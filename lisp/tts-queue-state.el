@@ -46,7 +46,7 @@
 (cl-defstruct (tts-queue--write (:constructor tts-queue--make-write))
 	      process string description auth guard own-stop used receipt)
 (cl-defstruct (tts-queue--guard (:constructor tts-queue--make-guard))
-	      process state serial generation registry-property registry stop-used)
+	      process state serial generation registry-property registry stop-used startup)
 (define-error 'tts-queue--proof-lost "Speech input changed during preparation")
 
 ;; State indices are queue * 2 + framing.  Queue: empty=0, pending=1,
@@ -270,17 +270,31 @@ EFFECTS is one symbol, or one symbol per record.  Mismatches remain opaque."
        (equal (tts-queue--state-generation state)
               (process-get process 'tts--speech-process-generation))))
 
-(defun tts-queue--known-empty-p (process)
-  "Whether PROCESS has usable empty-queue and input-boundary proof."
+(defun tts-queue--boundary-p (process)
+  "Whether PROCESS has usable input-boundary proof without a write in flight."
   (when-let* ((state (tts-queue--state process)))
     (unless (tts-queue--coverage-p) (tts-queue--invalidate state))
     (and (tts-queue--current-p process state)
          (not (tts-queue--state-flight state))
          (not (tts-queue--state-unusable state))
          (not (tts-queue--state-birth state))
-         (zerop (tts-queue--state-queue state))
          (zerop (tts-queue--state-framing state))
          (eq (cdr (process-coding-system process)) 'utf-8-unix))))
+
+(defun tts-queue--known-empty-p (process)
+  "Whether PROCESS has usable empty-queue and input-boundary proof."
+  (and (tts-queue--boundary-p process)
+       (zerop (tts-queue--state-queue (tts-queue--state process)))))
+
+(defun tts-queue--startup-guard (process)
+  "Reserve PROCESS's boundary for one explicit preview startup Stop.
+This grant permits only that clear, never a preview or ordinary promotion."
+  (when (tts-queue--boundary-p process)
+    (let ((state (tts-queue--state process)))
+      (tts-queue--make-guard :process process :state state
+                             :serial (tts-queue--state-serial state)
+                             :generation (tts-queue--state-generation state)
+                             :startup t))))
 
 (defun tts-queue--guard (process &optional registry-property)
   "Freeze PROCESS's proof and optional REGISTRY-PROPERTY in one bounded guard."
@@ -305,7 +319,9 @@ EFFECTS is one symbol, or one symbol per record.  Mismatches remain opaque."
 (defun tts-queue--guard-valid-p (guard)
   "Whether the complete proof retained by GUARD still holds."
   (let ((process (tts-queue--guard-process guard)))
-    (and (tts-queue--known-empty-p process)
+    (and (if (tts-queue--guard-startup guard)
+             (tts-queue--boundary-p process)
+           (tts-queue--known-empty-p process))
          (let ((state (tts-queue--state process)))
            (tts-queue--guard-identity-p guard process state (tts-queue--state-serial state))))))
 
@@ -316,11 +332,15 @@ EFFECTS is one symbol, or one symbol per record.  Mismatches remain opaque."
                (tts-queue--write-own-stop (nth 5 receipt))
                (eq (car receipt) (tts-queue--guard-state guard))
                (= (nth 1 receipt) (tts-queue--guard-serial guard))
-               (= (nth 3 receipt) 0) (= (nth 4 receipt) 0)
+               (if (tts-queue--guard-startup guard)
+                   (zerop (% (nth 3 receipt) 2))
+                 (= (nth 3 receipt) 0))
+               (= (nth 4 receipt) 0)
                (tts-queue--known-empty-p (tts-queue--guard-process guard))
                (= (nth 2 receipt) (tts-queue--state-serial (car receipt))))
     (signal 'tts-queue--proof-lost nil))
   (setf (tts-queue--guard-stop-used guard) t
+        (tts-queue--guard-startup guard) nil
         (tts-queue--guard-serial guard) (nth 2 receipt))
   (unless (tts-queue--guard-valid-p guard) (signal 'tts-queue--proof-lost nil)))
 
@@ -372,7 +392,13 @@ EFFECTS is one symbol, or one symbol per record.  Mismatches remain opaque."
                 (when (and (tts-queue--state-birth state) (not auth))
                   (tts-queue--invalidate state t))
                 (when (and guard
-                           (not (and (= before 0)
+                           (not (and (not (and (tts-queue--write-own-stop token)
+                                               (tts-queue--guard-stop-used guard)))
+                                     (if (tts-queue--guard-startup guard)
+                                         (and (zerop (% before 2))
+                                              (tts-queue--write-own-stop token)
+                                              (equal string "s\n"))
+                                       (= before 0))
                                      (not (tts-queue--state-unusable state))
                                      (tts-queue--current-p process state)
                                      (tts-queue--coverage-p)
@@ -447,6 +473,9 @@ EFFECTS is one symbol, or one symbol per record.  Mismatches remain opaque."
             (tts-queue--invalidate state))
           (when (and guard
                      (not (and (tts-queue--guard-valid-p guard)
+                               (not (and own-stop (tts-queue--guard-stop-used guard)))
+                               (or (not (tts-queue--guard-startup guard))
+                                   (and own-stop (equal command "s\n")))
                                (tts-queue--matches-p description command)
                                (or (not (tts-queue--state-remote state))
                                    (tts-queue--remote-packet-p command)))))

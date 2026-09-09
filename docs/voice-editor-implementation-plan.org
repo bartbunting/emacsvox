@@ -54,8 +54,9 @@ Guarded named promotion is implemented: 536 selected source tests pass, with
 muted local/remote named playback and verified fallback receipts on both lanes
 and reconnect. The [[file:voice-editor-preview-handoff-review.org][XHI preview-operation and original-row/context handoff]] is
 complete, with twelve reproduced gaps and forty independent desired cases.
-Return to High for the owned coordinator, guarded startup, strict v2 projection
-and optional editor integration; no new product decision is required.
+The maintainer resumed at High. The owned coordinator and guarded startup are
+implemented with 582 selected tests passing. Strict v2 projection and optional
+editor integration remain next; no new product decision is required.
 Scope A remains selected; broader cross-call tuning is deferred. Preview and
 editor work remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
@@ -779,13 +780,32 @@ the actual write succeeds. Preserve complete stable rows and sparse context;
 validate bounded v2 terminals independently from ordinary playback receipts.
 Draft/context/view revisions prevent stale callbacks updating newer inputs.
 The accepted storage/wire contracts and scope A remain unchanged. No product
-decision is needed. Return to High for the reviewed implementation slices.
+decision is needed. The maintainer resumed at High for the reviewed slices.
+
+**** DONE Unify complete and individual preview ownership
+
+Both existing Omnivox preview forms now use one coordinator with copied inputs,
+bounded whole-sequence preflight, one pending control reservation and one timer.
+The exact startup Stop has a boundary/serial receipt and cannot be reused.
+Reentrant public Stop cancels it. Early replies cannot advance inside a write;
+write failures and nonlocal exits release pending state without replay.
+Timeout and Stop callbacks run after interruption, independently of ambient
+speech captures. Sixteen new contracts and all 582 selected tests pass.
+Muted local and private-loopback real-server checks pass through reconnect,
+including actual fallback, exact audition and notification isolation.
+
+Isolated compiled parity and all sixteen new tests against the normal compiled
+tree pass. Fresh compiled real-server previews pass on both transports; ordinary
+named playback still verifies actual-fallback receipts on both lanes after
+reconnect. The full rebuild was followed by an incremental refresh for edits
+made during the build. The new module is included in the explicit normal-build
+manifest and dependency order. Byte-code preflight, headers, generated reference,
+documentation release and whitespace checks pass. No live profile was restarted.
 
 **** TODO Complete preview and editor controls
 
-The ordinary consumer slices and preview review are complete. At High, first
-implement the shared preview coordinator and guarded startup while preserving
-existing wire forms. Then connect strict private preview v2, original-row
+The ordinary consumer slices, preview review and shared coordinator are complete.
+Continue at High with strict private preview v2, original-row
 auditions and unflattened context projection. Finally add optional per-choice
 controls, revision-aware explanations and experiment keeps over those tested
 services. The [[file:voice-editor-preview-handoff-review.org][handoff]] specifies lifecycle, compatibility and evidence gates.

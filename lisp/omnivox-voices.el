@@ -38,6 +38,7 @@
 (require 'subr-x)
 (require 'emacsvox-aural-voice-runtime)
 (require 'omnivox-choice-codec)
+(require 'omnivox-preview)
 
 (declare-function emacsvox-aural-enable-framed-delivery
                   "emacsvox-aural-transport" (process))
@@ -370,23 +371,29 @@ cannot overtake server initialization or fail capability checks prematurely."
 CALLBACK receives PROCESS and the decoded response plist."
   (unless (process-live-p process)
     (error "Omnivox speech process is not live"))
-  (let* ((identifier (cl-incf omnivox--control-request-sequence))
+  (let* ((identifier (omnivox--next-control-request-id))
          (envelope
           (append
            (list :protocol_version omnivox-control-protocol-version
                  :request_id identifier)
            request))
-         (pending (omnivox--pending-requests process)))
-    (puthash identifier callback pending)
-    (condition-case error-data
-        (tts-queue--send-typed
-         process
-         (format "omnivox_control {%s}\n"
-                 (omnivox--encode-control-request envelope)) 'neutral)
-      (error
-       (remhash identifier pending)
-       (signal (car error-data) (cdr error-data))))
+         (pending (omnivox--pending-requests process)) complete)
+    (unwind-protect
+        (progn
+          (puthash identifier callback pending)
+          (tts-queue--send-typed
+           process
+           (format "omnivox_control {%s}\n"
+                   (omnivox--encode-control-request envelope)) 'neutral)
+          (setq complete t))
+      (unless complete (remhash identifier pending)))
     identifier))
+
+(defun omnivox--next-control-request-id ()
+  "Allocate a control ID without wrapping the wire's unsigned 64-bit identity."
+  (unless (< omnivox--control-request-sequence omnivox--choice-u64-max)
+    (error "Omnivox control request IDs exhausted"))
+  (cl-incf omnivox--control-request-sequence))
 
 (defun omnivox--record-control-error (process response)
   "Record control error RESPONSE from PROCESS without speaking it."
@@ -1116,22 +1123,25 @@ SEEN prevents malformed personality-variable cycles."
                     "The server did not realize the requested exact engine and voice"
                   (plist-get response :message))))))
 
-(defun omnivox--preview-one (entry callback)
-  "Preview one normalized ENTRY and call CALLBACK after playback."
+(defun omnivox--preview-individual-request (entry process)
+  "Preflight individual ENTRY for frozen PROCESS and return its legacy request."
+  (tts--validate-voice-preview-entry entry)
+  (omnivox--preview-validate-values entry)
+  (omnivox--preview-validate-selector (plist-get entry :selector))
+  (when (> (string-bytes (plist-get entry :text)) (* 16 1024))
+    (error "Preview text exceeds 16384 bytes"))
   (unless (and
-           (process-live-p tts-speaker-process)
+           (process-live-p process)
            (omnivox--process-supports-p
-            tts-speaker-process "exact_voice_preview"))
+            process "exact_voice_preview"))
     (error "The live Omnivox server does not support transactional preview"))
   (let ((effects-supported
          (omnivox--process-supports-p
-          tts-speaker-process "post_synthesis_effects_v1"))
+          process "post_synthesis_effects_v1"))
         (rate-supported
          (omnivox--process-supports-p
-          tts-speaker-process "relative_rate_v1")))
-    (omnivox--send-control-request
-     tts-speaker-process
-     (append
+          process "relative_rate_v1")))
+    (append
       (list
        :type "preview"
        :text (plist-get entry :text)
@@ -1147,11 +1157,12 @@ SEEN prevents malformed personality-variable cycles."
       (when effects-supported
         (list :effects
               (omnivox--preview-effects-json
-               (plist-get entry :effects)))))
-     (lambda (_process response)
-       (funcall callback
-                (omnivox--normalize-preview-response
-                 entry response effects-supported rate-supported))))))
+               (plist-get entry :effects)))))))
+
+(defun omnivox--preview-one (entry callback)
+  "Preview one ENTRY through the owned individual coordinator."
+  (omnivox--preview-sequence
+   (list entry) (lambda (result) (funcall callback (or (car (plist-get result :results)) result))) t))
 
 (defun omnivox--preview-valid-id-p (value limit &optional pattern)
   "Return non-nil for a bounded ID VALUE, with LIMIT bytes and PATTERN."
@@ -1212,24 +1223,11 @@ SEEN prevents malformed personality-variable cycles."
             (omnivox--preview-selector-json (plist-get policy :global-default)) :null)
         :fallback_engines (vconcat (plist-get policy :fallback-engines))))
 
-(defun omnivox--preview-complete-request (entry process)
-  "Preflight and encode complete ENTRY for the negotiated foreground PROCESS."
-  (unless (and (process-live-p process)
-               (omnivox--process-supports-p process "voice_chain_preview_v1"))
-    (user-error "Complete voice preview needs an updated Omnivox server; individual auditions and saving remain available"))
-  (tts--validate-voice-preview-entry entry)
-  (when (> (string-bytes (plist-get entry :text)) (* 16 1024))
-    (error "Complete preview text exceeds 16384 bytes"))
-  (unless (and (plist-member entry :fallback-policy)
-               (plist-member entry :disabled-engine-ids))
-    (error "Complete preview requires explicit fallback policy and disabled engines"))
-  (let ((selectors (plist-get entry :selectors))
-        (language (plist-get entry :language))
+(defun omnivox--preview-validate-values (entry)
+  "Validate normalized settings in ENTRY before either preview mode interrupts."
+  (let ((language (plist-get entry :language))
         (offset (plist-get entry :rate-offset))
         (expected (plist-get entry :expected-base-rate)))
-    (unless (and (proper-list-p selectors) (<= (length selectors) 32))
-      (error "Complete preview accepts at most 32 ordered selectors"))
-    (mapc #'omnivox--preview-validate-selector selectors)
     (when (and language
                (not (omnivox--preview-valid-id-p language 64 "\\`[0-9A-Za-z-]+\\'")))
       (error "Invalid complete preview language"))
@@ -1253,6 +1251,27 @@ SEEN prevents malformed personality-variable cycles."
             (unless (or (null value) (and (numberp value) (= value value)
                                           (< (abs value) 1.0e+INF)))
               (error "Preview %s must be a finite number or nil" key))))))
+))
+
+(defun omnivox--preview-complete-request (entry process)
+  "Preflight and encode complete ENTRY for the negotiated foreground PROCESS."
+  (unless (and (process-live-p process)
+               (omnivox--process-supports-p process "voice_chain_preview_v1"))
+    (user-error "Complete voice preview needs an updated Omnivox server; individual auditions and saving remain available"))
+  (tts--validate-voice-preview-entry entry)
+  (when (> (string-bytes (plist-get entry :text)) (* 16 1024))
+    (error "Complete preview text exceeds 16384 bytes"))
+  (unless (and (plist-member entry :fallback-policy)
+               (plist-member entry :disabled-engine-ids))
+    (error "Complete preview requires explicit fallback policy and disabled engines"))
+  (let ((selectors (plist-get entry :selectors))
+        (language (plist-get entry :language))
+        (offset (plist-get entry :rate-offset))
+        (expected (plist-get entry :expected-base-rate)))
+    (unless (and (proper-list-p selectors) (<= (length selectors) 32))
+      (error "Complete preview accepts at most 32 ordered selectors"))
+    (mapc #'omnivox--preview-validate-selector selectors)
+    (omnivox--preview-validate-values entry)
     (let ((request
            (append
             (list :type "preview_voice" :text (plist-get entry :text)
@@ -1335,87 +1354,13 @@ SEEN prevents malformed personality-variable cycles."
                  :request-snapshot (copy-tree entry) :message (error-message-string error-data)))))
 
 (defcustom omnivox-voice-preview-timeout 60
-  "Seconds allowed for one complete voice preview to finish playback."
+  "Seconds allowed for each voice preview to finish playback.
+This applies to complete comparisons and individual auditions."
   :group 'omnivox :type 'number)
 
 (defun omnivox--preview-complete-sequence (entries callback)
-  "Preview frozen complete ENTRIES on one foreground connection, then CALLBACK."
-  (let* ((owner tts-speaker-process)
-         (remaining
-          (mapcar (lambda (entry)
-                    (unless (plist-member entry :selectors)
-                      (error "A complete comparison requires complete entries for both voices"))
-                    (cons (copy-tree entry) (omnivox--preview-complete-request entry owner)))
-                  (copy-tree entries)))
-         (operation (1+ (or (process-get owner 'omnivox--voice-preview-generation) 0)))
-         results finished stop-handler timer pending-id base-rate disabled entry-generation)
-    (process-put owner 'omnivox--voice-preview-generation operation)
-    (tts-stop)
-    (cl-labels
-        ((current-p ()
-           (and (eq owner tts-speaker-process) (process-live-p owner)
-                (= operation (process-get owner 'omnivox--voice-preview-generation))))
-         (clear-pending ()
-           (when timer (cancel-timer timer) (setq timer nil))
-           (when pending-id
-             (remhash pending-id (omnivox--pending-requests owner))
-             (setq pending-id nil)))
-         (finish (status &optional message)
-           (unless finished
-             (setq finished t)
-             (clear-pending)
-             (remove-hook 'tts-stopped-hook stop-handler)
-             (tts--voice-preview-callback callback
-                                          (list :status status :completion-guarantee 'playback
-                                                :message message :results (nreverse results)))))
-         (next ()
-           (cond
-            (finished nil)
-            ((not (current-p)) (finish 'cancelled "Preview connection changed; restart comparison"))
-            ((null remaining) (finish 'completed))
-            (t
-             (let* ((item (pop remaining)) (entry (car item)) (request (cdr item))
-                    (generation (setq entry-generation (1+ (or entry-generation 0)))))
-               (when base-rate
-                 (setq request (plist-put request :expected_base_rate base-rate)))
-               (setq timer
-                     (run-at-time omnivox-voice-preview-timeout nil
-                                  (lambda ()
-                                    (unless (or finished (/= generation entry-generation))
-                                      (finish 'failed "Voice preview timed out; restart comparison")
-                                      (when (current-p) (tts--interrupt-process owner))))))
-               (condition-case error-data
-                   (let ((identifier
-                          (omnivox--send-control-request
-                           owner request
-                           (lambda (process response)
-                             (unless (or finished (not (eq process owner))
-                                         (/= generation entry-generation))
-                               (clear-pending)
-                               (if (not (current-p))
-                                   (finish 'cancelled "Preview connection changed; restart comparison")
-                                 (let ((result (omnivox--normalize-complete-preview-response entry response)))
-                                   (when (eq (plist-get result :status) 'completed)
-                                     (if base-rate
-                                         (unless (and (= base-rate (plist-get result :base-rate))
-                                                      (equal (sort (copy-sequence disabled) #'string-lessp)
-                                                             (sort (copy-sequence (plist-get result :effective-disabled-engine-ids)) #'string-lessp)))
-                                           (setq result (plist-put result :status 'failed))
-                                           (setq result (plist-put result :message "Comparison policy changed; restart comparison")))
-                                       (setq base-rate (plist-get result :base-rate)
-                                             disabled (plist-get result :effective-disabled-engine-ids))))
-                                   (push result results)
-                                   (if (eq (plist-get result :status) 'completed) (next)
-                                     (finish (plist-get result :status) (plist-get result :message))))))))))
-                     (when (and (not finished) (= generation entry-generation))
-                       (setq pending-id identifier)))
-                 (error (finish 'failed (error-message-string error-data)))))))))
-      (setq stop-handler
-            (lambda (process)
-              (when (eq owner process)
-                (finish (if (process-live-p owner) 'cancelled 'failed)))))
-      (add-hook 'tts-stopped-hook stop-handler)
-      (next))))
+  "Preview complete ENTRIES under shared operation ownership, then CALLBACK."
+  (omnivox--preview-sequence entries callback nil))
 
 (defun omnivox-preview-voice-sequence (entries callback)
   "Preview Omnivox ENTRIES in order and call CALLBACK after playback.
@@ -1427,48 +1372,8 @@ edited voices."
     (omnivox--preview-individual-sequence entries callback)))
 
 (defun omnivox--preview-individual-sequence (entries callback)
-  "Preview Omnivox ENTRIES in order and call CALLBACK after playback."
-  (tts-stop)
-  (let ((remaining (copy-tree entries))
-        (owner tts-speaker-process)
-        results finished stop-handler)
-    (cl-labels
-        ((finish
-          (status)
-          (unless finished
-            (setq finished t)
-            (remove-hook 'tts-stopped-hook stop-handler)
-            (tts--voice-preview-callback
-             callback
-             (list :status status :completion-guarantee 'playback
-                   :results (nreverse results)))))
-         (next
-          ()
-          (unless finished
-            (if (null remaining)
-                (finish 'completed)
-              (let ((entry (pop remaining)))
-                (condition-case error-data
-                    (omnivox--preview-one
-                     entry
-                     (lambda (result)
-                       (unless finished
-                         (push result results)
-                         (pcase (plist-get result :status)
-                           ('cancelled (finish 'cancelled))
-                           ('completed (next))
-                           (_ (finish 'failed))))))
-                  (error
-                   (finish 'failed)
-                   (signal (car error-data) (cdr error-data)))))))))
-      (setq stop-handler (lambda (process)
-                           (when (eq owner process) (finish 'cancelled))))
-      (add-hook 'tts-stopped-hook stop-handler)
-      (condition-case error-data
-          (next)
-        (error
-         (finish 'failed)
-         (signal (car error-data) (cdr error-data)))))))
+  "Preview individual ENTRIES under shared operation ownership, then CALLBACK."
+  (omnivox--preview-sequence entries callback t))
 
 (defun omnivox--logical-voice-ids ()
   "Return every defined or explicitly configured logical voice ID."

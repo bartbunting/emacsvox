@@ -6,9 +6,11 @@
 
 The XHI review is complete against Emacsvox =b46f0d682= and Omnivox =31a0b9a=.
 The maintainer's accepted choices still cover the feature; no new product
-decision is needed. Return to High for the implementation slices below, testing
-and committing each slice. Stop again for a contract conflict or user spoken
-acceptance. This review does not implement preview v2 or enable customization.
+decision is needed. The maintainer resumed at High. The first implementation
+slice now gives complete v1 and individual auditions one owned coordinator,
+guarded startup, deferred advancement and unwind-safe request cleanup. Private
+preview v2 and optional controls remain pending. Continue the implementation
+slices below, stopping for a contract conflict or user spoken acceptance.
 
 All Emacsvox ADRs 0001–0017 and Omnivox ADRs 0001–0011 were read together.
 [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], the [[file:voice-editor-fallback-wire-contract.org][wire contract]], [[file:voice-editor-fallback-tuning-contract.org][storage contract]] and
@@ -25,9 +27,12 @@ Run [[file:../test/diagnose-choice-preview.el][diagnose-choice-preview.el]] with
 /home/bart/opt/emacs-31/bin/emacs -Q --batch -l test/diagnose-choice-preview.el
 #+end_example
 
-Twelve assertions reproduce the current source behavior using synthetic drafts,
-private pipe objects and muted writes/timers. These are baseline observations,
-not passing tests of the desired behavior. No live speech engine was involved.
+At review commit =3c62f414b=, twelve assertions reproduced the baseline using
+synthetic drafts, private pipe objects and muted writes/timers. The six ownership
+observations have now become positive tests in [[file:../test/omnivox-preview-tests.el][omnivox-preview-tests.el]].
+The diagnostic retains six pending projection/view/decoder observations and the
+fixture checks. The table below records the historical findings, not current
+failures of the implemented coordinator.
 
 | Observation | Consequence |
 |-------------+-------------|
@@ -44,9 +49,10 @@ not passing tests of the desired behavior. No live speech engine was involved.
 | Context projection flattens an explicit field into shared style | Equality with shared loses the fact that context must override a row. |
 | Old decoding maps null, false and an empty array to nil | It cannot validate the v2 response grammar. |
 
-Inspection also finds no individual-sequence timeout/pending-ID cleanup;
-complete preview installs its Stop hook only after the initial public Stop;
-picker notifications lack operation ownership; and the draft record has no
+The baseline also lacked individual-sequence timeout/pending-ID cleanup and
+installed the complete preview Stop hook after its initial public Stop. Those
+coordinator gaps are fixed. Picker notifications still lack view ownership,
+and the draft record has no
 revision field. The current editor mutates selector lists by index, whereas
 the save projector already rejects disagreement with complete choice records.
 New controls must use those complete records throughout.
@@ -267,7 +273,7 @@ save recovery. This implements accepted behavior rather than changing storage.
 
 * High implementation slices and acceptance
 
-1. Implement the owned preview coordinator, startup framing grant and unwind-safe
+1. DONE: Implement the owned preview coordinator, startup framing grant and unwind-safe
    control reservation. Move existing complete/individual previews onto it with
    unchanged wire shapes. Turn the lifecycle observations into positive tests,
    including both supersession directions, early replies, all nonlocal exits,
@@ -288,11 +294,11 @@ save recovery. This implements accepted behavior rather than changing storage.
    acceptance boundary: automated checks cannot judge engine sound or navigation
    comfort. Keep optional controls and whole-feature completion pending until then.
 
-The fixture describes desired behavior independently; the diagnostic asserts
-today's contrary behavior. Fixture consistency and baseline reproduction are
-review evidence, not a claim that future runtime behavior already passes.
+The fixture describes desired behavior independently; the diagnostic retains
+the six remaining projection/view/decoder gaps. Fixture consistency and baseline
+reproduction do not establish the remaining runtime behavior.
 
-* Review validation
+* Original review validation
 
 All twelve source observations reproduce; all forty fixture cases are read as
 non-evaluated data with distinct IDs, and the raw voice/patch examples pass the
@@ -307,3 +313,34 @@ pass. No unrelated adapter or test implementation was changed.
 reports resolve; whitespace checks pass. Only reports, a diagnostic and fixture
 data changed, so no new production byte-code build or runtime installation was
 needed. Real-server and spoken acceptance of the future client remain pending.
+
+* Implemented coordinator slice
+
+[[file:../lisp/omnivox-preview.el][The private coordinator]] preflights all entries, copies mutable strings,
+retains the actual foreground connection and uses one request/timer per entry.
+A startup guard permits exactly one clear from a proven boundary, including
+pending input, then becomes an ordinary empty-queue guard. Early responses are
+latched until the actual write succeeds. Stop retires pending preview state
+before I/O and defers its callback until interruption ends, including when a
+callback starts a replacement. Nonlocal caller exits release ownership and
+propagate to that caller without retaining an asynchronous callback. No v1 or
+legacy-exact wire shape changed, and private preview requires no registration.
+
+Sixteen new connected tests cover these boundaries, including 64 synchronous
+early responses without nested writes, both supersession directions, public
+Stop failure/quit/throw, startup framing, request bounds and notification-lane
+isolation. All 582 selected speech/queue/preview/editor/context tests pass.
+Muted local and private authenticated loopback acceptance verifies actual
+fallback comparisons, exact samples, Stop cleanup and foreground reconnect.
+Isolated compiled parity and all sixteen new tests in the normal compiled tree
+pass. Fresh compiled real previews pass on both transports; ordinary named
+playback also retains verified actual-fallback receipts on both lanes after
+reconnect. The compiled fixture loads the common TTS test helper explicitly;
+its first run identified that missing dependency. Normal-build verification
+caught the new module missing from the explicit manifest, which is now fixed.
+The normal compiled test run explicitly loads source test files so unrelated
+ignored legacy test byte-code cannot supply obsolete fixtures.
+
+The full rebuild plus an incremental refresh for edits during that build passes
+byte-code preflight. Header, generated-reference, documentation-release and
+whitespace checks pass. No live profile was restarted or runtime installed.

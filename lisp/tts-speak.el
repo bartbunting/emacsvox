@@ -1185,34 +1185,51 @@ cannot deliver a second terminal result."
                (plist-get failure :process-status)
              description)))))))
 
-(defun tts--interrupt-process (process &optional notifications preserved)
+(defun tts--interrupt-process (process &optional notifications preserved preview)
   "Stop PROCESS and retire callbacks that can no longer complete.
 
 When NOTIFICATIONS is non-nil, also stop the notification speech stream.
 Pending aural deliveries are owned by the caller because replacement and
-urgent policies cancel different scopes."
-  (when
-      (and notifications
-           (process-live-p tts-notify-process)
-           (not (eq process tts-notify-process)))
-    (tts-notify-stop))
-  ;; Retirement owns these callbacks already.  A stopped observer may itself
-  ;; call `tts-stop', so do not enter the same hook again for that owner.
-  (unless (and (processp process)
-               (process-get process tts--speech-process-retiring-property))
-    (tts--preparation-invalidate process preserved)
-    (when (processp process)
-      (process-put process 'tts--dispatch-cancellation-epoch
-                   (1+ (or (process-get process 'tts--dispatch-cancellation-epoch) 0))))
+urgent policies cancel different scopes.  Private PREVIEW is a one-use
+startup guard, Stop observer and operation identity.  Only this invocation
+excludes that observer."
+  (let* ((listener (and (processp process) (process-get process 'tts--interrupt-listener)))
+         (completion (when (and listener (not (eq (car listener) (nth 2 preview))))
+                       (funcall (cadr listener))))
+         completed)
     (unwind-protect
-        (when (process-live-p process)
-          (let* ((guard (and preserved (tts--preparation-queue-guard preserved)))
-                 (receipt (emacsvox-aural--delivery-send-typed
-                           process "s\n" 'clear 'stop guard t)))
-            (when guard (tts-queue--advance-stop guard receipt))))
-      (tts--cancel-process-tracked-dispatches process 'cancelled preserved))
-    (emacsvox-aural--call-independent-callback
-     #'run-hook-with-args 'tts-stopped-hook process)))
+        (progn
+          (when
+              (and notifications
+                   (process-live-p tts-notify-process)
+                   (not (eq process tts-notify-process)))
+            (tts-notify-stop))
+          ;; Retirement owns these callbacks already.  A stopped observer may itself
+          ;; call `tts-stop', so do not enter the same hook again for that owner.
+          (unless (and (processp process)
+                       (process-get process tts--speech-process-retiring-property))
+            (tts--preparation-invalidate process preserved)
+            (when (processp process)
+              (process-put process 'tts--dispatch-cancellation-epoch
+                           (1+ (or (process-get process 'tts--dispatch-cancellation-epoch) 0))))
+            (unwind-protect
+                (when (process-live-p process)
+                  (let* ((guard (or (car preview)
+                                    (and preserved (tts--preparation-queue-guard preserved))))
+                         (receipt (emacsvox-aural--delivery-send-typed
+                                   process "s\n" 'clear 'stop guard t)))
+                    (when guard (tts-queue--advance-stop guard receipt))))
+              (tts--cancel-process-tracked-dispatches process 'cancelled preserved))
+            (emacsvox-aural--call-independent-callback
+             #'run-hook-wrapped 'tts-stopped-hook
+             (lambda (function owner)
+               ;; A reentrant public Stop calls this function without PREVIEW, so it
+               ;; invokes every observer even while this outer invocation is running.
+               (unless (eq function (cadr preview)) (funcall function owner))
+               nil)
+             process))
+          (setq completed t))
+      (when completion (funcall completion completed)))))
 
 (defun tts--retire-process (process)
   "Cancel state owned by PROCESS, stop it, and delete it.

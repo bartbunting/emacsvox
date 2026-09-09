@@ -5,8 +5,8 @@
 ;;; Commentary:
 ;; Run with the Emacs selected by local.mk: -Q --batch -l this file.
 ;; Source-only, synthetic drafts, private pipe objects and muted writes/timers.
-;; Assertions reproduce the review baseline; they do not assert correct UX.
-;; Convert these observations to positive regression tests during implementation.
+;; Assertions reproduce the remaining projection/view gaps, not correct UX.
+;; Ownership observations have become positive tests in omnivox-preview-tests.el.
 ;;; Code:
 (setq load-prefer-newer t)
 (require 'jka-compr)
@@ -26,24 +26,6 @@
   (cl-incf emacsvox-preview-diagnostic--count)
   (princ (format "%s %S\n" name observed)))
 
-(defmacro emacsvox-preview-diagnostic--with-owner (&rest body)
-  (declare (indent 0) (debug t))
-  `(let* ((owner (make-pipe-process :name "preview-review" :buffer nil :noquery t))
-          (tts-speaker-process owner) (tts-notify-process nil)
-          (tts-stopped-hook nil) (omnivox--control-request-sequence 0))
-     (unwind-protect
-         (cl-letf (((symbol-function 'tts-stop) #'ignore)
-                   ((symbol-function 'process-send-string) #'ignore))
-           (process-put owner omnivox--control-capabilities-property
-                        '(:features ("exact_voice_preview" "relative_rate_v1"
-                                     "post_synthesis_effects_v1")))
-           ,@body)
-       (delete-process owner))))
-
-(defconst emacsvox-preview-diagnostic--exact
-  '(:text "sample" :selector (:kind exact :scope local :engine-id "test" :voice-id "one")
-    :acss nil :rate-offset nil :effects nil))
-
 ;; A stable, tuned row reaches the old projector as selectors plus shared style.
 (let* ((selector '(:kind exact :scope local :engine-id "test" :voice-id "one"))
        (snapshot (list :definition '(:average-pitch 3) :selectors (list selector)
@@ -55,97 +37,6 @@
    (list (length (plist-get entry :selectors)) (and (plist-member entry :choices) t)
          (plist-get (plist-get entry :acss) :average-pitch))
    (list 1 nil (/ 3.0 9))))
-
-;; Stop happens before individual preview captures its process owner.
-(emacsvox-preview-diagnostic--with-owner
-  (let ((replacement (make-pipe-process :name "preview-replacement" :buffer nil :noquery t))
-        submitted)
-    (unwind-protect
-        (cl-letf (((symbol-function 'tts-stop) (lambda () (setq tts-speaker-process replacement)))
-                  ((symbol-function 'omnivox--preview-one)
-                   (lambda (_entry _callback) (setq submitted tts-speaker-process))))
-          (omnivox--preview-individual-sequence '(sample) #'ignore)
-          (emacsvox-preview-diagnostic--report
-           'individual-rebinds-after-stop (eq submitted replacement) t))
-      (delete-process replacement))))
-
-;; A nonlocal exit during the real control sender leaves its reserved callback.
-(dolist (exit-kind '(quit throw))
-  (emacsvox-preview-diagnostic--with-owner
-    (let (result)
-      (cl-letf (((symbol-function 'process-send-string)
-                 (lambda (&rest _)
-                   (if (eq exit-kind 'quit) (signal 'quit nil)
-                     (throw 'preview-exit 'escaped)))))
-        (catch 'preview-exit
-          (condition-case nil
-              (omnivox--preview-individual-sequence
-               (list emacsvox-preview-diagnostic--exact) (lambda (value) (setq result value)))
-            (quit nil))))
-      (emacsvox-preview-diagnostic--report
-       (intern (format "individual-%s-leaks-reservation" exit-kind))
-       (list (hash-table-count (omnivox--pending-requests owner))
-             (length tts-stopped-hook) (and result t)) '(1 1 nil)))))
-
-;; A valid terminal can run synchronously inside the first actual write.
-(emacsvox-preview-diagnostic--with-owner
-  (let ((depth 0) (maximum 0) (writes 0) result)
-    (cl-letf (((symbol-function 'process-send-string)
-               (lambda (_process _command)
-                 (cl-incf writes) (cl-incf depth) (setq maximum (max maximum depth))
-                 (unwind-protect
-                     (when (= writes 1)
-                       (omnivox--dispatch-control-response
-                        owner '(:protocol_version 1 :request_id 1 :type "preview_completed"
-                                :status "completed" :realized (:engine_id "test" :voice_id "one")
-                                :degraded_acss nil :degraded_effects nil :message nil))
-                       (error "first write failed after callback"))
-                   (cl-decf depth)))))
-      (condition-case nil
-          (omnivox--preview-individual-sequence
-           (list emacsvox-preview-diagnostic--exact emacsvox-preview-diagnostic--exact)
-           (lambda (value) (setq result value)))
-        (error nil)))
-    (emacsvox-preview-diagnostic--report
-     'reply-during-write-starts-next-before-write-failure
-     (list writes maximum (plist-get result :status)
-           (hash-table-count (omnivox--pending-requests owner))) '(2 2 failed 1))))
-
-;; Complete preflight is stubbed only to isolate the ownership boundary.
-(emacsvox-preview-diagnostic--with-owner
-  (let ((stops 0) submissions)
-    (cl-letf (((symbol-function 'omnivox--preview-complete-request) (lambda (&rest _) '(:type "preview_voice")))
-              ((symbol-function 'run-at-time) (lambda (&rest _) 'muted-timer))
-              ((symbol-function 'cancel-timer) #'ignore)
-              ((symbol-function 'omnivox--send-control-request)
-               (lambda (&rest _) (push 'complete submissions) 1))
-              ((symbol-function 'omnivox--preview-one)
-               (lambda (&rest _) (push 'individual submissions)))
-              ((symbol-function 'tts-stop)
-               (lambda ()
-                 (when (= (cl-incf stops) 1)
-                   (omnivox--preview-individual-sequence '(newer) #'ignore)))))
-      (omnivox--preview-complete-sequence '((:selectors nil)) #'ignore)
-      (emacsvox-preview-diagnostic--report
-       'newer-individual-during-stop-does-not-supersede-older-complete
-       (reverse submissions) '(individual complete)))))
-
-(emacsvox-preview-diagnostic--with-owner
-  (let (timeout events)
-    (cl-letf (((symbol-function 'omnivox--preview-complete-request) (lambda (&rest _) '(:type "preview_voice")))
-              ((symbol-function 'run-at-time)
-               (lambda (_seconds _repeat callback &rest _) (setq timeout callback) 'muted-timer))
-              ((symbol-function 'cancel-timer) #'ignore)
-              ((symbol-function 'omnivox--send-control-request) (lambda (&rest _) 1))
-              ((symbol-function 'omnivox--preview-one) (lambda (&rest _) (push 'new-sample events)))
-              ((symbol-function 'tts--interrupt-process) (lambda (&rest _) (push 'interrupt events))))
-      (omnivox--preview-complete-sequence
-       '((:selectors nil))
-       (lambda (_result) (omnivox--preview-individual-sequence '(newer) #'ignore)))
-      (funcall timeout)
-      (emacsvox-preview-diagnostic--report
-       'timeout-callback-starts-new-sample-before-old-interrupt
-       (reverse events) '(new-sample interrupt)))))
 
 ;; Local Stop removes UI ownership without invalidating its callback generation.
 (dolist (change '(stop text))

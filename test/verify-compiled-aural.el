@@ -117,6 +117,7 @@
          "outloud-voices"
          "mac-voices"
          "swiftmac-voices"
+         "omnivox-preview"
          "omnivox-voices"
          "emacsvox-pronounce"
          "emacsvox-speak"
@@ -351,6 +352,8 @@
                   "emacsvox-aural-transport-tests.el"
                   "omnivox-choice-consumer-tests.el"
                   "tts-queue-state-tests.el"
+                  "emacsvox-tts-tests.el"
+                  "omnivox-preview-tests.el"
                   "tts-queue-handoff-tests.el"
                   "emacsvox-aural-voice-palettes-tests.el"
                   "emacsvox-aural-voice-workbench-tests.el"))
@@ -379,6 +382,8 @@
                       omnivox--choice-decode-marker
                       omnivox--choice-span-projection
                       omnivox--choice-patch-json
+                      omnivox--preview-sequence
+                      omnivox--preview-drive
                       omnivox--portable-style-acss
                       emacsvox-aural--timeline-style-acss
                       emacsvox-aural--timeline-effect-transition
@@ -411,6 +416,7 @@
                "^omnivox-choice-timeline-"
                "^omnivox-choice-playback-"
                "^omnivox-choice-consumer-"
+               "^omnivox-preview-"
                "^tts-queue-"
                "^tts-handoff-"
                "^tts-preparation-"

@@ -113,9 +113,11 @@ shapes and cross-call queues keep compatibility, with bounded sent-delivery
 reasons. Scope A remains selected. The
 [[file:../voice-editor-preview-handoff-review.org][XHI private-preview handoff]] is now complete: twelve muted observations reproduce
 ownership, cancellation and projection gaps; independent data covers forty
-desired projection/lifecycle/evidence/compatibility cases. Return to High for
-one owned preview coordinator, guarded startup and strict v2 projection/readback,
-then optional controls and experiment keeps. Preserve stable row identity,
+desired projection/lifecycle/evidence/compatibility cases. The maintainer resumed
+at High; one owned preview coordinator and guarded startup are implemented.
+Sixteen new contracts and all 582 selected tests pass, with muted local/remote
+fallback, exact-audition, Stop and reconnect acceptance. Strict v2 projection/readback,
+optional controls and experiment keeps remain next. Preserve stable row identity,
 sparse context and separate accepted/started evidence. Preview v2, individual
 controls and spoken acceptance remain pending; this is not complete feature
 delivery. Earlier, the maintainer

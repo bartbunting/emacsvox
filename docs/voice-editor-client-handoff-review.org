@@ -33,9 +33,11 @@ reconnect. Guarded named promotion is now implemented, with 536 selected source
 tests and muted named playback on both lanes locally/remotely after reconnect.
 Scope A remains selected. The [[file:voice-editor-preview-handoff-review.org][XHI private-preview handoff]] is complete,
 with twelve reproducible observations and forty independent desired cases.
-Return to High for the common preview coordinator, startup framing guard,
-strict v2 projection/readback and optional editor controls. No new product
-decision is required; those runtime/UI slices remain pending.
+The maintainer resumed at High. The common preview coordinator and startup
+framing guard are implemented, with sixteen new contracts, 582 selected tests
+and muted local/remote preview acceptance through reconnect. Strict v2
+projection/readback and optional editor controls remain pending. No new
+product decision is required.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Acknowledged structured submissions now use layered transport and correlated

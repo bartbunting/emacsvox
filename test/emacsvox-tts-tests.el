@@ -404,13 +404,13 @@
 (defmacro emacsvox-test--with-complete-preview (&rest body)
   "Run BODY with isolated foreground and notification preview processes."
   (declare (indent 0) (debug t))
-  `(let* ((speaker (make-pipe-process :name "complete-preview-main" :noquery t))
+  `(let* ((speaker (make-pipe-process :name "complete-preview-main" :noquery t :coding 'utf-8-unix))
           (notifier (make-pipe-process :name "complete-preview-notifier" :noquery t))
           (tts-speaker-process speaker) (tts-notify-process notifier)
           (tts-voice-preview-function #'omnivox-preview-voice-sequence)
           (tts-stopped-hook nil) (omnivox--control-request-sequence 40)
           (omnivox-average-pitch-contrast 1.0)
-          writes results (stops 0))
+          writes results preview-write-hook (stops 0))
      (unwind-protect
          (progn
            (process-put speaker omnivox--control-capabilities-property
@@ -418,10 +418,12 @@
            (omnivox--install-control-filter speaker)
            (cl-letf (((symbol-function 'process-send-string)
                       (lambda (process command)
-                        (should (eq process speaker)) (push command writes)))
-                     ((symbol-function 'tts-stop)
-                      (lambda (&optional _all)
-                        (cl-incf stops) (run-hook-with-args 'tts-stopped-hook speaker))))
+                        (should (eq process speaker))
+                        (when preview-write-hook (funcall preview-write-hook process command))
+                        (if (equal command "s\n") (cl-incf stops)
+                          (push command writes)))))
+             (tts-queue--install)
+             (process-put speaker 'tts-queue--state (tts-queue--make-state :queue 0 :framing 0))
              ,@body))
        (run-hook-with-args 'tts-stopped-hook speaker)
        (when (process-live-p speaker) (delete-process speaker))
@@ -546,20 +548,18 @@
    (should (string-match-p "restart comparison" (plist-get (car results) :message)))))
 
 (ert-deftest emacsvox-tts-complete-preview-timeout-cleans-up ()
-  "A timeout retires its request without stopping a replacement preview."
+  "A timeout retires its request and interrupts once before notification."
   (emacsvox-test--with-complete-preview
-   (let (timeout interrupted)
+   (let (timeout)
      (cl-letf (((symbol-function 'run-at-time)
-                (lambda (_time _repeat callback) (setq timeout callback) nil))
-               ((symbol-function 'tts--interrupt-process)
-                (lambda (process &optional _all) (push process interrupted))))
+                (lambda (_time _repeat callback) (setq timeout callback) nil)))
        (tts-preview-voices (list (emacsvox-test--complete-preview-entry))
-                           (lambda (value) (push value results)))
+                          (lambda (value) (push value results)))
        (funcall timeout)
        (funcall timeout)
        (should (= (length results) 1))
        (should (eq (plist-get (car results) :status) 'failed))
-       (should (equal interrupted (list speaker)))
+       (should (= stops 2))
        (should-not tts-stopped-hook)
        (should (zerop (hash-table-count (omnivox--pending-requests speaker))))))))
 
@@ -603,22 +603,22 @@
     (should (gethash 42 (omnivox--pending-requests speaker)))))
 
 (ert-deftest emacsvox-tts-complete-preview-timeout-callback-can-start-replacement ()
-  "Cleanup must not interrupt speech started by the user's terminal callback."
+  "The old timeout interrupts before its callback can start a replacement."
   (emacsvox-test--with-complete-preview
-    (let (timeout interrupted)
+    (let (timeout stops-at-callback)
       (cl-letf (((symbol-function 'run-at-time)
-                 (lambda (_time _repeat callback) (setq timeout callback) nil))
-                ((symbol-function 'tts--interrupt-process)
-                 (lambda (&rest _) (setq interrupted t))))
+                 (lambda (_time _repeat callback) (setq timeout callback) nil)))
         (tts-preview-voices
          (list (emacsvox-test--complete-preview-entry))
          (lambda (value)
+           (setq stops-at-callback stops)
            (push value results)
            (tts-preview-voices (list (emacsvox-test--complete-preview-entry t)) #'ignore)))
         (funcall timeout)
         (should (= (length results) 1))
         (should (gethash 42 (omnivox--pending-requests speaker)))
-        (should-not interrupted)))))
+        (should (= stops-at-callback 2))
+        (should (= stops 3))))))
 
 (ert-deftest emacsvox-tts-complete-preview-dead-owner-finishes-without-replay ()
   "Disconnect releases pending callbacks even when a later server is available."
@@ -668,8 +668,11 @@
           (cl-letf
               (((symbol-function 'tts-stop) #'ignore)
                ((symbol-function 'process-send-string)
-                (lambda (_process command) (push command writes))))
-            (omnivox-preview-voice-sequence
+                (lambda (_process command) (unless (equal command "s\n") (push command writes)))))
+            (set-process-coding-system process 'utf-8-unix 'utf-8-unix)
+          (tts-queue--install)
+          (process-put process 'tts-queue--state (tts-queue--make-state :queue 0 :framing 0))
+          (omnivox-preview-voice-sequence
              '((:text "same text"
                 :selector
                 (:kind exact :scope session
@@ -727,51 +730,55 @@
     (should (eq (plist-get result :status) 'failed))
     (should (string-match-p "requested exact" (plist-get result :message)))))
 
+(defun emacsvox-test--individual-preview-entry ()
+  "Return a synthetic exact audition with no inventory prediction."
+  '(:text "sample" :selector (:kind exact :engine-id "test" :voice-id "one")))
+
+(defun emacsvox-test--individual-preview-response (id &optional status)
+  "Return a decoded legacy terminal for ID with STATUS."
+  (list :protocol_version 1 :request_id id :type "preview_completed"
+        :status (or status "completed") :realized '(:engine_id "test" :voice_id "one")
+        :degraded_acss nil :degraded_effects nil :message nil))
+
 (ert-deftest emacsvox-tts-omnivox-preview-failure-stops-the-sequence ()
-  "An unavailable sample ends a sequence with a failed terminal result."
-  (let ((tts-stopped-hook nil) calls result)
-    (cl-letf (((symbol-function 'tts-stop) #'ignore)
-              ((symbol-function 'omnivox--preview-one)
-               (lambda (entry callback)
-                 (push entry calls) (funcall callback '(:status failed)))))
-      (omnivox-preview-voice-sequence '(first second) (lambda (value) (setq result value)))
-      (should (equal calls '(first)))
-      (should (eq (plist-get result :status) 'failed))
-      (should-not tts-stopped-hook))))
+  "An unavailable sample ends a sequence without submitting the second entry."
+  (emacsvox-test--with-complete-preview
+   (omnivox-preview-voice-sequence
+    (make-list 2 (emacsvox-test--individual-preview-entry)) (lambda (value) (push value results)))
+   (omnivox--dispatch-control-response speaker (emacsvox-test--individual-preview-response 41 "failed"))
+   (should (= (length writes) 1))
+   (should (eq (plist-get (car results) :status) 'failed))
+   (should-not tts-stopped-hook)))
 
 (ert-deftest emacsvox-tts-omnivox-preview-stop-cancels-late-callbacks ()
-  "Only the preview owner cancels; late completion cannot start another sample."
-  (let ((tts-speaker-process 'main) (tts-stopped-hook nil)
-        callbacks submitted results)
-    (cl-letf (((symbol-function 'tts-stop) #'ignore)
-              ((symbol-function 'omnivox--preview-one)
-               (lambda (entry callback)
-                 (push entry submitted) (push callback callbacks))))
-      (omnivox-preview-voice-sequence '(first second)
-                                     (lambda (result) (push result results)))
-      (run-hook-with-args 'tts-stopped-hook 'notification)
-      (should-not results)
-      (run-hook-with-args 'tts-stopped-hook 'main)
-      (funcall (car callbacks) '(:status completed))
-      (should (equal submitted '(first)))
-      (should (= (length results) 1))
-      (should (eq (plist-get (car results) :status) 'cancelled))
-      (should-not tts-stopped-hook))))
+  "Only the preview owner cancels; a late completion cannot start another entry."
+  (emacsvox-test--with-complete-preview
+   (omnivox-preview-voice-sequence
+    (make-list 2 (emacsvox-test--individual-preview-entry)) (lambda (value) (push value results)))
+   (let ((late (gethash 41 (omnivox--pending-requests speaker))))
+     (run-hook-with-args 'tts-stopped-hook notifier)
+     (should-not results)
+     (tts-stop)
+     (funcall late speaker (emacsvox-test--individual-preview-response 41))
+     (should (= (length writes) 1))
+     (should (= (length results) 1))
+     (should (eq (plist-get (car results) :status) 'cancelled))
+     (should-not tts-stopped-hook)
+     (should (zerop (hash-table-count (omnivox--pending-requests speaker)))))))
 
 (ert-deftest emacsvox-tts-omnivox-preview-later-error-cleans-up ()
-  "A request error following an asynchronous completion finishes exactly once."
-  (let ((tts-speaker-process 'main) (tts-stopped-hook nil) callback results)
-    (cl-letf (((symbol-function 'tts-stop) #'ignore)
-              ((symbol-function 'omnivox--preview-one)
-               (lambda (entry continuation)
-                 (if (eq entry 'first) (setq callback continuation)
-                   (error "Preview unavailable")))))
-      (omnivox-preview-voice-sequence '(first second)
-                                     (lambda (result) (push result results)))
-      (should-error (funcall callback '(:status completed)))
-      (should (= (length results) 1))
-      (should (eq (plist-get (car results) :status) 'failed))
-      (should-not tts-stopped-hook))))
+  "A later write error ends the exact sequence and releases its reservation."
+  (emacsvox-test--with-complete-preview
+   (omnivox-preview-voice-sequence
+    (make-list 2 (emacsvox-test--individual-preview-entry)) (lambda (value) (push value results)))
+   (cl-letf (((symbol-function 'omnivox--preview-command)
+              (lambda (&rest _) (error "Later encoding failure"))))
+     (should-error (omnivox--dispatch-control-response
+                    speaker (emacsvox-test--individual-preview-response 41))))
+   (should (= (length results) 1))
+   (should (eq (plist-get (car results) :status) 'failed))
+   (should-not tts-stopped-hook)
+   (should (zerop (hash-table-count (omnivox--pending-requests speaker))))))
 
 (ert-deftest emacsvox-tts-omnivox-old-preview-omits-relative-rate-visibly ()
   "An older Omnivox is never sent an absolute fallback rate."
@@ -788,8 +795,11 @@
     (unwind-protect
         (cl-letf
             (((symbol-function 'process-send-string)
-              (lambda (_process command) (push command writes)))
+              (lambda (_process command) (unless (equal command "s\n") (push command writes))))
              ((symbol-function 'tts-stop) #'ignore))
+          (set-process-coding-system process 'utf-8-unix 'utf-8-unix)
+          (tts-queue--install)
+          (process-put process 'tts-queue--state (tts-queue--make-state :queue 0 :framing 0))
           (omnivox-preview-voice-sequence
            '((:text "relative preview"
               :selector
@@ -832,8 +842,11 @@
     (unwind-protect
         (cl-letf
             (((symbol-function 'process-send-string)
-              (lambda (_process command) (push command writes)))
+              (lambda (_process command) (unless (equal command "s\n") (push command writes))))
              ((symbol-function 'tts-stop) #'ignore))
+          (set-process-coding-system process 'utf-8-unix 'utf-8-unix)
+          (tts-queue--install)
+          (process-put process 'tts-queue--state (tts-queue--make-state :queue 0 :framing 0))
           (omnivox-preview-voice-sequence
            (list
             '(:text "effect preview"

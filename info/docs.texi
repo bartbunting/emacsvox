@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 288 loaded; 0 intentionally omitted.
+@c Modules: 289 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -56,10 +56,10 @@
 @c Loaded: emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc
 @c Loaded: emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc
 @c Loaded: gm-nnir.elc gmaps.elc gweb.elc ladspa.elc light.elc
-@c Loaded: mac-voices.elc omaps.elc omnivox-choice-codec.elc omnivox-remote.elc omnivox-voices.elc
-@c Loaded: outloud-voices.elc pip.elc plain-voices.elc soundscape.elc sox-gen.elc
-@c Loaded: sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc tts-speak.elc
-@c Loaded: voice-defs.elc voice-setup.elc xbacklight.elc
+@c Loaded: mac-voices.elc omaps.elc omnivox-choice-codec.elc omnivox-preview.elc omnivox-remote.elc
+@c Loaded: omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc soundscape.elc
+@c Loaded: sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc
+@c Loaded: tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -343,6 +343,7 @@ This chapter documents a total of 1561 commands and 207 options.
 * mac-voices:: Define  Mac tags.
 * omaps:: Open street  Maps.
 * omnivox-choice-codec:: Individual voice wire values.
+* omnivox-preview:: Owned Omnivox preview sequences.
 * omnivox-remote:: Workstation speech transport.
 * omnivox-voices:: Omnivox voice adapter.
 * outloud-voices:: Define  OutLoud tags.
@@ -24486,6 +24487,13 @@ https://nominatim.org/
 Pure conversions for the negotiated per-choice voice bundle.  Raw saved
 values retain presence until conversion; contextual nil keeps its existing
 ACSS meaning.  Physical route selection belongs to the server.
+
+@node omnivox-preview
+@section omnivox-preview
+
+Complete and individual samples share process ownership, guarded startup,
+bounded preparation and unwind-safe control reservations. Draft projection
+and wire-version-specific normalization remain in omnivox-voices.el.
 
 @node omnivox-remote
 @section omnivox-remote

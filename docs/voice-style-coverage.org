@@ -179,9 +179,12 @@ source observations reproduce lost row/context information, competing preview
 owners, nonlocal leaks, recursive early-response advancement and stale view
 updates. Forty independent expected cases cover projection, lifecycle, evidence
 and compatibility; existing pure validators check fixture consistency only.
-Return to High for the common coordinator and startup guard, strict v2 previews,
-then optional controls and experiment keeps. No runtime fix is claimed by this
-review, and no new product decision is required.
+The maintainer resumed at High. The common coordinator and startup guard are
+implemented: sixteen new connected contracts and all 582 selected tests pass.
+Muted local and private-loopback checks verify fallback comparison, exact sample,
+Stop cleanup and reconnect with notification isolation. Six diagnostic gaps in
+projection/view/decoder behavior remain; strict v2 previews, optional controls
+and experiment keeps are next. No new product decision is required.
 
 Eight new consumer contracts and all 490 selected source tests pass. Fresh
 compiled verification includes the same eight cases. The compiled fixture loads

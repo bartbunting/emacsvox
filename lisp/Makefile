@@ -63,6 +63,7 @@ outloud-voices.elc \
 mac-voices.elc \
 swiftmac-voices.elc \
 omnivox-choice-codec.elc \
+omnivox-preview.elc \
 omnivox-voices.elc
 
 TTS_OBJECTS = \
@@ -391,7 +392,8 @@ emacsvox-aural-voice-editing.elc: emacsvox-aural-voice-drafts.elc emacsvox-aural
 emacsvox-aural-voice-editor.elc: emacsvox-aural-voice-editing.elc emacsvox-aural-voice-workbench.elc
 emacsvox-aural-voice-context.elc: emacsvox-aural-voice-editor.elc emacsvox-aural-editor.elc emacsvox-aural-tools.elc
 omnivox-choice-codec.elc: emacsvox-aural-rules.elc emacsvox-aural-routing-profiles.elc
-omnivox-voices.elc: voice-defs.elc emacsvox-aural-voice-runtime.elc omnivox-choice-codec.elc
+omnivox-preview.elc: tts-queue-state.elc omnivox-choice-codec.elc
+omnivox-voices.elc: voice-defs.elc emacsvox-aural-voice-runtime.elc omnivox-choice-codec.elc omnivox-preview.elc
 emacsvox-aural-profile-service.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
 emacsvox-aural-compatibility-voice.elc: emacsvox-aural.elc

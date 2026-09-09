@@ -28,6 +28,11 @@ stop at their limits and announce minimum or maximum, and the automatic-sample
 toggle announces on or off. Arrow and Tab navigation stop at the first and
 last fields without wrapping around the editor.
 
+Complete voice comparisons and individual auditions now share cancellation
+handling. Stop and newer previews retire the previous sample's pending work;
+late replies cannot start another comparison entry. Individual auditions also
+have a playback timeout. A failed or interrupted write is never replayed.
+
 ** Omnivox 1.9.0 minimum for voice previews
 
 Omnivox 1.9.0 or newer is now the supported speech-server baseline for complete

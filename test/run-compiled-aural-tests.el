@@ -49,6 +49,7 @@
           "mac-voices.el"
           "swiftmac-voices.el"
           "omnivox-choice-codec.el"
+          "omnivox-preview.el"
           "omnivox-voices.el"
           "emacsvox-pronounce.el"
           "emacsvox-speak.el"

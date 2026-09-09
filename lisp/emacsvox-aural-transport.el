@@ -50,7 +50,7 @@
                   "omnivox-voices" (value))
 (declare-function tts--protocol-dispatch "tts-speak" ())
 (declare-function tts--interrupt-process "tts-speak"
-                  (process &optional notifications preserved))
+                  (process &optional notifications preserved preview))
 (declare-function tts--preparation-check "tts-speak" (&optional preparation))
 (declare-function tts--preparation-interrupt "tts-speak" (process))
 (declare-function tts--preparation-before-delivery "tts-speak" (process))
