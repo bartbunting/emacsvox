@@ -702,28 +702,71 @@
         (should (assq 'renamed entries))
         (should-not (assq 'custom-voice entries))))))
 
-(ert-deftest emacsvox-aural-voice-palette-preview-rename-protects-mappings-and-standards ()
-  "Registered mappings, standard names and inherited voices stop before saving."
+(ert-deftest emacsvox-aural-voice-palette-preview-rename-updates-mappings ()
+  "Personal mappings survive restart; live maps and nested requests follow the rename."
+  (dolist (request '(custom-voice (:preset custom-voice :echo 3)))
+    (emacsvox-test--with-voice-rename
+      (let* ((rules `((:id custom-voice :match (:legacy-face bold)
+                      :render (:content (:voice ,request)))))
+             (emacsvox-aural-user-rules (copy-tree rules))
+             (emacsvox-aural-session-rules (copy-tree rules))
+             (voice-setup-face-voice-table (make-hash-table :test #'eq))
+             (source (generate-new-buffer " *rename mapping*"))
+             (before (emacsvox-aural-voice-runtime--resolve 'custom-voice 'reading)))
+        (unwind-protect
+            (progn
+              (puthash 'bold '(custom-voice voice-smoothen) voice-setup-face-voice-table)
+              (with-current-buffer source
+                (setq-local emacsvox-aural-buffer-rules (copy-tree rules))
+                (setq-local voice-setup-local-map (make-hash-table :test #'eq))
+                (puthash 'italic 'custom-voice voice-setup-local-map))
+              (emacsvox-aural-save-user-data)
+              (emacsvox-aural-voice-palette-previews-rename)
+              (let ((expected `((:id custom-voice :match (:legacy-face bold)
+                                 :render (:content (:voice ,(if (symbolp request) 'renamed
+                                                             '(:preset renamed :echo 3))))))))
+                (should (equal emacsvox-aural-user-rules expected))
+                (should (equal emacsvox-aural-session-rules expected))
+                (should (equal (plist-get (emacsvox-aural-read-user-data) :user-rules) expected))
+                (with-current-buffer source
+                  (should (equal emacsvox-aural-buffer-rules expected))
+                  (should (eq (gethash 'italic voice-setup-local-map) 'renamed))))
+              (should (equal (gethash 'bold voice-setup-face-voice-table) '(renamed voice-smoothen)))
+              (let ((after (emacsvox-aural-voice-runtime--resolve 'renamed 'reading)))
+                (dolist (field '(:definition :choices :selectors :language))
+                  (should (equal (plist-get before field) (plist-get after field))))))
+          (kill-buffer source))))))
+
+(ert-deftest emacsvox-aural-voice-palette-preview-rename-protects-external-uses-and-standards ()
+  "Separately maintained references, standard names and inherited voices stay protected."
   (emacsvox-test--with-voice-rename
     (let ((before (emacsvox-aural-read-user-data)))
-      (dolist (request '(custom-voice (:preset custom-voice :echo 3)))
-        (let ((emacsvox-aural-user-rules `((:id uses-custom :render (:content (:voice ,request))))))
-          (should-error (emacsvox-aural-voice-palette-previews-rename) :type 'user-error)))
-      (let ((voice-setup-face-voice-table (make-hash-table :test #'eq)))
-        (puthash 'bold 'custom-voice voice-setup-face-voice-table)
+      (let ((emacsvox-aural-session-routing-bindings '((custom-voice . route))))
         (should-error (emacsvox-aural-voice-palette-previews-rename) :type 'user-error))
       (dolist (voice '(bolden annotate))
         (should-error (emacsvox-aural-voice-palettes--check-voice-rename 'reading voice) :type 'user-error))
+      (emacsvox-aural-register-voice-palette-data
+       '(:schema-version 1 :id other :summary "Other" :parent nil
+         :entries ((custom-voice :personality voice-smoothen))))
+      (should-error (emacsvox-aural-voice-palette-previews-rename) :type 'user-error)
       (should (equal before (emacsvox-aural-read-user-data))))))
 
 (ert-deftest emacsvox-aural-voice-palette-preview-rename-failure-keeps-old-name ()
   "Either store failing leaves the old name usable and permits retrying r."
   (dolist (writer '(emacsvox-aural-routing--write-user-data emacsvox-aural--write-user-data))
     (emacsvox-test--with-voice-rename
-      (let ((before (emacsvox-aural-read-user-data)))
+      (let* ((emacsvox-aural-user-rules '((:id mapped :render (:content (:voice custom-voice)))))
+             (emacsvox-aural-session-rules (copy-tree emacsvox-aural-user-rules))
+             (voice-setup-face-voice-table (make-hash-table :test #'eq))
+             (_ (emacsvox-aural-save-user-data))
+             (before (emacsvox-aural-read-user-data)))
+        (puthash 'bold 'custom-voice voice-setup-face-voice-table)
         (cl-letf (((symbol-function writer) (lambda (&rest _) (error "Simulated rename failure"))))
           (should-error (emacsvox-aural-voice-palette-previews-rename) :type 'user-error))
         (should (equal before (emacsvox-aural-read-user-data)))
+        (should (eq (gethash 'bold voice-setup-face-voice-table) 'custom-voice))
+        (should (equal emacsvox-aural-user-rules (plist-get before :user-rules)))
+        (should (equal emacsvox-aural-session-rules emacsvox-aural-user-rules))
         (should (eq (tabulated-list-get-id) 'custom-voice))
         (should (assq 'custom-voice (emacsvox-aural-effective-voice-entries 'reading)))
         (should (eq (emacsvox-aural-voice-palette-previews-rename) 'renamed))))))
@@ -738,9 +781,13 @@
       (emacsvox-aural-voice-palette-previews-mode)
       (setq emacsvox-aural-voice-palette-previews-palette 'reading)
       (emacsvox-aural-voice-palette-previews-refresh 'aside)
-      (let ((before (emacsvox-aural-voice 'aside 'reading)))
+      (let ((before (emacsvox-aural-voice 'aside 'reading))
+            (emacsvox-aural-user-rules '((:id mapped :render (:content (:voice aside))))))
+        (emacsvox-aural-save-user-data)
         (emacsvox-aural-voice-palette-previews-rename)
         (should (equal before (emacsvox-aural-voice 'renamed 'reading)))
+        (should (equal (plist-get (emacsvox-aural-read-user-data) :user-rules)
+                       '((:id mapped :render (:content (:voice renamed))))))
         (should (eq 1 (plist-get (emacsvox-aural-voice-palette-data-form
                                   (emacsvox-aural-voice-palette 'reading)) :schema-version)))))))
 

@@ -5349,7 +5349,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
  -- Command: emacsvox-aural-voice-palette-previews-rename
 
-     Rename an unused custom voice defined directly in the personal palette.
+     Rename a personal custom voice and update its personal and live face mappings.
 
 2.60.1.18 emacsvox-aural-voice-palette-previews-set-text
 ........................................................

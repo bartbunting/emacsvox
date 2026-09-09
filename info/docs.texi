@@ -5829,7 +5829,7 @@ Refresh palette voices, preserving VOICE and the current column.
 @findex emacsvox-aural-voice-palette-previews-rename
 
 @format
-Rename an unused custom voice defined directly in the personal palette.
+Rename a personal custom voice and update its personal and live face mappings.
 @end format
 @end deffn
 
@@ -13857,6 +13857,7 @@ Launch a Librivox Search.
 (fn SEARCH-TYPE)
 @end format
 @end deffn
+
 @subsubsection emacsvox-librivox-play
 @deffn {Command} emacsvox-librivox-play  (rss-url)
 @findex emacsvox-librivox-play

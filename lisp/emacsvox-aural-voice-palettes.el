@@ -2404,6 +2404,13 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
                    :key (list 'copy palette name)
                    :watches (emacsvox-aural-voice-drafts--watch (list palette))))
            (proposal (emacsvox-aural-voice-drafts--prepare draft data sets :sources (list palette))))
+      (when rename
+        ;; The palette and its persistent mappings share one atomic file write.
+        (setf (emacsvox-aural-voice-save-aural-data proposal)
+              (let ((aural (copy-tree (emacsvox-aural-voice-save-aural-data proposal))))
+                (plist-put aural :user-rules
+                           (emacsvox-aural-voice-palettes--rename-references
+                            (plist-get aural :user-rules) source name)))))
       (emacsvox-aural-voice-drafts--save proposal)
       (unless (memq 'published (emacsvox-aural-voice-save-completed proposal))
         (user-error "%s did not complete (%s): %s. Retry %s; the original voice is unchanged"
@@ -2421,8 +2428,26 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
            (emacsvox-aural-voice-palettes--voice-reference-p (car data) voice)
            (emacsvox-aural-voice-palettes--voice-reference-p (cdr data) voice))))
 
+(defun emacsvox-aural-voice-palettes--rename-references (data old new)
+  "Copy presentation DATA, replacing explicit voice references from OLD to NEW."
+  (if (not (consp data)) data
+    (if (and (memq (car data) '(:voice :preset :personality))
+             (eq (cadr data) old))
+        (cons (car data)
+              (cons new (emacsvox-aural-voice-palettes--rename-references (cddr data) old new)))
+      (cons (emacsvox-aural-voice-palettes--rename-references (car data) old new)
+            (emacsvox-aural-voice-palettes--rename-references (cdr data) old new)))))
+
+(defun emacsvox-aural-voice-palettes--rename-face-map (table old new)
+  "Update live face TABLE values referring to OLD to use NEW."
+  (when (hash-table-p table)
+    (maphash (lambda (face value)
+               (puthash face (if (eq value old) new
+                              (if (consp value) (cl-subst new old value) value)) table))
+             table)))
+
 (defun emacsvox-aural-voice-palettes--check-voice-rename (palette voice)
-  "Reject renaming an inherited, standard or referenced VOICE in PALETTE."
+  "Reject renaming an inherited, standard or externally referenced VOICE in PALETTE."
   (let* ((record (emacsvox-aural-voice-palette palette))
          (data (emacsvox-aural-voice-palette-data-form record)))
     (when (emacsvox-aural-voice-palette-built-in record)
@@ -2437,10 +2462,11 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
                (assq voice (emacsvox-aural-effective-voice-entries
                             (emacsvox-aural-voice-palette-parent record))))
       (user-error "Renaming this override would reveal its inherited voice; copy it first")))
-  (emacsvox-aural-voice-palettes--check-voice-references voice "renaming"))
+  (emacsvox-aural-voice-palettes--check-voice-references voice "renaming" t))
 
-(defun emacsvox-aural-voice-palettes--check-voice-references (voice action)
-  "Reject ACTION when registered mappings or presets still use VOICE."
+(defun emacsvox-aural-voice-palettes--check-voice-references (voice action &optional remap)
+  "Reject ACTION when registered mappings or presets still use VOICE.
+When REMAP is non-nil, allow personal rules and live face mappings to migrate."
   (cl-labels ((check (data where)
                 (when (emacsvox-aural-voice-palettes--voice-reference-p data voice)
                   (user-error "Voice %s is used by %s; remap that use before %s" voice where action)))
@@ -2450,18 +2476,20 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
                              (when (memq voice (if (listp value) value (list value)))
                                (user-error "Voice %s is mapped to face %s in %s; remap it before %s"
                                            voice face where action))) table))))
-    (check emacsvox-aural-user-rules "personal rules")
-    (check emacsvox-aural-session-rules "session rules")
+    (unless remap
+      (check emacsvox-aural-user-rules "personal rules")
+      (check emacsvox-aural-session-rules "session rules"))
     (dolist (pair `((,emacsvox-aural-scheme-registry . emacsvox-aural-scheme-entry-data)
                     (,emacsvox-aural-module-fragment-registry . emacsvox-aural-module-fragment-data)
                     (,emacsvox-aural-feature-fragment-registry . emacsvox-aural-feature-fragment-entry-data)
                     (,emacsvox-aural-voice-palette-registry . emacsvox-aural-voice-palette-data-form)))
       (maphash (lambda (id entry) (check (funcall (cdr pair) entry) id)) (car pair)))
-    (faces (bound-and-true-p voice-setup-face-voice-table) "the global face map")
-    (dolist (buffer (buffer-list))
-      (with-current-buffer buffer
-        (check emacsvox-aural-buffer-rules (buffer-name))
-        (faces (bound-and-true-p voice-setup-local-map) (buffer-name))))
+    (unless remap
+      (faces (bound-and-true-p voice-setup-face-voice-table) "the global face map")
+      (dolist (buffer (buffer-list))
+        (with-current-buffer buffer
+          (check emacsvox-aural-buffer-rules (buffer-name))
+          (faces (bound-and-true-p voice-setup-local-map) (buffer-name)))))
     (when (or (assq voice emacsvox-aural-session-routing-bindings)
               (cl-loop for entry being the hash-values of emacsvox-aural-routing-profile-registry
                        thereis (assq voice (plist-get (emacsvox-aural-routing-profile-entry-data entry) :bindings))))
@@ -2539,7 +2567,7 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
     voice))
 
 (defun emacsvox-aural-voice-palette-previews-rename ()
-  "Rename an unused custom voice defined directly in the personal palette."
+  "Rename a personal custom voice and update its personal and live face mappings."
   (interactive)
   (require 'emacsvox-aural-voice-editor)
   (let* ((palette emacsvox-aural-voice-palette-previews-palette)
@@ -2548,14 +2576,39 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
          (drafts (emacsvox-aural-voice-palettes--rename-drafts palette))
          (new (emacsvox-aural-voice-palettes--read-new-entry-name palette (symbol-name old))))
     (emacsvox-aural-voice-palettes--check-voice-rename palette old)
-    (setq drafts (emacsvox-aural-voice-palettes--rename-drafts palette "deleting"))
-    (if (emacsvox-aural-voice-runtime--owned-p palette)
-        (emacsvox-aural-voice-palettes--copy-owned-voice palette old new t)
-      (let* ((data (emacsvox-aural-voice-palette-data-form (emacsvox-aural-voice-palette palette)))
-             (entry (assq old (plist-get data :entries))))
-        (setcar entry new)
-        (emacsvox-aural-voice-palettes--install-data data palette)
-        (emacsvox-aural-configuration-changed 'voice-renamed)))
+    (maphash
+     (lambda (id record)
+       (unless (eq id palette)
+         (let ((entries (plist-get (emacsvox-aural-voice-palette-data-form record) :entries)))
+           (when (or (assq old entries) (assq new entries))
+             (user-error "Voice %s or %s is also defined in palette %s; shared mappings cannot be renamed safely"
+                         old new id)))))
+     emacsvox-aural-voice-palette-registry)
+    (setq drafts (emacsvox-aural-voice-palettes--rename-drafts palette))
+    (let* ((rules (emacsvox-aural-voice-palettes--rename-references
+                   emacsvox-aural-user-rules old new))
+           (emacsvox-aural-configuration-changed-hook nil))
+      (let ((emacsvox-aural-user-rules rules))
+        (if (emacsvox-aural-voice-runtime--owned-p palette)
+            (emacsvox-aural-voice-palettes--copy-owned-voice palette old new t)
+          (let* ((data (emacsvox-aural-voice-palette-data-form (emacsvox-aural-voice-palette palette)))
+                 (entry (assq old (plist-get data :entries))))
+            (setcar entry new)
+            (emacsvox-aural-voice-palettes--install-data data palette))))
+      ;; Publish mappings only after persistence succeeds.
+      (setq emacsvox-aural-user-rules rules
+            emacsvox-aural-session-rules
+            (emacsvox-aural-voice-palettes--rename-references emacsvox-aural-session-rules old new))
+      (emacsvox-aural-voice-palettes--rename-face-map
+       (bound-and-true-p voice-setup-face-voice-table) old new)
+      (dolist (buffer (buffer-list))
+        (with-current-buffer buffer
+          (when (local-variable-p 'emacsvox-aural-buffer-rules)
+            (setq emacsvox-aural-buffer-rules
+                  (emacsvox-aural-voice-palettes--rename-references emacsvox-aural-buffer-rules old new)))
+          (emacsvox-aural-voice-palettes--rename-face-map
+           (bound-and-true-p voice-setup-local-map) old new))))
+    (emacsvox-aural-configuration-changed 'voice-renamed)
     (dolist (draft drafts)
       (let* ((key (emacsvox-aural-voice-draft-key draft))
              (context (gethash key emacsvox-aural-voice-editor--contexts)))
@@ -2626,7 +2679,7 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
       "SPC speak voice      t tune voice\n"
       "e also tunes; s also stops for compatibility\n"
       "c copy voice         N new voice\n"
-      "r rename an unused custom voice\n"
+      "r rename a custom voice and its mappings\n"
       "d delete direct voice, with confirmation\n"
       "Copy saves a new voice, including owned choices and individual tuning.\n"
       "E replace definition\n"

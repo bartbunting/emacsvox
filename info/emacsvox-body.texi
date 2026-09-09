@@ -2945,14 +2945,19 @@ leave a registered mapping without its voice@comma{} remap that use first.  Save
 discard unfinished voice edits before deleting.  An empty palette remains
 open; press @kbd{o} to return to the palette manager.
 
-Press @kbd{r} in the voice list to rename an unused custom voice
+Press @kbd{r} in the voice list to rename a custom voice
 defined directly in that personal palette.  Enter the new name to save it;
 the renamed voice keeps its settings@comma{} physical choices and individual tuning.
 Save or discard unfinished voice edits first.  Standard Emacsvox voice names
 cannot be renamed; copy one to create a custom voice.  For an inherited voice@comma{}
-copy it or rename it in its owning palette.  If a registered face mapping@comma{}
-presentation rule@comma{} preset or shared route uses the old name@comma{} update that use
-before renaming.  Renaming does not rewrite mappings across other palettes.
+copy it or rename it in its owning palette.  Renaming updates personal@comma{}
+session and buffer presentation rules@comma{} including face mappings@comma{} and loaded
+global and buffer face maps.  Personal rules and the voice are saved together;
+a failed save leaves the old name and mappings usable.  Face mappings declared
+in your own Lisp configuration must also be updated there for future sessions.
+References in separately maintained schemes@comma{} fragments@comma{} other voice definitions
+or shared routes still block the rename; update those uses first.  Renaming also
+stops if another palette directly defines either name@comma{} because mappings are shared.
 
 To rename a personal palette@comma{} select it in @emph{Voice Palettes}@comma{} press
 @kbd{r}@comma{} and enter its new name.  The rename is saved immediately.
