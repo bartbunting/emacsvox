@@ -40,7 +40,7 @@ class DebianPackageTests(unittest.TestCase):
         control = (self.extracted / "DEBIAN/control").read_text()
         self.assertIn("Architecture: all\n", control)
         self.assertIn("emacs-nox (>= 1:30.2)", control)
-        self.assertIn("Recommends: omnivox (>= 1.9.0)\n", control)
+        self.assertIn("Recommends: omnivox (>= 1.10.0)\n", control)
         self.assertNotIn("omnivox", control.split("Depends: ")[1].splitlines()[0])
         self.assertTrue((self.runtime / "lisp/emacsvox-loaddefs.el").is_file())
         self.assertFalse(list(self.runtime.rglob("*.elc")))

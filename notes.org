@@ -1,0 +1,8 @@
+
+
+how can you rename  a voice pallet
+
+
+in voice pallet using e to edit or create a voice:
+acs interface is confusing it would be much better in a layout like the tuner rather than a series of prompt.
+if you chose personality it gives an error.

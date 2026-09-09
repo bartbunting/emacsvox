@@ -25,7 +25,7 @@ available before installation at
 
 Debian packaging is new development work; Emacsvox 2026.9.2 predates it.
 Use a package from a release that includes one, or a locally built development
-package. Omnivox 1.9.0 includes an amd64 deb for supported Ubuntu systems.
+package. Omnivox 1.10.0 includes an amd64 deb for supported Ubuntu systems.
 
 With a downloaded Emacsvox deb, install it using apt:
 
@@ -42,7 +42,7 @@ satisfies this dependency. The package never builds GNU Emacs. If your
 distribution cannot provide a supported version, use the source installation
 route below, which offers an explicit Emacs 31 source build.
 
-Omnivox 1.9.0 or newer is recommended. If it is unavailable from your apt
+Omnivox 1.10.0 or newer is recommended. If it is unavailable from your apt
 repositories, include its downloaded deb in the same apt command, or select an
 existing installation. Confirm both tone and speech from ~emacsvox --check~.
 For remote Emacs or WSL with an existing Windows speech server, use
@@ -72,7 +72,7 @@ Install ~git~ so you can obtain the Emacsvox checkout.  Emacsvox requires
 package before beginning.  The guided installer below uses an existing
 supported Emacs, suggests a suitable package, or offers an explicit source build.
 
-On GNU/Linux and macOS, install Emacs 30.2 or newer and ~make~.  Omnivox 1.9.0
+On GNU/Linux and macOS, install Emacs 30.2 or newer and ~make~.  Omnivox 1.10.0
 or newer is the supported speech-server baseline.  Installing its release
 archive also requires ~curl~ and either ~sha256sum~ on GNU/Linux or ~shasum~
 on macOS, plus ~tar~.  GNU Texinfo is needed only when building or editing the
@@ -152,7 +152,7 @@ prints one ~apt~ command for you to review and run.  The installer never invokes
 #+end_example
 
 If you chose ~--build-emacs~, it prepares the pinned stable Emacs for your user.
-It then downloads and verifies the matching Omnivox 1.9.0 Windows archive, records its
+It then downloads and verifies the matching Omnivox 1.10.0 Windows archive, records its
 path without editing a shell startup file, compiles Emacsvox, runs a diagnostic,
 and plays the final speech-server check.  The Emacs build can take a while on
 a fresh machine; later runs reuse it and the verified downloads.  Routine
@@ -185,7 +185,7 @@ licensing boundaries.
 Use this route when Emacs runs on a Linux host and speech plays on your
 workstation through an SSH reverse forward.  It also works for remote-only
 Emacs under WSL, without Windows interoperability.  This is currently a
-preview feature. The workstation needs Omnivox 1.9.0 or newer, which includes
+preview feature. The workstation needs Omnivox 1.10.0 or newer, which includes
 the ~--serve~ option.
 
 After cloning Emacsvox on the Emacs host, run:
@@ -337,7 +337,7 @@ checked.  Continue to @@texinfo:@ref{Quick Installation}@@.
 
 On a matching GNU/Linux x86-64 or macOS host, follow
 @@texinfo:@ref{Installing An Omnivox Release Binary}@@.  That procedure downloads and
-verifies the published 1.9.0 archive, keeps its runtime data beside the
+verifies the published 1.10.0 archive, keeps its runtime data beside the
 executable, and adds its versioned installation directory to ~PATH~.  Then run:
 
 #+begin_example

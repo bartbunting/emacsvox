@@ -50,11 +50,12 @@ from spoken comparison labels and audio that was accepted but never started.
 Text changes, undo, save and context recapture retire stale previews. Earlier
 playback evidence cannot replace a newer view's result.
 
-** Omnivox 1.9.0 minimum for voice previews
+** Omnivox 1.10.0 minimum for fallback tuning
 
-Omnivox 1.9.0 or newer is now the supported speech-server baseline for complete
-voice previews. The guided Windows and WSL installers pin 1.9.0, together with
-matching optional engine modules, and Debian packages recommend that minimum.
+Omnivox 1.10.0 or newer is now the supported speech-server baseline for individual
+fallback tuning in speech and complete voice previews. The guided Windows and
+WSL installers pin 1.10.0, together with matching optional engine modules, and
+Debian packages recommend that minimum.
 
 Upgrade an existing Omnivox installation separately. Updating Emacsvox does
 not replace your selected server or install optional engine modules.
