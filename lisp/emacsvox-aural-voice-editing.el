@@ -294,6 +294,37 @@ Only a selected row may be composed; automatic selection cannot predict a row."
                         (when (null value) (push key defaults)))))
     (list :style style :defaults (nreverse defaults))))
 
+(defun emacsvox-aural-voice-editing--field-sources (entry choice-id)
+  "Explain raw ENTRY fields for confirmed CHOICE-ID, or nil for policy fallback.
+Return each layer's operation, the winning source and its requested value.
+These are requests, never inferred native values or acoustic measurements."
+  (let* ((entry (copy-tree entry))
+         (voice (plist-get entry :voice))
+         (row (and choice-id (cl-find choice-id (plist-get voice :choices)
+                                     :test #'equal :key (lambda (item) (plist-get item :id)))))
+         (shared (plist-get voice :shared))
+         (patch (plist-get row :adjustments))
+         (context (plist-get entry :context)))
+    (when (and choice-id (not row)) (user-error "Confirmed choice is absent from the captured request"))
+    (setq entry (plist-put entry :selection
+                           (if choice-id (list :mode 'choice :choice-id choice-id) '(:mode automatic))))
+    (let ((style (plist-get (emacsvox-aural-voice-editing--compose-preview entry) :style)))
+      (mapcar
+       (lambda (key)
+         (let ((choice-state (cond ((not (plist-member patch key)) 'inherit)
+                                   ((null (plist-get patch key)) 'default) (t 'value)))
+               (context-state (cond ((not (plist-member context key)) 'inherit)
+                                    ((plist-get context key) 'value)
+                                    ((memq key '(:average-pitch :pitch-range :stress :richness)) 'legacy-nil)
+                                    (t 'default))))
+           (list :dimension key :shared (plist-get shared key)
+                 :choice-state choice-state :choice (plist-get patch key)
+                 :context-state context-state :context (plist-get context key)
+                 :value (plist-get style key)
+                 :source (cond ((memq context-state '(default value)) 'context)
+                               ((not (eq choice-state 'inherit)) 'choice) (t 'shared)))))
+       emacsvox-aural-routing--choice-dimensions))))
+
 (defun emacsvox-aural-voice-editing--legacy-preview (entry)
   "Project private ENTRY faithfully onto an existing generic preview form.
 Refuse automatic previews of customized chains and unrepresentable row resets.

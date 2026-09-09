@@ -132,7 +132,9 @@ audio. Muted real-editor checks cover fallback, reordered comparison, sparse
 context, text cancellation and reconnect. Optional per-choice controls now
 provide explicit inheritance/default/numeric states and row-specific automatic
 samples; five additional contracts expand the selected matrix to 626 tests.
-Clearer source explanations, experiment keeps and spoken acceptance remain pending; this is not complete feature
+Field-source Details now explains frozen shared/actual-row/context values for
+the last confirmed sample; three more contracts bring the matrix to 629 tests.
+Experiment keeps and spoken acceptance remain pending; this is not complete feature
 delivery. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual

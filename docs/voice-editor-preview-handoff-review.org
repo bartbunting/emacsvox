@@ -10,7 +10,7 @@ decision is needed. The maintainer resumed at High. The first implementation
 slice now gives complete v1 and individual auditions one owned coordinator,
 guarded startup, deferred advancement and unwind-safe request cleanup. Private
 preview v2, pure projection and revision-aware view integration are implemented.
-Optional row controls are implemented. Clearer source explanations and experiment keeps remain pending. Continue the implementation
+Optional row controls are implemented. Field-source explanations are implemented. Experiment keeps remain pending. Continue the implementation
 slices below, stopping for a contract conflict or user spoken acceptance.
 
 All Emacsvox ADRs 0001–0017 and Omnivox ADRs 0001–0011 were read together.
@@ -457,3 +457,21 @@ The full byte-code rebuild regenerated all maintained Lisp; final review edits
 required the expected incremental refresh, which passed its byte-code preflight.
 Org preview, manual/reference regeneration, header and documentation release
 checks also pass. No runtime installation or live profile restart was performed.
+
+* Actual sample field sources at High
+
+A pure projector explains shared, actual-row and contextual operations and the
+winning requested value. Details and the context view use the last confirmed
+sample's frozen entry, including its original/edited variant. They preserve
+explicit defaults, zero, contextual ACSS nil and policy fallback without a row
+patch. Earlier results remain labelled; later draft edits cannot rewrite them.
+Reported engine omissions are attached to the corresponding field. Accepted
+PCM and comparison labels alone do not establish sample field sources.
+
+Three additional contracts bring the selected source matrix to 629 passing
+tests, covering duplicate physical rows, equal-to-shared context, nullable
+states, policy fallback, missing IDs, frozen results and label-only evidence.
+
+Fresh compiled parity and byte-code preflight pass. Org preview, tracked manual
+and reference regeneration, and the non-mutating documentation release check
+pass. This slice changes explanation only; preview transport is unchanged.

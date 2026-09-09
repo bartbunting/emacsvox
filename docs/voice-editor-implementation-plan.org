@@ -864,9 +864,18 @@ retain their existing behavior. Deleted rows cannot redirect an edit to shared
 settings, and prompts reject changes to their captured draft or scope.
 Five additional contracts expand the selected source matrix to 626 tests.
 
-**** TODO Complete explanations and experiment keeps
+**** DONE Explain actual sample field sources
 
-Continue at High with clearer field-source explanations and experiment keeps over the tested services. The
+Details and the context view explain the last confirmed sample's frozen shared,
+actual-row and sparse contextual requests. They identify the winning layer,
+explicit defaults, legacy contextual nil and unsupported fields. Comparison
+labels and accepted-only audio cannot supply a sample explanation. Later edits
+retain an explicitly earlier result and cannot rewrite its field sources.
+Three additional contracts expand the selected matrix to 629 passing tests.
+
+**** TODO Complete experiment keeps
+
+Continue at High with experiment keeps over the tested services. The
 [[file:voice-editor-preview-handoff-review.org][handoff]] specifies lifecycle, compatibility and evidence gates.
 Verify fresh compiled behavior, update current documentation and commit each
 completed slice. Stop for a real contract conflict or the spoken acceptance

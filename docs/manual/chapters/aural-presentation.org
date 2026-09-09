@@ -573,6 +573,14 @@ confirm that the sample started. Stop and text, draft or context changes retire
 pending previews; retained results are labelled /Earlier preview/. Saving and
 application status remain separate from playback evidence.
 
+/Details and last playback evidence/ explains the shared setting, actual row's
+override and contextual override for each field in the last confirmed sample.
+The context view offers /Where the last sample's settings came from/ after a
+preview. Explanations use that sample's captured settings, even after editing,
+and identify whether it was an original or edited sample. They distinguish
+inherited values, explicit defaults, zero and unsupported requests. These are
+requested settings, not measurements of the engine's native values or sound.
+
 Older Omnivox servers retain shared-only previews. Customized complete previews
 require per-choice support; an individual audition is available only when its
 settings can be represented faithfully, including adapter defaults. Saving

@@ -849,10 +849,60 @@ Select a faithful wire form before any entry interrupts foreground speech."
   (interactive)
   (let ((context emacsvox-aural-voice-editor--context))
     (with-help-window "*Voice editor details*"
+      (princ (emacsvox-aural-voice-editor--explain-playback (plist-get context :preview-result)))
+      (princ "\nStored definitions and diagnostic data\n")
       (princ (format "Base voice in %s; definition owner %s.\nShared settings are the base; each row can override individual fields.\nSelection after Save and apply lasts for this session. Use a Presentation Profile to retain it after restart.\n\nWorking voice: %S\n\nWorkstation policy: %S\n\nTemporary override: %S\n\nLast playback evidence: %S\n"
                      (plist-get context :palette) (plist-get context :owner)
                      (emacsvox-aural-voice-draft-working (plist-get context :draft))
                      (plist-get context :policy) (plist-get context :temporary) (plist-get context :preview-result))))))
+
+(defun emacsvox-aural-voice-editor--field-value (dimension value)
+  "Describe requested DIMENSION VALUE in displayed units, retaining zero."
+  (if (null value) "adapter default"
+    (let ((number (emacsvox-aural-voice-tuner--control-value dimension value))
+          (description (emacsvox-aural-voice-tuner--value-description dimension value)))
+      (if (equal (format "%s" number) description) description
+        (format "%s (%s)" number description)))))
+
+(defun emacsvox-aural-voice-editor--explain-playback (result)
+  "Explain RESULT's last confirmed sample using only its captured raw request."
+  (let* ((sample (and (eq (plist-get result :preview-kind) 'layered)
+                      (cl-find-if
+                       (lambda (item) (and (eq (plist-get (plist-get item :request-snapshot) :role) 'sample)
+                                          (plist-get item :last-started)))
+                       (reverse (plist-get result :results)))))
+         (entry (plist-get sample :request-snapshot))
+         (identity (plist-get sample :last-started))
+         (id (plist-get identity :choice_id))
+         (unsupported (append (plist-get identity :degraded_acss) (plist-get identity :degraded_effects) nil)))
+    (concat "Where the last sample's settings came from\n"
+            (if result (concat (emacsvox-aural-voice-editor--preview-status result) "\n") "No preview result.\n")
+            (if (not sample)
+                "No confirmed sample row is available for field-source details.\n"
+              (concat
+               (format "%s sample, using the settings captured for that request.\n"
+                       (capitalize (symbol-name (or (plist-get entry :variant) 'edited))))
+               "Shared settings, then the actual fallback row, then context; later explicit fields replace earlier ones.\n"
+               "These values describe composed requests, not measured native or acoustic values.\n"
+               (mapconcat
+                (lambda (field)
+                  (let* ((key (plist-get field :dimension))
+                         (dimension (intern (substring (symbol-name key) 1)))
+                         (value (lambda (item) (emacsvox-aural-voice-editor--field-value dimension item))))
+                    (format "%s: %s; source %s. Shared: %s; row: %s; context: %s.%s"
+                            (emacsvox-aural-voice-tuner--dimension-label dimension)
+                            (funcall value (plist-get field :value)) (plist-get field :source)
+                            (funcall value (plist-get field :shared))
+                            (pcase (plist-get field :choice-state)
+                              ('inherit (if (eq id :null) "policy fallback, no row patch" "use shared value"))
+                              ('default "explicit adapter default") (_ (funcall value (plist-get field :choice))))
+                            (pcase (plist-get field :context-state)
+                              ('inherit "no override") ('legacy-nil "explicit nil, retains underlying value")
+                              ('default "explicit adapter default") (_ (funcall value (plist-get field :context))))
+                            (if (member (replace-regexp-in-string "-" "_" (symbol-name dimension)) unsupported)
+                                " Unsupported by the engine that started this sample." ""))))
+                (emacsvox-aural-voice-editing--field-sources entry (unless (eq id :null) id)) "\n")
+               "\n")))))
 
 (defun emacsvox-aural-voice-editor--leave-choice ()
   "Resolve unsaved work before hiding or killing this editor."

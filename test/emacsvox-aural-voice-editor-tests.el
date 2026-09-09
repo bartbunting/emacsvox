@@ -675,5 +675,28 @@
      (should-not (plist-get style :richness))
      (should (= (plist-get style :average-pitch) 7)))))
 
+(ert-deftest emacsvox-aural-voice-editor-field-details-use-frozen-started-sample ()
+  (emacsvox-test--with-layered-editor
+   (emacsvox-aural-voice-editor-play)
+   (omnivox-preview-test--control-line speaker (omnivox-preview-test--terminal))
+   (let ((before (emacsvox-aural-voice-editor--explain-playback (emacsvox-aural-voice-editor--get :preview-result))))
+     (should (string-match-p "source choice" before))
+     (should (string-match-p "explicit adapter default" before))
+     (should (string-match-p "Unsupported by the engine" before))
+     (emacsvox-aural-voice-editor--set 'richness 2)
+     (let ((after (emacsvox-aural-voice-editor--explain-playback (emacsvox-aural-voice-editor--get :preview-result))))
+       (should (string-match-p "Earlier preview" after))
+       (should (equal after (replace-regexp-in-string "Preview completed" "Earlier preview completed" before)))))))
+
+(ert-deftest emacsvox-aural-voice-editor-field-details-ignore-labels-and-accepted-audio ()
+  (emacsvox-test--with-layered-editor
+   (let* ((entry (omnivox-preview-test--layered))
+          (result (list :preview-kind 'layered :status 'failed
+                        :results (list (list :request-snapshot (plist-put (copy-tree entry) :role 'label)
+                                             :last-started (omnivox-preview-test--identity))
+                                       (list :request-snapshot entry :accepted-audio '(accepted))))))
+     (should (string-match-p "No confirmed sample row" (emacsvox-aural-voice-editor--explain-playback result)))
+     (should-not (string-match-p "source choice" (emacsvox-aural-voice-editor--explain-playback result))))))
+
 (provide 'emacsvox-aural-voice-editor-tests)
 ;;; emacsvox-aural-voice-editor-tests.el ends here

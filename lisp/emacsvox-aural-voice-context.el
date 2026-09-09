@@ -211,7 +211,12 @@ Keep requested nil distinct from the ACSS transport's no-reset behavior."
     (emacsvox-aural-voice-editor--button 'return "Return to base voice editor" #'emacsvox-aural-voice-context-return)
     (when emacsvox-aural-voice-context--playback
       (let ((label (emacsvox-aural-voice-editor--preview-status emacsvox-aural-voice-context--playback)))
-        (emacsvox-aural-voice-editor--button 'playback label (lambda () (emacsvox-aural-ui-speak label)))))
+        (emacsvox-aural-voice-editor--button 'playback label (lambda () (emacsvox-aural-ui-speak label))))
+      (emacsvox-aural-voice-editor--button
+       'playback-details "Where the last sample's settings came from"
+       (lambda ()
+         (let ((explanation (emacsvox-aural-voice-editor--explain-playback emacsvox-aural-voice-context--playback)))
+           (with-help-window "*Voice context playback details*" (princ explanation))))))
     (emacsvox-aural-voice-editor--locate field)))
 
 (defun emacsvox-aural-voice-context--preview (compare)
