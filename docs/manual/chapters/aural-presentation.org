@@ -553,6 +553,18 @@ the same physical voice. A newly added row has no original to compare yet;
 audition it or compare the complete voice instead. Replacing a customized
 physical voice asks whether to keep its settings or return to shared settings.
 
+Choose /Customize this voice/ in that row's menu for optional individual tuning.
+The panel names the physical voice it edits. Each field says /use shared value/,
+/custom value/, or /explicit adapter default/. =RET= offers all three states;
+left/right sets a number, =d= restores adapter default, and =i= returns the field
+to its shared value. Zero is an explicit setting. Later shared edits affect only
+inherited fields. /More adjustments and effects/ reveals the additional controls.
+Automatic samples speak the value or state before the sample and audition this
+row. /Play whole fallback chain/ checks normal selection. Use /Return to shared
+settings/ to leave individual tuning; all edits belong to the same voice draft
+and the same Save action. Removing a row disables its controls until undo or a
+return to shared settings.
+
 With Omnivox's per-choice tuning support, complete previews retain the full
 fallback chain and each row's settings. /Last sample playback started on …/
 identifies the engine and physical voice whose audio started. Audio merely

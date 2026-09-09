@@ -853,10 +853,20 @@ context and text cancellation through foreground reconnect without changing the
 notification lane. Compiled and documentation gates are recorded in the handoff
 report. No live profile was restarted or personal configuration changed.
 
-**** TODO Complete optional controls and explanations
+**** DONE Optional per-choice controls
 
-Continue at High with optional per-choice controls, clearer field-source
-explanations and experiment keeps over the tested services. The
+The normal editor remains shared by default. Each fallback row offers optional
+customization with explicit inheritance, native default and numeric states.
+The same draft and save coordinator own the changes. Automatic samples and
+comparison select the stable row, retaining the full chain in the request;
+a separate button previews automatic fallback. Limits and low-pass display units
+retain their existing behavior. Deleted rows cannot redirect an edit to shared
+settings, and prompts reject changes to their captured draft or scope.
+Five additional contracts expand the selected source matrix to 626 tests.
+
+**** TODO Complete explanations and experiment keeps
+
+Continue at High with clearer field-source explanations and experiment keeps over the tested services. The
 [[file:voice-editor-preview-handoff-review.org][handoff]] specifies lifecycle, compatibility and evidence gates.
 Verify fresh compiled behavior, update current documentation and commit each
 completed slice. Stop for a real contract conflict or the spoken acceptance

@@ -10,7 +10,7 @@ decision is needed. The maintainer resumed at High. The first implementation
 slice now gives complete v1 and individual auditions one owned coordinator,
 guarded startup, deferred advancement and unwind-safe request cleanup. Private
 preview v2, pure projection and revision-aware view integration are implemented.
-Optional controls, clearer source explanations and experiment keeps remain pending. Continue the implementation
+Optional row controls are implemented. Clearer source explanations and experiment keeps remain pending. Continue the implementation
 slices below, stopping for a contract conflict or user spoken acceptance.
 
 All Emacsvox ADRs 0001–0017 and Omnivox ADRs 0001–0011 were read together.
@@ -285,8 +285,8 @@ save recovery. This implements accepted behavior rather than changing storage.
    independent [[file:../test/fixtures/voice-editor/preview-handoff.el][handoff cases]] and the existing [[file:../test/fixtures/voice-editor/fallback-tuning-wire.json][paired wire fixture]], including
    duplicate physical voices, missing originals, nullable fields, truncated
    last-started evidence, no silent old-server flattening and metadata changes.
-3. IN PROGRESS: Context/view generations are implemented. Add per-choice controls,
-   clearer field-source Details and experiment keeps
+3. IN PROGRESS: Context/view generations and per-choice controls are implemented.
+   Add clearer field-source Details and experiment keeps
    over these services. Test spoken labels, boundaries, save/dirty status and
    retained drafts through both entry paths. Verify actual fallback and context
    parity with a muted real server locally and over private loopback, including
@@ -434,3 +434,26 @@ non-mutating documentation release check, header check and fixture consistency
 check pass. No live
 profile was restarted or runtime installed. Optional tuning controls, clearer
 source explanations, experiment keeps and the spoken walkthrough remain open.
+
+* Optional row controls at High
+
+The common editor now opens an individual row through /Customize this voice/.
+It labels inheritance, explicit adapter default and custom numeric values;
+=RET= offers those states, =i= restores inheritance, and =d= requests the adapter
+default. Automatic samples and comparisons use the selected stable row. A
+separate action previews the whole chain. The same authoritative draft, undo and
+save coordinator retain all changes. Deleted rows disable their adjustment
+fields and cannot redirect edits into shared settings. Prompts reject a changed
+draft or tuning scope before installing input.
+
+Five further contracts bring the selected matrix to 626 passing tests. They
+cover states and preservation, raw v2 operations and spoken value prefixes,
+reorder/deletion/undo, prompt reentrancy and every numeric field's boundaries.
+The compiled suite passes. Fresh compiled muted local and authenticated-loopback
+runs verify row zero/default/numeric samples, fallback, comparison after reorder,
+sparse context, cancellation, lane isolation and foreground reconnect.
+
+The full byte-code rebuild regenerated all maintained Lisp; final review edits
+required the expected incremental refresh, which passed its byte-code preflight.
+Org preview, manual/reference regeneration, header and documentation release
+checks also pass. No runtime installation or live profile restart was performed.

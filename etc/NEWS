@@ -8,6 +8,12 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox Unreleased --- Current User-Visible Changes
 
+** Optional fallback tuning
+Choose Customize this voice from an editor fallback row to set individual
+adjustments, use the shared value, or restore the adapter default. Automatic
+samples audition that row; the same voice draft and Save action own all changes.
+
+
 Released notes are preserved in [[file:NEWS-2026.9.4][NEWS for Emacsvox 2026.9.4]].
 
 ** Tracked speech handles early playback replies

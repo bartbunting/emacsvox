@@ -385,6 +385,8 @@
                       omnivox--preview-sequence
                       omnivox--preview-drive
                       omnivox--preview-token-operation
+                      emacsvox-aural-voice-editor--set-choice
+                      emacsvox-aural-voice-editor--tuning-style
                       emacsvox-aural-voice-editor--submit-preview
                       emacsvox-aural-voice-context--preview
                       emacsvox-aural-voice-editing--cascade

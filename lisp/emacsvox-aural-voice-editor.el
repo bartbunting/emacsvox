@@ -26,8 +26,8 @@
 ;;; Commentary:
 
 ;; One view for named voices and physical experiments, backed by retained
-;; session drafts and the acknowledged save coordinator.  Shared tuning is
-;; explicit; individual fallback adjustments are intentionally not advertised.
+;; session drafts and the acknowledged save coordinator.  Shared tuning is the
+;; default; optional row tuning preserves inheritance and native defaults.
 
 ;;; Code:
 
@@ -247,7 +247,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
   "Describe DIMENSION's value, change and advertised support for CHAIN."
   (let* ((key (emacsvox-aural--voice-dimension-key dimension))
          (value (plist-get style key))
-         (baseline (emacsvox-aural-voice-editing--style
+         (baseline (emacsvox-aural-voice-editor--tuning-style
                     (emacsvox-aural-voice-draft-baseline (emacsvox-aural-voice-editor--draft))
                     (emacsvox-aural-voice-editor--get :palette)))
          (engine (cl-find (plist-get (car chain) :engine-id)
@@ -256,13 +256,76 @@ Select a faithful wire form before any entry interrupts foreground speech."
          (emacsvox-aural-voice-tuner-route-engine engine)
          (emacsvox-aural-voice-tuner-route-selector (car chain)))
     (concat (emacsvox-aural-voice-tuner--dimension-label dimension) ": "
+            (when (emacsvox-aural-voice-editor--get :tuning-choice)
+              (let ((patch (plist-get (emacsvox-aural-voice-editor--tuning-row) :adjustments)))
+                (cond ((not (plist-member patch key)) "use shared value — ")
+                      ((null (plist-get patch key)) "explicit ")
+                      (t "custom value — "))))
             (emacsvox-aural-voice-tuner--value-description dimension value)
-            (unless (equal value (plist-get baseline key))
+            (unless (and (equal value (plist-get baseline key))
+                         (or (not (emacsvox-aural-voice-editor--get :tuning-choice))
+                             (let* ((old (plist-get (emacsvox-aural-voice-editor--tuning-row
+                                                    (emacsvox-aural-voice-draft-baseline (emacsvox-aural-voice-editor--draft))) :adjustments))
+                                    (new (plist-get (emacsvox-aural-voice-editor--tuning-row) :adjustments)))
+                               (equal (and (plist-member old key) (list (plist-get old key)))
+                                      (and (plist-member new key) (list (plist-get new key)))))))
               (format " [changed; was %s]" (emacsvox-aural-voice-tuner--value-description dimension (plist-get baseline key))))
             (cond ((eq dimension 'family) " [portable fallback; not part of full preview]")
                   ((and engine (not (emacsvox-aural-voice-tuner--supported-p dimension)))
-                   " [unsupported by the preferred engine; value retained]")
+                   (if (emacsvox-aural-voice-editor--get :tuning-choice)
+                       " [unsupported by this engine; value retained]"
+                     " [unsupported by the preferred engine; value retained]"))
                   ((and chain (not engine)) " [engine support not known]")))))
+
+(defun emacsvox-aural-voice-editor--tuning-row (&optional snapshot)
+  "Return the selected row in SNAPSHOT, or nil when absent or editing shared."
+  (when-let* ((id (emacsvox-aural-voice-editor--get :tuning-choice)))
+    (cl-find id (emacsvox-aural-voice-editing--rows
+                 (or snapshot (emacsvox-aural-voice-editor--working)))
+             :test #'equal :key (lambda (row) (plist-get row :id)))))
+
+(defun emacsvox-aural-voice-editor--tuning-style (snapshot palette)
+  "Return raw shared or selected-row settings in SNAPSHOT from PALETTE."
+  (let ((style (emacsvox-aural-voice-editing--style snapshot palette))
+        (patch (copy-tree (plist-get (emacsvox-aural-voice-editor--tuning-row snapshot) :adjustments))))
+    (while patch (setq style (plist-put style (pop patch) (pop patch))))
+    style))
+
+(defun emacsvox-aural-voice-editor--customize (id)
+  "Open optional tuning for stable ID, or return to shared settings for nil."
+  (when (and id (not (cl-find id (emacsvox-aural-voice-editing--rows (emacsvox-aural-voice-editor--working))
+                            :test #'equal :key (lambda (row) (plist-get row :id)))))
+    (user-error "This fallback row no longer exists"))
+  (emacsvox-aural-voice-editor-stop)
+  (emacsvox-aural-voice-editor--put :tuning-choice id)
+  (emacsvox-aural-voice-editor-refresh)
+  (emacsvox-aural-voice-editor--locate (if id 'tuning-scope 'fallbacks))
+  (emacsvox-aural-voice-editor-speak))
+
+(defun emacsvox-aural-voice-editor--inherit ()
+  "Make the selected row's current dimension follow shared settings."
+  (interactive)
+  (emacsvox-aural-voice-editor--set-choice
+   (or (get-text-property (point) 'voice-dimension) (user-error "Choose an adjustment field"))
+   'inherit nil))
+
+(defun emacsvox-aural-voice-editor--set-choice (dimension operation value)
+  "Apply OPERATION and stored VALUE to the selected row's DIMENSION."
+  (let* ((id (or (emacsvox-aural-voice-editor--get :tuning-choice) (user-error "Choose a fallback to customize first")))
+         (snapshot (emacsvox-aural-voice-editor--working))
+         (rows (emacsvox-aural-voice-data--adjust-choice
+                (emacsvox-aural-voice-editing--rows snapshot) id
+                (emacsvox-aural--voice-dimension-key dimension) operation value)))
+    (emacsvox-aural-voice-editor--changed
+     (plist-put snapshot :choices rows)
+     (pcase operation
+       ('inherit (format "Use shared value, %s"
+                         (emacsvox-aural-voice-tuner--value-description
+                          dimension (plist-get (emacsvox-aural-voice-editing--style snapshot
+                                                (emacsvox-aural-voice-editor--get :palette))
+                                               (emacsvox-aural--voice-dimension-key dimension)))))
+       ('default "Adapter default")
+       (_ (format "%s" (emacsvox-aural-voice-tuner--control-value dimension value)))))))
 
 (defun emacsvox-aural-voice-editor--preview-status (result)
   "Describe RESULT without confusing spoken labels or accepted audio with starts."
@@ -313,7 +376,9 @@ Select a faithful wire form before any entry interrupts foreground speech."
          (snapshot (emacsvox-aural-voice-editor--working))
          (palette (emacsvox-aural-voice-editor--get :palette))
          (voice (emacsvox-aural-voice-editor--get :voice))
-         (style (emacsvox-aural-voice-editing--style snapshot palette))
+         (tuning (emacsvox-aural-voice-editor--get :tuning-choice))
+         (row (emacsvox-aural-voice-editor--tuning-row snapshot))
+         (style (emacsvox-aural-voice-editor--tuning-style snapshot palette))
          (chain (plist-get snapshot :selectors))
          (inhibit-read-only t))
     (erase-buffer)
@@ -367,23 +432,39 @@ Select a faithful wire form before any entry interrupts foreground speech."
                         (plist-get (emacsvox-aural-voice-editor--get :policy) :engine-order)
                         (plist-get (plist-get (emacsvox-aural-voice-editor--get :policy) :fallback) :engines))))
       )
-    (insert "\nShared adjustments\n")
+    (insert (if tuning "\nIndividual fallback adjustments\n" "\nShared adjustments\n"))
+    (when tuning
+      (emacsvox-aural-voice-editor--button
+       'tuning-scope
+       (if row (format "Customizing choice %d, %s; return to shared settings"
+                       (1+ (cl-position tuning (emacsvox-aural-voice-editing--rows snapshot)
+                                         :test #'equal :key (lambda (item) (plist-get item :id))))
+                       (emacsvox-aural-voice-workbench--selector-description (plist-get row :selector)))
+         "This fallback was removed; return to shared settings")
+       (lambda () (emacsvox-aural-voice-editor--customize nil))))
     (insert "Left/right adjusts numeric fields; otherwise moves between fields.\n"
             "RET edits a value; d restores adapter default. Zero is an explicit value.\n")
-    (dolist (dimension (append '(rate-offset average-pitch pitch-range stress richness)
+    (when tuning (insert "RET also offers Use shared value; i restores inheritance. Only this row changes.\n"))
+    (dolist (dimension (unless (and tuning (null row))
+                        (append '(rate-offset average-pitch pitch-range stress richness)
                                (when (emacsvox-aural-voice-editor--get :effects)
-                                 '(family gain low-pass high-pass pan reverb echo chorus))))
+                                 (append (unless tuning '(family))
+                                         '(gain low-pass high-pass pan reverb echo chorus))))))
       (let ((field dimension))
         (emacsvox-aural-voice-editor--button dimension
-                                             (emacsvox-aural-voice-editor--adjustment-text dimension style chain)
+                                             (emacsvox-aural-voice-editor--adjustment-text
+                                              dimension style (if tuning (list (plist-get row :selector)) chain))
                                              (lambda () (emacsvox-aural-voice-editor-edit field)) dimension)))
     (emacsvox-aural-voice-editor--button 'more
                                          (format "More adjustments and effects: %s"
                                                  (if (emacsvox-aural-voice-editor--get :effects) "expanded" "collapsed"))
                                          (lambda () (emacsvox-aural-voice-editor--toggle :effects 'more)))
     (insert "\nListen — base voice, without contextual rules\n")
-    (emacsvox-aural-voice-editor--button 'play "Play edited" #'emacsvox-aural-voice-editor-play)
-    (emacsvox-aural-voice-editor--button 'compare "Compare original and edited" #'emacsvox-aural-voice-editor-compare)
+    (emacsvox-aural-voice-editor--button 'play (if tuning "Audition this choice" "Play edited") #'emacsvox-aural-voice-editor-play)
+    (emacsvox-aural-voice-editor--button 'compare (if tuning "Compare original and edited choice" "Compare original and edited") #'emacsvox-aural-voice-editor-compare)
+    (when tuning
+      (emacsvox-aural-voice-editor--button 'play-chain "Play whole fallback chain"
+                                            (lambda () (emacsvox-aural-voice-editor--preview nil))))
     (emacsvox-aural-voice-editor--button 'stop "Stop sample" #'emacsvox-aural-voice-editor-stop)
     (emacsvox-aural-voice-editor--button 'text (format "Sample text: %s" (emacsvox-aural-voice-editor--get :text))
                                          #'emacsvox-aural-voice-editor-text)
@@ -398,6 +479,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
     (insert (format "  Changes: %s\n"
                     (or (mapconcat (lambda (field) (pcase field
                                                      (:definition "shared adjustments") (:selectors "physical choices")
+                                                     (:choices "fallback choices or custom adjustments")
                                                      (:language "language") (:reset-choices "Automatic selection")
                                                      (_ "voice settings")))
                                    (emacsvox-aural-voice-drafts--dirty-fields draft) ", ") "none")))
@@ -453,7 +535,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
   (if (emacsvox-aural-voice-editor--get :automatic-sample)
       (progn
         (emacsvox-aural-voice-editor-stop)
-        (condition-case err (emacsvox-aural-voice-editor--preview nil nil value-label)
+        (condition-case err (emacsvox-aural-voice-editor--preview nil (emacsvox-aural-voice-editor--get :tuning-choice) value-label)
           (error (emacsvox-aural-ui-speak
                   (format "Changes kept. Preview unavailable: %s" (error-message-string err))))))
     (emacsvox-aural-voice-editor-speak)))
@@ -467,22 +549,36 @@ Select a faithful wire form before any entry interrupts foreground speech."
       (unless (and (integerp displayed) (<= minimum displayed maximum))
         (user-error "Enter a whole number from %s to %s, or leave blank for adapter default"
                     minimum maximum))))
-  (emacsvox-aural-voice-editor--changed
-   (emacsvox-aural-voice-editing--adjust
-    (emacsvox-aural-voice-editor--working) (emacsvox-aural-voice-editor--get :palette) dimension
-    (emacsvox-aural-voice-tuner--stored-value dimension displayed))
-   (if displayed (format "%s" displayed) "Adapter default")))
+  (if (emacsvox-aural-voice-editor--get :tuning-choice)
+      (emacsvox-aural-voice-editor--set-choice
+       dimension (if displayed 'set 'default)
+       (emacsvox-aural-voice-tuner--stored-value dimension displayed))
+    (emacsvox-aural-voice-editor--changed
+     (emacsvox-aural-voice-editing--adjust
+      (emacsvox-aural-voice-editor--working) (emacsvox-aural-voice-editor--get :palette) dimension
+      (emacsvox-aural-voice-tuner--stored-value dimension displayed))
+     (if displayed (format "%s" displayed) "Adapter default"))))
 (defun emacsvox-aural-voice-editor-edit (&optional dimension)
   "Edit DIMENSION or the current numeric field; blank means adapter default."
   (interactive)
   (let* ((dimension (or dimension (get-text-property (point) 'voice-dimension)
                         (user-error "Choose an adjustment field")))
-         (input (read-string (format "%s (blank for adapter default): " dimension)))
+         (context emacsvox-aural-voice-editor--context)
+         (revision (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft)))
+         (choice (emacsvox-aural-voice-editor--get :tuning-choice))
+         (action (if choice (completing-read "Adjustment: " '("Set value" "Use shared value" "Adapter default") nil t) "Set value"))
+         (input (if (equal action "Set value") (read-string (format "%s (blank for adapter default): " dimension)) ""))
          (value (unless (string-empty-p input)
                   (if (eq dimension 'family) (intern input)
                     (unless (string-match-p "\\`[+-]?[0-9]+\\'" input) (user-error "Enter a whole number"))
                     (string-to-number input)))))
-    (emacsvox-aural-voice-editor--set dimension value)))
+    (unless (and (eq context emacsvox-aural-voice-editor--context)
+                 (equal choice (emacsvox-aural-voice-editor--get :tuning-choice))
+                 (= revision (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft))))
+      (user-error "Voice changed while editing; choose the adjustment again"))
+    (if (equal action "Use shared value")
+        (emacsvox-aural-voice-editor--set-choice dimension 'inherit nil)
+      (emacsvox-aural-voice-editor--set dimension value))))
 
 (defun emacsvox-aural-voice-editor-default ()
   "Restore the current adjustment to the adapter default and audition it."
@@ -504,7 +600,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
 (defun emacsvox-aural-voice-editor-adjust (delta)
   "Adjust the current field by DELTA in displayed units."
   (let* ((dimension (or (get-text-property (point) 'voice-dimension) (user-error "Choose a numeric adjustment")))
-         (style (emacsvox-aural-voice-editing--style (emacsvox-aural-voice-editor--working)
+         (style (emacsvox-aural-voice-editor--tuning-style (emacsvox-aural-voice-editor--working)
                                                      (emacsvox-aural-voice-editor--get :palette)))
          (value (plist-get style (emacsvox-aural--voice-dimension-key dimension))))
     (when (eq dimension 'family) (user-error "Press RET to choose a family"))
@@ -605,12 +701,13 @@ Select a faithful wire form before any entry interrupts foreground speech."
          (id (and index (plist-get (nth index rows) :id)))
          (action (progn (unless id (user-error "This fallback row no longer exists"))
                         (completing-read "Choice action: " '("Replace" "Move earlier" "Move later" "Remove" "Audition this choice"
-                                                               "Compare original and edited choice") nil t))))
+                                                               "Compare original and edited choice" "Customize this voice") nil t))))
     (unless id (user-error "This fallback row no longer exists"))
     (unless (= revision (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft)))
       (user-error "Voice changed while choosing an action; choose the row again"))
     (pcase action
       ("Replace" (emacsvox-aural-voice-editor-choose id))
+      ("Customize this voice" (emacsvox-aural-voice-editor--customize id))
       ("Audition this choice" (emacsvox-aural-voice-editor--preview nil id))
       ("Compare original and edited choice" (emacsvox-aural-voice-editor--preview t id))
       (_ (if (equal action "Remove") (setq rows (append (cl-subseq rows 0 index) (nthcdr (1+ index) rows)))
@@ -646,8 +743,8 @@ Select a faithful wire form before any entry interrupts foreground speech."
                                            (list (plist-put (plist-put (copy-tree entry) :text (concat label ".")) :role 'label) entry))
                                        (list entry))))))
     (emacsvox-aural-voice-editor--start-entries context entries revision)))
-(defun emacsvox-aural-voice-editor-play () "Play the edited base voice without saving." (interactive) (emacsvox-aural-voice-editor--preview nil))
-(defun emacsvox-aural-voice-editor-compare () "Compare captured original and edited base voices." (interactive) (emacsvox-aural-voice-editor--preview t))
+(defun emacsvox-aural-voice-editor-play () "Play the edited voice or selected tuning row without saving." (interactive) (emacsvox-aural-voice-editor--preview nil (emacsvox-aural-voice-editor--get :tuning-choice)))
+(defun emacsvox-aural-voice-editor-compare () "Compare original and edited voices, or the selected tuning row." (interactive) (emacsvox-aural-voice-editor--preview t (emacsvox-aural-voice-editor--get :tuning-choice)))
 (defun emacsvox-aural-voice-editor-text ()
   "Change the common comparison text."
   (interactive)
@@ -795,6 +892,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
                     ("B" . emacsvox-aural-voice-editor-compare) ("S" . emacsvox-aural-voice-editor-stop)
                     ("T" . emacsvox-aural-voice-editor-text) ("u" . emacsvox-aural-voice-editor-undo)
                     ("d" . emacsvox-aural-voice-editor-default)
+                    ("i" . emacsvox-aural-voice-editor--inherit)
                     ("w" . emacsvox-aural-voice-editor-save) ("C-c C-c" . emacsvox-aural-voice-editor-save)
                     ("h" . emacsvox-aural-home)
                     ("q" . emacsvox-aural-voice-editor-leave) ("?" . describe-mode)))

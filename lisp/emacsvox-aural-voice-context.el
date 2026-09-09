@@ -32,6 +32,8 @@
 
 (require 'emacsvox-aural-voice-editor)
 (declare-function omnivox-preview-voice-sequence "omnivox-voices" (entries callback))
+(declare-function omnivox--preview-cancel "omnivox-preview" (operation))
+(declare-function omnivox--preview-token-operation "omnivox-preview" (token))
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-tools)
 

@@ -129,9 +129,10 @@ stable-row comparison and precise cancellation during startup. Fourteen further
 contracts bring the selected matrix to 621 passing tests. Shared-only saves keep
 their existing schema; sample starts are distinguished from labels and accepted
 audio. Muted real-editor checks cover fallback, reordered comparison, sparse
-context, text cancellation and reconnect. Optional controls, clearer source
-explanations and experiment keeps remain next. Individual
-controls and spoken acceptance remain pending; this is not complete feature
+context, text cancellation and reconnect. Optional per-choice controls now
+provide explicit inheritance/default/numeric states and row-specific automatic
+samples; five additional contracts expand the selected matrix to 626 tests.
+Clearer source explanations, experiment keeps and spoken acceptance remain pending; this is not complete feature
 delivery. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual

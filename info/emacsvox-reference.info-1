@@ -4838,8 +4838,8 @@ File: emacsvox-reference.info,  Node: emacsvox-aural-voice-editor,  Next: emacsv
 
 One view for named voices and physical experiments, backed by retained
 session drafts and the acknowledged save coordinator.  Shared tuning is
-explicit; individual fallback adjustments are intentionally not
-advertised.
+the default; optional row tuning preserves inheritance and native
+defaults.
 
 2.58.1 Emacsvox-Aural-Voice-Editor Commands
 -------------------------------------------
@@ -4863,7 +4863,7 @@ advertised.
 
  -- Command: emacsvox-aural-voice-editor-compare
 
-     Compare captured original and edited base voices.
+     Compare original and edited voices, or the selected tuning row.
 
 2.58.1.4 emacsvox-aural-voice-editor-decrease
 .............................................
@@ -4944,6 +4944,7 @@ advertised.
      d		emacsvox-aural-voice-editor-default
      g		revert-buffer
      h		emacsvox-aural-home
+     i		emacsvox-aural-voice-editor-inherit
      n		emacsvox-aural-voice-editor-next
      p		emacsvox-aural-voice-editor-previous
      q		emacsvox-aural-voice-editor-leave
@@ -4978,7 +4979,7 @@ advertised.
 
  -- Command: emacsvox-aural-voice-editor-play
 
-     Play the edited base voice without saving.
+     Play the edited voice or selected tuning row without saving.
 
 2.58.1.14 emacsvox-aural-voice-editor-previous
 ..............................................
