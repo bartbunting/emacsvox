@@ -67,7 +67,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1563 commands and 207 options.
+This chapter documents a total of 1564 commands and 207 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -5723,6 +5723,7 @@ c		emacsvox-aural-voice-palette-previews-copy
 e		emacsvox-aural-voice-palette-previews-tune
 h		emacsvox-aural
 o		emacsvox-aural-voice-palette-previews-open-manager
+r		emacsvox-aural-voice-palette-previews-rename
 s		emacsvox-aural-voice-palette-previews-stop
 t		emacsvox-aural-voice-palette-previews-tune
 x		emacsvox-aural-voice-palette-previews-explain
@@ -5810,6 +5811,15 @@ Move left and speak the previous voice column.
 Refresh palette voices, preserving VOICE and the current column.
 
 (fn &optional VOICE)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-rename
+@deffn {Command} emacsvox-aural-voice-palette-previews-rename
+@findex emacsvox-aural-voice-palette-previews-rename
+
+@format
+Rename an unused custom voice defined directly in the personal palette.
 @end format
 @end deffn
 

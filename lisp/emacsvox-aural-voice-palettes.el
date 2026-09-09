@@ -34,6 +34,9 @@
 (declare-function emacsvox-aural-voice-editor--invalidate "emacsvox-aural-voice-editor" (context))
 (declare-function emacsvox-aural-voice-editor-refresh "emacsvox-aural-voice-editor" ())
 (defvar emacsvox-aural-voice-editor--contexts)
+(defvar voice-setup-defined-voices)
+(defvar voice-setup-face-voice-table)
+(defvar voice-setup-local-map)
 
 (declare-function emacsvox-aural-voice-editor-open "emacsvox-aural-voice-editor" (palette voice &optional source text))
 
@@ -2363,8 +2366,9 @@ identity."
     (emacsvox-aural-voice-palette-previews-refresh voice)
     voice))
 
-(defun emacsvox-aural-voice-palettes--copy-owned-voice (palette source name)
-  "Save an independent copy of PALETTE's effective SOURCE voice as NAME."
+(defun emacsvox-aural-voice-palettes--copy-owned-voice (palette source name &optional rename)
+  "Save an independent copy of PALETTE's effective SOURCE voice as NAME.
+When RENAME is non-nil, remove the direct SOURCE entry in the same save."
   (let* ((record (emacsvox-aural-voice-palette palette))
          (data (emacsvox-aural-voice-palette-data-form record))
          (entries (emacsvox-aural-voice-data--entries
@@ -2395,6 +2399,9 @@ identity."
               sets (list (if layered
                              (list :schema-version 3 :id id :palette palette :voice name :choices rows)
                            (list :id id :palette palette :voice name :selectors (plist-get choices :selectors)))))))
+    (when rename
+      (setq data (emacsvox-aural-voice-palettes--replace-entries
+                  data (cl-remove source (plist-get data :entries) :key #'car))))
     (setq data (emacsvox-aural-voice-palettes--put-entry data (cons name properties)))
     (let* ((draft (emacsvox-aural-voice-drafts--make
                    :key (list 'copy palette name)
@@ -2402,10 +2409,110 @@ identity."
            (proposal (emacsvox-aural-voice-drafts--prepare draft data sets :sources (list palette))))
       (emacsvox-aural-voice-drafts--save proposal)
       (unless (memq 'published (emacsvox-aural-voice-save-completed proposal))
-        (user-error "Copy did not complete (%s): %s. Retry c; the original voice is unchanged"
+        (user-error "%s did not complete (%s): %s. Retry %s; the original voice is unchanged"
+                    (if rename "Rename" "Copy")
                     (plist-get (emacsvox-aural-voice-drafts--status draft) :label)
-                    (plist-get (emacsvox-aural-voice-save-result proposal) :message))))
+                    (plist-get (emacsvox-aural-voice-save-result proposal) :message)
+                    (if rename "r" "c"))))
     name))
+
+(defun emacsvox-aural-voice-palettes--voice-reference-p (data voice)
+  "Whether presentation DATA explicitly refers to VOICE."
+  (and (consp data)
+       (or (and (memq (car data) '(:voice :preset :personality))
+                (eq (cadr data) voice))
+           (emacsvox-aural-voice-palettes--voice-reference-p (car data) voice)
+           (emacsvox-aural-voice-palettes--voice-reference-p (cdr data) voice))))
+
+(defun emacsvox-aural-voice-palettes--check-voice-rename (palette voice)
+  "Reject renaming an inherited, standard or referenced VOICE in PALETTE."
+  (let* ((record (emacsvox-aural-voice-palette palette))
+         (data (emacsvox-aural-voice-palette-data-form record)))
+    (when (emacsvox-aural-voice-palette-built-in record)
+      (user-error "Built-in voices cannot be renamed; copy the voice first"))
+    (unless (assq voice (plist-get data :entries))
+      (user-error "This voice is inherited; copy it first, or rename it in its owning palette"))
+    (when (or (assq voice emacsvox-aural-default-voice-entries)
+              (rassq voice emacsvox-aural-default-voice-entries)
+              (memq voice (bound-and-true-p voice-setup-defined-voices)))
+      (user-error "Standard voice %s is used by Emacsvox; copy it under a custom name first" voice))
+    (when (and (emacsvox-aural-voice-palette-parent record)
+               (assq voice (emacsvox-aural-effective-voice-entries
+                            (emacsvox-aural-voice-palette-parent record))))
+      (user-error "Renaming this override would reveal its inherited voice; copy it first")))
+  (cl-labels ((check (data where)
+                (when (emacsvox-aural-voice-palettes--voice-reference-p data voice)
+                  (user-error "Voice %s is used by %s; remap that use before renaming" voice where)))
+              (faces (table where)
+                (when (hash-table-p table)
+                  (maphash (lambda (face value)
+                             (when (memq voice (if (listp value) value (list value)))
+                               (user-error "Voice %s is mapped to face %s in %s; remap it before renaming"
+                                           voice face where))) table))))
+    (check emacsvox-aural-user-rules "personal rules")
+    (check emacsvox-aural-session-rules "session rules")
+    (dolist (pair `((,emacsvox-aural-scheme-registry . emacsvox-aural-scheme-entry-data)
+                    (,emacsvox-aural-module-fragment-registry . emacsvox-aural-module-fragment-data)
+                    (,emacsvox-aural-feature-fragment-registry . emacsvox-aural-feature-fragment-entry-data)
+                    (,emacsvox-aural-voice-palette-registry . emacsvox-aural-voice-palette-data-form)))
+      (maphash (lambda (id entry) (check (funcall (cdr pair) entry) id)) (car pair)))
+    (faces (bound-and-true-p voice-setup-face-voice-table) "the global face map")
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (check emacsvox-aural-buffer-rules (buffer-name))
+        (faces (bound-and-true-p voice-setup-local-map) (buffer-name))))
+    (when (or (assq voice emacsvox-aural-session-routing-bindings)
+              (cl-loop for entry being the hash-values of emacsvox-aural-routing-profile-registry
+                       thereis (assq voice (plist-get (emacsvox-aural-routing-profile-entry-data entry) :bindings))))
+      (user-error "Voice %s has a shared routing binding; update that binding before renaming" voice))))
+
+(defun emacsvox-aural-voice-palette-previews-rename ()
+  "Rename an unused custom voice defined directly in the personal palette."
+  (interactive)
+  (require 'emacsvox-aural-voice-editor)
+  (let* ((palette emacsvox-aural-voice-palette-previews-palette)
+         (old (emacsvox-aural-voice-palette-previews--current-voice))
+         (_ (emacsvox-aural-voice-palettes--check-voice-rename palette old))
+         (drafts (emacsvox-aural-voice-palettes--rename-drafts palette))
+         (new (emacsvox-aural-voice-palettes--read-new-entry-name palette (symbol-name old))))
+    (emacsvox-aural-voice-palettes--check-voice-rename palette old)
+    (setq drafts (emacsvox-aural-voice-palettes--rename-drafts palette))
+    (if (emacsvox-aural-voice-runtime--owned-p palette)
+        (emacsvox-aural-voice-palettes--copy-owned-voice palette old new t)
+      (let* ((data (emacsvox-aural-voice-palette-data-form (emacsvox-aural-voice-palette palette)))
+             (entry (assq old (plist-get data :entries))))
+        (setcar entry new)
+        (emacsvox-aural-voice-palettes--install-data data palette)
+        (emacsvox-aural-configuration-changed 'voice-renamed)))
+    (dolist (draft drafts)
+      (let* ((key (emacsvox-aural-voice-draft-key draft))
+             (context (gethash key emacsvox-aural-voice-editor--contexts)))
+        (when (and (eq (car key) 'base) (eq (caddr key) old)
+                   (or (eq (cadr key) palette) (eq (plist-get context :owner) palette)))
+          (let ((renamed (list 'base (cadr key) new)))
+            (remhash key emacsvox-aural-voice-drafts--registry)
+            (remhash key emacsvox-aural-voice-editor--contexts)
+            (setf (emacsvox-aural-voice-draft-key draft) renamed)
+            (puthash renamed draft emacsvox-aural-voice-drafts--registry)
+            (when context
+              (emacsvox-aural-voice-editor--invalidate context)
+              (setf (plist-get context :voice) new)
+              (puthash renamed context emacsvox-aural-voice-editor--contexts))))
+        (setf (emacsvox-aural-voice-draft-proposal draft) nil
+              (emacsvox-aural-voice-draft-watches draft)
+              (emacsvox-aural-voice-drafts--watch (mapcar #'car (emacsvox-aural-voice-draft-watches draft))))
+        (when (and context (buffer-live-p (plist-get context :buffer)))
+          (with-current-buffer (plist-get context :buffer)
+            (emacsvox-aural-voice-editor-refresh)))))
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (and (eq emacsvox-aural-voice-tuner-palette palette)
+                   (eq emacsvox-aural-voice-tuner-voice old))
+          (setq emacsvox-aural-voice-tuner-voice new)
+          (emacsvox-aural-voice-tuner-refresh))))
+    (emacsvox-aural-voice-palette-previews-refresh new)
+    (emacsvox-aural-ui-announce-result "Renamed voice %s to %s in palette %s" old new palette)
+    new))
 
 (defun emacsvox-aural-voice-palette-previews-copy ()
   "Copy the current voice to a new, independently routable voice."
@@ -2447,6 +2554,7 @@ identity."
       "SPC speak voice      t tune voice\n"
       "e also tunes; s also stops for compatibility\n"
       "c copy voice         N new voice\n"
+      "r rename an unused custom voice\n"
       "Copy saves a new voice, including owned choices and individual tuning.\n"
       "E replace definition\n"
       "Tune opens a draft; first save creates an independent personal palette\n"
@@ -2492,6 +2600,7 @@ identity."
        ("e" . emacsvox-aural-voice-palette-previews-tune)
        ("E" . emacsvox-aural-voice-palette-previews-edit)
        ("c" . emacsvox-aural-voice-palette-previews-copy)
+       ("r" . emacsvox-aural-voice-palette-previews-rename)
        ("N" . emacsvox-aural-voice-palette-previews-new)
        ("x" . emacsvox-aural-voice-palette-previews-explain)
        ("o" . emacsvox-aural-voice-palette-previews-open-manager)

@@ -286,6 +286,7 @@
          ("e" . emacsvox-aural-voice-palette-previews-tune)
          ("s" . emacsvox-aural-voice-palette-previews-stop)
          ("c" . emacsvox-aural-voice-palette-previews-copy)
+         ("r" . emacsvox-aural-voice-palette-previews-rename)
          ("N" . emacsvox-aural-voice-palette-previews-new)))
     (should
      (eq
@@ -570,6 +571,84 @@
                  (eq (tabulated-list-get-id) 'voice-dired-directory)))))
         (when (get-buffer "*Aural Voice Palette Preview*")
           (kill-buffer "*Aural Voice Palette Preview*"))))))
+
+(defmacro emacsvox-test--with-voice-rename (&rest body)
+  "Run BODY in a real voice list containing a saved custom voice."
+  (declare (indent 0) (debug t))
+  `(emacsvox-test--with-palette-rename
+     (let ((emacsvox-aural-user-rules nil)
+           (emacsvox-aural-session-rules nil))
+       (emacsvox-aural-voice-palettes--copy-owned-voice 'reading 'bolden 'custom-voice)
+       (with-temp-buffer
+         (emacsvox-aural-voice-palette-previews-mode)
+         (setq emacsvox-aural-voice-palette-previews-palette 'reading)
+         (emacsvox-aural-voice-palette-previews-refresh 'custom-voice)
+         ,@body))))
+
+(ert-deftest emacsvox-aural-voice-palette-preview-rename-preserves-complete-voice ()
+  "Rename removes the old row and preserves sound data under the selected new name."
+  (emacsvox-test--with-voice-rename
+    (let* ((before (emacsvox-aural-voice-runtime--resolve 'custom-voice 'reading))
+           (sets (copy-tree emacsvox-aural-routing--choice-sets))
+           (draft (emacsvox-aural-voice-drafts--open '(base reading custom-voice)
+                   '(:definition (:average-pitch 4)) '(reading)))
+           (context (list :draft draft :palette 'reading :voice 'custom-voice :owner 'reading)))
+      (puthash '(base reading custom-voice) context emacsvox-aural-voice-editor--contexts)
+      (should (eq (emacsvox-aural-voice-palette-previews-rename) 'renamed))
+      (should (eq (tabulated-list-get-id) 'renamed))
+      (should-not (assq 'custom-voice (emacsvox-aural-effective-voice-entries 'reading)))
+      (let ((after (emacsvox-aural-voice-runtime--resolve 'renamed 'reading)))
+        (dolist (field '(:definition :choices :selectors :language))
+          (should (equal (plist-get before field) (plist-get after field)))))
+      (dolist (set sets) (should (member set emacsvox-aural-routing--choice-sets)))
+      (should (eq (gethash '(base reading renamed) emacsvox-aural-voice-drafts--registry) draft))
+      (should (eq (plist-get context :voice) 'renamed))
+      (let ((entries (plist-get (cl-find 'reading (plist-get (emacsvox-aural-read-user-data) :voice-palettes)
+                                        :key (lambda (data) (plist-get data :id))) :entries)))
+        (should (assq 'renamed entries))
+        (should-not (assq 'custom-voice entries))))))
+
+(ert-deftest emacsvox-aural-voice-palette-preview-rename-protects-mappings-and-standards ()
+  "Registered mappings, standard names and inherited voices stop before saving."
+  (emacsvox-test--with-voice-rename
+    (let ((before (emacsvox-aural-read-user-data)))
+      (dolist (request '(custom-voice (:preset custom-voice :echo 3)))
+        (let ((emacsvox-aural-user-rules `((:id uses-custom :render (:content (:voice ,request))))))
+          (should-error (emacsvox-aural-voice-palette-previews-rename) :type 'user-error)))
+      (let ((voice-setup-face-voice-table (make-hash-table :test #'eq)))
+        (puthash 'bold 'custom-voice voice-setup-face-voice-table)
+        (should-error (emacsvox-aural-voice-palette-previews-rename) :type 'user-error))
+      (dolist (voice '(bolden annotate))
+        (should-error (emacsvox-aural-voice-palettes--check-voice-rename 'reading voice) :type 'user-error))
+      (should (equal before (emacsvox-aural-read-user-data))))))
+
+(ert-deftest emacsvox-aural-voice-palette-preview-rename-failure-keeps-old-name ()
+  "Either store failing leaves the old name usable and permits retrying r."
+  (dolist (writer '(emacsvox-aural-routing--write-user-data emacsvox-aural--write-user-data))
+    (emacsvox-test--with-voice-rename
+      (let ((before (emacsvox-aural-read-user-data)))
+        (cl-letf (((symbol-function writer) (lambda (&rest _) (error "Simulated rename failure"))))
+          (should-error (emacsvox-aural-voice-palette-previews-rename) :type 'user-error))
+        (should (equal before (emacsvox-aural-read-user-data)))
+        (should (eq (tabulated-list-get-id) 'custom-voice))
+        (should (assq 'custom-voice (emacsvox-aural-effective-voice-entries 'reading)))
+        (should (eq (emacsvox-aural-voice-palette-previews-rename) 'renamed))))))
+
+(ert-deftest emacsvox-aural-voice-palette-preview-rename-legacy-keeps-definition ()
+  "Renaming a legacy custom voice keeps its raw definition and palette schema."
+  (emacsvox-test--with-palette-rename
+    (puthash 'reading (emacsvox-aural-compile-voice-palette-data emacsvox-test--voice-palette-data)
+             emacsvox-aural-voice-palette-registry)
+    (emacsvox-aural-save-user-data)
+    (with-temp-buffer
+      (emacsvox-aural-voice-palette-previews-mode)
+      (setq emacsvox-aural-voice-palette-previews-palette 'reading)
+      (emacsvox-aural-voice-palette-previews-refresh 'aside)
+      (let ((before (emacsvox-aural-voice 'aside 'reading)))
+        (emacsvox-aural-voice-palette-previews-rename)
+        (should (equal before (emacsvox-aural-voice 'renamed 'reading)))
+        (should (eq 1 (plist-get (emacsvox-aural-voice-palette-data-form
+                                  (emacsvox-aural-voice-palette 'reading)) :schema-version)))))))
 
 (ert-deftest emacsvox-aural-voice-palette-preview-copies-independent-voice ()
   "Copying a personality-backed row creates an independent style entry."

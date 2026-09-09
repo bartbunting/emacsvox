@@ -4161,217 +4161,221 @@ Function Index
 * emacsvox-aural-voice-palette-previews-mode <1>: emacsvox-aural-voice-palettes.
                                                              (line   52)
 * emacsvox-aural-voice-palette-previews-new: emacsvox-aural-voice-palettes.
-                                                             (line   81)
-* emacsvox-aural-voice-palette-previews-new <1>: emacsvox-aural-voice-palettes.
                                                              (line   82)
+* emacsvox-aural-voice-palette-previews-new <1>: emacsvox-aural-voice-palettes.
+                                                             (line   83)
 * emacsvox-aural-voice-palette-previews-next: emacsvox-aural-voice-palettes.
-                                                             (line   88)
-* emacsvox-aural-voice-palette-previews-next <1>: emacsvox-aural-voice-palettes.
                                                              (line   89)
+* emacsvox-aural-voice-palette-previews-next <1>: emacsvox-aural-voice-palettes.
+                                                             (line   90)
 * emacsvox-aural-voice-palette-previews-next-column: emacsvox-aural-voice-palettes.
-                                                             (line   95)
-* emacsvox-aural-voice-palette-previews-next-column <1>: emacsvox-aural-voice-palettes.
                                                              (line   96)
+* emacsvox-aural-voice-palette-previews-next-column <1>: emacsvox-aural-voice-palettes.
+                                                             (line   97)
 * emacsvox-aural-voice-palette-previews-open-manager: emacsvox-aural-voice-palettes.
-                                                             (line  102)
-* emacsvox-aural-voice-palette-previews-open-manager <1>: emacsvox-aural-voice-palettes.
                                                              (line  103)
+* emacsvox-aural-voice-palette-previews-open-manager <1>: emacsvox-aural-voice-palettes.
+                                                             (line  104)
 * emacsvox-aural-voice-palette-previews-play: emacsvox-aural-voice-palettes.
-                                                             (line  109)
-* emacsvox-aural-voice-palette-previews-play <1>: emacsvox-aural-voice-palettes.
                                                              (line  110)
+* emacsvox-aural-voice-palette-previews-play <1>: emacsvox-aural-voice-palettes.
+                                                             (line  111)
 * emacsvox-aural-voice-palette-previews-play-all: emacsvox-aural-voice-palettes.
-                                                             (line  116)
-* emacsvox-aural-voice-palette-previews-play-all <1>: emacsvox-aural-voice-palettes.
                                                              (line  117)
+* emacsvox-aural-voice-palette-previews-play-all <1>: emacsvox-aural-voice-palettes.
+                                                             (line  118)
 * emacsvox-aural-voice-palette-previews-previous: emacsvox-aural-voice-palettes.
-                                                             (line  123)
-* emacsvox-aural-voice-palette-previews-previous <1>: emacsvox-aural-voice-palettes.
                                                              (line  124)
+* emacsvox-aural-voice-palette-previews-previous <1>: emacsvox-aural-voice-palettes.
+                                                             (line  125)
 * emacsvox-aural-voice-palette-previews-previous-column: emacsvox-aural-voice-palettes.
-                                                             (line  130)
-* emacsvox-aural-voice-palette-previews-previous-column <1>: emacsvox-aural-voice-palettes.
                                                              (line  131)
+* emacsvox-aural-voice-palette-previews-previous-column <1>: emacsvox-aural-voice-palettes.
+                                                             (line  132)
 * emacsvox-aural-voice-palette-previews-refresh: emacsvox-aural-voice-palettes.
-                                                             (line  137)
+                                                             (line  138)
 * emacsvox-aural-voice-palette-previews-refresh <1>: emacsvox-aural-voice-palettes.
-                                                             (line  139)
-* emacsvox-aural-voice-palette-previews-set-text: emacsvox-aural-voice-palettes.
-                                                             (line  147)
-* emacsvox-aural-voice-palette-previews-set-text <1>: emacsvox-aural-voice-palettes.
+                                                             (line  140)
+* emacsvox-aural-voice-palette-previews-rename: emacsvox-aural-voice-palettes.
                                                              (line  148)
-* emacsvox-aural-voice-palette-previews-speak-current: emacsvox-aural-voice-palettes.
-                                                             (line  154)
-* emacsvox-aural-voice-palette-previews-speak-current <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palette-previews-rename <1>: emacsvox-aural-voice-palettes.
+                                                             (line  149)
+* emacsvox-aural-voice-palette-previews-set-text: emacsvox-aural-voice-palettes.
                                                              (line  155)
-* emacsvox-aural-voice-palette-previews-speak-current-cell: emacsvox-aural-voice-palettes.
-                                                             (line  161)
-* emacsvox-aural-voice-palette-previews-speak-current-cell <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palette-previews-set-text <1>: emacsvox-aural-voice-palettes.
+                                                             (line  156)
+* emacsvox-aural-voice-palette-previews-speak-current: emacsvox-aural-voice-palettes.
                                                              (line  162)
-* emacsvox-aural-voice-palette-previews-stop: emacsvox-aural-voice-palettes.
-                                                             (line  168)
-* emacsvox-aural-voice-palette-previews-stop <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palette-previews-speak-current <1>: emacsvox-aural-voice-palettes.
+                                                             (line  163)
+* emacsvox-aural-voice-palette-previews-speak-current-cell: emacsvox-aural-voice-palettes.
                                                              (line  169)
-* emacsvox-aural-voice-palette-previews-tune: emacsvox-aural-voice-palettes.
-                                                             (line  175)
-* emacsvox-aural-voice-palette-previews-tune <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palette-previews-speak-current-cell <1>: emacsvox-aural-voice-palettes.
+                                                             (line  170)
+* emacsvox-aural-voice-palette-previews-stop: emacsvox-aural-voice-palettes.
                                                              (line  176)
-* emacsvox-aural-voice-palettes-activate: emacsvox-aural-voice-palettes.
-                                                             (line  182)
-* emacsvox-aural-voice-palettes-activate <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palette-previews-stop <1>: emacsvox-aural-voice-palettes.
+                                                             (line  177)
+* emacsvox-aural-voice-palette-previews-tune: emacsvox-aural-voice-palettes.
                                                              (line  183)
-* emacsvox-aural-voice-palettes-audition: emacsvox-aural-voice-palettes.
-                                                             (line  189)
-* emacsvox-aural-voice-palettes-audition <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palette-previews-tune <1>: emacsvox-aural-voice-palettes.
+                                                             (line  184)
+* emacsvox-aural-voice-palettes-activate: emacsvox-aural-voice-palettes.
                                                              (line  190)
-* emacsvox-aural-voice-palettes-copy:    emacsvox-aural-voice-palettes.
-                                                             (line  196)
-* emacsvox-aural-voice-palettes-copy <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-activate <1>: emacsvox-aural-voice-palettes.
+                                                             (line  191)
+* emacsvox-aural-voice-palettes-audition: emacsvox-aural-voice-palettes.
                                                              (line  197)
-* emacsvox-aural-voice-palettes-create:  emacsvox-aural-voice-palettes.
-                                                             (line  203)
-* emacsvox-aural-voice-palettes-create <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-audition <1>: emacsvox-aural-voice-palettes.
+                                                             (line  198)
+* emacsvox-aural-voice-palettes-copy:    emacsvox-aural-voice-palettes.
                                                              (line  204)
-* emacsvox-aural-voice-palettes-delete:  emacsvox-aural-voice-palettes.
-                                                             (line  210)
-* emacsvox-aural-voice-palettes-delete <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-copy <1>: emacsvox-aural-voice-palettes.
+                                                             (line  205)
+* emacsvox-aural-voice-palettes-create:  emacsvox-aural-voice-palettes.
                                                              (line  211)
-* emacsvox-aural-voice-palettes-delete-entry: emacsvox-aural-voice-palettes.
-                                                             (line  217)
-* emacsvox-aural-voice-palettes-delete-entry <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-create <1>: emacsvox-aural-voice-palettes.
+                                                             (line  212)
+* emacsvox-aural-voice-palettes-delete:  emacsvox-aural-voice-palettes.
                                                              (line  218)
-* emacsvox-aural-voice-palettes-describe: emacsvox-aural-voice-palettes.
-                                                             (line  224)
-* emacsvox-aural-voice-palettes-describe <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-delete <1>: emacsvox-aural-voice-palettes.
+                                                             (line  219)
+* emacsvox-aural-voice-palettes-delete-entry: emacsvox-aural-voice-palettes.
                                                              (line  225)
-* emacsvox-aural-voice-palettes-edit-entry: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-delete-entry <1>: emacsvox-aural-voice-palettes.
+                                                             (line  226)
+* emacsvox-aural-voice-palettes-describe: emacsvox-aural-voice-palettes.
+                                                             (line  232)
+* emacsvox-aural-voice-palettes-describe <1>: emacsvox-aural-voice-palettes.
                                                              (line  233)
-* emacsvox-aural-voice-palettes-edit-entry <1>: emacsvox-aural-voice-palettes.
-                                                             (line  234)
-* emacsvox-aural-voice-palettes-edit-metadata: emacsvox-aural-voice-palettes.
-                                                             (line  240)
-* emacsvox-aural-voice-palettes-edit-metadata <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-edit-entry: emacsvox-aural-voice-palettes.
                                                              (line  241)
-* emacsvox-aural-voice-palettes-explain: emacsvox-aural-voice-palettes.
-                                                             (line  247)
-* emacsvox-aural-voice-palettes-explain <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-edit-entry <1>: emacsvox-aural-voice-palettes.
+                                                             (line  242)
+* emacsvox-aural-voice-palettes-edit-metadata: emacsvox-aural-voice-palettes.
                                                              (line  248)
-* emacsvox-aural-voice-palettes-follow-baseline: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-edit-metadata <1>: emacsvox-aural-voice-palettes.
+                                                             (line  249)
+* emacsvox-aural-voice-palettes-explain: emacsvox-aural-voice-palettes.
+                                                             (line  255)
+* emacsvox-aural-voice-palettes-explain <1>: emacsvox-aural-voice-palettes.
                                                              (line  256)
-* emacsvox-aural-voice-palettes-follow-baseline <1>: emacsvox-aural-voice-palettes.
-                                                             (line  257)
-* emacsvox-aural-voice-palettes-help:    emacsvox-aural-voice-palettes.
-                                                             (line  263)
-* emacsvox-aural-voice-palettes-help <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-follow-baseline: emacsvox-aural-voice-palettes.
                                                              (line  264)
-* emacsvox-aural-voice-palettes-mode:    emacsvox-aural-voice-palettes.
-                                                             (line  270)
-* emacsvox-aural-voice-palettes-mode <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-follow-baseline <1>: emacsvox-aural-voice-palettes.
+                                                             (line  265)
+* emacsvox-aural-voice-palettes-help:    emacsvox-aural-voice-palettes.
                                                              (line  271)
+* emacsvox-aural-voice-palettes-help <1>: emacsvox-aural-voice-palettes.
+                                                             (line  272)
+* emacsvox-aural-voice-palettes-mode:    emacsvox-aural-voice-palettes.
+                                                             (line  278)
+* emacsvox-aural-voice-palettes-mode <1>: emacsvox-aural-voice-palettes.
+                                                             (line  279)
 * emacsvox-aural-voice-palettes-next:    emacsvox-aural-voice-palettes.
-                                                             (line  301)
-* emacsvox-aural-voice-palettes-next <1>: emacsvox-aural-voice-palettes.
-                                                             (line  302)
-* emacsvox-aural-voice-palettes-next-column: emacsvox-aural-voice-palettes.
-                                                             (line  308)
-* emacsvox-aural-voice-palettes-next-column <1>: emacsvox-aural-voice-palettes.
                                                              (line  309)
-* emacsvox-aural-voice-palettes-preview: emacsvox-aural-voice-palettes.
-                                                             (line  315)
-* emacsvox-aural-voice-palettes-preview <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-next <1>: emacsvox-aural-voice-palettes.
+                                                             (line  310)
+* emacsvox-aural-voice-palettes-next-column: emacsvox-aural-voice-palettes.
                                                              (line  316)
-* emacsvox-aural-voice-palettes-previous: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-next-column <1>: emacsvox-aural-voice-palettes.
+                                                             (line  317)
+* emacsvox-aural-voice-palettes-preview: emacsvox-aural-voice-palettes.
+                                                             (line  323)
+* emacsvox-aural-voice-palettes-preview <1>: emacsvox-aural-voice-palettes.
                                                              (line  324)
-* emacsvox-aural-voice-palettes-previous <1>: emacsvox-aural-voice-palettes.
-                                                             (line  325)
-* emacsvox-aural-voice-palettes-previous-column: emacsvox-aural-voice-palettes.
-                                                             (line  331)
-* emacsvox-aural-voice-palettes-previous-column <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-previous: emacsvox-aural-voice-palettes.
                                                              (line  332)
-* emacsvox-aural-voice-palettes-refresh: emacsvox-aural-voice-palettes.
-                                                             (line  338)
-* emacsvox-aural-voice-palettes-refresh <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-previous <1>: emacsvox-aural-voice-palettes.
+                                                             (line  333)
+* emacsvox-aural-voice-palettes-previous-column: emacsvox-aural-voice-palettes.
                                                              (line  339)
-* emacsvox-aural-voice-palettes-rename:  emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-previous-column <1>: emacsvox-aural-voice-palettes.
+                                                             (line  340)
+* emacsvox-aural-voice-palettes-refresh: emacsvox-aural-voice-palettes.
+                                                             (line  346)
+* emacsvox-aural-voice-palettes-refresh <1>: emacsvox-aural-voice-palettes.
                                                              (line  347)
-* emacsvox-aural-voice-palettes-rename <1>: emacsvox-aural-voice-palettes.
-                                                             (line  348)
-* emacsvox-aural-voice-palettes-speak-current: emacsvox-aural-voice-palettes.
-                                                             (line  354)
-* emacsvox-aural-voice-palettes-speak-current <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-rename:  emacsvox-aural-voice-palettes.
                                                              (line  355)
-* emacsvox-aural-voice-palettes-speak-current-cell: emacsvox-aural-voice-palettes.
-                                                             (line  361)
-* emacsvox-aural-voice-palettes-speak-current-cell <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-rename <1>: emacsvox-aural-voice-palettes.
+                                                             (line  356)
+* emacsvox-aural-voice-palettes-speak-current: emacsvox-aural-voice-palettes.
                                                              (line  362)
-* emacsvox-aural-voice-tuner-audition:   emacsvox-aural-voice-palettes.
-                                                             (line  368)
-* emacsvox-aural-voice-tuner-audition <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-palettes-speak-current <1>: emacsvox-aural-voice-palettes.
+                                                             (line  363)
+* emacsvox-aural-voice-palettes-speak-current-cell: emacsvox-aural-voice-palettes.
+                                                             (line  369)
+* emacsvox-aural-voice-palettes-speak-current-cell <1>: emacsvox-aural-voice-palettes.
                                                              (line  370)
-* emacsvox-aural-voice-tuner-compare:    emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-audition:   emacsvox-aural-voice-palettes.
+                                                             (line  376)
+* emacsvox-aural-voice-tuner-audition <1>: emacsvox-aural-voice-palettes.
                                                              (line  378)
-* emacsvox-aural-voice-tuner-compare <1>: emacsvox-aural-voice-palettes.
-                                                             (line  379)
-* emacsvox-aural-voice-tuner-decrease:   emacsvox-aural-voice-palettes.
-                                                             (line  385)
-* emacsvox-aural-voice-tuner-decrease <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-compare:    emacsvox-aural-voice-palettes.
                                                              (line  386)
-* emacsvox-aural-voice-tuner-edit:       emacsvox-aural-voice-palettes.
-                                                             (line  392)
-* emacsvox-aural-voice-tuner-edit <1>:   emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-compare <1>: emacsvox-aural-voice-palettes.
+                                                             (line  387)
+* emacsvox-aural-voice-tuner-decrease:   emacsvox-aural-voice-palettes.
                                                              (line  393)
-* emacsvox-aural-voice-tuner-help:       emacsvox-aural-voice-palettes.
-                                                             (line  399)
-* emacsvox-aural-voice-tuner-help <1>:   emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-decrease <1>: emacsvox-aural-voice-palettes.
+                                                             (line  394)
+* emacsvox-aural-voice-tuner-edit:       emacsvox-aural-voice-palettes.
                                                              (line  400)
-* emacsvox-aural-voice-tuner-increase:   emacsvox-aural-voice-palettes.
-                                                             (line  406)
-* emacsvox-aural-voice-tuner-increase <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-edit <1>:   emacsvox-aural-voice-palettes.
+                                                             (line  401)
+* emacsvox-aural-voice-tuner-help:       emacsvox-aural-voice-palettes.
                                                              (line  407)
-* emacsvox-aural-voice-tuner-mode:       emacsvox-aural-voice-palettes.
-                                                             (line  413)
-* emacsvox-aural-voice-tuner-mode <1>:   emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-help <1>:   emacsvox-aural-voice-palettes.
+                                                             (line  408)
+* emacsvox-aural-voice-tuner-increase:   emacsvox-aural-voice-palettes.
                                                              (line  414)
+* emacsvox-aural-voice-tuner-increase <1>: emacsvox-aural-voice-palettes.
+                                                             (line  415)
+* emacsvox-aural-voice-tuner-mode:       emacsvox-aural-voice-palettes.
+                                                             (line  421)
+* emacsvox-aural-voice-tuner-mode <1>:   emacsvox-aural-voice-palettes.
+                                                             (line  422)
 * emacsvox-aural-voice-tuner-next:       emacsvox-aural-voice-palettes.
-                                                             (line  447)
-* emacsvox-aural-voice-tuner-next <1>:   emacsvox-aural-voice-palettes.
-                                                             (line  448)
-* emacsvox-aural-voice-tuner-previous:   emacsvox-aural-voice-palettes.
-                                                             (line  454)
-* emacsvox-aural-voice-tuner-previous <1>: emacsvox-aural-voice-palettes.
                                                              (line  455)
-* emacsvox-aural-voice-tuner-quit:       emacsvox-aural-voice-palettes.
-                                                             (line  461)
-* emacsvox-aural-voice-tuner-quit <1>:   emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-next <1>:   emacsvox-aural-voice-palettes.
+                                                             (line  456)
+* emacsvox-aural-voice-tuner-previous:   emacsvox-aural-voice-palettes.
                                                              (line  462)
-* emacsvox-aural-voice-tuner-refresh:    emacsvox-aural-voice-palettes.
-                                                             (line  468)
-* emacsvox-aural-voice-tuner-refresh <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-previous <1>: emacsvox-aural-voice-palettes.
+                                                             (line  463)
+* emacsvox-aural-voice-tuner-quit:       emacsvox-aural-voice-palettes.
                                                              (line  469)
-* emacsvox-aural-voice-tuner-restore:    emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-quit <1>:   emacsvox-aural-voice-palettes.
+                                                             (line  470)
+* emacsvox-aural-voice-tuner-refresh:    emacsvox-aural-voice-palettes.
+                                                             (line  476)
+* emacsvox-aural-voice-tuner-refresh <1>: emacsvox-aural-voice-palettes.
                                                              (line  477)
-* emacsvox-aural-voice-tuner-restore <1>: emacsvox-aural-voice-palettes.
-                                                             (line  478)
-* emacsvox-aural-voice-tuner-save:       emacsvox-aural-voice-palettes.
-                                                             (line  484)
-* emacsvox-aural-voice-tuner-save <1>:   emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-restore:    emacsvox-aural-voice-palettes.
                                                              (line  485)
-* emacsvox-aural-voice-tuner-set-digit:  emacsvox-aural-voice-palettes.
-                                                             (line  491)
-* emacsvox-aural-voice-tuner-set-digit <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-restore <1>: emacsvox-aural-voice-palettes.
+                                                             (line  486)
+* emacsvox-aural-voice-tuner-save:       emacsvox-aural-voice-palettes.
                                                              (line  492)
-* emacsvox-aural-voice-tuner-speak-current: emacsvox-aural-voice-palettes.
-                                                             (line  498)
-* emacsvox-aural-voice-tuner-speak-current <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-save <1>:   emacsvox-aural-voice-palettes.
+                                                             (line  493)
+* emacsvox-aural-voice-tuner-set-digit:  emacsvox-aural-voice-palettes.
                                                              (line  499)
-* emacsvox-aural-voice-tuner-undo:       emacsvox-aural-voice-palettes.
-                                                             (line  505)
-* emacsvox-aural-voice-tuner-undo <1>:   emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-set-digit <1>: emacsvox-aural-voice-palettes.
+                                                             (line  500)
+* emacsvox-aural-voice-tuner-speak-current: emacsvox-aural-voice-palettes.
                                                              (line  506)
-* emacsvox-aural-voice-tuner-use-default: emacsvox-aural-voice-palettes.
-                                                             (line  512)
-* emacsvox-aural-voice-tuner-use-default <1>: emacsvox-aural-voice-palettes.
+* emacsvox-aural-voice-tuner-speak-current <1>: emacsvox-aural-voice-palettes.
+                                                             (line  507)
+* emacsvox-aural-voice-tuner-undo:       emacsvox-aural-voice-palettes.
                                                              (line  513)
+* emacsvox-aural-voice-tuner-undo <1>:   emacsvox-aural-voice-palettes.
+                                                             (line  514)
+* emacsvox-aural-voice-tuner-use-default: emacsvox-aural-voice-palettes.
+                                                             (line  520)
+* emacsvox-aural-voice-tuner-use-default <1>: emacsvox-aural-voice-palettes.
+                                                             (line  521)
 * emacsvox-aural-voice-workbench:        emacsvox-aural-voice-workbench.
                                                              (line   41)
 * emacsvox-aural-voice-workbench <1>:    emacsvox-aural-voice-workbench.

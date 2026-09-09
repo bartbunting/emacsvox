@@ -2872,6 +2872,16 @@ includes physical voice choices, their fallback order, and individual
 tuning.  The new voice is selected after saving; the original voice is
 unchanged.
 
+   Press ‘r’ in the voice list to rename an unused custom voice defined
+directly in that personal palette.  Enter the new name to save it; the
+renamed voice keeps its settings, physical choices and individual
+tuning.  Save or discard unfinished voice edits first.  Standard
+Emacsvox voice names cannot be renamed; copy one to create a custom
+voice.  For an inherited voice, copy it or rename it in its owning
+palette.  If a registered face mapping, presentation rule, preset or
+shared route uses the old name, update that use before renaming.
+Renaming does not rewrite mappings across other palettes.
+
    To rename a personal palette, select it in _Voice Palettes_, press
 ‘r’, and enter its new name.  The rename is saved immediately.  It
 preserves voice settings and individual fallback tuning, updates child
