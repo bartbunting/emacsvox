@@ -91,11 +91,13 @@ layered requests. Raw named-voice queue entries still force an entire mixed
 transaction to legacy projection, and isolated characters retain the separate
 letter protocol. The maintainer returned to XHI. The
 [[file:../voice-editor-legacy-queue-review.org][legacy queue review]] reproduces missing dispatch after late raw entries
-and clarifies that isolated characters supply no named palette voice. A scope
-decision is pending: complete captured submissions first (recommended A), or
-also upgrade cross-call legacy queues now (B). Preserve queue order, cancellation
-and existing character review under either option; finish the handoff at XHI
-before returning to High.
+and clarifies that isolated characters supply no named palette voice. The
+maintainer selected A: upgrade complete captured submissions, retaining cross-call
+legacy queues as an explicit compatibility path. The
+[[file:../voice-editor-queue-handoff-contract.org][selected queue contract]] completes the XHI handoff with sixteen diagnostic
+observations and independent expected cases. Return to High for dispatch intent
+and callback identity, bounded queue proof, then guarded named-queue promotion
+in separate tested commits. Preserve queue order, cancellation and character review.
 The remaining compatibility fixes, preview v2, individual controls and spoken acceptance
 are still pending; this is not complete feature delivery. Earlier, the maintainer
 selected shared tuning first, with explicit
@@ -125,6 +127,20 @@ definitions, fallback order and failure recovery, then conduct a spoken
 walkthrough.  Keep this behavior-changing work separate from the maintenance
 extractions below.  The Home label/column changes and filter-amount controls
 are already implemented in =b22bfda67= and =350e0a1f2= respectively.
+
+** Deferred: individual tuning in legacy queues built across calls
+
+The maintainer selected complete captured submissions for the current editor
+work. A named queue-only call followed by a dispatch in a later call retains its
+existing compatibility commands and does not gain individual fallback tuning.
+Expose that limit in runtime explanations without claiming every old personality
+command implements all saved shared fields.
+
+Revisit only as a separate extension with a negotiated typed server pending queue,
+bounded ownership and receipt metadata, and explicit registration/state timing.
+Preserve queue-only silence, intervening raw commands, separate flushes, poisoning,
+Stop/reset/letter behavior and disconnect without replay. The deferred option B
+is described in the [[file:../voice-editor-legacy-queue-review.org][queue review]]; it is not part of the current implementation.
 
 * Aural contract decisions
 

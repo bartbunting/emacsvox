@@ -38,24 +38,39 @@
                 (letter-normal t letter normal)
                 (outside-raw nil raw)
                 (outside-raw-dispatch nil raw dispatch)
-                (outside-raw-normal nil raw normal)))
+                (outside-raw-normal nil raw normal)
+                (normal-rate-change t normal faster-normal)
+                (named-tracked-dispatch t raw tracked-dispatch)
+                (named-marked-dispatch t raw marked-dispatch)
+                (nested-tracked-normal t tracked-normal)))
   (omnivox-choice-consumer-test--with-speech
-   (let ((run (lambda ()
+   (let (failure
+         (run (lambda ()
                 (dolist (step (cddr case))
                   (pcase step
                     ('raw (emacsvox-choice-queue-diagnostic--raw))
                     ('normal (emacsvox-choice-queue-diagnostic--normal))
+                    ('faster-normal
+                     (let ((tts-speech-rate 200))
+                       (emacsvox-choice-queue-diagnostic--normal)))
+                    ('tracked-normal
+                     (tts-speak-tracked (propertize "NORMAL" 'personality 'voice-bolden) #'ignore))
                     ('dispatch (tts--protocol-dispatch))
+                    ('tracked-dispatch (tts--protocol-dispatch-tracked #'ignore))
+                    ('marked-dispatch (tts--protocol-dispatch-marked #'ignore #'ignore))
                     ('code (tts--protocol-queue-code "[[pitch 1.1]]"))
                     ('letter (tts-letter "B")))))))
-     (if (cadr case)
-         (emacsvox-aural-call-with-delivery-transaction speaker run)
-       (funcall run)))
-   (let ((wire (mapconcat #'cdr (reverse writes) "")))
-     (princ (format "%S %S\n" (car case)
-                    (split-string
-                     (replace-regexp-in-string
-                      "emacsvox_timeline {[^}]*}" "TIMELINE" wire)
-                     "\n" t))))))
+     (condition-case error-data
+         (if (cadr case)
+             (emacsvox-aural-call-with-delivery-transaction speaker run)
+           (funcall run))
+       (error (setq failure error-data)))
+     (let ((wire (mapconcat #'cdr (reverse writes) "")))
+       (princ (format "%S %S%s\n" (car case)
+                      (split-string
+                       (replace-regexp-in-string
+                        "emacsvox_timeline {[^}]*}" "TIMELINE" wire)
+                       "\n" t)
+                      (if failure (format " error=%S" failure) "")))))))
 
 ;;; diagnose-choice-queue.el ends here

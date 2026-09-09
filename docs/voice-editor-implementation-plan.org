@@ -38,10 +38,12 @@ audit adds eight connected contracts; all 490 selected source tests pass. It
 exposes mixed raw/prepared queue fallback and the separate isolated-letter path.
 The maintainer returned to XHI. The [[file:voice-editor-legacy-queue-review.org][legacy queue review]] now reproduces lost
 dispatch intent as well as lost individual tuning, and clarifies that isolated
-characters do not request a named palette voice. A scope decision is pending:
-upgrade complete captured submissions first (recommended A), or also extend
-cross-call legacy queues now (B). Stay at XHI until that choice and its handoff
-are complete. Preview and editor work remain pending.
+characters do not request a named palette voice. The maintainer selected A:
+upgrade complete captured submissions and retain cross-call legacy queues as
+an explicit compatibility path. The [[file:voice-editor-queue-handoff-contract.org][selected queue contract]] completes the XHI
+handoff. Return to High for three tested, committed slices: dispatch intent and
+callback identity, bounded queue proof, then named-queue promotion. Broader
+cross-call tuning is deferred. Preview and editor work remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -652,32 +654,51 @@ entries force a whole mixed transaction back to legacy projection, and isolated
 characters still use the special letter protocol. These are characterized
 limitations, not completed individual-tuning support.
 
-**** TODO XHI legacy-queue handoff: scope decision pending
+**** DONE XHI legacy-queue handoff: scope A selected
 
-The maintainer returned to XHI. The [[file:voice-editor-legacy-queue-review.org][review and scope proposal]] records twelve
+The maintainer returned to XHI. The [[file:voice-editor-legacy-queue-review.org][legacy queue review]] records sixteen
 muted source observations. Raw entries after normal speech can remove the
 already-suppressed dispatch; preserving intent until finalization is required
-under either scope. Isolated characters supply no named voice, so preserve their
+by the selected scope. Isolated characters supply no named voice, so preserve their
 existing selection and letter-command behavior rather than inventing a context.
 
-Select A (complete captured submissions, with explicit cross-call compatibility
-limits) or B (also upgrade cross-call pending queues), then finish the corresponding
-technical handoff at XHI. Neither option is adopted yet. Design how inspectable named
-queue entries retain their logical request without changing queue/dispatch order,
-joining unrelated presentations or bypassing the new cancellation scopes.
-Settle the behavior of mixed opaque commands explicitly. Preserve isolated-letter
-interruption, character rate and capital feedback; do not replace the letter
-command with ordinary speech without settling those differences.
+The maintainer selected A: complete captured submissions with explicit cross-call
+compatibility limits. The [[file:voice-editor-queue-handoff-contract.org][completed technical handoff]] and
+[[file:../test/fixtures/voice-editor/queue-handoff.el][independent expected cases]] preserve callback identity, sync values and flush
+boundaries. Promotion emits at most one document and requires bounded queue-state
+proof with generation, serial and registry rechecks. Opaque commands, multiple
+flushes and unsealed tails retain their original compatibility sequence. No new
+wire format or public queue API is required. Return to High; no further product
+choice is outstanding for these slices.
 
-Use the new consumer regressions as the baseline. Specify which tests should
-become positive layered contracts and which compatibility limitations remain
-visible. Keep the accepted storage and precedence contract. Present any required
-product/API choice before implementation, then return to High for tested slices.
+**** TODO Preserve dispatch intent and callback identity
 
-**** TODO Complete ordinary compatibility paths, preview and editor controls
+Add ordered capture and one-shot semantic binding of reserved owners. Repair
+late dispatch loss and nested tracked calls, preserve differing sync values and
+explicit flushes, and validate the selected framing before policy interruption.
+Keep new named-queue promotion disabled. Use the consumer regressions and expected
+cases as the baseline; run source and fresh compiled checks after rebuilding
+byte-code for the changed structures/interfaces, then commit.
 
-After the scope decision and completed XHI handoff, implement the consumer fixes.
-Then connect private preview v2
+**** TODO Track bounded legacy queue proof
+
+Observe actual writes using exact private typed tokens; unclassified managed
+process output invalidates the proof. Cover direct, remote, framed and scheduled
+writes, process generation, mutation serial, partial/nonlocal failure and the
+exact own-stop boundary before hooks. Keep promotion disabled while testing
+these contracts. Run source and compiled gates, then commit separately.
+
+**** TODO Promote complete named queues through layered transport
+
+Connect inspectable names to version-4 projection with final admission rechecks,
+reserved-owner reuse and bounded compatibility diagnostics. Convert supported
+consumer cases to positive layered tests, retaining explicit limits for the
+others. Verify actual fallback receipts on both lanes, source/compiled parity
+and muted real-server reconnect acceptance, then commit.
+
+**** TODO Complete preview and editor controls
+
+After the three reviewed consumer slices, connect private preview v2
 and optional per-choice controls in the review's remaining implementation slices.
 
 Implement lossless context projection, lane negotiation and apply reporting.

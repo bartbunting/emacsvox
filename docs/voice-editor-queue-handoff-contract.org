@@ -1,0 +1,340 @@
+#+title: Per-Fallback Tuning: Selected Queue Handoff Contract
+#+date: 2026-09-09
+#+startup: content
+
+* Decision and delivery boundary
+
+The maintainer selected A after the [[file:voice-editor-legacy-queue-review.org][XHI queue review]]: upgrade safely complete
+captured submissions, repair dispatch preservation, and retain cross-call legacy
+queues as an explicit compatibility path. Isolated-character selection is
+unchanged. This document completes the XHI handoff. Return to High for the
+implementation slices below; no further product choice is outstanding.
+
+No production Lisp, Rust or protocol behavior is changed by this contract.
+Keep the existing timeline-4, registration-2 and marker-3 formats. In particular,
+do not introduce typed server pending queues, a character request, timeline
+segmentation, or a second client-owned queue surviving across API calls.
+
+Read this with ADRs 0015–0017, the [[file:voice-editor-client-handoff-review.org][preparation/dispatch ownership contract]] and
+the [[file:voice-editor-fallback-wire-contract.org][wire contract]]. All accepted Emacsvox and Omnivox ADRs were read together
+during the preceding review and continue to apply.
+
+* Ordered capture and complete compatibility output
+
+** Capture source intent, not an early transport decision
+
+Add an ordered private capture journal to the existing delivery transaction.
+Journal records identify their exact original command range and contain one of:
+
+- a concrete run contribution, with its existing raw request and provenance;
+- an inspectable named queue contribution, with the unevaluated name, copied
+  text and its original compatibility commands;
+- a trusted state/sync command, with its actual command and typed state value;
+- an ordinary producer's end-of-speech dispatch intent; or
+- an explicit low-level dispatch or opaque command at its original position.
+
+The original command entries remain the compatibility representation. Do not
+duplicate their strings or retain text in process-wide proof records. A journal
+may use indices or object references to connect commands and runs; it must not
+reconstruct their ordering from two independent unpositioned lists.
+
+Bound added journal records by the existing timeline span/action limits plus
+the 128-owner limit, and added retained text/request metadata by 16 MiB per
+capture. Reuse references to already owned immutable data rather than copying
+the compatibility queue again. Check additions before retaining them; exhaustion
+is a preparation failure, never a reason to select legacy output.
+
+Record an ordinary dispatch intent when =tts--speak-transaction= finishes its
+speech preparation, regardless of the current value of
+=emacsvox-aural-structured-delivery-pending-p=. The intent captures callback
+identity and whether the producer requests plain, tracked or marked delivery.
+Only finalization decides whether that intent becomes a timeline or a legacy
+dispatch. A later opaque command cannot erase it.
+
+An explicit =tts--protocol-dispatch*= call is a hard boundary. Calls made to
+implement an ordinary producer's recorded intent use an explicit private origin
+tag; they must not be mistaken for an external explicit flush.
+
+Queue-only calls do not acquire a dispatch intent. In particular,
+=tts-speak-using-voice= keeps its signature, queue-only behavior, inaudible and
+empty-text handling. Preserve its original compatibility code/text/reset output
+when no promotion is selected. Do not implement it by invoking =tts-speak=.
+
+Retain the existing implicit finalization for a pure concrete-plan transaction
+whose caller relies on it. Do not infer a legacy dispatch for a bare concrete
+queue call that never requested one merely because another entry later makes
+that transaction incompatible. The lost-dispatch repair restores recorded
+producer intent; it does not redefine every queue function as a speak function.
+
+** Select one representation for the whole capture
+
+Emit at most one structured document from this finalizer. Promote only when:
+
+1. Every speech contribution is represented by concrete runs or an inspectable
+   owned name, and every accompanying command is a trusted representable entry.
+2. The complete capture has one effective closing dispatch and no queued tail.
+   Adjacent callback-free ordinary contributions may retain existing coalescing
+   when no low-level queue/control boundary intervenes and sync values agree.
+3. There is at most one callback owner. A final explicit dispatch can close a
+   queue-only prefix; an explicit dispatch followed by more speech remains a
+   boundary and prevents whole-capture promotion.
+4. All sync values that would move before the document are identical. Differing
+   rate, punctuation, split-caps or capitalization state retains legacy order.
+5. Additional promotion of named queue entries passes the queue proof below
+   and the lane has the complete acknowledged choice-tuning bundle.
+
+Otherwise render the original compatibility entries, restoring each recorded
+ordinary dispatch at its position and preserving every explicit dispatch.
+Do not append one final =d= as a general repair: that would also speak an
+unsealed queue-only tail. Do not coalesce dispatches merely because their
+callbacks or voice values compare equal.
+
+Multiple explicit flushes, opaque commands, unsealed tails and state transitions
+therefore retain compatibility output in A. This is deliberate: splitting them
+into several replaceable timelines under the same key could cancel an earlier
+part of the same submission. The current =emacsvox_tx= grammar also rejects
+nested timelines and tracked/marked commands. Do not bypass those constraints.
+Validate the selected compatibility framing as well as the timeline framing
+before policy interruption. An unsupported command cannot be hidden in an
+=emacsvox_tx= frame. Use an unframed packet only where the selected delivery
+policy permits it; otherwise report an admission failure. Do not add a Stop,
+drop callback ownership, or silently change delivery policy to make it fit.
+
+Examples, with Q a named queue-only call, N ordinary speech, D an explicit flush:
+
+| Input | Required outcome |
+|-------+------------------|
+| Q only | Queue only; no dispatch or timeline. |
+| Q, N | One layered timeline when the full proof succeeds. |
+| Q, D | One layered timeline when the full proof succeeds; D remains the closing flush. |
+| N, N with equal state and no callbacks | One ordinary timeline, as today. |
+| N, Q | Legacy N then its dispatch, followed by queued Q; Q is not spoken early. |
+| N, Q, D | Legacy N/dispatch then Q/D; the low-level queue boundary is retained. |
+| Q, D, N | Legacy Q/D then N/dispatch; preserve both flushes. |
+| N, opaque code | Legacy N/dispatch followed by the opaque code. |
+| N at rate 100, N at rate 200 | Preserve both sync/dispatch pairs; do not apply the last rate to both. |
+
+The [[file:../test/fixtures/voice-editor/queue-handoff.el][independent expected cases]] are data for implementation tests. They describe
+desired output, not output already produced by the current finalizer.
+
+* Named voice projection
+
+Before evaluating a personality variable or generating inline commands, retain
+the supplied symbol and resolve it with the existing owned palette compiler.
+Only a single inspectable owned name or alias is eligible. Compound personalities,
+unresolved names and opaque definitions retain compatibility output.
+
+A direct named queue call supplies no new contextual rule application. Its
+layered context is empty; its shared definition and choices come from the frozen
+acknowledged registry. Existing concrete runs retain their original sparse
+context and provenance. Never flatten an effective style into the new context,
+infer it by comparing numbers, or silently run text preprocessing/rules again.
+
+Build the timeline with the existing compiler, span projection and effect-mode
+boundary rules. The name resolved by compilation must identify an acknowledged
+layered definition in the same palette/registration snapshot. A pending or changed
+registration remains an admission error; it is not an old-server fallback.
+
+The compatibility alternative retains the old helper's actual commands. It is
+not a new guarantee that arbitrary old personality commands implement every
+saved palette field. Normal concrete speech on older servers continues to use
+its existing shared-style projection. Both limitations exclude individual tuning.
+
+* Bounded knowledge of the server's legacy pending queue
+
+** Scope and state
+
+The new proof gates only promotion that replaces named legacy queue entries.
+Already-structured ordinary speech retains its existing independent admission;
+it does not become an implicit flush of an older server pending queue.
+
+Keep one constant-size record per managed speech process: process generation,
+queue state (=empty=, =pending= or =unknown=), mutation serial and in-flight write
+information. Absence, malformed state, a changed generation, partial writes or
+retirement mean unknown. Do not retain queued text, historical registries or a
+list of earlier submissions in this record.
+
+Initialize empty only for a freshly owned local server or authenticated fresh
+remote worker, with observation installed before speech writes are exposed.
+Attaching to an existing process starts unknown. Capability/registry replies,
+playback completion and a new client capture do not establish queue emptiness.
+
+** Observe actual writes
+
+Use a small private observer at =process-send-string= for managed speech
+processes, together with a private typed writer used by TTS, aural delivery,
+Omnivox control/state output and remote heartbeat output. Other processes are
+untouched. Do not derive queue effects by parsing arbitrary command strings or
+install a Lisp interpreter for inline engine codes.
+
+A trusted write carries an exact process/string identity and a one-use effect
+token. Consume that token before forwarding to the primitive; nested writes
+must not inherit its classification. The observer records uncertainty before
+I/O, commits the declared effect only after a complete return, and retains
+unknown on error, quit, throw or unexplained reentrant mutation. Keep observer
+bookkeeping short, without user callbacks, speech or blocking work of its own.
+
+Direct unclassified writes invalidate the proof. Known control-envelope requests
+and authenticated remote heartbeats can be marked queue-neutral by their actual
+constructors; arbitrary state-command helper arguments are not trusted merely
+because they passed through a helper with a familiar name.
+
+| Successful typed write | Queue effect |
+|------------------------+--------------|
+| Queue text, code, tone, silence or icon | Empty becomes pending; unknown stays unknown. |
+| Unframed plain/tracked/marked dispatch | Empty after the pending batch is consumed or its poison is cleared. |
+| Stop or reset | Empty; retain their existing separate cancellation behavior. |
+| Isolated letter or immediate say | Preserve pending state; these do not clear the server pending batch. |
+| Structured timeline, known control, heartbeat or nonqueue state command | Preserve pending state; successful playback is not evidence that an older queue drained. |
+| Unknown command, partial/nonlocal write outcome or interleaving uncertainty | Unknown. |
+
+Increment the mutation serial for every queue-affecting or unclassified write,
+including a complete batch that leaves the queue empty. Letter and immediate
+say also increment it because they interrupt speech, even though they preserve
+the pending queue. Queue-neutral control/heartbeat/timeline writes leave it
+unchanged. In-flight bookkeeping separately prevents a temporary unknown state
+from being mistaken for a completed boundary.
+
+For a replaceable =emacsvox_tx= packet, join the state for the payload executing
+with the state for it being rejected/coalesced away. For example, an empty queue
+remains empty if a fully closed batch either executes or is skipped. A final
+dispatch inside a possibly skipped frame cannot prove that an earlier pending
+queue was emptied. Stop/reset inside such a frame are not a permitted shortcut.
+
+Queue effects apply at actual delivery, including an idle-scheduled send, rather
+than capture time. A typed complete legacy packet can summarize its ordered
+effects without storing a second copy of its commands. Limits/parse failures
+that cannot establish a complete boundary leave the proof unknown.
+
+** Admission and reentrancy
+
+Require known empty, no uncertain in-flight write, the same live process
+generation and the unchanged acknowledged registration when choosing new named
+promotion. Check again before policy interruption and immediately before the
+first output write. A body can recursively send speech while copying or framing;
+its earlier queue-state sample is not a permanent grant. Retain the mutation
+serial with the proposal and require it to match at both checks; even a later
+legacy dispatch that restores empty invalidates the earlier proof.
+
+Do not optimistically use an intended future Stop to justify promotion from
+pending/unknown. Choose compatibility output in that case; a successfully sent
+Stop can establish empty for the next capture. This keeps validation before Stop
+and avoids rebuilding a failed proposal after an irreversible output action.
+
+The existing exact own-stop allowance remains valid. Its private typed Stop
+write may update the proposal's expected serial exactly once, immediately after
+that clear succeeds and before stop hooks run. Bind the permission to the exact
+ready preparation and write token; do not use a dynamically inherited flag.
+After the hooks, recheck empty/serial/generation/registration. A nested complete
+ordinary timeline or heartbeat may preserve empty and need not cancel the outer
+request. A nested queue-only/opaque/legacy-dispatch/letter write invalidates
+promotion before it is sent. Public Stop still cancels the preparation and must
+not gain the own-stop exemption.
+
+Once representation and owners are prepared, a failed admission recheck aborts
+the submission. Do not reproject or replay it as legacy after policy effects.
+If queue-affecting reentrancy breaks the proof during the write itself, treat the
+delivery as an ambiguous send failure: retire owners, retain unknown, commit no
+success/history effects, and do not replay. Already transmitted bytes cannot be
+recalled. Harmless nested queue-neutral writes must not inherit a clear token or
+falsely prove an empty queue.
+
+* Callback identity and metadata
+
+Reserve a callback owner's ID when a captured tracked/marked dispatch intent is
+created, using the existing bounded preparation scope. Both low-level explicit
+dispatch and ordinary =tts-speak-tracked=/=tts-speak-marked= then retain that ID.
+This also prevents a nested tracked ordinary call from failing simply because
+its parent capture has not yet finalized. Reservation remains inactive, not
+evidence that the server accepted or played the speech.
+
+Finalization binds that same owner to the selected representation. Add a private
+one-shot semantic-binding operation and an explicit prepared/bound flag. Existing
+owner constructors with complete semantics remain bound. Deferred owners cannot
+arm until binding is complete. Binding nil for legacy is a completed binding,
+distinct from not having bound anything.
+
+Copy and size the final semantic map before the critical section, recheck the
+scope and owner, then update the map, bound flag, owner charge and process charge
+together. Roll back on nonlocal exit. Charge only the delta from the original
+reservation; use the existing 128-owner and 32-MiB metadata limits. Scope unwind
+must release a reservation even if binding fails before the helper returns.
+Attach choice context afterward using the existing atomic sidecar service.
+
+A single eligible document reuses its reserved owner, or allocates one at final
+projection for callback-free speech. Several callback owners force compatibility
+delivery with their original dispatches. They are never merged into one callback
+or abandoned merely to replace them with a new timeline ID.
+
+Keep the existing packet writer, arm-before-write, deferred callback drain,
+publication and last-reference release. Serialize all compatibility dispatch
+commands and owner associations before policy interruption. Early server events
+and failed writes keep the existing lifecycle semantics.
+
+Any reserved callback owner makes delivery immediate, even after the dynamic
+callback binding of a nested producer has ended. Do not put such an owner into
+the idle scheduler and abandon it when the preparation scope closes. Callback-free
+compatibility delivery retains the existing scheduler and cancellation rules.
+
+* Visible limits and bounded diagnostics
+
+Keep the last successful delivery's compatibility reason per lane when captured
+owned names could not use individual tuning. Use bounded data: generation,
+submission identity, reason, at most 32 logical IDs with the existing 128-byte
+ID limit, and a truncation flag. Retain no text, callbacks or buffers. Update it
+only for the proposal actually sent; an old completion cannot clear newer state.
+
+Distinguish unsealed tail, explicit multiple flushes, opaque commands/definitions,
+state transition, cross-call pending/unknown queue and old-server support. Do not
+overwrite a historical consumed-playback receipt with a prediction or a send
+limitation. Configuration application and the route used by a particular
+submission remain separate facts.
+
+The editor/runtime explanation will expose these limits and the separate
+character-review behavior. Routine speech must not repeat a warning on every
+submission. Keep broader cross-call queue tuning explicitly deferred in the
+backlog. No claim of complete editor delivery precedes that explanation and the
+remaining preview/control/acceptance work.
+
+* High implementation slices
+
+1. Add ordered capture, durable dispatch intents and prepared-owner semantic
+   binding. Preserve existing compatible timelines; repair late-incompatibility
+   dispatch loss, callback identity and state/flush order. Add source and fresh
+   compiled regressions, rebuild byte-code after struct/interface changes, and
+   commit. Do not enable named queue promotion yet.
+2. Add bounded queue proof and typed write observation, including direct output,
+   framed payloads, remote heartbeat, process startup/reconnect and delayed
+   delivery. Exercise unknown/partial/reentrant writes and exact own-stop cases.
+   Promotion remains disabled until the proof tests and compiled gate pass;
+   commit this slice separately.
+3. Connect inspectable named capture to the existing version-4 projection with
+   the final proof guards, owner reuse and bounded compatibility diagnostics.
+   Convert supported consumer cases to positive layered tests. Verify actual
+   fallback receipts on both lanes, source/compiled parity and muted real-server
+   reconnect acceptance, then commit.
+4. Continue preview v2 and optional editor controls. Add their runtime explanation,
+   update maintained guidance/artifacts, and perform the existing spoken acceptance.
+
+Each slice also runs the selected source matrix and required non-mutating gates.
+Test error/quit/throw during binding and proof publication, cancelled captures,
+old/new lanes, registry changes, queue poisoning, framed rejection, empty/inaudible
+input, unsealed tails, opaque state, two explicit flushes, two callback owners,
+changed sync rates, pending scheduling, early receipts and disconnect without
+replay. Bounds must fail before output; they must not trigger a legacy retry.
+Observer tests must keep observation active around the mocked I/O primitive;
+replacing the advised function wholesale would bypass the behavior under test.
+
+* Handoff validation
+
+All 490 selected source tests pass at the unchanged runtime baseline. The muted
+source diagnostic records sixteen observations, including the expected existing
+nested-tracked failure. The fixture was read as non-evaluated data: eighteen
+capture cases, eleven queue-proof cases and seven admission cases have valid
+basic shapes and unique IDs. This validates design data, not future runtime
+behavior or listening acceptance.
+
+=make check-emacs=, =make bytecode-check=, =make headers-check= and
+=make docs-release-check= pass with the selected Emacs 31.0.90. No production
+Lisp changed, so this handoff does not require a new byte-code build or a live
+profile restart. Runtime implementation remains the three High slices above.

@@ -127,8 +127,8 @@ behaviors are visible in Omnivox's =CommandId::Letter= handling and
 =process_letter= pipeline. They are not reproduced merely by sending a one-letter
 ordinary text span. No listening or server behavior change was performed here.
 
-The maintainer returned to XHI. The [[file:voice-editor-legacy-queue-review.org][queue handoff review]] records twelve further
-observations and a scope decision. It also reproduces a missing-dispatch defect:
+The maintainer returned to XHI. The [[file:voice-editor-legacy-queue-review.org][queue handoff review]] records sixteen further
+observations and the selected scope A. It also reproduces a missing-dispatch defect:
 late raw commands can prevent structured replacement after dispatch was suppressed.
 That needs repair regardless of the selected tuning scope.
 
@@ -138,9 +138,11 @@ to apply. Retain its existing voice selection and letter semantics. Choosing a
 voice from formatting at point would be separate UX work. Word spelling and
 phonetic review remain ordinary speech consumers.
 
-The recommended scope upgrades complete captured submissions and explicitly
-retains cross-call legacy queue limitations; the alternative also extends those
-pending queues through new negotiated support. Neither is selected yet.
+The selected scope upgrades complete captured submissions and explicitly retains
+cross-call legacy queue limitations. Broader cross-call tuning is deferred. The
+[[file:voice-editor-queue-handoff-contract.org][completed handoff contract]] preserves dispatch/owner identity, sync boundaries
+and bounded queue proof. Its [[file:../test/fixtures/voice-editor/queue-handoff.el][expected cases]] describe desired behavior; they do
+not establish implemented support. Return to High for three tested runtime slices.
 Preserve shared -> actual choice -> context and the existing public queue API.
 Preview and editor work remain pending.
 
