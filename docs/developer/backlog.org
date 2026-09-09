@@ -100,11 +100,12 @@ Dispatch intent and callback identity now survive finalization, including legacy
 fallback, distinct flushes and changing sync values. Fifteen new contracts and
 all 505 selected source tests pass. Capture sealing and independent presentation
 hooks prevent late contributions from disappearing; framing is checked before
-interruption. The [[file:../voice-editor-queue-proof-review.org][protocol-fragment review]] now requires a narrow return to
-XHI before bounded queue proof: an unfinished command can absorb a later Stop,
-reset or dispatch. Refine framing knowledge and exact own-stop admission, then
-resume queue proof and guarded named-queue promotion at High. Scope A remains
-selected. Preserve queue order, cancellation and character review.
+interruption. The [[file:../voice-editor-queue-proof-review.org][XHI protocol-boundary refinement]] is now complete: queue contents and framing
+have separate proof, with conservative local/remote recovery, observed birth and
+exact own-stop receipts. All 26 muted local/remote server observations pass.
+Return to High for bounded observation and then guarded named-queue promotion.
+The new proof remains unimplemented. Scope A remains selected. Preserve queue
+order, cancellation and character review.
 The remaining compatibility fixes, preview v2, individual controls and spoken acceptance
 are still pending; this is not complete feature delivery. Earlier, the maintainer
 selected shared tuning first, with explicit

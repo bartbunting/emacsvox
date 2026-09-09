@@ -1,84 +1,305 @@
-#+title: Queue Proof: Protocol Fragment Review Boundary
+#+title: Queue Proof: Completed Protocol Boundary Refinement
 #+date: 2026-09-09
 #+startup: content
 
-* Status
+* Status and next level
 
-High implementation slice =3fbae73b3= is complete: ordered captures preserve
-dispatch intent, callback identity and state boundaries. All 505 selected source
-tests, fresh compiled aural checks, byte-code preflight and muted both-lane/reconnect
-acceptance pass. Named-queue promotion is still disabled.
+The maintainer resumed at XHI after =67ba2eb8b=. This refinement completes the
+[[file:voice-editor-queue-handoff-contract.org][selected A queue contract]]; return to High for bounded observation and then
+separately guarded named-queue promotion. No new product decision is required.
+This review changes design data and server diagnostics, not production behavior.
+The first runtime slice =3fbae73b3= remains complete with 505 passing selected
+source tests. New named-queue promotion remains disabled.
 
-Inspection for the next slice found an assumption that needs XHI review before
-implementing queue-state proof. The selected scope A remains unchanged. There is
-no new product choice or request to extend cross-call tuning.
+Keep cross-call tuning deferred, the existing character protocol, bounded
+metadata and no replay. Do not insert a newline, Stop or reset to repair proof.
+A proof failure restricts promotion; it does not authorize cancelling a healthy
+connection or changing ordinary compatibility output. Remote proof recovery may
+wait for the existing reconnect lifecycle without initiating a reconnect itself.
 
-* A write boundary is not a protocol command boundary
+* Why the previous rule was insufficient
 
-The [[file:voice-editor-queue-handoff-contract.org][selected handoff]] distinguishes empty, pending and unknown server queues,
-but its clear-after-Stop/dispatch/reset rule does not yet distinguish uncertainty
-about the queue from uncertainty about an unfinished protocol line. Omnivox reads
-commands from a byte stream. Separate =process-send-string= calls do not create
-separate protocol lines.
-
-For example, previously queued text can survive this stream:
+Omnivox consumes a byte stream. With EARLIER already queued, these two writes:
 
 #+begin_example
-q {EARLIER}\n
-q {
-s\n
-q {NEW}\n
-emacsvox_marker_dispatch 91\n
+"q {"
+"s\n"
 #+end_example
 
-Here =\n= denotes a newline; the incomplete =q {= has none. The next =s= becomes
-part of =q {s=, so no Stop command executes. A later marker dispatch still reports
-=EARLIER= alongside the fragment and =NEW=. A successful client write of =s\n=
-therefore does not establish an empty queue in this state.
+form one =q {s= line. Stop did not execute; EARLIER survives. Reset and dispatch
+can be absorbed in the same way. A following newline can establish a command
+boundary while leaving the queue unknown. A later, independently requested Stop
+can then clear it. Concatenating captured entries does not remove this problem.
 
-The same problem applies to dispatch and reset. The next newline can restore
-the input boundary while leaving the server queue uncertain. An additional,
-already requested Stop at that restored boundary can clear it. This observation
-does not authorize inserting additional Stops or changing delivery policy.
+The selected Emacs's =process-send-string= documentation explicitly permits
+splitting a write into several bunches and running process output between them.
+A nested heartbeat can therefore join a line too. Classifying its command as
+queue-neutral is insufficient while another write is in flight.
 
-* Muted server evidence
+* Reader evidence and deliberately bounded recovery
 
-[[file:../test/diagnose-queue-fragments.py][The diagnostic]] supplies the exact byte streams to an explicitly selected
-Omnivox executable with eSpeak and =--audio-output null=. It checks terminal
-completion and reports the text in legacy utterance-start records. These are
-protocol/queue observations, not listening acceptance or per-fallback receipts.
+This review read all accepted Emacsvox and Omnivox ADRs together and inspected
+Omnivox =31a0b9a=: =omnivox-cli/src/server.rs=, =remote.rs= and =transaction.rs=,
+plus =omnivox-core/src/command.rs=. Relevant reader behavior:
 
-| Stream before the final NEW/marker dispatch | EARLIER survives |
-|-------------------------------------------+------------------|
-| Queued EARLIER, complete Stop | No |
-| Queued EARLIER, incomplete q prefix, Stop | Yes |
-| Queued EARLIER, incomplete q prefix, reset | Yes |
-| Queued EARLIER, incomplete q prefix, plain dispatch | Yes |
-| Queued EARLIER, incomplete q prefix, Stop, later Stop | No |
-| Queued EARLIER, complete opaque code line, Stop | No |
+| Reader | Bound and recovery |
+|--------+--------------------|
+| Local stdio | 524288 payload bytes, excluding LF and one trailing CR. Oversized or invalid UTF-8 records are drained through LF and discarded; later records continue. EOF can submit an unfinished final record, then closes input. |
+| Remote broker | 524288 bytes including LF and any CR. Requires UTF-8 without NUL. Malformed/oversized records close the connection and retire its worker. A partial line can be retained across reads, but does not renew the lease. |
+| Remote reserved prefix | Only exact =OMNIVOX-REMOTE ping= with LF or CRLF is accepted after authentication; other records starting with =OMNIVOX-REMOTE= close the connection. A ping appended to =q {= reaches the worker as queue text. |
+| Legacy parser | Trims a complete record; block/space arguments are accepted. A string that looks like Stop inside another record is not a Stop command. |
 
-All six cases were reproduced against development Omnivox =31a0b9a=, with
-successful terminal completion and the expected retained/cleared text. No
-Omnivox source, runtime installation or live personal settings were changed.
+The proof deliberately does not implement a second incremental remote decoder.
+A complete, independently written remote packet can be checked without retaining
+its text. A remote fragment across actual writes, uncertain prefix, nonlocal
+write failure, unsupported encoding or overlapping write latches the proof
+unusable until a fresh connection. Some such streams would happen to recover;
+the client does not claim to know which ones. Fully framed opaque remote output
+can instead leave only the queue unknown, allowing a later typed clear to prove
+empty. Compatibility playback and the existing heartbeat lifecycle are unchanged.
 
-* Required XHI refinement
+* Constant-size state and transitions
 
-Recommend retaining scope A and refining its bounded proof to track protocol-line
-framing separately from queue contents. Settle and record:
+Use a private low-dependency =tts-queue-state.el= service. Keep one record per
+managed process, shared by both direct and aural packet writers. Fields are:
+record identity, process generation, local/remote mode, queue =empty/pending/
+unknown=, framing =boundary/unproven=, a sticky unusable flag, mutation serial,
+and one outer-write identity plus an overlap flag. No queue text, decoder tail,
+buffer, callback list or registry history belongs here. Saturating serial
+exhaustion replaces the record with unknown state and a new identity; an old
+guard can never match after rollover. Retirement makes the record unusable.
 
-- which complete command boundaries can be established after an unclassified
-  write, partial/error outcome or connection attachment;
-- how typed effects compose when adjacent entry strings or separate writes join
-  into one line, including delayed and framed delivery;
-- how a fresh local process or authenticated remote worker gains its initial
-  proof before external writes can escape observation;
-- how the exact own-stop allowance advances a proposal only after a clear
-  command is known to have executed at a valid boundary;
-- how neutral control/heartbeat traffic and nested writes preserve or invalidate
-  both parts of the proof without retaining arbitrary text or replaying speech.
+=boundary= means the preceding observed byte stream ends at LF, or starts at a
+proven fresh input. =unproven= covers both a known unfinished line and an unknown
+prefix: neither permits applying the first command's declared queue effect.
+A queue may be empty while framing is unproven; that combination cannot promote.
+The unusable latch is separate: recovering a trailing LF cannot undo a remote
+transport fault or EOF. An unusable record stays unknown/unproven until fresh
+ownership; later writes cannot publish new proof into it. Successful output describes the ordered stream if the
+same worker continues consuming it, not an execution acknowledgement or playback
+receipt. An asynchronous disconnect still fails delivery without replay.
 
-Keep the existing conservative rule: uncertainty prevents named promotion.
-Do not implement a new server queue, add repair commands, infer engine-code
-semantics, or treat capability acknowledgement as proof of an empty queue.
-Extend the independent proof/admission fixtures after settling the refinement,
-then return to High for the remaining implementation slices.
+For an uncontended complete return, use these transitions:
+
+| Contribution | From boundary | From unproven |
+|--------------+---------------+---------------|
+| Validated single typed record ending LF | Apply its declared queue effect; remain boundary. | First record may be absorbed: queue unknown, framing boundary, serial changed. |
+| Nonempty opaque entry | Queue unknown; framing boundary only if its last byte is LF. | Same. Do not infer a clear from its contents. |
+| Empty entry/write | Preserve state and serial. | Preserve state and serial. |
+| Partial/error/quit/throw/overlap | Queue unknown, framing unproven, serial changed. | Same. Remote also latches unusable. |
+| Region output | Unknown queue and unproven framing; do not copy/read the region for proof. | Same. Remote also latches unusable. |
+| EOF | Unknown queue and unproven framing; unusable for either mode. | Same. |
+
+The successful transitions require the reviewed UTF-8 Unix output coding at the
+actual write. Use =utf-8-unix= explicitly in the owned factories. Unsupported
+coding invalidates proof; do not silently recode an attached connection. On a
+local process a subsequent successful observed UTF-8 Unix write ending LF can
+restore framing, but its first clear still cannot clear the unknown prefix.
+On remote, an unusable latch stays set until a new process is owned.
+
+Typed queue effects at a valid boundary retain the main contract: queue items
+make empty pending (unknown stays unknown); unframed plain/tracked/marked dispatch,
+Stop and reset clear; letter/say preserve queue but advance serial; ordinary
+structured timeline, validated control and nonqueue state preserve both. Queue
+operations advance serial even when the final state is empty. An absorbed
+supposedly neutral record advances serial and leaves queue unknown.
+
+For local typed records validate UTF-8 and the local payload limit. An invalid
+record loses its declared effect and is opaque, even if it spells Stop. Its LF
+can still restore framing because the local reader drains rejected records.
+For remote, validate the entire actual packet before using any summary: start
+at a boundary, end at LF, each encoded record within the inclusive limit, valid
+UTF-8, no NUL, and no reserved-prefix record except exact ping. Rejecting this
+proof check latches unusable; it does not reject an already selected ordinary
+legacy send. New promotion must pass the check before any policy effect.
+
+Bound proof inspection to the existing 16-MiB capture/packet budget. Oversized
+unclassified output remains unclassified and invalidates proof without retaining
+or fully scanning it. Local framing then remains unproven until a later bounded
+write; remote latches unusable. No second full packet/encoded buffer is retained.
+Use bounded per-record UTF-8 counting/scanning, discarding each temporary record.
+
+* Compose entries before observing the actual packet
+
+Add private effect metadata alongside delivery-entry =kind=; public delivery
+arguments and generic state helpers do not confer trust. Actual constructors
+validate the exact records they create. An unknown inline engine code can be
+classified as a queue operation only when its outer =c= record is valid; its
+engine semantics remain opaque to representation selection.
+
+Each entry summary is a fixed six-row transfer table over queue times framing,
+with a serial-disturbance bit per input. Charge added summary/fingerprint metadata
+against the existing capture budget before retaining it; keep existing entry
+count limits. Compose in original order; this is a
+constant-size map, not a list of past commands. For example, opaque ="q {"=
+followed by typed ="s\n"= maps to unknown/boundary, while a subsequent separately
+typed ="s\n"= maps to empty/boundary. A multiline constructor composes its own
+validated records; do not label a whole arbitrary string as one trusted Stop.
+
+Remote wire validation applies after concatenation, independently of entry
+effect composition. Adjacent fragments inside one actual complete packet can
+pass framing validation; their typed effects still respect entry boundaries.
+Separate actual remote writes with an unfinished tail latch unusable, even if
+concatenating them later would make a valid record. Delayed scheduling retains
+summaries but changes process proof only when output occurs.
+
+A replaceable =emacsvox_tx= is one typed outer record. At a valid boundary, join
+the old queue state with its validated payload's executed state; unequal states
+join to unknown. Empty stays empty for a closed batch executing or being skipped;
+an earlier pending queue cannot be proved emptied by a skippable frame. From an
+unproven boundary the outer record itself can be absorbed, so it yields unknown.
+Advance serial in either case. Existing frame admission bounds and exactly one
+final plain dispatch remain mandatory.
+
+Constructors own their command strings. Bind each entry's effect to a content
+fingerprint when the effect is created; verify those fingerprints before composing
+the final packet. Bind its summary to the exact process, final string identity
+and packet fingerprint. Recheck content immediately before I/O and on return.
+A string changed before packet construction cannot inherit an old entry effect.
+Keep only fingerprints/summaries with the already retained commands, and discard
+the one-use token's command reference on unwind. A pre-write mismatch invalidates
+proof and fails a guarded promotion before send; a mismatch discovered after I/O
+is an ambiguous failure. Neither permits a compatibility retry.
+
+* Observe the real I/O boundary and fail closed on overlap
+
+Install an innermost observer around =process-send-string=, plus invalidators for
+=process-send-region= and =process-send-eof=. Resolve process objects, process/
+buffer names, buffers and nil as the primitives do, so naming a managed process
+differently cannot escape observation. Unmanaged processes pass through unchanged;
+a birth-scope taint flag is the only extra observation during owned creation.
+No unrelated writer is rewritten.
+
+Private typed writes carry an exact process/string identity and one-use token.
+The observer consumes it before I/O. An outer advice that rewrites arguments
+cannot inherit its effect. Missing observation, changed content, unavailable
+observer coverage, unsupported inner advice or a changed generation cannot
+produce a success receipt. Install the observer nearest the primitive and verify
+that arrangement before granting proof; do not bypass existing advice. Deliberate
+replacement of Lisp/primitive machinery outside this supported arrangement is
+not evidence of an observed stream. Tests wrap a fake primitive under the real
+observer, including outer rewriting and missing-forwarding advice. If an outer
+advice forwards unclassified bytes or returns without consuming the token, the
+guarded writer cannot publish success; treat the missing receipt as ambiguous
+failure, with owner retirement and no replay.
+
+Before entering I/O mark the record in flight; no admission is permitted then.
+Any same-process nested output, including a complete heartbeat/timeline, sets
+an overlap flag. Neither nested completion nor outer unwind may publish an empty
+proof. Keep one outer identity, not an unbounded write journal. On all nonlocal
+exits, leave unknown/unproven and advance serial; remote latches unusable. Other
+processes retain independent proof. A proof bookkeeping failure must never leave
+old known state usable. Keep mutation/publication unwind-safe and callback-free.
+
+A neutral write is neutral only when complete, correctly framed and outside any
+other write. Neutral output from a Stop hook runs after the Stop receipt and can
+preserve proof. Neutral output during that Stop is ambiguous and invalidates it.
+A guarded promoted write that loses proof during I/O reports ambiguous failure,
+retires owners, publishes no success/history and never replays already sent bytes.
+Existing unguarded compatibility writers retain their output behavior.
+
+* Birth, generation and reconnect
+
+Install observation before invoking either owned process factory. A bounded
+creation scope starts clean; any output to an as-yet-unregistered process during
+factory execution taints it, even when made by factory advice. Conservatively
+share taint with nested creation scopes; do not retain a list of unknown processes
+or writes. Writes to an already managed other lane do not taint the new birth.
+Immediately attach a provisional record to the returned process before waits,
+callbacks, startup commands or public exposure. An old/custom attached process
+starts unknown/unproven and cannot use a fresh-birth assertion.
+
+The reviewed local =make-process= pipe path may initialize empty/boundary only
+with an untainted creation scope and the reviewed coding. No user callback
+occurs between testing that scope and attaching the provisional record. A tainted
+local birth starts unknown/unproven; ordinary later framing/clear rules apply.
+
+Remote attaches its provisional record immediately after network creation,
+before waiting for connect or writing credentials. It starts not promotion-ready.
+A private auth token is bound to that birth and the exact bounded handshake write.
+Only one successful authentication write followed by the matching ready response,
+without other output or overlap, consumes the fresh-worker grant and initializes
+empty/boundary. Ready alone cannot clear an existing queue or fault. Do not retain
+or log credentials in proof metadata. Unexpected pre-ready writes or birth taint
+make this remote record unusable for promotion; ordinary connection code keeps
+its current success/failure behavior. Start typed heartbeats after this handoff.
+
+Assigning the public TTS generation attaches it to the same provisional identity;
+it never resets observed queue/framing/serial or erases a fault. Unexpected
+reassignment to an existing process invalidates proof. New local/remote processes
+get different identities, and old receipts, timers and closures cannot alter them.
+Registry/capability replies and playback completion never establish emptiness.
+
+* Admission and exact own-stop receipt
+
+A proposal replacing named queues stores one private guard in its existing
+preparation: proof-record identity, generation, serial and the acknowledged
+registration identity. It requires empty, boundary, usable and no write in flight
+at selection, before policy interruption and immediately before output. Registry
+validation and existing owner lifecycle checks remain independent requirements.
+Ordinary already-structured speech keeps its existing admission path. Bounded
+compatibility diagnostics distinguish input-boundary-unproven and remote-proof-
+unusable from an ordinary cross-call pending queue. Explanations remain separate
+from actual-playback receipts and do not repeat warnings during routine speech.
+
+Pending/unknown/unproven/unusable at selection chooses compatibility. A proposed
+future Stop cannot justify promotion. Once a layered proposal and owners are
+prepared, a failed recheck aborts; do not rebuild legacy output after policy effects.
+
+Only the exact ready preparation's one permitted policy Stop can advance its
+expected serial. Bind a private permission to that preparation and exact typed
+write token. The completed receipt must prove that Stop started at boundary,
+finished without overlap and left empty/boundary on the same identity/generation.
+Publish the expected serial once, before owner cleanup and stopped hooks. A failed
+or merely boundary-restoring Stop cannot advance it. Recheck after hooks and
+before writing the proposal. Public Stop still cancels, and nested dispatch,
+queue, opaque or letter output invalidates the saved serial even if it restores
+empty. Post-Stop complete neutral output can preserve it; in-flight neutral output
+cannot. This narrows the original contract's ambiguous phrase "nested neutral".
+
+* HI implementation and validation handoff
+
+Implement the proof service, private constructor metadata and actual writers
+first, with promotion disabled. Cover TTS queue/flush/Stop/reset/letter/say/state,
+aural direct/packet/framed/scheduled delivery, Omnivox control and validated state
+constructors, remote auth/heartbeat/retry, both factories, retirement, alternative
+primitive arguments and generation handoff. Arbitrary state-helper input remains
+unclassified. Add the new library to build inventories/dependencies and fresh
+compiled tests; rebuild byte-code after changed structures/private interfaces.
+
+The [[file:../test/fixtures/voice-editor/queue-handoff.el][version-2 expected fixture]] makes framing, birth and observation cases explicit.
+It remains non-evaluated independent data; HI tests must drive actual observers
+and finalizers against it. Test clear versus restored-boundary, EOF, limits,
+encoding changes, mutated strings, nested I/O and nonlocal exits. Retain the
+source/compiled gates and both-lane/reconnect real-server acceptance, then commit
+proof separately before enabling named promotion. No unresolved XHI design or
+product choice remains; a new implementation contradiction warrants review.
+
+The expanded [[file:../test/diagnose-queue-fragments.py][muted server diagnostic]] uses an explicit executable. Its optional =--remote=
+mode owns a temporary loopback service, fresh workers, private temporary token
+and null audio. It never uses the live service or credentials. Results characterize
+server queue/framing behavior, not client proof implementation, physical listening
+or verified per-fallback receipts.
+
+Validation on the unchanged Omnivox =31a0b9a= development binary:
+
+| Diagnostic group | Result |
+|------------------+--------|
+| Seven shared cases, local and remote | Complete Stop, later Stop after a fragment, complete code then Stop and CRLF Stop clear EARLIER; absorbed Stop/reset/dispatch retain it. |
+| Five additional local cases | Exact payload limit accepts Stop; oversized and invalid UTF-8 records retain EARLIER; a later valid Stop clears it. |
+| Three additional remote queue cases | Complete heartbeat returns pong and preserves pending text; an absorbed heartbeat becomes text without pong; the inclusive exact-limit Stop clears pending text. |
+| Four remote rejection cases | Oversize, invalid UTF-8, NUL and invalid reserved-prefix input close the private connection. |
+
+All 12 local and 14 remote observations pass. The local checks completed inside
+the sandbox; loopback creation required tool approval, after which all remote
+checks passed. The token and service were temporary; live settings, installed
+runtimes and Omnivox source were untouched.
+
+All 505 selected Emacsvox source tests pass. The fixture reader validates 89
+unique non-evaluated cases: 18 capture, 11 queue-effect, 12 admission, 24 framing,
+10 birth and 14 observer cases. This is shape/consistency validation, not an
+assertion that an unimplemented observer passes them. Python syntax, local Org
+links and =git diff --check= pass. =make check-emacs=, =make bytecode-check=,
+=make headers-check= and =make docs-release-check= pass with selected Emacs
+31.0.90. No production Lisp changed, so no byte-code rebuild or live profile
+restart is required for this design slice.

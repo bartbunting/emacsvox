@@ -24,10 +24,11 @@ characters supply no named palette voice and retain their existing selection.
 The [[file:voice-editor-queue-handoff-contract.org][selected queue contract]] completes the XHI handoff. The maintainer resumed
 at High. Dispatch intent/owner binding is implemented, with fifteen new contracts
 and all 505 selected source tests passing. The
-[[file:voice-editor-queue-proof-review.org][protocol-fragment finding]] requires a narrow XHI refinement before bounded
-queue proof and guarded named promotion: a prior unfinished line can absorb a
-subsequent clear command. Scope A remains selected. Preview v2 and editor controls
-are also pending.
+[[file:voice-editor-queue-proof-review.org][completed XHI protocol-boundary refinement]] now specifies separate queue/framing
+state, conservative local/remote recovery, birth observation and exact own-stop
+receipts. Twenty-six muted local/remote observations pass. Return to High for
+bounded proof and guarded named promotion; scope A remains selected. Preview v2
+and editor controls are also pending.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Acknowledged structured submissions now use layered transport and correlated

@@ -1,7 +1,11 @@
 ;;; Selected A: independent expected capture/flush outcomes, not executable code.
 ;;; N = ordinary producer, Q = owned named queue, D = explicit dispatch.
-(:fixture-version 1
+;;; Version 2 adds explicit framing, creation and actual-write proof expectations.
+;;; Wire strings describe writes/entries; they are never evaluated as Lisp.
+(:fixture-version 2
  :scope complete-captures
+ :proof-assumptions (:framing boundary :usable t :write complete
+                     :coding utf-8-unix :overlap nil)
  :cases
  ((:id queue-only :initial empty :events (Q)
    :output legacy :sequence (Q) :reason queue-only)
@@ -70,4 +74,140 @@
   (:id registration-changed :prepared layered :now empty :registry-changed t
    :result abort :writes nil)
   (:id proof-lost-during-write :prepared layered :reentrant unknown-write
-   :result ambiguous-failure :queue unknown :replay nil)))
+   :result ambiguous-failure :queue unknown :replay nil)
+  (:id framing-unproven-at-selection :prepared nil :now empty :framing unproven
+   :result compatibility :planned-stop t :reason input-boundary-unproven)
+  (:id heartbeat-during-own-stop :prepared layered :reentrant heartbeat :stop-sent t
+   :result abort :writes (Stop heartbeat) :framing unproven :own-stop-grant nil)
+  (:id heartbeat-during-promoted-write :prepared layered :reentrant heartbeat
+   :result ambiguous-failure :queue unknown :framing unproven :replay nil)
+  (:id boundary-restoring-stop-not-own-grant :prepared layered :now unknown
+   :framing unproven :stop-sent t :result abort :own-stop-grant nil)
+  (:id remote-unusable-at-selection :prepared nil :now unknown :usable nil
+   :result compatibility :reconnect nil :reason remote-proof-unusable))
+ :framing-cases
+ ((:id fragment-then-stop :transport local :before (pending boundary usable)
+   :writes (((opaque "q {")) ((stop "s\n")))
+   :after (unknown boundary usable) :serial changed)
+  (:id fragment-then-reset :transport local :before (pending boundary usable)
+   :writes (((opaque "q {")) ((reset "tts_reset\n")))
+   :after (unknown boundary usable) :serial changed)
+  (:id fragment-then-dispatch :transport local :before (pending boundary usable)
+   :writes (((opaque "q {")) ((dispatch "d\n")))
+   :after (unknown boundary usable) :serial changed)
+  (:id restored-boundary-later-stop :transport local :before (pending boundary usable)
+   :writes (((opaque "q {")) ((stop "s\n")) ((stop "s\n")))
+   :after (empty boundary usable) :serial changed)
+  (:id joined-entry-fragment :transport local :before (pending boundary usable)
+   :writes (((opaque "q {") (stop "s\n")))
+   :after (unknown boundary usable) :serial changed)
+  (:id joined-entry-later-stop :transport local :before (pending boundary usable)
+   :writes (((opaque "q {") (stop "s\n") (stop "s\n")))
+   :after (empty boundary usable) :serial changed)
+  (:id opaque-stop-spelling-is-not-trust :transport local :before (pending boundary usable)
+   :writes (((opaque "s\n"))) :after (unknown boundary usable) :serial changed)
+  (:id complete-opaque-then-typed-clear :transport local :before (pending boundary usable)
+   :writes (((opaque "c {opaque}\n")) ((stop "s\n")))
+   :after (empty boundary usable) :serial changed)
+  (:id neutral-record-absorbed :transport local :before (empty unproven usable)
+   :writes (((state "tts_set_speech_rate 200\n")))
+   :after (unknown boundary usable) :serial changed)
+  (:id empty-write-keeps-prefix :transport local :before (empty unproven usable)
+   :writes (((opaque ""))) :after (empty unproven usable) :serial unchanged)
+  (:id local-exact-limit-crlf :transport local :before (pending boundary usable)
+   :writes (((stop :payload-bytes 524288 :ending crlf)))
+   :after (empty boundary usable) :serial changed)
+  (:id local-oversized-stop-is-opaque :transport local :before (pending boundary usable)
+   :writes (((stop :payload-bytes 524289 :ending lf)))
+   :after (unknown boundary usable) :serial changed)
+  (:id local-invalid-utf8-drained :transport local :before (pending boundary usable)
+   :writes (((opaque :invalid-utf8 t :ending lf)) ((stop "s\n")))
+   :after (empty boundary usable) :serial changed)
+  (:id failed-write-then-one-clear :transport local :before (pending boundary usable)
+   :writes (((opaque "q {" :outcome error)) ((stop "s\n")))
+   :after (unknown boundary usable) :serial changed)
+  (:id frame-from-unproven-prefix :transport local :before (empty unproven usable)
+   :writes (((replaceable-frame queue dispatch)))
+   :after (unknown boundary usable) :serial changed)
+  (:id remote-complete-opaque-then-clear :transport remote :before (pending boundary usable)
+   :writes (((opaque "c {opaque}\n")) ((stop "s\n")))
+   :after (empty boundary usable) :serial changed)
+  (:id remote-split-fragment-stays-unusable :transport remote :before (pending boundary usable)
+   :writes (((opaque "q {")) ((stop "s\n")) ((stop "s\n")))
+   :after (unknown unproven unusable) :serial changed)
+  (:id remote-joined-fragment-valid-packet :transport remote :before (pending boundary usable)
+   :writes (((opaque "q {") (stop "s\n") (stop "s\n")))
+   :after (empty boundary usable) :serial changed)
+  (:id remote-inclusive-limit :transport remote :before (pending boundary usable)
+   :writes (((stop :payload-bytes 524287 :ending lf)))
+   :after (empty boundary usable) :serial changed)
+  (:id remote-over-limit-is-sticky :transport remote :before (pending boundary usable)
+   :writes (((stop :payload-bytes 524288 :ending lf)) ((stop "s\n")))
+   :after (unknown unproven unusable) :serial changed)
+  (:id remote-nul-is-sticky :transport remote :before (pending boundary usable)
+   :writes (((opaque :nul t :ending lf)) ((stop "s\n")))
+   :after (unknown unproven unusable) :serial changed)
+  (:id remote-reserved-prefix-is-sticky :transport remote :before (empty boundary usable)
+   :writes (((opaque "OMNIVOX-REMOTE invalid\n")) ((stop "s\n")))
+   :after (unknown unproven unusable) :serial changed)
+  (:id remote-heartbeat-at-boundary :transport remote :before (pending boundary usable)
+   :writes (((heartbeat "OMNIVOX-REMOTE ping\r\n")))
+   :after (pending boundary usable) :serial unchanged)
+  (:id eof-never-reopens-proof :transport local :before (empty boundary usable)
+   :writes (((eof)) ((stop "s\n")))
+   :after (unknown unproven unusable) :serial changed))
+ :birth-cases
+ ((:id fresh-local-observed-birth :transport local :events (factory attach set-generation)
+   :after (empty boundary usable))
+  (:id attached-local-is-unknown :transport local :events (attach-existing)
+   :after (unknown unproven usable))
+  (:id local-factory-advice-wrote-first :transport local
+   :events (factory-unclassified-write attach set-generation)
+   :after (unknown unproven usable))
+  (:id fresh-remote-authenticated :transport remote
+   :events (factory attach auth-write ready set-generation)
+   :after (empty boundary usable))
+  (:id remote-ready-alone-not-birth :transport remote :events (attach-existing ready)
+   :after (unknown unproven unusable))
+  (:id remote-write-before-ready :transport remote
+   :events (factory attach auth-write extra-write ready set-generation)
+   :after (unknown unproven unusable))
+  (:id remote-tainted-birth :transport remote
+   :events (factory-unclassified-write attach auth-write ready set-generation)
+   :after (unknown unproven unusable))
+  (:id provisional-local-state-preserved :transport local
+   :events (factory attach typed-queue set-generation)
+   :after (pending boundary usable))
+  (:id reconnect-old-receipt-ignored :transport remote
+   :events (retire factory attach auth-write ready set-generation old-write-receipt)
+   :after (empty boundary usable) :identity new)
+  (:id nested-creation-taint-shared :transport local
+   :events (factory nested-factory-unclassified-write attach set-generation)
+   :after (unknown unproven usable)))
+ :observer-cases
+ ((:id primitive-argument-aliases :process-arguments (object process-name buffer buffer-name nil)
+   :write opaque :result unknown :observer active)
+  (:id region-output-invalidates :primitive process-send-region :result unknown
+   :framing unproven :copy-region nil)
+  (:id eof-output-latches :primitive process-send-eof :result unknown :usable nil)
+  (:id same-process-nested-neutral :write stop :nested heartbeat
+   :result unknown :framing unproven :receipt nil)
+  (:id other-lane-write-independent :write stop :nested (other-process queue)
+   :result empty :framing boundary :receipt clear)
+  (:id neutral-nonlocal-exits :write heartbeat :outcomes (error quit throw)
+   :result unknown :framing unproven :receipt nil)
+  (:id effect-token-one-use :write stop :nested (same-string same-process)
+   :result unknown :receipt nil)
+  (:id mutated-command-rejected :prepared layered :mutation same-string-content
+   :result abort :writes nil :receipt nil)
+  (:id advice-rewrites-command :prepared layered :advice rewrite-argument
+   :result ambiguous-failure :writes (opaque-replacement) :receipt nil)
+  (:id advice-skips-observer :prepared layered :advice skip-forwarding
+   :result ambiguous-failure :receipt nil)
+  (:id observer-not-innermost :prepared nil :advice unknown-inner
+   :result compatibility :receipt nil)
+  (:id coding-changed-at-delivery :prepared layered :coding utf-16
+   :result abort :writes nil :receipt nil)
+  (:id scheduler-does-not-publish-early :events (capture schedule replace)
+   :result unchanged :writes nil)
+  (:id serial-rollover :serial saturated :result unknown :identity new)))

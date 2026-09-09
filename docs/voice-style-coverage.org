@@ -155,10 +155,12 @@ capture bounds and reentrancy. Presentation hooks submit independently. New
 named-queue promotion remains disabled until bounded queue proof and its guards
 are implemented; the earlier raw-queue limitation is still an explicit baseline.
 
-The [[file:voice-editor-queue-proof-review.org][protocol-fragment review]] adds a demonstrated XHI boundary before that next
-slice. A pending incomplete command can absorb a subsequent clear command, so
-its successful write is insufficient evidence of an empty queue. Retain scope A
-and refine framing separately from queue state before implementing promotion.
+The [[file:voice-editor-queue-proof-review.org][XHI protocol-boundary refinement]] is now complete. Separate queue/framing state,
+local/remote recovery, observed birth and exact own-stop receipts are specified.
+All 26 muted server observations pass: 12 local and 14 private-loopback remote
+cases, including swallowed clears/heartbeat, CRLF, record limits and malformed
+input. Version-2 expected cases remain design data until HI observer tests drive
+them. Return to High for bounded proof and guarded promotion; scope A is unchanged.
 
 Eight new consumer contracts and all 490 selected source tests pass. Fresh
 compiled verification includes the same eight cases. The compiled fixture loads

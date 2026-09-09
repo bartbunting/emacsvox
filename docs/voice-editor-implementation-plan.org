@@ -44,11 +44,13 @@ an explicit compatibility path. The [[file:voice-editor-queue-handoff-contract.o
 handoff. The maintainer resumed at High. Ordered capture now preserves dispatch
 intent, callback identity and state/flush boundaries, with fifteen new contracts
 and all 505 selected source tests passing. Finalization seals the capture;
-presentation hooks use independent captures. Before bounded queue proof and
-named-queue promotion, the [[file:voice-editor-queue-proof-review.org][protocol-fragment review]] requires a return to XHI:
-a Stop written after an unfinished command may not execute as Stop. Refine the
-framing proof while retaining scope A. Broader cross-call tuning is deferred.
-Preview and editor work remain pending.
+presentation hooks use independent captures. The subsequent
+[[file:voice-editor-queue-proof-review.org][XHI protocol-boundary refinement]] is complete: separate queue/framing state,
+local/remote recovery, birth observation and exact own-stop receipts are specified.
+Twenty-six muted server observations cover local and remote framing. Return to
+High for proof implementation, then guarded named promotion. Scope A remains
+selected; broader cross-call tuning is deferred. Preview and editor work remain
+pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -694,25 +696,32 @@ Captured bounds failures remain cancelled even when caught. A sealed journal
 rejects late contributions, while presentation hooks run in independent captures.
 New named-queue promotion remains disabled until the next two slices are complete.
 
-**** TODO XHI refine queue proof for unfinished protocol lines
+**** DONE XHI refine queue proof for unfinished protocol lines
 
-The [[file:voice-editor-queue-proof-review.org][review boundary and muted diagnostic]] demonstrate that a partial =q {=
-prefix can absorb a subsequent Stop, reset or dispatch. Successful output alone
-then proves neither execution of that command nor an empty queue. Distinguish
-input framing from pending-queue state, settle composition across captured and
-separate writes, and refine initial ownership and exact own-stop admission.
-Keep bounded metadata, no replay and no invented repair commands. Scope A stays
-selected. Update the contract and fixtures at XHI before returning to High.
+The [[file:voice-editor-queue-proof-review.org][completed refinement]] separates queue contents, input boundary and unusable
+transport state. It specifies finite effect composition, typed record validation,
+actual packet limits, region/EOF invalidation, observed process birth, provisional
+generation handoff and exact own-stop receipts. Any same-process overlapping
+write invalidates proof; neutral speech from a post-write Stop hook can preserve
+it. Local boundaries can recover through existing output; remote fragments and
+faults require fresh connection ownership without initiating a reconnect.
+
+The version-2 fixture extends expected capture/proof/admission data with framing,
+birth and observer cases. Twelve local and fourteen private-loopback muted server
+observations pass against Omnivox 31a0b9a. These characterize existing server
+behavior, not the future client observer. Scope A stays selected; return to High
+with no new product decision. Keep bounded metadata, no replay and no repair
+commands.
 
 **** TODO Track bounded legacy queue proof
 
-Blocked on the narrow XHI protocol-fragment refinement above, not a new product
-scope choice. Do not implement the current unconditional clear-after-write rule.
-
-Observe actual writes using exact private typed tokens; unclassified managed
-process output invalidates the proof. Cover direct, remote, framed and scheduled
-writes, process generation, mutation serial, partial/nonlocal failure and the
-exact own-stop boundary before hooks. Keep promotion disabled while testing
+Ready for High under the completed refinement above. Implement the private
+proof service and validated constructor metadata. Observe actual writes using
+exact private typed tokens; unclassified managed output invalidates the proof.
+Cover string/region/EOF output and alternate process arguments, direct/remote/
+framed/scheduled writes, process birth and generation handoff, mutation serial,
+coding/line limits, partial/nonlocal failure and the exact own-stop receipt before
+cleanup/hooks. Keep promotion disabled while testing
 these contracts. Run source and compiled gates, then commit separately.
 
 **** TODO Promote complete named queues through layered transport

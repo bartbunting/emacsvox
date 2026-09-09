@@ -34,11 +34,11 @@ validated before interruption, including the server's requirement for exactly
 one final plain dispatch. Ordered compatibility packets retain multiple flushes.
 
 Bounded queue-state proof and new named-queue promotion remain the next two
-implementation slices. First return to XHI for the
-[[file:voice-editor-queue-proof-review.org][protocol-fragment refinement]]: the clear-after-write rule below needs a known
-protocol boundary, because a prior unfinished command can absorb Stop/reset/
-dispatch text. Do not implement that rule unconditionally. Scope A is unchanged;
-no claim of individual tuning is made for those raw queue entries yet.
+implementation slices. The [[file:voice-editor-queue-proof-review.org][completed protocol-boundary refinement]] now specifies
+framing separately from queue contents, conservative local/remote recovery,
+composable effects, birth ownership and exact own-stop receipts. Return to High;
+no further product decision is needed. Scope A is unchanged; no claim of
+individual tuning is made for those raw queue entries yet.
 
 Validation for this first runtime slice: all 505 selected source tests and the
 fresh compiled aural gate pass. The complete byte-code rebuild was followed by
@@ -176,11 +176,13 @@ The new proof gates only promotion that replaces named legacy queue entries.
 Already-structured ordinary speech retains its existing independent admission;
 it does not become an implicit flush of an older server pending queue.
 
-Keep one constant-size record per managed speech process: process generation,
-queue state (=empty=, =pending= or =unknown=), mutation serial and in-flight write
-information. Absence, malformed state, a changed generation, partial writes or
-retirement mean unknown. Do not retain queued text, historical registries or a
-list of earlier submissions in this record.
+Keep one constant-size record per managed speech process: record identity,
+process generation, local/remote mode, queue state (=empty=, =pending= or
+=unknown=), framing (=boundary= or =unproven=), a sticky unusable flag, mutation
+serial and one outer-write identity/overlap flag. Absence, malformed state,
+a changed generation, partial writes or retirement mean unknown. Require both
+empty and a usable input boundary for promotion. Do not retain queued text,
+decoder tails, historical registries or a list of earlier submissions.
 
 Initialize empty only for a freshly owned local server or authenticated fresh
 remote worker, with observation installed before speech writes are exposed.
@@ -189,27 +191,34 @@ playback completion and a new client capture do not establish queue emptiness.
 
 ** Observe actual writes
 
-The [[file:voice-editor-queue-proof-review.org][subsequent fragment review]] leaves this subsection's boundary assumptions
-pending XHI refinement. Queue-state uncertainty and unfinished-line uncertainty
-must not be treated as the same fact when applying the clear operations below.
+The [[file:voice-editor-queue-proof-review.org][completed boundary refinement]] specifies the precise transitions, effect
+composition, coding/reader limits, observer coverage and birth handoff. It refines
+this section: queue uncertainty and unfinished input are different facts. A typed
+clear is effective only when it starts at a proven command boundary. Otherwise
+its first line can restore local framing while leaving the queue unknown.
 
 Use a small private observer at =process-send-string= for managed speech
-processes, together with a private typed writer used by TTS, aural delivery,
-Omnivox control/state output and remote heartbeat output. Other processes are
-untouched. Do not derive queue effects by parsing arbitrary command strings or
-install a Lisp interpreter for inline engine codes.
+processes, plus invalidators for =process-send-region= and =process-send-eof=.
+Use a private typed writer for TTS, aural delivery, Omnivox control/state output
+and remote auth/heartbeat output. Resolve alternate primitive process arguments
+and verify coverage nearest the primitive. Other processes are untouched. Do not
+derive queue effects by parsing arbitrary command strings or install a Lisp
+interpreter for inline engine codes.
 
-A trusted write carries an exact process/string identity and a one-use effect
-token. Consume that token before forwarding to the primitive; nested writes
-must not inherit its classification. The observer records uncertainty before
-I/O, commits the declared effect only after a complete return, and retains
-unknown on error, quit, throw or unexplained reentrant mutation. Keep observer
-bookkeeping short, without user callbacks, speech or blocking work of its own.
+A trusted write carries an exact process/string identity, checked content
+fingerprint and a one-use effect token. Consume that token before forwarding to
+the primitive; nested writes must not inherit its classification. The observer
+records uncertainty before I/O, commits the declared effect only after a complete return, and retains
+unknown/unproven on error, quit, throw or any same-process overlapping write.
+Keep observer bookkeeping short, without user callbacks, speech or blocking work
+of its own.
 
 Direct unclassified writes invalidate the proof. Known control-envelope requests
 and authenticated remote heartbeats can be marked queue-neutral by their actual
 constructors; arbitrary state-command helper arguments are not trusted merely
 because they passed through a helper with a familiar name.
+
+These effects require complete validated records beginning at a usable boundary:
 
 | Successful typed write | Queue effect |
 |------------------------+--------------|
@@ -235,12 +244,22 @@ queue was emptied. Stop/reset inside such a frame are not a permitted shortcut.
 
 Queue effects apply at actual delivery, including an idle-scheduled send, rather
 than capture time. A typed complete legacy packet can summarize its ordered
-effects without storing a second copy of its commands. Limits/parse failures
-that cannot establish a complete boundary leave the proof unknown.
+effects without storing a second copy of its commands. Compose fixed six-row
+queue/framing transfer tables in original entry order. Adjacent partial entries
+can absorb a later typed clear; concatenation is not proof of command separation.
+
+A bounded successful local UTF-8 Unix write ending LF restores framing even after
+a rejected record, but only a later valid typed clear establishes empty. Remote
+validation covers each entire actual packet with its stricter inclusive line
+limit, UTF-8/NUL and reserved-prefix rules. Across-write fragments, errors and
+overlap latch remote proof unusable until fresh connection ownership. EOF does
+so for either mode. Never manufacture a repair command or reconnect for proof.
+Birth scopes must cover factory writes; public generation assignment preserves
+the provisional record's observed state, and remote ready alone cannot reset it.
 
 ** Admission and reentrancy
 
-Require known empty, no uncertain in-flight write, the same live process
+Require known empty, boundary, usable, no in-flight write, the same live process
 generation and the unchanged acknowledged registration when choosing new named
 promotion. Check again before policy interruption and immediately before the
 first output write. A body can recursively send speech while copying or framing;
@@ -250,26 +269,29 @@ legacy dispatch that restores empty invalidates the earlier proof.
 
 Do not optimistically use an intended future Stop to justify promotion from
 pending/unknown. Choose compatibility output in that case; a successfully sent
-Stop can establish empty for the next capture. This keeps validation before Stop
-and avoids rebuilding a failed proposal after an irreversible output action.
+Stop at a proven boundary can establish empty for the next capture. This keeps
+validation before Stop and avoids rebuilding a failed proposal after an
+irreversible output action.
 
 The existing exact own-stop allowance remains valid. Its private typed Stop
 write may update the proposal's expected serial exactly once, immediately after
-that clear succeeds and before stop hooks run. Bind the permission to the exact
-ready preparation and write token; do not use a dynamically inherited flag.
-After the hooks, recheck empty/serial/generation/registration. A nested complete
-ordinary timeline or heartbeat may preserve empty and need not cancel the outer
-request. A nested queue-only/opaque/legacy-dispatch/letter write invalidates
-promotion before it is sent. Public Stop still cancels the preparation and must
+that clear succeeds at a valid boundary without overlap, before owner cleanup
+and stop hooks run. Bind the permission to the exact ready preparation and write
+token; do not use a dynamically inherited flag.
+After the hooks, recheck empty/boundary/usable/serial/generation/registration.
+A complete ordinary timeline or heartbeat from a post-write Stop hook may preserve
+empty and need not cancel the outer request. A nested queue-only/opaque/legacy-
+dispatch/letter write invalidates promotion before it is sent. Public Stop still cancels the preparation and must
 not gain the own-stop exemption.
 
 Once representation and owners are prepared, a failed admission recheck aborts
 the submission. Do not reproject or replay it as legacy after policy effects.
-If queue-affecting reentrancy breaks the proof during the write itself, treat the
+If any same-process nested write breaks the proof during the write itself, treat the
 delivery as an ambiguous send failure: retire owners, retain unknown, commit no
 success/history effects, and do not replay. Already transmitted bytes cannot be
-recalled. Harmless nested queue-neutral writes must not inherit a clear token or
-falsely prove an empty queue.
+recalled. Even a heartbeat can join an unfinished line during I/O; it must not
+inherit a clear token or be allowed to publish empty proof. Independent lanes
+remain independent.
 
 * Callback identity and metadata
 
@@ -317,7 +339,8 @@ ID limit, and a truncation flag. Retain no text, callbacks or buffers. Update it
 only for the proposal actually sent; an old completion cannot clear newer state.
 
 Distinguish unsealed tail, explicit multiple flushes, opaque commands/definitions,
-state transition, cross-call pending/unknown queue and old-server support. Do not
+state transition, cross-call pending/unknown queue, unproven input boundary,
+remote proof unusable until fresh ownership, and old-server support. Do not
 overwrite a historical consumed-playback receipt with a prediction or a send
 limitation. Configuration application and the route used by a particular
 submission remain separate facts.
@@ -335,7 +358,8 @@ remaining preview/control/acceptance work.
    dispatch loss, callback identity and state/flush order. Add source and fresh
    compiled regressions, rebuild byte-code after struct/interface changes, and
    commit. Do not enable named queue promotion yet.
-2. Add bounded queue proof and typed write observation, including direct output,
+2. Implement the completed boundary refinement's private proof service and typed
+   write observation, including alternate primitives, guarded birth, direct output,
    framed payloads, remote heartbeat, process startup/reconnect and delayed
    delivery. Exercise unknown/partial/reentrant writes and exact own-stop cases.
    Promotion remains disabled until the proof tests and compiled gate pass;
@@ -357,7 +381,7 @@ replay. Bounds must fail before output; they must not trigger a legacy retry.
 Observer tests must keep observation active around the mocked I/O primitive;
 replacing the advised function wholesale would bypass the behavior under test.
 
-* Handoff validation
+* Historical initial handoff validation
 
 All 490 selected source tests pass at the unchanged runtime baseline. The muted
 source diagnostic records sixteen observations, including the expected existing
@@ -370,3 +394,11 @@ behavior or listening acceptance.
 =make docs-release-check= pass with the selected Emacs 31.0.90. No production
 Lisp changed, so this handoff does not require a new byte-code build or a live
 profile restart. Runtime implementation remains the three High slices above.
+
+* Refined handoff validation
+
+The subsequent [[file:voice-editor-queue-proof-review.org][completed XHI refinement]] and version-2 fixture supersede the initial
+queue-only assumptions. The 505-test runtime baseline is unchanged; new proof
+fixtures are specifications for the next HI slice. See the refinement for muted
+local/remote observations and final non-mutating gate results. Promotion remains
+disabled until actual observer and finalizer tests establish the new behavior.
