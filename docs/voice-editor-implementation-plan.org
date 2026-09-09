@@ -33,8 +33,11 @@ The subsequent XHI preparation review is complete: 20 diagnostic observations
 expose cancellation before/during preparation and interrupted reservation leaks.
 The selected refinement uses cancellable scopes, explicit own-stop preservation
 and unwind-safe bookkeeping. High implementation now covers preparation
-cancellation and generic/shared-choice reservation cleanup. All 482 selected
-source tests pass. The remaining consumer audit, preview and editor work follow.
+cancellation and generic/shared-choice reservation cleanup. The ordinary-consumer
+audit adds eight connected contracts; all 490 selected source tests pass. It
+exposes mixed raw/prepared queue fallback and the separate isolated-letter path.
+Return to XHI for the bounded compatibility handoff design before further High
+implementation. Preview and editor work remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -632,13 +635,40 @@ Implemented with five additional contracts and all 482 selected source tests
 passing. All pending-quit diagnostic cases now release every byte and reference;
 shared owners keep their own reservation intact.
 
-**** TODO Complete ordinary consumers, preview and editor controls
+**** DONE Audit ordinary consumers through actual speech producers
 
-After the cancellation fix, audit all ordinary and legacy-inline consumers. Then connect private preview v2 and the
-optional per-choice controls in the review's remaining implementation slices.
+Eight connected contracts in [[file:../test/omnivox-choice-consumer-tests.el][consumer tests]] and the updated
+[[file:voice-style-coverage.org][coverage audit]] follow ordinary names/aliases, notifications, sparse rules,
+speech actions and spelling through preparation and final wire. All 490 selected
+source tests pass. Older notification lanes retain shared-style behavior.
+Compound personalities are explicitly legacy in version 4.
+
+The audit also reproduces two outstanding boundaries: raw named-voice queue
+entries force a whole mixed transaction back to legacy projection, and isolated
+characters still use the special letter protocol. These are characterized
+limitations, not completed individual-tuning support.
+
+**** TODO XHI legacy-queue and isolated-character handoff review
+
+Stop High implementation here and return to XHI. Design how inspectable named
+queue entries retain their logical request without changing queue/dispatch order,
+joining unrelated presentations or bypassing the new cancellation scopes.
+Settle the behavior of mixed opaque commands explicitly. Preserve isolated-letter
+interruption, character rate and capital feedback; do not replace the letter
+command with ordinary speech without settling those differences.
+
+Use the new consumer regressions as the baseline. Specify which tests should
+become positive layered contracts and which compatibility limitations remain
+visible. Keep the accepted storage and precedence contract. Present any required
+product/API choice before implementation, then return to High for tested slices.
+
+**** TODO Complete ordinary compatibility paths, preview and editor controls
+
+Implement the reviewed consumer handoff first. Then connect private preview v2
+and optional per-choice controls in the review's remaining implementation slices.
 
 Implement lossless context projection, lane negotiation and apply reporting.
-Audit ordinary speech paths before enabling customization, then add per-choice
+Close the audited ordinary speech gaps before enabling customization, then add per-choice
 controls and experiment keeps over the tested services. Verify fresh compiled
 behavior, update current documentation and commit each completed slice.
 

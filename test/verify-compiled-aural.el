@@ -348,6 +348,7 @@
                   "emacsvox-aural-voice-editor-tests.el"
                   "emacsvox-aural-voice-context-tests.el"
                   "emacsvox-aural-transport-tests.el"
+                  "omnivox-choice-consumer-tests.el"
                   "emacsvox-aural-voice-palettes-tests.el"
                   "emacsvox-aural-voice-workbench-tests.el"))
     (load (expand-file-name (concat "test/" file) root-directory) nil nil t))
@@ -406,6 +407,7 @@
                "^omnivox-choice-registration-"
                "^omnivox-choice-timeline-"
                "^omnivox-choice-playback-"
+               "^omnivox-choice-consumer-"
                "^tts-handoff-"
                "^tts-preparation-"
                "^emacsvox-aural-voice-editor-"

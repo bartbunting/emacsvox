@@ -13,13 +13,16 @@ hooks and legacy dispatch, plus pending quits during bookkeeping. The selected
 refinement uses cancellable preparation scopes, explicit own-stop preservation
 and unwind-safe reservations. Implementation resumed at High. Generic scopes,
 Stop ownership, generic reservation cleanup and shared choice metadata cleanup
-are implemented. All 482 selected source tests pass. Consumer audits, preview
-v2 and editor controls remain next. No new product choice or reasoning-level
-change is needed.
+are implemented. The subsequent ordinary-consumer audit adds eight connected
+contracts; all 490 selected source tests pass. It exposes whole-transaction
+legacy fallback when raw named speech is mixed with prepared speech, and the
+separate isolated-letter protocol. Return to XHI for the bounded compatibility
+handoff design described in the implementation plan before continuing at High.
+Preview v2 and editor controls remain pending.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Acknowledged structured submissions now use layered transport and correlated
-marker-3 readback. The remaining ordinary-consumer audit, private preview v2
+marker-3 readback. The remaining ordinary compatibility fixes, private preview v2
 and optional editor controls are pending. No live runtime or personal configuration was changed.
 
 The accepted [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], [[file:voice-editor-fallback-wire-contract.org][wire contract]] and

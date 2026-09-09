@@ -1,5 +1,5 @@
 #+title: Voice-style consumer coverage
-#+date: 2026-09-08
+#+date: 2026-09-09
 
 * Scope and outcome
 
@@ -91,7 +91,55 @@ When adding a field, review each boundary above and add independent expected
 values or explicit degradation checks.  Keep normalization, UI amount policy
 and backend support outside the field metadata table.
 
-* Verification
+* Individual fallback consumer audit
+
+The follow-up [[file:../test/omnivox-choice-consumer-tests.el][ordinary-consumer contracts]] exercise public producers through real
+source preparation, rule resolution, compilation and captured final wire. They
+substitute adapter command generation and pipe writes; they do not predict which
+physical voice will play. Runtime receipt tests cover that separate boundary.
+
+| Consumer | Observed behavior with the negotiated bundle |
+|----------+---------------------------------------------|
+| =tts-speak= with an owned name or personality alias | Layered span retains logical identity and an empty context; shared and individual values come from the frozen registry. |
+| =tts-notify= | Uses the notification lane's registry. An older lane emits version 3 with shared adjustments, including supported relative rate. |
+| Contextual rules and spoken before-actions | Full producer path retains sparse overrides, zero and explicit effect default operations. It does not flatten the shared style into context. |
+| Word spelling | Uses ordinary preparation. Contextual voices remain layered; the existing capital-letter =animate= cue is layered when that voice is owned. |
+| Compound personality list | Version 4 labels the span legacy. Individual tuning is not claimed. |
+| Raw =tts-speak-using-voice= queue | Still emits legacy commands. Mixing it with prepared speech makes the whole transaction fall back to the legacy queue. |
+| Isolated character review | Still sends =l {B}=, without a layered request or choice receipt. |
+
+The raw queue and isolated-letter tests characterize remaining limitations;
+their passing status does not mean those consumers support individual tuning.
+The source audit also confirms maintained producers do not directly call
+=tts-speak-using-voice= outside =tts-speak.el=; the existing static aural audit
+guards that boundary. External callers and compatibility formatting still matter.
+
+The raw command helper queues text without dispatching it. Replacing it with
+=tts-speak= would change its contract. The current transaction finalizer can
+replace a legacy queue only when all entries are structured-compatible; otherwise
+even captured layered runs use the legacy projection. A fix must preserve mixed
+command order and whole-submission cancellation, and must not silently claim
+that individual adjustments were applied.
+
+Isolated character review has a different server contract: immediate interruption,
+character rate, lowercased synthesis and a separate capital pitch cue. These
+behaviors are visible in Omnivox's =CommandId::Letter= handling and
+=process_letter= pipeline. They are not reproduced merely by sending a one-letter
+ordinary text span. No listening or server behavior change was performed here.
+
+Return to XHI for the bounded legacy-queue/character handoff design before
+implementation or enabling editor support. Preserve the accepted shared -> actual
+choice -> context precedence and existing public queue behavior. The remaining
+preview and editor work stays pending.
+
+Eight new consumer contracts and all 490 selected source tests pass. Fresh
+compiled verification includes the same eight cases. The compiled fixture loads
+transport test helpers before the consumer tests; the first run exposed that
+load-order dependency and was corrected. Current byte-code preflight and the
+documentation/header gates also pass. These checks extend the historical audit
+below; they do not establish complete feature coverage or audible acceptance.
+
+* Earlier shared-style verification
 
 Using the Emacs selected by =local.mk=:
 
