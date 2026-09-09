@@ -494,10 +494,22 @@ use @@texinfo:@kbd{P}@@ to audition the palette sequence before editing, and use
 activate a selected palette.  Built-in palettes remain intact; editing can
 create a personal copy.
 
+Opening the manager announces its selected palette.  Entering a palette
+announces its name, voice count, selected voice and main keys.
+
 In a personal palette's voice list, press @@texinfo:@kbd{c}@@ on a voice and
 enter a new name to save an independent copy.  For palette-owned voices this
 includes physical voice choices, their fallback order, and individual tuning.
 The new voice is selected after saving; the original voice is unchanged.
+
+Press @@texinfo:@kbd{d}@@ in the voice list to delete the selected direct voice
+from a personal palette, then confirm its name and palette.  Other voices and
+their tuning are preserved.  Deleting an override restores its inherited or
+standard voice; the confirmation says when this will happen.  Built-in and
+inherited entries cannot be deleted here.  If removing a custom voice would
+leave a registered mapping without its voice, remap that use first.  Save or
+discard unfinished voice edits before deleting.  An empty palette remains
+open; press @@texinfo:@kbd{o}@@ to return to the palette manager.
 
 Press @@texinfo:@kbd{r}@@ in the voice list to rename an unused custom voice
 defined directly in that personal palette.  Enter the new name to save it;

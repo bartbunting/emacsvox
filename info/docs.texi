@@ -67,7 +67,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1564 commands and 207 options.
+This chapter documents a total of 1565 commands and 207 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -5670,6 +5670,15 @@ Copy the current voice to a new, independently routable voice.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-voice-palette-previews-delete
+@deffn {Command} emacsvox-aural-voice-palette-previews-delete
+@findex emacsvox-aural-voice-palette-previews-delete
+
+@format
+Confirm deletion of the current personal voice and select a remaining row.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-voice-palette-previews-edit
 @deffn {Command} emacsvox-aural-voice-palette-previews-edit
 @findex emacsvox-aural-voice-palette-previews-edit
@@ -5720,6 +5729,7 @@ P		emacsvox-aural-voice-palette-previews-play
 S		emacsvox-aural-voice-palette-previews-stop
 T		emacsvox-aural-voice-palette-previews-set-text
 c		emacsvox-aural-voice-palette-previews-copy
+d		emacsvox-aural-voice-palette-previews-delete
 e		emacsvox-aural-voice-palette-previews-tune
 h		emacsvox-aural
 o		emacsvox-aural-voice-palette-previews-open-manager
@@ -13847,7 +13857,6 @@ Launch a Librivox Search.
 (fn SEARCH-TYPE)
 @end format
 @end deffn
-
 @subsubsection emacsvox-librivox-play
 @deffn {Command} emacsvox-librivox-play  (rss-url)
 @findex emacsvox-librivox-play

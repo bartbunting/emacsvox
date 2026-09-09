@@ -287,6 +287,7 @@
          ("s" . emacsvox-aural-voice-palette-previews-stop)
          ("c" . emacsvox-aural-voice-palette-previews-copy)
          ("r" . emacsvox-aural-voice-palette-previews-rename)
+         ("d" . emacsvox-aural-voice-palette-previews-delete)
          ("N" . emacsvox-aural-voice-palette-previews-new)))
     (should
      (eq
@@ -584,6 +585,99 @@
          (setq emacsvox-aural-voice-palette-previews-palette 'reading)
          (emacsvox-aural-voice-palette-previews-refresh 'custom-voice)
          ,@body))))
+
+(ert-deftest emacsvox-aural-voice-palette-preview-delete-preserves-other-voices ()
+  "Deletion removes the selected saved voice and its clean editor, not other tuning."
+  (emacsvox-test--with-voice-rename
+    (let* ((before (emacsvox-aural-voice-runtime--resolve 'bolden 'reading))
+           (sets (copy-tree emacsvox-aural-routing--choice-sets))
+           (draft (emacsvox-aural-voice-drafts--open '(base reading custom-voice)
+                   '(:definition (:average-pitch 4)) '(reading)))
+           (context (list :draft draft :palette 'reading :voice 'custom-voice :owner 'reading)))
+      (puthash '(base reading custom-voice) context emacsvox-aural-voice-editor--contexts)
+      (cl-letf (((symbol-function 'yes-or-no-p)
+                 (lambda (prompt)
+                   (should (string-match-p "custom-voice.*reading" prompt)) t)))
+        (should (eq (emacsvox-aural-voice-palette-previews-delete) 'custom-voice)))
+      (should-not (assq 'custom-voice emacsvox-aural-voice-palette-previews-entries))
+      (should (tabulated-list-get-id))
+      (should-not (gethash '(base reading custom-voice) emacsvox-aural-voice-drafts--registry))
+      (should-not (gethash '(base reading custom-voice) emacsvox-aural-voice-editor--contexts))
+      (should (equal sets emacsvox-aural-routing--choice-sets))
+      (should (equal before (emacsvox-aural-voice-runtime--resolve 'bolden 'reading)))
+      (should-not (assq 'custom-voice
+                        (plist-get (cl-find 'reading (plist-get (emacsvox-aural-read-user-data) :voice-palettes)
+                                             :key (lambda (data) (plist-get data :id))) :entries))))))
+
+(ert-deftest emacsvox-aural-voice-palette-preview-delete-cancel-and-failure-keep-selection ()
+  "Cancellation and persistence failure preserve the selected voice and saved data."
+  (emacsvox-test--with-voice-rename
+    (let ((before (emacsvox-aural-read-user-data)))
+      (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) nil)))
+        (should-error (emacsvox-aural-voice-palette-previews-delete) :type 'user-error))
+      (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t))
+                ((symbol-function 'emacsvox-aural-save-user-data)
+                 (lambda (&rest _) (error "Simulated delete failure"))))
+        (should-error (emacsvox-aural-voice-palette-previews-delete)))
+      (should (eq (tabulated-list-get-id) 'custom-voice))
+      (should (assq 'custom-voice (emacsvox-aural-effective-voice-entries 'reading)))
+      (should (equal before (emacsvox-aural-read-user-data))))))
+
+(ert-deftest emacsvox-aural-voice-palette-preview-delete-protects-references-and-restores-defaults ()
+  "Custom mappings cannot dangle, while a standard override can be removed."
+  (emacsvox-test--with-voice-rename
+    (let ((emacsvox-aural-user-rules '((:id custom-use :render (:content (:voice custom-voice))))))
+      (should-error (emacsvox-aural-voice-palette-previews-delete) :type 'user-error))
+    (should-error (emacsvox-aural-voice-palettes--delete-voice 'reading 'annotate) :type 'user-error)
+    (should-error (emacsvox-aural-voice-palettes--delete-voice 'acss-default 'bolden) :type 'user-error)
+    (cl-letf (((symbol-function 'yes-or-no-p)
+               (lambda (prompt) (should (string-match-p "restore" prompt)) t)))
+      (emacsvox-aural-voice-palettes--delete-voice 'reading 'bolden))
+    (should-not (assq 'bolden (plist-get (emacsvox-aural-voice-palette-data-form
+                                        (emacsvox-aural-voice-palette 'reading)) :entries)))))
+
+(ert-deftest emacsvox-aural-voice-palette-preview-delete-last-voice-keeps-empty-list ()
+  "Deleting the last voice leaves a valid, reopenable empty palette."
+  (emacsvox-test--with-palette-rename
+    (emacsvox-aural-register-voice-palette-data
+     '(:schema-version 3 :id solo :summary "Solo" :parent nil :routing owned
+       :entries ((only-voice :personality voice-smoothen :choices nil))))
+    (emacsvox-aural-save-user-data)
+    (with-temp-buffer
+      (emacsvox-aural-voice-palette-previews-mode)
+      (setq emacsvox-aural-voice-palette-previews-palette 'solo)
+      (emacsvox-aural-voice-palette-previews-refresh 'only-voice)
+      (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+        (emacsvox-aural-voice-palette-previews-delete))
+      (should-not tabulated-list-entries)
+      (should-not (tabulated-list-get-id)))
+    (let (buffer spoken)
+      (unwind-protect
+          (save-window-excursion
+            (cl-letf (((symbol-function 'tts-speak) (lambda (text) (push text spoken))))
+              (setq buffer (emacsvox-aural-list-voice-palette-previews 'solo)))
+            (should (= (length spoken) 1))
+            (should (string-match-p "solo.*0 voices.*No voices" (car spoken))))
+        (when (buffer-live-p buffer) (kill-buffer buffer))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-opening-announces-location-once ()
+  "Programmatic entry from Home announces the manager and palette without interruption."
+  (emacsvox-test--with-voice-palettes
+    (emacsvox-aural-register-voice-palette-data emacsvox-test--voice-palette-data)
+    (let (manager preview spoken)
+      (unwind-protect
+          (save-window-excursion
+            (cl-letf (((symbol-function 'tts-speak) (lambda (text) (push text spoken))))
+              (setq manager (emacsvox-aural-list-voice-palettes 'reading))
+              (should (= (length spoken) 1))
+              (should (string-match-p "Voice palettes.*Selected reading" (car spoken)))
+              (setq spoken nil)
+              (setq preview (emacsvox-aural-list-voice-palette-previews 'reading 'heading t))
+              (should (= (length spoken) 1))
+              (dolist (text '("Voice palette reading" "voices" "heading" "Physical choice" "d deletes"))
+                (should (string-match-p text (car spoken))))))
+        (when (buffer-live-p preview) (kill-buffer preview))
+        (when (buffer-live-p manager) (kill-buffer manager))))))
 
 (ert-deftest emacsvox-aural-voice-palette-preview-rename-preserves-complete-voice ()
   "Rename removes the old row and preserves sound data under the selected new name."
