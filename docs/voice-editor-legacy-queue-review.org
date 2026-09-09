@@ -18,6 +18,8 @@ The [[file:voice-editor-queue-handoff-contract.org][selected implementation cont
 resumed at High. The first slice now preserves dispatch intent, callback IDs and
 sync/flush boundaries, with fifteen new contracts and 505 passing selected source
 tests. Named-queue promotion remains disabled pending the queue-proof slices.
+The [[file:voice-editor-queue-proof-review.org][subsequent fragment finding]] requires a narrow XHI refinement of the clear
+proof before those slices; the selected scope A remains unchanged.
 The broader
 [[file:voice-editor-implementation-plan.org][implementation plan]] remains active; preview v2, optional
 controls and spoken acceptance are not complete.

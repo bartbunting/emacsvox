@@ -155,6 +155,11 @@ capture bounds and reentrancy. Presentation hooks submit independently. New
 named-queue promotion remains disabled until bounded queue proof and its guards
 are implemented; the earlier raw-queue limitation is still an explicit baseline.
 
+The [[file:voice-editor-queue-proof-review.org][protocol-fragment review]] adds a demonstrated XHI boundary before that next
+slice. A pending incomplete command can absorb a subsequent clear command, so
+its successful write is insufficient evidence of an empty queue. Retain scope A
+and refine framing separately from queue state before implementing promotion.
+
 Eight new consumer contracts and all 490 selected source tests pass. Fresh
 compiled verification includes the same eight cases. The compiled fixture loads
 transport test helpers before the consumer tests; the first run exposed that

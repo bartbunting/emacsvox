@@ -1,0 +1,84 @@
+#+title: Queue Proof: Protocol Fragment Review Boundary
+#+date: 2026-09-09
+#+startup: content
+
+* Status
+
+High implementation slice =3fbae73b3= is complete: ordered captures preserve
+dispatch intent, callback identity and state boundaries. All 505 selected source
+tests, fresh compiled aural checks, byte-code preflight and muted both-lane/reconnect
+acceptance pass. Named-queue promotion is still disabled.
+
+Inspection for the next slice found an assumption that needs XHI review before
+implementing queue-state proof. The selected scope A remains unchanged. There is
+no new product choice or request to extend cross-call tuning.
+
+* A write boundary is not a protocol command boundary
+
+The [[file:voice-editor-queue-handoff-contract.org][selected handoff]] distinguishes empty, pending and unknown server queues,
+but its clear-after-Stop/dispatch/reset rule does not yet distinguish uncertainty
+about the queue from uncertainty about an unfinished protocol line. Omnivox reads
+commands from a byte stream. Separate =process-send-string= calls do not create
+separate protocol lines.
+
+For example, previously queued text can survive this stream:
+
+#+begin_example
+q {EARLIER}\n
+q {
+s\n
+q {NEW}\n
+emacsvox_marker_dispatch 91\n
+#+end_example
+
+Here =\n= denotes a newline; the incomplete =q {= has none. The next =s= becomes
+part of =q {s=, so no Stop command executes. A later marker dispatch still reports
+=EARLIER= alongside the fragment and =NEW=. A successful client write of =s\n=
+therefore does not establish an empty queue in this state.
+
+The same problem applies to dispatch and reset. The next newline can restore
+the input boundary while leaving the server queue uncertain. An additional,
+already requested Stop at that restored boundary can clear it. This observation
+does not authorize inserting additional Stops or changing delivery policy.
+
+* Muted server evidence
+
+[[file:../test/diagnose-queue-fragments.py][The diagnostic]] supplies the exact byte streams to an explicitly selected
+Omnivox executable with eSpeak and =--audio-output null=. It checks terminal
+completion and reports the text in legacy utterance-start records. These are
+protocol/queue observations, not listening acceptance or per-fallback receipts.
+
+| Stream before the final NEW/marker dispatch | EARLIER survives |
+|-------------------------------------------+------------------|
+| Queued EARLIER, complete Stop | No |
+| Queued EARLIER, incomplete q prefix, Stop | Yes |
+| Queued EARLIER, incomplete q prefix, reset | Yes |
+| Queued EARLIER, incomplete q prefix, plain dispatch | Yes |
+| Queued EARLIER, incomplete q prefix, Stop, later Stop | No |
+| Queued EARLIER, complete opaque code line, Stop | No |
+
+All six cases were reproduced against development Omnivox =31a0b9a=, with
+successful terminal completion and the expected retained/cleared text. No
+Omnivox source, runtime installation or live personal settings were changed.
+
+* Required XHI refinement
+
+Recommend retaining scope A and refining its bounded proof to track protocol-line
+framing separately from queue contents. Settle and record:
+
+- which complete command boundaries can be established after an unclassified
+  write, partial/error outcome or connection attachment;
+- how typed effects compose when adjacent entry strings or separate writes join
+  into one line, including delayed and framed delivery;
+- how a fresh local process or authenticated remote worker gains its initial
+  proof before external writes can escape observation;
+- how the exact own-stop allowance advances a proposal only after a clear
+  command is known to have executed at a valid boundary;
+- how neutral control/heartbeat traffic and nested writes preserve or invalidate
+  both parts of the proof without retaining arbitrary text or replaying speech.
+
+Keep the existing conservative rule: uncertainty prevents named promotion.
+Do not implement a new server queue, add repair commands, infer engine-code
+semantics, or treat capability acknowledgement as proof of an empty queue.
+Extend the independent proof/admission fixtures after settling the refinement,
+then return to High for the remaining implementation slices.

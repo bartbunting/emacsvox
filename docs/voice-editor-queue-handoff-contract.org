@@ -34,7 +34,11 @@ validated before interruption, including the server's requirement for exactly
 one final plain dispatch. Ordered compatibility packets retain multiple flushes.
 
 Bounded queue-state proof and new named-queue promotion remain the next two
-High slices. No claim of individual tuning is made for those raw queue entries yet.
+implementation slices. First return to XHI for the
+[[file:voice-editor-queue-proof-review.org][protocol-fragment refinement]]: the clear-after-write rule below needs a known
+protocol boundary, because a prior unfinished command can absorb Stop/reset/
+dispatch text. Do not implement that rule unconditionally. Scope A is unchanged;
+no claim of individual tuning is made for those raw queue entries yet.
 
 Validation for this first runtime slice: all 505 selected source tests and the
 fresh compiled aural gate pass. The complete byte-code rebuild was followed by
@@ -184,6 +188,10 @@ Attaching to an existing process starts unknown. Capability/registry replies,
 playback completion and a new client capture do not establish queue emptiness.
 
 ** Observe actual writes
+
+The [[file:voice-editor-queue-proof-review.org][subsequent fragment review]] leaves this subsection's boundary assumptions
+pending XHI refinement. Queue-state uncertainty and unfinished-line uncertainty
+must not be treated as the same fact when applying the clear operations below.
 
 Use a small private observer at =process-send-string= for managed speech
 processes, together with a private typed writer used by TTS, aural delivery,
