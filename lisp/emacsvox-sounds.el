@@ -492,10 +492,10 @@ None: For systems that rely on the speech server playing the icon."
 
 (defun emacsvox-queue-resource (resource)
   "Queue concrete auditory RESOURCE on the ordered speech stream."
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
    (format "a %s\n" (emacsvox-sounds--tcl-word
-                      (omnivox-remote-resource resource)))))
+                      (omnivox-remote-resource resource))) 'queue))
 
 (defun emacsvox-sounds-spatial-capability ()
   "Return the selected local cue player's spatial capability."
@@ -574,10 +574,10 @@ Apply normalized stereo BALANCE when the selected local player supports it."
   (let ((process-connection-type nil))
     (cond
      ((null emacsvox-play-program)
-      (emacsvox-aural-delivery-send
+      (emacsvox-aural--delivery-send-typed
        tts-speaker-process
        (format "p %s\n" (emacsvox-sounds--tcl-word
-                          (omnivox-remote-resource resource)))))
+                          (omnivox-remote-resource resource))) 'neutral))
      ((and
        emacsvox-pactl
        (string= emacsvox-play-program emacsvox-pactl))
@@ -610,12 +610,12 @@ This is a private function and  might go away."
 (defun emacsvox-serve-icon (icon)
   "Serve auditory icon ICON."
   
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
    (format
     "p %s\n"
     (emacsvox-sounds--tcl-word
-     (omnivox-remote-resource (emacsvox-sounds-cache-get icon))))))
+     (omnivox-remote-resource (emacsvox-sounds-cache-get icon)))) 'neutral))
 
 ;;;;   Play an icon
 

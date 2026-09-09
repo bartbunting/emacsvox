@@ -7,6 +7,7 @@
 ;;; Code:
 (require 'omnivox-choice-consumer-tests)
 (require 'tts-preparation-tests)
+(require 'tts-queue-state-tests)
 
 (defconst tts-queue-test--fixture
   (expand-file-name "fixtures/voice-editor/queue-handoff.el"
@@ -231,6 +232,14 @@
        (tts-preparation-test--empty speaker)))))
 
 (ert-deftest tts-queue-frame-validator-checks-grammar-and-bounds ()
+  (tts-queue-state-test--with-process
+   (process-put process emacsvox-aural--framed-delivery-process-property t)
+   (let* ((command (copy-sequence "q {hello}\nd\n"))
+          (entry (emacsvox-aural--make-delivery-entry
+                  :process process :command command
+                  :queue-description (tts-queue--describe command '(queue clear)))))
+     (aset command 3 ?X)
+     (should-error (emacsvox-aural--framed-delivery-entries process 1 (list entry)))))
   (dolist (payload '("q {hello}\nd\n" "c {}\ntts_sync_state all 1 0 100\nd\n"
                      "a \"/tmp/cue space.ogg\"\nt 440 25\nemacsvox_tone 1 insert 440 25\nsh 0\nd\n"
                      "a \"/tmp/\\uD000\\u0024\\n.ogg\"\nd\n"))
@@ -296,6 +305,54 @@
                     (mapcar (lambda (write)
                               (plist-get (omnivox-choice-consumer-test--timeline write) :dispatch_id))
                             (reverse writes)))))))
+
+(ert-deftest tts-queue-observed-producers-and-packets-preserve-queue-knowledge ()
+  (omnivox-choice-consumer-test--with-speech
+   (tts-queue--install)
+   (set-process-coding-system speaker 'utf-8-unix 'utf-8-unix)
+   (tts-queue-state-test--set speaker '(empty boundary usable))
+   (tts--protocol-queue-text "QUEUED")
+   (should (equal '(pending boundary usable) (tts-queue-state-test--get speaker)))
+   (tts-queue-test--normal)
+   (should (equal '(pending boundary usable) (tts-queue-state-test--get speaker)))
+   (tts--protocol-dispatch)
+   (should (tts-queue--known-empty-p speaker))
+   (emacsvox-aural-call-with-delivery-transaction
+    speaker (lambda () (emacsvox-aural-delivery-send speaker "q {")
+              (tts--protocol-stop)))
+   (should-not (tts-queue--known-empty-p speaker))
+   ;; Observe actual adjacent entry concatenation with a typed clear afterwards.
+   (emacsvox-aural-call-with-delivery-transaction
+    speaker (lambda () (emacsvox-aural-delivery-send speaker "fragment")
+              (tts--protocol-dispatch)))
+   (should (equal '(unknown boundary usable) (tts-queue-state-test--get speaker)))
+   (tts--protocol-dispatch)
+   (should (tts-queue--known-empty-p speaker))))
+
+(ert-deftest tts-queue-own-stop-guard-advances-before-independent-hooks ()
+  (dolist (nested '(nil neutral queue dispatch letter))
+    (omnivox-choice-consumer-test--with-speech
+     (tts-queue--install)
+     (set-process-coding-system speaker 'utf-8-unix 'utf-8-unix)
+     (tts-queue-state-test--set speaker '(empty boundary usable))
+     (let ((tts-stopped-hook
+            (list (lambda (_process)
+                    (pcase nested
+                      ('neutral (tts-queue--send-typed speaker "OMNIVOX-REMOTE ping\n" 'neutral))
+                      ('queue (tts--protocol-queue-text "OTHER"))
+                      ('dispatch (tts--protocol-dispatch))
+                      ('letter (tts--protocol-letter "A")))))))
+       (tts--call-with-preparation
+        speaker
+        (lambda ()
+          (let ((guard (tts-queue--guard speaker omnivox--choice-registration-property)))
+            (setf (tts--preparation-queue-guard tts--current-preparation) guard)
+            (tts--preparation-before-delivery speaker)
+            (if (memq nested '(nil neutral))
+                (progn (tts--preparation-interrupt speaker)
+                       (should (tts-queue--guard-valid-p guard)))
+              (should-error (tts--preparation-interrupt speaker)
+                            :type 'tts--preparation-cancelled)))))))))
 
 (provide 'tts-queue-handoff-tests)
 ;;; tts-queue-handoff-tests.el ends here

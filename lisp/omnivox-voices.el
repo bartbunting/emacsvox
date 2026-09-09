@@ -32,6 +32,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl-lib))
+(require 'tts-queue-state)
 (require 'emacsvox-preamble)
 (require 'json)
 (require 'subr-x)
@@ -378,10 +379,10 @@ CALLBACK receives PROCESS and the decoded response plist."
          (pending (omnivox--pending-requests process)))
     (puthash identifier callback pending)
     (condition-case error-data
-        (process-send-string
+        (tts-queue--send-typed
          process
          (format "omnivox_control {%s}\n"
-                 (omnivox--encode-control-request envelope)))
+                 (omnivox--encode-control-request envelope)) 'neutral)
       (error
        (remhash identifier pending)
        (signal (car error-data) (cdr error-data))))
@@ -2450,13 +2451,14 @@ Signal an error if discovery cannot run or returns malformed data."
     (message "Found %d Omnivox voices" (length omnivox-available-voices)))
   omnivox-available-voices)
 
-(defun omnivox--send-state-command (command)
+(defun omnivox--send-state-command (command &optional effects)
   "Send Omnivox state COMMAND to the live speaker processes.
 Return the number of distinct processes that received the command."
   (let (sent)
     (dolist (process (list tts-speaker-process tts-notify-process))
       (when (and (process-live-p process) (not (memq process sent)))
-        (process-send-string process (concat command "\n"))
+        (if effects (tts-queue--send-typed process (concat command "\n") effects)
+          (process-send-string process (concat command "\n")))
         (push process sent)))
     (length sent)))
 
@@ -2467,7 +2469,7 @@ Return the number of distinct processes that received the command."
     (user-error "Invalid Omnivox voice identifier"))
   (setq omnivox-default-voice-id voice-id)
   (unless (> (omnivox--send-state-command
-              (format "tts_set_voice %s" voice-id))
+              (format "tts_set_voice %s" voice-id) 'neutral)
              0)
     (user-error "No live Omnivox speech process"))
   voice-id)
@@ -2957,7 +2959,7 @@ Return the number of distinct processes that received the command."
   (omnivox--negotiate-processes)
   (unless (string-empty-p omnivox-default-voice-id)
     (omnivox--send-state-command
-     (format "tts_set_voice %s" omnivox-default-voice-id))))
+     (format "tts_set_voice %s" omnivox-default-voice-id) 'neutral)))
 
 (provide 'omnivox-voices)
 

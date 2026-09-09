@@ -47,9 +47,10 @@ and all 505 selected source tests passing. Finalization seals the capture;
 presentation hooks use independent captures. The subsequent
 [[file:voice-editor-queue-proof-review.org][XHI protocol-boundary refinement]] is complete: separate queue/framing state,
 local/remote recovery, birth observation and exact own-stop receipts are specified.
-Twenty-six muted server observations cover local and remote framing. Return to
-High for proof implementation, then guarded named promotion. Scope A remains
-selected; broader cross-call tuning is deferred. Preview and editor work remain
+Twenty-six muted server observations cover local and remote framing. The High
+proof implementation now passes 526 selected source tests and muted client/server
+acceptance on both lanes over local and remote connections, including reconnect.
+Guarded named promotion is next. Scope A remains selected; broader cross-call tuning is deferred. Preview and editor work remain
 pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
@@ -713,16 +714,23 @@ behavior, not the future client observer. Scope A stays selected; return to High
 with no new product decision. Keep bounded metadata, no replay and no repair
 commands.
 
-**** TODO Track bounded legacy queue proof
+**** DONE Track bounded legacy queue proof
 
-Ready for High under the completed refinement above. Implement the private
-proof service and validated constructor metadata. Observe actual writes using
-exact private typed tokens; unclassified managed output invalidates the proof.
-Cover string/region/EOF output and alternate process arguments, direct/remote/
-framed/scheduled writes, process birth and generation handoff, mutation serial,
-coding/line limits, partial/nonlocal failure and the exact own-stop receipt before
-cleanup/hooks. Keep promotion disabled while testing
-these contracts. Run source and compiled gates, then commit separately.
+Implemented the private constant-size proof service and validated constructor
+metadata. Actual string writes consume exact typed tokens; region/EOF output,
+partial writes, overlapping writes, unsupported coding and uncertain process
+birth cannot manufacture empty proof. Local framing can recover through later
+ordinary output. Remote fragments require fresh connection ownership. Guards
+retain process/record identity, serial, generation and registration; only the
+exact policy Stop receipt can advance its guard before cleanup and hooks.
+
+Ten observer contracts drive all 24 framing and 11 queue-effect fixture cases,
+plus alias, birth/auth, mutation, overlap, advice and nonlocal-failure checks.
+Two connected contracts cover real producers and policy Stop hooks. All 526
+selected source tests pass, including nine remote lifecycle tests. Muted real
+client/server acceptance verifies both lanes and reconnect for local pipes and
+private loopback authentication. Named-queue promotion remains disabled in this
+slice; no live configuration or runtime installation changed.
 
 **** TODO Promote complete named queues through layered transport
 

@@ -7,9 +7,10 @@
 The maintainer resumed at XHI after =67ba2eb8b=. This refinement completes the
 [[file:voice-editor-queue-handoff-contract.org][selected A queue contract]]; return to High for bounded observation and then
 separately guarded named-queue promotion. No new product decision is required.
-This review changes design data and server diagnostics, not production behavior.
-The first runtime slice =3fbae73b3= remains complete with 505 passing selected
-source tests. New named-queue promotion remains disabled.
+The subsequent High slice implements the private observer, constructor metadata,
+provisional process birth/authentication and exact policy Stop guards. All 526
+selected source tests pass. New named-queue promotion remains disabled pending
+its separate integration slice.
 
 Keep cross-call tuning deferred, the existing character protocol, bounded
 metadata and no replay. Do not insert a newline, Stop or reset to repair proof.
@@ -303,3 +304,36 @@ links and =git diff --check= pass. =make check-emacs=, =make bytecode-check=,
 =make headers-check= and =make docs-release-check= pass with selected Emacs
 31.0.90. No production Lisp changed, so no byte-code rebuild or live profile
 restart is required for this design slice.
+
+* High implementation evidence
+
+=tts-queue-state.el= now observes the actual string/region/EOF primitives and
+keeps constant-size queue/framing state. Exact typed tokens, packet fingerprints,
+constructor effect tables and own-stop receipts connect direct, captured,
+framed and remote output. Factory advice cannot grant fresh empty proof by
+returning an old process. Captured typed commands are rechecked before framing.
+
+Ten observer tests execute all 24 framing and 11 queue-effect fixture cases,
+with additional birth/authentication, alias, coding/limits, advice, mutation,
+overlap, nonlocal cleanup and guard checks. The birth and observer fixture groups
+remain specifications supported by focused tests rather than a claim that all
+89 cases are independently driven. Two connected tests cover actual producers,
+packet composition and guard advancement before Stop hooks. All 526 selected
+source tests pass, including the nine remote lifecycle tests.
+
+Muted real-server acceptance against the unchanged Omnivox =31a0b9a= passes for
+local pipes and private loopback connections: main and notification lanes each
+report the actual fallback row, then repeat after reconnection. The preparation
+guard survives initialization and structured delivery. These tests install no
+runtime, change no personal configuration and leave named promotion disabled.
+
+The isolated compiled aural gate passes after adding the new library to its
+build inventory and loading observer helpers before their connected tests.
+A full byte-code rebuild and subsequent incremental refresh leave the selected
+Emacs 31.0.90 byte-code current. These automated checks do not replace spoken
+acceptance of the eventual editor.
+
+=make headers-check=, =make docs-reference=, =make bytecode-check=,
+=make docs-release-check= and =git diff --check= pass. Generated reference
+artifacts include the new private module. Concurrent Notmuch source/test edits
+and the untracked code-quality audit are preserved outside this slice.

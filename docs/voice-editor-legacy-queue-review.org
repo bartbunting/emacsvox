@@ -20,8 +20,10 @@ sync/flush boundaries, with fifteen new contracts and 505 passing selected sourc
 tests. Named-queue promotion remains disabled pending the queue-proof slices.
 The [[file:voice-editor-queue-proof-review.org][subsequent XHI boundary refinement]] is complete, with separate framing proof,
 local/remote recovery, observed birth and exact own-stop receipts. Twenty-six
-muted server observations pass. Return to High for the proof slices; selected
-scope A remains unchanged.
+muted server observations pass. The High proof implementation now passes 526
+selected source tests and muted local/remote client acceptance on both lanes
+and reconnect. Guarded named promotion remains the next slice; selected scope A
+is unchanged.
 The broader
 [[file:voice-editor-implementation-plan.org][implementation plan]] remains active; preview v2, optional
 controls and spoken acceptance are not complete.

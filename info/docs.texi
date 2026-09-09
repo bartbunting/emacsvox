@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 287 loaded; 0 intentionally omitted.
+@c Modules: 288 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -58,8 +58,8 @@
 @c Loaded: gm-nnir.elc gmaps.elc gweb.elc ladspa.elc light.elc
 @c Loaded: mac-voices.elc omaps.elc omnivox-choice-codec.elc omnivox-remote.elc omnivox-voices.elc
 @c Loaded: outloud-voices.elc pip.elc plain-voices.elc soundscape.elc sox-gen.elc
-@c Loaded: sox.elc swiftmac-voices.elc tetris.elc tts-speak.elc voice-defs.elc
-@c Loaded: voice-setup.elc xbacklight.elc
+@c Loaded: sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc tts-speak.elc
+@c Loaded: voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -353,6 +353,7 @@ This chapter documents a total of 1561 commands and 207 options.
 * sox-gen:: Binaural Beats And More Using SoX.
 * swiftmac-voices:: Define  Swiftmac tags.
 * tetris:: Tetris for Emacs.
+* tts-queue-state:: Bounded speech input observation.
 * tts-speak:: Interface to speech server.
 * voice-defs:: Define voices for voice-lock.
 * voice-setup:: Setup voices for voice-lock.
@@ -25229,6 +25230,12 @@ This module defines the various voices used in voice-lock mode by SwiftMac.
 
 @node tetris
 @section tetris
+
+@node tts-queue-state
+@section tts-queue-state
+
+Private stream knowledge for complete captured queue promotion.  This does
+not own a queue or replay output.  Unknown input preserves legacy delivery.
 
 @node tts-speak
 @section tts-speak

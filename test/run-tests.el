@@ -54,6 +54,7 @@
   (require 'omnivox-choice-playback-tests)
   (require 'omnivox-choice-consumer-tests)
   (require 'tts-queue-handoff-tests)
+  (require 'tts-queue-state-tests)
   (require 'emacsvox-aural-voice-editor-tests)
   (require 'emacsvox-aural-voice-context-tests)
   (require 'emacsvox-aural-voice-workbench-tests)

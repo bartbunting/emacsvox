@@ -118,34 +118,34 @@ variable is unset, compatibility defaults select `mac' on macOS and
 
 (defun tts--protocol-silence (duration &optional force)
   
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
    (format "sh %d%s\n"
            duration
-           (if force "\nd" ""))))
+           (if force "\nd" "")) (if force '(queue clear) 'queue)))
 
 ;;;;   tone
 
 (defun tts--protocol-tone (pitch duration &optional force)
   
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
    (format "t %d %d%s\n"
            pitch duration
-           (if force "\nd" ""))))
+           (if force "\nd" "")) (if force '(queue clear) 'queue)))
 
 ;;;;   queue
 
 (defun tts--protocol-queue-text (text)
   
   (unless (string-match "^[[:space:]]+$" text)
-    (emacsvox-aural-delivery-send
-     tts-speaker-process (format "q {%s }\n" text))))
+    (emacsvox-aural--delivery-send-typed
+     tts-speaker-process (format "q {%s }\n" text) 'queue)))
 
 (defun tts--protocol-queue-code (code)
   
-  (emacsvox-aural-delivery-send
-   tts-speaker-process (format "c {%s }\n" code)))
+  (emacsvox-aural--delivery-send-typed
+   tts-speaker-process (format "c {%s }\n" code) 'queue))
 
 ;;;;   speak
 
@@ -154,8 +154,8 @@ variable is unset, compatibility defaults select `mac' on macOS and
 
 (defun tts--protocol-dispatch ()
 
-  (emacsvox-aural-delivery-send
-   tts-speaker-process "d\n"
+  (emacsvox-aural--delivery-send-typed
+   tts-speaker-process "d\n" 'clear
    (if (eq tts--dispatch-origin 'ordinary) 'ordinary-dispatch 'explicit-dispatch)))
 
 (defconst tts--tracked-status-prefix "__EMACSVOX_TRACKED__"
@@ -207,7 +207,7 @@ a `cancelled' record when pending input interrupts that wait.")
   preparation reserved (semantics-bound t))
 
 (cl-defstruct (tts--preparation (:constructor tts--preparation-create))
-  process generation owners cancelled closed ready stop-used legacy-stop)
+  process generation owners cancelled closed ready stop-used legacy-stop queue-guard)
 (defvar tts--preparations (make-hash-table :test #'eq))
 (defvar tts--prepared-owners (make-hash-table :test #'eql))
 (defvar tts--current-preparation nil)
@@ -220,6 +220,8 @@ a `cancelled' record when pending input interrupts that wait.")
     (let ((process (tts--preparation-process scope)))
       (when (or (tts--preparation-cancelled scope)
                 (tts--preparation-closed scope)
+                (and (tts--preparation-queue-guard scope)
+                     (not (tts-queue--guard-valid-p (tts--preparation-queue-guard scope))))
                 (and (processp process)
                      (or (not (process-live-p process))
                          (process-get process 'tts--speech-process-retiring)
@@ -227,6 +229,12 @@ a `cancelled' record when pending input interrupts that wait.")
                                      (process-get process 'tts--speech-process-generation))))))
         (setf (tts--preparation-cancelled scope) t)
         (signal 'tts--preparation-cancelled nil)))))
+
+(defun tts--preparation-output-guard (process)
+  "Return the current preparation's queue guard only for its own PROCESS."
+  (and tts--current-preparation
+       (eq process (tts--preparation-process tts--current-preparation))
+       (tts--preparation-queue-guard tts--current-preparation)))
 
 (defun tts--preparation-cancel-current ()
   "Mark the current preparation cancelled, even if its caller catches an error."
@@ -657,7 +665,7 @@ With DEFERRED, require final semantic binding before admission."
       (tts--dispatch-schedule-drain process)
       t)))
 
-(defun tts--dispatch-write-packet (process command owners)
+(defun tts--dispatch-write-packet (process command owners &optional description)
   "Arm OWNERS and send COMMAND to PROCESS once, retaining the write outcome."
   (let ((tts--dispatch-call-depth (1+ tts--dispatch-call-depth))
         complete)
@@ -668,7 +676,7 @@ With DEFERRED, require final semantic binding before admission."
           (tts--preparation-check)
           (when (cl-some #'tts--dispatch-owner-retired owners)
             (signal 'tts--preparation-cancelled nil))
-          (process-send-string process command)
+          (tts-queue--send process command description nil (tts--preparation-output-guard process))
           (setq complete t)
           (dolist (owner owners)
             (setf (tts--dispatch-owner-state owner) 'sent
@@ -692,13 +700,15 @@ With DEFERRED, require final semantic binding before admission."
          (emacsvox-aural--make-delivery-entry
           :process (tts--dispatch-owner-process owner)
           :command command :owners (list owner)
+          :queue-description (tts-queue--describe command 'clear)
           :kind (if (eq tts--dispatch-origin 'ordinary)
                     'ordinary-dispatch 'explicit-dispatch)))
         (tts--dispatch-owner-id owner))
     (unwind-protect
         (progn
           (tts--dispatch-write-packet
-           (tts--dispatch-owner-process owner) command (list owner))
+           (tts--dispatch-owner-process owner) command (list owner)
+           (tts-queue--describe command 'clear))
           (when (tts--dispatch-publish owner) (tts--dispatch-owner-id owner)))
       (unless (tts--dispatch-owner-published owner)
         (tts--dispatch-abandon owner)))))
@@ -1134,6 +1144,7 @@ cannot deliver a second terminal result."
               (eq process tts-speaker-process)
               (eq process tts-notify-process)))
             (failure (tts--speech-process-failure process event)))
+        (tts-queue--retire process)
         (emacsvox-aural-cancel-pending-deliveries process)
         (when-let* ((fragment
                      (process-get process tts--tracked-fragment-property)))
@@ -1188,7 +1199,10 @@ urgent policies cancel different scopes."
                    (1+ (or (process-get process 'tts--dispatch-cancellation-epoch) 0))))
     (unwind-protect
         (when (process-live-p process)
-          (emacsvox-aural-delivery-send process "s\n" 'stop))
+          (let* ((guard (and preserved (tts--preparation-queue-guard preserved)))
+                 (receipt (emacsvox-aural--delivery-send-typed
+                           process "s\n" 'clear 'stop guard t)))
+            (when guard (tts-queue--advance-stop guard receipt))))
       (tts--cancel-process-tracked-dispatches process 'cancelled preserved))
     (emacsvox-aural--call-independent-callback
      #'run-hook-with-args 'tts-stopped-hook process)))
@@ -1206,6 +1220,7 @@ the same owner is harmless."
              (not (process-get process tts--speech-process-retiring-property)))
     (tts--preparation-invalidate process)
     (process-put process tts--speech-process-retiring-property t)
+    (tts-queue--retire process)
     ;; Logging during teardown must not try to speak through the old server.
     ;; Diagnostics remain in the echo area and *Messages* after recovery.
     (let ((emacsvox-speak-messages nil)
@@ -1304,15 +1319,15 @@ effect must run only after the complete timeline command has been sent."
 
 (defun tts--protocol-say (string)
   
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
-   (format "tts_say { %s}\n" string)))
+   (format "tts_say { %s}\n" string) 'interrupt))
 
 ;;;;  stop
 
 (defun tts--protocol-stop ()
   
-  (emacsvox-aural-delivery-send tts-speaker-process "s\n" 'stop))
+  (emacsvox-aural--delivery-send-typed tts-speaker-process "s\n" 'clear 'stop))
 
 ;;;;  sync
 
@@ -1336,17 +1351,17 @@ use their existing isolated-letter behavior."
         (and
          (processp target)
          (process-get target tts--capitalization-presentation-property))
-      (emacsvox-aural-delivery-send
+      (emacsvox-aural--delivery-send-typed
        target
        (format
         "tts_set_capitalization_presentation %s\n"
-        (tts--effective-capitalization-presentation))
+        (tts--effective-capitalization-presentation)) 'neutral
        'sync-capitalization))))
 
 (defun tts--protocol-sync ()
   "Synchronize speech state with running server"
   (tts--protocol-sync-capitalization-presentation)
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
    (format "tts_sync_state %s %s %s %s\n"
            tts-punctuation-mode
@@ -1355,16 +1370,16 @@ use their existing isolated-letter behavior."
            ;; actions.  Disable legacy server-side scanning to avoid a second
            ;; cue for the same source boundary.
            0
-           tts-speech-rate)
+           tts-speech-rate) 'neutral
    'sync-state))
 
 ;;;;   letter
 
 (defun tts--protocol-letter (letter)
   
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
-   (format "l {%s}\n" letter)))
+   (format "l {%s}\n" letter) 'interrupt))
 
 ;;;;   language
 
@@ -1379,70 +1394,70 @@ use their existing isolated-letter behavior."
 
 (defun tts--protocol-next-language (&optional say_it)
   (tts--require-legacy-language-protocol)
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
-   (format "set_next_lang %s\n" say_it)))
+   (format "set_next_lang %s\n" say_it) 'neutral))
 
 (defun tts--protocol-previous-language (&optional say_it)
   (tts--require-legacy-language-protocol)
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
-   (format "set_previous_lang %s\n" say_it)))
+   (format "set_previous_lang %s\n" say_it) 'neutral))
 
 (defun tts--protocol-set-language (language say_it)
   (tts--require-legacy-language-protocol)
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
-   (format "set_lang %s %s \n" language say_it)))
+   (format "set_lang %s %s \n" language say_it) 'neutral))
 
 (defun tts--protocol-set-preferred-language (alias language)
   (tts--require-legacy-language-protocol)
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
-   (format "set_preferred_lang %s %s \n" alias language)))
+   (format "set_preferred_lang %s %s \n" alias language) 'neutral))
 
 ;;;;   Version, rate
 
 (defun tts--protocol-version ()
   
-  (emacsvox-aural-delivery-send tts-speaker-process "version\n"))
+  (emacsvox-aural--delivery-send-typed tts-speaker-process "version\n" 'neutral))
 
 (defun tts--protocol-set-rate (rate)
   
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
-   (format "tts_set_speech_rate %s\n" rate)))
+   (format "tts_set_speech_rate %s\n" rate) 'neutral))
 
 ;;;;  character scale
 
 (defun tts--protocol-set-character-scale (factor)
   
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
    (format "tts_set_character_scale %s\n"
-           factor)))
+           factor) 'neutral))
 
 ;;;;   split caps
 
 (defun tts--protocol-set-split-caps (flag)
   
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
-   (format "tts_split_caps %s\n" (if flag 1 0))))
+   (format "tts_split_caps %s\n" (if flag 1 0)) 'neutral))
 
 ;;;;  punctuations
 
 (defun tts--protocol-set-punctuations (mode)
   
-  (emacsvox-aural-delivery-send
+  (emacsvox-aural--delivery-send-typed
    tts-speaker-process
-   (format "tts_set_punctuations %s\nd\n" mode)))
+   (format "tts_set_punctuations %s\nd\n" mode) '(neutral clear)))
 
 ;;;;  reset
 
 (defun tts--protocol-reset ()
   
-  (emacsvox-aural-delivery-send tts-speaker-process "tts_reset \n"))
+  (emacsvox-aural--delivery-send-typed tts-speaker-process "tts_reset \n" 'clear))
 
 ;;;   user customizations:
 
@@ -3618,14 +3633,18 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
     (setq process
           (if (omnivox-remote-enabled-p)
               (omnivox-remote-make-process name)
-            (make-process
-             :name name :command (list program) :connection-type 'pipe
-             :stderr (get-buffer-create (format "*%s diagnostics*" name)))))
+            (tts-queue--create
+             (lambda ()
+               (make-process
+                :name name :command (list program) :connection-type 'pipe
+                :coding 'utf-8-unix
+                :stderr (get-buffer-create (format "*%s diagnostics*" name)))) nil)))
     (unless (process-live-p process) (error "Fail: Speech Server"))
-    (set-process-coding-system process 'utf-8 'utf-8)
+    (set-process-coding-system process 'utf-8-unix 'utf-8-unix)
     (process-put
      process tts--speech-process-generation-property
      (cl-incf tts--speech-process-generation))
+    (tts-queue--set-generation process tts--speech-process-generation)
     (process-put
      process tts--speech-process-role-property
      (if (string= name "Notify") 'notification 'speaker))

@@ -68,6 +68,7 @@ omnivox-voices.elc
 TTS_OBJECTS = \
 emacsvox-version.elc \
 emacsvox-preamble.elc \
+tts-queue-state.elc \
 omnivox-remote.elc \
 tts-speak.elc \
 $(VOICE_OBJECTS)
@@ -540,6 +541,10 @@ tags:
 
 clean:
 	@rm -f *.elc  emacsvox-loaddefs.el
+
+
+# Queue descriptors and records must precede compiled consumers.
+omnivox-remote.elc omnivox-voices.elc emacsvox-aural-transport.elc tts-speak.elc: tts-queue-state.elc
 
 ###  end of file
 

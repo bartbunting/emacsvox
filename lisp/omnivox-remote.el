@@ -32,6 +32,7 @@
 
 (require 'cl-lib)
 (require 'subr-x)
+(require 'tts-queue-state)
 
 (defgroup omnivox-remote nil
   "Speech on the workstation from a remote Emacs."
@@ -129,7 +130,7 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
     (if (> (- (float-time) (process-get process 'omnivox-remote-pong)) 20)
         (delete-process process)
       (condition-case nil
-          (process-send-string process "OMNIVOX-REMOTE ping\n")
+          (tts-queue--send-typed process "OMNIVOX-REMOTE ping\n" 'neutral)
         (error (delete-process process))))))
 
 (defun omnivox-remote--schedule-retry ()
@@ -145,6 +146,7 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
 (defun omnivox-remote--sentinel (process event)
   "Retire PROCESS with EVENT through TTS and arrange remote recovery."
   (unless (process-live-p process)
+    (tts-queue--retire process)
     (when-let* ((timer (process-get process 'omnivox-remote-heartbeat)))
       (cancel-timer timer)
       (process-put process 'omnivox-remote-heartbeat nil))
@@ -156,13 +158,15 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
 (defun omnivox-remote--open (name token)
   "Authenticate lane NAME with TOKEN and return its network process."
   (let* ((process
-          (make-network-process
-           :name name :host omnivox-remote-host :service omnivox-remote-port
-           :family (if (equal omnivox-remote-host "::1") 'ipv6 'ipv4)
-           :coding 'utf-8-unix :noquery t :nowait t
-           :filter #'omnivox-remote--filter :sentinel #'omnivox-remote--sentinel))
+          (tts-queue--create
+           (lambda ()
+             (make-network-process
+              :name name :host omnivox-remote-host :service omnivox-remote-port
+              :family (if (equal omnivox-remote-host "::1") 'ipv6 'ipv4)
+              :coding 'utf-8-unix :noquery t :nowait t
+              :filter #'omnivox-remote--filter :sentinel #'omnivox-remote--sentinel)) t))
          (deadline (+ (float-time) 4))
-         success)
+         success auth-receipt)
     (unwind-protect
         (progn
           (while (and (eq (process-status process) 'connect)
@@ -170,17 +174,19 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
             (accept-process-output process 0.05))
           (unless (eq (process-status process) 'open)
             (error "Cannot connect to Omnivox SSH endpoint"))
-          (process-send-string
-           process
-           (format "OMNIVOX-REMOTE 1 %s %s %s\n" token omnivox-remote--session
-                   (if (equal name "Notify") "notification" "speaker")))
+          (let ((command (format "OMNIVOX-REMOTE 1 %s %s %s\n" token omnivox-remote--session
+                                 (if (equal name "Notify") "notification" "speaker"))))
+            (setq auth-receipt
+                  (tts-queue--send process command (tts-queue--describe command 'neutral) t)))
           (while (and (process-live-p process)
                       (not (process-get process 'omnivox-remote-ready))
                       (not (process-get process 'omnivox-remote-error))
                       (< (float-time) deadline))
             (accept-process-output process 0.05))
           (if (process-get process 'omnivox-remote-ready)
-              (setq success process)
+              (progn
+                (tts-queue--authenticated process auth-receipt)
+                (setq success process))
             (error "Omnivox remote connection: %s"
                    (or (process-get process 'omnivox-remote-error) "handshake timeout"))))
       (unless success (delete-process process)))
@@ -240,8 +246,8 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
               (let ((tts-speaker-process tts-notify-process))
                 (tts--protocol-sync))
               (unless (string-empty-p omnivox-default-voice-id)
-                (process-send-string
-                 tts-notify-process (format "tts_set_voice %s\n" omnivox-default-voice-id)))))
+                (tts-queue--send-typed
+                 tts-notify-process (format "tts_set_voice %s\n" omnivox-default-voice-id) 'neutral))))
           (setq omnivox-remote--retry-delay 1 omnivox-remote--last-error nil))
       (error
        (setq omnivox-remote--last-error (error-message-string err))

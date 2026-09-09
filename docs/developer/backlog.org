@@ -103,9 +103,11 @@ hooks prevent late contributions from disappearing; framing is checked before
 interruption. The [[file:../voice-editor-queue-proof-review.org][XHI protocol-boundary refinement]] is now complete: queue contents and framing
 have separate proof, with conservative local/remote recovery, observed birth and
 exact own-stop receipts. All 26 muted local/remote server observations pass.
-Return to High for bounded observation and then guarded named-queue promotion.
-The new proof remains unimplemented. Scope A remains selected. Preserve queue
-order, cancellation and character review.
+The High bounded observer and guards are implemented: 526 selected source tests
+pass, including actual primitive, producer/Stop-hook and remote lifecycle checks.
+Muted client/server acceptance passes on both lanes and reconnect, locally and
+remotely. Guarded named-queue promotion is next and remains disabled. Scope A
+remains selected. Preserve queue order, cancellation and character review.
 The remaining compatibility fixes, preview v2, individual controls and spoken acceptance
 are still pending; this is not complete feature delivery. Earlier, the maintainer
 selected shared tuning first, with explicit

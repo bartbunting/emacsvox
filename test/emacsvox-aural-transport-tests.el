@@ -2700,6 +2700,7 @@ write.  State synchronization lines in a combined write are ignored."
                (eq property emacsvox-aural--presentation-tone-process-property)
                1)))
            ((symbol-function 'process-put) #'ignore)
+           ((symbol-function 'process-type) (lambda (_) 'pipe))
            ((symbol-function 'process-send-string)
             (lambda (process command)
               (push (list process command) writes))))
@@ -4680,8 +4681,8 @@ is the default inherited by a newly created TTS scratch buffer."
             (and
              (eq property emacsvox-aural--presentation-tone-process-property)
              1)))
-         ((symbol-function 'emacsvox-aural-delivery-send)
-          (lambda (process command &optional _kind)
+         ((symbol-function 'emacsvox-aural--delivery-submit)
+          (lambda (process command _kind _description &rest _private)
             (push (list process command) writes))))
       (emacsvox-aural--protocol-presentation-tone 297.3018 150 'insert)
       (emacsvox-aural--protocol-presentation-tone 880 35 'overlay))
@@ -4698,8 +4699,8 @@ is the default inherited by a newly created TTS scratch buffer."
     (cl-letf
         (((symbol-function 'processp) (lambda (_process) t))
          ((symbol-function 'process-get) (lambda (&rest _) nil))
-         ((symbol-function 'emacsvox-aural-delivery-send)
-          (lambda (&rest arguments) (push arguments writes))))
+         ((symbol-function 'emacsvox-aural--delivery-submit)
+          (lambda (process command _kind _description &rest _private) (push (list process command) writes))))
       (emacsvox-aural--protocol-presentation-tone 297.3018 150 'insert)
       (emacsvox-aural--protocol-presentation-tone 880 35 'overlay))
     (should

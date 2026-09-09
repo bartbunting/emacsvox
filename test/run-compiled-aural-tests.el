@@ -36,6 +36,7 @@
           "emacsvox-aural-source.el"
           "emacsvox-aural-planner.el"
           "emacsvox-aural-submission.el"
+          "tts-queue-state.el"
           "emacsvox-aural-transport.el"
           "omnivox-remote.el"
           "tts-speak.el"

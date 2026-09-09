@@ -26,8 +26,10 @@ at High. Dispatch intent/owner binding is implemented, with fifteen new contract
 and all 505 selected source tests passing. The
 [[file:voice-editor-queue-proof-review.org][completed XHI protocol-boundary refinement]] now specifies separate queue/framing
 state, conservative local/remote recovery, birth observation and exact own-stop
-receipts. Twenty-six muted local/remote observations pass. Return to High for
-bounded proof and guarded named promotion; scope A remains selected. Preview v2
+receipts. The High proof implementation now passes 526 selected source tests,
+including connected producer/Stop-hook and remote lifecycle checks. Muted
+client/server acceptance passes on both lanes, locally and remotely, including
+reconnect. Guarded named promotion is next; scope A remains selected. Preview v2
 and editor controls are also pending.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen

@@ -31,6 +31,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'tts-queue-state)
 (require 'json)
 (require 'subr-x)
 (require 'omnivox-remote)
@@ -66,6 +67,8 @@
 (declare-function tts-initialize "tts-speak" ())
 (declare-function tts-voice-reset-code "tts-speak" ())
 
+(declare-function tts--preparation-output-guard "tts-speak" (process))
+
 (defvar tts-speaker-process)
 (defvar tts--marker-event-function)
 (defvar tts--tracked-completion-function)
@@ -92,7 +95,7 @@
     (emacsvox-aural--delivery-entry
      (:constructor emacsvox-aural--make-delivery-entry))
   "One server command captured inside a complete delivery transaction."
-  process command kind owners)
+  process command kind owners queue-description)
 
 (cl-defstruct
     (emacsvox-aural--pending-delivery
@@ -120,7 +123,7 @@ delay.  Ordered and urgent transactions are never delayed."
 (defvar emacsvox-aural--delivery-dispatch-owners nil
   "Inactive or armed dispatch owners captured by the current transaction.")
 
-(declare-function tts--dispatch-write-packet "tts-speak" (process command owners))
+(declare-function tts--dispatch-write-packet "tts-speak" (process command owners &optional description))
 (declare-function tts--dispatch-abandon "tts-speak" (owner &optional status))
 (declare-function tts--dispatch-owner-id "tts-speak" (owner))
 (declare-function tts--dispatch-owner-published "tts-speak" (owner))
@@ -351,11 +354,11 @@ the tone and surrounding speech but cannot preserve overlay timing."
           emacsvox-aural--presentation-tone-process-property)
          0)
         emacsvox-aural--presentation-tone-version))
-      (emacsvox-aural-delivery-send
+      (emacsvox-aural--delivery-send-typed
        tts-speaker-process
        (format
         "emacsvox_tone %d %s %s %d\n"
-        emacsvox-aural--presentation-tone-version mode pitch duration))
+        emacsvox-aural--presentation-tone-version mode pitch duration) 'queue)
     (tts--protocol-tone (max 1 (round pitch)) duration)))
 
 (defun emacsvox-aural--capture-record (kind value bytes)
@@ -378,7 +381,9 @@ the tone and surrounding speech but cannot preserve overlay timing."
 (defun emacsvox-aural--capture-delivery-entry (entry)
   "Capture original command ENTRY and its exact position in the journal."
   (emacsvox-aural--capture-record
-   'entry entry (string-bytes (emacsvox-aural--delivery-entry-command entry)))
+   'entry entry (+ (string-bytes (emacsvox-aural--delivery-entry-command entry))
+                   (if (emacsvox-aural--delivery-entry-queue-description entry)
+                       tts-queue--metadata-bytes 0)))
   (push entry emacsvox-aural--delivery-transaction-entries))
 
 (defun emacsvox-aural-delivery-send (process command &optional kind)
@@ -386,15 +391,21 @@ the tone and surrounding speech but cannot preserve overlay timing."
 
 KIND may be `stop'.  Stops are delivery control rather than presentation
 payload, so they remain immediate and cannot accumulate behind idle delivery."
-  (if
-      (and
-       emacsvox-aural--delivery-transaction-active-p
-       (not (eq kind 'stop)))
+  (emacsvox-aural--delivery-submit process command kind nil))
+
+(defun emacsvox-aural--delivery-send-typed (process command effects &optional kind guard own-stop)
+  "Submit constructor COMMAND with private EFFECTS and existing delivery KIND."
+  (emacsvox-aural--delivery-submit
+   process command kind (tts-queue--describe command effects) guard own-stop))
+
+(defun emacsvox-aural--delivery-submit (process command kind description &optional guard own-stop)
+  "Capture or send COMMAND with its exact private DESCRIPTION."
+  (if (and emacsvox-aural--delivery-transaction-active-p (not (eq kind 'stop)))
       (emacsvox-aural--capture-delivery-entry
        (emacsvox-aural--make-delivery-entry
-        :process process :command command
+        :process process :command command :queue-description description
         :kind (or kind emacsvox-aural--delivery-entry-kind)))
-    (process-send-string process command)))
+    (tts-queue--send process command description nil guard own-stop)))
 
 (defun emacsvox-aural--legacy-frame-float-p (value)
   "Return non-nil for a finite decimal VALUE representable by the server."
@@ -512,22 +523,22 @@ This checks framing eligibility only; it does not infer inline voice semantics."
           (eq owner (emacsvox-aural--delivery-entry-process entry)))
         entries))
       (let* ((payload
-              (apply
-               #'concat
-               (mapcar
-                #'emacsvox-aural--delivery-entry-command entries)))
+              (car (tts-queue--packet
+                    (mapcar #'emacsvox-aural--delivery-entry-command entries)
+                    (mapcar #'emacsvox-aural--delivery-entry-queue-description
+                            entries))))
              (_ (emacsvox-aural--validate-legacy-frame payload))
              (encoded
               (base64-encode-string
-               (encode-coding-string payload 'utf-8 t) t)))
+               (encode-coding-string payload 'utf-8 t) t))
+             (command (format "emacsvox_tx %d {%s}\n" generation encoded)))
         (list
          (emacsvox-aural--make-delivery-entry
           :process owner :kind 'framed
           :owners (delete-dups
                    (apply #'append
                           (mapcar #'emacsvox-aural--delivery-entry-owners entries)))
-          :command
-          (format "emacsvox_tx %d {%s}\n" generation encoded))))
+          :command command :queue-description (tts-queue--describe command 'frame))))
     entries))
 
 (defun emacsvox-aural--delivery-process-name (process)
@@ -584,7 +595,7 @@ Return non-nil when every entry was sent to a live process."
    (emacsvox-aural--framed-delivery-entries
     owner generation entries))
   (let ((sent t)
-        current-process commands dispatch-owners)
+        current-process commands descriptions dispatch-owners)
     (cl-labels
         ((flush
            ()
@@ -600,12 +611,13 @@ Return non-nil when every entry was sent to a live process."
                     'process-not-live current-process owner generation
                     transaction-id))
                (condition-case error-data
-                   (if dispatch-owners
-                       (tts--dispatch-write-packet
-                        current-process (apply #'concat (nreverse commands))
-                        (delete-dups (nreverse dispatch-owners)))
-                     (process-send-string
-                      current-process (apply #'concat (nreverse commands))))
+                   (let ((packet (tts-queue--packet (nreverse commands) (nreverse descriptions))))
+                     (if dispatch-owners
+                         (tts--dispatch-write-packet
+                          current-process (car packet)
+                          (delete-dups (nreverse dispatch-owners)) (cdr packet))
+                       (tts-queue--send current-process (car packet) (cdr packet) nil
+                                        (tts--preparation-output-guard current-process))))
                  (tts--preparation-cancelled
                   (signal (car error-data) (cdr error-data)))
                  (error
@@ -613,7 +625,7 @@ Return non-nil when every entry was sent to a live process."
                   (emacsvox-aural--record-delivery-failure
                    'process-send-error current-process owner generation
                    transaction-id error-data)))))
-           (setq current-process nil commands nil dispatch-owners nil)))
+           (setq current-process nil commands nil descriptions nil dispatch-owners nil)))
       (dolist (entry entries)
         (let ((process (emacsvox-aural--delivery-entry-process entry))
               (command (emacsvox-aural--delivery-entry-command entry)))
@@ -622,6 +634,7 @@ Return non-nil when every entry was sent to a live process."
             (setq current-process process))
           (dolist (dispatch (emacsvox-aural--delivery-entry-owners entry))
             (push dispatch dispatch-owners))
+          (push (emacsvox-aural--delivery-entry-queue-description entry) descriptions)
           (push command commands)))
       (flush))
     sent))
@@ -1859,6 +1872,7 @@ the authoritative check after punctuation and split-cap preprocessing."
              (lambda (command)
                (emacsvox-aural--make-delivery-entry
                 :process owner :kind 'structured :command command
+                :queue-description (tts-queue--describe command 'neutral)
                 :owners (list (nth 2 registration))))
              (emacsvox-aural--frame-structured-timeline envelope)))
            effects

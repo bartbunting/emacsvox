@@ -33,10 +33,11 @@ Presentation hooks run in independent captures. Legacy replacement framing is
 validated before interruption, including the server's requirement for exactly
 one final plain dispatch. Ordered compatibility packets retain multiple flushes.
 
-Bounded queue-state proof and new named-queue promotion remain the next two
-implementation slices. The [[file:voice-editor-queue-proof-review.org][completed protocol-boundary refinement]] now specifies
+Bounded queue-state proof is now implemented; new named-queue promotion is the
+next implementation slice. The [[file:voice-editor-queue-proof-review.org][completed protocol-boundary refinement]] now specifies
 framing separately from queue contents, conservative local/remote recovery,
-composable effects, birth ownership and exact own-stop receipts. Return to High;
+composable effects, birth ownership and exact own-stop receipts. The High
+observer slice passes 526 selected source tests and the isolated compiled gate;
 no further product decision is needed. Scope A is unchanged; no claim of
 individual tuning is made for those raw queue entries yet.
 
@@ -398,7 +399,9 @@ profile restart. Runtime implementation remains the three High slices above.
 * Refined handoff validation
 
 The subsequent [[file:voice-editor-queue-proof-review.org][completed XHI refinement]] and version-2 fixture supersede the initial
-queue-only assumptions. The 505-test runtime baseline is unchanged; new proof
-fixtures are specifications for the next HI slice. See the refinement for muted
-local/remote observations and final non-mutating gate results. Promotion remains
-disabled until actual observer and finalizer tests establish the new behavior.
+queue-only assumptions. The subsequent High proof implementation passes 526
+selected source tests, including actual observer and connected producer/Stop
+guard checks. It drives the 24 framing and 11 queue-effect fixture cases. Muted
+client/server acceptance passes on both lanes locally and remotely after
+reconnect. See the refinement for details. Promotion remains disabled pending
+the separate guarded finalizer integration.

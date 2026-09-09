@@ -2646,8 +2646,8 @@
           (cl-letf
               (((symbol-function 'emacsvox-aural-cancel-pending-deliveries)
                 #'ignore)
-               ((symbol-function 'emacsvox-aural-delivery-send)
-                (lambda (owner command kind)
+               ((symbol-function 'emacsvox-aural--delivery-submit)
+                (lambda (owner command kind &rest _metadata)
                   (push (list owner command kind) writes))))
             (tts-stop)
             (tts-stop))
@@ -2980,8 +2980,8 @@
             (let ((tts-stopped-hook
                    (list (lambda (process) (push process stopped)))))
               (cl-letf
-                  (((symbol-function 'emacsvox-aural-delivery-send)
-                    (lambda (process command kind)
+                  (((symbol-function 'emacsvox-aural--delivery-submit)
+                    (lambda (process command kind _description &rest _private)
                       (push (list process command kind) writes)))
                    ((symbol-function
                      'emacsvox-aural-cancel-pending-deliveries)
@@ -3626,8 +3626,8 @@
           (process-put
            process tts--capitalization-presentation-property t)
           (cl-letf
-              (((symbol-function 'emacsvox-aural-delivery-send)
-                (lambda (target command &optional _kind)
+              (((symbol-function 'emacsvox-aural--delivery-submit)
+                (lambda (target command _kind _description &rest _private)
                   (push (list target command) writes))))
             (tts--protocol-sync)
             (should

@@ -106,7 +106,8 @@
      "Aural compiler, planner, source, and inspection loaded queue transport"))
   (dolist
       (library
-       '("omnivox-remote"
+       '("tts-queue-state"
+         "omnivox-remote"
          "tts-speak"
          "voice-setup"
          "voice-defs"
@@ -230,7 +231,7 @@
          ".elc" (or (symbol-file function 'defun) ""))
       (error "%S was not loaded from byte-code: %S"
              function (symbol-file function 'defun))))
-  (dolist (function '(omnivox-voice-capabilities omnivox-remote-make-process))
+  (dolist (function '(tts-queue--observe-string tts-queue--send omnivox-voice-capabilities omnivox-remote-make-process))
     (unless (file-in-directory-p (symbol-file function 'defun) build-directory)
       (error "%S escaped the isolated compiled build: %S"
              function (symbol-file function 'defun))))
@@ -349,6 +350,7 @@
                   "emacsvox-aural-voice-context-tests.el"
                   "emacsvox-aural-transport-tests.el"
                   "omnivox-choice-consumer-tests.el"
+                  "tts-queue-state-tests.el"
                   "tts-queue-handoff-tests.el"
                   "emacsvox-aural-voice-palettes-tests.el"
                   "emacsvox-aural-voice-workbench-tests.el"))
