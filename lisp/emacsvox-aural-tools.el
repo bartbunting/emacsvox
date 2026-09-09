@@ -156,6 +156,7 @@ with the current inspection source only when its original identity survives;
 history deliberately does not retain source buffers.  Without RECORD, use
 inspectable facts at the captured source position, or a retained presentation
 whose source identity, position, and modification tick still match.
+For voice remapping, a named source face can also identify the current text.
 When COMPONENT is non-nil, select the retained part to remap."
   (if record
       (progn
@@ -201,12 +202,22 @@ When COMPONENT is non-nil, select the retained part to remap."
                 (copy-tree (emacsvox-aural-concrete-plan-context concrete))
                 :render render
                 :concrete concrete))
-           (let* ((facts (emacsvox-aural-facts-at-point))
+           (let* ((context (emacsvox-aural-context-at-point))
+                  (facts
+                   (or
+                    (emacsvox-aural-facts-at-point)
+                    ;; Face-only text, including Comint prompts, can use the
+                    ;; existing face selector without a retained presentation.
+                    (when (and (eq component 'voice)
+                               (plist-get context :legacy-faces))
+                      (list :content
+                            (buffer-substring-no-properties
+                             (line-beginning-position)
+                             (line-end-position))))))
                   (_
                    (unless facts
                      (user-error
                       "No presentation at this item; use Recent Feedback to select what you heard")))
-                  (context (emacsvox-aural-context-at-point))
                   (explanation (emacsvox-aural-explain facts context)))
              (list
               :source source

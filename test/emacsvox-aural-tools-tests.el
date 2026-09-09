@@ -519,6 +519,72 @@
               (car (last answers)))))
         (kill-buffer source)))))
 
+(ert-deftest emacsvox-aural-tools-home-remaps-unspoken-shell-prompt ()
+  "Home can remap a real Comint prompt without first hearing it."
+  (require 'shell)
+  (require 'emacsvox-comint)
+  (emacsvox-test--with-home-context
+    (with-current-buffer source
+      (erase-buffer)
+      (shell-mode))
+    (let ((process (make-pipe-process :name "aural-prompt-test"
+                                      :buffer source :noquery t))
+          (prompt "bart@URSYS-8M3WMB4:~/src/emacsvox$ "))
+      (unwind-protect
+          (progn
+            (comint-output-filter process prompt)
+            ;; Include the insertion point just after the trailing space.
+            (dolist (position (list 1 10 (1+ (length prompt))))
+              (switch-to-buffer source)
+              (goto-char position)
+              (should-not (emacsvox-aural-facts-at-point))
+              (should-not emacsvox-aural-presentation-history)
+              (emacsvox-aural source)
+              (cl-letf (((symbol-function 'completing-read)
+                         (lambda (question &rest _)
+                           (if (string-prefix-p "Voice for " question)
+                               "animate"
+                             "this Emacs session"))))
+                (emacsvox-aural-home-remap-voice))
+              (with-current-buffer (window-buffer (selected-window))
+                (should (derived-mode-p 'emacsvox-aural-scheme-editor-mode))
+                (should emacsvox-aural-editor-dirty)
+                (should
+                 (equal (plist-get (car emacsvox-aural-editor-rules) :match)
+                        '(:module shell :legacy-face comint-highlight-prompt)))
+                (emacsvox-aural-editor-save)))
+            ;; Exercise speech planning with the saved rule, including a
+            ;; different face for command input on the same shell line.
+            (with-current-buffer source
+              (let* ((text (concat (buffer-substring (point-min) (point-max))
+                                   (propertize "echo hello" 'font-lock-face
+                                               'comint-highlight-input)))
+                     (prepared
+                      (emacsvox-aural-prepare-text
+                       text nil (emacsvox-aural-capture-context))))
+                (dolist (offset (list 0 (length prompt)))
+                  (let* ((plan (get-text-property
+                                offset emacsvox-aural-concrete-plan-property
+                                prepared))
+                         (voice (emacsvox-aural-concrete-content-voice-request
+                                 (emacsvox-aural-concrete-plan-content plan))))
+                    (if (zerop offset)
+                        (should (eq voice 'animate))
+                      (should-not (eq voice 'animate))))))))
+        (delete-process process)))))
+
+(ert-deftest emacsvox-aural-tools-face-fallback-requires-a-voice-target ()
+  "Plain text still needs a presentation; a face cannot identify an earcon."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (insert "plain text")
+      (goto-char (point-min))
+      (should-error (emacsvox-aural-tools--remap-source-input nil 'voice)
+                    :type 'user-error)
+      (put-text-property (point-min) (point-max) 'face 'bold)
+      (should-error (emacsvox-aural-tools--remap-source-input nil 'earcon)
+                    :type 'user-error))))
+
 (ert-deftest emacsvox-aural-tools-earcon-remap-keeps-transition-context ()
   "Earcon remaps retain event and occasion unlike object-wide voice remaps."
   (let ((selector
