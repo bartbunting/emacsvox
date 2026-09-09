@@ -21,9 +21,10 @@ separate isolated-letter protocol. The maintainer returned to XHI; the
 intent after late raw commands. The maintainer selected A: upgrade complete
 captured submissions and retain explicit cross-call compatibility limits. Isolated
 characters supply no named palette voice and retain their existing selection.
-The [[file:voice-editor-queue-handoff-contract.org][selected queue contract]] completes the XHI handoff. Return to High for
-dispatch intent/owner binding, bounded queue proof and guarded named promotion
-as separate tested commits. Preview v2 and editor controls remain pending.
+The [[file:voice-editor-queue-handoff-contract.org][selected queue contract]] completes the XHI handoff. The maintainer resumed
+at High. Dispatch intent/owner binding is implemented, with fifteen new contracts
+and all 505 selected source tests passing. Bounded queue proof and guarded named
+promotion remain next; preview v2 and editor controls are also pending.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Acknowledged structured submissions now use layered transport and correlated

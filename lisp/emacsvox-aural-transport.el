@@ -125,9 +125,16 @@ delay.  Ordered and urgent transactions are never delayed."
 (declare-function tts--dispatch-owner-id "tts-speak" (owner))
 (declare-function tts--dispatch-owner-published "tts-speak" (owner))
 (declare-function tts--dispatch-publish "tts-speak" (owner))
+(declare-function tts--preparation-cancel-current "tts-speak" ())
 
 (defvar emacsvox-aural--delivery-timeline-runs nil
   "Reverse-ordered concrete runs captured for structured delivery.")
+
+(defvar emacsvox-aural--capture-journal nil
+  "Reverse-ordered run and original command references in this capture.")
+(defvar emacsvox-aural--capture-count 0)
+(defvar emacsvox-aural--capture-bytes 0)
+(defvar emacsvox-aural--capture-sealed-p nil)
 
 (defvar emacsvox-aural--delivery-entry-kind nil
   "Dynamic origin tag applied to captured delivery entries.")
@@ -223,12 +230,17 @@ Preserve the ambient speech process, including replacements made by FUNCTION."
   (let ((tts--current-preparation nil)
         (tts--marker-event-function nil)
         (tts--tracked-completion-function nil)
+        (tts--dispatch-origin nil)
         (emacsvox-aural--delivery-transaction-active-p nil)
         (emacsvox-aural--delivery-transaction-entries nil)
         (emacsvox-aural--delivery-transaction-effects nil)
         (emacsvox-aural--delivery-dispatch-owners nil)
         (emacsvox-aural--submission-failure-cleanups nil)
         (emacsvox-aural--delivery-timeline-runs nil)
+        (emacsvox-aural--capture-journal nil)
+        (emacsvox-aural--capture-count 0)
+        (emacsvox-aural--capture-bytes 0)
+        (emacsvox-aural--capture-sealed-p nil)
         (emacsvox-aural--delivery-entry-kind nil)
         (emacsvox-aural--structured-runs-recorded-p nil)
         (emacsvox-aural--history-transaction-id nil)
@@ -346,6 +358,29 @@ the tone and surrounding speech but cannot preserve overlay timing."
         emacsvox-aural--presentation-tone-version mode pitch duration))
     (tts--protocol-tone (max 1 (round pitch)) duration)))
 
+(defun emacsvox-aural--capture-record (kind value bytes)
+  "Retain a bounded journal reference to VALUE of KIND, charging BYTES."
+  (tts--preparation-check)
+  (when emacsvox-aural--capture-sealed-p
+    (tts--preparation-cancel-current)
+    (signal 'tts--preparation-cancelled nil))
+  (when (or (>= emacsvox-aural--capture-count
+                 (+ emacsvox-aural--timeline-max-spans
+                    emacsvox-aural--timeline-max-actions 128))
+            (> (+ emacsvox-aural--capture-bytes bytes)
+               emacsvox-aural--timeline-aggregate-max-bytes))
+    (tts--preparation-cancel-current)
+    (emacsvox-aural--transport-error "Speech capture capacity is exhausted"))
+  (push (cons kind value) emacsvox-aural--capture-journal)
+  (cl-incf emacsvox-aural--capture-count)
+  (cl-incf emacsvox-aural--capture-bytes bytes))
+
+(defun emacsvox-aural--capture-delivery-entry (entry)
+  "Capture original command ENTRY and its exact position in the journal."
+  (emacsvox-aural--capture-record
+   'entry entry (string-bytes (emacsvox-aural--delivery-entry-command entry)))
+  (push entry emacsvox-aural--delivery-transaction-entries))
+
 (defun emacsvox-aural-delivery-send (process command &optional kind)
   "Send COMMAND to PROCESS through the current delivery transaction.
 
@@ -355,12 +390,108 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
       (and
        emacsvox-aural--delivery-transaction-active-p
        (not (eq kind 'stop)))
-      (push
+      (emacsvox-aural--capture-delivery-entry
        (emacsvox-aural--make-delivery-entry
         :process process :command command
-        :kind (or kind emacsvox-aural--delivery-entry-kind))
-       emacsvox-aural--delivery-transaction-entries)
+        :kind (or kind emacsvox-aural--delivery-entry-kind)))
     (process-send-string process command)))
+
+(defun emacsvox-aural--legacy-frame-float-p (value)
+  "Return non-nil for a finite decimal VALUE representable by the server."
+  (and value
+       (string-match-p
+        "\\`[+-]?\\(?:[0-9]+\\(?:\\.[0-9]*\\)?\\|\\.[0-9]+\\)\\(?:[eE][+-]?[0-9]+\\)?\\'"
+        value)
+       (<= (abs (string-to-number value)) 3.4028234e38)))
+
+(defun emacsvox-aural--legacy-frame-uint-p (value maximum)
+  "Return non-nil for an unsigned decimal VALUE at most MAXIMUM."
+  (and value (string-match-p "\\`[+]?[0-9]+\\'" value)
+       (<= (string-to-number value) maximum)))
+
+(defun emacsvox-aural--legacy-frame-resource-p (argument)
+  "Check ARGUMENT's quoted resource escapes without evaluating a Tcl word."
+  (and argument
+       (or (not (string-prefix-p "\"" argument))
+           (and (>= (length argument) 2) (string-suffix-p "\"" argument)
+                (let ((index 1) (end (1- (length argument))) (valid t))
+                  (while (and valid (< index end))
+                    (when (= (aref argument index) ?\\)
+                      (cl-incf index)
+                      (cond
+                       ((>= index end) (setq valid nil))
+                       ((memq (aref argument index) '(?\\ ?\" ?$ ?\[ ?n ?r ?t)))
+                       ((= (aref argument index) ?u)
+                        (let ((digits (and (< (+ index 4) end)
+                                           (substring argument (1+ index) (+ index 5)))))
+                          (setq valid
+                                (and digits
+                                     (string-match-p "\\`[0-9a-fA-F]\\{4\\}\\'" digits)
+                                     (let ((scalar (string-to-number digits 16)))
+                                       (and (> scalar 0)
+                                            (not (<= #xd800 scalar #xdfff)))))))
+                        (cl-incf index 4))
+                       (t (setq valid nil))))
+                    (cl-incf index))
+                  valid)))))
+
+(defun emacsvox-aural--legacy-frame-command-p (line)
+  "Validate one LINE against the existing Omnivox legacy frame grammar.
+This checks framing eligibility only; it does not infer inline voice semantics."
+  (let ((case-fold-search nil))
+    (when (string-match "\\`\\([a-z_]+\\)\\(?:[ \t]+\\(.*\\)\\)?\\'" line)
+      (let ((name (match-string 1 line)) (args (match-string 2 line)))
+        (when (and args (string-prefix-p "{" args) (string-suffix-p "}" args))
+          (setq args (substring args 1 -1)))
+        (let ((fields (and args (split-string args "[ \t]+" t))))
+          (pcase name
+            ((or "q" "c") (not (null args)))
+            ("d" (null args))
+            ("a" (emacsvox-aural--legacy-frame-resource-p args))
+            ("sh" (emacsvox-aural--legacy-frame-uint-p args 4294967295))
+            ((or "t" "emacsvox_tone")
+             (when (equal name "emacsvox_tone")
+               (unless (and (equal (car fields) "1")
+                            (member (cadr fields) '("insert" "overlay")))
+                 (setq fields nil))
+               (setq fields (cddr fields)))
+             (and (= (length fields) 2)
+                  (emacsvox-aural--legacy-frame-float-p (car fields))
+                  (< 0 (string-to-number (car fields)))
+                  (<= (string-to-number (car fields)) 24000)
+                  (emacsvox-aural--legacy-frame-uint-p (cadr fields) 60000)
+                  (< 0 (string-to-number (cadr fields)))))
+            ("tts_set_punctuations" (member args '("none" "some" "all")))
+            ("tts_split_caps" (member args '("0" "1")))
+            ("tts_set_capitalization_presentation"
+             (member args '("none" "spoken" "tone" "spoken-tone" "custom")))
+            ("tts_sync_state"
+             (and (= (length fields) 4)
+                  (member (nth 0 fields) '("none" "some" "all"))
+                  (member (nth 1 fields) '("0" "1"))
+                  (member (nth 2 fields) '("0" "1"))
+                  (emacsvox-aural--legacy-frame-float-p (nth 3 fields))))
+            ((or "tts_set_speech_rate" "tts_set_character_scale"
+                 "tts_set_pitch_multiplier" "tts_set_sound_volume"
+                 "tts_set_tone_volume" "tts_set_voice_volume")
+             (emacsvox-aural--legacy-frame-float-p args))
+            ("tts_set_voice" (and args (not (string-empty-p args))))
+            ("tts_set_speech_channel" (member args '("left" "right" "both")))
+            ((or "tts_set_notification_channel" "set_lang" "set_next_lang"
+                 "set_previous_lang" "set_preferred_lang") t)
+            (_ nil)))))))
+
+(defun emacsvox-aural--validate-legacy-frame (payload)
+  "Reject unsupported or incomplete legacy frame PAYLOAD before interruption."
+  (let ((lines (split-string payload "[\r\n]+" t "[ \t]+")))
+    (unless (and (<= (string-bytes (encode-coding-string payload 'utf-8 t))
+                     emacsvox-aural--timeline-frame-max-bytes)
+                 (<= (length lines) 4096)
+                 (equal (car (last lines)) "d")
+                 (= 1 (cl-count "d" lines :test #'equal))
+                 (cl-every #'emacsvox-aural--legacy-frame-command-p lines))
+      (emacsvox-aural--transport-error
+       "Legacy replacement requires one complete supported frame ending in one plain dispatch"))))
 
 (defun emacsvox-aural--framed-delivery-entries
     (owner generation entries)
@@ -371,8 +502,7 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
        (not
         (cl-some
          (lambda (entry)
-           (eq 'structured
-               (emacsvox-aural--delivery-entry-kind entry)))
+           (memq (emacsvox-aural--delivery-entry-kind entry) '(structured framed)))
          entries))
        (processp owner)
        (process-get
@@ -386,12 +516,13 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
                #'concat
                (mapcar
                 #'emacsvox-aural--delivery-entry-command entries)))
+             (_ (emacsvox-aural--validate-legacy-frame payload))
              (encoded
               (base64-encode-string
                (encode-coding-string payload 'utf-8 t) t)))
         (list
          (emacsvox-aural--make-delivery-entry
-          :process owner
+          :process owner :kind 'framed
           :owners (delete-dups
                    (apply #'append
                           (mapcar #'emacsvox-aural--delivery-entry-owners entries)))
@@ -646,7 +777,15 @@ timelines with native replacement are never left pending."
        (emacsvox-aural--delivery-process-name
         (emacsvox-aural--delivery-entry-process foreign))))
     (when (condition-case error-data
-              (progn (tts--preparation-before-delivery owner) t)
+              (progn
+                (setq entries
+                      (emacsvox-aural--framed-delivery-entries
+                       owner
+                       (and (eq emacsvox-aural-submission-delivery-policy 'replaceable)
+                            generation)
+                       entries))
+                (tts--preparation-before-delivery owner)
+                t)
             (tts--preparation-cancelled
              (signal (car error-data) (cdr error-data)))
             (error
@@ -726,11 +865,16 @@ OWNER so a logical transaction cannot be partially delivered across streams."
              (emacsvox-aural--delivery-transaction-entries nil)
              (emacsvox-aural--delivery-transaction-effects nil)
              (emacsvox-aural--delivery-timeline-runs nil)
+             (emacsvox-aural--capture-journal nil)
+             (emacsvox-aural--capture-count 0)
+             (emacsvox-aural--capture-bytes 0)
+             (emacsvox-aural--capture-sealed-p nil)
              (emacsvox-aural--delivery-dispatch-owners nil)
              result)
 	 (unwind-protect
              (progn
                (setq result (apply function arguments))
+               (setq emacsvox-aural--capture-sealed-p t)
                (tts--preparation-check)
                (let* ((entries (nreverse emacsvox-aural--delivery-transaction-entries))
                       (effects (nreverse emacsvox-aural--delivery-transaction-effects))
@@ -798,18 +942,49 @@ Signal a clear installation error when negotiation found an older version."
 (defun emacsvox-aural--capture-structured-run
     (plan text pause positioned-actions)
   "Capture PLAN, final TEXT, PAUSE, and POSITIONED-ACTIONS for the timeline."
-  (push
-   (list plan text pause positioned-actions)
-   emacsvox-aural--delivery-timeline-runs))
+  (let* ((run (list plan text pause positioned-actions))
+         (print-circle t) (print-length nil) (print-level nil)
+         (bytes (string-bytes (prin1-to-string run))))
+    (emacsvox-aural--capture-record 'run run bytes)
+    (push run emacsvox-aural--delivery-timeline-runs)))
 
 (defun emacsvox-aural--structured-compatible-delivery-entry-p (entry)
   "Return non-nil when ENTRY can accompany a structured timeline."
-  (let ((command (emacsvox-aural--delivery-entry-command entry)))
-    (or
-     (eq 'structured-fallback
-         (emacsvox-aural--delivery-entry-kind entry))
-     (string-prefix-p "tts_sync_state " command)
-     (string-prefix-p "tts_set_capitalization_presentation " command))))
+  (memq (emacsvox-aural--delivery-entry-kind entry)
+        '(structured-fallback sync-state sync-capitalization
+          ordinary-dispatch explicit-dispatch)))
+
+(defun emacsvox-aural--capture-single-timeline-p (entries)
+  "Check ordered ENTRIES for one complete timeline without moving boundaries."
+  (and
+   (cl-every #'emacsvox-aural--structured-compatible-delivery-entry-p entries)
+   (let ((valid t) (dispatches 0) callback-owner last-dispatch tail states)
+     (dolist (record (reverse emacsvox-aural--capture-journal))
+       (if (eq (car record) 'run)
+           (progn
+             (when (eq last-dispatch 'explicit-dispatch) (setq valid nil))
+             (setq tail t))
+         (let* ((entry (cdr record))
+                (kind (emacsvox-aural--delivery-entry-kind entry))
+                (command (emacsvox-aural--delivery-entry-command entry)))
+           (cond
+            ((memq kind '(ordinary-dispatch explicit-dispatch))
+             (when (and last-dispatch
+                        (or (eq kind 'explicit-dispatch)
+                            (eq last-dispatch 'explicit-dispatch)))
+               (setq valid nil))
+             (cl-incf dispatches)
+             (setq callback-owner (or callback-owner
+                                      (emacsvox-aural--delivery-entry-owners entry))
+                   last-dispatch kind tail nil))
+            ((memq kind '(sync-state sync-capitalization))
+             (let ((prior (assq kind states)))
+               (if prior
+                   (unless (equal (cdr prior) command) (setq valid nil))
+                 (push (cons kind command) states))))))))
+     (and valid
+          (not (and callback-owner (> dispatches 1)))
+          (not (and (> dispatches 0) tail))))))
 
 (defun emacsvox-aural-structured-delivery-pending-p ()
   "Return non-nil when the current transaction can replace its legacy queue."
@@ -817,8 +992,7 @@ Signal a clear installation error when negotiation found an older version."
    emacsvox-aural--delivery-timeline-runs
    (cl-some #'emacsvox-aural--timeline-run-has-speech-p
     emacsvox-aural--delivery-timeline-runs)
-   (cl-every
-    #'emacsvox-aural--structured-compatible-delivery-entry-p
+   (emacsvox-aural--capture-single-timeline-p
     emacsvox-aural--delivery-transaction-entries)))
 
 (defun emacsvox-aural--timeline-run-has-speech-p (run)
@@ -1647,22 +1821,28 @@ the authoritative check after punctuation and split-cap preprocessing."
         runs
         (eq owner tts-speaker-process)
         (cl-some #'emacsvox-aural--timeline-run-has-speech-p runs)
-        (cl-every
-         #'emacsvox-aural--structured-compatible-delivery-entry-p
-         entries)))
-      (list entries effects)
+        (emacsvox-aural--capture-single-timeline-p entries)))
+      (emacsvox-aural--finalize-legacy-delivery entries effects)
     (let* ((snapshot (when (eql (process-get owner emacsvox-aural--structured-timeline-process-property) 4)
                        (omnivox--choice-current-registration owner)))
            (built (emacsvox-aural--build-structured-timeline generation 1 runs snapshot)))
       (if (not built)
-          (list entries effects)
+          (emacsvox-aural--finalize-legacy-delivery entries effects)
         (let* ((envelope (car built))
                (bindings (cadr built))
+               (reserved
+                (car (delete-dups
+                      (apply #'append
+                             (mapcar #'emacsvox-aural--delivery-entry-owners entries)))))
                (registration
-                (tts--prepare-structured-dispatch
-                 tts--marker-event-function
-                 tts--tracked-completion-function
-                 bindings))
+                (if reserved
+                    (progn
+                      (tts--dispatch-bind-semantics reserved bindings)
+                      (list (tts--dispatch-owner-id reserved) nil reserved))
+                  (tts--prepare-structured-dispatch
+                   tts--marker-event-function
+                   tts--tracked-completion-function
+                   bindings)))
                (actual-id (car registration)))
           (when snapshot
             (omnivox--prepare-choice-dispatch (nth 2 registration) snapshot (nth 2 built)))
@@ -1672,8 +1852,8 @@ the authoritative check after punctuation and split-cap preprocessing."
            (append
             (cl-remove-if
              (lambda (entry)
-               (eq 'structured-fallback
-                   (emacsvox-aural--delivery-entry-kind entry)))
+               (memq (emacsvox-aural--delivery-entry-kind entry)
+                     '(structured-fallback ordinary-dispatch explicit-dispatch)))
              entries)
             (mapcar
              (lambda (command)
@@ -1683,6 +1863,14 @@ the authoritative check after punctuation and split-cap preprocessing."
              (emacsvox-aural--frame-structured-timeline envelope)))
            effects
            actual-id))))))
+
+(defun emacsvox-aural--finalize-legacy-delivery (entries effects)
+  "Bind pending callback owners to unchanged compatibility ENTRIES and EFFECTS."
+  (dolist (entry entries)
+    (dolist (owner (emacsvox-aural--delivery-entry-owners entry))
+      (unless (tts--dispatch-owner-semantics-bound owner)
+        (tts--dispatch-bind-semantics owner nil))))
+  (list entries effects))
 
 (defun emacsvox-aural-queue-concrete-action (action &optional context)
   "Queue concrete ACTION under frozen CONTEXT without resolving again."
@@ -1870,8 +2058,8 @@ run's leading transport pause."
          (lambda ()
            (when emacsvox-aural-plan-presented-hook
              (let ((emacsvox-aural--history-respect-icon-policy t))
-               (run-hook-with-args
-                'emacsvox-aural-plan-presented-hook
+               (emacsvox-aural--call-independent-callback
+                #'run-hook-with-args 'emacsvox-aural-plan-presented-hook
                 (if queued-plan
                     (emacsvox-aural--history-value queued-plan)
                   (if text-supplied-p

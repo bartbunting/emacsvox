@@ -142,9 +142,18 @@ The selected scope upgrades complete captured submissions and explicitly retains
 cross-call legacy queue limitations. Broader cross-call tuning is deferred. The
 [[file:voice-editor-queue-handoff-contract.org][completed handoff contract]] preserves dispatch/owner identity, sync boundaries
 and bounded queue proof. Its [[file:../test/fixtures/voice-editor/queue-handoff.el][expected cases]] describe desired behavior; they do
-not establish implemented support. Return to High for three tested runtime slices.
+not by themselves establish implemented support. The maintainer resumed at High.
 Preserve shared -> actual choice -> context and the existing public queue API.
 Preview and editor work remain pending.
+
+The first queue slice is now implemented: [[file:../test/tts-queue-handoff-tests.el][fifteen connected contracts]] bring
+the selected source matrix to 505 passing tests. Seven independent fixture cases
+now verify real compatibility dispatch order, tails and sync changes. Other
+contracts cover one-timeline coalescing, tracked/marked owner reuse, distinct
+callback IDs, framing before Stop, one-shot metadata binding, nonlocal failures,
+capture bounds and reentrancy. Presentation hooks submit independently. New
+named-queue promotion remains disabled until bounded queue proof and its guards
+are implemented; the earlier raw-queue limitation is still an explicit baseline.
 
 Eight new consumer contracts and all 490 selected source tests pass. Fresh
 compiled verification includes the same eight cases. The compiled fixture loads

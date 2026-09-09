@@ -19,6 +19,30 @@ Read this with ADRs 0015–0017, the [[file:voice-editor-client-handoff-review.o
 the [[file:voice-editor-fallback-wire-contract.org][wire contract]]. All accepted Emacsvox and Omnivox ADRs were read together
 during the preceding review and continue to apply.
 
+* Implementation status
+
+The maintainer resumed at High. The first slice implements bounded ordered
+capture, durable dispatch intent and one-shot owner binding. Fifteen new
+[[file:../test/tts-queue-handoff-tests.el][connected contracts]] bring the selected source matrix to 505 passing tests.
+The original diagnostic now preserves missing dispatches and differing rates,
+and its nested tracked ordinary call succeeds with its reserved ID.
+
+Capture closes before finalization. Further contributions cancel the preparation
+even if their immediate error is caught; a caught capacity error also cancels it.
+Presentation hooks run in independent captures. Legacy replacement framing is
+validated before interruption, including the server's requirement for exactly
+one final plain dispatch. Ordered compatibility packets retain multiple flushes.
+
+Bounded queue-state proof and new named-queue promotion remain the next two
+High slices. No claim of individual tuning is made for those raw queue entries yet.
+
+Validation for this first runtime slice: all 505 selected source tests and the
+fresh compiled aural gate pass. The complete byte-code rebuild was followed by
+an incremental refresh for the final guard changes; byte-code is current. Muted
+real-server both-lane/reconnect acceptance passes for both the original submission
+path and explicit tracked owner reuse, retaining IDs and verified actual-fallback
+receipts. These automated checks do not replace the planned spoken acceptance.
+
 * Ordered capture and complete compatibility output
 
 ** Capture source intent, not an early transport decision

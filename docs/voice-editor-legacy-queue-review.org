@@ -6,20 +6,23 @@
 
 The maintainer returned to XHI after consumer audit =32c7494ac=. This review
 narrows the character finding and reproduces a missing-dispatch defect in
-mixed submissions. No production behavior changes here. Sixteen source-only
-observations are retained in [[file:../test/diagnose-choice-queue.el][the muted diagnostic]].
+mixed submissions. The review itself changed no production behavior. Sixteen
+source-only cases are retained in [[file:../test/diagnose-choice-queue.el][the muted diagnostic]].
 
 The maintainer selected A: upgrade named speech inside complete captured
 submissions, repair dispatch preservation, and retain the old cross-call queue as a
 compatibility path. B is deferred; it would require an additional pending-queue
 protocol and ownership design. Isolated-character voice selection is unchanged.
 
-The [[file:voice-editor-queue-handoff-contract.org][selected implementation contract]] completes the XHI handoff. Return to High
-for tested, committed implementation slices. The broader
+The [[file:voice-editor-queue-handoff-contract.org][selected implementation contract]] completes the XHI handoff. The maintainer
+resumed at High. The first slice now preserves dispatch intent, callback IDs and
+sync/flush boundaries, with fifteen new contracts and 505 passing selected source
+tests. Named-queue promotion remains disabled pending the queue-proof slices.
+The broader
 [[file:voice-editor-implementation-plan.org][implementation plan]] remains active; preview v2, optional
 controls and spoken acceptance are not complete.
 
-* What the code actually does
+* Reviewed baseline before the first queue implementation slice
 
 =tts-speak-using-voice= queues voice code, text and reset code. It does not
 dispatch. Its public signature must keep that behavior. Maintained source
@@ -36,7 +39,7 @@ That decision is currently made too early. A later raw command can make the
 transaction incompatible after the dispatch has already been omitted. This
 is a delivery bug in addition to the missing individual settings.
 
-| Sequence inside one capture | Current observation |
+| Sequence inside one capture | Baseline observation |
 |-----------------------------+---------------------|
 | Named queue only | Code/text/reset, no dispatch; correctly remains queued. |
 | Named queue, normal speech | Entire queue uses legacy commands and one dispatch; individual tuning is lost. |
@@ -56,7 +59,7 @@ flush of arbitrary previously queued server commands.
 
 Four further observations cover differing sync rates, explicit tracked and
 marked flushes, and a tracked ordinary call inside an enclosing capture. The
-current finalizer puts both rates before one timeline, retains explicit legacy
+reviewed finalizer puts both rates before one timeline, retains explicit legacy
 callback IDs, and fails the nested ordinary call with "Tracked speech was not
 submitted". The selected contract preserves state boundaries and callback
 identity alongside dispatch intent.

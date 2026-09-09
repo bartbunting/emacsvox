@@ -41,9 +41,12 @@ dispatch intent as well as lost individual tuning, and clarifies that isolated
 characters do not request a named palette voice. The maintainer selected A:
 upgrade complete captured submissions and retain cross-call legacy queues as
 an explicit compatibility path. The [[file:voice-editor-queue-handoff-contract.org][selected queue contract]] completes the XHI
-handoff. Return to High for three tested, committed slices: dispatch intent and
-callback identity, bounded queue proof, then named-queue promotion. Broader
-cross-call tuning is deferred. Preview and editor work remain pending.
+handoff. The maintainer resumed at High. Ordered capture now preserves dispatch
+intent, callback identity and state/flush boundaries, with fifteen new contracts
+and all 505 selected source tests passing. Finalization seals the capture;
+presentation hooks use independent captures. Bounded queue proof and named-queue
+promotion are next. Broader cross-call tuning is deferred. Preview and editor
+work remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -668,10 +671,10 @@ compatibility limits. The [[file:voice-editor-queue-handoff-contract.org][comple
 boundaries. Promotion emits at most one document and requires bounded queue-state
 proof with generation, serial and registry rechecks. Opaque commands, multiple
 flushes and unsealed tails retain their original compatibility sequence. No new
-wire format or public queue API is required. Return to High; no further product
-choice is outstanding for these slices.
+wire format or public queue API is required. The maintainer resumed at High;
+no further product choice is outstanding for these slices.
 
-**** TODO Preserve dispatch intent and callback identity
+**** DONE Preserve dispatch intent and callback identity
 
 Add ordered capture and one-shot semantic binding of reserved owners. Repair
 late dispatch loss and nested tracked calls, preserve differing sync values and
@@ -679,6 +682,15 @@ explicit flushes, and validate the selected framing before policy interruption.
 Keep new named-queue promotion disabled. Use the consumer regressions and expected
 cases as the baseline; run source and fresh compiled checks after rebuilding
 byte-code for the changed structures/interfaces, then commit.
+
+Implemented with fifteen new connected contracts and all 505 selected source
+tests passing. Compatibility output retains dispatches at their original positions;
+one eligible timeline reuses the caller's reserved ID. Differing sync values,
+explicit flushes and callback owners prevent unsafe coalescing. Frame validation
+occurs before policy interruption; invalid legacy replacement frames fail admission.
+Captured bounds failures remain cancelled even when caught. A sealed journal
+rejects late contributions, while presentation hooks run in independent captures.
+New named-queue promotion remains disabled until the next two slices are complete.
 
 **** TODO Track bounded legacy queue proof
 

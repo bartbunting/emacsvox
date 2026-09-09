@@ -149,10 +149,14 @@ variable is unset, compatibility defaults select `mac' on macOS and
 
 ;;;;   speak
 
+(defvar tts--dispatch-origin nil
+  "Private origin of a producer's closing dispatch, or nil for an explicit flush.")
+
 (defun tts--protocol-dispatch ()
 
-  (unless (emacsvox-aural-structured-delivery-pending-p)
-    (emacsvox-aural-delivery-send tts-speaker-process "d\n")))
+  (emacsvox-aural-delivery-send
+   tts-speaker-process "d\n"
+   (if (eq tts--dispatch-origin 'ordinary) 'ordinary-dispatch 'explicit-dispatch)))
 
 (defconst tts--tracked-status-prefix "__EMACSVOX_TRACKED__"
   "Speech-server output prefix for tracked dispatch status records.")
@@ -200,7 +204,7 @@ a `cancelled' record when pending input interrupts that wait.")
   id process generation epoch submission-id marker completion semantics
   (state 'prepared) published terminal retired released tracking-failed metadata-bytes
   write-started-at write-ended-at context admission-function release-function
-  preparation reserved)
+  preparation reserved (semantics-bound t))
 
 (cl-defstruct (tts--preparation (:constructor tts--preparation-create))
   process generation owners cancelled closed ready stop-used legacy-stop)
@@ -223,6 +227,11 @@ a `cancelled' record when pending input interrupts that wait.")
                                      (process-get process 'tts--speech-process-generation))))))
         (setf (tts--preparation-cancelled scope) t)
         (signal 'tts--preparation-cancelled nil)))))
+
+(defun tts--preparation-cancel-current ()
+  "Mark the current preparation cancelled, even if its caller catches an error."
+  (when tts--current-preparation
+    (setf (tts--preparation-cancelled tts--current-preparation) t)))
 
 (defun tts--preparation-invalidate (process &optional preserved)
   "Cancel PROCESS's open preparations except the explicitly PRESERVED scope."
@@ -358,8 +367,9 @@ a `cancelled' record when pending input interrupts that wait.")
     (when (eq process (tts--marker-dispatch-process entry))
       (tts--marker-dispatch-owner entry))))
 
-(defun tts--dispatch-new-owner (marker completion semantics)
-  "Reserve an inactive dispatch for MARKER, COMPLETION and SEMANTICS."
+(defun tts--dispatch-new-owner (marker completion semantics &optional deferred)
+  "Reserve an inactive dispatch for MARKER, COMPLETION and SEMANTICS.
+With DEFERRED, require final semantic binding before admission."
   (unless tts--current-preparation
     (error "Speech dispatch reservation requires a preparation scope"))
   (tts--preparation-check)
@@ -384,7 +394,7 @@ a `cancelled' record when pending input interrupts that wait.")
             :submission-id (and (boundp 'emacsvox-aural--current-submission-id)
                                 emacsvox-aural--current-submission-id)
             :marker marker :completion completion
-            :semantics copied :metadata-bytes bytes
+            :semantics copied :metadata-bytes bytes :semantics-bound (not deferred)
             :preparation tts--current-preparation)))
       (let ((inhibit-quit t))
         (push owner (tts--preparation-owners tts--current-preparation))
@@ -395,6 +405,45 @@ a `cancelled' record when pending input interrupts that wait.")
           (push owner emacsvox-aural--delivery-dispatch-owners)))
       owner)))
 
+(defun tts--dispatch-bind-semantics (owner semantics)
+  "Bind deferred OWNER to copied SEMANTICS exactly once, charging only the delta."
+  (let* ((copied (tts--dispatch-copy-data semantics))
+         (print-circle t) (print-length nil) (print-level nil)
+         (bytes (string-bytes (prin1-to-string copied)))
+         (process (tts--dispatch-owner-process owner)))
+    (tts--preparation-check (tts--dispatch-owner-preparation owner))
+    (when (or (tts--dispatch-owner-retired owner)
+              (tts--dispatch-owner-released owner))
+      (signal 'tts--preparation-cancelled nil))
+    (unless (and (eq (tts--dispatch-owner-state owner) 'prepared)
+                 (tts--dispatch-owner-reserved owner)
+                 (not (tts--dispatch-owner-retired owner))
+                 (not (tts--dispatch-owner-released owner))
+                 (not (tts--dispatch-owner-semantics-bound owner)))
+      (error "Speech dispatch cannot bind semantics again"))
+    (let* ((old-map (tts--dispatch-owner-semantics owner))
+           (old-charge (tts--dispatch-owner-metadata-bytes owner))
+           (old-bytes (string-bytes (prin1-to-string old-map)))
+           (used (or (process-get process 'tts--dispatch-metadata-bytes) 0))
+           (count (or (process-get process 'tts--dispatch-owner-count) 0))
+           (delta (- bytes old-bytes))
+           (inhibit-quit t) complete)
+      (when (> (+ used delta) tts--dispatch-metadata-limit)
+        (error "Speech dispatch tracking capacity is exhausted"))
+      (unwind-protect
+          (progn
+            (tts--dispatch-set-accounting process count (+ used delta))
+            (setf (tts--dispatch-owner-semantics owner) copied
+                  (tts--dispatch-owner-metadata-bytes owner) (+ old-charge delta)
+                  (tts--dispatch-owner-semantics-bound owner) t)
+            (setq complete t))
+        (unless complete
+          (setf (tts--dispatch-owner-semantics owner) old-map
+                (tts--dispatch-owner-metadata-bytes owner) old-charge
+                (tts--dispatch-owner-semantics-bound owner) nil)
+          (tts--dispatch-set-accounting process count used)))))
+  owner)
+
 (defun tts--dispatch-check-admission (owner)
   "Validate inactive OWNER without installing playback observation."
   (tts--preparation-check (tts--dispatch-owner-preparation owner))
@@ -403,6 +452,8 @@ a `cancelled' record when pending input interrupts that wait.")
     (signal 'tts--preparation-cancelled nil))
   (unless (eq (tts--dispatch-owner-state owner) 'prepared)
     (error "Speech dispatch is already armed"))
+  (unless (tts--dispatch-owner-semantics-bound owner)
+    (error "Speech dispatch semantics have not been bound"))
   (when-let* ((validate (tts--dispatch-owner-admission-function owner)))
     (funcall validate owner))
   (tts--preparation-check (tts--dispatch-owner-preparation owner))
@@ -637,10 +688,12 @@ a `cancelled' record when pending input interrupts that wait.")
   "Capture OWNER and COMMAND or send and publish them directly."
   (if emacsvox-aural--delivery-transaction-active-p
       (progn
-        (push (emacsvox-aural--make-delivery-entry
-               :process (tts--dispatch-owner-process owner)
-               :command command :owners (list owner))
-              emacsvox-aural--delivery-transaction-entries)
+        (emacsvox-aural--capture-delivery-entry
+         (emacsvox-aural--make-delivery-entry
+          :process (tts--dispatch-owner-process owner)
+          :command command :owners (list owner)
+          :kind (if (eq tts--dispatch-origin 'ordinary)
+                    'ordinary-dispatch 'explicit-dispatch)))
         (tts--dispatch-owner-id owner))
     (unwind-protect
         (progn
@@ -1206,7 +1259,8 @@ or `failed'.  Return the identifier allocated to this dispatch."
   (tts--ensure-tracked-process-filter tts-speaker-process)
   (tts--call-with-dispatch-preparation
    (lambda ()
-     (let ((owner (tts--dispatch-new-owner nil callback nil)))
+     (let ((owner (tts--dispatch-new-owner
+                   nil callback nil emacsvox-aural--delivery-transaction-active-p)))
        (tts--dispatch-command
         owner (format "emacsvox_tracked_dispatch %d\n" (tts--dispatch-owner-id owner)))))))
 
@@ -1223,7 +1277,9 @@ COMPLETION-CALLBACK receives the identifier and terminal status."
   (tts--ensure-tracked-process-filter tts-speaker-process)
   (tts--call-with-dispatch-preparation
    (lambda ()
-     (let ((owner (tts--dispatch-new-owner marker-callback completion-callback nil)))
+     (let ((owner (tts--dispatch-new-owner
+                   marker-callback completion-callback nil
+                   emacsvox-aural--delivery-transaction-active-p)))
        (tts--dispatch-command
         owner (format "emacsvox_marker_dispatch %d\n" (tts--dispatch-owner-id owner)))))))
 
@@ -1284,7 +1340,8 @@ use their existing isolated-letter behavior."
        target
        (format
         "tts_set_capitalization_presentation %s\n"
-        (tts--effective-capitalization-presentation))))))
+        (tts--effective-capitalization-presentation))
+       'sync-capitalization))))
 
 (defun tts--protocol-sync ()
   "Synchronize speech state with running server"
@@ -1298,7 +1355,8 @@ use their existing isolated-letter behavior."
            ;; actions.  Disable legacy server-side scanning to avoid a second
            ;; cue for the same source boundary.
            0
-           tts-speech-rate)))
+           tts-speech-rate)
+   'sync-state))
 
 ;;;;   letter
 
@@ -3861,16 +3919,16 @@ by the audio device's buffering latency."
               (unless (= start (point-max))
                 (skip-syntax-forward " ")       ;skip leading whitespace
                 (unless (eobp) (tts-audio-format (point) (point-max)))))
-            (cond
-             ((emacsvox-aural-structured-delivery-pending-p) nil)
-             (tts--marker-event-function
-              (tts--protocol-dispatch-marked
-               tts--marker-event-function
-               tts--tracked-completion-function))
-             (tts--tracked-completion-function
-              (tts--protocol-dispatch-tracked
-               tts--tracked-completion-function))
-             (t (tts--protocol-dispatch))))
+            (let ((tts--dispatch-origin 'ordinary))
+              (cond
+               (tts--marker-event-function
+                (tts--protocol-dispatch-marked
+                 tts--marker-event-function
+                 tts--tracked-completion-function))
+               (tts--tracked-completion-function
+                (tts--protocol-dispatch-tracked
+                 tts--tracked-completion-function))
+               (t (tts--protocol-dispatch)))))
         (when (and nested-scratch-p (buffer-live-p tts-scratch-buffer))
           (kill-buffer tts-scratch-buffer))))))
 

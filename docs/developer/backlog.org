@@ -95,9 +95,13 @@ and clarifies that isolated characters supply no named palette voice. The
 maintainer selected A: upgrade complete captured submissions, retaining cross-call
 legacy queues as an explicit compatibility path. The
 [[file:../voice-editor-queue-handoff-contract.org][selected queue contract]] completes the XHI handoff with sixteen diagnostic
-observations and independent expected cases. Return to High for dispatch intent
-and callback identity, bounded queue proof, then guarded named-queue promotion
-in separate tested commits. Preserve queue order, cancellation and character review.
+observations and independent expected cases. The maintainer resumed at High.
+Dispatch intent and callback identity now survive finalization, including legacy
+fallback, distinct flushes and changing sync values. Fifteen new contracts and
+all 505 selected source tests pass. Capture sealing and independent presentation
+hooks prevent late contributions from disappearing; framing is checked before
+interruption. Bounded queue proof and guarded named-queue promotion are next.
+Preserve queue order, cancellation and character review.
 The remaining compatibility fixes, preview v2, individual controls and spoken acceptance
 are still pending; this is not complete feature delivery. Earlier, the maintainer
 selected shared tuning first, with explicit
