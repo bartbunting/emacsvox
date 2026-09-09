@@ -26,7 +26,8 @@ reviewed client baseline. The selected contract gives each dispatch pre-write ow
 frozen receipt context and deferred server callbacks after caller initialization.
 The maintainer resumed at High; the lifecycle fix is now implemented and tested.
 Registration now freezes raw palette/voice/choice provenance alongside wire
-definitions. Layered transport and correlated playback readback remain next.
+definitions. Explicit snapshot projection now builds version-4 spans and multipart commands;
+the strict marker-3 codec is tested. Runtime correlation and enablement remain next.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -543,9 +544,28 @@ new contracts for immutable provenance, identical-value owner changes, wire
 separation and preparation bounds. Shared dispatch retention/accounting and span
 context capture remain part of the next transport integration.
 
+**** DONE Add strict receipt decoding and explicit layered timeline projection
+
+The marker-3 codec validates exact fields, duplicate members at every object
+level, positive u64 identities, actual-row/policy reason shape, nullable values
+and both decoded receipt and encoded line bounds. Existing event variants are
+validated under version 3 without changing the old marker decoder.
+
+An explicitly supplied acknowledged snapshot projects version-4 speech spans
+with sparse raw context and separate placement. It preserves nil/default/zero
+semantics, resets legacy effects across layered boundaries and retains compact
+span/rule provenance without sample text. Equal sounding spans with different
+rule sources remain distinguishable. Single and multipart encodings retain the
+same document and version. All 474 selected source tests and isolated compiled
+parity pass, including 11 new codec/projection contracts.
+
+This is explicit projection only: ordinary negotiation remains at version 3.
+Runtime snapshot retention, start/receipt correlation and bounded historical
+readback must be connected before enabling the new wire path.
+
 **** TODO Complete layered transport, readback, preview and editor controls
 
-Add strict marker-3 correlation with timeline-4 projection before enabling that path. Then connect private preview v2 and the
+Connect snapshot retention and strict marker-3 correlation before enabling timeline 4. Then connect private preview v2 and the
 optional per-choice controls in the review's remaining implementation slices.
 
 Implement lossless context projection, lane negotiation and apply reporting.

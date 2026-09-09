@@ -65,5 +65,74 @@
                    (:gain 5 :gain 0) (:unknown 1) (:rate 3)))
     (should-error (omnivox--choice-patch-json patch))))
 
+(defun omnivox-choice-codec-test--receipt ()
+  "Return an independent actual-choice wire receipt."
+  (list :protocol_version 3 :dispatch_id 41 :sequence 2 :type "voice_choice_applied"
+        :utterance_id 8 :span_id 1 :registry_generation 6 :logical_voice_id "bolden"
+        :choice (list :choice_id "alternate" :reason '(:reason "explicit_alternative" :preference_index 1)
+                      :realized '(:engine_id "eloquence" :voice_id "Reed")
+                      :degraded_acss [] :degraded_effects ["chorus"])))
+
+(defun omnivox-choice-codec-test--decode (event)
+  "Round-trip EVENT through the strict encoded record boundary."
+  (omnivox--choice-decode-marker
+   (base64-encode-string (encode-coding-string (json-serialize event) 'utf-8 t) t)))
+
+(ert-deftest omnivox-choice-codec-marker-receipt-preserves-exact-row-and-policy-null ()
+  (let ((event (omnivox-choice-codec-test--receipt)))
+    (should (equal (omnivox-choice-codec-test--decode event) event))
+    (let ((choice (plist-get event :choice)))
+      (setf (plist-get choice :choice_id) :null
+            (plist-get choice :reason) '(:reason "fallback_engine" :fallback_index 0)))
+    (should (eq (plist-get (plist-get (omnivox-choice-codec-test--decode event) :choice) :choice_id) :null))))
+
+(ert-deftest omnivox-choice-codec-marker-rejects-duplicate-members-at-every-depth ()
+  (let ((json (json-serialize (omnivox-choice-codec-test--receipt))))
+    (dolist (pair '(("\"dispatch_id\":41" . "\"dispatch_id\":41,\"dispatch_id\":42")
+                    ("\"choice_id\":\"alternate\"" . "\"choice_id\":\"alternate\",\"choice_id\":null")
+                    ("\"preference_index\":1" . "\"preference_index\":1,\"preference_index\":2")
+                    ("\"engine_id\":\"eloquence\"" . "\"engine_id\":\"eloquence\",\"engine_id\":\"espeak\"")))
+      (let ((invalid (string-replace (car pair) (cdr pair) json)))
+        (should-not (equal invalid json))
+        (should-error (omnivox--choice-decode-marker (base64-encode-string invalid t)))))))
+
+(ert-deftest omnivox-choice-codec-marker-rejects-shape-type-and-identity-errors ()
+  (dolist (field '(:dispatch_id :sequence :utterance_id :span_id :registry_generation))
+    (dolist (value (list 0 -1 1.0 :null "1" (1+ omnivox--choice-u64-max)))
+      (let ((event (omnivox-choice-codec-test--receipt)))
+        (setf (plist-get event field) value)
+        (should-error (omnivox-choice-codec-test--decode event)))))
+  (dolist (mutate
+           (list (lambda (event) (plist-put event :extra t))
+                 (lambda (event) (cl-remf event :choice) event)
+                 (lambda (event) (setf (plist-get (plist-get event :choice) :choice_id) :null) event)
+                 (lambda (event) (setf (plist-get (plist-get event :choice) :reason) '(:reason "global_default")) event)
+                 (lambda (event) (setf (plist-get (plist-get event :choice) :degraded_acss) :null) event)
+                 (lambda (event) (setf (plist-get (plist-get event :choice) :degraded_effects) ["unknown"]) event)))
+    (should-error (omnivox-choice-codec-test--decode (funcall mutate (omnivox-choice-codec-test--receipt))))))
+
+(ert-deftest omnivox-choice-codec-marker-enforces-both-wire-bounds-and-canonical-base64 ()
+  (let* ((json (json-serialize (omnivox-choice-codec-test--receipt)))
+         (at-limit (concat json (make-string (- omnivox--choice-receipt-limit (string-bytes json)) ?\s))))
+    (should (omnivox--choice-decode-marker (base64-encode-string at-limit t)))
+    (should-error (omnivox--choice-decode-marker (base64-encode-string (concat at-limit " ") t)))
+    (should-error (omnivox--choice-decode-marker (concat (base64-encode-string json t) "\n"))))
+  (let ((event (list :protocol_version 3 :dispatch_id 1 :sequence 1 :type "utterance_started"
+                     :utterance_id 1 :text (make-string 400000 ?a) :engine_id "espeak"
+                     :actual_voice :null :logical_voice_id :null :sample_rate 22050 :frame_count 0)))
+    (should-error (omnivox-choice-codec-test--decode event))))
+
+(ert-deftest omnivox-choice-codec-marker-retains-existing-event-variants-under-version-three ()
+  (let ((base '(:protocol_version 3 :dispatch_id 1 :sequence 1 :utterance_id 1)))
+    (dolist (fields
+             '((:type "utterance_started" :text "héllo" :engine_id "espeak" :actual_voice :null
+                      :logical_voice_id :null :sample_rate 22050 :frame_count 0)
+               (:type "marker_reached" :marker (:kind "word" :frame_offset 0 :text_start 0 :text_length 5 :value :null))
+               (:type "semantic_event_reached" :action_id "semantic.1")
+               (:type "timeline_action_resolved" :action_id "semantic.1" :resolution "span_boundary")
+               (:type "timeline_style_degraded" :degraded_acss ["stress"] :degraded_effects [])))
+      (let ((event (append base fields)))
+        (should (equal (omnivox-choice-codec-test--decode event) event))))))
+
 (provide 'omnivox-choice-codec-tests)
 ;;; omnivox-choice-codec-tests.el ends here

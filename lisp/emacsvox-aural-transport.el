@@ -69,6 +69,15 @@
 (defvar emacsvox-aural--current-submission-id)
 (defvar emacsvox-aural--presented-plan-collector)
 
+(declare-function omnivox--choice-span-projection "omnivox-choice-codec" (registration logical request balance))
+(declare-function omnivox--choice-validate-wire-patch "omnivox-choice-codec" (patch))
+(declare-function omnivox--choice-object-keys "omnivox-choice-codec" (object keys))
+(declare-function omnivox--choice-string "omnivox-choice-codec" (value maximum &optional nullable empty))
+(declare-function omnivox--choice-unsigned "omnivox-choice-codec" (value &optional maximum positive))
+
+(defvar emacsvox-aural--layered-projection-p nil
+  "Non-nil while coalescing spans that retain contextual provenance.")
+
 (defvar emacsvox-aural--queued-run-leading-pause nil
   "Leading pause retained while queueing one concrete formatting run.")
 
@@ -980,6 +989,8 @@ Nil POLICY means ordered delivery.  Only replaceable delivery uses the key."
   (list
    (emacsvox-aural-concrete-content-speak content)
    (emacsvox-aural-concrete-content-voice-request content)
+   (and emacsvox-aural--layered-projection-p
+        (emacsvox-aural-concrete-content-voice-provenance content))
    (emacsvox-aural-concrete-content-voice-style content)
    (emacsvox-aural-concrete-content-voice-command content)
    (emacsvox-aural-concrete-content-balance content)))
@@ -1061,149 +1072,155 @@ construction can retain that plan's trailing actions and context."
     (nreverse coalesced)))
 
 (defun emacsvox-aural--build-structured-timeline
-    (generation dispatch-id runs)
-  "Build a structured timeline for GENERATION, DISPATCH-ID, and RUNS.
-
-Return a list of envelope and opaque semantic bindings, or nil when the
-recorded plans contain no speech span and therefore require legacy lowering."
+    (generation dispatch-id runs &optional registration)
+  "Build a timeline for GENERATION, DISPATCH-ID, and RUNS.
+REGISTRATION selects version 4 using its frozen acknowledged definitions.
+Return envelope, opaque semantic bindings and a compact span index, or nil
+when the recorded plans have no speech span and require legacy lowering."
   (let ((span-sequence 0)
+        (emacsvox-aural--layered-projection-p (and registration t))
         (action-sequence 0)
-        active-effects spans actions bindings deferred-actions unsupported)
+        active-effects spans actions bindings deferred-actions unsupported
+        (span-contexts (and registration (make-hash-table :test #'eql))))
     (cl-labels
         ((wire-id
-          (prefix)
-          (format "%s.%d" prefix (cl-incf action-sequence)))
+           (prefix)
+           (format "%s.%d" prefix (cl-incf action-sequence)))
          (effect-directive
-          (style balance)
-          (let* ((effects
-                  (emacsvox-aural--timeline-style-effects style balance))
-                 (transition
-                  (emacsvox-aural--timeline-effect-transition
-                   active-effects effects span-sequence)))
-            (setq active-effects (cdr transition))
-            (car transition)))
+           (style balance)
+           (let* ((effects
+                   (emacsvox-aural--timeline-style-effects style balance))
+                  (transition
+                   (emacsvox-aural--timeline-effect-transition
+                    active-effects effects span-sequence)))
+             (setq active-effects (cdr transition))
+             (car transition)))
          (add-wire-action
-          (wire-id position lifecycle fields semantic-value)
-          (push
-           (append
-            (list
-             :id wire-id
-             :position position
-             :lifecycle_anchor lifecycle)
-            fields)
-           actions)
-          (when semantic-value
-            (push (cons wire-id (copy-tree semantic-value)) bindings)))
+           (wire-id position lifecycle fields semantic-value)
+           (push
+            (append
+             (list
+              :id wire-id
+              :position position
+              :lifecycle_anchor lifecycle)
+             fields)
+            actions)
+           (when semantic-value
+             (push (cons wire-id (copy-tree semantic-value)) bindings)))
          (add-action
-          (action span-id affinity context &optional explicit-position)
-          (let* ((position
-                  (or
-                   explicit-position
-                   (emacsvox-aural--timeline-position span-id affinity)))
-                 (lifecycle
-                  (emacsvox-aural--timeline-lifecycle action))
-                 (semantic-value
-                  (emacsvox-aural--timeline-semantic-value action))
-                 (kind (emacsvox-aural-concrete-action-kind action))
-                 (wire-action-id (wire-id "action"))
-                 (modelled t))
-            (pcase kind
-              ('cue
-               (if (emacsvox-aural-icons-enabled-p context)
-                   (add-wire-action
-                    wire-action-id position lifecycle
-                    (list
-                     :type "audio"
-                     :path
-                     (omnivox-remote-resource
-                      (expand-file-name
-                       (emacsvox-aural-concrete-action-resource action)))
-                     :mode "overlay" :volume 1.0
-                     :pan (emacsvox-aural--timeline-action-pan action)
-                     :effect_bus "dry")
-                    semantic-value)
-                 (setq modelled nil)))
-              ('pause
-               (add-wire-action
-                wire-action-id position lifecycle
-                (list
-                 :type "silence"
-                 :duration_ms
-                 (emacsvox-aural-concrete-action-duration action))
-                semantic-value))
-              ('tone
-               (add-wire-action
-                wire-action-id position lifecycle
-                (list
-                 :type "tone"
-                 :frequency_hz
-                 (float (emacsvox-aural-concrete-action-pitch action))
-                 :duration_ms
-                 (emacsvox-aural-concrete-action-duration action)
-                 :mode
-                 (symbol-name
-                  (or
-                   (emacsvox-aural-concrete-action-audio-mode action)
-                   'overlay))
-                 :volume 1.0
-                 :pan (emacsvox-aural--timeline-action-pan action)
-                 :effect_bus "dry")
-                semantic-value))
-              (_ (setq modelled nil)))
-            (when modelled
-              (let ((semantic-id (wire-id "semantic")))
+           (action span-id affinity context &optional explicit-position)
+           (let* ((position
+                   (or
+                    explicit-position
+                    (emacsvox-aural--timeline-position span-id affinity)))
+                  (lifecycle
+                   (emacsvox-aural--timeline-lifecycle action))
+                  (semantic-value
+                   (emacsvox-aural--timeline-semantic-value action))
+                  (kind (emacsvox-aural-concrete-action-kind action))
+                  (wire-action-id (wire-id "action"))
+                  (modelled t))
+             (pcase kind
+               ('cue
+                (if (emacsvox-aural-icons-enabled-p context)
+                    (add-wire-action
+                     wire-action-id position lifecycle
+                     (list
+                      :type "audio"
+                      :path
+                      (omnivox-remote-resource
+                       (expand-file-name
+                        (emacsvox-aural-concrete-action-resource action)))
+                      :mode "overlay" :volume 1.0
+                      :pan (emacsvox-aural--timeline-action-pan action)
+                      :effect_bus "dry")
+                     semantic-value)
+                  (setq modelled nil)))
+               ('pause
                 (add-wire-action
-                 semantic-id position lifecycle
-                 '(:type "semantic_event") semantic-value)))))
+                 wire-action-id position lifecycle
+                 (list
+                  :type "silence"
+                  :duration_ms
+                  (emacsvox-aural-concrete-action-duration action))
+                 semantic-value))
+               ('tone
+                (add-wire-action
+                 wire-action-id position lifecycle
+                 (list
+                  :type "tone"
+                  :frequency_hz
+                  (float (emacsvox-aural-concrete-action-pitch action))
+                  :duration_ms
+                  (emacsvox-aural-concrete-action-duration action)
+                  :mode
+                  (symbol-name
+                   (or
+                    (emacsvox-aural-concrete-action-audio-mode action)
+                    'overlay))
+                  :volume 1.0
+                  :pan (emacsvox-aural--timeline-action-pan action)
+                  :effect_bus "dry")
+                 semantic-value))
+               (_ (setq modelled nil)))
+             (when modelled
+               (let ((semantic-id (wire-id "semantic")))
+                 (add-wire-action
+                  semantic-id position lifecycle
+                  '(:type "semantic_event") semantic-value)))))
          (add-silence
-          (duration span-id affinity)
-          (add-wire-action
-           (wire-id "pause")
-           (emacsvox-aural--timeline-position span-id affinity)
-           "run"
-           (list :type "silence" :duration_ms duration)
-           nil))
+           (duration span-id affinity)
+           (add-wire-action
+            (wire-id "pause")
+            (emacsvox-aural--timeline-position span-id affinity)
+            "run"
+            (list :type "silence" :duration_ms duration)
+            nil))
          (add-pending
-          (pending span-id affinity)
-          (dolist (entry pending)
-            (if (numberp (car entry))
-                (add-silence (car entry) span-id affinity)
-              (add-action (car entry) span-id affinity (cdr entry)))))
+           (pending span-id affinity)
+           (dolist (entry pending)
+             (if (numberp (car entry))
+                 (add-silence (car entry) span-id affinity)
+               (add-action (car entry) span-id affinity (cdr entry)))))
          (add-span
-          (text request style command balance lifecycle pending context)
-          (let* ((span-id (cl-incf span-sequence))
-                 (logical
-                  (emacsvox-aural--timeline-logical-voice command request))
-                 (rate-offset
-                  (emacsvox-aural--timeline-rate-offset style)))
-            (push
-             (append
-              (list
-               :id span-id :text text
-               :logical_voice_id (or logical :null)
-               :acss (emacsvox-aural--timeline-style-acss style)
-               :effects (effect-directive style balance))
-              (when rate-offset (list :rate_offset rate-offset)))
-             spans)
-            (add-pending (append deferred-actions pending) span-id 'before)
-            (setq deferred-actions nil)
-            (when lifecycle
-              (let ((semantic-id (wire-id "semantic")))
-                (add-wire-action
-                 semantic-id
-                 (emacsvox-aural--timeline-position span-id 'before)
-                 (emacsvox-aural--timeline-lifecycle lifecycle)
-                 '(:type "semantic_event")
-                 (emacsvox-aural--timeline-semantic-value lifecycle))))
-            span-id))
+           (text request style command balance lifecycle pending provenance)
+           (let* ((span-id (cl-incf span-sequence))
+                  (logical (emacsvox-aural--timeline-logical-voice command request))
+                  (layered (and registration
+                                (omnivox--choice-span-projection registration logical request balance)))
+                  (rate-offset (emacsvox-aural--timeline-rate-offset style)))
+             (if layered
+                 (progn
+                   (setq active-effects nil)
+                   (push (list :mode "layered" :span (append (list :id span-id :text text) (car layered))) spans)
+                   (puthash span-id (append (cadr layered) (list :voice-provenance (copy-tree provenance))) span-contexts))
+               (let ((span (append
+                            (list :id span-id :text text :logical_voice_id (or logical :null)
+                                  :acss (emacsvox-aural--timeline-style-acss style)
+                                  :effects (effect-directive style balance))
+                            (when rate-offset (list :rate_offset rate-offset)))))
+                 (push (if registration (list :mode "legacy" :span span) span) spans)
+                 (when registration
+                   (puthash span-id (list :mode 'legacy :logical-id logical) span-contexts))))
+             (add-pending (append deferred-actions pending) span-id 'before)
+             (setq deferred-actions nil)
+             (when lifecycle
+               (let ((semantic-id (wire-id "semantic")))
+                 (add-wire-action
+                  semantic-id
+                  (emacsvox-aural--timeline-position span-id 'before)
+                  (emacsvox-aural--timeline-lifecycle lifecycle)
+                  '(:type "semantic_event")
+                  (emacsvox-aural--timeline-semantic-value lifecycle))))
+             span-id))
          (speech-action-p
-          (action)
-          (and
-           (eq 'speech (emacsvox-aural-concrete-action-kind action))
-           (stringp (emacsvox-aural-concrete-action-text action))
-           (not
-            (string-empty-p
-             (emacsvox-aural-concrete-action-text action))))))
+           (action)
+           (and
+            (eq 'speech (emacsvox-aural-concrete-action-kind action))
+            (stringp (emacsvox-aural-concrete-action-text action))
+            (not
+             (string-empty-p
+              (emacsvox-aural-concrete-action-text action))))))
       (dolist (run (emacsvox-aural--coalesce-structured-runs runs))
         (pcase-let* ((`(,plan ,text ,pause . ,extra) run)
                      (positioned-actions (car extra))
@@ -1225,7 +1242,7 @@ recorded plans contain no speech span and therefore require legacy lowering."
                     (emacsvox-aural-concrete-action-voice-style action)
                     (emacsvox-aural-concrete-action-voice-command action)
                     (emacsvox-aural-concrete-action-balance action)
-                    action pending context)
+                    action pending (emacsvox-aural-concrete-action-voice-provenance action))
                    pending nil))
               (setq pending (append pending (list (cons action context))))))
           (when
@@ -1240,12 +1257,12 @@ recorded plans contain no speech span and therefore require legacy lowering."
               (emacsvox-aural-concrete-content-voice-style content)
               (emacsvox-aural-concrete-content-voice-command content)
               (emacsvox-aural-concrete-content-balance content)
-              nil pending context)
+              nil pending (emacsvox-aural-concrete-content-voice-provenance content))
              pending nil))
           ;; As in legacy content queueing, suppression also omits actions
           ;; positioned within that content.  Boundary actions remain distinct.
           (dolist (positioned (and (emacsvox-aural-concrete-content-speak content)
-                                  positioned-actions))
+                                   positioned-actions))
             (let ((offset (plist-get positioned :utf8-offset)))
               (unless
                   (and last-span (integerp offset)
@@ -1271,7 +1288,7 @@ recorded plans contain no speech span and therefore require legacy lowering."
                     (emacsvox-aural-concrete-action-voice-style action)
                     (emacsvox-aural-concrete-action-voice-command action)
                     (emacsvox-aural-concrete-action-balance action)
-                    action pending after-context)
+                    action pending (emacsvox-aural-concrete-action-voice-provenance action))
                    pending nil))
               (setq pending (append pending (list (cons action after-context))))))
           (if (not last-span)
@@ -1287,14 +1304,17 @@ recorded plans contain no speech span and therefore require legacy lowering."
       (list
        (append
         (list
-         :protocol_version emacsvox-aural--structured-timeline-version
+         :protocol_version (if registration 4 emacsvox-aural--structured-timeline-version)
          :generation generation
          :dispatch_id dispatch-id)
+        (when registration
+          (list :registry_generation (plist-get registration :registry-generation)))
         (emacsvox-aural--timeline-delivery-fields)
         (list
          :spans (vconcat (nreverse spans))
          :actions (vconcat (nreverse actions))))
-       (nreverse bindings)))))
+       (nreverse bindings)
+       span-contexts))))
 
 (defun emacsvox-aural--timeline-validate-id (value kind)
   "Validate timeline identifier VALUE described by KIND."
@@ -1411,18 +1431,26 @@ the authoritative check after punctuation and split-cap preprocessing."
                emacsvox-aural--timeline-max-actions-per-speech-window))))))))
 
 (defun emacsvox-aural--validate-structured-timeline (envelope)
-  "Validate V3 timeline ENVELOPE before any transport write."
-  (unless
-      (eql
-       (plist-get envelope :protocol_version)
-       emacsvox-aural--structured-timeline-version)
+  "Validate version-3 or version-4 ENVELOPE before any transport write."
+  (unless (memq (plist-get envelope :protocol_version) '(3 4))
     (emacsvox-aural--transport-error
-     "Multipart delivery requires timeline protocol version %d"
-     emacsvox-aural--structured-timeline-version))
-  (dolist (field '(:generation :dispatch_id))
+     "Structured delivery requires timeline protocol version 3 or 4"))
+  (when (eql (plist-get envelope :protocol_version) 4)
+    (omnivox--choice-object-keys
+     envelope (append '(:protocol_version :generation :dispatch_id :registry_generation :delivery_policy :spans :actions)
+                      (when (equal (plist-get envelope :delivery_policy) "replaceable") '(:replacement_key))))
+    (unless (member (plist-get envelope :delivery_policy) '("ordered" "urgent" "replaceable"))
+      (emacsvox-aural--transport-error "Invalid version-4 delivery policy"))
+    (when (equal (plist-get envelope :delivery_policy) "replaceable")
+      (omnivox--choice-string (plist-get envelope :replacement_key)
+                              emacsvox-aural--timeline-replacement-key-max-bytes)))
+  (dolist (field (append '(:generation :dispatch_id)
+                         (when (eql (plist-get envelope :protocol_version) 4) '(:registry_generation))))
     (unless
         (let ((value (plist-get envelope field)))
-          (and (integerp value) (> value 0)))
+          (and (integerp value) (> value 0)
+               (or (not (eql (plist-get envelope :protocol_version) 4))
+                   (<= value (1- (expt 2 64))))))
       (emacsvox-aural--transport-error
        "Structured timeline %S must be a positive integer" field)))
   (let* ((spans (append (plist-get envelope :spans) nil))
@@ -1443,24 +1471,39 @@ the authoritative check after punctuation and split-cap preprocessing."
       (emacsvox-aural--transport-error
        "Structured timeline exceeds %d actions"
        emacsvox-aural--timeline-max-actions))
-    (dolist (span spans)
-      (let ((id (plist-get span :id))
-            (text (plist-get span :text))
-            (logical-voice (plist-get span :logical_voice_id))
-            (effects (plist-get span :effects)))
-        (unless (and (integerp id) (> id 0) (not (gethash id span-texts)))
-          (emacsvox-aural--transport-error
-           "Structured timeline has an invalid or duplicate span ID: %S" id))
-        (unless (and (stringp text) (not (string-empty-p text)))
-          (emacsvox-aural--transport-error
-           "Structured timeline span %S has no speech text" id))
-        (when (and logical-voice (not (eq logical-voice :null)))
-          (emacsvox-aural--timeline-validate-id
-           logical-voice "Logical voice ID"))
-        (when (equal (plist-get effects :mode) "replace")
-          (emacsvox-aural--timeline-validate-id
-           (plist-get effects :state_id) "Effect state ID"))
-        (puthash id text span-texts)))
+    (dolist (wrapper spans)
+      (let* ((v4 (eql (plist-get envelope :protocol_version) 4))
+             (span (if v4 (plist-get wrapper :span) wrapper)))
+        (when v4
+          (omnivox--choice-object-keys wrapper '(:mode :span))
+          (unless (member (plist-get wrapper :mode) '("legacy" "layered"))
+            (emacsvox-aural--transport-error "Unknown version-4 span mode"))
+          (when (equal (plist-get wrapper :mode) "layered")
+            (omnivox--choice-object-keys span '(:id :text :logical_voice_id :context :placement))
+            (omnivox--choice-string (plist-get span :logical_voice_id) 128)
+            (omnivox--choice-validate-wire-patch (plist-get span :context))
+            (omnivox--choice-object-keys (plist-get span :placement) '(:pan))
+            (let ((pan (plist-get (plist-get span :placement) :pan)))
+              (unless (or (eq pan :null) (and (numberp pan) (<= 0 pan 1)))
+                (emacsvox-aural--transport-error "Invalid layered span placement")))))
+        (let ((id (plist-get span :id))
+              (text (plist-get span :text))
+              (logical-voice (plist-get span :logical_voice_id))
+              (effects (plist-get span :effects)))
+          (unless (and (integerp id) (> id 0) (not (gethash id span-texts)))
+            (emacsvox-aural--transport-error
+             "Structured timeline has an invalid or duplicate span ID: %S" id))
+          (unless (and (stringp text) (not (string-empty-p text)))
+            (emacsvox-aural--transport-error
+             "Structured timeline span %S has no speech text" id))
+          (when (and logical-voice (not (eq logical-voice :null)))
+            (emacsvox-aural--timeline-validate-id
+             logical-voice "Logical voice ID"))
+          (when (equal (plist-get effects :mode) "replace")
+            (emacsvox-aural--timeline-validate-id
+             (plist-get effects :state_id) "Effect state ID"))
+          (when v4 (omnivox--choice-unsigned id nil t))
+          (puthash id text span-texts))))
     (dolist (action actions)
       (let* ((id (plist-get action :id))
              (position (plist-get action :position))
@@ -1493,9 +1536,9 @@ the authoritative check after punctuation and split-cap preprocessing."
                  (<=
                   (string-bytes path)
                   emacsvox-aural--timeline-resource-path-max-bytes))
-               (emacsvox-aural--transport-error
-                "Audio action %S path must contain 1 to %d UTF-8 bytes"
-                id emacsvox-aural--timeline-resource-path-max-bytes))))))
+              (emacsvox-aural--transport-error
+               "Audio action %S path must contain 1 to %d UTF-8 bytes"
+               id emacsvox-aural--timeline-resource-path-max-bytes))))))
     (maphash
      (lambda (span-id offsets)
        (puthash
@@ -1532,7 +1575,7 @@ the authoritative check after punctuation and split-cap preprocessing."
   (cadr (emacsvox-aural--structured-timeline-payload envelope)))
 
 (defun emacsvox-aural--frame-structured-timeline (envelope)
-  "Return complete bounded protocol commands carrying V3 ENVELOPE."
+  "Return complete bounded protocol commands carrying ENVELOPE."
   (emacsvox-aural--validate-structured-timeline envelope)
   (pcase-let* ((`(,payload-bytes ,encoded)
                  (emacsvox-aural--structured-timeline-payload envelope))
@@ -1555,7 +1598,7 @@ the authoritative check after punctuation and split-cap preprocessing."
          collect
          (format
           "emacsvox_timeline_part %d %d %d %d %d %d %s\n"
-          emacsvox-aural--structured-timeline-version
+          (plist-get envelope :protocol_version)
           generation dispatch-id part-index part-count payload-bytes
           (substring encoded start end)))))))
 

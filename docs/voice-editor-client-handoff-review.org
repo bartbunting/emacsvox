@@ -8,7 +8,8 @@ The review is complete and the maintainer resumed implementation at High.
 The first lifecycle slice now arms dispatch ownership before writing and defers
 server callbacks until submission returns. The probes below describe the reviewed
 baseline; passing regression tests cover the new behavior. Registration now captures frozen raw provenance alongside wire definitions;
-timeline-4 projection and strict marker-3 readback remain next.
+explicit timeline-4 projection and strict marker-3 decoding are tested.
+Runtime correlation, bounded retention and ordinary enablement remain next.
 No further product decision or Max review is needed.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
@@ -420,3 +421,18 @@ registry write. Shared per-dispatch retention and compact span context are next.
 All 457 selected source tests and the fresh isolated compiled gate pass, including
 four new registration tests. =make bytecode= and its preflight pass. This slice
 does not enable timeline 4, marker 3 or individual editor controls.
+
+* Explicit layered projection and receipt codec at High
+
+The strict marker-3 decoder rejects duplicate/unknown/missing fields, malformed
+identities/reasons, invalid enum arrays and oversized records. Null and booleans
+remain distinct. Explicit snapshot projection builds layered spans with raw
+context and placement; it never recovers context by subtracting the shared
+value. It retains compact span/rule provenance, separates equal values with
+different rule sources, ends legacy effect continuity at layered boundaries and
+frames the same version-4 document in one or multiple commands.
+
+All 474 selected source tests and the isolated compiled gate pass, including
+11 new codec/projection contracts. Negotiation and normal submission still use
+version 3. The next slice must connect ownership retention, start/receipt
+correlation and bounded readback before enabling the new path.
