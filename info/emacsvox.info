@@ -16,7 +16,7 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 Indirect:
 emacsvox.info-1: 384
-emacsvox.info-2: 307499
+emacsvox.info-2: 307871
 
 Tag Table:
 (Indirect)
@@ -87,32 +87,32 @@ Node: Desktop Management169333
 Node: Personal Information Management169835
 Node: Desktop Applications170367
 Node: Notmuch Mail178509
-Ref: Notmuch fields and privacy187852
-Node: Agent Shell193560
-Node: EAT Terminal Access206031
-Node: Running Terminal Based Applications223290
-Node: Starting Term224245
-Node: Term Input Modes225084
-Node: Term Speech Feedback226244
-Node: Reviewing The Term Screen227438
-Node: Term Help And Recovery229339
-Node: Emacsvox Keyboard Commands230238
-Node: Copyright232483
-Node: Acknowledgments233070
-Node: Developer Guide234096
-Node: Documentation Maintenance235260
-Node: Speech Server Protocols240060
-Ref: Testing A Direct Legacy Server245967
-Ref: Commands That Queue Output246526
-Ref: Commands That Set State249560
-Node: Integration Maintenance252154
-Ref: Background startup ownership and failure recovery254884
-Ref: Supported Emacs versions258037
-Ref: Native Windows builds260243
-Ref: Remote preview validation262303
-Ref: Internal ownership and renderer tests282555
-Ref: Upstream contract layers286011
-Node: Concept Index307499
+Ref: Notmuch fields and privacy188224
+Node: Agent Shell193932
+Node: EAT Terminal Access206403
+Node: Running Terminal Based Applications223662
+Node: Starting Term224617
+Node: Term Input Modes225456
+Node: Term Speech Feedback226616
+Node: Reviewing The Term Screen227810
+Node: Term Help And Recovery229711
+Node: Emacsvox Keyboard Commands230610
+Node: Copyright232855
+Node: Acknowledgments233442
+Node: Developer Guide234468
+Node: Documentation Maintenance235632
+Node: Speech Server Protocols240432
+Ref: Testing A Direct Legacy Server246339
+Ref: Commands That Queue Output246898
+Ref: Commands That Set State249932
+Node: Integration Maintenance252526
+Ref: Background startup ownership and failure recovery255256
+Ref: Supported Emacs versions258409
+Ref: Native Windows builds260615
+Ref: Remote preview validation262675
+Ref: Internal ownership and renderer tests282927
+Ref: Upstream contract layers286383
+Node: Concept Index307871
 
 End Tag Table
 

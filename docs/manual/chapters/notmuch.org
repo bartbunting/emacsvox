@@ -96,15 +96,19 @@ provided by the installed Notmuch version.
 
 A Notmuch search buffer can appear before its rows have finished rendering.
 For a user-owned non-refresh search that remains selected, Emacsvox gives a
-progress cue and waits for Notmuch's process sentinel.  It does not announce an
-empty row or move point while the process is still producing results.
+progress cue.  With the default ~adaptive~ policy, it speaks the selected
+message as soon as the first complete result is available, while the search
+continues.  This uses the same message summary, voices, and status cues as
+~n~, ~p~, and the arrow keys.  It does not announce an empty row or move point.
 
 The default ~adaptive~ completion policy distinguishes two interactions:
 
 - If the search is still selected, no command has been issued in it, and no input
-   is pending, completion uses the primary speech stream.  It reports the final
-   thread count followed by the result at point, or an explicit zero-thread
-   summary.
+   is pending, the first available result is spoken once on the primary speech
+   stream.  Completion reports the final thread count on the notification
+   stream, without repeating that message.  If the search finishes before a
+   row could be announced early, completion reports the count followed by the
+   result at point, or an explicit zero-thread summary.
 
 - If you navigate, invoke another command, leave the buffer, or refresh an
    existing search before it completes, the eventual completion is a generic

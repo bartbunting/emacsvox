@@ -117,7 +117,10 @@ it is spoken."
   "Control successful asynchronous Notmuch search completion feedback.
 
 With `adaptive', a user-owned search that remains selected and untouched
-speaks its final count and the result at point on the primary speech stream.
+speaks the result at point as soon as it is available, while results are
+still arriving.  Completion then sends only the final count to the notification
+stream.  If no row was announced early, an untouched focused search speaks
+its count and selected result together at completion.
 After the user issues another command, leaves the search buffer, or refreshes
 an existing search, completion contains only a generic result count and uses
 the notification stream.  `summary' always sends the generic count to the
@@ -2626,6 +2629,31 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
    (emacsvox-notmuch-view-facts 'search 'search nil)
    'state-change 'progress nil))
 
+(defun emacsvox-notmuch--maybe-speak-initial-search-result (process)
+  "Speak PROCESS's selected result once, as soon as a complete row exists."
+  (when-let* ((state (process-get
+                     process emacsvox-notmuch--search-process-property))
+              ((eq (plist-get state :kind) 'search))
+              ((not (plist-get state :initial-result-spoken)))
+              ((not (plist-get state :interacted)))
+              (buffer (process-buffer process))
+              ((emacsvox-notmuch--search-buffer-focused-p buffer)))
+    (with-current-buffer buffer
+      (when (and (eq major-mode 'notmuch-search-mode)
+                 (eq emacsvox-notmuch--tracked-search-process process)
+                 (eq emacsvox-notmuch-search-completion-style 'adaptive)
+                 (not (input-pending-p)))
+        (when-let* ((result (notmuch-search-get-result)))
+          ;; Mark delivery before speech, which can itself process new output.
+          (process-put
+           process emacsvox-notmuch--search-process-property
+           (plist-put (copy-sequence state) :initial-result-spoken t))
+          (emacsvox-notmuch-speak-search-result result))))))
+
+(defun emacsvox--advice-notmuch-search-process-filter-after (process _output)
+  "Present the initial row after Notmuch has parsed new PROCESS output."
+  (emacsvox-notmuch--maybe-speak-initial-search-result process))
+
 (defun emacsvox-notmuch--announce-foreground-search-complete
     (buffer count)
   "Present completed focused search BUFFER with final result COUNT."
@@ -2639,28 +2667,43 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
           (let* ((summary-content (concat summary "\n"))
                  (result-content
                   (emacsvox-notmuch-format-search-result result))
-                 (shared-facts
-                  (cl-loop
-                   for (key value) on view-facts by #'cddr
-                   unless (memq key '(:role :mail-view-kind))
-                   append (list key value))))
+                 (result-facts
+                  (emacsvox-notmuch-message-facts result 'focus-entered)))
             (add-text-properties
              0 (length summary-content)
              (list
               emacsvox-aural-object-property 'search-summary
               emacsvox-aural-facts-property view-facts)
              summary-content)
+            ;; Each field and separator needs the same message facts as
+            ;; ordinary result navigation.  Keep them local to the row so
+            ;; unread state and focus events cannot leak into the count.
+            (let ((position 0)
+                  (limit (length result-content)))
+              (while (< position limit)
+                (let ((end (next-single-property-change
+                            position emacsvox-aural-facts-property
+                            result-content limit)))
+                  (put-text-property
+                   position end emacsvox-aural-facts-property
+                   (emacsvox-aural-merge-facts
+                    result-facts
+                    (get-text-property
+                     position emacsvox-aural-facts-property result-content))
+                   result-content)
+                  (setq position end))))
             (add-text-properties
              0 (length result-content)
-             (list emacsvox-aural-object-property 'search-result)
+             (list emacsvox-aural-object-property 'search-result
+                   emacsvox-aural-occasion-property 'navigation)
              result-content)
             (emacsvox-notmuch--submit-content
              (concat summary-content result-content)
-             shared-facts 'state-change
+             '(:role message) 'state-change
              (append
               (emacsvox-notmuch--leading-compatibility-actions 'task-done)
               (emacsvox-notmuch--status-compatibility-actions
-               result emacsvox-notmuch-search-status-icons 'state-change))))
+               result emacsvox-notmuch-search-status-icons 'navigation))))
         (emacsvox-notmuch--submit-text-feedback
          view-facts 'state-change 'task-done summary)))))
 
@@ -2686,6 +2729,7 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
             (eq kind 'search)
             focused
             (not interacted)
+            (not (plist-get state :initial-result-spoken))
             (not (input-pending-p)))
            (emacsvox-notmuch--announce-foreground-search-complete
             buffer count)
@@ -2755,7 +2799,10 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
         (when (and
                (eq kind 'search)
                (emacsvox-notmuch--search-buffer-focused-p (current-buffer)))
-          (emacsvox-notmuch--announce-search-start))))))
+          (emacsvox-notmuch--announce-search-start))
+        ;; Output may have arrived before the search command returned and
+        ;; installed tracking.  Do not wait for another filter invocation.
+        (emacsvox-notmuch--maybe-speak-initial-search-result process)))))
 
 (defun emacsvox--advice-notmuch-search-around (original &rest arguments)
   "Track completion of a user-owned call to `notmuch-search'."
@@ -2774,6 +2821,11 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
 (push
  '(notmuch-search
    :around emacsvox--advice-notmuch-search-around)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-search-process-filter
+   :after emacsvox--advice-notmuch-search-process-filter-after)
  emacsvox-notmuch--advice)
 
 (push

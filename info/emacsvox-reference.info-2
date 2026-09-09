@@ -4171,7 +4171,10 @@ itself.
      Control successful asynchronous Notmuch search completion feedback.
 
      With ‘adaptive’, a user-owned search that remains selected and untouched
-     speaks its final count and the result at point on the primary speech stream.
+     speaks the result at point as soon as it is available, while results are
+     still arriving.  Completion then sends only the final count to the notification
+     stream.  If no row was announced early, an untouched focused search speaks
+     its count and selected result together at completion.
      After the user issues another command, leaves the search buffer, or refreshes
      an existing search, completion contains only a generic result count and uses
      the notification stream.  ‘summary’ always sends the generic count to the

@@ -3493,6 +3493,111 @@ Return the beginning of the inserted row."
       (when (buffer-live-p buffer) (kill-buffer buffer)))
     (should (equal events '((progress))))))
 
+(ert-deftest emacsvox-notmuch-streamed-first-result-speaks-before-completion ()
+  "Partial output speaks the first complete row once while search still runs."
+  (let ((buffer (generate-new-buffer " *notmuch streaming test*"))
+        (parser (generate-new-buffer " *notmuch streaming parser*"))
+        (notmuch-hl-line nil)
+        properties spoken notifications occasions)
+    (unwind-protect
+        (save-window-excursion
+          (set-window-buffer (selected-window) buffer)
+          (with-current-buffer buffer
+            (setq major-mode 'notmuch-search-mode)
+            (setq properties (list (cons 'parse-buf parser)))
+            (emacsvox-notmuch-test--with-fake-search-process
+                ('process buffer properties 'run 0)
+              (cl-letf
+                  (((symbol-function 'input-pending-p) (lambda () nil))
+                   ((symbol-function 'emacsvox-aural-submit-actions) #'ignore)
+                   ((symbol-function 'emacsvox-aural-submit)
+                    (lambda (content &rest arguments)
+                      (should (eq (process-status 'process) 'run))
+                      (push (substring-no-properties content) spoken)
+                      (push (plist-get arguments :occasion) occasions)))
+                   ((symbol-function 'emacsvox-aural-submit-notification)
+                    (lambda (content &rest _) (push content notifications))))
+                (emacsvox-notmuch--track-search-process 'search)
+                ;; The opening list and partial record are not a result yet.
+                (notmuch-search-process-filter 'process "((:thread \"first\" ")
+                (should-not spoken)
+                (notmuch-search-process-filter
+                 'process
+                 (concat (substring
+                          (prin1-to-string emacsvox-notmuch-test--search-result) 1)
+                         "\n"))
+                (should (= (length spoken) 1))
+                (should (equal occasions '(navigation)))
+                (should (string-prefix-p "Alice Smith, Bob Jones, Project update" (car spoken)))
+                (should-not notifications)
+                (should (= (point) (point-min)))
+                ;; More output and end-of-list must not repeat the first row.
+                (notmuch-search-process-filter
+                 'process
+                 (concat (prin1-to-string
+                          (plist-put (copy-tree emacsvox-notmuch-test--search-result)
+                                     :thread "second")) ")"))
+                (should (= (length spoken) 1))
+                (emacsvox--advice-notmuch-search-process-sentinel-after 'process nil)
+                (should-not notifications)
+                (emacsvox-notmuch-test--with-fake-search-process
+                    ('process buffer properties 'exit 0)
+                  (emacsvox--advice-notmuch-search-process-sentinel-after 'process nil))
+                (should (= (length spoken) 1))
+                (should (equal notifications '("Search complete, 2 threads")))))))
+      (when (buffer-live-p buffer) (kill-buffer buffer))
+      (when (buffer-live-p parser) (kill-buffer parser)))))
+
+(ert-deftest emacsvox-notmuch-initial-result-respects-search-ownership ()
+  "Early output must not interrupt navigation, refreshes, or other buffers."
+  (dolist (case '(interacted background pending refresh untracked summary cue silent))
+    (with-temp-buffer
+      (setq major-mode 'notmuch-search-mode)
+      (emacsvox-notmuch-test--insert-search-result
+       "First" emacsvox-notmuch-test--search-result)
+      (goto-char (point-min))
+      (let* ((buffer (current-buffer))
+             (emacsvox-notmuch--tracked-search-process
+              (unless (eq case 'untracked) 'process))
+             (emacsvox-notmuch-search-completion-style
+              (if (memq case '(summary cue silent)) case 'adaptive))
+             (properties
+              (list (cons emacsvox-notmuch--search-process-property
+                          (list :kind (if (eq case 'refresh) 'refresh 'search)
+                                :interacted (eq case 'interacted))))))
+        (emacsvox-notmuch-test--with-fake-search-process
+            ('process buffer properties 'run 0)
+          (cl-letf
+              (((symbol-function 'input-pending-p) (lambda () (eq case 'pending)))
+               ((symbol-function 'emacsvox-notmuch--search-buffer-focused-p)
+                (lambda (_) (not (eq case 'background))))
+               ((symbol-function 'emacsvox-notmuch-speak-search-result)
+                (lambda (&rest _) (ert-fail "Unowned early result was spoken"))))
+            (emacsvox--advice-notmuch-search-process-filter-after 'process "")))))))
+
+(ert-deftest emacsvox-notmuch-initial-result-precedes-tracking ()
+  "A row delivered before tracking starts is spoken without another chunk."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-search-mode)
+    (emacsvox-notmuch-test--insert-search-result "First" '(:thread "first"))
+    (let ((selected (emacsvox-notmuch-test--insert-search-result
+                     "Selected" '(:thread "selected")))
+          (buffer (current-buffer))
+          properties spoken)
+      (goto-char selected)
+      (emacsvox-notmuch-test--with-fake-search-process
+          ('process buffer properties 'run 0)
+        (cl-letf
+            (((symbol-function 'input-pending-p) (lambda () nil))
+             ((symbol-function 'emacsvox-notmuch--search-buffer-focused-p)
+              (lambda (_) t))
+             ((symbol-function 'emacsvox-notmuch--announce-search-start) #'ignore)
+             ((symbol-function 'emacsvox-notmuch-speak-search-result)
+              (lambda (result) (push (plist-get result :thread) spoken))))
+          (emacsvox-notmuch--track-search-process 'search)
+          (should (equal spoken '("selected")))
+          (should (= (point) selected)))))))
+
 (ert-deftest emacsvox-notmuch-untouched-search-speaks-final-row-and-count ()
   "A focused untouched search presents complete data once without moving."
   (let ((buffer (generate-new-buffer " *emacsvox-notmuch-complete-test*"))
@@ -3607,7 +3712,9 @@ Return the beginning of the inserted row."
                 (let ((facts (emacsvox-aural-concrete-plan-facts plan)))
                   (and
                    (eq (plist-get facts :role) 'mail-view)
-                   (eq (plist-get facts :mail-view-kind) 'search))))
+                   (eq (plist-get facts :mail-view-kind) 'search)
+                   (not (plist-get facts :states))
+                   (equal (plist-get facts :events) '(mail-view-opened)))))
               summary-plans))
             (should
              (cl-every
@@ -3618,6 +3725,17 @@ Return the beginning of the inserted row."
                   :mail-view-kind)))
               result-plans))
             (should
+             (cl-every
+              (lambda (plan)
+                (let ((facts (emacsvox-aural-concrete-plan-facts plan))
+                      (context (emacsvox-aural-concrete-plan-context plan)))
+                  (and
+                   (eq (plist-get context :occasion) 'navigation)
+                   (equal (plist-get facts :events) '(focus-entered))
+                   (equal (plist-get facts :states) '(unread flagged))
+                   (not (plist-member facts :mail-action-kind)))))
+              result-plans))
+            (should
              (cl-some
               (lambda (plan)
                 (let ((facts (emacsvox-aural-concrete-plan-facts plan)))
@@ -3626,6 +3744,50 @@ Return the beginning of the inserted row."
                    (eq (plist-get facts :field-kind) 'authors))))
               result-plans))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-notmuch-opening-row-matches-navigation-presentation ()
+  "The opening row uses the same voices and semantic cues as navigation."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-search-mode)
+    (let ((emacsvox-aural-active-scheme 'default)
+          (emacsvox-aural-enabled-feature-fragments '(mail-message-status-cues))
+          (emacsvox-aural-user-rules nil)
+          (emacsvox-aural-session-rules nil)
+          (emacsvox-aural-buffer-rules nil)
+          (emacsvox-use-icons t)
+          (emacsvox-aural-face-presentation-enabled t)
+          (voice-lock-mode t)
+          opening spoken)
+      (cl-letf (((symbol-function 'notmuch-search-get-result)
+                 (lambda () emacsvox-notmuch-test--search-result))
+                ((symbol-function 'tts-speak)
+                 (lambda (prepared) (setq spoken prepared))))
+        (setq opening
+              (emacsvox-notmuch--announce-foreground-search-complete
+               (current-buffer) 2))
+        (emacsvox-notmuch-speak-search-result))
+      (cl-labels
+          ((presentation
+            (plan)
+            (list
+             (emacsvox-aural-concrete-plan-facts plan)
+             (plist-get (emacsvox-aural-concrete-plan-context plan) :occasion)
+             (emacsvox-aural-concrete-content-voice-request
+              (emacsvox-aural-concrete-plan-content plan))
+             (mapcar #'emacsvox-aural-concrete-action-cue
+                     (emacsvox-aural-concrete-plan-before plan))
+             (mapcar #'emacsvox-aural-concrete-action-cue
+                     (emacsvox-aural-concrete-plan-after plan)))))
+        (should
+         (equal
+          (mapcar
+           #'presentation
+           (cl-remove-if-not
+            (lambda (plan)
+              (eq (emacsvox-aural-concrete-plan-object-id plan) 'search-result))
+            (emacsvox-aural-submission-plans opening)))
+          (mapcar #'presentation
+                  (emacsvox-aural--submission-plans-in spoken))))))))
 
 (ert-deftest emacsvox-notmuch-empty-search-is-explicit-after-completion ()
   "An untouched empty search reports zero only after its sentinel."
