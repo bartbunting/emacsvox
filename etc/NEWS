@@ -12,6 +12,10 @@ Maintained by Emacsvox Contributors.
 Choose Customize this voice from an editor fallback row to set individual
 adjustments, use the shared value, or restore the adapter default. Automatic
 samples audition that row; the same voice draft and Save action own all changes.
+Experiment keeps default to the chosen row's voice and adjustments. Shared
+changes remain explicit; unrelated draft edits and save recovery are preserved.
+Details explains the shared, actual-fallback and contextual sources of the last
+confirmed sample's settings.
 
 
 Released notes are preserved in [[file:NEWS-2026.9.4][NEWS for Emacsvox 2026.9.4]].

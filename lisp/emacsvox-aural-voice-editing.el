@@ -137,6 +137,33 @@ REPLACEMENT explicitly keeps or resets a replaced row's custom settings."
   "Allocate a fresh local choice identity, frozen into its eventual proposal."
   (concat "voice-" (secure-hash 'sha256 (format "%S-%S-%S" (current-time) (emacs-pid) (random)))))
 
+(defun emacsvox-aural-voice-editing--keep-for-choice (destination experiment part placement id)
+  "Keep EXPERIMENT's PART in DESTINATION's selected ID or new PLACEMENT.
+PART is adjustments or both.  Replace the chosen row's complete tuning with
+the experiment's resolved preview fields; absent fields become explicit native
+defaults so unrelated shared values cannot alter the kept experiment.  Every
+other row and all shared settings remain unchanged."
+  (unless (memq part '(adjustments both)) (user-error "Choose individual adjustments or both"))
+  (let* ((rows (emacsvox-aural-voice-editing--rows destination))
+         (index (and id (cl-position id rows :test #'equal :key (lambda (row) (plist-get row :id)))))
+         (result (plist-put (copy-tree destination) :choices rows))
+         (style (emacsvox-aural-voice-editing--style experiment nil)) patch)
+    (when (and (or (eq part 'adjustments) (eq placement 'replace)) (null index))
+      (user-error "Choose the destination fallback row"))
+    (when (eq part 'both)
+      ;; Explicitly choosing experiment adjustments replaces the row's old patch.
+      (setq result (emacsvox-aural-voice-editing--keep
+                    result experiment 'physical placement index 'reset))
+      (setq rows (emacsvox-aural-voice-editing--rows result)
+            id (pcase placement
+                 ('preferred (plist-get (car rows) :id))
+                 ('fallback (plist-get (car (last rows)) :id)) (_ id))))
+    (dolist (key emacsvox-aural-routing--choice-dimensions)
+      (setq patch (plist-put patch key (plist-get style key))))
+    (emacsvox-aural-routing--validate-choice-adjustments patch)
+    (setf (plist-get (cl-find id rows :test #'equal :key (lambda (row) (plist-get row :id))) :adjustments) patch)
+    (plist-put result :choices rows)))
+
 (defun emacsvox-aural-voice-editing--proposal (palette voice snapshot destination summary routing)
   "Propose SNAPSHOT for VOICE from PALETTE in DESTINATION with SUMMARY.
 Legacy conversion uses explicitly captured ROUTING.  No registry is changed."

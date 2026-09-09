@@ -4907,7 +4907,7 @@ defaults.
 
  -- Command: emacsvox-aural-voice-editor-keep-experiment
 
-     Choose what the experiment contributes, preserving destination fallback choices.
+     Choose the experiment’s destination row and scope, retaining other draft edits.
 
 2.58.1.10 emacsvox-aural-voice-editor-leave
 ...........................................

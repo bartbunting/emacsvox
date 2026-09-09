@@ -1,5 +1,5 @@
 #+title: Unified Voice Editor Implementation Plan
-#+date: 2026-09-08
+#+date: 2026-09-09
 #+startup: content
 
 * Status and working agreement
@@ -19,7 +19,7 @@ to High after the completed XHI streaming review. Actual-attempt preparation,
 native Windows default restoration, DSP ownership, playback observations and
 private preview v2, timeline-4 reader/queue execution and marker-3 receipts are
 now tested and committed. Both-lane/reconnect acceptance passes and Omnivox
-=31a0b9a= advertises the complete bundle. Client integration remains in slice 7d.
+=31a0b9a= advertises the complete bundle. Client integration is implemented in slice 7d.
 The [[file:voice-editor-client-handoff-review.org][XHI client dispatch handoff review]] is now complete. Eight isolated probes
 exposed early-event loss, retirement resurrection and callback reentrancy in the
 reviewed client baseline. The selected contract gives each dispatch pre-write ownership,
@@ -57,11 +57,13 @@ complete, with twelve reproduced gaps and forty independent desired cases.
 The maintainer resumed at High. The owned coordinator and guarded startup are
 implemented. Private v2 request/terminal handling now passes 595 selected tests
 and muted local/remote compiled acceptance. Pure editor snapshot/context
-projection and view integration now pass 621 selected tests. Optional controls,
-clearer field-source explanations and experiment keeps remain next; no new
-product decision is required.
-Scope A remains selected; broader cross-call tuning is deferred. Preview and
-editor work remain pending.
+projection and view integration were followed by optional row controls,
+field-source explanations and explicit experiment keeps. All 635 selected source
+tests and fresh compiled parity pass. Muted local/remote editor checks cover
+fallback, reordered comparisons, row states, experiment transfer, field sources,
+context, cancellation and reconnect. Scope A remains selected; broader cross-call
+tuning is deferred. Implementation is ready for the maintainer's spoken acceptance.
+No reasoning-level change is required; stop at that user-feedback boundary.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -377,7 +379,7 @@ The first workflow inspects a captured source item; it does not provide syntheti
 example authoring or individual fallback adjustments. Live spoken acceptance is
 still required after the agreed reasoning boundary.
 
-** TODO 7. Implement optional individual fallback tuning
+** DONE 7. Implement optional individual fallback tuning
 
 The maintainer returned to XHI on 2026-09-09 and selected A: shared base, selected
 choice overrides, then contextual dimensions, with no numeric accumulation.
@@ -522,7 +524,7 @@ ownership; (2) ticket/acceptance/first-frame ownership and bounded observations;
 advertising the bundle. Client integration and optional editor controls remain
 7d. Server completion does not establish complete Emacsvox feature delivery.
 
-*** TODO 7d. Client, ordinary consumers and optional editor controls at High
+*** DONE 7d. Client, ordinary consumers and optional editor controls at High
 
 The first client slice adds pure raw-to-wire conversion for complete shared
 values and sparse choice/context patches. Six contracts preserve inheritance,
@@ -873,20 +875,24 @@ labels and accepted-only audio cannot supply a sample explanation. Later edits
 retain an explicitly earlier result and cannot rewrite its field sources.
 Three additional contracts expand the selected matrix to 629 passing tests.
 
-**** TODO Complete experiment keeps
+**** DONE Complete experiment keeps
 
-Continue at High with experiment keeps over the tested services. The
-[[file:voice-editor-preview-handoff-review.org][handoff]] specifies lifecycle, compatibility and evidence gates.
-Verify fresh compiled behavior, update current documentation and commit each
-completed slice. Stop for a real contract conflict or the spoken acceptance
-boundary, rather than treating review evidence as feature completion.
+Combined keeps default to the selected destination row; adjustments-only keeps
+require a row. Physical-only replacement asks whether to keep or reset existing
+custom tuning. Explicit shared keeps retain their separate scope. Row keeps
+copy all supported experiment fields, including native defaults for omitted
+fields, so unrelated destination shared values cannot change the kept settings.
+Every other row and shared field remains intact. An existing draft offers to add
+the chosen changes or resume without adding; neither route discards other edits
+or pending save recovery. Source and destination revisions guard the prompts.
 
-Implement only with negotiated support and explicit behavior for older servers.
-Verify adjustment selection after actual runtime fallback, including two voices
-from the same engine, unavailable primary choices, reordered choices and a
-fallback selected differently from the client prediction. Preview parity alone
-does not establish correctness. Keep this stage visibly pending until delivered
-or explicitly deferred by the maintainer.
+Six additional contracts expand the selected matrix to 635 passing tests,
+including a keep/save/apply round trip through the versioned stores. Compiled
+parity and muted real-editor local/remote checks pass, including experiment
+transfer, actual selected-row playback, source explanations and reconnect.
+The [[file:voice-editor-preview-handoff-review.org][handoff report]] records the final gates. No live runtime was installed or
+profile restarted. Ordinary both-lane fallback evidence remains covered by the
+previous runtime and queue slices, separate from preview acceptance.
 
 ** TODO 8. Spoken acceptance and closeout
 
@@ -894,6 +900,20 @@ Conduct a live walkthrough of both entry paths, save status, fallback behavior,
 context explanations, draft resumption and recovery. Automated tests cannot
 approve whether speech navigation feels usable or different engines sound alike.
 Request user feedback at that boundary; do not claim completion without it.
+This is the current stop condition. Use an Omnivox development build advertising
+the full per-choice bundle; released 1.9.0 alone cannot exercise custom chains.
+
+Walk through:
+1. Open a named voice, adjust its shared value and confirm the save status.
+2. Customize a fallback: test a number, explicit zero, adapter default and use
+   shared. Check the spoken value prefix, toggles, limits and navigation.
+3. Reorder that row, compare original/edited, and play the full fallback chain.
+4. Inspect a context override and the last sample's field-source explanation.
+5. Tune a physical experiment, keep it in one row, save, leave and resume.
+   Confirm the other row settings and any unrelated draft edits remain intact.
+
+Sound quality, cross-engine similarity and navigation comfort need maintainer
+feedback. Automated muted tests do not approve them.
 
 Update current user and developer guidance, generate tracked docs, rerun the
 required gates, and commit final status. Retain any explicitly deferred optional

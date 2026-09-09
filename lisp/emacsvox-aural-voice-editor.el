@@ -810,39 +810,78 @@ Select a faithful wire form before any entry interrupts foreground speech."
 (defun emacsvox-aural-voice-editor-save () "Save and apply this named voice, or choose an experiment destination." (interactive) (emacsvox-aural-voice-editor--save t))
 (defun emacsvox-aural-voice-editor-save-to-collection () "Save the named voice without selecting its palette." (interactive) (emacsvox-aural-voice-editor--save nil))
 
+(defun emacsvox-aural-voice-editor--read-choice (snapshot prompt &optional preferred)
+  "Read a stable row from SNAPSHOT with PROMPT and optional PREFERRED ID."
+  (let ((choices (cl-loop for row in (emacsvox-aural-voice-editing--rows snapshot) for index from 1
+                          collect (cons (format "%d. %s" index (emacsvox-aural-voice-workbench--selector-description
+                                                                (plist-get row :selector)))
+                                        (plist-get row :id)))))
+    (unless choices (user-error "This voice has no explicit fallback choice; keep a physical voice first"))
+    (cdr (assoc (completing-read prompt choices nil t nil nil
+                                 (or (car (rassoc preferred choices)) (caar choices))) choices))))
+
 (defun emacsvox-aural-voice-editor-keep-experiment ()
-  "Choose what the experiment contributes, preserving destination fallback choices."
+  "Choose the experiment's destination row and scope, retaining other draft edits."
   (interactive)
   (let* ((experiment (emacsvox-aural-voice-editor--working))
          (origin emacsvox-aural-voice-editor--context)
+         (origin-buffer (current-buffer))
+         (origin-draft (plist-get origin :draft))
+         (origin-revision (emacsvox-aural-voice-draft-revision origin-draft))
          (palette (intern (completing-read "Destination palette: "
                                            (hash-table-keys emacsvox-aural-voice-palette-registry) nil t nil nil
                                            (symbol-name (emacsvox-aural-effective-voice-palette)))))
          (voice (emacsvox-aural-voice-palettes--read-voice palette "Use for named voice: "))
          (context (emacsvox-aural-voice-editor--context-for palette voice))
          (draft (plist-get context :draft))
-         (part (cdr (assoc (completing-read "Keep from experiment: "
-                                            '("Physical voice only" "Shared adjustments only — all fallback choices" "Both — shared adjustments for all fallback choices") nil t)
-                           '(("Physical voice only" . physical)
-                             ("Shared adjustments only — all fallback choices" . adjustments)
-                             ("Both — shared adjustments for all fallback choices" . both)))))
-         (placement (if (eq part 'adjustments) 'replace
-                      (cdr (assoc (completing-read "Place physical voice: " '("Replace first choice" "Add as preferred" "Add as fallback") nil t)
-                                  '(("Replace first choice" . replace) ("Add as preferred" . preferred) ("Add as fallback" . fallback)))))))
-    (when (emacsvox-aural-voice-drafts--dirty-fields draft)
-      (unless (equal (completing-read "Destination has a draft: " '("Resume its changes" "Replace its unsaved changes with this experiment") nil t)
-                     "Replace its unsaved changes with this experiment")
-        (emacsvox-aural-voice-editor--show context (current-buffer))
-        (user-error "Resumed destination draft; experiment retained")))
-    (emacsvox-aural-voice-drafts--edit draft
-     (emacsvox-aural-voice-editing--keep
-      (emacsvox-aural-voice-draft-baseline draft) experiment part placement nil
-      (when (and (memq part '(physical both)) (eq placement 'replace))
-        (emacsvox-aural-voice-editor--replacement
-         (car (emacsvox-aural-voice-editing--rows (emacsvox-aural-voice-draft-baseline draft)))))))
-    (setf (plist-get context :experiment) origin)
-    (emacsvox-aural-voice-editor--show context (current-buffer))
-    (emacsvox-aural-ui-speak "Destination proposal ready. Preview now plays the proposed saved combination. Save and apply to keep it.")))
+         (revision (emacsvox-aural-voice-draft-revision draft))
+         (destination (copy-tree (emacsvox-aural-voice-draft-working draft)))
+         (options '(("Physical voice and adjustments — this choice" . both)
+                    ("Physical voice only" . physical)
+                    ("Adjustments only — selected choice" . adjustments)
+                    ("Shared adjustments only — all inheriting choices" . shared)
+                    ("Physical voice and shared adjustments — all inheriting choices" . shared-both)))
+         (part (cdr (assoc (completing-read "Keep from experiment: " options nil t nil nil (caar options)) options)))
+         (placement (if (memq part '(adjustments shared)) 'replace
+                      (cdr (assoc (completing-read "Place physical voice: "
+                                                   '("Replace selected choice" "Add as preferred" "Add as fallback") nil t nil nil
+                                                   (if (plist-get destination :selectors) "Replace selected choice" "Add as preferred"))
+                                  '(("Replace selected choice" . replace) ("Add as preferred" . preferred) ("Add as fallback" . fallback))))))
+         (id (when (and (not (eq part 'shared)) (eq placement 'replace))
+               (emacsvox-aural-voice-editor--read-choice destination "Destination fallback: " (plist-get context :tuning-choice))))
+         (rows (emacsvox-aural-voice-editing--rows destination))
+         (index (and id (cl-position id rows :test #'equal :key (lambda (row) (plist-get row :id)))))
+         (replacement (when (and (memq part '(physical shared-both)) (eq placement 'replace))
+                        (emacsvox-aural-voice-editor--replacement (nth index rows))))
+         (proposed (if (memq part '(both adjustments))
+                       (emacsvox-aural-voice-editing--keep-for-choice destination experiment part placement id)
+                     (emacsvox-aural-voice-editing--keep destination experiment
+                                                       (pcase part ('shared 'adjustments) ('shared-both 'both) (_ part))
+                                                       placement index replacement)))
+         (merge (or (not (emacsvox-aural-voice-drafts--dirty-fields draft))
+                    (equal (completing-read "Destination has a draft: "
+                                           '("Add chosen changes to this draft" "Resume draft without adding") nil t nil nil
+                                           "Add chosen changes to this draft")
+                           "Add chosen changes to this draft"))))
+    (unless (and (buffer-live-p origin-buffer)
+                 (with-current-buffer origin-buffer (eq origin emacsvox-aural-voice-editor--context))
+                 (= origin-revision (emacsvox-aural-voice-draft-revision origin-draft))
+                 (= revision (emacsvox-aural-voice-draft-revision draft)))
+      (user-error "Experiment or destination changed while choosing; start the keep action again"))
+    (unless merge
+      (emacsvox-aural-voice-editor--show context origin-buffer)
+      (user-error "Resumed destination draft; experiment retained"))
+    (emacsvox-aural-voice-drafts--edit draft proposed)
+    (emacsvox-aural-voice-editor--context-put context :experiment origin)
+    (emacsvox-aural-voice-editor--context-put context :tuning-choice nil)
+    (emacsvox-aural-voice-editor--show context origin-buffer)
+    (emacsvox-aural-ui-speak
+     (concat "Destination draft ready. "
+             (pcase part
+               ((or 'both 'adjustments) "The chosen row now uses the experiment's adjustments and adapter defaults; shared settings and other rows are retained. ")
+               ((or 'shared 'shared-both) "Shared settings changed; customized row values still override them. ")
+               (_ "Physical choice changed; the destination's adjustments determine its sound. "))
+             "Play edited previews the proposed combination. Save and apply to keep it."))))
 
 (defun emacsvox-aural-voice-editor-details ()
   "Show ownership, saved/requested values and actual playback evidence."

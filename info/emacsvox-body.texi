@@ -3129,16 +3129,27 @@ keeps the previous choice and returns to the same field. Named voices also
 have an expandable @emph{Fallbacks} section: replace@comma{} reorder@comma{} remove or individually
 audition a choice@comma{} append another@comma{} or explicitly return to Automatic. Existing
 unavailable@comma{} engine-default and property choices are preserved. Shared
-adjustments currently apply to every choice in that named voice; different
-settings for individual fallbacks are not implemented yet.
+adjustments apply to fields that a row inherits; @emph{Customize this voice} adds
+optional individual settings.
 
 For a physical experiment@comma{} @kbd{w} chooses a destination palette
-and named voice@comma{} then offers @emph{Physical voice only}@comma{} @emph{Shared adjustments only}@comma{}
-or @emph{Both}. The adjustment choices explicitly affect all fallbacks in the
-destination voice. A physical choice can replace the first choice@comma{} become the
-preferred choice@comma{} or be appended as a fallback. Other choices are retained.
-The destination opens in the same editor; preview now plays the proposed saved
-combination. Choosing a destination has not saved anything yet.
+and named voice. The default keeps @emph{Physical voice and adjustments — this
+choice}. You can instead keep only the physical voice@comma{} only the adjustments for
+a selected row@comma{} or explicitly change shared settings for all inheriting choices.
+A physical voice can replace a selected row@comma{} become preferred@comma{} or be appended
+as a fallback. Row-level adjustments replace that row's tuning with the
+experiment's values and adapter defaults. This prevents unrelated destination
+shared settings from changing the experiment's base sound. Use @samp{i} in the row's
+optional tuner for any field you want to inherit afterward.
+
+Other rows and shared settings are retained during a row-level keep. Replacing
+only the physical voice asks whether to keep or reset an existing row's custom
+settings. Shared adjustment keeps affect inherited fields; custom row settings
+still override them. An existing destination draft offers to add the chosen
+changes or resume without adding. Other edits and pending save recovery remain.
+The destination opens in the same editor; preview plays the proposed saved
+combination@comma{} which may differ from the experiment because of the chosen scope
+and destination fallback order. Choosing a destination has not saved anything yet.
 
 For a named voice@comma{} @kbd{w} or @kbd{C-c C-c} saves and
 applies the complete draft. @emph{Save to collection without selecting} saves an

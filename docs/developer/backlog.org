@@ -19,19 +19,19 @@ Collect and triage live feedback on the validated Phase 9 support recorded in
 separately, preserving the documented privacy and conservative-speech
 boundaries.
 
-** TODO Settle and implement the unified voice editor design
+** TODO Complete spoken acceptance of the unified voice editor
 
 Follow [[file:../voice-editor-design.org][the voice editor design]] and [[file:../adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] for palette-owned base voices:
 preferred physical choices, fallback order and shared adjustments. Independent
-conversion on first save is accepted. Individual choice adjustments have an
-accepted contract and remain unimplemented.
+conversion on first save is accepted. Individual choice adjustments, preview
+and runtime delivery are implemented under the accepted contract.
 Simple editing should expose one voice, common adjustments, preview and one
 save action; fallback configuration and individual tuning expand on demand.
 The new formats, read-only conversion proposals and nonactivating writers are
 implemented. Owned runtime integration, draft/save recovery and the common base
 editor are tested. Optional context inspection and scoped field editing now
-preserve the existing cascade. Individual fallback tuning and live spoken
-acceptance remain pending.
+preserve the existing cascade. Optional fallback controls, source explanations
+and experiment keeps are implemented. Live spoken acceptance remains pending.
 The [[file:../voice-editor-implementation-plan.org][implementation plan]] now records the source inventory, ordered slices,
 acceptance checks and reasoning-level stops. Planning, the
 [[file:../voice-editor-data-contract.org][data contract]] and storage/migration are complete. Runtime inspection found that
@@ -134,7 +134,11 @@ provide explicit inheritance/default/numeric states and row-specific automatic
 samples; five additional contracts expand the selected matrix to 626 tests.
 Field-source Details now explains frozen shared/actual-row/context values for
 the last confirmed sample; three more contracts bring the matrix to 629 tests.
-Experiment keeps and spoken acceptance remain pending; this is not complete feature
+Experiment keeps now select row/shared scope, preserve unrelated working edits
+and pending save recovery, and pass six more contracts plus a persisted
+keep/save/apply round trip (635 selected tests total). Compiled and muted
+local/remote editor checks pass through reconnect. Only spoken acceptance
+remains in this editor implementation plan; this is not complete feature
 delivery. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual

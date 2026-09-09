@@ -3078,17 +3078,30 @@ field.  Named voices also have an expandable _Fallbacks_ section:
 replace, reorder, remove or individually audition a choice, append
 another, or explicitly return to Automatic.  Existing unavailable,
 engine-default and property choices are preserved.  Shared adjustments
-currently apply to every choice in that named voice; different settings
-for individual fallbacks are not implemented yet.
+apply to fields that a row inherits; _Customize this voice_ adds
+optional individual settings.
 
    For a physical experiment, ‘w’ chooses a destination palette and
-named voice, then offers _Physical voice only_, _Shared adjustments
-only_, or _Both_.  The adjustment choices explicitly affect all
-fallbacks in the destination voice.  A physical choice can replace the
-first choice, become the preferred choice, or be appended as a fallback.
-Other choices are retained.  The destination opens in the same editor;
-preview now plays the proposed saved combination.  Choosing a
-destination has not saved anything yet.
+named voice.  The default keeps _Physical voice and adjustments — this
+choice_.  You can instead keep only the physical voice, only the
+adjustments for a selected row, or explicitly change shared settings for
+all inheriting choices.  A physical voice can replace a selected row,
+become preferred, or be appended as a fallback.  Row-level adjustments
+replace that row's tuning with the experiment's values and adapter
+defaults.  This prevents unrelated destination shared settings from
+changing the experiment's base sound.  Use ‘i’ in the row's optional
+tuner for any field you want to inherit afterward.
+
+   Other rows and shared settings are retained during a row-level keep.
+Replacing only the physical voice asks whether to keep or reset an
+existing row's custom settings.  Shared adjustment keeps affect
+inherited fields; custom row settings still override them.  An existing
+destination draft offers to add the chosen changes or resume without
+adding.  Other edits and pending save recovery remain.  The destination
+opens in the same editor; preview plays the proposed saved combination,
+which may differ from the experiment because of the chosen scope and
+destination fallback order.  Choosing a destination has not saved
+anything yet.
 
    For a named voice, ‘w’ or ‘C-c C-c’ saves and applies the complete
 draft.  _Save to collection without selecting_ saves an inactive palette

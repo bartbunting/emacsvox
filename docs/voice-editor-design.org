@@ -4,10 +4,10 @@
 
 * Status and purpose
 
-The common base editor and first optional context workflow are implemented.
-This document also describes later interactions, including individual fallback
-tuning, whose design is accepted but implementation remains pending. Live
-spoken acceptance is still pending.
+The common editor, context workflow and optional individual fallback tuning are
+implemented, including field-source explanations and scoped experiment keeps.
+Live spoken acceptance is still pending; the implementation plan identifies the
+current walkthrough and deliberately deferred work.
 The [[file:voice-editor-implementation-plan.org][implementation plan]] defines tested delivery slices.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] accepts palette ownership and independent conversion on first save;
 the [[file:voice-editor-data-contract.org][data contract]] specifies its implementation. The implementation plan records
@@ -249,7 +249,7 @@ distinct information. Runtime routing and health policy decide eligibility;
 an inventory entry alone does not prove a voice will play successfully. Do not
 promise retry or replay of an utterance after playback has already begun.
 
-Accepted extension, pending implementation: keep shared adjustments for the named
+Implemented extension: keep shared adjustments for the named
 voice, with optional overrides attached to each fallback choice. This lets two physical voices,
 including two voices from the same engine, use different values. A choice uses
 the shared value unless explicitly customized. An override replaces that
@@ -390,8 +390,8 @@ Emacs must give an equivalent opportunity to resolve unsaved work.
 
 One authoritative draft owns each destination and scope. Opening the same
 voice through another view resumes it. An experiment selecting a destination
-that already has a draft must offer to resume or explicitly replace that draft;
-it must not silently overwrite it. Detect conflicts involving parent edits,
+that already has a draft offers to add the explicitly chosen changes or resume
+without adding. It preserves unrelated edits and pending save recovery. Detect conflicts involving parent edits,
 explicit shared definitions, and legacy routing targets during migration;
 distinct palette-owned definitions should otherwise remain independent.
 

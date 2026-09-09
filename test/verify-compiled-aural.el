@@ -385,6 +385,8 @@
                       omnivox--preview-sequence
                       omnivox--preview-drive
                       omnivox--preview-token-operation
+                      emacsvox-aural-voice-editing--keep-for-choice
+                      emacsvox-aural-voice-editor--read-choice
                       emacsvox-aural-voice-editing--field-sources
                       emacsvox-aural-voice-editor--explain-playback
                       emacsvox-aural-voice-editor--set-choice

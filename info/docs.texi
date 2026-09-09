@@ -5305,7 +5305,7 @@ Increase a numeric adjustment, or move to the next field.
 @findex emacsvox-aural-voice-editor-keep-experiment
 
 @format
-Choose what the experiment contributes, preserving destination fallback choices.
+Choose the experiment’s destination row and scope, retaining other draft edits.
 @end format
 @end deffn
 

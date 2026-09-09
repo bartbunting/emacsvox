@@ -10,8 +10,8 @@ decision is needed. The maintainer resumed at High. The first implementation
 slice now gives complete v1 and individual auditions one owned coordinator,
 guarded startup, deferred advancement and unwind-safe request cleanup. Private
 preview v2, pure projection and revision-aware view integration are implemented.
-Optional row controls are implemented. Field-source explanations are implemented. Experiment keeps remain pending. Continue the implementation
-slices below, stopping for a contract conflict or user spoken acceptance.
+Optional row controls, field-source explanations and experiment keeps are
+implemented. The current stop is the maintainer's spoken acceptance walkthrough.
 
 All Emacsvox ADRs 0001–0017 and Omnivox ADRs 0001–0011 were read together.
 [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], the [[file:voice-editor-fallback-wire-contract.org][wire contract]], [[file:voice-editor-fallback-tuning-contract.org][storage contract]] and
@@ -285,9 +285,8 @@ save recovery. This implements accepted behavior rather than changing storage.
    independent [[file:../test/fixtures/voice-editor/preview-handoff.el][handoff cases]] and the existing [[file:../test/fixtures/voice-editor/fallback-tuning-wire.json][paired wire fixture]], including
    duplicate physical voices, missing originals, nullable fields, truncated
    last-started evidence, no silent old-server flattening and metadata changes.
-3. IN PROGRESS: Context/view generations and per-choice controls are implemented.
-   Add clearer field-source Details and experiment keeps
-   over these services. Test spoken labels, boundaries, save/dirty status and
+3. IMPLEMENTED: Context/view generations, per-choice controls, field-source
+   Details and experiment keeps use these services. Tests cover spoken labels, boundaries, save/dirty status and
    retained drafts through both entry paths. Verify actual fallback and context
    parity with a muted real server locally and over private loopback, including
    reconnect and fresh compiled Emacs. Existing ordinary two-lane acceptance
@@ -475,3 +474,41 @@ states, policy fallback, missing IDs, frozen results and label-only evidence.
 Fresh compiled parity and byte-code preflight pass. Org preview, tracked manual
 and reference regeneration, and the non-mutating documentation release check
 pass. This slice changes explanation only; preview transport is unchanged.
+
+* Experiment keeps and spoken-acceptance boundary
+
+Physical-plus-adjustment keeps default to one explicitly selected destination
+row. Adjustments-only requires a row; shared operations remain separately
+labelled. The row receives all supported experiment values, including explicit
+native defaults for absent fields. This preserves the experiment's requested
+settings without importing unrelated destination shared values. The user can
+restore inheritance for individual fields afterward. Physical-only replacement
+keeps the explicit keep/reset prompt for a customized destination row.
+
+The action merges into the authoritative working draft after explicit scope
+selection. Existing drafts offer to add those changes or resume without adding.
+Other rows, shared fields and pending save proposals survive; undo restores the
+previous complete draft. Changes to either source or destination while prompts
+are open reject the stale proposal before editing.
+
+Six further contracts bring the selected matrix to 635 passing tests. They cover
+all placements, row-only and physical-only scope, explicit keep/reset, retained
+draft edits and save recovery, cancellation, reentrant changes, resumption, and
+a keep/save/apply round trip through the actual versioned stores. The save test
+normalizes its sparse wire fixture to the complete ACSS base required on disk;
+Save to collection intentionally has no apply acknowledgement, so the end-to-end
+apply contract uses Save and apply.
+
+Fresh compiled parity and muted local/authenticated-loopback runs pass. The
+latter include complete fallback, reordered original comparison, row default and
+numeric states, experiment transfer, confirmed-row field sources, contextual
+comparison, text cancellation, foreground reconnect and notification isolation.
+The next stop is the maintainer's spoken walkthrough, not another reasoning
+review. Omnivox 1.9.0 is insufficient for custom chains; use the tested development
+capability bundle. No live runtime or personal configuration was changed.
+
+Final ordinary-speech checks also pass locally and remotely: verified actual
+fallback receipts on foreground and notification lanes before and after
+reconnect. Byte-code preflight, compiled tests, Org preview, tracked manual and
+reference generation, whitespace and documentation release checks pass. The
+untracked maintainer audit remains untouched. No live profile was restarted.
