@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1525 commands and 207 options.
+   This chapter documents a total of 1531 commands and 207 options.
 
 * Menu:
 
@@ -5124,6 +5124,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      A		emacsvox-aural-voice-palette-previews-play-all
      E		emacsvox-aural-voice-palette-previews-edit
      N		emacsvox-aural-voice-palette-previews-new
+     O		emacsvox-aural-voice-palette-previews-open-source
      P		emacsvox-aural-voice-palette-previews-play
      R		emacsvox-aural-voice-palette-previews-reset
      S		emacsvox-aural-voice-palette-previews-stop
@@ -5136,6 +5137,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      r		emacsvox-aural-voice-palette-previews-rename
      s		emacsvox-aural-voice-palette-previews-stop
      t		emacsvox-aural-voice-palette-previews-tune
+     u		emacsvox-aural-voice-palettes-where-used
      x		emacsvox-aural-voice-palette-previews-explain
 
 2.59.1.8 emacsvox-aural-voice-palette-previews-new
@@ -5166,35 +5168,42 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      Return to the palette manager for the current preview palette.
 
-2.59.1.12 emacsvox-aural-voice-palette-previews-play
+2.59.1.12 emacsvox-aural-voice-palette-previews-open-source
+...........................................................
+
+ -- Command: emacsvox-aural-voice-palette-previews-open-source
+
+     Browse the defining palette of the selected voice.
+
+2.59.1.13 emacsvox-aural-voice-palette-previews-play
 ....................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-play
 
      Audition the effective voice at point with the comparison text.
 
-2.59.1.13 emacsvox-aural-voice-palette-previews-play-all
+2.59.1.14 emacsvox-aural-voice-palette-previews-play-all
 ........................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-play-all
 
      Audition every effective voice using the same comparison text.
 
-2.59.1.14 emacsvox-aural-voice-palette-previews-previous
+2.59.1.15 emacsvox-aural-voice-palette-previews-previous
 ........................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-previous
 
      Move to and speak the previous effective voice.
 
-2.59.1.15 emacsvox-aural-voice-palette-previews-previous-column
+2.59.1.16 emacsvox-aural-voice-palette-previews-previous-column
 ...............................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-previous-column
 
      Move left and speak the previous voice column.
 
-2.59.1.16 emacsvox-aural-voice-palette-previews-refresh
+2.59.1.17 emacsvox-aural-voice-palette-previews-refresh
 .......................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-refresh (&optional
@@ -5204,98 +5213,105 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional VOICE)
 
-2.59.1.17 emacsvox-aural-voice-palette-previews-rename
+2.59.1.18 emacsvox-aural-voice-palette-previews-rename
 ......................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-rename
 
      Rename a personal custom voice and update its personal and live face mappings.
 
-2.59.1.18 emacsvox-aural-voice-palette-previews-reset
+2.59.1.19 emacsvox-aural-voice-palette-previews-reset
 .....................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-reset
 
      Reset the direct voice at point to its parent’s complete entry.
 
-2.59.1.19 emacsvox-aural-voice-palette-previews-set-text
+2.59.1.20 emacsvox-aural-voice-palette-previews-set-text
 ........................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-set-text
 
      Set the comparison text used by this preview buffer.
 
-2.59.1.20 emacsvox-aural-voice-palette-previews-speak-current
+2.59.1.21 emacsvox-aural-voice-palette-previews-speak-current
 .............................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-speak-current
 
      Speak the complete palette voice row at point.
 
-2.59.1.21 emacsvox-aural-voice-palette-previews-speak-current-cell
+2.59.1.22 emacsvox-aural-voice-palette-previews-speak-current-cell
 ..................................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-speak-current-cell
 
      Speak the current preview column title and value.
 
-2.59.1.22 emacsvox-aural-voice-palette-previews-stop
+2.59.1.23 emacsvox-aural-voice-palette-previews-stop
 ....................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-stop
 
      Stop the current voice audition.
 
-2.59.1.23 emacsvox-aural-voice-palette-previews-tune
+2.59.1.24 emacsvox-aural-voice-palette-previews-tune
 ....................................................
 
  -- Command: emacsvox-aural-voice-palette-previews-tune
 
      Open the common voice editor without changing the palette or its selection.
 
-2.59.1.24 emacsvox-aural-voice-palettes-activate
+2.59.1.25 emacsvox-aural-voice-palettes-activate
 ................................................
 
  -- Command: emacsvox-aural-voice-palettes-activate
 
      Activate the voice palette at point as an override.
 
-2.59.1.25 emacsvox-aural-voice-palettes-audition
+2.59.1.26 emacsvox-aural-voice-palettes-audition
 ................................................
 
  -- Command: emacsvox-aural-voice-palettes-audition
 
      Audition the selected palette’s effective voices in order.
 
-2.59.1.26 emacsvox-aural-voice-palettes-copy
+2.59.1.27 emacsvox-aural-voice-palettes-backup
+..............................................
+
+ -- Command: emacsvox-aural-voice-palettes-backup
+
+     Back up complete palette ancestry and exact local choices for this machine.
+
+2.59.1.28 emacsvox-aural-voice-palettes-copy
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-copy
 
      Copy the voice palette at point to a personal palette.
 
-2.59.1.27 emacsvox-aural-voice-palettes-create
+2.59.1.29 emacsvox-aural-voice-palettes-create
 ..............................................
 
  -- Command: emacsvox-aural-voice-palettes-create
 
      Create an empty personal voice palette.
 
-2.59.1.28 emacsvox-aural-voice-palettes-delete
+2.59.1.30 emacsvox-aural-voice-palettes-delete
 ..............................................
 
  -- Command: emacsvox-aural-voice-palettes-delete
 
      Delete the personal voice palette at point when it is unreferenced.
 
-2.59.1.29 emacsvox-aural-voice-palettes-delete-entry
+2.59.1.31 emacsvox-aural-voice-palettes-delete-entry
 ....................................................
 
  -- Command: emacsvox-aural-voice-palettes-delete-entry
 
      Delete one direct entry from the personal palette at point.
 
-2.59.1.30 emacsvox-aural-voice-palettes-describe
+2.59.1.32 emacsvox-aural-voice-palettes-describe
 ................................................
 
  -- Command: emacsvox-aural-voice-palettes-describe (&optional id)
@@ -5304,21 +5320,21 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID)
 
-2.59.1.31 emacsvox-aural-voice-palettes-edit-entry
+2.59.1.33 emacsvox-aural-voice-palettes-edit-entry
 ..................................................
 
  -- Command: emacsvox-aural-voice-palettes-edit-entry
 
      Open the complete editor for a voice in the palette at point.
 
-2.59.1.32 emacsvox-aural-voice-palettes-edit-metadata
+2.59.1.34 emacsvox-aural-voice-palettes-edit-metadata
 .....................................................
 
  -- Command: emacsvox-aural-voice-palettes-edit-metadata
 
      Edit summary and parent of the personal palette at point.
 
-2.59.1.33 emacsvox-aural-voice-palettes-explain
+2.59.1.35 emacsvox-aural-voice-palettes-explain
 ...............................................
 
  -- Command: emacsvox-aural-voice-palettes-explain (&optional id voice)
@@ -5327,21 +5343,35 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID VOICE)
 
-2.59.1.34 emacsvox-aural-voice-palettes-follow-baseline
+2.59.1.36 emacsvox-aural-voice-palettes-export
+..............................................
+
+ -- Command: emacsvox-aural-voice-palettes-export
+
+     Export effective portable voices, explicitly omitting local physical choices.
+
+2.59.1.37 emacsvox-aural-voice-palettes-follow-baseline
 .......................................................
 
  -- Command: emacsvox-aural-voice-palettes-follow-baseline
 
      Clear the palette override and use the compatibility baseline.
 
-2.59.1.35 emacsvox-aural-voice-palettes-help
+2.59.1.38 emacsvox-aural-voice-palettes-help
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-help
 
      Display and speak voice-palette manager help.
 
-2.59.1.36 emacsvox-aural-voice-palettes-mode
+2.59.1.39 emacsvox-aural-voice-palettes-import
+..............................................
+
+ -- Command: emacsvox-aural-voice-palettes-import
+
+     Import a portable palette or full backup as an independent saved palette.
+
+2.59.1.40 emacsvox-aural-voice-palettes-mode
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-mode
@@ -5363,31 +5393,36 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      N		emacsvox-aural-voice-palettes-create
      P		emacsvox-aural-voice-palettes-audition
      R		emacsvox-aural-voice-palettes-reset-entry
+     U		emacsvox-aural-voice-palettes-use-at-startup
+     W		emacsvox-aural-voice-palettes-backup
      a		emacsvox-aural-voice-palettes-activate
      c		emacsvox-aural-voice-palettes-copy
      d		emacsvox-aural-voice-palettes-delete
      e		emacsvox-aural-voice-palettes-edit-entry
      f		emacsvox-aural-voice-palettes-follow-baseline
      h		emacsvox-aural
+     i		emacsvox-aural-voice-palettes-import
      r		emacsvox-aural-voice-palettes-rename
+     u		emacsvox-aural-voice-palettes-where-used
      v		emacsvox-aural-voice-palettes-describe
+     w		emacsvox-aural-voice-palettes-export
      x		emacsvox-aural-voice-palettes-explain
 
-2.59.1.37 emacsvox-aural-voice-palettes-next
+2.59.1.41 emacsvox-aural-voice-palettes-next
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-next
 
      Move to and speak the next voice palette.
 
-2.59.1.38 emacsvox-aural-voice-palettes-next-column
+2.59.1.42 emacsvox-aural-voice-palettes-next-column
 ...................................................
 
  -- Command: emacsvox-aural-voice-palettes-next-column
 
      Move right and speak the next palette column.
 
-2.59.1.39 emacsvox-aural-voice-palettes-preview
+2.59.1.43 emacsvox-aural-voice-palettes-preview
 ...............................................
 
  -- Command: emacsvox-aural-voice-palettes-preview (&optional id)
@@ -5396,21 +5431,21 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID)
 
-2.59.1.40 emacsvox-aural-voice-palettes-previous
+2.59.1.44 emacsvox-aural-voice-palettes-previous
 ................................................
 
  -- Command: emacsvox-aural-voice-palettes-previous
 
      Move to and speak the previous voice palette.
 
-2.59.1.41 emacsvox-aural-voice-palettes-previous-column
+2.59.1.45 emacsvox-aural-voice-palettes-previous-column
 .......................................................
 
  -- Command: emacsvox-aural-voice-palettes-previous-column
 
      Move left and speak the previous palette column.
 
-2.59.1.42 emacsvox-aural-voice-palettes-refresh
+2.59.1.46 emacsvox-aural-voice-palettes-refresh
 ...............................................
 
  -- Command: emacsvox-aural-voice-palettes-refresh (&optional id)
@@ -5419,33 +5454,50 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID)
 
-2.59.1.43 emacsvox-aural-voice-palettes-rename
+2.59.1.47 emacsvox-aural-voice-palettes-rename
 ..............................................
 
  -- Command: emacsvox-aural-voice-palettes-rename
 
      Rename a personal palette, preserving tuning, inheritance and profile uses.
 
-2.59.1.44 emacsvox-aural-voice-palettes-reset-entry
+2.59.1.48 emacsvox-aural-voice-palettes-reset-entry
 ...................................................
 
  -- Command: emacsvox-aural-voice-palettes-reset-entry
 
      Choose a direct voice to reset to its parent’s complete entry.
 
-2.59.1.45 emacsvox-aural-voice-palettes-speak-current
+2.59.1.49 emacsvox-aural-voice-palettes-speak-current
 .....................................................
 
  -- Command: emacsvox-aural-voice-palettes-speak-current
 
      Speak the complete voice-palette row at point.
 
-2.59.1.46 emacsvox-aural-voice-palettes-speak-current-cell
+2.59.1.50 emacsvox-aural-voice-palettes-speak-current-cell
 ..........................................................
 
  -- Command: emacsvox-aural-voice-palettes-speak-current-cell
 
      Speak the current palette column title and value.
+
+2.59.1.51 emacsvox-aural-voice-palettes-use-at-startup
+......................................................
+
+ -- Command: emacsvox-aural-voice-palettes-use-at-startup
+
+     Use the selected palette in the saved startup profile without applying it.
+
+2.59.1.52 emacsvox-aural-voice-palettes-where-used
+..................................................
+
+ -- Command: emacsvox-aural-voice-palettes-where-used (&optional palette
+          voice)
+
+     Show known uses and descendants of PALETTE, or its selected VOICE.
+
+     (fn &optional PALETTE VOICE)
 
 2.59.2 emacsvox-aural-voice-palettes Options
 --------------------------------------------

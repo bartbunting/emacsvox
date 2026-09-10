@@ -42,6 +42,11 @@
 (declare-function emacsvox-aural-voice-editor-new "emacsvox-aural-voice-editor" (palette voice &optional source text))
 (declare-function emacsvox-aural-voice-editor--copy "emacsvox-aural-voice-editor" (palette voice name source text))
 
+(declare-function emacsvox-aural-profile-set-startup-palette "emacsvox-aural-profile-service" (palette &optional new-profile))
+(declare-function emacsvox-aural-voice-workbench--selector-realization "emacsvox-aural-voice-workbench" (selector))
+(declare-function emacsvox-aural-voice-workbench--selector-description "emacsvox-aural-voice-workbench" (selector))
+(defvar emacsvox-aural-voice-workbench-inventory)
+
 (require 'cl-lib)
 (require 'subr-x)
 (require 'tabulated-list)
@@ -278,16 +283,9 @@ replaces live state.  Return the value of MUTATION."
   "Return palette DATA with direct ENTRIES."
   (plist-put (copy-tree data) :entries (copy-tree entries)))
 
-(defun emacsvox-aural-voice-palettes--entry-data
-    (name definition)
-  "Return safe entry data for NAME and DEFINITION."
-  (if (symbolp definition)
-      (list name :personality definition)
-    (list name :style (copy-tree definition))))
 
-(defun emacsvox-aural-voice-palettes--direct-entry (data name)
-  "Return direct entry named NAME in palette DATA."
-  (cl-find name (plist-get data :entries) :key #'car :test #'eq))
+
+
 
 (defun emacsvox-aural-voice-palettes--put-entry (data entry)
   "Return palette DATA with direct ENTRY inserted or replaced."
@@ -331,18 +329,7 @@ replaces live state.  Return the value of MUTATION."
       (user-error "Voice already exists in palette %s: %s" id name))
     name))
 
-(defun emacsvox-aural-voice-palettes--personality-candidates ()
-  "Return known compatibility personality names."
-  (let ((names
-         (mapcar
-          (lambda (entry) (symbol-name (cdr entry)))
-          emacsvox-aural-default-voice-entries)))
-    (dolist
-        (symbol
-         (apropos-internal "\\`voice-" #'boundp))
-      (unless (string-suffix-p "-settings" (symbol-name symbol))
-        (push (symbol-name symbol) names)))
-    (sort (delete-dups names) #'string-lessp)))
+
 
 (defun emacsvox-aural-voice-palettes-speak-current ()
   "Speak the complete voice-palette row at point."
@@ -948,8 +935,9 @@ ACTION describes the operation and defaults to renaming."
                         (or (and (fboundp 'emacsvox-aural-voice-editor--status-for)
                                  (emacsvox-aural-voice-editor--status-for palette name))
                             (if (plist-get opened :diagnostics) "Missing local choices"
-                              "Saved; palette-owned")))))
-      (error (list name (vector (symbol-name name) "Unavailable" "" "" (error-message-string err)))))))
+                              "Saved; palette-owned"))
+                        (symbol-name (plist-get opened :owner)))))
+      (error (list name (vector (symbol-name name) "Unavailable" "" "" (error-message-string err) "Unavailable"))))))
 
 (defun emacsvox-aural-voice-palette-previews--set-entries ()
   "Populate the current voice-palette preview buffer."
@@ -1019,12 +1007,13 @@ ACTION describes the operation and defaults to renaming."
            (user-error "Unknown voice: %s" voice)))
          (summary
           (format
-           "%s. Physical choice %s. Engine %s. Adjustments %s. State %s."
+           "%s. Physical choice %s. Engine %s. Adjustments %s. State %s. Source %s."
            (aref row 0)
            (aref row 1)
            (aref row 2)
            (aref row 3)
-           (aref row 4))))
+           (aref row 4)
+           (aref row 5))))
     summary))
 
 (defun emacsvox-aural-voice-palette-previews-speak-current ()
@@ -1423,21 +1412,20 @@ When REMAP is non-nil, allow personal rules and live face mappings to migrate."
                              (when (emacsvox-aural-voice-palettes--voice-reference-p (list :voice value) voice)
                                (user-error "Voice %s is mapped to face %s in %s; remap it before %s"
                                            voice face where action))) table))))
-	     (unless remap
-	       (check emacsvox-aural-user-rules "personal rules")
-	       (check emacsvox-aural-session-rules "session rules"))
-	     (dolist (pair `((,emacsvox-aural-scheme-registry . emacsvox-aural-scheme-entry-data)
-			     (,emacsvox-aural-module-fragment-registry . emacsvox-aural-module-fragment-data)
-			     (,emacsvox-aural-feature-fragment-registry . emacsvox-aural-feature-fragment-entry-data)
-			     (,emacsvox-aural-voice-palette-registry . emacsvox-aural-voice-palette-data-form)))
-	       (maphash (lambda (id entry) (check (funcall (cdr pair) entry) id)) (car pair)))
-	     (unless remap
-	       (faces (bound-and-true-p voice-setup-face-voice-table) "the global face map")
-	       (dolist (buffer (buffer-list))
-		 (with-current-buffer buffer
-		   (check emacsvox-aural-buffer-rules (buffer-name))
-		   (faces (bound-and-true-p voice-setup-local-map) (buffer-name)))))
-	     ))
+    (unless remap
+      (check emacsvox-aural-user-rules "personal rules")
+      (check emacsvox-aural-session-rules "session rules"))
+    (dolist (pair `((,emacsvox-aural-scheme-registry . emacsvox-aural-scheme-entry-data)
+                    (,emacsvox-aural-module-fragment-registry . emacsvox-aural-module-fragment-data)
+                    (,emacsvox-aural-feature-fragment-registry . emacsvox-aural-feature-fragment-entry-data)
+                    (,emacsvox-aural-voice-palette-registry . emacsvox-aural-voice-palette-data-form)))
+      (maphash (lambda (id entry) (check (funcall (cdr pair) entry) id)) (car pair)))
+    (unless remap
+      (faces (bound-and-true-p voice-setup-face-voice-table) "the global face map")
+      (dolist (buffer (buffer-list))
+        (with-current-buffer buffer
+          (check emacsvox-aural-buffer-rules (buffer-name))
+          (faces (bound-and-true-p voice-setup-local-map) (buffer-name)))))))
 
 (defun emacsvox-aural-voice-palettes--delete-voice (palette voice &optional reset)
   "Remove direct VOICE from PALETTE after confirmation.
@@ -1639,8 +1627,8 @@ A built-in voice opens a personal draft; save it to create a personal child."
       "Copy saves a new voice, including owned choices and individual tuning.\n"
       "E also opens the complete voice editor\n"
       "Editing a built-in voice opens a draft; saving creates a personal child\n"
-      "x explain voice\n"
-      "g refresh            o palette manager\n"
+      "x explain voice; u known uses and descendants\n"
+      "O open source        g refresh; o palette manager\n"
       "h aural home         q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -1662,7 +1650,8 @@ A built-in voice opens a personal draft; save it to create a personal child."
     ("Physical voice" 28 t)
     ("Engine" 16 t)
     ("Adjustments" 48 t)
-    ("State" 0 t)])
+    ("State" 24 t)
+    ("Source" 0 t)])
   (setq tabulated-list-padding 2)
   (add-hook
    'tabulated-list-revert-hook
@@ -1687,6 +1676,8 @@ A built-in voice opens a personal draft; save it to create a personal child."
        ("N" . emacsvox-aural-voice-palette-previews-new)
        ("x" . emacsvox-aural-voice-palette-previews-explain)
        ("o" . emacsvox-aural-voice-palette-previews-open-manager)
+       ("O" . emacsvox-aural-voice-palette-previews-open-source)
+       ("u" . emacsvox-aural-voice-palettes-where-used)
        ("h" . emacsvox-aural)
        ("?" . emacsvox-aural-voice-palette-previews-help)))
   (define-key
@@ -1766,6 +1757,8 @@ When SPEAK is non-nil, include the selected row's full description."
              "No fallback"))))
     (emacsvox-aural-ui-with-help-window
       (princ (format "Voice: %s\nPalette: %s\n\n" voice id))
+      (princ (format "Source: %s\n" (emacsvox-aural-voice-palettes--entry-provider voice id)))
+      (princ "Use u in the voice list for known uses and aliases; O opens the source; e edits here.\n\n")
       (princ (format "Requested preset: %S\n" definition))
       (princ
        (format
@@ -1790,6 +1783,233 @@ When SPEAK is non-nil, include the selected row's full description."
       (message "%s" summary))
     compiled))
 
+(defvar emacsvox-aural-voice-palettes--import-pending nil
+  "Frozen import awaiting an explicit retry or discard.")
+
+(defun emacsvox-aural-voice-palettes--known-uses (voice)
+  "Return known loaded references to VOICE and its declared aliases."
+  (let ((names (cons voice (mapcar #'cdr (cl-remove-if-not
+                                        (lambda (pair) (eq (car pair) voice))
+                                        emacsvox-aural-default-voice-entries)))) uses)
+    (cl-labels ((check (data where)
+                  (when (cl-some (lambda (name) (emacsvox-aural-voice-palettes--voice-reference-p data name)) names)
+                    (push where uses)))
+                (faces (table where)
+                  (when (hash-table-p table)
+                    (maphash (lambda (face value) (check (list :voice value) (format "%s: face %s" where face))) table))))
+      (check emacsvox-aural-user-rules "Personal rules")
+      (check emacsvox-aural-session-rules "Session rules")
+      (dolist (pair `((,emacsvox-aural-scheme-registry emacsvox-aural-scheme-entry-data "Scheme")
+                      (,emacsvox-aural-module-fragment-registry emacsvox-aural-module-fragment-data "Module")
+                      (,emacsvox-aural-feature-fragment-registry emacsvox-aural-feature-fragment-entry-data "Feature")
+                      (,emacsvox-aural-voice-palette-registry emacsvox-aural-voice-palette-data-form "Palette")))
+        (maphash (lambda (id entry) (check (funcall (cadr pair) entry) (format "%s %s" (nth 2 pair) id))) (car pair)))
+      (faces (bound-and-true-p voice-setup-face-voice-table) "Global")
+      (dolist (buffer (buffer-list))
+        (with-current-buffer buffer
+          (check emacsvox-aural-buffer-rules (format "Buffer %s: rules" (buffer-name)))
+          (faces (bound-and-true-p voice-setup-local-map) (format "Buffer %s" (buffer-name))))))
+    (sort (delete-dups uses) #'string-lessp)))
+
+(defun emacsvox-aural-voice-palettes--descendants (palette)
+  "Return all descendants of PALETTE without repeating cycles."
+  (let ((pending (emacsvox-aural-voice-palettes--dependents palette)) (seen (list palette)) result)
+    (while pending
+      (let ((id (pop pending)))
+        (unless (memq id seen)
+          (push id seen) (push id result)
+          (setq pending (append (emacsvox-aural-voice-palettes--dependents id) pending)))))
+    (sort result (lambda (a b) (string-lessp (symbol-name a) (symbol-name b))))))
+
+(defun emacsvox-aural-voice-palettes--edit-impact (palette voice)
+  "Return descendants whose VOICE would change when edited in PALETTE."
+  (when-let* ((owner (and (emacsvox-aural-voice-palette palette)
+                         (emacsvox-aural-voice-palettes--entry-provider voice palette))))
+    (cl-remove-if-not (lambda (id) (eq owner (emacsvox-aural-voice-palettes--entry-provider voice id)))
+                      (emacsvox-aural-voice-palettes--descendants palette))))
+
+(defun emacsvox-aural-voice-palettes--confirm-edit-impact (palette voice)
+  "Review shared effects before saving VOICE in PALETTE."
+  (when-let* ((affected (emacsvox-aural-voice-palettes--edit-impact palette voice)))
+    (let ((uses (emacsvox-aural-voice-palettes--known-uses voice)))
+      (unless (yes-or-no-p
+               (format "Saving %s in %s also changes it in %s. Known loaded uses: %s. Save? "
+                       voice palette (mapconcat #'symbol-name affected ", ")
+                       (if uses (string-join uses "; ") "none")))
+        (user-error "Save cancelled; the voice draft is retained")))))
+(defun emacsvox-aural-voice-palettes-where-used (&optional palette voice)
+  "Show known uses and descendants of PALETTE, or its selected VOICE."
+  (interactive)
+  (let* ((voices (derived-mode-p 'emacsvox-aural-voice-palette-previews-mode))
+         (palette (or palette (if voices emacsvox-aural-voice-palette-previews-palette
+                                (emacsvox-aural-voice-palettes--at-point-or-read))))
+         (voice (or voice (and voices (emacsvox-aural-voice-palette-previews--current-voice))))
+         (owner (and voice (emacsvox-aural-voice-palettes--entry-provider voice palette)))
+         (uses (if voice (emacsvox-aural-voice-palettes--known-uses voice)
+                 (emacsvox-aural-voice-palettes--references palette)))
+         (descendants (emacsvox-aural-voice-palettes--descendants palette)))
+    (emacsvox-aural-ui-with-help-window
+      (princ (format "%s%s\n" palette (if voice (format ": %s; source %s" voice owner) "")))
+      (when voice
+        (princ (format "Declared aliases: %s\n"
+                       (or (mapcar #'cdr (cl-remove-if-not (lambda (pair) (eq (car pair) voice))
+                                                          emacsvox-aural-default-voice-entries)) "none")))
+        (princ "Edit here creates or updates this palette's entry. Open Source visits its defining palette.\n"))
+      (princ (format "\nDescendant palettes: %s\n" (or descendants "none")))
+      (princ "\nKnown loaded references\n")
+      (if uses (dolist (use uses) (princ (concat use "\n"))) (princ "None found.\n")))
+    (emacsvox-aural-ui-speak (format "%s. %d known references; %d descendant palettes."
+                                    (or voice palette) (length uses) (length descendants)))))
+
+(defun emacsvox-aural-voice-palette-previews-open-source ()
+  "Browse the defining palette of the selected voice."
+  (interactive)
+  (let* ((voice (emacsvox-aural-voice-palette-previews--current-voice))
+         (owner (emacsvox-aural-voice-palettes--entry-provider voice emacsvox-aural-voice-palette-previews-palette)))
+    (emacsvox-aural-list-voice-palette-previews owner)
+    (emacsvox-aural-voice-palette-previews-refresh voice)
+    (emacsvox-aural-voice-palette-previews-speak-current)))
+
+(defun emacsvox-aural-voice-palettes-use-at-startup ()
+  "Use the selected palette in the saved startup profile without applying it."
+  (interactive)
+  (require 'emacsvox-aural-profile-service)
+  (let ((palette (emacsvox-aural-voice-palettes--at-point-or-read)) new-profile)
+    (unless (emacsvox-aural-current-profile-id)
+      (let* ((name (read-string "New startup profile name: "))
+             (id (intern name)))
+        (emacsvox-aural--validate-id id "Startup profile")
+        (when (or (string-empty-p name) (emacsvox-aural-profile-entry id))
+          (user-error "Choose an unused profile name"))
+        (setq new-profile (emacsvox-aural-capture-profile-data id (format "Startup setup %s" id)))
+        (unless (yes-or-no-p
+                 (format "Create startup profile %s with palette %s, sound pack %s, features %S and spatial settings %S? "
+                         id palette (plist-get new-profile :sound-pack)
+                         (plist-get new-profile :feature-fragments) (plist-get new-profile :spatial)))
+          (user-error "Startup choice cancelled"))))
+    (let ((profile (emacsvox-aural-profile-set-startup-palette palette new-profile)))
+      (emacsvox-aural-ui-refresh-home-if-live)
+      (emacsvox-aural-ui-speak
+       (format "Startup profile %s now uses %s. Current voices and other settings are unchanged." profile palette))
+      profile)))
+
+(defun emacsvox-aural-voice-palettes--write-exchange (data file)
+  "Write inert exchange DATA atomically to FILE after explicit overwrite choice."
+  (let* ((file (expand-file-name file))
+         (before (emacsvox-aural-voice-drafts--file-id file)) temporary)
+    (when (and before (not (yes-or-no-p (format "Replace export file %s? " file))))
+      (user-error "Export cancelled"))
+    (unless (equal before (emacsvox-aural-voice-drafts--file-id file))
+      (user-error "Export destination changed; retry"))
+    (setq temporary (make-temp-file (expand-file-name ".voice-palette-" (file-name-directory file))))
+    (unwind-protect
+        (progn
+          (with-temp-buffer
+            (insert ";;; Voice palette data; read without evaluation.\n")
+            (let ((print-length nil) (print-level nil)) (pp data (current-buffer)))
+            (write-region (point-min) (point-max) temporary nil 'silent))
+          (set-file-modes temporary #o600)
+          (unless (equal before (emacsvox-aural-voice-drafts--file-id file))
+            (user-error "Export destination changed; retry"))
+          (rename-file temporary file t)
+          (setq temporary nil))
+      (when temporary (delete-file temporary)))
+    file))
+
+(defun emacsvox-aural-voice-palettes-export ()
+  "Export effective portable voices, explicitly omitting local physical choices."
+  (interactive)
+  (let* ((palette (emacsvox-aural-voice-palettes--at-point-or-read))
+         (export (emacsvox-aural-voice-data--export-effective emacsvox-aural-voice-palette-registry palette))
+         (omitted (plist-get export :omitted-local-choices))
+         (file (read-file-name "Portable palette export: " nil nil nil (format "%s-portable.el" palette))))
+    (when (and omitted (not (yes-or-no-p
+                            (format "Export portable choices only? Local choices for %s will be omitted; use Full Backup to preserve them. "
+                                    (mapconcat #'symbol-name omitted ", ")))))
+      (user-error "Portable export cancelled"))
+    (emacsvox-aural-voice-palettes--write-exchange (plist-get export :palette) file)
+    (emacsvox-aural-ui-speak (format "Exported %s. Local choices omitted for %d voices." file (length omitted)))))
+
+(defun emacsvox-aural-voice-palettes-backup ()
+  "Back up complete palette ancestry and exact local choices for this machine."
+  (interactive)
+  (let* ((palette (emacsvox-aural-voice-palettes--at-point-or-read))
+         (data (emacsvox-aural-voice-data--backup emacsvox-aural-voice-palette-registry palette emacsvox-aural-routing--choice-sets))
+         (file (read-file-name "Full local palette backup: " nil nil nil (format "%s-backup.el" palette))))
+    (emacsvox-aural-voice-palettes--write-exchange data file)
+    (emacsvox-aural-ui-speak (format "Backed up %s with ancestry and local choices. Import restores an independent palette." palette))))
+
+(defun emacsvox-aural-voice-palettes--import-gaps (data sets)
+  "Describe DATA's choices absent from current inventory, resolving local SETS."
+  (require 'emacsvox-aural-voice-workbench)
+  (let ((emacsvox-aural-voice-workbench-inventory (tts-voice-inventory)) gaps)
+    (dolist (entry (plist-get data :entries))
+      (dolist (selector (plist-get (emacsvox-aural-voice-data--choices
+                                   (plist-get data :id) (car entry) (cdr entry) sets) :selectors))
+        (unless (emacsvox-aural-voice-workbench--selector-realization selector)
+          (push (format "%s: %s" (car entry) (emacsvox-aural-voice-workbench--selector-description selector)) gaps))))
+    (nreverse gaps)))
+
+(defun emacsvox-aural-voice-palettes--finish-import ()
+  "Save or retry the frozen pending import without activation."
+  (let* ((proposal emacsvox-aural-voice-palettes--import-pending)
+         (id (plist-get (emacsvox-aural-voice-save-palette proposal) :id)))
+    (emacsvox-aural-voice-drafts--save proposal)
+    (unless (memq 'published (emacsvox-aural-voice-save-completed proposal))
+      (user-error "Import %s is %s. Press i to retry or discard the frozen import"
+                  id (emacsvox-aural-voice-save-state proposal)))
+    (setq emacsvox-aural-voice-palettes--import-pending nil)
+    (emacsvox-aural-voice-palettes-refresh id)
+    (emacsvox-aural-ui-speak (format "Imported %s as an independent palette. Current voices are unchanged." id))
+    id))
+
+(defun emacsvox-aural-voice-palettes-import ()
+  "Import a portable palette or full backup as an independent saved palette."
+  (interactive)
+  (when emacsvox-aural-voice-palettes--import-pending
+    (when (equal (completing-read "Pending import: " '("Retry" "Discard") nil t nil nil "Retry") "Discard")
+      (emacsvox-aural-voice-drafts--discard (emacsvox-aural-voice-save-draft emacsvox-aural-voice-palettes--import-pending))
+      (setq emacsvox-aural-voice-palettes--import-pending nil)
+      (user-error "Pending import discarded; press i to choose another file")))
+  (unless emacsvox-aural-voice-palettes--import-pending
+    (let* ((file (read-file-name "Import portable palette or full backup: " nil nil t))
+           (fingerprint (emacsvox-aural-voice-drafts--file-id file))
+           (inputs (emacsvox-aural-voice-data--read-exchange
+                    (emacsvox-aural-routing--read-one-form file "palette exchange")
+                    (emacsvox-aural-voice-palette 'acss-default)))
+           (source (plist-get inputs :source))
+           (registry (plist-get inputs :registry))
+           (id (emacsvox-aural-voice-palettes--read-new-id
+                (if (gethash source emacsvox-aural-voice-palette-registry) (format "%s-imported" source) (symbol-name source))))
+           (entries (emacsvox-aural-voice-data--entries source registry))
+           (data (emacsvox-aural-voice-data--materialize
+                  registry source id (emacsvox-aural-voice-palette-summary (gethash source registry))
+                  (plist-get inputs :choice-sets)
+                  (mapcar (lambda (item) (cons (car (plist-get item :entry)) (emacsvox-aural-voice-editing--new-id))) entries)))
+           (palette (plist-get data :palette))
+           (sets (plist-get data :choice-sets))
+           (gaps (emacsvox-aural-voice-palettes--import-gaps palette sets))
+           (draft (emacsvox-aural-voice-drafts--make :key (list 'import id)
+                   :watches (emacsvox-aural-voice-drafts--watch '(acss-default)))))
+      (let ((emacsvox-aural-voice-palette-registry (copy-hash-table emacsvox-aural-voice-palette-registry)))
+        (puthash id (emacsvox-aural-compile-voice-palette-data palette) emacsvox-aural-voice-palette-registry)
+        (when-let* ((missing (emacsvox-aural-validate-voice-palette id)))
+          (user-error "Import has unavailable personality definitions: %s" missing)))
+      (when gaps
+        (emacsvox-aural-ui-with-help-window
+          (princ "Choices absent from the current inventory; saved choices will be retained.\n\n")
+          (dolist (gap gaps) (princ (concat gap "\n")))))
+      (unless (yes-or-no-p (format "Import %s as independent palette %s with %d voices and %d choices absent from current inventory? "
+                                   source id (length (plist-get palette :entries)) (length gaps)))
+        (user-error "Import cancelled"))
+      (unless (equal fingerprint (emacsvox-aural-voice-drafts--file-id file))
+        (user-error "Import file changed during review; retry"))
+      (when (emacsvox-aural-voice-palette id)
+        (user-error "Palette %s was created during review; choose another name" id))
+      (setq emacsvox-aural-voice-palettes--import-pending
+            (emacsvox-aural-voice-drafts--prepare draft palette sets :sources '(acss-default)))))
+  (emacsvox-aural-voice-palettes--finish-import))
+
 (defun emacsvox-aural-voice-palettes-help ()
   "Display and speak voice-palette manager help."
   (interactive)
@@ -1803,13 +2023,16 @@ When SPEAK is non-nil, include the selected row's full description."
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET browse voices    SPC speak palette\n"
-      "a activate palette   f switch to default palette\n"
+      "a activate for this session; U use at startup\n"
+      "f switch to default palette\n"
+      "w portable export    W full local backup; i import independently\n"
+      "After an incomplete import, i offers Retry or Discard\n"
       "N create palette     c copy palette\n"
       "r rename personal palette\n"
       "e edit voice         E edit summary and parent\n"
       "R reset voice to parent; D delete custom voice; d delete palette\n"
       "B browse voices      P audition palette; S stop\n"
-      "x explain voice\n"
+      "x explain voice; u known uses and descendants\n"
       "In the voice list, N creates and c copies a voice\n"
       "v view and validate  g refresh\n"
       "h aural home         q quit\n")))
@@ -1847,6 +2070,11 @@ When SPEAK is non-nil, include the selected row's full description."
      '(("RET" . emacsvox-aural-voice-palettes-preview)
        ("B" . emacsvox-aural-voice-palettes-preview)
        ("a" . emacsvox-aural-voice-palettes-activate)
+       ("U" . emacsvox-aural-voice-palettes-use-at-startup)
+       ("u" . emacsvox-aural-voice-palettes-where-used)
+       ("w" . emacsvox-aural-voice-palettes-export)
+       ("W" . emacsvox-aural-voice-palettes-backup)
+       ("i" . emacsvox-aural-voice-palettes-import)
        ("f" . emacsvox-aural-voice-palettes-follow-baseline)
        ("N" . emacsvox-aural-voice-palettes-create)
        ("c" . emacsvox-aural-voice-palettes-copy)

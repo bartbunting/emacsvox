@@ -805,6 +805,9 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
                                                       :select select :sources (list palette))))))
       (unless (eq (and select t) (and (emacsvox-aural-voice-save-select proposal) t))
         (user-error "The pending save has a different activation choice; retry its original save action"))
+      (when (eq (emacsvox-aural-voice-save-state proposal) 'ready)
+        (emacsvox-aural-voice-palettes--confirm-edit-impact
+         (plist-get (emacsvox-aural-voice-save-palette proposal) :id) voice))
       (emacsvox-aural-voice-drafts--save proposal)
       (when (memq 'published (emacsvox-aural-voice-save-completed proposal))
         (let* ((destination (plist-get (emacsvox-aural-voice-save-palette proposal) :id))

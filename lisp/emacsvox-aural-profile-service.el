@@ -304,6 +304,57 @@ source-buffer argument is retained for older callers but is ignored."
   "Return whether profile ID is selected and matches live global settings."
   (eq (emacsvox-aural-profile-status id) 'active))
 
+(defun emacsvox-aural-profile--file-fingerprint (file)
+  "Return FILE's content fingerprint, or nil when absent."
+  (when (file-exists-p file)
+    (with-temp-buffer
+      (insert-file-contents-literally file)
+      (secure-hash 'sha256 (current-buffer)))))
+
+(defun emacsvox-aural-profile-set-startup-palette (palette &optional new-profile)
+  "Save PALETTE for startup without applying live presentation settings.
+Change only the selected saved profile's palette field.  NEW-PROFILE supplies
+an explicitly reviewed new profile when no saved profile is selected."
+  (let* ((file emacsvox-aural-schemes-file)
+         (fingerprint (emacsvox-aural-profile--file-fingerprint file))
+         (saved (or (emacsvox-aural-read-user-data file) (emacsvox-aural-user-data)))
+         (selected (emacsvox-aural-current-profile-id))
+         (profiles (copy-tree (plist-get saved :profiles)))
+         (profile (if new-profile (copy-tree new-profile)
+                    (copy-tree (cl-find selected profiles :key (lambda (entry) (plist-get entry :id))))))
+         (id (plist-get profile :id))
+         (record (emacsvox-aural-voice-palette palette))
+         (registry (copy-hash-table emacsvox-aural-profile-registry)))
+    (unless record (user-error "Unknown palette: %s" palette))
+    (unless (or (emacsvox-aural-voice-palette-built-in record)
+                (equal (emacsvox-aural-voice-palette-data-form record)
+                       (cl-find palette (plist-get saved :voice-palettes)
+                                :key (lambda (data) (plist-get data :id)))))
+      (user-error "Save or reload palette %s before using it at startup" palette))
+    (if new-profile
+        (when (or selected (gethash id registry)
+                  (cl-find id profiles :key (lambda (entry) (plist-get entry :id))))
+          (user-error "The selected profile or destination changed; review the new setup again"))
+      (unless (and id (eq selected (plist-get saved :active-profile))
+                   (equal profile (emacsvox-aural-profile-entry-data (gethash id registry))))
+        (user-error "The selected saved profile changed; reload it before setting startup voices")))
+    (when (and new-profile
+               (not (equal new-profile (emacsvox-aural-capture-profile-data id (plist-get new-profile :summary)))))
+      (user-error "Current presentation settings changed; review the new setup again"))
+    (setq profile (plist-put profile :voice-palette palette))
+    (let ((emacsvox-aural-profile-registry registry))
+      (emacsvox-aural-register-profile profile :source file :replace (not new-profile)))
+    (setq saved (plist-put (copy-tree saved) :profiles
+                           (if new-profile (append profiles (list profile))
+                             (mapcar (lambda (entry) (if (eq (plist-get entry :id) id) profile entry)) profiles))))
+    (when new-profile (setq saved (plist-put saved :active-profile id)))
+    (unless (equal fingerprint (emacsvox-aural-profile--file-fingerprint file))
+      (user-error "Saved presentation settings changed during preparation; retry"))
+    (emacsvox-aural--write-user-data saved file)
+    (setq emacsvox-aural-profile-registry registry)
+    (when new-profile (setq emacsvox-aural-active-profile id))
+    id))
+
 (provide 'emacsvox-aural-profile-service)
 
 ;;; emacsvox-aural-profile-service.el ends here

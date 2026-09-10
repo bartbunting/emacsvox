@@ -356,7 +356,10 @@
                   "emacsvox-aural-voice-palettes-tests.el"
                   "emacsvox-aural-voice-workbench-tests.el"))
     (load (expand-file-name (concat "test/" file) root-directory) nil nil t))
-  (dolist (function '(emacsvox-aural-voice-data--resolve
+  (dolist (function '(emacsvox-aural-profile-set-startup-palette
+         emacsvox-aural-voice-data--read-exchange
+         emacsvox-aural-voice-palettes-import
+         emacsvox-aural-voice-data--resolve
                      emacsvox-aural-voice-data--put-choices
                      emacsvox-aural-routing--validate-choices
                      emacsvox-aural-voice-runtime--resolve
@@ -404,7 +407,7 @@
                       emacsvox-aural-voice-editor--set))
     (unless (file-in-directory-p (symbol-file function 'defun) build-directory)
       (error "Aural contract escaped compiled build: %S" function)))
-  (dolist (tag '(voice-style-ui delivery-preparation))
+  (dolist (tag '(voice-style-ui voice-palette-tools delivery-preparation))
     (unless (ert-select-tests (list 'tag tag) t)
       (error "No compiled %S contracts were loaded" tag)))
   (let ((stats
@@ -426,7 +429,8 @@
                "^tts-preparation-"
                "^emacsvox-aural-voice-editor-"
                "^emacsvox-aural-voice-context-"
-               (tag voice-style-ui)
+               (tag voice-palette-tools)
+                    (tag voice-style-ui)
                (tag delivery-preparation)
                emacsvox-aural-delivery-keeps-stops-immediate-and-cancellable
                emacsvox-aural-delivery-contains-process-send-failure

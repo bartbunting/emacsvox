@@ -190,6 +190,13 @@ LOCAL-SETS supplies full chains; LOCAL-IDS supplies fresh IDs for the new owner.
 Missing local data requires an explicit portable export instead of a local copy."
   (when (gethash destination registry)
     (emacsvox-aural--resource-error "Destination palette already exists: %S" destination))
+  (emacsvox-aural-voice-data--materialize registry source destination summary local-sets local-ids))
+
+(defun emacsvox-aural-voice-data--materialize
+    (registry source destination summary local-sets local-ids)
+  "Propose complete independent DESTINATION from SOURCE in REGISTRY.
+SUMMARY and LOCAL-IDS belong to the new owner; LOCAL-SETS supplies full rows.
+The caller validates destination conflicts in the publication registry."
   (let ((effective (emacsvox-aural-voice-data--entries source registry)) entries sets)
     (dolist (item effective)
       (let* ((entry (copy-tree (plist-get item :entry)))
@@ -221,6 +228,73 @@ Missing local data requires an explicit portable export instead of a local copy.
         (cl-remf properties :local-choices)
         (setcdr entry properties)))
     (list :palette result :omitted-local-choices (nreverse omitted))))
+
+(defun emacsvox-aural-voice-data--export-effective (registry source)
+  "Return a portable, independent export of SOURCE from REGISTRY.
+Omission diagnostics name every voice whose local snapshot is excluded."
+  (let ((data (list :schema-version 3
+                    :id (if (eq source 'acss-default) 'acss-default-copy source)
+                    :summary (emacsvox-aural-voice-palette-summary (gethash source registry))
+                    :parent 'acss-default :routing 'owned
+                    :entries (mapcar (lambda (item) (copy-tree (plist-get item :entry)))
+                                     (emacsvox-aural-voice-data--entries source registry)))))
+    (emacsvox-aural-voice-data--portable-export data)))
+
+(defun emacsvox-aural-voice-data--backup (registry source local-sets)
+  "Return SOURCE's complete ancestry and referenced LOCAL-SETS from REGISTRY."
+  ;; Validate the complete chain before collecting it.
+  (emacsvox-aural-voice-data--entries source registry)
+  (let ((id source) palettes ids)
+    (while id
+      (let* ((record (gethash id registry))
+             (data (emacsvox-aural-voice-palette-data-form record)))
+        (push data palettes)
+        (dolist (entry (plist-get data :entries))
+          (let ((choices (emacsvox-aural-voice-data--choices id (car entry) (cdr entry) local-sets)))
+            (when (plist-get choices :diagnostics)
+              (emacsvox-aural--resource-error "Cannot back up missing local choices for %s in %s" (car entry) id)))
+          (when-let* ((local (plist-get (cdr entry) :local-choices))) (push local ids)))
+        (setq id (emacsvox-aural-voice-palette-parent record))))
+    (list :schema-version 1 :kind 'voice-palette-backup :palette source
+          :palettes (nreverse palettes)
+          :choice-sets (copy-tree (cl-remove-if-not (lambda (set) (member (plist-get set :id) ids)) local-sets)))))
+
+(defun emacsvox-aural-voice-data--read-exchange (data root)
+  "Validate exchange DATA against standard ROOT and return isolated inputs.
+Portable palettes are self-contained; backups carry their complete ancestry."
+  (let ((registry (make-hash-table :test #'eq)) source sets kind)
+    (if (eq (plist-get data :kind) 'voice-palette-backup)
+        (progn
+          (emacsvox-aural-routing--strict-properties
+           data '(:schema-version :kind :palette :palettes :choice-sets)
+           '(:schema-version :kind :palette :palettes :choice-sets))
+          (unless (eq (plist-get data :schema-version) 1)
+            (emacsvox-aural--resource-error "Unsupported palette backup version"))
+          (setq source (plist-get data :palette) kind 'backup
+                sets (emacsvox-aural-routing--validate-choice-sets (plist-get data :choice-sets)))
+          (unless (proper-list-p (plist-get data :palettes))
+            (emacsvox-aural--resource-error "Backup palettes must be a list"))
+          (dolist (palette (plist-get data :palettes))
+            (let ((id (plist-get palette :id)))
+              (when (gethash id registry) (emacsvox-aural--resource-error "Duplicate backup palette: %s" id))
+              (puthash id (emacsvox-aural-compile-voice-palette-data palette (eq id 'acss-default)) registry)))
+          (unless (gethash 'acss-default registry)
+            (emacsvox-aural--resource-error "Backup is missing its standard root"))
+          (let ((validated (emacsvox-aural-voice-data--backup registry source sets)))
+            (unless (= (length (plist-get validated :palettes)) (hash-table-count registry))
+              (emacsvox-aural--resource-error "Backup contains unrelated palettes"))
+            (unless (= (length sets) (length (plist-get validated :choice-sets)))
+              (emacsvox-aural--resource-error "Backup contains unreferenced local snapshots"))))
+      (setq source (plist-get data :id) kind 'portable)
+      (unless (eq (plist-get data :parent) 'acss-default)
+        (emacsvox-aural--resource-error "Portable imports must be independent children of acss-default"))
+      (dolist (entry (plist-get data :entries))
+        (when (plist-member (cdr entry) :local-choices)
+          (emacsvox-aural--resource-error "Portable imports cannot contain local snapshot references")))
+      (puthash 'acss-default root registry)
+      (puthash source (emacsvox-aural-compile-voice-palette-data data) registry))
+    (emacsvox-aural-voice-data--entries source registry)
+    (list :kind kind :source source :registry registry :choice-sets sets)))
 
 (provide 'emacsvox-aural-voice-data)
 

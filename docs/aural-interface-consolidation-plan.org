@@ -260,7 +260,7 @@ Current fixtures supply owned choices, and action tests check that named editing
 and retained engine controls are reachable. All 719 affected source tests pass.
 The isolated compiled parity harness, complete byte-code rebuild, final
 preflight and fresh build-tree check passed. Command references were regenerated.
-The remaining readers and per-name state are now retired. Palette files accept
+Reader and routing retirement =d62d83c84=: the remaining readers and per-name state are now retired. Palette files accept
 only complete schema-3 entries, reserve declared aliases, and require an explicit
 parent except for the read-only standard root. Runtime lookup, editing, copying
 and save preparation no longer branch on ownership format or convert on first
@@ -282,29 +282,40 @@ originals and the proposal are in
 =~/.emacsvox/backups/routing-retirement-20260910-Lm2Ugz/=. No live restart, reload
 or selection change was performed. The earlier standard-root backup is retained.
 
-** TODO 5. Finish source, persistence and sharing tools — High
+** DONE 5. Finish source, persistence and sharing tools — High
 
-Show Source in voice lists, and make source/reset/edit-here reachable by named
-actions. Show known uses and descendants before a change with wider effects.
-Keep base voice editing separate from contextual rule editing.
+The voice list now names the actual Source. =O= opens that source without
+activation, =e= edits here, and =R= resets to the parent. =u= shows loaded rule,
+face, scheme, feature and palette uses, declared aliases, and descendant
+palettes. Saving an entry shared by descendants reviews the affected palettes
+and known uses first; cancellation retains the draft.
 
-Add Use at Startup beside palette activation. With a selected saved Presentation
-Profile, change only its palette field and explain that result. With no profile,
-offer to create a named setup from the reviewed current selections. Do not create
-a second independent startup-palette preference. Saving this choice need not
-overwrite other diverged fields or change an inactive palette's current use.
+=U= in the palette manager saves Use at Startup. For the selected saved
+Presentation Profile, only its palette field changes. Other saved fields,
+current palette selection and current divergences remain intact. External file
+or profile changes cause a conflict instead of an overwrite. With no selected
+profile, the command reviews a named setup captured from current selections
+before saving it. There is no separate startup-palette preference.
 
-Expose portable palette import/export using the existing validation and local
-choice services. Distinguish portable omission, a full same-machine backup, and
-independent local copy. Imported portable data uses the standard root and declares
-unavailable choices. Export copies effective entries before dropping local choices,
-so custom-parent dependencies are resolved without using rendered playback values.
-Full local backup includes the required ancestry and local snapshots. Never
-silently overwrite an existing ID or flatten an actual playback result into data.
+=w= exports an independent effective portable palette after declaring omitted
+local choices. =W= writes a full local backup containing required ancestry and
+referenced snapshots. =i= imports either format under an explicitly chosen,
+unused name as an independent palette; local choices receive new ownership and
+snapshot IDs. It reports choices absent from current inventory and retains them.
+The existing frozen save coordinator handles both stores and retry; a pending
+import offers Retry or Discard. Existing IDs are never silently replaced, and
+imports do not select or apply the result. Full backup import intentionally
+materializes its effective voices; it does not replace the saved ancestry tree.
 
-Tests: save/current/startup state independently, profile reference semantics,
-export omission versus local preservation, conflicts, missing local data,
-preview and persistence failures. All new actions have matching live help.
+Validation passed: 750 affected source tests plus the focused Open Source user
+journey, and the isolated compiled parity checks. Coverage includes saved/current/
+startup separation, whole-file preservation on startup updates, external and
+post-confirmation conflicts, portable omission, local ownership and tuning,
+missing ancestry/snapshots, atomic export failure and frozen partial-import retry.
+The complete rebuild and byte-code preflight pass. A fresh normal build-tree
+startup passes, and all 12 new tool journeys pass against that compiled tree.
+Public references were regenerated; the documentation release preflight passes.
+The original Home announcement edits remain separate.
 
 ** TODO 6. Simplify tables and finish common navigation — Medium
 
@@ -320,7 +331,9 @@ physical-voice policy is not to be inferred by reusing a final-fallback setting;
 if a new runtime policy is needed, record that bounded follow-up separately.
 
 Tests: arrows, actions/help agreement, nested return and draft retention across
-all changed managers. Update maintained manual text and generated artifacts under
+all changed managers. Refresh an already open profile table after Use at Startup
+so its displayed saved palette follows the updated registry. Update maintained
+manual text and generated artifacts under
 the normal documentation workflow once wording settles.
 
 ** TODO 7. Focused integration review — XHI

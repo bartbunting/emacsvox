@@ -67,7 +67,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1525 commands and 207 options.
+This chapter documents a total of 1531 commands and 207 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -5559,6 +5559,7 @@ RET		emacsvox-aural-voice-palette-previews-explain
 A		emacsvox-aural-voice-palette-previews-play-all
 E		emacsvox-aural-voice-palette-previews-edit
 N		emacsvox-aural-voice-palette-previews-new
+O		emacsvox-aural-voice-palette-previews-open-source
 P		emacsvox-aural-voice-palette-previews-play
 R		emacsvox-aural-voice-palette-previews-reset
 S		emacsvox-aural-voice-palette-previews-stop
@@ -5571,6 +5572,7 @@ o		emacsvox-aural-voice-palette-previews-open-manager
 r		emacsvox-aural-voice-palette-previews-rename
 s		emacsvox-aural-voice-palette-previews-stop
 t		emacsvox-aural-voice-palette-previews-tune
+u		emacsvox-aural-voice-palettes-where-used
 x		emacsvox-aural-voice-palette-previews-explain
 
 @end format
@@ -5609,6 +5611,15 @@ Move right and speak the next voice column.
 
 @format
 Return to the palette manager for the current preview palette.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-open-source
+@deffn {Command} emacsvox-aural-voice-palette-previews-open-source
+@findex emacsvox-aural-voice-palette-previews-open-source
+
+@format
+Browse the defining palette of the selected voice.
 @end format
 @end deffn
 
@@ -5740,6 +5751,15 @@ Audition the selected palette’s effective voices in order.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-voice-palettes-backup
+@deffn {Command} emacsvox-aural-voice-palettes-backup
+@findex emacsvox-aural-voice-palettes-backup
+
+@format
+Back up complete palette ancestry and exact local choices for this machine.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-voice-palettes-copy
 @deffn {Command} emacsvox-aural-voice-palettes-copy
 @findex emacsvox-aural-voice-palettes-copy
@@ -5816,6 +5836,15 @@ Explain one effective voice and its adapter fallback.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-voice-palettes-export
+@deffn {Command} emacsvox-aural-voice-palettes-export
+@findex emacsvox-aural-voice-palettes-export
+
+@format
+Export effective portable voices, explicitly omitting local physical choices.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-voice-palettes-follow-baseline
 @deffn {Command} emacsvox-aural-voice-palettes-follow-baseline
 @findex emacsvox-aural-voice-palettes-follow-baseline
@@ -5831,6 +5860,15 @@ Clear the palette override and use the compatibility baseline.
 
 @format
 Display and speak voice-palette manager help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-import
+@deffn {Command} emacsvox-aural-voice-palettes-import
+@findex emacsvox-aural-voice-palettes-import
+
+@format
+Import a portable palette or full backup as an independent saved palette.
 @end format
 @end deffn
 
@@ -5856,14 +5894,19 @@ E		emacsvox-aural-voice-palettes-edit-metadata
 N		emacsvox-aural-voice-palettes-create
 P		emacsvox-aural-voice-palettes-audition
 R		emacsvox-aural-voice-palettes-reset-entry
+U		emacsvox-aural-voice-palettes-use-at-startup
+W		emacsvox-aural-voice-palettes-backup
 a		emacsvox-aural-voice-palettes-activate
 c		emacsvox-aural-voice-palettes-copy
 d		emacsvox-aural-voice-palettes-delete
 e		emacsvox-aural-voice-palettes-edit-entry
 f		emacsvox-aural-voice-palettes-follow-baseline
 h		emacsvox-aural
+i		emacsvox-aural-voice-palettes-import
 r		emacsvox-aural-voice-palettes-rename
+u		emacsvox-aural-voice-palettes-where-used
 v		emacsvox-aural-voice-palettes-describe
+w		emacsvox-aural-voice-palettes-export
 x		emacsvox-aural-voice-palettes-explain
 
 @end format
@@ -5960,6 +6003,26 @@ Speak the complete voice-palette row at point.
 
 @format
 Speak the current palette column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-use-at-startup
+@deffn {Command} emacsvox-aural-voice-palettes-use-at-startup
+@findex emacsvox-aural-voice-palettes-use-at-startup
+
+@format
+Use the selected palette in the saved startup profile without applying it.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-where-used
+@deffn {Command} emacsvox-aural-voice-palettes-where-used  (&optional palette voice)
+@findex emacsvox-aural-voice-palettes-where-used
+
+@format
+Show known uses and descendants of PALETTE, or its selected VOICE.
+
+(fn &optional PALETTE VOICE)
 @end format
 @end deffn
 
@@ -16484,7 +16547,6 @@ Provide additional advice to outline-mode
 @subsubsection emacsvox-outline-speak-backward-heading
 @deffn {Command} emacsvox-outline-speak-backward-heading
 @findex emacsvox-outline-speak-backward-heading
-
 @format
 Analogous to outline-backward-same-level
 except that the outline section is  spoken
