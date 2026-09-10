@@ -19,9 +19,10 @@
 (defun emacsvox-test--voice-data-registry (palettes)
   "Compile PALETTES into an isolated registry."
   (let ((registry (make-hash-table :test #'eq)))
+    (puthash 'acss-default (emacsvox-aural-voice-palette 'acss-default) registry)
     (dolist (data palettes)
       (puthash (plist-get data :id)
-               (emacsvox-aural-compile-voice-palette-data data) registry))
+               (emacsvox-aural-compile-voice-palette-data data (eq (plist-get data :id) 'acss-default)) registry))
     registry))
 
 (defun emacsvox-test--voice-data-conversion ()
@@ -41,11 +42,11 @@
           :policy '(:engine-order ("espeak" "dectalk") :disabled-engines ("dectalk")
                     :fallback (:allow-same-language t :global-default nil :engines ("eloquence"))))))
 
-(defun emacsvox-test--resolve-owned (inputs voice palette &optional session)
-  "Resolve VOICE in PALETTE from INPUTS and explicit SESSION data."
+(defun emacsvox-test--resolve-owned (inputs voice palette)
+  "Resolve VOICE in PALETTE from INPUTS and workstation policy."
   (emacsvox-aural-voice-data--resolve
    voice palette (plist-get inputs :registry) (plist-get inputs :sets)
-   (plist-get inputs :routing) session (plist-get inputs :policy)))
+     (plist-get inputs :policy)))
 
 (ert-deftest emacsvox-aural-voice-data-resolve-switches-owned-chains ()
   "Palette A-B-A keeps ordered unavailable choices and shared stored values."
@@ -56,26 +57,21 @@
     (should (eq (plist-get first :name) 'bolden))
     (should (eq (plist-get first :palette) 'reading-owned))
     (should (equal (plist-get first :names) '(bolden voice-bolden)))
-    (should (equal (plist-get first :selectors) (plist-get (car (plist-get inputs :sets)) :selectors)))
-    (should (equal (plist-get other :selectors) (plist-get (cadr (plist-get inputs :sets)) :selectors)))
+    (should (equal (plist-get first :selectors) (emacsvox-aural-voice-data--selectors (plist-get (car (plist-get inputs :sets)) :choices))))
+    (should (equal (plist-get other :selectors) (emacsvox-aural-voice-data--selectors (plist-get (cadr (plist-get inputs :sets)) :choices))))
     (should (equal (plist-get first :definition) (plist-get other :definition)))
     (should (= (plist-get (plist-get first :definition) :low-pass) 7))
     (should (equal (plist-get first :policy) (plist-get inputs :policy)))
     (should (equal first (emacsvox-test--resolve-owned inputs 'voice-bolden 'reading-owned)))))
 
-(ert-deftest emacsvox-aural-voice-data-resolve-automatic-missing-and-legacy-differ ()
-  "An empty owned chain cannot reuse an old routing-profile binding."
+(ert-deftest emacsvox-aural-voice-data-resolve-automatic-and-missing-differ ()
+  "An automatic chain and a missing local snapshot have distinct diagnostics."
   (let* ((inputs (emacsvox-test--voice-resolution-inputs))
-         (auto (emacsvox-test--resolve-owned inputs 'voice-annotate 'reading-owned))
-         (legacy (emacsvox-test--resolve-owned inputs 'voice-bolden 'source-child)))
+         (auto (emacsvox-test--resolve-owned inputs 'voice-annotate 'reading-owned)))
     (should (plist-get auto :automatic))
     (should (eq (plist-get auto :mode) 'owned))
     (should (eq (plist-get auto :definition) 'voice-annotate))
     (should-not (plist-get auto :selectors))
-    (should (eq (plist-get legacy :mode) 'legacy))
-    (should-not (plist-get legacy :automatic))
-    (should (equal (plist-get legacy :selectors)
-                   (plist-get (car (plist-get (plist-get inputs :routing) :bindings)) :selectors)))
     (setf (plist-get inputs :sets) nil)
     (let ((missing (emacsvox-test--resolve-owned inputs 'bolden 'alternative-owned)))
       (should-not (plist-get missing :selectors))
@@ -84,55 +80,6 @@
     (let ((portable (emacsvox-test--resolve-owned inputs 'bolden 'reading-owned)))
       (should (eq (plist-get portable :choice-source) 'portable))
       (should (eq (plist-get (car (plist-get portable :selectors)) :kind) 'properties)))))
-
-(ert-deftest emacsvox-aural-voice-data-resolve-direct-identity-beats-alias ()
-  "Two real names remain distinct; arbitrary voice prefixes are not aliases."
-  (let* ((inputs (emacsvox-test--voice-resolution-inputs))
-         (registry (plist-get inputs :registry))
-         (child '(:schema-version 2 :id child :summary "Child" :parent reading-owned
-                  :routing owned :entries ((voice-bolden :personality voice-smoothen :choices nil)))))
-    (puthash 'child (emacsvox-aural-compile-voice-palette-data child) registry)
-    (let ((direct (emacsvox-test--resolve-owned inputs 'voice-bolden 'child))
-          (inherited (emacsvox-test--resolve-owned inputs 'bolden 'child)))
-      (should (eq (plist-get direct :palette) 'child))
-      (should (eq (plist-get direct :name) 'voice-bolden))
-      (should (eq (plist-get direct :definition) 'voice-smoothen))
-      (should (equal (plist-get direct :names) '(voice-bolden)))
-      (should (equal (plist-get inherited :names) '(bolden)))
-      (should (eq (plist-get inherited :palette) 'reading-owned)))
-    (should (eq (plist-get (emacsvox-test--resolve-owned inputs 'voice-custom 'child) :mode) 'legacy))))
-
-(ert-deftest emacsvox-aural-voice-data-resolve-session-alias-conflicts ()
-  "Temporary aliases coalesce only when identical and never change saved data."
-  (let* ((inputs (emacsvox-test--voice-resolution-inputs))
-         (selectors '((:kind exact :scope session :engine-id "espeak" :voice-id "en")))
-         (session (list (cons 'voice-bolden selectors)))
-         (result (emacsvox-test--resolve-owned inputs 'bolden 'reading-owned session)))
-    (should (eq (plist-get result :choice-source) 'session))
-    (should (equal (plist-get result :selectors) selectors))
-    (should (plist-get result :session))
-    (should (equal (plist-get result :selectors)
-                   (plist-get (emacsvox-test--resolve-owned inputs 'voice-bolden 'alternative-owned session) :selectors)))
-    (should (equal (plist-get result :selectors)
-                   (plist-get (emacsvox-test--resolve-owned inputs 'bolden 'reading-owned
-                               (cons (cons 'bolden selectors) session)) :selectors)))
-    (should-error (emacsvox-test--resolve-owned inputs 'bolden 'reading-owned (cons '(bolden) session))
-                  :type 'emacsvox-aural-voice-data-conflict)
-    (should (eq (plist-get (emacsvox-test--resolve-owned inputs 'bolden 'reading-owned) :choice-source) 'local))))
-
-(ert-deftest emacsvox-aural-voice-data-resolve-legacy-session-scope-is-unchanged ()
-  "Legacy session bindings still match the requested logical name exactly."
-  (let* ((inputs (emacsvox-test--voice-resolution-inputs))
-         (temporary '((:kind engine-default :scope session :engine-id "espeak")))
-         (saved (emacsvox-test--resolve-owned inputs 'voice-bolden 'source-child))
-         (alias (emacsvox-test--resolve-owned inputs 'voice-bolden 'source-child
-                  (list (cons 'bolden temporary))))
-         (direct (emacsvox-test--resolve-owned inputs 'voice-bolden 'source-child
-                   (list (cons 'voice-bolden temporary)))))
-    (should (equal saved alias))
-    (should (eq (plist-get direct :mode) 'legacy))
-    (should (eq (plist-get direct :choice-source) 'session))
-    (should (equal (plist-get direct :selectors) temporary))))
 
 (ert-deftest emacsvox-aural-voice-data-resolve-isolates-results ()
   "Resolved styles, choices, policy and raw entries are fresh mutable copies."
@@ -144,39 +91,6 @@
           (plist-get (plist-get result :policy) :disabled-engines) nil
           (plist-get (cdr (plist-get result :entry)) :choices) nil)
     (should (equal expected (emacsvox-test--resolve-owned inputs 'bolden 'reading-owned)))))
-
-(ert-deftest emacsvox-aural-voice-data-conversion-fixtures ()
-  "Two routing sources produce independent copies without touching inputs."
-  (let* ((fixture (copy-tree emacsvox-test--voice-data-fixture))
-         (before (copy-tree fixture))
-         (registry (emacsvox-test--voice-data-registry
-                    (plist-get fixture :source-palettes)))
-         (live-registry emacsvox-aural-voice-palette-registry)
-         (live-routing emacsvox-aural-routing-profile-registry)
-         (live-active emacsvox-aural-active-routing-profile))
-    (dolist (conversion (plist-get fixture :conversions))
-      (let* ((expected (plist-get conversion :expected-palette))
-             (sets (plist-get conversion :expected-local-choice-sets))
-             (profile (cl-find (plist-get conversion :source-routing-profile)
-                               (plist-get fixture :source-routing-profiles)
-                               :key (lambda (data) (plist-get data :id))))
-             (args (list registry (plist-get conversion :source-palette)
-                         (plist-get expected :id) (plist-get expected :summary)
-                         profile (mapcar (lambda (record)
-                                           (cons (plist-get record :voice)
-                                                 (plist-get record :id))) sets)))
-             (result (apply #'emacsvox-aural-voice-data--convert args)))
-        (should (equal (plist-get result :palette) expected))
-        (should (equal (plist-get result :choice-sets) sets))
-        (should (equal result (apply #'emacsvox-aural-voice-data--convert args)))
-        (let ((emacsvox-aural-voice-palette-registry
-               (emacsvox-test--voice-data-registry (list expected))))
-          (should (equal (emacsvox-aural-voice 'bolden (plist-get expected :id))
-                         (plist-get (cdr (car (plist-get expected :entries))) :style))))))
-    (should (equal fixture before))
-    (should (eq live-registry emacsvox-aural-voice-palette-registry))
-    (should (eq live-routing emacsvox-aural-routing-profile-registry))
-    (should (eq live-active emacsvox-aural-active-routing-profile))))
 
 (ert-deftest emacsvox-aural-voice-data-validates-owned-metadata ()
   "Reject malformed, nonportable, ambiguous and unknown owned data."
@@ -200,71 +114,27 @@
       (should-error (emacsvox-aural-compile-voice-palette-data
                      (funcall edit (copy-tree base)))))))
 
-(ert-deftest emacsvox-aural-voice-data-alias-conflict-and-direct-identity ()
-  "Alias disagreements block migration; actual direct entries remain distinct."
-  (let* ((fixture (copy-tree emacsvox-test--voice-data-fixture))
-         (palettes (plist-get fixture :source-palettes))
-         (profile (car (plist-get fixture :source-routing-profiles)))
-         (registry (emacsvox-test--voice-data-registry palettes)))
-    (setq profile (plist-put profile :bindings
-                             (append (plist-get profile :bindings)
-                                     '((:logical-voice bolden :selectors nil)))))
-    (should-error (emacsvox-aural-voice-data--convert
-                   registry 'source-child 'new "New" profile '((bolden . "one")))
-                  :type 'emacsvox-aural-voice-data-conflict)
-    (setf (plist-get (car palettes) :entries)
-          (append (plist-get (car palettes) :entries)
-                  '((voice-bolden :personality voice-bolden))))
-    (let* ((result (emacsvox-aural-voice-data--convert
-                    (emacsvox-test--voice-data-registry palettes)
-                    'source-child 'new "New" profile '((voice-bolden . "two"))))
-           (entries (plist-get (plist-get result :palette) :entries)))
-      (should-not (plist-get (cdr (assq 'bolden entries)) :local-choices))
-      (should (equal (plist-get (cdr (assq 'voice-bolden entries)) :local-choices)
-                     "two")))))
-
-(ert-deftest emacsvox-aural-voice-data-automatic-does-not-capture-session ()
-  "An explicit Automatic conversion is independent of live session routing."
-  (let* ((registry (emacsvox-test--voice-data-registry
-                    (plist-get emacsvox-test--voice-data-fixture :source-palettes)))
-         (emacsvox-aural-session-routing-bindings
-          '((:logical-voice bolden :selectors
-             ((:kind exact :scope session :engine-id "dectalk" :voice-id "Paul")))))
-         (result (emacsvox-aural-voice-data--convert
-                  registry 'source-child 'new "New" nil nil)))
-    (should-not (plist-get result :choice-sets))
-    (dolist (entry (plist-get (plist-get result :palette) :entries))
-      (should (plist-member (cdr entry) :choices))
-      (should-not (plist-get (cdr entry) :choices)))))
-
 (ert-deftest emacsvox-aural-voice-data-inheritance-owner-and-missing-local ()
   "Whole entries retain their defining owner; missing references use portable data."
   (let* ((conversion (emacsvox-test--voice-data-conversion))
          (parent (plist-get conversion :expected-palette))
          (sets (plist-get conversion :expected-local-choice-sets))
-         (child '(:schema-version 2 :id child :summary "Child" :parent reading-owned
-                  :routing owned :entries nil))
+         (child '(:schema-version 3 :id child :summary "Child" :parent reading-owned :routing owned :entries nil))
          (registry (emacsvox-test--voice-data-registry (list parent child)))
-         (item (car (emacsvox-aural-voice-data--entries 'child registry)))
+         (item (cl-find 'bolden (emacsvox-aural-voice-data--entries 'child registry)
+                        :key (lambda (entry) (car (plist-get entry :entry)))))
          (properties (cdr (plist-get item :entry))))
     (should (eq (plist-get item :palette) 'reading-owned))
     (should (equal (plist-get (emacsvox-aural-voice-data--choices
                               'reading-owned 'bolden properties sets) :selectors)
-                   (plist-get (car sets) :selectors)))
+                   (emacsvox-aural-voice-data--selectors (plist-get (car sets) :choices))))
     (let ((missing (emacsvox-aural-voice-data--choices
                     'reading-owned 'bolden properties nil)))
       (should (equal (plist-get missing :diagnostics) '(missing-local-choices)))
-      (should (equal (plist-get missing :selectors) (plist-get properties :choices))))
+      (should (equal (plist-get missing :choices) (plist-get properties :choices))))
     (should-error (emacsvox-aural-voice-data--choices 'child 'bolden properties sets))
-    (setf (plist-get (car sets) :selectors) nil)
-    (should-not (plist-get (emacsvox-aural-voice-data--choices
-                            'reading-owned 'bolden properties sets) :selectors))
-    (puthash 'legacy (emacsvox-aural-compile-voice-palette-data
-                      '(:schema-version 1 :id legacy :summary "Legacy" :parent child
-                        :entries nil)) registry)
-    (should-error (emacsvox-aural-voice-data--entries 'legacy registry))
-    (let ((emacsvox-aural-voice-palette-registry registry))
-      (should-error (emacsvox-aural-effective-voice-entries 'legacy)))))
+    (setf (plist-get (car sets) :choices) nil)
+    (should-error (emacsvox-aural-voice-data--choices 'reading-owned 'bolden properties sets))))
 
 (ert-deftest emacsvox-aural-voice-data-shares-whole-entry-inheritance ()
   "Public definitions and owned resolution agree through four palette levels."
@@ -289,7 +159,7 @@
          (emacsvox-aural-voice-palette-registry registry)
          (metadata (emacsvox-aural-voice-data--entries 'a registry))
          (resolved (emacsvox-aural-voice-data--resolve
-                    'voice-bolden 'a registry nil nil nil nil)))
+                    'voice-bolden 'a registry nil   nil)))
     (should (equal (mapcar (lambda (item) (plist-get item :palette)) metadata)
                    '(b acss-default)))
     (should (equal (emacsvox-aural-voice 'bolden 'a)
@@ -348,7 +218,7 @@
     (should (equal (plist-get result :omitted-local-choices) '(bolden)))
     (should (eq (plist-get export :routing) 'owned))
     (should-not (plist-member (cdr (car (plist-get export :entries))) :local-choices))
-    (should (equal (plist-get (cdr (car (plist-get export :entries))) :choices)
+    (should (equal (emacsvox-aural-voice-data--selectors (plist-get (cdr (car (plist-get export :entries))) :choices))
                    '((:kind properties :scope portable :engine-id "eloquence" :gender male))))
     (should (equal data before))))
 
@@ -359,15 +229,15 @@
          (changed (copy-tree sets)))
     (should (equal sets (emacsvox-aural-routing--merge-choice-sets sets sets)))
     (should (equal sets (emacsvox-aural-routing--merge-choice-sets sets nil)))
-    (setf (plist-get (car changed) :selectors) nil)
+    (setf (plist-get (car changed) :choices) nil)
     (should-error (emacsvox-aural-routing--merge-choice-sets sets changed))
     (should-error (emacsvox-aural-routing--validate-choice-sets (append sets sets)))
     (setf (plist-get (car changed) :selectors)
           '((:kind engine-default :scope session :engine-id "dectalk")))
     (should-error (emacsvox-aural-routing--validate-choice-sets changed))))
 
-(ert-deftest emacsvox-aural-voice-data-old-files-read-without-writing ()
-  "Both envelope migrations are read-only and leave legacy palettes at version 1."
+(ert-deftest emacsvox-aural-voice-data-old-envelopes-read-without-writing ()
+  "Envelope upgrades are read-only and retain complete palette records."
   (let ((directory (make-temp-file "voice-old-data-" t)))
     (unwind-protect
         (dolist (routing '(nil t))
@@ -383,7 +253,7 @@
               (should (= (plist-get read :schema-version) (if routing 3 9)))
               (unless routing
                 (should (= (plist-get (car (plist-get read :voice-palettes))
-                                      :schema-version) 1))))
+                                      :schema-version) 3))))
             (should (equal text (with-temp-buffer
                                   (insert-file-contents file) (buffer-string))))
             (should-not (file-exists-p (concat file "~")))))
@@ -428,6 +298,46 @@
           (should (= (hash-table-count emacsvox-aural-routing-profile-registry) 0))
           (should-not (directory-files directory nil "^\\.aural-")))
       (delete-directory directory t))))
+
+(ert-deftest emacsvox-aural-voice-data-rejects-retired-palettes-and-alias-entries ()
+  "Old palette formats and alias shadowing fail without registry mutation."
+  (let* ((inputs (emacsvox-test--voice-resolution-inputs))
+         (registry (plist-get inputs :registry))
+         (before (hash-table-count registry)))
+    (dolist (version '(1 2))
+      (should-error (emacsvox-aural-compile-voice-palette-data
+                     (list :schema-version version :id 'old :summary "Old"
+                           :parent 'acss-default :routing 'owned :entries nil))))
+    (should-error (emacsvox-aural-compile-voice-palette-data
+                   '(:schema-version 3 :id shadow :summary "Shadow" :parent acss-default
+                     :routing owned :entries ((voice-bolden :personality voice-smoothen :choices nil)))))
+    (should (= before (hash-table-count registry)))
+    (let ((canonical (emacsvox-test--resolve-owned inputs 'bolden 'reading-owned))
+          (alias (emacsvox-test--resolve-owned inputs 'voice-bolden 'reading-owned)))
+      (should (eq (plist-get alias :name) 'bolden))
+      (should (equal (plist-get canonical :choices) (plist-get alias :choices))))
+    (should-not (plist-get (emacsvox-test--resolve-owned inputs 'voice-custom 'reading-owned) :name))))
+
+(ert-deftest emacsvox-aural-voice-data-rejects-retired-referenced-snapshot ()
+  "Historical local records remain readable but cannot supply current choices."
+  (let* ((old '(:id "historical" :palette reading-owned :voice bolden
+                :selectors ((:kind exact :scope local :engine-id "dectalk" :voice-id "Paul"))))
+         (sets (emacsvox-aural-routing--validate-choice-sets (list old)))
+         (before (copy-tree sets)))
+    (should (equal sets (list old)))
+    (should-error (emacsvox-aural-voice-data--choices
+                   'reading-owned 'bolden '(:choices nil :local-choices "historical") sets))
+    (should (equal sets before))))
+
+(ert-deftest emacsvox-aural-voice-data-has-no-shared-named-routing-api ()
+  "Named choices are owned by palettes; workstation policy has no bindings."
+  (dolist (function '(emacsvox-aural-set-session-routing-binding
+                      emacsvox-aural-voice-data--convert emacsvox-aural-voice-data--promote
+                      emacsvox-aural-routing-apply-preset-to-data))
+    (should-not (fboundp function)))
+  (should-error (emacsvox-aural-validate-routing-profile-data
+                 '(:schema-version 2 :id old :summary "Old" :engine-order nil
+                   :disabled-engines nil :fallback nil :bindings nil))))
 
 (provide 'emacsvox-aural-voice-data-tests)
 ;;; emacsvox-aural-voice-data-tests.el ends here

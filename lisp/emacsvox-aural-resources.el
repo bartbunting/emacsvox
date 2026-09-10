@@ -879,17 +879,15 @@ generated ACSS variables and arbitrary interned symbols are never enumerated."
                emacsvox-aural-voice-palette-registry)
       (run-hooks 'emacsvox-aural-configuration-changed-hook))))
 
-(defun emacsvox-aural--compile-voice-palette-entry (data palette-id &optional owned)
-  "Compile safe voice entry DATA for PALETTE-ID, validating OWNED metadata."
+(defun emacsvox-aural--compile-voice-palette-entry (data palette-id)
+  "Compile a complete safe voice entry DATA for PALETTE-ID."
   (unless (and (consp data) (car data) (symbolp (car data))
                (not (keywordp (car data))))
     (emacsvox-aural--resource-error
      "Voice palette %S entry must start with a symbol: %S" palette-id data))
   (let* ((name (car data))
          (properties (cdr data))
-         (allowed (if owned
-                      '(:personality :style :choices :language :local-choices)
-                    '(:personality :style)))
+         (allowed '(:personality :style :choices :language :local-choices))
          (unknown
           (and
            (emacsvox-aural--plist-p properties)
@@ -908,26 +906,17 @@ generated ACSS variables and arbitrary interned symbols are never enumerated."
     (when (emacsvox-aural--generated-voice-name-p name)
       (emacsvox-aural--resource-error
        "Voice name %S is reserved for generated ACSS" name))
-    (when (and (eq owned 3)
-               (not (eq name (emacsvox-aural--canonical-voice-name name))))
+    (when (not (eq name (emacsvox-aural--canonical-voice-name name)))
       (emacsvox-aural--resource-error
        "Voice name %S is a reserved alias for %S"
        name (emacsvox-aural--canonical-voice-name name)))
-    (when owned
-      (require 'emacsvox-aural-routing-profiles)
-      (emacsvox-aural-routing--strict-properties properties allowed '(:choices))
-      (unless (proper-list-p (plist-get properties :choices))
-        (emacsvox-aural--resource-error "Voice choices must be a proper list"))
-      (if (eq owned 3)
-          (emacsvox-aural-routing--validate-choices (plist-get properties :choices) t)
-        (dolist (selector (plist-get properties :choices))
-          (emacsvox-aural-validate-routing-selector selector t)
-          (unless (eq (plist-get selector :scope) 'portable)
-            (emacsvox-aural--resource-error "Palette choices must be portable"))))
-      (dolist (key '(:language :local-choices))
-        (when-let* ((value (plist-get properties key)))
-          (unless (and (stringp value) (not (string-empty-p value)))
-            (emacsvox-aural--resource-error "Invalid voice %S: %S" key value)))))
+    (require 'emacsvox-aural-routing-profiles)
+    (emacsvox-aural-routing--strict-properties properties allowed '(:choices))
+    (emacsvox-aural-routing--validate-choices (plist-get properties :choices) t)
+    (dolist (key '(:language :local-choices))
+      (when-let* ((value (plist-get properties key)))
+        (unless (and (stringp value) (not (string-empty-p value)))
+          (emacsvox-aural--resource-error "Invalid voice %S: %S" key value))))
     (when
         (eq
          (and (plist-member properties :personality) t)
@@ -950,10 +939,7 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
   (unless (emacsvox-aural--plist-p data)
     (emacsvox-aural--resource-error
      "Voice palette data must be a keyword plist: %S" data))
-  (let* ((allowed
-          (if (memq (plist-get data :schema-version) '(2 3))
-              '(:schema-version :id :summary :parent :entries :routing)
-            '(:schema-version :id :summary :parent :entries)))
+  (let* ((allowed '(:schema-version :id :summary :parent :entries :routing))
          (unknown
           (cl-loop
            for (key _) on data by #'cddr
@@ -967,27 +953,29 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
     (when unknown
       (emacsvox-aural--resource-error
        "Unknown voice palette properties: %S" unknown))
-    (unless (memq version '(1 2 3))
+    (unless (eq version 3)
       (emacsvox-aural--resource-error
        "Unsupported voice palette schema version: %S" version))
-    (when (memq version '(2 3))
-      (require 'emacsvox-aural-routing-profiles)
-      (emacsvox-aural-routing--strict-properties
-       data allowed '(:schema-version :id :summary :parent :entries :routing))
-      (unless (eq (plist-get data :routing) 'owned)
-        (emacsvox-aural--resource-error "Owned palettes require owned routing")))
+    (require 'emacsvox-aural-routing-profiles)
+    (emacsvox-aural-routing--strict-properties data allowed allowed)
+    (unless (eq (plist-get data :routing) 'owned)
+      (emacsvox-aural--resource-error "Palettes require owned choices"))
     (emacsvox-aural--validate-id id "Voice palette identifier")
     (emacsvox-aural--validate-summary summary (format "Voice palette %S" id))
     (when parent
       (emacsvox-aural--validate-id parent (format "Parent palette for %S" id)))
+    (if (eq id 'acss-default)
+        (unless (and built-in (null parent))
+          (emacsvox-aural--resource-error "acss-default is the read-only root palette"))
+      (unless parent
+        (emacsvox-aural--resource-error "Palette %S requires a parent ending at acss-default" id)))
     (unless (proper-list-p raw-entries)
       (emacsvox-aural--resource-error
        "Voice palette %S entries must be a list" id))
     (let ((entries
            (mapcar
             (lambda (entry)
-              (emacsvox-aural--compile-voice-palette-entry entry id
-                                                         (and (memq version '(2 3)) version)))
+              (emacsvox-aural--compile-voice-palette-entry entry id))
             raw-entries)))
       (let ((names (mapcar #'car entries)))
         (unless
@@ -1732,30 +1720,10 @@ The nearest definition replaces the entire entry.  PATH detects cycles."
          entries)
     (unless record
       (emacsvox-aural--resource-error "Unknown voice palette: %S" palette-id))
-    (emacsvox-aural-compile-voice-palette-data data)
+    (emacsvox-aural-compile-voice-palette-data data (emacsvox-aural-voice-palette-built-in record))
     (when parent
-      (let ((parent-record (gethash parent registry)))
-        (unless (and parent-record
-                     (or (eq (plist-get data :routing)
-                             (plist-get (emacsvox-aural-voice-palette-data-form
-                                         parent-record) :routing))
-                         ;; Transitional schema-1 reader until ADR 0018 slice 4.
-                         ;; Older definition palettes can read the standard
-                         ;; vocabulary without adopting its choice ownership.
-                         (and (eq (plist-get data :schema-version) 1)
-                              (eq parent 'acss-default)
-                              (emacsvox-aural-voice-palette-built-in parent-record))))
-          (emacsvox-aural--resource-error
-           "Missing parent or mixed palette ownership: %S" parent)))
       (setq entries (emacsvox-aural--effective-voice-metadata
-                     parent registry (cons palette-id path)))
-      (when (eq (plist-get data :schema-version) 1)
-        (dolist (item entries)
-          (setf (plist-get item :schema-version) 1)
-          (let ((properties (cdr (plist-get item :entry))))
-            (dolist (key '(:choices :local-choices :language))
-              (cl-remf properties key))
-            (setcdr (plist-get item :entry) properties)))))
+                     parent registry (cons palette-id path))))
     (dolist (entry (plist-get data :entries))
       (let ((value (list :palette palette-id :schema-version (plist-get data :schema-version)
                          :entry (copy-tree entry)))
@@ -1782,12 +1750,7 @@ The nearest definition replaces the entire entry.  PATH detects cycles."
   "Return the complete voice preset for NAME in PALETTE-ID."
   (let* ((palette-id (or palette-id 'acss-default))
          (entries (emacsvox-aural-effective-voice-entries palette-id)))
-    (alist-get
-     (if (eq (plist-get (emacsvox-aural-voice-palette-data-form
-                        (emacsvox-aural-voice-palette palette-id)) :schema-version) 3)
-         (emacsvox-aural--canonical-voice-name name)
-       name)
-     entries)))
+    (alist-get (emacsvox-aural--canonical-voice-name name) entries)))
 
 (defun emacsvox-aural--voice-reference-kind (voice palette)
   "Classify runtime VOICE in PALETTE without consulting arbitrary variables."

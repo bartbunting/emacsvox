@@ -174,7 +174,6 @@ Use a private process advertising structured delivery, without sending audio."
            (emacsvox-aural-voice-palette-override 'consumer-test)
            (emacsvox-aural-voice-palette-changed-hook nil)
            (emacsvox-aural-active-routing-profile nil)
-           (emacsvox-aural-session-routing-bindings nil)
            (omnivox-average-pitch-contrast 1.0)
            (initial '(:family nil :average-pitch nil :pitch-range nil
                       :stress nil :richness nil))
@@ -219,7 +218,7 @@ Use a private process advertising structured delivery, without sending audio."
                              expected-style))
               (remhash 'consumer-test emacsvox-aural-voice-palette-registry)
               (emacsvox-aural-register-voice-palette-data palette))
-            (let ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'consumer-test 'bolden nil) :snapshot)))
+            (let ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'consumer-test 'bolden) :snapshot)))
               (should (equal (plist-get snapshot :definition) expected-style))
               (should (= (emacsvox-aural-voice-tuner--control-value
                           'low-pass (plist-get (plist-get snapshot :definition) :low-pass)) 2)))
@@ -1634,7 +1633,7 @@ write.  State synchronization lines in a combined write are ignored."
            (omnivox-logical-voice-preferences nil)
            (omnivox-logical-voice-languages nil)
            (omnivox-engine-priority-ids nil)
-           (emacsvox-aural-session-routing-bindings nil))
+           )
        (cl-letf (((symbol-function 'tts-voice-defined-p) #'omnivox-voice-defined-p)
                  ((symbol-function 'tts-define-voice-from-acss) #'omnivox-define-voice-from-acss)
                  ((symbol-function 'tts-get-voice-command) #'omnivox-get-voice-command)

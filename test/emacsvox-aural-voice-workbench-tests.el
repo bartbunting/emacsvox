@@ -49,12 +49,7 @@
   "Representative normalized Workbench inventory.")
 
 (defconst emacsvox-test--workbench-routing-profile
-  '(:schema-version 2 :id workstation :summary "Workbench profile"
-    :engine-order ("eloquence" "winrt")
-    :disabled-engines nil
-    :fallback
-    (:allow-same-language t :global-default nil :engines ("winrt"))
-    :bindings nil)
+  '(:schema-version 2 :id workstation :summary "Workbench profile" :engine-order ("eloquence" "winrt") :disabled-engines nil :fallback (:allow-same-language t :global-default nil :engines ("winrt")))
   "Representative staged Workbench route.")
 
 (defmacro emacsvox-test--with-voice-workbench (&rest body)
@@ -69,7 +64,6 @@
          (emacsvox-aural-routing-profile-registry
           (make-hash-table :test #'eq))
          (emacsvox-aural-active-routing-profile 'workstation)
-         (emacsvox-aural-session-routing-bindings nil)
          (emacsvox-aural-session-engine-order nil)
          (emacsvox-aural-routing-profile-changed-hook nil)
          (emacsvox-aural-routing-apply-status nil)

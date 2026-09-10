@@ -6,25 +6,9 @@
 (require 'emacsvox-aural-voice-runtime-tests)
 (require 'emacsvox-aural-voice-editing)
 
-(ert-deftest emacsvox-aural-voice-editing-legacy-alias-and-independent-conversion ()
-  (emacsvox-test--with-owned-runtime
-   (let* ((profile (car (plist-get emacsvox-test--voice-data-fixture :source-routing-profiles)))
-          (opened (emacsvox-aural-voice-editing--snapshot 'source-child 'voice-bolden profile))
-          (snapshot (plist-get opened :snapshot))
-          (copy (emacsvox-aural-voice-editing--proposal
-                 'source-child 'bolden snapshot 'new-editor "Editor" profile)))
-     (should (eq (plist-get opened :name) 'bolden))
-     (should (equal (plist-get snapshot :selectors) (plist-get (car emacsvox-aural-routing--choice-sets) :selectors)))
-     (should-not (gethash 'new-editor emacsvox-aural-voice-palette-registry))
-     (should-not (plist-get (plist-get copy :palette) :parent))
-     (should (equal (plist-get (cdr (assq 'bolden (plist-get (plist-get copy :palette) :entries))) :style)
-                    (plist-get snapshot :definition)))
-     (should (equal (plist-get (car (plist-get copy :choice-sets)) :selectors)
-                    (plist-get snapshot :selectors))))))
-
 (ert-deftest emacsvox-aural-voice-editing-experiment-keeps-are-explicit-and-preserve-chain ()
   (emacsvox-test--with-owned-runtime
-   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading-owned 'bolden nil) :snapshot))
+   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading-owned 'bolden) :snapshot))
           (experiment '(:definition (:family nil :average-pitch 8 :pitch-range 2 :stress 4 :richness 5)
                                     :selectors ((:kind exact :scope local :engine-id "new" :voice-id "new"))))
           (physical (emacsvox-aural-voice-editing--keep snapshot experiment 'physical 'replace))
@@ -39,9 +23,9 @@
 
 (ert-deftest emacsvox-aural-voice-editing-style-only-preserves-local-reference-and-raw-values ()
   (emacsvox-test--with-owned-runtime
-   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading-owned 'bolden nil) :snapshot))
+   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading-owned 'bolden) :snapshot))
           (edited (emacsvox-aural-voice-editing--adjust snapshot 'reading-owned 'echo nil))
-          (proposal (emacsvox-aural-voice-editing--proposal 'reading-owned 'bolden edited 'reading-owned "" nil))
+          (proposal (emacsvox-aural-voice-editing--proposal 'reading-owned 'bolden edited 'reading-owned ""))
           (properties (cdr (assq 'bolden (plist-get (plist-get proposal :palette) :entries)))))
      (should (= (plist-get (plist-get properties :style) :low-pass) 7))
      (should (= (plist-get (plist-get properties :style) :average-pitch) 0))
@@ -54,22 +38,23 @@
   (emacsvox-test--with-owned-runtime
    (puthash 'child-owned
             (emacsvox-aural-compile-voice-palette-data
-             '(:schema-version 2 :id child-owned :summary "Child" :parent reading-owned :routing owned :entries nil))
+             '(:schema-version 3 :id child-owned :summary "Child" :parent reading-owned :routing owned :entries nil))
             emacsvox-aural-voice-palette-registry)
-   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'child-owned 'bolden nil) :snapshot))
-          (copy (emacsvox-aural-voice-editing--proposal 'child-owned 'bolden snapshot 'child-owned "" nil))
+   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'child-owned 'bolden) :snapshot))
+          (copy (emacsvox-aural-voice-editing--proposal 'child-owned 'bolden snapshot 'child-owned ""))
           (set (car (plist-get copy :choice-sets))))
      (should (eq (plist-get set :palette) 'child-owned))
-     (should (equal (plist-get set :selectors) (plist-get snapshot :selectors)))
+     (should (equal (plist-get set :choices) (plist-get snapshot :choices)))
      (setq snapshot (plist-put snapshot :selectors nil))
-     (let* ((auto (emacsvox-aural-voice-editing--proposal 'reading-owned 'bolden snapshot 'reading-owned "" nil))
+     (setq snapshot (plist-put snapshot :choices nil))
+     (let* ((auto (emacsvox-aural-voice-editing--proposal 'reading-owned 'bolden snapshot 'reading-owned ""))
             (properties (cdr (assq 'bolden (plist-get (plist-get auto :palette) :entries)))))
        (should-not (plist-get properties :local-choices))
        (should-not (plist-get properties :choices))))))
 
 (ert-deftest emacsvox-aural-voice-editing-preview-keeps-chain-and-neutral-effects ()
   (emacsvox-test--with-owned-runtime
-   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading-owned 'bolden nil) :snapshot))
+   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading-owned 'bolden) :snapshot))
           (preview (emacsvox-aural-voice-editing--preview snapshot 'reading-owned
                                                           '(:engine-order ("dectalk") :disabled-engines ("disabled") :fallback (:engines ("eloquence"))) "Test")))
      (should (equal (plist-get preview :selectors) (plist-get snapshot :selectors)))
@@ -150,18 +135,18 @@
           (should (= (plist-get (plist-get legacy :acss) :richness) (/ 2.0 9)))
           (should-not (plist-get (plist-get legacy :effects) :echo)))))))
 
-(ert-deftest emacsvox-aural-voice-editing-temporary-row-ids-do-not-force-schema-promotion ()
+(ert-deftest emacsvox-aural-voice-editing-shared-edit-preserves-rows-and-tuned-edit-allocates-snapshot ()
   (emacsvox-test--with-owned-runtime
    (let* ((snapshot (emacsvox-aural-voice-editing--freeze
-                     (plist-get (emacsvox-aural-voice-editing--snapshot 'reading-owned 'bolden nil) :snapshot) 'reading-owned))
+                     (plist-get (emacsvox-aural-voice-editing--snapshot 'reading-owned 'bolden) :snapshot) 'reading-owned))
           (edited (emacsvox-aural-voice-editing--adjust snapshot 'reading-owned 'echo nil))
-          (shared (emacsvox-aural-voice-editing--proposal 'reading-owned 'bolden edited 'reading-owned "" nil)))
-     (should (plist-get snapshot :transient-choices))
+          (shared (emacsvox-aural-voice-editing--proposal 'reading-owned 'bolden edited 'reading-owned "")))
+     (should-not (plist-get snapshot :transient-choices))
      (should (plist-get snapshot :choices))
-     (should (= (plist-get (plist-get shared :palette) :schema-version) 2))
+     (should (= (plist-get (plist-get shared :palette) :schema-version) 3))
      (should-not (plist-get shared :choice-sets))
      (plist-put (car (plist-get edited :choices)) :adjustments '(:richness 0))
-     (let ((tuned (emacsvox-aural-voice-editing--proposal 'reading-owned 'bolden edited 'reading-owned "" nil)))
+     (let ((tuned (emacsvox-aural-voice-editing--proposal 'reading-owned 'bolden edited 'reading-owned "")))
        (should (= (plist-get (plist-get tuned :palette) :schema-version) 3))
        (should (equal (plist-get (car (plist-get (car (plist-get tuned :choice-sets)) :choices)) :id)
                       (plist-get (car (plist-get edited :choices)) :id)))))))
@@ -194,7 +179,7 @@
 (ert-deftest emacsvox-aural-voice-editing-individual-keep-preserves-other-rows-and-shared ()
   (emacsvox-test--with-owned-runtime
    (let* ((snapshot (emacsvox-aural-voice-editing--freeze
-                     (plist-get (emacsvox-aural-voice-editing--snapshot 'reading-owned 'bolden nil) :snapshot) 'reading-owned))
+                     (plist-get (emacsvox-aural-voice-editing--snapshot 'reading-owned 'bolden) :snapshot) 'reading-owned))
           (rows (plist-get snapshot :choices))
           (id (plist-get (nth 1 rows) :id))
           (experiment '(:definition (:richness 8 :rate-offset 0 :low-pass 6)

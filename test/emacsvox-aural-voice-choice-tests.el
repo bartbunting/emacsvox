@@ -34,14 +34,14 @@
           (plist-get (emacsvox-test--choice-fixture :expected-routing) :choice-sets)))
      ,@body))
 
-(ert-deftest emacsvox-aural-voice-choice-promotion-matches-independent-fixture ()
-  "Only the affected palette is promoted, with complete immutable local data."
+(ert-deftest emacsvox-aural-voice-choice-save-matches-independent-fixture ()
+  "Saving changed choices preserves unrelated entries and immutable local data."
   (let* ((source (emacsvox-test--choice-fixture :source-palette))
          (before (copy-tree source))
          (rows (emacsvox-test--tuned-choices))
          (proposal (emacsvox-aural-voice-data--put-choices
                     source 'bolden rows "reading-bolden-after"
-                    '((smoothen "espeak-default"))))
+                    ))
          (routing (emacsvox-aural-validate-routing-user-data
                    (emacsvox-test--choice-fixture :source-routing))))
     (should (equal (plist-get proposal :palette) (emacsvox-test--choice-fixture :expected-palette)))
@@ -53,7 +53,7 @@
     (should (equal rows (emacsvox-test--tuned-choices)))
     (should (equal proposal (emacsvox-aural-voice-data--put-choices
                              source 'bolden rows "reading-bolden-after"
-                             '((smoothen "espeak-default")))))))
+                             )))))
 
 (ert-deftest emacsvox-aural-voice-choice-rejects-malformed-patches-and-records ()
   "Choice patches have strict presence and range semantics without legacy spillover."
@@ -85,23 +85,19 @@
   (let ((data (emacsvox-test--choice-fixture :expected-palette)))
     (should-error (emacsvox-aural-compile-voice-palette-data (plist-put data :schema-version 2)))))
 
-(ert-deftest emacsvox-aural-voice-choice-resolves-owned-records-and-session-replacement ()
-  "Aliases and temporary routes retain their scope without physical-ID patch joins."
+(ert-deftest emacsvox-aural-voice-choice-resolves-owned-records-and-aliases ()
+  "Aliases resolve the complete owned records and return independent copies."
   (emacsvox-test--with-tuned-storage
    (let* ((rows (emacsvox-test--tuned-choices))
-          (resolve (lambda (voice &optional session)
+          (resolve (lambda (voice)
                      (emacsvox-aural-voice-data--resolve
                       voice 'reading emacsvox-aural-voice-palette-registry
-                      emacsvox-aural-routing--choice-sets nil session nil)))
+                      emacsvox-aural-routing--choice-sets   nil)))
           (saved (funcall resolve 'bolden))
-          (alias (funcall resolve 'voice-bolden))
-          (temporary (funcall resolve 'bolden
-                              (list (cons 'bolden (list (plist-get (car rows) :selector)))))))
+          (alias (funcall resolve 'voice-bolden)))
      (should (equal (plist-get saved :choices) rows))
      (should (equal (plist-get alias :choices) rows))
      (should (equal (plist-get saved :selectors) (emacsvox-aural-voice-data--selectors rows)))
-     (should (eq (plist-get temporary :choice-source) 'session))
-     (should-not (plist-get (car (plist-get temporary :choices)) :adjustments))
      (should (equal (plist-get (funcall resolve 'bolden) :choices) rows))
      (setf (plist-get (car (plist-get saved :choices)) :adjustments) nil)
      (should (equal (plist-get (funcall resolve 'bolden) :choices) rows)))))
@@ -111,15 +107,15 @@
   (let* ((data (emacsvox-test--choice-fixture :expected-palette))
          (properties (cdr (assq 'bolden (plist-get data :entries))))
          (sets (plist-get (emacsvox-test--choice-fixture :expected-routing) :choice-sets)))
-    (should-error (emacsvox-aural-voice-data--choices 'other 'bolden properties sets 3))
-    (should-error (emacsvox-aural-voice-data--choices 'reading 'bolden properties sets 2))
+    (should-error (emacsvox-aural-voice-data--choices 'other 'bolden properties sets))
+    (should (emacsvox-aural-voice-data--choices 'reading 'bolden properties sets))
     (setf (plist-get (car (plist-get properties :choices)) :adjustments) nil)
-    (should-error (emacsvox-aural-voice-data--choices 'reading 'bolden properties sets 3)))
+    (should-error (emacsvox-aural-voice-data--choices 'reading 'bolden properties sets)))
   (let* ((data (emacsvox-test--choice-fixture :expected-palette))
          (properties (cdr (assq 'bolden (plist-get data :entries))))
          (sets (plist-get (emacsvox-test--choice-fixture :source-routing) :choice-sets)))
     (setq properties (plist-put properties :local-choices "reading-bolden-before"))
-    (should-error (emacsvox-aural-voice-data--choices 'reading 'bolden properties sets 3))))
+    (should-error (emacsvox-aural-voice-data--choices 'reading 'bolden properties sets))))
 
 (ert-deftest emacsvox-aural-voice-choice-operations-preserve-identities-and-states ()
   "Reordering and replacement preserve the selected row; inheritance is removal."
@@ -155,11 +151,11 @@
 (ert-deftest emacsvox-aural-voice-choice-custom-edit-creates-new-local-snapshot ()
   "Changing a patch keeps row IDs and creates a new immutable full-chain snapshot."
   (emacsvox-test--with-tuned-storage
-   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading 'bolden nil) :snapshot))
+   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading 'bolden) :snapshot))
           (rows (emacsvox-aural-voice-data--adjust-choice
                  (plist-get snapshot :choices) "eloquence-male" :richness 'set 8)))
      (setq snapshot (plist-put snapshot :choices rows))
-     (let* ((proposal (emacsvox-aural-voice-editing--proposal 'reading 'bolden snapshot 'reading "" nil))
+     (let* ((proposal (emacsvox-aural-voice-editing--proposal 'reading 'bolden snapshot 'reading ""))
             (set (car (plist-get proposal :choice-sets)))
             (properties (cdr (assq 'bolden (plist-get (plist-get proposal :palette) :entries)))))
        (should (equal (plist-get set :choices) rows))
@@ -172,9 +168,9 @@
 (ert-deftest emacsvox-aural-voice-choice-shared-edit-retains-tuning-and-reference ()
   "The existing shared editor can save without rewriting any choice patches."
   (emacsvox-test--with-tuned-storage
-   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading 'bolden nil) :snapshot))
+   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading 'bolden) :snapshot))
           (edited (emacsvox-aural-voice-editing--adjust snapshot 'reading 'richness 9))
-          (proposal (emacsvox-aural-voice-editing--proposal 'reading 'bolden edited 'reading "Reading" nil))
+          (proposal (emacsvox-aural-voice-editing--proposal 'reading 'bolden edited 'reading "Reading"))
           (entry (cdr (assq 'bolden (plist-get (plist-get proposal :palette) :entries)))))
      (should (equal (plist-get snapshot :choices) (emacsvox-test--tuned-choices)))
      (should (equal (plist-get entry :choices) (emacsvox-aural-voice-data--portable-choices
@@ -184,41 +180,25 @@
      (should-not (plist-get proposal :choice-sets))
      ;; A caller updating selectors alone cannot silently discard attached tuning.
      (setf (plist-get edited :selectors) nil)
-     (should-error (emacsvox-aural-voice-editing--proposal 'reading 'bolden edited 'reading "" nil)
+     (should-error (emacsvox-aural-voice-editing--proposal 'reading 'bolden edited 'reading "")
                    :type 'user-error))))
 
 (ert-deftest emacsvox-aural-voice-choice-missing-local-preserved-until-explicit-reset ()
   "A shared edit retains an unresolved reference; choice edits require reset."
   (emacsvox-test--with-tuned-storage
    (let* ((emacsvox-aural-routing--choice-sets nil)
-          (snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading 'bolden nil) :snapshot))
-          (proposal (emacsvox-aural-voice-editing--proposal 'reading 'bolden snapshot 'reading "" nil)))
+          (snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading 'bolden) :snapshot))
+          (proposal (emacsvox-aural-voice-editing--proposal 'reading 'bolden snapshot 'reading "")))
      (should (equal (plist-get (cdr (assq 'bolden (plist-get (plist-get proposal :palette) :entries))) :local-choices)
                     "reading-bolden-after"))
      (setq snapshot (plist-put snapshot :choices
                                (emacsvox-aural-voice-data--adjust-choice
                                 (plist-get snapshot :choices) "eloquence-male" :richness 'set 8)))
-     (should-error (emacsvox-aural-voice-editing--proposal 'reading 'bolden snapshot 'reading "" nil)
+     (should-error (emacsvox-aural-voice-editing--proposal 'reading 'bolden snapshot 'reading "")
                    :type 'user-error)
      (setq snapshot (plist-put snapshot :reset-choices t))
-     (setq proposal (emacsvox-aural-voice-editing--proposal 'reading 'bolden snapshot 'reading "" nil))
+     (setq proposal (emacsvox-aural-voice-editing--proposal 'reading 'bolden snapshot 'reading ""))
      (should-not (plist-get (cdr (assq 'bolden (plist-get (plist-get proposal :palette) :entries))) :local-choices)))))
-
-(ert-deftest emacsvox-aural-voice-choice-promoted-old-reference-remains-untouched ()
-  "Promotion leaves old local sets immutable and shared edits keep that reference."
-  (let* ((data (emacsvox-aural-voice-data--promote (emacsvox-test--choice-fixture :source-palette)))
-         (emacsvox-aural-voice-palette-registry
-          (emacsvox-test--voice-data-registry (list data (emacsvox-test--choice-fixture :unchanged-parent))))
-         (emacsvox-aural-routing--choice-sets
-          (plist-get (emacsvox-test--choice-fixture :source-routing) :choice-sets))
-         (snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading 'bolden nil) :snapshot))
-         (proposal (emacsvox-aural-voice-editing--proposal 'reading 'bolden snapshot 'reading "" nil)))
-    (should (equal (plist-get (cdr (assq 'bolden (plist-get (plist-get proposal :palette) :entries))) :choices)
-                   (plist-get (cdr (assq 'bolden (plist-get data :entries))) :choices)))
-    (should (equal (plist-get (cdr (assq 'bolden (plist-get (plist-get proposal :palette) :entries))) :local-choices)
-                   "reading-bolden-before"))
-    (should-not (cl-some (lambda (row) (plist-get row :adjustments)) (plist-get snapshot :choices)))
-    (should-not (plist-get proposal :choice-sets))))
 
 (ert-deftest emacsvox-aural-voice-choice-copy-inheritance-and-portable-export ()
   "Copy changes ownership while preserving row IDs, patches and inherited entries."
@@ -240,10 +220,10 @@
                     (emacsvox-test--choice-fixture :expected-portable-bolden-entry)))
      (should (equal (plist-get export :omitted-local-choices) '(bolden))))
    (puthash 'child (emacsvox-aural-compile-voice-palette-data
-                   '(:schema-version 2 :id child :summary "Child" :parent reading :routing owned :entries nil))
+                   '(:schema-version 3 :id child :summary "Child" :parent reading :routing owned :entries nil))
             emacsvox-aural-voice-palette-registry)
-   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'child 'bolden nil) :snapshot))
-          (proposal (emacsvox-aural-voice-editing--proposal 'child 'bolden snapshot 'child "" nil))
+   (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'child 'bolden) :snapshot))
+          (proposal (emacsvox-aural-voice-editing--proposal 'child 'bolden snapshot 'child ""))
           (set (car (plist-get proposal :choice-sets))))
      (should (= (plist-get (plist-get proposal :palette) :schema-version) 3))
      (should (eq (plist-get set :palette) 'child))
@@ -283,8 +263,7 @@
   "The actual save coordinator freezes IDs and keeps old settings until publication."
   (emacsvox-test--with-voice-save
    (let* ((old (emacsvox-aural-voice-drafts--palette-data 'reading-owned))
-          (rows (emacsvox-aural-voice-data--wrap-selectors
-                 (plist-get (car emacsvox-aural-routing--choice-sets) :selectors)))
+          (rows (copy-tree (plist-get (car emacsvox-aural-routing--choice-sets) :choices)))
           (rows (emacsvox-aural-voice-data--adjust-choice rows (plist-get (car rows) :id) :richness 'set 7))
           (change (emacsvox-aural-voice-data--put-choices old 'bolden rows "tuned-snapshot"))
           (proposed (plist-get change :palette))

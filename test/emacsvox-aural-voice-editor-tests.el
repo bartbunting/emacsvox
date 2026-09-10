@@ -110,7 +110,7 @@
    (let ((before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file)))
      (emacsvox-aural-voice-editor-open 'source-child 'voice-bolden)
      (should (derived-mode-p 'emacsvox-aural-voice-editor-mode))
-     (should (string-match-p "First save creates an independent copy" (buffer-string)))
+     (should (string-match-p "Inherited from source-base" (buffer-string)))
      (should (string-match-p "every fallback choice" (buffer-string)))
      (should (eq emacsvox-aural-voice-palette-override 'reading-owned))
      (should-not callbacks)
@@ -305,24 +305,6 @@
      (should (memq context (emacsvox-aural-home--pending-drafts)))
      (emacsvox-aural-voice-editor--show context (current-buffer))
      (should (= (plist-get (plist-get (emacsvox-aural-voice-editor--working) :definition) :richness) 7)))))
-
-(ert-deftest emacsvox-aural-voice-editor-converted-draft-becomes-independent-on-first-save ()
-  (emacsvox-test--with-voice-editor
-   (emacsvox-aural-voice-editor-open 'source-child 'voice-bolden)
-   (emacsvox-aural-voice-editor--put :automatic-sample nil)
-   (emacsvox-aural-voice-editor--set 'richness 7)
-   (cl-letf (((symbol-function 'read-string) (lambda (&rest _) "new-personal")))
-     (emacsvox-aural-voice-editor-save))
-   (funcall (car callbacks) '(:status applied))
-   (should (eq (emacsvox-aural-voice-editor--get :palette) 'new-personal))
-   (let ((source (emacsvox-aural-voice-drafts--palette-data 'source-child)))
-     (setq source (plist-put source :summary "Changed source"))
-     (puthash 'source-child (emacsvox-aural-compile-voice-palette-data source) emacsvox-aural-voice-palette-registry))
-   (emacsvox-aural-voice-editor--set 'richness 8)
-   (emacsvox-aural-voice-editor-save)
-   (should (= (length callbacks) 2))
-   (should (= (plist-get (cdr (assq 'bolden (emacsvox-aural-voice-palette-entries
-                                             (gethash 'new-personal emacsvox-aural-voice-palette-registry)))) :richness) 8))))
 
 (ert-deftest emacsvox-aural-voice-editor-picker-auditions-without-editing ()
   (emacsvox-test--with-voice-editor

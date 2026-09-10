@@ -126,7 +126,7 @@ Keep requested nil distinct from the ACSS transport's no-reset behavior."
           (cond ((eq preset 'inaudible) (list :definition nil :selectors nil))
                 (used (copy-tree snapshot))
                 (name (emacsvox-aural-voice-editing--freeze
-                       (plist-get (emacsvox-aural-voice-editing--snapshot palette name (plist-get base :routing)) :snapshot) palette))
+                       (plist-get (emacsvox-aural-voice-editing--snapshot palette name) :snapshot) palette))
                 ((or (null preset) (symbolp preset))
                  (list :definition preset :selectors nil))
                 (t (user-error "This compound legacy voice cannot be represented by a complete preview"))))

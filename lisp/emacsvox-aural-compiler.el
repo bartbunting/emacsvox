@@ -151,41 +151,6 @@ PACK and CUE remain readable while RESOURCE contents distinguish generations."
    (emacsvox-aural--sample-component cue)
    (substring (emacsvox-aural--file-digest resource) 0 16)))
 
-(defun emacsvox-aural--resolve-voice-name (voice palette)
-  "Resolve named VOICE through PALETTE and existing personality variables."
-  (let ((resolved
-         (or
-          (and
-           (symbolp voice)
-           (emacsvox-aural-voice voice palette))
-          voice)))
-    (if
-        (and
-         (symbolp resolved)
-         (boundp resolved)
-         (not (eq (symbol-value resolved) resolved)))
-        (symbol-value resolved)
-      resolved)))
-
-(defun emacsvox-aural--palette-voice-definition (voice palette)
-  "Return the effective palette name and definition for VOICE in PALETTE.
-
-Legacy face mappings use personality names such as `voice-lighten-extra',
-while portable palettes expose the corresponding name `lighten-extra'.  Use
-that portable entry only after it has been replaced with a custom definition;
-an unchanged personality alias must continue through the legacy compiler and
-must not recursively resolve to itself."
-  (when (symbolp voice)
-    (let ((direct (emacsvox-aural-voice voice palette)))
-      (if direct
-          (list voice direct)
-        (when-let* ((portable
-                     (car (rassq voice emacsvox-aural-default-voice-entries)))
-                    (definition
-                     (emacsvox-aural-voice portable palette)))
-          (unless (eq definition voice)
-            (list portable definition)))))))
-
 (defun emacsvox-aural--legacy-voice-adapter ()
   "Identify the active legacy ACSS adapter from its compiler function."
   (let ((implementation
@@ -653,30 +618,10 @@ and ACSS dimensions to the rules that supplied them."
      ((and (symbolp voice)
            (eq kind 'unknown))
       (emacsvox-aural--compile-unknown-voice voice palette provenance capability))
-     ((and (symbolp voice)
-           (emacsvox-aural-voice-runtime--owned voice palette))
-      (emacsvox-aural--compile-owned-voice
-       (emacsvox-aural-voice-runtime--owned voice palette) palette provenance))
      ((symbolp voice)
-      (let* ((palette-entry
-              (emacsvox-aural--palette-voice-definition voice palette))
-             (logical-voice (car palette-entry))
-             (palette-definition (cadr palette-entry)))
-        (if palette-entry
-            ;; Transitional old-format entries also contain terminal
-            ;; implementations, never another named-palette lookup.
-            (emacsvox-aural--compile-owned-voice
-             (list :name logical-voice :definition palette-definition) palette provenance)
-          (let* ((resolved (emacsvox-aural--resolve-voice-name voice palette))
-                 (style (emacsvox-aural--personality-style voice)))
-            (emacsvox-aural--make-compiled-voice
-             :command
-             (emacsvox-aural--compile-personality-command resolved)
-             :request voice
-             :style style
-             :provenance (copy-tree provenance)
-             :capability capability
-             :preset voice)))))
+      (if-let* ((resolved (emacsvox-aural-voice-runtime--owned voice palette)))
+          (emacsvox-aural--compile-owned-voice resolved palette provenance)
+        (emacsvox-aural--compile-unknown-voice voice palette provenance capability)))
      (t
       (emacsvox-aural--transport-error
        "Cannot compile voice value: %S" voice)))))

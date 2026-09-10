@@ -928,7 +928,7 @@ ACTION describes the operation and defaults to renaming."
   "Describe saved physical choices, shared adjustments and draft state for ENTRY."
   (let ((name (car entry)) (palette emacsvox-aural-voice-palette-previews-palette))
     (condition-case err
-        (let* ((opened (emacsvox-aural-voice-editing--snapshot palette name (emacsvox-aural-voice-runtime--profile)))
+        (let* ((opened (emacsvox-aural-voice-editing--snapshot palette name))
                (snapshot (plist-get opened :snapshot))
                (chain (plist-get snapshot :selectors)) (first (car chain))
                (style (emacsvox-aural-voice-editing--style snapshot palette))
@@ -948,8 +948,7 @@ ACTION describes the operation and defaults to renaming."
                         (or (and (fboundp 'emacsvox-aural-voice-editor--status-for)
                                  (emacsvox-aural-voice-editor--status-for palette name))
                             (if (plist-get opened :diagnostics) "Missing local choices"
-                              (if (emacsvox-aural-voice-runtime--owned-p palette)
-                                  "Saved; palette-owned" "Legacy shared routing"))))))
+                              "Saved; palette-owned")))))
       (error (list name (vector (symbol-name name) "Unavailable" "" "" (error-message-string err)))))))
 
 (defun emacsvox-aural-voice-palette-previews--set-entries ()
@@ -1315,11 +1314,8 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
          (properties (copy-tree (cdr (plist-get item :entry))))
          (choices (and item (emacsvox-aural-voice-data--choices
                              (plist-get item :palette) source properties
-                             emacsvox-aural-routing--choice-sets (plist-get item :schema-version))))
-         (layered (or (eq (plist-get data :schema-version) 3)
-                      (eq (plist-get item :schema-version) 3)))
-         (rows (and layered (if (plist-member choices :choices) (plist-get choices :choices)
-                              (emacsvox-aural-voice-data--wrap-selectors (plist-get choices :selectors)))))
+                             emacsvox-aural-routing--choice-sets)))
+         (rows (plist-get choices :choices))
          sets)
     (when (emacsvox-aural-voice-palette-built-in record)
       (user-error "Copy the built-in palette first"))
@@ -1328,15 +1324,11 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
       (user-error "Voice already exists in palette %s: %s" palette name))
     (when (plist-get choices :diagnostics)
       (user-error "Cannot copy %s: its saved local voice choices are missing" source))
-    (when layered
-      (setq data (emacsvox-aural-voice-data--promote data)
-            properties (plist-put properties :choices (emacsvox-aural-voice-data--portable-choices rows))))
+    (setq properties (plist-put properties :choices (emacsvox-aural-voice-data--portable-choices rows)))
     (when (plist-get properties :local-choices)
       (let ((id (emacsvox-aural-voice-editing--new-id)))
         (setq properties (plist-put properties :local-choices id)
-              sets (list (if layered
-                             (list :schema-version 3 :id id :palette palette :voice name :choices rows)
-                           (list :id id :palette palette :voice name :selectors (plist-get choices :selectors)))))))
+              sets (list (list :schema-version 3 :id id :palette palette :voice name :choices rows)))))
     (when rename
       (setq data (emacsvox-aural-voice-palettes--replace-entries
                   data (cl-remove source (plist-get data :entries) :key #'car))))
@@ -1431,24 +1423,21 @@ When REMAP is non-nil, allow personal rules and live face mappings to migrate."
                              (when (emacsvox-aural-voice-palettes--voice-reference-p (list :voice value) voice)
                                (user-error "Voice %s is mapped to face %s in %s; remap it before %s"
                                            voice face where action))) table))))
-    (unless remap
-      (check emacsvox-aural-user-rules "personal rules")
-      (check emacsvox-aural-session-rules "session rules"))
-    (dolist (pair `((,emacsvox-aural-scheme-registry . emacsvox-aural-scheme-entry-data)
-                    (,emacsvox-aural-module-fragment-registry . emacsvox-aural-module-fragment-data)
-                    (,emacsvox-aural-feature-fragment-registry . emacsvox-aural-feature-fragment-entry-data)
-                    (,emacsvox-aural-voice-palette-registry . emacsvox-aural-voice-palette-data-form)))
-      (maphash (lambda (id entry) (check (funcall (cdr pair) entry) id)) (car pair)))
-    (unless remap
-      (faces (bound-and-true-p voice-setup-face-voice-table) "the global face map")
-      (dolist (buffer (buffer-list))
-        (with-current-buffer buffer
-          (check emacsvox-aural-buffer-rules (buffer-name))
-          (faces (bound-and-true-p voice-setup-local-map) (buffer-name)))))
-    (when (or (assq voice emacsvox-aural-session-routing-bindings)
-              (cl-loop for entry being the hash-values of emacsvox-aural-routing-profile-registry
-                       thereis (assq voice (plist-get (emacsvox-aural-routing-profile-entry-data entry) :bindings))))
-      (user-error "Voice %s has a shared routing binding; update that binding before %s" voice action))))
+	     (unless remap
+	       (check emacsvox-aural-user-rules "personal rules")
+	       (check emacsvox-aural-session-rules "session rules"))
+	     (dolist (pair `((,emacsvox-aural-scheme-registry . emacsvox-aural-scheme-entry-data)
+			     (,emacsvox-aural-module-fragment-registry . emacsvox-aural-module-fragment-data)
+			     (,emacsvox-aural-feature-fragment-registry . emacsvox-aural-feature-fragment-entry-data)
+			     (,emacsvox-aural-voice-palette-registry . emacsvox-aural-voice-palette-data-form)))
+	       (maphash (lambda (id entry) (check (funcall (cdr pair) entry) id)) (car pair)))
+	     (unless remap
+	       (faces (bound-and-true-p voice-setup-face-voice-table) "the global face map")
+	       (dolist (buffer (buffer-list))
+		 (with-current-buffer buffer
+		   (check emacsvox-aural-buffer-rules (buffer-name))
+		   (faces (bound-and-true-p voice-setup-local-map) (buffer-name)))))
+	     ))
 
 (defun emacsvox-aural-voice-palettes--delete-voice (palette voice &optional reset)
   "Remove direct VOICE from PALETTE after confirmation.

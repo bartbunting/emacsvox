@@ -245,9 +245,9 @@ Tests: actual manager keys through draft, save, reopen, reset and subsequent edi
 copy isolation including duplicate physical choices and individual adjustments;
 failed writes and conflicts; standard root remains intact.
 
-** TODO 4. Retire the old voice-management routes — High
+** DONE 4. Retire the old voice-management routes — High
 
-The standalone tuner and old physical-experiment screen have been removed,
+Screen retirement =aabde8de9=: the standalone tuner and old physical-experiment screen have been removed,
 including their startup/build inventories. Shared adjustment helpers remain for
 the complete editor and contextual controls. The Workbench's Assign, shared
 route editing, migration and preset actions are removed. Its named rows read
@@ -260,28 +260,27 @@ Current fixtures supply owned choices, and action tests check that named editing
 and retained engine controls are reachable. All 719 affected source tests pass.
 The isolated compiled parity harness, complete byte-code rebuild, final
 preflight and fresh build-tree check passed. Command references were regenerated.
-The remaining work in this slice is retirement of the older palette readers
-and shared/session per-name state after preserving the saved data.
+The remaining readers and per-name state are now retired. Palette files accept
+only complete schema-3 entries, reserve declared aliases, and require an explicit
+parent except for the read-only standard root. Runtime lookup, editing, copying
+and save preparation no longer branch on ownership format or convert on first
+edit. Workstation profiles contain global engine policy only. Historical local
+snapshots remain preserved but cannot supply a current entry's choices.
 
-The inspected one-time data conversion is complete, as recorded in slice 2.
-Account for maintained fixtures before removing the remaining reader support.
-Route all named edits to the common editor. Remove definition-only dialogs,
-shared per-name assignment/save/migration routes and the standalone old tuner
-screen. Retain helpers used by the common editor, engine policy, local choice
-storage, speech adapters and active integration mappings.
+Maintained fixtures now contain current records. Retired conversion, shared
+binding and preset tests were replaced by rejection and current ownership
+contracts. Actual save/retry, both-lane registration, preview, generated ACSS and
+standalone adapter checks remain. All 724 affected source tests and 335 isolated
+compiled contracts pass; the complete rebuild, byte-code preflight and fresh
+build-tree startup check pass. Public command references were regenerated.
 
-Old shared/session per-name bindings must not remain as a hidden route that
-overrides current owned data. Report any live use during preparation; preserve
-deliberate saved voice choices in the appropriate personal entries. Remove only
-obsolete ownership fields and commands, not unrelated user-data migrations.
-
-Update help with each removed route, and remove obsolete tests only when their
-old product behavior is intentionally retired. Replace them with current user
-journeys; do not weaken registration, apply, preview or transport coverage.
-
-Tests: reachable action inventory, fresh startup, both-lane registrations, current
-data reopening, unchanged engine policy, supported adapter compilation and the
-absence of actions that accept input before failing on ownership format.
+The inspected routing proposal removed four redundant per-name bindings. Both
+file fingerprints still matched, and neither live session had temporary routes
+or dirty drafts. All 24 local snapshots, global policy and the palette file were
+preserved. The strict reader reopened exactly the proposed result. Private
+originals and the proposal are in
+=~/.emacsvox/backups/routing-retirement-20260910-Lm2Ugz/=. No live restart, reload
+or selection change was performed. The earlier standard-root backup is retained.
 
 ** TODO 5. Finish source, persistence and sharing tools — High
 

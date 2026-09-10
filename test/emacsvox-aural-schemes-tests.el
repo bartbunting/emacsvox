@@ -1200,17 +1200,7 @@
     (let* ((directory (make-temp-file "emacsvox-voice-palettes-" t))
            (file (expand-file-name "aural-schemes.el" directory))
            (palette
-            '(:schema-version 1
-              :id reading
-              :summary "Reading voices"
-              :parent acss-default
-              :entries
-              ((heading
-                :style
-                (:family paul :average-pitch 6 :pitch-range 4
-                 :stress nil :richness 7 :rate-offset -20 :rate 9
-                 :gain 0 :low-pass nil :high-pass 9 :pan 5
-                 :reverb 1 :echo 2 :chorus 3)))))
+            '(:routing owned :schema-version 3 :id reading :summary "Reading voices" :parent acss-default :entries ((heading :style (:family paul :average-pitch 6 :pitch-range 4 :stress nil :richness 7 :rate-offset -20 :rate 9 :gain 0 :low-pass nil :high-pass 9 :pan 5 :reverb 1 :echo 2 :chorus 3) :choices nil))))
            (rules '((:id nil-preset :match (:role heading)
                      :render (:content (:voice (:preset nil :average-pitch 0 :pan nil)))))))
       (unwind-protect
@@ -1239,11 +1229,7 @@
   "Invalid palette inheritance leaves the live palette registry unchanged."
   (emacsvox-test--with-isolated-schemes
     (emacsvox-aural-register-voice-palette-data
-     '(:schema-version 1
-       :id working-palette
-       :summary "Working palette"
-       :entries
-       ((heading :personality voice-bolden))))
+     '(:routing owned :parent acss-default :schema-version 3 :id working-palette :summary "Working palette" :entries ((heading :personality voice-bolden :choices nil))))
     (let* ((directory (make-temp-file "emacsvox-bad-palette-" t))
            (file (expand-file-name "invalid.el" directory))
            (before emacsvox-aural-voice-palette-registry))
@@ -1251,18 +1237,7 @@
           (progn
             (emacsvox-test--write-lisp-data
              file
-             '(:schema-version 4
-               :schemes nil
-               :feature-fragments nil
-               :enabled-feature-fragments nil
-               :voice-palettes
-               ((:schema-version 1
-                 :id broken
-                 :summary "Broken"
-                 :parent missing
-                 :entries nil))
-               :profiles nil
-               :user-rules nil))
+             '(:schema-version 4 :schemes nil :feature-fragments nil :enabled-feature-fragments nil :voice-palettes ((:routing owned :schema-version 3 :id broken :summary "Broken" :parent missing :entries nil)) :profiles nil :user-rules nil))
             (should-error
              (emacsvox-aural-load-user-data file)
              :type 'emacsvox-aural-resource-error)

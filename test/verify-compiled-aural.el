@@ -356,7 +356,7 @@
                   "emacsvox-aural-voice-palettes-tests.el"
                   "emacsvox-aural-voice-workbench-tests.el"))
     (load (expand-file-name (concat "test/" file) root-directory) nil nil t))
-  (dolist (function '(emacsvox-aural-voice-data--convert
+  (dolist (function '(emacsvox-aural-voice-data--resolve
                      emacsvox-aural-voice-data--put-choices
                      emacsvox-aural-routing--validate-choices
                      emacsvox-aural-voice-runtime--resolve

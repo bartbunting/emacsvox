@@ -71,20 +71,19 @@ PROFILE optionally supplies staged workstation policy for inspection."
     (emacsvox-aural-voice-data--resolve
      voice (emacsvox-aural-voice-runtime--palette palette)
      emacsvox-aural-voice-palette-registry emacsvox-aural-routing--choice-sets
-     profile emacsvox-aural-session-routing-bindings
      (list :engine-order (copy-sequence (plist-get profile :engine-order))
            :disabled-engines (copy-sequence (plist-get profile :disabled-engines))
            :fallback (copy-tree (plist-get profile :fallback))))))
 
 (defun emacsvox-aural-voice-runtime--owned (voice &optional palette profile)
-  "Return owned VOICE resolution, or nil to retain legacy behavior.
+  "Return complete VOICE resolution, or nil when the name is absent.
 PALETTE and PROFILE optionally select inactive data for inspection."
   (when (emacsvox-aural-voice-runtime--owned-p palette)
     (let ((result (emacsvox-aural-voice-runtime--resolve voice palette profile)))
       (and (eq (plist-get result :mode) 'owned) result))))
 
 (defun emacsvox-aural-voice-runtime--validate (&optional palette)
-  "Validate owned metadata and temporary aliases in PALETTE before applying."
+  "Validate complete metadata in PALETTE before applying."
   (when (emacsvox-aural-voice-runtime--owned-p palette)
     (dolist (entry (emacsvox-aural-effective-voice-entries
                     (emacsvox-aural-voice-runtime--palette palette)))
@@ -126,8 +125,7 @@ PALETTE and PROFILE optionally select inactive data for inspection."
            (ids (mapcar (lambda (item) (plist-get (cdr (plist-get item :entry)) :local-choices)) entries)))
       (list (emacsvox-aural-voice-runtime--palette) entries
             (copy-tree (cl-remove-if-not (lambda (set) (member (plist-get set :id) ids))
-                                        emacsvox-aural-routing--choice-sets))
-            (copy-tree emacsvox-aural-session-routing-bindings)))))
+                                        emacsvox-aural-routing--choice-sets))))))
 
 (defun emacsvox-aural-voice-runtime--configuration-changed (&rest _)
   "Apply changed owned definitions and choices through the acknowledged service."

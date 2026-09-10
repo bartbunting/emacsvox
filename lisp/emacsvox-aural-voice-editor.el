@@ -198,9 +198,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
 (defun emacsvox-aural-voice-editor--context-for (palette voice &optional new)
   "Resume or capture a named PALETTE VOICE context without activation.
 NEW prepares an explicit neutral voice, rejecting existing or reserved names."
-  (let* ((profile (emacsvox-aural-routing-profile emacsvox-aural-active-routing-profile))
-         (routing (and profile (copy-tree (emacsvox-aural-routing-profile-entry-data profile))))
-         (opened
+  (let* ((opened
           (if new
               (progn
                 (emacsvox-aural--validate-id voice "New voice name")
@@ -213,17 +211,16 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
                       :snapshot '(:definition (:family nil :average-pitch nil
                                                :pitch-range nil :stress nil :richness nil)
                                   :selectors nil :choices nil :language nil)))
-            (emacsvox-aural-voice-editing--snapshot palette voice routing)))
+            (emacsvox-aural-voice-editing--snapshot palette voice)))
          (name (plist-get opened :name))
          (key (list 'base palette name)))
     (or (gethash key emacsvox-aural-voice-editor--contexts)
         (let ((context
                (list :draft (emacsvox-aural-voice-drafts--open key (emacsvox-aural-voice-editing--freeze (plist-get opened :snapshot) palette) (list palette))
-                     :palette palette :voice name :routing routing :policy (emacsvox-aural-voice-editor--policy)
+                     :palette palette :voice name :policy (emacsvox-aural-voice-editor--policy)
                      :destination palette :summary nil :owner (plist-get opened :owner)
                      :diagnostics (plist-get opened :diagnostics) :experiment nil :new new
                      :inventory (tts-voice-inventory)
-                     :temporary (plist-get (emacsvox-aural-voice-runtime--resolve name palette) :session)
                      :text emacsvox-aural-voice-workbench-preview-text :expanded nil :effects nil
                      :automatic-sample t :preview-generation 0 :preview-result nil :origin nil :buffer nil)))
           (puthash key context emacsvox-aural-voice-editor--contexts)
@@ -408,13 +405,11 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
                     (plist-get (emacsvox-aural-voice-drafts--status draft) :label)))
     (insert (if voice "Shared settings provide the base for every fallback choice. Customized rows can override them.\n"
               "Temporary experiment. Choose a destination before saving.\n"))
-    (when (emacsvox-aural-voice-editor--get :temporary)
-      (insert "Temporary routing is active. Base previews and saves exclude it.\n"))
     (when (emacsvox-aural-voice-editor--get :diagnostics)
       (insert "Local choices are missing; preview uses the portable fallback.\n"))
-    (when (and palette (not (emacsvox-aural-voice-runtime--owned-p palette)))
-      (insert (format "Legacy source: %s; routing profile: %s. First save creates an independent copy.\n"
-                      palette (or (plist-get (emacsvox-aural-voice-editor--get :routing) :id) "Automatic"))))
+    (when (and voice (not (eq palette (emacsvox-aural-voice-editor--get :owner))))
+      (insert (format "Inherited from %s. Saving creates an entry in the destination palette.\n"
+                      (emacsvox-aural-voice-editor--get :owner))))
     (when (and palette (not (eq palette (emacsvox-aural-effective-voice-palette))))
       (insert "This palette is inactive. Save and apply will select it for this session.\n"))
     (insert "\nDestination\n")
@@ -780,8 +775,7 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
   "Choose a personal palette before preparing the first save."
   (let* ((palette (emacsvox-aural-voice-editor--get :palette))
          (record (gethash palette emacsvox-aural-voice-palette-registry)))
-    (if (and (emacsvox-aural-voice-runtime--owned-p palette)
-             (not (emacsvox-aural-voice-palette-built-in record))) palette
+    (if (not (emacsvox-aural-voice-palette-built-in record)) palette
       (or (let ((chosen (emacsvox-aural-voice-editor--get :destination)))
             (and (not (eq chosen palette)) chosen))
           (let* ((name (read-string "New personal palette: " (format "%s-personal" palette)))
@@ -806,7 +800,6 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
                      (data (emacsvox-aural-voice-editing--proposal
                             palette voice (emacsvox-aural-voice-editor--working) destination
                             (format "Personal voices based on %s" palette)
-                            (emacsvox-aural-voice-editor--get :routing)
                             (emacsvox-aural-voice-editor--get :new))))
                 (emacsvox-aural-voice-drafts--prepare draft (plist-get data :palette) (plist-get data :choice-sets)
                                                       :select select :sources (list palette))))))
@@ -912,10 +905,10 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
     (with-help-window "*Voice editor details*"
       (princ (emacsvox-aural-voice-editor--explain-playback (plist-get context :preview-result)))
       (princ "\nStored definitions and diagnostic data\n")
-      (princ (format "Base voice in %s; definition owner %s.\nShared settings are the base; each row can override individual fields.\nSelection after Save and apply lasts for this session. Use a Presentation Profile to retain it after restart.\n\nWorking voice: %S\n\nWorkstation policy: %S\n\nTemporary override: %S\n\nLast playback evidence: %S\n"
+      (princ (format "Base voice in %s; definition owner %s.\nShared settings are the base; each row can override individual fields.\nSelection after Save and apply lasts for this session. Use a Presentation Profile to retain it after restart.\n\nWorking voice: %S\n\nWorkstation policy: %S\n\nLast playback evidence: %S\n"
                      (plist-get context :palette) (plist-get context :owner)
                      (emacsvox-aural-voice-draft-working (plist-get context :draft))
-                     (plist-get context :policy) (plist-get context :temporary) (plist-get context :preview-result))))))
+                     (plist-get context :policy) (plist-get context :preview-result))))))
 
 (defun emacsvox-aural-voice-editor--field-value (dimension value)
   "Describe requested DIMENSION VALUE in displayed units, retaining zero."
@@ -1067,7 +1060,7 @@ a personal child containing the new voice."
 (defun emacsvox-aural-voice-editor--copy (palette voice name source text)
   "Open an independent NAME draft from PALETTE's VOICE, returning to SOURCE.
 Use TEXT for previews.  Saving from a built-in palette creates a personal child."
-  (let* ((opened (emacsvox-aural-voice-editing--snapshot palette voice nil))
+  (let* ((opened (emacsvox-aural-voice-editing--snapshot palette voice))
          (key (list 'base palette name)))
     (when (plist-get opened :diagnostics)
       (user-error "Cannot copy %s: its saved local voice choices are missing" voice))

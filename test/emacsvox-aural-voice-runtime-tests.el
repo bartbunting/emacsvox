@@ -26,7 +26,6 @@
           (emacsvox-aural-voice-runtime--last-snapshot nil)
           (emacsvox-aural-routing--apply-operation 0)
           (emacsvox-aural-voice-runtime--defer-apply nil)
-          (emacsvox-aural-session-routing-bindings nil)
           (emacsvox-aural-session-engine-order nil)
           (emacsvox-aural-configuration-changed-hook
            '(emacsvox-aural-voice-runtime--configuration-changed))
@@ -102,21 +101,7 @@
        (should (equal (nth 1 (car calls)) (nth 1 (car (last calls)))))
        (emacsvox-aural-select-voice-palette 'source-child)
        (should (equal (plist-get (nth 1 (car calls)) :preferences)
-                      [(:kind "exact" :engine_id "legacy" :voice_id "Old")]))))))
-
-(ert-deftest emacsvox-aural-voice-runtime-conflicting-session-change-rolls-back ()
-  "Alias conflicts fail before changing live session state or starting an apply."
-  (emacsvox-test--with-owned-runtime
-   (let ((emacsvox-aural-session-routing-bindings
-          '((voice-bolden (:kind exact :scope session :engine-id "dectalk" :voice-id "Paul")))))
-     (cl-letf (((symbol-function 'tts-apply-voice-configuration)
-                (lambda (&rest _) (ert-fail "Conflict must not apply"))))
-       (should-error
-        (emacsvox-aural-set-session-routing-binding
-         'bolden '((:kind exact :scope local :engine-id "eloquence" :voice-id "Reed")))
-        :type 'emacsvox-aural-voice-data-conflict)
-       (should (= (length emacsvox-aural-session-routing-bindings) 1))
-       (should (eq (caar emacsvox-aural-session-routing-bindings) 'voice-bolden))))))
+                      []))))))
 
 (ert-deftest emacsvox-aural-voice-runtime-compiler-preserves-cascade-and-identity ()
   "Contextual patches keep the owned base, routing name and transported effects."
@@ -158,7 +143,7 @@
          (should (plist-member entry :selectors))
          (should-not (plist-member entry :selector))
          (should (equal (plist-get entry :selectors)
-                        (plist-get (car emacsvox-aural-routing--choice-sets) :selectors)))
+                        (emacsvox-aural-voice-data--selectors (plist-get (car emacsvox-aural-routing--choice-sets) :choices))))
          (should (= (plist-get entry :rate-offset) -4))
          (should (= (plist-get (plist-get entry :acss) :average-pitch) 0.0))
          (should (= (plist-get (plist-get entry :effects) :gain) 0.5))

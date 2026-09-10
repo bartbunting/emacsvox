@@ -42,16 +42,7 @@
        ,@body)))
 
 (defconst emacsvox-test--voice-palette-data
-  '(:schema-version 1
-    :id reading
-    :summary "Reading voices"
-    :parent acss-default
-    :entries
-    ((heading :personality voice-bolden)
-     (aside
-      :style
-      (:family nil :average-pitch 4 :pitch-range 3
-       :stress nil :richness 6))))
+  '(:routing owned :schema-version 3 :id reading :summary "Reading voices" :parent acss-default :entries ((heading :personality voice-bolden :choices nil) (aside :style (:family nil :average-pitch 4 :pitch-range 3 :stress nil :richness 6) :choices nil)))
   "Personal palette used by manager tests.")
 
 (ert-deftest emacsvox-aural-voice-palettes-rows-and-bindings-are-complete ()
@@ -134,7 +125,6 @@
             (emacsvox-aural-routing-profile-registry (make-hash-table :test #'eq))
             (emacsvox-aural-active-routing-profile nil)
             (emacsvox-aural-active-profile nil)
-            (emacsvox-aural-session-routing-bindings nil)
             (emacsvox-aural-configuration-changed-hook nil))
        (unwind-protect
            (progn
@@ -202,9 +192,11 @@
 (ert-deftest emacsvox-aural-voice-palettes-parent-candidates-are-rooted-and-acyclic ()
   (emacsvox-test--with-voice-palettes
     (dolist (pair '((a . acss-default) (b . a) (c . b) (other . acss-default)
-                    (orphan . nil) (missing . absent) (loop-one . loop-two) (loop-two . loop-one)))
+                    (missing . absent) (loop-one . loop-two) (loop-two . loop-one)))
       (emacsvox-aural-register-voice-palette-data
        (list :schema-version 3 :id (car pair) :summary "Test" :parent (cdr pair) :routing 'owned :entries nil)))
+    (should-error (emacsvox-aural-register-voice-palette-data
+                   '(:schema-version 3 :id orphan :summary "Orphan" :parent nil :routing owned :entries nil)))
     (let ((candidates (emacsvox-aural-voice-palettes--parent-candidates 'a)))
       (dolist (valid '("acss-default" "other")) (should (member valid candidates)))
       (dolist (invalid '("none" "a" "b" "c" "orphan" "missing" "loop-one" "loop-two"))
@@ -561,7 +553,7 @@
             (should
              (equal
               (aref (cadr (assq 'annotate tabulated-list-entries)) 4)
-              "Legacy shared routing"))
+              "Saved; palette-owned"))
             (should
              (eq
               (key-binding (kbd "<down>"))
@@ -670,11 +662,11 @@
     (should-not (assq 'bolden (plist-get (emacsvox-aural-voice-palette-data-form
                                         (emacsvox-aural-voice-palette 'reading)) :entries)))))
 
-(ert-deftest emacsvox-aural-voice-palette-preview-delete-last-voice-keeps-empty-list ()
-  "Deleting the last voice leaves a valid, reopenable empty palette."
+(ert-deftest emacsvox-aural-voice-palette-preview-delete-last-custom-voice-retains-inherited-list ()
+  "Deleting the last custom voice leaves the inherited standard voices available."
   (emacsvox-test--with-palette-rename
     (emacsvox-aural-register-voice-palette-data
-     '(:schema-version 3 :id solo :summary "Solo" :parent nil :routing owned
+     '(:schema-version 3 :id solo :summary "Solo" :parent acss-default :routing owned
        :entries ((only-voice :personality voice-smoothen :choices nil))))
     (emacsvox-aural-save-user-data)
     (with-temp-buffer
@@ -683,15 +675,16 @@
       (emacsvox-aural-voice-palette-previews-refresh 'only-voice)
       (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
         (emacsvox-aural-voice-palette-previews-delete))
-      (should-not tabulated-list-entries)
-      (should-not (tabulated-list-get-id)))
+      (should tabulated-list-entries)
+      (should-not (assq 'only-voice tabulated-list-entries))
+      (should (tabulated-list-get-id)))
     (let (buffer spoken)
       (unwind-protect
           (save-window-excursion
             (cl-letf (((symbol-function 'tts-speak) (lambda (text) (push text spoken))))
               (setq buffer (emacsvox-aural-list-voice-palette-previews 'solo)))
             (should (= (length spoken) 1))
-            (should (string-match-p "solo.*0 voices.*No voices" (car spoken))))
+            (should (string-match-p "solo" (car spoken))))
         (when (buffer-live-p buffer) (kill-buffer buffer))))))
 
 (ert-deftest emacsvox-aural-voice-palettes-opening-announces-location-once ()
@@ -775,13 +768,10 @@
   "Separately maintained references, standard names and inherited voices stay protected."
   (emacsvox-test--with-voice-rename
     (let ((before (emacsvox-aural-read-user-data)))
-      (let ((emacsvox-aural-session-routing-bindings '((custom-voice . route))))
-        (should-error (emacsvox-aural-voice-palette-previews-rename) :type 'user-error))
       (dolist (voice '(bolden annotate))
         (should-error (emacsvox-aural-voice-palettes--check-voice-rename 'reading voice) :type 'user-error))
       (emacsvox-aural-register-voice-palette-data
-       '(:schema-version 1 :id other :summary "Other" :parent nil
-         :entries ((custom-voice :personality voice-smoothen))))
+       '(:routing owned :schema-version 3 :id other :summary "Other" :parent acss-default :entries ((custom-voice :personality voice-smoothen :choices nil))))
       (should-error (emacsvox-aural-voice-palette-previews-rename) :type 'user-error)
       (should (equal before (emacsvox-aural-read-user-data))))))
 
@@ -805,8 +795,8 @@
         (should (assq 'custom-voice (emacsvox-aural-effective-voice-entries 'reading)))
         (should (eq (emacsvox-aural-voice-palette-previews-rename) 'renamed))))))
 
-(ert-deftest emacsvox-aural-voice-palette-preview-rename-legacy-keeps-definition ()
-  "Renaming a legacy custom voice keeps its raw definition and palette schema."
+(ert-deftest emacsvox-aural-voice-palette-preview-rename-custom-keeps-definition ()
+  "Renaming a custom voice keeps its raw definition and complete palette schema."
   (emacsvox-test--with-palette-rename
     (puthash 'reading (emacsvox-aural-compile-voice-palette-data emacsvox-test--voice-palette-data)
              emacsvox-aural-voice-palette-registry)
@@ -822,7 +812,7 @@
         (should (equal before (emacsvox-aural-voice 'renamed 'reading)))
         (should (equal (plist-get (emacsvox-aural-read-user-data) :user-rules)
                        '((:id mapped :render (:content (:voice renamed))))))
-        (should (eq 1 (plist-get (emacsvox-aural-voice-palette-data-form
+        (should (eq 3 (plist-get (emacsvox-aural-voice-palette-data-form
                                   (emacsvox-aural-voice-palette 'reading)) :schema-version)))))))
 
 (ert-deftest emacsvox-aural-voice-palette-preview-copies-owned-voice-completely ()
@@ -856,8 +846,8 @@
                       (plist-get (cl-find 'reading (plist-get (emacsvox-aural-read-user-data) :voice-palettes)
                                            :key (lambda (data) (plist-get data :id))) :entries)))))))
 
-(ert-deftest emacsvox-aural-voice-palette-preview-copies-inherited-and-older-owned-voices ()
-  "Inherited Automatic voices and schema-2 local chains retain their settings."
+(ert-deftest emacsvox-aural-voice-palette-preview-copies-inherited-and-untuned-owned-voices ()
+  "Inherited Automatic voices and untuned local chains retain their settings."
   (emacsvox-test--with-palette-rename
     (emacsvox-aural-voice-palettes--copy-owned-voice 'reading 'annotate 'annotation-copy)
     (should (equal (plist-get (emacsvox-aural-voice-runtime--resolve 'annotate 'reading) :definition)
@@ -868,7 +858,7 @@
                       (emacsvox-test--choice-fixture :source-palette)) emacsvox-aural-voice-palette-registry)
     (emacsvox-aural-save-user-data)
     (emacsvox-aural-voice-palettes--copy-owned-voice 'reading 'bolden 'bolden-copy)
-    (should (eq 2 (plist-get (emacsvox-aural-voice-palette-data-form
+    (should (eq 3 (plist-get (emacsvox-aural-voice-palette-data-form
                               (emacsvox-aural-voice-palette 'reading)) :schema-version)))
     (should (equal (plist-get (emacsvox-aural-voice-runtime--resolve 'bolden 'reading) :selectors)
                    (plist-get (emacsvox-aural-voice-runtime--resolve 'bolden-copy 'reading) :selectors)))))
@@ -918,7 +908,7 @@
        '(:style
          (:family nil :average-pitch 4 :pitch-range 3
           :stress nil :richness 6 :rate-offset -7 :gain 5
-          :low-pass 8 :high-pass nil :pan 2 :reverb 4 :echo 1 :chorus 6)))
+          :low-pass 8 :high-pass nil :pan 2 :reverb 4 :echo 1 :chorus 6) :choices nil))
       (emacsvox-aural-register-voice-palette-data data)
       (let ((style (emacsvox-aural-voice 'aside 'reading)))
         (should (= (plist-get style :rate-offset) -7))
@@ -980,12 +970,7 @@
   "Play-all queues every voice against one comparison before dispatch."
   (emacsvox-test--with-voice-palettes
     (emacsvox-aural-register-voice-palette-data
-     '(:schema-version 1
-       :id pair
-       :summary "Two comparison voices"
-       :entries
-       ((first :personality voice-bolden)
-        (second :personality voice-animate))))
+     '(:routing owned :parent acss-default :schema-version 3 :id pair :summary "Two comparison voices" :entries ((first :personality voice-bolden :choices nil) (second :personality voice-animate :choices nil))))
     (let (preview-runs)
       (unwind-protect
           (save-window-excursion
@@ -1004,10 +989,10 @@
                   (plist-get
                    (emacsvox-aural-voice-palette-previews-play-all)
                    :queued)
-                  2)))))
+                  (length (emacsvox-aural-effective-voice-entries 'pair)))))))
         (when (get-buffer "*Aural Voice Palette Preview*")
           (kill-buffer "*Aural Voice Palette Preview*")))
-      (should (= (length preview-runs) 2))
+      (should (= (length preview-runs) (length (emacsvox-aural-effective-voice-entries 'pair))))
       (should
        (equal
         (sort
@@ -1015,7 +1000,11 @@
           (lambda (run)
             (emacsvox-aural-concrete-content-text
              (emacsvox-aural-concrete-plan-content (car run))))
-          preview-runs)
+          (cl-remove-if-not (lambda (run)
+                              (member (emacsvox-aural-concrete-content-text
+                                       (emacsvox-aural-concrete-plan-content (car run)))
+                                      '("First voice. The quick brown fox jumps over the lazy dog."
+                                        "Second voice. The quick brown fox jumps over the lazy dog."))) preview-runs))
          #'string-lessp)
         '("First voice. The quick brown fox jumps over the lazy dog."
           "Second voice. The quick brown fox jumps over the lazy dog."))))))

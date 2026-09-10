@@ -25,7 +25,6 @@
            (notification (make-pipe-process :name "choice-notify" :noquery t))
            (tts-speaker-process speaker) (tts-notify-process notification)
            (emacsvox-aural-voice-palette-override 'reading)
-           (emacsvox-aural-session-routing-bindings nil)
            (omnivox--logical-registry-generation 0)
            (omnivox--logical-registry-signature nil)
            (omnivox-average-pitch-contrast 1.0)
@@ -135,15 +134,15 @@
          (omnivox--dispatch-control-response speaker (omnivox-test--choice-registration-ack old))
          (should (equal accepted (process-get speaker omnivox--choice-registration-property))))))))
 
-(ert-deftest omnivox-choice-registration-temporary-routing-never-joins-saved-patches ()
+(ert-deftest omnivox-choice-registration-owned-rows-ignore-old-adapter-preferences ()
+  "Current named voices keep complete rows even with old adapter preferences bound."
   (omnivox-test--with-choice-registration
-   (let* ((selector (plist-get (car (emacsvox-test--tuned-choices)) :selector))
-          (emacsvox-aural-session-routing-bindings (list (cons 'bolden (list selector))))
+   (let* ((before (omnivox--choice-definition-json (omnivox--logical-definition-json "bolden" nil t)))
+          (omnivox-logical-voice-preferences '((bolden (exact "dectalk" "other"))))
           (definition (omnivox--choice-definition-json (omnivox--logical-definition-json "bolden" nil t)))
           (rows (plist-get (plist-get definition :definition) :choices)))
-     (should (= (length rows) 1))
-     (should (hash-table-p (plist-get (aref rows 0) :adjustments)))
-     (should (= (hash-table-count (plist-get (aref rows 0) :adjustments)) 0)))))
+     (should (= (length rows) 2))
+     (should (equal definition before)))))
 
 (ert-deftest omnivox-choice-registration-unsupported-warning-belongs-to-the-connection ()
   (omnivox-test--with-choice-registration

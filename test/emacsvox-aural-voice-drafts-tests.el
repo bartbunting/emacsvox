@@ -22,8 +22,9 @@
            (draft (emacsvox-aural-voice-drafts--open '(base reading-owned bolden)
                                                      '(:pitch 0) '(reading-owned)))
            (palette (emacsvox-aural-voice-drafts--palette-data 'reading-owned))
-           (new-set '(:id "saved-chain" :palette reading-owned :voice bolden
-                          :selectors ((:kind exact :scope local :engine-id "eloquence" :voice-id "Reed"))))
+           (new-set '(:schema-version 3 :id "saved-chain" :palette reading-owned :voice bolden
+                      :choices ((:id "reed" :selector (:kind exact :scope local :engine-id "eloquence" :voice-id "Reed")
+                                 :adjustments nil))))
            palettes)
       (unwind-protect
           (progn
@@ -35,6 +36,7 @@
             (emacsvox-aural-save-routing-profiles)
             (let ((entry (assq 'bolden (plist-get palette :entries))))
               (setcdr entry (plist-put (cdr entry) :local-choices "saved-chain"))
+              (setcdr entry (plist-put (cdr entry) :choices nil))
               (setcdr entry (plist-put (cdr entry) :style
                                        (plist-put (plist-get (cdr entry) :style) :average-pitch 8))))
             (emacsvox-aural-voice-drafts--edit draft '(:pitch 8))
@@ -203,18 +205,6 @@
      (should (eq (emacsvox-aural-voice-save-state proposal) 'saved))
      (should (= operation emacsvox-aural-routing--apply-operation))
      (should (eq emacsvox-aural-voice-palette-override 'alternative-owned)))))
-
-(ert-deftest emacsvox-aural-voice-drafts-temporary-alias-conflict-rejected-before-save ()
-  "New conflicting temporary choices are checked again before either writer."
-  (emacsvox-test--with-voice-save
-   (let ((proposal (emacsvox-aural-voice-drafts--prepare draft palette (list new-set) :select t))
-         (before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-routing-profiles-file)))
-     (setq emacsvox-aural-session-routing-bindings
-           '((bolden (:kind exact :scope session :engine-id "dectalk" :voice-id "Paul"))
-             (voice-bolden (:kind exact :scope session :engine-id "eloquence" :voice-id "Reed"))))
-     (emacsvox-aural-voice-drafts--save proposal)
-     (should (eq (emacsvox-aural-voice-save-state proposal) 'failed))
-     (should (equal before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-routing-profiles-file))))))
 
 (ert-deftest emacsvox-aural-voice-drafts-does-not-claim-old-save-is-current-after-switch ()
   "A callback for the saved palette remains attached but cannot claim current apply."

@@ -12,35 +12,23 @@
 (require 'outloud-voices)
 (require 'dectalk-voices)
 (require 'emacsvox-aural-routing-profiles)
+(require 'emacsvox-aural-voice-runtime)
+(require 'emacsvox-aural-schemes)
 
 (defconst emacsvox-test--routing-profile
-  '(:schema-version 2
-    :id workstation
-    :summary "Local workstation routing"
-    :engine-order ("eloquence" "dectalk" "winrt" "espeak")
-    :disabled-engines ("dectalk")
-    :fallback
-    (:allow-same-language t
-     :global-default
-     (:kind properties :scope portable :language "en-AU")
-     :engines ("espeak"))
-    :bindings
-    ((:logical-voice voice-bolden :language "en-AU"
-      :selectors
-      ((:kind exact :scope local :engine-id "eloquence"
-        :voice-id "eci:Reed")
-       (:kind properties :scope portable :engine-id "dectalk"
-        :gender male)))))
+  '(:schema-version 2 :id workstation :summary "Local workstation routing" :engine-order ("eloquence" "dectalk" "winrt" "espeak") :disabled-engines ("dectalk") :fallback (:allow-same-language t :global-default (:kind properties :scope portable :language "en-AU") :engines ("espeak")))
   "Representative machine routing profile data.")
 
 (defmacro emacsvox-test--with-routing-profiles (&rest body)
   "Run BODY with isolated routing and Omnivox state."
   (declare (indent 0) (debug t))
-  `(let ((emacsvox-aural-routing-profile-registry
+  `(let ((emacsvox-aural-voice-palette-registry (copy-hash-table emacsvox-aural-voice-palette-registry))
+         (emacsvox-aural-voice-palette-override 'routing-test)
+         (emacsvox-aural-voice-runtime--palette nil)
+         (emacsvox-aural-routing-profile-registry
           (make-hash-table :test #'eq))
          (emacsvox-aural-routing--choice-sets nil)
          (emacsvox-aural-active-routing-profile nil)
-         (emacsvox-aural-session-routing-bindings nil)
          (emacsvox-aural-session-engine-order nil)
          (emacsvox-aural-routing-profile-changed-hook nil)
          (omnivox-logical-voice-preferences nil)
@@ -50,17 +38,30 @@
          (omnivox-disabled-engine-ids nil)
          (omnivox-global-default-selector nil)
          (omnivox-allow-same-language-fallback t))
+     (emacsvox-test--routing-choices '((:kind exact :scope local :engine-id "eloquence" :voice-id "eci:Reed")
+                                      (:kind properties :scope portable :engine-id "dectalk" :gender male)))
      ,@body))
+
+(defun emacsvox-test--routing-choices (selectors)
+  "Install complete test choices for the named bolden entry."
+  (let* ((rows (emacsvox-aural-voice-data--wrap-selectors selectors))
+         (portable (emacsvox-aural-voice-data--portable-choices rows)))
+    (setq emacsvox-aural-routing--choice-sets
+          (list (list :schema-version 3 :id "routing-bolden" :palette 'routing-test
+                      :voice 'bolden :choices rows)))
+    (puthash 'routing-test
+             (emacsvox-aural-compile-voice-palette-data
+              (list :schema-version 3 :id 'routing-test :summary "Test" :parent 'acss-default
+                    :routing 'owned :entries
+                    (list (list 'bolden :personality 'voice-bolden
+                                :choices portable :local-choices "routing-bolden"))))
+             emacsvox-aural-voice-palette-registry)))
 
 (ert-deftest emacsvox-aural-routing-migrates-schema-one-disablement ()
   "Schema-one profiles gain an empty, independent disabled-engine list."
   (let ((profile
          (emacsvox-aural-validate-routing-profile-data
-          '(:schema-version 1 :id old :summary "Old"
-            :engine-order ("winrt")
-            :fallback
-            (:allow-same-language t :global-default nil :engines nil)
-            :bindings nil))))
+          '(:schema-version 1 :id old :summary "Old" :engine-order ("winrt") :fallback (:allow-same-language t :global-default nil :engines nil)))))
     (should (= (plist-get profile :schema-version) 2))
     (should-not (plist-get profile :disabled-engines))))
 
@@ -79,19 +80,6 @@
     (emacsvox-aural-validate-routing-selector
      '(:kind exact :scope local :engine-id "winrt" :voice-id "David") t)
     '(:kind exact :scope local :engine-id "winrt" :voice-id "David"))))
-
-(ert-deftest emacsvox-aural-routing-composes-binding-and-engine-order ()
-  "Logical selectors precede distinct global engine defaults."
-  (emacsvox-test--with-routing-profiles
-    (emacsvox-aural-register-routing-profile-data
-     emacsvox-test--routing-profile "test")
-    (setq emacsvox-aural-active-routing-profile 'workstation)
-    (let ((selectors
-           (emacsvox-aural-routing-selectors 'voice-bolden)))
-      (should (eq (plist-get (nth 0 selectors) :kind) 'exact))
-      (should (equal (plist-get (nth 1 selectors) :engine-id) "dectalk"))
-      (should (equal (plist-get (nth 2 selectors) :engine-id) "winrt"))
-      (should (equal (plist-get (nth 3 selectors) :engine-id) "espeak")))))
 
 (ert-deftest emacsvox-aural-routing-promotes-engine-without-changing-routes ()
   "Engine preference preserves explicit selectors and fallback policy."
@@ -136,15 +124,10 @@
         (should
          (equal omnivox-engine-priority-ids
                 emacsvox-aural-session-engine-order))
-        (let ((selectors
-               (emacsvox-aural-routing-selectors 'voice-bolden)))
-          (should (eq (plist-get (nth 0 selectors) :kind) 'exact))
-          (should (equal (plist-get (nth 0 selectors) :engine-id)
-                         "eloquence"))
-          (should (equal (plist-get (nth 1 selectors) :engine-id)
-                         "dectalk"))
-          (should (equal (plist-get (nth 2 selectors) :engine-id)
-                         "winrt")))
+        (let ((resolved (emacsvox-aural-voice-runtime--resolve 'bolden)))
+          (should (equal (plist-get (plist-get resolved :policy) :engine-order)
+                         emacsvox-aural-session-engine-order))
+          (should (equal (plist-get (car (plist-get resolved :selectors)) :voice-id) "eci:Reed")))
         (let* ((user-data (emacsvox-aural-routing-user-data))
                (saved-profile (car (plist-get user-data :profiles))))
           (should
@@ -158,37 +141,12 @@
                 '("eloquence" "dectalk" "winrt" "espeak")))
         (should (= (length statuses) 2))))))
 
-(ert-deftest emacsvox-aural-routing-session-binding-replaces-saved-route ()
-  "A temporary session route wins and is not added to saved user data."
-  (emacsvox-test--with-routing-profiles
-    (emacsvox-aural-register-routing-profile-data
-     emacsvox-test--routing-profile "test")
-    (setq emacsvox-aural-active-routing-profile 'workstation)
-    (emacsvox-aural-set-session-routing-binding
-     'voice-bolden
-     '((:kind exact :engine-id "winrt" :voice-id "David")))
-    (let ((selectors
-           (emacsvox-aural-routing-selectors 'voice-bolden)))
-      (should (= (length selectors) 1))
-      (should (eq (plist-get (car selectors) :scope) 'session))
-      (should (equal (plist-get (car selectors) :engine-id) "winrt")))
-    (should-not
-     (string-match-p
-     "David" (prin1-to-string (emacsvox-aural-routing-user-data))))))
-
 (ert-deftest emacsvox-aural-routing-resolves-static-engine-family-alias ()
   "An Omnivox Eloquence ID maps to the equivalent standalone family."
   (emacsvox-test--with-routing-profiles
+    (emacsvox-test--routing-choices '((:kind exact :scope local :engine-id "eloquence" :voice-id "v2")))
     (let ((profile
-           '(:schema-version 2 :id static :summary "Static"
-             :engine-order nil :disabled-engines nil
-             :fallback
-             (:allow-same-language t :global-default nil :engines nil)
-             :bindings
-             ((:logical-voice voice-bolden
-               :selectors
-               ((:kind exact :scope local :engine-id "eloquence"
-                 :voice-id "v2")))))))
+           '(:schema-version 2 :id static :summary "Static" :engine-order nil :disabled-engines nil :fallback (:allow-same-language t :global-default nil :engines nil))))
       (emacsvox-aural-register-routing-profile-data profile "test")
       (setq emacsvox-aural-active-routing-profile 'static)
       (should
@@ -203,16 +161,9 @@
 (ert-deftest emacsvox-aural-routing-static-properties-degrade-safely ()
   "Static property routes resolve traits and missing routes retain ACSS."
   (emacsvox-test--with-routing-profiles
+    (emacsvox-test--routing-choices '((:kind properties :scope portable :engine-id "dectalk" :gender female)))
     (let ((profile
-           '(:schema-version 2 :id static :summary "Static"
-             :engine-order nil :disabled-engines nil
-             :fallback
-             (:allow-same-language t :global-default nil :engines nil)
-             :bindings
-             ((:logical-voice voice-bolden
-               :selectors
-               ((:kind properties :scope portable :engine-id "dectalk"
-                 :gender female)))))))
+           '(:schema-version 2 :id static :summary "Static" :engine-order nil :disabled-engines nil :fallback (:allow-same-language t :global-default nil :engines nil))))
       (emacsvox-aural-register-routing-profile-data profile "test")
       (setq emacsvox-aural-active-routing-profile 'static)
       (let* ((capabilities (dectalk-voice-capabilities))
@@ -245,8 +196,8 @@
         (should (eq (plist-get diagnostic :requested-family) 'male))
         (should (equal (plist-get diagnostic :voice-id) "eci:Reed"))))))
 
-(ert-deftest emacsvox-aural-routing-migrates-omnivox-order-faithfully ()
-  "Import and apply preserve the existing effective Omnivox selector order."
+(ert-deftest emacsvox-aural-routing-imports-only-global-omnivox-policy ()
+  "Import and apply preserve global policy and do not capture old per-name preferences."
   (emacsvox-test--with-routing-profiles
     (setq omnivox-logical-voice-preferences
           '((voice-bolden
@@ -262,7 +213,8 @@
     (let ((before (omnivox--logical-registry-content "dectalk"))
           (profile
            (emacsvox-aural-routing-profile-from-omnivox 'imported)))
-      (emacsvox-aural-register-routing-profile-data profile "migration")
+      (should-not (plist-member profile :bindings))
+      (emacsvox-aural-register-routing-profile-data profile "policy")
       (cl-letf (((symbol-function 'omnivox-register-logical-voices)
                  #'ignore))
         (emacsvox-aural-apply-routing-profile 'imported))
@@ -338,9 +290,12 @@
               ((:voice-id "eci:Reed" :language "en-AU" :gender male))))))
          (portable
           (emacsvox-aural-routing-portable-profile-data
-           emacsvox-test--routing-profile inventory))
+           (let ((profile (copy-tree emacsvox-test--routing-profile)))
+             (setf (plist-get (plist-get profile :fallback) :global-default)
+                   '(:kind exact :scope local :engine-id "eloquence" :voice-id "eci:Reed"))
+             profile) inventory))
          (selector
-          (car (plist-get (car (plist-get portable :bindings)) :selectors))))
+          (plist-get (plist-get portable :fallback) :global-default)))
     (should (eq (plist-get selector :kind) 'properties))
     (should (eq (plist-get selector :scope) 'portable))
     (should (equal (plist-get selector :engine-id) "eloquence"))
@@ -349,27 +304,6 @@
     (should
      (equal (plist-get portable :engine-order)
             (plist-get emacsvox-test--routing-profile :engine-order)))))
-
-(ert-deftest emacsvox-aural-routing-presets-are-staged-pure-transformations ()
-  "Engine and language presets do not mutate their input profile."
-  (let* ((input (copy-tree emacsvox-test--routing-profile))
-         (ordered
-          (emacsvox-aural-routing-apply-preset-to-data
-           input 'dectalk-first))
-         (language
-          (emacsvox-aural-routing-apply-preset-to-data
-           input 'native-language))
-         (selector
-          (car
-           (plist-get (car (plist-get language :bindings)) :selectors))))
-    (should (equal (plist-get ordered :engine-order)
-                   '("dectalk" "eloquence" "winrt" "espeak")))
-    (should (equal
-             (plist-get (plist-get ordered :fallback) :engines)
-             '("dectalk" "eloquence" "winrt" "espeak")))
-    (should (eq (plist-get selector :kind) 'properties))
-    (should (equal (plist-get selector :language) "en-AU"))
-    (should (equal input emacsvox-test--routing-profile))))
 
 (ert-deftest emacsvox-aural-routing-exports-one-non-evaluated-profile ()
   "Routing exchange round trips one profile and rejects trailing forms."
