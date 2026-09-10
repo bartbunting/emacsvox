@@ -2373,35 +2373,153 @@ heard and use Aural Home rather than editing configuration data by hand:
      Explain why the object at point received its voices, sounds, and
      other actions.
 
-   For a first experiment, press ‘C-e H’ and use ‘/’ to find _Browse and
-adjust voices_.  Select an engine with <RET>, then a voice with ‘P’ to
-hear it.  Nothing is saved by browsing or previewing.  To change
-something you just heard, use ‘C-e H c’ for the current item, or ‘C-e H
-H’ to select past feedback.  See *note Voices And Routing:
-(emacsvox)Voices And Routing. for complete examples.
-
-   This chapter gives a user-level model of the system and practical
-workflows for common changes.  The generated reference provides rule
-schemas, transport contracts, and extension development.
+   This chapter starts with a short listening task, then explains how to
+change feedback and manage voices, sounds, and saved setups.  You can
+follow it in order or open a task directly from its Info menu.  In an
+Aural interface, ‘C-c C-i’ opens the relevant manual topic; ‘q’ in Info
+returns to the interface.  In interface Help, ‘i’ opens the same topic.
 
 * Menu:
 
-* Presentation Model::           Follow meaning from an Emacs application to audible output.
-* Presentation Modalities::      Recognize speech, voices, cues, tones, pauses, and spatial output.
 * Aural Home::                   Navigate the spoken presentation control center.
+* Presentation Model::           Follow meaning from an Emacs application to audible output.
 * Explaining Presentation::      Explain current or recently queued feedback.
 * Adjusting Presentation::       Preview, scope, save, and undo presentation changes.
-* Presentation Profiles::        Save and switch complete presentation configurations.
-* Voices And Routing::           Distinguish logical styles, palettes, physical voices, and engines.
+* Choose And Manage Voice Palettes: Voices And Routing.  Understand named voices, standard inheritance, and personal palettes.
+* Edit A Named Voice: Editing Named Voices.  Adjust a voice, compare it, and save the complete result.
+* Browse Installed Voices And Choose Engines: Installed Voices And Engines.  Find physical voices and configure shared engine preferences.
 * Sounds And Space::             Audition sound packs and inspect spatial fallback.
+* Speech Output And Notifications: Aural Speech Output.  Set speech rate and understand foreground and background output.
+* Presentation Profiles::        Save selected settings and distinguish profiles from resource backups.
 * Presentation Troubleshooting:: Trace unexpected output and use safe diagnostics.
 * Voice Lock Compatibility: Voice Lock.  Understand the established face and personality voice adapter.
 
 
-File: emacsvox.info,  Node: Presentation Model,  Next: Presentation Modalities,  Up: Aural Presentation
+File: emacsvox.info,  Node: Aural Home,  Next: Presentation Model,  Up: Aural Presentation
 
-6.1 A Practical Model Of Presentation
-=====================================
+6.1 Getting Started With Aural Home
+===================================
+
+For a first listening experiment:
+
+  1. Press ‘C-e H’, then ‘/’, and choose _Browse and adjust voices_ from
+     the searchable actions.
+  2. Select an available engine and press <RET> to list its voices.
+  3. Move to a voice and press ‘P’ to hear a sample.  ‘S’ stops it.
+     Browsing and previewing save no settings.
+  4. Press ‘h’ to return to Home.  From Home, ‘C-c C-o’ returns to the
+     item where you started.
+
+   If an engine is unavailable, its details explain why; try another
+available engine.  If no speech is available, start with *note
+Recovering From No Speech: (emacsvox)Recovering From No Speech.
+
+   Open Aural Home from an ordinary buffer with ‘C-e H’.  Emacsvox
+remembers that source buffer and opening position so contextual actions
+such as explanation and remapping operate on the object you were using.
+Moving the source cursor while Home is open does not change this target.
+In Home, ‘C-c C-o’ returns to it.  To choose a new target, invoke ‘C-e
+H’ afresh from that item in an ordinary buffer.
+
+   Returning through Home or Help preserves the selected row and
+unfinished edits.  Buffer rule editors retain separate drafts for each
+source buffer; reopening a modified editor resumes its draft.  Reopening
+the same voice in the voice editor likewise preserves its working
+settings.  If a prepared remap's source item changes or disappears,
+Emacsvox asks you to prepare that change again before applying it.
+
+   Aural Home begins with five task groups in one spoken table.  Press
+<RET> or <TAB> to expand or collapse a group.  Each action names a
+destination, reports its current status, and describes its purpose.  ‘/’
+searches all actions, including collapsed groups; the matching group
+opens with your destination selected.
+
+   Expandable groups announce an open or close cue with their name when
+you reach or toggle them.  These cues follow the icon setting and sound
+pack.  For spoken state words, enable _aural-panel-state-labels_ in
+_Presentation Options_.  This adds "collapsed" or "expanded" after the
+control through the normal presentation rules.  Key instructions remain
+available in Help.
+
+   Panel entry, return, selection, and warning cues accompany their
+spoken feedback in one utterance.  Returning from a panel announces the
+destination and any unfinished draft warning together.  These cues
+follow the icon setting, sound pack, and cue remapping rules.  The voice
+editor uses the normal navigation voice for these announcements;
+auditions still play the working voice.
+
+   In Home and other tables, the navigation controls are:
+
+‘n, p, down, up’
+     Move by row, retaining and speaking the selected column.  In the
+     first column, settings lists announce the name and current state.
+‘left, right’
+     Move among the titled columns.
+‘.’
+     Speak the current column title and value.
+‘SPC’
+     Speak the complete current row.
+‘RET’
+     Open a destination, child list, or details.
+‘C-c C-a’
+     Choose an applicable action by name.
+‘N’
+     Create a new item where supported.
+‘P’
+     Preview in managers and editors; Home retains its profiles
+     shortcut.
+‘S’
+     Stop the preview and its remaining samples.
+‘?’
+     Display and speak help for the current Aural interface.
+‘h’
+     Return to Aural Home from a manager or editor.
+‘q’
+     Go back or leave; an editor may first offer to retain or discard
+     changes.
+
+   The five groups are:
+
+Task group                Destinations
+Understand or change      Current item explanation and remapping,
+feedback                  Recent Feedback, semantic vocabulary, and
+                          return to source.
+Choose voices and         Browse and adjust voices, palettes, sound
+sounds                    packs, speech engine and rate, notifications,
+                          spatial settings, and the full Voice
+                          Workbench.
+Choose optional           Presentation Options and training
+feedback                  explanations.
+Manage changes and        Unfinished drafts, overrides, buffer rules,
+saved setups              and Presentation Profiles.
+Troubleshoot              Aural Doctor and Omnivox engine modules.
+
+   The header identifies the captured source and the number of
+unfinished drafts.  Choose _Resume unfinished changes_ to visit the
+original rule editor, voice editor, or Workbench engine settings.  The
+draft is still unsaved until you accept it there.  Presentation Profiles
+capture options, palette, sound pack, and spatial settings.  Physical
+choices and their adjustments belong to the selected palette's named
+voices; shared engine settings are saved separately.
+
+   You can press <RET> on a row without memorizing its shortcut.  Aural
+Home also provides direct keys for frequent routes, including ‘x’ for
+explanation, ‘O’ for overrides, ‘H’ for recent feedback, ‘P’ for
+profiles, ‘V’ for voice palettes, ‘W’ for Voice Workbench, and ‘D’ for
+Aural Doctor.
+
+   The voice editor contains fields and buttons rather than table
+columns: left/right changes a numeric value, and <RET> edits a field.
+See *note Edit a Named Voice: (emacsvox)Editing Named Voices.  Keys are
+local to the view: for example, ‘w’ saves a voice in its editor but
+exports a palette in the palette manager.  Use ‘C-c C-a’ to choose an
+action by name, or ‘?’ for that view's current keys.
+
+
+File: emacsvox.info,  Node: Presentation Model,  Next: Explaining Presentation,  Prev: Aural Home,  Up: Aural Presentation
+
+6.2 How Aural Presentation Works
+================================
 
 It helps to separate four questions that are often mixed together:
 
@@ -2411,9 +2529,9 @@ Meaning          What happened or       A level-two heading was reached
 Presentation     What should convey     Speak the heading in a named
                  that meaning?          voice and play a section cue
                                         first.
-Resources        Which voice and        Resolve the logical voice through
-                 sound realize that     the active palette and the cue
-                 request?               through the active sound pack.
+Resources        Which voice and        Find the named voice in the
+                 sound realize that     active palette and the cue in the
+                 request?               active sound pack.
 Output           What can this          Route speech to an installed
                  machine produce?       engine and apply supported
                                         spatial behavior.
@@ -2443,18 +2561,23 @@ relevant part rather than repeat the complete presentation.
   3. Enabled _Presentation Options_ that add optional behavior in a
      stable weakest-to-strongest order.
 
-  4. Personal, session, and current-buffer _overrides_.  These are the
-     strongest layers and are intended for precise changes.
+  4. Personal, session, and current-buffer rules.  These are the
+     strongest layers and are intended for precise changes.  They are
+     also called _overrides_ because they can replace weaker behavior.
 
-   A presentation profile is not another rule layer.  It records a
-complete set of selected options, sound pack, voice palette, and spatial
-choices so you can switch those choices together.
+   A presentation profile is not another rule layer.  It records the
+selected options, sound pack, voice palette, and spatial choices so you
+can switch those choices together.
+
+* Menu:
+
+* Presentation Modalities::      Recognize speech, voices, cues, tones, pauses, and spatial output.
 
 
-File: emacsvox.info,  Node: Presentation Modalities,  Next: Aural Home,  Prev: Presentation Model,  Up: Aural Presentation
+File: emacsvox.info,  Node: Presentation Modalities,  Up: Presentation Model
 
-6.2 What You Can Hear
-=====================
+6.2.1 What You Can Hear
+-----------------------
 
 Aural Presentation can use one or more of these forms of feedback:
 
@@ -2462,13 +2585,13 @@ Aural Presentation can use one or more of these forms of feedback:
      Added speech should explain meaning that is not already clear from
      the content.
 
-   • _Voice_ changes characteristics of spoken content.  Named logical
-     voices make distinctions such as headings, annotations, warnings,
-     or quoted text portable across speech engines.
+   • _Voice_ changes characteristics of spoken content.  Named voices
+     make distinctions such as headings, annotations, warnings, or
+     quoted text portable across speech engines.
 
-   • _Auditory cues_ are short recognizable sounds associated with
-     semantic events or objects.  A sound pack supplies the concrete
-     audio for those cue names.
+   • _Auditory cues_, also called _earcons_ or _auditory icons_, are
+     short sounds associated with semantic events or objects.  A sound
+     pack supplies the concrete audio for those cue names.
 
    • _Tones_ convey compact information using a named pitch and
      duration.  They are useful when a short distinction is preferable
@@ -2492,139 +2615,10 @@ pack, and audio hardware.  The intended distinction should remain
 understandable even when a simpler backend uses fewer voice
 characteristics or centered output.
 
-6.2.1 Main And Notification Speech Streams
-------------------------------------------
-
-Emacsvox assigns speech to one of two streams according to what caused
-it:
-
-   • The _main stream_ presents foreground information produced directly
-     by your current interaction, such as movement, entering a buffer,
-     or opening a message.  New navigation interrupts obsolete
-     main-stream speech, and you can interrupt a longer entry
-     announcement by navigating again.
-
-   • The _notification stream_ presents asynchronous events, such as
-     completion of background work.  It does not stop main-stream
-     speech, and normal navigation does not stop it, so both streams may
-     be heard concurrently.  A notification cue and its associated
-     speech are delivered together on this stream.
-
-   With Omnivox, Emacsvox starts a second server process for the
-notification stream by default.  Set ‘tts-notification-device’ to
-‘left’, ‘right’, or ‘both’ to choose that process's route.  Set it to
-‘default’ or the empty string to disable the separate process;
-notification speech then falls back to the main process and remains
-interruptible by navigation.  Other speech backends may use a configured
-notification device or fall back to the main stream.
-
-   Stopping obsolete main speech is local to the main stream.  An
-explicit ‘tts-stop’ command stops both main and notification speech.
-
 
-File: emacsvox.info,  Node: Aural Home,  Next: Explaining Presentation,  Prev: Presentation Modalities,  Up: Aural Presentation
+File: emacsvox.info,  Node: Explaining Presentation,  Next: Adjusting Presentation,  Prev: Presentation Model,  Up: Aural Presentation
 
-6.3 Begin With Aural Home
-=========================
-
-Open Aural Home from an ordinary buffer with ‘C-e H’.  Emacsvox
-remembers that source buffer and opening position so contextual actions
-such as explanation and remapping operate on the object you were using.
-Moving the source cursor while Home is open does not change this target.
-In Home, ‘C-c C-o’ returns to it.  To choose a new target, invoke ‘C-e
-H’ afresh from that item in an ordinary buffer.
-
-   Returning through Home or Help preserves the selected row and
-unfinished edits.  Buffer rule editors retain separate drafts for each
-source buffer; reopening a modified editor resumes its draft.  Reopening
-the same voice in the voice editor likewise preserves its working
-settings.  If a prepared remap's source item changes or disappears,
-Emacsvox asks you to prepare that change again before applying it.
-
-   Aural Home begins with five task groups in one spoken table.  Press
-<RET> or <TAB> to expand or collapse a group.  Each action names a
-destination, reports its current status, and describes its purpose.  ‘/’
-searches all actions, including collapsed groups; the matching group
-opens with your destination selected.
-
-   Expandable panels keep visibility as control metadata, without adding
-"collapsed" or "expanded" to the displayed text.  Navigating to or
-toggling a section presents its open/close cue together with its name,
-respecting the icon setting and selected sound pack.  For spoken state
-words, enable _aural-panel-state-labels_ in _Presentation Options_.
-This adds "collapsed" or "expanded" after the control through the normal
-presentation rules.  Key instructions remain available in Help.
-
-   Panel entry, return, selection, and warning cues accompany their
-spoken feedback in one utterance.  Returning from a panel announces the
-destination and any unfinished draft warning together.  These cues
-follow the icon setting, sound pack, and cue remapping rules.  The voice
-editor uses the normal navigation voice for these announcements;
-auditions still play the working voice.
-
-   The common controls are:
-
-‘n, p, down, up’
-     Move by row, retaining and speaking the selected column.  In the
-     first column, settings lists announce the name and current state.
-‘left, right’
-     Move among the titled columns.
-‘.’
-     Speak the current column title and value.
-‘SPC’
-     Speak the complete current row.
-‘RET’
-     Open a destination, child list, or details.  In the voice editor,
-     edit a value.
-‘C-c C-a’
-     Choose an applicable action by name.
-‘N’
-     Create a new item where supported.
-‘P’
-     Preview in managers and editors; Home retains its profiles
-     shortcut.
-‘S’
-     Stop the preview and its remaining samples.
-‘?’
-     Display and speak help for the current Aural interface.
-‘h’
-     Return to Aural Home from a manager or editor.
-‘q’
-     Leave the current Aural interface.
-
-   The five groups are:
-
-Task group                Destinations
-Understand or change      Current item explanation and remapping,
-feedback                  Recent Feedback, semantic vocabulary, and
-                          return to source.
-Choose voices and         Browse and adjust voices, palettes, sound
-sounds                    packs, speech engine and rate, notifications,
-                          spatial settings, and the full Voice
-                          Workbench.
-Choose optional           Presentation Options and training
-feedback                  explanations.
-Manage changes and        Unfinished drafts, overrides, buffer rules,
-saved setups              and Presentation Profiles.
-Troubleshoot              Aural Doctor and Omnivox engine modules.
-
-   Home announces the captured source and unfinished draft count on
-entry.  Choose _Resume unfinished changes_ to visit the original rule
-editor, voice editor, or routing Workbench.  The draft is still unsaved
-until you accept it there.  Presentation Profiles capture options,
-palette, sound pack, and spatial settings.  Physical voice routes have
-their own saved routing profile.
-
-   You can press <RET> on a row without memorizing its shortcut.  Aural
-Home also provides direct keys for frequent routes, including ‘x’ for
-explanation, ‘O’ for overrides, ‘H’ for recent feedback, ‘P’ for
-profiles, ‘V’ for voice palettes, ‘W’ for Voice Workbench, and ‘D’ for
-Aural Doctor.
-
-
-File: emacsvox.info,  Node: Explaining Presentation,  Next: Adjusting Presentation,  Prev: Aural Home,  Up: Aural Presentation
-
-6.4 Understand Why Something Sounded That Way
+6.3 Understand Why Something Sounded That Way
 =============================================
 
 Use this workflow when feedback is surprising, unclear, or especially
@@ -2637,22 +2631,24 @@ useful:
      sounds, and any backend fallback or degradation.
 
   3. Note the strongest rule that changed the part you care about.  This
-     tells you whether to inspect an option, an override, a voice route,
-     a sound pack, or the Voice Lock compatibility layer.
+     tells you whether to inspect an option, a personal or temporary
+     rule, a named voice, a sound pack, or the Voice Lock compatibility
+     layer.
 
    When a retained presentation still matches the source buffer,
-position, and unchanged source revision, the explanation describes the
-exact output that was queued, including its source location and resolved
+position, and unchanged source text, the explanation describes the exact
+output that was queued, including its source location and resolved
 resources.  It does not reinterpret that old output using your latest
 settings.  Without an exact record, Emacsvox labels the explanation as a
 simulation of what the current rules would produce at point.
 
    To inspect something heard earlier, open Aural Home and choose
-_Recent Aural Feedback_, or press ‘H’ there.  Each row is a bounded
-frozen record.  Moving through the Content column speaks the preview
-using its recorded voices, including voice changes within an entry.
-Column titles and the other fields use the normal interface voice.
-Useful commands in the feedback browser include:
+_Recent Aural Feedback_, or press ‘H’ there.  Each row preserves a
+recorded presentation; the history has a size limit.  Moving through the
+Content column speaks the preview using its recorded voices, including
+voice changes within an entry.  Column titles and the other fields use
+the normal interface voice.  Useful commands in the feedback browser
+include:
 
 ‘RET or e’
      Explain the selected retained presentation.
@@ -2675,10 +2671,10 @@ than ordinary operation; turn it off when you no longer need the
 additional labels.
 
 
-File: emacsvox.info,  Node: Adjusting Presentation,  Next: Presentation Profiles,  Prev: Explaining Presentation,  Up: Aural Presentation
+File: emacsvox.info,  Node: Adjusting Presentation,  Next: Voices And Routing,  Prev: Explaining Presentation,  Up: Aural Presentation
 
-6.5 Make A Small Change Safely
-==============================
+6.4 Change Feedback And Manage Rules
+====================================
 
 Start by choosing the narrowest tool that matches your intention:
 
@@ -2692,10 +2688,20 @@ Review or remove an existing   Presentation           Its recorded scope
 precise change                 Overrides
 Try rules only in the          Current Buffer Rules   Life of that
 current work buffer                                   buffer
-Switch a complete reading or   Presentation           Saved global
-working setup                  Profiles               configuration
+Switch selected reading or     Presentation           Saved global
+working settings               Profiles               configuration
 
-6.5.1 Guided Change This Feedback
+* Menu:
+
+* Guided Change This Feedback: Guided Feedback Changes.  Learn the controls and scope of this task.
+* Remap One Item At Point: Choosing A Voice For An Item.  Learn the controls and scope of this task.
+* Review And Remove Your Rules: Managing Feedback Rules.  Inspect, change, disable, or remove personal and temporary rules.
+* Try A Presentation Option: Presentation Options.  Learn the controls and scope of this task.
+
+
+File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For An Item,  Up: Adjusting Presentation
+
+6.4.1 Guided Change This Feedback
 ---------------------------------
 
   1. Move to a representative item, press ‘C-e H’, then ‘c’.  This
@@ -2762,7 +2768,10 @@ Current-item changes recheck their captured source before applying; a
 changed or killed target must be inspected again.  Historical changes
 remain tied to the selected frozen example.
 
-6.5.2 Remap One Item At Point
+
+File: emacsvox.info,  Node: Choosing A Voice For An Item,  Next: Managing Feedback Rules,  Prev: Guided Feedback Changes,  Up: Adjusting Presentation
+
+6.4.2 Remap One Item At Point
 -----------------------------
 
   1. Move to a representative object and press ‘C-e E’ so you know what
@@ -2787,9 +2796,9 @@ remain tied to the selected frozen example.
 
   3. Choose _How long_ deliberately:
 
-        • a _personal_ override persists across Emacs sessions;
-        • a _session_ override lasts until this Emacs exits; and
-        • a _buffer_ override affects only the remembered live buffer.
+        • a _personal_ rule persists across Emacs sessions;
+        • a _session_ rule lasts until this Emacs exits; and
+        • a _buffer_ rule affects only the remembered live buffer.
 
   4. Check _Applies to_, _Voice_, and _How long_, then activate _Save_
      or press ‘w’.  A face mapping affects matching uses of that face
@@ -2802,7 +2811,13 @@ remain tied to the selected frozen example.
   5. Return to the source, repeat the action, and use ‘C-e E’ again to
      confirm which rule now wins.
 
-   In _Presentation Overrides_, ‘RET’ or ‘e’ opens the selected rule's
+
+File: emacsvox.info,  Node: Managing Feedback Rules,  Next: Presentation Options,  Prev: Choosing A Voice For An Item,  Up: Adjusting Presentation
+
+6.4.3 Review And Remove Your Rules
+----------------------------------
+
+In _Presentation Overrides_, ‘RET’ or ‘e’ opens the selected rule's
 settings panel.  In the rule list, the same keys open that panel.  Only
 the selected rule appears while its panel is open; the other rules
 remain in the working draft.  ‘n’ and ‘p’ move through the visible
@@ -2831,7 +2846,10 @@ disables or enables a rule, and ‘d’ removes it.  Disabling or deleting
 an override restores the next weaker behavior; it does not leave a
 copied default behind.
 
-6.5.3 Try A Presentation Option
+
+File: emacsvox.info,  Node: Presentation Options,  Prev: Managing Feedback Rules,  Up: Adjusting Presentation
+
+6.4.4 Try A Presentation Option
 -------------------------------
 
 Presentation Options are maintained additions such as richer heading
@@ -2854,74 +2872,35 @@ _Presentation Options_:
 narrow override usually expresses that intention more clearly.
 
 
-File: emacsvox.info,  Node: Presentation Profiles,  Next: Voices And Routing,  Prev: Adjusting Presentation,  Up: Aural Presentation
+File: emacsvox.info,  Node: Voices And Routing,  Next: Editing Named Voices,  Prev: Adjusting Presentation,  Up: Aural Presentation
 
-6.6 Save Complete Setups With Profiles
-======================================
-
-A presentation profile records a coordinated setup: enabled Presentation
-Options and their order, the sound pack, the voice palette, and portable
-spatial settings.  This is useful for switching between focused work and
-leisure reading, between quiet and information-rich feedback, or between
-audio environments.
-
-   To save and use a profile:
-
-  1. Configure the live options, sound pack, voice palette, and spatial
-     choices you want.
-
-  2. Open _Presentation Profiles_ from Aural Home or press ‘P’ there.
-
-  3. Press ‘N’ to save the current live configuration as a new named
-     profile.
-
-  4. Later, select that profile and press ‘a’ to apply its saved values.
-
-  5. If you deliberately change the live configuration and want the
-     selected profile to adopt it, press ‘w’.  If you instead want to
-     discard the live differences, press ‘a’ to restore the saved
-     profile; Emacsvox asks before replacing the diverged values.
-
-   Only one profile identity is selected.  _Active_ means the selected
-profile's saved values match the live configuration.  _Diverged_ means
-the same profile is still selected but the live values differ; it is a
-status, not an unsaved editor warning.
-
-   Profiles do not copy presentation rules.  Edit rules in Presentation
-Options or Overrides.  They also do not capture buffer-local Voice Lock
-state or current-buffer rules, because those belong to an individual
-buffer rather than a global setup.
-
-
-File: emacsvox.info,  Node: Voices And Routing,  Next: Sounds And Space,  Prev: Presentation Profiles,  Up: Aural Presentation
-
-6.7 Choose Voices And Speech Engines
+6.5 Choose And Manage Voice Palettes
 ====================================
 
-Four terms help when adjusting voices:
+A _named voice_ gives a reusable name, such as ‘bolden’ or ‘annotate’,
+to a way of speaking.  Some detailed views call it a _logical voice_.  A
+_voice palette_ is a collection of these named entries.  Each entry
+includes its shared adjustments, ordered physical voice choices, and any
+adjustments for individual choices.
 
-   • A _logical voice_ expresses a purpose such as boldening,
-     annotation, or a heading distinction without naming one synthesizer
-     voice.
+   A _physical voice_ is a voice supplied by an installed _speech
+engine_.  The palette describes the intended choices; availability on
+your machine and shared engine preferences determine which can be used.
+A presentation rule chooses when to use a named voice.  Editing that
+voice changes every use that resolves to the entry; changing a rule
+changes which items use it.
 
-   • A _voice palette_ gives named logical voices portable style
-     characteristics.  Each named entry includes its style, ordered
-     physical choices and individual adjustments.  Palettes can inherit
-     from another palette and travel between machines; exact local
-     choices may need replacement on another machine.
+   Use this section to manage the collection.  For pitch, physical
+choices, and other voice settings, see *note Edit a Named Voice:
+(emacsvox)Editing Named Voices.  To hear installed voices or change
+engine preference, see *note Installed Voices and Engines:
+(emacsvox)Installed Voices And Engines.
 
-   • A _physical voice_ is an actual voice reported by an installed
-     speech engine.  Its exact identifier is usually machine-local.
-
-   • An _engine route_ decides which engine and physical voice realize a
-     logical voice on the current machine.
-
-   Use the _Voice Palettes_ manager when you want to choose or edit the
-portable style vocabulary.  Press <RET> on a palette to browse its
-voices, use ‘P’ to audition the palette sequence before editing, and use
-‘a’ in the palette manager to activate a selected palette.  Built-in
-palettes remain intact; editing can open an unsaved personal child in
-the common editor.
+   Use the _Voice Palettes_ manager to choose a palette or manage its
+named voices.  Press <RET> on a palette to browse its voices, use ‘P’ to
+audition the palette sequence before editing, and use ‘a’ in the palette
+manager to activate a selected palette.  Built-in palettes remain
+intact; editing can open an unsaved personal child in the common editor.
 
    Opening the manager announces its selected palette.  Entering a
 palette announces its name, voice count, selected voice and main keys.
@@ -2972,28 +2951,29 @@ action, ‘E’, to review or change a personal palette's parent; the
 manager rejects inheritance cycles.
 
    Activation with ‘a’ lasts for this session.  Press ‘f’ to follow the
-current scheme's baseline palette again.  Use at Startup, ‘U’, changes
-the palette in the selected saved Presentation Profile while preserving
-its other saved fields.  It does not apply that profile to the current
+standard baseline palette again.  Use at Startup, ‘U’, changes the
+palette in the selected saved Presentation Profile while preserving its
+other saved fields.  It does not apply that profile to the current
 session.  If no startup profile exists, the action asks you to review a
 new profile captured from the current setup.  It checks voice references
 in saved rules and the profile's saved options; session and buffer rules
 do not affect this startup check.  An already open Profiles view
 refreshes to show the saved choice.
 
-   For sharing, ‘w’ exports effective portable entries and asks before
-omitting machine-local physical choices.  ‘W’ creates a full local
-backup containing the palette's ancestry and referenced local choices.
-Import with ‘i’ accepts either file and creates an independent personal
-palette under an unused name; it does not replace the original ancestry
-tree or activate the imported palette.  Missing installed voices are
-reported and retained for later replacement.  A partial import keeps its
-proposal available for Retry or Discard.
+* Menu:
 
-   Press ‘r’ in the voice list to rename a custom voice defined directly
-in that personal palette.  Enter the new name to save it; the renamed
-voice keeps its settings, physical choices and individual tuning.  Save
-or discard unfinished voice edits first.  Standard Emacsvox voice names
+* Rename Voices And Palettes: Renaming Voices And Palettes.  Rename personal entries while checking their known uses.
+
+
+File: emacsvox.info,  Node: Renaming Voices And Palettes,  Up: Voices And Routing
+
+6.5.1 Rename Voices And Palettes
+--------------------------------
+
+Press ‘r’ in the voice list to rename a custom voice defined directly in
+that personal palette.  Enter the new name to save it; the renamed voice
+keeps its settings, physical choices and individual tuning.  Save or
+discard unfinished voice edits first.  Standard Emacsvox voice names
 cannot be renamed; copy one to create a custom voice.  For an inherited
 voice, copy it or rename it in its owning palette.  Renaming updates
 personal, session and buffer presentation rules, including face
@@ -3001,95 +2981,153 @@ mappings, and loaded global and buffer face maps.  Personal rules and
 the voice are saved together; a failed save leaves the old name and
 mappings usable.  Face mappings declared in your own Lisp configuration
 must also be updated there for future sessions.  References in
-separately maintained schemes, fragments, other voice definitions still
-block the rename; update those uses first.  Renaming also stops if
-another palette directly defines either name, because mappings are
-shared.
+maintained integration rules, Presentation Options, or other voice
+definitions still block the rename; update those uses first.  Renaming
+also stops if another palette directly defines either name, because
+mappings are shared.
 
    To rename a personal palette, select it in _Voice Palettes_, press
 ‘r’, and enter its new name.  The rename is saved immediately.  It
 preserves voice settings and individual fallback tuning, updates child
 palettes and personal Presentation Profiles, and keeps an active palette
 selected under its new name.  Save or discard unfinished voice edits
-first.  Built-in palettes cannot be renamed.  If a separately maintained
-scheme references the palette, update that scheme before renaming it.
+first.  Built-in palettes cannot be renamed.  A reference from
+maintained integration configuration can block a rename; its owner must
+update that reference first.
 
-   With Voice Lock enabled, named formatting voices such as _bolden_ and
-_annotate_ follow the active palette in search feedback, completion,
-status speech, and the named-voice sampler.  Explicit aural rules can
-override these formatting voices.
+
+File: emacsvox.info,  Node: Editing Named Voices,  Next: Installed Voices And Engines,  Prev: Voices And Routing,  Up: Aural Presentation
 
-   If you assign voices in your personal Lisp configuration, use a name
-such as ‘'voice-bolden’ to follow the palette.  For example:
+6.6 Edit A Named Voice
+======================
 
-     (setq emacsvox-calendar-mark-personality 'voice-bolden)
+From _Voice Palettes_, open a palette, select a voice, and press ‘e’ to
+edit it.  From Aural Home, _Tune voice used here_ opens the named voice
+used by the captured source item.  Editing an inherited voice creates a
+complete entry in your destination palette when saved.  Editing a
+built-in palette asks for a personal child.  Opening the editor and
+previewing a draft do not change live feedback or save settings.
 
-   Legacy settings such as ‘voice-bolden-settings’ still supply the
-fallback when the palette has no custom definition.  Explicit ACSS
-styles retain their own settings.  Restart Emacs after updating Emacsvox
-to load changed voice defaults; explicit choices in your personal
-configuration remain in effect.
+   The editor uses the ordinary navigation voice for its labelled
+fields.  ‘n/p’, up/down or Tab moves between fields.  Left/right adjusts
+a numeric field and moves between fields elsewhere; <RET> activates a
+button or enters an adjustment value.  Press ‘d’ on an adjustment to
+restore the adapter default; blank numeric entry does the same.  Zero is
+an explicit value, such as the lowest pitch or leftmost pan, whereas
+adapter default leaves that setting to the speech adapter.  They may
+sound the same for some effects, but they are different settings.  _More
+adjustments and effects_ exposes filters, gain, pan and other optional
+controls.  Changed values say what they were before editing; unsupported
+settings remain visible and are retained.  Field navigation stops at the
+first and last field without wrapping.  Numeric adjustments stop at
+their limits and announce the minimum or maximum.
 
-   Use _Voice Workbench_ when the question involves installed voices,
-engines, or routes.  Open it from Aural Home with ‘W’.  Its main views
-are:
+   ‘P’ plays the edited voice.  ‘B’ compares the captured original with
+the edited version using the same text, with spoken labels.  ‘T’ changes
+that text; ‘S’ stops.  An automatic sample follows each adjustment
+unless you turn that field off.  The new value precedes the sample text,
+for example "1.  The quick brown fox…".  Toggling _Automatic sample
+after adjustment_ announces on or off with distinct cues.  _More
+adjustments and effects_ and _Fallbacks_ present their visibility with
+open/close cues and optional spoken state labels, both when toggled and
+when reached during field navigation.  Navigation stops an outstanding
+sample.  ‘u’ undoes an edit, including a reset to adapter default.  ‘q’
+dismisses the editor and returns to its originating view, offering to
+retain or discard unsaved changes.  Quitting the workbench afterwards
+does not reopen the experiment.
 
-‘e’
-     Engines, such as Flite or Eloquence.  Start here to try voices from
-     a particular synthesizer or inspect its availability.
-‘v’
-     Physical voices: the actual installed voices you can hear.  Use
-     this list to listen, compare, and experiment with their parameters.
-     On an engine row, this key opens just that engine's voices.
-‘l’
-     Logical voices: named roles such as _bolden_ and _annotate_.  Start
-     here to change which physical voice reads a role.
-‘s’
-     Styles and effects for those logical roles.  Use this view to
-     inspect their parameters and what their current engines support.
+   Choose the _Physical voice_ field to search by engine or voice name.
+You can audition a candidate with the working adjustments before
+accepting it.  Cancel keeps the previous choice and returns to the same
+field.  Named voices also have an expandable _Fallbacks_ section:
+replace, reorder, remove or individually audition a choice, append
+another, or explicitly return to Automatic.  Existing unavailable,
+engine-default and property choices are preserved.  Shared adjustments
+apply to fields that a row inherits; _Customize this voice_ adds
+optional individual settings.
 
-   For physical voices, choose _Browse and adjust voices_ in Home, then
-press <RET> or ‘v’ on an engine to browse its voices.  <RET> on a voice
-shows details; ‘P’ plays a named sample.  Filters set with ‘F’ and each
-view's selected row and column survive navigation through Home.  The
-engine selected for browsing is a temporary limit: switching to the
-logical, styles, or engine view removes it.  Pressing ‘v’ from a voice
-list also removes that temporary limit.  Your explicit filters still
-apply; ‘C’ clears all filters to show voices across engines.  Press ‘q’
-in an engine's voice list to return to that engine's row and column.
-Press ‘q’ again from the engine list to leave the workbench.  The direct
-view shortcuts remain available.
+   For a named voice, ‘w’ or ‘C-c C-c’ saves and applies the complete
+draft.  _Save to collection without selecting_ saves an inactive palette
+without changing the current selection.  The header reports unsaved
+changes, partial saves, applying, failures, or saved and applied.  Retry
+uses the pending proposal and retains successful persistence steps.
+Changes made during an earlier apply remain unsaved when its
+acknowledgement arrives.  A changed file or destination requires fresh
+review rather than an implicit merge.
 
-   The engine list reports _Availability_ before routing preferences.
-An engine with a missing runtime stays visible as _unavailable_, with
-its reason under _Last failure_.  _Routing policy: allowed_ means the
-policy permits using that engine; it does not mean its runtime is
-installed.  Disabled policies, health, and temporary failures are
-reported separately.
+   Named-voice previews test the complete choice chain without selecting
+the draft palette or changing live settings.  They require an Omnivox
+server advertising complete-voice preview.  Older servers report this
+operation as unsupported; individual physical auditions remain
+available.  Playback reports identify actual accepted audio when the
+server supplies that evidence, including unsupported adjustments.  They
+do not infer a successful fallback from inventory or claim exact
+effective numeric parameter values.
 
-   ‘A’ plays available matching voices in displayed order, skipping
-unavailable rows.  ‘B’ starts with the selected voice as A and offers
-another matching voice as B.  Choose _Search all engines_ inside that
-prompt to compare outside the current filters.  Both samples use the
-same sentence.  ‘T’ edits it, ‘F’ filters, ‘C’ clears filters, and ‘R’
-refreshes inventory.
+   ‘q’ returns to the originating row and column.  With unsaved changes,
+choose to retain the draft, discard changes, or continue editing.
+Retained drafts survive closing the view and can be reopened from Home's
+_Resume unfinished changes_ during this Emacs session.  They do not
+survive restarting Emacs.  Leaving does not undo a completed save.
 
-   Labels identify each engine and voice.  Customize
-‘emacsvox-aural-preview-label-verbosity’ for names, brief letters or
-numbers, or no labels.  Labels and samples share one preview sequence:
-‘S’ or foreground navigation cancels the remaining samples.  An
-exact-preview failure is reported instead of accepting a different voice
-as the requested one.  Availability and capability reports describe what
-the adapter advertises; they are not a listening test of every
-parameter.
+   _Save and apply_ selects the palette for this session.  Use the _Use
+at Startup_ action, ‘U’ in Voice Palettes, to retain that selection
+after restart.  A save can involve more than one settings file.  The
+editor reports partial failures and retains the proposal for retry; see
+*note Recovering Unfinished Changes: (emacsvox)Recovering Aural Changes.
 
-   Press ‘t’ on a logical or style row to open the common voice editor.
-The same editor opens from _Voice Palettes_.  Its physical choice and
-shared adjustments belong to one draft and one save action.  The voice
-list separates _Physical voice_, _Engine_, _Adjustments_, and _State_,
-including unfinished editor changes.
+* Menu:
 
-   Shared settings provide the base for the whole voice.  Expand
+* Understand Voice Adjustments: Voice Adjustments.  Understand the voice controls and their defaults.
+* Choose And Tune Fallback Voices: Voice Fallbacks.  Order physical choices and customize their individual adjustments.
+* Inspect Or Adjust A Voice In Context: Voices In Context.  Learn the controls and scope of this task.
+
+
+File: emacsvox.info,  Node: Voice Adjustments,  Next: Voice Fallbacks,  Up: Editing Named Voices
+
+6.6.1 Understand Voice Adjustments
+----------------------------------
+
+The voice editor presents _Low-pass Amount_ and _High-pass Amount_ from
+zero through nine.  Higher amounts mean more filtering: low-pass removes
+more high frequencies, and high-pass removes more low frequencies.  Zero
+is the neutral cutoff; blank numeric entry requests the adapter default.
+The amount scale applies to arrows and numeric entry in the common
+editor.  Existing saved styles retain their sound; stored low-pass
+cutoff values keep their original meaning.
+
+   The voice editor names other neutral effect values instead of
+speaking an ambiguous number: gain five is _unchanged_, pan five is
+_centre_, and reverb, echo, or chorus zero is _disabled_.  Chorus adds a
+bounded doubled-voice modulation without changing speech duration or
+marker positions.  It is applied by Omnivox to buffered audio; the voice
+editor reports when the selected route cannot apply it.  These portable
+levels are translated to the exact values required by the active
+adapter.
+
+   The built-in ‘acss-default’ palette also includes a ‘telephone’ named
+voice.  It combines high-pass and low-pass filtering to give any
+buffered Omnivox engine a narrow-band telephone sound while preserving
+its selected physical voice, duration, and markers.  Preview it in
+_Voice Palettes_ or _Voice Workbench_ before assigning it to content.
+Adapters without post-synthesis filtering preserve the portable style
+but do not apply the filters.
+
+   Omnivox average-pitch differences use the customizable
+‘omnivox-average-pitch-contrast’.  Its default value, ‘0.5’, keeps
+palette distinctions while making them gentler.  Set it to ‘1.0’ for the
+historical contrast, or ‘0’ to make average pitch neutral.  Values
+through ‘2.0’ are accepted.  Changing it refreshes logical-voice
+registration, and the same setting applies to previews, structured
+speech, and legacy inline voices.
+
+
+File: emacsvox.info,  Node: Voice Fallbacks,  Next: Voices In Context,  Prev: Voice Adjustments,  Up: Editing Named Voices
+
+6.6.2 Choose And Tune Fallback Voices
+-------------------------------------
+
+Shared settings provide the base for the whole voice.  Expand
 _Fallbacks_ to see which rows _use shared settings_ and which are
 _customized_.  A row's action menu can audition that row or compare its
 original and edited versions.  Comparison follows the same row after
@@ -3135,186 +3173,10 @@ available only when its settings can be represented faithfully,
 including adapter defaults.  Saving remains available when that preview
 is unavailable.
 
-   All named voices use the common editor and the same complete palette
-model.  Workbench engine policy is shared across palettes: ‘O’ toggles
-preferred engines and ‘[’ / ‘]’ reorder them; ‘f’ toggles fallback
-engines and ‘{’ / ‘}’ reorder those.  ‘D’ enables or disables an engine,
-and ‘K’ requests a recovery probe.  These are staged policy edits; ‘w’
-saves and applies them.  Physical choices for a named voice are saved in
-that voice's editor.
+
+File: emacsvox.info,  Node: Voices In Context,  Prev: Voice Fallbacks,  Up: Editing Named Voices
 
-   Tables put voice or engine names first.  Detailed adapter
-capabilities, native identifiers and registration information are
-available with ‘x’ for Details.  Availability, failure reasons,
-predicted selection and observed playback remain distinct.  Inventory
-predictions do not prove that audio played.
-
-   Applying waits for each speech stream to acknowledge its
-configuration.  If an Omnivox apply times out, the Workbench reports
-_server outcome unconfirmed_.  Emacsvox stops that apply and sends no
-later steps, but changes already sent may still take effect on the
-server.  A timeout does not undo the saved profile or confirm that the
-server rejected it.  Press ‘r’ to reapply the committed profile and
-obtain a fresh result.  Save or cancel any newer staged edits before
-retrying.  A partial result retains the streams that acknowledged
-success and identifies those that timed out.
-
-   The voice editor presents _Low-pass Amount_ and _High-pass Amount_
-from zero through nine.  Higher amounts mean more filtering: low-pass
-removes more high frequencies, and high-pass removes more low
-frequencies.  Zero is the neutral cutoff; blank numeric entry requests
-the adapter default.  The amount scale applies to arrows and numeric
-entry in the common editor.  Existing saved styles retain their sound;
-stored low-pass cutoff values keep their original meaning.
-
-   The voice editor names other neutral effect values instead of
-speaking an ambiguous number: gain five is _unchanged_, pan five is
-_centre_, and reverb, echo, or chorus zero is _disabled_.  Chorus adds a
-bounded doubled-voice modulation without changing speech duration or
-marker positions.  It is applied by Omnivox to buffered audio; the voice
-editor reports when the selected route cannot apply it.  These portable
-levels are translated to the exact values required by the active
-adapter.
-
-   The built-in ‘acss-default’ palette also includes a ‘telephone’
-logical voice.  It combines high-pass and low-pass filtering to give any
-buffered Omnivox engine a narrow-band telephone sound while preserving
-its selected physical voice, duration, and markers.  Preview it in
-_Voice Palettes_ or _Voice Workbench_ before assigning it to content.
-Adapters without post-synthesis filtering preserve the portable style
-but do not apply the filters.
-
-   Omnivox average-pitch differences use the customizable
-‘omnivox-average-pitch-contrast’.  Its default value, ‘0.5’, keeps
-palette distinctions while making them gentler.  Set it to ‘1.0’ for the
-historical contrast, or ‘0’ to make average pitch neutral.  Values
-through ‘2.0’ are accepted.  Changing it refreshes logical-voice
-registration, and the same setting applies to previews, structured
-speech, and legacy inline voices.
-
-   For a quick engine preference, ‘C-e d e’ chooses an available engine
-for the current Emacs session.  Press ‘C-u’ first to save the new
-preference.  On a first run with no saved routing profile, the ordinary
-command uses the live Omnivox policy as an in-memory baseline and writes
-no file; the prefixed command explicitly saves that baseline and the
-selected preference.  Explicit logical-voice routes still take
-precedence.
-
-   Home groups speech engine, rate, notification output and spatial
-controls under _Choose voices and sounds_.  Speech rate applies to the
-remembered source buffer; a prefix sets the global rate.  Notification
-Output opens Customize: _Automatic_ uses the backend's normal
-notification arrangement, while _Use main output (notifications remain
-audible)_ sends notification speech through the main process.  It does
-not mute notifications.  Initialize the chosen notification arrangement
-with ‘C-e d C-n’.  _Stop notification speech_ stops the current
-notification stream; it is not a persistent mute.  Use Customize's save
-action to retain output choices across restarts.
-
-   Judge voices in context.  The goal is usually to distinguish nearby
-kinds of content, not to identify every named voice in isolation.  Use a
-portable palette for the intended distinction and machine routing for
-the best local realization.
-
-6.7.1 Tune A Physical Voice Temporarily
----------------------------------------
-
-In _Browse and adjust voices_, select a physical voice and press ‘t’.
-This opens an experiment with that exact engine and voice,
-adapter-default speech characteristics, the current base speech rate,
-and neutral audio effects.  Opening, adjusting and comparing write no
-settings.
-
-   The editor uses the ordinary navigation voice for its labelled
-fields.  ‘n/p’, up/down or Tab moves between fields.  Left/right adjusts
-a numeric field and moves between fields elsewhere; <RET> activates a
-button or enters an adjustment value.  Press ‘d’ on an adjustment to
-restore the adapter default; blank numeric entry does the same.  Zero is
-an explicit value, such as the lowest pitch or leftmost pan, whereas
-adapter default leaves that setting to the speech adapter.  They may
-sound the same for some effects, but they are different settings.  _More
-adjustments and effects_ exposes filters, gain, pan and other optional
-controls.  Changed values say what they were before editing; unsupported
-settings remain visible and are retained.  Field navigation stops at the
-first and last field without wrapping.  Numeric adjustments stop at
-their limits and announce the minimum or maximum.
-
-   ‘P’ plays the edited voice.  ‘B’ compares the captured original with
-the edited version using the same text, with spoken labels.  ‘T’ changes
-that text; ‘S’ stops.  An automatic sample follows each adjustment
-unless you turn that field off.  The new value precedes the sample text,
-for example "1.  The quick brown fox…".  Toggling _Automatic sample
-after adjustment_ announces on or off with distinct cues.  _More
-adjustments and effects_ and _Fallbacks_ present their visibility with
-open/close cues and optional spoken state labels, both when toggled and
-when reached during field navigation.  Navigation stops an outstanding
-sample.  ‘u’ undoes an edit, including a reset to adapter default.  ‘q’
-dismisses the editor and returns to its originating view, offering to
-retain or discard unsaved changes.  Quitting the workbench afterwards
-does not reopen the experiment.
-
-   Choose the _Physical voice_ field to search by engine or voice name.
-You can audition a candidate with the working adjustments before
-accepting it.  Cancel keeps the previous choice and returns to the same
-field.  Named voices also have an expandable _Fallbacks_ section:
-replace, reorder, remove or individually audition a choice, append
-another, or explicitly return to Automatic.  Existing unavailable,
-engine-default and property choices are preserved.  Shared adjustments
-apply to fields that a row inherits; _Customize this voice_ adds
-optional individual settings.
-
-   For a physical experiment, ‘w’ chooses a destination palette and
-named voice.  The default keeps _Physical voice and adjustments — this
-choice_.  You can instead keep only the physical voice, only the
-adjustments for a selected row, or explicitly change shared settings for
-all inheriting choices.  A physical voice can replace a selected row,
-become preferred, or be appended as a fallback.  Row-level adjustments
-replace that row's tuning with the experiment's values and adapter
-defaults.  This prevents unrelated destination shared settings from
-changing the experiment's base sound.  Use ‘i’ in the row's individual
-adjustment panel for any field you want to inherit afterward.
-
-   Other rows and shared settings are retained during a row-level keep.
-Replacing only the physical voice asks whether to keep or reset an
-existing row's custom settings.  Shared adjustment keeps affect
-inherited fields; custom row settings still override them.  An existing
-destination draft offers to add the chosen changes or resume without
-adding.  Other edits and pending save recovery remain.  The destination
-opens in the same editor; preview plays the proposed saved combination,
-which may differ from the experiment because of the chosen scope and
-destination fallback order.  Choosing a destination has not saved
-anything yet.
-
-   For a named voice, ‘w’ or ‘C-c C-c’ saves and applies the complete
-draft.  _Save to collection without selecting_ saves an inactive palette
-without changing the current selection.  The header reports unsaved
-changes, partial saves, applying, failures, or saved and applied.  Retry
-uses the pending proposal and retains successful persistence steps.
-Changes made during an earlier apply remain unsaved when its
-acknowledgement arrives.  A changed file or destination requires fresh
-review rather than an implicit merge.
-
-   Named-voice previews test the complete choice chain using a private
-policy snapshot; they do not temporarily apply the draft.  They require
-an Omnivox server advertising complete-voice preview.  Older servers
-report this operation as unsupported; individual physical auditions
-remain available.  Playback reports identify actual accepted audio when
-the server supplies that evidence, including unsupported adjustments.
-They do not infer a successful fallback from inventory or claim exact
-effective numeric parameter values.
-
-   ‘q’ returns to the originating row and column.  With unsaved changes,
-choose to retain the draft, discard changes, or continue editing.
-Retained drafts survive closing the view and can be reopened from Home's
-_Resume unfinished changes_ during this Emacs session.  They do not
-survive restarting Emacs.  Leaving does not undo a completed save.
-
-   _Save and apply_ selects the palette for this session.  Use the _Use
-at Startup_ action, ‘U’ in Voice Palettes, to retain that selection
-after restart.  Palette and local-choice files are separate; the editor
-coordinates their writes and reports partial failures in the same view.
-
-6.7.2 Inspect Or Adjust A Voice In Context
+6.6.3 Inspect Or Adjust A Voice In Context
 ------------------------------------------
 
 In the common named-voice editor, choose _Effective sound / Where
@@ -3325,12 +3187,12 @@ presentation facts or a valid retained presentation.  _Choose another
 source context_ selects a new item explicitly.
 
    This is a simulation using captured facts and rules.  It shows the
-selected base preset, matching rules, requested values and each
+selected named voice, matching rules, requested values and each
 dimension's source.  A rule can override pitch while another supplies
 richness.  A stronger pitch rule can hide a base pitch edit; a rule
-selecting a different preset can make the open base voice irrelevant to
-this item.  Rates follow precedence too: competing relative-rate values
-do not add together.
+selecting a different named voice can make the open base voice
+irrelevant to this item.  Rates follow precedence too: competing
+relative-rate values do not add together.
 
    ‘P’ plays the edited voice in this context; ‘B’ compares original and
 edited using the same captured facts, rules and text.  These voice-only
@@ -3356,113 +3218,158 @@ preparing another contextual rule.
 
    In the scoped field control, _Inherit_ removes the field so weaker
 contributions can supply its value.  Removing the final voice field
-removes the voice patch.  An existing explicit nil is displayed
-separately and retained when editing other fields.  For ACSS fields, the
-existing transport reports nil but sends no reset over a preset; rate
-and effect fields use their existing clearing behavior.  Inherit,
-explicit nil and zero are distinct.  Named presets continue to reset the
-base and earlier voice overrides.  These operations never save a
-flattened contextual result back into the palette.
-
-6.7.3 Worked Presentation Recipes
----------------------------------
-
-  1. Browse Eloquence And Compare Pitch
-
-       1. Open ‘C-e H’ and search with ‘/’ for _Browse and adjust
-          voices_.  Select the installed Eloquence engine and press
-          <RET>.  Its list shows the voices this installation reports;
-          if Eloquence is unavailable, choose another available engine.
-       2. Use up/down to choose a voice.  ‘P’ plays it; ‘A’ plays the
-          filtered list with spoken names, and ‘S’ stops.  ‘T’ chooses
-          your own sample sentence.  For two different voices, ‘B’ uses
-          the selected voice as A and asks for B.
-       3. Press ‘t’ on one physical voice.  Move to _Average Pitch_.
-          Press <RET> and enter ‘3’, then ‘P’.  Enter ‘7’ and replay the
-          same sentence.  ‘u’ restores the previous value for another
-          comparison.  Navigation uses the ordinary voice; automatic
-          samples let you hear changes.
-       4. Press ‘B’ for a labelled comparison of the captured original
-          and edited versions.  This compares against the opening or
-          last successfully applied version, not the two most recent
-          edits.
-
-  2. Keep A Voice Experiment
-
-     After finding a useful setting in the physical experiment, press
-     ‘w’ and choose a destination palette and named voice.  Keep the
-     physical choice and its adjustments together, the physical voice
-     only, the adjustments for a selected row, or shared adjustments for
-     inheriting rows.  Choose replacement, preferred or fallback
-     placement when keeping a physical choice.  Review the proposed
-     combination in the destination editor and press ‘P’ to hear it
-     before saving with ‘w’.
-
-     A built-in destination opens a personal-child draft.  A partial
-     save stays visible in that editor and can be retried.  Selection
-     lasts for this session; use ‘U’ in Voice Palettes to retain it
-     after restart.
-
-  3. Change A Heading Voice, Add A Cue, Or Silence One
-
-     Move to a representative heading and open ‘C-e H c’.  Press ‘c’,
-     choose _Change the content voice_, and select a named voice such as
-     ‘bolden’.  ‘P’ previews it.  Use ‘m’ to review the actual heading
-     facts, including level when supplied by the integration.  Use ‘l’
-     to choose a lifetime, review the summary, then press ‘a’.  A rule
-     matching level-two headings affects all matching level-two headings
-     within that lifetime's scope.
-
-     To add a cue, begin again with a representative item and choose
-     _Add a sound_.  Select before or after content, choose a registered
-     sound, and preview it.  To silence an existing cue, choose
-     _Suppress one component_ and select that sound by phase and
-     identity.  This retains the spoken content and other feedback.
-     Review matching criteria and lifetime before applying either rule.
-
-  4. Change A Blank-Line Tone
-
-     Navigate onto a blank line so its feedback enters history.  Open
-     ‘C-e H H’, select that blank-line record, and press ‘C’.  Choose
-     _Change a tone_, select the tone, then choose a named tone or
-     explicit pitch in Hertz and duration in milliseconds.  Compare ‘O’
-     and ‘P’.  Review the matching facts before choosing lifetime and
-     applying.
-
-     If that record contains a cue instead of a tone, the tone choice is
-     absent.  Use _Explain_ to see which rule supplied the cue; a guided
-     change can suppress that cue, and a second change can add a tone.
-     The interface reports the actual presentation rather than assuming
-     every visually blank line uses the same feedback.
-
-  5. Choose An Engine And Recover Unfinished Work
-
-     For ordinary speech, open Home and search for _Ordinary speech
-     engine_, or use ‘C-e d e’ directly.  Choose an available engine.
-     This preference lasts for the session; a prefix argument explicitly
-     saves it.  Existing exact logical-voice routes take precedence over
-     the preference.
-
-     Use ‘h’ to leave a working editor through Home without losing it.
-     Home's _Resume unfinished changes_ opens the original draft,
-     including its source and working settings.  In the common voice
-     editor, ‘u’ undoes and ‘q’ offers to keep the draft, discard
-     changes, or continue.  Guided feedback ‘q’ goes back one level,
-     then hides and retains the draft at the top level.  To undo an
-     already applied rule, open _Presentation Overrides_, select it in
-     the appropriate scope, and use ‘t’ to disable it or ‘d’ to remove
-     it.
-
-     From any Aural interface, ‘C-c C-i’ opens its offline task manual
-     and ‘q’ returns to the same interface and position.  In Help, ‘i’
-     opens that manual.  ‘C-c C-a’ offers named actions; ‘S’ stops a
-     preview sequence.
+removes the voice patch.  Existing explicit default values are shown
+separately and preserved when you edit another field.  Use _Inherit_ to
+remove a contextual adjustment; zero is a value, not a request to
+inherit.  Some older explicit defaults cannot reset an underlying voice
+setting on every backend.  Check the preview and use the explanation to
+identify that limitation.  Contextual changes are saved as rules; they
+do not replace the palette entry with the combined result.  The *note
+Developer Guide: (emacsvox)Integration Maintenance. explains the
+representation and compatibility details.
 
 
-File: emacsvox.info,  Node: Sounds And Space,  Next: Presentation Troubleshooting,  Prev: Voices And Routing,  Up: Aural Presentation
+File: emacsvox.info,  Node: Installed Voices And Engines,  Next: Sounds And Space,  Prev: Editing Named Voices,  Up: Aural Presentation
 
-6.8 Choose Sounds And Spatial Cues
-==================================
+6.7 Browse Installed Voices And Choose Engines
+==============================================
+
+Use _Voice Workbench_ when the question involves installed voices or
+engines.  Open it from Aural Home with ‘W’.  Its main views are:
+
+‘e’
+     Engines, such as Flite or Eloquence.  Start here to try voices from
+     a particular synthesizer or inspect its availability.
+‘v’
+     Physical voices: the actual installed voices you can hear.  Use
+     this list to listen, compare, and experiment with their parameters.
+     On an engine row, this key opens just that engine's voices.
+‘l’
+     Named voices (the _Logical voices_ view): roles such as _bolden_
+     and _annotate_.  Start here to change which physical voice reads a
+     role.
+‘s’
+     Styles and effects for those logical roles.  Use this view to
+     inspect their parameters and what their current engines support.
+
+   For physical voices, choose _Browse and adjust voices_ in Home, then
+press <RET> or ‘v’ on an engine to browse its voices.  <RET> on a voice
+shows details; ‘P’ plays a named sample.  Filters set with ‘F’ and each
+view's selected row and column survive navigation through Home.  The
+engine selected for browsing is a temporary limit: switching to the
+logical, styles, or engine view removes it.  Pressing ‘v’ from a voice
+list also removes that temporary limit.  Your explicit filters still
+apply; ‘C’ clears all filters to show voices across engines.  Press ‘q’
+in an engine's voice list to return to that engine's row and column.
+Press ‘q’ again from the engine list to leave the workbench.  The direct
+view shortcuts remain available.
+
+   The engine list reports _Availability_ before routing preferences.
+An engine with a missing runtime stays visible as _unavailable_, with
+its reason under _Last failure_.  _Routing policy: allowed_ means the
+policy permits using that engine; it does not mean its runtime is
+installed.  Disabled policies, health, and temporary failures are
+reported separately.
+
+   ‘A’ plays available matching voices in displayed order, skipping
+unavailable rows.  ‘B’ starts with the selected voice as A and offers
+another matching voice as B.  Choose _Search all engines_ inside that
+prompt to compare outside the current filters.  Both samples use the
+same sentence.  ‘T’ edits it, ‘F’ filters, ‘C’ clears filters, and ‘R’
+refreshes inventory.
+
+   Labels identify each engine and voice.  Customize
+‘emacsvox-aural-preview-label-verbosity’ for names, brief letters or
+numbers, or no labels.  Labels and samples share one preview sequence:
+‘S’ or foreground navigation cancels the remaining samples.  An
+exact-preview failure is reported instead of accepting a different voice
+as the requested one.  Availability and capability reports describe what
+the adapter advertises; they are not a listening test of every
+parameter.
+
+* Menu:
+
+* Experiment With An Installed Voice: Physical Voice Experiments.  Try physical voices without saving, then keep a useful experiment.
+* Set Shared Engine Preferences: Speech Engine Preferences.  Choose engine order and distinguish it from explicit palette choices.
+
+
+File: emacsvox.info,  Node: Physical Voice Experiments,  Next: Speech Engine Preferences,  Up: Installed Voices And Engines
+
+6.7.1 Experiment With An Installed Voice
+----------------------------------------
+
+In _Browse and adjust voices_, select a physical voice and press ‘t’.
+This opens an experiment with that exact engine and voice,
+adapter-default speech characteristics, the current base speech rate,
+and neutral audio effects.  Opening, adjusting and comparing write no
+settings.
+
+   The field navigation, adjustments and comparison controls are the
+same as in *note Edit a Named Voice: (emacsvox)Editing Named Voices.  In
+an experiment, ‘w’ first asks where to use the result; it cannot save a
+voice without a palette destination.
+
+   For a physical experiment, ‘w’ chooses a destination palette and
+named voice.  The default keeps _Physical voice and adjustments — this
+choice_.  You can instead keep only the physical voice, only the
+adjustments for a selected row, or explicitly change shared settings for
+all inheriting choices.  A physical voice can replace a selected row,
+become preferred, or be appended as a fallback.  Row-level adjustments
+replace that row's tuning with the experiment's values and adapter
+defaults.  This prevents unrelated destination shared settings from
+changing the experiment's base sound.  Use ‘i’ in the row's individual
+adjustment panel for any field you want to inherit afterward.
+
+   Other rows and shared settings are retained during a row-level keep.
+Replacing only the physical voice asks whether to keep or reset an
+existing row's custom settings.  Shared adjustment keeps affect
+inherited fields; custom row settings still override them.  An existing
+destination draft offers to add the chosen changes or resume without
+adding.  Other edits and pending save recovery remain.  The destination
+opens in the same editor; preview plays the proposed saved combination,
+which may differ from the experiment because of the chosen scope and
+destination fallback order.  Choosing a destination has not saved
+anything yet.
+
+
+File: emacsvox.info,  Node: Speech Engine Preferences,  Prev: Physical Voice Experiments,  Up: Installed Voices And Engines
+
+6.7.2 Set Shared Engine Preferences
+-----------------------------------
+
+For a quick engine preference, ‘C-e d e’ chooses an available engine for
+the current Emacs session.  Use ‘C-u C-e d e’ to save the new
+preference.  On a first run with no saved engine settings, the ordinary
+command uses the live Omnivox policy as an in-memory baseline and writes
+no file; the prefixed command explicitly saves that baseline and the
+selected preference.  Explicit physical choices in named palette voices
+still take precedence.
+
+   All named voices use the common editor and the same complete palette
+model.  Workbench engine policy is shared across palettes: ‘O’ toggles
+preferred engines and ‘[’ / ‘]’ reorder them; ‘f’ toggles fallback
+engines and ‘{’ / ‘}’ reorder those.  ‘D’ enables or disables an engine,
+and ‘K’ requests a recovery probe.  These are staged policy edits; ‘w’
+saves and applies them.  Physical choices for a named voice are saved in
+that voice's editor.
+
+   Tables put voice or engine names first.  Detailed adapter
+capabilities, native identifiers and registration information are
+available with ‘x’ for Details.  Availability, failure reasons,
+predicted selection and observed playback remain distinct.  Inventory
+predictions do not prove that audio played.
+
+   Saving engine policy is separate from saving a named voice or a
+Presentation Profile.  If an apply fails or is unconfirmed, see *note
+Recovering Unfinished Changes: (emacsvox)Recovering Aural Changes.
+Installation and optional engine modules are covered in *note Optional
+Omnivox Engine Modules: (emacsvox)Optional Omnivox Engine Modules.
+
+
+File: emacsvox.info,  Node: Sounds And Space,  Next: Aural Speech Output,  Prev: Installed Voices And Engines,  Up: Aural Presentation
+
+6.8 Sounds, Tones, And Spatial Cues
+===================================
 
 Presentation rules refer to auditory cues by semantic name.  A sound
 pack maps those names to concrete audio assets and can inherit missing
@@ -3497,11 +3404,174 @@ center rather than silently losing content.
 require a sampled sound file and may be used independently of the active
 sound pack.
 
-
-File: emacsvox.info,  Node: Presentation Troubleshooting,  Next: Voice Lock,  Prev: Sounds And Space,  Up: Aural Presentation
+* Menu:
 
-6.9 Diagnose Unexpected Presentation
-====================================
+* Change A Blank-Line Tone: Changing Tones.  Change a recorded tone and distinguish it from a sampled cue.
+
+
+File: emacsvox.info,  Node: Changing Tones,  Up: Sounds And Space
+
+6.8.1 Change A Blank-Line Tone
+------------------------------
+
+Navigate onto a blank line so its feedback enters history.  Open ‘C-e H
+H’, select that blank-line record, and press ‘C’.  Choose _Change a
+tone_, select the tone, then choose a named tone or explicit pitch in
+Hertz and duration in milliseconds.  Compare ‘O’ and ‘P’.  Review the
+matching facts before choosing lifetime and applying.
+
+   If that record contains a cue instead of a tone, the tone choice is
+absent.  Use _Explain_ to see which rule supplied the cue; a guided
+change can suppress that cue, and a second change can add a tone.  The
+interface reports the actual presentation rather than assuming every
+visually blank line uses the same feedback.
+
+
+File: emacsvox.info,  Node: Aural Speech Output,  Next: Presentation Profiles,  Prev: Sounds And Space,  Up: Aural Presentation
+
+6.9 Speech Output And Notifications
+===================================
+
+Speech rate and output settings control how speech reaches you,
+independently of which presentation rule chose the content.  _Speech
+rate_ in Home applies to the captured source buffer; invoke that action
+with a prefix argument to set the global rate.  A named voice's relative
+rate adjusts its speech around the applicable base rate.  See *note
+Voice Adjustments: (emacsvox)Voice Adjustments.
+
+   Emacsvox assigns speech to one of two streams according to what
+caused it:
+
+   • The _main stream_ presents foreground information produced directly
+     by your current interaction, such as movement, entering a buffer,
+     or opening a message.  New navigation interrupts obsolete
+     main-stream speech, and you can interrupt a longer entry
+     announcement by navigating again.
+
+   • The _notification stream_ presents asynchronous events, such as
+     completion of background work.  It does not stop main-stream
+     speech, and normal navigation does not stop it, so both streams may
+     be heard concurrently.  A notification cue and its associated
+     speech are delivered together on this stream.
+
+   Open _Notification output_ in Home to choose the arrangement in
+Customize.  With Omnivox, _Automatic_ normally uses an independent
+notification process.  The left, right, and both choices select its
+output route.  _Use main output (notifications remain audible)_ sends
+notifications through the main process instead.  Navigation can then
+interrupt them; this setting does not mute notifications.  Other
+backends may use their configured device or fall back to the main
+stream.
+
+   After changing the setting, initialize the arrangement with ‘C-e d
+C-n’.  Use Customize's save action to retain the choice across restarts.
+In Lisp, ‘default’ or an empty string selects main output; prefer the
+descriptive Customize labels for ordinary configuration.
+
+   _Stop notification speech_ in Home stops the current notification
+stream; it is not a persistent mute.  _Review notifications_ opens the
+notification history so you can read an announcement you missed.
+
+   Stopping obsolete main speech is local to the main stream.  An
+explicit ‘tts-stop’ command stops both main and notification speech.
+
+
+File: emacsvox.info,  Node: Presentation Profiles,  Next: Presentation Troubleshooting,  Prev: Aural Speech Output,  Up: Aural Presentation
+
+6.10 Save, Switch, And Share Your Setup
+=======================================
+
+A presentation profile records a coordinated setup: enabled Presentation
+Options and their order, the sound pack, the voice palette, and portable
+spatial settings.  This is useful for switching between focused work and
+leisure reading, between quiet and information-rich feedback, or between
+audio environments.
+
+   To save and use a profile:
+
+  1. Configure the live options, sound pack, voice palette, and spatial
+     choices you want.
+
+  2. Open _Presentation Profiles_ from Aural Home or press ‘P’ there.
+
+  3. Press ‘N’ to save the current live configuration as a new named
+     profile.
+
+  4. Later, select that profile and press ‘a’ to apply its saved values.
+
+  5. If you deliberately change the live configuration and want the
+     selected profile to adopt it, press ‘w’.  If you instead want to
+     discard the live differences, press ‘a’ to restore the saved
+     profile; Emacsvox asks before replacing the diverged values.
+
+   Only one profile identity is selected.  _Active_ means the selected
+profile's saved values match the live configuration.  _Diverged_ means
+the same profile is still selected but the live values differ; it is a
+status, not an unsaved editor warning.
+
+   Profiles refer to palettes and sound packs by name; they do not make
+private copies of their contents.  Editing a palette affects every
+profile selecting it.  A profile is therefore a convenient selection of
+settings, not a backup.  Profiles do not capture engine policy, speech
+rate, or notification output.
+
+   Profiles do not copy presentation rules.  Edit rules in Presentation
+Options or Overrides.  They also do not capture buffer-local Voice Lock
+state or current-buffer rules, because those belong to an individual
+buffer rather than a global setup.
+
+* Menu:
+
+* Choose What Persists: Saving And Startup.  Distinguish previews, drafts, saved resources, activation, and startup.
+* Export, Back Up, And Import Palettes: Sharing Voice Palettes.  Share portable voices or retain local choices in a backup.
+
+
+File: emacsvox.info,  Node: Saving And Startup,  Next: Sharing Voice Palettes,  Up: Presentation Profiles
+
+6.10.1 Choose What Persists
+---------------------------
+
+These actions answer different questions:
+
+   • _Preview_ plays an example without saving or selecting the draft.
+   • _Retain draft_ keeps unfinished edits in this Emacs session only.
+   • _Save to collection without selecting_ saves the voice for later
+     use.
+   • _Save and apply_ saves the voice and selects its palette for this
+     session.
+   • _Activate_ selects an existing palette or sound pack now.
+   • _Use at Startup_ in Voice Palettes changes the palette selected by
+     the saved startup profile; it does not apply that profile now.
+   • _Presentation Profiles_ save selected options, palette, sound pack,
+     and spatial settings together.  Their referenced resources remain
+     shared.
+   • _Export_ and _Full backup_ create files to share or retain
+     separately.
+
+   A saved personal rule is used in future sessions.  Session and buffer
+rules expire with their session or buffer.  Saving a profile does not
+turn these temporary rules or unfinished drafts into permanent settings.
+
+
+File: emacsvox.info,  Node: Sharing Voice Palettes,  Prev: Saving And Startup,  Up: Presentation Profiles
+
+6.10.2 Export, Back Up, And Import Palettes
+-------------------------------------------
+
+For sharing, ‘w’ exports effective portable entries and asks before
+omitting machine-local physical choices.  ‘W’ creates a full local
+backup containing the palette's ancestry and referenced local choices.
+Import with ‘i’ accepts either file and creates an independent personal
+palette under an unused name; it does not replace the original ancestry
+tree or activate the imported palette.  Missing installed voices are
+reported and retained for later replacement.  A partial import keeps its
+proposal available for Retry or Discard.
+
+
+File: emacsvox.info,  Node: Presentation Troubleshooting,  Next: Voice Lock,  Prev: Presentation Profiles,  Up: Aural Presentation
+
+6.11 Troubleshooting And Recovery
+=================================
 
 Use the symptom to choose the shortest diagnostic route:
 
@@ -3514,9 +3584,9 @@ A broad optional behavior is    Inspect Presentation Options and
 unwanted                        preview or disable the matching option.
 One narrow exception is         Open Presentation Overrides, preview
 unwanted                        it, then disable or remove it.
-A logical voice uses the        Inspect its route and engine health in
-wrong engine or physical        Voice Workbench.
-voice
+A named voice uses the wrong    Inspect its physical choices in the
+engine or physical voice        voice editor, then engine health in
+                                Voice Workbench.
 A cue is missing or             Validate and audition the active Sound
 inappropriate                   Pack, then inspect earcon overrides.
 A saved setup no longer         Check whether the selected Presentation
@@ -3536,11 +3606,46 @@ speech itself is absent rather than merely presented incorrectly, follow
 *note Backend Diagnostics And Responsibilities: Backend Diagnostics And
 Ownership.; presentation diagnostics assume that a speech route can run.
 
+* Menu:
+
+* Recover Unfinished Changes: Recovering Aural Changes.  Resume drafts and distinguish saved settings from confirmed application.
+
+
+File: emacsvox.info,  Node: Recovering Aural Changes,  Up: Presentation Troubleshooting
+
+6.11.1 Recover Unfinished Changes
+---------------------------------
+
+Use ‘h’ to leave a working editor through Home without losing it.
+Home's _Resume unfinished changes_ opens the original draft, including
+its source and working settings.  In the common voice editor, ‘u’ undoes
+and ‘q’ offers to keep the draft, discard changes, or continue.  Guided
+feedback ‘q’ goes back one level, then hides and retains the draft at
+the top level.  To undo an already applied rule, open _Presentation
+Overrides_, select it in the appropriate scope, and use ‘t’ to disable
+it or ‘d’ to remove it.
+
+   Retained drafts last only until Emacs exits.  Discarding a draft
+abandons unsaved edits; it does not undo a completed save.  A voice
+editor reports saved settings separately from successful application to
+the speech server.  Keep that distinction when deciding whether to retry
+or to edit the saved voice.
+
+   Applying waits for each speech stream to acknowledge its
+configuration.  If an Omnivox apply times out, the Workbench reports
+_server outcome unconfirmed_.  Emacsvox stops that apply and sends no
+later steps, but changes already sent may still take effect on the
+server.  A timeout does not undo the saved engine settings or confirm
+that the server rejected it.  Press ‘r’ to reapply the saved engine
+settings and obtain a fresh result.  Save or cancel any newer staged
+edits before retrying.  A partial result retains the streams that
+acknowledged success and identifies those that timed out.
+
 
 File: emacsvox.info,  Node: Voice Lock,  Prev: Presentation Troubleshooting,  Up: Aural Presentation
 
-6.10 Voice Lock Compatibility
-=============================
+6.12 Voice Lock And Advanced Configuration
+==========================================
 
 Voice Lock is one compatibility input to Aural Presentation, not the
 whole presentation system.  It maps established Emacs faces and
@@ -3590,17 +3695,20 @@ a named legacy voice's ‘-settings’ option, such as
 generated ‘acss-...’ voice symbol.  Historical background is preserved
 in *note (emacsvox-heritage)Audio Formatting And Aural CSS::.
 
-6.11 Further Detail
-===================
+   Named formatting voices such as ‘bolden’ and ‘annotate’ follow the
+active palette.  An inherited standard entry may use a personality's
+‘-settings’ option as its implementation.  This is the definition in the
+explicit standard root, not a second hidden palette fallback.  Explicit
+styles keep their own settings, and explicit presentation rules can
+change the resulting voice.
 
-Every Aural manager and editor has live ‘?’ help.  The generated *note
-(emacsvox-reference)Emacsvox Commands And Options:: records the exact
-public commands and options.  The source-tree file
-‘etc/aural-presentation-reference.org’ documents the rule schema,
-selection order, queue behavior, extension contracts, and advanced data
-authoring.  Those details are useful when developing an integration or a
-reusable Presentation Option; they are not required for ordinary
-customization.
+   The *note Developer Guide: (emacsvox)Integration Maintenance. covers
+voice-style metadata, rule authoring contracts, and integration
+behavior; *note Speech Server Protocols: (emacsvox)Speech Server
+Protocols. covers delivery.  The generated *note
+(emacsvox-reference)Emacsvox Commands And Options:: records exact
+commands, options, and keymaps.  These references complement the tasks
+here; they are not prerequisites for using Aural Home.
 
 
 File: emacsvox.info,  Node: Using Online Help,  Next: Emacs Packages,  Prev: Aural Presentation,  Up: Top

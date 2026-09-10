@@ -34,15 +34,32 @@ Desktop Objects
 Object Oriented Desktop
 Context-Sensitive Interaction
 Aural Presentation
+Aural Home
 Presentation Model
 Presentation Modalities
-Aural Home
 Explaining Presentation
 Adjusting Presentation
-Presentation Profiles
+Guided Feedback Changes
+Choosing A Voice For An Item
+Managing Feedback Rules
+Presentation Options
 Voices And Routing
+Renaming Voices And Palettes
+Editing Named Voices
+Voice Adjustments
+Voice Fallbacks
+Voices In Context
+Installed Voices And Engines
+Physical Voice Experiments
+Speech Engine Preferences
 Sounds And Space
+Changing Tones
+Aural Speech Output
+Presentation Profiles
+Saving And Startup
+Sharing Voice Palettes
 Presentation Troubleshooting
+Recovering Aural Changes
 Voice Lock
 Using Online Help
 Emacs Packages

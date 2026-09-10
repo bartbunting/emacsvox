@@ -29,19 +29,118 @@ than editing configuration data by hand:
   Explain why the object at point received its voices, sounds, and other
   actions.
 
-For a first experiment, press @@texinfo:@kbd{C-e H}@@ and use
-@@texinfo:@kbd{/}@@ to find /Browse and adjust voices/.  Select an engine with
-@@texinfo:@key{RET}@@, then a voice with @@texinfo:@kbd{P}@@ to hear it.  Nothing
-is saved by browsing or previewing.  To change something you just heard, use
-@@texinfo:@kbd{C-e H c}@@ for the current item, or
-@@texinfo:@kbd{C-e H H}@@ to select past feedback.  See
-[[info:emacsvox#Voices And Routing][Voices And Routing]] for complete examples.
+This chapter starts with a short listening task, then explains how to change
+feedback and manage voices, sounds, and saved setups. You can follow it in
+order or open a task directly from its Info menu. In an Aural interface,
+@@texinfo:@kbd{C-c C-i}@@ opens the relevant manual topic;
+@@texinfo:@kbd{q}@@ in Info returns to the interface. In interface Help,
+@@texinfo:@kbd{i}@@ opens the same topic.
 
-This chapter gives a user-level model of the system and practical workflows for
-common changes.  The generated reference provides rule
-schemas, transport contracts, and extension development.
+** Getting Started With Aural Home
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Aural Home
+:ALT_TITLE: Aural Home
+:DESCRIPTION: Navigate the spoken presentation control center.
+:END:
 
-** A Practical Model Of Presentation
+#+cindex: Aural Home
+
+For a first listening experiment:
+
+1. Press @@texinfo:@kbd{C-e H}@@, then @@texinfo:@kbd{/}@@, and choose
+   /Browse and adjust voices/ from the searchable actions.
+2. Select an available engine and press @@texinfo:@key{RET}@@ to list its voices.
+3. Move to a voice and press @@texinfo:@kbd{P}@@ to hear a sample.
+   @@texinfo:@kbd{S}@@ stops it. Browsing and previewing save no settings.
+4. Press @@texinfo:@kbd{h}@@ to return to Home. From Home,
+   @@texinfo:@kbd{C-c C-o}@@ returns to the item where you started.
+
+If an engine is unavailable, its details explain why; try another available
+engine. If no speech is available, start with
+[[info:emacsvox#Recovering From No Speech][Recovering From No Speech]].
+
+Open Aural Home from an ordinary buffer with @@texinfo:@kbd{C-e H}@@.  Emacsvox
+remembers that source buffer and opening position so contextual actions such
+as explanation and remapping operate on the object you were using.  Moving
+the source cursor while Home is open does not change this target.  In Home,
+@@texinfo:@kbd{C-c C-o}@@ returns to it.  To choose a new target, invoke
+@@texinfo:@kbd{C-e H}@@ afresh from that item in an ordinary buffer.
+
+Returning through Home or Help preserves the selected row and unfinished
+edits.  Buffer rule editors retain separate drafts for each source buffer;
+reopening a modified editor resumes its draft.  Reopening the same voice in
+the voice editor likewise preserves its working settings.  If a prepared remap's
+source item changes or disappears, Emacsvox asks you to prepare that change
+again before applying it.
+
+Aural Home begins with five task groups in one spoken table.  Press
+@@texinfo:@key{RET}@@ or @@texinfo:@key{TAB}@@ to expand or collapse a group.
+Each action names a destination, reports its current status, and describes
+its purpose.  @@texinfo:@kbd{/}@@ searches all actions, including collapsed
+groups; the matching group opens with your destination selected.
+
+Expandable groups announce an open or close cue with their name when you
+reach or toggle them. These cues follow the icon setting and sound pack.
+For spoken state words, enable
+/aural-panel-state-labels/ in /Presentation Options/.  This adds ``collapsed''
+or ``expanded'' after the control through the normal presentation rules.
+Key instructions remain available in Help.
+
+Panel entry, return, selection, and warning cues accompany their spoken
+feedback in one utterance.  Returning from a panel announces the destination
+and any unfinished draft warning together.  These cues follow the icon
+setting, sound pack, and cue remapping rules.
+The voice editor uses the normal navigation voice for these announcements;
+auditions still play the working voice.
+
+In Home and other tables, the navigation controls are:
+
+#+attr_texinfo: :indic kbd :compact t
+- n, p, down, up :: Move by row, retaining and speaking the selected column.
+  In the first column, settings lists announce the name and current state.
+- left, right :: Move among the titled columns.
+- . :: Speak the current column title and value.
+- SPC :: Speak the complete current row.
+- RET :: Open a destination, child list, or details.
+- C-c C-a :: Choose an applicable action by name.
+- N :: Create a new item where supported.
+- P :: Preview in managers and editors; Home retains its profiles shortcut.
+- S :: Stop the preview and its remaining samples.
+- ? :: Display and speak help for the current Aural interface.
+- h :: Return to Aural Home from a manager or editor.
+- q :: Go back or leave; an editor may first offer to retain or discard changes.
+
+The five groups are:
+
+#+attr_texinfo: :columns 0.35 0.65
+| Task group | Destinations |
+| Understand or change feedback | Current item explanation and remapping, Recent Feedback, semantic vocabulary, and return to source. |
+| Choose voices and sounds | Browse and adjust voices, palettes, sound packs, speech engine and rate, notifications, spatial settings, and the full Voice Workbench. |
+| Choose optional feedback | Presentation Options and training explanations. |
+| Manage changes and saved setups | Unfinished drafts, overrides, buffer rules, and Presentation Profiles. |
+| Troubleshoot | Aural Doctor and Omnivox engine modules. |
+
+The header identifies the captured source and the number of unfinished drafts.
+Choose /Resume unfinished changes/ to visit the original rule editor, voice editor,
+or Workbench engine settings.  The draft is still unsaved until you accept it there.
+Presentation Profiles capture options, palette, sound pack, and spatial
+settings. Physical choices and their adjustments belong to the selected
+palette's named voices; shared engine settings are saved separately.
+
+You can press @@texinfo:@key{RET}@@ on a row without memorizing its shortcut.  Aural
+Home also provides direct keys for frequent routes, including @@texinfo:@kbd{x}@@ for
+explanation, @@texinfo:@kbd{O}@@ for overrides, @@texinfo:@kbd{H}@@ for recent feedback,
+@@texinfo:@kbd{P}@@ for profiles, @@texinfo:@kbd{V}@@ for voice palettes, @@texinfo:@kbd{W}@@ for
+Voice Workbench, and @@texinfo:@kbd{D}@@ for Aural Doctor.
+
+The voice editor contains fields and buttons rather than table columns:
+left/right changes a numeric value, and @@texinfo:@key{RET}@@ edits a field.
+See [[info:emacsvox#Editing Named Voices][Edit a Named Voice]]. Keys are local to the view: for example,
+@@texinfo:@kbd{w}@@ saves a voice in its editor but exports a palette in the
+palette manager. Use @@texinfo:@kbd{C-c C-a}@@ to choose an action by name,
+or @@texinfo:@kbd{?}@@ for that view's current keys.
+
+** How Aural Presentation Works
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Presentation Model
 :ALT_TITLE: Presentation Model
@@ -56,7 +155,7 @@ It helps to separate four questions that are often mixed together:
 | Layer | Question | Example |
 | Meaning | What happened or what is this? | A level-two heading was reached during navigation. |
 | Presentation | What should convey that meaning? | Speak the heading in a named voice and play a section cue first. |
-| Resources | Which voice and sound realize that request? | Resolve the logical voice through the active palette and the cue through the active sound pack. |
+| Resources | Which voice and sound realize that request? | Find the named voice in the active palette and the cue in the active sound pack. |
 | Output | What can this machine produce? | Route speech to an installed engine and apply supported spatial behavior. |
 
 An Emacs mode or Emacsvox integration supplies facts about an object or event.
@@ -81,14 +180,15 @@ The user-visible configuration layers are:
 3. Enabled /Presentation Options/ that add optional behavior in a stable
    weakest-to-strongest order.
 
-4. Personal, session, and current-buffer /overrides/.  These are the strongest
-   layers and are intended for precise changes.
+4. Personal, session, and current-buffer rules. These are the strongest
+   layers and are intended for precise changes. They are also called
+   /overrides/ because they can replace weaker behavior.
 
-A presentation profile is not another rule layer.  It records a complete set
-of selected options, sound pack, voice palette, and spatial choices so you can
+A presentation profile is not another rule layer.  It records the
+selected options, sound pack, voice palette, and spatial choices so you can
 switch those choices together.
 
-** What You Can Hear
+*** What You Can Hear
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Presentation Modalities
 :ALT_TITLE: Presentation Modalities
@@ -102,11 +202,11 @@ Aural Presentation can use one or more of these forms of feedback:
 - /Speech/ conveys content, labels, prompts, results, and status.  Added speech
   should explain meaning that is not already clear from the content.
 
-- /Voice/ changes characteristics of spoken content.  Named logical voices
+- /Voice/ changes characteristics of spoken content.  Named voices
   make distinctions such as headings, annotations, warnings, or quoted text
   portable across speech engines.
 
-- /Auditory cues/ are short recognizable sounds associated with semantic
+- /Auditory cues/, also called /earcons/ or /auditory icons/, are short sounds associated with semantic
   events or objects.  A sound pack supplies the concrete audio for those cue
   names.
 
@@ -129,123 +229,6 @@ The precise sound may vary by speech engine, installed voices, sound pack, and
 audio hardware.  The intended distinction should remain understandable even
 when a simpler backend uses fewer voice characteristics or centered output.
 
-*** Main And Notification Speech Streams
-:PROPERTIES:
-:TEXINFO_NODE: no
-:END:
-
-#+cindex: speech streams
-
-#+cindex: notification stream
-
-#+vindex: tts-notification-device
-
-Emacsvox assigns speech to one of two streams according to what caused it:
-
-- The /main stream/ presents foreground information produced directly by your
-  current interaction, such as movement, entering a buffer, or opening a
-  message.  New navigation interrupts obsolete main-stream speech, and you can
-  interrupt a longer entry announcement by navigating again.
-
-- The /notification stream/ presents asynchronous events, such as completion
-  of background work.  It does not stop main-stream speech, and normal
-  navigation does not stop it, so both streams may be heard concurrently.  A
-  notification cue and its associated speech are delivered together on this
-  stream.
-
-With Omnivox, Emacsvox starts a second server process for the notification
-stream by default.  Set ~tts-notification-device~ to ~left~, ~right~, or
-~both~ to choose that process's route.  Set it to ~default~ or the empty string
-to disable the separate process; notification speech then falls back to the
-main process and remains interruptible by navigation.  Other speech backends
-may use a configured notification device or fall back to the main stream.
-
-Stopping obsolete main speech is local to the main stream.  An explicit
-~tts-stop~ command stops both main and notification speech.
-
-** Begin With Aural Home
-:PROPERTIES:
-:TEXINFO_NODE_NAME: Aural Home
-:ALT_TITLE: Aural Home
-:DESCRIPTION: Navigate the spoken presentation control center.
-:END:
-
-#+cindex: Aural Home
-
-Open Aural Home from an ordinary buffer with @@texinfo:@kbd{C-e H}@@.  Emacsvox
-remembers that source buffer and opening position so contextual actions such
-as explanation and remapping operate on the object you were using.  Moving
-the source cursor while Home is open does not change this target.  In Home,
-@@texinfo:@kbd{C-c C-o}@@ returns to it.  To choose a new target, invoke
-@@texinfo:@kbd{C-e H}@@ afresh from that item in an ordinary buffer.
-
-Returning through Home or Help preserves the selected row and unfinished
-edits.  Buffer rule editors retain separate drafts for each source buffer;
-reopening a modified editor resumes its draft.  Reopening the same voice in
-the voice editor likewise preserves its working settings.  If a prepared remap's
-source item changes or disappears, Emacsvox asks you to prepare that change
-again before applying it.
-
-Aural Home begins with five task groups in one spoken table.  Press
-@@texinfo:@key{RET}@@ or @@texinfo:@key{TAB}@@ to expand or collapse a group.
-Each action names a destination, reports its current status, and describes
-its purpose.  @@texinfo:@kbd{/}@@ searches all actions, including collapsed
-groups; the matching group opens with your destination selected.
-
-Expandable panels keep visibility as control metadata, without adding
-``collapsed'' or ``expanded'' to the displayed text.  Navigating to or toggling
-a section presents its open/close cue together with its name, respecting the
-icon setting and selected sound pack.  For spoken state words, enable
-/aural-panel-state-labels/ in /Presentation Options/.  This adds ``collapsed''
-or ``expanded'' after the control through the normal presentation rules.
-Key instructions remain available in Help.
-
-Panel entry, return, selection, and warning cues accompany their spoken
-feedback in one utterance.  Returning from a panel announces the destination
-and any unfinished draft warning together.  These cues follow the icon
-setting, sound pack, and cue remapping rules.
-The voice editor uses the normal navigation voice for these announcements;
-auditions still play the working voice.
-
-The common controls are:
-
-#+attr_texinfo: :indic kbd :compact t
-- n, p, down, up :: Move by row, retaining and speaking the selected column.
-  In the first column, settings lists announce the name and current state.
-- left, right :: Move among the titled columns.
-- . :: Speak the current column title and value.
-- SPC :: Speak the complete current row.
-- RET :: Open a destination, child list, or details. In the voice editor, edit a value.
-- C-c C-a :: Choose an applicable action by name.
-- N :: Create a new item where supported.
-- P :: Preview in managers and editors; Home retains its profiles shortcut.
-- S :: Stop the preview and its remaining samples.
-- ? :: Display and speak help for the current Aural interface.
-- h :: Return to Aural Home from a manager or editor.
-- q :: Leave the current Aural interface.
-
-The five groups are:
-
-#+attr_texinfo: :columns 0.35 0.65
-| Task group | Destinations |
-| Understand or change feedback | Current item explanation and remapping, Recent Feedback, semantic vocabulary, and return to source. |
-| Choose voices and sounds | Browse and adjust voices, palettes, sound packs, speech engine and rate, notifications, spatial settings, and the full Voice Workbench. |
-| Choose optional feedback | Presentation Options and training explanations. |
-| Manage changes and saved setups | Unfinished drafts, overrides, buffer rules, and Presentation Profiles. |
-| Troubleshoot | Aural Doctor and Omnivox engine modules. |
-
-Home announces the captured source and unfinished draft count on entry.
-Choose /Resume unfinished changes/ to visit the original rule editor, voice editor,
-or routing Workbench.  The draft is still unsaved until you accept it there.
-Presentation Profiles capture options, palette, sound pack, and spatial
-settings.  Physical voice routes have their own saved routing profile.
-
-You can press @@texinfo:@key{RET}@@ on a row without memorizing its shortcut.  Aural
-Home also provides direct keys for frequent routes, including @@texinfo:@kbd{x}@@ for
-explanation, @@texinfo:@kbd{O}@@ for overrides, @@texinfo:@kbd{H}@@ for recent feedback,
-@@texinfo:@kbd{P}@@ for profiles, @@texinfo:@kbd{V}@@ for voice palettes, @@texinfo:@kbd{W}@@ for
-Voice Workbench, and @@texinfo:@kbd{D}@@ for Aural Doctor.
-
 ** Understand Why Something Sounded That Way
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Explaining Presentation
@@ -264,18 +247,18 @@ Use this workflow when feedback is surprising, unclear, or especially useful:
    backend fallback or degradation.
 
 3. Note the strongest rule that changed the part you care about.  This tells
-   you whether to inspect an option, an override, a voice route, a sound pack,
+   you whether to inspect an option, a personal or temporary rule, a named voice, a sound pack,
    or the Voice Lock compatibility layer.
 
 When a retained presentation still matches the source buffer, position, and
-unchanged source revision, the explanation
+unchanged source text, the explanation
 describes the exact output that was queued, including its source location and
 resolved resources.  It does not reinterpret that old output using your latest
 settings.  Without an exact record, Emacsvox labels the explanation as a
 simulation of what the current rules would produce at point.
 
 To inspect something heard earlier, open Aural Home and choose /Recent Aural
-Feedback/, or press @@texinfo:@kbd{H}@@ there.  Each row is a bounded frozen record.
+Feedback/, or press @@texinfo:@kbd{H}@@ there.  Each row preserves a recorded presentation; the history has a size limit.
 Moving through the Content column speaks the preview using its recorded voices,
 including voice changes within an entry.  Column titles and the other fields use
 the normal interface voice.
@@ -294,7 +277,7 @@ after normal presentations.  It can help while learning the vocabulary used by
 an integration, but is intentionally more verbose than ordinary operation;
 turn it off when you no longer need the additional labels.
 
-** Make A Small Change Safely
+** Change Feedback And Manage Rules
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Adjusting Presentation
 :ALT_TITLE: Adjusting Presentation
@@ -311,11 +294,13 @@ Start by choosing the narrowest tool that matches your intention:
 | Change voice, sound, tone, label, or suppression | Change this feedback | Personal, session, or current buffer |
 | Review or remove an existing precise change | Presentation Overrides | Its recorded scope |
 | Try rules only in the current work buffer | Current Buffer Rules | Life of that buffer |
-| Switch a complete reading or working setup | Presentation Profiles | Saved global configuration |
+| Switch selected reading or working settings | Presentation Profiles | Saved global configuration |
 
 *** Guided Change This Feedback
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Guided Feedback Changes
+:ALT_TITLE: Guided Change This Feedback
+:DESCRIPTION: Learn the controls and scope of this task.
 :END:
 
 1. Move to a representative item, press @@texinfo:@kbd{C-e H}@@, then
@@ -385,7 +370,9 @@ frozen example.
 
 *** Remap One Item At Point
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Choosing A Voice For An Item
+:ALT_TITLE: Remap One Item At Point
+:DESCRIPTION: Learn the controls and scope of this task.
 :END:
 
 1. Move to a representative object and press @@texinfo:@kbd{C-e E}@@ so you know what
@@ -410,9 +397,9 @@ frozen example.
 
 3. Choose /How long/ deliberately:
 
-   - a /personal/ override persists across Emacs sessions;
-   - a /session/ override lasts until this Emacs exits; and
-   - a /buffer/ override affects only the remembered live buffer.
+   - a /personal/ rule persists across Emacs sessions;
+   - a /session/ rule lasts until this Emacs exits; and
+   - a /buffer/ rule affects only the remembered live buffer.
 
 4. Check /Applies to/, /Voice/, and /How long/, then activate /Save/ or press
    @@texinfo:@kbd{w}@@.  A face mapping affects matching uses of that face
@@ -423,6 +410,13 @@ frozen example.
 
 5. Return to the source, repeat the action, and use @@texinfo:@kbd{C-e E}@@ again to
    confirm which rule now wins.
+
+*** Review And Remove Your Rules
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Managing Feedback Rules
+:ALT_TITLE: Review And Remove Your Rules
+:DESCRIPTION: Inspect, change, disable, or remove personal and temporary rules.
+:END:
 
 In /Presentation Overrides/, @@texinfo:@kbd{RET}@@ or @@texinfo:@kbd{e}@@
 opens the selected rule's settings panel.  In the rule list, the same keys
@@ -457,7 +451,9 @@ behind.
 
 *** Try A Presentation Option
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Presentation Options
+:ALT_TITLE: Try A Presentation Option
+:DESCRIPTION: Learn the controls and scope of this task.
 :END:
 
 Presentation Options are maintained additions such as richer heading feedback
@@ -477,79 +473,33 @@ or integration-specific cues.  From Aural Home, open /Presentation Options/:
 Avoid reordering options merely to solve one exceptional object.  A narrow
 override usually expresses that intention more clearly.
 
-** Save Complete Setups With Profiles
-:PROPERTIES:
-:TEXINFO_NODE_NAME: Presentation Profiles
-:ALT_TITLE: Presentation Profiles
-:DESCRIPTION: Save and switch complete presentation configurations.
-:END:
-
-#+cindex: presentation profiles
-
-A presentation profile records a coordinated setup: enabled Presentation
-Options and their order, the sound pack, the voice palette, and portable
-spatial settings.  This is useful for switching between focused work and
-leisure reading, between quiet and information-rich feedback, or between audio
-environments.
-
-To save and use a profile:
-
-1. Configure the live options, sound pack, voice palette, and spatial choices
-   you want.
-
-2. Open /Presentation Profiles/ from Aural Home or press @@texinfo:@kbd{P}@@ there.
-
-3. Press @@texinfo:@kbd{N}@@ to save the current live configuration as a new named
-   profile.
-
-4. Later, select that profile and press @@texinfo:@kbd{a}@@ to apply
-   its saved values.
-
-5. If you deliberately change the live configuration and want the selected
-   profile to adopt it, press @@texinfo:@kbd{w}@@.  If you instead want to discard the
-   live differences, press @@texinfo:@kbd{a}@@ to restore the saved profile; Emacsvox
-   asks before replacing the diverged values.
-
-Only one profile identity is selected.  /Active/ means the selected profile's
-saved values match the live configuration.  /Diverged/ means the same profile
-is still selected but the live values differ; it is a status, not an unsaved
-editor warning.
-
-Profiles do not copy presentation rules.  Edit rules in Presentation Options
-or Overrides.  They also do not capture buffer-local Voice Lock state or
-current-buffer rules, because those belong to an individual buffer rather than
-a global setup.
-
-** Choose Voices And Speech Engines
+** Choose And Manage Voice Palettes
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Voices And Routing
-:ALT_TITLE: Voices And Routing
-:DESCRIPTION: Distinguish logical styles, palettes, physical voices, and engines.
+:ALT_TITLE: Choose And Manage Voice Palettes
+:DESCRIPTION: Understand named voices, standard inheritance, and personal palettes.
 :END:
 
-#+cindex: voice palettes
+A /named voice/ gives a reusable name, such as ~bolden~ or ~annotate~, to a
+way of speaking. Some detailed views call it a /logical voice/. A /voice
+palette/ is a collection of these named entries. Each entry includes its
+shared adjustments, ordered physical voice choices, and any adjustments for
+individual choices.
 
-#+cindex: Voice Workbench
+A /physical voice/ is a voice supplied by an installed /speech engine/.
+The palette describes the intended choices; availability on your machine
+and shared engine preferences determine which can be used. A presentation
+rule chooses when to use a named voice. Editing that voice changes every use
+that resolves to the entry; changing a rule changes which items use it.
 
-Four terms help when adjusting voices:
+Use this section to manage the collection. For pitch, physical choices, and
+other voice settings, see [[info:emacsvox#Editing Named Voices][Edit a Named Voice]]. To hear installed voices or
+change engine preference, see [[info:emacsvox#Installed Voices And Engines][Installed Voices and Engines]].
 
-- A /logical voice/ expresses a purpose such as boldening, annotation, or a
-  heading distinction without naming one synthesizer voice.
-
-- A /voice palette/ gives named logical voices portable style characteristics.
-  Each named entry includes its style, ordered physical choices and individual
-  adjustments. Palettes can inherit from another palette and travel between
-  machines; exact local choices may need replacement on another machine.
-
-- A /physical voice/ is an actual voice reported by an installed speech engine.
-  Its exact identifier is usually machine-local.
-
-- An /engine route/ decides which engine and physical voice realize a logical
-  voice on the current machine.
-
-Use the /Voice Palettes/ manager when you want to choose or edit the portable
-style vocabulary.  Press @@texinfo:@key{RET}@@ on a palette to browse its voices,
-use @@texinfo:@kbd{P}@@ to audition the palette sequence before editing, and use @@texinfo:@kbd{a}@@ in the palette manager to
+Use the /Voice Palettes/ manager to choose a palette or manage its named
+voices. Press @@texinfo:@key{RET}@@ on a palette to browse its voices,
+use @@texinfo:@kbd{P}@@ to audition the palette sequence before editing,
+and use @@texinfo:@kbd{a}@@ in the palette manager to
 activate a selected palette.  Built-in palettes remain intact; editing can
 open an unsaved personal child in the common editor.
 
@@ -601,7 +551,7 @@ parent action, @@texinfo:@kbd{E}@@, to review or change a personal palette's
 parent; the manager rejects inheritance cycles.
 
 Activation with @@texinfo:@kbd{a}@@ lasts for this session. Press
-@@texinfo:@kbd{f}@@ to follow the current scheme's baseline palette again.
+@@texinfo:@kbd{f}@@ to follow the standard baseline palette again.
 Use at Startup, @@texinfo:@kbd{U}@@, changes the palette in the selected saved
 Presentation Profile while preserving its other saved fields. It does not
 apply that profile to the current session. If no startup profile exists, the
@@ -610,14 +560,12 @@ It checks voice references in saved rules and the profile's saved options;
 session and buffer rules do not affect this startup check. An already open
 Profiles view refreshes to show the saved choice.
 
-For sharing, @@texinfo:@kbd{w}@@ exports effective portable entries and asks
-before omitting machine-local physical choices. @@texinfo:@kbd{W}@@ creates a
-full local backup containing the palette's ancestry and referenced local
-choices. Import with @@texinfo:@kbd{i}@@ accepts either file and creates an
-independent personal palette under an unused name; it does not replace the
-original ancestry tree or activate the imported palette. Missing installed
-voices are reported and retained for later replacement. A partial import keeps
-its proposal available for Retry or Discard.
+*** Rename Voices And Palettes
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Renaming Voices And Palettes
+:ALT_TITLE: Rename Voices And Palettes
+:DESCRIPTION: Rename personal entries while checking their known uses.
+:END:
 
 Press @@texinfo:@kbd{r}@@ in the voice list to rename a custom voice
 defined directly in that personal palette.  Enter the new name to save it;
@@ -629,8 +577,8 @@ session and buffer presentation rules, including face mappings, and loaded
 global and buffer face maps.  Personal rules and the voice are saved together;
 a failed save leaves the old name and mappings usable.  Face mappings declared
 in your own Lisp configuration must also be updated there for future sessions.
-References in separately maintained schemes, fragments, other voice definitions
-still block the rename; update those uses first.  Renaming also
+References in maintained integration rules, Presentation Options, or other
+voice definitions still block the rename; update those uses first. Renaming also
 stops if another palette directly defines either name, because mappings are shared.
 
 To rename a personal palette, select it in /Voice Palettes/, press
@@ -638,79 +586,131 @@ To rename a personal palette, select it in /Voice Palettes/, press
 It preserves voice settings and individual fallback tuning, updates child
 palettes and personal Presentation Profiles, and keeps an active palette
 selected under its new name.  Save or discard unfinished voice edits first.
-Built-in palettes cannot be renamed.  If a separately maintained scheme
-references the palette, update that scheme before renaming it.
+Built-in palettes cannot be renamed. A reference from maintained integration
+configuration can block a rename; its owner must update that reference first.
 
-With Voice Lock enabled, named formatting voices such as /bolden/ and
-/annotate/ follow the active palette in search feedback, completion,
-status speech, and the named-voice sampler. Explicit aural rules can override
-these formatting voices.
+** Edit A Named Voice
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Editing Named Voices
+:ALT_TITLE: Edit A Named Voice
+:DESCRIPTION: Adjust a voice, compare it, and save the complete result.
+:END:
 
-If you assign voices in your personal Lisp configuration, use a name such as
-~'voice-bolden~ to follow the palette. For example:
+From /Voice Palettes/, open a palette, select a voice, and press
+@@texinfo:@kbd{e}@@ to edit it. From Aural Home, /Tune voice used here/
+opens the named voice used by the captured source item. Editing an inherited
+voice creates a complete entry in your destination palette when saved.
+Editing a built-in palette asks for a personal child. Opening the editor
+and previewing a draft do not change live feedback or save settings.
 
-#+begin_src emacs-lisp
-(setq emacsvox-calendar-mark-personality 'voice-bolden)
-#+end_src
+The editor uses the ordinary navigation voice for its labelled fields.
+@@texinfo:@kbd{n/p}@@, up/down or Tab moves between fields. Left/right adjusts
+a numeric field and moves between fields elsewhere; @@texinfo:@key{RET}@@
+activates a button or enters an adjustment value. Press @@texinfo:@kbd{d}@@
+on an adjustment to restore the adapter default; blank numeric entry does the
+same. Zero is an explicit value, such as the lowest pitch or leftmost pan,
+whereas adapter default leaves that setting to the speech adapter. They may
+sound the same for some effects, but they are different settings.
+/More adjustments and effects/ exposes filters,
+gain, pan and other optional controls. Changed values say what they were before
+editing; unsupported settings remain visible and are retained.
+Field navigation stops at the first and last field without wrapping. Numeric
+adjustments stop at their limits and announce the minimum or maximum.
 
-Legacy settings such as ~voice-bolden-settings~ still supply the fallback
-when the palette has no custom definition. Explicit ACSS styles retain their
-own settings. Restart Emacs after updating Emacsvox to load changed voice
-defaults; explicit choices in your personal configuration remain in effect.
+@@texinfo:@kbd{P}@@ plays the edited voice. @@texinfo:@kbd{B}@@ compares the
+captured original with the edited version using the same text, with spoken
+labels. @@texinfo:@kbd{T}@@ changes that text; @@texinfo:@kbd{S}@@ stops.
+An automatic sample follows each adjustment unless you turn that field off.
+The new value precedes the sample text, for example ``1. The quick brown fox…''.
+Toggling /Automatic sample after adjustment/ announces on or off with distinct
+cues. /More adjustments and effects/ and /Fallbacks/ present their visibility
+with open/close cues and optional spoken state labels, both when toggled and
+when reached during field navigation.
+Navigation stops an outstanding sample. @@texinfo:@kbd{u}@@ undoes an edit,
+including a reset to adapter default. @@texinfo:@kbd{q}@@ dismisses the editor
+and returns to its originating view, offering to retain or discard unsaved
+changes. Quitting the workbench afterwards does not reopen the experiment.
 
-Use /Voice Workbench/ when the question involves installed voices, engines, or
-routes.  Open it from Aural Home with @@texinfo:@kbd{W}@@.  Its main views are:
+Choose the /Physical voice/ field to search by engine or voice name. You can
+audition a candidate with the working adjustments before accepting it. Cancel
+keeps the previous choice and returns to the same field. Named voices also
+have an expandable /Fallbacks/ section: replace, reorder, remove or individually
+audition a choice, append another, or explicitly return to Automatic. Existing
+unavailable, engine-default and property choices are preserved. Shared
+adjustments apply to fields that a row inherits; /Customize this voice/ adds
+optional individual settings.
 
-#+attr_texinfo: :indic kbd :compact t
-- e :: Engines, such as Flite or Eloquence. Start here to try voices from a
-  particular synthesizer or inspect its availability.
-- v :: Physical voices: the actual installed voices you can hear. Use this
-  list to listen, compare, and experiment with their parameters. On an engine
-  row, this key opens just that engine's voices.
-- l :: Logical voices: named roles such as /bolden/ and /annotate/. Start here
-  to change which physical voice reads a role.
-- s :: Styles and effects for those logical roles. Use this view to inspect
-  their parameters and what their current engines support.
+For a named voice, @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ saves and
+applies the complete draft. /Save to collection without selecting/ saves an
+inactive palette without changing the current selection. The header reports
+unsaved changes, partial saves, applying, failures, or saved and applied.
+Retry uses the pending proposal and retains successful persistence steps.
+Changes made during an earlier apply remain unsaved when its acknowledgement
+arrives. A changed file or destination requires fresh review rather than an
+implicit merge.
 
-For physical voices, choose /Browse and adjust voices/ in Home, then press
-@@texinfo:@key{RET}@@ or @@texinfo:@kbd{v}@@ on an engine to browse its voices.  @@texinfo:@key{RET}@@
-on a voice shows details; @@texinfo:@kbd{P}@@ plays a named sample.  Filters
-set with @@texinfo:@kbd{F}@@ and each view's selected row and column survive
-navigation through Home. The engine selected for browsing is a temporary
-limit: switching to the logical, styles, or engine view removes it.
-Pressing @@texinfo:@kbd{v}@@ from a voice list also removes that temporary
-limit. Your explicit filters still apply; @@texinfo:@kbd{C}@@ clears all
-filters to show voices across engines.
-Press @@texinfo:@kbd{q}@@ in an engine's voice list to return to that engine's
-row and column.  Press @@texinfo:@kbd{q}@@ again from the engine list to leave
-the workbench.  The direct view shortcuts remain available.
+Named-voice previews test the complete choice chain without selecting the draft palette or changing live settings. They require an Omnivox
+server advertising complete-voice preview. Older servers report this operation
+as unsupported; individual physical auditions remain available. Playback
+reports identify actual accepted audio when the server supplies that evidence,
+including unsupported adjustments. They do not infer a successful fallback
+from inventory or claim exact effective numeric parameter values.
 
-The engine list reports /Availability/ before routing preferences.  An engine
-with a missing runtime stays visible as /unavailable/, with its reason under
-/Last failure/.  /Routing policy: allowed/ means the policy permits using that
-engine; it does not mean its runtime is installed.  Disabled policies, health,
-and temporary failures are reported separately.
+@@texinfo:@kbd{q}@@ returns to the originating row and column. With unsaved
+changes, choose to retain the draft, discard changes, or continue editing.
+Retained drafts survive closing the view and can be reopened from Home's
+/Resume unfinished changes/ during this Emacs session. They do not survive
+restarting Emacs. Leaving does not undo a completed save.
 
-@@texinfo:@kbd{A}@@ plays available matching voices in displayed order,
-skipping unavailable rows.  @@texinfo:@kbd{B}@@ starts with the selected voice
-as A and offers another matching voice as B.  Choose /Search all engines/
-inside that prompt to compare outside the current filters.  Both samples use
-the same sentence.  @@texinfo:@kbd{T}@@ edits it, @@texinfo:@kbd{F}@@ filters,
-@@texinfo:@kbd{C}@@ clears filters, and @@texinfo:@kbd{R}@@ refreshes inventory.
+/Save and apply/ selects the palette for this session. Use the
+/Use at Startup/ action, @@texinfo:@kbd{U}@@ in Voice Palettes, to retain
+that selection after restart. A save can involve more than one settings file. The editor reports partial
+failures and retains the proposal for retry; see
+[[info:emacsvox#Recovering Aural Changes][Recovering Unfinished Changes]].
 
-Labels identify each engine and voice.  Customize
-~emacsvox-aural-preview-label-verbosity~ for names, brief letters or numbers,
-or no labels.  Labels and samples share one preview sequence:
-@@texinfo:@kbd{S}@@ or foreground navigation cancels the remaining samples.
-An exact-preview failure is reported instead of accepting a different voice
-as the requested one.  Availability and capability reports describe what the
-adapter advertises; they are not a listening test of every parameter.
+*** Understand Voice Adjustments
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Voice Adjustments
+:ALT_TITLE: Understand Voice Adjustments
+:DESCRIPTION: Understand the voice controls and their defaults.
+:END:
 
-Press @@texinfo:@kbd{t}@@ on a logical or style row to open the common
-voice editor. The same editor opens from /Voice Palettes/. Its physical
-choice and shared adjustments belong to one draft and one save action.
-The voice list separates /Physical voice/, /Engine/, /Adjustments/, and
-/State/, including unfinished editor changes.
+The voice editor presents /Low-pass Amount/ and /High-pass Amount/ from zero through
+nine. Higher amounts mean more filtering: low-pass removes more high
+frequencies, and high-pass removes more low frequencies. Zero is the neutral
+cutoff; blank numeric entry requests the adapter default. The amount scale
+applies to arrows and numeric entry in the common editor. Existing
+saved styles retain their sound; stored low-pass cutoff values keep their
+original meaning.
+
+The voice editor names other neutral effect values instead of speaking an ambiguous number:
+gain five is /unchanged/, pan five is /centre/, and reverb, echo, or chorus zero is
+/disabled/.  Chorus adds a bounded doubled-voice modulation without changing
+speech duration or marker positions.  It is applied by Omnivox to buffered
+audio; the voice editor reports when the selected route cannot apply it.  These
+portable levels are translated to the exact values required by the active
+adapter.
+
+The built-in ~acss-default~ palette also includes a ~telephone~ named voice.
+It combines high-pass and low-pass filtering to give any buffered Omnivox
+engine a narrow-band telephone sound while preserving its selected physical
+voice, duration, and markers.  Preview it in /Voice Palettes/ or /Voice
+Workbench/ before assigning it to content.  Adapters without post-synthesis
+filtering preserve the portable style but do not apply the filters.
+
+Omnivox average-pitch differences use the customizable
+=omnivox-average-pitch-contrast=.  Its default value, =0.5=, keeps palette
+distinctions while making them gentler.  Set it to =1.0= for the historical
+contrast, or =0= to make average pitch neutral.  Values through =2.0= are
+accepted.  Changing it refreshes logical-voice registration, and the same
+setting applies to previews, structured speech, and legacy inline voices.
+
+*** Choose And Tune Fallback Voices
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Voice Fallbacks
+:ALT_TITLE: Choose And Tune Fallback Voices
+:DESCRIPTION: Order physical choices and customize their individual adjustments.
+:END:
 
 Shared settings provide the base for the whole voice. Expand /Fallbacks/ to
 see which rows /use shared settings/ and which are /customized/. A row's action
@@ -753,177 +753,11 @@ require per-choice support; an individual audition is available only when its
 settings can be represented faithfully, including adapter defaults. Saving
 remains available when that preview is unavailable.
 
-All named voices use the common editor and the same complete palette model.
-Workbench engine policy is shared across palettes: @@texinfo:@kbd{O}@@ toggles
-preferred engines and @@texinfo:@kbd{[}@@ / @@texinfo:@kbd{]}@@ reorder them;
-@@texinfo:@kbd{f}@@ toggles fallback engines and ~{~ / ~}~ reorder those. @@texinfo:@kbd{D}@@ enables or disables an
-engine, and @@texinfo:@kbd{K}@@ requests a recovery probe. These are staged
-policy edits; @@texinfo:@kbd{w}@@ saves and applies them. Physical choices for
-a named voice are saved in that voice's editor.
-
-Tables put voice or engine names first. Detailed adapter capabilities, native
-identifiers and registration information are available with @@texinfo:@kbd{x}@@
-for Details. Availability, failure reasons, predicted selection and observed
-playback remain distinct. Inventory predictions do not prove that audio played.
-
-Applying waits for each speech stream to acknowledge its configuration.  If
-an Omnivox apply times out, the Workbench reports /server outcome unconfirmed/.
-Emacsvox stops that apply and sends no later steps, but changes already sent
-may still take effect on the server.  A timeout does not undo the saved profile
-or confirm that the server rejected it.  Press @@texinfo:@kbd{r}@@ to reapply
-the committed profile and obtain a fresh result.  Save or cancel any newer
-staged edits before retrying.  A partial result retains the streams that
-acknowledged success and identifies those that timed out.
-
-The voice editor presents /Low-pass Amount/ and /High-pass Amount/ from zero through
-nine. Higher amounts mean more filtering: low-pass removes more high
-frequencies, and high-pass removes more low frequencies. Zero is the neutral
-cutoff; blank numeric entry requests the adapter default. The amount scale
-applies to arrows and numeric entry in the common editor. Existing
-saved styles retain their sound; stored low-pass cutoff values keep their
-original meaning.
-
-The voice editor names other neutral effect values instead of speaking an ambiguous number:
-gain five is /unchanged/, pan five is /centre/, and reverb, echo, or chorus zero is
-/disabled/.  Chorus adds a bounded doubled-voice modulation without changing
-speech duration or marker positions.  It is applied by Omnivox to buffered
-audio; the voice editor reports when the selected route cannot apply it.  These
-portable levels are translated to the exact values required by the active
-adapter.
-
-The built-in ~acss-default~ palette also includes a ~telephone~ logical voice.
-It combines high-pass and low-pass filtering to give any buffered Omnivox
-engine a narrow-band telephone sound while preserving its selected physical
-voice, duration, and markers.  Preview it in /Voice Palettes/ or /Voice
-Workbench/ before assigning it to content.  Adapters without post-synthesis
-filtering preserve the portable style but do not apply the filters.
-
-Omnivox average-pitch differences use the customizable
-=omnivox-average-pitch-contrast=.  Its default value, =0.5=, keeps palette
-distinctions while making them gentler.  Set it to =1.0= for the historical
-contrast, or =0= to make average pitch neutral.  Values through =2.0= are
-accepted.  Changing it refreshes logical-voice registration, and the same
-setting applies to previews, structured speech, and legacy inline voices.
-
-For a quick engine preference, @@texinfo:@kbd{C-e d e}@@ chooses an available engine
-for the current Emacs session.  Press @@texinfo:@kbd{C-u}@@ first to save the new
-preference.  On a first run with no saved routing profile, the ordinary command
-uses the live Omnivox policy as an in-memory baseline and writes no file; the
-prefixed command explicitly saves that baseline and the selected preference.
-Explicit logical-voice routes still take precedence.
-
-Home groups speech engine, rate, notification output and spatial controls under
-/Choose voices and sounds/. Speech rate applies to the remembered source buffer;
-a prefix sets the global rate. Notification Output opens Customize:
-/Automatic/ uses the backend's normal notification arrangement, while
-/Use main output (notifications remain audible)/ sends notification speech
-through the main process. It does not mute notifications. Initialize the chosen
-notification arrangement with @@texinfo:@kbd{C-e d C-n}@@. /Stop notification
-speech/ stops the current notification stream; it is not a persistent mute.
-Use Customize's save action to retain output choices across restarts.
-
-Judge voices in context.  The goal is usually to distinguish nearby kinds of
-content, not to identify every named voice in isolation.  Use a portable
-palette for the intended distinction and machine routing for the best local
-realization.
-
-*** Tune A Physical Voice Temporarily
-:PROPERTIES:
-:TEXINFO_NODE: no
-:END:
-
-In /Browse and adjust voices/, select a physical voice and press
-@@texinfo:@kbd{t}@@. This opens an experiment with that exact engine and
-voice, adapter-default speech characteristics, the current base speech rate,
-and neutral audio effects. Opening, adjusting and comparing write no settings.
-
-The editor uses the ordinary navigation voice for its labelled fields.
-@@texinfo:@kbd{n/p}@@, up/down or Tab moves between fields. Left/right adjusts
-a numeric field and moves between fields elsewhere; @@texinfo:@key{RET}@@
-activates a button or enters an adjustment value. Press @@texinfo:@kbd{d}@@
-on an adjustment to restore the adapter default; blank numeric entry does the
-same. Zero is an explicit value, such as the lowest pitch or leftmost pan,
-whereas adapter default leaves that setting to the speech adapter. They may
-sound the same for some effects, but they are different settings.
-/More adjustments and effects/ exposes filters,
-gain, pan and other optional controls. Changed values say what they were before
-editing; unsupported settings remain visible and are retained.
-Field navigation stops at the first and last field without wrapping. Numeric
-adjustments stop at their limits and announce the minimum or maximum.
-
-@@texinfo:@kbd{P}@@ plays the edited voice. @@texinfo:@kbd{B}@@ compares the
-captured original with the edited version using the same text, with spoken
-labels. @@texinfo:@kbd{T}@@ changes that text; @@texinfo:@kbd{S}@@ stops.
-An automatic sample follows each adjustment unless you turn that field off.
-The new value precedes the sample text, for example ``1. The quick brown fox…''.
-Toggling /Automatic sample after adjustment/ announces on or off with distinct
-cues. /More adjustments and effects/ and /Fallbacks/ present their visibility
-with open/close cues and optional spoken state labels, both when toggled and
-when reached during field navigation.
-Navigation stops an outstanding sample. @@texinfo:@kbd{u}@@ undoes an edit,
-including a reset to adapter default. @@texinfo:@kbd{q}@@ dismisses the editor
-and returns to its originating view, offering to retain or discard unsaved
-changes. Quitting the workbench afterwards does not reopen the experiment.
-
-Choose the /Physical voice/ field to search by engine or voice name. You can
-audition a candidate with the working adjustments before accepting it. Cancel
-keeps the previous choice and returns to the same field. Named voices also
-have an expandable /Fallbacks/ section: replace, reorder, remove or individually
-audition a choice, append another, or explicitly return to Automatic. Existing
-unavailable, engine-default and property choices are preserved. Shared
-adjustments apply to fields that a row inherits; /Customize this voice/ adds
-optional individual settings.
-
-For a physical experiment, @@texinfo:@kbd{w}@@ chooses a destination palette
-and named voice. The default keeps /Physical voice and adjustments — this
-choice/. You can instead keep only the physical voice, only the adjustments for
-a selected row, or explicitly change shared settings for all inheriting choices.
-A physical voice can replace a selected row, become preferred, or be appended
-as a fallback. Row-level adjustments replace that row's tuning with the
-experiment's values and adapter defaults. This prevents unrelated destination
-shared settings from changing the experiment's base sound. Use =i= in the row's
-individual adjustment panel for any field you want to inherit afterward.
-
-Other rows and shared settings are retained during a row-level keep. Replacing
-only the physical voice asks whether to keep or reset an existing row's custom
-settings. Shared adjustment keeps affect inherited fields; custom row settings
-still override them. An existing destination draft offers to add the chosen
-changes or resume without adding. Other edits and pending save recovery remain.
-The destination opens in the same editor; preview plays the proposed saved
-combination, which may differ from the experiment because of the chosen scope
-and destination fallback order. Choosing a destination has not saved anything yet.
-
-For a named voice, @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ saves and
-applies the complete draft. /Save to collection without selecting/ saves an
-inactive palette without changing the current selection. The header reports
-unsaved changes, partial saves, applying, failures, or saved and applied.
-Retry uses the pending proposal and retains successful persistence steps.
-Changes made during an earlier apply remain unsaved when its acknowledgement
-arrives. A changed file or destination requires fresh review rather than an
-implicit merge.
-
-Named-voice previews test the complete choice chain using a private policy
-snapshot; they do not temporarily apply the draft. They require an Omnivox
-server advertising complete-voice preview. Older servers report this operation
-as unsupported; individual physical auditions remain available. Playback
-reports identify actual accepted audio when the server supplies that evidence,
-including unsupported adjustments. They do not infer a successful fallback
-from inventory or claim exact effective numeric parameter values.
-
-@@texinfo:@kbd{q}@@ returns to the originating row and column. With unsaved
-changes, choose to retain the draft, discard changes, or continue editing.
-Retained drafts survive closing the view and can be reopened from Home's
-/Resume unfinished changes/ during this Emacs session. They do not survive
-restarting Emacs. Leaving does not undo a completed save.
-
-/Save and apply/ selects the palette for this session. Use the
-/Use at Startup/ action, @@texinfo:@kbd{U}@@ in Voice Palettes, to retain
-that selection after restart. Palette and local-choice files are separate; the editor coordinates their writes and
-reports partial failures in the same view.
-
 *** Inspect Or Adjust A Voice In Context
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Voices In Context
+:ALT_TITLE: Inspect Or Adjust A Voice In Context
+:DESCRIPTION: Learn the controls and scope of this task.
 :END:
 
 In the common named-voice editor, choose /Effective sound / Where settings
@@ -932,10 +766,10 @@ the voice list. If none is attached, choose an ordinary buffer at its current
 point. The item must have inspectable presentation facts or a valid retained
 presentation. /Choose another source context/ selects a new item explicitly.
 
-This is a simulation using captured facts and rules. It shows the selected base
-preset, matching rules, requested values and each dimension's source. A rule
+This is a simulation using captured facts and rules. It shows the selected named
+voice, matching rules, requested values and each dimension's source. A rule
 can override pitch while another supplies richness. A stronger pitch rule can
-hide a base pitch edit; a rule selecting a different preset can make the open
+hide a base pitch edit; a rule selecting a different named voice can make the open
 base voice irrelevant to this item. Rates follow precedence too: competing
 relative-rate values do not add together.
 
@@ -961,120 +795,136 @@ in that rule editor must be completed before preparing another contextual rule.
 
 In the scoped field control, /Inherit/ removes the field so weaker contributions
 can supply its value. Removing the final voice field removes the voice patch.
-An existing explicit nil is displayed separately and retained when editing other
-fields. For ACSS fields, the existing transport reports nil but sends no reset
-over a preset; rate and effect fields use their existing clearing behavior.
-Inherit, explicit nil and zero are distinct. Named presets continue to reset the
-base and earlier voice overrides. These operations never save a flattened
-contextual result back into the palette.
+Existing explicit default values are shown separately and preserved when you
+edit another field. Use /Inherit/ to remove a contextual adjustment; zero is
+a value, not a request to inherit. Some older explicit defaults cannot reset
+an underlying voice setting on every backend. Check the preview and use the
+explanation to identify that limitation. Contextual changes are saved as rules;
+they do not replace the palette entry with the combined result. The
+[[info:emacsvox#Integration Maintenance][Developer Guide]] explains the representation and compatibility details.
 
-*** Worked Presentation Recipes
+** Browse Installed Voices And Choose Engines
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Installed Voices And Engines
+:ALT_TITLE: Browse Installed Voices And Choose Engines
+:DESCRIPTION: Find physical voices and configure shared engine preferences.
 :END:
 
-**** Browse Eloquence And Compare Pitch
+Use /Voice Workbench/ when the question involves installed voices or engines.  Open it from Aural Home with @@texinfo:@kbd{W}@@.  Its main views are:
+
+#+attr_texinfo: :indic kbd :compact t
+- e :: Engines, such as Flite or Eloquence. Start here to try voices from a
+  particular synthesizer or inspect its availability.
+- v :: Physical voices: the actual installed voices you can hear. Use this
+  list to listen, compare, and experiment with their parameters. On an engine
+  row, this key opens just that engine's voices.
+- l :: Named voices (the /Logical voices/ view): roles such as /bolden/ and /annotate/. Start here
+  to change which physical voice reads a role.
+- s :: Styles and effects for those logical roles. Use this view to inspect
+  their parameters and what their current engines support.
+
+For physical voices, choose /Browse and adjust voices/ in Home, then press
+@@texinfo:@key{RET}@@ or @@texinfo:@kbd{v}@@ on an engine to browse its voices.  @@texinfo:@key{RET}@@
+on a voice shows details; @@texinfo:@kbd{P}@@ plays a named sample.  Filters
+set with @@texinfo:@kbd{F}@@ and each view's selected row and column survive
+navigation through Home. The engine selected for browsing is a temporary
+limit: switching to the logical, styles, or engine view removes it.
+Pressing @@texinfo:@kbd{v}@@ from a voice list also removes that temporary
+limit. Your explicit filters still apply; @@texinfo:@kbd{C}@@ clears all
+filters to show voices across engines.
+Press @@texinfo:@kbd{q}@@ in an engine's voice list to return to that engine's
+row and column.  Press @@texinfo:@kbd{q}@@ again from the engine list to leave
+the workbench.  The direct view shortcuts remain available.
+
+The engine list reports /Availability/ before routing preferences.  An engine
+with a missing runtime stays visible as /unavailable/, with its reason under
+/Last failure/.  /Routing policy: allowed/ means the policy permits using that
+engine; it does not mean its runtime is installed.  Disabled policies, health,
+and temporary failures are reported separately.
+
+@@texinfo:@kbd{A}@@ plays available matching voices in displayed order,
+skipping unavailable rows.  @@texinfo:@kbd{B}@@ starts with the selected voice
+as A and offers another matching voice as B.  Choose /Search all engines/
+inside that prompt to compare outside the current filters.  Both samples use
+the same sentence.  @@texinfo:@kbd{T}@@ edits it, @@texinfo:@kbd{F}@@ filters,
+@@texinfo:@kbd{C}@@ clears filters, and @@texinfo:@kbd{R}@@ refreshes inventory.
+
+Labels identify each engine and voice.  Customize
+~emacsvox-aural-preview-label-verbosity~ for names, brief letters or numbers,
+or no labels.  Labels and samples share one preview sequence:
+@@texinfo:@kbd{S}@@ or foreground navigation cancels the remaining samples.
+An exact-preview failure is reported instead of accepting a different voice
+as the requested one.  Availability and capability reports describe what the
+adapter advertises; they are not a listening test of every parameter.
+
+*** Experiment With An Installed Voice
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Physical Voice Experiments
+:ALT_TITLE: Experiment With An Installed Voice
+:DESCRIPTION: Try physical voices without saving, then keep a useful experiment.
 :END:
 
-1. Open @@texinfo:@kbd{C-e H}@@ and search with @@texinfo:@kbd{/}@@ for
-   /Browse and adjust voices/.  Select the installed Eloquence engine and press
-   @@texinfo:@key{RET}@@.  Its list shows the voices this installation reports;
-   if Eloquence is unavailable, choose another available engine.
-2. Use up/down to choose a voice.  @@texinfo:@kbd{P}@@ plays it;
-   @@texinfo:@kbd{A}@@ plays the filtered list with spoken names, and
-   @@texinfo:@kbd{S}@@ stops.  @@texinfo:@kbd{T}@@ chooses your own sample
-   sentence.  For two different voices, @@texinfo:@kbd{B}@@ uses the selected
-   voice as A and asks for B.
-3. Press @@texinfo:@kbd{t}@@ on one physical voice.  Move to /Average Pitch/.
-   Press @@texinfo:@key{RET}@@ and enter @@texinfo:@kbd{3}@@, then
-   @@texinfo:@kbd{P}@@.  Enter @@texinfo:@kbd{7}@@ and replay the same sentence.
-   @@texinfo:@kbd{u}@@ restores the previous value for another comparison.
-   Navigation uses the ordinary voice; automatic samples let you hear changes.
-4. Press @@texinfo:@kbd{B}@@ for a labelled comparison of the captured original
-   and edited versions. This compares against the opening or last successfully
-   applied version, not the two most recent edits.
+In /Browse and adjust voices/, select a physical voice and press
+@@texinfo:@kbd{t}@@. This opens an experiment with that exact engine and
+voice, adapter-default speech characteristics, the current base speech rate,
+and neutral audio effects. Opening, adjusting and comparing write no settings.
 
-**** Keep A Voice Experiment
+The field navigation, adjustments and comparison controls are the same as
+in [[info:emacsvox#Editing Named Voices][Edit a Named Voice]]. In an experiment, @@texinfo:@kbd{w}@@ first asks
+where to use the result; it cannot save a voice without a palette destination.
+
+For a physical experiment, @@texinfo:@kbd{w}@@ chooses a destination palette
+and named voice. The default keeps /Physical voice and adjustments — this
+choice/. You can instead keep only the physical voice, only the adjustments for
+a selected row, or explicitly change shared settings for all inheriting choices.
+A physical voice can replace a selected row, become preferred, or be appended
+as a fallback. Row-level adjustments replace that row's tuning with the
+experiment's values and adapter defaults. This prevents unrelated destination
+shared settings from changing the experiment's base sound. Use =i= in the row's
+individual adjustment panel for any field you want to inherit afterward.
+
+Other rows and shared settings are retained during a row-level keep. Replacing
+only the physical voice asks whether to keep or reset an existing row's custom
+settings. Shared adjustment keeps affect inherited fields; custom row settings
+still override them. An existing destination draft offers to add the chosen
+changes or resume without adding. Other edits and pending save recovery remain.
+The destination opens in the same editor; preview plays the proposed saved
+combination, which may differ from the experiment because of the chosen scope
+and destination fallback order. Choosing a destination has not saved anything yet.
+
+*** Set Shared Engine Preferences
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Speech Engine Preferences
+:ALT_TITLE: Set Shared Engine Preferences
+:DESCRIPTION: Choose engine order and distinguish it from explicit palette choices.
 :END:
 
-After finding a useful setting in the physical experiment, press
-@@texinfo:@kbd{w}@@ and choose a destination palette and named voice. Keep the
-physical choice and its adjustments together, the physical voice only, the
-adjustments for a selected row, or shared adjustments for inheriting rows.
-Choose replacement, preferred or fallback placement when keeping a physical
-choice. Review the proposed combination in the destination editor and press
-@@texinfo:@kbd{P}@@ to hear it before saving with @@texinfo:@kbd{w}@@.
+For a quick engine preference, @@texinfo:@kbd{C-e d e}@@ chooses an available engine
+for the current Emacs session.  Use @@texinfo:@kbd{C-u C-e d e}@@ to save the new
+preference. On a first run with no saved engine settings, the ordinary command
+uses the live Omnivox policy as an in-memory baseline and writes no file; the
+prefixed command explicitly saves that baseline and the selected preference.
+Explicit physical choices in named palette voices still take precedence.
 
-A built-in destination opens a personal-child draft. A partial save stays
-visible in that editor and can be retried. Selection lasts for this session;
-use @@texinfo:@kbd{U}@@ in Voice Palettes to retain it after restart.
+All named voices use the common editor and the same complete palette model.
+Workbench engine policy is shared across palettes: @@texinfo:@kbd{O}@@ toggles
+preferred engines and @@texinfo:@kbd{[}@@ / @@texinfo:@kbd{]}@@ reorder them;
+@@texinfo:@kbd{f}@@ toggles fallback engines and ~{~ / ~}~ reorder those. @@texinfo:@kbd{D}@@ enables or disables an
+engine, and @@texinfo:@kbd{K}@@ requests a recovery probe. These are staged
+policy edits; @@texinfo:@kbd{w}@@ saves and applies them. Physical choices for
+a named voice are saved in that voice's editor.
 
-**** Change A Heading Voice, Add A Cue, Or Silence One
-:PROPERTIES:
-:TEXINFO_NODE: no
-:END:
+Tables put voice or engine names first. Detailed adapter capabilities, native
+identifiers and registration information are available with @@texinfo:@kbd{x}@@
+for Details. Availability, failure reasons, predicted selection and observed
+playback remain distinct. Inventory predictions do not prove that audio played.
 
-Move to a representative heading and open @@texinfo:@kbd{C-e H c}@@.
-Press @@texinfo:@kbd{c}@@, choose /Change the content voice/, and select a
-named voice such as ~bolden~.  @@texinfo:@kbd{P}@@ previews it.  Use
-@@texinfo:@kbd{m}@@ to review the actual heading facts, including level when
-supplied by the integration.  Use @@texinfo:@kbd{l}@@ to choose a lifetime,
-review the summary, then press @@texinfo:@kbd{a}@@.  A rule matching level-two
-headings affects all matching level-two headings within that lifetime's scope.
+Saving engine policy is separate from saving a named voice or a Presentation
+Profile. If an apply fails or is unconfirmed, see
+[[info:emacsvox#Recovering Aural Changes][Recovering Unfinished Changes]]. Installation and optional engine modules are
+covered in [[info:emacsvox#Optional Omnivox Engine Modules][Optional Omnivox Engine Modules]].
 
-To add a cue, begin again with a representative item and choose /Add a sound/.
-Select before or after content, choose a registered sound, and preview it.
-To silence an existing cue, choose /Suppress one component/ and select that
-sound by phase and identity.  This retains the spoken content and other
-feedback.  Review matching criteria and lifetime before applying either rule.
-
-**** Change A Blank-Line Tone
-:PROPERTIES:
-:TEXINFO_NODE: no
-:END:
-
-Navigate onto a blank line so its feedback enters history.  Open
-@@texinfo:@kbd{C-e H H}@@, select that blank-line record, and press
-@@texinfo:@kbd{C}@@.  Choose /Change a tone/, select the tone, then choose a
-named tone or explicit pitch in Hertz and duration in milliseconds.  Compare
-@@texinfo:@kbd{O}@@ and @@texinfo:@kbd{P}@@.  Review the matching facts before
-choosing lifetime and applying.
-
-If that record contains a cue instead of a tone, the tone choice is absent.
-Use /Explain/ to see which rule supplied the cue; a guided change can suppress
-that cue, and a second change can add a tone.  The interface reports the
-actual presentation rather than assuming every visually blank line uses the
-same feedback.
-
-**** Choose An Engine And Recover Unfinished Work
-:PROPERTIES:
-:TEXINFO_NODE: no
-:END:
-
-For ordinary speech, open Home and search for /Ordinary speech engine/, or
-use @@texinfo:@kbd{C-e d e}@@ directly.  Choose an available engine.  This
-preference lasts for the session; a prefix argument explicitly saves it.
-Existing exact logical-voice routes take precedence over the preference.
-
-Use @@texinfo:@kbd{h}@@ to leave a working editor through Home without losing
-it.  Home's /Resume unfinished changes/ opens the original draft, including
-its source and working settings.  In the common voice editor, @@texinfo:@kbd{u}@@ undoes and
-@@texinfo:@kbd{q}@@ offers to keep the draft, discard changes, or continue.  Guided feedback
-@@texinfo:@kbd{q}@@ goes back one level, then hides and retains the draft at
-the top level.  To undo an already applied
-rule, open /Presentation Overrides/, select it in the appropriate scope, and
-use @@texinfo:@kbd{t}@@ to disable it or @@texinfo:@kbd{d}@@ to remove it.
-
-From any Aural interface, @@texinfo:@kbd{C-c C-i}@@ opens its offline task
-manual and @@texinfo:@kbd{q}@@ returns to the same interface and position.
-In Help, @@texinfo:@kbd{i}@@ opens that manual.  @@texinfo:@kbd{C-c C-a}@@
-offers named actions; @@texinfo:@kbd{S}@@ stops a preview sequence.
-
-** Choose Sounds And Spatial Cues
+** Sounds, Tones, And Spatial Cues
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Sounds And Space
 :ALT_TITLE: Sounds And Space
@@ -1112,7 +962,167 @@ output remains audible at the center rather than silently losing content.
 Named tones are another compact presentation resource.  They do not require a
 sampled sound file and may be used independently of the active sound pack.
 
-** Diagnose Unexpected Presentation
+*** Change A Blank-Line Tone
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Changing Tones
+:ALT_TITLE: Change A Blank-Line Tone
+:DESCRIPTION: Change a recorded tone and distinguish it from a sampled cue.
+:END:
+
+Navigate onto a blank line so its feedback enters history.  Open
+@@texinfo:@kbd{C-e H H}@@, select that blank-line record, and press
+@@texinfo:@kbd{C}@@.  Choose /Change a tone/, select the tone, then choose a
+named tone or explicit pitch in Hertz and duration in milliseconds.  Compare
+@@texinfo:@kbd{O}@@ and @@texinfo:@kbd{P}@@.  Review the matching facts before
+choosing lifetime and applying.
+
+If that record contains a cue instead of a tone, the tone choice is absent.
+Use /Explain/ to see which rule supplied the cue; a guided change can suppress
+that cue, and a second change can add a tone.  The interface reports the
+actual presentation rather than assuming every visually blank line uses the
+same feedback.
+
+** Speech Output And Notifications
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Aural Speech Output
+:ALT_TITLE: Speech Output And Notifications
+:DESCRIPTION: Set speech rate and understand foreground and background output.
+:END:
+
+Speech rate and output settings control how speech reaches you, independently
+of which presentation rule chose the content. /Speech rate/ in Home applies to
+the captured source buffer; invoke that action with a prefix argument to set
+the global rate. A named voice's relative rate adjusts its speech around the
+applicable base rate. See [[info:emacsvox#Voice Adjustments][Voice Adjustments]].
+
+#+cindex: speech streams
+
+#+cindex: notification stream
+
+#+vindex: tts-notification-device
+
+Emacsvox assigns speech to one of two streams according to what caused it:
+
+- The /main stream/ presents foreground information produced directly by your
+  current interaction, such as movement, entering a buffer, or opening a
+  message.  New navigation interrupts obsolete main-stream speech, and you can
+  interrupt a longer entry announcement by navigating again.
+
+- The /notification stream/ presents asynchronous events, such as completion
+  of background work.  It does not stop main-stream speech, and normal
+  navigation does not stop it, so both streams may be heard concurrently.  A
+  notification cue and its associated speech are delivered together on this
+  stream.
+
+Open /Notification output/ in Home to choose the arrangement in Customize.
+With Omnivox, /Automatic/ normally uses an independent notification process.
+The left, right, and both choices select its output route.
+/Use main output (notifications remain audible)/ sends notifications through
+the main process instead. Navigation can then interrupt them; this setting
+does not mute notifications. Other backends may use their configured device
+or fall back to the main stream.
+
+After changing the setting, initialize the arrangement with
+@@texinfo:@kbd{C-e d C-n}@@. Use Customize's save action to retain the choice
+across restarts. In Lisp, ~default~ or an empty string selects main output;
+prefer the descriptive Customize labels for ordinary configuration.
+
+/Stop notification speech/ in Home stops the current notification stream;
+it is not a persistent mute. /Review notifications/ opens the notification
+history so you can read an announcement you missed.
+
+Stopping obsolete main speech is local to the main stream.  An explicit
+~tts-stop~ command stops both main and notification speech.
+
+** Save, Switch, And Share Your Setup
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Presentation Profiles
+:ALT_TITLE: Presentation Profiles
+:DESCRIPTION: Save selected settings and distinguish profiles from resource backups.
+:END:
+
+#+cindex: presentation profiles
+
+A presentation profile records a coordinated setup: enabled Presentation
+Options and their order, the sound pack, the voice palette, and portable
+spatial settings.  This is useful for switching between focused work and
+leisure reading, between quiet and information-rich feedback, or between audio
+environments.
+
+To save and use a profile:
+
+1. Configure the live options, sound pack, voice palette, and spatial choices
+   you want.
+
+2. Open /Presentation Profiles/ from Aural Home or press @@texinfo:@kbd{P}@@ there.
+
+3. Press @@texinfo:@kbd{N}@@ to save the current live configuration as a new named
+   profile.
+
+4. Later, select that profile and press @@texinfo:@kbd{a}@@ to apply
+   its saved values.
+
+5. If you deliberately change the live configuration and want the selected
+   profile to adopt it, press @@texinfo:@kbd{w}@@.  If you instead want to discard the
+   live differences, press @@texinfo:@kbd{a}@@ to restore the saved profile; Emacsvox
+   asks before replacing the diverged values.
+
+Only one profile identity is selected.  /Active/ means the selected profile's
+saved values match the live configuration.  /Diverged/ means the same profile
+is still selected but the live values differ; it is a status, not an unsaved
+editor warning.
+
+Profiles refer to palettes and sound packs by name; they do not make private
+copies of their contents. Editing a palette affects every profile selecting
+it. A profile is therefore a convenient selection of settings, not a backup.
+Profiles do not capture engine policy, speech rate, or notification output.
+
+Profiles do not copy presentation rules.  Edit rules in Presentation Options
+or Overrides.  They also do not capture buffer-local Voice Lock state or
+current-buffer rules, because those belong to an individual buffer rather than
+a global setup.
+
+*** Choose What Persists
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Saving And Startup
+:ALT_TITLE: Choose What Persists
+:DESCRIPTION: Distinguish previews, drafts, saved resources, activation, and startup.
+:END:
+
+These actions answer different questions:
+
+- /Preview/ plays an example without saving or selecting the draft.
+- /Retain draft/ keeps unfinished edits in this Emacs session only.
+- /Save to collection without selecting/ saves the voice for later use.
+- /Save and apply/ saves the voice and selects its palette for this session.
+- /Activate/ selects an existing palette or sound pack now.
+- /Use at Startup/ in Voice Palettes changes the palette selected by the saved
+  startup profile; it does not apply that profile now.
+- /Presentation Profiles/ save selected options, palette, sound pack, and
+  spatial settings together. Their referenced resources remain shared.
+- /Export/ and /Full backup/ create files to share or retain separately.
+
+A saved personal rule is used in future sessions. Session and buffer rules
+expire with their session or buffer. Saving a profile does not turn these
+temporary rules or unfinished drafts into permanent settings.
+
+*** Export, Back Up, And Import Palettes
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Sharing Voice Palettes
+:ALT_TITLE: Export, Back Up, And Import Palettes
+:DESCRIPTION: Share portable voices or retain local choices in a backup.
+:END:
+
+For sharing, @@texinfo:@kbd{w}@@ exports effective portable entries and asks
+before omitting machine-local physical choices. @@texinfo:@kbd{W}@@ creates a
+full local backup containing the palette's ancestry and referenced local
+choices. Import with @@texinfo:@kbd{i}@@ accepts either file and creates an
+independent personal palette under an unused name; it does not replace the
+original ancestry tree or activate the imported palette. Missing installed
+voices are reported and retained for later replacement. A partial import keeps
+its proposal available for Retry or Discard.
+
+** Troubleshooting And Recovery
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Presentation Troubleshooting
 :ALT_TITLE: Presentation Troubleshooting
@@ -1129,7 +1139,7 @@ Use the symptom to choose the shortest diagnostic route:
 | Something heard earlier was wrong | Open Recent Aural Feedback and explain its frozen record. |
 | A broad optional behavior is unwanted | Inspect Presentation Options and preview or disable the matching option. |
 | One narrow exception is unwanted | Open Presentation Overrides, preview it, then disable or remove it. |
-| A logical voice uses the wrong engine or physical voice | Inspect its route and engine health in Voice Workbench. |
+| A named voice uses the wrong engine or physical voice | Inspect its physical choices in the voice editor, then engine health in Voice Workbench. |
 | A cue is missing or inappropriate | Validate and audition the active Sound Pack, then inspect earcon overrides. |
 | A saved setup no longer appears active | Check whether the selected Presentation Profile is active or diverged. |
 | Voice changes disappear only in some buffers | Compare Voice Lock and explicit face-presentation state. |
@@ -1145,7 +1155,37 @@ Press @@texinfo:@kbd{?}@@ in any Aural interface for its complete current keys. 
 speech itself is absent rather than merely presented incorrectly, follow
 @@texinfo:@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}@@; presentation diagnostics assume that a speech route can run.
 
-** Voice Lock Compatibility
+*** Recover Unfinished Changes
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Recovering Aural Changes
+:ALT_TITLE: Recover Unfinished Changes
+:DESCRIPTION: Resume drafts and distinguish saved settings from confirmed application.
+:END:
+
+Use @@texinfo:@kbd{h}@@ to leave a working editor through Home without losing
+it.  Home's /Resume unfinished changes/ opens the original draft, including
+its source and working settings.  In the common voice editor, @@texinfo:@kbd{u}@@ undoes and
+@@texinfo:@kbd{q}@@ offers to keep the draft, discard changes, or continue.  Guided feedback
+@@texinfo:@kbd{q}@@ goes back one level, then hides and retains the draft at
+the top level.  To undo an already applied
+rule, open /Presentation Overrides/, select it in the appropriate scope, and
+use @@texinfo:@kbd{t}@@ to disable it or @@texinfo:@kbd{d}@@ to remove it.
+
+Retained drafts last only until Emacs exits. Discarding a draft abandons
+unsaved edits; it does not undo a completed save. A voice editor reports saved
+settings separately from successful application to the speech server. Keep
+that distinction when deciding whether to retry or to edit the saved voice.
+
+Applying waits for each speech stream to acknowledge its configuration.  If
+an Omnivox apply times out, the Workbench reports /server outcome unconfirmed/.
+Emacsvox stops that apply and sends no later steps, but changes already sent
+may still take effect on the server.  A timeout does not undo the saved engine settings
+or confirm that the server rejected it.  Press @@texinfo:@kbd{r}@@ to reapply
+the saved engine settings and obtain a fresh result.  Save or cancel any newer
+staged edits before retrying.  A partial result retains the streams that
+acknowledged success and identifies those that timed out.
+
+** Voice Lock And Advanced Configuration
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Voice Lock
 :ALT_TITLE: Voice Lock Compatibility
@@ -1192,14 +1232,14 @@ settings option rather than a generated ~acss-...~ voice symbol.  Historical
 background is preserved in
 @@texinfo:@ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}@@.
 
-** Further Detail
-:PROPERTIES:
-:TEXINFO_NODE: no
-:END:
+Named formatting voices such as ~bolden~ and ~annotate~ follow the active
+palette. An inherited standard entry may use a personality's ~-settings~
+option as its implementation. This is the definition in the explicit standard
+root, not a second hidden palette fallback. Explicit styles keep their own
+settings, and explicit presentation rules can change the resulting voice.
 
-Every Aural manager and editor has live @@texinfo:@kbd{?}@@ help.  The generated
-@@texinfo:@ref{Emacsvox Commands And Options,,,emacsvox-reference,Emacsvox Reference Manual}@@ records the exact public commands and options.  The source-tree file
-~etc/aural-presentation-reference.org~ documents the rule schema, selection
-order, queue behavior, extension contracts, and advanced data authoring.  Those
-details are useful when developing an integration or a reusable Presentation
-Option; they are not required for ordinary customization.
+The [[info:emacsvox#Integration Maintenance][Developer Guide]] covers voice-style metadata, rule authoring contracts,
+and integration behavior; [[info:emacsvox#Speech Server Protocols][Speech Server Protocols]] covers delivery.
+The generated @@texinfo:@ref{Emacsvox Commands And Options,,,emacsvox-reference,Emacsvox Reference Manual}@@
+records exact commands, options, and keymaps. These references complement the
+tasks here; they are not prerequisites for using Aural Home.
