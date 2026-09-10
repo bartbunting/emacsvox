@@ -67,7 +67,7 @@ the user's files without checking their latest state.
 Design validation: local document links, =git diff --check= and
 =make docs-release-check=. Reports and ADRs require no application rebuild.
 
-** TODO 2. Establish current standard data and shared lookup — High
+** DONE 2. Establish current standard data and shared lookup — High
 
 Foundation =d717313ad=: resource lookup, owned data resolution and palette source
 inspection now use the same whole-entry inheritance reader. Independent tests
@@ -103,16 +103,18 @@ Explicit transitional boundary: schema-1 palettes may read definition-only
 standard entries while the old experiment implementation and fixtures remain.
 Schema-2 owned palettes still load unchanged. Remove this reader projection and
 the experiment's explicit schema-1 constructor in slice 4; do not expand them.
-Unknown-name authoring/runtime enforcement remains to finish this slice.
+Unknown-name enforcement is completed below; remaining ownership-format readers
+and obsolete authoring routes are still removed in slice 4.
 
-The one-time current-file proposal has been prepared through the existing save
-coordinator against both SHA-256 fingerprints, with exact retained originals in
-a private temporary directory. It preserves all 29 direct definitions, ordered
-selectors and languages, retains 17 existing snapshots and adds seven schema-3
-snapshots. Only =animate= is newly inherited. Both running Emacsvox sessions
-reported no temporary per-name routes; the current session had no dirty voice
-drafts. The proposal has not been applied. Recheck current files and sessions
-before applying it in slice 4, and retain durable originals then.
+The one-time current-file conversion moved forward from slice 4 so the strict
+activation checks can accept the maintainer's palette. Both original fingerprints
+were unchanged, and both running sessions again reported no temporary per-name
+routes or dirty voice drafts. The existing save coordinator preserved all 29
+direct definitions, ordered selectors, languages and profile references. It
+retained 17 snapshots and added seven schema-3 snapshots. Only =animate= is newly
+inherited. Both saved files reopened exactly as proposed. Private exact originals
+and the proposal are retained under =~/.emacsvox/backups/standard-root-20260910-AV7LCf/=.
+Live sessions were not reloaded; use a fresh restart for the completed interface.
 
 The bounded XHI handoff requested in =1fca47d6f= is resolved by ADR 0018's generated
 concrete ACSS contract. An isolated fresh-process probe confirmed that the current
@@ -122,27 +124,17 @@ callers need their concrete style identity preserved. Current personal data has
 no reserved generated-name references. No runtime enforcement or personal data
 changed during this design handoff.
 
-Return to High before implementation. Add the raw generated-handle registry at
-the style API, exact membership classification and generated-name reservation.
-Preserve complete-preset composition, terminal personality decoding and adapter
-registration independently of named palette lookup. Then replace arbitrary-symbol
-fallback with the agreed unknown-name behavior across runtime and authoring,
-including contextual presets and nested voice values. Persistent references need
-durable definitions or stable names even when a handle is currently issued.
-
-Test real API issuance rather than treating a mocked adapter cache hit as proof
-of identity. Cover repeated issuance, unrelated cached names, both collision
-orders, neutral and zero-valued styles, mutation isolation, static family
-projection, palette changes, adapter reset and context composition. Exercise the
-maths/sampler paths and both transport lanes, including frozen registrations.
-Retain useful low-level adapter coverage when retiring palette fallback tests.
-The maintainer's Home edit remains separate and untouched.
+The maintainer switched back to High for the implementation below. The tests use
+real style API issuance, including unrelated cached names, collision ordering,
+neutral and zero styles, mutation isolation, static family projection, palette
+changes, adapter reset, maths/sampler callers and context composition. The
+maintainer's Home edit remains separate and untouched.
 
 Design verification: selected-Emacs and byte-code preflights, the isolated
 collision probe, =git diff --check= and =make docs-release-check= passed.
 This documentation-only decision requires no application rebuild.
 
-Generated-style implementation: the style API now owns copied raw snapshots,
+Generated-style implementation =7676b4ebc=: the style API now owns copied raw snapshots,
 distinguishes issued handles from adapter cache entries, rejects ambiguous
 generated names and reconstructs missing adapter definitions. Palette declarations,
 New/Rename and stable personality declarations reserve the generated namespace;
@@ -154,8 +146,27 @@ composition, mutation isolation and both speech lanes have regression coverage.
 Validation: 579 affected source tests and 14 fresh compiled tests passed. The full
 byte-code rebuild was followed by incremental compilation of the final compiler
 and registration changes; final byte-code preflight and reference generation
-passed. Unknown-name enforcement and the remaining complete voice operations
-are still the next High work. No personal files or live sessions changed.
+passed. That commit changed no personal files or live sessions.
+
+Name enforcement now shares a classifier across compilation and validation.
+Bound variables alone cannot supply named voices. Unexpected names preserve
+content with ordinary speech in both lanes, omit invalid wire identities, and
+retain up to twenty quiet diagnostics shown by Doctor and explanations. Missing
+terminal implementations also retain their identity in diagnostics; preview
+refuses to claim that either unresolved request was heard. Nested presets and
+speech actions receive the same reference checks.
+
+The rule editor checks its target palette before saving. Stored rules must have
+a durable provider in the saved collection; selecting a palette or applying a
+profile checks the selected palette against known enabled rule references before
+publication. Renames stage their saved rule changes before proposal validation.
+Runtime fixtures now inherit the read-only standard root, and persistence fixtures
+exclude that built-in record from personal data.
+
+Validation: 751 affected source tests, four focused unknown/terminal checks, and
+13 fresh compiled checks passed. Final byte-code preflight passed. The remaining
+complete operations, parent authoring constraints and old-route retirement are
+the next High slices.
 
 Create schema-3 standard entries without changing their raw style/personality
 representations. Make constructors produce current complete data. Give aliases,
@@ -202,7 +213,8 @@ failed writes and conflicts; standard root remains intact.
 
 ** TODO 4. Retire the old voice-management routes — High
 
-Finish the inspected one-time data conversion before removing its reader support.
+The inspected one-time data conversion is complete, as recorded in slice 2.
+Account for maintained fixtures before removing the remaining reader support.
 Route all named edits to the common editor. Remove definition-only dialogs,
 shared per-name assignment/save/migration routes and the standalone old tuner
 screen. Retain helpers used by the common editor, engine policy, local choice

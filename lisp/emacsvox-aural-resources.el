@@ -37,6 +37,8 @@
 (require 'emacsvox-aural)
 (require 'emacsvox-aural-rules)
 
+(declare-function voice-setup--generated-acss-p "voice-setup" (voice))
+
 (declare-function emacsvox-aural-routing--strict-properties
                   "emacsvox-aural-routing-profiles" (data allowed required))
 (declare-function emacsvox-aural-validate-routing-selector
@@ -1786,6 +1788,66 @@ The nearest definition replaces the entire entry.  PATH detects cycles."
          (emacsvox-aural--canonical-voice-name name)
        name)
      entries)))
+
+(defun emacsvox-aural--voice-reference-kind (voice palette)
+  "Classify runtime VOICE in PALETTE without consulting arbitrary variables."
+  (setq palette (or palette 'acss-default))
+  (cond
+   ((null voice) 'unstyled)
+   ((eq voice 'inaudible) 'inaudible)
+   ((or (emacsvox-aural--acss-p voice)
+        (emacsvox-aural-voice-style-p voice)) 'style)
+   ((and (proper-list-p voice) voice) 'composite)
+   ((and (fboundp 'voice-setup--generated-acss-p)
+         (voice-setup--generated-acss-p voice)) 'generated)
+   ((and (symbolp voice)
+         (not (emacsvox-aural--generated-voice-name-p voice))
+         (emacsvox-aural-voice-palette palette)
+         (let ((entries (emacsvox-aural-effective-voice-entries palette)))
+           (or (assq voice entries)
+               (assq (emacsvox-aural--canonical-voice-name voice) entries))))
+    'named)
+   (t 'unknown)))
+
+(defun emacsvox-aural--voice-reference-known-p (voice palette &optional persistent)
+  "Whether VOICE resolves in PALETTE, including nested styles and composites.
+PERSISTENT rejects session-issued handles in durable named-reference fields."
+  (pcase (emacsvox-aural--voice-reference-kind voice palette)
+    ((or 'unstyled 'inaudible 'named) t)
+    ('generated (not persistent))
+    ('style
+     (or (emacsvox-aural--acss-p voice)
+         (not (plist-member voice :preset))
+         (emacsvox-aural--voice-reference-known-p
+          (plist-get voice :preset) palette persistent)))
+    ('composite
+     (cl-every (lambda (part)
+                 (emacsvox-aural--voice-reference-known-p part palette persistent))
+               voice))))
+
+(defun emacsvox-aural--rule-voice-values (rule)
+  "Return content and action voice values referenced by compiled RULE."
+  (let* ((content (emacsvox-aural-contribution-content
+                   (emacsvox-aural-rule-contribution rule)))
+         voices)
+    (when (emacsvox-aural-content-patch-voice-set-p content)
+      (push (emacsvox-aural-content-patch-voice content) voices))
+    (dolist (action (emacsvox-aural-rule-actions rule))
+      (when (emacsvox-aural-action-voice action)
+        (push (emacsvox-aural-action-voice action) voices)))
+    voices))
+
+(defun emacsvox-aural--validate-rule-voice-references (rules palette &optional persistent)
+  "Reject unresolved voices in compiled RULES for PALETTE.
+PERSISTENT requires durable references instead of generated handles."
+  (dolist (rule rules)
+    (dolist (voice (emacsvox-aural--rule-voice-values rule))
+      (unless (emacsvox-aural--voice-reference-known-p voice palette persistent)
+        (emacsvox-aural--resource-error
+         "Rule %S has an unavailable%s voice in palette %S: %S"
+         (emacsvox-aural-rule-id rule)
+         (if persistent " or session-only" "") palette voice))))
+  t)
 
 (defun emacsvox-aural-validate-voice-palette (&optional palette-id)
   "Return unbound personalities in PALETTE-ID or the default palette."

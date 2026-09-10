@@ -146,6 +146,11 @@ part of profile state."
            :remapping emacsvox-aural-spatial-remapping))
          (previous (emacsvox-aural--capture-coordinated-state))
          state-committed)
+    (require 'emacsvox-aural-voice-runtime)
+    (let ((emacsvox-aural-enabled-feature-fragments (copy-sequence fragments))
+          (emacsvox-aural-feature-fragment-order
+           (emacsvox-aural--merge-enabled-feature-fragment-order fragments)))
+      (emacsvox-aural-voice-runtime--validate-selection (or palette 'acss-default)))
     (when pack
       (unless (emacsvox-aural-resource-pack pack)
         (emacsvox-aural--scheme-error

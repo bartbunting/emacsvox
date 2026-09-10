@@ -40,6 +40,8 @@
 
 (declare-function emacsvox-aural-voice-runtime--validate
                   "emacsvox-aural-voice-runtime" (&optional palette))
+(declare-function emacsvox-aural-voice-runtime--validate-selection
+                  "emacsvox-aural-voice-runtime" (&optional palette))
 
 (defvar emacsvox-user-directory (expand-file-name "~/.emacsvox/")
   "Emacsvox user data directory.")
@@ -1353,7 +1355,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
     (emacsvox-aural--scheme-error
      "Unknown voice palette: %S" palette))
   (require 'emacsvox-aural-voice-runtime)
-  (emacsvox-aural-voice-runtime--validate
+  (emacsvox-aural-voice-runtime--validate-selection
    (or palette (emacsvox-aural-effective-scheme-provider 'voice-palette) 'acss-default))
   (let ((previous (emacsvox-aural--capture-coordinated-state)))
     (setq emacsvox-aural-voice-palette-override palette)
@@ -1403,7 +1405,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
            (emacsvox-aural--built-in-feature-fragment-registry))
           (palette-registry
            (emacsvox-aural--built-in-voice-palette-registry))
-          profile-ids)
+          profile-ids stored-rules)
       (dolist (fragment fragments)
         (let* ((compiled
                 (emacsvox-aural--compile-feature-fragment fragment))
@@ -1411,7 +1413,8 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
           (when (gethash id fragment-registry)
             (emacsvox-aural--scheme-error
              "Duplicate or protected user feature fragment: %S" id))
-          (puthash id t fragment-registry)))
+          (puthash id t fragment-registry)
+          (setq stored-rules (append stored-rules (emacsvox-aural-scheme-rules compiled)))))
       (emacsvox-aural--validate-enabled-feature-fragments
        enabled fragment-registry)
       (emacsvox-aural--validate-feature-fragment-order
@@ -1432,7 +1435,18 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
         (maphash
          (lambda (id _)
            (emacsvox-aural-effective-voice-entries id))
-         palette-registry))
+         palette-registry)
+        ;; Stored rules may target an inactive saved palette.  Require a
+        ;; durable provider here; activation checks the selected palette.
+        (dolist (rule (append stored-rules
+                              (emacsvox-aural--compile-rule-list rules 'user "user data" t)))
+          (dolist (voice (emacsvox-aural--rule-voice-values rule))
+            (unless (cl-some (lambda (id)
+                               (emacsvox-aural--voice-reference-known-p voice id t))
+                             (hash-table-keys palette-registry))
+              (emacsvox-aural--scheme-error
+               "Rule %S has no durable voice reference in the saved palettes: %S"
+               (emacsvox-aural-rule-id rule) voice)))))
       (dolist (profile profiles)
         (emacsvox-aural--validate-profile-data
          profile scheme-registry fragment-registry palette-registry)
@@ -1448,7 +1462,6 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
           (emacsvox-aural--scheme-error
            "Active presentation profile is not saved: %S"
            active-profile))))
-    (emacsvox-aural--compile-rule-list rules 'user "user data")
     data))
 
 (defun emacsvox-aural-migrate-user-data (data)

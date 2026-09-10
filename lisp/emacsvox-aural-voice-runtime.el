@@ -90,6 +90,34 @@ PALETTE and PROFILE optionally select inactive data for inspection."
                     (emacsvox-aural-voice-runtime--palette palette)))
       (emacsvox-aural-voice-runtime--owned (car entry) palette))))
 
+(defun emacsvox-aural-voice-runtime--validate-selection (&optional palette)
+  "Reject known unresolved definitions and rule references before selecting PALETTE."
+  (setq palette (emacsvox-aural-voice-runtime--palette palette))
+  (emacsvox-aural-voice-runtime--validate palette)
+  (when-let* ((missing (emacsvox-aural-validate-voice-palette palette)))
+    (user-error "Palette %s has unavailable personality definitions: %S" palette missing))
+  (emacsvox-aural--validate-rule-voice-references
+   (append (emacsvox-aural-effective-scheme-rules)
+           (emacsvox-aural--feature-fragment-rules)
+           (emacsvox-aural--compile-rule-list emacsvox-aural-user-rules 'user "user rules")
+           (emacsvox-aural--compile-rule-list emacsvox-aural-session-rules 'session "session rules"))
+   palette)
+  (maphash
+   (lambda (_ fragment)
+     (emacsvox-aural--validate-rule-voice-references
+      (cl-remove-if-not #'emacsvox-aural-rule-enabled
+                        (emacsvox-aural-scheme-rules
+                         (emacsvox-aural-module-fragment-compiled fragment)))
+      palette))
+   emacsvox-aural-module-fragment-registry)
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when emacsvox-aural-buffer-rules
+        (emacsvox-aural--validate-rule-voice-references
+         (emacsvox-aural--compile-rule-list emacsvox-aural-buffer-rules 'buffer (buffer-name))
+         palette))))
+  t)
+
 (defun emacsvox-aural-voice-runtime--snapshot ()
   "Capture owned data that must be registered after a palette or session change."
   (when (emacsvox-aural-voice-runtime--owned-p)

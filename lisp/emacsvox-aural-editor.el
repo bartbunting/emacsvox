@@ -1254,6 +1254,11 @@ LABEL identifies the speech or cue being edited."
 
 (defun emacsvox-aural-editor-validation-report ()
   "Validate working data and return a report or simple success marker."
+  (emacsvox-aural--validate-rule-voice-references
+   (emacsvox-aural--compile-rule-list
+    (emacsvox-aural-editor-normalized-rules) 'user "editor" t)
+   (emacsvox-aural-effective-voice-palette)
+   (memq emacsvox-aural-editor-scope '(personal fragment)))
   (pcase emacsvox-aural-editor-scope
     ('fragment
      (let* ((data (emacsvox-aural-editor--working-scheme-data))

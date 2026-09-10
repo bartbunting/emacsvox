@@ -4068,5 +4068,18 @@
     (should (equal (emacsvox-aural-ui--manual-node) "Voices And Routing"))
     (should (eq (key-binding (kbd "C-c C-i")) #'emacsvox-aural-ui-open-manual))))
 
+(ert-deftest emacsvox-aural-editor-rejects-unresolved-voice-before-save ()
+  "The editor rejects nested missing references before writing or applying."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-aural-scheme-editor-mode)
+      (setq emacsvox-aural-editor-scope 'personal
+            emacsvox-aural-editor-rules
+            '((:id missing :match (:role heading)
+               :render (:content (:voice (:preset missing-editor-voice :stress 0))))))
+      (cl-letf (((symbol-function 'emacsvox-aural-save-user-data)
+                 (lambda (&rest _) (ert-fail "Invalid data reached persistence"))))
+        (should-error (emacsvox-aural-editor-save) :type 'emacsvox-aural-resource-error)))))
+
 (provide 'emacsvox-aural-tools-tests)
 ;;; emacsvox-aural-tools-tests.el ends here

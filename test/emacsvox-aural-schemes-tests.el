@@ -1333,5 +1333,35 @@
              :type 'emacsvox-aural-scheme-error))
         (delete-directory directory t)))))
 
+(ert-deftest emacsvox-aural-schemes-persistence-rejects-nested-missing-and-generated-voices ()
+  "Neither imported rules nor action presets may save unresolved identities."
+  (require 'voice-setup)
+  (emacsvox-test--with-isolated-schemes
+    (let ((voice-setup--generated-acss-table (make-hash-table :test #'eq)))
+      (cl-letf (((symbol-function 'tts-define-voice-from-acss) #'ignore))
+        (voice-from-acss (make-acss :average-pitch 0)))
+      (dolist (voice '(missing-stored-voice acss-a0 (:preset missing-stored-voice)))
+        (let ((data (emacsvox-aural-user-data)))
+          (setf (plist-get data :user-rules)
+                `((:id stored-action :match (:role heading)
+                   :render (:before ((:id label :kind speech :text "Label" :voice ,voice))))))
+          (should-error (emacsvox-aural--validate-user-data data)
+                        :type 'emacsvox-aural-scheme-error))))))
+
+(ert-deftest emacsvox-aural-schemes-activation-rejects-missing-voice-before-publication ()
+  "Palette selection cannot publish state that invalidates a known user rule."
+  (emacsvox-test--with-isolated-schemes
+    (emacsvox-aural-register-voice-palette 'valid-child :summary "Child" :entries nil)
+    (let ((emacsvox-aural-user-rules
+           '((:id unresolved :match (:role heading)
+              :render (:content (:voice (:preset missing-in-target :stress 0))))))
+          (before emacsvox-aural-voice-palette-override)
+          changed)
+      (let ((emacsvox-aural-configuration-changed-hook (list (lambda () (setq changed t)))))
+        (should-error (emacsvox-aural-select-voice-palette 'valid-child)
+                      :type 'emacsvox-aural-resource-error))
+      (should (eq before emacsvox-aural-voice-palette-override))
+      (should-not changed))))
+
 (provide 'emacsvox-aural-schemes-tests)
 ;;; emacsvox-aural-schemes-tests.el ends here

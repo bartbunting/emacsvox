@@ -32,6 +32,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'seq)
 (require 'subr-x)
 (require 'emacsvox-aural-concrete)
 (require 'emacsvox-aural-providers)
@@ -66,6 +67,29 @@ capability degradation.  `reject' signals an error before anything is queued."
 (defvar emacsvox-aural--file-digest-cache
   (make-hash-table :test #'equal)
   "Content digests keyed by canonical file identity and metadata.")
+
+(defvar emacsvox-aural--unknown-voice-diagnostics nil
+  "Up to twenty recent distinct unresolved voice and palette pairs.
+These diagnostics never insert warning speech into ordinary content.")
+
+(defun emacsvox-aural--compile-unknown-voice (voice palette provenance capability &optional definition)
+  "Preserve speech for unknown VOICE in PALETTE with a bounded diagnostic.
+PROVENANCE and CAPABILITY remain attached to the ordinary speech result.
+DEFINITION identifies an unavailable terminal personality when the name exists."
+  (let ((diagnostic (list :reason 'unknown-voice :requested voice :palette palette
+                          :message (if definition
+                                       "Unavailable personality; used ordinary speech"
+                                     "Unknown voice; used ordinary speech"))))
+    (when definition (setq diagnostic (plist-put diagnostic :definition definition)))
+    (setq emacsvox-aural--unknown-voice-diagnostics
+          (seq-take (cons (copy-tree diagnostic)
+                          (remove diagnostic emacsvox-aural--unknown-voice-diagnostics))
+                    20))
+    (emacsvox-aural--make-compiled-voice
+     :command nil :request nil :preset nil
+     :style (emacsvox-aural--empty-voice-style)
+     :provenance (copy-tree provenance) :capability capability
+     :degradations (list diagnostic))))
 
 (defun emacsvox-aural-clear-file-digest-cache (&optional _pack)
   "Clear cached sound digests after a resource-pack change.
@@ -411,6 +435,7 @@ portable palette object and every other dimension remain untouched."
           (when preset-present
             (emacsvox-aural-compile-voice-style
              preset palette provenance)))
+         (request (copy-tree style))
          (effective
           (or
            (and base
@@ -418,6 +443,12 @@ portable palette object and every other dimension remain untouched."
            (emacsvox-aural--empty-voice-style)))
          command-style
          degradations)
+    (when (and preset-present base
+               (cl-find 'unknown-voice (emacsvox-aural-compiled-voice-degradations base)
+                        :key (lambda (item) (plist-get item :reason))))
+      ;; Keep the failed request in the degradation, never in a wire identity.
+      (setq preset nil)
+      (setf (plist-get request :preset) nil))
     (when
         (and
          base
@@ -508,7 +539,7 @@ portable palette object and every other dimension remain untouched."
        (emacsvox-aural--join-voice-commands
         (and base (emacsvox-aural-compiled-voice-command base))
         style-command)
-       :request (copy-tree style)
+       :request request
        :style effective
        :provenance (copy-tree provenance)
        :capability capability
@@ -538,21 +569,27 @@ portable palette object and every other dimension remain untouched."
                   (emacsvox-aural--personality-style definition))))
          (routed-style (and style
                             (emacsvox-aural--route-palette-voice-definition name style)))
+         (missing (and (symbolp definition) definition (not (boundp definition))))
          (compiled
-          (if (and style
+          (cond
+           (missing
+            (emacsvox-aural--compile-unknown-voice
+             name palette provenance (emacsvox-aural-active-voice-capabilities) definition))
+           ((and style
                    (not (and (symbolp definition) (symbolp value)
                              (equal style routed-style))))
-              (emacsvox-aural--compile-explicit-voice-style
-               routed-style palette provenance)
+            (emacsvox-aural--compile-explicit-voice-style routed-style palette provenance))
+           (t
             (emacsvox-aural--make-compiled-voice
              ;; A personality is a terminal implementation, not another
              ;; palette name.  Keep its adapter command unless an owned
              ;; physical choice requires a different static family.
              :command (emacsvox-aural--compile-personality-command value)
              :style (copy-tree style) :provenance (copy-tree provenance)
-             :capability (emacsvox-aural-active-voice-capabilities)))))
-    (setf (emacsvox-aural-compiled-voice-request compiled) name
-          (emacsvox-aural-compiled-voice-preset compiled) name)
+             :capability (emacsvox-aural-active-voice-capabilities))))))
+    (unless missing
+      (setf (emacsvox-aural-compiled-voice-request compiled) name
+            (emacsvox-aural-compiled-voice-preset compiled) name))
     compiled))
 
 (defun emacsvox-aural-compile-voice-style
@@ -563,7 +600,8 @@ PALETTE defaults to the active palette.  PROVENANCE maps the winning preset
 and ACSS dimensions to the rules that supplied them."
   (let* ((palette (or palette (emacsvox-aural-effective-voice-palette)))
          (emacsvox-aural-voice-runtime--palette palette)
-         (capability (emacsvox-aural-active-voice-capabilities)))
+         (capability (emacsvox-aural-active-voice-capabilities))
+         (kind (emacsvox-aural--voice-reference-kind voice palette)))
     (cond
      ((null voice)
       (emacsvox-aural--make-compiled-voice
@@ -610,9 +648,11 @@ and ACSS dimensions to the rules that supplied them."
          (mapcar
            #'emacsvox-aural-compiled-voice-degradations parts))
          :preset (copy-tree voice))))
-     ((and (fboundp 'voice-setup--generated-acss-p)
-           (voice-setup--generated-acss-p voice))
+     ((eq kind 'generated)
       (emacsvox-aural--compile-generated-voice voice provenance capability))
+     ((and (symbolp voice)
+           (eq kind 'unknown))
+      (emacsvox-aural--compile-unknown-voice voice palette provenance capability))
      ((and (symbolp voice)
            (emacsvox-aural-voice-runtime--owned voice palette))
       (emacsvox-aural--compile-owned-voice
@@ -623,15 +663,10 @@ and ACSS dimensions to the rules that supplied them."
              (logical-voice (car palette-entry))
              (palette-definition (cadr palette-entry)))
         (if palette-entry
-            (let ((compiled
-                   (emacsvox-aural-compile-voice-style
-                    (emacsvox-aural--route-palette-voice-definition
-                     logical-voice palette-definition)
-                    palette provenance)))
-              (setf
-               (emacsvox-aural-compiled-voice-request compiled) logical-voice
-               (emacsvox-aural-compiled-voice-preset compiled) logical-voice)
-              compiled)
+            ;; Transitional old-format entries also contain terminal
+            ;; implementations, never another named-palette lookup.
+            (emacsvox-aural--compile-owned-voice
+             (list :name logical-voice :definition palette-definition) palette provenance)
           (let* ((resolved (emacsvox-aural--resolve-voice-name voice palette))
                  (style (emacsvox-aural--personality-style voice)))
             (emacsvox-aural--make-compiled-voice

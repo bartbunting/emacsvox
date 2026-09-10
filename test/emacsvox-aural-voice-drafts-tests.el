@@ -27,7 +27,9 @@
            palettes)
       (unwind-protect
           (progn
-            (maphash (lambda (_ record) (push (emacsvox-aural-voice-palette-data-form record) palettes))
+            (maphash (lambda (_ record)
+                       (unless (emacsvox-aural-voice-palette-built-in record)
+                         (push (emacsvox-aural-voice-palette-data-form record) palettes)))
                      emacsvox-aural-voice-palette-registry)
             (emacsvox-aural--write-user-data (list :schema-version 9 :voice-palettes palettes))
             (emacsvox-aural-save-routing-profiles)

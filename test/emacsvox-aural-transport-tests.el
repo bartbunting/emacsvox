@@ -1747,6 +1747,68 @@ write.  State synchronization lines in a combined write are ignored."
                 (forward-line 1))))
         (kill-buffer buffer)))))
 
+(ert-deftest emacsvox-aural-unknown-voice-preserves-both-lanes-without-wire-name ()
+  "A missing source personality never becomes an unknown server voice ID."
+  (emacsvox-test--with-transport-scheme
+    (let ((emacsvox-aural--unknown-voice-diagnostics nil))
+      (cl-progv '(test-bound-missing-voice) '(voice-bolden)
+        (dolist (lane '(main notification))
+          (let* ((text (propertize "Keep this content" 'personality 'test-bound-missing-voice))
+                 (result (emacsvox-test--capture-native-timeline text :lane lane))
+                 (span (car (plist-get (plist-get result :timeline) :spans))))
+            (should (equal (plist-get span :text) "Keep this content"))
+            (should (eq (plist-get span :logical_voice_id) :null))
+            (should-not (plist-get span :acss)))))
+      (should (= (length emacsvox-aural--unknown-voice-diagnostics) 1))
+      (should (eq (plist-get (car emacsvox-aural--unknown-voice-diagnostics) :requested)
+                  'test-bound-missing-voice)))))
+
+(ert-deftest emacsvox-aural-unknown-voice-diagnostics-are-bounded-and-silent ()
+  "Repeated failures do not speak warnings or grow diagnostics without bound."
+  (let ((emacsvox-aural--unknown-voice-diagnostics nil)
+        (voice-setup--generated-acss-table (make-hash-table :test #'eq)))
+    (cl-letf (((symbol-function 'message) (lambda (&rest _) (ert-fail "Warning speech")))
+              ((symbol-function 'tts-get-voice-command)
+               (lambda (_) (ert-fail "Unknown name reached adapter"))))
+      (dotimes (_ 30) (emacsvox-aural-compile-voice-style 'acss-not-issued))
+      (should (= (length emacsvox-aural--unknown-voice-diagnostics) 1))
+      (dotimes (index 30)
+        (emacsvox-aural-compile-voice-style (intern (format "missing-test-%d" index))))
+      (should (= (length emacsvox-aural--unknown-voice-diagnostics) 20))
+      (should (eq (plist-get (car emacsvox-aural--unknown-voice-diagnostics) :requested)
+                  'missing-test-29)))))
+
+(ert-deftest emacsvox-aural-unknown-preset-keeps-explicit-context-and-diagnostic ()
+  "An unknown base falls back to ordinary speech before a valid adjustment."
+  (require 'emacsvox-aural-preview)
+  (emacsvox-test--with-generated-voices
+    (let* ((emacsvox-aural--unknown-voice-diagnostics nil)
+           (compiled (emacsvox-aural-compile-voice-style '(:preset missing-base :pitch-range 3))))
+      (should-not (plist-get (emacsvox-aural-compiled-voice-request compiled) :preset))
+      (should-not (emacsvox-aural-compiled-voice-preset compiled))
+      (should (= (plist-get (emacsvox-aural-compiled-voice-style compiled) :pitch-range) 3))
+      (should (eq (plist-get (car (emacsvox-aural-compiled-voice-degradations compiled)) :requested)
+                  'missing-base))
+      (should-error (emacsvox-aural-preview-compiled-voice-plan compiled "Preview")
+                    :type 'user-error))))
+
+(ert-deftest emacsvox-aural-unavailable-terminal-personality-does-not-claim-preview ()
+  "An existing name with a missing implementation retains a precise diagnostic."
+  (require 'emacsvox-aural-preview)
+  (let ((emacsvox-aural-voice-palette-registry
+         (copy-hash-table emacsvox-aural-voice-palette-registry))
+        (emacsvox-aural--unknown-voice-diagnostics nil))
+    (emacsvox-aural-register-voice-palette
+     'broken-terminal :summary "Missing implementation"
+     :entries '((custom . test-unavailable-personality)))
+    (let ((compiled (emacsvox-aural-compile-voice-style
+                     '(:preset custom :stress 0) 'broken-terminal)))
+      (should-not (plist-get (emacsvox-aural-compiled-voice-request compiled) :preset))
+      (should (eq (plist-get (car (emacsvox-aural-compiled-voice-degradations compiled)) :definition)
+                  'test-unavailable-personality))
+      (should-error (emacsvox-aural-preview-compiled-voice-plan compiled "Preview")
+                    :type 'user-error))))
+
 (ert-deftest emacsvox-aural-structured-timeline-honors-disabled-icons ()
   "Structured lowering retains the frozen auditory-icon policy."
   (let* ((cue
@@ -6029,7 +6091,7 @@ is the default inherited by a newly created TTS scratch buffer."
 (ert-deftest emacsvox-aural-transport-preserves-voice-lock-compatibility ()
   "Legacy personalities compile only when legacy voice locking is enabled."
   (emacsvox-test--with-transport-scheme
-    (let ((text (propertize "styled" 'personality 'voice-explicit)))
+    (let ((text (propertize "styled" 'personality 'voice-bolden)))
       (cl-letf (((symbol-function 'tts-get-voice-command)
                  (lambda (voice) (format "<%s>" voice))))
         (let* ((voice-lock-mode t)
@@ -6040,7 +6102,7 @@ is the default inherited by a newly created TTS scratch buffer."
           (should
            (equal
             (emacsvox-aural-concrete-content-voice-command content)
-            "<voice-explicit>")))
+            (emacsvox-test--transport-adapter-command 'voice-bolden))))
         (let* ((voice-lock-mode nil)
                (prepared (emacsvox-aural-prepare-text text))
                (content

@@ -294,6 +294,20 @@
          (format "%s" (process-name tts-speaker-process))
        "Speech starts the configured server on demand"))))
 
+(defun emacsvox-aural-doctor--unknown-voice-finding ()
+  "Report recent unresolved runtime voices without repeating warning speech."
+  (let ((recent emacsvox-aural--unknown-voice-diagnostics))
+    (emacsvox-aural-doctor--finding
+     'unknown-voices (if recent 'warning 'ok) "Recent unresolved voices"
+     (if recent (format "%d recorded" (length recent)) "none recorded")
+     (if recent
+         (concat "These recent requests used ordinary speech: "
+                 (mapconcat (lambda (item)
+                              (format "%s in %s" (plist-get item :requested)
+                                      (plist-get item :palette)))
+                            recent "; "))
+       "No unresolved voice requests have been recorded in this session"))))
+
 (defun emacsvox-aural-doctor--training-finding ()
   "Report whether semantic training feedback is active."
   (emacsvox-aural-doctor--finding
@@ -396,6 +410,7 @@
     (emacsvox-aural-doctor--face-presentation-finding)
     (emacsvox-aural-doctor--compatibility-voice-finding)
     (emacsvox-aural-doctor--face-mapping-finding)
+    (emacsvox-aural-doctor--unknown-voice-finding)
     (emacsvox-aural-doctor--speech-server-finding)
     (emacsvox-aural-doctor--training-finding))))
 

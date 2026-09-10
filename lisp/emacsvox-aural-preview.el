@@ -110,6 +110,13 @@ legacy inline voice command."
             (list 'emacsvox-aural-compiled-voice-p compiled)))
   (when (eq (emacsvox-aural-compiled-voice-command compiled) 'inaudible)
     (user-error "Inaudible voices cannot be previewed"))
+  (when-let* ((missing (cl-find 'unknown-voice
+                               (emacsvox-aural-compiled-voice-degradations compiled)
+                               :key (lambda (item) (plist-get item :reason)))))
+    (user-error "Cannot preview unresolved voice %s in palette %s%s"
+                (plist-get missing :requested) (plist-get missing :palette)
+                (if (plist-get missing :definition)
+                    (format "; unavailable personality %s" (plist-get missing :definition)) "")))
   (emacsvox-aural--make-concrete-plan
    :content
    (emacsvox-aural--make-concrete-content

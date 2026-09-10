@@ -137,6 +137,23 @@
         "Unavailable tones: (not-registered)"
         (emacsvox-aural-validation-report-errors report))))))
 
+(ert-deftest emacsvox-aural-validation-distinguishes-names-handles-and-style-values ()
+  "Validation follows nested presets and rejects arbitrary bound names."
+  (require 'voice-setup)
+  (let ((voice-setup--generated-acss-table (make-hash-table :test #'eq)))
+    (cl-letf (((symbol-function 'tts-define-voice-from-acss) #'ignore))
+      (voice-from-acss (make-acss :average-pitch 0)))
+    (dolist (voice '(nil inaudible bolden voice-bolden acss-a0
+                        (:preset acss-a0 :pitch-range 3)
+                        (:average-pitch 0) (bolden (:preset voice-bolden :richness 0))))
+      (should (emacsvox-aural-validation--voice-available-p voice 'acss-default)))
+    (should (emacsvox-aural-validation--voice-available-p (make-acss) 'acss-default))
+    (cl-progv '(bound-but-undeclared) '(voice-bolden)
+      (dolist (voice '(bound-but-undeclared acss-not-issued
+                      (:preset missing) (bolden (:preset missing :richness 0))))
+        (should-not (emacsvox-aural-validation--voice-available-p voice 'acss-default))))
+    (should-not (emacsvox-aural--voice-reference-known-p '(:preset acss-a0) 'acss-default t))))
+
 (provide 'emacsvox-aural-validation-tests)
 
 ;;; emacsvox-aural-validation-tests.el ends here

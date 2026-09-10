@@ -2407,14 +2407,13 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
     (let* ((draft (emacsvox-aural-voice-drafts--make
                    :key (list 'copy palette name)
                    :watches (emacsvox-aural-voice-drafts--watch (list palette))))
-           (proposal (emacsvox-aural-voice-drafts--prepare draft data sets :sources (list palette))))
-      (when rename
-        ;; The palette and its persistent mappings share one atomic file write.
-        (setf (emacsvox-aural-voice-save-aural-data proposal)
-              (let ((aural (copy-tree (emacsvox-aural-voice-save-aural-data proposal))))
-                (plist-put aural :user-rules
-                           (emacsvox-aural-voice-palettes--rename-references
-                            (plist-get aural :user-rules) source name)))))
+           (proposal (emacsvox-aural-voice-drafts--prepare
+                      draft data sets :sources (list palette)
+                      :user-rules-transform
+                      (when rename
+                        ;; Validate the complete renamed state, before either write.
+                        (lambda (rules)
+                          (emacsvox-aural-voice-palettes--rename-references rules source name))))))
       (emacsvox-aural-voice-drafts--save proposal)
       (unless (memq 'published (emacsvox-aural-voice-save-completed proposal))
         (user-error "%s did not complete (%s): %s. Retry %s; the original voice is unchanged"

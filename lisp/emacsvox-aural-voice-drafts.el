@@ -125,12 +125,13 @@ SOURCES identifies palettes to watch for edits made after opening."
                       id emacsvox-aural-voice-palette-registry))) ids))
 
 (cl-defun emacsvox-aural-voice-drafts--prepare
-    (draft palette choice-sets &key select sources
+    (draft palette choice-sets &key select sources user-rules-transform
            (aural-file emacsvox-aural-schemes-file)
            (routing-file emacsvox-aural-routing-profiles-file))
   "Freeze DRAFT, destination PALETTE and new CHOICE-SETS for one save.
 SELECT requests activation after complete persistence; nil saves to collection.
 SOURCES lists palettes whose effective definitions must remain unchanged.
+USER-RULES-TRANSFORM prepares coordinated rule edits before validating the result.
 AURAL-FILE and ROUTING-FILE identify the two existing stores."
   (when-let* ((previous (emacsvox-aural-voice-draft-proposal draft)))
     (when (memq (emacsvox-aural-voice-save-state previous)
@@ -179,6 +180,10 @@ AURAL-FILE and ROUTING-FILE identify the two existing stores."
     (setq aural (plist-put aural :voice-palettes
                            (cons palette (cl-remove id (plist-get aural :voice-palettes)
                                                     :key (lambda (p) (plist-get p :id))))))
+    (when user-rules-transform
+      (setq aural (plist-put aural :user-rules
+                             (funcall user-rules-transform
+                                      (copy-tree (plist-get aural :user-rules))))))
     (setq routing (plist-put routing :choice-sets sets))
     (let ((proposal
            (emacsvox-aural-voice-drafts--make-save

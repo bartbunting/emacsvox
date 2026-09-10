@@ -138,33 +138,9 @@
        diagnostics))
     (nreverse diagnostics)))
 
-(defun emacsvox-aural-validation--rule-voices (rule)
-  "Return voice values referenced by RULE."
-  (let* ((contribution (emacsvox-aural-rule-contribution rule))
-         (content (emacsvox-aural-contribution-content contribution))
-         voices)
-    (when (emacsvox-aural-content-patch-voice-set-p content)
-      (push (emacsvox-aural-content-patch-voice content) voices))
-    (dolist (action (emacsvox-aural-rule-actions rule))
-      (when (emacsvox-aural-action-voice action)
-        (push (emacsvox-aural-action-voice action) voices)))
-    voices))
-
 (defun emacsvox-aural-validation--voice-available-p (voice palette)
-  "Return non-nil when VOICE can be supplied by PALETTE or existing ACSS."
-  (cond
-   ((or (null voice) (eq voice 'inaudible)) t)
-   ((eq (type-of voice) 'acss) t)
-   ((and (listp voice) (proper-list-p voice))
-    (cl-every
-     (lambda (entry)
-       (emacsvox-aural-validation--voice-available-p entry palette))
-     voice))
-   ((symbolp voice)
-    (or
-     (emacsvox-aural-voice voice palette)
-     (boundp voice)))
-   (t nil)))
+  "Return non-nil when runtime VOICE resolves in PALETTE."
+  (emacsvox-aural--voice-reference-known-p voice palette))
 
 (defun emacsvox-aural-validation--scheme-cues (rules)
   "Return unique cue names referenced by RULES."
@@ -276,7 +252,7 @@
           (dolist (rule rules)
             (when (emacsvox-aural-validation--rule-ineffective-p rule)
               (push (emacsvox-aural-rule-id rule) unreachable))
-            (dolist (voice (emacsvox-aural-validation--rule-voices rule))
+            (dolist (voice (emacsvox-aural--rule-voice-values rule))
               (unless
                   (emacsvox-aural-validation--voice-available-p
                    voice palette)

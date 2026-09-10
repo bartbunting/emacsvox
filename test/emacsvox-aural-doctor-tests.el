@@ -241,5 +241,16 @@
       (delete-directory
        (file-name-directory emacsvox-aural-schemes-file) t))))
 
+(ert-deftest emacsvox-aural-doctor-reports-recent-unknown-voice-fallback ()
+  "Doctor names the requested voice and the palette used at the failure."
+  (let ((emacsvox-aural--unknown-voice-diagnostics nil))
+    (emacsvox-aural-compile-voice-style 'doctor-missing-voice 'acss-default)
+    (let ((finding (emacsvox-aural-doctor--unknown-voice-finding)))
+      (should (eq (emacsvox-aural-doctor-finding-severity finding) 'warning))
+      (should (string-match-p "doctor-missing-voice in acss-default"
+                              (emacsvox-aural-doctor-finding-detail finding)))
+      (should (string-match-p "used ordinary speech"
+                              (emacsvox-aural-doctor-finding-detail finding))))))
+
 (provide 'emacsvox-aural-doctor-tests)
 ;;; emacsvox-aural-doctor-tests.el ends here

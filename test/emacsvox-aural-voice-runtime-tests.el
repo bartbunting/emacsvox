@@ -17,7 +17,8 @@
 (defmacro emacsvox-test--with-owned-runtime (&rest body)
   "Run BODY with independent owned palettes and deliberately different legacy routing."
   (declare (indent 0) (debug t))
-  `(let* ((inputs (emacsvox-test--voice-resolution-inputs))
+  `(let* ((standard-root (emacsvox-aural-voice-palette 'acss-default))
+          (inputs (emacsvox-test--voice-resolution-inputs))
           (emacsvox-aural-voice-palette-registry (plist-get inputs :registry))
           (emacsvox-aural-routing--choice-sets (plist-get inputs :sets))
           (emacsvox-aural-voice-palette-override 'reading-owned)
@@ -46,6 +47,15 @@
           (omnivox-disabled-engine-ids nil)
           (omnivox-global-default-selector nil)
           (omnivox-allow-same-language-fallback t))
+     ;; Runtime palettes participate in the explicit standard inheritance tree.
+     ;; Keep the independent old-format choice fixtures for the data tests.
+     (puthash 'acss-default standard-root emacsvox-aural-voice-palette-registry)
+     (dolist (id '(reading-owned alternative-owned source-base))
+       (let ((data (emacsvox-aural-voice-palette-data-form
+                    (emacsvox-aural-voice-palette id))))
+         (setf (plist-get data :parent) 'acss-default)
+         (puthash id (emacsvox-aural-compile-voice-palette-data data)
+                  emacsvox-aural-voice-palette-registry)))
      ,@body))
 
 (ert-deftest emacsvox-aural-voice-runtime-registration-keeps-owned-and-legacy-scopes ()
