@@ -231,7 +231,7 @@
           (export (emacsvox-aural-voice-data--portable-export
                    (emacsvox-test--choice-fixture :expected-palette))))
      (should (= (plist-get palette :schema-version) 3))
-     (should-not (plist-get palette :parent))
+     (should (eq (plist-get palette :parent) 'acss-default))
      (should (eq (plist-get set :palette) 'copied))
      (should (equal (plist-get set :choices) (emacsvox-test--tuned-choices)))
      (should (equal (assq 'annotate (plist-get palette :entries))
@@ -278,18 +278,6 @@
           (should (equal aural (emacsvox-aural-read-user-data aural-file)))
           (should (equal routing (emacsvox-aural-read-routing-profiles routing-file))))
       (delete-directory directory t))))
-
-(ert-deftest emacsvox-aural-voice-choice-selector-only-palette-copy-cannot-reuse-owner ()
-  "The older palette copier cannot publish another owner's local references."
-  (require 'emacsvox-aural-voice-palettes)
-  (emacsvox-test--with-tuned-storage
-   (let ((before (hash-table-count emacsvox-aural-voice-palette-registry)))
-     (cl-letf (((symbol-function 'emacsvox-aural-voice-palettes--read-new-id)
-                (lambda (&rest _) (ert-fail "Unsupported copy prompted before validation")))
-               ((symbol-function 'emacsvox-aural-save-user-data)
-                (lambda (&rest _) (ert-fail "Unsupported copy wrote palette data"))))
-       (should-error (emacsvox-aural-voice-palettes--copy 'reading) :type 'user-error))
-     (should (= before (hash-table-count emacsvox-aural-voice-palette-registry))))))
 
 (ert-deftest emacsvox-aural-voice-choice-partial-save-retry-keeps-settings-paired ()
   "The actual save coordinator freezes IDs and keeps old settings until publication."

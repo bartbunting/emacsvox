@@ -192,6 +192,19 @@ the palette row builder is insufficient.
 
 ** TODO 3. Complete palette and voice operations — High
 
+The manager's Copy Palette now uses the complete copy and two-store save services.
+It copies effective entries and their ordered tuning, allocates independent local
+owners, uses the standard root for current palettes, and leaves selection alone.
+Parent completion excludes unrooted chains, missing parents, cycles, the current
+palette and its descendants. The obsolete test that required current palette copy
+to fail is replaced by manager-key persistence, isolation and write-failure tests.
+The common individual-adjustment editor also uses a valid local row setter.
+
+Validation: 130 affected source tests and three fresh compiled operation tests
+passed; incremental byte-code compilation, its final preflight and documentation
+release checks passed. Remaining slice-3 work is parent-change impact,
+common editor entry points and explicit Reset/Delete behavior.
+
 New Palette creates an empty current palette with an explicit parent. Editing
 the built-in root prepares a personal child draft; browsing and previewing write
 nothing. New Voice, Edit, Copy Voice and Copy Palette use the common complete

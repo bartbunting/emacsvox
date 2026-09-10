@@ -161,7 +161,8 @@ other row and all shared settings remain unchanged."
     (dolist (key emacsvox-aural-routing--choice-dimensions)
       (setq patch (plist-put patch key (plist-get style key))))
     (emacsvox-aural-routing--validate-choice-adjustments patch)
-    (setf (plist-get (cl-find id rows :test #'equal :key (lambda (row) (plist-get row :id))) :adjustments) patch)
+    (let ((row (cl-find id rows :test #'equal :key (lambda (row) (plist-get row :id)))))
+      (setf (plist-get row :adjustments) patch))
     (plist-put result :choices rows)))
 
 (defun emacsvox-aural-voice-editing--proposal

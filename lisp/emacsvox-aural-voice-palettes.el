@@ -278,13 +278,18 @@
     id))
 
 (defun emacsvox-aural-voice-palettes--parent-candidates (&optional exclude)
-  "Return palette candidates, omitting EXCLUDE."
-  (cons
-   "none"
-   (cl-remove
-    (and exclude (symbol-name exclude))
-    (emacsvox-aural-voice-palette-candidates)
-    :test #'equal)))
+  "Return rooted parent candidates that cannot introduce a cycle with EXCLUDE."
+  (cl-remove-if-not
+   (lambda (candidate)
+     (let ((id (intern candidate)) seen valid)
+       (while (and id (not (eq id exclude)) (not (memq id seen)))
+         (push id seen)
+         (let ((record (emacsvox-aural-voice-palette id)))
+           (if (eq id 'acss-default)
+               (setq valid (and record (emacsvox-aural-voice-palette-built-in record)) id nil)
+             (setq id (and record (emacsvox-aural-voice-palette-parent record))))))
+       valid))
+   (emacsvox-aural-voice-palette-candidates)))
 
 (defun emacsvox-aural-voice-palettes--read-parent (&optional current exclude)
   "Read a parent palette, offering CURRENT and omitting EXCLUDE."
@@ -294,7 +299,7 @@
           (emacsvox-aural-voice-palettes--parent-candidates exclude)
           nil 'must-match nil nil
           (if current (symbol-name current) "acss-default"))))
-    (unless (equal answer "none") (intern answer))))
+    (intern answer)))
 
 (defun emacsvox-aural-voice-palettes--persist-mutation (mutation)
   "Persist MUTATION against a staged palette registry, then publish it.
@@ -597,24 +602,27 @@ replaces live state.  Return the value of MUTATION."
 
 (defun emacsvox-aural-voice-palettes--copy (source)
   "Copy voice palette SOURCE to a prompted personal palette."
-  (when (eq (plist-get (emacsvox-aural-voice-palette-data-form
-                        (emacsvox-aural-voice-palette source)) :schema-version) 3)
-    (user-error "Copy this palette through the common voice editor to preserve individual settings"))
-  (let* ((source-palette (emacsvox-aural-voice-palette source))
-         (id
+  (require 'emacsvox-aural-voice-editing)
+  (let* ((id
           (emacsvox-aural-voice-palettes--read-new-id
            (format "%s-copy" source)))
-         (data
-          (emacsvox-aural-voice-palette-data-form source-palette)))
-    (setq data (plist-put data :id id))
-    (setq
-     data
-     (plist-put
-      data :summary
-      (read-string
-       "Copied palette purpose: "
-       (format "Editable copy of %s" source))))
-    (emacsvox-aural-voice-palettes--install-data data)
+         (summary (read-string "Copied palette purpose: " (format "Independent copy of %s" source)))
+         (entries (emacsvox-aural-voice-data--entries source emacsvox-aural-voice-palette-registry))
+         (sources (delete-dups (cons source (mapcar (lambda (item) (plist-get item :palette)) entries))))
+         (draft (emacsvox-aural-voice-drafts--make
+                 :key (list 'copy-palette source id)
+                 :watches (emacsvox-aural-voice-drafts--watch sources)))
+         (copy (emacsvox-aural-voice-data--copy-owned
+                emacsvox-aural-voice-palette-registry source id summary
+                emacsvox-aural-routing--choice-sets
+                (mapcar (lambda (item) (cons (car (plist-get item :entry))
+                                            (emacsvox-aural-voice-editing--new-id))) entries)))
+         (proposal (emacsvox-aural-voice-drafts--prepare
+                    draft (plist-get copy :palette) (plist-get copy :choice-sets) :sources sources)))
+    (emacsvox-aural-voice-drafts--save proposal)
+    (unless (memq 'published (emacsvox-aural-voice-save-completed proposal))
+      (user-error "Palette copy did not complete: %s. Retry Copy"
+                  (plist-get (emacsvox-aural-voice-save-result proposal) :message)))
     id))
 
 (defun emacsvox-aural-voice-palettes-copy ()

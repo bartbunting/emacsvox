@@ -170,6 +170,64 @@
                ,@body))
          (delete-directory directory t)))))
 
+(ert-deftest emacsvox-aural-voice-palettes-copy-complete-effective-palette ()
+  "Manager Copy preserves inherited tuning and saves independent local owners."
+  (emacsvox-test--with-palette-rename
+    (emacsvox-aural-register-voice-palette-data
+     '(:schema-version 3 :id child :summary "Child" :parent reading :routing owned :entries nil))
+    (emacsvox-aural-save-user-data)
+    (let ((before (emacsvox-aural-voice-runtime--resolve 'bolden 'child))
+          (selected (emacsvox-aural-effective-voice-palette)))
+      (with-temp-buffer
+        (emacsvox-aural-voice-palettes-mode)
+        (cl-letf (((symbol-function 'emacsvox-aural-voice-palettes--at-point-or-read)
+                   (lambda () 'child))
+                  ((symbol-function 'emacsvox-aural-voice-palettes-speak-current) #'ignore))
+          (should (eq (call-interactively (key-binding (kbd "c"))) 'renamed))))
+      (let* ((data (emacsvox-aural-voice-palette-data-form (emacsvox-aural-voice-palette 'renamed)))
+             (after (emacsvox-aural-voice-runtime--resolve 'bolden 'renamed))
+             (ref (plist-get (cdr (assq 'bolden (plist-get data :entries))) :local-choices))
+             (set (cl-find ref (plist-get (emacsvox-aural-read-routing-profiles) :choice-sets)
+                           :test #'equal :key (lambda (set) (plist-get set :id)))))
+        (should (eq (plist-get data :parent) 'acss-default))
+        (should (= (length (plist-get data :entries))
+                   (length (emacsvox-aural-effective-voice-entries 'child))))
+        (dolist (key '(:definition :choices :selectors :language))
+          (should (equal (plist-get before key) (plist-get after key))))
+        (should (eq (plist-get set :palette) 'renamed))
+        (should-not (equal ref (plist-get (cdr (assq 'bolden
+                         (plist-get (emacsvox-aural-voice-drafts--palette-data 'reading) :entries))) :local-choices)))
+        (should (equal data (cl-find 'renamed (plist-get (emacsvox-aural-read-user-data) :voice-palettes)
+                                    :key (lambda (item) (plist-get item :id)))))
+        (should (eq selected (emacsvox-aural-effective-voice-palette)))
+        ;; Changing the source parent cannot change the independent copy.
+        (puthash 'reading (emacsvox-aural-compile-voice-palette-data
+                          '(:schema-version 3 :id reading :summary "Changed" :parent acss-default :routing owned :entries nil))
+                 emacsvox-aural-voice-palette-registry)
+        (should (equal (plist-get after :choices)
+                       (plist-get (emacsvox-aural-voice-runtime--resolve 'bolden 'renamed) :choices)))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-copy-failure-preserves-source-and-retries ()
+  (dolist (writer '(emacsvox-aural-routing--write-user-data emacsvox-aural--write-user-data))
+    (emacsvox-test--with-palette-rename
+      (let ((before (emacsvox-aural-voice-drafts--palette-data 'reading)))
+        (cl-letf (((symbol-function writer) (lambda (&rest _) (error "Write failed"))))
+          (should-error (emacsvox-aural-voice-palettes--copy 'reading)))
+        (should-not (emacsvox-aural-voice-palette 'renamed))
+        (should (equal before (emacsvox-aural-voice-drafts--palette-data 'reading)))
+        (should (eq (emacsvox-aural-voice-palettes--copy 'reading) 'renamed))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-parent-candidates-are-rooted-and-acyclic ()
+  (emacsvox-test--with-voice-palettes
+    (dolist (pair '((a . acss-default) (b . a) (c . b) (other . acss-default)
+                    (orphan . nil) (missing . absent) (loop-one . loop-two) (loop-two . loop-one)))
+      (emacsvox-aural-register-voice-palette-data
+       (list :schema-version 3 :id (car pair) :summary "Test" :parent (cdr pair) :routing 'owned :entries nil)))
+    (let ((candidates (emacsvox-aural-voice-palettes--parent-candidates 'a)))
+      (dolist (valid '("acss-default" "other")) (should (member valid candidates)))
+      (dolist (invalid '("none" "a" "b" "c" "orphan" "missing" "loop-one" "loop-two"))
+        (should-not (member invalid candidates))))))
+
 (ert-deftest emacsvox-aural-voice-palettes-rename-preserves-owned-tuning-and-references ()
   "Rename preserves complete choices, inheritance, profiles and selection on disk."
   (emacsvox-test--with-palette-rename

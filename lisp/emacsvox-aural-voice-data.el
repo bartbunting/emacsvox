@@ -379,7 +379,8 @@ Missing local data requires an explicit portable export instead of a local copy.
                     (list :id id :palette destination :voice name :selectors (plist-get choices :selectors))) sets)))
         (push (cons name properties) entries)))
     (let ((palette (list :schema-version version :id destination :summary summary
-                         :parent nil :routing 'owned :entries (nreverse entries))))
+                         :parent (and (= version 3) 'acss-default)
+                         :routing 'owned :entries (nreverse entries))))
       (emacsvox-aural-compile-voice-palette-data palette)
       (emacsvox-aural-routing--merge-choice-sets local-sets sets)
       (list :palette palette :choice-sets (nreverse sets)))))
