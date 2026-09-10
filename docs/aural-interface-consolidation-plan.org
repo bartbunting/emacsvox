@@ -79,7 +79,7 @@ already owned by =bart=, so none supplies its current choices. Recheck fingerpri
 before conversion; this observation does not authorize silently capturing session
 bindings.
 
-Current-root sub-slice: =acss-default= and the supported definition constructor
+Current-root sub-slice =75204aa98=: =acss-default= and the supported definition constructor
 now produce schema 3 with Automatic choices. Registered personalities extend
 the root through a post-definition hook; declared aliases retain canonical
 identities. Terminal personality commands retain adapter behavior. Source tests
@@ -108,6 +108,22 @@ snapshots. Only =animate= is newly inherited. Both running Emacsvox sessions
 reported no temporary per-name routes; the current session had no dirty voice
 drafts. The proposal has not been applied. Recheck current files and sessions
 before applying it in slice 4, and retain durable originals then.
+
+Next step requires a bounded XHI handoff before missing-name enforcement.
+=voice-from-acss= returns a generated symbol, not an ACSS record.
+=emacsvox-maths-acss= and =emacsvox-wizards-generate-voice-sampler= put these
+symbols into speech personality properties. The existing raw-ACSS predicate
+recognizes records only. Consequently, rejecting every non-palette symbol would
+degrade these legitimate concrete voices; treating every bound or adapter-known
+symbol as a palette voice would restore the hidden fallback ADR 0018 rejects.
+
+Settle the identity and validation contract for generated concrete ACSS handles:
+how they retain raw-style behavior without entering the standard named inventory,
+how they are distinguished from unknown names without prefix guessing, and what
+happens if a personal name collides with a handle. Then return to High for the
+remaining implementation. No missing-name enforcement has been changed yet.
+The two implementation commits are checked and usable with the recorded
+transitional readers; the maintainer's Home edit remains separate and untouched.
 
 Create schema-3 standard entries without changing their raw style/personality
 representations. Make constructors produce current complete data. Give aliases,
