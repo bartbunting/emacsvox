@@ -238,21 +238,33 @@
     (intern answer)))
 
 (defun emacsvox-aural-voice-palettes--persist-mutation (mutation)
-  "Persist MUTATION against a staged palette registry, then publish it.
-
-MUTATION is called with a copy of the voice-palette registry dynamically
-installed.  The complete candidate registry is validated and saved before it
-replaces live state.  Return the value of MUTATION."
-  (let ((registry
-         (copy-hash-table emacsvox-aural-voice-palette-registry))
-        result)
+  "Persist only MUTATION's palette changes, preserving other saved settings.
+Validate the staged registry and reject changed saved destinations before
+writing. Publish the registry only after the atomic write succeeds."
+  (let* ((before emacsvox-aural-voice-palette-registry)
+         (registry (copy-hash-table before))
+         (file emacsvox-aural-schemes-file)
+         (fingerprint (emacsvox-aural-voice-drafts--file-id file))
+         (saved (or (emacsvox-aural-read-user-data file)
+                    (emacsvox-aural-user-data)))
+         (palettes (copy-tree (plist-get saved :voice-palettes))) result)
     (let ((emacsvox-aural-voice-palette-registry registry))
       (setq result (funcall mutation))
-      (maphash
-       (lambda (palette-id _)
-         (emacsvox-aural-effective-voice-entries palette-id))
-       registry)
-      (emacsvox-aural-save-user-data))
+      (maphash (lambda (id _) (emacsvox-aural-effective-voice-entries id)) registry)
+      (dolist (id (delete-dups (append (hash-table-keys before) (hash-table-keys registry))))
+        (let* ((old (gethash id before)) (new (gethash id registry))
+               (old-data (and old (emacsvox-aural-voice-palette-data-form old)))
+               (new-data (and new (emacsvox-aural-voice-palette-data-form new))))
+          (unless (equal old-data new-data)
+            (unless (equal old-data (cl-find id palettes :key (lambda (data) (plist-get data :id))))
+              (user-error "Saved palette %s differs from loaded data; reload before changing it" id))
+            (setq palettes (cl-remove id palettes :key (lambda (data) (plist-get data :id))))
+            (when new-data (push new-data palettes)))))
+      (setq saved (plist-put (copy-tree saved) :voice-palettes palettes))
+      (emacsvox-aural--validate-user-data saved)
+      (unless (equal fingerprint (emacsvox-aural-voice-drafts--file-id file))
+        (user-error "Saved presentation settings changed while preparing; retry"))
+      (emacsvox-aural--write-user-data saved file))
     (setq emacsvox-aural-voice-palette-registry registry)
     result))
 
@@ -642,8 +654,10 @@ replaces live state.  Return the value of MUTATION."
 (defun emacsvox-aural-voice-palettes-delete ()
   "Delete the personal voice palette at point when it is unreferenced."
   (interactive)
+  (require 'emacsvox-aural-voice-editor)
   (let* ((id (emacsvox-aural-voice-palettes--at-point-or-read))
          (palette (emacsvox-aural-voice-palette id))
+         (drafts (emacsvox-aural-voice-palettes--rename-drafts id "deleting"))
          (children (emacsvox-aural-voice-palettes--dependents id))
          (references (emacsvox-aural-voice-palettes--references id)))
     (when (emacsvox-aural-voice-palette-built-in palette)
@@ -658,10 +672,19 @@ replaces live state.  Return the value of MUTATION."
        id (string-join references ", ")))
     (unless (yes-or-no-p (format "Delete voice palette %s? " id))
       (user-error "Deletion cancelled"))
+    (unless (and (eq palette (emacsvox-aural-voice-palette id))
+                 (null (emacsvox-aural-voice-palettes--dependents id))
+                 (null (emacsvox-aural-voice-palettes--references id)))
+      (user-error "Palette or its uses changed during confirmation; review deletion again"))
+    (setq drafts (emacsvox-aural-voice-palettes--rename-drafts id "deleting"))
     (emacsvox-aural-voice-palettes--persist-mutation
      (lambda ()
        (remhash id emacsvox-aural-voice-palette-registry)
+       (when (eq id emacsvox-aural-voice-palette-override)
+         (emacsvox-aural-voice-runtime--validate-selection
+          (or (emacsvox-aural-effective-scheme-provider 'voice-palette) 'acss-default)))
        id))
+    (emacsvox-aural-voice-palettes--discard-clean-drafts drafts)
     (when (eq id emacsvox-aural-voice-palette-override)
       (emacsvox-aural-select-voice-palette nil))
     (emacsvox-aural-voice-palettes-refresh)
@@ -833,7 +856,7 @@ ACTION describes the operation and defaults to renaming."
       new)))
 
 (defun emacsvox-aural-voice-palettes-activate ()
-  "Activate the voice palette at point as an override."
+  "Use the selected voice palette for this session."
   (interactive)
   (let ((id (emacsvox-aural-voice-palettes--at-point-or-read)))
     (emacsvox-aural-select-voice-palette id)
@@ -843,7 +866,7 @@ ACTION describes the operation and defaults to renaming."
     id))
 
 (defun emacsvox-aural-voice-palettes-follow-baseline ()
-  "Clear the palette override and use the compatibility baseline."
+  "Use the baseline voice palette again for this session."
   (interactive)
   (emacsvox-aural-select-voice-palette nil)
   (emacsvox-aural-voice-palettes-refresh
@@ -1394,7 +1417,7 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
     (when (and (emacsvox-aural-voice-palette-parent record)
                (assq voice (emacsvox-aural-effective-voice-entries
                             (emacsvox-aural-voice-palette-parent record))))
-      (user-error "Renaming this override would reveal its inherited voice; copy it first")))
+      (user-error "Renaming this personal entry would reveal its inherited voice; copy it first")))
   (emacsvox-aural-voice-palettes--check-voice-references voice "renaming" t))
 
 (defun emacsvox-aural-voice-palettes--check-voice-references (voice action &optional remap)
@@ -1431,7 +1454,11 @@ RESET requires an inherited replacement; deletion requires that there is none."
   (let* ((record (emacsvox-aural-voice-palette palette))
          (data (emacsvox-aural-voice-palette-data-form record))
          (parent (emacsvox-aural-voice-palette-parent record))
-         (fallback (and parent (assq voice (emacsvox-aural-effective-voice-entries parent))))
+         (inherited (and parent (cl-find voice (emacsvox-aural-voice-data--entries
+                                                parent emacsvox-aural-voice-palette-registry)
+                                         :key (lambda (item) (car (plist-get item :entry))))))
+         (fallback (plist-get inherited :entry))
+         (source (plist-get inherited :palette))
          drafts)
     (when (emacsvox-aural-voice-palette-built-in record)
       (user-error "Built-in voices cannot be deleted"))
@@ -1445,11 +1472,15 @@ RESET requires an inherited replacement; deletion requires that there is none."
     (setq drafts (emacsvox-aural-voice-palettes--rename-drafts palette "deleting"))
     (unless (yes-or-no-p
              (if reset
-                 (format "Reset %s in %s and restore its inherited voice from %s? " voice palette parent)
+                 (format "Reset %s in %s and restore its inherited voice from %s? " voice palette source)
                (format "Delete custom voice %s from palette %s? " voice palette)))
       (user-error "%s cancelled" (if reset "Reset" "Deletion")))
-    (unless (eq record (emacsvox-aural-voice-palette palette))
-      (user-error "Palette changed while confirming deletion; try again"))
+    (unless (and (eq record (emacsvox-aural-voice-palette palette))
+                 (equal inherited
+                        (and parent (cl-find voice (emacsvox-aural-voice-data--entries
+                                                    parent emacsvox-aural-voice-palette-registry)
+                                             :key (lambda (item) (car (plist-get item :entry)))))))
+      (user-error "Palette or inherited voice changed during confirmation; review it again"))
     (unless fallback (emacsvox-aural-voice-palettes--check-voice-references voice "deleting"))
     (setq drafts (emacsvox-aural-voice-palettes--rename-drafts palette "deleting"))
     (emacsvox-aural-voice-palettes--install-data
@@ -1617,7 +1648,7 @@ A built-in voice opens a personal draft; save it to create a personal child."
       "RET voice details    P preview; A preview every voice\n"
       "T comparison text    S stop preview\n"
       "SPC speak voice      t tune voice\n"
-      "e also tunes; s also stops for compatibility\n"
+      "e also opens the voice editor; s also stops previews\n"
       "c copy voice         N new voice\n"
       "r rename a custom voice and its mappings\n"
       "R reset to parent    d delete custom voice, with confirmation\n"

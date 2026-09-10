@@ -311,6 +311,38 @@ source-buffer argument is retained for older callers but is ignored."
       (insert-file-contents-literally file)
       (secure-hash 'sha256 (current-buffer)))))
 
+(defun emacsvox-aural-profile--validate-startup-voices (profile saved)
+  "Validate PROFILE's voice references against SAVED startup data.
+Use saved personal rules, palette ancestry and selected options. Session and
+buffer rules are deliberately excluded because they do not survive restart."
+  (let ((emacsvox-aural-voice-palette-registry
+         (emacsvox-aural--built-in-voice-palette-registry))
+        (palette (plist-get profile :voice-palette))
+        (rules (append (emacsvox-aural-effective-scheme-rules 'default)
+                       (emacsvox-aural--compile-rule-list
+                        (plist-get saved :user-rules) 'user "saved startup rules"))))
+    (dolist (data (plist-get saved :voice-palettes))
+      (emacsvox-aural-register-voice-palette-data data))
+    (when-let* ((missing (emacsvox-aural-validate-voice-palette palette)))
+      (user-error "Startup palette %s has unavailable personality definitions: %S" palette missing))
+    (dolist (id (plist-get profile :feature-fragments))
+      (let* ((data (cl-find id (plist-get saved :feature-fragments)
+                            :key (lambda (entry) (plist-get entry :id))))
+             (compiled (if data (emacsvox-aural--compile-feature-fragment data)
+                         (emacsvox-aural-feature-fragment-entry-compiled
+                          (emacsvox-aural-feature-fragment-entry id)))))
+        (setq rules (append rules (emacsvox-aural-scheme-rules compiled)))))
+    ;; Loaded integration rules are runtime declarations, not persisted data.
+    (maphash (lambda (_ fragment)
+               (emacsvox-aural--validate-rule-voice-references
+                (cl-remove-if-not #'emacsvox-aural-rule-enabled
+                                  (emacsvox-aural-scheme-rules
+                                   (emacsvox-aural-module-fragment-compiled fragment)))
+                palette))
+             emacsvox-aural-module-fragment-registry)
+    (emacsvox-aural--validate-rule-voice-references
+     (cl-remove-if-not #'emacsvox-aural-rule-enabled rules) palette t)))
+
 (defun emacsvox-aural-profile-set-startup-palette (palette &optional new-profile)
   "Save PALETTE for startup without applying live presentation settings.
 Change only the selected saved profile's palette field.  NEW-PROFILE supplies
@@ -342,6 +374,7 @@ an explicitly reviewed new profile when no saved profile is selected."
                (not (equal new-profile (emacsvox-aural-capture-profile-data id (plist-get new-profile :summary)))))
       (user-error "Current presentation settings changed; review the new setup again"))
     (setq profile (plist-put profile :voice-palette palette))
+    (emacsvox-aural-profile--validate-startup-voices profile saved)
     (let ((emacsvox-aural-profile-registry registry))
       (emacsvox-aural-register-profile profile :source file :replace (not new-profile)))
     (setq saved (plist-put (copy-tree saved) :profiles

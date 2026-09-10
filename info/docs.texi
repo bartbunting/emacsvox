@@ -5738,7 +5738,7 @@ Open the common voice editor without changing the palette or its selection.
 @findex emacsvox-aural-voice-palettes-activate
 
 @format
-Activate the voice palette at point as an override.
+Use the selected voice palette for this session.
 @end format
 @end deffn
 
@@ -5850,7 +5850,7 @@ Export effective portable voices, explicitly omitting local physical choices.
 @findex emacsvox-aural-voice-palettes-follow-baseline
 
 @format
-Clear the palette override and use the compatibility baseline.
+Use the baseline voice palette again for this session.
 @end format
 @end deffn
 
@@ -16547,6 +16547,7 @@ Provide additional advice to outline-mode
 @subsubsection emacsvox-outline-speak-backward-heading
 @deffn {Command} emacsvox-outline-speak-backward-heading
 @findex emacsvox-outline-speak-backward-heading
+
 @format
 Analogous to outline-backward-same-level
 except that the outline section is  spoken
@@ -23192,7 +23193,6 @@ Speak ISO date-time.
 @end table
 
 @findex emacsvox-wizards-squeeze-blanks
-
 @format
 Squeeze multiple blank lines.
 

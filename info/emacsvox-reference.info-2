@@ -3997,6 +3997,7 @@ Provide additional advice to outline-mode
 .................................................
 
  -- Command: emacsvox-outline-speak-backward-heading
+
      Analogous to outline-backward-same-level
      except that the outline section is  spoken
 

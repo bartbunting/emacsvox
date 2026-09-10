@@ -5267,7 +5267,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
  -- Command: emacsvox-aural-voice-palettes-activate
 
-     Activate the voice palette at point as an override.
+     Use the selected voice palette for this session.
 
 2.59.1.26 emacsvox-aural-voice-palettes-audition
 ................................................
@@ -5355,7 +5355,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
  -- Command: emacsvox-aural-voice-palettes-follow-baseline
 
-     Clear the palette override and use the compatibility baseline.
+     Use the baseline voice palette again for this session.
 
 2.59.1.38 emacsvox-aural-voice-palettes-help
 ............................................

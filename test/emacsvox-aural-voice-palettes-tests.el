@@ -390,8 +390,10 @@
   (emacsvox-test--with-voice-palettes
     (let (saved)
       (cl-letf
-          (((symbol-function 'emacsvox-aural-save-user-data)
-            (lambda (&optional _)
+          (((symbol-function 'emacsvox-aural-read-user-data)
+            (lambda (&optional _) (emacsvox-aural-user-data)))
+           ((symbol-function 'emacsvox-aural--write-user-data)
+            (lambda (&rest _)
               (setq
                saved
                (emacsvox-aural-voice-palette 'reading))
@@ -418,8 +420,8 @@
             'acss-default))
           (let (staged-registry staged-summary)
             (cl-letf
-                (((symbol-function 'emacsvox-aural-save-user-data)
-                  (lambda (&optional _)
+                (((symbol-function 'emacsvox-aural--write-user-data)
+                  (lambda (&rest _)
                     (setq
                      staged-registry
                      emacsvox-aural-voice-palette-registry
@@ -448,15 +450,18 @@
     (emacsvox-aural-register-voice-palette-data
      emacsvox-test--voice-palette-data)
     (setq emacsvox-aural-voice-palette-override 'reading)
-    (let ((before emacsvox-aural-voice-palette-registry)
+    (let ((emacsvox-aural-schemes-file (make-temp-name (expand-file-name "palette-test-" temporary-file-directory)))
+          (before emacsvox-aural-voice-palette-registry)
           staged-registry
           staged-entry)
       (cl-letf
-          (((symbol-function 'emacsvox-aural-voice-palettes--at-point-or-read)
+          (((symbol-function 'emacsvox-aural-read-user-data)
+            (lambda (&optional _) (emacsvox-aural-user-data)))
+           ((symbol-function 'emacsvox-aural-voice-palettes--at-point-or-read)
             (lambda (&optional _) 'reading))
            ((symbol-function 'yes-or-no-p) (lambda (&rest _) t))
-           ((symbol-function 'emacsvox-aural-save-user-data)
-            (lambda (&optional _)
+           ((symbol-function 'emacsvox-aural--write-user-data)
+            (lambda (&rest _)
               (setq
                staged-registry emacsvox-aural-voice-palette-registry
                staged-entry (emacsvox-aural-voice-palette 'reading))
@@ -474,8 +479,8 @@
                'emacsvox-aural-voice-palettes--at-point-or-read)
               (lambda (&optional _) 'reading))
              ((symbol-function 'yes-or-no-p) (lambda (&rest _) t))
-             ((symbol-function 'emacsvox-aural-save-user-data)
-              (lambda (&optional _)
+             ((symbol-function 'emacsvox-aural--write-user-data)
+              (lambda (&rest _)
                 (setq
                  saved-registry
                  emacsvox-aural-voice-palette-registry)))
@@ -637,7 +642,7 @@
       (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) nil)))
         (should-error (emacsvox-aural-voice-palette-previews-delete) :type 'user-error))
       (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t))
-                ((symbol-function 'emacsvox-aural-save-user-data)
+                ((symbol-function 'emacsvox-aural--write-user-data)
                  (lambda (&rest _) (error "Simulated delete failure"))))
         (should-error (emacsvox-aural-voice-palette-previews-delete)))
       (should (eq (tabulated-list-get-id) 'custom-voice))
@@ -1252,6 +1257,167 @@
                 (should (eq (tabulated-list-get-id) 'bolden)))))
         (when (buffer-live-p buffer) (kill-buffer buffer)))
       (should (eq selected emacsvox-aural-voice-palette-override)))))
+
+(ert-deftest emacsvox-aural-voice-palettes-review-reset-retains-newer-saved-profile ()
+  :tags '(voice-palette-tools)
+  (require 'emacsvox-aural-profile-service)
+  (emacsvox-test--with-voice-save
+    (emacsvox-aural-voice-drafts--discard draft)
+    (let ((emacsvox-aural-profile-registry (make-hash-table :test #'eq))
+          (emacsvox-aural-active-profile 'startup)
+          (emacsvox-aural-ui-speech-function #'ignore))
+      (emacsvox-aural-register-profile
+       '(:id startup :summary "Startup" :feature-fragments nil :sound-pack nil
+         :voice-palette reading-owned :spatial (:enabled nil)))
+      (emacsvox-aural-save-user-data)
+      (let* ((saved (emacsvox-aural-read-user-data))
+             (profile (car (plist-get saved :profiles))))
+        (setf (plist-get profile :voice-palette) 'alternative-owned)
+        (emacsvox-aural--write-user-data saved)
+        (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+          (emacsvox-aural-voice-palettes--delete-voice 'reading-owned 'bolden t))
+        (should (equal (plist-get (emacsvox-aural-read-user-data) :profiles)
+                       (plist-get saved :profiles)))))))
+(ert-deftest emacsvox-aural-voice-palettes-review-reset-names-actual-source ()
+  :tags '(voice-palette-tools)
+  (require 'emacsvox-aural-profile-service)
+  (emacsvox-test--with-voice-save
+    (emacsvox-aural-voice-drafts--discard draft)
+    (let ((emacsvox-aural-ui-speech-function #'ignore))
+      (emacsvox-aural-register-voice-palette-data
+       '(:schema-version 3 :id middle :summary "Middle" :parent acss-default :routing owned :entries nil))
+      (let ((data (emacsvox-aural-voice-drafts--palette-data 'reading-owned)))
+        (setf (plist-get data :parent) 'middle)
+        (puthash 'reading-owned (emacsvox-aural-compile-voice-palette-data data) emacsvox-aural-voice-palette-registry))
+      (emacsvox-aural-save-user-data)
+      (cl-letf (((symbol-function 'yes-or-no-p)
+                 (lambda (prompt) (should (string-match-p "from acss-default" prompt)) t)))
+        (emacsvox-aural-voice-palettes--delete-voice 'reading-owned 'bolden t)))))
+(ert-deftest emacsvox-aural-voice-palettes-review-startup-rejects-missing-saved-rule-voice ()
+  :tags '(voice-palette-tools)
+  (require 'emacsvox-aural-profile-service)
+  (emacsvox-test--with-voice-save
+    (let ((emacsvox-aural-profile-registry (make-hash-table :test #'eq))
+          (emacsvox-aural-active-profile 'startup)
+          (emacsvox-aural-user-rules nil))
+      (emacsvox-aural-voice-palettes--copy-owned-voice 'reading-owned 'bolden 'custom-startup)
+      (emacsvox-aural-register-profile
+       '(:id startup :summary "Startup" :feature-fragments nil :sound-pack nil
+         :voice-palette reading-owned :spatial (:enabled nil)))
+      (setq emacsvox-aural-user-rules '((:id use :render (:content (:voice custom-startup)))))
+      (emacsvox-aural-save-user-data)
+      (should-error (emacsvox-aural-profile-set-startup-palette 'alternative-owned)))))
+
+(ert-deftest emacsvox-aural-voice-palettes-review-reset-rechecks-inherited-source ()
+  :tags '(voice-palette-tools)
+  (require 'emacsvox-aural-profile-service)
+  (emacsvox-test--with-voice-save
+    (emacsvox-aural-voice-drafts--discard draft)
+    (let ((before (emacsvox-aural-read-user-data))
+          (emacsvox-aural-ui-speech-function #'ignore))
+      (cl-letf (((symbol-function 'yes-or-no-p)
+                 (lambda (&rest _)
+                   (let* ((root (emacsvox-aural-voice-drafts--palette-data 'acss-default))
+                          (entry (assq 'bolden (plist-get root :entries))))
+                     (setcdr entry '(:style (:family nil :average-pitch 1 :pitch-range nil :stress nil :richness nil) :choices nil))
+                     (puthash 'acss-default (emacsvox-aural-compile-voice-palette-data root t)
+                              emacsvox-aural-voice-palette-registry))
+                   t)))
+        (should-error (emacsvox-aural-voice-palettes--delete-voice 'reading-owned 'bolden t)))
+      (should (assq 'bolden (plist-get (emacsvox-aural-voice-drafts--palette-data 'reading-owned) :entries)))
+      (should (equal before (emacsvox-aural-read-user-data))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-review-delete-active-validates-baseline ()
+  :tags '(voice-palette-tools)
+  (require 'emacsvox-aural-profile-service)
+  (emacsvox-test--with-voice-save
+    (emacsvox-aural-voice-drafts--discard draft)
+    (let ((emacsvox-aural-profile-registry (make-hash-table :test #'eq))
+          (emacsvox-aural-user-rules nil)
+          (emacsvox-aural-session-rules nil))
+      (dolist (id '(reading-owned alternative-owned))
+        (emacsvox-aural-voice-palettes--copy-owned-voice id 'bolden 'custom-startup))
+      (setq emacsvox-aural-session-rules '((:id use :render (:content (:voice custom-startup)))))
+      (let ((before (emacsvox-aural-read-user-data)))
+        (cl-letf (((symbol-function 'emacsvox-aural-voice-palettes--at-point-or-read) (lambda () 'reading-owned))
+                  ((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+          (should-error (emacsvox-aural-voice-palettes-delete)))
+        (should (eq emacsvox-aural-voice-palette-override 'reading-owned))
+        (should (emacsvox-aural-voice-palette 'reading-owned))
+        (should (equal before (emacsvox-aural-read-user-data)))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-review-delete-retains-dirty-editor ()
+  :tags '(voice-palette-tools)
+  (require 'emacsvox-aural-profile-service)
+  (emacsvox-test--with-voice-save
+    (let ((emacsvox-aural-profile-registry (make-hash-table :test #'eq))
+          (before (emacsvox-aural-read-user-data)))
+      (emacsvox-aural-voice-drafts--edit draft '(:pitch 1))
+      (cl-letf (((symbol-function 'emacsvox-aural-voice-palettes--at-point-or-read) (lambda () 'reading-owned))
+                ((symbol-function 'yes-or-no-p) (lambda (&rest _) (ert-fail "Unfinished edits must be checked first"))))
+        (should-error (emacsvox-aural-voice-palettes-delete) :type 'user-error))
+      (should (equal (emacsvox-aural-voice-draft-working draft) '(:pitch 1)))
+      (should (equal before (emacsvox-aural-read-user-data))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-review-startup-uses-saved-not-session-rules ()
+  :tags '(voice-palette-tools)
+  (require 'emacsvox-aural-profile-service)
+  (emacsvox-test--with-voice-save
+    (let ((emacsvox-aural-profile-registry (make-hash-table :test #'eq))
+          (emacsvox-aural-active-profile 'startup)
+          (emacsvox-aural-user-rules nil)
+          (emacsvox-aural-session-rules '((:id temporary :render (:content (:voice unknown-at-startup))))))
+      (emacsvox-aural-register-profile
+       '(:id startup :summary "Startup" :feature-fragments nil :sound-pack nil
+         :voice-palette reading-owned :spatial (:enabled nil)))
+      (emacsvox-aural-save-user-data)
+      (setq emacsvox-aural-user-rules '((:id unsaved :render (:content (:voice unknown-at-startup)))))
+      (should (eq (emacsvox-aural-profile-set-startup-palette 'alternative-owned) 'startup))
+      (should-not (plist-get (emacsvox-aural-read-user-data) :user-rules)))))
+
+
+(ert-deftest emacsvox-aural-voice-palettes-review-reset-rejects-newer-saved-destination ()
+  :tags '(voice-palette-tools)
+  (emacsvox-test--with-voice-save
+    (emacsvox-aural-voice-drafts--discard draft)
+    (let* ((saved (emacsvox-aural-read-user-data))
+           (changed (cl-find 'reading-owned (plist-get saved :voice-palettes)
+                             :key (lambda (data) (plist-get data :id))))
+           (before (emacsvox-aural-voice-drafts--palette-data 'reading-owned)))
+      (setf (plist-get changed :summary) "Changed elsewhere")
+      (emacsvox-aural--write-user-data saved)
+      (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+        (should-error (emacsvox-aural-voice-palettes--delete-voice 'reading-owned 'bolden t)))
+      (should (equal before (emacsvox-aural-voice-drafts--palette-data 'reading-owned)))
+      (should (equal saved (emacsvox-aural-read-user-data))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-review-startup-checks-selected-saved-options ()
+  :tags '(voice-palette-tools)
+  (require 'emacsvox-aural-profile-service)
+  (emacsvox-test--with-voice-save
+    (let ((emacsvox-aural-profile-registry (make-hash-table :test #'eq))
+          (emacsvox-aural-feature-fragment-registry
+           (copy-hash-table emacsvox-aural-feature-fragment-registry))
+          (emacsvox-aural-active-profile 'startup)
+          (emacsvox-aural-user-rules nil)
+          (emacsvox-aural-enabled-feature-fragments nil))
+      (emacsvox-aural-voice-palettes--copy-owned-voice 'reading-owned 'bolden 'custom-startup)
+      (emacsvox-aural-register-feature-fragment
+       '(:schema-version 1 :id startup-feature :summary "Saved option"
+         :rules ((:id use :render (:content (:voice custom-startup))))))
+      (emacsvox-aural-register-profile
+       '(:id startup :summary "Startup" :feature-fragments (startup-feature)
+         :sound-pack nil :voice-palette reading-owned :spatial (:enabled nil)))
+      (emacsvox-aural-save-user-data)
+      ;; Live option contents and activation have diverged from the saved profile.
+      (remhash 'startup-feature emacsvox-aural-feature-fragment-registry)
+      (emacsvox-aural-register-feature-fragment
+       '(:schema-version 1 :id startup-feature :summary "Live option" :rules nil))
+      (let ((before (emacsvox-aural-read-user-data)))
+        (should-error (emacsvox-aural-profile-set-startup-palette 'alternative-owned))
+        (should (equal before (emacsvox-aural-read-user-data)))
+        (should (eq (plist-get (emacsvox-aural-profile-entry-data
+                               (emacsvox-aural-profile-entry 'startup)) :voice-palette) 'reading-owned))))))
 
 (provide 'emacsvox-aural-voice-palettes-tests)
 ;;; emacsvox-aural-voice-palettes-tests.el ends here
