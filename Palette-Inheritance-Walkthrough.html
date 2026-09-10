@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Palette Inheritance Walkthrough (Emacsvox User Manual)</title>
+
+<meta name="description" content="Palette Inheritance Walkthrough (Emacsvox User Manual)">
+<meta name="keywords" content="Palette Inheritance Walkthrough (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Voices-And-Routing.html" rel="up" title="Voices And Routing">
+<link href="Renaming-Voices-And-Palettes.html" rel="next" title="Renaming Voices And Palettes">
+<link href="Personal-Palette-Walkthrough.html" rel="prev" title="Personal Palette Walkthrough">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Palette-Inheritance-Walkthrough">
+<div class="nav-panel">
+<p>
+Next: <a href="Renaming-Voices-And-Palettes.html" accesskey="n" rel="next">Rename Voices And Palettes</a>, Previous: <a href="Personal-Palette-Walkthrough.html" accesskey="p" rel="prev">Walkthrough: Make A Personal Reading Palette</a>, Up: <a href="Voices-And-Routing.html" accesskey="u" rel="up">Choose And Manage Voice Palettes</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Walkthrough_003a-Inheritance_002c-Aliases_002c-And-Reset"><span>6.5.2 Walkthrough: Inheritance, Aliases, And Reset<a class="copiable-link" href="#Walkthrough_003a-Inheritance_002c-Aliases_002c-And-Reset"> &para;</a></span></h4>
+
+<p>Use <code class="code">reading-demo</code> from the previous example, or another personal palette
+with <code class="code">acss-default</code> as its parent.
+</p>
+<ol class="enumerate">
+<li> In the palette manager, create <code class="code">reading-child-demo</code> with <kbd class="kbd">N</kbd> and choose
+<code class="code">reading-demo</code> as its parent. The chain is now
+<code class="code">reading-child-demo -&gt; reading-demo -&gt; acss-default</code>.
+
+</li><li> Enter the child and inspect <code class="code">bolden</code>&rsquo;s <em class="emph">Source</em>. If <code class="code">reading-demo</code> has a
+direct <code class="code">bolden</code> entry, it supplies the child&rsquo;s whole entry. Otherwise
+<code class="code">acss-default</code> supplies it. <kbd class="kbd">O</kbd> opens the supplying palette; <kbd class="kbd">u</kbd> shows
+Where Used, including known references, aliases, and affected descendants.
+
+</li><li> The alias <code class="code">voice-bolden</code> refers to the same named voice as <code class="code">bolden</code>.
+It is an alternative spelling used by integrations, not another entry
+with independent settings. You do not create or edit aliases in this view.
+
+</li><li> Return to the child palette and copy <code class="code">bolden</code> with <kbd class="kbd">c</kbd>. Give the copy an
+unused name such as <code class="code">reading-heading-demo</code>. Change its pitch, compare it,
+and choose <em class="emph">Save to collection without selecting</em>. You now have a separate
+named entry. A rule must select this new name before ordinary content uses
+it; copying alone does not remap headings.
+
+</li><li> For a Reset experiment, edit the child&rsquo;s inherited <code class="code">bolden</code>, change one
+field, and save to the collection. Its Source becomes the child. Back in
+the voice list, press <kbd class="kbd">R</kbd> on <code class="code">bolden</code>. The confirmation names the parent
+entry that will take over. After confirming, <code class="code">bolden</code> remains in the list
+and Source returns to that provider.
+
+</li><li> To remove the custom copy, select <code class="code">reading-heading-demo</code> and press <kbd class="kbd">d</kbd>.
+This deletes it if there is no inherited replacement or known use. If you
+assigned it to a rule, remove or remap that rule first. Reset is for a local
+entry with an inherited replacement; Delete is for a removable custom name.
+</li></ol>
+
+<p>The standard root ensures standard voices remain available after Reset. It
+cannot be deleted or edited here. A palette can contain additional custom
+names; the standard list grows when loaded integrations register voices.
+Copy Palette is different from New Palette: it copies all current effective
+entries and stops following edits to the source palette, while still inheriting
+new standard names from <code class="code">acss-default</code>. Definitions referring to an existing
+personality still use that personality&rsquo;s settings. A copy is not a recording
+of its sound.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Renaming-Voices-And-Palettes.html">Rename Voices And Palettes</a>, Previous: <a href="Personal-Palette-Walkthrough.html">Walkthrough: Make A Personal Reading Palette</a>, Up: <a href="Voices-And-Routing.html">Choose And Manage Voice Palettes</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Installed Voices And Engines (Emacsvox User Manual)</title>
+
+<meta name="description" content="Installed Voices And Engines (Emacsvox User Manual)">
+<meta name="keywords" content="Installed Voices And Engines (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
+<link href="Sounds-And-Space.html" rel="next" title="Sounds And Space">
+<link href="Editing-Named-Voices.html" rel="prev" title="Editing Named Voices">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Installed-Voices-And-Engines">
+<div class="nav-panel">
+<p>
+Next: <a href="Sounds-And-Space.html" accesskey="n" rel="next">Sounds, Tones, And Spatial Cues</a>, Previous: <a href="Editing-Named-Voices.html" accesskey="p" rel="prev">Edit A Named Voice</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Browse-Installed-Voices-And-Choose-Engines"><span>6.7 Browse Installed Voices And Choose Engines<a class="copiable-link" href="#Browse-Installed-Voices-And-Choose-Engines"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-Voice-Workbench"></a>
+<a class="index-entry-id" id="index-physical-voices"></a>
+<a class="index-entry-id" id="index-speech-engine-preference"></a>
+
+<p>Use <em class="emph">Voice Workbench</em> when the question involves installed voices or engines.  Open it from Aural Home with <kbd class="kbd">W</kbd>.  Its main views are:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">e</kbd></dt>
+<dd><p>Engines, such as Flite or Eloquence. Start here to try voices from a
+particular synthesizer or inspect its availability.
+</p></dd>
+<dt><kbd class="kbd">v</kbd></dt>
+<dd><p>Physical voices: the actual installed voices you can hear. Use this
+list to listen, compare, and experiment with their parameters. On an engine
+row, this key opens just that engine&rsquo;s voices.
+</p></dd>
+<dt><kbd class="kbd">l</kbd></dt>
+<dd><p>Named voices (the <em class="emph">Logical voices</em> view): roles such as <em class="emph">bolden</em> and <em class="emph">annotate</em>. Start here
+to change which physical voice reads a role.
+</p></dd>
+<dt><kbd class="kbd">s</kbd></dt>
+<dd><p>Styles and effects for those named voices. Use this view to inspect
+their parameters and what their current engines support.
+</p></dd>
+</dl>
+
+<p>For physical voices, choose <em class="emph">Browse installed voices</em> in Home, then press
+<kbd class="key">RET</kbd> or <kbd class="kbd">v</kbd> on an engine to browse its voices.  <kbd class="key">RET</kbd>
+on a voice shows details; <kbd class="kbd">P</kbd> plays a named sample.  Filters
+set with <kbd class="kbd">F</kbd> and each view&rsquo;s selected row and column survive
+navigation through Home. The engine selected for browsing is a temporary
+limit: switching to the logical, styles, or engine view removes it.
+Pressing <kbd class="kbd">v</kbd> from a voice list also removes that temporary
+limit. Your explicit filters still apply; <kbd class="kbd">C</kbd> clears all
+filters to show voices across engines.
+Press <kbd class="kbd">q</kbd> in an engine&rsquo;s voice list to return to that engine&rsquo;s
+row and column.  Press <kbd class="kbd">q</kbd> again from the engine list to leave
+the workbench.  The direct view shortcuts remain available.
+</p>
+<p>The engine list reports <em class="emph">Availability</em> before routing preferences.  An engine
+with a missing runtime stays visible as <em class="emph">unavailable</em>, with its reason under
+<em class="emph">Last failure</em>.  <em class="emph">Routing policy: allowed</em> means the policy permits using that
+engine; it does not mean its runtime is installed.  Disabled policies, health,
+and temporary failures are reported separately.
+</p>
+<p><kbd class="kbd">A</kbd> plays available matching voices in displayed order,
+skipping unavailable rows.  <kbd class="kbd">B</kbd> starts with the selected voice
+as A and offers another matching voice as B.  Choose <em class="emph">Search all engines</em>
+inside that prompt to compare outside the current filters.  Both samples use
+the same sentence.  <kbd class="kbd">T</kbd> edits it, <kbd class="kbd">F</kbd> filters,
+<kbd class="kbd">C</kbd> clears filters, and <kbd class="kbd">R</kbd> refreshes inventory.
+</p>
+<p>Labels identify each engine and voice.  Customize
+<code class="code">emacsvox-aural-preview-label-verbosity</code> for names, brief letters or numbers,
+or no labels.  Labels and samples share one preview sequence:
+<kbd class="kbd">S</kbd> or foreground navigation cancels the remaining samples.
+An exact-preview failure is reported instead of accepting a different voice
+as the requested one.  Availability and capability reports describe what the
+adapter advertises; they are not a listening test of every parameter.
+</p>
+
+<ul class="mini-toc">
+<li><a href="Physical-Voice-Experiments.html" accesskey="1">Experiment With An Installed Voice</a></li>
+<li><a href="Keeping-A-Voice-Experiment.html" accesskey="2">Walkthrough: Keep An Installed Voice Experiment</a></li>
+<li><a href="Speech-Engine-Preferences.html" accesskey="3">Set Shared Engine Preferences</a></li>
+</ul>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Sounds-And-Space.html">Sounds, Tones, And Spatial Cues</a>, Previous: <a href="Editing-Named-Voices.html">Edit A Named Voice</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -16,7 +16,8 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
-<link href="Presentation-Modalities.html" rel="next" title="Presentation Modalities">
+<link href="Explaining-Presentation.html" rel="next" title="Explaining Presentation">
+<link href="Aural-Home.html" rel="prev" title="Aural Home">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -32,10 +33,10 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Presentation-Model">
 <div class="nav-panel">
 <p>
-Next: <a href="Presentation-Modalities.html" accesskey="n" rel="next">What You Can Hear</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Explaining-Presentation.html" accesskey="n" rel="next">Understand Why Something Sounded That Way</a>, Previous: <a href="Aural-Home.html" accesskey="p" rel="prev">Getting Started With Aural Home</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="A-Practical-Model-Of-Presentation"><span>6.1 A Practical Model Of Presentation<a class="copiable-link" href="#A-Practical-Model-Of-Presentation"> &para;</a></span></h3>
+<h3 class="section" id="How-Aural-Presentation-Works"><span>6.2 How Aural Presentation Works<a class="copiable-link" href="#How-Aural-Presentation-Works"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-presentation-model"></a>
 
@@ -45,7 +46,7 @@ Next: <a href="Presentation-Modalities.html" accesskey="n" rel="next">What You C
 <tbody><tr><td width="22%">Layer</td><td width="30%">Question</td><td width="48%">Example</td></tr>
 <tr><td width="22%">Meaning</td><td width="30%">What happened or what is this?</td><td width="48%">A level-two heading was reached during navigation.</td></tr>
 <tr><td width="22%">Presentation</td><td width="30%">What should convey that meaning?</td><td width="48%">Speak the heading in a named voice and play a section cue first.</td></tr>
-<tr><td width="22%">Resources</td><td width="30%">Which voice and sound realize that request?</td><td width="48%">Resolve the logical voice through the active palette and the cue through the active sound pack.</td></tr>
+<tr><td width="22%">Resources</td><td width="30%">Which voice and sound realize that request?</td><td width="48%">Find the named voice in the active palette and the cue in the active sound pack.</td></tr>
 <tr><td width="22%">Output</td><td width="30%">What can this machine produce?</td><td width="48%">Route speech to an installed engine and apply supported spatial behavior.</td></tr>
 </tbody>
 </table>
@@ -73,19 +74,38 @@ the complete presentation.
 </li><li> Enabled <em class="emph">Presentation Options</em> that add optional behavior in a stable
 weakest-to-strongest order.
 
-</li><li> Personal, session, and current-buffer <em class="emph">overrides</em>.  These are the strongest
-layers and are intended for precise changes.
+</li><li> Personal, session, and current-buffer rules. These are the strongest
+layers and are intended for precise changes. They are also called
+<em class="emph">overrides</em> because they can replace weaker behavior.
 </li></ol>
 
-<p>A presentation profile is not another rule layer.  It records a complete set
-of selected options, sound pack, voice palette, and spatial choices so you can
+<p>A presentation profile is not another rule layer.  It records the
+selected options, sound pack, voice palette, and spatial choices so you can
 switch those choices together.
 </p>
+<p>For example, an Org integration identifies a level-two heading. A rule asks
+for <code class="code">bolden</code> and a section cue. The active palette supplies <code class="code">bolden</code>&rsquo;s voice
+settings and physical choices; the active sound pack supplies the cue. The
+speech backend plays what it supports. Changing the rule changes which
+headings get that feedback. Editing <code class="code">bolden</code> changes the voice wherever that
+entry is used. Switching sound packs changes the cue&rsquo;s recording while
+preserving its meaning.
+</p>
+<p>When two rules change the same voice field, the stronger explicit value wins;
+values are not added. Personal rules are weaker than session rules, which are
+weaker than current-buffer rules. Rules can also add actions before or after
+the content. Use Explain to see the actual contributors and winning values
+rather than inferring them from the order in which you made edits.
+</p>
+
+<ul class="mini-toc">
+<li><a href="Presentation-Modalities.html" accesskey="1">What You Can Hear</a></li>
+</ul>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Presentation-Modalities.html">What You Can Hear</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Explaining-Presentation.html">Understand Why Something Sounded That Way</a>, Previous: <a href="Aural-Home.html">Getting Started With Aural Home</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

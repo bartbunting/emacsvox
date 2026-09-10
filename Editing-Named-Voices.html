@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Editing Named Voices (Emacsvox User Manual)</title>
+
+<meta name="description" content="Editing Named Voices (Emacsvox User Manual)">
+<meta name="keywords" content="Editing Named Voices (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
+<link href="Installed-Voices-And-Engines.html" rel="next" title="Installed Voices And Engines">
+<link href="Voices-And-Routing.html" rel="prev" title="Voices And Routing">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Editing-Named-Voices">
+<div class="nav-panel">
+<p>
+Next: <a href="Installed-Voices-And-Engines.html" accesskey="n" rel="next">Browse Installed Voices And Choose Engines</a>, Previous: <a href="Voices-And-Routing.html" accesskey="p" rel="prev">Choose And Manage Voice Palettes</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Edit-A-Named-Voice"><span>6.6 Edit A Named Voice<a class="copiable-link" href="#Edit-A-Named-Voice"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-voice-editor"></a>
+<a class="index-entry-id" id="index-voice-adjustments"></a>
+
+<p>From <em class="emph">Voice Palettes</em>, open a palette, select a voice, and press
+<kbd class="kbd">e</kbd> to edit it. From Aural Home, <em class="emph">Edit the named voice used here</em>
+opens the named voice used by the captured source item. Editing an inherited
+voice creates a complete entry in your destination palette when saved.
+Editing a built-in palette asks for a personal child. Opening the editor
+and previewing a draft do not change live feedback or save settings.
+</p>
+<p>If you opened an experiment from an installed physical voice, these same
+controls apply, but saving first asks for a destination. See
+<a data-manual="emacsvox" href="../Keeping-A-Voice-Experiment.html#Keeping-A-Voice-Experiment">Keep an Installed Voice Experiment</a> for that sequence.
+</p>
+<p>The editor uses the ordinary navigation voice for its labelled fields.
+<kbd class="kbd">n/p</kbd>, up/down or Tab moves between fields. Left/right adjusts
+a numeric field and moves between fields elsewhere; <kbd class="key">RET</kbd>
+activates a button or enters an adjustment value. Press <kbd class="kbd">d</kbd>
+on an adjustment to restore the adapter default; blank numeric entry does the
+same. Zero is an explicit value, such as the lowest pitch or leftmost pan,
+whereas adapter default leaves that setting to the speech adapter. They may
+sound the same for some effects, but they are different settings.
+<em class="emph">More adjustments and effects</em> exposes filters,
+gain, pan and other optional controls. Changed values say what they were before
+editing; unsupported settings remain visible and are retained.
+Field navigation stops at the first and last field without wrapping. Numeric
+adjustments stop at their limits and announce the minimum or maximum.
+</p>
+<p><kbd class="kbd">P</kbd> plays the edited voice. <kbd class="kbd">B</kbd> compares the
+captured original with the edited version using the same text, with spoken
+labels. <kbd class="kbd">T</kbd> changes that text; <kbd class="kbd">S</kbd> stops.
+An automatic sample follows each adjustment unless you turn off
+<em class="emph">Automatic sample after adjustment</em>.
+The new value precedes the sample text, for example &ldquo;1. The quick brown fox…&rdquo;.
+Toggling <em class="emph">Automatic sample after adjustment</em> announces on or off with distinct
+cues. <em class="emph">More adjustments and effects</em> and <em class="emph">Fallbacks</em> present their visibility
+with open/close cues and optional spoken state labels, both when toggled and
+when reached during field navigation.
+Navigation stops an outstanding sample. <kbd class="kbd">u</kbd> undoes an edit,
+including a reset to adapter default. <kbd class="kbd">q</kbd> dismisses the editor
+and returns to its originating view, offering to retain or discard unsaved
+changes.
+</p>
+<p>Choose the <em class="emph">Physical voice</em> field to search by engine or voice name. You can
+audition a candidate with the working adjustments before accepting it. Cancel
+keeps the previous choice and returns to the same field. Named voices also
+have an expandable <em class="emph">Fallbacks</em> section: replace, reorder, remove or individually
+audition a choice, append another, or explicitly return to Automatic. Existing
+unavailable, engine-default and property choices are preserved. Shared
+adjustments apply to fields that a row inherits; <em class="emph">Customize this voice</em> adds
+optional individual settings.
+</p>
+<p>For a named voice, <kbd class="kbd">w</kbd> or <kbd class="kbd">C-c C-c</kbd> saves and
+applies the complete draft. <em class="emph">Save to collection without selecting</em> saves an
+inactive palette without changing the current selection. The header reports
+unsaved changes, partial saves, applying, failures, or saved and applied.
+Retry uses the pending proposal and retains successful persistence steps.
+Changes made during an earlier apply remain unsaved when its acknowledgement
+arrives. A changed file or destination requires fresh review rather than an
+implicit merge.
+</p>
+<p>Named-voice previews test the complete choice chain without selecting the
+draft palette or changing live settings. They require an Omnivox server
+advertising complete-voice preview. Older servers report this operation
+as unsupported; individual physical auditions remain available. Playback
+reports identify actual accepted audio when the server supplies that evidence,
+including unsupported adjustments. They do not infer a successful fallback
+from inventory or claim exact effective numeric parameter values.
+</p>
+<p><kbd class="kbd">q</kbd> returns to the originating row and column. With unsaved
+changes, choose to retain the draft, discard changes, or continue editing.
+Retained drafts survive closing the view and can be reopened from Home&rsquo;s
+<em class="emph">Resume unfinished changes</em> during this Emacs session. They do not survive
+restarting Emacs. Leaving does not undo a completed save.
+</p>
+<p><em class="emph">Save and apply</em> selects the palette for this session. Use the
+<em class="emph">Use at Startup</em> action, <kbd class="kbd">U</kbd> in Voice Palettes, to retain
+that selection after restart. A save can involve more than one settings file.
+The editor reports partial failures and retains the proposal for retry; see
+<a data-manual="emacsvox" href="../Recovering-Aural-Changes.html#Recovering-Aural-Changes">Recovering Unfinished Changes</a>.
+</p>
+
+<ul class="mini-toc">
+<li><a href="Voice-Adjustments.html" accesskey="1">Understand Voice Adjustments</a></li>
+<li><a href="Voice-Fallbacks.html" accesskey="2">Choose And Tune Fallback Voices</a></li>
+<li><a href="Voices-In-Context.html" accesskey="3">Inspect Or Adjust A Voice In Context</a></li>
+</ul>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Installed-Voices-And-Engines.html">Browse Installed Voices And Choose Engines</a>, Previous: <a href="Voices-And-Routing.html">Choose And Manage Voice Palettes</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

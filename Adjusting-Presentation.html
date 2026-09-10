@@ -16,15 +16,12 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
-<link href="Presentation-Profiles.html" rel="next" title="Presentation Profiles">
+<link href="Voices-And-Routing.html" rel="next" title="Voices And Routing">
 <link href="Explaining-Presentation.html" rel="prev" title="Explaining Presentation">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
-kbd.kbd {font-style: oblique}
-kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
-ul.mark-bullet {list-style-type: disc}
 -->
 </style>
 <link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
@@ -36,10 +33,10 @@ ul.mark-bullet {list-style-type: disc}
 <div class="section-level-extent" id="Adjusting-Presentation">
 <div class="nav-panel">
 <p>
-Next: <a href="Presentation-Profiles.html" accesskey="n" rel="next">Save Complete Setups With Profiles</a>, Previous: <a href="Explaining-Presentation.html" accesskey="p" rel="prev">Understand Why Something Sounded That Way</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Voices-And-Routing.html" accesskey="n" rel="next">Choose And Manage Voice Palettes</a>, Previous: <a href="Explaining-Presentation.html" accesskey="p" rel="prev">Understand Why Something Sounded That Way</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Make-A-Small-Change-Safely"><span>6.5 Make A Small Change Safely<a class="copiable-link" href="#Make-A-Small-Change-Safely"> &para;</a></span></h3>
+<h3 class="section" id="Change-Feedback-And-Manage-Rules"><span>6.4 Change Feedback And Manage Rules<a class="copiable-link" href="#Change-Feedback-And-Manage-Rules"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-presentation-overrides"></a>
 
@@ -49,135 +46,20 @@ Next: <a href="Presentation-Profiles.html" accesskey="n" rel="next">Save Complet
 <tbody><tr><td width="42%">Intention</td><td width="30%">Use</td><td width="28%">Scope</td></tr>
 <tr><td width="42%">Try an optional behavior supplied by Emacsvox or an integration</td><td width="30%">Presentation Options</td><td width="28%">Global configuration</td></tr>
 <tr><td width="42%">Change voice, sound, tone, label, or suppression</td><td width="30%">Change this feedback</td><td width="28%">Personal, session, or current buffer</td></tr>
-<tr><td width="42%">Review or remove an existing precise change</td><td width="30%">Presentation Overrides</td><td width="28%">Its recorded scope</td></tr>
+<tr><td width="42%">Review or remove an existing precise change</td><td width="30%">Your feedback rules</td><td width="28%">Its recorded scope</td></tr>
 <tr><td width="42%">Try rules only in the current work buffer</td><td width="30%">Current Buffer Rules</td><td width="28%">Life of that buffer</td></tr>
-<tr><td width="42%">Switch a complete reading or working setup</td><td width="30%">Presentation Profiles</td><td width="28%">Saved global configuration</td></tr>
+<tr><td width="42%">Switch selected reading or working settings</td><td width="30%">Presentation Profiles</td><td width="28%">Saved global configuration</td></tr>
 </tbody>
 </table>
 
+
 <ul class="mini-toc">
-<li><a href="#Guided-Change-This-Feedback" accesskey="1">Guided Change This Feedback</a></li>
-<li><a href="#Remap-One-Item-At-Point" accesskey="2">Remap One Item At Point</a></li>
-<li><a href="#Try-A-Presentation-Option" accesskey="3">Try A Presentation Option</a></li>
+<li><a href="Heading-Voice-Walkthrough.html" accesskey="1">Walkthrough: Change Headings In One Buffer</a></li>
+<li><a href="Guided-Feedback-Changes.html" accesskey="2">Guided Change This Feedback</a></li>
+<li><a href="Choosing-A-Voice-For-An-Item.html" accesskey="3">Remap One Item At Point</a></li>
+<li><a href="Managing-Feedback-Rules.html" accesskey="4">Review And Remove Your Rules</a></li>
+<li><a href="Presentation-Options.html" accesskey="5">Try A Presentation Option</a></li>
 </ul>
-<div class="subsection-level-extent" id="Guided-Change-This-Feedback">
-<h4 class="subsection"><span>6.5.1 Guided Change This Feedback<a class="copiable-link" href="#Guided-Change-This-Feedback"> &para;</a></span></h4>
-
-<ol class="enumerate">
-<li> Move to a representative item, press <kbd class="kbd">C-e H</kbd>, then
-<kbd class="kbd">c</kbd>.  This captures <em class="emph">Current item</em>.  For feedback that has
-already happened, use Home&rsquo;s <kbd class="kbd">H</kbd>, select a <em class="emph">Recent Feedback</em>
-record, and press <kbd class="kbd">C</kbd>.  A record containing several parts
-asks which part to change.  Truncated history cannot supply a complete
-original/proposed comparison.
-
-</li><li> Press <kbd class="kbd">c</kbd> to choose a component change.  Available choices
-include the content voice, adding a sound or tone, adding a spoken label,
-replacing an existing sound, changing a tone, or suppressing one component.
-You can add a cue when the original has none.  The choices use the facts
-and components supplied by the integration; they cannot add missing
-semantic distinctions.
-
-</li><li> Press <kbd class="kbd">P</kbd> to hear the proposed change before choosing how
-long to keep it.  <kbd class="kbd">O</kbd> plays the frozen original example;
-<kbd class="kbd">S</kbd> stops.  Proposed preview resolves the selected example
-with current rules and its captured buffer context.  It does not apply
-your draft to live feedback.
-
-</li><li> Press <kbd class="kbd">m</kbd> for <em class="emph">What should match</em>.  Review the actual facts,
-states, events, and occasion.  When available, the object-kind choice
-omits events and occasion and therefore affects more presentations.
-These are rules for every matching item, not an edit to one object.
-
-</li><li> Press <kbd class="kbd">l</kbd> for <em class="emph">How long</em>: the source buffer&rsquo;s lifetime,
-this Emacs session, or a saved personal rule.  A buffer rule affects every
-matching item in that buffer.  Review the spoken summary of target,
-change, matching criteria, and lifetime.
-
-</li><li> Press <kbd class="kbd">a</kbd> or <kbd class="kbd">C-c C-c</kbd> to apply or save.
-<kbd class="kbd">e</kbd> instead opens the prepared rule in the Advanced editor.
-<kbd class="kbd">q</kbd> hides the guided draft; Home&rsquo;s <em class="emph">Resume unfinished
-changes</em> brings it back.  Aborting a choice or leaving before Apply does
-not change live rules.  Failed saves retain the draft and report failure.
-</li></ol>
-
-<p>Replacing or suppressing a sound targets its identity in its before- or
-after-content phase, retaining other components.  Existing rule data can
-insert only at the beginning or end of a phase; replacing a middle component
-therefore asks which edge to use and includes that placement in the summary.
-Ambiguous components require the Advanced editor.  Current-item changes
-recheck their captured source before applying; a changed or killed target
-must be inspected again.  Historical changes remain tied to the selected
-frozen example.
-</p>
-</div>
-<div class="subsection-level-extent" id="Remap-One-Item-At-Point">
-<h4 class="subsection"><span>6.5.2 Remap One Item At Point<a class="copiable-link" href="#Remap-One-Item-At-Point"> &para;</a></span></h4>
-
-<ol class="enumerate">
-<li> Move to a representative object and press <kbd class="kbd">C-e E</kbd> so you know what
-currently controls it.
-
-</li><li> Press <kbd class="kbd">C-e H</kbd>.  Use <kbd class="kbd">r</kbd> to remap its voice or <kbd class="kbd">R</kbd> to
-remap one exact earcon.
-
-</li><li> Choose the scope deliberately:
-
-<ul class="itemize mark-bullet">
-<li>a <em class="emph">personal</em> override persists across Emacs sessions;
-</li><li>a <em class="emph">session</em> override lasts until this Emacs exits; and
-</li><li>a <em class="emph">buffer</em> override affects only the remembered live buffer.
-</li></ul>
-
-</li><li> Review the generated rule in the editor.  It is initially unwritten.  Use
-the editor&rsquo;s <kbd class="kbd">?</kbd> help, preview when offered, and press <kbd class="kbd">w</kbd> only
-when the target, scope, and change are correct.
-
-</li><li> Return to the source, repeat the action, and use <kbd class="kbd">C-e E</kbd> again to
-confirm which rule now wins.
-</li></ol>
-
-<p>In the rule editor, <kbd class="kbd">n</kbd> and <kbd class="kbd">p</kbd> move between
-rules.  <kbd class="kbd">N</kbd> adds a rule, <kbd class="kbd">P</kbd> previews it, and
-<kbd class="kbd">S</kbd> stops.  These replace the former lowercase Add and Preview
-keys.  Saving announces whether the rule was saved or applied temporarily.
-<kbd class="kbd">q</kbd> asks before discarding an unfinished draft.
-</p>
-<p>Open <em class="emph">Presentation Overrides</em> to manage these changes together.  There,
-<kbd class="kbd">P</kbd> previews the complete current result, <kbd class="kbd">t</kbd> temporarily disables
-or enables a rule, and <kbd class="kbd">d</kbd> removes it.  Disabling or deleting an
-override restores the next weaker behavior; it does not leave a copied default
-behind.
-</p>
-</div>
-<div class="subsection-level-extent" id="Try-A-Presentation-Option">
-<h4 class="subsection"><span>6.5.3 Try A Presentation Option<a class="copiable-link" href="#Try-A-Presentation-Option"> &para;</a></span></h4>
-
-<p>Presentation Options are maintained additions such as richer heading feedback
-or integration-specific cues.  From Aural Home, open <em class="emph">Presentation Options</em>:
-</p>
-<ol class="enumerate">
-<li> Use <kbd class="key">TAB</kbd> or <kbd class="key">RET</kbd> on a collection to expand it.
-
-</li><li> Move to an option and press <kbd class="kbd">P</kbd> to preview it composed with the
-current configuration.  Press <kbd class="kbd">C-u P</kbd> to preview it in isolation.
-
-</li><li> Press <kbd class="kbd">t</kbd> to enable or disable it.  Press <kbd class="kbd">a</kbd> to hear
-enabled options in their exact weakest-to-strongest order.
-
-</li><li> Return to the source and test the original task.  Personal, session, and
-buffer overrides remain stronger than an enabled option.
-</li></ol>
-
-<p>Avoid reordering options merely to solve one exceptional object.  A narrow
-override usually expresses that intention more clearly.
-</p>
-</div>
-</div>
-<hr>
-<div class="nav-panel">
-<p>
-Next: <a href="Presentation-Profiles.html">Save Complete Setups With Profiles</a>, Previous: <a href="Explaining-Presentation.html">Understand Why Something Sounded That Way</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

@@ -16,8 +16,7 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
-<link href="Explaining-Presentation.html" rel="next" title="Explaining Presentation">
-<link href="Presentation-Modalities.html" rel="prev" title="Presentation Modalities">
+<link href="Presentation-Model.html" rel="next" title="Presentation Model">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -35,13 +34,29 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Aural-Home">
 <div class="nav-panel">
 <p>
-Next: <a href="Explaining-Presentation.html" accesskey="n" rel="next">Understand Why Something Sounded That Way</a>, Previous: <a href="Presentation-Modalities.html" accesskey="p" rel="prev">What You Can Hear</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Presentation-Model.html" accesskey="n" rel="next">How Aural Presentation Works</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Begin-With-Aural-Home"><span>6.3 Begin With Aural Home<a class="copiable-link" href="#Begin-With-Aural-Home"> &para;</a></span></h3>
+<h3 class="section" id="Getting-Started-With-Aural-Home"><span>6.1 Getting Started With Aural Home<a class="copiable-link" href="#Getting-Started-With-Aural-Home"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Aural-Home"></a>
 
+<p>For a first listening experiment:
+</p>
+<ol class="enumerate">
+<li> Press <kbd class="kbd">C-e H</kbd>, then <kbd class="kbd">/</kbd>, and choose
+<em class="emph">Browse installed voices</em> from the searchable actions.
+</li><li> Select an available engine and press <kbd class="key">RET</kbd> to list its voices.
+</li><li> Move to a voice and press <kbd class="kbd">P</kbd> to hear a sample.
+<kbd class="kbd">S</kbd> stops it. Browsing and previewing save no settings.
+</li><li> Press <kbd class="kbd">h</kbd> to return to Home. From Home,
+<kbd class="kbd">C-c C-o</kbd> returns to the item where you started.
+</li></ol>
+
+<p>If an engine is unavailable, its details explain why; try another available
+engine. If no speech is available, start with
+<a data-manual="emacsvox" href="../Recovering-From-No-Speech.html#Recovering-From-No-Speech">Recovering From No Speech</a>.
+</p>
 <p>Open Aural Home from an ordinary buffer with <kbd class="kbd">C-e H</kbd>.  Emacsvox
 remembers that source buffer and opening position so contextual actions such
 as explanation and remapping operate on the object you were using.  Moving
@@ -52,19 +67,36 @@ the source cursor while Home is open does not change this target.  In Home,
 <p>Returning through Home or Help preserves the selected row and unfinished
 edits.  Buffer rule editors retain separate drafts for each source buffer;
 reopening a modified editor resumes its draft.  Reopening the same voice in
-the tuner likewise preserves its working settings.  If a prepared remap&rsquo;s
+the voice editor likewise preserves its working settings.  If a prepared remap&rsquo;s
 source item changes or disappears, Emacsvox asks you to prepare that change
 again before applying it.
 </p>
-<p>Aural Home begins with five task groups in one spoken table.  Press
+<p>Aural Home begins with six task groups in one spoken table.  Press
 <kbd class="key">RET</kbd> or <kbd class="key">TAB</kbd> to expand or collapse a group.
 Each action names a destination, reports its current status, and describes
 its purpose.  <kbd class="kbd">/</kbd> searches all actions, including collapsed
-groups; the matching group opens with your destination selected.  The common controls are:
+groups; the matching group opens with your destination selected.
+</p>
+<p>Expandable groups announce an open or close cue with their name when you
+reach or toggle them. These cues follow the icon setting and sound pack.
+For spoken state words, enable
+<em class="emph">aural-panel-state-labels</em> in <em class="emph">Presentation Options</em>.  This adds &ldquo;collapsed&rdquo;
+or &ldquo;expanded&rdquo; after the control through the normal presentation rules.
+Key instructions remain available in Help.
+</p>
+<p>Panel entry, return, selection, and warning cues accompany their spoken
+feedback in one utterance.  Returning from a panel announces the destination
+and any unfinished draft warning together.  These cues follow the icon
+setting, sound pack, and cue remapping rules.
+The voice editor uses the normal navigation voice for these announcements;
+auditions still play the working voice.
+</p>
+<p>In Home and other tables, the navigation controls are:
 </p>
 <dl class="table">
 <dt><kbd class="kbd">n, p, down, up</kbd></dt>
-<dd><p>Move by row; settings lists speak the name and current state.
+<dd><p>Move by row, retaining and speaking the selected column.
+In the first column, settings lists announce the name and current state.
 </p></dd>
 <dt><kbd class="kbd">left, right</kbd></dt>
 <dd><p>Move among the titled columns.
@@ -76,7 +108,7 @@ groups; the matching group opens with your destination selected.  The common con
 <dd><p>Speak the complete current row.
 </p></dd>
 <dt><kbd class="kbd">RET</kbd></dt>
-<dd><p>Open a destination, child list, or details. In the tuner, edit a value.
+<dd><p>Open a destination, child list, or details.
 </p></dd>
 <dt><kbd class="kbd">C-c C-a</kbd></dt>
 <dd><p>Choose an applicable action by name.
@@ -97,39 +129,48 @@ groups; the matching group opens with your destination selected.  The common con
 <dd><p>Return to Aural Home from a manager or editor.
 </p></dd>
 <dt><kbd class="kbd">q</kbd></dt>
-<dd><p>Leave the current Aural interface.
+<dd><p>Go back or leave; an editor may first offer to retain or discard changes.
 </p></dd>
 </dl>
 
-<p>The five groups are:
+<p>The six groups are:
 </p>
 <table class="multitable">
 <tbody><tr><td width="35%">Task group</td><td width="65%">Destinations</td></tr>
-<tr><td width="35%">Understand or change feedback</td><td width="65%">Current item explanation and remapping, Recent Feedback, semantic vocabulary, and return to source.</td></tr>
-<tr><td width="35%">Choose voices and sounds</td><td width="65%">Browse and try voices, palettes, sound packs, speech engine and rate, notifications, spatial settings, and the full Voice Workbench.</td></tr>
-<tr><td width="35%">Choose optional feedback</td><td width="65%">Presentation Options and training explanations.</td></tr>
-<tr><td width="35%">Manage changes and saved setups</td><td width="65%">Unfinished drafts, overrides, buffer rules, and Presentation Profiles.</td></tr>
-<tr><td width="35%">Troubleshoot</td><td width="65%">Aural Doctor and Omnivox engine modules.</td></tr>
+<tr><td width="35%">Understand and change feedback</td><td width="65%">Explain this item, Change this feedback, Recent aural feedback, contextual voice and sound changes, semantic vocabulary, and return to source.</td></tr>
+<tr><td width="35%">Voices and speech</td><td width="65%">Voice palettes, Browse installed voices, Preferred speech engine, Speech rate, and Voice Workbench.</td></tr>
+<tr><td width="35%">Sounds and output</td><td width="65%">Sound packs, Spatial settings, Notification output, Review notifications, and Stop notification speech.</td></tr>
+<tr><td width="35%">Optional feedback and rules</td><td width="65%">Presentation options, Your feedback rules, Current buffer rules, and Explain feedback as you navigate.</td></tr>
+<tr><td width="35%">Saved setups and unfinished changes</td><td width="65%">Presentation profiles and Resume unfinished changes.</td></tr>
+<tr><td width="35%">Troubleshooting</td><td width="65%">Aural Doctor, Spatial capabilities, and Omnivox engine modules.</td></tr>
 </tbody>
 </table>
 
-<p>Home announces the captured source and unfinished draft count on entry.
-Choose <em class="emph">Resume unfinished changes</em> to visit the original rule editor, tuner,
-or routing Workbench.  The draft is still unsaved until you accept it there.
+<p>The header identifies the captured source and the number of unfinished drafts.
+Choose <em class="emph">Resume unfinished changes</em> to visit the original rule editor, voice editor,
+or Workbench engine settings.  The draft is still unsaved until you accept it there.
 Presentation Profiles capture options, palette, sound pack, and spatial
-settings.  Physical voice routes have their own saved routing profile.
+settings. Physical choices and their adjustments belong to the selected
+palette&rsquo;s named voices; shared engine settings are saved separately.
 </p>
 <p>You can press <kbd class="key">RET</kbd> on a row without memorizing its shortcut.  Aural
 Home also provides direct keys for frequent routes, including <kbd class="kbd">x</kbd> for
-explanation, <kbd class="kbd">O</kbd> for overrides, <kbd class="kbd">H</kbd> for recent feedback,
+explanation, <kbd class="kbd">O</kbd> for your feedback rules, <kbd class="kbd">H</kbd> for recent feedback,
 <kbd class="kbd">P</kbd> for profiles, <kbd class="kbd">V</kbd> for voice palettes, <kbd class="kbd">W</kbd> for
 Voice Workbench, and <kbd class="kbd">D</kbd> for Aural Doctor.
+</p>
+<p>The voice editor contains fields and buttons rather than table columns:
+left/right changes a numeric value, and <kbd class="key">RET</kbd> edits a field.
+See <a data-manual="emacsvox" href="../Editing-Named-Voices.html#Editing-Named-Voices">Edit a Named Voice</a>. Keys are local to the view: for example,
+<kbd class="kbd">w</kbd> saves a voice in its editor but exports a palette in the
+palette manager. Use <kbd class="kbd">C-c C-a</kbd> to choose an action by name,
+or <kbd class="kbd">?</kbd> for that view&rsquo;s current keys.
 </p>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Explaining-Presentation.html">Understand Why Something Sounded That Way</a>, Previous: <a href="Presentation-Modalities.html">What You Can Hear</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Presentation-Model.html">How Aural Presentation Works</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Presentation Profile Walkthrough (Emacsvox User Manual)</title>
+
+<meta name="description" content="Presentation Profile Walkthrough (Emacsvox User Manual)">
+<meta name="keywords" content="Presentation Profile Walkthrough (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Presentation-Profiles.html" rel="up" title="Presentation Profiles">
+<link href="Saving-And-Startup.html" rel="next" title="Saving And Startup">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Presentation-Profile-Walkthrough">
+<div class="nav-panel">
+<p>
+Next: <a href="Saving-And-Startup.html" accesskey="n" rel="next">Choose What Persists</a>, Up: <a href="Presentation-Profiles.html" accesskey="u" rel="up">Save, Switch, And Share Your Setup</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Walkthrough_003a-Switch-Reading-And-Working-Setups"><span>6.10.1 Walkthrough: Switch Reading And Working Setups<a class="copiable-link" href="#Walkthrough_003a-Switch-Reading-And-Working-Setups"> &para;</a></span></h4>
+
+<p>This example saves two profiles with different voice or sound selections.
+Use unused names and note the profile selected before starting.
+</p>
+<ol class="enumerate">
+<li> Open <kbd class="kbd">C-e H P</kbd>. If you want a restore point for the current selected
+options and resources, press <kbd class="kbd">N</kbd> and save <code class="code">before-demo</code> with a short
+purpose. This captures those selections and makes the new profile selected.
+It does not back up rules, resource definitions, or engine settings.
+</li><li> From Home, activate the voice palette and sound pack you want for reading.
+Enable any desired Presentation Options and choose spatial settings.
+Return to Profiles and press <kbd class="kbd">N</kbd> to save <code class="code">reading-setup-demo</code>.
+</li><li> Choose a different palette or sound pack for working, then save another
+new profile named <code class="code">working-setup-demo</code>. Both profiles should show their
+selected resources in the list. <kbd class="kbd">RET</kbd> describes a profile&rsquo;s saved fields.
+</li><li> Select <code class="code">reading-setup-demo</code> and press <kbd class="kbd">a</kbd> to apply it. Check the active
+palette and sound pack in Home, then repeat familiar feedback. Select
+<code class="code">working-setup-demo</code> and apply it to compare the two setups.
+</li><li> Change one live option without updating the profile. The selected profile
+now reports <em class="emph">Diverged</em>. Press <kbd class="kbd">a</kbd> on it to restore its saved settings,
+or <kbd class="kbd">w</kbd> if you intend to replace its saved values with the current ones.
+Read the confirmation before discarding live differences.
+</li><li> Applying a profile also saves its selection for future sessions. Finish on
+the profile you want at startup. To restore the earlier setup, apply the
+original profile or <code class="code">before-demo</code>. Delete unwanted demonstration profiles
+with <kbd class="kbd">d</kbd> only after selecting the one you want to retain.
+</li></ol>
+
+<p>If both profiles select <code class="code">reading-demo</code>, later edits to that palette affect
+both profiles. For independently adjustable voices, first use <em class="emph">Copy Palette</em>
+and select different palettes in the two profiles. A profile&rsquo;s <em class="emph">Copy</em> action
+copies selections, not the selected resources. To change only the startup
+palette while preserving the profile&rsquo;s other saved fields, use <kbd class="kbd">U</kbd> in
+Voice Palettes instead of capturing all current settings again.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Saving-And-Startup.html">Choose What Persists</a>, Up: <a href="Presentation-Profiles.html">Save, Switch, And Share Your Setup</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -44,6 +44,7 @@ from the user task guides.  Optional package APIs and renderers evolve, so
 recheck the upstream interfaces and keep compatibility behavior bounded when
 changing an integration.
 </p>
+
 <ul class="mini-toc">
 <li><a href="#Source-checkout-and-byte_002dcode-lifecycle" accesskey="1">Source checkout and byte-code lifecycle</a></li>
 <li><a href="#Debian-package-builds" accesskey="2">Debian package builds</a></li>
@@ -60,6 +61,7 @@ changing an integration.
 <li><a href="#WSL2-Omnivox-development-staging">WSL2 Omnivox development staging</a></li>
 <li><a href="#Windows-staging-implementation-and-fixtures">Windows staging implementation and fixtures</a></li>
 <li><a href="#Aural-experiments-and-guided-changes">Aural experiments and guided changes</a></li>
+<li><a href="Authoring-Sound-Packs.html">Authoring Sound Packs</a></li>
 </ul>
 <div class="subsection-level-extent" id="Source-checkout-and-byte_002dcode-lifecycle">
 <h4 class="subsection"><span>16.3.1 Source checkout and byte-code lifecycle<a class="copiable-link" href="#Source-checkout-and-byte_002dcode-lifecycle"> &para;</a></span></h4>
@@ -398,7 +400,7 @@ Composition and provenance continue to consume the accepted-key inventory.
 the four numeric ACSS fields, post-synthesis fields, relative rate, and legacy
 rate.  The accepted-key inventory places relative and legacy rate before the
 post-synthesis fields.  ACSS dimension order also determines positional legacy
-personality settings, and rich dimension order determines tuner rows.
+personality settings, and rich dimension order determines adjustment rows.
 </p>
 <p>Every accepted field allows <code class="code">nil</code>.  Validation preserves the original plist,
 including duplicate fields, for which the first value is used.  Field absence,
@@ -417,19 +419,24 @@ future inheritance, omission, or reset policy needs a separate decision.
 <p>Compiler conversion, backend wire names, capability discovery, normalization,
 and delivery stay in their existing owners.  When adding a field, update those
 consumers explicitly and test final serialized output or an explicit
-degradation.  The palette editor and tuner&rsquo;s typed-entry and increment/decrement
-bounds use this metadata through <code class="code">emacsvox-aural--voice-style-field</code>.  The
-complete ACSS editor obtains its four numeric fields from the ACSS inventory;
-it does not expand into editing rate or post-synthesis fields.
+degradation. The common voice editor uses the shared field metadata for bounds
+and neutral values. It covers portable ACSS and optional rate and post-synthesis
+adjustments in the same retained draft.
 </p>
-<p>Input grammar, labels, neutral values, and preview descriptions remain UI
-policy.  Ordinary numeric input accepts a single digit; blank retains an
-existing value, including zero.  Relative-rate input accepts signed integers
-and blank clears the explicit adjustment to <code class="code">nil</code>.  From <code class="code">nil</code>, horizontal
-adjustment starts at five for ordinary fields and at plus/minus one for rate.
-Digit shortcuts retain their zero-through-nine values.  Invalid boundary steps
-must fail before history, dirty state, refresh, or audition changes.
-Delivery preparation has the limited helper boundaries described below;
+<p>Input grammar remains UI policy. In the common voice editor, blank numeric
+entry requests the adapter default; zero is explicit. Individual choice fields
+distinguish shared inheritance, custom values and explicit adapter defaults.
+Rule-editor input has its own scoped inheritance semantics; do not substitute
+one editor&rsquo;s blank-input behavior for the other&rsquo;s.
+</p>
+<p>The common editor displays low-pass and high-pass as amounts from zero through
+nine, increasing with stronger filtering. Low-pass converts between amount and
+stored cutoff with &lsquo;<samp class="samp">9 - value</samp>&rsquo;; high-pass retains its numeric direction. Zero
+is labelled neutral. Stored cutoffs and adapter-default nil retain their
+meaning. Invalid boundary steps must fail before history, dirty state, refresh
+or audition changes.
+</p>
+<p>Delivery preparation has the limited helper boundaries described below;
 asynchronous operation ownership remains a separate refactoring proposal.
 </p>
 <p>The rule tests state field inventories, bounds, error precedence, and
@@ -438,10 +445,16 @@ saved rich palettes and explicit-nil rules; transport tests check distinct
 ACSS mappings, zero and omitted wire fields, effects, and preset behavior.
 <code class="code">make compiled-aural-test</code> also runs these style contracts with the isolated
 compiled subsystem loaded, checking that the implementations stay in that
-build.  The <code class="code">voice-style-ui</code> tests in
-&lsquo;<samp class="samp">test/emacsvox-aural-voice-palettes-tests.el</samp>&rsquo; exercise interactive numeric
-commands, prompts, blank input, boundaries, unchanged values, and undo in both
-source and compiled runs.  They capture auditions and do not start audio.
+build. The <code class="code">voice-style-ui</code> tests exercise common-editor entry, inherited
+reset and draft retention in source and compiled runs. Editor tests also cover
+numeric bounds, explicit defaults, undo and comparison. They capture auditions
+and do not start audio.
+The connected saved-style regression edits a custom &lsquo;<samp class="samp">bolden</samp>&rsquo;, reads its saved
+data back, and compares common-editor and Workbench previews with the final
+normal-speech wire for &lsquo;<samp class="samp">voice-bolden</samp>&rsquo;.  Workbench uses the compiler&rsquo;s palette
+resolution and the shared effect normalizer: gain and pan level five must
+remain exactly neutral at 0.5.  Preserve both this path and the independently
+specified Workbench scale cases when changing preview or palette lookup.
 Preserve final-write, timeout, reentrancy, and trace regressions when
 working on later delivery slices; metadata validation alone cannot establish
 process lifecycle or audible behavior.
@@ -791,7 +804,7 @@ revision and run its <code class="code">Piper Native Validation</code> workflow.
 <code class="code">piper-sha256sums.txt</code>, then stage it with a reviewed model:
 </p>
 <div class="example">
-<pre class="example-preformatted">OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.7.1-piper-windows-x64.zip \
+<pre class="example-preformatted">OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.10.0-piper-windows-x64.zip \
   OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256=64-character-sha256 \
   OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx \
   make windows-omnivox-piper-dev
@@ -892,21 +905,19 @@ acceptance in an appropriate staging environment.
 <div class="subsection-level-extent" id="Aural-experiments-and-guided-changes">
 <h4 class="subsection"><span>16.3.15 Aural experiments and guided changes<a class="copiable-link" href="#Aural-experiments-and-guided-changes"> &para;</a></span></h4>
 
-<p>Physical experiments reuse the tuner with an exact engine/voice selector,
-an immutable opening snapshot, a mutable working style, and undo history.
-They do not modify the palette registry, active palette, or route profile
-until the user explicitly keeps a reviewed result.  Navigation and Help use
-the working style.  A failed exact preview must be reported before ordinary
-speech can provide navigation fallback; a fallback sample must never be
-reported as the requested physical voice.
+<p>Physical experiments use the common voice editor with an exact engine/voice
+selector, an immutable opening snapshot, a mutable working style and undo
+history. Navigation uses the ordinary voice. Experiments write no settings;
+Keep prepares a named-voice draft, including any reviewed row placement and
+adjustment scope. The destination still requires an explicit save.
 </p>
-<p>Keep proposals snapshot the destination palette and routing profile as well
-as the proposed result.  Check those snapshots before writing, and retain
-separate completion flags for palette write, route write, and route apply.
-A retry must not repeat a successful write.  If routing saves but application
-fails, keep that distinction visible and retry the application step.  Never
-report the combined operation complete while one selected destination failed.
-Portable style storage and machine-local routing storage remain separate.
+<p>The unified palette contract is recorded in ADR 0018. Every nonroot palette
+uses complete schema 3 entries and an explicit parent chain to &lsquo;<samp class="samp">acss-default</samp>&rsquo;.
+Palette definitions and immutable local-choice snapshots are saved through the
+common coordinator. Frozen proposals retain separate persistence and apply
+completion, and retry does not repeat a successful write. Save failures,
+acknowledged application and actual playback evidence remain separate.
+Workstation routing profiles contain global engine policy, not per-name routes.
 </p>
 <p>Labelled comparisons use one controlled preview sequence, with identical
 sample text and separately configurable labels.  Each sequence belongs to

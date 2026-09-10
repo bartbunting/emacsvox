@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Changing One Sound (Emacsvox User Manual)</title>
+
+<meta name="description" content="Changing One Sound (Emacsvox User Manual)">
+<meta name="keywords" content="Changing One Sound (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Sounds-And-Space.html" rel="up" title="Sounds And Space">
+<link href="Changing-Tones.html" rel="next" title="Changing Tones">
+<link href="Sound-Pack-Walkthrough.html" rel="prev" title="Sound Pack Walkthrough">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Changing-One-Sound">
+<div class="nav-panel">
+<p>
+Next: <a href="Changing-Tones.html" accesskey="n" rel="next">Change A Blank-Line Tone</a>, Previous: <a href="Sound-Pack-Walkthrough.html" accesskey="p" rel="prev">Walkthrough: Try A Sound Pack</a>, Up: <a href="Sounds-And-Space.html" accesskey="u" rel="up">Sounds, Tones, And Spatial Cues</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Walkthrough_003a-Silence-One-Cue"><span>6.8.2 Walkthrough: Silence One Cue<a class="copiable-link" href="#Walkthrough_003a-Silence-One-Cue"> &para;</a></span></h4>
+
+<ol class="enumerate">
+<li> Repeat the action that produces the unwanted cue. Open <kbd class="kbd">C-e H H</kbd>, select
+that recorded feedback, and press <kbd class="kbd">RET</kbd> to explain it. Find the cue name
+and whether it occurs before or after content.
+</li><li> Return to the feedback list and press <kbd class="kbd">C</kbd> for <em class="emph">Change this feedback</em>.
+If the record has several parts, select the part containing that cue.
+Press <kbd class="kbd">c</kbd>, choose <em class="emph">Suppress one component</em>, and select the exact cue.
+</li><li> Compare <kbd class="kbd">O</kbd> and <kbd class="kbd">P</kbd>. The proposed version should keep the speech and
+other components while omitting that cue. Review <em class="emph">What should match</em> with
+<kbd class="kbd">m</kbd>, then press <kbd class="kbd">l</kbd> and choose <em class="emph">This Emacs session</em> for this experiment.
+</li><li> Press <kbd class="kbd">a</kbd> and repeat the original action. The selected cue should be
+absent for matching feedback. Other cues with different identities or
+matching criteria should still sound.
+</li><li> To restore it, open Home&rsquo;s <em class="emph">Your feedback rules</em>, find the new session rule,
+and disable it with <kbd class="kbd">t</kbd> or remove it with <kbd class="kbd">d</kbd>. The session rule also
+expires when Emacs exits.
+</li></ol>
+
+<p>To add a cue to feedback that has none, use <em class="emph">Add a sound</em> instead. Choose
+<em class="emph">Before content</em> or <em class="emph">After content</em>, select a registered cue, preview, then
+review matching and lifetime. A cue addition and its later removal use the
+same rule-management workflow.
+</p>
+</div>
+
+
+
+</body>
+</html>

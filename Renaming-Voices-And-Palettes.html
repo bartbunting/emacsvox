@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Renaming Voices And Palettes (Emacsvox User Manual)</title>
+
+<meta name="description" content="Renaming Voices And Palettes (Emacsvox User Manual)">
+<meta name="keywords" content="Renaming Voices And Palettes (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Voices-And-Routing.html" rel="up" title="Voices And Routing">
+<link href="Palette-Inheritance-Walkthrough.html" rel="prev" title="Palette Inheritance Walkthrough">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Renaming-Voices-And-Palettes">
+<div class="nav-panel">
+<p>
+Previous: <a href="Palette-Inheritance-Walkthrough.html" accesskey="p" rel="prev">Walkthrough: Inheritance, Aliases, And Reset</a>, Up: <a href="Voices-And-Routing.html" accesskey="u" rel="up">Choose And Manage Voice Palettes</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Rename-Voices-And-Palettes"><span>6.5.3 Rename Voices And Palettes<a class="copiable-link" href="#Rename-Voices-And-Palettes"> &para;</a></span></h4>
+
+<p>Press <kbd class="kbd">r</kbd> in the voice list to rename a custom voice
+defined directly in that personal palette.  Enter the new name to save it;
+the renamed voice keeps its settings, physical choices and individual tuning.
+Save or discard unfinished voice edits first.  Standard Emacsvox voice names
+cannot be renamed; copy one to create a custom voice.  For an inherited voice,
+copy it or rename it in its owning palette.  Renaming updates personal,
+session and buffer presentation rules, including face mappings, and loaded
+global and buffer face maps.  Personal rules and the voice are saved together;
+a failed save leaves the old name and mappings usable.  Face mappings declared
+in your own Lisp configuration must also be updated there for future sessions.
+References in maintained integration rules, Presentation Options, or other
+voice definitions still block the rename; update those uses first. Renaming also
+stops if another palette directly defines either name, because mappings are shared.
+</p>
+<p>To rename a personal palette, select it in <em class="emph">Voice Palettes</em>, press
+<kbd class="kbd">r</kbd>, and enter its new name.  The rename is saved immediately.
+It preserves voice settings and individual fallback tuning, updates child
+palettes and personal Presentation Profiles, and keeps an active palette
+selected under its new name.  Save or discard unfinished voice edits first.
+Built-in palettes cannot be renamed. A reference from maintained integration
+configuration can block a rename; its owner must update that reference first.
+</p>
+</div>
+
+
+
+</body>
+</html>

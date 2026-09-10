@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-voice-context (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-aural-voice-context (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-aural-voice-context (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dvoice_002ddata.html" rel="next" title="emacsvox-aural-voice-data">
+<link href="emacsvox_002daural_002dvalidation.html" rel="prev" title="emacsvox-aural-validation">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002dvoice_002dcontext">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dvoice_002ddata.html" accesskey="n" rel="next">emacsvox-aural-voice-data</a>, Previous: <a href="emacsvox_002daural_002dvalidation.html" accesskey="p" rel="prev">emacsvox-aural-validation</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002dvoice_002dcontext-1"><span>2.54 emacsvox-aural-voice-context<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext-1"> &para;</a></span></h3>
+
+<p>Inspect the existing cascade without flattening it into palette data.
+Contextual edits use the ordinary scoped rule editor and its save services.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural_002dVoice_002dContext-Commands" accesskey="1">Emacsvox-Aural-Voice-Context Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dVoice_002dContext-Commands">
+<h4 class="subsection"><span>2.54.1 Emacsvox-Aural-Voice-Context Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dVoice_002dContext-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002dadjust" accesskey="1">emacsvox-aural-voice-context-adjust</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002dadjust_002drule" accesskey="2">emacsvox-aural-voice-context-adjust-rule</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002dchoose" accesskey="3">emacsvox-aural-voice-context-choose</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002dcompare" accesskey="4">emacsvox-aural-voice-context-compare</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002dmode" accesskey="5">emacsvox-aural-voice-context-mode</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002dnext" accesskey="6">emacsvox-aural-voice-context-next</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002dopen" accesskey="7">emacsvox-aural-voice-context-open</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002dplay" accesskey="8">emacsvox-aural-voice-context-play</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002dprevious" accesskey="9">emacsvox-aural-voice-context-previous</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002drecapture">emacsvox-aural-voice-context-recapture</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002drefresh">emacsvox-aural-voice-context-refresh</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002dreturn">emacsvox-aural-voice-context-return</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dcontext_002dstop">emacsvox-aural-voice-context-stop</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002dadjust">
+<h4 class="subsubsection"><span>2.54.1.1 emacsvox-aural-voice-context-adjust<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002dadjust"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002dadjust"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-adjust</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002dadjust"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002dadjust-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prepare a dimension-only rule with an explicit match and lifetime.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002dadjust_002drule">
+<h4 class="subsubsection"><span>2.54.1.2 emacsvox-aural-voice-context-adjust-rule<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002dadjust_002drule"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002dadjust_002drule"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-adjust-rule</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002dadjust_002drule"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002dadjust_002drule-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Adjust one voice field in the selected rule; Inherit removes that field.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002dchoose">
+<h4 class="subsubsection"><span>2.54.1.3 emacsvox-aural-voice-context-choose<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002dchoose"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002dchoose"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-choose</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002dchoose"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002dchoose-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose a new current source item from the originating base voice editor.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002dcompare">
+<h4 class="subsubsection"><span>2.54.1.4 emacsvox-aural-voice-context-compare<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002dcompare"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002dcompare"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-compare</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002dcompare"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002dcompare-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Compare original and edited voices against the same captured context.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002dmode">
+<h4 class="subsubsection"><span>2.54.1.5 emacsvox-aural-voice-context-mode<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Inspect contextual voice requests independently of the named base draft.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-interface-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-voice-context-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+TAB		emacsvox-aural-voice-context-next
+SPC		scroll-up-command
+-		negative-argument
+0 .. 9		digit-argument
+&lt;		beginning-of-buffer
+&gt;		end-of-buffer
+?		describe-mode
+B		emacsvox-aural-voice-context-compare
+P		emacsvox-aural-voice-context-play
+S		emacsvox-aural-voice-context-stop
+a		emacsvox-aural-voice-context-adjust
+g		emacsvox-aural-voice-context-recapture
+h		describe-mode
+n		emacsvox-aural-voice-context-next
+p		emacsvox-aural-voice-context-previous
+q		emacsvox-aural-voice-context-return
+DEL		scroll-down-command
+S-SPC		scroll-down-command
+&lt;backtab&gt;	emacsvox-aural-voice-context-previous
+&lt;down&gt;		emacsvox-aural-voice-context-next
+&lt;up&gt;		emacsvox-aural-voice-context-previous
+
+&lt;remap&gt; &lt;backward-button&gt;	emacsvox-aural-voice-context-previous
+&lt;remap&gt; &lt;forward-button&gt;	emacsvox-aural-voice-context-next
+
+C-c C-a		emacsvox-aural-ui-actions
+C-c TAB		emacsvox-aural-ui-open-manual
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002dnext">
+<h4 class="subsubsection"><span>2.54.1.6 emacsvox-aural-voice-context-next<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002dnext"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002dnext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-next</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002dnext"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002dnext-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to and read the next context field.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002dopen">
+<h4 class="subsubsection"><span>2.54.1.7 emacsvox-aural-voice-context-open<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002dopen"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002dopen"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-open</strong> <var class="def-var-arguments">(&amp;optional choose-source)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002dopen"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002dopen-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Inspect the base draft against a captured source item, without saving.
+With CHOOSE-SOURCE, explicitly select a buffer and use its current point.
+
+(fn &amp;optional CHOOSE-SOURCE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002dplay">
+<h4 class="subsubsection"><span>2.54.1.8 emacsvox-aural-voice-context-play<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002dplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002dplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-play</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002dplay"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002dplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play the edited voice against captured context without saving.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002dprevious">
+<h4 class="subsubsection"><span>2.54.1.9 emacsvox-aural-voice-context-previous<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002dprevious"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002dprevious"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-previous</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002dprevious"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002dprevious-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to and read the previous context field.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002drecapture">
+<h4 class="subsubsection"><span>2.54.1.10 emacsvox-aural-voice-context-recapture<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002drecapture"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002drecapture"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-recapture</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002drecapture"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002drecapture-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Refresh the captured rules and facts after validating the source identity.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002drefresh">
+<h4 class="subsubsection"><span>2.54.1.11 emacsvox-aural-voice-context-refresh<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002drefresh"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-refresh</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002drefresh"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002drefresh-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Explain requested values and their origins for the captured item.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002dreturn">
+<h4 class="subsubsection"><span>2.54.1.12 emacsvox-aural-voice-context-return<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002dreturn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002dreturn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-return</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002dreturn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002dreturn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Return to the same field in the base editor.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dcontext_002dstop">
+<h4 class="subsubsection"><span>2.54.1.13 emacsvox-aural-voice-context-stop<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dcontext_002dstop"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dcontext_002dstop"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-context-stop</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dcontext_002dstop"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dcontext_002dstop-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Stop this context preview without cancelling a newer editor’s playback.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dvoice_002ddata.html">emacsvox-aural-voice-data</a>, Previous: <a href="emacsvox_002daural_002dvalidation.html">emacsvox-aural-validation</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

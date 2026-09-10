@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Recovering Aural Changes (Emacsvox User Manual)</title>
+
+<meta name="description" content="Recovering Aural Changes (Emacsvox User Manual)">
+<meta name="keywords" content="Recovering Aural Changes (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Presentation-Troubleshooting.html" rel="up" title="Presentation Troubleshooting">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Recovering-Aural-Changes">
+<div class="nav-panel">
+<p>
+Up: <a href="Presentation-Troubleshooting.html" accesskey="u" rel="up">Troubleshooting And Recovery</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Recover-Unfinished-Changes"><span>6.11.1 Recover Unfinished Changes<a class="copiable-link" href="#Recover-Unfinished-Changes"> &para;</a></span></h4>
+
+<p>Use <kbd class="kbd">h</kbd> to leave a working editor through Home without losing
+it.  Home&rsquo;s <em class="emph">Resume unfinished changes</em> opens the original draft, including
+its source and working settings.  In the common voice editor, <kbd class="kbd">u</kbd> undoes and
+<kbd class="kbd">q</kbd> offers to keep the draft, discard changes, or continue.  Guided feedback
+<kbd class="kbd">q</kbd> goes back one level, then hides and retains the draft at
+the top level.  To undo an already applied
+rule, open <em class="emph">Your feedback rules</em>, select it in the appropriate scope, and
+use <kbd class="kbd">t</kbd> to disable it or <kbd class="kbd">d</kbd> to remove it.
+</p>
+<p>Retained drafts last only until Emacs exits. Discarding a draft abandons
+unsaved edits; it does not undo a completed save. A voice editor reports saved
+settings separately from successful application to the speech server. Keep
+that distinction when deciding whether to retry or to edit the saved voice.
+</p>
+<p>Applying waits for each speech stream to acknowledge its configuration.  If
+an Omnivox apply times out, the Workbench reports <em class="emph">server outcome unconfirmed</em>.
+Emacsvox stops that apply and sends no later steps, but changes already sent
+may still take effect on the server. A timeout does not undo the saved engine
+settings or confirm that the server rejected them. Press <kbd class="kbd">r</kbd> to reapply
+the saved engine settings and obtain a fresh result.  Save or cancel any newer
+staged edits before retrying.  A partial result retains the streams that
+acknowledged success and identifies those that timed out.
+</p>
+</div>
+
+
+
+</body>
+</html>

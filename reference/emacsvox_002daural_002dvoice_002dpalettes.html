@@ -15,8 +15,8 @@
 <link href="index.html" rel="start" title="Top">
 <link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
 <link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
-<link href="emacsvox_002daural_002dvoice_002dworkbench.html" rel="next" title="emacsvox-aural-voice-workbench">
-<link href="emacsvox_002daural_002dvoice_002dexperiment.html" rel="prev" title="emacsvox-aural-voice-experiment">
+<link href="emacsvox_002daural_002dvoice_002druntime.html" rel="next" title="emacsvox-aural-voice-runtime">
+<link href="emacsvox_002daural_002dvoice_002deditor.html" rel="prev" title="emacsvox-aural-voice-editor">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -34,10 +34,10 @@ strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
 <div class="section-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes">
 <div class="nav-panel">
 <p>
-Next: <a href="emacsvox_002daural_002dvoice_002dworkbench.html" accesskey="n" rel="next">emacsvox-aural-voice-workbench</a>, Previous: <a href="emacsvox_002daural_002dvoice_002dexperiment.html" accesskey="p" rel="prev">emacsvox-aural-voice-experiment</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="emacsvox_002daural_002dvoice_002druntime.html" accesskey="n" rel="next">emacsvox-aural-voice-runtime</a>, Previous: <a href="emacsvox_002daural_002dvoice_002deditor.html" accesskey="p" rel="prev">emacsvox-aural-voice-editor</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="emacsvox_002daural_002dvoice_002dpalettes-1"><span>2.55 emacsvox-aural-voice-palettes<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes-1"> &para;</a></span></h3>
+<h3 class="section" id="emacsvox_002daural_002dvoice_002dpalettes-1"><span>2.59 emacsvox-aural-voice-palettes<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes-1"> &para;</a></span></h3>
 
 <p>Accessible management for inherited, data-safe ACSS voice palettes.
 </p>
@@ -46,24 +46,28 @@ Next: <a href="emacsvox_002daural_002dvoice_002dworkbench.html" accesskey="n" re
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes-Options" accesskey="2">emacsvox-aural-voice-palettes Options</a></li>
 </ul>
 <div class="subsection-level-extent" id="Emacsvox_002dAural_002dVoice_002dPalettes-Commands">
-<h4 class="subsection"><span>2.55.1 Emacsvox-Aural-Voice-Palettes Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dVoice_002dPalettes-Commands"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.59.1 Emacsvox-Aural-Voice-Palettes Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dVoice_002dPalettes-Commands"> &para;</a></span></h4>
 
 <ul class="mini-toc">
 <li><a href="#emacsvox_002daural_002dlist_002dvoice_002dpalettes" accesskey="1">emacsvox-aural-list-voice-palettes</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dcopy" accesskey="2">emacsvox-aural-voice-palette-previews-copy</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dedit" accesskey="3">emacsvox-aural-voice-palette-previews-edit</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dexplain" accesskey="4">emacsvox-aural-voice-palette-previews-explain</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dhelp" accesskey="5">emacsvox-aural-voice-palette-previews-help</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dmode" accesskey="6">emacsvox-aural-voice-palette-previews-mode</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnew" accesskey="7">emacsvox-aural-voice-palette-previews-new</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext" accesskey="8">emacsvox-aural-voice-palette-previews-next</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext_002dcolumn" accesskey="9">emacsvox-aural-voice-palette-previews-next-column</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002ddelete" accesskey="3">emacsvox-aural-voice-palette-previews-delete</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dedit" accesskey="4">emacsvox-aural-voice-palette-previews-edit</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dexplain" accesskey="5">emacsvox-aural-voice-palette-previews-explain</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dhelp" accesskey="6">emacsvox-aural-voice-palette-previews-help</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dmode" accesskey="7">emacsvox-aural-voice-palette-previews-mode</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnew" accesskey="8">emacsvox-aural-voice-palette-previews-new</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext" accesskey="9">emacsvox-aural-voice-palette-previews-next</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext_002dcolumn">emacsvox-aural-voice-palette-previews-next-column</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dmanager">emacsvox-aural-voice-palette-previews-open-manager</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dsource">emacsvox-aural-voice-palette-previews-open-source</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay">emacsvox-aural-voice-palette-previews-play</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay_002dall">emacsvox-aural-voice-palette-previews-play-all</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious">emacsvox-aural-voice-palette-previews-previous</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious_002dcolumn">emacsvox-aural-voice-palette-previews-previous-column</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drefresh">emacsvox-aural-voice-palette-previews-refresh</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drename">emacsvox-aural-voice-palette-previews-rename</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dreset">emacsvox-aural-voice-palette-previews-reset</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dset_002dtext">emacsvox-aural-voice-palette-previews-set-text</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent">emacsvox-aural-voice-palette-previews-speak-current</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent_002dcell">emacsvox-aural-voice-palette-previews-speak-current-cell</a></li>
@@ -71,6 +75,7 @@ Next: <a href="emacsvox_002daural_002dvoice_002dworkbench.html" accesskey="n" re
 <li><a href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dtune">emacsvox-aural-voice-palette-previews-tune</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dactivate">emacsvox-aural-voice-palettes-activate</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002daudition">emacsvox-aural-voice-palettes-audition</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dbackup">emacsvox-aural-voice-palettes-backup</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dcopy">emacsvox-aural-voice-palettes-copy</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dcreate">emacsvox-aural-voice-palettes-create</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002ddelete">emacsvox-aural-voice-palettes-delete</a></li>
@@ -79,8 +84,10 @@ Next: <a href="emacsvox_002daural_002dvoice_002dworkbench.html" accesskey="n" re
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dentry">emacsvox-aural-voice-palettes-edit-entry</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dmetadata">emacsvox-aural-voice-palettes-edit-metadata</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dexplain">emacsvox-aural-voice-palettes-explain</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dexport">emacsvox-aural-voice-palettes-export</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dfollow_002dbaseline">emacsvox-aural-voice-palettes-follow-baseline</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dhelp">emacsvox-aural-voice-palettes-help</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dimport">emacsvox-aural-voice-palettes-import</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dmode">emacsvox-aural-voice-palettes-mode</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dnext">emacsvox-aural-voice-palettes-next</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dnext_002dcolumn">emacsvox-aural-voice-palettes-next-column</a></li>
@@ -88,28 +95,15 @@ Next: <a href="emacsvox_002daural_002dvoice_002dworkbench.html" accesskey="n" re
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dprevious">emacsvox-aural-voice-palettes-previous</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dprevious_002dcolumn">emacsvox-aural-voice-palettes-previous-column</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002drefresh">emacsvox-aural-voice-palettes-refresh</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002drename">emacsvox-aural-voice-palettes-rename</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dreset_002dentry">emacsvox-aural-voice-palettes-reset-entry</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent">emacsvox-aural-voice-palettes-speak-current</a></li>
 <li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent_002dcell">emacsvox-aural-voice-palettes-speak-current-cell</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002daudition">emacsvox-aural-voice-tuner-audition</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dcompare">emacsvox-aural-voice-tuner-compare</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002ddecrease">emacsvox-aural-voice-tuner-decrease</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dedit">emacsvox-aural-voice-tuner-edit</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dhelp">emacsvox-aural-voice-tuner-help</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dincrease">emacsvox-aural-voice-tuner-increase</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dmode">emacsvox-aural-voice-tuner-mode</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dnext">emacsvox-aural-voice-tuner-next</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dprevious">emacsvox-aural-voice-tuner-previous</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dquit">emacsvox-aural-voice-tuner-quit</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002drefresh">emacsvox-aural-voice-tuner-refresh</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002drestore">emacsvox-aural-voice-tuner-restore</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dsave">emacsvox-aural-voice-tuner-save</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dset_002ddigit">emacsvox-aural-voice-tuner-set-digit</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dspeak_002dcurrent">emacsvox-aural-voice-tuner-speak-current</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002dundo">emacsvox-aural-voice-tuner-undo</a></li>
-<li><a href="#emacsvox_002daural_002dvoice_002dtuner_002duse_002ddefault">emacsvox-aural-voice-tuner-use-default</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002duse_002dat_002dstartup">emacsvox-aural-voice-palettes-use-at-startup</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dpalettes_002dwhere_002dused">emacsvox-aural-voice-palettes-where-used</a></li>
 </ul>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dlist_002dvoice_002dpalettes">
-<h4 class="subsubsection"><span>2.55.1.1 emacsvox-aural-list-voice-palettes<a class="copiable-link" href="#emacsvox_002daural_002dlist_002dvoice_002dpalettes"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.1 emacsvox-aural-list-voice-palettes<a class="copiable-link" href="#emacsvox_002daural_002dlist_002dvoice_002dpalettes"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dlist_002dvoice_002dpalettes"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-list-voice-palettes</strong> <var class="def-var-arguments">(&amp;optional palette)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dlist_002dvoice_002dpalettes"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dlist_002dvoice_002dpalettes-1"></a>
@@ -123,31 +117,44 @@ Next: <a href="emacsvox_002daural_002dvoice_002dworkbench.html" accesskey="n" re
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dcopy">
-<h4 class="subsubsection"><span>2.55.1.2 emacsvox-aural-voice-palette-previews-copy<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dcopy"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.2 emacsvox-aural-voice-palette-previews-copy<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dcopy"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dcopy"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-copy</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dcopy"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dcopy-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Copy the current voice to a new, independently routable voice.
+<pre class="format-preformatted">Copy the complete voice at point under a new name.
+A built-in voice opens a personal draft; save it to create a personal child.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002ddelete">
+<h4 class="subsubsection"><span>2.59.1.3 emacsvox-aural-voice-palette-previews-delete<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002ddelete"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002ddelete"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-delete</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002ddelete"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002ddelete-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Confirm deletion of the current personal voice and select a remaining row.
 </pre></div>
 </dd></dl>
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dedit">
-<h4 class="subsubsection"><span>2.55.1.3 emacsvox-aural-voice-palette-previews-edit<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dedit"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.4 emacsvox-aural-voice-palette-previews-edit<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dedit"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dedit"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-edit</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dedit"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dedit-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Replace the effective voice at point using the guided definition editor.
+<pre class="format-preformatted">Open the complete voice editor for the effective voice at point.
 </pre></div>
 </dd></dl>
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dexplain">
-<h4 class="subsubsection"><span>2.55.1.4 emacsvox-aural-voice-palette-previews-explain<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dexplain"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.5 emacsvox-aural-voice-palette-previews-explain<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dexplain"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dexplain"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-explain</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dexplain"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dexplain-1"></a>
@@ -159,7 +166,7 @@ Next: <a href="emacsvox_002daural_002dvoice_002dworkbench.html" accesskey="n" re
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dhelp">
-<h4 class="subsubsection"><span>2.55.1.5 emacsvox-aural-voice-palette-previews-help<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dhelp"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.6 emacsvox-aural-voice-palette-previews-help<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dhelp"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-help</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dhelp"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dhelp-1"></a>
@@ -171,7 +178,7 @@ Next: <a href="emacsvox_002daural_002dvoice_002dworkbench.html" accesskey="n" re
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dmode">
-<h4 class="subsubsection"><span>2.55.1.6 emacsvox-aural-voice-palette-previews-mode<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dmode"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.7 emacsvox-aural-voice-palette-previews-mode<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dmode"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dmode"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dmode-1"></a>
@@ -191,15 +198,20 @@ RET		emacsvox-aural-voice-palette-previews-explain
 A		emacsvox-aural-voice-palette-previews-play-all
 E		emacsvox-aural-voice-palette-previews-edit
 N		emacsvox-aural-voice-palette-previews-new
+O		emacsvox-aural-voice-palette-previews-open-source
 P		emacsvox-aural-voice-palette-previews-play
+R		emacsvox-aural-voice-palette-previews-reset
 S		emacsvox-aural-voice-palette-previews-stop
 T		emacsvox-aural-voice-palette-previews-set-text
 c		emacsvox-aural-voice-palette-previews-copy
+d		emacsvox-aural-voice-palette-previews-delete
 e		emacsvox-aural-voice-palette-previews-tune
 h		emacsvox-aural
 o		emacsvox-aural-voice-palette-previews-open-manager
+r		emacsvox-aural-voice-palette-previews-rename
 s		emacsvox-aural-voice-palette-previews-stop
 t		emacsvox-aural-voice-palette-previews-tune
+u		emacsvox-aural-voice-palettes-where-used
 x		emacsvox-aural-voice-palette-previews-explain
 
 </pre></div>
@@ -207,19 +219,19 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnew">
-<h4 class="subsubsection"><span>2.55.1.7 emacsvox-aural-voice-palette-previews-new<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnew"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.8 emacsvox-aural-voice-palette-previews-new<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnew"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnew"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-new</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnew"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnew-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Create a new voice in the palette shown by the current preview.
+<pre class="format-preformatted">Draft a new complete voice in the palette shown by the current preview.
 </pre></div>
 </dd></dl>
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext">
-<h4 class="subsubsection"><span>2.55.1.8 emacsvox-aural-voice-palette-previews-next<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.9 emacsvox-aural-voice-palette-previews-next<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-next</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext-1"></a>
@@ -231,7 +243,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext_002dcolumn">
-<h4 class="subsubsection"><span>2.55.1.9 emacsvox-aural-voice-palette-previews-next-column<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.10 emacsvox-aural-voice-palette-previews-next-column<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-next-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dnext_002dcolumn-1"></a>
@@ -243,7 +255,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dmanager">
-<h4 class="subsubsection"><span>2.55.1.10 emacsvox-aural-voice-palette-previews-open-manager<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dmanager"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.11 emacsvox-aural-voice-palette-previews-open-manager<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dmanager"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dmanager"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-open-manager</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dmanager"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dmanager-1"></a>
@@ -254,8 +266,20 @@ x		emacsvox-aural-voice-palette-previews-explain
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dsource">
+<h4 class="subsubsection"><span>2.59.1.12 emacsvox-aural-voice-palette-previews-open-source<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dsource"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dsource"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-open-source</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dsource"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dopen_002dsource-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse the defining palette of the selected voice.
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay">
-<h4 class="subsubsection"><span>2.55.1.11 emacsvox-aural-voice-palette-previews-play<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.13 emacsvox-aural-voice-palette-previews-play<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-play</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay-1"></a>
@@ -267,7 +291,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay_002dall">
-<h4 class="subsubsection"><span>2.55.1.12 emacsvox-aural-voice-palette-previews-play-all<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay_002dall"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.14 emacsvox-aural-voice-palette-previews-play-all<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay_002dall"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay_002dall"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-play-all</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay_002dall"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dplay_002dall-1"></a>
@@ -279,7 +303,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious">
-<h4 class="subsubsection"><span>2.55.1.13 emacsvox-aural-voice-palette-previews-previous<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.15 emacsvox-aural-voice-palette-previews-previous<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-previous</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious-1"></a>
@@ -291,7 +315,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious_002dcolumn">
-<h4 class="subsubsection"><span>2.55.1.14 emacsvox-aural-voice-palette-previews-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.16 emacsvox-aural-voice-palette-previews-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-previous-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dprevious_002dcolumn-1"></a>
@@ -303,7 +327,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drefresh">
-<h4 class="subsubsection"><span>2.55.1.15 emacsvox-aural-voice-palette-previews-refresh<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drefresh"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.17 emacsvox-aural-voice-palette-previews-refresh<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drefresh"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-refresh</strong> <var class="def-var-arguments">(&amp;optional voice)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drefresh"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drefresh-1"></a>
@@ -316,8 +340,32 @@ x		emacsvox-aural-voice-palette-previews-explain
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drename">
+<h4 class="subsubsection"><span>2.59.1.18 emacsvox-aural-voice-palette-previews-rename<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drename"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drename"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-rename</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drename"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002drename-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Rename a personal custom voice and update its personal and live face mappings.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dreset">
+<h4 class="subsubsection"><span>2.59.1.19 emacsvox-aural-voice-palette-previews-reset<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dreset"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dreset"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-reset</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dreset"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dreset-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Reset the direct voice at point to its parent’s complete entry.
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dset_002dtext">
-<h4 class="subsubsection"><span>2.55.1.16 emacsvox-aural-voice-palette-previews-set-text<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dset_002dtext"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.20 emacsvox-aural-voice-palette-previews-set-text<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dset_002dtext"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dset_002dtext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-set-text</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dset_002dtext"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dset_002dtext-1"></a>
@@ -329,7 +377,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent">
-<h4 class="subsubsection"><span>2.55.1.17 emacsvox-aural-voice-palette-previews-speak-current<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.21 emacsvox-aural-voice-palette-previews-speak-current<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-speak-current</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent-1"></a>
@@ -341,7 +389,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent_002dcell">
-<h4 class="subsubsection"><span>2.55.1.18 emacsvox-aural-voice-palette-previews-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.22 emacsvox-aural-voice-palette-previews-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-speak-current-cell</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent_002dcell"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dspeak_002dcurrent_002dcell-1"></a>
@@ -353,7 +401,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dstop">
-<h4 class="subsubsection"><span>2.55.1.19 emacsvox-aural-voice-palette-previews-stop<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dstop"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.23 emacsvox-aural-voice-palette-previews-stop<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dstop"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dstop"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-stop</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dstop"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dstop-1"></a>
@@ -365,31 +413,31 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dtune">
-<h4 class="subsubsection"><span>2.55.1.20 emacsvox-aural-voice-palette-previews-tune<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dtune"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.24 emacsvox-aural-voice-palette-previews-tune<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dtune"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dtune"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palette-previews-tune</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dtune"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalette_002dpreviews_002dtune-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Open a transactional tuner for the effective voice at point.
+<pre class="format-preformatted">Open the common voice editor without changing the palette or its selection.
 </pre></div>
 </dd></dl>
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dactivate">
-<h4 class="subsubsection"><span>2.55.1.21 emacsvox-aural-voice-palettes-activate<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dactivate"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.25 emacsvox-aural-voice-palettes-activate<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dactivate"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dactivate"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-activate</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dactivate"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dactivate-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Activate the voice palette at point as an override.
+<pre class="format-preformatted">Use the selected voice palette for this session.
 </pre></div>
 </dd></dl>
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002daudition">
-<h4 class="subsubsection"><span>2.55.1.22 emacsvox-aural-voice-palettes-audition<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002daudition"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.26 emacsvox-aural-voice-palettes-audition<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002daudition"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002daudition"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-audition</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002daudition"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002daudition-1"></a>
@@ -400,8 +448,20 @@ x		emacsvox-aural-voice-palette-previews-explain
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dbackup">
+<h4 class="subsubsection"><span>2.59.1.27 emacsvox-aural-voice-palettes-backup<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dbackup"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dbackup"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-backup</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dbackup"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dbackup-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Back up complete palette ancestry and exact local choices for this machine.
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dcopy">
-<h4 class="subsubsection"><span>2.55.1.23 emacsvox-aural-voice-palettes-copy<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dcopy"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.28 emacsvox-aural-voice-palettes-copy<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dcopy"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dcopy"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-copy</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dcopy"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dcopy-1"></a>
@@ -413,7 +473,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dcreate">
-<h4 class="subsubsection"><span>2.55.1.24 emacsvox-aural-voice-palettes-create<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dcreate"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.29 emacsvox-aural-voice-palettes-create<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dcreate"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dcreate"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-create</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dcreate"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dcreate-1"></a>
@@ -425,7 +485,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002ddelete">
-<h4 class="subsubsection"><span>2.55.1.25 emacsvox-aural-voice-palettes-delete<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002ddelete"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.30 emacsvox-aural-voice-palettes-delete<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002ddelete"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002ddelete"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-delete</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002ddelete"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002ddelete-1"></a>
@@ -437,7 +497,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002ddelete_002dentry">
-<h4 class="subsubsection"><span>2.55.1.26 emacsvox-aural-voice-palettes-delete-entry<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002ddelete_002dentry"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.31 emacsvox-aural-voice-palettes-delete-entry<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002ddelete_002dentry"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002ddelete_002dentry"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-delete-entry</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002ddelete_002dentry"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002ddelete_002dentry-1"></a>
@@ -449,7 +509,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002ddescribe">
-<h4 class="subsubsection"><span>2.55.1.27 emacsvox-aural-voice-palettes-describe<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002ddescribe"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.32 emacsvox-aural-voice-palettes-describe<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002ddescribe"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002ddescribe"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-describe</strong> <var class="def-var-arguments">(&amp;optional id)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002ddescribe"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002ddescribe-1"></a>
@@ -463,19 +523,19 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dentry">
-<h4 class="subsubsection"><span>2.55.1.28 emacsvox-aural-voice-palettes-edit-entry<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dentry"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.33 emacsvox-aural-voice-palettes-edit-entry<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dentry"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dentry"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-edit-entry</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dentry"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dentry-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Create or replace one direct voice entry in the personal palette at point.
+<pre class="format-preformatted">Open the complete editor for a voice in the palette at point.
 </pre></div>
 </dd></dl>
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dmetadata">
-<h4 class="subsubsection"><span>2.55.1.29 emacsvox-aural-voice-palettes-edit-metadata<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dmetadata"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.34 emacsvox-aural-voice-palettes-edit-metadata<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dmetadata"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dmetadata"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-edit-metadata</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dmetadata"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dedit_002dmetadata-1"></a>
@@ -487,7 +547,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dexplain">
-<h4 class="subsubsection"><span>2.55.1.30 emacsvox-aural-voice-palettes-explain<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dexplain"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.35 emacsvox-aural-voice-palettes-explain<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dexplain"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dexplain"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-explain</strong> <var class="def-var-arguments">(&amp;optional id voice)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dexplain"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dexplain-1"></a>
@@ -500,20 +560,32 @@ x		emacsvox-aural-voice-palette-previews-explain
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dexport">
+<h4 class="subsubsection"><span>2.59.1.36 emacsvox-aural-voice-palettes-export<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dexport"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dexport"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-export</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dexport"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dexport-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Export effective portable voices, explicitly omitting local physical choices.
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dfollow_002dbaseline">
-<h4 class="subsubsection"><span>2.55.1.31 emacsvox-aural-voice-palettes-follow-baseline<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dfollow_002dbaseline"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.37 emacsvox-aural-voice-palettes-follow-baseline<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dfollow_002dbaseline"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dfollow_002dbaseline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-follow-baseline</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dfollow_002dbaseline"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dfollow_002dbaseline-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Clear the palette override and use the compatibility baseline.
+<pre class="format-preformatted">Use the baseline voice palette again for this session.
 </pre></div>
 </dd></dl>
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dhelp">
-<h4 class="subsubsection"><span>2.55.1.32 emacsvox-aural-voice-palettes-help<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dhelp"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.38 emacsvox-aural-voice-palettes-help<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dhelp"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-help</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dhelp"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dhelp-1"></a>
@@ -524,8 +596,20 @@ x		emacsvox-aural-voice-palette-previews-explain
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dimport">
+<h4 class="subsubsection"><span>2.59.1.39 emacsvox-aural-voice-palettes-import<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dimport"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dimport"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-import</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dimport"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dimport-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Import a portable palette or full backup as an independent saved palette.
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dmode">
-<h4 class="subsubsection"><span>2.55.1.33 emacsvox-aural-voice-palettes-mode<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dmode"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.40 emacsvox-aural-voice-palettes-mode<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dmode"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dmode"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dmode-1"></a>
@@ -547,13 +631,20 @@ D		emacsvox-aural-voice-palettes-delete-entry
 E		emacsvox-aural-voice-palettes-edit-metadata
 N		emacsvox-aural-voice-palettes-create
 P		emacsvox-aural-voice-palettes-audition
+R		emacsvox-aural-voice-palettes-reset-entry
+U		emacsvox-aural-voice-palettes-use-at-startup
+W		emacsvox-aural-voice-palettes-backup
 a		emacsvox-aural-voice-palettes-activate
 c		emacsvox-aural-voice-palettes-copy
 d		emacsvox-aural-voice-palettes-delete
 e		emacsvox-aural-voice-palettes-edit-entry
 f		emacsvox-aural-voice-palettes-follow-baseline
 h		emacsvox-aural
+i		emacsvox-aural-voice-palettes-import
+r		emacsvox-aural-voice-palettes-rename
+u		emacsvox-aural-voice-palettes-where-used
 v		emacsvox-aural-voice-palettes-describe
+w		emacsvox-aural-voice-palettes-export
 x		emacsvox-aural-voice-palettes-explain
 
 </pre></div>
@@ -561,7 +652,7 @@ x		emacsvox-aural-voice-palettes-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dnext">
-<h4 class="subsubsection"><span>2.55.1.34 emacsvox-aural-voice-palettes-next<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dnext"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.41 emacsvox-aural-voice-palettes-next<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dnext"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dnext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-next</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dnext"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dnext-1"></a>
@@ -573,7 +664,7 @@ x		emacsvox-aural-voice-palettes-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dnext_002dcolumn">
-<h4 class="subsubsection"><span>2.55.1.35 emacsvox-aural-voice-palettes-next-column<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dnext_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.42 emacsvox-aural-voice-palettes-next-column<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dnext_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-next-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dnext_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dnext_002dcolumn-1"></a>
@@ -585,7 +676,7 @@ x		emacsvox-aural-voice-palettes-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dpreview">
-<h4 class="subsubsection"><span>2.55.1.36 emacsvox-aural-voice-palettes-preview<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dpreview"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.43 emacsvox-aural-voice-palettes-preview<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dpreview"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dpreview"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-preview</strong> <var class="def-var-arguments">(&amp;optional id)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dpreview"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dpreview-1"></a>
@@ -599,7 +690,7 @@ x		emacsvox-aural-voice-palettes-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dprevious">
-<h4 class="subsubsection"><span>2.55.1.37 emacsvox-aural-voice-palettes-previous<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dprevious"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.44 emacsvox-aural-voice-palettes-previous<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dprevious"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dprevious"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-previous</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dprevious"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dprevious-1"></a>
@@ -611,7 +702,7 @@ x		emacsvox-aural-voice-palettes-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dprevious_002dcolumn">
-<h4 class="subsubsection"><span>2.55.1.38 emacsvox-aural-voice-palettes-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dprevious_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.45 emacsvox-aural-voice-palettes-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dprevious_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-previous-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dprevious_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dprevious_002dcolumn-1"></a>
@@ -623,7 +714,7 @@ x		emacsvox-aural-voice-palettes-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002drefresh">
-<h4 class="subsubsection"><span>2.55.1.39 emacsvox-aural-voice-palettes-refresh<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002drefresh"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.46 emacsvox-aural-voice-palettes-refresh<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002drefresh"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-refresh</strong> <var class="def-var-arguments">(&amp;optional id)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002drefresh"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002drefresh-1"></a>
@@ -636,8 +727,32 @@ x		emacsvox-aural-voice-palettes-explain
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002drename">
+<h4 class="subsubsection"><span>2.59.1.47 emacsvox-aural-voice-palettes-rename<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002drename"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002drename"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-rename</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002drename"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002drename-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Rename a personal palette, preserving tuning, inheritance and profile uses.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dreset_002dentry">
+<h4 class="subsubsection"><span>2.59.1.48 emacsvox-aural-voice-palettes-reset-entry<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dreset_002dentry"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dreset_002dentry"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-reset-entry</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dreset_002dentry"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dreset_002dentry-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose a direct voice to reset to its parent’s complete entry.
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent">
-<h4 class="subsubsection"><span>2.55.1.40 emacsvox-aural-voice-palettes-speak-current<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.49 emacsvox-aural-voice-palettes-speak-current<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-speak-current</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent-1"></a>
@@ -649,7 +764,7 @@ x		emacsvox-aural-voice-palettes-explain
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent_002dcell">
-<h4 class="subsubsection"><span>2.55.1.41 emacsvox-aural-voice-palettes-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.59.1.50 emacsvox-aural-voice-palettes-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-speak-current-cell</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent_002dcell"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dspeak_002dcurrent_002dcell-1"></a>
@@ -660,245 +775,35 @@ x		emacsvox-aural-voice-palettes-explain
 </dd></dl>
 
 </div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002daudition">
-<h4 class="subsubsection"><span>2.55.1.42 emacsvox-aural-voice-tuner-audition<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002daudition"> &para;</a></span></h4>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002duse_002dat_002dstartup">
+<h4 class="subsubsection"><span>2.59.1.51 emacsvox-aural-voice-palettes-use-at-startup<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002duse_002dat_002dstartup"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002daudition"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-audition</strong> <var class="def-var-arguments">(&amp;optional announcement)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002daudition"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002daudition-1"></a>
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002duse_002dat_002dstartup"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-use-at-startup</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002duse_002dat_002dstartup"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002duse_002dat_002dstartup-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Audition the unsaved working style after optional ANNOUNCEMENT.
-
-(fn &amp;optional ANNOUNCEMENT)
+<pre class="format-preformatted">Use the selected palette in the saved startup profile without applying it.
 </pre></div>
 </dd></dl>
 
 </div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dcompare">
-<h4 class="subsubsection"><span>2.55.1.43 emacsvox-aural-voice-tuner-compare<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dcompare"> &para;</a></span></h4>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes_002dwhere_002dused">
+<h4 class="subsubsection"><span>2.59.1.52 emacsvox-aural-voice-palettes-where-used<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes_002dwhere_002dused"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dcompare"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-compare</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dcompare"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dcompare-1"></a>
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dwhere_002dused"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-palettes-where-used</strong> <var class="def-var-arguments">(&amp;optional palette voice)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dpalettes_002dwhere_002dused"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dpalettes_002dwhere_002dused-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Alternate an opening-style and working-style comparison sample.
-</pre></div>
-</dd></dl>
+<pre class="format-preformatted">Show known uses and descendants of PALETTE, or its selected VOICE.
 
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002ddecrease">
-<h4 class="subsubsection"><span>2.55.1.44 emacsvox-aural-voice-tuner-decrease<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002ddecrease"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002ddecrease"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-decrease</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002ddecrease"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002ddecrease-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Decrease the current numeric dimension and audition its new value.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dedit">
-<h4 class="subsubsection"><span>2.55.1.45 emacsvox-aural-voice-tuner-edit<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dedit"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dedit"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-edit</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dedit"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dedit-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Edit the current dimension and audition the new value.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dhelp">
-<h4 class="subsubsection"><span>2.55.1.46 emacsvox-aural-voice-tuner-help<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dhelp"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-help</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dhelp"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dhelp-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Display and speak voice tuner help.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dincrease">
-<h4 class="subsubsection"><span>2.55.1.47 emacsvox-aural-voice-tuner-increase<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dincrease"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dincrease"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-increase</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dincrease"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dincrease-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Increase the current numeric dimension and audition its new value.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dmode">
-<h4 class="subsubsection"><span>2.55.1.48 emacsvox-aural-voice-tuner-mode<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dmode"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dmode"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dmode-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Transactional spoken tuner for one personal-palette voice.
-
-In addition to any hooks its parent mode
-‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
-hook ‘emacsvox-aural-voice-tuner-mode-hook’, as the final or
-penultimate step during initialization.
-
-Key             Binding
-&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
-RET		emacsvox-aural-voice-tuner-edit
-+		emacsvox-aural-voice-tuner-increase
--		emacsvox-aural-voice-tuner-decrease
-0 .. 9		emacsvox-aural-voice-tuner-set-digit
-?		emacsvox-aural-voice-tuner-help
-B		emacsvox-aural-voice-tuner-compare
-P		emacsvox-aural-voice-tuner-audition
-R		emacsvox-aural-voice-tuner-restore
-d		emacsvox-aural-voice-tuner-use-default
-e		emacsvox-aural-voice-tuner-edit
-h		emacsvox-aural
-q		emacsvox-aural-voice-tuner-quit
-u		emacsvox-aural-voice-tuner-undo
-w		emacsvox-aural-voice-tuner-save
-&lt;left&gt;		emacsvox-aural-voice-tuner-decrease
-&lt;right&gt;		emacsvox-aural-voice-tuner-increase
-
-C-c C-c		emacsvox-aural-voice-tuner-save
-C-c C-k		emacsvox-aural-voice-tuner-quit
-
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dnext">
-<h4 class="subsubsection"><span>2.55.1.49 emacsvox-aural-voice-tuner-next<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dnext"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dnext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-next</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dnext"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dnext-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Move to and speak the next tunable dimension.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dprevious">
-<h4 class="subsubsection"><span>2.55.1.50 emacsvox-aural-voice-tuner-previous<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dprevious"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dprevious"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-previous</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dprevious"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dprevious-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Move to and speak the previous tunable dimension.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dquit">
-<h4 class="subsubsection"><span>2.55.1.51 emacsvox-aural-voice-tuner-quit<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dquit"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dquit"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-quit</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dquit"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dquit-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Cancel tuning, asking before discarding unsaved changes.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002drefresh">
-<h4 class="subsubsection"><span>2.55.1.52 emacsvox-aural-voice-tuner-refresh<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002drefresh"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-refresh</strong> <var class="def-var-arguments">(&amp;optional dimension)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002drefresh"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002drefresh-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Refresh the tuner while preserving DIMENSION and the current column.
-
-(fn &amp;optional DIMENSION)
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002drestore">
-<h4 class="subsubsection"><span>2.55.1.53 emacsvox-aural-voice-tuner-restore<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002drestore"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002drestore"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-restore</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002drestore"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002drestore-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Restore and audition the style present when the tuner opened.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dsave">
-<h4 class="subsubsection"><span>2.55.1.54 emacsvox-aural-voice-tuner-save<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dsave"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dsave"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-save</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dsave"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dsave-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Atomically save the portable style and return to the voice preview.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dset_002ddigit">
-<h4 class="subsubsection"><span>2.55.1.55 emacsvox-aural-voice-tuner-set-digit<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dset_002ddigit"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dset_002ddigit"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-set-digit</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dset_002ddigit"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dset_002ddigit-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Set the current numeric dimension from the typed digit and audition it.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dspeak_002dcurrent">
-<h4 class="subsubsection"><span>2.55.1.56 emacsvox-aural-voice-tuner-speak-current<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dspeak_002dcurrent"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dspeak_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-speak-current</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dspeak_002dcurrent"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dspeak_002dcurrent-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Speak the complete tuner row at point.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002dundo">
-<h4 class="subsubsection"><span>2.55.1.57 emacsvox-aural-voice-tuner-undo<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002dundo"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002dundo"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-undo</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002dundo"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002dundo-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Undo the most recent unsaved tuner change and audition it.
-</pre></div>
-</dd></dl>
-
-</div>
-<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dtuner_002duse_002ddefault">
-<h4 class="subsubsection"><span>2.55.1.58 emacsvox-aural-voice-tuner-use-default<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dtuner_002duse_002ddefault"> &para;</a></span></h4>
-<dl class="first-deffn def-block">
-<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dtuner_002duse_002ddefault"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-tuner-use-default</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dtuner_002duse_002ddefault"> &para;</a></span></dt>
-<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dtuner_002duse_002ddefault-1"></a>
-
-<div class="format">
-<pre class="format-preformatted">Use the adapter default for the current dimension and audition it.
+(fn &amp;optional PALETTE VOICE)
 </pre></div>
 </dd></dl>
 
 </div>
 </div>
 <div class="subsection-level-extent" id="emacsvox_002daural_002dvoice_002dpalettes-Options">
-<h4 class="subsection"><span>2.55.2 emacsvox-aural-voice-palettes Options<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes-Options"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.59.2 emacsvox-aural-voice-palettes Options<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dpalettes-Options"> &para;</a></span></h4>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
 <dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-47"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-voice-palettes-preview-text</var><a class="copiable-link" href="#index-User-Option-47"> &para;</a></span></dt>
@@ -916,7 +821,7 @@ C-c C-k		emacsvox-aural-voice-tuner-quit
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="emacsvox_002daural_002dvoice_002dworkbench.html">emacsvox-aural-voice-workbench</a>, Previous: <a href="emacsvox_002daural_002dvoice_002dexperiment.html">emacsvox-aural-voice-experiment</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="emacsvox_002daural_002dvoice_002druntime.html">emacsvox-aural-voice-runtime</a>, Previous: <a href="emacsvox_002daural_002dvoice_002deditor.html">emacsvox-aural-voice-editor</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

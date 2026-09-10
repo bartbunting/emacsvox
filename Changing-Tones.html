@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Changing Tones (Emacsvox User Manual)</title>
+
+<meta name="description" content="Changing Tones (Emacsvox User Manual)">
+<meta name="keywords" content="Changing Tones (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Sounds-And-Space.html" rel="up" title="Sounds And Space">
+<link href="Spatial-Presentation-Controls.html" rel="next" title="Spatial Presentation Controls">
+<link href="Changing-One-Sound.html" rel="prev" title="Changing One Sound">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Changing-Tones">
+<div class="nav-panel">
+<p>
+Next: <a href="Spatial-Presentation-Controls.html" accesskey="n" rel="next">Adjust Spatial Presentation</a>, Previous: <a href="Changing-One-Sound.html" accesskey="p" rel="prev">Walkthrough: Silence One Cue</a>, Up: <a href="Sounds-And-Space.html" accesskey="u" rel="up">Sounds, Tones, And Spatial Cues</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Change-A-Blank_002dLine-Tone"><span>6.8.3 Change A Blank-Line Tone<a class="copiable-link" href="#Change-A-Blank_002dLine-Tone"> &para;</a></span></h4>
+
+<p>This changes a tone already present in recorded blank-line feedback. The
+available actions depend on what your integration actually produced.
+</p>
+<ol class="enumerate">
+<li> Navigate onto a blank line, then open <kbd class="kbd">C-e H H</kbd>. Select that feedback
+record and press <kbd class="kbd">C</kbd>. Select its part if the record has several.
+</li><li> Press <kbd class="kbd">c</kbd> and choose <em class="emph">Change a tone</em>. Select the tone, choose <em class="emph">Pitch and
+duration</em>, then enter <code class="code">500</code> Hertz and <code class="code">80</code> milliseconds as a trial.
+If the tone was between other components, choose <em class="emph">Before the other
+feedback</em> when asked about replacement placement. The summary includes
+this movement; inspect it along with the pitch and duration.
+</li><li> Compare <kbd class="kbd">O</kbd> and <kbd class="kbd">P</kbd>. The changed example should retain its other
+content while changing that tone. A named tone can be selected instead
+of entering numbers.
+</li><li> Press <kbd class="kbd">m</kbd> to review the matching facts. Press <kbd class="kbd">l</kbd> and choose <em class="emph">This
+Emacs session</em>, review the summary, and press <kbd class="kbd">a</kbd>. Navigate onto another
+matching blank line to hear the live result.
+</li><li> Restore the earlier behavior by disabling or deleting this session rule
+in <em class="emph">Your feedback rules</em>. It also expires when Emacs exits.
+</li></ol>
+
+<p>If the record contains a sampled cue instead of a tone, <em class="emph">Change a tone</em> is
+absent. Explain the record to identify the cue. You can suppress it with one
+rule and add a tone with another; remove both rules to restore the original.
+If no record was retained, check the history limit and repeat the action.
+The interface cannot infer a missing component from a visually blank line.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Spatial-Presentation-Controls.html">Adjust Spatial Presentation</a>, Previous: <a href="Changing-One-Sound.html">Walkthrough: Silence One Cue</a>, Up: <a href="Sounds-And-Space.html">Sounds, Tones, And Spatial Cues</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

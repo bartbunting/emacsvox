@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Speech Engine Preferences (Emacsvox User Manual)</title>
+
+<meta name="description" content="Speech Engine Preferences (Emacsvox User Manual)">
+<meta name="keywords" content="Speech Engine Preferences (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Installed-Voices-And-Engines.html" rel="up" title="Installed Voices And Engines">
+<link href="Keeping-A-Voice-Experiment.html" rel="prev" title="Keeping A Voice Experiment">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Speech-Engine-Preferences">
+<div class="nav-panel">
+<p>
+Previous: <a href="Keeping-A-Voice-Experiment.html" accesskey="p" rel="prev">Walkthrough: Keep An Installed Voice Experiment</a>, Up: <a href="Installed-Voices-And-Engines.html" accesskey="u" rel="up">Browse Installed Voices And Choose Engines</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Set-Shared-Engine-Preferences"><span>6.7.3 Set Shared Engine Preferences<a class="copiable-link" href="#Set-Shared-Engine-Preferences"> &para;</a></span></h4>
+
+<p>For a quick engine preference, <kbd class="kbd">C-e d e</kbd> chooses an available engine
+for the current Emacs session.  Use <kbd class="kbd">C-u C-e d e</kbd> to save the new
+preference. On a first run with no saved engine settings, the ordinary command
+uses the live Omnivox policy as an in-memory baseline and writes no file; the
+prefixed command explicitly saves that baseline and the selected preference.
+Explicit physical choices in named palette voices still take precedence.
+</p>
+<p>All named voices use the common editor and the same complete palette model.
+Workbench engine policy is shared across palettes: <kbd class="kbd">O</kbd> toggles
+preferred engines and <kbd class="kbd">[</kbd> / <kbd class="kbd">]</kbd> reorder them;
+<kbd class="kbd">f</kbd> toggles fallback engines and <code class="code">{</code> / <code class="code">}</code> reorder those. <kbd class="kbd">D</kbd> enables or disables an
+engine, and <kbd class="kbd">K</kbd> requests a recovery probe. These are staged
+policy edits; <kbd class="kbd">w</kbd> saves and applies them. Physical choices for
+a named voice are saved in that voice&rsquo;s editor.
+</p>
+<p>Tables put voice or engine names first. Detailed adapter capabilities, native
+identifiers and registration information are available with <kbd class="kbd">x</kbd>
+for Details. Availability, failure reasons, predicted selection and observed
+playback remain distinct. Inventory predictions do not prove that audio played.
+</p>
+<p>Saving engine policy is separate from saving a named voice or a Presentation
+Profile. If an apply fails or is unconfirmed, see
+<a data-manual="emacsvox" href="../Recovering-Aural-Changes.html#Recovering-Aural-Changes">Recovering Unfinished Changes</a>. Installation and optional engine modules are
+covered in <a data-manual="emacsvox" href="../Optional-Omnivox-Engine-Modules.html#Optional-Omnivox-Engine-Modules">Optional Omnivox Engine Modules</a>.
+</p>
+</div>
+
+
+
+</body>
+</html>

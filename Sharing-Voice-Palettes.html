@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Sharing Voice Palettes (Emacsvox User Manual)</title>
+
+<meta name="description" content="Sharing Voice Palettes (Emacsvox User Manual)">
+<meta name="keywords" content="Sharing Voice Palettes (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Presentation-Profiles.html" rel="up" title="Presentation Profiles">
+<link href="Saving-And-Startup.html" rel="prev" title="Saving And Startup">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Sharing-Voice-Palettes">
+<div class="nav-panel">
+<p>
+Previous: <a href="Saving-And-Startup.html" accesskey="p" rel="prev">Choose What Persists</a>, Up: <a href="Presentation-Profiles.html" accesskey="u" rel="up">Save, Switch, And Share Your Setup</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Export_002c-Back-Up_002c-And-Import-Palettes"><span>6.10.3 Export, Back Up, And Import Palettes<a class="copiable-link" href="#Export_002c-Back-Up_002c-And-Import-Palettes"> &para;</a></span></h4>
+
+<p>For sharing, <kbd class="kbd">w</kbd> exports effective portable entries and asks
+before omitting machine-local physical choices. <kbd class="kbd">W</kbd> creates a
+full local backup containing the palette&rsquo;s ancestry and referenced local
+choices. Import with <kbd class="kbd">i</kbd> accepts either file and creates an
+independent personal palette under an unused name; it does not replace the
+original ancestry tree or activate the imported palette. Missing installed
+voices are reported and retained for later replacement. A partial import keeps
+its proposal available for Retry or Discard.
+</p>
+<p>For example, select <code class="code">reading-demo</code> in Voice Palettes and press <kbd class="kbd">w</kbd> to
+export a portable file. Review any omitted local choices. Import that file
+with <kbd class="kbd">i</kbd> under an unused name such as <code class="code">reading-import-demo</code>. Enter the
+imported palette and preview its voices before activating it. A retained
+unavailable choice is a request to review, not evidence of successful audio.
+Delete the imported copy when finished if no profiles, children, or rules
+need it. The original palette is unchanged by this trial.
+</p>
+<p>Use uppercase <kbd class="kbd">W</kbd> when the aim is to retain exact local choice data with
+the required palette ancestry. Importing that backup still creates a new,
+independent palette; it does not overwrite the original tree. Neither form
+contains speech engines or sound-pack audio, and a palette backup is not a
+backup of every Emacsvox setting.
+</p>
+</div>
+
+
+
+</body>
+</html>

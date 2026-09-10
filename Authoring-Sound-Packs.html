@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Authoring Sound Packs (Emacsvox User Manual)</title>
+
+<meta name="description" content="Authoring Sound Packs (Emacsvox User Manual)">
+<meta name="keywords" content="Authoring Sound Packs (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Integration-Maintenance.html" rel="up" title="Integration Maintenance">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Authoring-Sound-Packs">
+<div class="nav-panel">
+<p>
+Up: <a href="Integration-Maintenance.html" accesskey="u" rel="up">Integration Maintenance</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Authoring-Sound-Packs-1"><span>16.3.16 Authoring Sound Packs<a class="copiable-link" href="#Authoring-Sound-Packs-1"> &para;</a></span></h4>
+
+<p>Ordinary selection, preview, and cue remapping are covered in
+<a data-manual="emacsvox" href="../Sounds-And-Space.html#Sounds-And-Space">Sounds, Tones, and Spatial Cues</a>. Preparing a new pack requires audio files
+and resource metadata. A pack supplies recordings for registered cue names;
+the presentation rules decide when those cues occur.
+</p>
+<p>The standard personal discovery root is &lsquo;<samp class="samp">~/.emacsvox/sounds/packs/</samp>&rsquo;, controlled
+by <code class="code">emacsvox-aural-personal-sound-packs-directory</code>. Each immediate child is a
+candidate pack, and its directory basename becomes its identifier. Choose an
+unused identifier. A directory containing &lsquo;<samp class="samp">button.ogg</samp>&rsquo; is discovered without
+a manifest. A partial pack can instead supply the data-only manifest
+&lsquo;<samp class="samp">emacsvox-sound-pack.el</samp>&rsquo; and inherit missing cues from another pack.
+</p>
+<p>For example, create &lsquo;<samp class="samp">my-cues/</samp>&rsquo; below the personal root and put this single
+Lisp data form in &lsquo;<samp class="samp">my-cues/emacsvox-sound-pack.el</samp>&rsquo;:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(:schema-version 1
+ :summary &quot;My personal cues, inheriting the remaining chimes&quot;
+ :parent chimes
+ :default-spatialization neutral)
+</pre></div>
+
+<p>The file contains data, not executable initialization: do not wrap the form in
+<code class="code">setq</code>, quote it, or add a second form. Put a replacement recording such as
+&lsquo;<samp class="samp">button.ogg</samp>&rsquo; in the same directory. Its basename names the registered cue.
+Unknown cue names fail the resource audit; introducing a new semantic cue
+requires an integration to register its intent and use it. Every standalone
+sound pack must resolve &lsquo;<samp class="samp">button</samp>&rsquo;, directly or through its declared parent.
+</p>
+<p>The optional <code class="code">:profiles</code> field lists registered cue-coverage requirements.
+These are resource validation contracts, distinct from Presentation Profiles
+that select a user&rsquo;s setup. Keep the coverage appropriate to the intended
+uses rather than treating a successful single audition as complete coverage.
+Default spatialization is <code class="code">neutral</code>, <code class="code">stereo</code>, or <code class="code">pre-spatialized</code>. Use the
+last for recordings that already encode their intended spatial placement,
+so runtime balance does not position them a second time.
+</p>
+<p>Open Aural Home&rsquo;s <em class="emph">Sound packs</em> and press <kbd class="kbd">g</kbd> to rescan.
+Inspect the new pack with <kbd class="key">RET</kbd>: the replacement should be
+native, while unchanged cues identify their parent or fallback provider.
+Audition individual cues with <kbd class="kbd">P</kbd> and validate with
+<kbd class="kbd">v</kbd> before activating the pack. Missing or malformed assets
+are errors to resolve, not cues to copy from an unrelated installed pack.
+No activation follows from writing the directory or previewing it.
+</p>
+<p>The manager&rsquo;s <kbd class="kbd">e</kbd> edits metadata for discovered packs only.
+It replaces the manifest atomically, retains the previous file with a &lsquo;<samp class="samp">~</samp>&rsquo;
+suffix, and restores the old metadata if validation of the refreshed pack
+fails. It does not edit recordings. After changing files externally, refresh
+the pack; <code class="code">emacsvox-aural-refresh-resource-pack</code> refreshes an already registered
+pack, and <code class="code">emacsvox-aural-refresh-discovered-resource-packs</code> rescans discovery
+roots. Engine installation, remote sound-directory placement, and user
+startup selection remain separate tasks.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Up: <a href="Integration-Maintenance.html">Integration Maintenance</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

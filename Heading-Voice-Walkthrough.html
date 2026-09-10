@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Heading Voice Walkthrough (Emacsvox User Manual)</title>
+
+<meta name="description" content="Heading Voice Walkthrough (Emacsvox User Manual)">
+<meta name="keywords" content="Heading Voice Walkthrough (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Adjusting-Presentation.html" rel="up" title="Adjusting Presentation">
+<link href="Guided-Feedback-Changes.html" rel="next" title="Guided Feedback Changes">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Heading-Voice-Walkthrough">
+<div class="nav-panel">
+<p>
+Next: <a href="Guided-Feedback-Changes.html" accesskey="n" rel="next">Guided Change This Feedback</a>, Up: <a href="Adjusting-Presentation.html" accesskey="u" rel="up">Change Feedback And Manage Rules</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Walkthrough_003a-Change-Headings-In-One-Buffer"><span>6.4.1 Walkthrough: Change Headings In One Buffer<a class="copiable-link" href="#Walkthrough_003a-Change-Headings-In-One-Buffer"> &para;</a></span></h4>
+
+<p>This example changes headings in a temporary Org buffer. It leaves your
+palette definitions and saved rules alone.
+</p>
+<ol class="enumerate">
+<li> Use <kbd class="kbd">C-x b</kbd> to create a new buffer named <code class="code">*aural-practice*</code>. Run
+<kbd class="kbd">M-x org-mode</kbd> and insert this short document:
+
+<div class="example">
+<pre class="example-preformatted">* Reading notes
+An ordinary paragraph.
+* Next steps
+Another ordinary paragraph.
+</pre></div>
+
+</li><li> Move onto the first heading and press <kbd class="kbd">C-e E</kbd>. Find its current named
+voice and the facts identifying a heading. The explanation should tell
+you whether it describes recorded output or a simulation.
+
+</li><li> Open <kbd class="kbd">C-e H c</kbd>. Press <kbd class="kbd">c</kbd>, select <em class="emph">Content voice</em>, and choose
+<code class="code">annotate</code> with <kbd class="kbd">RET</kbd>. If <code class="code">annotate</code> is already the original, use
+<code class="code">bolden</code> instead. <kbd class="kbd">O</kbd> plays the original and <kbd class="kbd">P</kbd> previews your choice.
+At this point the change exists only in the draft.
+
+</li><li> Press <kbd class="kbd">m</kbd> to inspect <em class="emph">What should match</em>. Keep the Org module and
+heading role, plus heading level if shown. Leave other criteria as shown
+for this first example. Press <kbd class="kbd">l</kbd> and choose <em class="emph">Current buffer, until it
+is killed</em>. This means every matching heading in this buffer, not just
+the heading you started from.
+
+</li><li> Review the summary, then press <kbd class="kbd">a</kbd>. Return through Home with <kbd class="kbd">h</kbd>,
+then <kbd class="kbd">C-c C-o</kbd>. Move between the two headings using the same navigation
+action. Both matching headings should use your chosen voice; the ordinary
+paragraphs should keep their previous presentation.
+
+</li><li> Press <kbd class="kbd">C-e E</kbd> on a heading again. Check that the new buffer rule supplies
+the selected voice. If the sound is too similar to distinguish, the
+explanation still tells you whether the rule matched; compare voices in
+the palette or consult <a data-manual="emacsvox" href="../Presentation-Troubleshooting.html#Presentation-Troubleshooting">Troubleshooting</a>.
+
+</li><li> To undo, open Home&rsquo;s <em class="emph">Your feedback rules</em> with <kbd class="kbd">O</kbd>. Find the new rule
+in the buffer scope and inspect its target. Press <kbd class="kbd">t</kbd> to disable it or
+<kbd class="kbd">d</kbd> to remove it, then revisit the heading. Killing this practice buffer
+also ends its buffer rules. Nothing from this example survives a restart.
+</li></ol>
+
+<p>For a permanent change, repeat the task on a representative item and choose
+<em class="emph">Saved personal rule</em> at step 4. Review the matching criteria carefully:
+a permanent rule can affect future matching buffers too.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Guided-Feedback-Changes.html">Guided Change This Feedback</a>, Up: <a href="Adjusting-Presentation.html">Change Feedback And Manage Rules</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

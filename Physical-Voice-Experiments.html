@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Physical Voice Experiments (Emacsvox User Manual)</title>
+
+<meta name="description" content="Physical Voice Experiments (Emacsvox User Manual)">
+<meta name="keywords" content="Physical Voice Experiments (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Installed-Voices-And-Engines.html" rel="up" title="Installed Voices And Engines">
+<link href="Keeping-A-Voice-Experiment.html" rel="next" title="Keeping A Voice Experiment">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Physical-Voice-Experiments">
+<div class="nav-panel">
+<p>
+Next: <a href="Keeping-A-Voice-Experiment.html" accesskey="n" rel="next">Walkthrough: Keep An Installed Voice Experiment</a>, Up: <a href="Installed-Voices-And-Engines.html" accesskey="u" rel="up">Browse Installed Voices And Choose Engines</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Experiment-With-An-Installed-Voice"><span>6.7.1 Experiment With An Installed Voice<a class="copiable-link" href="#Experiment-With-An-Installed-Voice"> &para;</a></span></h4>
+
+<p>In <em class="emph">Browse installed voices</em>, select a physical voice and press
+<kbd class="kbd">t</kbd>. This opens an experiment with that exact engine and
+voice, adapter-default speech characteristics, the current base speech rate,
+and neutral audio effects. Opening, adjusting and comparing write no settings.
+</p>
+<p>The field navigation, adjustments and comparison controls are the same as
+in <a data-manual="emacsvox" href="../Editing-Named-Voices.html#Editing-Named-Voices">Edit a Named Voice</a>. In an experiment, <kbd class="kbd">w</kbd> first asks
+where to use the result; it cannot save a voice without a palette destination.
+</p>
+<p>To compare pitch on an installed voice:
+</p>
+<ol class="enumerate">
+<li> From Home choose <em class="emph">Browse installed voices</em>, select an available engine,
+and press <kbd class="kbd">RET</kbd>. Select a physical voice and press <kbd class="kbd">P</kbd>. You can use
+<kbd class="kbd">B</kbd> to compare it with another available voice, using the same sentence.
+</li><li> Press <kbd class="kbd">t</kbd> on the physical voice to open an experiment. Move to <em class="emph">Average
+Pitch</em>, enter <code class="code">3</code>, and listen. Then enter <code class="code">7</code> and listen again. If the engine
+cannot change pitch, the unsupported setting remains visible.
+</li><li> Press <kbd class="kbd">B</kbd> for the labelled original and edited comparison. Here
+&ldquo;original&rdquo; means the experiment&rsquo;s captured starting voice, not the
+immediately preceding edit. <kbd class="kbd">u</kbd> undoes an edit; <kbd class="kbd">d</kbd> restores the
+adapter default for the current adjustment.
+</li><li> To finish without saving, press <kbd class="kbd">q</kbd> and choose to discard the experiment.
+To keep it, use the following walkthrough instead.
+</li></ol>
+
+<p>For a physical experiment, <kbd class="kbd">w</kbd> chooses a destination palette
+and named voice. The default keeps <em class="emph">Physical voice and adjustments — this
+choice</em>. You can instead keep only the physical voice, only the adjustments for
+a selected row, or explicitly change shared settings for all inheriting choices.
+A physical voice can replace a selected row, become preferred, or be appended
+as a fallback. Row-level adjustments replace that row&rsquo;s tuning with the
+experiment&rsquo;s values and adapter defaults. This prevents unrelated destination
+shared settings from changing the experiment&rsquo;s base sound. Use &lsquo;<samp class="samp">i</samp>&rsquo; in the row&rsquo;s
+individual adjustment panel for any field you want to inherit afterward.
+</p>
+<p>Other rows and shared settings are retained during a row-level keep. Replacing
+only the physical voice asks whether to keep or reset an existing row&rsquo;s custom
+settings. Shared adjustment keeps affect inherited fields; custom row settings
+still override them. An existing destination draft offers to add the chosen
+changes or resume without adding. Other edits and pending save recovery remain.
+The destination opens in the same editor; preview plays the proposed saved
+combination, which may differ from the experiment because of the chosen scope
+and destination fallback order. Choosing a destination has not saved anything yet.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Keeping-A-Voice-Experiment.html">Walkthrough: Keep An Installed Voice Experiment</a>, Up: <a href="Installed-Voices-And-Engines.html">Browse Installed Voices And Choose Engines</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

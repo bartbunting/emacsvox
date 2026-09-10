@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Choosing A Voice For An Item (Emacsvox User Manual)</title>
+
+<meta name="description" content="Choosing A Voice For An Item (Emacsvox User Manual)">
+<meta name="keywords" content="Choosing A Voice For An Item (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Adjusting-Presentation.html" rel="up" title="Adjusting Presentation">
+<link href="Managing-Feedback-Rules.html" rel="next" title="Managing Feedback Rules">
+<link href="Guided-Feedback-Changes.html" rel="prev" title="Guided Feedback Changes">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Choosing-A-Voice-For-An-Item">
+<div class="nav-panel">
+<p>
+Next: <a href="Managing-Feedback-Rules.html" accesskey="n" rel="next">Review And Remove Your Rules</a>, Previous: <a href="Guided-Feedback-Changes.html" accesskey="p" rel="prev">Guided Change This Feedback</a>, Up: <a href="Adjusting-Presentation.html" accesskey="u" rel="up">Change Feedback And Manage Rules</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Remap-One-Item-At-Point"><span>6.4.3 Remap One Item At Point<a class="copiable-link" href="#Remap-One-Item-At-Point"> &para;</a></span></h4>
+
+<ol class="enumerate">
+<li> Move to a representative object and press <kbd class="kbd">C-e E</kbd> so you know what
+currently controls it.
+
+</li><li> Press <kbd class="kbd">C-e H</kbd>.  Choose <em class="emph">Choose a voice for this item</em> with
+<kbd class="kbd">r</kbd> to use a different named voice here, or <em class="emph">Edit the named voice used
+here</em> with <kbd class="kbd">T</kbd> to open the current named voice in the common voice editor.
+Tuning changes that voice wherever it is used in the palette; remapping
+changes which voice is used for the face or item.  For example, at a shell
+prompt you can assign another voice to the prompt face, or tune the voice
+currently used by prompts.  You do not need to hear the prompt first.
+
+<p>In the remapping screen, move with <kbd class="kbd">n</kbd> and
+<kbd class="kbd">p</kbd> or the arrow keys.  Press <kbd class="kbd">RET</kbd> on
+<em class="emph">Voice</em> to choose a voice, <em class="emph">Preview original</em> to hear the captured item, or
+<em class="emph">Preview change</em> to hear your choice.  <kbd class="kbd">O</kbd> and
+<kbd class="kbd">P</kbd> also play these previews; <kbd class="kbd">S</kbd> stops.
+Previewing does not save the mapping or retune the named voice.
+</p>
+<p><kbd class="kbd">R</kbd> in Home still remaps one exact earcon.
+</p>
+</li><li> Choose <em class="emph">How long</em> deliberately:
+
+<ul class="itemize mark-bullet">
+<li>a <em class="emph">personal</em> rule persists across Emacs sessions;
+</li><li>a <em class="emph">session</em> rule lasts until this Emacs exits; and
+</li><li>a <em class="emph">buffer</em> rule affects only the remembered live buffer.
+</li></ul>
+
+</li><li> Check <em class="emph">Applies to</em>, <em class="emph">Voice</em>, and <em class="emph">How long</em>, then activate <em class="emph">Save</em> or press
+<kbd class="kbd">w</kbd>.  A face mapping affects matching uses of that face
+within the displayed module or mode and chosen lifetime.  <em class="emph">Advanced</em>
+opens the full rule editor when you need more detailed matching controls.
+At the top level, <kbd class="kbd">q</kbd> hides the simple remapping screen and keeps its draft;
+<em class="emph">Resume unfinished changes</em> in Home finds it again after a voice is chosen.
+
+</li><li> Return to the source, repeat the action, and use <kbd class="kbd">C-e E</kbd> again to
+confirm which rule now wins.
+</li></ol>
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Managing-Feedback-Rules.html">Review And Remove Your Rules</a>, Previous: <a href="Guided-Feedback-Changes.html">Guided Change This Feedback</a>, Up: <a href="Adjusting-Presentation.html">Change Feedback And Manage Rules</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

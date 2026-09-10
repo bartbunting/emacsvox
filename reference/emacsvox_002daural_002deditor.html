@@ -39,7 +39,7 @@ Next: <a href="emacsvox_002daural_002dexplanation.html" accesskey="n" rel="next"
 <hr>
 <h3 class="section" id="emacsvox_002daural_002deditor-1"><span>2.23 emacsvox-aural-editor<a class="copiable-link" href="#emacsvox_002daural_002deditor-1"> &para;</a></span></h3>
 
-<p>A completion-driven special-mode editor for Presentation Options and
+<p>An expandable special-mode editor for Presentation Options and
 personal, session, or buffer-local rule layers.  The buffer remains plain
 text and predictable for speech access.
 </p>
@@ -161,7 +161,7 @@ Return the editor buffer.  Reopening a modified editor preserves its draft.
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dedit_002drule-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Edit the selected rule through guided prompts.
+<pre class="format-preformatted">Expand the selected rule’s settings, or edit just the selected panel field.
 </pre></div>
 </dd></dl>
 
@@ -221,7 +221,7 @@ Return the editor buffer.  Reopening a modified editor preserves its draft.
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dnext_002drule-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Move to the next rule.
+<pre class="format-preformatted">Move to the next rule or expanded setting.
 </pre></div>
 </dd></dl>
 
@@ -245,7 +245,7 @@ Return the editor buffer.  Reopening a modified editor preserves its draft.
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dprevious_002drule-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Move to the previous rule.
+<pre class="format-preformatted">Move to the previous rule or expanded setting.
 </pre></div>
 </dd></dl>
 
@@ -257,7 +257,7 @@ Return the editor buffer.  Reopening a modified editor preserves its draft.
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dquit-1"></a>
 
 <div class="format">
-<pre class="format-preformatted">Quit the editor, asking before discarding working changes.
+<pre class="format-preformatted">Go back one level, retaining the draft; check unsaved changes on list exit.
 </pre></div>
 </dd></dl>
 
@@ -327,15 +327,18 @@ penultimate step during initialization.
 Key             Binding
 &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
 RET		emacsvox-aural-editor-edit-rule
-SPC		scroll-up-command
+SPC		emacsvox-aural-editor&ndash;panel-speak
 -		negative-argument
 0 .. 9		digit-argument
 &lt;		beginning-of-buffer
 &gt;		end-of-buffer
 ?		emacsvox-aural-editor-help
+D		emacsvox-aural-editor&ndash;panel-remove
+E		emacsvox-aural-editor-edit-rule
 N		emacsvox-aural-editor-add-rule
 P		emacsvox-aural-editor-preview-rule
 S		emacsvox-aural-ui-stop-preview
+V		emacsvox-aural-voice-context-adjust-rule
 c		emacsvox-aural-editor-copy-rule
 d		emacsvox-aural-editor-delete-rule
 e		emacsvox-aural-editor-edit-rule

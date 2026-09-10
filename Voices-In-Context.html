@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Voices In Context (Emacsvox User Manual)</title>
+
+<meta name="description" content="Voices In Context (Emacsvox User Manual)">
+<meta name="keywords" content="Voices In Context (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Editing-Named-Voices.html" rel="up" title="Editing Named Voices">
+<link href="Voice-Fallbacks.html" rel="prev" title="Voice Fallbacks">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Voices-In-Context">
+<div class="nav-panel">
+<p>
+Previous: <a href="Voice-Fallbacks.html" accesskey="p" rel="prev">Choose And Tune Fallback Voices</a>, Up: <a href="Editing-Named-Voices.html" accesskey="u" rel="up">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Inspect-Or-Adjust-A-Voice-In-Context"><span>6.6.3 Inspect Or Adjust A Voice In Context<a class="copiable-link" href="#Inspect-Or-Adjust-A-Voice-In-Context"> &para;</a></span></h4>
+
+<p>In the common named-voice editor, choose <em class="emph">Effective sound / Where settings
+came from</em>. It uses the source item captured when you entered Aural Home or
+the voice list. If none is attached, choose an ordinary buffer at its current
+point. The item must have inspectable presentation facts or a valid retained
+presentation. <em class="emph">Choose another source context</em> selects a new item explicitly.
+</p>
+<p>This is a simulation using captured facts and rules. It shows the selected named
+voice, matching rules, requested values and each dimension&rsquo;s source. A rule
+can override pitch while another supplies richness. A stronger pitch rule can
+hide a base pitch edit; a rule selecting a different named voice can make the open
+base voice irrelevant to this item. Rates follow precedence too: competing
+relative-rate values do not add together.
+</p>
+<p><kbd class="kbd">P</kbd> plays the edited voice in this context;
+<kbd class="kbd">B</kbd> compares original and edited using the same captured facts,
+rules and text. These voice-only previews omit cues and spatial placement. Family remains a portable fallback outside full
+preview. On a server with per-choice support, the actual fallback&rsquo;s settings
+are applied before the captured context. An explicit rule value still overrides
+that row when it happens to equal the shared value. Requested values are
+separate from confirmed sample starts, accepted audio and
+unsupported adjustments. A changed or deleted source is rejected. After saving
+a rule, use <em class="emph">Refresh facts and rules from this source item</em> to capture its new
+contribution. <kbd class="kbd">q</kbd> returns to the base editor.
+</p>
+<p><em class="emph">Adjust for this context</em> presents the matching criteria and asks whether the
+rule lasts always (personal), for this Emacs session, or for this buffer. Choose
+one adjustment and its value. It opens the ordinary rule editor with that field
+prepared; changing richness alone produces a richness-only patch and does not
+select a different named voice. Review the rule&rsquo;s match with <kbd class="key">RET</kbd>,
+use <kbd class="kbd">V</kbd> to adjust another voice field, and save that scope with
+<kbd class="kbd">w</kbd>. Palette definitions are unchanged. Existing unsaved work
+in that rule editor must be completed before preparing another contextual rule.
+</p>
+<p>In the scoped field control, <em class="emph">Inherit</em> removes the field so weaker contributions
+can supply its value. Removing the final voice field removes the voice patch.
+Existing explicit default values are shown separately and preserved when you
+edit another field. Use <em class="emph">Inherit</em> to remove a contextual adjustment; zero is
+a value, not a request to inherit. Some older explicit defaults cannot reset
+an underlying voice setting on every backend. Check the preview and use the
+explanation to identify that limitation. Contextual changes are saved as rules;
+they do not replace the palette entry with the combined result. The
+<a data-manual="emacsvox" href="../Integration-Maintenance.html#Integration-Maintenance">Developer Guide</a> explains the representation and compatibility details.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Voice-Fallbacks.html">Choose And Tune Fallback Voices</a>, Up: <a href="Editing-Named-Voices.html">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

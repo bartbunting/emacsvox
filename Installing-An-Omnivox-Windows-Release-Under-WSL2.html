@@ -48,7 +48,7 @@ without changing anything:
 </pre></div>
 
 <p>The doctor detects the Windows architecture, chooses the matching Omnivox
-1.7.1 archive, and reports the Emacs and per-user paths it will use.  If Linux
+1.10.0 archive, and reports the Emacs and per-user paths it will use.  If Linux
 packages are missing, it prints one <code class="code">apt</code> command for you to review and run.
 Working <code class="code">powershell.exe</code> and <code class="code">wslpath</code> interoperation are required.  After
 resolving any reported prerequisite, run:
@@ -95,9 +95,9 @@ directory and verify that archive&rsquo;s published checksum.
 <p>Download the Windows x64 archive and the release checksum file in WSL:
 </p>
 <div class="example">
-<pre class="example-preformatted">mkdir -p &quot;$HOME/Downloads/omnivox-1.7.1&quot;
-cd &quot;$HOME/Downloads/omnivox-1.7.1&quot;
-omnivox_version=1.7.1
+<pre class="example-preformatted">mkdir -p &quot;$HOME/Downloads/omnivox-1.10.0&quot;
+cd &quot;$HOME/Downloads/omnivox-1.10.0&quot;
+omnivox_version=1.10.0
 archive=&quot;omnivox-${omnivox_version}-windows-x64.zip&quot;
 release_url=&quot;https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}&quot;
 curl -fLO &quot;$release_url/$archive&quot;
@@ -139,19 +139,19 @@ physical audio check:
 ./servers/omnivox --check
 </pre></div>
 
-<p>The version must report 1.7.0 or newer.  The check must produce both its tone
+<p>The version must report 1.10.0 or newer.  The check must produce both its tone
 and spoken confirmation.  Release CI verifies the downloaded archive, Windows x64
 architecture, adjacent eSpeak data, voice discovery, and headless synthesis
 through both WinRT and eSpeak, but only this audible check proves the local
 audio path.  The Windows archive is not code-signed.  If Windows security or
 local policy refuses it, do not weaken that policy to complete the install.
 </p>
-<p>The generic Omnivox 1.7.1 archive includes the portable RHVoice helper, but not
+<p>The generic Omnivox 1.10.0 archive includes the portable RHVoice helper, but not
 the RHVoice runtime, language data, or voices.  It does not contain the optional
 Piper, Flite, or RuTTS companions; none is needed for normal WinRT speech.
-Omnivox 1.7.1 publishes separate matching companions for those engines.
+Omnivox 1.10.0 publishes separate matching companions for those engines.
 Emacsvox&rsquo;s clean source-build route below verifies and stages the official
-Piper companion and builds RHVoice, Flite, and RuTTS from the matching 1.7.1
+Piper companion and builds RHVoice, Flite, and RuTTS from the matching 1.10.0
 source.  A Piper voice model and the RHVoice runtime and voices remain separate
 user-supplied files.  Flite and RuTTS need no external runtime installation in
 the source-built bundle.  Eloquence and DECtalk remain separately licensed,

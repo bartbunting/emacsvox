@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Keeping A Voice Experiment (Emacsvox User Manual)</title>
+
+<meta name="description" content="Keeping A Voice Experiment (Emacsvox User Manual)">
+<meta name="keywords" content="Keeping A Voice Experiment (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Installed-Voices-And-Engines.html" rel="up" title="Installed Voices And Engines">
+<link href="Speech-Engine-Preferences.html" rel="next" title="Speech Engine Preferences">
+<link href="Physical-Voice-Experiments.html" rel="prev" title="Physical Voice Experiments">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Keeping-A-Voice-Experiment">
+<div class="nav-panel">
+<p>
+Next: <a href="Speech-Engine-Preferences.html" accesskey="n" rel="next">Set Shared Engine Preferences</a>, Previous: <a href="Physical-Voice-Experiments.html" accesskey="p" rel="prev">Experiment With An Installed Voice</a>, Up: <a href="Installed-Voices-And-Engines.html" accesskey="u" rel="up">Browse Installed Voices And Choose Engines</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Walkthrough_003a-Keep-An-Installed-Voice-Experiment"><span>6.7.2 Walkthrough: Keep An Installed Voice Experiment<a class="copiable-link" href="#Walkthrough_003a-Keep-An-Installed-Voice-Experiment"> &para;</a></span></h4>
+
+<p>This example keeps the physical voice and its tuning together. First create
+<code class="code">reading-demo</code> as in <a data-manual="emacsvox" href="../Personal-Palette-Walkthrough.html#Personal-Palette-Walkthrough">Make a Personal Reading Palette</a>, or choose an existing
+personal destination. Note the active palette before beginning.
+</p>
+<ol class="enumerate">
+<li> In the installed-voice browser, open an experiment with <kbd class="kbd">t</kbd>, adjust a
+field, and use <kbd class="kbd">P</kbd> or <kbd class="kbd">B</kbd> to listen. Press <kbd class="kbd">w</kbd> when ready to keep it.
+</li><li> At <em class="emph">Destination palette</em>, choose your personal palette. At <em class="emph">Use for named
+voice</em>, choose <code class="code">bolden</code>. Select <em class="emph">Physical voice and adjustments — this
+choice</em>, then <em class="emph">Add as preferred</em>. These choices put the experiment first
+while retaining existing alternative physical choices.
+</li><li> The named-voice editor opens with the proposed combination. Nothing has
+been saved yet. Expand <em class="emph">Fallbacks</em>: the new first choice should be marked
+customized, with any previous explicit choices after it. <kbd class="kbd">P</kbd> plays the
+whole proposed voice. Review the reported engine and physical voice after
+the sample; an unavailable preferred choice can cause a fallback.
+</li><li> Press <kbd class="kbd">w</kbd> to save and apply. Wait for the editor&rsquo;s result. If it reports
+a partial save or failed application, keep the draft and follow
+<a data-manual="emacsvox" href="../Recovering-Aural-Changes.html#Recovering-Aural-Changes">Recovering Unfinished Changes</a>. A successful save selects the destination
+palette for this session. Use <kbd class="kbd">U</kbd> in Voice Palettes only if you also want
+that palette at startup.
+</li><li> To reverse this change before saving, use <kbd class="kbd">u</kbd> or discard the draft.
+After saving, reopen the named voice, expand <em class="emph">Fallbacks</em>, open the added
+choice&rsquo;s action menu with <kbd class="kbd">RET</kbd>, choose <em class="emph">Remove</em>, preview, and save.
+Removing that row retains the other choices and shared settings. Reactivate
+your original palette if you also want to restore the session selection.
+</li></ol>
+
+<p>To tune a fallback independently, open its action menu and choose <em class="emph">Customize
+this voice</em>. Set one field, audition that choice, then select <em class="emph">Play whole
+fallback chain</em> to test normal selection. Its custom field replaces the shared
+value only when that choice is used. <kbd class="kbd">i</kbd> returns the field to the shared
+value. Reordering a choice carries its adjustments with it.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Speech-Engine-Preferences.html">Set Shared Engine Preferences</a>, Previous: <a href="Physical-Voice-Experiments.html">Experiment With An Installed Voice</a>, Up: <a href="Installed-Voices-And-Engines.html">Browse Installed Voices And Choose Engines</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

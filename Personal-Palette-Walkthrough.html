@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Personal Palette Walkthrough (Emacsvox User Manual)</title>
+
+<meta name="description" content="Personal Palette Walkthrough (Emacsvox User Manual)">
+<meta name="keywords" content="Personal Palette Walkthrough (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Voices-And-Routing.html" rel="up" title="Voices And Routing">
+<link href="Palette-Inheritance-Walkthrough.html" rel="next" title="Palette Inheritance Walkthrough">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Personal-Palette-Walkthrough">
+<div class="nav-panel">
+<p>
+Next: <a href="Palette-Inheritance-Walkthrough.html" accesskey="n" rel="next">Walkthrough: Inheritance, Aliases, And Reset</a>, Up: <a href="Voices-And-Routing.html" accesskey="u" rel="up">Choose And Manage Voice Palettes</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Walkthrough_003a-Make-A-Personal-Reading-Palette"><span>6.5.1 Walkthrough: Make A Personal Reading Palette<a class="copiable-link" href="#Walkthrough_003a-Make-A-Personal-Reading-Palette"> &para;</a></span></h4>
+
+<p>This example gives you a personal place to adjust standard voices. Use an
+unused palette name; <code class="code">reading-demo</code> below is an example. Note your current
+palette before starting so you can return to it.
+</p>
+<ol class="enumerate">
+<li> Open <kbd class="kbd">C-e H V</kbd> for <em class="emph">Voice palettes</em>. Press <kbd class="kbd">N</kbd>, enter <code class="code">reading-demo</code>,
+give it a purpose such as &ldquo;My reading experiments&rdquo;, and choose
+<code class="code">acss-default</code> as its parent. Creation saves the new palette, but does not
+activate it. Its standard voices are inherited.
+
+</li><li> Press <kbd class="kbd">RET</kbd> to enter the new palette. Find <code class="code">bolden</code> and move to its
+<em class="emph">Source</em> column. It should name <code class="code">acss-default</code>. <kbd class="kbd">.</kbd> repeats the column
+title and value; <kbd class="kbd">SPC</kbd> reads the whole row. <kbd class="kbd">P</kbd> previews the voice.
+
+</li><li> Press <kbd class="kbd">e</kbd> to edit <code class="code">bolden</code> here. The editor identifies the destination
+palette and inherited source. Move to <em class="emph">Average Pitch</em>, press <kbd class="kbd">RET</kbd>,
+and enter <code class="code">6</code> (or <code class="code">5</code> if it is already six). <kbd class="kbd">B</kbd> compares the opening
+voice with the edited voice using the same text. Unsupported adjustments
+are reported; see <a data-manual="emacsvox" href="../Voice-Adjustments.html#Voice-Adjustments">Voice Adjustments</a> if the contrast is unclear.
+
+</li><li> Choose <em class="emph">Save to collection without selecting</em>. Wait for the save result,
+then use <kbd class="kbd">q</kbd> to return to the voice list. <em class="emph">Source</em> should now identify
+<code class="code">reading-demo</code> for <code class="code">bolden</code>. Other inherited entries still name their
+providers. Saving has created a complete local entry, not a pitch-only
+patch on the parent.
+
+</li><li> Press <kbd class="kbd">o</kbd> to return to the palette manager and <kbd class="kbd">a</kbd> on <code class="code">reading-demo</code>
+to activate it. Check its status, then revisit content that uses <code class="code">bolden</code>.
+This affects all uses resolving to your edited entry. Explanation at the
+source helps distinguish palette settings from additional contextual rules.
+
+</li><li> If you want this palette after restart, press <kbd class="kbd">U</kbd> on it in the palette
+manager and review the startup proposal. It updates the palette selection
+in the saved startup profile. If no startup profile exists, review the
+proposed new profile&rsquo;s other settings too. Saving the palette and selecting
+it for startup are separate actions.
+
+</li><li> To return to your previous sound, activate the original palette. If you
+also changed startup, use <kbd class="kbd">U</kbd> on that original palette to restore the
+startup selection. Your saved <code class="code">reading-demo</code> remains available for later
+experiments. To remove only its <code class="code">bolden</code> customization, follow the Reset
+example in <a data-manual="emacsvox" href="../Palette-Inheritance-Walkthrough.html#Palette-Inheritance-Walkthrough">Inheritance, Aliases, and Reset</a>.
+</li></ol>
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Palette-Inheritance-Walkthrough.html">Walkthrough: Inheritance, Aliases, And Reset</a>, Up: <a href="Voices-And-Routing.html">Choose And Manage Voice Palettes</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

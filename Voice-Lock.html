@@ -33,10 +33,10 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Voice-Lock">
 <div class="nav-panel">
 <p>
-Previous: <a href="Presentation-Troubleshooting.html" accesskey="p" rel="prev">Diagnose Unexpected Presentation</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="Presentation-Troubleshooting.html" accesskey="p" rel="prev">Troubleshooting And Recovery</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Voice-Lock-Compatibility"><span>6.10 Voice Lock Compatibility<a class="copiable-link" href="#Voice-Lock-Compatibility"> &para;</a></span></h3>
+<h3 class="section" id="Voice-Lock-And-Advanced-Configuration"><span>6.12 Voice Lock And Advanced Configuration<a class="copiable-link" href="#Voice-Lock-And-Advanced-Configuration"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Voice-Lock"></a>
 
@@ -49,7 +49,7 @@ can use those labels without requiring you to see them.
 </p>
 <table class="multitable">
 <tbody><tr><td width="28%">Policy</td><td width="42%">What it controls</td><td width="30%">How to inspect or change it</td></tr>
-<tr><td width="28%">Semantic presentation</td><td width="42%">Rules based on roles, events, states, and attributes supplied by integrations.</td><td width="30%">Use <kbd class="kbd">C-e E</kbd>, Presentation Options, and Overrides.</td></tr>
+<tr><td width="28%">Semantic presentation</td><td width="42%">Rules based on roles, events, states, and attributes supplied by integrations.</td><td width="30%">Use <kbd class="kbd">C-e E</kbd>, Presentation options, and Your feedback rules.</td></tr>
 <tr><td width="28%">Explicit face presentation</td><td width="42%">Aural rules that deliberately match a named Emacs face.</td><td width="30%">Run <code class="code">emacsvox-aural-toggle-face-presentation</code> or inspect it in Aural Doctor.</td></tr>
 <tr><td width="28%">Voice Lock</td><td width="42%">The historical face or personality-to-voice mapping in each buffer.</td><td width="30%">Use <kbd class="kbd">C-e d v</kbd> locally or <kbd class="kbd">C-e d C-v</kbd> globally.</td></tr>
 </tbody>
@@ -82,22 +82,23 @@ settings option rather than a generated <code class="code">acss-...</code> voice
 background is preserved in
 <a data-manual="emacsvox-heritage" href="heritage/Audio-Formatting-And-Aural-CSS.html#Audio-Formatting-And-Aural-CSS">Audio Formatting And Aural CSS</a> in <cite class="cite">Emacspeak Heritage</cite>.
 </p>
-</div>
-<div class="section-level-extent" id="Further-Detail">
-<h3 class="section"><span>6.11 Further Detail<a class="copiable-link" href="#Further-Detail"> &para;</a></span></h3>
-
-<p>Every Aural manager and editor has live <kbd class="kbd">?</kbd> help.  The generated
-<a data-manual="emacsvox-reference" href="reference/Emacsvox-Commands-And-Options.html#Emacsvox-Commands-And-Options">Emacsvox Commands And Options</a> in <cite class="cite">Emacsvox Reference Manual</cite> records the exact public commands and options.  The source-tree file
-<code class="code">etc/aural-presentation-reference.org</code> documents the rule schema, selection
-order, queue behavior, extension contracts, and advanced data authoring.  Those
-details are useful when developing an integration or a reusable Presentation
-Option; they are not required for ordinary customization.
+<p>Named formatting voices such as <code class="code">bolden</code> and <code class="code">annotate</code> follow the active
+palette. An inherited standard entry may use a personality&rsquo;s <code class="code">-settings</code>
+option as its implementation. This is the definition in the explicit standard
+root, not a second hidden palette fallback. Explicit styles keep their own
+settings, and explicit presentation rules can change the resulting voice.
+</p>
+<p>The <a data-manual="emacsvox" href="../Integration-Maintenance.html#Integration-Maintenance">Developer Guide</a> covers voice-style metadata, rule authoring contracts,
+and integration behavior; <a data-manual="emacsvox" href="../Speech-Server-Protocols.html#Speech-Server-Protocols">Speech Server Protocols</a> covers delivery.
+The generated <a data-manual="emacsvox-reference" href="reference/Emacsvox-Commands-And-Options.html#Emacsvox-Commands-And-Options">Emacsvox Commands And Options</a> in <cite class="cite">Emacsvox Reference Manual</cite>
+records exact commands, options, and keymaps. These references complement the
+tasks here; they are not prerequisites for using Aural Home.
 </p>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Previous: <a href="Presentation-Troubleshooting.html">Diagnose Unexpected Presentation</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="Presentation-Troubleshooting.html">Troubleshooting And Recovery</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

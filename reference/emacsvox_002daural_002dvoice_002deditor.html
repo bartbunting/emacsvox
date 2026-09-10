@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-voice-editor (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-aural-voice-editor (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-aural-voice-editor (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dvoice_002dpalettes.html" rel="next" title="emacsvox-aural-voice-palettes">
+<link href="emacsvox_002daural_002dvoice_002dediting.html" rel="prev" title="emacsvox-aural-voice-editing">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002dvoice_002deditor">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dvoice_002dpalettes.html" accesskey="n" rel="next">emacsvox-aural-voice-palettes</a>, Previous: <a href="emacsvox_002daural_002dvoice_002dediting.html" accesskey="p" rel="prev">emacsvox-aural-voice-editing</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002dvoice_002deditor-1"><span>2.58 emacsvox-aural-voice-editor<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor-1"> &para;</a></span></h3>
+
+<p>One view for named voices and physical experiments, backed by retained
+session drafts and the acknowledged save coordinator.  Shared tuning is the
+default; optional row tuning preserves inheritance and native defaults.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural_002dVoice_002dEditor-Commands" accesskey="1">Emacsvox-Aural-Voice-Editor Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dVoice_002dEditor-Commands">
+<h4 class="subsection"><span>2.58.1 Emacsvox-Aural-Voice-Editor Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dVoice_002dEditor-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dactivate" accesskey="1">emacsvox-aural-voice-editor-activate</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dautomatic" accesskey="2">emacsvox-aural-voice-editor-automatic</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dcompare" accesskey="3">emacsvox-aural-voice-editor-compare</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002ddecrease" accesskey="4">emacsvox-aural-voice-editor-decrease</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002ddefault" accesskey="5">emacsvox-aural-voice-editor-default</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002ddetails" accesskey="6">emacsvox-aural-voice-editor-details</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dedit" accesskey="7">emacsvox-aural-voice-editor-edit</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dincrease" accesskey="8">emacsvox-aural-voice-editor-increase</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dkeep_002dexperiment" accesskey="9">emacsvox-aural-voice-editor-keep-experiment</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dleave">emacsvox-aural-voice-editor-leave</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dmode">emacsvox-aural-voice-editor-mode</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dnext">emacsvox-aural-voice-editor-next</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dplay">emacsvox-aural-voice-editor-play</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dprevious">emacsvox-aural-voice-editor-previous</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002drefresh">emacsvox-aural-voice-editor-refresh</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dsave">emacsvox-aural-voice-editor-save</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dsave_002dto_002dcollection">emacsvox-aural-voice-editor-save-to-collection</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dspeak">emacsvox-aural-voice-editor-speak</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dstop">emacsvox-aural-voice-editor-stop</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dtext">emacsvox-aural-voice-editor-text</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002deditor_002dundo">emacsvox-aural-voice-editor-undo</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dactivate">
+<h4 class="subsubsection"><span>2.58.1.1 emacsvox-aural-voice-editor-activate<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dactivate"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dactivate"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-activate</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dactivate"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dactivate-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Activate the current field, leaving its spoken result as the final feedback.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dautomatic">
+<h4 class="subsubsection"><span>2.58.1.2 emacsvox-aural-voice-editor-automatic<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dautomatic"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dautomatic"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-automatic</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dautomatic"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dautomatic-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Explicitly replace the saved choice chain with Automatic.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dcompare">
+<h4 class="subsubsection"><span>2.58.1.3 emacsvox-aural-voice-editor-compare<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dcompare"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dcompare"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-compare</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dcompare"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dcompare-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Compare original and edited voices, or the selected tuning row.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002ddecrease">
+<h4 class="subsubsection"><span>2.58.1.4 emacsvox-aural-voice-editor-decrease<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002ddecrease"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002ddecrease"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-decrease</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002ddecrease"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002ddecrease-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Decrease a numeric adjustment, or move to the previous field.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002ddefault">
+<h4 class="subsubsection"><span>2.58.1.5 emacsvox-aural-voice-editor-default<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002ddefault"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002ddefault"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-default</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002ddefault"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002ddefault-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Restore the current adjustment to the adapter default and audition it.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002ddetails">
+<h4 class="subsubsection"><span>2.58.1.6 emacsvox-aural-voice-editor-details<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002ddetails"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002ddetails"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-details</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002ddetails"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002ddetails-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Show ownership, saved/requested values and actual playback evidence.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dedit">
+<h4 class="subsubsection"><span>2.58.1.7 emacsvox-aural-voice-editor-edit<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dedit"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dedit"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-edit</strong> <var class="def-var-arguments">(&amp;optional dimension)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dedit"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dedit-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Edit DIMENSION or the current numeric field; blank means adapter default.
+
+(fn &amp;optional DIMENSION)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dincrease">
+<h4 class="subsubsection"><span>2.58.1.8 emacsvox-aural-voice-editor-increase<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dincrease"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dincrease"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-increase</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dincrease"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dincrease-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Increase a numeric adjustment, or move to the next field.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dkeep_002dexperiment">
+<h4 class="subsubsection"><span>2.58.1.9 emacsvox-aural-voice-editor-keep-experiment<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dkeep_002dexperiment"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dkeep_002dexperiment"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-keep-experiment</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dkeep_002dexperiment"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dkeep_002dexperiment-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose the experiment’s destination row and scope, retaining other draft edits.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dleave">
+<h4 class="subsubsection"><span>2.58.1.10 emacsvox-aural-voice-editor-leave<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dleave"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dleave"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-leave</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dleave"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dleave-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Return to the originating field while retaining this session’s draft.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dmode">
+<h4 class="subsubsection"><span>2.58.1.11 emacsvox-aural-voice-editor-mode<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Edit shared named-voice adjustments and ordered physical choices.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-interface-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-voice-editor-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+TAB		emacsvox-aural-voice-editor-next
+SPC		emacsvox-aural-voice-editor-speak
+-		negative-argument
+0 .. 9		digit-argument
+&lt;		beginning-of-buffer
+&gt;		end-of-buffer
+?		describe-mode
+B		emacsvox-aural-voice-editor-compare
+P		emacsvox-aural-voice-editor-play
+S		emacsvox-aural-voice-editor-stop
+T		emacsvox-aural-voice-editor-text
+d		emacsvox-aural-voice-editor-default
+g		revert-buffer
+h		emacsvox-aural-home
+i		emacsvox-aural-voice-editor&ndash;inherit
+n		emacsvox-aural-voice-editor-next
+p		emacsvox-aural-voice-editor-previous
+q		emacsvox-aural-voice-editor-leave
+u		emacsvox-aural-voice-editor-undo
+w		emacsvox-aural-voice-editor-save
+DEL		scroll-down-command
+S-SPC		scroll-down-command
+&lt;backtab&gt;	emacsvox-aural-voice-editor-previous
+&lt;down&gt;		emacsvox-aural-voice-editor-next
+&lt;left&gt;		emacsvox-aural-voice-editor-decrease
+&lt;right&gt;		emacsvox-aural-voice-editor-increase
+&lt;up&gt;		emacsvox-aural-voice-editor-previous
+
+C-c C-c		emacsvox-aural-voice-editor-save
+
+&lt;remap&gt; &lt;backward-button&gt;	emacsvox-aural-voice-editor-previous
+&lt;remap&gt; &lt;forward-button&gt;	emacsvox-aural-voice-editor-next
+&lt;remap&gt; &lt;push-button&gt;		emacsvox-aural-voice-editor-activate
+
+C-c C-a		emacsvox-aural-ui-actions
+C-c TAB		emacsvox-aural-ui-open-manual
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dnext">
+<h4 class="subsubsection"><span>2.58.1.12 emacsvox-aural-voice-editor-next<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dnext"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dnext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-next</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dnext"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dnext-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to and read the next editor field.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dplay">
+<h4 class="subsubsection"><span>2.58.1.13 emacsvox-aural-voice-editor-play<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-play</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dplay"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play the edited voice or selected tuning row without saving.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dprevious">
+<h4 class="subsubsection"><span>2.58.1.14 emacsvox-aural-voice-editor-previous<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dprevious"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dprevious"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-previous</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dprevious"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dprevious-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to and read the previous editor field.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002drefresh">
+<h4 class="subsubsection"><span>2.58.1.15 emacsvox-aural-voice-editor-refresh<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002drefresh"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-refresh</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002drefresh"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002drefresh-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Refresh the common editor, preserving the current field and point’s column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dsave">
+<h4 class="subsubsection"><span>2.58.1.16 emacsvox-aural-voice-editor-save<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dsave"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dsave"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-save</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dsave"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dsave-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Save and apply this named voice, or choose an experiment destination.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dsave_002dto_002dcollection">
+<h4 class="subsubsection"><span>2.58.1.17 emacsvox-aural-voice-editor-save-to-collection<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dsave_002dto_002dcollection"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dsave_002dto_002dcollection"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-save-to-collection</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dsave_002dto_002dcollection"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dsave_002dto_002dcollection-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Save the named voice without selecting its palette.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dspeak">
+<h4 class="subsubsection"><span>2.58.1.18 emacsvox-aural-voice-editor-speak<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dspeak"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dspeak"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-speak</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dspeak"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dspeak-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Read the current labelled field using the ordinary navigation voice.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dstop">
+<h4 class="subsubsection"><span>2.58.1.19 emacsvox-aural-voice-editor-stop<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dstop"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dstop"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-stop</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dstop"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dstop-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Stop this editor’s sample without stopping another editor’s newer preview.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dtext">
+<h4 class="subsubsection"><span>2.58.1.20 emacsvox-aural-voice-editor-text<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dtext"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dtext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-text</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dtext"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dtext-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Change the common comparison text.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002deditor_002dundo">
+<h4 class="subsubsection"><span>2.58.1.21 emacsvox-aural-voice-editor-undo<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002deditor_002dundo"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002deditor_002dundo"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-editor-undo</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002deditor_002dundo"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002deditor_002dundo-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Undo the last draft change.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dvoice_002dpalettes.html">emacsvox-aural-voice-palettes</a>, Previous: <a href="emacsvox_002daural_002dvoice_002dediting.html">emacsvox-aural-voice-editing</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

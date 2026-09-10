@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Voice Adjustments (Emacsvox User Manual)</title>
+
+<meta name="description" content="Voice Adjustments (Emacsvox User Manual)">
+<meta name="keywords" content="Voice Adjustments (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Editing-Named-Voices.html" rel="up" title="Editing Named Voices">
+<link href="Voice-Fallbacks.html" rel="next" title="Voice Fallbacks">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Voice-Adjustments">
+<div class="nav-panel">
+<p>
+Next: <a href="Voice-Fallbacks.html" accesskey="n" rel="next">Choose And Tune Fallback Voices</a>, Up: <a href="Editing-Named-Voices.html" accesskey="u" rel="up">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Understand-Voice-Adjustments"><span>6.6.1 Understand Voice Adjustments<a class="copiable-link" href="#Understand-Voice-Adjustments"> &para;</a></span></h4>
+
+<p>Change one field at a time and compare with <kbd class="kbd">B</kbd>. These are portable
+controls, not measurements in Hertz or decibels. Equal numbers can sound
+different on different engines. Most numeric fields use integer levels from
+zero through nine; Relative Rate is the exception.
+</p>
+<ul class="itemize mark-bullet">
+<li><em class="emph">Relative Rate</em> ranges from -20 to 20. Negative values request slower
+speech, positive values faster speech, and zero leaves the base rate
+unchanged. The engine interprets those relative steps; they are not words
+per minute. A stronger contextual relative-rate value replaces this value
+rather than adding to it.
+</li><li><em class="emph">Average Pitch</em> requests a lower or higher overall pitch. Start with a
+small difference between two voices intended to mark related content.
+</li><li><em class="emph">Pitch Range</em> requests less or more pitch variation. A low range can make
+a supported voice more monotone; a high range makes intonation more varied.
+</li><li><em class="emph">Stress</em> requests less or more emphasis. Its audible effect depends on how
+the engine implements stress.
+</li><li><em class="emph">Richness</em> changes the voice&rsquo;s tonal character or fullness where supported.
+Compare samples rather than treating it as another volume control.
+</li><li><em class="emph">Gain</em> changes output level. Five is unchanged; lower values reduce it and
+higher values increase it.
+</li><li><em class="emph">Pan</em> places supported audio from left at zero, through center at five,
+to right at nine. Its effect also depends on your output arrangement.
+</li><li><em class="emph">Low-pass Amount</em> and <em class="emph">High-pass Amount</em> remove high and low frequencies,
+respectively. Both use zero for neutral and nine for strongest filtering.
+</li><li><em class="emph">Reverb</em> adds a reverberant character, <em class="emph">Echo</em> adds delayed repetitions,
+and <em class="emph">Chorus</em> adds a doubled-voice effect. Zero disables each; higher levels
+increase the effect.
+</li><li><em class="emph">Portable Fallback Family</em>, where offered under additional adjustments,
+is a compatibility family hint. Use <em class="emph">Physical voice</em> for an installed voice
+choice. Family is not part of the complete Omnivox voice preview.
+</li></ul>
+
+<p>In shared settings, <kbd class="kbd">d</kbd> or blank numeric input requests <em class="emph">adapter default</em>;
+<kbd class="kbd">u</kbd> undoes that edit. In an individual physical choice, <kbd class="kbd">i</kbd> instead means
+<em class="emph">use the shared value</em>. Zero remains an explicit value in either view.
+Thus &ldquo;standard default palette&rdquo;, &ldquo;Automatic physical selection&rdquo;, and
+&ldquo;adapter default adjustment&rdquo; answer three different questions: which
+collection supplies the voice, who selects its physical voice, and who supplies
+one adjustment value.
+</p>
+<p>The voice editor presents <em class="emph">Low-pass Amount</em> and <em class="emph">High-pass Amount</em> from zero through
+nine. Higher amounts mean more filtering: low-pass removes more high
+frequencies, and high-pass removes more low frequencies. Zero is the neutral
+cutoff; blank numeric entry requests the adapter default. The amount scale
+applies to arrows and numeric entry in the common editor. Existing
+saved styles retain their sound; stored low-pass cutoff values keep their
+original meaning.
+</p>
+<p>The voice editor names other neutral effect values instead of speaking an ambiguous number:
+gain five is <em class="emph">unchanged</em>, pan five is <em class="emph">centre</em>, and reverb, echo, or chorus zero is
+<em class="emph">disabled</em>.  Chorus adds a bounded doubled-voice modulation without changing
+speech duration or marker positions.  It is applied by Omnivox to buffered
+audio; the voice editor reports when the selected route cannot apply it.  These
+portable levels are translated to the exact values required by the active
+adapter.
+</p>
+<p>The built-in <code class="code">acss-default</code> palette also includes a <code class="code">telephone</code> named voice.
+It combines high-pass and low-pass filtering to give any buffered Omnivox
+engine a narrow-band telephone sound while preserving its selected physical
+voice, duration, and markers.  Preview it in <em class="emph">Voice Palettes</em> or <em class="emph">Voice
+Workbench</em> before assigning it to content.  Adapters without post-synthesis
+filtering preserve the portable style but do not apply the filters.
+</p>
+<p>Omnivox average-pitch differences use the customizable
+&lsquo;<samp class="samp">omnivox-average-pitch-contrast</samp>&rsquo;.  Its default value, &lsquo;<samp class="samp">0.5</samp>&rsquo;, keeps palette
+distinctions while making them gentler.  Set it to &lsquo;<samp class="samp">1.0</samp>&rsquo; for the historical
+contrast, or &lsquo;<samp class="samp">0</samp>&rsquo; to make average pitch neutral.  Values through &lsquo;<samp class="samp">2.0</samp>&rsquo; are
+accepted.  Changing it refreshes logical-voice registration, and the same
+setting applies to previews, structured speech, and legacy inline voices.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Voice-Fallbacks.html">Choose And Tune Fallback Voices</a>, Up: <a href="Editing-Named-Voices.html">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

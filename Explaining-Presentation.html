@@ -17,7 +17,7 @@
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
 <link href="Adjusting-Presentation.html" rel="next" title="Adjusting Presentation">
-<link href="Aural-Home.html" rel="prev" title="Aural Home">
+<link href="Presentation-Model.html" rel="prev" title="Presentation Model">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -34,10 +34,10 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Explaining-Presentation">
 <div class="nav-panel">
 <p>
-Next: <a href="Adjusting-Presentation.html" accesskey="n" rel="next">Make A Small Change Safely</a>, Previous: <a href="Aural-Home.html" accesskey="p" rel="prev">Begin With Aural Home</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Adjusting-Presentation.html" accesskey="n" rel="next">Change Feedback And Manage Rules</a>, Previous: <a href="Presentation-Model.html" accesskey="p" rel="prev">How Aural Presentation Works</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Understand-Why-Something-Sounded-That-Way"><span>6.4 Understand Why Something Sounded That Way<a class="copiable-link" href="#Understand-Why-Something-Sounded-That-Way"> &para;</a></span></h3>
+<h3 class="section" id="Understand-Why-Something-Sounded-That-Way"><span>6.3 Understand Why Something Sounded That Way<a class="copiable-link" href="#Understand-Why-Something-Sounded-That-Way"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-explaining-presentation"></a>
 
@@ -51,19 +51,22 @@ presentation rules, selected actions, concrete voices and sounds, and any
 backend fallback or degradation.
 
 </li><li> Note the strongest rule that changed the part you care about.  This tells
-you whether to inspect an option, an override, a voice route, a sound pack,
+you whether to inspect an option, a personal or temporary rule, a named voice, a sound pack,
 or the Voice Lock compatibility layer.
 </li></ol>
 
 <p>When a retained presentation still matches the source buffer, position, and
-unchanged source revision, the explanation
+unchanged source text, the explanation
 describes the exact output that was queued, including its source location and
 resolved resources.  It does not reinterpret that old output using your latest
 settings.  Without an exact record, Emacsvox labels the explanation as a
 simulation of what the current rules would produce at point.
 </p>
 <p>To inspect something heard earlier, open Aural Home and choose <em class="emph">Recent Aural
-Feedback</em>, or press <kbd class="kbd">H</kbd> there.  Each row is a bounded frozen record.
+Feedback</em>, or press <kbd class="kbd">H</kbd> there.  Each row preserves a recorded presentation; the history has a size limit.
+Moving through the Content column speaks the preview using its recorded voices,
+including voice changes within an entry.  Column titles and the other fields use
+the normal interface voice.
 Useful commands in the feedback browser include:
 </p>
 <dl class="table">
@@ -71,7 +74,7 @@ Useful commands in the feedback browser include:
 <dd><p>Explain the selected retained presentation.
 </p></dd>
 <dt><kbd class="kbd">P</kbd></dt>
-<dd><p>Replay its complete ordered presentation.
+<dd><p>Replay its complete ordered presentation without adding a history entry.
 </p></dd>
 <dt><kbd class="kbd">c</kbd></dt>
 <dd><p>Audition only its auditory cues.
@@ -87,7 +90,7 @@ Useful commands in the feedback browser include:
 </p></dd>
 </dl>
 
-<p>Training Mode, available from Aural Home, speaks concise semantic explanations
+<p><em class="emph">Explain feedback as you navigate</em>, available from Aural Home, speaks concise semantic explanations
 after normal presentations.  It can help while learning the vocabulary used by
 an integration, but is intentionally more verbose than ordinary operation;
 turn it off when you no longer need the additional labels.
@@ -96,7 +99,7 @@ turn it off when you no longer need the additional labels.
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Adjusting-Presentation.html">Make A Small Change Safely</a>, Previous: <a href="Aural-Home.html">Begin With Aural Home</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Adjusting-Presentation.html">Change Feedback And Manage Rules</a>, Previous: <a href="Presentation-Model.html">How Aural Presentation Works</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

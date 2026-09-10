@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Voice Fallbacks (Emacsvox User Manual)</title>
+
+<meta name="description" content="Voice Fallbacks (Emacsvox User Manual)">
+<meta name="keywords" content="Voice Fallbacks (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Editing-Named-Voices.html" rel="up" title="Editing Named Voices">
+<link href="Voices-In-Context.html" rel="next" title="Voices In Context">
+<link href="Voice-Adjustments.html" rel="prev" title="Voice Adjustments">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Voice-Fallbacks">
+<div class="nav-panel">
+<p>
+Next: <a href="Voices-In-Context.html" accesskey="n" rel="next">Inspect Or Adjust A Voice In Context</a>, Previous: <a href="Voice-Adjustments.html" accesskey="p" rel="prev">Understand Voice Adjustments</a>, Up: <a href="Editing-Named-Voices.html" accesskey="u" rel="up">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Choose-And-Tune-Fallback-Voices"><span>6.6.2 Choose And Tune Fallback Voices<a class="copiable-link" href="#Choose-And-Tune-Fallback-Voices"> &para;</a></span></h4>
+
+<p>Shared settings provide the base for the whole voice.
+</p>
+<p>Physical choices are tried in their displayed order, subject to availability,
+engine policy, and synthesis failures. An empty explicit list means <em class="emph">Automatic</em>:
+use the shared engine policy. Availability predicts a possible choice;
+the last sample&rsquo;s result identifies what actually played.
+</p>
+<p>There are two distinct kinds of inheritance. A parent palette supplies a
+whole named entry. Inside that entry, an individual physical choice can
+inherit each shared adjustment separately. For example, shared pitch six,
+choice pitch four, and a matching contextual rule setting pitch seven result
+in a requested pitch of seven. Without that rule, the choice requests four.
+Returning the choice field to <em class="emph">Use shared value</em> makes it request six.
+</p>
+<p>Expand <em class="emph">Fallbacks</em> to see which rows <em class="emph">use shared settings</em> and which are
+<em class="emph">customized</em>. A row&rsquo;s action
+menu can audition that row or compare its original and edited versions.
+Comparison follows the same row after reordering, including two rows mapped to
+the same physical voice. A newly added row has no original to compare yet;
+audition it or compare the complete voice instead. Replacing a customized
+physical voice asks whether to keep its settings or return to shared settings.
+</p>
+<p>Choose <em class="emph">Customize this voice</em> in that row&rsquo;s menu for optional individual tuning.
+The panel names the physical voice it edits. Each field says <em class="emph">use shared value</em>,
+<em class="emph">custom value</em>, or <em class="emph">explicit adapter default</em>. &lsquo;<samp class="samp">RET</samp>&rsquo; offers all three states;
+left/right sets a number, &lsquo;<samp class="samp">d</samp>&rsquo; restores adapter default, and &lsquo;<samp class="samp">i</samp>&rsquo; returns the field
+to its shared value. Zero is an explicit setting. Later shared edits affect only
+inherited fields. <em class="emph">More adjustments and effects</em> reveals the additional controls.
+Automatic samples speak the value or state before the sample and audition this
+row. <em class="emph">Play whole fallback chain</em> checks normal selection. Use <em class="emph">Return to shared
+settings</em> to leave individual tuning; all edits belong to the same voice draft
+and the same Save action. Removing a row disables its controls until undo or a
+return to shared settings.
+</p>
+<p>With Omnivox&rsquo;s per-choice tuning support, complete previews retain the full
+fallback chain and each row&rsquo;s settings. <em class="emph">Last sample playback started on …</em>
+identifies the engine and physical voice whose audio started. Audio merely
+accepted for playback, or the spoken label <em class="emph">Original</em> or <em class="emph">Edited</em>, does not
+confirm that the sample started. Stop and text, draft or context changes retire
+pending previews; retained results are labelled <em class="emph">Earlier preview</em>. Saving and
+application status remain separate from playback evidence.
+</p>
+<p><em class="emph">Details and last playback evidence</em> explains the shared setting, actual row&rsquo;s
+override and contextual override for each field in the last confirmed sample.
+The context view offers <em class="emph">Where the last sample&rsquo;s settings came from</em> after a
+preview. Explanations use that sample&rsquo;s captured settings, even after editing,
+and identify whether it was an original or edited sample. They distinguish
+inherited values, explicit defaults, zero and unsupported requests. These are
+requested settings, not measurements of the engine&rsquo;s native values or sound.
+</p>
+<p>Older Omnivox servers retain shared-only previews. Customized complete previews
+require per-choice support; an individual audition is available only when its
+settings can be represented faithfully, including adapter defaults. Saving
+remains available when that preview is unavailable.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Voices-In-Context.html">Inspect Or Adjust A Voice In Context</a>, Previous: <a href="Voice-Adjustments.html">Understand Voice Adjustments</a>, Up: <a href="Editing-Named-Voices.html">Edit A Named Voice</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

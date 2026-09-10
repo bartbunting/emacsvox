@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Aural Speech Output (Emacsvox User Manual)</title>
+
+<meta name="description" content="Aural Speech Output (Emacsvox User Manual)">
+<meta name="keywords" content="Aural Speech Output (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
+<link href="Presentation-Profiles.html" rel="next" title="Presentation Profiles">
+<link href="Sounds-And-Space.html" rel="prev" title="Sounds And Space">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Aural-Speech-Output">
+<div class="nav-panel">
+<p>
+Next: <a href="Presentation-Profiles.html" accesskey="n" rel="next">Save, Switch, And Share Your Setup</a>, Previous: <a href="Sounds-And-Space.html" accesskey="p" rel="prev">Sounds, Tones, And Spatial Cues</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Speech-Output-And-Notifications"><span>6.9 Speech Output And Notifications<a class="copiable-link" href="#Speech-Output-And-Notifications"> &para;</a></span></h3>
+
+<p>Speech rate and output settings control how speech reaches you, independently
+of which presentation rule chose the content. <em class="emph">Speech rate</em> in Home applies to
+the captured source buffer; invoke that action with a prefix argument to set
+the global rate. A named voice&rsquo;s relative rate adjusts its speech around the
+applicable base rate. See <a data-manual="emacsvox" href="../Voice-Adjustments.html#Voice-Adjustments">Voice Adjustments</a>.
+</p>
+<a class="index-entry-id" id="index-speech-streams"></a>
+
+<a class="index-entry-id" id="index-notification-stream"></a>
+
+<a class="index-entry-id" id="index-tts_002dnotification_002ddevice"></a>
+
+<p>Emacsvox assigns speech to one of two streams according to what caused it:
+</p>
+<ul class="itemize mark-bullet">
+<li>The <em class="emph">main stream</em> presents foreground information produced directly by your
+current interaction, such as movement, entering a buffer, or opening a
+message.  New navigation interrupts obsolete main-stream speech, and you can
+interrupt a longer entry announcement by navigating again.
+
+</li><li>The <em class="emph">notification stream</em> presents asynchronous events, such as completion
+of background work.  It does not stop main-stream speech, and normal
+navigation does not stop it, so both streams may be heard concurrently.  A
+notification cue and its associated speech are delivered together on this
+stream.
+</li></ul>
+
+<p>Open <em class="emph">Notification output</em> in Home to choose the arrangement in Customize.
+With Omnivox, <em class="emph">Automatic</em> normally uses an independent notification process.
+The left, right, and both choices select its output route.
+<em class="emph">Use main output (notifications remain audible)</em> sends notifications through
+the main process instead. Navigation can then interrupt them; this setting
+does not mute notifications. Other backends may use their configured device
+or fall back to the main stream.
+</p>
+<p>After changing the setting, initialize the arrangement with
+<kbd class="kbd">C-e d C-n</kbd>. Use Customize&rsquo;s save action to retain the choice
+across restarts. In Lisp, <code class="code">default</code> or an empty string selects main output;
+prefer the descriptive Customize labels for ordinary configuration.
+</p>
+<p><em class="emph">Stop notification speech</em> in Home stops the current notification stream;
+it is not a persistent mute. <em class="emph">Review notifications</em> opens the notification
+history so you can read an announcement you missed.
+</p>
+<p>Stopping obsolete main speech is local to the main stream.  An explicit
+<code class="code">tts-stop</code> command stops both main and notification speech.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Presentation-Profiles.html">Save, Switch, And Share Your Setup</a>, Previous: <a href="Sounds-And-Space.html">Sounds, Tones, And Spatial Cues</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>
