@@ -64,7 +64,7 @@ Design validation: local document links, =git diff --check= and
 
 ** TODO 2. Establish current standard data and shared lookup — High
 
-Foundation completed: resource lookup, owned data resolution and palette source
+Foundation =d717313ad=: resource lookup, owned data resolution and palette source
 inspection now use the same whole-entry inheritance reader. Independent tests
 cover the four-level chain, nearest source, replacement of all choice metadata,
 raw nil/zero preservation, isolation, missing parents and cycles. The 143
@@ -78,6 +78,36 @@ Current-file inspection also found seven local-choice references in =bart= and
 already owned by =bart=, so none supplies its current choices. Recheck fingerprints
 before conversion; this observation does not authorize silently capturing session
 bindings.
+
+Current-root sub-slice: =acss-default= and the supported definition constructor
+now produce schema 3 with Automatic choices. Registered personalities extend
+the root through a post-definition hook; declared aliases retain canonical
+identities. Terminal personality commands retain adapter behavior. Source tests
+cover actual transport, registration, late declarations and complete draft saves.
+Validation passed: 469 affected source tests, nine focused draft lifecycle tests,
+ten fresh compiled checks including both speech lanes, the full byte-code rebuild
+followed by compilation of the final lifecycle correction, byte-code preflight,
+=make docs-reference= and =make docs-release-check=.
+
+New Voice had to move forward from slice 3 because the old definition-only dialog
+cannot save into the current root. It now opens a neutral complete draft without
+writing. Saving from the root creates a personal child with just the edited/new
+entry. Existing independent-copy and older route retirement work remain below.
+
+Explicit transitional boundary: schema-1 palettes may read definition-only
+standard entries while the old experiment implementation and fixtures remain.
+Schema-2 owned palettes still load unchanged. Remove this reader projection and
+the experiment's explicit schema-1 constructor in slice 4; do not expand them.
+Unknown-name authoring/runtime enforcement remains to finish this slice.
+
+The one-time current-file proposal has been prepared through the existing save
+coordinator against both SHA-256 fingerprints, with exact retained originals in
+a private temporary directory. It preserves all 29 direct definitions, ordered
+selectors and languages, retains 17 existing snapshots and adds seven schema-3
+snapshots. Only =animate= is newly inherited. Both running Emacsvox sessions
+reported no temporary per-name routes; the current session had no dirty voice
+drafts. The proposal has not been applied. Recheck current files and sessions
+before applying it in slice 4, and retain durable originals then.
 
 Create schema-3 standard entries without changing their raw style/personality
 representations. Make constructors produce current complete data. Give aliases,

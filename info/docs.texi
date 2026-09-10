@@ -5750,7 +5750,7 @@ x		emacsvox-aural-voice-palette-previews-explain
 @findex emacsvox-aural-voice-palette-previews-new
 
 @format
-Create a new voice in the palette shown by the current preview.
+Draft a new complete voice in the palette shown by the current preview.
 @end format
 @end deffn
 
@@ -21746,6 +21746,7 @@ Optional prefix arg prompts for toolbelt options.
 (fn QUERY &optional OPTIONS)
 @end format
 @end deffn
+
 @subsubsection emacsvox-websearch-google-news
 @deffn {Command} emacsvox-websearch-google-news
 @table @kbd

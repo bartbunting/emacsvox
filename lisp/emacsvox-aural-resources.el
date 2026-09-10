@@ -45,6 +45,7 @@
                   "emacsvox-aural-routing-profiles" (choices &optional portable))
 
 (defvar read-eval)
+(defvar voice-setup-defined-voices)
 
 (define-error
   'emacsvox-aural-resource-error
@@ -220,9 +221,8 @@ standard personal discovery root.  The directory need not exist."
   (make-hash-table :test #'eq)
   "Map voice-palette identifiers to palette records.")
 
-(defconst emacsvox-aural-voice-palette-schema-version 1
-  "Legacy definition-only schema used by existing palette constructors.
-Owned palettes use schema 2 through the versioned data compiler.")
+(defconst emacsvox-aural-voice-palette-schema-version 3
+  "Current complete voice-palette schema, including individual choice settings.")
 
 (defconst emacsvox-aural-resource-pack-manifest
   "emacsvox-sound-pack.el"
@@ -803,7 +803,9 @@ default assets."
 
 Each entry maps a name to either an existing personality symbol or a complete
 explicit ACSS style.  BUILT-IN, SOURCE, and safe declarative DATA are retained
-for management and persistence."
+for management and persistence.  Definition-only arguments become complete
+entries with Automatic physical choices.  PARENT defaults to `acss-default'
+except for the standard root itself."
   (emacsvox-aural--validate-id id "Voice palette identifier")
   (emacsvox-aural--validate-summary summary (format "Voice palette %S" id))
   (when parent
@@ -824,16 +826,52 @@ for management and persistence."
       (emacsvox-aural--resource-error
        "Voice palette %S contains duplicate names" id)))
   (let ((record
-         (emacsvox-aural--make-voice-palette
-          :id id
-          :summary summary
-          :parent parent
-          :entries (copy-tree entries)
-          :built-in built-in
-          :source source
-          :data (copy-tree data))))
+         (emacsvox-aural-compile-voice-palette-data
+          (or data (emacsvox-aural--voice-palette-definition-data
+                    id summary parent entries)) built-in source)))
+    (unless (and (eq id (emacsvox-aural-voice-palette-id record))
+                 (equal entries (emacsvox-aural-voice-palette-entries record)))
+      (emacsvox-aural--resource-error "Palette arguments disagree with data: %S" id))
     (puthash id record emacsvox-aural-voice-palette-registry)
     record))
+
+(defun emacsvox-aural--canonical-voice-name (name)
+  "Return the canonical identity of declared alias NAME, or NAME itself."
+  (or (car (rassq name emacsvox-aural-default-voice-entries)) name))
+
+(defun emacsvox-aural--voice-palette-definition-data (id summary parent entries)
+  "Project definition-only ENTRIES into complete palette ID with SUMMARY.
+PARENT defaults to the standard root.  Raw definitions remain unchanged."
+  (list :schema-version emacsvox-aural-voice-palette-schema-version
+        :id id :summary summary
+        :parent (or parent (unless (eq id 'acss-default) 'acss-default))
+        :routing 'owned
+        :entries
+        (mapcar
+         (lambda (entry)
+           (append (if (symbolp (cdr entry))
+                       (list (car entry) :personality (cdr entry))
+                     (list (car entry) :style (copy-tree (cdr entry))))
+                   (list :choices nil)))
+         entries)))
+
+(defun emacsvox-aural--register-standard-personality (personality)
+  "Include explicitly registered PERSONALITY in the standard vocabulary.
+Declared aliases keep their canonical entries.  Other identities are exact;
+generated ACSS variables and arbitrary interned symbols are never enumerated."
+  (let* ((root (emacsvox-aural-voice-palette 'acss-default))
+         (name (emacsvox-aural--canonical-voice-name personality))
+         (data (and root (emacsvox-aural-voice-palette-data-form root))))
+    (when (and (eq (plist-get data :schema-version) 3)
+               (not (assq name (plist-get data :entries))))
+      (setf (plist-get data :entries)
+            (append (plist-get data :entries)
+                    (list (list name :personality personality :choices nil))))
+      (puthash 'acss-default
+               (emacsvox-aural-compile-voice-palette-data
+                data t (emacsvox-aural-voice-palette-source root))
+               emacsvox-aural-voice-palette-registry)
+      (run-hooks 'emacsvox-aural-configuration-changed-hook))))
 
 (defun emacsvox-aural--compile-voice-palette-entry (data palette-id &optional owned)
   "Compile safe voice entry DATA for PALETTE-ID, validating OWNED metadata."
@@ -861,6 +899,11 @@ for management and persistence."
       (emacsvox-aural--resource-error
        "Unknown properties for voice %S in palette %S: %S"
        name palette-id unknown))
+    (when (and (eq owned 3)
+               (not (eq name (emacsvox-aural--canonical-voice-name name))))
+      (emacsvox-aural--resource-error
+       "Voice name %S is a reserved alias for %S"
+       name (emacsvox-aural--canonical-voice-name name)))
     (when owned
       (require 'emacsvox-aural-routing-profiles)
       (emacsvox-aural-routing--strict-properties properties allowed '(:choices))
@@ -968,18 +1011,11 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
   "Return safe persistent data for voice PALETTE."
   (or
    (copy-tree (emacsvox-aural-voice-palette-data palette))
-   (list
-    :schema-version emacsvox-aural-voice-palette-schema-version
-    :id (emacsvox-aural-voice-palette-id palette)
-    :summary (emacsvox-aural-voice-palette-summary palette)
-    :parent (emacsvox-aural-voice-palette-parent palette)
-    :entries
-    (mapcar
-     (lambda (entry)
-       (if (symbolp (cdr entry))
-           (list (car entry) :personality (cdr entry))
-         (list (car entry) :style (copy-tree (cdr entry)))))
-     (emacsvox-aural-voice-palette-entries palette)))))
+   (emacsvox-aural--voice-palette-definition-data
+    (emacsvox-aural-voice-palette-id palette)
+    (emacsvox-aural-voice-palette-summary palette)
+    (emacsvox-aural-voice-palette-parent palette)
+    (emacsvox-aural-voice-palette-entries palette))))
 
 (defun emacsvox-aural-cue (id)
   "Return registered cue ID, or nil."
@@ -1691,13 +1727,26 @@ The nearest definition replaces the entire entry.  PATH detects cycles."
     (when parent
       (let ((parent-record (gethash parent registry)))
         (unless (and parent-record
-                     (eq (plist-get data :routing)
-                         (plist-get (emacsvox-aural-voice-palette-data-form
-                                     parent-record) :routing)))
+                     (or (eq (plist-get data :routing)
+                             (plist-get (emacsvox-aural-voice-palette-data-form
+                                         parent-record) :routing))
+                         ;; Transitional schema-1 reader until ADR 0018 slice 4.
+                         ;; Older definition palettes can read the standard
+                         ;; vocabulary without adopting its choice ownership.
+                         (and (eq (plist-get data :schema-version) 1)
+                              (eq parent 'acss-default)
+                              (emacsvox-aural-voice-palette-built-in parent-record))))
           (emacsvox-aural--resource-error
            "Missing parent or mixed palette ownership: %S" parent)))
       (setq entries (emacsvox-aural--effective-voice-metadata
-                     parent registry (cons palette-id path))))
+                     parent registry (cons palette-id path)))
+      (when (eq (plist-get data :schema-version) 1)
+        (dolist (item entries)
+          (setf (plist-get item :schema-version) 1)
+          (let ((properties (cdr (plist-get item :entry))))
+            (dolist (key '(:choices :local-choices :language))
+              (cl-remf properties key))
+            (setcdr (plist-get item :entry) properties)))))
     (dolist (entry (plist-get data :entries))
       (let ((value (list :palette palette-id :schema-version (plist-get data :schema-version)
                          :entry (copy-tree entry)))
@@ -1722,10 +1771,14 @@ The nearest definition replaces the entire entry.  PATH detects cycles."
 
 (defun emacsvox-aural-voice (name &optional palette-id)
   "Return the complete voice preset for NAME in PALETTE-ID."
-  (alist-get
-   name
-   (emacsvox-aural-effective-voice-entries
-    (or palette-id 'acss-default))))
+  (let* ((palette-id (or palette-id 'acss-default))
+         (entries (emacsvox-aural-effective-voice-entries palette-id)))
+    (alist-get
+     (if (eq (plist-get (emacsvox-aural-voice-palette-data-form
+                        (emacsvox-aural-voice-palette palette-id)) :schema-version) 3)
+         (emacsvox-aural--canonical-voice-name name)
+       name)
+     entries)))
 
 (defun emacsvox-aural-validate-voice-palette (&optional palette-id)
   "Return unbound personalities in PALETTE-ID or the default palette."
@@ -1884,7 +1937,13 @@ The nearest definition replaces the entire entry.  PATH detects cycles."
      :summary "Existing device-independent ACSS personalities"
      :entries emacsvox-aural-default-voice-entries
      :built-in t
-     :source 'emacsvox-aural-resources)))
+     :source 'emacsvox-aural-resources))
+  (when (boundp 'voice-setup-defined-voices)
+    (dolist (personality voice-setup-defined-voices)
+      (emacsvox-aural--register-standard-personality personality))))
+
+(add-hook 'voice-setup-defined-voice-hook
+          #'emacsvox-aural--register-standard-personality)
 
 (defun emacsvox-aural--prioritize-resource-pack-discovery-roots (roots)
   "Put ROOTS first in configured discovery precedence order."

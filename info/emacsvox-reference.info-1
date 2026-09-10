@@ -5287,7 +5287,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
  -- Command: emacsvox-aural-voice-palette-previews-new
 
-     Create a new voice in the palette shown by the current preview.
+     Draft a new complete voice in the palette shown by the current preview.
 
 2.60.1.9 emacsvox-aural-voice-palette-previews-next
 ...................................................

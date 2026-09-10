@@ -4843,16 +4843,19 @@ is the default inherited by a newly created TTS scratch buffer."
 (ert-deftest emacsvox-aural-transport-legacy-personality-uses-custom-palette-entry ()
   "A legacy face personality follows its customized portable palette name."
   (emacsvox-test--with-transport-scheme
-    (let ((custom
+    (let ((emacsvox-aural-voice-palette-registry
+           (copy-hash-table emacsvox-aural-voice-palette-registry))
+          (emacsvox-aural-voice-palette-override 'custom-alias-fixture)
+          (custom
            '(:family nil :average-pitch 6 :pitch-range nil :stress 4
              :richness nil :rate-offset -4 :gain nil :low-pass nil :high-pass 5
              :pan nil :reverb 5 :echo 0 :chorus 6))
           generated)
+      (emacsvox-aural-register-voice-palette
+       'custom-alias-fixture :summary "Custom alias fixture"
+       :entries (list (cons 'lighten-extra custom)))
       (cl-letf
-          (((symbol-function 'emacsvox-aural-voice)
-            (lambda (name _palette)
-              (when (eq name 'lighten-extra) custom)))
-           ((symbol-function 'emacsvox-aural-active-voice-capabilities)
+          (((symbol-function 'emacsvox-aural-active-voice-capabilities)
             (lambda ()
               '(:adapter omnivox
                 :dimensions

@@ -558,47 +558,6 @@
       (when (get-buffer "*Aural Voice Palette Preview*")
         (kill-buffer "*Aural Voice Palette Preview*")))))
 
-(ert-deftest emacsvox-aural-voice-palette-preview-creates-new-voice ()
-  "The preview browser creates and selects a new personal voice."
-  (emacsvox-test--with-voice-palettes
-    (emacsvox-aural-register-voice-palette-data
-     emacsvox-test--voice-palette-data)
-    (let ((style
-           '(:family paul :average-pitch 4 :pitch-range 3
-             :stress 2 :richness 6)))
-      (unwind-protect
-          (save-window-excursion
-            (cl-letf
-                (((symbol-function 'emacsvox-aural-save-user-data) #'ignore)
-                 ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live)
-                  #'ignore)
-                 ((symbol-function
-                   'emacsvox-aural-voice-palettes--read-new-entry-name)
-                  (lambda (palette &optional _)
-                    (should (eq palette 'reading))
-                    'voice-dired-directory))
-                 ((symbol-function
-                   'emacsvox-aural-voice-palettes--read-definition)
-                  (lambda (&optional current)
-                    (should-not current)
-                    style))
-                 ((symbol-function 'tts-get-voice-command)
-                  (lambda (voice) (format "<%s>" voice))))
-              (emacsvox-aural-list-voice-palette-previews 'reading)
-              (with-current-buffer "*Aural Voice Palette Preview*"
-                (should
-                 (eq
-                  (emacsvox-aural-voice-palette-previews-new)
-                  'voice-dired-directory))
-                (should
-                 (equal
-                  (emacsvox-aural-voice 'voice-dired-directory 'reading)
-                  style))
-                (should
-                 (eq (tabulated-list-get-id) 'voice-dired-directory)))))
-        (when (get-buffer "*Aural Voice Palette Preview*")
-          (kill-buffer "*Aural Voice Palette Preview*"))))))
-
 (defmacro emacsvox-test--with-voice-rename (&rest body)
   "Run BODY in a real voice list containing a saved custom voice."
   (declare (indent 0) (debug t))
@@ -916,63 +875,25 @@
         (should (eq (emacsvox-aural-voice-palettes--copy-owned-voice 'reading 'bolden 'bolden-copy)
                     'bolden-copy))))))
 
-(ert-deftest emacsvox-aural-voice-palette-preview-uses-one-built-in-overlay ()
-  "The first built-in edit creates one active overlay reused by later edits."
+(ert-deftest emacsvox-aural-voice-palette-preview-new-opens-complete-draft ()
+  "New Voice sends the current palette to the common editor without writing."
   (emacsvox-test--with-voice-palettes
-    (let ((overlay-prompts 0)
-          (id-prompts 0)
-          (voice-count 0)
-          (style
-           '(:family nil :average-pitch 4 :pitch-range 3
-             :stress 2 :richness 6)))
-      (unwind-protect
-          (save-window-excursion
-            (cl-letf
-                (((symbol-function 'emacsvox-aural-save-user-data) #'ignore)
-                 ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live)
-                  #'ignore)
-                 ((symbol-function 'y-or-n-p)
-                  (lambda (&rest _)
-                    (cl-incf overlay-prompts)
-                    t))
-                 ((symbol-function 'emacsvox-aural-voice-palettes--read-new-id)
-                  (lambda (&optional initial)
-                    (cl-incf id-prompts)
-                    (should (equal initial "acss-default-personal"))
-                    'personal-voices))
-                 ((symbol-function
-                   'emacsvox-aural-voice-palettes--read-new-entry-name)
-                  (lambda (palette &optional _)
-                    (should (eq palette 'personal-voices))
-                    (intern (format "new-voice-%d" (cl-incf voice-count)))))
-                 ((symbol-function
-                   'emacsvox-aural-voice-palettes--read-definition)
-                  (lambda (&optional _) style))
-                 ((symbol-function 'tts-get-voice-command)
-                  (lambda (voice) (format "<%s>" voice))))
-              (emacsvox-aural-list-voice-palette-previews 'acss-default)
-              (with-current-buffer "*Aural Voice Palette Preview*"
-                (emacsvox-aural-voice-palette-previews-new)
-                (emacsvox-aural-voice-palette-previews-new)
-                (should
-                 (eq emacsvox-aural-voice-palette-previews-palette
-                     'personal-voices))
-                (should (eq emacsvox-aural-voice-palette-override
-                            'personal-voices))))
-          (let ((palette
-                 (emacsvox-aural-voice-palette 'personal-voices)))
-            (should-not (emacsvox-aural-voice-palette-built-in palette))
-            (should
-             (eq (emacsvox-aural-voice-palette-parent palette)
-                 'acss-default))
-            (should
-             (equal
-              (mapcar #'car (emacsvox-aural-voice-palette-entries palette))
-              '(new-voice-1 new-voice-2))))
-          (should (= overlay-prompts 1))
-          (should (= id-prompts 1)))
-        (when (get-buffer "*Aural Voice Palette Preview*")
-          (kill-buffer "*Aural Voice Palette Preview*"))))))
+    (with-temp-buffer
+      (emacsvox-aural-voice-palette-previews-mode)
+      (setq emacsvox-aural-voice-palette-previews-palette 'acss-default
+            emacsvox-aural-voice-palette-previews-text "New sample")
+      (let (opened)
+        (cl-letf (((symbol-function 'emacsvox-aural-voice-palettes--read-new-entry-name)
+                   (lambda (palette &optional _)
+                     (should (eq palette 'acss-default)) 'new-voice))
+                  ((symbol-function 'emacsvox-aural-voice-editor-new)
+                   (lambda (&rest args) (setq opened args)))
+                  ((symbol-function 'emacsvox-aural-save-user-data)
+                   (lambda (&rest _) (ert-fail "Opening New Voice must not save"))))
+          (call-interactively (lookup-key (current-local-map) (kbd "N")))
+          (should (equal opened
+                         (list 'acss-default 'new-voice (current-buffer) "New sample")))
+          (should-not emacsvox-aural-voice-palette-override))))))
 
 (ert-deftest emacsvox-aural-voice-tuner-reopens-its-working-draft ()
   "Reopening the same voice retains unsaved parameters without a discard prompt."

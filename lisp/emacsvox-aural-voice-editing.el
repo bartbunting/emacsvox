@@ -164,9 +164,11 @@ other row and all shared settings remain unchanged."
     (setf (plist-get (cl-find id rows :test #'equal :key (lambda (row) (plist-get row :id))) :adjustments) patch)
     (plist-put result :choices rows)))
 
-(defun emacsvox-aural-voice-editing--proposal (palette voice snapshot destination summary routing)
+(defun emacsvox-aural-voice-editing--proposal
+    (palette voice snapshot destination summary routing &optional new)
   "Propose SNAPSHOT for VOICE from PALETTE in DESTINATION with SUMMARY.
-Legacy conversion uses explicitly captured ROUTING.  No registry is changed."
+Legacy conversion uses explicitly captured ROUTING.  No registry is changed.
+NEW explicitly requests creation of a voice that must not already exist."
   (let* ((registry emacsvox-aural-voice-palette-registry)
          (source (gethash palette registry))
          (owned (eq (plist-get (emacsvox-aural-voice-palette-data-form source) :routing) 'owned))
@@ -175,6 +177,12 @@ Legacy conversion uses explicitly captured ROUTING.  No registry is changed."
                                            (emacsvox-aural-voice-editing--new-id))) entries))
          (copy (cond ((not owned)
                       (emacsvox-aural-voice-data--convert registry palette destination summary routing ids))
+                     ((and (emacsvox-aural-voice-palette-built-in source)
+                           (not (eq palette destination)))
+                      (when (gethash destination registry)
+                        (user-error "Destination palette already exists: %s" destination))
+                      (list :palette (emacsvox-aural--voice-palette-definition-data
+                                      destination summary palette nil)))
                      ((not (eq palette destination))
                       (emacsvox-aural-voice-data--copy-owned
                        registry palette destination summary emacsvox-aural-routing--choice-sets ids))
@@ -187,12 +195,13 @@ Legacy conversion uses explicitly captured ROUTING.  No registry is changed."
     (puthash destination (emacsvox-aural-compile-voice-palette-data data) effective)
     (setq item (cl-find voice (emacsvox-aural-voice-data--entries destination effective)
                         :key (lambda (item) (car (plist-get item :entry)))))
-    (unless item (user-error "Unknown destination voice: %s" voice))
+    (when (and new item) (user-error "Voice already exists: %s" voice))
+    (unless (or item new) (user-error "Unknown destination voice: %s" voice))
     (setq properties (copy-tree (cdr (plist-get item :entry))))
-    (setq old-choices (emacsvox-aural-voice-data--choices
+    (setq old-choices (and item (emacsvox-aural-voice-data--choices
                        (plist-get item :palette) voice properties
                        (emacsvox-aural-routing--merge-choice-sets emacsvox-aural-routing--choice-sets sets)
-                       (plist-get item :schema-version)))
+                       (plist-get item :schema-version))))
     (let* ((selectors (copy-tree (plist-get snapshot :selectors)))
            (portable (cl-remove-if-not (lambda (s) (eq (plist-get s :scope) 'portable)) selectors))
            (reference (and (not (plist-get snapshot :reset-choices))

@@ -507,14 +507,20 @@ portable palette object and every other dimension remain untouched."
                   (emacsvox-aural--acss-to-voice-style value))
                  ((symbolp definition)
                   (emacsvox-aural--personality-style definition))))
+         (routed-style (and style
+                            (emacsvox-aural--route-palette-voice-definition name style)))
          (compiled
-          (if style
+          (if (and style
+                   (not (and (symbolp definition) (symbolp value)
+                             (equal style routed-style))))
               (emacsvox-aural--compile-explicit-voice-style
-               (emacsvox-aural--route-palette-voice-definition name style)
-               palette provenance)
+               routed-style palette provenance)
             (emacsvox-aural--make-compiled-voice
+             ;; A personality is a terminal implementation, not another
+             ;; palette name.  Keep its adapter command unless an owned
+             ;; physical choice requires a different static family.
              :command (emacsvox-aural--compile-personality-command value)
-             :style nil :provenance (copy-tree provenance)
+             :style (copy-tree style) :provenance (copy-tree provenance)
              :capability (emacsvox-aural-active-voice-capabilities)))))
     (setf (emacsvox-aural-compiled-voice-request compiled) name
           (emacsvox-aural-compiled-voice-preset compiled) name)

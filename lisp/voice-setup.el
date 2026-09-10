@@ -108,6 +108,10 @@
 (defvar voice-setup-defined-voices nil
   "Logical personality variables declared through `defvoice'.")
 
+(defvar voice-setup-defined-voice-hook nil
+  "Hook called with a personality after `defvoice' finishes defining it.
+Consumers can update named-voice inventories after its settings are available.")
+
 ;;;  customization group
 
 (defgroup voice-fonts nil
@@ -416,7 +420,8 @@ last-registration-wins behavior."
        :set
        #'(lambda  (sym val)
            (setq ,voice (voice-setup-acss-from-style val ',voice))
-           (set-default sym val)))))
+           (set-default sym val)))
+     (run-hook-with-args 'voice-setup-defined-voice-hook ',voice)))
 
 (require 'emacsvox-aural-compatibility-voice)
 

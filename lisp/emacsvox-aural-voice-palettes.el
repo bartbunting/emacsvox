@@ -39,6 +39,7 @@
 (defvar voice-setup-local-map)
 
 (declare-function emacsvox-aural-voice-editor-open "emacsvox-aural-voice-editor" (palette voice &optional source text))
+(declare-function emacsvox-aural-voice-editor-new "emacsvox-aural-voice-editor" (palette voice &optional source text))
 
 (require 'cl-lib)
 (require 'subr-x)
@@ -382,6 +383,9 @@ replaces live state.  Return the value of MUTATION."
     (when
         (or (string-empty-p text) (keywordp name) (memq name '(nil t)))
       (user-error "Use a non-keyword voice name"))
+    (unless (eq name (emacsvox-aural--canonical-voice-name name))
+      (user-error "Reserved alias: %s; use %s" name
+                  (emacsvox-aural--canonical-voice-name name)))
     (when (assq name (emacsvox-aural-effective-voice-entries id))
       (user-error "Voice already exists in palette %s: %s" id name))
     name))
@@ -579,9 +583,10 @@ replaces live state.  Return the value of MUTATION."
          (data
           (list
            :schema-version emacsvox-aural-voice-palette-schema-version
+           :routing 'owned
            :id id
            :summary summary
-           :parent parent
+           :parent (or parent 'acss-default)
            :entries nil)))
     (emacsvox-aural-voice-palettes--install-data data)
     (emacsvox-aural-voice-palettes-refresh id)
@@ -1288,6 +1293,7 @@ in that overlay so subsequent edits do not create more palettes."
              (data
               (list
                :schema-version emacsvox-aural-voice-palette-schema-version
+               :routing 'owned
                :id id
                :summary (format "Personal additions to %s" source)
                :parent source
@@ -2350,17 +2356,13 @@ identity."
    (current-buffer) emacsvox-aural-voice-palette-previews-text))
 
 (defun emacsvox-aural-voice-palette-previews-new ()
-  "Create a new voice in the palette shown by the current preview."
+  "Draft a new complete voice in the palette shown by the current preview."
   (interactive)
-  (let* ((palette
-          (emacsvox-aural-voice-palette-previews--editable-palette))
-         (voice
-          (emacsvox-aural-voice-palettes--read-new-entry-name palette))
-         (definition
-          (emacsvox-aural-voice-palettes--read-definition)))
-    (emacsvox-aural-voice-palettes--install-entry-definition
-     palette voice definition)
-    (emacsvox-aural-voice-palette-previews-refresh voice)
+  (require 'emacsvox-aural-voice-editor)
+  (let* ((palette emacsvox-aural-voice-palette-previews-palette)
+         (voice (emacsvox-aural-voice-palettes--read-new-entry-name palette)))
+    (emacsvox-aural-voice-editor-new
+     palette voice (current-buffer) emacsvox-aural-voice-palette-previews-text)
     voice))
 
 (defun emacsvox-aural-voice-palettes--copy-owned-voice (palette source name &optional rename)

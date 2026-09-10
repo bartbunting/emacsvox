@@ -779,6 +779,61 @@
           (emacsvox-aural-resource-report-missing-required report)
           '(task-done)))))))
 
+(ert-deftest emacsvox-aural-resources-standard-voices-use-complete-data ()
+  "The standard root retains raw definitions and owns Automatic choices."
+  (let* ((root (emacsvox-aural-voice-palette 'acss-default))
+         (data (emacsvox-aural-voice-palette-data-form root)))
+    (should (emacsvox-aural-voice-palette-built-in root))
+    (should (= (plist-get data :schema-version) 3))
+    (should-not (plist-get data :parent))
+    (should (eq (plist-get data :routing) 'owned))
+    (should (equal (assq 'bolden (plist-get data :entries))
+                   '(bolden :personality voice-bolden :choices nil)))
+    (should (equal (assq 'telephone (plist-get data :entries))
+                   '(telephone :style (:family nil :average-pitch nil
+                                        :pitch-range nil :stress nil :richness nil
+                                        :low-pass 5 :high-pass 5) :choices nil)))
+    (should (eq (emacsvox-aural-voice 'voice-bolden) 'voice-bolden))
+    (should (eq (emacsvox-aural-voice 'bolden) 'voice-bolden))))
+
+(ert-deftest emacsvox-aural-resources-definition-api-creates-current-child ()
+  "Supported definition arguments become complete entries under the root."
+  (let ((emacsvox-aural-voice-palette-registry
+         (copy-hash-table emacsvox-aural-voice-palette-registry)))
+    (let* ((record (emacsvox-aural-register-voice-palette
+                    'personal :summary "Personal" :entries '((custom . voice-bolden))))
+           (data (emacsvox-aural-voice-palette-data-form record)))
+      (should (= (plist-get data :schema-version) 3))
+      (should (eq (plist-get data :parent) 'acss-default))
+      (should (equal (plist-get data :entries)
+                     '((custom :personality voice-bolden :choices nil))))
+      (should (eq (emacsvox-aural-voice 'bolden 'personal) 'voice-bolden)))
+    (should-error (emacsvox-aural-register-voice-palette
+                   'bad :summary "Reserved" :entries '((voice-bolden . voice-annotate)))
+                  :type 'emacsvox-aural-resource-error)))
+
+(ert-deftest emacsvox-aural-resources-late-personality-updates-root ()
+  "A real declaration extends the root once, after its settings are available."
+  (require 'voice-setup)
+  (let ((emacsvox-aural-voice-palette-registry
+         (copy-hash-table emacsvox-aural-voice-palette-registry))
+        (voice-setup-defined-voices (copy-sequence voice-setup-defined-voices))
+        (updates 0)
+        (emacsvox-aural-configuration-changed-hook nil))
+    (add-hook 'emacsvox-aural-configuration-changed-hook
+              (lambda ()
+                (should (boundp 'test-stable-personality-settings))
+                (cl-incf updates)))
+    (cl-letf (((symbol-function 'voice-setup-acss-from-style)
+               (lambda (&rest _) 'test-compiled-acss)))
+      (eval '(defvoice test-stable-personality '(nil 0 nil 3 nil))))
+    (should (eq (emacsvox-aural-voice 'test-stable-personality)
+                'test-stable-personality))
+    (should-not (emacsvox-aural-voice 'test-compiled-acss))
+    (should (= updates 1))
+    (emacsvox-aural--register-standard-personality 'test-stable-personality)
+    (should (= updates 1))))
+
 (ert-deftest emacsvox-aural-resources-detect-pack-inheritance-cycle ()
   "Resource-pack inheritance cannot recurse through a cycle."
   (emacsvox-test--with-resource-directory

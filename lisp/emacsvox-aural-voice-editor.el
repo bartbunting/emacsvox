@@ -195,11 +195,25 @@ Select a faithful wire form before any entry interrupts foreground speech."
         (setq policy (plist-put policy :engine-order (list preferred)))))
     policy))
 
-(defun emacsvox-aural-voice-editor--context-for (palette voice)
-  "Resume or capture a named PALETTE VOICE context without activation."
+(defun emacsvox-aural-voice-editor--context-for (palette voice &optional new)
+  "Resume or capture a named PALETTE VOICE context without activation.
+NEW prepares an explicit neutral voice, rejecting existing or reserved names."
   (let* ((profile (emacsvox-aural-routing-profile emacsvox-aural-active-routing-profile))
          (routing (and profile (copy-tree (emacsvox-aural-routing-profile-entry-data profile))))
-         (opened (emacsvox-aural-voice-editing--snapshot palette voice routing))
+         (opened
+          (if new
+              (progn
+                (emacsvox-aural--validate-id voice "New voice name")
+                (unless (eq voice (emacsvox-aural--canonical-voice-name voice))
+                  (user-error "Reserved alias: %s; use %s" voice
+                              (emacsvox-aural--canonical-voice-name voice)))
+                (when (assq voice (emacsvox-aural-effective-voice-entries palette))
+                  (user-error "Voice already exists: %s" voice))
+                (list :name voice :owner palette
+                      :snapshot '(:definition (:family nil :average-pitch nil
+                                               :pitch-range nil :stress nil :richness nil)
+                                  :selectors nil :choices nil :language nil)))
+            (emacsvox-aural-voice-editing--snapshot palette voice routing)))
          (name (plist-get opened :name))
          (key (list 'base palette name)))
     (or (gethash key emacsvox-aural-voice-editor--contexts)
@@ -207,12 +221,14 @@ Select a faithful wire form before any entry interrupts foreground speech."
                (list :draft (emacsvox-aural-voice-drafts--open key (emacsvox-aural-voice-editing--freeze (plist-get opened :snapshot) palette) (list palette))
                      :palette palette :voice name :routing routing :policy (emacsvox-aural-voice-editor--policy)
                      :destination palette :summary nil :owner (plist-get opened :owner)
-                     :diagnostics (plist-get opened :diagnostics) :experiment nil
+                     :diagnostics (plist-get opened :diagnostics) :experiment nil :new new
                      :inventory (tts-voice-inventory)
                      :temporary (plist-get (emacsvox-aural-voice-runtime--resolve name palette) :session)
                      :text emacsvox-aural-voice-workbench-preview-text :expanded nil :effects nil
                      :automatic-sample t :preview-generation 0 :preview-result nil :origin nil :buffer nil)))
           (puthash key context emacsvox-aural-voice-editor--contexts)
+          (when new
+            (setf (emacsvox-aural-voice-draft-baseline (plist-get context :draft)) nil))
           context))))
 
 (defun emacsvox-aural-voice-editor--button (id text command &optional dimension)
@@ -761,14 +777,14 @@ Select a faithful wire form before any entry interrupts foreground speech."
   (emacsvox-aural-voice-editor-refresh) (emacsvox-aural-voice-editor-speak))
 
 (defun emacsvox-aural-voice-editor--destination ()
-  "Choose the first saved independent palette before preparing its proposal."
+  "Choose a personal palette before preparing the first save."
   (let* ((palette (emacsvox-aural-voice-editor--get :palette))
          (record (gethash palette emacsvox-aural-voice-palette-registry)))
     (if (and (emacsvox-aural-voice-runtime--owned-p palette)
              (not (emacsvox-aural-voice-palette-built-in record))) palette
       (or (let ((chosen (emacsvox-aural-voice-editor--get :destination)))
             (and (not (eq chosen palette)) chosen))
-          (let* ((name (read-string "New independent personal palette: " (format "%s-personal" palette)))
+          (let* ((name (read-string "New personal palette: " (format "%s-personal" palette)))
                  (id (intern name)))
             (when (or (string-empty-p name) (gethash id emacsvox-aural-voice-palette-registry))
               (user-error "Choose an unused palette name"))
@@ -789,7 +805,9 @@ Select a faithful wire form before any entry interrupts foreground speech."
               (let* ((destination (emacsvox-aural-voice-editor--destination))
                      (data (emacsvox-aural-voice-editing--proposal
                             palette voice (emacsvox-aural-voice-editor--working) destination
-                            (format "Personal voices copied from %s" palette) (emacsvox-aural-voice-editor--get :routing))))
+                            (format "Personal voices based on %s" palette)
+                            (emacsvox-aural-voice-editor--get :routing)
+                            (emacsvox-aural-voice-editor--get :new))))
                 (emacsvox-aural-voice-drafts--prepare draft (plist-get data :palette) (plist-get data :choice-sets)
                                                       :select select :sources (list palette))))))
       (unless (eq (and select t) (and (emacsvox-aural-voice-save-select proposal) t))
@@ -807,6 +825,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
           (setf (emacsvox-aural-voice-draft-watches draft)
                 (emacsvox-aural-voice-drafts--watch (list destination)))
           (emacsvox-aural-voice-editor--put :owner destination)
+          (emacsvox-aural-voice-editor--put :new nil)
           (emacsvox-aural-voice-editor--put :palette destination)))
       (emacsvox-aural-voice-editor-refresh)
       (emacsvox-aural-ui-speak (plist-get (emacsvox-aural-voice-drafts--status draft) :label)))))
@@ -951,7 +970,15 @@ Select a faithful wire form before any entry interrupts foreground speech."
   (if (not (emacsvox-aural-voice-drafts--dirty-fields (emacsvox-aural-voice-editor--draft))) t
     (pcase (completing-read "Unsaved voice changes: " '("Keep draft and return" "Discard changes and return" "Continue editing") nil t nil nil "Keep draft and return")
       ("Continue editing" nil)
-      ("Discard changes and return" (emacsvox-aural-voice-drafts--discard (emacsvox-aural-voice-editor--draft)) t)
+      ("Discard changes and return"
+       (let ((draft (emacsvox-aural-voice-editor--draft)))
+         (emacsvox-aural-voice-drafts--discard draft)
+         (when (and (emacsvox-aural-voice-editor--get :new)
+                    (null (emacsvox-aural-voice-draft-proposal draft)))
+           (remhash (emacsvox-aural-voice-draft-key draft) emacsvox-aural-voice-drafts--registry)
+           (remhash (emacsvox-aural-voice-draft-key draft) emacsvox-aural-voice-editor--contexts)
+           (emacsvox-aural-voice-editor--put :discarded t)))
+       t)
       (_ t))))
 (defun emacsvox-aural-voice-editor-leave ()
   "Return to the originating field while retaining this session's draft."
@@ -963,7 +990,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
           (column (emacsvox-aural-voice-editor--get :origin-column)))
       ;; Selecting the origin alone leaves this editor in the window history,
       ;; so quitting the workbench can immediately reveal it again.
-      (quit-window)
+      (quit-window (emacsvox-aural-voice-editor--get :discarded))
       (if (and (markerp origin) (marker-buffer origin))
           (progn (pop-to-buffer (marker-buffer origin))
                  (if (and row (derived-mode-p 'tabulated-list-mode))
@@ -1028,6 +1055,15 @@ Select a faithful wire form before any entry interrupts foreground speech."
   (let ((context (emacsvox-aural-voice-editor--context-for palette voice)))
     (when text (setf (plist-get context :text) text))
     (emacsvox-aural-voice-editor--show context (or source (current-buffer)))))
+
+(defun emacsvox-aural-voice-editor-new (palette voice &optional source text)
+  "Draft a new neutral VOICE in PALETTE, returning to SOURCE with sample TEXT.
+Opening the editor writes nothing.  Saving from the standard palette creates
+a personal child containing the new voice."
+  (let ((context (emacsvox-aural-voice-editor--context-for palette voice t)))
+    (when text (setf (plist-get context :text) text))
+    (emacsvox-aural-voice-editor--show context (or source (current-buffer)))))
+
 (defun emacsvox-aural-voice-editor-experiment (pair source text)
   "Open an exact physical PAIR experiment with adapter defaults and sample TEXT."
   (let* ((selector (list :kind 'exact :scope 'local :engine-id (plist-get (car pair) :engine-id)

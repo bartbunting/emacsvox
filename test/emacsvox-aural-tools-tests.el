@@ -549,7 +549,7 @@
                                (should (equal (emacsvox-aural-concrete-content-text
                                                (emacsvox-aural-concrete-plan-content plan)) prompt))
                                (should (eq (emacsvox-aural-concrete-content-voice-request
-                                            (emacsvox-aural-concrete-plan-content plan)) 'voice-lighten-extra)))))
+                                            (emacsvox-aural-concrete-plan-content plan)) 'lighten-extra)))))
                     (emacsvox-aural-ui-goto-row 'original)
                     (emacsvox-aural-change-feedback-open-row)))
                 (cl-letf (((symbol-function 'completing-read)
@@ -3826,6 +3826,8 @@
   (let ((emacsvox-aural-voice-palette-registry
          (make-hash-table :test #'eq))
         (emacsvox-aural-voice-palette-override 'profile-palette))
+    (emacsvox-aural-register-voice-palette
+     'acss-default :summary "Standard fixture" :entries nil :built-in t)
     (emacsvox-aural-register-voice-palette
      'base-palette
      :summary "Inherited voices"

@@ -70,6 +70,80 @@
          (should-not callbacks)
          (should (equal before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file))))))))
 
+(ert-deftest emacsvox-aural-voice-editor-new-standard-voice-saves-personal-child ()
+  "New Voice is a retained neutral draft; save writes only a personal child."
+  (emacsvox-test--with-voice-editor
+   (let* ((root '(:schema-version 3 :id acss-default :summary "Standard"
+                  :parent nil :routing owned
+                  :entries ((bolden :personality voice-bolden :choices nil))))
+          (before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file)))
+     (puthash 'acss-default (emacsvox-aural-compile-voice-palette-data root t)
+              emacsvox-aural-voice-palette-registry)
+     (emacsvox-aural-voice-editor-new 'acss-default 'custom)
+     (emacsvox-aural-voice-editor--put :automatic-sample nil)
+     (let ((draft (emacsvox-aural-voice-editor--draft)))
+       (should (emacsvox-aural-voice-drafts--dirty-fields draft))
+       (should-not (plist-get (emacsvox-aural-voice-editor--working) :choices))
+       (should (equal (plist-get (emacsvox-aural-voice-editor--working) :definition)
+                      '(:family nil :average-pitch nil :pitch-range nil
+                        :stress nil :richness nil)))
+       (emacsvox-aural-voice-editor--set 'average-pitch 0)
+       (emacsvox-aural-voice-editor-new 'acss-default 'custom)
+       (should (eq draft (emacsvox-aural-voice-editor--draft)))
+       (should (equal before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file)))
+       (cl-letf (((symbol-function 'read-string) (lambda (&rest _) "personal")))
+         (emacsvox-aural-voice-editor-save-to-collection))
+       (should-not (emacsvox-aural-voice-drafts--dirty-fields draft))
+       (should-not (emacsvox-aural-voice-editor--get :new))
+       (let ((saved (emacsvox-aural-voice-drafts--palette-data 'personal)))
+         (should (= (plist-get saved :schema-version) 3))
+         (should (eq (plist-get saved :parent) 'acss-default))
+         (should (equal (mapcar #'car (plist-get saved :entries)) '(custom)))
+         (should (= (plist-get (emacsvox-aural-voice 'custom 'personal) :average-pitch) 0)))
+       (should (equal root (emacsvox-aural-voice-drafts--palette-data 'acss-default)))
+       (should (eq emacsvox-aural-voice-palette-override 'reading-owned))
+       (should-not callbacks)
+       (emacsvox-aural-voice-editor-open 'personal 'custom)
+       (emacsvox-aural-voice-editor-save-to-collection)
+       (should (eq draft (emacsvox-aural-voice-editor--draft))))
+     (emacsvox-aural-voice-editor-new 'personal 'second-custom)
+     (emacsvox-aural-voice-editor-save-to-collection)
+     (should (assq 'second-custom
+                   (plist-get (emacsvox-aural-voice-drafts--palette-data 'personal)
+                              :entries)))
+     (should (eq emacsvox-aural-voice-palette-override 'reading-owned)))))
+
+(ert-deftest emacsvox-aural-voice-editor-new-rejects-existing-and-alias-names ()
+  "New cannot overwrite an inherited voice or claim a reserved alias."
+  (emacsvox-test--with-voice-editor
+   (should-error (emacsvox-aural-voice-editor-new 'reading-owned 'bolden)
+                 :type 'user-error)
+   (should-error (emacsvox-aural-voice-editor-new 'reading-owned 'voice-bolden)
+                 :type 'user-error)
+   (should-error (emacsvox-aural-voice-editor-open 'reading-owned 'missing)
+                 :type 'user-error)))
+
+(ert-deftest emacsvox-aural-voice-editor-discard-new-voice-starts-clean ()
+  "Discard removes an uncreated voice; reopening starts with a neutral draft."
+  (emacsvox-test--with-voice-editor
+   (with-temp-buffer
+     (switch-to-buffer (current-buffer))
+     (let ((before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file)))
+       (emacsvox-aural-voice-editor-new 'reading-owned 'custom)
+       (emacsvox-aural-voice-editor--put :automatic-sample nil)
+       (emacsvox-aural-voice-editor--set 'average-pitch 8)
+       (let ((old (emacsvox-aural-voice-editor--draft)) (view (current-buffer)))
+         (cl-letf (((symbol-function 'completing-read)
+                    (lambda (&rest _) "Discard changes and return")))
+           (emacsvox-aural-voice-editor-leave))
+         (should-not (buffer-live-p view))
+         (should-not (gethash '(base reading-owned custom) emacsvox-aural-voice-editor--contexts))
+         (emacsvox-aural-voice-editor-new 'reading-owned 'custom)
+         (should-not (eq old (emacsvox-aural-voice-editor--draft)))
+         (should-not (plist-get (plist-get (emacsvox-aural-voice-editor--working) :definition)
+                                :average-pitch)))
+       (should (equal before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file)))))))
+
 (ert-deftest emacsvox-aural-voice-editor-comparison-and-save-retain-newer-changes ()
   (emacsvox-test--with-voice-editor
    (emacsvox-aural-voice-editor-open 'reading-owned 'bolden)

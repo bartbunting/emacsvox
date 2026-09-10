@@ -196,7 +196,7 @@ KIND is `style', `route', or `both'.  This function performs no writes."
          (palette-before (and palette-id (emacsvox-aural-voice-experiment--palette-data palette-id)))
          (palette-data (and (memq kind '(style both))
                             (or (copy-tree palette-before)
-                                (list :schema-version emacsvox-aural-voice-palette-schema-version
+                                (list :schema-version 1
                                       :id palette-id :summary "Kept physical voice experiments"
                                       :parent active :entries nil))))
          (routing-before (emacsvox-aural-voice-workbench--current-profile-data))

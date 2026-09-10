@@ -161,9 +161,7 @@ is carried unchanged to the adapter.  ALIASES declares stable logical names."
                                          (car (plist-get entry :entry))))))
          (owner (plist-get item :palette))
          (properties (cdr (plist-get item :entry)))
-         (owned (and item
-                     (eq (plist-get (emacsvox-aural-voice-palette-data-form
-                                     (gethash owner registry)) :routing) 'owned)))
+         (owned (memq (plist-get item :schema-version) '(2 3)))
          (names (if owned
                     (emacsvox-aural-voice-data--names canonical entries aliases)
                   (and name (list name))))
