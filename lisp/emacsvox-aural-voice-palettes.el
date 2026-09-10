@@ -164,9 +164,6 @@
         "")
       (format "%d" direct)
       (format "%d" effective)
-      (symbol-name
-       (plist-get
-        (emacsvox-aural-active-voice-capabilities) :adapter))
       (emacsvox-aural-voice-palettes--validation-status report)
       (emacsvox-aural-voice-palette-summary palette)))))
 
@@ -1888,6 +1885,8 @@ When SPEAK is non-nil, include the selected row's full description."
                          (plist-get new-profile :feature-fragments) (plist-get new-profile :spatial)))
           (user-error "Startup choice cancelled"))))
     (let ((profile (emacsvox-aural-profile-set-startup-palette palette new-profile)))
+      (when (fboundp 'emacsvox-aural-profiles-refresh-if-live)
+        (emacsvox-aural-profiles-refresh-if-live))
       (emacsvox-aural-ui-refresh-home-if-live)
       (emacsvox-aural-ui-speak
        (format "Startup profile %s now uses %s. Current voices and other settings are unchanged." profile palette))
@@ -2056,7 +2055,6 @@ When SPEAK is non-nil, include the selected row's full description."
     ("Parent" 20 t)
     ("Direct" 8 t)
     ("Effective" 10 t)
-    ("Adapter" 12 t)
     ("Validation" 16 t)
     ("Purpose" 0 t)])
   (setq tabulated-list-padding 2)

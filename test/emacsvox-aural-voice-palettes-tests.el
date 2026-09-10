@@ -1055,6 +1055,32 @@
         (should (eq (plist-get (emacsvox-aural-profile-entry-data (emacsvox-aural-profile-entry 'fixture-startup)) :voice-palette)
                     'alternative-owned))))))
 
+(ert-deftest emacsvox-aural-voice-palettes-tools-startup-refreshes-open-profiles ()
+  :tags '(voice-palette-tools)
+  (require 'emacsvox-aural-profiles)
+  (emacsvox-test--with-voice-save
+    (let ((emacsvox-aural-ui-speech-function #'ignore)
+          (emacsvox-aural-profile-registry (make-hash-table :test #'eq))
+          (emacsvox-aural-active-profile 'fixture-startup))
+      (emacsvox-aural-register-profile
+       '(:id fixture-startup :summary "Saved setup" :feature-fragments nil
+         :sound-pack nil :voice-palette reading-owned :spatial (:enabled nil)))
+      (emacsvox-aural-save-user-data)
+      (let ((buffer (get-buffer-create "*Aural Presentation Profiles*")))
+        (unwind-protect
+            (progn
+              (with-current-buffer buffer
+                (emacsvox-aural-profiles-mode)
+                (emacsvox-aural-profiles-refresh 'fixture-startup))
+              (cl-letf (((symbol-function 'emacsvox-aural-voice-palettes--at-point-or-read)
+                         (lambda (&rest _) 'alternative-owned)))
+                (emacsvox-aural-voice-palettes-use-at-startup))
+              (with-current-buffer buffer
+                (should (eq (tabulated-list-get-id) 'fixture-startup))
+                (should (member "alternative-owned"
+                                (append (tabulated-list-get-entry) nil)))))
+          (kill-buffer buffer))))))
+
 (ert-deftest emacsvox-aural-voice-palettes-tools-new-startup-is-reviewed-and-conflict-checked ()
   :tags '(voice-palette-tools)
   (require 'emacsvox-aural-profile-service)

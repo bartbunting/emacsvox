@@ -315,7 +315,8 @@ Return the window selected by `pop-to-buffer'."
   "Configure the current spoken tabulated interface.
 
 LIST-NAME is used in boundary announcements.  ROW-SPEAKER describes a whole
-row, while MOVE-SPEAKER optionally provides a shorter movement announcement.
+row, while MOVE-SPEAKER optionally announces movement in the first column.
+Other columns always speak their selected cell.
 REFRESH-FUNCTION is invoked by the common refresh command.  AFTER-MOVE-FUNCTION
 can record selection or perform other non-speaking bookkeeping."
   (emacsvox-aural-ui-register-interface)
@@ -665,7 +666,8 @@ LIST-NAME and SPEAKER override the current buffer's configured values."
           (progn
             (emacsvox-aural-ui-goto-tabulated-column column)
             (if-let* ((move-speaker
-                       (or speaker emacsvox-aural-ui-move-speaker)))
+                       (and (zerop column)
+                            (or speaker emacsvox-aural-ui-move-speaker))))
                 (funcall move-speaker)
               (emacsvox-aural-ui-speak-current-cell t))
             (when emacsvox-aural-ui-after-move-function

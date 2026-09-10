@@ -3630,7 +3630,7 @@ For other servers, nil disables a separate notification stream.  If you name a
 device, make sure it exists first.  For SwiftMac, use `left' or `right'."
   :type '(choice
           (const :tag "Automatic" nil)
-          (const :tag "Disabled" "default")
+          (const :tag "Use main output (notifications remain audible)" "default")
           (string :value ""))
   :group 'tts)
 

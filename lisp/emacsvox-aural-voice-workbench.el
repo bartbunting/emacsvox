@@ -64,33 +64,6 @@
     (styles . "Styles and effects"))
   "Workbench view identifiers and spoken titles.")
 
-(defconst emacsvox-aural-voice-workbench--known-engine-aliases
-  '(("eloquence"
-     ("v1" paul outloud-v1 v1 male)
-     ("v2" outloud-v2 v2 female)
-     ("v3" outloud-v3 v3 child)
-     ("v4" outloud-v4 v4 male)
-     ("v5" outloud-v5 v5 male)
-     ("v6" outloud-v6 v6 female)
-     ("v7" outloud-v7 v7 female)
-     ("v8" outloud-v8 v8 male))
-    ("outloud"
-     ("paul" paul outloud-v1 v1 male)
-     ("outloud-v2" outloud-v2 v2 female)
-     ("outloud-v3" outloud-v3 v3 child)
-     ("outloud-v4" outloud-v4 v4 male)
-     ("outloud-v5" outloud-v5 v5 male)
-     ("outloud-v6" outloud-v6 v6 female)
-     ("outloud-v7" outloud-v7 v7 female)
-     ("outloud-v8" outloud-v8 v8 male))
-    ("dectalk"
-     ("paul" paul male) ("betty" betty female)
-     ("harry" harry male) ("frank" frank male)
-     ("kit" kit child) ("rita" rita female)
-     ("ursula" ursula female) ("dennis" dennis male)
-     ("wendy" wendy female)))
-  "Compatibility aliases used only to explain reviewable route suggestions.")
-
 (defvar-local emacsvox-aural-voice-workbench-view 'logical
   "View displayed by the current Voice Workbench.")
 
@@ -768,11 +741,11 @@ or persisting a routing choice."
       (emacsvox-aural-voice-workbench--provenance-description logical)
       (emacsvox-aural-voice-workbench--family-diagnostic logical)))))
 
-(defun emacsvox-aural-voice-workbench--format ()
+(defun emacsvox-aural-voice-workbench--detail-format ()
   "Return tabulated columns for the active workbench view."
   (pcase emacsvox-aural-voice-workbench-view
     ('logical
-     [("Palette" 16 t) ("Aliases" 24 t) ("Logical voice" 28 t)
+     [("Palette" 16 t) ("Canonical name" 24 t) ("Logical voice" 28 t)
       ("Requested style" 34 t) ("Selector order" 48 t)
       ("Predicted route" 24 t) ("Last played" 30 t)
       ("Registration" 36 t) ("Language" 12 t) ("Scope" 16 t)
@@ -795,7 +768,7 @@ or persisting a routing choice."
       ("Provenance" 28 t)
       ("Diagnostic" 0 t)])))
 
-(defun emacsvox-aural-voice-workbench--entries ()
+(defun emacsvox-aural-voice-workbench--detail-entries ()
   "Return rows for the active workbench view."
   (pcase emacsvox-aural-voice-workbench-view
     ('logical
@@ -824,6 +797,31 @@ or persisting a routing choice."
                (string-lessp (symbol-name (car left))
                              (symbol-name (car right))))))
          nil)))))
+
+(defun emacsvox-aural-voice-workbench--visible-columns ()
+  "Return detail column indices to display in the current view."
+  (pcase emacsvox-aural-voice-workbench-view
+    ('logical '(2 3 4 5 6 10))
+    ('physical '(0 1 2 3 4 5 6 7))
+    ('engines '(1 2 3 4 5 6 7 8 10))
+    ('styles '(0 2 3 4 8))))
+
+(defun emacsvox-aural-voice-workbench--visible-values (values)
+  "Select visible columns from the full row or format VALUES."
+  (vconcat (mapcar (lambda (index) (aref values index))
+                  (emacsvox-aural-voice-workbench--visible-columns))))
+
+(defun emacsvox-aural-voice-workbench--format ()
+  "Return the concise table format for the current view."
+  (emacsvox-aural-voice-workbench--visible-values
+   (emacsvox-aural-voice-workbench--detail-format)))
+
+(defun emacsvox-aural-voice-workbench--entries ()
+  "Return concise rows, retaining stable identities for actions and return."
+  (mapcar (lambda (row)
+            (list (car row)
+                  (emacsvox-aural-voice-workbench--visible-values (cadr row))))
+          (emacsvox-aural-voice-workbench--detail-entries)))
 
 (defun emacsvox-aural-voice-workbench--physical-pair (id)
   "Return the physical engine/voice pair identified by ID."
@@ -1972,26 +1970,39 @@ when they remain unsaved."
 (defun emacsvox-aural-voice-workbench-describe ()
   "Display and speak exact Workbench row and configuration details."
   (interactive)
-  (let ((summary (emacsvox-aural-voice-workbench-speak-current)))
+  (let* ((summary (emacsvox-aural-voice-workbench-speak-current))
+         (details (cadr (assoc (tabulated-list-get-id)
+                              (emacsvox-aural-voice-workbench--detail-entries))))
+         (format (emacsvox-aural-voice-workbench--detail-format))
+         (status (emacsvox-aural-voice-workbench--header))
+         (inventory emacsvox-aural-voice-workbench-inventory)
+         (profile emacsvox-aural-voice-workbench-staged-profile)
+         (diagnostics emacsvox-aural-voice-workbench-diagnostics)
+         (provenance emacsvox-aural-voice-workbench-provenance))
     (emacsvox-aural-ui-with-help-window
       (princ (format "%s\n\n" summary))
+      (when details
+        (dotimes (index (length details))
+          (princ (format "%s: %s\n" (car (aref format index))
+                         (aref details index))))
+        (princ "\n"))
       (princ (format "Status: %s\n\n"
-                     (emacsvox-aural-voice-workbench--header)))
+                     status))
       (princ
        (format "Inventory:\n%S\n\n"
-               emacsvox-aural-voice-workbench-inventory))
+               inventory))
       (princ
        (format "Staged routing profile:\n%S\n"
-               emacsvox-aural-voice-workbench-staged-profile))
+               profile))
       (princ
        (format "\nApply status:\n%S\n"
                emacsvox-aural-routing-apply-status))
       (princ
        (format "\nCurrent diagnostics:\n%S\n"
-               emacsvox-aural-voice-workbench-diagnostics))
+               diagnostics))
       (princ
        (format "\nStaged provenance:\n%S\n"
-               emacsvox-aural-voice-workbench-provenance)))
+               provenance)))
     summary))
 
 (defun emacsvox-aural-voice-workbench-help ()

@@ -424,15 +424,18 @@
       '("eloquence")))))
 
 (ert-deftest emacsvox-aural-voice-workbench-shows-engine-runtime-detail ()
-  "Engine rows expose audio, markers, failure, cooldown, and circuit state."
+  "Engine rows show failures; Details exposes audio and marker capabilities."
   (emacsvox-test--with-voice-workbench
     (setq emacsvox-aural-voice-workbench-view 'engines)
     (emacsvox-aural-voice-workbench-refresh "winrt")
     (let ((spoken (emacsvox-aural-voice-workbench-speak-current)))
-      (should (string-match-p "buffered_pcm" spoken))
       (should (string-match-p "helper exited" spoken))
       (should (string-match-p "750 ms" spoken))
-      (should (string-match-p "word-boundary" spoken)))))
+      (save-window-excursion
+        (emacsvox-aural-voice-workbench-describe)
+        (with-current-buffer (help-buffer)
+          (should (string-match-p "Audio: buffered_pcm" (buffer-string)))
+          (should (string-match-p "Anchors: word-boundary" (buffer-string))))))))
 
 (ert-deftest emacsvox-aural-voice-workbench-reports-status-without-speaking ()
   "Quiet refresh updates inventory, process, and staged-state header status."
@@ -500,15 +503,13 @@
       (should (string-match-p "\\bbolden\\b" (aref entry 7))))))
 
 (ert-deftest emacsvox-aural-voice-workbench-shows-portable-and-realized-identity ()
-  "Logical rows put palette aliases, requested style, route, and result together."
+  "Named voice rows lead with the name and distinguish predicted and played voices."
   (emacsvox-test--with-voice-workbench
     (should (emacsvox-aural-ui-goto-row "bolden"))
     (let ((entry (tabulated-list-get-entry)))
-      (should (equal (aref entry 0) "workbench-test"))
-      (should (string-match-p "bolden" (aref entry 1)))
-      (should (equal (aref entry 2) "bolden"))
-      (should (string-match-p "eci:Reed" (aref entry 4)))
-      (should (equal (aref entry 5) "eloquence/eci:Reed")))))
+      (should (equal (aref entry 0) "bolden"))
+      (should (string-match-p "eci:Reed" (aref entry 2)))
+      (should (equal (aref entry 3) "eloquence/eci:Reed")))))
 
 (ert-deftest emacsvox-aural-voice-workbench-shows-last-played-route ()
   "Logical rows distinguish predicted routing from playback observation."
@@ -519,9 +520,9 @@
                :degraded-acss ("richness") :degraded-effects nil))))
       (emacsvox-aural-voice-workbench-refresh "bolden")
       (let ((entry (tabulated-list-get-entry)))
-        (should (equal (aref entry 5) "eloquence/eci:Reed"))
+        (should (equal (aref entry 3) "eloquence/eci:Reed"))
         (should
-         (equal (aref entry 6) "dectalk/paul omitted richness"))))))
+         (equal (aref entry 4) "dectalk/paul omitted richness"))))))
 
 (ert-deftest emacsvox-aural-voice-workbench-diagnoses-disappearing-inventory ()
   "A stale or vanished exact voice is reported without rewriting its route."
@@ -879,6 +880,28 @@
       (should
        (string-match-p "Engine policy changes remain staged" spoken))
       (should (string-match-p "press w to save and apply" spoken)))))
+
+
+(ert-deftest emacsvox-aural-voice-workbench-compact-columns-retain-details ()
+  "Each view keeps its row identities, and Details retains hidden fields."
+  (emacsvox-test--with-voice-workbench
+    (dolist (view '(logical physical engines styles))
+      (setq emacsvox-aural-voice-workbench-view view)
+      (emacsvox-aural-voice-workbench-refresh)
+      (dolist (row tabulated-list-entries)
+        (should (= (length (cadr row)) (length tabulated-list-format))))
+      (should (equal (mapcar #'car tabulated-list-entries)
+                     (mapcar #'car (emacsvox-aural-voice-workbench--detail-entries)))))
+    (setq emacsvox-aural-voice-workbench-view 'physical)
+    (emacsvox-aural-voice-workbench-refresh '("eloquence" "eci:Reed"))
+    (save-window-excursion
+      (emacsvox-aural-voice-workbench-describe)
+      (with-current-buffer (help-buffer)
+        (should (string-match-p "Native ID: eci:Reed" (buffer-string)))
+        (should (string-match-p "generation 12" (buffer-string)))))
+    (setq emacsvox-aural-voice-workbench-view 'engines)
+    (emacsvox-aural-voice-workbench-refresh "eloquence")
+    (should (equal (aref (tabulated-list-get-entry) 0) "Eloquence"))))
 
 (provide 'emacsvox-aural-voice-workbench-tests)
 ;;; emacsvox-aural-voice-workbench-tests.el ends here

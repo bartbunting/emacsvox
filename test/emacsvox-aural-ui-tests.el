@@ -200,7 +200,7 @@
             (second ["Second" "two"])))
     (emacsvox-aural-ui-refresh-tabulated
      #'emacsvox-test-aural-ui--populate)
-    (let (spoken moved)
+    (let ((emacsvox-aural-ui-speech-function #'ignore) spoken moved)
       (setq-local
        emacsvox-aural-ui-move-speaker
        (lambda () (push (tabulated-list-get-id) spoken)))
@@ -211,8 +211,11 @@
       (emacsvox-aural-ui-next-row)
       (should (eq (tabulated-list-get-id) 'second))
       (should (= (emacsvox-aural-ui-tabulated-column-index) 1))
-      (should (equal spoken '(second)))
-      (should (equal moved '(second))))))
+      (should-not spoken)
+      (emacsvox-aural-ui-goto-tabulated-column 0)
+      (emacsvox-aural-ui-previous-row)
+      (should (equal spoken '(first)))
+      (should (equal moved '(first second))))))
 
 (ert-deftest emacsvox-aural-ui-cell-order-follows-movement-direction ()
   "Rows speak value first while columns and explicit cells speak title first."
@@ -300,7 +303,7 @@
       (should (eq (get-text-property 0 'auditory-icon (car spoken)) 'warn-user)))))
 
 (ert-deftest emacsvox-aural-ui-settings-movement-speaks-name-and-state ()
-  "Moving down from a status cell names the new setting as well as its state."
+  "Moving vertically speaks the selected cell even with a custom row speaker."
   (with-temp-buffer
     (emacsvox-test-aural-ui-mode)
     (setq tabulated-list-format [("Name" 16 nil) ("Status" 16 nil)]
@@ -312,7 +315,7 @@
     (let (spoken)
       (setq emacsvox-aural-ui-speech-function (lambda (text) (push text spoken)))
       (emacsvox-aural-ui-next-row)
-      (should (equal spoken '("Second: off")))
+      (should (equal spoken '("off, Status")))
       (should (= (emacsvox-aural-ui-tabulated-column-index) 1)))))
 
 (ert-deftest emacsvox-aural-ui-actions-follow-effective-bindings-and-filter ()
