@@ -278,8 +278,9 @@
         'inaudible)))))
 
 (ert-deftest emacsvox-voice-acss-generates-stable-name-and-definition ()
-  "An ACSS style is named from its dimensions and defined only when absent."
-  (let (defined)
+  "An issued style has a stable name and an isolated adapter definition."
+  (let ((voice-setup--generated-acss-table (make-hash-table :test #'eq))
+        defined)
     (cl-letf (((symbol-function 'tts-voice-defined-p) #'ignore)
               ((symbol-function 'tts-define-voice-from-acss)
                (lambda (name style)
@@ -294,20 +295,91 @@
              (name (voice-from-acss style)))
         (should (eq name 'acss-paul-a4-p6-s7-r8))
         (should (eq (car defined) name))
-        (should (eq (cadr defined) style))))))
+        (should (equal (cadr defined) style))
+        (should-not (eq (cadr defined) style))
+        (should (equal (voice-setup--generated-acss name) style))))))
 
 (ert-deftest emacsvox-voice-acss-reuses-existing-definition ()
-  "An already defined ACSS name is returned without redefining it."
-  (let (defined)
+  "Only an issued handle may reuse an existing adapter definition."
+  (let ((voice-setup--generated-acss-table (make-hash-table :test #'eq))
+        (definitions 0))
     (cl-letf (((symbol-function 'tts-voice-defined-p) (lambda (_) t))
               ((symbol-function 'tts-define-voice-from-acss)
-               (lambda (&rest _) (setq defined t))))
+               (lambda (&rest _) (cl-incf definitions))))
       (should
        (eq
         (voice-from-acss
          (make-acss :average-pitch 4 :richness 6))
         'acss-a4-r6))
-      (should-not defined))))
+      (should (= definitions 1))
+      (voice-from-acss (make-acss :average-pitch 4 :richness 6))
+      (should (= definitions 1)))))
+
+(ert-deftest emacsvox-voice-acss-retains-independent-raw-snapshots ()
+  "Caller, lookup and adapter mutation cannot change an issued raw style."
+  (let ((voice-setup--generated-acss-table (make-hash-table :test #'eq))
+        (style (make-acss :family (copy-sequence "test") :average-pitch 0)))
+    (cl-letf (((symbol-function 'tts-define-voice-from-acss)
+               (lambda (_name value) (setf (acss-average-pitch value) 9))))
+      (let* ((handle (voice-from-acss style))
+             (read (voice-setup--generated-acss handle)))
+        (aset (acss-family style) 0 ?X)
+        (setf (acss-average-pitch style) 8)
+        (aset (acss-family read) 0 ?Y)
+        (setf (acss-average-pitch read) 7)
+        (should (equal (voice-setup--generated-acss handle)
+                       (make-acss :family "test" :average-pitch 0)))))))
+
+(ert-deftest emacsvox-voice-acss-identity-survives-adapter-reset ()
+  "Neutral and zero handles survive cache loss and retain distinct styles."
+  (let ((voice-setup--generated-acss-table (make-hash-table :test #'eq))
+        (cache (make-hash-table :test #'eq)))
+    (cl-letf (((symbol-function 'tts-voice-defined-p)
+               (lambda (name) (gethash name cache)))
+              ((symbol-function 'tts-define-voice-from-acss)
+               (lambda (name style) (puthash name style cache))))
+      (let ((neutral (voice-from-acss (make-acss)))
+            (zero (voice-from-acss (make-acss :average-pitch 0))))
+        (should (eq neutral 'acss))
+        (should (eq zero 'acss-a0))
+        (clrhash cache)
+        (should (voice-setup--generated-acss-p neutral))
+        (voice-setup--ensure-generated-voice neutral)
+        (voice-setup--ensure-generated-voice zero)
+        (should (equal (gethash neutral cache) (make-acss)))
+        (should (= (acss-average-pitch (gethash zero cache)) 0))
+        (puthash 'acss-not-issued (make-acss) cache)
+        (should-not (voice-setup--generated-acss-p 'acss-not-issued))
+        (should-error (voice-setup--ensure-generated-voice 'acss-not-issued))))))
+
+(ert-deftest emacsvox-voice-acss-rejects-ambiguous-generated-spelling ()
+  "Different raw styles cannot silently acquire the same generated identity."
+  (let ((voice-setup--generated-acss-table (make-hash-table :test #'eq)))
+    (cl-letf (((symbol-function 'tts-define-voice-from-acss) #'ignore))
+      (voice-from-acss (make-acss :family 'test :average-pitch 4))
+      (should-error (voice-from-acss (make-acss :family 'test-a4)))
+      (should (equal (voice-setup--generated-acss 'acss-test-a4)
+                     (make-acss :family 'test :average-pitch 4))))))
+
+(ert-deftest emacsvox-voice-acss-failed-definition-does-not-issue-handle ()
+  "An adapter failure cannot leave a supposedly usable new handle."
+  (let ((voice-setup--generated-acss-table (make-hash-table :test #'eq)))
+    (cl-letf (((symbol-function 'tts-define-voice-from-acss)
+               (lambda (&rest _) (error "Adapter failed"))))
+      (should-error (voice-from-acss (make-acss :richness 2)))
+      (should-not (voice-setup--generated-acss-p 'acss-r2)))))
+
+(ert-deftest emacsvox-voice-acss-reservation-precedes-personality-mutation ()
+  "A stable personality cannot claim the generated namespace before issuance."
+  (let ((voice-setup-defined-voices nil)
+        (voice-setup-defined-voice-hook (list (lambda (_) (ert-fail "Hook ran")))))
+    (cl-progv '(acss-test-reserved acss-test-reserved-settings) nil
+      (makunbound 'acss-test-reserved)
+      (makunbound 'acss-test-reserved-settings)
+      (should-error (eval '(defvoice acss-test-reserved '(nil 0 nil nil nil))))
+      (should-not voice-setup-defined-voices)
+      (should-not (boundp 'acss-test-reserved))
+      (should-not (boundp 'acss-test-reserved-settings)))))
 
 (ert-deftest emacsvox-voice-acss-can-route-only-the-physical-family ()
   "A logical route changes family while retaining every other ACSS value."

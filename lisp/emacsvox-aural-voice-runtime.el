@@ -35,6 +35,8 @@
 
 (declare-function tts-apply-voice-configuration "tts-speak" (&optional callback))
 (declare-function tts-voice-inventory "tts-speak" ())
+(declare-function voice-setup--generated-acss-p "voice-setup" (voice))
+(declare-function voice-setup--generated-acss "voice-setup" (voice))
 
 (defvar emacsvox-aural-voice-runtime--palette nil
   "Explicit palette bound while compiling or inspecting an inactive voice.")
@@ -132,6 +134,10 @@ SEEN prevents personality-variable cycles; opaque personalities are rejected."
    ((emacsvox-aural-voice-style-p definition) (copy-tree definition))
    ((emacsvox-aural--acss-p definition)
     (emacsvox-aural--acss-to-voice-style definition))
+   ((and (fboundp 'voice-setup--generated-acss-p)
+         (voice-setup--generated-acss-p definition))
+    (emacsvox-aural--acss-to-voice-style
+     (voice-setup--generated-acss definition)))
    ((and (symbolp definition) (not (memq definition seen)))
     (let ((settings (intern-soft (format "%s-settings" definition))))
       (cond

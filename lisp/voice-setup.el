@@ -87,6 +87,7 @@
 ;;  Required modules: 
 
 (eval-when-compile (require 'cl-lib))
+(require 'emacsvox-aural)
 (require 'tts-speak)
 (eval-when-compile (require 'easy-mmode))
 
@@ -133,6 +134,35 @@ Consumers can update named-voice inventories after its settings are available.")
                (:copier nil))   ;; Don't make a copier we don't need.
   family average-pitch pitch-range stress richness)
 
+(defvar voice-setup--generated-acss-table (make-hash-table :test #'eq)
+  "Issued concrete voice handles and their independent raw ACSS snapshots.
+Retained across palette changes and adapter cache resets.")
+
+(defun voice-setup--copy-acss (style)
+  "Copy raw ACSS STYLE, including a mutable family string if present."
+  (let ((copy (copy-sequence style)))
+    (when (stringp (acss-family copy))
+      (setf (acss-family copy) (copy-sequence (acss-family copy))))
+    copy))
+
+(defun voice-setup--generated-acss-p (voice)
+  "Return non-nil if VOICE was issued by `voice-from-acss'."
+  (and (symbolp voice) (not (null (gethash voice voice-setup--generated-acss-table)))))
+
+(defun voice-setup--generated-acss (voice)
+  "Return an independent raw snapshot for issued VOICE, or nil."
+  (when-let* ((style (and (symbolp voice)
+                         (gethash voice voice-setup--generated-acss-table))))
+    (voice-setup--copy-acss style)))
+
+(defun voice-setup--ensure-generated-voice (voice)
+  "Ensure issued VOICE is defined for the current adapter and return it."
+  (let ((style (voice-setup--generated-acss voice)))
+    (unless style (error "Unknown generated ACSS handle: %S" voice))
+    (unless (tts-voice-defined-p voice)
+      (tts-define-voice-from-acss voice style))
+    voice))
+
 (defun voice-setup ()
   "Setup voices for selected TTS engine."
   (setq tts-voice-inventory-function #'tts-default-voice-inventory)
@@ -174,8 +204,9 @@ Consumers can update named-voice inventories after its settings are available.")
   (ems--fastload "voice-defs"))
 
 (defun voice-from-acss (style &optional logical-voice)
-  "Compute a  name for this STYLE.
-Define a voice for it if needed, then return the symbol.
+  "Return a stable concrete voice handle for raw ACSS STYLE.
+Retain an independent raw snapshot and define it for the selected adapter.
+The returned symbol is a runtime style value, not an editable palette name.
 
 When LOGICAL-VOICE is supplied, a standalone adapter may replace only the
 physical family through the active routing profile.  Every other ACSS
@@ -205,8 +236,16 @@ dimension remains portable and unchanged."
                    (if p (format "-p%s" p) "")
                    (if s (format "-s%s" s) "")
                    (if r (format "-r%s" r) ""))))
-    (unless (tts-voice-defined-p name)
-      (tts-define-voice-from-acss name effective-style))
+    (if-let* ((issued (gethash name voice-setup--generated-acss-table)))
+        (progn
+          (unless (equal issued effective-style)
+            (error "Generated ACSS name collides with a different style: %S" name))
+          (voice-setup--ensure-generated-voice name))
+      ;; An adapter cache hit alone does not establish this handle's meaning.
+      ;; Keep our copy isolated even if the adapter mutates its argument.
+      (let ((snapshot (voice-setup--copy-acss effective-style)))
+        (tts-define-voice-from-acss name (voice-setup--copy-acss snapshot))
+        (puthash name snapshot voice-setup--generated-acss-table)))
     name))
 
 (defun voice-setup-recompile-defined-voices ()
@@ -394,6 +433,8 @@ last-registration-wins behavior."
  <voice>-settings. "
   (declare (indent 1) (debug t))
   `(progn
+     (when (emacsvox-aural--generated-voice-name-p ',voice)
+       (error "Personality name is reserved for generated ACSS: %S" ',voice))
      (cl-pushnew ',voice voice-setup-defined-voices)
      (defvar  ,voice
        (voice-setup-acss-from-style ,settings ',voice)

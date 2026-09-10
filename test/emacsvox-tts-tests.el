@@ -1256,7 +1256,8 @@
 
 (ert-deftest emacsvox-tts-omnivox-preserves-structured-voice-selectors ()
   "Logical preferences keep engine IDs separate from native voice IDs."
-  (let* ((omnivox-logical-voice-preferences
+  (let* ((emacsvox-aural-voice-palette-registry (make-hash-table :test #'eq))
+         (omnivox-logical-voice-preferences
           '((voice-annotate
              (exact "dectalk" "paul")
              (exact "eloquence" "eci:v1")
@@ -1340,7 +1341,9 @@
 
 (ert-deftest emacsvox-tts-omnivox-registers-stable-logical-voice-aliases ()
   "Portable and personality names retain identity and share ACSS style."
-  (let ((semantic-name 'emacsvox-test-semantic-voice)
+  (let ((emacsvox-aural-voice-palette-registry (make-hash-table :test #'eq))
+        (voice-setup--generated-acss-table (make-hash-table :test #'eq))
+        (semantic-name 'emacsvox-test-semantic-voice)
         (omnivox-logical-voice-preferences
          '((emacsvox-test-semantic-voice
             (engine-default "espeak"))))
@@ -1622,7 +1625,9 @@
 
 (ert-deftest emacsvox-tts-omnivox-registers-both-processes-atomically ()
   "Both servers share a generation but use their own preferred engine."
-  (let* ((speaker
+  (let* ((emacsvox-aural-voice-palette-registry (make-hash-table :test #'eq))
+         (voice-setup--generated-acss-table (make-hash-table :test #'eq))
+         (speaker
           (make-pipe-process
            :name "emacsvox-omnivox-registration-speaker"
            :buffer nil :noquery t))

@@ -386,6 +386,8 @@ replaces live state.  Return the value of MUTATION."
     (unless (eq name (emacsvox-aural--canonical-voice-name name))
       (user-error "Reserved alias: %s; use %s" name
                   (emacsvox-aural--canonical-voice-name name)))
+    (when (emacsvox-aural--generated-voice-name-p name)
+      (user-error "Voice name is reserved for generated ACSS: %s" name))
     (when (assq name (emacsvox-aural-effective-voice-entries id))
       (user-error "Voice already exists in palette %s: %s" id name))
     name))

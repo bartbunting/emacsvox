@@ -101,7 +101,8 @@
 Use a private process advertising structured delivery, without sending audio."
   (require 'omnivox-voices)
   (let* ((process (make-pipe-process :name "aural-native-wire-test" :noquery t))
-         (tts-speaker-process process) (tts-notify-process nil)
+         (tts-speaker-process process)
+         (tts-notify-process (and (eq (plist-get arguments :lane) 'notification) process))
          (tts-program "omnivox") (tts-quiet nil) (tts-stop-immediately nil)
          (tts-handle-unicode nil) (tts-caps nil) (voice-lock-mode t)
          (tts-chunk-separator-syntax ".>)$\"") (tts-punctuation-mode 'none)
@@ -1637,6 +1638,114 @@ write.  State synchronization lines in a combined write are ignored."
          (span (aref (plist-get envelope :spans) 0)))
     (should
      (equal (plist-get span :logical_voice_id) "lighten-extra"))))
+
+(defmacro emacsvox-test--with-generated-voices (&rest body)
+  "Run BODY with real style issuance and isolated Omnivox adapter state."
+  (declare (indent 0) (debug t))
+  `(progn
+     (require 'omnivox-voices)
+     (let ((voice-setup--generated-acss-table (make-hash-table :test #'eq))
+           (omnivox-voice-table (make-hash-table :test #'eq))
+           (omnivox--logical-acss-table (make-hash-table :test #'equal))
+           (omnivox--generated-average-pitch-table (make-hash-table :test #'eq))
+           (omnivox-average-pitch-contrast 1.0)
+           (omnivox-logical-voice-preferences nil)
+           (omnivox-logical-voice-languages nil)
+           (omnivox-engine-priority-ids nil)
+           (emacsvox-aural-session-routing-bindings nil))
+       (cl-letf (((symbol-function 'tts-voice-defined-p) #'omnivox-voice-defined-p)
+                 ((symbol-function 'tts-define-voice-from-acss) #'omnivox-define-voice-from-acss)
+                 ((symbol-function 'tts-get-voice-command) #'omnivox-get-voice-command)
+                 ((symbol-function 'omnivox--schedule-logical-registration) #'ignore)
+                 ((symbol-function 'emacsvox-aural-active-voice-capabilities)
+                  (lambda () '(:adapter omnivox :dimensions
+                               (average-pitch pitch-range stress richness)))))
+         ,@body))))
+
+(ert-deftest emacsvox-aural-generated-voice-replaces-base-before-context-adjustment ()
+  "Handles replace a base; raw records patch it, including explicit zero."
+  (emacsvox-test--with-generated-voices
+    (let* ((handle (voice-from-acss (make-acss :average-pitch 0 :stress 6)))
+           (content (emacsvox-aural--make-content-style
+                     :voice '(:richness 9 :rate-offset 4))))
+      (emacsvox-aural--apply-voice content handle 'new-base)
+      (emacsvox-aural--apply-voice content '(:pitch-range 3) 'adjustment)
+      (let* ((compiled (emacsvox-aural-compile-voice-style
+                        (emacsvox-aural-content-style-voice content)))
+             (style (emacsvox-aural-compiled-voice-style compiled)))
+        (should (= (plist-get style :average-pitch) 0))
+        (should (= (plist-get style :pitch-range) 3))
+        (should (= (plist-get style :stress) 6))
+        (should-not (plist-get style :richness))
+        (should-not (plist-get style :rate-offset))
+        (should (eq (emacsvox-aural-compiled-voice-preset compiled) handle)))
+      (setf (emacsvox-aural-content-style-voice content) '(:richness 9))
+      (emacsvox-aural--apply-voice content (make-acss :average-pitch 0) 'patch)
+      (should (equal (emacsvox-aural-content-style-voice content)
+                     '(:richness 9 :average-pitch 0))))))
+
+(ert-deftest emacsvox-aural-generated-voice-survives-palette-and-cache-changes ()
+  "Raw identity survives adapter reset and ignores shared per-name routes."
+  (emacsvox-test--with-generated-voices
+    (let* ((handle (voice-from-acss (make-acss :average-pitch 0 :stress 6)))
+           (id (symbol-name handle))
+           (before (omnivox--logical-definition-json id nil t))
+           (omnivox-logical-voice-preferences `((,handle . ((exact "wrong" "wrong")))))
+           (omnivox-logical-voice-languages `((,handle . "fr")))
+           (emacsvox-aural-voice-palette-registry
+            (copy-hash-table emacsvox-aural-voice-palette-registry)))
+      (emacsvox-aural-register-voice-palette 'generated-child :summary "Child" :entries nil)
+      (clrhash omnivox-voice-table)
+      (clrhash omnivox--logical-acss-table)
+      (clrhash omnivox--generated-average-pitch-table)
+      (let ((emacsvox-aural-voice-palette-override 'generated-child))
+        (should (member id (omnivox--logical-voice-ids)))
+        (should (equal before (omnivox--logical-definition-json id nil t)))
+        (should (equal (plist-get before :acss) '(:average_pitch 0.0 :stress 0.6666666666666666)))
+        (should (string-match-p "logical_voice acss-a0-s6"
+                                (emacsvox-aural-compile-voice handle)))
+        (should (omnivox-voice-defined-p handle))
+        (should (equal (emacsvox-aural-voice-runtime--definition-style handle)
+                       '(:average-pitch 0 :stress 6)))))))
+
+(ert-deftest emacsvox-aural-generated-maths-voice-reaches-both-speech-lanes ()
+  "The maths API's genuine symbol reaches native wire with all raw dimensions."
+  (require 'emacsvox-maths)
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--with-generated-voices
+      (let* ((handle (emacsvox-maths-acss
+                      '((average-pitch . 0) (pitch-range . 3) (stress . 6) (richness . 9))))
+             (text (propertize "Formula" 'personality handle)))
+        (dolist (lane '(main notification))
+          (let* ((result (emacsvox-test--capture-native-timeline text :lane lane))
+                 (span (car (plist-get (plist-get result :timeline) :spans))))
+            (should (eq (emacsvox-aural-submission-lane (plist-get result :submission)) lane))
+            (should (equal (plist-get span :logical_voice_id) (symbol-name handle)))
+            (should (equal (plist-get span :acss)
+                           '(:average_pitch 0.0 :pitch_range 0.3333333333333333
+                             :stress 0.6666666666666666 :richness 1.0)))))))))
+
+(ert-deftest emacsvox-aural-generated-sampler-voices-remain-concrete ()
+  "The actual sampler emits issued handles with inspectable raw styles."
+  (require 'emacsvox-extras)
+  (emacsvox-test--with-generated-voices
+    (let ((buffer (generate-new-buffer " *generated-sampler-test*")))
+      (unwind-protect
+          (save-window-excursion
+            (cl-letf (((symbol-function 'get-buffer-create) (lambda (&rest _) buffer)))
+              (emacsvox-wizards-generate-voice-sampler 9))
+            (with-current-buffer buffer
+              (should (= (count-lines (point-min) (point-max)) 16))
+              (goto-char (point-min))
+              (while (not (eobp))
+                (let* ((handle (get-text-property (point) 'personality))
+                       (compiled (emacsvox-aural-compile-voice-style handle)))
+                  (should (voice-setup--generated-acss-p handle))
+                  (should (eq (emacsvox-aural-compiled-voice-preset compiled) handle))
+                  (should (numberp (plist-get (emacsvox-aural-compiled-voice-style compiled)
+                                             :average-pitch))))
+                (forward-line 1))))
+        (kill-buffer buffer)))))
 
 (ert-deftest emacsvox-aural-structured-timeline-honors-disabled-icons ()
   "Structured lowering retains the frozen auditory-icon policy."

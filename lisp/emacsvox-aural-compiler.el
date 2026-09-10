@@ -44,6 +44,9 @@
 (declare-function tts-voice-family-id
                   "tts-speak" (family &optional capabilities))
 (declare-function voice-from-acss "voice-setup" (style &optional logical-voice))
+(declare-function voice-setup--generated-acss-p "voice-setup" (voice))
+(declare-function voice-setup--generated-acss "voice-setup" (voice))
+(declare-function voice-setup--ensure-generated-voice "voice-setup" (voice))
 (declare-function
  emacsvox-aural-routing-static-family
  "emacsvox-aural-routing-profiles" (logical-voice requested-family
@@ -352,7 +355,33 @@ and are not reconstructed or rejected here."
   (unless (fboundp 'tts-get-voice-command)
     (emacsvox-aural--transport-error
      "The selected TTS adapter has no voice compiler"))
+  (when (and (fboundp 'voice-setup--generated-acss-p)
+             (voice-setup--generated-acss-p personality))
+    (voice-setup--ensure-generated-voice personality))
   (tts-get-voice-command personality))
+
+(defun emacsvox-aural--compile-generated-voice (voice provenance capability)
+  "Compile issued VOICE directly, retaining PROVENANCE and CAPABILITY limits."
+  (let ((raw (emacsvox-aural--acss-to-voice-style
+              (voice-setup--generated-acss voice)))
+        (style (emacsvox-aural--empty-voice-style))
+        (supported (plist-get capability :dimensions))
+        degradations)
+    (dolist (dimension emacsvox-aural-voice-dimensions)
+      (let* ((key (emacsvox-aural--voice-dimension-key dimension))
+             (value (plist-get raw key)))
+        (if (memq dimension supported)
+            (setq style (plist-put style key value))
+          (when value
+            (push (list :reason 'unsupported-voice-dimension
+                        :adapter (plist-get capability :adapter)
+                        :dimension dimension :requested value)
+                  degradations)))))
+    (emacsvox-aural--make-compiled-voice
+     :command (emacsvox-aural--compile-personality-command voice)
+     :request voice :preset voice :style style
+     :provenance (copy-tree provenance) :capability capability
+     :degradations (nreverse degradations))))
 
 (defun emacsvox-aural--route-palette-voice-definition
     (logical-voice definition)
@@ -581,6 +610,9 @@ and ACSS dimensions to the rules that supplied them."
          (mapcar
            #'emacsvox-aural-compiled-voice-degradations parts))
          :preset (copy-tree voice))))
+     ((and (fboundp 'voice-setup--generated-acss-p)
+           (voice-setup--generated-acss-p voice))
+      (emacsvox-aural--compile-generated-voice voice provenance capability))
      ((and (symbolp voice)
            (emacsvox-aural-voice-runtime--owned voice palette))
       (emacsvox-aural--compile-owned-voice

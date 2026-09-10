@@ -834,6 +834,38 @@
     (emacsvox-aural--register-standard-personality 'test-stable-personality)
     (should (= updates 1))))
 
+(ert-deftest emacsvox-aural-resources-generated-namespace-is-not-editable ()
+  "Palette declarations cannot collide before or after real API issuance."
+  (require 'voice-setup)
+  (let ((emacsvox-aural-voice-palette-registry
+         (copy-hash-table emacsvox-aural-voice-palette-registry))
+        (voice-setup--generated-acss-table (make-hash-table :test #'eq)))
+    (cl-letf (((symbol-function 'tts-define-voice-from-acss) #'ignore))
+      (dolist (issued '(nil t))
+        (when issued
+          (voice-from-acss (make-acss))
+          (voice-from-acss (make-acss :average-pitch 0)))
+        (dolist (name '(acss acss-a0 acss-not-issued))
+          (should-error
+           (emacsvox-aural-register-voice-palette
+            'bad-generated :summary "Collision" :entries (list (cons name 'voice-bolden)))
+           :type 'emacsvox-aural-resource-error)
+          (should-not (emacsvox-aural-voice-palette 'bad-generated)))))
+    (should (emacsvox-aural-voice-palette 'acss-default))))
+
+(ert-deftest emacsvox-aural-resources-generated-handle-is-not-a-saved-personality ()
+  "Even issued handles cannot become session-dependent saved definitions."
+  (require 'voice-setup)
+  (let ((voice-setup--generated-acss-table (make-hash-table :test #'eq)))
+    (cl-letf (((symbol-function 'tts-define-voice-from-acss) #'ignore))
+      (voice-from-acss (make-acss :average-pitch 0)))
+    (dolist (name '(acss-a0 acss-not-issued))
+      (should-error
+       (emacsvox-aural-compile-voice-palette-data
+        (list :schema-version 3 :id 'saved :summary "Saved" :parent 'acss-default
+              :routing 'owned :entries (list (list 'custom :personality name :choices nil))))
+       :type 'emacsvox-aural-resource-error))))
+
 (ert-deftest emacsvox-aural-resources-detect-pack-inheritance-cycle ()
   "Resource-pack inheritance cannot recurse through a cycle."
   (emacsvox-test--with-resource-directory

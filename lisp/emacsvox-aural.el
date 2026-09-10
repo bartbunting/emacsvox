@@ -34,6 +34,13 @@
 (require 'cl-lib)
 (require 'subr-x)
 
+(defun emacsvox-aural--generated-voice-name-p (name)
+  "Return non-nil if NAME is reserved for generated ACSS handles.
+This tests the namespace, not whether a handle has actually been issued."
+  (and (symbolp name)
+       (or (eq name 'acss)
+           (string-prefix-p "acss-" (symbol-name name)))))
+
 (defgroup emacsvox-aural nil
   "Semantic Aural Presentation."
   :group 'emacsvox

@@ -776,6 +776,10 @@ default assets."
      "Voice palette %S contains an invalid entry name: %S"
      palette-id entry))
   (let ((definition (cdr entry)))
+    (when (emacsvox-aural--generated-voice-name-p definition)
+      (emacsvox-aural--resource-error
+       "Voice %S in palette %S must store a raw style or stable personality, not generated handle %S"
+       (car entry) palette-id definition))
     (cond
      ((and
        (symbolp definition)
@@ -899,6 +903,9 @@ generated ACSS variables and arbitrary interned symbols are never enumerated."
       (emacsvox-aural--resource-error
        "Unknown properties for voice %S in palette %S: %S"
        name palette-id unknown))
+    (when (emacsvox-aural--generated-voice-name-p name)
+      (emacsvox-aural--resource-error
+       "Voice name %S is reserved for generated ACSS" name))
     (when (and (eq owned 3)
                (not (eq name (emacsvox-aural--canonical-voice-name name))))
       (emacsvox-aural--resource-error

@@ -142,6 +142,21 @@ Design verification: selected-Emacs and byte-code preflights, the isolated
 collision probe, =git diff --check= and =make docs-release-check= passed.
 This documentation-only decision requires no application rebuild.
 
+Generated-style implementation: the style API now owns copied raw snapshots,
+distinguishes issued handles from adapter cache entries, rejects ambiguous
+generated names and reconstructs missing adapter definitions. Palette declarations,
+New/Rename and stable personality declarations reserve the generated namespace;
+persisted personality fields reject generated handles. Compilation retains the
+concrete preset's metadata, and Omnivox registration retains issued handles across
+cache resets without shared per-name choices. Maths, the actual sampler, context
+composition, mutation isolation and both speech lanes have regression coverage.
+
+Validation: 579 affected source tests and 14 fresh compiled tests passed. The full
+byte-code rebuild was followed by incremental compilation of the final compiler
+and registration changes; final byte-code preflight and reference generation
+passed. Unknown-name enforcement and the remaining complete voice operations
+are still the next High work. No personal files or live sessions changed.
+
 Create schema-3 standard entries without changing their raw style/personality
 representations. Make constructors produce current complete data. Give aliases,
 root inventory, inherited metadata and terminal personalities one resolution

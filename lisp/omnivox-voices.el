@@ -949,6 +949,11 @@ one must not silently migrate to the other."
   "Resolve normalized ACSS for logical voice VALUE without changing its ID.
 SEEN prevents malformed personality-variable cycles."
   (cond
+   ((voice-setup--generated-acss-p
+     (if (stringp value) (intern-soft value) value))
+    (omnivox--normalized-acss-json
+     (voice-setup--generated-acss
+      (if (stringp value) (intern-soft value) value))))
    ((and (recordp value)
          (> (length value) 1)
          (eq (aref value 0) 'acss))
@@ -1399,6 +1404,8 @@ edited voices."
 (defun omnivox--logical-voice-ids ()
   "Return every defined or explicitly configured logical voice ID."
   (let (ids)
+    (maphash (lambda (voice _style) (push (symbol-name voice) ids))
+             voice-setup--generated-acss-table)
     (maphash (lambda (id _style) (push id ids))
              omnivox--logical-acss-table)
     (dolist (voice voice-setup-defined-voices)
@@ -1438,12 +1445,14 @@ edited voices."
 Use PREFERRED-ENGINE-ID for an otherwise unconfigured voice.
 When RUNTIME-ROUTING-POLICY is non-nil, do not duplicate global engine order
 inside this logical definition."
-  (let* ((owned (emacsvox-aural-voice-runtime--owned id))
+  (let* ((generated (voice-setup--generated-acss-p (intern-soft id)))
+         (owned (and (not generated) (emacsvox-aural-voice-runtime--owned id)))
          (configured
           (if owned
               (mapcar #'emacsvox-aural-routing--selector-to-omnivox
                       (plist-get owned :selectors))
-            (omnivox--logical-setting id omnivox-logical-voice-preferences)))
+            (unless generated
+              (omnivox--logical-setting id omnivox-logical-voice-preferences))))
          (selectors
           (if owned
               (if runtime-routing-policy configured
@@ -1458,7 +1467,8 @@ inside this logical definition."
                '((properties))))))
          (language
           (if owned (plist-get owned :language)
-            (omnivox--logical-setting id omnivox-logical-voice-languages))))
+            (unless generated
+              (omnivox--logical-setting id omnivox-logical-voice-languages)))))
     (when (and language (not (stringp language)))
       (error "Language for logical Omnivox voice %s must be a string" id))
     (list
