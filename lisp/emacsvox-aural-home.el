@@ -367,9 +367,8 @@
     (dolist (group emacsvox-aural-home-task-groups)
       (let ((expanded (memq (car group) emacsvox-aural-home-expanded-groups)))
         (push (list (list 'group (car group))
-                    (vector (cadr group)
-                            (format "%s, %d actions" (if expanded "expanded" "collapsed")
-                                    (length (cddr group)))
+                    (vector (emacsvox-aural-ui--expansion-text (cadr group) expanded)
+                            (format "%d actions" (length (cddr group)))
                             "Task group")) rows)
         (when expanded
           (dolist (id (cddr group))
@@ -705,9 +704,9 @@
         (emacsvox-aural-home-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-home-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (when (called-interactively-p 'interactive)
-      (emacsvox-aural-home-speak-current t))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (and (called-interactively-p 'interactive)
+                 (lambda () (emacsvox-aural-home-speak-current t))))
     buffer))
 
 (add-hook

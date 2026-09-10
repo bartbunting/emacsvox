@@ -295,9 +295,8 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
         (emacsvox-aural-semantics-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-semantics-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (when (called-interactively-p 'interactive)
-      (emacsvox-aural-semantics-speak-current))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (and (called-interactively-p 'interactive) #'emacsvox-aural-semantics-speak-current))
     buffer))
 
 (defun emacsvox-describe-aural-semantic (&optional semantic)

@@ -1114,7 +1114,18 @@
   "Semantic definitions used by representative integration slices.")
 
 (defconst emacsvox-aural-workflow-module-fragments
-  '((bs
+  '((aural-tools
+     :schema-version 1
+     :id aural-panel-visibility-cues
+     :summary "Present panel visibility with its control in one transaction"
+     :rules
+     ((:id aural-panel-folded-cue
+       :match (:role aural-interface :module aural-tools :visibility folded)
+       :render (:before (:append ((:id panel-visibility-cue :kind cue :cue close-object)))))
+      (:id aural-panel-expanded-cue
+       :match (:role aural-interface :module aural-tools :visibility expanded)
+       :render (:before (:append ((:id panel-visibility-cue :kind cue :cue open-object)))))))
+    (bs
      :schema-version 1
      :id bs-buffer-state-tones
      :summary "Compatibility tones for buffer state in BS"
@@ -1460,6 +1471,16 @@
 
 (defconst emacsvox-aural-workflow-feature-fragments
   '((:schema-version 1
+     :id aural-panel-state-labels
+     :summary "Speak collapsed or expanded after panel controls"
+     :rules
+     ((:id aural-panel-folded-label
+       :match (:role aural-interface :module aural-tools :visibility folded)
+       :render (:after (:append ((:id panel-visibility-label :kind speech :text "collapsed")))))
+      (:id aural-panel-expanded-label
+       :match (:role aural-interface :module aural-tools :visibility expanded)
+       :render (:after (:append ((:id panel-visibility-label :kind speech :text "expanded")))))))
+    (:schema-version 1
      :id mail-message-status-cues
      :summary
      "Add semantic cues for unread, replied, forwarded, flagged, and attached messages"

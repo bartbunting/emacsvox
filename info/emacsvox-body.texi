@@ -2567,10 +2567,20 @@ Each action names a destination@comma{} reports its current status@comma{} and d
 its purpose.  @kbd{/} searches all actions@comma{} including collapsed
 groups; the matching group opens with your destination selected.
 
-Expandable panels show their collapsed or expanded state without repeating
-key instructions on each row.  Toggling a section uses the normal open/close
-cue and a short spoken state announcement@comma{} respecting the existing icon and
-speech settings.  Key instructions remain available in Help.
+Expandable panels keep visibility as control metadata@comma{} without adding
+``collapsed'' or ``expanded'' to the displayed text.  Navigating to or toggling
+a section presents its open/close cue together with its name@comma{} respecting the
+icon setting and selected sound pack.  For spoken state words@comma{} enable
+@emph{aural-panel-state-labels} in @emph{Presentation Options}.  This adds ``collapsed''
+or ``expanded'' after the control through the normal presentation rules.
+Key instructions remain available in Help.
+
+Panel entry@comma{} return@comma{} selection@comma{} and warning cues accompany their spoken
+feedback in one utterance.  Returning from a panel announces the destination
+and any unfinished draft warning together.  These cues follow the icon
+setting@comma{} sound pack@comma{} and cue remapping rules.
+The older tuner uses the normal navigation voice for these announcements;
+auditions still play the working voice.
 
 The common controls are:
 
@@ -2742,6 +2752,11 @@ and components supplied by the integration; they cannot add missing
 semantic distinctions.
 @kbd{RET} on @emph{Parts} reopens the parts; unfinished choices are
 retained separately when you switch between parts.
+Press @kbd{q} to go back one level: from a voice choice to
+@emph{Content voice}@comma{} then to @emph{Change}.  The section closes and focus returns
+to its parent@comma{} whose name and state are presented through the configured
+cues and optional spoken labels.  At the top level@comma{}
+@kbd{q} leaves the panel and preserves the unfinished draft.
 
 @item
 Press @kbd{P} to hear the proposed change before choosing how
@@ -2770,7 +2785,7 @@ change@comma{} matching criteria@comma{} and lifetime.
 @item
 Press @kbd{a} or @kbd{C-c C-c} to apply or save.
 @kbd{e} instead opens the prepared rule in the Advanced editor.
-@kbd{q} hides the guided draft; Home's @emph{Resume unfinished
+At the top level@comma{} @kbd{q} hides the guided draft; Home's @emph{Resume unfinished
 changes} brings it back.  Aborting a choice or leaving before Apply does
 not change live rules.  Failed saves retain the draft and report failure.
 @end enumerate
@@ -2826,7 +2841,7 @@ Check @emph{Applies to}@comma{} @emph{Voice}@comma{} and @emph{How long}@comma{}
 @kbd{w}.  A face mapping affects matching uses of that face
 within the displayed module or mode and chosen lifetime.  @emph{Advanced}
 opens the full rule editor when you need more detailed matching controls.
-@kbd{q} hides the simple remapping screen and keeps its draft;
+At the top level@comma{} @kbd{q} hides the simple remapping screen and keeps its draft;
 @emph{Resume unfinished changes} in Home finds it again after a voice is chosen.
 
 @item
@@ -2852,7 +2867,9 @@ edit preserves the rule's other settings and stays in the working draft.
 @kbd{P} previews the working rule and @kbd{S} stops.
 @kbd{w} or the @emph{Save} row saves to the original scope and announces
 whether the rule was saved or applied temporarily.  @kbd{q} closes
-the panel and returns to the full rule list while retaining unfinished edits.
+the current section and focuses its parent@comma{} retaining unfinished edits.
+For example@comma{} from a voice choice it returns to @emph{voice}@comma{} then @emph{Content}.
+At the top level it closes the panel and returns to the full rule list.
 From the rule list@comma{}
 @kbd{N} adds a rule and @kbd{q} asks before discarding
 an unfinished draft.
@@ -3214,8 +3231,9 @@ labels. @kbd{T} changes that text; @kbd{S} stops.
 An automatic sample follows each adjustment unless you turn that field off.
 The new value precedes the sample text@comma{} for example ``1. The quick brown fox…''.
 Toggling @emph{Automatic sample after adjustment} announces on or off with distinct
-cues. @emph{More adjustments and effects} and @emph{Fallbacks} announce expanded or
-collapsed@comma{} both when toggled and when reached during field navigation.
+cues. @emph{More adjustments and effects} and @emph{Fallbacks} present their visibility
+with open/close cues and optional spoken state labels@comma{} both when toggled and
+when reached during field navigation.
 Navigation stops an outstanding sample. @kbd{u} undoes an edit@comma{}
 including a reset to adapter default. @kbd{q} dismisses the editor
 and returns to its originating view@comma{} offering to retain or discard unsaved
@@ -3418,7 +3436,8 @@ Use @kbd{h} to leave a working editor through Home without losing
 it.  Home's @emph{Resume unfinished changes} opens the original draft@comma{} including
 its source and working settings.  In the common voice editor@comma{} @kbd{u} undoes and
 @kbd{q} offers to keep the draft@comma{} discard changes@comma{} or continue.  Guided feedback
-@kbd{q} hides and retains the draft.  To undo an already applied
+@kbd{q} goes back one level@comma{} then hides and retains the draft at
+the top level.  To undo an already applied
 rule@comma{} open @emph{Presentation Overrides}@comma{} select it in the appropriate scope@comma{} and
 use @kbd{t} to disable it or @kbd{d} to remove it.
 

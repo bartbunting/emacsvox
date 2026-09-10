@@ -936,12 +936,13 @@ PATH protects completion from invalid inheritance cycles."
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-sound-packs-refresh
        (or pack (tabulated-list-get-id) emacsvox-sounds-current-pack)))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (when
-        (and
-         (called-interactively-p 'interactive)
-         (tabulated-list-get-id))
-      (emacsvox-aural-sound-packs-speak-current))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer
+     (and (called-interactively-p 'interactive)
+          (lambda ()
+            (if (tabulated-list-get-id)
+                (emacsvox-aural-sound-packs-speak-current)
+              (emacsvox-aural-ui-speak "No sound packs are available.")))))
     buffer))
 
 (defun emacsvox-aural-list-sound-pack-cues (&optional pack)
@@ -964,12 +965,13 @@ PATH protects completion from invalid inheritance cycles."
       (emacsvox-aural-inspection-attach-source source)
       (setq emacsvox-aural-sound-pack-cues-pack pack)
       (emacsvox-aural-sound-pack-cues-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (when
-        (and
-         (called-interactively-p 'interactive)
-         (tabulated-list-get-id))
-      (emacsvox-aural-sound-pack-cues-speak-current))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer
+     (and (called-interactively-p 'interactive)
+          (lambda ()
+            (if (tabulated-list-get-id)
+                (emacsvox-aural-sound-pack-cues-speak-current)
+              (emacsvox-aural-ui-speak "This sound pack has no cues.")))))
     buffer))
 
 (provide 'emacsvox-aural-sound-packs)

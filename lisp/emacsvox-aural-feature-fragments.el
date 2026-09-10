@@ -217,12 +217,13 @@
     (list
      (emacsvox-aural-feature-fragments--fragment-collection-row-id collection)
      (vector
-      (capitalize (emacsvox-aural-humanize collection))
+      (emacsvox-aural-ui--expansion-text
+       (capitalize (emacsvox-aural-humanize collection)) (not collapsed))
       (format "%d of %d enabled" enabled (length ids))
       "collection"
       (number-to-string rules)
       ""
-      (if collapsed "collapsed" "expanded")))))
+      ""))))
 
 (defun emacsvox-aural-feature-fragments--set-entries ()
   "Populate the current presentation-option manager."
@@ -295,17 +296,12 @@
                           (emacsvox-aural-feature-fragments--fragment-collections))))
          (enabled
           (cl-count-if
-           #'emacsvox-aural-feature-fragment-enabled-p ids))
-         (collapsed
-          (memq
-           collection
-           emacsvox-aural-feature-fragments-collapsed-collections)))
+           #'emacsvox-aural-feature-fragment-enabled-p ids)))
     (format
-     "%s collection. %d of %d options enabled. %s."
+     "%s collection. %d of %d options enabled."
      (emacsvox-aural-humanize collection)
      enabled
-     (length ids)
-     (if collapsed "Collapsed" "Expanded"))))
+     (length ids))))
 
 (defun emacsvox-aural-feature-fragments-speak-current ()
   "Speak the presentation option or collection at point."
@@ -317,9 +313,7 @@
                (cdr id))
             (emacsvox-aural-feature-fragments--fragment-spoken-summary
              (emacsvox-aural-feature-fragments--fragment-at-point-or-read)))))
-    (if (fboundp 'tts-speak)
-        (tts-speak summary)
-      (message "%s" summary))
+    (emacsvox-aural-ui--speak-control summary)
     summary))
 
 (defun emacsvox-aural-feature-fragments-speak-current-cell ()
@@ -471,10 +465,7 @@
       (dolist (warning (emacsvox-aural-validation-report-warnings report))
         (princ (format "Warning: %s\n" warning))))
     (when (called-interactively-p 'interactive)
-      (when (fboundp 'emacsvox-icon)
-        (emacsvox-icon 'help))
-      (when (fboundp 'tts-speak)
-        (tts-speak summary)))
+      (emacsvox-aural-ui--speak-feedback summary 'help))
     summary))
 
 (defun emacsvox-aural-feature-fragments--fragment-matching-rules
@@ -1104,9 +1095,12 @@ announce the selected example after displaying the buffer."
        emacsvox-aural-feature-fragment-previews-isolated
        (not (null isolated)))
       (emacsvox-aural-feature-fragment-previews-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (when (and speak (tabulated-list-get-id))
-      (emacsvox-aural-feature-fragment-previews-speak-current))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (when speak
+              (lambda ()
+                (if (tabulated-list-get-id)
+                    (emacsvox-aural-feature-fragment-previews-speak-current)
+                  (emacsvox-aural-ui-speak "No presentation option examples are available.")))))
     buffer))
 
 (defun emacsvox-aural-feature-fragments-install-state
@@ -1475,16 +1469,14 @@ announce the selected example after displaying the buffer."
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-feature-fragments-refresh
        (or (tabulated-list-get-id) (car emacsvox-aural-enabled-feature-fragments))))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (if (tabulated-list-get-id)
-        (when (called-interactively-p 'interactive)
-          (emacsvox-aural-feature-fragments-speak-current))
-      (when (called-interactively-p 'interactive)
-        (if (fboundp 'tts-speak)
-            (tts-speak
-             "No presentation options are registered.  Press N to create one.")
-          (message
-           "No presentation options are registered.  Press N to create one."))))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer
+     (and (called-interactively-p 'interactive)
+          (lambda ()
+            (if (tabulated-list-get-id)
+                (emacsvox-aural-feature-fragments-speak-current)
+              (emacsvox-aural-ui-speak
+               "No presentation options are registered. Press N to create one.")))))
     buffer))
 
 (defalias 'emacsvox-aural-tools--install-feature-fragment-state

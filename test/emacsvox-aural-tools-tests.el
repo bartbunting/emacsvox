@@ -2199,7 +2199,8 @@
               (save-window-excursion
                 (emacsvox-aural-explanation-display
                  explanation t counts)))
-            (should (eq icon 'help))
+            (should-not icon)
+            (should (eq (get-text-property 0 'auditory-icon spoken) 'help))
             (should
              (string-match-p
               "Compatibility baseline occasion test" spoken))
@@ -2598,7 +2599,7 @@
                 (emacsvox-aural-home-previous)
                 (should (equal spoken "Top of aural home."))
                 (emacsvox-aural-home-toggle-group)
-                (should (equal "expanded" spoken))
+                (should (equal "Understand or change feedback" spoken))
                 (emacsvox-aural-home-next)
                 (should (string-prefix-p "Change this feedback: " spoken))
                 (emacsvox-aural-home-next)
@@ -2689,11 +2690,11 @@
             (lambda (&optional kill)
               (push (list 'quit kill) events)
               'dismissed))
-           ((symbol-function 'emacsvox-icon)
-            (lambda (icon)
+           ((symbol-function 'tts-speak)
+            (lambda (text)
               (push
                (list
-                'icon icon emacsvox-aural-submission-facts
+                'speech (get-text-property 0 'emacsvox-aural-facts text)
                 (plist-get emacsvox-aural-submission-context :module)
                 emacsvox-aural-submission-occasion)
                events)))
@@ -2704,10 +2705,9 @@
      (equal
       (nreverse events)
       '((quit nil)
-        (icon close-object
+        (speech
          (:role aural-interface :events (aural-interface-closed))
-         aural-tools state-change)
-        mode-line)))))
+         aural-tools state-change))))))
 
 (ert-deftest emacsvox-aural-editor-quit-confirms-before-shared-dismissal ()
   "Dirty editors still confirm before using shared aural exit feedback."
@@ -2932,7 +2932,7 @@
               (should
                (equal
                 spoken
-                "collapsed")))
+                "Org")))
             (should-not (assq 'org-levels tabulated-list-entries))
             (cl-letf (((symbol-function 'tts-speak) #'ignore))
               (emacsvox-aural-feature-fragments-toggle-collection))
@@ -3381,12 +3381,12 @@
   (emacsvox-aural-scheme-editor-mode)
   (setq emacsvox-aural-editor-scope 'session
         emacsvox-aural-editor-rules
-        '((:id authors :order 8 :enabled t
+        (copy-tree '((:id authors :order 8 :enabled t
            :match (:role field :field-kind authors :states (unread) :module notmuch)
            :render (:before (:append ((:id cue :kind cue :cue select-object :anchor object)))
                     :content (:voice lighten :volume 70 :space (:balance -0.3))
                     :after (:append ((:id pause :kind pause :duration 50 :anchor object)))))
-          (:id other :order 9 :match (:role heading) :render (:content (:voice bolden)))))
+          (:id other :order 9 :match (:role heading) :render (:content (:voice bolden))))))
   (emacsvox-aural-editor-refresh)
   (emacsvox-aural-editor--panel-goto '(rule authors))
   (emacsvox-aural-editor-edit-rule))
@@ -3460,6 +3460,191 @@
       (should (= 0 (emacsvox-aural-editor--index-at-point)))
       (should (= 1 (length emacsvox-aural-editor-rules))))))
 
+(ert-deftest emacsvox-aural-panel-visibility-is-presented-with-the-control ()
+  "Cues and optional state labels share one plan, honoring the icon setting."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-workflow-provider)
+    (with-temp-buffer
+      (emacsvox-aural-interface-mode)
+      (dolist (labels '(nil t))
+        (emacsvox-aural-set-enabled-feature-fragments
+         (when labels '(aural-panel-state-labels)))
+        (dolist (icons '(nil t))
+          (dolist (expanded '(nil t))
+            (let ((emacsvox-use-icons icons) prepared (calls 0))
+              (cl-letf (((symbol-function 'emacsvox-icon)
+                         (lambda (&rest _) (ert-fail "Separate cue can be interrupted")))
+                        ((symbol-function 'tts-speak)
+                         (lambda (text)
+                           (cl-incf calls)
+                           (setq prepared (emacsvox-aural-prepare-text text)))))
+                (emacsvox-aural-ui--announce-expansion expanded "Content voice"))
+              (should (= calls 1))
+              (should (equal prepared "Content voice"))
+              (let* ((plan (emacsvox-aural-concrete-plan-at 0 prepared))
+                     (context (emacsvox-aural-concrete-plan-context plan))
+                     (cue (car (emacsvox-aural-concrete-plan-before plan)))
+                     (after (emacsvox-aural-concrete-plan-after plan)))
+                (should (eq (plist-get context :occasion) 'state-change))
+                (should (eq (emacsvox-aural-concrete-action-cue cue)
+                            (if expanded 'open-object 'close-object)))
+                (should (eq (not (null (emacsvox-aural--concrete-action-output-p cue context))) icons))
+                (should (equal (mapcar #'emacsvox-aural-concrete-action-text after)
+                               (when labels (list (if expanded "expanded" "collapsed")))))))))))))
+
+(ert-deftest emacsvox-aural-ui-feedback-keeps-cues-in-the-spoken-plan ()
+  "Feedback honors icon settings and saved cue remaps in one speech call."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-aural-interface-mode)
+      (dolist (icons '(nil t))
+        (dolist (remap '(nil t))
+          (let ((emacsvox-use-icons icons) prepared (calls 0))
+            (setq emacsvox-aural-user-rules
+             (when remap
+               (list (emacsvox-aural-make-legacy-cue-rule
+                      'opening-cue 'open-object 'select-object))))
+            (clrhash emacsvox-aural--current-rules-cache)
+            (cl-letf (((symbol-function 'emacsvox-icon)
+                       (lambda (&rest _) (ert-fail "Cue must accompany speech")))
+                      ((symbol-function 'tts-speak)
+                       (lambda (text)
+                         (cl-incf calls)
+                         (setq prepared (emacsvox-aural-prepare-text text)))))
+              (emacsvox-aural-ui--speak-feedback
+               "Voice settings" 'open-object 'aural-interface-opened))
+            (should (= calls 1))
+            (should (equal prepared "Voice settings"))
+            (let* ((plan (emacsvox-aural-concrete-plan-at 0 prepared))
+                   (context (emacsvox-aural-concrete-plan-context plan))
+                   (cues (emacsvox-aural-concrete-plan-before plan)))
+              (should (= (length cues) 1))
+              (should (eq (emacsvox-aural-concrete-action-cue (car cues))
+                          (if remap 'select-object 'open-object)))
+              (should (eq (not (null (emacsvox-aural--concrete-action-output-p
+                                     (car cues) context))) icons)))))))))
+
+(ert-deftest emacsvox-aural-ui-callback-feedback-is-scoped-to-first-speech ()
+  "Opening supports both speech paths, with no cue leaking past the callback."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-aural-interface-mode)
+      (dolist (speaker '(tts-speak emacsvox-aural-ui-speak))
+        (let (results)
+          (cl-letf (((symbol-function 'tts-speak)
+                     (lambda (text)
+                       (push (emacsvox-aural-prepare-text text) results))))
+            (emacsvox-aural-ui--call-with-feedback
+             'open-object
+             (lambda ()
+               (funcall speaker "First")
+               (funcall speaker "Second"))
+             'aural-interface-opened)
+            (should-error
+             (emacsvox-aural-ui--call-with-feedback
+              'button (lambda () (user-error "Cancelled"))))
+            (emacsvox-aural-ui-speak "After cancellation"))
+          (setq results (nreverse results))
+          (should (equal results '("First" "Second" "After cancellation")))
+          (should
+           (equal
+            (mapcar (lambda (text)
+                      (mapcar #'emacsvox-aural-concrete-action-cue
+                              (emacsvox-aural-concrete-plan-before
+                               (emacsvox-aural-concrete-plan-at 0 text))))
+                    results)
+            '((open-object) nil nil))))))))
+
+(ert-deftest emacsvox-aural-ui-tuner-feedback-retains-cue-through-its-renderer ()
+  "Cued tuner announcements use normal presentation without starting a preview."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (let ((emacsvox-aural-ui-speech-function #'emacsvox-aural-voice-tuner--speak-text)
+            prepared)
+        (cl-letf (((symbol-function 'emacsvox-aural-voice-tuner--play-text)
+                   (lambda (&rest _) (ert-fail "Interface cues need normal presentation")))
+                  ((symbol-function 'tts-speak)
+                   (lambda (text) (setq prepared (emacsvox-aural-prepare-text text)))))
+          (emacsvox-aural-ui--speak-feedback "Pitch 5" 'select-object))
+        (should (equal prepared "Pitch 5"))
+        (should (equal (mapcar #'emacsvox-aural-concrete-action-cue
+                               (emacsvox-aural-concrete-plan-before
+                                (emacsvox-aural-concrete-plan-at 0 prepared)))
+                       '(select-object)))))))
+
+(ert-deftest emacsvox-aural-ui-close-combines-destination-and-draft-warning ()
+  "Returning speaks one result and retains the dismissed panel's rule context."
+  (emacsvox-test--with-aural-tools
+    (save-window-excursion
+      (with-temp-buffer
+        (let ((destination (current-buffer)) prepared (calls 0))
+          (with-temp-buffer
+            (emacsvox-aural-interface-mode)
+            (setq-local emacsvox-aural-ui-dismiss-warning-function
+                        (lambda () "The draft remains unsaved."))
+            (cl-letf (((symbol-function 'quit-window)
+                       (lambda (&optional _) (set-buffer destination)))
+                      ((symbol-function 'tts-speak)
+                       (lambda (text)
+                         (cl-incf calls)
+                         (setq prepared (emacsvox-aural-prepare-text text)))))
+              (emacsvox-aural-quit)))
+          (should (= calls 1))
+          (should (string-match-p (regexp-quote (buffer-name destination)) prepared))
+          (should (string-match-p "The draft remains unsaved" prepared))
+          (let* ((plan (emacsvox-aural-concrete-plan-at 0 prepared))
+                 (context (emacsvox-aural-concrete-plan-context plan)))
+            (should (eq (plist-get context :mode) 'emacsvox-aural-interface-mode))
+            (should (equal (mapcar #'emacsvox-aural-concrete-action-cue
+                                   (emacsvox-aural-concrete-plan-before plan))
+                           '(close-object)))))))))
+
+(ert-deftest emacsvox-aural-panel-navigation-uses-hidden-visibility ()
+  "Rows contain only their content, while navigation presents visibility cues."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-workflow-provider)
+    (with-temp-buffer
+      (emacsvox-test--open-rule-panel)
+      (should-not (string-match-p "\\b\\(expanded\\|collapsed\\)\\b" (buffer-string)))
+      (let (prepared)
+        (cl-letf (((symbol-function 'tts-speak)
+                   (lambda (text) (setq prepared (emacsvox-aural-prepare-text text)))))
+          (emacsvox-aural-editor--panel-speak))
+        (let ((plan (emacsvox-aural-concrete-plan-at 0 prepared)))
+          (should (eq (plist-get (emacsvox-aural-concrete-plan-context plan) :occasion) 'navigation))
+          (should (eq (emacsvox-aural-concrete-action-cue
+                       (car (emacsvox-aural-concrete-plan-before plan))) 'close-object)))))))
+
+(ert-deftest emacsvox-aural-editor-panel-back-follows-nested-settings ()
+  "q closes the nearest section, keeping sibling sections and the draft intact."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-test--open-rule-panel)
+      (emacsvox-aural-editor-edit-rule)
+      (dolist (path '((:render :content) (:render :content :voice)))
+        (should (emacsvox-aural-editor--panel-goto (list 'field path)))
+        (emacsvox-aural-editor-edit-rule))
+      (emacsvox-aural-editor--panel-goto '(choice (:render :content :voice) bolden))
+      (emacsvox-aural-editor-edit-rule)
+      (let ((draft (copy-tree emacsvox-aural-editor-rules)) spoken)
+        (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text))))
+          (call-interactively (key-binding (kbd "q")))
+          (should (equal (get-text-property (point) 'emacsvox-aural-editor--field)
+                         '(field (:render :content :voice))))
+          (should (equal spoken "voice"))
+          (should (member '(:render :content) emacsvox-aural-editor--expanded))
+          (call-interactively (key-binding (kbd "q")))
+          (should (equal (get-text-property (point) 'emacsvox-aural-editor--field)
+                         '(field (:render :content))))
+          (should (equal spoken "Content"))
+          (should (equal emacsvox-aural-editor--expanded '((:match))))
+          (call-interactively (key-binding (kbd "q")))
+          (should-not emacsvox-aural-editor--panel-rule)
+          (should (equal (get-text-property (point) 'emacsvox-aural-editor--field)
+                         '(rule authors)))
+          (should emacsvox-aural-editor-dirty)
+          (should (equal draft emacsvox-aural-editor-rules)))))))
+
 (ert-deftest emacsvox-aural-editor-panel-matching-retains-exclusions-on-reopen ()
   "Rule matching toggles are retained when the panel is closed and reopened."
   (emacsvox-test--with-aural-tools
@@ -3471,6 +3656,9 @@
       (should-not (plist-get (plist-get (car emacsvox-aural-editor-rules) :match) :states))
       (cl-letf (((symbol-function 'yes-or-no-p)
                  (lambda (&rest _) (ert-fail "Closing a panel must keep the draft"))))
+        (emacsvox-aural-editor-quit)
+        (should (equal (get-text-property (point) 'emacsvox-aural-editor--field)
+                       '(field (:match))))
         (emacsvox-aural-editor-quit))
       (should emacsvox-aural-editor-dirty)
       (emacsvox-aural-editor-edit-rule)
@@ -3865,10 +4053,14 @@
   "Task mappings resolve to real maintained offline nodes, including derived tuners."
   (require 'info)
   (require 'emacsvox-aural-voice-experiment)
-  (dolist (entry emacsvox-aural-ui-manual-nodes)
-    (with-temp-buffer
-      (insert-file-contents (expand-file-name "emacsvox.info" emacsvox-info-directory))
-      (should (search-forward (format "Node: %s," (cdr entry)) nil t))))
+  (with-temp-buffer
+    (Info-mode)
+    (dolist (entry emacsvox-aural-ui-manual-nodes)
+      (ert-info ((format "Manual node for %s" (car entry)))
+        ;; Info follows the indirect table when the manual is split into files.
+        (Info-find-node (expand-file-name "emacsvox.info" emacsvox-info-directory)
+                        (cdr entry))
+        (should (equal Info-current-node (cdr entry))))))
   (with-temp-buffer
     (emacsvox-aural-voice-experiment-mode)
     (should (equal (emacsvox-aural-ui--manual-node) "Voices And Routing"))

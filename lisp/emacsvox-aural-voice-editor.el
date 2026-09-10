@@ -218,6 +218,9 @@ Select a faithful wire form before any entry interrupts foreground speech."
 (defun emacsvox-aural-voice-editor--button (id text command &optional dimension)
   "Insert a spoken field ID labelled TEXT invoking COMMAND, with DIMENSION."
   (insert "  ")
+  (when (memq id '(fallbacks more))
+    (setq text (emacsvox-aural-ui--expansion-text
+                text (emacsvox-aural-voice-editor--get (if (eq id 'fallbacks) :expanded :effects)))))
   (insert-text-button text 'follow-link t 'voice-field id 'voice-dimension dimension
                       'action (lambda (button)
                                 (goto-char (button-start button))
@@ -233,8 +236,8 @@ Select a faithful wire form before any entry interrupts foreground speech."
     (emacsvox-aural-voice-editor--locate field)
     (if (memq key '(:expanded :effects))
         (emacsvox-aural-ui--announce-expansion enabled)
-      (emacsvox-icon (if enabled 'on 'off))
-      (emacsvox-aural-voice-editor-speak))))
+      (emacsvox-aural-ui--call-with-feedback
+       (if enabled 'on 'off) #'emacsvox-aural-voice-editor-speak))))
 
 (defun emacsvox-aural-voice-editor--locate (field)
   "Move to the button identified by FIELD, or the first available button."
@@ -416,8 +419,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
                                          (lambda () (emacsvox-aural-voice-editor-choose 0)))
     (when voice
       (emacsvox-aural-voice-editor--button 'fallbacks
-                                           (format "Fallbacks: %s — %s" (if (cdr chain) (format "%d explicit" (length (cdr chain))) "Automatic")
-                                                   (if (emacsvox-aural-voice-editor--get :expanded) "expanded" "collapsed"))
+                                           (format "Fallbacks: %s" (if (cdr chain) (format "%d explicit" (length (cdr chain))) "Automatic"))
                                            (lambda () (emacsvox-aural-voice-editor--toggle :expanded 'fallbacks)))
       (when (emacsvox-aural-voice-editor--get :expanded)
         (cl-loop for choice in chain for index from 0 do
@@ -458,8 +460,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
                                               dimension style (if tuning (list (plist-get row :selector)) chain))
                                              (lambda () (emacsvox-aural-voice-editor-edit field)) dimension)))
     (emacsvox-aural-voice-editor--button 'more
-                                         (format "More adjustments and effects: %s"
-                                                 (if (emacsvox-aural-voice-editor--get :effects) "expanded" "collapsed"))
+                                         "More adjustments and effects"
                                          (lambda () (emacsvox-aural-voice-editor--toggle :effects 'more)))
     (insert "\nListen — base voice, without contextual rules\n")
     (emacsvox-aural-voice-editor--button 'play (if tuning "Audition this choice" "Play edited") #'emacsvox-aural-voice-editor-play)
@@ -507,7 +508,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
   "Read the current labelled field using the ordinary navigation voice."
   (interactive)
   (emacsvox-aural-voice-editor-stop)
-  (emacsvox-aural-ui-speak (if-let* ((button (button-at (point)))) (button-label button)
+  (emacsvox-aural-ui--speak-control (if-let* ((button (button-at (point)))) (button-label button)
                              (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))
 (defun emacsvox-aural-voice-editor-next ()
   "Move to and read the next editor field."
@@ -594,11 +595,11 @@ Select a faithful wire form before any entry interrupts foreground speech."
   "Activate the current field, leaving its spoken result as the final feedback."
   (interactive)
   (let ((button (or (button-at (point)) (user-error "Choose an editor field"))))
-    ;; Generic push-button advice cues after the action. Keep this editor's
-    ;; feedback ordered, with state-specific cues owned by the toggle action.
-    (unless (memq (button-get button 'voice-field) '(more fallbacks auto-sample))
-      (emacsvox-icon 'button))
-    (button-activate button)))
+    ;; Toggles own their state cue. Other actions attach a button cue to their
+    ;; spoken result or prompt; previews retain their own playback transaction.
+    (if (memq (button-get button 'voice-field) '(more fallbacks auto-sample))
+        (button-activate button)
+      (emacsvox-aural-ui--call-with-feedback 'button (lambda () (button-activate button))))))
 (defun emacsvox-aural-voice-editor-adjust (delta)
   "Adjust the current field by DELTA in displayed units."
   (let* ((dimension (or (get-text-property (point) 'voice-dimension) (user-error "Choose a numeric adjustment")))
@@ -1019,8 +1020,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
       (setq emacsvox-aural-voice-editor--context context)
       (emacsvox-aural-inspection-attach-source ordinary)
       (emacsvox-aural-voice-editor-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (emacsvox-aural-voice-editor-speak)
+    (emacsvox-aural-ui--pop-to-buffer buffer #'emacsvox-aural-voice-editor-speak)
     buffer))
 
 (defun emacsvox-aural-voice-editor-open (palette voice &optional source text)

@@ -39,6 +39,11 @@
 (defvar emacsvox-aural-submission-module)
 (defvar emacsvox-aural-submission-occasion)
 (defvar emacsvox-speak-messages)
+(defvar emacsvox-aural-source-annotation-functions)
+(defvar emacsvox-aural-ui--feedback-annotation nil
+  "Dynamically scoped annotation for the next spoken result of a UI action.")
+(defvar emacsvox-aural-ui--inhibit-opening-feedback nil
+  "Non-nil while a caller prepares a more specific opening announcement.")
 
 (declare-function emacsvox-aural-capture-context
                   "emacsvox-aural-transport"
@@ -220,10 +225,9 @@ When nil, movement speaks the current titled cell.")
         (goto-char origin-position))))
     (when (markerp origin-position)
       (set-marker origin-position nil))
-    (when (fboundp 'emacsvox-icon)
-      (emacsvox-icon 'close-object))
-    (when (fboundp 'emacsvox-speak-mode-line)
-      (emacsvox-speak-mode-line))))
+    (emacsvox-aural-ui--speak-feedback
+     (emacsvox-aural-ui--destination-description) 'close-object
+     'aural-interface-closed)))
 
 (defun emacsvox-aural-ui-display-help (producer)
   "Display Help from PRODUCER and remember the exact aural origin.
@@ -289,22 +293,22 @@ as the ordinary buffer from which this interface was opened."
 (defun emacsvox-aural-ui-pop-to-buffer (buffer)
   "Display aural interface BUFFER and announce that it opened.
 
-Interactive Emacs sessions play the scheme-resolved `open-object' cue with
-semantic event `aural-interface-opened'.  Batch sessions remain silent.
+Interactive Emacs sessions speak the buffer name with the scheme-resolved
+`open-object' cue and semantic event `aural-interface-opened' in one utterance.
+Batch sessions remain silent.
 Return the window selected by `pop-to-buffer'."
+  (emacsvox-aural-ui--pop-to-buffer buffer nil))
+
+(defun emacsvox-aural-ui--pop-to-buffer (buffer speaker)
+  "Display BUFFER and combine its opening cue with SPEAKER's announcement."
   (let ((window (pop-to-buffer buffer)))
-    (when
-        (and
-         (not noninteractive)
-         (fboundp 'emacsvox-icon))
-      (let ((emacsvox-aural-submission-facts
-             '(:role aural-interface :events (aural-interface-opened)))
-            (emacsvox-aural-submission-context
-             (emacsvox-aural-capture-context
-              'aural-tools 'state-change))
-            (emacsvox-aural-submission-module 'aural-tools)
-            (emacsvox-aural-submission-occasion 'state-change))
-        (emacsvox-icon 'open-object)))
+    (cond
+     (emacsvox-aural-ui--inhibit-opening-feedback nil)
+     (noninteractive (when speaker (funcall speaker)))
+     (t (emacsvox-aural-ui--call-with-feedback
+         'open-object
+         (or speaker (lambda () (emacsvox-aural-ui-speak (buffer-name))))
+         'aural-interface-opened)))
     window))
 
 (defun emacsvox-aural-ui-configure-tabulated
@@ -439,6 +443,8 @@ When VALUE-FIRST is non-nil, put the cell value before its column title."
 
 (defun emacsvox-aural-ui-speak (text)
   "Speak interface feedback TEXT through the current buffer's renderer."
+  (when emacsvox-aural-ui--feedback-annotation
+    (setq text (funcall emacsvox-aural-ui--feedback-annotation text)))
   (cond
    (emacsvox-aural-ui-speech-function
     (funcall emacsvox-aural-ui-speech-function text))
@@ -448,11 +454,103 @@ When VALUE-FIRST is non-nil, put the cell value before its column title."
     (message "%s" text)))
   text)
 
-(defun emacsvox-aural-ui--announce-expansion (expanded)
-  "Announce EXPANDED through the configured cue and speech paths."
-  (when (fboundp 'emacsvox-icon)
-    (emacsvox-icon (if expanded 'open-object 'close-object)))
-  (emacsvox-aural-ui-speak (if expanded "expanded" "collapsed")))
+(defun emacsvox-aural-ui--feedback-text (text cue &optional event)
+  "Attach CUE or semantic EVENT to TEXT without emitting separate audio."
+  (let ((text (copy-sequence text)))
+    (when (> (length text) 0)
+      (if event
+          (let ((start 0))
+            (while (< start (length text))
+              (let ((end (next-single-property-change
+                          start 'emacsvox-aural-facts text (length text)))
+                    (facts (copy-tree (get-text-property start 'emacsvox-aural-facts text))))
+                (unless (plist-get facts :role)
+                  (setq facts (plist-put facts :role 'aural-interface)))
+                (setq facts (plist-put facts :events
+                                       (cons event (remove event (plist-get facts :events)))))
+                (put-text-property start end 'emacsvox-aural-facts facts text)
+                (setq start end)))
+            (put-text-property 0 (length text) 'emacsvox-aural-module 'aural-tools text)
+            (put-text-property 0 (length text) 'auditory-icon cue text))
+        ;; A more specific result cue takes precedence over a generic button cue.
+        (unless (get-text-property 0 'auditory-icon text)
+          (put-text-property 0 (length text) 'auditory-icon cue text))))
+    text))
+
+(defun emacsvox-aural-ui--call-with-feedback (cue function &optional event)
+  "Attach CUE or EVENT to FUNCTION's first speech, scoped to this call only."
+  (let* ((pending t)
+         (emacsvox-aural-submission-module
+          (if event 'aural-tools emacsvox-aural-submission-module))
+         (emacsvox-aural-submission-occasion
+          (if event 'state-change emacsvox-aural-submission-occasion))
+         (emacsvox-aural-submission-context
+          (if event (emacsvox-aural-capture-context 'aural-tools 'state-change)
+            emacsvox-aural-submission-context))
+         (annotate (lambda (text)
+                     (if (and pending (stringp text) (> (length text) 0))
+                         (progn
+                           (setq pending nil)
+                           (emacsvox-aural-ui--feedback-text text cue event))
+                       text)))
+         (emacsvox-aural-ui--feedback-annotation annotate)
+         (emacsvox-aural-source-annotation-functions
+          (cons annotate emacsvox-aural-source-annotation-functions)))
+    (funcall function)))
+
+(defun emacsvox-aural-ui--speak-feedback (text cue &optional event)
+  "Present TEXT and its CUE or EVENT as one utterance."
+  (let* ((emacsvox-aural-submission-module 'aural-tools)
+         (emacsvox-aural-submission-occasion (if event 'state-change 'navigation))
+         (emacsvox-aural-submission-context
+          (or emacsvox-aural-submission-context
+              (emacsvox-aural-capture-context 'aural-tools emacsvox-aural-submission-occasion))))
+    (emacsvox-aural-ui-speak (emacsvox-aural-ui--feedback-text text cue event))))
+
+(defun emacsvox-aural-ui--destination-description ()
+  "Describe the restored destination without starting another speech transaction."
+  (format "Returned to %s. %s" (buffer-name)
+          (string-trim (format-mode-line (or header-line-format mode-line-format)))))
+
+(defun emacsvox-aural-ui--expansion-text (text expanded)
+  "Attach EXPANDED control metadata to TEXT without changing its characters."
+  (propertize text
+              'emacsvox-aural-facts
+              (list :role 'aural-interface :visibility (if expanded 'expanded 'folded))
+              'emacsvox-aural-module 'aural-tools))
+
+(defun emacsvox-aural-ui--control-visibility ()
+  "Return the visibility metadata of the control at point."
+  (or (plist-get (get-text-property (point) 'emacsvox-aural-facts) :visibility)
+      (when-let* ((row (and (derived-mode-p 'tabulated-list-mode)
+                           (tabulated-list-get-entry))))
+        (cl-loop for cell across row
+                 when (and (stringp cell) (> (length cell) 0))
+                 thereis (plist-get (get-text-property 0 'emacsvox-aural-facts cell)
+                                    :visibility)))))
+
+(defun emacsvox-aural-ui--speak-control (text &optional visibility occasion)
+  "Present TEXT with control VISIBILITY for OCCASION in one speech transaction."
+  (let ((visibility (or visibility (emacsvox-aural-ui--control-visibility))))
+    (if (not visibility) (emacsvox-aural-ui-speak text)
+      (let* ((emacsvox-aural-submission-module 'aural-tools)
+             (emacsvox-aural-submission-occasion (or occasion 'navigation))
+             (emacsvox-aural-submission-context
+              (emacsvox-aural-capture-context 'aural-tools emacsvox-aural-submission-occasion)))
+        (emacsvox-aural-ui-speak
+         (emacsvox-aural-ui--expansion-text text (eq visibility 'expanded)))))))
+
+(defun emacsvox-aural-ui--announce-expansion (expanded &optional label)
+  "Present EXPANDED control state and LABEL through the selected presentation."
+  (emacsvox-aural-ui--speak-control
+   (or label
+       (get-text-property (point) 'emacsvox-aural-editor--label)
+       (when (derived-mode-p 'tabulated-list-mode)
+         (when-let* ((row (tabulated-list-get-entry)))
+           (string-trim (aref row 0))))
+       (when-let* ((button (button-at (point)))) (button-label button))
+       "Section")
+   (if expanded 'expanded 'folded) 'state-change))
 
 (defun emacsvox-aural-ui-speak-current-cell (&optional value-first)
   "Speak the current tabulated cell.
@@ -462,9 +560,9 @@ the cell value first."
   (interactive)
   (let ((description
          (emacsvox-aural-ui-tabulated-cell-description value-first)))
-    (when (fboundp 'emacsvox-icon)
-      (emacsvox-icon 'select-object))
-    (emacsvox-aural-ui-speak description)
+    (if (emacsvox-aural-ui--control-visibility)
+        (emacsvox-aural-ui--speak-control description)
+      (emacsvox-aural-ui--speak-feedback description 'select-object))
     description))
 
 (defun emacsvox-aural-ui-speak-current-row ()
@@ -489,7 +587,7 @@ the cell value first."
          (name (string-trim (format "%s" (aref row name-index))))
          (state (and state-index
                      (string-trim (format "%s" (aref row state-index))))))
-    (emacsvox-aural-ui-speak
+    (emacsvox-aural-ui--speak-control
      (if state (format "%s: %s" name state) (format "%s" name)))))
 
 (defun emacsvox-aural-ui-stop-preview ()
@@ -553,9 +651,7 @@ the cell value first."
 
 (defun emacsvox-aural-ui-announce-boundary (message)
   "Announce tabulated-list boundary MESSAGE."
-  (when (fboundp 'emacsvox-icon)
-    (emacsvox-icon 'warn-user))
-  (emacsvox-aural-ui-speak message)
+  (emacsvox-aural-ui--speak-feedback message 'warn-user)
   message)
 
 (defun emacsvox-aural-ui-move-row
@@ -654,12 +750,10 @@ When KILL is non-nil, kill the interface buffer as `quit-window' would."
             (emacsvox-aural-submission-context context)
             (emacsvox-aural-submission-module 'aural-tools)
             (emacsvox-aural-submission-occasion 'state-change))
-        (emacsvox-icon 'close-object)
-        (emacsvox-speak-mode-line)
-        (when warning
-          (if (fboundp 'tts-speak)
-              (tts-speak warning)
-            (message "%s" warning)))))))
+        (emacsvox-aural-ui--speak-feedback
+         (concat (emacsvox-aural-ui--destination-description)
+                 (when warning (concat " " warning)))
+         'close-object 'aural-interface-closed)))))
 
 (defvar emacsvox-aural-interface-mode-map
   (let ((map (make-sparse-keymap)))

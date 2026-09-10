@@ -1816,6 +1816,7 @@ e		emacsvox-aural-change-feedback-advanced
 h		emacsvox-aural
 l		emacsvox-aural-change-feedback-lifetime
 m		emacsvox-aural-change-feedback-match
+q		emacsvox-aural-change-feedback--back
 w		emacsvox-aural-change-feedback-apply
 
 C-c C-c		emacsvox-aural-change-feedback-apply
@@ -2270,7 +2271,7 @@ Move to the previous rule or expanded setting.
 @findex emacsvox-aural-editor-quit
 
 @format
-Close the panel, or quit the rule list after checking for unsaved changes.
+Go back one level, retaining the draft; check unsaved changes on list exit.
 @end format
 @end deffn
 
@@ -21745,7 +21746,6 @@ Optional prefix arg prompts for toolbelt options.
 (fn QUERY &optional OPTIONS)
 @end format
 @end deffn
-
 @subsubsection emacsvox-websearch-google-news
 @deffn {Command} emacsvox-websearch-google-news
 @table @kbd

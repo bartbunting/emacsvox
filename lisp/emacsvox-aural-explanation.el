@@ -831,10 +831,7 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
         "\nTo change this object's voice, choose Remap at point from "
         "Aural Home, or run M-x emacsvox-aural-remap-voice-at-point.\n")))
     (when speak
-      (when (fboundp 'emacsvox-icon)
-        (emacsvox-icon 'help))
-      (when (fboundp 'tts-speak)
-        (tts-speak summary)))
+      (emacsvox-aural-ui--speak-feedback summary 'help))
     summary))
 
 (defun emacsvox-explain-aural-presentation

@@ -174,7 +174,7 @@
         (should (string-match-p "Routing changed" (plist-get plan :failure)))))))
 
 (ert-deftest emacsvox-aural-experiment-feedback-uses-exact-working-settings ()
-  "Navigation uses the working selector and normalized parameters; old callbacks are ignored."
+  "Cued navigation uses normal speech; working-voice feedback retains exact settings."
   (emacsvox-test--with-voice-workbench
     (with-temp-buffer
       (emacsvox-aural-voice-experiment-mode)
@@ -185,15 +185,19 @@
             emacsvox-aural-voice-tuner-working-style '(:average-pitch 4 :gain 5 :pan 5)
             emacsvox-aural-voice-tuner-initial-style '(:average-pitch 4 :gain 5 :pan 5))
       (emacsvox-aural-voice-tuner-refresh)
-      (let (requests callbacks)
+      (let (requests callbacks spoken)
         (cl-letf (((symbol-function 'tts-preview-voice)
                    (lambda (text selector &rest arguments)
                      (push (list text selector arguments) requests)
                      (push (plist-get arguments :callback) callbacks)))
                   ((symbol-function 'tts-speak)
-                   (lambda (&rest _) (ert-fail "Working voice unexpectedly fell back")))
+                   (lambda (text) (push text spoken)))
                   ((symbol-function 'emacsvox-icon) #'ignore))
           (emacsvox-aural-ui-next-row)
+          (should (= (length spoken) 1))
+          (should (eq (get-text-property 0 'auditory-icon (car spoken)) 'select-object))
+          (should-not requests)
+          (emacsvox-aural-voice-tuner--speak-text "Earlier working voice feedback")
           (emacsvox-aural-voice-tuner--speak-text "Help in the working voice")
           (should (= (length requests) 2))
           (should (equal (plist-get (cadar requests) :voice-id) "eci:Reed"))

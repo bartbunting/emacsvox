@@ -855,16 +855,14 @@
         (emacsvox-aural-overrides-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-overrides-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (if (tabulated-list-get-id)
-        (when (called-interactively-p 'interactive)
-          (emacsvox-aural-overrides-speak-current))
-      (when (called-interactively-p 'interactive)
-        (if (fboundp 'tts-speak)
-            (tts-speak
-             "No personal, session, or source-buffer presentation overrides.")
-          (message
-           "No personal, session, or source-buffer presentation overrides."))))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer
+     (and (called-interactively-p 'interactive)
+          (lambda ()
+            (if (tabulated-list-get-id)
+                (emacsvox-aural-overrides-speak-current)
+              (emacsvox-aural-ui-speak
+               "No personal, session, or source-buffer presentation overrides.")))))
     buffer))
 
 (provide 'emacsvox-aural-overrides)

@@ -428,8 +428,8 @@ With CHOOSE-SOURCE, explicitly select a buffer and use its current point."
             emacsvox-aural-voice-context--origin-field field
             emacsvox-aural-voice-context--input input)
       (emacsvox-aural-voice-context-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (emacsvox-aural-ui-speak "Voice in captured context. Values are requests; playback reports actual support.")
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (lambda () (emacsvox-aural-ui-speak "Voice in captured context. Values are requests; playback reports actual support.")))
     buffer))
 
 (provide 'emacsvox-aural-voice-context)

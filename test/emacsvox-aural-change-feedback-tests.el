@@ -39,6 +39,37 @@
       (emacsvox-aural-change-feedback-proposed))
     proposed))
 
+(ert-deftest emacsvox-aural-guided-back-keeps-voice-and-returns-one-level ()
+  "q backs out of nested voice choices without selecting or losing the draft."
+  (emacsvox-test--with-guided-feedback
+    (emacsvox-test--guided-choose "Change the content voice" "bolden")
+    (let ((draft (copy-tree emacsvox-aural-change-feedback-render)) spoken dismissed)
+      (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text)))
+                ((symbol-function 'emacsvox-aural-quit) (lambda (&rest _) (setq dismissed t))))
+        (call-interactively (key-binding (kbd "q")))
+        (should (eq emacsvox-aural-change-feedback--expanded 'operations))
+        (should (equal (tabulated-list-get-id) '(operation "Change the content voice")))
+        (should (equal spoken "Content voice"))
+        (should-not dismissed)
+        (call-interactively (key-binding (kbd "q")))
+        (should-not emacsvox-aural-change-feedback--expanded)
+        (should (eq (tabulated-list-get-id) 'change))
+        (should (equal spoken "Change"))
+        (should-not dismissed)
+        (call-interactively (key-binding (kbd "q")))
+        (should dismissed)
+        (should (equal draft emacsvox-aural-change-feedback-render))))))
+
+(ert-deftest emacsvox-aural-guided-remap-back-has-no-component-level ()
+  "The simple voice mapping panel returns directly to Voice."
+  (emacsvox-test--with-guided-feedback
+    (setq emacsvox-aural-change-feedback--voice-remap t)
+    (emacsvox-aural-change-feedback-change)
+    (should (emacsvox-aural-ui-goto-row '(voice bolden)))
+    (call-interactively (key-binding (kbd "q")))
+    (should-not emacsvox-aural-change-feedback--expanded)
+    (should (eq (tabulated-list-get-id) 'change))))
+
 (ert-deftest emacsvox-aural-guided-voice-preview-before-lifetime ()
   "A voice change can be heard while all live layers remain unchanged."
   (emacsvox-test--with-guided-feedback
@@ -206,6 +237,11 @@
                     :id 123 :plan concrete :plans (list concrete second-plan)))
            played)
       (emacsvox-aural-change-feedback record)
+      (should (emacsvox-aural-ui-goto-row '(part 2)))
+      (call-interactively (key-binding (kbd "q")))
+      (should (eq (tabulated-list-get-id) 'target))
+      (should-not emacsvox-aural-change-feedback--part-number)
+      (emacsvox-aural-change-feedback-open-row)
       (should (emacsvox-aural-ui-goto-row '(part 2)))
       (emacsvox-aural-change-feedback-open-row)
       (should (equal (plist-get (plist-get emacsvox-aural-change-feedback-input :facts) :content) "Second part"))
@@ -382,7 +418,10 @@
     (should (eq emacsvox-aural-change-feedback--expanded 'match))
     (should (emacsvox-aural-ui-goto-row '(criterion (:states (selected)))))
     (emacsvox-aural-change-feedback-open-row)
-    (should (equal emacsvox-aural-change-feedback-selector '(:role heading)))))
+    (should (equal emacsvox-aural-change-feedback-selector '(:role heading)))
+    (call-interactively (key-binding (kbd "q")))
+    (should (eq (tabulated-list-get-id) 'target))
+    (should-not emacsvox-aural-change-feedback--expanded)))
 
 (provide 'emacsvox-aural-change-feedback-tests)
 ;;; emacsvox-aural-change-feedback-tests.el ends here

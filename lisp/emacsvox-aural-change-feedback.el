@@ -188,6 +188,41 @@
      ('match (eq emacsvox-aural-change-feedback--expanded 'match))
      (_ (eq emacsvox-aural-change-feedback--expanded 'voices)))))
 
+(defun emacsvox-aural-change-feedback--back ()
+  "Collapse one level and focus its parent, or leave the top-level draft."
+  (interactive)
+  (let* ((row (tabulated-list-get-id))
+         (expanded emacsvox-aural-change-feedback--expanded)
+         (section
+          (pcase row
+            (`(voice ,_) 'voices)
+            (`(operation ,operation)
+             (if (and (equal operation "Change the content voice")
+                      (eq expanded 'voices)) 'voices 'operations))
+            (`(part ,_) 'parts)
+            (`(criterion ,_) 'match)
+            ('change (when (memq expanded '(operations voices))
+                       (if emacsvox-aural-change-feedback--voice-remap 'voices 'operations)))
+            ('match (when (eq expanded 'match) 'match))
+            ('target (when (memq expanded '(parts match)) expanded)))))
+    (if (not section)
+        (emacsvox-aural-quit)
+      (let ((parent
+             (pcase section
+               ('voices
+                (if emacsvox-aural-change-feedback--voice-remap 'change
+                  '(operation "Change the content voice")))
+               ('operations 'change)
+               ('parts 'target)
+               ('match (if emacsvox-aural-change-feedback--voice-remap 'target 'match)))))
+        (setq emacsvox-aural-change-feedback--expanded
+              (when (and (eq section 'voices)
+                         (not emacsvox-aural-change-feedback--voice-remap))
+                'operations))
+        (emacsvox-aural-change-feedback-refresh parent)
+        (emacsvox-aural-ui--announce-expansion
+         nil (string-trim (aref (tabulated-list-get-entry) 0)))))))
+
 (defun emacsvox-aural-change-feedback--require-part ()
   "Require an explicit part selection for a multi-part record."
   (when (and emacsvox-aural-change-feedback--record-input
@@ -206,29 +241,23 @@
        ('target
         (cond
          (emacsvox-aural-change-feedback--voice-remap
-          (list id (vector "Applies to"
-                           (concat (aref (cadr row) 1)
-                                   (if (eq emacsvox-aural-change-feedback--expanded 'match)
-                                       "; expanded" "; collapsed")))))
+          (list id (vector (emacsvox-aural-ui--expansion-text
+                            "Applies to" (eq emacsvox-aural-change-feedback--expanded 'match))
+                           (aref (cadr row) 1))))
          (emacsvox-aural-change-feedback--record-input
-            (list id (vector "Parts"
-                             (format "%s; %s"
-                                     (or emacsvox-aural-change-feedback-part "Choose a part")
-                                     (if (eq emacsvox-aural-change-feedback--expanded 'parts)
-                                         "expanded" "collapsed")))))
+            (list id (vector (emacsvox-aural-ui--expansion-text
+                              "Parts" (eq emacsvox-aural-change-feedback--expanded 'parts))
+                             (or emacsvox-aural-change-feedback-part "Choose a part"))))
          (t row)))
        ('change
-        (list id (vector (if emacsvox-aural-change-feedback--voice-remap "Voice" "Change")
-                         (concat (emacsvox-aural-change-feedback--voice-description)
-                                 (if (memq emacsvox-aural-change-feedback--expanded '(operations voices))
-                                     "; expanded"
-                                   "; collapsed")))))
+        (list id (vector (emacsvox-aural-ui--expansion-text
+                          (if emacsvox-aural-change-feedback--voice-remap "Voice" "Change")
+                          (memq emacsvox-aural-change-feedback--expanded '(operations voices)))
+                         (emacsvox-aural-change-feedback--voice-description))))
        ('match
-        (list id (vector "What should match"
-                         (concat (aref (cadr row) 1)
-                                 (if (eq emacsvox-aural-change-feedback--expanded 'match)
-                                     "; expanded"
-                                   "; collapsed")))))
+        (list id (vector (emacsvox-aural-ui--expansion-text
+                          "What should match" (eq emacsvox-aural-change-feedback--expanded 'match))
+                         (aref (cadr row) 1))))
        (_ row)))
     (pcase id
       ('match
@@ -252,12 +281,12 @@
             append
             (append
              (list (list (list 'operation operation)
-                         (vector (concat "  " (if voicep "Content voice" operation))
+                         (vector (if voicep
+                                     (emacsvox-aural-ui--expansion-text
+                                      "  Content voice" (eq emacsvox-aural-change-feedback--expanded 'voices))
+                                   (concat "  " operation))
                                  (if voicep
-                                     (concat (emacsvox-aural-change-feedback--voice-description)
-                                             (if (eq emacsvox-aural-change-feedback--expanded 'voices)
-                                                 "; expanded"
-                                               "; collapsed"))
+                                     (emacsvox-aural-change-feedback--voice-description)
                                    "RET chooses this change"))))
              (when (and voicep (eq emacsvox-aural-change-feedback--expanded 'voices))
                (emacsvox-aural-change-feedback--voice-rows)))))))))))
@@ -319,10 +348,11 @@
             emacsvox-aural-change-feedback-selector selector
             emacsvox-aural-change-feedback-component '(content))
       (emacsvox-aural-change-feedback-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (emacsvox-aural-ui-speak
-     (concat (emacsvox-aural-change-feedback--summary)
-             " Choose Voice, How long, then Save. P previews; O plays the original."))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (lambda ()
+              (emacsvox-aural-ui-speak
+               (concat (emacsvox-aural-change-feedback--summary)
+                       " Choose Voice, How long, then Save. P previews; O plays the original."))))
     buffer))
 
 (defun emacsvox-aural-change-feedback--remap-rows ()
@@ -798,7 +828,7 @@
                   (concat (emacsvox-aural-change-feedback--summary)
                           "\n\nChoose Voice to use another named voice for this face or item. The named voice's settings stay unchanged.\n"
                           "RET opens the selected row. n/p or arrows move. P previews the change; O plays the original; S stops.\n"
-                          "Choose How long, then Save or w. q hides and preserves the draft. e opens Advanced.\n"
+                          "Choose How long, then Save or w. q goes back one level; at the top it hides and preserves the draft. e opens Advanced.\n"
                           "To retune the named voice everywhere it is used, return to Home and choose Tune voice used here (T).\n")
                 (concat (emacsvox-aural-change-feedback--summary)
                       "\n\nRET on Parts expands parts in playback order. Moving reads their text in the captured voice; O replays a part.\n"
@@ -809,7 +839,7 @@
                       "Preview uses the selected example with current rules and its captured buffer context.\n"
                       "a or C-c C-c applies only after all choices are made; e opens the full Advanced rule editor.\n"
                       "RET opens choices or details. n/p and arrows navigate. Space reads the row.\n"
-                      "C-c C-a lists applicable actions. h opens Home. q hides and preserves the unfinished draft.\n"))))
+                      "C-c C-a lists applicable actions. h opens Home. q collapses one level and returns to its parent; at the top it hides and preserves the draft.\n"))))
     (emacsvox-aural-ui-with-help-window (princ text))
     (emacsvox-aural-ui-speak text)))
 
@@ -829,6 +859,7 @@
   (tabulated-list-init-header))
 
 (dolist (binding '(("RET" . emacsvox-aural-change-feedback-open-row)
+                   ("q" . emacsvox-aural-change-feedback--back)
                    ("c" . emacsvox-aural-change-feedback-change)
                    ("m" . emacsvox-aural-change-feedback-match)
                    ("l" . emacsvox-aural-change-feedback-lifetime)
@@ -866,9 +897,13 @@
             emacsvox-aural-change-feedback--record-input record-input
             emacsvox-aural-change-feedback--expanded (and (cdr plans) 'parts))
       (emacsvox-aural-change-feedback-refresh (and (cdr plans) '(part 1))))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (emacsvox-aural-ui-speak (emacsvox-aural-change-feedback--summary))
-    (when (cdr plans) (emacsvox-aural-ui-speak-name-and-state))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (lambda ()
+              (emacsvox-aural-ui-speak
+               (concat (emacsvox-aural-change-feedback--summary)
+                       (when (cdr plans)
+                         (concat ". " (aref (tabulated-list-get-entry) 0)
+                                 ": " (aref (tabulated-list-get-entry) 1)))))))
     buffer))
 
 (provide 'emacsvox-aural-change-feedback)

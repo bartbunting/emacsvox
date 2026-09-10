@@ -3034,11 +3034,12 @@ when they remain unsaved."
       (emacsvox-aural-inspection-attach-source source)
       (when view (setq emacsvox-aural-voice-workbench-view view))
       (emacsvox-aural-voice-workbench-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (when (called-interactively-p 'interactive)
-      (if (tabulated-list-get-id)
-          (emacsvox-aural-voice-workbench-speak-current)
-        (tts-speak "Voice Workbench has no rows")))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (and (called-interactively-p 'interactive)
+                 (lambda ()
+                   (if (tabulated-list-get-id)
+                       (emacsvox-aural-voice-workbench-speak-current)
+                     (tts-speak "Voice Workbench has no rows")))))
     buffer))
 
 (defun emacsvox-aural-voice-workbench-refresh-if-live (&rest _ignored)

@@ -492,9 +492,8 @@ OUTPUT to the generic process sentinel EVENT."
         (emacsvox-omnivox-components-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-omnivox-components-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (when (called-interactively-p 'interactive)
-      (emacsvox-omnivox-components-speak-current))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (and (called-interactively-p 'interactive) #'emacsvox-omnivox-components-speak-current))
     buffer))
 
 (provide 'emacsvox-omnivox-components)

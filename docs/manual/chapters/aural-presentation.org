@@ -192,10 +192,20 @@ Each action names a destination, reports its current status, and describes
 its purpose.  @@texinfo:@kbd{/}@@ searches all actions, including collapsed
 groups; the matching group opens with your destination selected.
 
-Expandable panels show their collapsed or expanded state without repeating
-key instructions on each row.  Toggling a section uses the normal open/close
-cue and a short spoken state announcement, respecting the existing icon and
-speech settings.  Key instructions remain available in Help.
+Expandable panels keep visibility as control metadata, without adding
+``collapsed'' or ``expanded'' to the displayed text.  Navigating to or toggling
+a section presents its open/close cue together with its name, respecting the
+icon setting and selected sound pack.  For spoken state words, enable
+/aural-panel-state-labels/ in /Presentation Options/.  This adds ``collapsed''
+or ``expanded'' after the control through the normal presentation rules.
+Key instructions remain available in Help.
+
+Panel entry, return, selection, and warning cues accompany their spoken
+feedback in one utterance.  Returning from a panel announces the destination
+and any unfinished draft warning together.  These cues follow the icon
+setting, sound pack, and cue remapping rules.
+The older tuner uses the normal navigation voice for these announcements;
+auditions still play the working voice.
 
 The common controls are:
 
@@ -330,6 +340,11 @@ Start by choosing the narrowest tool that matches your intention:
    semantic distinctions.
    @@texinfo:@kbd{RET}@@ on /Parts/ reopens the parts; unfinished choices are
    retained separately when you switch between parts.
+   Press @@texinfo:@kbd{q}@@ to go back one level: from a voice choice to
+   /Content voice/, then to /Change/.  The section closes and focus returns
+   to its parent, whose name and state are presented through the configured
+   cues and optional spoken labels.  At the top level,
+   @@texinfo:@kbd{q}@@ leaves the panel and preserves the unfinished draft.
 
 3. Press @@texinfo:@kbd{P}@@ to hear the proposed change before choosing how
    long to keep it.  @@texinfo:@kbd{O}@@ plays the frozen original example;
@@ -354,7 +369,7 @@ Start by choosing the narrowest tool that matches your intention:
 
 6. Press @@texinfo:@kbd{a}@@ or @@texinfo:@kbd{C-c C-c}@@ to apply or save.
    @@texinfo:@kbd{e}@@ instead opens the prepared rule in the Advanced editor.
-   @@texinfo:@kbd{q}@@ hides the guided draft; Home's /Resume unfinished
+   At the top level, @@texinfo:@kbd{q}@@ hides the guided draft; Home's /Resume unfinished
    changes/ brings it back.  Aborting a choice or leaving before Apply does
    not change live rules.  Failed saves retain the draft and report failure.
 
@@ -402,7 +417,7 @@ frozen example.
    @@texinfo:@kbd{w}@@.  A face mapping affects matching uses of that face
    within the displayed module or mode and chosen lifetime.  /Advanced/
    opens the full rule editor when you need more detailed matching controls.
-   @@texinfo:@kbd{q}@@ hides the simple remapping screen and keeps its draft;
+   At the top level, @@texinfo:@kbd{q}@@ hides the simple remapping screen and keeps its draft;
    /Resume unfinished changes/ in Home finds it again after a voice is chosen.
 
 5. Return to the source, repeat the action, and use @@texinfo:@kbd{C-e E}@@ again to
@@ -426,7 +441,9 @@ edit preserves the rule's other settings and stays in the working draft.
 @@texinfo:@kbd{P}@@ previews the working rule and @@texinfo:@kbd{S}@@ stops.
 @@texinfo:@kbd{w}@@ or the /Save/ row saves to the original scope and announces
 whether the rule was saved or applied temporarily.  @@texinfo:@kbd{q}@@ closes
-the panel and returns to the full rule list while retaining unfinished edits.
+the current section and focuses its parent, retaining unfinished edits.
+For example, from a voice choice it returns to /voice/, then /Content/.
+At the top level it closes the panel and returns to the full rule list.
 From the rule list,
 @@texinfo:@kbd{N}@@ adds a rule and @@texinfo:@kbd{q}@@ asks before discarding
 an unfinished draft.
@@ -778,8 +795,9 @@ labels. @@texinfo:@kbd{T}@@ changes that text; @@texinfo:@kbd{S}@@ stops.
 An automatic sample follows each adjustment unless you turn that field off.
 The new value precedes the sample text, for example ``1. The quick brown fox…''.
 Toggling /Automatic sample after adjustment/ announces on or off with distinct
-cues. /More adjustments and effects/ and /Fallbacks/ announce expanded or
-collapsed, both when toggled and when reached during field navigation.
+cues. /More adjustments and effects/ and /Fallbacks/ present their visibility
+with open/close cues and optional spoken state labels, both when toggled and
+when reached during field navigation.
 Navigation stops an outstanding sample. @@texinfo:@kbd{u}@@ undoes an edit,
 including a reset to adapter default. @@texinfo:@kbd{q}@@ dismisses the editor
 and returns to its originating view, offering to retain or discard unsaved
@@ -986,7 +1004,8 @@ Use @@texinfo:@kbd{h}@@ to leave a working editor through Home without losing
 it.  Home's /Resume unfinished changes/ opens the original draft, including
 its source and working settings.  In the common voice editor, @@texinfo:@kbd{u}@@ undoes and
 @@texinfo:@kbd{q}@@ offers to keep the draft, discard changes, or continue.  Guided feedback
-@@texinfo:@kbd{q}@@ hides and retains the draft.  To undo an already applied
+@@texinfo:@kbd{q}@@ goes back one level, then hides and retains the draft at
+the top level.  To undo an already applied
 rule, open /Presentation Overrides/, select it in the appropriate scope, and
 use @@texinfo:@kbd{t}@@ to disable it or @@texinfo:@kbd{d}@@ to remove it.
 

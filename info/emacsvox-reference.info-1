@@ -1891,6 +1891,7 @@ for full control.
      h		emacsvox-aural
      l		emacsvox-aural-change-feedback-lifetime
      m		emacsvox-aural-change-feedback-match
+     q		emacsvox-aural-change-feedback-back
      w		emacsvox-aural-change-feedback-apply
 
      C-c C-c		emacsvox-aural-change-feedback-apply
@@ -2282,7 +2283,7 @@ predictable for speech access.
 
  -- Command: emacsvox-aural-editor-quit
 
-     Close the panel, or quit the rule list after checking for unsaved changes.
+     Go back one level, retaining the draft; check unsaved changes on list exit.
 
 2.23.1.16 emacsvox-aural-editor-refresh
 .......................................

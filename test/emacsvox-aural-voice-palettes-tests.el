@@ -1034,7 +1034,7 @@
   (emacsvox-test--with-voice-palettes
     (emacsvox-aural-register-voice-palette-data
      emacsvox-test--voice-palette-data)
-    (let (buffers spoken style)
+    (let (buffers spoken)
       (unwind-protect
           (save-window-excursion
             (cl-letf
@@ -1044,9 +1044,9 @@
                       :dimensions
                       (family average-pitch pitch-range stress richness))))
                  ((symbol-function 'emacsvox-aural-voice-tuner--play-text)
-                  (lambda (text working-style &optional _)
-                    (setq spoken text
-                          style (copy-tree working-style))))
+                  #'ignore)
+                 ((symbol-function 'tts-speak)
+                  (lambda (text) (setq spoken text)))
                  ((symbol-function 'emacsvox-icon) #'ignore))
               (setq buffers (emacsvox-test--open-reading-voice-tuner 'aside))
               (with-current-buffer (cadr buffers)
@@ -1063,7 +1063,7 @@
                  (equal
                   spoken
                   "Average Pitch 9. Supported By Outloud."))
-                (should (= (plist-get style :average-pitch) 9))
+                (should (eq (get-text-property 0 'auditory-icon spoken) 'select-object))
                 (emacsvox-aural-voice-tuner-next)
                 (should (eq (tabulated-list-get-id) 'pitch-range))
                 (emacsvox-aural-voice-tuner-previous)
@@ -1075,8 +1075,8 @@
         (dolist (buffer buffers)
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
 
-(ert-deftest emacsvox-aural-voice-tuner-uses-working-voice-for-shared-ui ()
-  "Cells and boundaries use the current unsaved style in the tuner buffer."
+(ert-deftest emacsvox-aural-voice-tuner-keeps-shared-ui-cues-with-speech ()
+  "Cells and boundaries use normal speech; uncued feedback keeps the working style."
   (with-temp-buffer
     (emacsvox-aural-voice-tuner-mode)
     (setq
@@ -1086,19 +1086,22 @@
     (tabulated-list-init-header)
     (tabulated-list-print t)
     (goto-char (point-min))
-    (let (requests)
+    (let (requests spoken)
       (cl-letf
           (((symbol-function 'emacsvox-aural-voice-tuner--play-text)
             (lambda (text style &optional _)
               (push (list text (copy-tree style)) requests)))
+           ((symbol-function 'tts-speak)
+            (lambda (text) (push text spoken)))
            ((symbol-function 'emacsvox-icon) #'ignore))
         (emacsvox-aural-ui-speak-current-cell)
-        (emacsvox-aural-ui-announce-boundary "Top of voice settings."))
+        (emacsvox-aural-ui-announce-boundary "Top of voice settings.")
+        (emacsvox-aural-ui-speak "Working voice feedback"))
+      (should (equal (nreverse spoken) '("Setting, Pitch" "Top of voice settings.")))
       (should
        (equal
         (nreverse requests)
-        '(("Setting, Pitch" (:average-pitch 8))
-          ("Top of voice settings." (:average-pitch 8))))))))
+        '(("Working voice feedback" (:average-pitch 8))))))))
 
 (ert-deftest emacsvox-aural-voice-tuner-compares-opening-and-working-styles ()
   "Repeated comparison alternates the opening and unsaved working voices."

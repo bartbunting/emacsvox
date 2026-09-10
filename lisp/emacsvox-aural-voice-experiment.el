@@ -265,8 +265,7 @@ KIND is `style', `route', or `both'.  This function performs no writes."
                   (with-current-buffer origin (emacsvox-aural-voice-tuner--speak-text text))
                 (tts-speak text))))
       (emacsvox-aural-voice-experiment--show-keep))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (emacsvox-aural-ui-speak (buffer-string))
+    (emacsvox-aural-ui--pop-to-buffer buffer (lambda () (emacsvox-aural-ui-speak (buffer-string))))
     buffer))
 
 (defun emacsvox-aural-voice-experiment--keep-summary ()
@@ -536,8 +535,7 @@ Later edits and components not included in this save remain unsaved."
               emacsvox-aural-voice-experiment-opening (emacsvox-aural-voice-experiment--snapshot)
               emacsvox-aural-voice-experiment-accepted-route (copy-tree selector))
         (emacsvox-aural-voice-tuner-refresh)))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (emacsvox-aural-voice-tuner-speak-current)
+    (emacsvox-aural-ui--pop-to-buffer buffer #'emacsvox-aural-voice-tuner-speak-current)
     buffer))
 
 (provide 'emacsvox-aural-voice-experiment)

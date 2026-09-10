@@ -42,7 +42,7 @@
     (should-not (emacsvox-aural-ui-interface-buffer-p))))
 
 (ert-deftest emacsvox-aural-ui-open-announces-semantic-interface-event ()
-  "Opening an interface plays one remappable cue after displaying it."
+  "Opening an interface combines its semantic event with one announcement."
   (let ((noninteractive nil)
         displayed
         events)
@@ -54,12 +54,11 @@
          ((symbol-function 'emacsvox-aural-capture-context)
           (lambda (module occasion)
             (list :module module :occasion occasion)))
-         ((symbol-function 'emacsvox-icon)
-          (lambda (cue)
+         ((symbol-function 'tts-speak)
+          (lambda (text)
             (push
              (list
-              cue
-              (copy-tree emacsvox-aural-submission-facts)
+              (get-text-property 0 'emacsvox-aural-facts text)
               (copy-tree emacsvox-aural-submission-context)
               emacsvox-aural-submission-module
               emacsvox-aural-submission-occasion)
@@ -72,8 +71,7 @@
     (should
      (equal
       events
-      '((open-object
-         (:role aural-interface :events (aural-interface-opened))
+      '(((:role aural-interface :events (aural-interface-opened))
          (:module aural-tools :occasion state-change)
          aural-tools
          state-change))))))
@@ -91,19 +89,43 @@
         (emacsvox-aural-ui-pop-to-buffer "*Aural Test*")
        'selected-window)))))
 
-(ert-deftest emacsvox-aural-ui-expansion-announces-only-the-state ()
-  "Expansion uses ordinary cues and the selected speech renderer, without hints."
+(ert-deftest emacsvox-aural-ui-expansion-presents-control-metadata ()
+  "Expansion sends one annotated utterance, without a separate interruptible cue."
   (with-temp-buffer
     (let* ((events nil)
           (emacsvox-aural-ui-speech-function
            (lambda (text) (push (list 'speech text) events))))
       (cl-letf (((symbol-function 'emacsvox-icon)
-                 (lambda (cue) (push (list 'cue cue) events))))
+                 (lambda (&rest _) (ert-fail "Cue must be part of the speech plan"))))
         (emacsvox-aural-ui--announce-expansion t)
-        (emacsvox-aural-ui--announce-expansion nil))
-      (should (equal (nreverse events)
-                     '((cue open-object) (speech "expanded")
-                       (cue close-object) (speech "collapsed")))))))
+        (emacsvox-aural-ui--announce-expansion nil)
+        (emacsvox-aural-ui--announce-expansion nil "Content voice"))
+      (setq events (nreverse events))
+      (should (equal events '((speech "Section") (speech "Section") (speech "Content voice"))))
+      (should (equal (mapcar (lambda (event)
+                              (plist-get (get-text-property 0 'emacsvox-aural-facts (cadr event))
+                                         :visibility)) events)
+                     '(expanded folded folded))))))
+
+(ert-deftest emacsvox-aural-ui-feedback-preserves-annotated-content ()
+  "Adding lifecycle feedback preserves each part's facts and rendered voice."
+  (let* ((first (propertize "Settings. " 'emacsvox-aural-facts '(:role heading)))
+         (second (propertize "Author" 'emacsvox-aural-facts '(:role field :field-kind authors)
+                             'personality 'lighten))
+         (original (concat first second))
+         (result (emacsvox-aural-ui--feedback-text
+                  original 'open-object 'aural-interface-opened)))
+    (should (equal result original))
+    (should (eq (plist-get (get-text-property 0 'emacsvox-aural-facts result) :role) 'heading))
+    (should (eq (plist-get (get-text-property (length first) 'emacsvox-aural-facts result)
+                          :field-kind) 'authors))
+    (should (eq (get-text-property (length first) 'personality result) 'lighten))
+    (should-not (get-text-property 0 'auditory-icon original))
+    (should-not (plist-get (get-text-property 0 'emacsvox-aural-facts original) :events)))
+  (let ((specific (propertize "Enabled" 'auditory-icon 'on)))
+    (should (eq (get-text-property 0 'auditory-icon
+                                  (emacsvox-aural-ui--feedback-text specific 'button))
+                'on))))
 
 (ert-deftest emacsvox-aural-ui-common-tabulated-bindings-are-consistent ()
   "All conventional row keys should use the spoken navigation commands."
@@ -150,7 +172,8 @@
                     (lambda (&optional _kill _window)
                       (set-window-buffer (selected-window) home)))
                    ((symbol-function 'emacsvox-icon) #'ignore)
-                   ((symbol-function 'emacsvox-speak-mode-line) #'ignore))
+                   ((symbol-function 'emacsvox-speak-mode-line) #'ignore)
+                   ((symbol-function 'tts-speak) #'ignore))
                 (emacsvox-aural-ui-with-help-window
                   (princ "Aural help contents"))
                 (emacsvox-speak-help)
@@ -273,7 +296,8 @@
           (should-not (emacsvox-aural-ui-next-row))
           (should (= (point) position))))
       (should (equal spoken '("Bottom of test rows.")))
-      (should (equal icons '(warn-user))))))
+      (should-not icons)
+      (should (eq (get-text-property 0 'auditory-icon (car spoken)) 'warn-user)))))
 
 (ert-deftest emacsvox-aural-ui-settings-movement-speaks-name-and-state ()
   "Moving down from a status cell names the new setting as well as its state."

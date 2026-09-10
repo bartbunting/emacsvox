@@ -1687,9 +1687,7 @@ including nil for the adapter default, retain their representation."
   (let ((summary
          (emacsvox-aural-voice-tuner--setting-announcement
           (emacsvox-aural-voice-tuner--current-dimension))))
-    (when (fboundp 'emacsvox-icon)
-      (emacsvox-icon 'select-object))
-    (emacsvox-aural-ui-speak summary)
+    (emacsvox-aural-ui--speak-feedback summary 'select-object)
     summary))
 
 (defun emacsvox-aural-voice-tuner--normalized-acss (style)
@@ -1769,19 +1767,24 @@ information for the working tuner display."
 (defun emacsvox-aural-voice-tuner--speak-text (text)
   "Speak ordinary tuner feedback TEXT through the current working style.
 
-If the staged route cannot be previewed, fall back to normal speech so that
-the tuner remains operable."
-  (condition-case error-data
-      (let ((emacsvox-aural-voice-tuner--feedback-p t))
-        (emacsvox-aural-voice-tuner--play-text
-         text emacsvox-aural-voice-tuner-working-style t))
-    (error
-     (emacsvox-aural-preview-message
-      "Tuned voice unavailable; using normal speech: %s"
-      (error-message-string error-data))
-     (if (fboundp 'tts-speak)
-         (tts-speak text)
-       (message "%s" text))))
+Cued interface announcements use normal speech so their cues and text share
+one presentation.  If the staged route cannot be previewed, also fall back to
+normal speech so that the tuner remains operable."
+  ;; Private voice previews do not render interface cues. Keep annotated
+  ;; feedback on the ordinary presentation path so its cue accompanies speech.
+  (if (and (> (length text) 0) (get-text-property 0 'auditory-icon text))
+      (tts-speak text)
+    (condition-case error-data
+        (let ((emacsvox-aural-voice-tuner--feedback-p t))
+          (emacsvox-aural-voice-tuner--play-text
+           text emacsvox-aural-voice-tuner-working-style t))
+      (error
+       (emacsvox-aural-preview-message
+        "Tuned voice unavailable; using normal speech: %s"
+        (error-message-string error-data))
+       (if (fboundp 'tts-speak)
+           (tts-speak text)
+         (message "%s" text)))))
   text)
 
 (defun emacsvox-aural-voice-tuner-audition (&optional announcement)
@@ -2336,8 +2339,7 @@ identity."
             (not (zerop (plist-get definition :rate)))
             (plist-get definition :rate)))
           (emacsvox-aural-voice-tuner-refresh)))
-      (emacsvox-aural-ui-pop-to-buffer buffer)
-      (emacsvox-aural-voice-tuner-speak-current)
+      (emacsvox-aural-ui--pop-to-buffer buffer #'emacsvox-aural-voice-tuner-speak-current)
       buffer)))
 
 (defun emacsvox-aural-voice-palette-previews-tune ()
@@ -2759,14 +2761,15 @@ When SPEAK is non-nil, include the selected row's full description."
        emacsvox-aural-voice-palette-previews-palette palette
        emacsvox-aural-voice-palette-previews-entries entries)
       (emacsvox-aural-voice-palette-previews-refresh voice))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (emacsvox-aural-ui-speak
-     (format "Voice palette %s. %d voices. %s" palette (length entries)
-             (if (tabulated-list-get-id)
-                 (concat (if speak (emacsvox-aural-voice-palette-previews--row-summary)
-                           (format "Selected %s." (tabulated-list-get-id)))
-                         " t tunes, c copies, r renames, d deletes. Question mark for help.")
-               "No voices. o returns to the palette manager.")))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (lambda ()
+              (emacsvox-aural-ui-speak
+               (format "Voice palette %s. %d voices. %s" palette (length entries)
+                       (if (tabulated-list-get-id)
+                           (concat (if speak (emacsvox-aural-voice-palette-previews--row-summary)
+                                     (format "Selected %s." (tabulated-list-get-id)))
+                                   " t tunes, c copies, r renames, d deletes. Question mark for help.")
+                         "No voices. o returns to the palette manager.")))))
     buffer))
 
 (defun emacsvox-aural-voice-palettes-preview (&optional id)
@@ -2922,10 +2925,11 @@ When SPEAK is non-nil, include the selected row's full description."
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-voice-palettes-refresh
        (or palette (tabulated-list-get-id) (emacsvox-aural-voice-palettes--active-id))))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (emacsvox-aural-ui-speak
-     (format "Voice palettes. %d palettes. Selected %s. Return browses voices; a activates. Question mark for help."
-             (length tabulated-list-entries) (or (tabulated-list-get-id) "none")))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (lambda ()
+              (emacsvox-aural-ui-speak
+               (format "Voice palettes. %d palettes. Selected %s. Return browses voices; a activates. Question mark for help."
+                       (length tabulated-list-entries) (or (tabulated-list-get-id) "none")))))
     buffer))
 
 (provide 'emacsvox-aural-voice-palettes)

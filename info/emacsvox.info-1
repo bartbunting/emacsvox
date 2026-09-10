@@ -2547,11 +2547,20 @@ destination, reports its current status, and describes its purpose.  ‘/’
 searches all actions, including collapsed groups; the matching group
 opens with your destination selected.
 
-   Expandable panels show their collapsed or expanded state without
-repeating key instructions on each row.  Toggling a section uses the
-normal open/close cue and a short spoken state announcement, respecting
-the existing icon and speech settings.  Key instructions remain
-available in Help.
+   Expandable panels keep visibility as control metadata, without adding
+"collapsed" or "expanded" to the displayed text.  Navigating to or
+toggling a section presents its open/close cue together with its name,
+respecting the icon setting and selected sound pack.  For spoken state
+words, enable _aural-panel-state-labels_ in _Presentation Options_.
+This adds "collapsed" or "expanded" after the control through the normal
+presentation rules.  Key instructions remain available in Help.
+
+   Panel entry, return, selection, and warning cues accompany their
+spoken feedback in one utterance.  Returning from a panel announces the
+destination and any unfinished draft warning together.  These cues
+follow the icon setting, sound pack, and cue remapping rules.  The older
+tuner uses the normal navigation voice for these announcements;
+auditions still play the working voice.
 
    The common controls are:
 
@@ -2710,6 +2719,11 @@ working setup                  Profiles               configuration
      supplied by the integration; they cannot add missing semantic
      distinctions.  ‘RET’ on _Parts_ reopens the parts; unfinished
      choices are retained separately when you switch between parts.
+     Press ‘q’ to go back one level: from a voice choice to _Content
+     voice_, then to _Change_.  The section closes and focus returns to
+     its parent, whose name and state are presented through the
+     configured cues and optional spoken labels.  At the top level, ‘q’
+     leaves the panel and preserves the unfinished draft.
 
   3. Press ‘P’ to hear the proposed change before choosing how long to
      keep it.  ‘O’ plays the frozen original example; ‘S’ stops.
@@ -2733,10 +2747,10 @@ working setup                  Profiles               configuration
      change, matching criteria, and lifetime.
 
   6. Press ‘a’ or ‘C-c C-c’ to apply or save.  ‘e’ instead opens the
-     prepared rule in the Advanced editor.  ‘q’ hides the guided draft;
-     Home's _Resume unfinished changes_ brings it back.  Aborting a
-     choice or leaving before Apply does not change live rules.  Failed
-     saves retain the draft and report failure.
+     prepared rule in the Advanced editor.  At the top level, ‘q’ hides
+     the guided draft; Home's _Resume unfinished changes_ brings it
+     back.  Aborting a choice or leaving before Apply does not change
+     live rules.  Failed saves retain the draft and report failure.
 
    Replacing or suppressing a sound targets its identity in its before-
 or after-content phase, retaining other components.  Existing rule data
@@ -2780,9 +2794,9 @@ remain tied to the selected frozen example.
      or press ‘w’.  A face mapping affects matching uses of that face
      within the displayed module or mode and chosen lifetime.
      _Advanced_ opens the full rule editor when you need more detailed
-     matching controls.  ‘q’ hides the simple remapping screen and keeps
-     its draft; _Resume unfinished changes_ in Home finds it again after
-     a voice is chosen.
+     matching controls.  At the top level, ‘q’ hides the simple
+     remapping screen and keeps its draft; _Resume unfinished changes_
+     in Home finds it again after a voice is chosen.
 
   5. Return to the source, repeat the action, and use ‘C-e E’ again to
      confirm which rule now wins.
@@ -2804,8 +2818,10 @@ stays in the working draft.
 
    ‘P’ previews the working rule and ‘S’ stops.  ‘w’ or the _Save_ row
 saves to the original scope and announces whether the rule was saved or
-applied temporarily.  ‘q’ closes the panel and returns to the full rule
-list while retaining unfinished edits.  From the rule list, ‘N’ adds a
+applied temporarily.  ‘q’ closes the current section and focuses its
+parent, retaining unfinished edits.  For example, from a voice choice it
+returns to _voice_, then _Content_.  At the top level it closes the
+panel and returns to the full rule list.  From the rule list, ‘N’ adds a
 rule and ‘q’ asks before discarding an unfinished draft.
 
    Open _Presentation Overrides_ to manage these changes together.
@@ -3166,12 +3182,13 @@ that text; ‘S’ stops.  An automatic sample follows each adjustment
 unless you turn that field off.  The new value precedes the sample text,
 for example "1.  The quick brown fox…".  Toggling _Automatic sample
 after adjustment_ announces on or off with distinct cues.  _More
-adjustments and effects_ and _Fallbacks_ announce expanded or collapsed,
-both when toggled and when reached during field navigation.  Navigation
-stops an outstanding sample.  ‘u’ undoes an edit, including a reset to
-adapter default.  ‘q’ dismisses the editor and returns to its
-originating view, offering to retain or discard unsaved changes.
-Quitting the workbench afterwards does not reopen the experiment.
+adjustments and effects_ and _Fallbacks_ present their visibility with
+open/close cues and optional spoken state labels, both when toggled and
+when reached during field navigation.  Navigation stops an outstanding
+sample.  ‘u’ undoes an edit, including a reset to adapter default.  ‘q’
+dismisses the editor and returns to its originating view, offering to
+retain or discard unsaved changes.  Quitting the workbench afterwards
+does not reopen the experiment.
 
    Choose the _Physical voice_ field to search by engine or voice name.
 You can audition a candidate with the working adjustments before
@@ -3368,10 +3385,11 @@ flattened contextual result back into the palette.
      Home's _Resume unfinished changes_ opens the original draft,
      including its source and working settings.  In the common voice
      editor, ‘u’ undoes and ‘q’ offers to keep the draft, discard
-     changes, or continue.  Guided feedback ‘q’ hides and retains the
-     draft.  To undo an already applied rule, open _Presentation
-     Overrides_, select it in the appropriate scope, and use ‘t’ to
-     disable it or ‘d’ to remove it.
+     changes, or continue.  Guided feedback ‘q’ goes back one level,
+     then hides and retains the draft at the top level.  To undo an
+     already applied rule, open _Presentation Overrides_, select it in
+     the appropriate scope, and use ‘t’ to disable it or ‘d’ to remove
+     it.
 
      From any Aural interface, ‘C-c C-i’ opens its offline task manual
      and ‘q’ returns to the same interface and position.  In Help, ‘i’

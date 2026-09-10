@@ -591,17 +591,14 @@
         (emacsvox-aural-doctor-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-doctor-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (when (called-interactively-p 'interactive)
-      (let ((summary
-             (concat
-              "Aural Doctor. "
-              (emacsvox-aural-doctor-summary
-               emacsvox-aural-doctor-findings)
-              ".")))
-        (if (fboundp 'tts-speak)
-            (tts-speak summary)
-          (message "%s" summary))))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer
+     (and (called-interactively-p 'interactive)
+          (lambda ()
+            (emacsvox-aural-ui-speak
+             (concat "Aural Doctor. "
+                     (emacsvox-aural-doctor-summary emacsvox-aural-doctor-findings)
+                     ".")))))
     buffer))
 
 (provide 'emacsvox-aural-doctor)

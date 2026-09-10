@@ -3112,21 +3112,21 @@ Function Index
 * emacsvox-aural-change-feedback-mode <1>: emacsvox-aural-change-feedback.
                                                              (line   76)
 * emacsvox-aural-change-feedback-open-row: emacsvox-aural-change-feedback.
-                                                             (line  103)
-* emacsvox-aural-change-feedback-open-row <1>: emacsvox-aural-change-feedback.
                                                              (line  104)
+* emacsvox-aural-change-feedback-open-row <1>: emacsvox-aural-change-feedback.
+                                                             (line  105)
 * emacsvox-aural-change-feedback-original: emacsvox-aural-change-feedback.
-                                                             (line  110)
-* emacsvox-aural-change-feedback-original <1>: emacsvox-aural-change-feedback.
                                                              (line  111)
+* emacsvox-aural-change-feedback-original <1>: emacsvox-aural-change-feedback.
+                                                             (line  112)
 * emacsvox-aural-change-feedback-proposed: emacsvox-aural-change-feedback.
-                                                             (line  117)
-* emacsvox-aural-change-feedback-proposed <1>: emacsvox-aural-change-feedback.
                                                              (line  118)
+* emacsvox-aural-change-feedback-proposed <1>: emacsvox-aural-change-feedback.
+                                                             (line  119)
 * emacsvox-aural-change-feedback-refresh: emacsvox-aural-change-feedback.
-                                                             (line  124)
-* emacsvox-aural-change-feedback-refresh <1>: emacsvox-aural-change-feedback.
                                                              (line  125)
+* emacsvox-aural-change-feedback-refresh <1>: emacsvox-aural-change-feedback.
+                                                             (line  126)
 * emacsvox-aural-copy-feature-fragment:  emacsvox-aural-feature-fragments.
                                                              (line   15)
 * emacsvox-aural-copy-feature-fragment <1>: emacsvox-aural-feature-fragments.

@@ -607,16 +607,14 @@ MUTATION."
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-profiles-refresh
        (or profile (tabulated-list-get-id) (emacsvox-aural-current-profile-id))))
-    (emacsvox-aural-ui-pop-to-buffer buffer)
-    (if (tabulated-list-get-id)
-        (when (called-interactively-p 'interactive)
-          (emacsvox-aural-profiles-speak-current))
-      (when (called-interactively-p 'interactive)
-        (if (fboundp 'tts-speak)
-            (tts-speak
-             "No presentation profiles are saved. Press capital N to save the current configuration.")
-          (message
-           "No presentation profiles are saved; press N to create one."))))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer
+     (and (called-interactively-p 'interactive)
+          (lambda ()
+            (if (tabulated-list-get-id)
+                (emacsvox-aural-profiles-speak-current)
+              (emacsvox-aural-ui-speak
+               "No presentation profiles are saved. Press capital N to save the current configuration.")))))
     buffer))
 
 (provide 'emacsvox-aural-profiles)
