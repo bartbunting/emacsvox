@@ -155,12 +155,19 @@ Use a private process advertising structured delivery, without sending audio."
         (should (= (plist-get effects (car entry)) (cdr entry)))))))
 
 (ert-deftest emacsvox-aural-native-saved-style-matches-voice-previews ()
-  "Edited values survive saving and agree in tuner, Workbench and final wire."
+  "Edited values survive saving and agree in the common editor, Workbench and final wire."
   (require 'emacsvox-aural-voice-workbench)
   (require 'omnivox-voices)
+  (require 'emacsvox-aural-voice-editor)
   (emacsvox-test--with-transport-scheme
     (let* ((directory (make-temp-file "emacsvox-style-consumers-" t))
            (emacsvox-aural-schemes-file (expand-file-name "styles.el" directory))
+           (emacsvox-aural-routing-profiles-file (expand-file-name "routing.el" directory))
+           (emacsvox-aural-routing-profile-registry (make-hash-table :test #'eq))
+           (emacsvox-aural-routing--choice-sets nil)
+           (emacsvox-aural-voice-drafts--registry (make-hash-table :test #'equal))
+           (emacsvox-aural-voice-editor--contexts (make-hash-table :test #'equal))
+           (emacsvox-aural-voice-drafts--changed-hook nil)
            (emacsvox-aural-voice-palette-registry
             (emacsvox-aural--built-in-voice-palette-registry))
            (emacsvox-aural-profile-registry (make-hash-table :test #'eq))
@@ -174,56 +181,36 @@ Use a private process advertising structured delivery, without sending audio."
            ;; Independent stored and wire expectations, not generated from metadata.
            (expected-style
             '(:family nil :average-pitch 0 :pitch-range 3 :stress 6 :richness 9
-              :rate-offset -4 :gain 5 :low-pass 7 :high-pass 4 :pan 5
-              :reverb 1 :echo 2 :chorus 3))
+              :gain 5 :low-pass 7 :high-pass 4 :pan 5
+              :reverb 1 :echo 2 :chorus 3 :rate-offset -4))
            (expected-acss
             (list :average-pitch 0.0 :pitch-range (/ 3.0 9.0)
                   :stress (/ 6.0 9.0) :richness 1.0))
            (expected-effects
             (list :gain 0.5 :low-pass (/ 7.0 9.0) :high-pass (/ 4.0 9.0)
                   :pan 0.5 :reverb (/ 1.0 9.0) :echo (/ 2.0 9.0) :chorus (/ 3.0 9.0)))
-           tuner-preview workbench-preview)
+           editor-preview workbench-preview)
       (unwind-protect
           (progn
             (emacsvox-aural-register-voice-palette-data
-             (list :schema-version 1 :id 'consumer-test :summary "Consumer parity"
-                   :parent 'acss-default :entries (list (list 'bolden :style initial))))
+             (list :schema-version 3 :routing 'owned :id 'consumer-test :summary "Consumer parity"
+                   :parent 'acss-default :entries (list (list 'bolden :style initial :choices nil))))
             (with-temp-buffer
-              (emacsvox-aural-voice-tuner-mode)
-              (setq emacsvox-aural-voice-tuner-palette 'consumer-test
-                    emacsvox-aural-voice-tuner-voice 'bolden
-                    emacsvox-aural-voice-tuner-initial-style
-                    (emacsvox-aural-voice-tuner--complete-style initial 'consumer-test)
-                    emacsvox-aural-voice-tuner-working-style
-                    (copy-tree emacsvox-aural-voice-tuner-initial-style)
-                    emacsvox-aural-voice-tuner-route-selector
-                    '(:kind exact :scope local :engine-id "dectalk" :voice-id "Paul"))
-              (let (dimension)
-                (cl-letf (((symbol-function 'emacsvox-aural-voice-tuner--current-dimension)
-                           (lambda () dimension))
-                          ((symbol-function 'emacsvox-aural-voice-tuner-refresh) #'ignore)
-                          ((symbol-function 'emacsvox-aural-voice-tuner-audition) #'ignore)
-                          ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live) #'ignore)
-                          ((symbol-function 'emacsvox-aural-voice-tuner--refresh-source) #'ignore)
-                          ((symbol-function 'emacsvox-aural-voice-tuner--announce-save) #'ignore)
-                          ((symbol-function 'emacsvox-aural-quit) #'ignore)
-                          ((symbol-function 'tts-preview-voice)
-                           (lambda (_text _selector &rest arguments)
-                             (setq tuner-preview arguments))))
-                  (dolist (input '((average-pitch . 0) (pitch-range . 3) (stress . 6)
-                                   (richness . 9) (gain . 5) (low-pass . 2) (high-pass . 4)
-                                   (pan . 5) (reverb . 1) (echo . 2) (chorus . 3)))
-                    (setq dimension (car input))
-                    (let ((last-command-event (+ ?0 (cdr input))))
-                      (emacsvox-aural-voice-tuner-set-digit)))
-                  (setq dimension 'rate-offset)
-                  (cl-letf (((symbol-function 'read-string) (lambda (&rest _) "-4")))
-                    (emacsvox-aural-voice-tuner-edit))
-                  (should (equal emacsvox-aural-voice-tuner-working-style expected-style))
-                  (emacsvox-aural-voice-tuner--play-text
-                   "Sample" emacsvox-aural-voice-tuner-working-style)
-                  (emacsvox-aural-voice-tuner-save)
-                  (should-not emacsvox-aural-voice-tuner-dirty))))
+              (emacsvox-aural-voice-editor-mode)
+              (setq emacsvox-aural-voice-editor--context
+                    (emacsvox-aural-voice-editor--context-for 'consumer-test 'bolden))
+              (emacsvox-aural-voice-editor--put :buffer (current-buffer))
+              (emacsvox-aural-voice-editor--put :automatic-sample nil)
+              (cl-letf (((symbol-function 'tts-speak) #'ignore)
+                        ((symbol-function 'tts-preview-voices)
+                         (lambda (entries &optional _callback) (setq editor-preview (car entries)))))
+                (dolist (input '((average-pitch . 0) (pitch-range . 3) (stress . 6)
+                                 (richness . 9) (gain . 5) (low-pass . 2) (high-pass . 4)
+                                 (pan . 5) (reverb . 1) (echo . 2) (chorus . 3) (rate-offset . -4)))
+                  (emacsvox-aural-voice-editor--set (car input) (cdr input)))
+                (should (equal (plist-get (emacsvox-aural-voice-editor--working) :definition) expected-style))
+                (emacsvox-aural-voice-editor-play)
+                (emacsvox-aural-voice-editor-save-to-collection)))
             ;; Read the actual saved file, discard the live entry, and register its data.
             (let* ((data (emacsvox-aural-read-user-data emacsvox-aural-schemes-file))
                    (palette (car (plist-get data :voice-palettes))))
@@ -232,20 +219,15 @@ Use a private process advertising structured delivery, without sending audio."
                              expected-style))
               (remhash 'consumer-test emacsvox-aural-voice-palette-registry)
               (emacsvox-aural-register-voice-palette-data palette))
-            (with-temp-buffer
-              (emacsvox-aural-voice-tuner-mode)
-              (setq emacsvox-aural-voice-tuner-working-style
-                    (emacsvox-aural-voice-tuner--complete-style
-                     (emacsvox-aural-voice 'bolden 'consumer-test) 'consumer-test))
-              (should (equal emacsvox-aural-voice-tuner-working-style expected-style))
-              (should (equal (emacsvox-aural-voice-tuner--requested-value 'low-pass) "2")))
+            (let ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'consumer-test 'bolden nil) :snapshot)))
+              (should (equal (plist-get snapshot :definition) expected-style))
+              (should (= (emacsvox-aural-voice-tuner--control-value
+                          'low-pass (plist-get (plist-get snapshot :definition) :low-pass)) 2)))
             (with-temp-buffer
               (emacsvox-aural-voice-workbench-mode)
               (setq emacsvox-aural-voice-workbench-view 'logical
                     emacsvox-aural-voice-workbench-staged-profile
-                    '(:bindings ((:logical-voice voice-bolden :selectors
-                                  ((:kind exact :scope local :engine-id "dectalk"
-                                    :voice-id "Paul"))))))
+                    (emacsvox-aural-voice-runtime--profile))
               (should (equal (emacsvox-aural-voice-workbench--palette-aliases "voice-bolden")
                              '("bolden")))
               (let ((inhibit-read-only t))
@@ -254,7 +236,7 @@ Use a private process advertising structured delivery, without sending audio."
               (cl-letf (((symbol-function 'tts-preview-voices)
                          (lambda (entries _callback) (setq workbench-preview (car entries)))))
                 (emacsvox-aural-voice-workbench-preview)))
-            (dolist (preview (list tuner-preview workbench-preview))
+            (dolist (preview (list editor-preview workbench-preview))
               (should (equal (plist-get preview :acss) expected-acss))
               (should (equal (plist-get preview :effects) expected-effects))
               (should (= (plist-get preview :rate-offset) -4)))

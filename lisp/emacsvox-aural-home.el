@@ -111,7 +111,6 @@
        (or (and (derived-mode-p 'emacsvox-aural-change-feedback-mode)
                 (emacsvox-aural-change-feedback--pending-p))
            (bound-and-true-p emacsvox-aural-editor-dirty)
-           (bound-and-true-p emacsvox-aural-voice-tuner-dirty)
            (and (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
                 (emacsvox-aural-voice-workbench--dirty-p)))))
    (buffer-list))

@@ -108,7 +108,6 @@
     "emacsvox-aural-profiles.el"
     "emacsvox-aural-voice-palettes.el"
     "emacsvox-aural-voice-workbench.el"
-    "emacsvox-aural-voice-experiment.el"
     "emacsvox-aural-change-feedback.el"
     "emacsvox-aural-provider-org.el"
     "emacsvox-aural-provider-org-srs.el"

@@ -73,7 +73,6 @@
           "emacsvox-aural-voice-workbench.el"
           "emacsvox-aural-voice-editor.el"
           "emacsvox-aural-voice-context.el"
-          "emacsvox-aural-voice-experiment.el"
           "emacsvox-aural-change-feedback.el"
           "emacsvox-aural-provider-org.el"
           "emacsvox-aural-provider-org-srs.el"

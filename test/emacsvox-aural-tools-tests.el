@@ -2635,10 +2635,10 @@
         emacsvox-aural-voice-workbench-mode-map
         emacsvox-omnivox-components-mode-map
         emacsvox-aural-voice-palette-previews-mode-map
-        emacsvox-aural-voice-tuner-mode-map
+        emacsvox-aural-voice-editor-mode-map
         emacsvox-aural-scheme-editor-mode-map))
     (should
-     (eq (lookup-key map (kbd "h")) #'emacsvox-aural))))
+     (memq (lookup-key map (kbd "h")) '(emacsvox-aural emacsvox-aural-home)))))
 
 (ert-deftest emacsvox-aural-interfaces-provide-dismissal ()
   "Aural managers use shared exit feedback and editors retain confirmation."
@@ -2666,8 +2666,8 @@
     #'emacsvox-aural-editor-quit))
   (should
    (eq
-    (lookup-key emacsvox-aural-voice-tuner-mode-map (kbd "q"))
-    #'emacsvox-aural-voice-tuner-quit)))
+    (lookup-key emacsvox-aural-voice-editor-mode-map (kbd "q"))
+    #'emacsvox-aural-voice-editor-leave)))
 
 (ert-deftest emacsvox-aural-editors-use-consistent-write-bindings ()
   "Rule editors use w and C-c C-c for writing, leaving s unbound."
@@ -3555,13 +3555,14 @@
                     results)
             '((open-object) nil nil))))))))
 
-(ert-deftest emacsvox-aural-ui-tuner-feedback-retains-cue-through-its-renderer ()
-  "Cued tuner announcements use normal presentation without starting a preview."
+(ert-deftest emacsvox-aural-ui-voice-editor-feedback-retains-cue ()
+  "Common editor announcements retain their cues without starting a voice preview."
   (emacsvox-test--with-aural-tools
     (with-temp-buffer
-      (let ((emacsvox-aural-ui-speech-function #'emacsvox-aural-voice-tuner--speak-text)
+      (emacsvox-aural-voice-editor-mode)
+      (let ((emacsvox-aural-ui-speech-function nil)
             prepared)
-        (cl-letf (((symbol-function 'emacsvox-aural-voice-tuner--play-text)
+        (cl-letf (((symbol-function 'tts-preview-voices)
                    (lambda (&rest _) (ert-fail "Interface cues need normal presentation")))
                   ((symbol-function 'tts-speak)
                    (lambda (text) (setq prepared (emacsvox-aural-prepare-text text)))))
@@ -4052,9 +4053,9 @@
     (should (equal (buffer-name) (help-buffer)))))
 
 (ert-deftest emacsvox-aural-ui-manual-covers-all-task-interfaces ()
-  "Task mappings resolve to real maintained offline nodes, including derived tuners."
+  "Task mappings resolve to maintained offline nodes, including the common editor."
   (require 'info)
-  (require 'emacsvox-aural-voice-experiment)
+  (require 'emacsvox-aural-voice-editor)
   (with-temp-buffer
     (Info-mode)
     (dolist (entry emacsvox-aural-ui-manual-nodes)
@@ -4064,7 +4065,7 @@
                         (cdr entry))
         (should (equal Info-current-node (cdr entry))))))
   (with-temp-buffer
-    (emacsvox-aural-voice-experiment-mode)
+    (emacsvox-aural-voice-editor-mode)
     (should (equal (emacsvox-aural-ui--manual-node) "Voices And Routing"))
     (should (eq (key-binding (kbd "C-c C-i")) #'emacsvox-aural-ui-open-manual))))
 

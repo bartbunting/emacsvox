@@ -247,6 +247,22 @@ failed writes and conflicts; standard root remains intact.
 
 ** TODO 4. Retire the old voice-management routes — High
 
+The standalone tuner and old physical-experiment screen have been removed,
+including their startup/build inventories. Shared adjustment helpers remain for
+the complete editor and contextual controls. The Workbench's Assign, shared
+route editing, migration and preset actions are removed. Its named rows read
+complete palette entries and canonical names; engine preference, fallback,
+disablement, preview, recovery and policy save tools remain available.
+
+Old screen and route-authoring tests were retired with their product behavior.
+The common editor now performs the saved-style/preview/final-wire comparison.
+Current fixtures supply owned choices, and action tests check that named editing
+and retained engine controls are reachable. All 719 affected source tests pass.
+The isolated compiled parity harness, complete byte-code rebuild, final
+preflight and fresh build-tree check passed. Command references were regenerated.
+The remaining work in this slice is retirement of the older palette readers
+and shared/session per-name state after preserving the saved data.
+
 The inspected one-time data conversion is complete, as recorded in slice 2.
 Account for maintained fixtures before removing the remaining reader support.
 Route all named edits to the common editor. Remove definition-only dialogs,

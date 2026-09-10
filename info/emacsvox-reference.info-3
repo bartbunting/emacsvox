@@ -14,7 +14,7 @@ END-INFO-DIR-ENTRY
 
 File: emacsvox-reference.info,  Node: emacsvox-woman,  Next: emacsvox-xkcd,  Prev: emacsvox-wizards,  Up: Emacsvox Commands And Options
 
-2.258 emacsvox-woman
+2.257 emacsvox-woman
 ====================
 
 WOMAN == Man pages implemented in Emacs Lisp
@@ -22,7 +22,7 @@ WOMAN == Man pages implemented in Emacs Lisp
 
 File: emacsvox-reference.info,  Node: emacsvox-xkcd,  Next: emacsvox-xref,  Prev: emacsvox-woman,  Up: Emacsvox Commands And Options
 
-2.259 emacsvox-xkcd
+2.258 emacsvox-xkcd
 ===================
 
 XKCD == XKCD In Emacs View XKCD comics in Emacs.  Speech enables package
@@ -30,10 +30,10 @@ xkcd Augments it by displaying the alt text and the transcript.
 
    Required modules:
 
-2.259.1 Emacsvox-Xkcd Commands
+2.258.1 Emacsvox-Xkcd Commands
 ------------------------------
 
-2.259.1.1 emacsvox-xkcd-open-explanation-browser
+2.258.1.1 emacsvox-xkcd-open-explanation-browser
 ................................................
 
  -- Command: emacsvox-xkcd-open-explanation-browser
@@ -43,7 +43,7 @@ xkcd Augments it by displaying the alt text and the transcript.
 
 File: emacsvox-reference.info,  Node: emacsvox-xref,  Next: emacsvox-xslt,  Prev: emacsvox-xkcd,  Up: Emacsvox Commands And Options
 
-2.260 emacsvox-xref
+2.259 emacsvox-xref
 ===================
 
 XREF == Cross-references in source code.  This is part of Emacs 25.
@@ -54,17 +54,17 @@ This module speech-enables xref
 
 File: emacsvox-reference.info,  Node: emacsvox-xslt,  Next: emacsvox-yaml,  Prev: emacsvox-xref,  Up: Emacsvox Commands And Options
 
-2.261 emacsvox-xslt
+2.260 emacsvox-xslt
 ===================
 
 libxml and libxsl are XML libraries for GNOME. xsltproc is a xslt
 processor using libxsl this module defines routines for applying xsl
 transformations using xsltproc
 
-2.261.1 Emacsvox-Xslt Commands
+2.260.1 Emacsvox-Xslt Commands
 ------------------------------
 
-2.261.1.1 emacsvox-xslt-view
+2.260.1.1 emacsvox-xslt-view
 ............................
 
  -- Command: emacsvox-xslt-view (style url)
@@ -73,7 +73,7 @@ transformations using xsltproc
 
      (fn STYLE URL)
 
-2.261.1.2 emacsvox-xslt-view-atom-file
+2.260.1.2 emacsvox-xslt-view-atom-file
 ......................................
 
  -- Command: emacsvox-xslt-view-atom-file (file)
@@ -83,7 +83,7 @@ transformations using xsltproc
 
      (fn FILE)
 
-2.261.1.3 emacsvox-xslt-view-file
+2.260.1.3 emacsvox-xslt-view-file
 .................................
 
  -- Command: emacsvox-xslt-view-file (style file)
@@ -93,7 +93,7 @@ transformations using xsltproc
 
      (fn STYLE FILE)
 
-2.261.1.4 emacsvox-xslt-view-region
+2.260.1.4 emacsvox-xslt-view-region
 ...................................
 
  -- Command: emacsvox-xslt-view-region (style start end &optional
@@ -103,7 +103,7 @@ transformations using xsltproc
 
      (fn STYLE START END &optional UNESCAPE-CHARENT)
 
-2.261.1.5 emacsvox-xslt-view-rss-file
+2.260.1.5 emacsvox-xslt-view-rss-file
 .....................................
 
  -- Command: emacsvox-xslt-view-rss-file (file)
@@ -113,7 +113,7 @@ transformations using xsltproc
 
      (fn FILE)
 
-2.261.1.6 emacsvox-xslt-view-xml
+2.260.1.6 emacsvox-xslt-view-xml
 ................................
 
  -- Command: emacsvox-xslt-view-xml (style url &optional
@@ -126,7 +126,7 @@ transformations using xsltproc
 
 File: emacsvox-reference.info,  Node: emacsvox-yaml,  Next: emacsvox-yasnippet,  Prev: emacsvox-xslt,  Up: Emacsvox Commands And Options
 
-2.262 emacsvox-yaml
+2.261 emacsvox-yaml
 ===================
 
 YAML == Yet Another Markup Language This module speech-enables
@@ -135,7 +135,7 @@ yaml-mode.
 
 File: emacsvox-reference.info,  Node: emacsvox-yasnippet,  Next: espeak-voices,  Prev: emacsvox-yaml,  Up: Emacsvox Commands And Options
 
-2.263 emacsvox-yasnippet
+2.262 emacsvox-yasnippet
 ========================
 
 YASNIPPET == Template based editing using snippets.
@@ -143,16 +143,16 @@ YASNIPPET == Template based editing using snippets.
 
 File: emacsvox-reference.info,  Node: espeak-voices,  Next: g-utils,  Prev: emacsvox-yasnippet,  Up: Emacsvox Commands And Options
 
-2.264 espeak-voices
+2.263 espeak-voices
 ===================
 
 This module defines the various voices used in voice-lock mode by the
 ESpeak TTS engine.
 
-2.264.1 Espeak-Voices Commands
+2.263.1 Espeak-Voices Commands
 ------------------------------
 
-2.264.1.1 espeak
+2.263.1.1 espeak
 ................
 
  -- Command: espeak
@@ -160,7 +160,7 @@ ESpeak TTS engine.
 
      Start ESpeak.
 
-2.264.2 espeak-voices Options
+2.263.2 espeak-voices Options
 -----------------------------
 
  -- Variable: User Option espeak-default-speech-rate
@@ -174,13 +174,13 @@ ESpeak TTS engine.
 
 File: emacsvox-reference.info,  Node: g-utils,  Next: gm-nnir,  Prev: espeak-voices,  Up: Emacsvox Commands And Options
 
-2.265 g-utils
+2.264 g-utils
 =============
 
 Common Code e.g.  helper functions.  Used by modules like gphoto,
 gblogger etc.
 
-2.265.1 g-utils Options
+2.264.1 g-utils Options
 -----------------------
 
  -- Variable: User Option g-cookie-jar
@@ -195,16 +195,16 @@ gblogger etc.
 
 File: emacsvox-reference.info,  Node: gm-nnir,  Next: gmaps,  Prev: g-utils,  Up: Emacsvox Commands And Options
 
-2.266 gm-nnir
+2.265 gm-nnir
 =============
 
 Makes search GMail more convenient.  IMap search operators, GMail search
 extensions.
 
-2.266.1 Gm-Nnir Commands
+2.265.1 Gm-Nnir Commands
 ------------------------
 
-2.266.1.1 gm-nnir-group-make-gmail-group
+2.265.1.1 gm-nnir-group-make-gmail-group
 ........................................
 
  -- Command: gm-nnir-group-make-gmail-group (query)
@@ -219,15 +219,15 @@ extensions.
 
 File: emacsvox-reference.info,  Node: gmaps,  Next: gweb,  Prev: gm-nnir,  Up: Emacsvox Commands And Options
 
-2.267 gmaps
+2.266 gmaps
 ===========
 
 Implements the Google Maps API
 
-2.267.1 Gmaps Commands
+2.266.1 Gmaps Commands
 ----------------------
 
-2.267.1.1 gmaps
+2.266.1.1 gmaps
 ...............
 
  -- Command: gmaps
@@ -238,7 +238,7 @@ Implements the Google Maps API
 
      (fn)
 
-2.267.1.2 gmaps-bicycling-directions
+2.266.1.2 gmaps-bicycling-directions
 ....................................
 
  -- Command: gmaps-bicycling-directions (origin destination)
@@ -249,7 +249,7 @@ Implements the Google Maps API
 
      (fn ORIGIN DESTINATION)
 
-2.267.1.3 gmaps-directions
+2.266.1.3 gmaps-directions
 ..........................
 
  -- Command: gmaps-directions (origin destination mode)
@@ -258,7 +258,7 @@ Implements the Google Maps API
 
      (fn ORIGIN DESTINATION MODE)
 
-2.267.1.4 gmaps-driving-directions
+2.266.1.4 gmaps-driving-directions
 ..................................
 
  -- Command: gmaps-driving-directions (origin destination)
@@ -269,21 +269,21 @@ Implements the Google Maps API
 
      (fn ORIGIN DESTINATION)
 
-2.267.1.5 gmaps-locations-load
+2.266.1.5 gmaps-locations-load
 ..............................
 
  -- Command: gmaps-locations-load
 
      Load saved GMaps locations.
 
-2.267.1.6 gmaps-locations-save
+2.266.1.6 gmaps-locations-save
 ..............................
 
  -- Command: gmaps-locations-save
 
      Save GMaps Locations.
 
-2.267.1.7 gmaps-mode
+2.266.1.7 gmaps-mode
 ....................
 
  -- Command: gmaps-mode
@@ -312,7 +312,7 @@ Implements the Google Maps API
 
      M-i		backward-button
 
-2.267.1.8 gmaps-place-details
+2.266.1.8 gmaps-place-details
 .............................
 
  -- Command: gmaps-place-details
@@ -324,7 +324,7 @@ Implements the Google Maps API
 
      (fn)
 
-2.267.1.9 gmaps-place-reviews
+2.266.1.9 gmaps-place-reviews
 .............................
 
  -- Command: gmaps-place-reviews
@@ -332,7 +332,7 @@ Implements the Google Maps API
      Display reviews for place at point.
      Place details need to have been expanded first.
 
-2.267.1.10 gmaps-places-nearby
+2.266.1.10 gmaps-places-nearby
 ..............................
 
  -- Command: gmaps-places-nearby (&optional clear-filter)
@@ -344,7 +344,7 @@ Implements the Google Maps API
 
      (fn &optional CLEAR-FILTER)
 
-2.267.1.11 gmaps-places-search
+2.266.1.11 gmaps-places-search
 ..............................
 
  -- Command: gmaps-places-search (query &optional clear-filter)
@@ -357,7 +357,7 @@ Implements the Google Maps API
 
      (fn QUERY &optional CLEAR-FILTER)
 
-2.267.1.12 gmaps-set-current-filter
+2.266.1.12 gmaps-set-current-filter
 ...................................
 
  -- Command: gmaps-set-current-filter (&optional all)
@@ -367,7 +367,7 @@ Implements the Google Maps API
 
      (fn &optional ALL)
 
-2.267.1.13 gmaps-set-current-location
+2.266.1.13 gmaps-set-current-location
 .....................................
 
  -- Command: gmaps-set-current-location (address)
@@ -378,7 +378,7 @@ Implements the Google Maps API
 
      (fn ADDRESS)
 
-2.267.1.14 gmaps-set-current-radius
+2.266.1.14 gmaps-set-current-radius
 ...................................
 
  -- Command: gmaps-set-current-radius (radius)
@@ -389,7 +389,7 @@ Implements the Google Maps API
 
      (fn RADIUS)
 
-2.267.1.15 gmaps-transit-directions
+2.266.1.15 gmaps-transit-directions
 ...................................
 
  -- Command: gmaps-transit-directions (origin destination)
@@ -400,7 +400,7 @@ Implements the Google Maps API
 
      (fn ORIGIN DESTINATION)
 
-2.267.1.16 gmaps-walking-directions
+2.266.1.16 gmaps-walking-directions
 ...................................
 
  -- Command: gmaps-walking-directions (origin destination)
@@ -411,7 +411,7 @@ Implements the Google Maps API
 
      (fn ORIGIN DESTINATION)
 
-2.267.2 gmaps Options
+2.266.2 gmaps Options
 ---------------------
 
  -- Variable: User Option gmaps-api-key
@@ -434,7 +434,7 @@ Implements the Google Maps API
 
 File: emacsvox-reference.info,  Node: gweb,  Next: ladspa,  Prev: gmaps,  Up: Emacsvox Commands And Options
 
-2.268 gweb
+2.267 gweb
 ==========
 
 Provide Google services -- such as search, search-based completion etc.
@@ -444,7 +444,7 @@ For use from within Emacs tools.  This is meant to be fast and efficient
 
 File: emacsvox-reference.info,  Node: ladspa,  Next: light,  Prev: gweb,  Up: Emacsvox Commands And Options
 
-2.269 ladspa
+2.268 ladspa
 ============
 
 This module uses tools from the Ladspa SDK to expose Ladspa plugins in a
@@ -455,10 +455,10 @@ install zam-plugins wah-plugins vco-plugins tap-plugins swh-plugins
 rev-plugins mcp-plugins liquidsoap-plugin-ladspa ladspa-foo-plugins
 invada-studio-plugins-ladspa fil-plugins
 
-2.269.1 Ladspa Commands
+2.268.1 Ladspa Commands
 -----------------------
 
-2.269.1.1 ladspa
+2.268.1.1 ladspa
 ................
 
  -- Command: ladspa (&optional refresh)
@@ -467,28 +467,28 @@ invada-studio-plugins-ladspa fil-plugins
 
      (fn &optional REFRESH)
 
-2.269.1.2 ladspa-analyse-plugin-at-point
+2.268.1.2 ladspa-analyse-plugin-at-point
 ........................................
 
  -- Command: ladspa-analyse-plugin-at-point
 
      Analyse plugin at point.
 
-2.269.1.3 ladspa-edit-control
+2.268.1.3 ladspa-edit-control
 .............................
 
  -- Command: ladspa-edit-control
 
      Edit Ladspa control  at point by prompting for control values.
 
-2.269.1.4 ladspa-instantiate
+2.268.1.4 ladspa-instantiate
 ............................
 
  -- Command: ladspa-instantiate
 
      Instantiate plugin at point by prompting for control values.
 
-2.269.1.5 ladspa-mode
+2.268.1.5 ladspa-mode
 .....................
 
  -- Command: ladspa-mode
@@ -512,7 +512,7 @@ invada-studio-plugins-ladspa fil-plugins
 
 File: emacsvox-reference.info,  Node: light,  Next: mac-voices,  Prev: ladspa,  Up: Emacsvox Commands And Options
 
-2.270 light
+2.269 light
 ===========
 
 Provide an emacs front-end to light.  This is a tool that controls the
@@ -520,38 +520,38 @@ brightness on laptops.  To install light, sudo apt-get install light
 Install light setuid (sudo chmod u+s /usr/bin/light) This module is most
 easily used in conjunction with hydra: M-x package-install hydra
 
-2.270.1 Light Commands
+2.269.1 Light Commands
 ----------------------
 
-2.270.1.1 light-black
+2.269.1.1 light-black
 .....................
 
  -- Command: light-black
 
      Black screen.
 
-2.270.1.2 light-decrement
+2.269.1.2 light-decrement
 .........................
 
  -- Command: light-decrement
 
      Decrease brightness.
 
-2.270.1.3 light-get
+2.269.1.3 light-get
 ...................
 
  -- Command: light-get
 
      Get  brightness level.
 
-2.270.1.4 light-increment
+2.269.1.4 light-increment
 .........................
 
  -- Command: light-increment
 
      Increase brightness.
 
-2.270.1.5 light-set
+2.269.1.5 light-set
 ...................
 
  -- Command: light-set (brightness)
@@ -560,7 +560,7 @@ easily used in conjunction with hydra: M-x package-install hydra
 
      (fn BRIGHTNESS)
 
-2.270.1.6 light-white
+2.269.1.6 light-white
 .....................
 
  -- Command: light-white
@@ -570,13 +570,13 @@ easily used in conjunction with hydra: M-x package-install hydra
 
 File: emacsvox-reference.info,  Node: mac-voices,  Next: omaps,  Prev: light,  Up: Emacsvox Commands And Options
 
-2.271 mac-voices
+2.270 mac-voices
 ================
 
 This module defines the various voices used in voice-lock mode by Mac
 TTS.
 
-2.271.1 mac-voices Options
+2.270.1 mac-voices Options
 --------------------------
 
  -- Variable: User Option mac-default-speech-rate
@@ -590,7 +590,7 @@ TTS.
 
 File: emacsvox-reference.info,  Node: omaps,  Next: omnivox-choice-codec,  Prev: mac-voices,  Up: Emacsvox Commands And Options
 
-2.272 omaps
+2.271 omaps
 ===========
 
 Implements geocoding via the Open Street Maps API https://nominatim.org/
@@ -598,7 +598,7 @@ Implements geocoding via the Open Street Maps API https://nominatim.org/
 
 File: emacsvox-reference.info,  Node: omnivox-choice-codec,  Next: omnivox-preview,  Prev: omaps,  Up: Emacsvox Commands And Options
 
-2.273 omnivox-choice-codec
+2.272 omnivox-choice-codec
 ==========================
 
 Pure conversions for the negotiated per-choice voice bundle.  Raw saved
@@ -608,7 +608,7 @@ existing ACSS meaning.  Physical route selection belongs to the server.
 
 File: emacsvox-reference.info,  Node: omnivox-preview,  Next: omnivox-remote,  Prev: omnivox-choice-codec,  Up: Emacsvox Commands And Options
 
-2.274 omnivox-preview
+2.273 omnivox-preview
 =====================
 
 Complete and individual samples share process ownership, guarded
@@ -619,7 +619,7 @@ playback evidence.
 
 File: emacsvox-reference.info,  Node: omnivox-remote,  Next: omnivox-voices,  Prev: omnivox-preview,  Up: Emacsvox Commands And Options
 
-2.275 omnivox-remote
+2.274 omnivox-remote
 ====================
 
 Authenticated loopback connections through a user-managed SSH reverse
@@ -630,7 +630,7 @@ identifiers.
 
 File: emacsvox-reference.info,  Node: omnivox-voices,  Next: outloud-voices,  Prev: omnivox-remote,  Up: Emacsvox Commands And Options
 
-2.276 omnivox-voices
+2.275 omnivox-voices
 ====================
 
 Voice and rate support for the Omnivox speech server.  Omnivox accepts
@@ -640,16 +640,16 @@ codes.
 
 File: emacsvox-reference.info,  Node: outloud-voices,  Next: pip,  Prev: omnivox-voices,  Up: Emacsvox Commands And Options
 
-2.277 outloud-voices
+2.276 outloud-voices
 ====================
 
 Interface to outloud server.  This module is IBM ViaVoice Outloud
 specific.
 
-2.277.1 Outloud-Voices Commands
+2.276.1 Outloud-Voices Commands
 -------------------------------
 
-2.277.1.1 outloud
+2.276.1.1 outloud
 .................
 
  -- Command: outloud
@@ -657,7 +657,7 @@ specific.
 
      Start Outloud.
 
-2.277.2 outloud-voices Options
+2.276.2 outloud-voices Options
 ------------------------------
 
  -- Variable: User Option outloud-default-speech-rate
@@ -671,7 +671,7 @@ specific.
 
 File: emacsvox-reference.info,  Node: pip,  Next: plain-voices,  Prev: outloud-voices,  Up: Emacsvox Commands And Options
 
-2.278 pip
+2.277 pip
 =========
 
 Piper TTS is an Open Source neural-net TTS engine.  This module exposes
@@ -692,10 +692,10 @@ Piper TTS to Emacs.
   7. However it might be interesting to use it for lower-priority speech
      where quality trumps latency.
 
-2.278.1 Pip Commands
+2.277.1 Pip Commands
 --------------------
 
-2.278.1.1 pip-device-select
+2.277.1.1 pip-device-select
 ...........................
 
  -- Command: pip-device-select (device)
@@ -705,7 +705,7 @@ Piper TTS to Emacs.
 
      (fn DEVICE)
 
-2.278.1.2 pip-model-select
+2.277.1.2 pip-model-select
 ..........................
 
  -- Command: pip-model-select (voice)
@@ -715,7 +715,7 @@ Piper TTS to Emacs.
 
      (fn VOICE)
 
-2.278.1.3 pip-speak
+2.277.1.3 pip-speak
 ...................
 
  -- Command: pip-speak (text)
@@ -724,14 +724,14 @@ Piper TTS to Emacs.
 
      (fn TEXT)
 
-2.278.1.4 pip-start
+2.277.1.4 pip-start
 ...................
 
  -- Command: pip-start
 
      Start the Piper process
 
-2.278.1.5 pip-stop
+2.277.1.5 pip-stop
 ..................
 
  -- Command: pip-stop
@@ -741,7 +741,7 @@ Piper TTS to Emacs.
 
 File: emacsvox-reference.info,  Node: plain-voices,  Next: soundscape,  Prev: pip,  Up: Emacsvox Commands And Options
 
-2.279 plain-voices
+2.278 plain-voices
 ==================
 
 This module defines the various voices used in voice-lock mode.  Module
@@ -753,7 +753,7 @@ appropriate voice-locking controls
 
 File: emacsvox-reference.info,  Node: soundscape,  Next: sox,  Prev: plain-voices,  Up: Emacsvox Commands And Options
 
-2.280 soundscape
+2.279 soundscape
 ================
 
 Soundscapes <https://en.wikipedia.org/wiki/Soundscape> define an
@@ -790,10 +790,10 @@ that is loaded using ‘(soundscape-load soundscape-default-theme)’.
 Emacs modes that provide similar functionality e.g., communication ==
 email, IM, ...  map to the same *mood*.
 
-2.280.1 Soundscape Commands
+2.279.1 Soundscape Commands
 ---------------------------
 
-2.280.1.1 soundscape
+2.279.1.1 soundscape
 ....................
 
  -- Command: soundscape (scape)
@@ -804,14 +804,14 @@ email, IM, ...  map to the same *mood*.
 
      (fn SCAPE)
 
-2.280.1.2 soundscape-kill
+2.279.1.2 soundscape-kill
 .........................
 
  -- Command: soundscape-kill
 
      Stop all running soundscapes.
 
-2.280.1.3 soundscape-listener
+2.279.1.3 soundscape-listener
 .............................
 
  -- Command: soundscape-listener (&optional restart)
@@ -822,14 +822,14 @@ email, IM, ...  map to the same *mood*.
 
      (fn &optional RESTART)
 
-2.280.1.4 soundscape-listener-shutdown
+2.279.1.4 soundscape-listener-shutdown
 ......................................
 
  -- Command: soundscape-listener-shutdown
 
      Shutdown listener.
 
-2.280.1.5 soundscape-remote
+2.279.1.5 soundscape-remote
 ...........................
 
  -- Command: soundscape-remote (names)
@@ -838,7 +838,7 @@ email, IM, ...  map to the same *mood*.
 
      (fn NAMES)
 
-2.280.1.6 soundscape-restart
+2.279.1.6 soundscape-restart
 ............................
 
  -- Command: soundscape-restart (&optional prompt)
@@ -851,7 +851,7 @@ email, IM, ...  map to the same *mood*.
 
      (fn &optional PROMPT)
 
-2.280.1.7 soundscape-stop
+2.279.1.7 soundscape-stop
 .........................
 
  -- Command: soundscape-stop (scape)
@@ -860,14 +860,14 @@ email, IM, ...  map to the same *mood*.
 
      (fn SCAPE)
 
-2.280.1.8 soundscape-theme
+2.279.1.8 soundscape-theme
 ..........................
 
  -- Command: soundscape-theme
 
      Shows default theme in a special buffer.
 
-2.280.1.9 soundscape-toggle
+2.279.1.9 soundscape-toggle
 ...........................
 
  -- Command: soundscape-toggle
@@ -877,7 +877,7 @@ email, IM, ...  map to the same *mood*.
      Toggle automatic SoundScapes.
      Run command M-x soundscape-theme to see the default mode->mood mapping.
 
-2.280.1.10 soundscape-update-mood
+2.279.1.10 soundscape-update-mood
 .................................
 
  -- Command: soundscape-update-mood (&optional prompt-mode)
@@ -890,7 +890,7 @@ email, IM, ...  map to the same *mood*.
 
      (fn &optional PROMPT-MODE)
 
-2.280.2 soundscape Options
+2.279.2 soundscape Options
 --------------------------
 
  -- Variable: User Option soundscape-data
@@ -921,7 +921,7 @@ email, IM, ...  map to the same *mood*.
 
 File: emacsvox-reference.info,  Node: sox,  Next: sox-gen,  Prev: soundscape,  Up: Emacsvox Commands And Options
 
-2.281 sox
+2.280 sox
 =========
 
 This module defines a convenient speech-enabled interface for editing
@@ -938,10 +938,10 @@ ladspa.el.  To use ladspa effects with SoX, you need a relatively new
 build of Sox; The stock SoX that is package for Debian/Ubuntu does not
 always work.  This module can be used independent of Emacsvox.
 
-2.281.1 Sox Commands
+2.280.1 Sox Commands
 --------------------
 
-2.281.1.1 sox-add-effect
+2.280.1.1 sox-add-effect
 ........................
 
  -- Command: sox-add-effect (name)
@@ -950,7 +950,7 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn NAME)
 
-2.281.1.2 sox-delete-effect-at-point
+2.280.1.2 sox-delete-effect-at-point
 ....................................
 
  -- Command: sox-delete-effect-at-point
@@ -961,14 +961,14 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn)
 
-2.281.1.3 sox-edit-effect-at-point
+2.280.1.3 sox-edit-effect-at-point
 ..................................
 
  -- Command: sox-edit-effect-at-point
 
      Edit effect at point.
 
-2.281.1.4 sox-mode
+2.280.1.4 sox-mode
 ..................
 
  -- Command: sox-mode
@@ -979,7 +979,7 @@ always work.  This module can be used independent of Emacsvox.
      run, this mode runs the hook ‘sox-mode-hook’, as the final or
      penultimate step during initialization.
 
-2.281.1.5 sox-open-file
+2.280.1.5 sox-open-file
 .......................
 
  -- Command: sox-open-file (snd-file)
@@ -990,14 +990,14 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn SND-FILE)
 
-2.281.1.6 sox-play
+2.280.1.6 sox-play
 ..................
 
  -- Command: sox-play
 
      Play sound .
 
-2.281.1.7 sox-refresh
+2.280.1.7 sox-refresh
 .....................
 
  -- Command: sox-refresh
@@ -1008,7 +1008,7 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn)
 
-2.281.1.8 sox-save
+2.280.1.8 sox-save
 ..................
 
  -- Command: sox-save (save-file)
@@ -1017,7 +1017,7 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn SAVE-FILE)
 
-2.281.1.9 sox-set-effect
+2.280.1.9 sox-set-effect
 ........................
 
  -- Command: sox-set-effect (name)
@@ -1026,14 +1026,14 @@ always work.  This module can be used independent of Emacsvox.
 
      (fn NAME)
 
-2.281.1.10 sox-show-timestamp
+2.280.1.10 sox-show-timestamp
 .............................
 
  -- Command: sox-show-timestamp
 
      Show timestamp   in stream.
 
-2.281.1.11 sox-stop
+2.280.1.11 sox-stop
 ...................
 
  -- Command: sox-stop
@@ -1043,13 +1043,13 @@ always work.  This module can be used independent of Emacsvox.
 
 File: emacsvox-reference.info,  Node: sox-gen,  Next: swiftmac-voices,  Prev: sox,  Up: Emacsvox Commands And Options
 
-2.282 sox-gen
+2.281 sox-gen
 =============
 
 Provides binaural audio along with pre-defined themes.  This module can
 be used independent of Emacsvox.
 
-2.282.1 Binaural Beats Using SoX
+2.281.1 Binaural Beats Using SoX
 --------------------------------
 
 A binaural beat is an auditory illusion perceived when two different
@@ -1077,7 +1077,7 @@ binaural beat sequences by customizing
  -- Variable: User Option sox-binaural-gain-offset to a positive value
    -- default is 0.
 
-2.282.1.1 High-Level Commands For Pre-Defined Binaural Beats
+2.281.1.1 High-Level Commands For Pre-Defined Binaural Beats
 ............................................................
 
 These commands can be called directly to play one of the predefined
@@ -1112,10 +1112,10 @@ binaural beats.
    • ‘sox-tone-slide-binaural’: Generate a tone that slides from one
      binaural beat to another.
 
-2.282.2 Sox-Gen Commands
+2.281.2 Sox-Gen Commands
 ------------------------
 
-2.282.2.1 sox-beats-binaural
+2.281.2.1 sox-beats-binaural
 ............................
 
  -- Command: sox-beats-binaural (length beat-spec-list gain)
@@ -1125,7 +1125,7 @@ binaural beats.
 
      (fn LENGTH BEAT-SPEC-LIST GAIN)
 
-2.282.2.2 sox-binaural
+2.281.2.2 sox-binaural
 ......................
 
  -- Command: sox-binaural (name duration)
@@ -1136,7 +1136,7 @@ binaural beats.
 
      (fn NAME DURATION)
 
-2.282.2.3 sox-chakras
+2.281.2.3 sox-chakras
 .....................
 
  -- Command: sox-chakras (theme duration)
@@ -1146,7 +1146,7 @@ binaural beats.
 
      (fn THEME DURATION)
 
-2.282.2.4 sox-relax
+2.281.2.4 sox-relax
 ...................
 
  -- Command: sox-relax (length)
@@ -1155,7 +1155,7 @@ binaural beats.
 
      (fn LENGTH)
 
-2.282.2.5 sox-rev-up
+2.281.2.5 sox-rev-up
 ....................
 
  -- Command: sox-rev-up (length)
@@ -1164,7 +1164,7 @@ binaural beats.
 
      (fn LENGTH)
 
-2.282.2.6 sox-slide-binaural
+2.281.2.6 sox-slide-binaural
 ............................
 
  -- Command: sox-slide-binaural (name-1 name-2 duration)
@@ -1173,7 +1173,7 @@ binaural beats.
 
      (fn NAME-1 NAME-2 DURATION)
 
-2.282.2.7 sox-tone-binaural
+2.281.2.7 sox-tone-binaural
 ...........................
 
  -- Command: sox-tone-binaural (length freq beat gain)
@@ -1183,7 +1183,7 @@ binaural beats.
 
      (fn LENGTH FREQ BEAT GAIN)
 
-2.282.2.8 sox-tone-slide-binaural
+2.281.2.8 sox-tone-slide-binaural
 .................................
 
  -- Command: sox-tone-slide-binaural (length freq beat-start beat-end
@@ -1194,7 +1194,7 @@ binaural beats.
 
      (fn LENGTH FREQ BEAT-START BEAT-END GAIN)
 
-2.282.2.9 sox-turn-down
+2.281.2.9 sox-turn-down
 .......................
 
  -- Command: sox-turn-down (length)
@@ -1203,7 +1203,7 @@ binaural beats.
 
      (fn LENGTH)
 
-2.282.2.10 sox-wind-down
+2.281.2.10 sox-wind-down
 ........................
 
  -- Command: sox-wind-down (length)
@@ -1212,7 +1212,7 @@ binaural beats.
 
      (fn LENGTH)
 
-2.282.3 sox-gen Options
+2.281.3 sox-gen Options
 -----------------------
 
  -- Variable: User Option sox-binaural-gain-offset
@@ -1236,7 +1236,7 @@ binaural beats.
 
 File: emacsvox-reference.info,  Node: swiftmac-voices,  Next: tetris,  Prev: sox-gen,  Up: Emacsvox Commands And Options
 
-2.283 swiftmac-voices
+2.282 swiftmac-voices
 =====================
 
 This module defines the various voices used in voice-lock mode by
@@ -1245,13 +1245,13 @@ SwiftMac.
 
 File: emacsvox-reference.info,  Node: tetris,  Next: tts-queue-state,  Prev: swiftmac-voices,  Up: Emacsvox Commands And Options
 
-2.284 tetris
+2.283 tetris
 ============
 
 
 File: emacsvox-reference.info,  Node: tts-queue-state,  Next: tts-speak,  Prev: tetris,  Up: Emacsvox Commands And Options
 
-2.285 tts-queue-state
+2.284 tts-queue-state
 =====================
 
 Private stream knowledge for complete captured queue promotion.  This
@@ -1261,15 +1261,15 @@ delivery.
 
 File: emacsvox-reference.info,  Node: tts-speak,  Next: voice-defs,  Prev: tts-queue-state,  Up: Emacsvox Commands And Options
 
-2.286 tts-speak
+2.285 tts-speak
 ===============
 
 This module defines the generic TTS interface.
 
-2.286.1 Tts-Speak Commands
+2.285.1 Tts-Speak Commands
 --------------------------
 
-2.286.1.1 emacsvox-set-capitalization-presentation
+2.285.1.1 emacsvox-set-capitalization-presentation
 ..................................................
 
  -- Command: emacsvox-set-capitalization-presentation (presentation
@@ -1283,7 +1283,7 @@ This module defines the generic TTS interface.
 
      (fn PRESENTATION &optional GLOBAL)
 
-2.286.1.2 tts-add-cleanup-pattern
+2.285.1.2 tts-add-cleanup-pattern
 .................................
 
  -- Command: tts-add-cleanup-pattern (&optional delete)
@@ -1295,7 +1295,7 @@ This module defines the generic TTS interface.
 
      (fn &optional DELETE)
 
-2.286.1.3 tts-cloud
+2.285.1.3 tts-cloud
 ...................
 
  -- Command: tts-cloud
@@ -1303,7 +1303,7 @@ This module defines the generic TTS interface.
 
      Select  Cloud TTS server.
 
-2.286.1.4 tts-define-voice-from-acss
+2.285.1.4 tts-define-voice-from-acss
 ....................................
 
  -- Command: tts-define-voice-from-acss (&rest arguments)
@@ -1314,7 +1314,7 @@ This module defines the generic TTS interface.
 
      (fn &rest ARGUMENTS)
 
-2.286.1.5 tts-local-server
+2.285.1.5 tts-local-server
 ..........................
 
  -- Command: tts-local-server (program &optional prompt-port)
@@ -1327,7 +1327,7 @@ This module defines the generic TTS interface.
 
      (fn PROGRAM &optional PROMPT-PORT)
 
-2.286.1.6 tts-notify-initialize
+2.285.1.6 tts-notify-initialize
 ...............................
 
  -- Command: tts-notify-initialize
@@ -1335,7 +1335,7 @@ This module defines the generic TTS interface.
 
      Initialize a separate notification TTS process when configured.
 
-2.286.1.7 tts-notify-stop
+2.285.1.7 tts-notify-stop
 .........................
 
  -- Command: tts-notify-stop
@@ -1343,7 +1343,7 @@ This module defines the generic TTS interface.
 
      Stop  speech on notification stream.
 
-2.286.1.8 tts-rate-adjust
+2.285.1.8 tts-rate-adjust
 .........................
 
  -- Command: tts-rate-adjust
@@ -1356,14 +1356,14 @@ This module defines the generic TTS interface.
      C-impel-d -. Pressing =,+, or - immediately continues to adjust
      the speech rate.  Call when on a non-blank line to preview the effectt
 
-2.286.1.9 tts-reset-punctuation-mode
+2.285.1.9 tts-reset-punctuation-mode
 ....................................
 
  -- Command: tts-reset-punctuation-mode
 
      Clear the buffer override and restore automatic punctuation policy.
 
-2.286.1.10 tts-reset-state
+2.285.1.10 tts-reset-state
 ..........................
 
  -- Command: tts-reset-state
@@ -1371,7 +1371,7 @@ This module defines the generic TTS interface.
 
      Reset TTS engine.
 
-2.286.1.11 tts-restart
+2.285.1.11 tts-restart
 ......................
 
  -- Command: tts-restart
@@ -1379,7 +1379,7 @@ This module defines the generic TTS interface.
 
      Restart TTS server.
 
-2.286.1.12 tts-select-server
+2.285.1.12 tts-select-server
 ............................
 
  -- Command: tts-select-server (program)
@@ -1391,7 +1391,7 @@ This module defines the generic TTS interface.
 
      (fn PROGRAM)
 
-2.286.1.13 tts-set-character-scale
+2.285.1.13 tts-set-character-scale
 ..................................
 
  -- Command: tts-set-character-scale (factor &optional prefix)
@@ -1405,7 +1405,7 @@ This module defines the generic TTS interface.
 
      (fn FACTOR &optional PREFIX)
 
-2.286.1.14 tts-set-chunk-separator-syntax
+2.285.1.14 tts-set-chunk-separator-syntax
 .........................................
 
  -- Command: tts-set-chunk-separator-syntax (s)
@@ -1416,7 +1416,7 @@ This module defines the generic TTS interface.
 
      (fn S)
 
-2.286.1.15 tts-set-language
+2.285.1.15 tts-set-language
 ...........................
 
  -- Command: tts-set-language (lang)
@@ -1429,7 +1429,7 @@ This module defines the generic TTS interface.
 
      (fn LANG)
 
-2.286.1.16 tts-set-next-language
+2.285.1.16 tts-set-next-language
 ................................
 
  -- Command: tts-set-next-language
@@ -1438,7 +1438,7 @@ This module defines the generic TTS interface.
      Switch to next legacy language.
      Signal a user error when logical voices own language routing.
 
-2.286.1.17 tts-set-predefined-rate
+2.285.1.17 tts-set-predefined-rate
 ..................................
 
  -- Command: tts-set-predefined-rate (&optional prefix)
@@ -1460,7 +1460,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.286.1.18 tts-set-preferred-language
+2.285.1.18 tts-set-preferred-language
 .....................................
 
  -- Command: tts-set-preferred-language (alias lang)
@@ -1470,7 +1470,7 @@ This module defines the generic TTS interface.
 
      (fn ALIAS LANG)
 
-2.286.1.19 tts-set-previous-language
+2.285.1.19 tts-set-previous-language
 ....................................
 
  -- Command: tts-set-previous-language
@@ -1479,7 +1479,7 @@ This module defines the generic TTS interface.
      Switch to previous legacy language.
      Signal a user error when logical voices own language routing.
 
-2.286.1.20 tts-set-punctuations
+2.285.1.20 tts-set-punctuations
 ...............................
 
  -- Command: tts-set-punctuations (mode &optional prefix)
@@ -1492,7 +1492,7 @@ This module defines the generic TTS interface.
 
      (fn MODE &optional PREFIX)
 
-2.286.1.21 tts-set-punctuations-to-all
+2.285.1.21 tts-set-punctuations-to-all
 ......................................
 
  -- Command: tts-set-punctuations-to-all (&optional prefix)
@@ -1502,7 +1502,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.286.1.22 tts-set-punctuations-to-some
+2.285.1.22 tts-set-punctuations-to-some
 .......................................
 
  -- Command: tts-set-punctuations-to-some (&optional prefix)
@@ -1512,7 +1512,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.286.1.23 tts-set-rate
+2.285.1.23 tts-set-rate
 .......................
 
  -- Command: tts-set-rate (rate &optional prefix)
@@ -1524,7 +1524,7 @@ This module defines the generic TTS interface.
 
      (fn RATE &optional PREFIX)
 
-2.286.1.24 tts-speak-version
+2.285.1.24 tts-speak-version
 ............................
 
  -- Command: tts-speak-version
@@ -1532,7 +1532,7 @@ This module defines the generic TTS interface.
 
      Speak version.
 
-2.286.1.25 tts-stop
+2.285.1.25 tts-stop
 ...................
 
  -- Command: tts-stop (&optional all)
@@ -1544,7 +1544,7 @@ This module defines the generic TTS interface.
 
      (fn &optional ALL)
 
-2.286.1.26 tts-toggle-caps
+2.285.1.26 tts-toggle-caps
 ..........................
 
  -- Command: tts-toggle-caps (&optional prefix)
@@ -1554,7 +1554,7 @@ This module defines the generic TTS interface.
      Interactive PREFIX arg means toggle the global default
      value, and then set the current local value to the result.
 
-2.286.1.27 tts-toggle-punctuation-mode
+2.285.1.27 tts-toggle-punctuation-mode
 ......................................
 
  -- Command: tts-toggle-punctuation-mode (&optional prefix)
@@ -1565,7 +1565,7 @@ This module defines the generic TTS interface.
 
      (fn &optional PREFIX)
 
-2.286.1.28 tts-toggle-quiet
+2.285.1.28 tts-toggle-quiet
 ...........................
 
  -- Command: tts-toggle-quiet (&optional prefix)
@@ -1575,7 +1575,7 @@ This module defines the generic TTS interface.
      Turning on this switch silences speech.  Optional interactive
      prefix arg causes this setting to become global.
 
-2.286.1.29 tts-toggle-speak-nonprinting-chars
+2.285.1.29 tts-toggle-speak-nonprinting-chars
 .............................................
 
  -- Command: tts-toggle-speak-nonprinting-chars (&optional prefix)
@@ -1585,7 +1585,7 @@ This module defines the generic TTS interface.
      Interactive PREFIX arg means toggle the global default
      value, and then set the current local value to the result.
 
-2.286.1.30 tts-toggle-split-caps
+2.285.1.30 tts-toggle-split-caps
 ................................
 
  -- Command: tts-toggle-split-caps (&optional prefix)
@@ -1597,7 +1597,7 @@ This module defines the generic TTS interface.
      global default value, and then set the current local value to the
      result.
 
-2.286.1.31 tts-toggle-splitting-on-white-space
+2.285.1.31 tts-toggle-splitting-on-white-space
 ..............................................
 
  -- Command: tts-toggle-splitting-on-white-space
@@ -1605,7 +1605,7 @@ This module defines the generic TTS interface.
 
      Toggle splitting of speech on white space.
 
-2.286.1.32 tts-toggle-strip-octals
+2.285.1.32 tts-toggle-strip-octals
 ..................................
 
  -- Command: tts-toggle-strip-octals (&optional prefix)
@@ -1616,7 +1616,7 @@ This module defines the generic TTS interface.
       toggle the global default value, and then set the current local
      value to the result.
 
-2.286.1.33 tts-unicode-customize-char
+2.285.1.33 tts-unicode-customize-char
 .....................................
 
  -- Command: tts-unicode-customize-char (char replacement)
@@ -1627,7 +1627,7 @@ This module defines the generic TTS interface.
 
      (fn CHAR REPLACEMENT)
 
-2.286.1.34 tts-unicode-uncustomize-char
+2.285.1.34 tts-unicode-uncustomize-char
 .......................................
 
  -- Command: tts-unicode-uncustomize-char (char)
@@ -1638,7 +1638,7 @@ This module defines the generic TTS interface.
 
      (fn CHAR)
 
-2.286.2 tts-speak Options
+2.285.2 tts-speak Options
 -------------------------
 
  -- Variable: User Option emacsvox-capitalization-presentation
@@ -1810,13 +1810,13 @@ This module defines the generic TTS interface.
 
 File: emacsvox-reference.info,  Node: voice-defs,  Next: voice-setup,  Prev: tts-speak,  Up: Emacsvox Commands And Options
 
-2.287 voice-defs
+2.286 voice-defs
 ================
 
 Contains just the voice definitions.  Voices are defined using the macro
 ‘defvoice’ from module voice-setup.
 
-2.287.1 An Overview Of Voice Design
+2.286.1 An Overview Of Voice Design
 -----------------------------------
 
 Aural CSS defines 4 primary device-independent dimensions.
@@ -1828,7 +1828,7 @@ possible settings.
 these dimensions to device-specific parameters and are responsible for
 generating the final device-specific codes.
 
-2.287.2 Creating Distinct Voices Via Aural CSS
+2.286.2 Creating Distinct Voices Via Aural CSS
 ----------------------------------------------
 
 Along each dimension, a setting of 5 is mapped to the default setting
@@ -1845,7 +1845,7 @@ there are 4 *overlay* voices, corresponding to the 4 dimensions; these
 each set one of the dimensions to ‘8’.  Thus, we have a total of 25
 unique voices defined in this module.
 
-2.287.3 Things to note
+2.286.3 Things to note
 ----------------------
 
    • These voices are designed to be distinctive when used in a given
@@ -1856,7 +1856,7 @@ unique voices defined in this module.
      content so that when used in context, one can easily pick-out
      distinct parts of the utterance.
 
-2.287.4 voice-defs Options
+2.286.4 voice-defs Options
 --------------------------
 
  -- Variable: User Option voice-animate-extra-settings
@@ -2062,7 +2062,7 @@ unique voices defined in this module.
 
 File: emacsvox-reference.info,  Node: voice-setup,  Next: xbacklight,  Prev: voice-defs,  Up: Emacsvox Commands And Options
 
-2.288 voice-setup
+2.287 voice-setup
 =================
 
 A voice is to audio as a font is to a visual display.  A personality is
@@ -2083,7 +2083,7 @@ mapping, and local compatibility-provider machinery.  When this minor
 mode is on, the voices of the current line are updated with every
 insertion or deletion.
 
-2.288.1 Voice-Lock And Aural CSS
+2.287.1 Voice-Lock And Aural CSS
 --------------------------------
 
 The CSS Speech Style Sheet specification defines a number of abstract
@@ -2115,10 +2115,10 @@ dectalk-voices.el and outloud-voices.el map ACSS dimensions to
 engine-specific codes.  Emacsvox modules use voice-setup-add-map when
 defining face->personality mappings.  For use from other modules.
 
-2.288.2 Voice-Setup Commands
+2.287.2 Voice-Setup Commands
 ----------------------------
 
-2.288.2.1 voice-setup-toggle-silence-personality
+2.287.2.1 voice-setup-toggle-silence-personality
 ................................................
 
  -- Command: voice-setup-toggle-silence-personality
@@ -2128,7 +2128,7 @@ defining face->personality mappings.  For use from other modules.
 
 File: emacsvox-reference.info,  Node: xbacklight,  Next: URL Templates,  Prev: voice-setup,  Up: Emacsvox Commands And Options
 
-2.289 xbacklight
+2.288 xbacklight
 ================
 
 Provide an emacs front-end to xbacklight.  This is a tool that controls
@@ -2138,38 +2138,38 @@ xbacklight
    This module is most easily used in conjunction with hydra: M-x
 package-install hydra
 
-2.289.1 Xbacklight Commands
+2.288.1 Xbacklight Commands
 ---------------------------
 
-2.289.1.1 xbacklight-black
+2.288.1.1 xbacklight-black
 ..........................
 
  -- Command: xbacklight-black
 
      Black screen.
 
-2.289.1.2 xbacklight-decrement
+2.288.1.2 xbacklight-decrement
 ..............................
 
  -- Command: xbacklight-decrement
 
      Decrease brightness.
 
-2.289.1.3 xbacklight-get
+2.288.1.3 xbacklight-get
 ........................
 
  -- Command: xbacklight-get
 
      Get  brightness level.
 
-2.289.1.4 xbacklight-increment
+2.288.1.4 xbacklight-increment
 ..............................
 
  -- Command: xbacklight-increment
 
      Increase brightness.
 
-2.289.1.5 xbacklight-set
+2.288.1.5 xbacklight-set
 ........................
 
  -- Command: xbacklight-set (brightness)
@@ -2178,7 +2178,7 @@ package-install hydra
 
      (fn BRIGHTNESS)
 
-2.289.1.6 xbacklight-white
+2.288.1.6 xbacklight-white
 ..........................
 
  -- Command: xbacklight-white
@@ -2188,7 +2188,7 @@ package-install hydra
 
 File: emacsvox-reference.info,  Node: URL Templates,  Prev: xbacklight,  Up: Emacsvox Commands And Options
 
-2.290 URL Templates
+2.289 URL Templates
 ===================
 
 This section documents a total of 66 URL Templates.
@@ -4084,62 +4084,6 @@ Function Index
                                                              (line  203)
 * emacsvox-aural-voice-editor-undo <1>:  emacsvox-aural-voice-editor.
                                                              (line  204)
-* emacsvox-aural-voice-experiment-compare: emacsvox-aural-voice-experiment.
-                                                             (line   17)
-* emacsvox-aural-voice-experiment-compare <1>: emacsvox-aural-voice-experiment.
-                                                             (line   18)
-* emacsvox-aural-voice-experiment-copy-style: emacsvox-aural-voice-experiment.
-                                                             (line   24)
-* emacsvox-aural-voice-experiment-copy-style <1>: emacsvox-aural-voice-experiment.
-                                                             (line   25)
-* emacsvox-aural-voice-experiment-edit-text: emacsvox-aural-voice-experiment.
-                                                             (line   31)
-* emacsvox-aural-voice-experiment-edit-text <1>: emacsvox-aural-voice-experiment.
-                                                             (line   32)
-* emacsvox-aural-voice-experiment-help:  emacsvox-aural-voice-experiment.
-                                                             (line   38)
-* emacsvox-aural-voice-experiment-help <1>: emacsvox-aural-voice-experiment.
-                                                             (line   39)
-* emacsvox-aural-voice-experiment-keep:  emacsvox-aural-voice-experiment.
-                                                             (line   45)
-* emacsvox-aural-voice-experiment-keep <1>: emacsvox-aural-voice-experiment.
-                                                             (line   46)
-* emacsvox-aural-voice-experiment-keep-mode: emacsvox-aural-voice-experiment.
-                                                             (line   52)
-* emacsvox-aural-voice-experiment-keep-mode <1>: emacsvox-aural-voice-experiment.
-                                                             (line   53)
-* emacsvox-aural-voice-experiment-mode:  emacsvox-aural-voice-experiment.
-                                                             (line   73)
-* emacsvox-aural-voice-experiment-mode <1>: emacsvox-aural-voice-experiment.
-                                                             (line   74)
-* emacsvox-aural-voice-experiment-preview-kept: emacsvox-aural-voice-experiment.
-                                                             (line   99)
-* emacsvox-aural-voice-experiment-preview-kept <1>: emacsvox-aural-voice-experiment.
-                                                             (line  100)
-* emacsvox-aural-voice-experiment-reset: emacsvox-aural-voice-experiment.
-                                                             (line  106)
-* emacsvox-aural-voice-experiment-reset <1>: emacsvox-aural-voice-experiment.
-                                                             (line  107)
-* emacsvox-aural-voice-experiment-review: emacsvox-aural-voice-experiment.
-                                                             (line  113)
-* emacsvox-aural-voice-experiment-review <1>: emacsvox-aural-voice-experiment.
-                                                             (line  114)
-* emacsvox-aural-voice-experiment-save-and-apply: emacsvox-aural-voice-experiment.
-                                                             (line  120)
-* emacsvox-aural-voice-experiment-save-and-apply <1>: emacsvox-aural-voice-experiment.
-                                                             (line  121)
-* emacsvox-aural-voice-experiment-sweep: emacsvox-aural-voice-experiment.
-                                                             (line  127)
-* emacsvox-aural-voice-experiment-sweep <1>: emacsvox-aural-voice-experiment.
-                                                             (line  128)
-* emacsvox-aural-voice-experiment-switch-voice: emacsvox-aural-voice-experiment.
-                                                             (line  134)
-* emacsvox-aural-voice-experiment-switch-voice <1>: emacsvox-aural-voice-experiment.
-                                                             (line  135)
-* emacsvox-aural-voice-experiment-undo:  emacsvox-aural-voice-experiment.
-                                                             (line  141)
-* emacsvox-aural-voice-experiment-undo <1>: emacsvox-aural-voice-experiment.
-                                                             (line  142)
 * emacsvox-aural-voice-palette-previews-copy: emacsvox-aural-voice-palettes.
                                                              (line   23)
 * emacsvox-aural-voice-palette-previews-copy <1>: emacsvox-aural-voice-palettes.
@@ -4320,262 +4264,150 @@ Function Index
                                                              (line  394)
 * emacsvox-aural-voice-palettes-speak-current-cell <1>: emacsvox-aural-voice-palettes.
                                                              (line  395)
-* emacsvox-aural-voice-tuner-audition:   emacsvox-aural-voice-palettes.
-                                                             (line  401)
-* emacsvox-aural-voice-tuner-audition <1>: emacsvox-aural-voice-palettes.
-                                                             (line  403)
-* emacsvox-aural-voice-tuner-compare:    emacsvox-aural-voice-palettes.
-                                                             (line  411)
-* emacsvox-aural-voice-tuner-compare <1>: emacsvox-aural-voice-palettes.
-                                                             (line  412)
-* emacsvox-aural-voice-tuner-decrease:   emacsvox-aural-voice-palettes.
-                                                             (line  418)
-* emacsvox-aural-voice-tuner-decrease <1>: emacsvox-aural-voice-palettes.
-                                                             (line  419)
-* emacsvox-aural-voice-tuner-edit:       emacsvox-aural-voice-palettes.
-                                                             (line  425)
-* emacsvox-aural-voice-tuner-edit <1>:   emacsvox-aural-voice-palettes.
-                                                             (line  426)
-* emacsvox-aural-voice-tuner-help:       emacsvox-aural-voice-palettes.
-                                                             (line  432)
-* emacsvox-aural-voice-tuner-help <1>:   emacsvox-aural-voice-palettes.
-                                                             (line  433)
-* emacsvox-aural-voice-tuner-increase:   emacsvox-aural-voice-palettes.
-                                                             (line  439)
-* emacsvox-aural-voice-tuner-increase <1>: emacsvox-aural-voice-palettes.
-                                                             (line  440)
-* emacsvox-aural-voice-tuner-mode:       emacsvox-aural-voice-palettes.
-                                                             (line  446)
-* emacsvox-aural-voice-tuner-mode <1>:   emacsvox-aural-voice-palettes.
-                                                             (line  447)
-* emacsvox-aural-voice-tuner-next:       emacsvox-aural-voice-palettes.
-                                                             (line  480)
-* emacsvox-aural-voice-tuner-next <1>:   emacsvox-aural-voice-palettes.
-                                                             (line  481)
-* emacsvox-aural-voice-tuner-previous:   emacsvox-aural-voice-palettes.
-                                                             (line  487)
-* emacsvox-aural-voice-tuner-previous <1>: emacsvox-aural-voice-palettes.
-                                                             (line  488)
-* emacsvox-aural-voice-tuner-quit:       emacsvox-aural-voice-palettes.
-                                                             (line  494)
-* emacsvox-aural-voice-tuner-quit <1>:   emacsvox-aural-voice-palettes.
-                                                             (line  495)
-* emacsvox-aural-voice-tuner-refresh:    emacsvox-aural-voice-palettes.
-                                                             (line  501)
-* emacsvox-aural-voice-tuner-refresh <1>: emacsvox-aural-voice-palettes.
-                                                             (line  502)
-* emacsvox-aural-voice-tuner-restore:    emacsvox-aural-voice-palettes.
-                                                             (line  510)
-* emacsvox-aural-voice-tuner-restore <1>: emacsvox-aural-voice-palettes.
-                                                             (line  511)
-* emacsvox-aural-voice-tuner-save:       emacsvox-aural-voice-palettes.
-                                                             (line  517)
-* emacsvox-aural-voice-tuner-save <1>:   emacsvox-aural-voice-palettes.
-                                                             (line  518)
-* emacsvox-aural-voice-tuner-set-digit:  emacsvox-aural-voice-palettes.
-                                                             (line  524)
-* emacsvox-aural-voice-tuner-set-digit <1>: emacsvox-aural-voice-palettes.
-                                                             (line  525)
-* emacsvox-aural-voice-tuner-speak-current: emacsvox-aural-voice-palettes.
-                                                             (line  531)
-* emacsvox-aural-voice-tuner-speak-current <1>: emacsvox-aural-voice-palettes.
-                                                             (line  532)
-* emacsvox-aural-voice-tuner-undo:       emacsvox-aural-voice-palettes.
-                                                             (line  538)
-* emacsvox-aural-voice-tuner-undo <1>:   emacsvox-aural-voice-palettes.
-                                                             (line  539)
-* emacsvox-aural-voice-tuner-use-default: emacsvox-aural-voice-palettes.
-                                                             (line  545)
-* emacsvox-aural-voice-tuner-use-default <1>: emacsvox-aural-voice-palettes.
-                                                             (line  546)
 * emacsvox-aural-voice-workbench:        emacsvox-aural-voice-workbench.
                                                              (line   41)
 * emacsvox-aural-voice-workbench <1>:    emacsvox-aural-voice-workbench.
                                                              (line   42)
-* emacsvox-aural-voice-workbench-apply-preset: emacsvox-aural-voice-workbench.
-                                                             (line   50)
-* emacsvox-aural-voice-workbench-apply-preset <1>: emacsvox-aural-voice-workbench.
-                                                             (line   51)
-* emacsvox-aural-voice-workbench-assign: emacsvox-aural-voice-workbench.
-                                                             (line   57)
-* emacsvox-aural-voice-workbench-assign <1>: emacsvox-aural-voice-workbench.
-                                                             (line   58)
-* emacsvox-aural-voice-workbench-begin-assignment: emacsvox-aural-voice-workbench.
-                                                             (line   64)
-* emacsvox-aural-voice-workbench-begin-assignment <1>: emacsvox-aural-voice-workbench.
-                                                             (line   65)
-* emacsvox-aural-voice-workbench-bind-unmapped: emacsvox-aural-voice-workbench.
-                                                             (line   71)
-* emacsvox-aural-voice-workbench-bind-unmapped <1>: emacsvox-aural-voice-workbench.
-                                                             (line   72)
-* emacsvox-aural-voice-workbench-cancel-assignment: emacsvox-aural-voice-workbench.
-                                                             (line   78)
-* emacsvox-aural-voice-workbench-cancel-assignment <1>: emacsvox-aural-voice-workbench.
-                                                             (line   79)
 * emacsvox-aural-voice-workbench-cancel-staged: emacsvox-aural-voice-workbench.
-                                                             (line   85)
+                                                             (line   50)
 * emacsvox-aural-voice-workbench-cancel-staged <1>: emacsvox-aural-voice-workbench.
-                                                             (line   86)
+                                                             (line   51)
 * emacsvox-aural-voice-workbench-clear-filters: emacsvox-aural-voice-workbench.
-                                                             (line   92)
+                                                             (line   57)
 * emacsvox-aural-voice-workbench-clear-filters <1>: emacsvox-aural-voice-workbench.
-                                                             (line   93)
+                                                             (line   58)
 * emacsvox-aural-voice-workbench-compare: emacsvox-aural-voice-workbench.
-                                                             (line   99)
+                                                             (line   64)
 * emacsvox-aural-voice-workbench-compare <1>: emacsvox-aural-voice-workbench.
-                                                             (line  100)
-* emacsvox-aural-voice-workbench-complete-assignment: emacsvox-aural-voice-workbench.
-                                                             (line  106)
-* emacsvox-aural-voice-workbench-complete-assignment <1>: emacsvox-aural-voice-workbench.
-                                                             (line  107)
-* emacsvox-aural-voice-workbench-copy-route: emacsvox-aural-voice-workbench.
-                                                             (line  113)
-* emacsvox-aural-voice-workbench-copy-route <1>: emacsvox-aural-voice-workbench.
-                                                             (line  114)
-* emacsvox-aural-voice-workbench-delete-selector: emacsvox-aural-voice-workbench.
-                                                             (line  120)
-* emacsvox-aural-voice-workbench-delete-selector <1>: emacsvox-aural-voice-workbench.
-                                                             (line  121)
+                                                             (line   65)
 * emacsvox-aural-voice-workbench-describe: emacsvox-aural-voice-workbench.
-                                                             (line  127)
+                                                             (line   71)
 * emacsvox-aural-voice-workbench-describe <1>: emacsvox-aural-voice-workbench.
-                                                             (line  128)
+                                                             (line   72)
 * emacsvox-aural-voice-workbench-edit-preview-text: emacsvox-aural-voice-workbench.
-                                                             (line  134)
+                                                             (line   78)
 * emacsvox-aural-voice-workbench-edit-preview-text <1>: emacsvox-aural-voice-workbench.
-                                                             (line  135)
+                                                             (line   79)
 * emacsvox-aural-voice-workbench-engine-view: emacsvox-aural-voice-workbench.
-                                                             (line  141)
+                                                             (line   85)
 * emacsvox-aural-voice-workbench-engine-view <1>: emacsvox-aural-voice-workbench.
-                                                             (line  142)
+                                                             (line   86)
 * emacsvox-aural-voice-workbench-export-profile: emacsvox-aural-voice-workbench.
-                                                             (line  148)
+                                                             (line   92)
 * emacsvox-aural-voice-workbench-export-profile <1>: emacsvox-aural-voice-workbench.
-                                                             (line  149)
+                                                             (line   93)
 * emacsvox-aural-voice-workbench-help:   emacsvox-aural-voice-workbench.
-                                                             (line  155)
+                                                             (line   99)
 * emacsvox-aural-voice-workbench-help <1>: emacsvox-aural-voice-workbench.
-                                                             (line  156)
+                                                             (line  100)
 * emacsvox-aural-voice-workbench-import-profile: emacsvox-aural-voice-workbench.
-                                                             (line  162)
+                                                             (line  106)
 * emacsvox-aural-voice-workbench-import-profile <1>: emacsvox-aural-voice-workbench.
-                                                             (line  163)
+                                                             (line  107)
 * emacsvox-aural-voice-workbench-logical-view: emacsvox-aural-voice-workbench.
-                                                             (line  169)
+                                                             (line  113)
 * emacsvox-aural-voice-workbench-logical-view <1>: emacsvox-aural-voice-workbench.
-                                                             (line  170)
-* emacsvox-aural-voice-workbench-migrate: emacsvox-aural-voice-workbench.
-                                                             (line  176)
-* emacsvox-aural-voice-workbench-migrate <1>: emacsvox-aural-voice-workbench.
-                                                             (line  177)
+                                                             (line  114)
 * emacsvox-aural-voice-workbench-mode:   emacsvox-aural-voice-workbench.
-                                                             (line  183)
+                                                             (line  120)
 * emacsvox-aural-voice-workbench-mode <1>: emacsvox-aural-voice-workbench.
-                                                             (line  184)
+                                                             (line  121)
 * emacsvox-aural-voice-workbench-move-fallback-engine-down: emacsvox-aural-voice-workbench.
-                                                             (line  242)
+                                                             (line  170)
 * emacsvox-aural-voice-workbench-move-fallback-engine-down <1>: emacsvox-aural-voice-workbench.
-                                                             (line  243)
+                                                             (line  171)
 * emacsvox-aural-voice-workbench-move-fallback-engine-up: emacsvox-aural-voice-workbench.
-                                                             (line  249)
+                                                             (line  177)
 * emacsvox-aural-voice-workbench-move-fallback-engine-up <1>: emacsvox-aural-voice-workbench.
-                                                             (line  250)
-* emacsvox-aural-voice-workbench-move-selector-down: emacsvox-aural-voice-workbench.
-                                                             (line  256)
-* emacsvox-aural-voice-workbench-move-selector-down <1>: emacsvox-aural-voice-workbench.
-                                                             (line  257)
-* emacsvox-aural-voice-workbench-move-selector-up: emacsvox-aural-voice-workbench.
-                                                             (line  263)
-* emacsvox-aural-voice-workbench-move-selector-up <1>: emacsvox-aural-voice-workbench.
-                                                             (line  264)
+                                                             (line  178)
+* emacsvox-aural-voice-workbench-move-preferred-engine-down: emacsvox-aural-voice-workbench.
+                                                             (line  184)
+* emacsvox-aural-voice-workbench-move-preferred-engine-down <1>: emacsvox-aural-voice-workbench.
+                                                             (line  185)
+* emacsvox-aural-voice-workbench-move-preferred-engine-up: emacsvox-aural-voice-workbench.
+                                                             (line  191)
+* emacsvox-aural-voice-workbench-move-preferred-engine-up <1>: emacsvox-aural-voice-workbench.
+                                                             (line  192)
 * emacsvox-aural-voice-workbench-open-row: emacsvox-aural-voice-workbench.
-                                                             (line  270)
+                                                             (line  198)
 * emacsvox-aural-voice-workbench-open-row <1>: emacsvox-aural-voice-workbench.
-                                                             (line  271)
+                                                             (line  199)
 * emacsvox-aural-voice-workbench-physical-view: emacsvox-aural-voice-workbench.
-                                                             (line  277)
+                                                             (line  205)
 * emacsvox-aural-voice-workbench-physical-view <1>: emacsvox-aural-voice-workbench.
-                                                             (line  278)
+                                                             (line  206)
 * emacsvox-aural-voice-workbench-preview: emacsvox-aural-voice-workbench.
-                                                             (line  285)
+                                                             (line  213)
 * emacsvox-aural-voice-workbench-preview <1>: emacsvox-aural-voice-workbench.
-                                                             (line  286)
+                                                             (line  214)
 * emacsvox-aural-voice-workbench-preview-all: emacsvox-aural-voice-workbench.
-                                                             (line  292)
+                                                             (line  220)
 * emacsvox-aural-voice-workbench-preview-all <1>: emacsvox-aural-voice-workbench.
-                                                             (line  293)
+                                                             (line  221)
 * emacsvox-aural-voice-workbench-quit:   emacsvox-aural-voice-workbench.
-                                                             (line  299)
+                                                             (line  227)
 * emacsvox-aural-voice-workbench-quit <1>: emacsvox-aural-voice-workbench.
-                                                             (line  300)
+                                                             (line  228)
 * emacsvox-aural-voice-workbench-refresh: emacsvox-aural-voice-workbench.
-                                                             (line  310)
+                                                             (line  238)
 * emacsvox-aural-voice-workbench-refresh <1>: emacsvox-aural-voice-workbench.
-                                                             (line  311)
+                                                             (line  239)
 * emacsvox-aural-voice-workbench-refresh-inventory: emacsvox-aural-voice-workbench.
-                                                             (line  319)
+                                                             (line  247)
 * emacsvox-aural-voice-workbench-refresh-inventory <1>: emacsvox-aural-voice-workbench.
-                                                             (line  320)
-* emacsvox-aural-voice-workbench-replace-engine: emacsvox-aural-voice-workbench.
-                                                             (line  326)
-* emacsvox-aural-voice-workbench-replace-engine <1>: emacsvox-aural-voice-workbench.
-                                                             (line  327)
+                                                             (line  248)
 * emacsvox-aural-voice-workbench-request-recovery-probe: emacsvox-aural-voice-workbench.
-                                                             (line  333)
+                                                             (line  254)
 * emacsvox-aural-voice-workbench-request-recovery-probe <1>: emacsvox-aural-voice-workbench.
-                                                             (line  334)
+                                                             (line  255)
 * emacsvox-aural-voice-workbench-retry-apply: emacsvox-aural-voice-workbench.
-                                                             (line  340)
+                                                             (line  261)
 * emacsvox-aural-voice-workbench-retry-apply <1>: emacsvox-aural-voice-workbench.
-                                                             (line  341)
+                                                             (line  262)
 * emacsvox-aural-voice-workbench-save-and-apply: emacsvox-aural-voice-workbench.
-                                                             (line  347)
+                                                             (line  268)
 * emacsvox-aural-voice-workbench-save-and-apply <1>: emacsvox-aural-voice-workbench.
-                                                             (line  348)
+                                                             (line  269)
 * emacsvox-aural-voice-workbench-set-filter: emacsvox-aural-voice-workbench.
-                                                             (line  354)
+                                                             (line  275)
 * emacsvox-aural-voice-workbench-set-filter <1>: emacsvox-aural-voice-workbench.
-                                                             (line  355)
+                                                             (line  276)
 * emacsvox-aural-voice-workbench-speak-current: emacsvox-aural-voice-workbench.
-                                                             (line  361)
+                                                             (line  282)
 * emacsvox-aural-voice-workbench-speak-current <1>: emacsvox-aural-voice-workbench.
-                                                             (line  362)
+                                                             (line  283)
 * emacsvox-aural-voice-workbench-stop-preview: emacsvox-aural-voice-workbench.
-                                                             (line  368)
+                                                             (line  289)
 * emacsvox-aural-voice-workbench-stop-preview <1>: emacsvox-aural-voice-workbench.
-                                                             (line  369)
+                                                             (line  290)
 * emacsvox-aural-voice-workbench-style-view: emacsvox-aural-voice-workbench.
-                                                             (line  375)
+                                                             (line  296)
 * emacsvox-aural-voice-workbench-style-view <1>: emacsvox-aural-voice-workbench.
-                                                             (line  376)
-* emacsvox-aural-voice-workbench-suggest-route: emacsvox-aural-voice-workbench.
-                                                             (line  382)
-* emacsvox-aural-voice-workbench-suggest-route <1>: emacsvox-aural-voice-workbench.
-                                                             (line  383)
+                                                             (line  297)
 * emacsvox-aural-voice-workbench-toggle-disabled-engine: emacsvox-aural-voice-workbench.
-                                                             (line  389)
+                                                             (line  303)
 * emacsvox-aural-voice-workbench-toggle-disabled-engine <1>: emacsvox-aural-voice-workbench.
-                                                             (line  390)
+                                                             (line  304)
 * emacsvox-aural-voice-workbench-toggle-fallback-engine: emacsvox-aural-voice-workbench.
-                                                             (line  396)
+                                                             (line  310)
 * emacsvox-aural-voice-workbench-toggle-fallback-engine <1>: emacsvox-aural-voice-workbench.
-                                                             (line  397)
+                                                             (line  311)
 * emacsvox-aural-voice-workbench-toggle-preferred-engine: emacsvox-aural-voice-workbench.
-                                                             (line  403)
+                                                             (line  317)
 * emacsvox-aural-voice-workbench-toggle-preferred-engine <1>: emacsvox-aural-voice-workbench.
-                                                             (line  404)
+                                                             (line  318)
 * emacsvox-aural-voice-workbench-tune:   emacsvox-aural-voice-workbench.
-                                                             (line  410)
+                                                             (line  324)
 * emacsvox-aural-voice-workbench-tune <1>: emacsvox-aural-voice-workbench.
-                                                             (line  411)
+                                                             (line  325)
 * emacsvox-aural-voice-workbench-undo:   emacsvox-aural-voice-workbench.
-                                                             (line  417)
+                                                             (line  331)
 * emacsvox-aural-voice-workbench-undo <1>: emacsvox-aural-voice-workbench.
-                                                             (line  418)
+                                                             (line  332)
 * emacsvox-aural-voice-workbench-undo-applied: emacsvox-aural-voice-workbench.
-                                                             (line  424)
+                                                             (line  338)
 * emacsvox-aural-voice-workbench-undo-applied <1>: emacsvox-aural-voice-workbench.
-                                                             (line  425)
+                                                             (line  339)
 * emacsvox-beginning-or-end:             emacsvox-speak.     (line   16)
 * emacsvox-beginning-or-end <1>:         emacsvox-speak.     (line   17)
 * emacsvox-bookshare:                    emacsvox-bookshare. (line   51)

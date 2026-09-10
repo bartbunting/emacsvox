@@ -137,7 +137,6 @@
          "emacsvox-aural-doctor"
          "emacsvox-aural-profiles"
          "emacsvox-aural-voice-palettes"
-         "emacsvox-aural-voice-experiment"
          "emacsvox-aural-change-feedback"
          "emacsvox-aural-voice-workbench"
          "emacsvox-aural-provider-org"
@@ -218,7 +217,6 @@
          emacsvox-aural-doctor--finding
          emacsvox-aural-profiles--ids
          emacsvox-aural-voice-palettes--active-id
-         emacsvox-aural-voice-experiment-open
          emacsvox-aural-change-feedback
          emacsvox-org--require-aural-semantics
          emacsvox-aural-register-workflow-provider
@@ -402,13 +400,8 @@
                       emacsvox-aural--timeline-delivery-fields
                       emacsvox-aural--build-structured-timeline
                       emacsvox-aural--finalize-structured-delivery
-                      emacsvox-aural-voice-palettes--read-style-number
-                      emacsvox-aural-voice-palettes--read-style
-                      emacsvox-aural-voice-tuner--set-value
                       emacsvox-aural-voice-workbench--preview-effects
-                      emacsvox-aural-voice-tuner-increase
-                      emacsvox-aural-voice-tuner-decrease
-                      emacsvox-aural-voice-tuner-edit))
+                      emacsvox-aural-voice-editor--set))
     (unless (file-in-directory-p (symbol-file function 'defun) build-directory)
       (error "Aural contract escaped compiled build: %S" function)))
   (dolist (tag '(voice-style-ui delivery-preparation))

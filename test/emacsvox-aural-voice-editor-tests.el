@@ -49,6 +49,7 @@
           (should (eq (emacsvox-aural-voice-editor--get :voice) 'bolden)))))))
 
 (ert-deftest emacsvox-aural-voice-editor-inherited-edit-reset-and-edit-again ()
+  :tags '(voice-style-ui)
   (require 'emacsvox-aural-voice-palettes)
   (emacsvox-test--with-voice-editor
     (emacsvox-aural-register-voice-palette-data
@@ -86,6 +87,7 @@
         (when (buffer-live-p source) (kill-buffer source))))))
 
 (ert-deftest emacsvox-aural-voice-editor-copy-built-in-is-a-personal-draft ()
+  :tags '(voice-style-ui)
   (emacsvox-test--with-voice-editor
     (let ((before (emacsvox-aural-read-user-data))
           (root (emacsvox-aural-voice-drafts--palette-data 'acss-default))

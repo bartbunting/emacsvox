@@ -60,7 +60,6 @@
   (require 'emacsvox-aural-voice-context-tests)
   (require 'emacsvox-aural-voice-workbench-tests)
   (require 'emacsvox-aural-voice-palettes-tests)
-  (require 'emacsvox-aural-voice-experiment-tests)
   (require 'emacsvox-aural-change-feedback-tests)
   (require 'emacsvox-aural-transport-tests)
   (require 'emacsvox-aural-preview-tests)
