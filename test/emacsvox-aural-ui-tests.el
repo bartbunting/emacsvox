@@ -89,7 +89,21 @@
       (should
        (eq
         (emacsvox-aural-ui-pop-to-buffer "*Aural Test*")
-        'selected-window)))))
+       'selected-window)))))
+
+(ert-deftest emacsvox-aural-ui-expansion-announces-only-the-state ()
+  "Expansion uses ordinary cues and the selected speech renderer, without hints."
+  (with-temp-buffer
+    (let* ((events nil)
+          (emacsvox-aural-ui-speech-function
+           (lambda (text) (push (list 'speech text) events))))
+      (cl-letf (((symbol-function 'emacsvox-icon)
+                 (lambda (cue) (push (list 'cue cue) events))))
+        (emacsvox-aural-ui--announce-expansion t)
+        (emacsvox-aural-ui--announce-expansion nil))
+      (should (equal (nreverse events)
+                     '((cue open-object) (speech "expanded")
+                       (cue close-object) (speech "collapsed")))))))
 
 (ert-deftest emacsvox-aural-ui-common-tabulated-bindings-are-consistent ()
   "All conventional row keys should use the spoken navigation commands."

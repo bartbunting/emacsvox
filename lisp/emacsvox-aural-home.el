@@ -70,6 +70,8 @@
                   "emacsvox-omnivox-components" ())
 (declare-function emacsvox-aural-change-feedback
                   "emacsvox-aural-change-feedback" (&optional record))
+(declare-function emacsvox-aural-change-feedback--pending-p
+                  "emacsvox-aural-change-feedback" ())
 (declare-function emacsvox-aural-change-feedback--remap-at-point
                   "emacsvox-aural-change-feedback" ())
 (declare-function emacsvox-aural-change-feedback--tune-at-point
@@ -106,8 +108,8 @@
   (cl-remove-if-not
    (lambda (buffer)
      (with-current-buffer buffer
-       (or (and (bound-and-true-p emacsvox-aural-change-feedback-render)
-                (not (bound-and-true-p emacsvox-aural-change-feedback-applied)))
+       (or (and (derived-mode-p 'emacsvox-aural-change-feedback-mode)
+                (emacsvox-aural-change-feedback--pending-p))
            (bound-and-true-p emacsvox-aural-editor-dirty)
            (bound-and-true-p emacsvox-aural-voice-tuner-dirty)
            (and (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
@@ -368,7 +370,7 @@
                     (vector (cadr group)
                             (format "%s, %d actions" (if expanded "expanded" "collapsed")
                                     (length (cddr group)))
-                            "RET or TAB expands or collapses this task group")) rows)
+                            "Task group")) rows)
         (when expanded
           (dolist (id (cddr group))
             (when-let* ((entry (assq id actions))) (push entry rows))))))
@@ -392,7 +394,8 @@
               (delq id emacsvox-aural-home-expanded-groups))
       (push id emacsvox-aural-home-expanded-groups))
     (emacsvox-aural-home-refresh (list 'group id))
-    (emacsvox-aural-ui-speak-name-and-state)))
+    (emacsvox-aural-ui--announce-expansion
+     (memq id emacsvox-aural-home-expanded-groups))))
 
 (defun emacsvox-aural-home-search ()
   "Find and open any named Home action, including collapsed destinations."

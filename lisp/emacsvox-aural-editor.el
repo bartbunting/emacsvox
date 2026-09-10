@@ -25,7 +25,7 @@
 
 ;;; Commentary:
 
-;; A completion-driven special-mode editor for Presentation Options and
+;; An expandable special-mode editor for Presentation Options and
 ;; personal, session, or buffer-local rule layers.  The buffer remains plain
 ;; text and predictable for speech access.
 
@@ -56,6 +56,185 @@
 
 (defvar-local emacsvox-aural-editor-dirty nil
   "Non-nil when working editor data differs from its saved source.")
+
+(defvar-local emacsvox-aural-editor--panel-rule nil
+  "Identifier of the rule whose settings panel is open.")
+(defvar-local emacsvox-aural-editor--expanded nil
+  "Setting paths expanded in the current rule panel.")
+(defvar-local emacsvox-aural-editor--match-options nil
+  "Matching criteria retained by rule identifier, including excluded criteria.")
+
+(defun emacsvox-aural-editor--panel-row (id label value)
+  "Insert one accessible panel row with ID, LABEL, and VALUE."
+  (insert (propertize (format "   %-24s %s\n" label value)
+                      'emacsvox-aural-editor--field id 'rear-nonsticky t)))
+
+(defun emacsvox-aural-editor--panel-goto (id)
+  "Move to panel row ID, returning non-nil when it exists."
+  (let ((position (point-min)) found)
+    (while (and (< position (point-max)) (not found))
+      (if (equal id (get-text-property position 'emacsvox-aural-editor--field))
+          (setq found position)
+        (setq position (next-single-property-change
+                        position 'emacsvox-aural-editor--field nil (point-max)))))
+    (when found (goto-char found))))
+
+(defun emacsvox-aural-editor--panel-speak ()
+  "Speak the selected rule or setting, including its current value."
+  (interactive)
+  (emacsvox-aural-ui-speak
+   (string-trim (buffer-substring-no-properties
+                 (line-beginning-position) (line-end-position)))))
+
+(defun emacsvox-aural-editor--path-value (data path)
+  "Return DATA's value at PATH of property names or action indices."
+  (dolist (key path data)
+    (setq data (if (integerp key) (nth key data) (plist-get data key)))))
+
+(defun emacsvox-aural-editor--path-set (data path value &optional remove)
+  "Return a copy of DATA with PATH set to VALUE, or removed when REMOVE."
+  (let ((copy (copy-tree data)) (key (car path)))
+    (cond
+     ((null path) value)
+     ((cdr path)
+      (let ((child (emacsvox-aural-editor--path-set
+                    (if (integerp key) (nth key copy) (plist-get copy key))
+                    (cdr path) value remove)))
+        (if (integerp key) (setf (nth key copy) child)
+          (setq copy (plist-put copy key child))))
+      copy)
+     ((integerp key)
+      (if remove (append (cl-subseq copy 0 key) (nthcdr (1+ key) copy))
+        (setf (nth key copy) value) copy))
+     (remove (cl-loop for (name item) on copy by #'cddr
+                      unless (eq name key) append (list name item)))
+     (t (plist-put copy key value)))))
+
+(defun emacsvox-aural-editor--panel-update (rule field)
+  "Validate RULE, replace only the selected working rule, and retain FIELD."
+  (let* ((index (emacsvox-aural-editor--index-at-point))
+         (old (nth index emacsvox-aural-editor-rules)))
+    (emacsvox-aural-compile-rule rule 'user)
+    (when (cl-loop for other in emacsvox-aural-editor-rules for n from 0
+                   thereis (and (/= n index) (eq (plist-get other :id) (plist-get rule :id))))
+      (user-error "A rule named %s already exists" (plist-get rule :id)))
+    (unless (equal old rule)
+      (unless (eq (plist-get old :id) (plist-get rule :id))
+        (setf (alist-get (plist-get rule :id) emacsvox-aural-editor--match-options)
+              (alist-get (plist-get old :id) emacsvox-aural-editor--match-options)))
+      (setf (nth index emacsvox-aural-editor-rules) rule)
+      (setq emacsvox-aural-editor--panel-rule (plist-get rule :id))
+      (emacsvox-aural-editor-mark-dirty))
+    (emacsvox-aural-editor-refresh)
+    (unless (emacsvox-aural-editor--panel-goto field)
+      (emacsvox-aural-editor--panel-goto (list 'rule (plist-get rule :id))))
+    (emacsvox-aural-editor--panel-speak)))
+
+(defun emacsvox-aural-editor--panel-criteria (selector)
+  "Split SELECTOR into independently selectable criteria."
+  (cl-loop for (key value) on selector by #'cddr
+           append (if (memq key '(:states :events :requires))
+                      (mapcar (lambda (item) (list key (list item))) value)
+                    (list (list key value)))))
+
+(defun emacsvox-aural-editor--panel-match (rule)
+  "Insert included and excluded matching criteria for RULE."
+  (let* ((id (plist-get rule :id))
+         (selected (emacsvox-aural-editor--panel-criteria (plist-get rule :match)))
+         (options (delete-dups (append (alist-get id emacsvox-aural-editor--match-options) selected))))
+    (setf (alist-get id emacsvox-aural-editor--match-options) options)
+    (dolist (criterion options)
+      (let ((key (car criterion)) (value (cadr criterion)))
+        (emacsvox-aural-editor--panel-row
+         (list 'criterion criterion)
+         (format "  %s %s" (pcase key (:states "state") (:events "event")
+                                  (_ (emacsvox-aural-humanize (substring (symbol-name key) 1))))
+                 (emacsvox-aural-humanize (if (memq key '(:states :events :requires)) (car value) value)))
+         (if (member criterion selected) "Included; RET excludes" "Excluded; RET includes"))))
+    (emacsvox-aural-editor--panel-row '(add-criterion) "  Add or edit criterion" "RET chooses one fact or context field")))
+
+(defun emacsvox-aural-editor--panel-choices (rule path)
+  "Insert inline choices for RULE's voice or speech setting at PATH."
+  (let* ((key (car (last path)))
+         (parent (emacsvox-aural-editor--path-value rule (butlast path)))
+         (present (plist-member parent key))
+         (current (plist-get parent key))
+         (choices
+          (if (eq key :voice)
+              (append
+               (when (and present current)
+                 (list (cons (format "%s" current) current)))
+               (mapcar (lambda (name) (cons name (unless (equal name "default") (intern name))))
+                       (sort (emacsvox-aural-editor-voice-candidates) #'string-lessp)))
+            '(("Speak" . t) ("Silence" . nil)))))
+    (emacsvox-aural-editor--panel-row
+     (list 'inherit path) "    Inherit" (if present "RET removes this setting" "Current; follows other rules"))
+    (dolist (choice (cl-delete-duplicates choices :key #'cdr :test #'equal :from-end t))
+      (emacsvox-aural-editor--panel-row
+       (list 'choice path (cdr choice)) (concat "    " (car choice))
+       (if (and present (equal current (cdr choice))) "Current choice; P previews" "RET selects; P previews")))))
+
+(defun emacsvox-aural-editor--panel-node (rule path label)
+  "Insert one setting of RULE at PATH, expanding its children when requested."
+  (let* ((value (emacsvox-aural-editor--path-value rule path))
+         (key (car (last path)))
+         (expanded (member path emacsvox-aural-editor--expanded))
+         (container (or (memq key '(:match :content :before :after :space :voice :speak))
+                        (consp value)))
+         (summary
+          (cond
+           ((eq key :match)
+            (condition-case err
+                (emacsvox-aural-describe-selector
+                 (emacsvox-aural-rule-selector (emacsvox-aural-compile-rule rule 'user)))
+              (error (format "%S; invalid: %s" value (error-message-string err)))))
+           ((memq key '(:before :after)) (emacsvox-aural-editor--phase-summary value))
+           ((eq key :content) (emacsvox-aural-editor--content-summary value))
+           ((and (not (integerp key))
+                 (not (plist-member (emacsvox-aural-editor--path-value rule (butlast path)) key))) "Inherited")
+           ((and (eq key :voice) (null value)) "Default voice")
+           ((eq key :speak) (if value "Speak" "Silence"))
+           (t (format "%S" value)))))
+    (emacsvox-aural-editor--panel-row
+     (list 'field path) label
+     (concat summary (when container (if expanded "; expanded" "; collapsed"))))
+    (when (and container expanded)
+      (cond
+       ((eq key :match) (emacsvox-aural-editor--panel-match rule))
+       ((memq key '(:voice :speak)) (emacsvox-aural-editor--panel-choices rule path))
+       ((or (null value) (keywordp (car-safe value)))
+        (let ((keys (delete-dups
+                     (append (cl-loop for (name _) on value by #'cddr collect name)
+                             (pcase key (:content '(:voice :speak :volume :space))
+                                    (:space '(:balance :azimuth)))))))
+          (dolist (name keys)
+            (emacsvox-aural-editor--panel-node
+             rule (append path (list name))
+             (concat "  " (emacsvox-aural-humanize (substring (symbol-name name) 1)))))))
+       (t
+        (cl-loop for item in value for index from 0 do
+                 (if (listp item)
+                     (emacsvox-aural-editor--panel-node rule (append path (list index))
+                                                      (format "  Action %d" (1+ index)))
+                   (emacsvox-aural-editor--panel-row
+                    (list 'field (append path (list index))) (format "  Item %d" (1+ index))
+                    (format "%s; RET edits; D removes" item))))))
+      (when (memq key '(:before :after))
+        (emacsvox-aural-editor--panel-row
+         (list 'phase key) "  Change operation" "RET chooses an operation for this phase")))))
+
+(defun emacsvox-aural-editor--panel-insert (rule)
+  "Insert the editable settings panel for RULE."
+  (emacsvox-aural-editor--panel-node rule '(:id) "Rule identifier")
+  (emacsvox-aural-editor--panel-row '(enabled) "Enabled"
+                                    (if (emacsvox-aural-editor-rule-enabled-p rule) "Yes; RET disables" "No; RET enables"))
+  (emacsvox-aural-editor--panel-node rule '(:match) "What should match")
+  (emacsvox-aural-editor--panel-node rule '(:render :before) "Before content")
+  (emacsvox-aural-editor--panel-node rule '(:render :content) "Content")
+  (emacsvox-aural-editor--panel-node rule '(:render :after) "After content")
+  (emacsvox-aural-editor--panel-row '(preview) "Preview" "P or RET plays this working rule")
+  (emacsvox-aural-editor--panel-row '(save) "Save"
+                                    (if emacsvox-aural-editor-dirty "Unsaved changes; w or RET saves" "Saved; no pending changes")))
 
 (defvar emacsvox-aural-editor-prepared-source-guard nil
   "Dynamically supplied source guard for a generated current-item rule.")
@@ -137,7 +316,12 @@
   "Render the current working Presentation Option or rule layer."
   (interactive)
   (let ((inhibit-read-only t)
-        (position (point)))
+        (position (point))
+        (field (get-text-property (point) 'emacsvox-aural-editor--field)))
+    (unless (cl-find emacsvox-aural-editor--panel-rule emacsvox-aural-editor-rules
+                     :key (lambda (rule) (plist-get rule :id)))
+      (setq emacsvox-aural-editor--panel-rule nil
+            emacsvox-aural-editor--expanded nil))
     (erase-buffer)
     (insert (format "Aural Presentation Editor: %s\n\n"
                     (emacsvox-aural-editor--scope-label)))
@@ -148,45 +332,54 @@
          "Summary: %s\n\n"
          (plist-get emacsvox-aural-editor-scheme-data :summary)))))
     (insert
-     "Keys: n/p or up/down move, N add, RET/e edit, c copy, d delete,\n"
+     "Keys: n/p or up/down move, N add, RET/e edit, c copy, d delete rule,\n"
      "t enable/disable, M-up/M-down reorder, m metadata, P preview, S stop,\n"
-     "x explain, v validate, w write, C-c C-a actions, q quit, ? help.\n\n")
+     "D remove setting, Space read row, x explain, v validate, w write, q back/quit, ? help.\n\n")
     (if emacsvox-aural-editor-rules
         (cl-loop
          for rule in emacsvox-aural-editor-rules
          for index from 0
+         when (or (null emacsvox-aural-editor--panel-rule)
+                  (eq (plist-get rule :id) emacsvox-aural-editor--panel-rule))
          do
          (let ((start (point))
                (render (plist-get rule :render)))
            (insert
-            (format
-             "%d. %s [%s]\n"
-             (1+ index)
-             (plist-get rule :id)
-             (if (emacsvox-aural-editor-rule-enabled-p rule)
-                 "enabled"
-               "disabled")))
-           (insert (format "   Match: %S\n" (plist-get rule :match)))
-           (insert
-            (format
-             "   Before: %s\n"
-             (emacsvox-aural-editor--phase-summary
-              (plist-get render :before))))
-           (insert
-            (format
-             "   Content: %s\n"
-             (emacsvox-aural-editor--content-summary
-              (plist-get render :content))))
-           (insert
-            (format
-             "   After: %s\n\n"
-             (emacsvox-aural-editor--phase-summary
-              (plist-get render :after))))
+            (propertize (format
+                         "%s%s [%s]\n"
+                         (if emacsvox-aural-editor--panel-rule ""
+                           (format "%d. " (1+ index)))
+                         (plist-get rule :id)
+                         (if (emacsvox-aural-editor-rule-enabled-p rule)
+                             "enabled"
+                           "disabled"))
+                        'emacsvox-aural-editor--field (list 'rule (plist-get rule :id))
+                        'rear-nonsticky t))
+           (if (eq (plist-get rule :id) emacsvox-aural-editor--panel-rule)
+               (progn (emacsvox-aural-editor--panel-insert rule) (insert "\n"))
+             (progn
+               (insert (format "   Match: %S\n" (plist-get rule :match)))
+               (insert
+                (format
+                 "   Before: %s\n"
+                 (emacsvox-aural-editor--phase-summary
+                  (plist-get render :before))))
+               (insert
+                (format
+                 "   Content: %s\n"
+                 (emacsvox-aural-editor--content-summary
+                  (plist-get render :content))))
+               (insert
+                (format
+                 "   After: %s\n\n"
+                 (emacsvox-aural-editor--phase-summary
+                  (plist-get render :after))))))
            (put-text-property
             start (point)
             emacsvox-aural-editor-rule-index-property index)))
       (insert "No rules.  Press N to add one.\n"))
-    (goto-char (min position (point-max)))))
+    (unless (and field (emacsvox-aural-editor--panel-goto field))
+      (goto-char (min position (point-max))))))
 
 (defun emacsvox-aural-editor--index-at-point ()
   "Return working rule index at point, or report that no rule is selected."
@@ -200,27 +393,36 @@
 
 (defun emacsvox-aural-editor--move-rule (direction)
   "Move DIRECTION rules and speak the selected rule's name and state."
-  (let* ((current (get-text-property (point) emacsvox-aural-editor-rule-index-property))
-         (target (if current (+ current direction)
-                   (if (> direction 0) 0 (1- (length emacsvox-aural-editor-rules))))))
-    (if (or (< target 0) (>= target (length emacsvox-aural-editor-rules)))
-        (emacsvox-aural-ui-announce-boundary
-         (if (> direction 0) "End of rules." "Beginning of rules."))
-      (goto-char (text-property-any (point-min) (point-max)
-                                    emacsvox-aural-editor-rule-index-property target))
-      (let ((rule (nth target emacsvox-aural-editor-rules)))
-        (emacsvox-aural-ui-speak
-         (format "%s: %s%s" (plist-get rule :id)
-                 (if (emacsvox-aural-editor-rule-enabled-p rule) "enabled" "disabled")
-                 (if emacsvox-aural-editor-dirty ", unsaved" "")))))))
+  (if emacsvox-aural-editor--panel-rule
+      (let ((start (point)) found)
+        (while (and (not found) (= 0 (forward-line direction)))
+          (when (get-text-property (point) 'emacsvox-aural-editor--field)
+            (setq found t)))
+        (if found (emacsvox-aural-editor--panel-speak)
+          (goto-char start)
+          (emacsvox-aural-ui-announce-boundary
+           (if (> direction 0) "End of settings." "Beginning of settings."))))
+    (let* ((current (get-text-property (point) emacsvox-aural-editor-rule-index-property))
+           (target (if current (+ current direction)
+                     (if (> direction 0) 0 (1- (length emacsvox-aural-editor-rules))))))
+      (if (or (< target 0) (>= target (length emacsvox-aural-editor-rules)))
+          (emacsvox-aural-ui-announce-boundary
+           (if (> direction 0) "End of rules." "Beginning of rules."))
+        (goto-char (text-property-any (point-min) (point-max)
+                                      emacsvox-aural-editor-rule-index-property target))
+        (let ((rule (nth target emacsvox-aural-editor-rules)))
+          (emacsvox-aural-ui-speak
+           (format "%s: %s%s" (plist-get rule :id)
+                   (if (emacsvox-aural-editor-rule-enabled-p rule) "enabled" "disabled")
+                   (if emacsvox-aural-editor-dirty ", unsaved" ""))))))))
 
 (defun emacsvox-aural-editor-next-rule ()
-  "Move to the next rule."
+  "Move to the next rule or expanded setting."
   (interactive)
   (emacsvox-aural-editor--move-rule 1))
 
 (defun emacsvox-aural-editor-previous-rule ()
-  "Move to the previous rule."
+  "Move to the previous rule or expanded setting."
   (interactive)
   (emacsvox-aural-editor--move-rule -1))
 
@@ -783,18 +985,146 @@ LABEL identifies the speech or cue being edited."
     (emacsvox-aural-editor-mark-dirty)
     (emacsvox-aural-editor-refresh)))
 
-(defun emacsvox-aural-editor-edit-rule ()
-  "Edit the selected rule through guided prompts."
+(defun emacsvox-aural-editor--panel-read-value (path value)
+  "Read just the setting at PATH, using VALUE as its initial value."
+  (let* ((key (car (last path)))
+         (name (if (integerp key) "Item" (substring (symbol-name key) 1)))
+         (prompt (format "%s (currently %S): " name value))
+         (choices (pcase key
+                    (:cue (emacsvox-aural-editor-cue-candidates))
+                    (:tone (emacsvox-aural-tone-candidates))
+                    (:anchor '("object" "run" "transition"))
+                    (:kind '("speech" "cue" "pause" "tone"))
+                    (:mode (emacsvox-aural-editor-mode-candidates))
+                    (:occasion (emacsvox-aural-occasion-candidates)))))
+    (cond
+     (choices (intern (completing-read prompt choices nil t nil nil (and value (symbol-name value)))))
+     ((or (numberp value) (memq key '(:volume :balance :azimuth :pitch :duration)))
+      (read-number prompt (or value 0)))
+     ((memq key '(:suppress :enabled))
+      (emacsvox-aural-editor--read-boolean prompt value))
+     ((or (stringp value) (memq key '(:text :text-template)))
+      (read-string prompt value))
+     ((symbolp value) (intern (read-string prompt (and value (symbol-name value)))))
+     (t (read--expression prompt (prin1-to-string value))))))
+
+(defun emacsvox-aural-editor--panel-add-criterion (rule)
+  "Read one semantic or context criterion, returning an updated copy of RULE."
+  (let* ((context '("module" "mode" "occasion" "legacy-face" "legacy-cue" "requires"))
+         (name (completing-read "Criterion: "
+                                (append context (emacsvox-aural-semantic-candidates)) nil t))
+         (selector (copy-tree (plist-get rule :match))))
+    (cond
+     ((equal name "requires")
+      (let ((attribute
+             (intern (completing-read
+                      "Attribute that must be present: "
+                      (cl-loop for record in (emacsvox-aural-semantics)
+                               when (eq (emacsvox-aural-semantic-kind record) 'attribute)
+                               collect (symbol-name (emacsvox-aural-semantic-id record))) nil t))))
+        (setq selector (plist-put selector :requires
+                                  (delete-dups (append (plist-get selector :requires) (list attribute)))))))
+     ((member name context)
+        (let* ((key (intern (concat ":" name)))
+               (value (emacsvox-aural-editor--panel-read-value
+                       (list :match key) (plist-get selector key))))
+          (setq selector (plist-put selector key value))))
+     ((eq (emacsvox-aural-semantic-kind (emacsvox-aural-semantic (intern name))) 'role)
+      (setq selector (plist-put selector :role (intern name))))
+     (t (setq selector (emacsvox-aural-editor--add-semantic-selector selector (intern name)))))
+    (plist-put (copy-tree rule) :match selector)))
+
+(defun emacsvox-aural-editor--panel-toggle-criterion (rule criterion)
+  "Return RULE with CRITERION included or excluded from its matching facts."
+  (let* ((selected (emacsvox-aural-editor--panel-criteria (plist-get rule :match)))
+         (wanted (if (member criterion selected) (remove criterion selected)
+                   (cons criterion
+                         (if (memq (car criterion) '(:states :events :requires)) selected
+                           (cl-remove (car criterion) selected :key #'car)))))
+         selector)
+    (dolist (option (alist-get (plist-get rule :id) emacsvox-aural-editor--match-options))
+      (when (member option wanted)
+        (let ((key (car option)) (value (cadr option)))
+          (setq selector (plist-put selector key
+                                    (if (memq key '(:states :events :requires))
+                                        (append (plist-get selector key) value) (copy-tree value)))))))
+    (plist-put (copy-tree rule) :match selector)))
+
+(defun emacsvox-aural-editor--panel-remove ()
+  "Remove the selected setting from the working rule, retaining other fields."
   (interactive)
-  (let* ((index (emacsvox-aural-editor--index-at-point))
-         (old (nth index emacsvox-aural-editor-rules))
-         (rule
+  (pcase (get-text-property (point) 'emacsvox-aural-editor--field)
+    (`(field ,path)
+     (when (member path '((:id) (:match)))
+       (user-error "Edit this field instead of removing it"))
+     (emacsvox-aural-editor--panel-update
+      (emacsvox-aural-editor--path-set (emacsvox-aural-editor--rule-at-point) path nil t)
+      (list 'field path)))
+    (_ (user-error "Move to a setting first; RET toggles matching criteria"))))
+
+(defun emacsvox-aural-editor-edit-rule ()
+  "Expand the selected rule's settings, or edit just the selected panel field."
+  (interactive)
+  (let* ((rule (emacsvox-aural-editor--rule-at-point))
+         (id (plist-get rule :id))
+         (field (get-text-property (point) 'emacsvox-aural-editor--field)))
+    (if (or (not (eq id emacsvox-aural-editor--panel-rule))
+            (eq (car-safe field) 'rule) (null field))
+        (progn
+          (setq emacsvox-aural-editor--panel-rule
+                (unless (eq id emacsvox-aural-editor--panel-rule) id)
+                emacsvox-aural-editor--expanded nil)
+          (emacsvox-aural-editor-refresh)
+          (emacsvox-aural-editor--panel-goto
+           (if emacsvox-aural-editor--panel-rule '(field (:match)) (list 'rule id)))
+          (emacsvox-aural-ui--announce-expansion emacsvox-aural-editor--panel-rule))
+      (pcase field
+        (`(field ,path)
+         (let ((value (emacsvox-aural-editor--path-value rule path)))
+           (if (or (memq (car (last path)) '(:match :content :before :after :space :voice :speak))
+                   (consp value))
+               (progn
+                 (setq emacsvox-aural-editor--expanded
+                       (if (member path emacsvox-aural-editor--expanded)
+                           (remove path emacsvox-aural-editor--expanded)
+                         (cons path emacsvox-aural-editor--expanded)))
+                 (emacsvox-aural-editor-refresh)
+                 (emacsvox-aural-ui--announce-expansion
+                  (member path emacsvox-aural-editor--expanded)))
+             (emacsvox-aural-editor--panel-update
+              (emacsvox-aural-editor--path-set
+               rule path
+               (emacsvox-aural-editor--with-spoken-prompts
+                   (emacsvox-aural-editor--rule-prompt-context rule "Editing")
+                 (emacsvox-aural-editor--panel-read-value path value))) field))))
+        (`(criterion ,criterion)
+         (emacsvox-aural-editor--panel-update
+          (emacsvox-aural-editor--panel-toggle-criterion rule criterion) field))
+        (`(choice ,path ,value)
+         (emacsvox-aural-editor--panel-update
+          (emacsvox-aural-editor--path-set rule path value) field))
+        (`(inherit ,path)
+         (emacsvox-aural-editor--panel-update
+          (emacsvox-aural-editor--path-set rule path nil t) field))
+        (`(phase ,phase)
+         (emacsvox-aural-editor--panel-update
+          (emacsvox-aural-editor--path-set
+           rule (list :render phase)
+           (emacsvox-aural-editor--with-spoken-prompts
+               (emacsvox-aural-editor--rule-prompt-context rule "Editing phase")
+             (emacsvox-aural-editor--read-phase
+              id (intern (substring (symbol-name phase) 1))
+              (emacsvox-aural-editor--path-value rule (list :render phase))))) field))
+        ('(add-criterion)
+         (emacsvox-aural-editor--panel-update
           (emacsvox-aural-editor--with-spoken-prompts
-              (emacsvox-aural-editor--rule-prompt-context old "Editing")
-            (emacsvox-aural-editor--read-rule old))))
-    (setf (nth index emacsvox-aural-editor-rules) rule)
-    (emacsvox-aural-editor-mark-dirty)
-    (emacsvox-aural-editor-refresh)))
+              (emacsvox-aural-editor--rule-prompt-context rule "Editing matching criteria")
+            (emacsvox-aural-editor--panel-add-criterion rule)) field))
+        ('(enabled)
+         (emacsvox-aural-editor--panel-update
+          (plist-put (copy-tree rule) :enabled (not (emacsvox-aural-editor-rule-enabled-p rule))) field))
+        ('(preview) (emacsvox-aural-editor-preview-rule))
+        ('(save) (emacsvox-aural-editor-save))))))
 
 (defun emacsvox-aural-editor-copy-rule ()
   "Copy the selected rule and request a new stable identifier."
@@ -1146,8 +1476,13 @@ LABEL identifies the speech or cue being edited."
       "content, and after phases.  Ordered actions are speech, cues, pauses,\n"
       "or named tones.\n"
       "Open a different editor buffer to choose another persistence scope.\n\n"
-      "n/p or up/down move N add rule\n"
-      "RET or e edit rule  C-c C-a available actions\n"
+      "n/p or up/down move between rules and expanded settings. Space reads the row.\n"
+      "RET or e opens a rule panel, expands a section, or edits only the selected field.\n"
+      "What should match expands individual included/excluded criteria.\n"
+      "Content expands voice, speech, volume, and space; voice and speech choices expand inline.\n"
+      "Before and After expand existing actions; Change operation replaces only that phase.\n"
+      "D removes the selected setting; Inherit removes a voice or speech override.\n"
+      "N adds a rule; C-c C-a lists available actions.\n"
       "V adjust one voice field; Inherit removes the field\n"
       "c copy rule         d delete rule\n"
       "t enable/disable    M-up/M-down reorder\n"
@@ -1155,18 +1490,24 @@ LABEL identifies the speech or cue being edited."
       "x explain           v validate\n"
       "w or C-c C-c write changes\n"
       "h aural home\n"
-      "q quit\n")))
+      "q closes the panel, retaining changes; q from the rule list quits\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
 (defun emacsvox-aural-editor-quit ()
-  "Quit the editor, asking before discarding working changes."
+  "Close the panel, or quit the rule list after checking for unsaved changes."
   (interactive)
-  (when
-      (or
-       (not emacsvox-aural-editor-dirty)
-       (yes-or-no-p "Discard unsaved aural editor changes? "))
-    (emacsvox-aural-quit t)))
+  (if emacsvox-aural-editor--panel-rule
+      (let ((id emacsvox-aural-editor--panel-rule))
+        (setq emacsvox-aural-editor--panel-rule nil emacsvox-aural-editor--expanded nil)
+        (emacsvox-aural-editor-refresh)
+        (emacsvox-aural-editor--panel-goto (list 'rule id))
+        (emacsvox-aural-ui--announce-expansion nil))
+    (when
+        (or
+         (not emacsvox-aural-editor-dirty)
+         (yes-or-no-p "Discard unsaved aural editor changes? "))
+      (emacsvox-aural-quit t))))
 
 (autoload 'emacsvox-aural-voice-context-adjust-rule "emacsvox-aural-voice-context"
   "Adjust one voice field in a scoped rule, with explicit Inherit." t)
@@ -1181,6 +1522,9 @@ LABEL identifies the speech or cue being edited."
     (define-key map (kbd "N") #'emacsvox-aural-editor-add-rule)
     (define-key map (kbd "RET") #'emacsvox-aural-editor-edit-rule)
     (define-key map (kbd "e") #'emacsvox-aural-editor-edit-rule)
+    (define-key map (kbd "E") #'emacsvox-aural-editor-edit-rule)
+    (define-key map (kbd "SPC") #'emacsvox-aural-editor--panel-speak)
+    (define-key map (kbd "D") #'emacsvox-aural-editor--panel-remove)
     (define-key map (kbd "c") #'emacsvox-aural-editor-copy-rule)
     (define-key map (kbd "d") #'emacsvox-aural-editor-delete-rule)
     (define-key map (kbd "t") #'emacsvox-aural-editor-toggle-rule)
@@ -1446,14 +1790,20 @@ the ordinary source whose buffer-local rules should be edited."
           (user-error
            "No %s override named %S is available"
            scope rule-id))
+        (unless (eq rule-id emacsvox-aural-editor--panel-rule)
+          (setq emacsvox-aural-editor--panel-rule rule-id
+                emacsvox-aural-editor--expanded nil)
+          (emacsvox-aural-editor-refresh))
         (when-let* ((position
                      (text-property-any
                       (point-min) (point-max)
                       emacsvox-aural-editor-rule-index-property
                       index)))
           (goto-char position)
+          (emacsvox-aural-editor--panel-goto '(field (:match)))
           (when-let* ((window (get-buffer-window buffer t)))
-            (set-window-point window position)))))
+            (set-window-point window (point)))
+          (emacsvox-aural-editor--panel-speak))))
     buffer))
 
 (defun emacsvox-edit-aural-feature-fragment (&optional fragment)

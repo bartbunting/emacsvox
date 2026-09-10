@@ -2162,9 +2162,9 @@ File: emacsvox-reference.info,  Node: emacsvox-aural-editor,  Next: emacsvox-aur
 2.23 emacsvox-aural-editor
 ==========================
 
-A completion-driven special-mode editor for Presentation Options and
-personal, session, or buffer-local rule layers.  The buffer remains
-plain text and predictable for speech access.
+An expandable special-mode editor for Presentation Options and personal,
+session, or buffer-local rule layers.  The buffer remains plain text and
+predictable for speech access.
 
 2.23.1 Emacsvox-Aural-Editor Commands
 -------------------------------------
@@ -2226,7 +2226,7 @@ plain text and predictable for speech access.
 
  -- Command: emacsvox-aural-editor-edit-rule
 
-     Edit the selected rule through guided prompts.
+     Expand the selected rule’s settings, or edit just the selected panel field.
 
 2.23.1.8 emacsvox-aural-editor-explain-rule
 ...........................................
@@ -2261,7 +2261,7 @@ plain text and predictable for speech access.
 
  -- Command: emacsvox-aural-editor-next-rule
 
-     Move to the next rule.
+     Move to the next rule or expanded setting.
 
 2.23.1.13 emacsvox-aural-editor-preview-rule
 ............................................
@@ -2275,14 +2275,14 @@ plain text and predictable for speech access.
 
  -- Command: emacsvox-aural-editor-previous-rule
 
-     Move to the previous rule.
+     Move to the previous rule or expanded setting.
 
 2.23.1.15 emacsvox-aural-editor-quit
 ....................................
 
  -- Command: emacsvox-aural-editor-quit
 
-     Quit the editor, asking before discarding working changes.
+     Close the panel, or quit the rule list after checking for unsaved changes.
 
 2.23.1.16 emacsvox-aural-editor-refresh
 .......................................
@@ -2327,12 +2327,14 @@ plain text and predictable for speech access.
      Key             Binding
      -----------------------------------------------------
      RET		emacsvox-aural-editor-edit-rule
-     SPC		scroll-up-command
+     SPC		emacsvox-aural-editor-panel-speak
      -		negative-argument
      0 .. 9		digit-argument
      <		beginning-of-buffer
      >		end-of-buffer
      ?		emacsvox-aural-editor-help
+     D		emacsvox-aural-editor-panel-remove
+     E		emacsvox-aural-editor-edit-rule
      N		emacsvox-aural-editor-add-rule
      P		emacsvox-aural-editor-preview-rule
      S		emacsvox-aural-ui-stop-preview
@@ -3212,6 +3214,7 @@ cascade.
      -----------------------------------------------------
      RET		emacsvox-aural-overrides-edit
      ?		emacsvox-aural-overrides-help
+     E		emacsvox-aural-overrides-edit
      P		emacsvox-aural-overrides-preview
      a		emacsvox-aural-overrides-clear-filter
      d		emacsvox-aural-overrides-delete

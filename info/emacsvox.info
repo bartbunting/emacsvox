@@ -16,7 +16,7 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 Indirect:
 emacsvox.info-1: 384
-emacsvox.info-2: 315473
+emacsvox.info-2: 317773
 
 Tag Table:
 (Indirect)
@@ -62,57 +62,57 @@ Node: Aural Presentation108485
 Node: Presentation Model111081
 Node: Presentation Modalities113548
 Node: Aural Home116717
-Node: Explaining Presentation120299
-Node: Adjusting Presentation122551
-Node: Presentation Profiles129511
-Node: Voices And Routing131188
-Ref: Browse Eloquence And Compare Pitch154170
-Ref: Keep A Voice Experiment155351
-Ref: Change A Heading Voice Add A Cue Or Silence One156228
-Ref: Change A Blank-Line Tone157189
-Ref: Choose An Engine And Recover Unfinished Work157946
-Node: Sounds And Space159094
-Node: Presentation Troubleshooting160730
-Node: Voice Lock162768
-Node: Using Online Help165975
-Node: Emacs Packages170037
-Node: Document Authoring171411
-Node: Structured Editing171965
-Node: Browsing Structure172948
-Node: Web Browsing173546
-Node: Messaging174381
-Node: Editing Code174879
-Node: Development Environment175398
-Node: Desktop Management176934
-Node: Personal Information Management177436
-Node: Desktop Applications177968
-Node: Notmuch Mail186110
-Ref: Notmuch fields and privacy195825
-Node: Agent Shell201533
-Node: EAT Terminal Access214004
-Node: Running Terminal Based Applications231263
-Node: Starting Term232218
-Node: Term Input Modes233057
-Node: Term Speech Feedback234217
-Node: Reviewing The Term Screen235411
-Node: Term Help And Recovery237312
-Node: Emacsvox Keyboard Commands238211
-Node: Copyright240456
-Node: Acknowledgments241043
-Node: Developer Guide242069
-Node: Documentation Maintenance243233
-Node: Speech Server Protocols248033
-Ref: Testing A Direct Legacy Server253940
-Ref: Commands That Queue Output254499
-Ref: Commands That Set State257533
-Node: Integration Maintenance260127
-Ref: Background startup ownership and failure recovery262857
-Ref: Supported Emacs versions266010
-Ref: Native Windows builds268216
-Ref: Remote preview validation270276
-Ref: Internal ownership and renderer tests290528
-Ref: Upstream contract layers293984
-Node: Concept Index315473
+Node: Explaining Presentation120595
+Node: Adjusting Presentation122847
+Node: Presentation Profiles131811
+Node: Voices And Routing133488
+Ref: Browse Eloquence And Compare Pitch156470
+Ref: Keep A Voice Experiment157651
+Ref: Change A Heading Voice Add A Cue Or Silence One158528
+Ref: Change A Blank-Line Tone159489
+Ref: Choose An Engine And Recover Unfinished Work160246
+Node: Sounds And Space161394
+Node: Presentation Troubleshooting163030
+Node: Voice Lock165068
+Node: Using Online Help168275
+Node: Emacs Packages172337
+Node: Document Authoring173711
+Node: Structured Editing174265
+Node: Browsing Structure175248
+Node: Web Browsing175846
+Node: Messaging176681
+Node: Editing Code177179
+Node: Development Environment177698
+Node: Desktop Management179234
+Node: Personal Information Management179736
+Node: Desktop Applications180268
+Node: Notmuch Mail188410
+Ref: Notmuch fields and privacy198125
+Node: Agent Shell203833
+Node: EAT Terminal Access216304
+Node: Running Terminal Based Applications233563
+Node: Starting Term234518
+Node: Term Input Modes235357
+Node: Term Speech Feedback236517
+Node: Reviewing The Term Screen237711
+Node: Term Help And Recovery239612
+Node: Emacsvox Keyboard Commands240511
+Node: Copyright242756
+Node: Acknowledgments243343
+Node: Developer Guide244369
+Node: Documentation Maintenance245533
+Node: Speech Server Protocols250333
+Ref: Testing A Direct Legacy Server256240
+Ref: Commands That Queue Output256799
+Ref: Commands That Set State259833
+Node: Integration Maintenance262427
+Ref: Background startup ownership and failure recovery265157
+Ref: Supported Emacs versions268310
+Ref: Native Windows builds270516
+Ref: Remote preview validation272576
+Ref: Internal ownership and renderer tests292828
+Ref: Upstream contract layers296284
+Node: Concept Index317773
 
 End Tag Table
 

@@ -132,7 +132,7 @@
       id)
      ((emacsvox-aural-feature-fragments--fragment-collection-row-p id)
       (user-error
-       "%s is a collection; press TAB or RET to expand or collapse it"
+       "%s is a collection"
        (emacsvox-aural-humanize (cdr id))))
      (t
       (let ((candidates (emacsvox-aural-feature-fragment-candidates)))
@@ -222,11 +222,7 @@
       "collection"
       (number-to-string rules)
       ""
-      (format
-       "%s; %s to %s"
-       (if collapsed "collapsed" "expanded")
-       "TAB or RET"
-       (if collapsed "expand" "collapse"))))))
+      (if collapsed "collapsed" "expanded")))))
 
 (defun emacsvox-aural-feature-fragments--set-entries ()
   "Populate the current presentation-option manager."
@@ -373,7 +369,8 @@
          collection
          emacsvox-aural-feature-fragments-collapsed-collections))
       (emacsvox-aural-feature-fragments-refresh id)
-      (emacsvox-aural-feature-fragments-speak-current))))
+      (emacsvox-aural-ui--announce-expansion
+       (not (memq collection emacsvox-aural-feature-fragments-collapsed-collections))))))
 
 (defun emacsvox-aural-feature-fragments-activate ()
   "Open the option at point, or toggle its collection."

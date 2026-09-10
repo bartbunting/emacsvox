@@ -448,6 +448,12 @@ When VALUE-FIRST is non-nil, put the cell value before its column title."
     (message "%s" text)))
   text)
 
+(defun emacsvox-aural-ui--announce-expansion (expanded)
+  "Announce EXPANDED through the configured cue and speech paths."
+  (when (fboundp 'emacsvox-icon)
+    (emacsvox-icon (if expanded 'open-object 'close-object)))
+  (emacsvox-aural-ui-speak (if expanded "expanded" "collapsed")))
+
 (defun emacsvox-aural-ui-speak-current-cell (&optional value-first)
   "Speak the current tabulated cell.
 

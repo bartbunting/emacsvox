@@ -106,6 +106,7 @@
          (emacsvox-aural-training-voice 'annotate)
          (emacsvox-aural-explanation--pending-training-explanations nil)
          (emacsvox-sounds-current-pack 'chimes)
+         (emacsvox-use-icons nil)
          (emacsvox-aural-spatial-enabled t)
          (emacsvox-aural-spatial-speech-enabled t)
          (emacsvox-aural-spatial-cue-enabled t)
@@ -557,6 +558,8 @@
                                  "animate"
                                "This Emacs session"))))
                   (emacsvox-aural-change-feedback-change)
+                  (should (emacsvox-aural-ui-goto-row '(voice animate)))
+                  (emacsvox-aural-change-feedback-open-row)
                   (emacsvox-aural-change-feedback-lifetime))
                 (let ((before (copy-tree emacsvox-aural-session-rules)))
                   (cl-letf (((symbol-function 'emacsvox-aural-preview-play-plan)
@@ -1004,6 +1007,9 @@
                      (emacsvox-aural-editor-open-rule
                       'session 'second source)))
                 (with-current-buffer buffer
+                  (should (eq emacsvox-aural-editor--panel-rule 'second))
+                  (should (equal (get-text-property (point) 'emacsvox-aural-editor--field)
+                                 '(field (:match))))
                   (should
                    (= 1
                       (get-text-property
@@ -2592,7 +2598,7 @@
                 (emacsvox-aural-home-previous)
                 (should (equal spoken "Top of aural home."))
                 (emacsvox-aural-home-toggle-group)
-                (should (string-prefix-p "Understand or change feedback: expanded" spoken))
+                (should (equal "expanded" spoken))
                 (emacsvox-aural-home-next)
                 (should (string-prefix-p "Change this feedback: " spoken))
                 (emacsvox-aural-home-next)
@@ -2926,7 +2932,7 @@
               (should
                (equal
                 spoken
-                "org collection. 1 of 2 options enabled. Collapsed.")))
+                "collapsed")))
             (should-not (assq 'org-levels tabulated-list-entries))
             (cl-letf (((symbol-function 'tts-speak) #'ignore))
               (emacsvox-aural-feature-fragments-toggle-collection))
@@ -3370,6 +3376,201 @@
       (emacsvox-aural-editor--read-space nil "Cue")
       '(:azimuth 135.0)))))
 
+(defun emacsvox-test--open-rule-panel ()
+  "Populate this test buffer with a complete rule and open its settings panel."
+  (emacsvox-aural-scheme-editor-mode)
+  (setq emacsvox-aural-editor-scope 'session
+        emacsvox-aural-editor-rules
+        '((:id authors :order 8 :enabled t
+           :match (:role field :field-kind authors :states (unread) :module notmuch)
+           :render (:before (:append ((:id cue :kind cue :cue select-object :anchor object)))
+                    :content (:voice lighten :volume 70 :space (:balance -0.3))
+                    :after (:append ((:id pause :kind pause :duration 50 :anchor object)))))
+          (:id other :order 9 :match (:role heading) :render (:content (:voice bolden)))))
+  (emacsvox-aural-editor-refresh)
+  (emacsvox-aural-editor--panel-goto '(rule authors))
+  (emacsvox-aural-editor-edit-rule))
+
+(ert-deftest emacsvox-aural-editor-panel-edits-voice-without-changing-other-settings ()
+  "Inline voice selection edits one setting and preserves the complete saved rule."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-test--open-rule-panel)
+      (let ((original (copy-tree emacsvox-aural-editor-rules)))
+        (cl-letf (((symbol-function 'completing-read)
+                   (lambda (&rest _) (ert-fail "Voice choices should be inline")))
+                  ((symbol-function 'emacsvox-aural-editor--read-rule)
+                   (lambda (&rest _) (ert-fail "Editing must not run the whole-rule wizard"))))
+          (should (emacsvox-aural-editor--panel-goto '(field (:render :content))))
+          (emacsvox-aural-editor-edit-rule)
+          (should (emacsvox-aural-editor--panel-goto '(field (:render :content :voice))))
+          (emacsvox-aural-editor-edit-rule)
+          (should (emacsvox-aural-editor--panel-goto '(choice (:render :content :voice) lighten)))
+          (should (string-match-p "Current choice" (thing-at-point 'line t)))
+          (should-not emacsvox-aural-editor-dirty)
+          (emacsvox-aural-editor--panel-goto '(choice (:render :content :voice) bolden))
+          (emacsvox-aural-editor-edit-rule))
+        (should emacsvox-aural-editor-dirty)
+        (should (equal (car emacsvox-aural-editor-rules)
+                       (emacsvox-aural-editor--path-set (car original) '(:render :content :voice) 'bolden)))
+        (should (equal (cadr emacsvox-aural-editor-rules) (cadr original)))
+        (should-not emacsvox-aural-session-rules)
+        (emacsvox-aural-editor-save)
+        (should (eq (plist-get (car emacsvox-aural-session-rules) :id) 'authors))
+        (should (= 2 (length emacsvox-aural-session-rules)))
+        (should-not emacsvox-aural-editor-dirty)))))
+
+(ert-deftest emacsvox-aural-editor-panel-isolates-selected-rule-and-restores-list ()
+  "A focused panel retains the real rule index and all other rules on save."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-test--open-rule-panel)
+      (emacsvox-aural-editor-quit)
+      (should (emacsvox-aural-editor--panel-goto '(rule other)))
+      (emacsvox-aural-editor-edit-rule)
+      (should (= 1 (emacsvox-aural-editor--index-at-point)))
+      (should-not (emacsvox-aural-editor--panel-goto '(rule authors)))
+      (should-not (string-match-p "^[0-9]+\\. " (buffer-string)))
+      (let ((untouched (copy-tree (car emacsvox-aural-editor-rules))))
+        (emacsvox-aural-editor-toggle-rule)
+        (should (equal untouched (car emacsvox-aural-editor-rules)))
+        (emacsvox-aural-editor-save)
+        ;; Saving normalizes order numbers for the complete layer.
+        (should (equal (plist-put untouched :order 0)
+                       (car emacsvox-aural-session-rules)))
+        (should (= 2 (length emacsvox-aural-session-rules)))
+        (should-not (emacsvox-aural-editor-rule-enabled-p
+                     (cadr emacsvox-aural-session-rules))))
+      (emacsvox-aural-editor-quit)
+      (should (equal (get-text-property (point) 'emacsvox-aural-editor--field)
+                     '(rule other)))
+      (should (emacsvox-aural-editor--panel-goto '(rule authors)))
+      (should (string-match-p "^1\\. authors" (buffer-string)))
+      (should (string-match-p "^2\\. other" (buffer-string))))))
+
+(ert-deftest emacsvox-aural-editor-panel-deletion-restores-remaining-rules ()
+  "Deleting the focused rule returns to the list instead of an empty panel."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-test--open-rule-panel)
+      (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+        (emacsvox-aural-editor-delete-rule))
+      (should-not emacsvox-aural-editor--panel-rule)
+      (should (emacsvox-aural-editor--panel-goto '(rule other)))
+      (should (= 0 (emacsvox-aural-editor--index-at-point)))
+      (should (= 1 (length emacsvox-aural-editor-rules))))))
+
+(ert-deftest emacsvox-aural-editor-panel-matching-retains-exclusions-on-reopen ()
+  "Rule matching toggles are retained when the panel is closed and reopened."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-test--open-rule-panel)
+      (emacsvox-aural-editor-edit-rule)
+      (should (emacsvox-aural-editor--panel-goto '(criterion (:states (unread)))))
+      (emacsvox-aural-editor-edit-rule)
+      (should-not (plist-get (plist-get (car emacsvox-aural-editor-rules) :match) :states))
+      (cl-letf (((symbol-function 'yes-or-no-p)
+                 (lambda (&rest _) (ert-fail "Closing a panel must keep the draft"))))
+        (emacsvox-aural-editor-quit))
+      (should emacsvox-aural-editor-dirty)
+      (emacsvox-aural-editor-edit-rule)
+      (emacsvox-aural-editor-edit-rule)
+      (should (emacsvox-aural-editor--panel-goto '(criterion (:states (unread)))))
+      (should (string-match-p "Excluded" (thing-at-point 'line t)))
+      (emacsvox-aural-editor-edit-rule)
+      (should (equal (plist-get (plist-get (car emacsvox-aural-editor-rules) :match) :states) '(unread))))))
+
+(ert-deftest emacsvox-aural-editor-panel-navigation-visits-expanded-fields ()
+  "n and p visit settings and choices while preserving their rule identity."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-test--open-rule-panel)
+      (emacsvox-aural-editor-edit-rule)
+      (emacsvox-aural-editor-next-rule)
+      (should (equal (get-text-property (point) 'emacsvox-aural-editor--field)
+                     '(criterion (:role field))))
+      (should (= 0 (emacsvox-aural-editor--index-at-point)))
+      (emacsvox-aural-editor-previous-rule)
+      (should (equal (get-text-property (point) 'emacsvox-aural-editor--field) '(field (:match)))))))
+
+(ert-deftest emacsvox-aural-editor-panel-edits-an-action-field-and-cancels-safely ()
+  "Editing an existing action changes just its selected field; quitting preserves it."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-test--open-rule-panel)
+      (let ((original (copy-tree (car emacsvox-aural-editor-rules))))
+        (dolist (path '((:render :after) (:render :after :append) (:render :after :append 0)))
+          (should (emacsvox-aural-editor--panel-goto (list 'field path)))
+          (emacsvox-aural-editor-edit-rule))
+        (should (emacsvox-aural-editor--panel-goto '(field (:render :after :append 0 :duration))))
+        (cl-letf (((symbol-function 'read-number) (lambda (&rest _) 100)))
+          (emacsvox-aural-editor-edit-rule))
+        (should (equal (car emacsvox-aural-editor-rules)
+                       (emacsvox-aural-editor--path-set original '(:render :after :append 0 :duration) 100)))
+        (let ((before (copy-tree emacsvox-aural-editor-rules)))
+          (cl-letf (((symbol-function 'read-number) (lambda (&rest _) (signal 'quit nil))))
+            (condition-case nil (emacsvox-aural-editor-edit-rule) (quit nil)))
+          (should (equal before emacsvox-aural-editor-rules)))))))
+
+(ert-deftest emacsvox-aural-editor-panel-inherit-removes-only-the-voice ()
+  "Inherit removes the voice property, retaining volume, space, and surrounding actions."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-test--open-rule-panel)
+      (let ((original (copy-tree (car emacsvox-aural-editor-rules))))
+        (dolist (path '((:render :content) (:render :content :voice)))
+          (emacsvox-aural-editor--panel-goto (list 'field path))
+          (emacsvox-aural-editor-edit-rule))
+        (emacsvox-aural-editor--panel-goto '(inherit (:render :content :voice)))
+        (emacsvox-aural-editor-edit-rule)
+        (should (equal (car emacsvox-aural-editor-rules)
+                       (emacsvox-aural-editor--path-set original '(:render :content :voice) nil t)))))))
+
+(ert-deftest emacsvox-aural-editor-panel-invalid-match-keeps-the-working-rule ()
+  "A toggle that violates semantic dependencies leaves the original rule intact."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-test--open-rule-panel)
+      (emacsvox-aural-editor-edit-rule)
+      (let ((original (copy-tree emacsvox-aural-editor-rules)))
+        (emacsvox-aural-editor--panel-goto '(criterion (:role field)))
+        (should-error (emacsvox-aural-editor-edit-rule) :type 'emacsvox-aural-rule-error)
+        (should (equal original emacsvox-aural-editor-rules))
+        (should-not emacsvox-aural-editor-dirty)))))
+
+(ert-deftest emacsvox-aural-editor-panel-alternative-criterion-replaces-its-value ()
+  "Restoring an earlier attribute value replaces its alternative, not other facts."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-test--open-rule-panel)
+      (emacsvox-aural-editor-edit-rule)
+      (emacsvox-aural-editor--panel-goto '(add-criterion))
+      (let ((answers '("field-kind" "tags")))
+        (cl-letf (((symbol-function 'completing-read) (lambda (&rest _) (pop answers)))
+                  ((symbol-function 'read-string) (lambda (&rest _) (pop answers))))
+          (emacsvox-aural-editor-edit-rule)))
+      (should (eq (plist-get (plist-get (car emacsvox-aural-editor-rules) :match) :field-kind) 'tags))
+      (should (emacsvox-aural-editor--panel-goto '(criterion (:field-kind authors))))
+      (emacsvox-aural-editor-edit-rule)
+      (let ((match (plist-get (car emacsvox-aural-editor-rules) :match)))
+        (should (eq (plist-get match :field-kind) 'authors))
+        (should (eq (plist-get match :module) 'notmuch))
+        (should (equal (plist-get match :states) '(unread)))))))
+
+(ert-deftest emacsvox-aural-editor-panel-can-edit-roles-and-required-attributes ()
+  "The panel retains advanced matching for role changes and template guarantees."
+  (emacsvox-test--with-aural-tools
+    (let ((rule '(:id example :match (:role field) :render (:content (:voice lighten))))
+          (answers '("heading" "requires" "level")))
+      (cl-letf (((symbol-function 'completing-read) (lambda (&rest _) (pop answers))))
+        (setq rule (emacsvox-aural-editor--panel-add-criterion rule))
+        (setq rule (emacsvox-aural-editor--panel-add-criterion rule)))
+      (let ((compiled (emacsvox-aural-compile-rule rule 'user)))
+        (should (emacsvox-aural-rule-matches-p
+                 compiled (emacsvox-aural-normalize-input '(:role heading :level 2))))
+        (should-not (emacsvox-aural-rule-matches-p
+                     compiled (emacsvox-aural-normalize-input '(:role heading))))))))
+
 (ert-deftest emacsvox-aural-advanced-editor-speaks-full-prompt-context ()
   "Advanced rule prompts identify both the selected rule and requested field."
   (emacsvox-test--with-aural-tools
@@ -3387,17 +3588,19 @@
        (text-property-any
         (point-min) (point-max)
         emacsvox-aural-editor-rule-index-property 0))
+      (emacsvox-aural-editor-edit-rule)
+      (emacsvox-aural-editor--panel-goto '(field (:id)))
       (let ((minibuffer-setup-hook nil)
             spoken)
         (cl-letf
-            (((symbol-function 'emacsvox-aural-editor--read-rule)
-              (lambda (old &optional _)
+            (((symbol-function 'emacsvox-aural-editor--panel-read-value)
+              (lambda (_path old)
                 (cl-letf (((symbol-function 'minibuffer-prompt)
                            (lambda () "Rule identifier: ")))
                   (run-hooks 'minibuffer-setup-hook))
                 old))
              ((symbol-function 'tts-speak)
-              (lambda (text) (setq spoken text))))
+              (lambda (text) (setq spoken (concat spoken " " text)))))
           (emacsvox-aural-editor-edit-rule))
         (should (string-match-p "directory-rule" spoken))
         (should (string-match-p "voice bolden" spoken))

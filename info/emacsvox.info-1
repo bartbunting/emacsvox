@@ -2545,7 +2545,15 @@ to prepare that change again before applying it.
 <RET> or <TAB> to expand or collapse a group.  Each action names a
 destination, reports its current status, and describes its purpose.  ‘/’
 searches all actions, including collapsed groups; the matching group
-opens with your destination selected.  The common controls are:
+opens with your destination selected.
+
+   Expandable panels show their collapsed or expanded state without
+repeating key instructions on each row.  Toggling a section uses the
+normal open/close cue and a short spoken state announcement, respecting
+the existing icon and speech settings.  Key instructions remain
+available in Help.
+
+   The common controls are:
 
 ‘n, p, down, up’
      Move by row; settings lists speak the name and current state.
@@ -2683,16 +2691,25 @@ working setup                  Profiles               configuration
   1. Move to a representative item, press ‘C-e H’, then ‘c’.  This
      captures _Current item_.  For feedback that has already happened,
      use Home's ‘H’, select a _Recent Feedback_ record, and press ‘C’.
-     A record containing several parts asks which part to change.
-     Truncated history cannot supply a complete original/proposed
-     comparison.
+     A record containing several parts expands numbered parts in
+     playback order.  Move with ‘n’ and ‘p’ to hear their text in the
+     captured voices; ‘O’ replays the part at point.  Press ‘RET’ to
+     select it.  Truncated history cannot supply a complete
+     original/proposed comparison.
 
-  2. Press ‘c’ to choose a component change.  Available choices include
-     the content voice, adding a sound or tone, adding a spoken label,
-     replacing an existing sound, changing a tone, or suppressing one
-     component.  You can add a cue when the original has none.  The
-     choices use the facts and components supplied by the integration;
-     they cannot add missing semantic distinctions.
+  2. Press ‘c’ to expand component changes in the panel.  Move to a
+     choice and press ‘RET’.  _Content voice_ expands voice choices and
+     identifies the original voice and proposed replacement.  The
+     original named voice comes first when available, followed by
+     alternatives in alphabetical order.  Press ‘RET’ on a voice to
+     select it for the draft; the panel stays open for comparison.
+     Available changes include the content voice, adding a sound or
+     tone, adding a spoken label, replacing an existing sound, changing
+     a tone, or suppressing one component.  You can add a cue when the
+     original has none.  The choices use the facts and components
+     supplied by the integration; they cannot add missing semantic
+     distinctions.  ‘RET’ on _Parts_ reopens the parts; unfinished
+     choices are retained separately when you switch between parts.
 
   3. Press ‘P’ to hear the proposed change before choosing how long to
      keep it.  ‘O’ plays the frozen original example; ‘S’ stops.
@@ -2700,11 +2717,15 @@ working setup                  Profiles               configuration
      and its captured buffer context.  It does not apply your draft to
      live feedback.
 
-  4. Press ‘m’ for _What should match_.  Review the actual facts,
-     states, events, and occasion.  When available, the object-kind
-     choice omits events and occasion and therefore affects more
-     presentations.  These are rules for every matching item, not an
-     edit to one object.
+  4. Press ‘m’ or ‘RET’ on _What should match_ to expand the matching
+     criteria.  Each fact, state, event, and occasion shows whether it
+     is included.  Press ‘RET’ on a criterion to exclude or include it;
+     excluded criteria stay available to restore.  For example, exclude
+     _state unread_ while keeping _role field_, _field kind authors_,
+     and _module notmuch_ to match authors in both read and unread
+     messages.  Keep at least one criterion.  The parent row shows the
+     resulting match; ‘m’ collapses the criteria again.  These are rules
+     for every matching item, not an edit to one object.
 
   5. Press ‘l’ for _How long_: the source buffer's lifetime, this Emacs
      session, or a saved personal rule.  A buffer rule affects every
@@ -2766,10 +2787,26 @@ remain tied to the selected frozen example.
   5. Return to the source, repeat the action, and use ‘C-e E’ again to
      confirm which rule now wins.
 
-   In the rule editor, ‘n’ and ‘p’ move between rules.  ‘N’ adds a rule,
-‘P’ previews it, and ‘S’ stops.  These replace the former lowercase Add
-and Preview keys.  Saving announces whether the rule was saved or
-applied temporarily.  ‘q’ asks before discarding an unfinished draft.
+   In _Presentation Overrides_, ‘RET’ or ‘e’ opens the selected rule's
+settings panel.  In the rule list, the same keys open that panel.  Only
+the selected rule appears while its panel is open; the other rules
+remain in the working draft.  ‘n’ and ‘p’ move through the visible
+settings; ‘SPC’ reads the current setting and value.  ‘RET’ expands
+_What should match_, _Content_, _Before content_, or _After content_.
+Matching criteria toggle between included and excluded.  Within
+_Content_, _voice_ and _speak_ expand their choices in place, showing
+the current choice.  Other fields ask only for the selected value.
+Existing actions expand into their individual settings; _Change
+operation_ offers the operation choices for that phase.  _Inherit_
+removes the selected voice or speech override; ‘D’ removes another
+selected setting.  Each edit preserves the rule's other settings and
+stays in the working draft.
+
+   ‘P’ previews the working rule and ‘S’ stops.  ‘w’ or the _Save_ row
+saves to the original scope and announces whether the rule was saved or
+applied temporarily.  ‘q’ closes the panel and returns to the full rule
+list while retaining unfinished edits.  From the rule list, ‘N’ adds a
+rule and ‘q’ asks before discarding an unfinished draft.
 
    Open _Presentation Overrides_ to manage these changes together.
 There, ‘P’ previews the complete current result, ‘t’ temporarily

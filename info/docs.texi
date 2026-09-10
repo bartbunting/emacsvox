@@ -2124,7 +2124,7 @@ Speak the current diagnostic column title and value.
 @node emacsvox-aural-editor
 @section emacsvox-aural-editor
 
-A completion-driven special-mode editor for Presentation Options and
+An expandable special-mode editor for Presentation Options and
 personal, session, or buffer-local rule layers.  The buffer remains plain
 text and predictable for speech access.
 
@@ -2198,7 +2198,7 @@ Edit metadata for the current personal Presentation Option.
 @findex emacsvox-aural-editor-edit-rule
 
 @format
-Edit the selected rule through guided prompts.
+Expand the selected rule’s settings, or edit just the selected panel field.
 @end format
 @end deffn
 
@@ -2243,7 +2243,7 @@ Move the selected rule earlier in its scope.
 @findex emacsvox-aural-editor-next-rule
 
 @format
-Move to the next rule.
+Move to the next rule or expanded setting.
 @end format
 @end deffn
 
@@ -2261,7 +2261,7 @@ Preview the selected unsaved working rule.
 @findex emacsvox-aural-editor-previous-rule
 
 @format
-Move to the previous rule.
+Move to the previous rule or expanded setting.
 @end format
 @end deffn
 
@@ -2270,7 +2270,7 @@ Move to the previous rule.
 @findex emacsvox-aural-editor-quit
 
 @format
-Quit the editor, asking before discarding working changes.
+Close the panel, or quit the rule list after checking for unsaved changes.
 @end format
 @end deffn
 
@@ -2325,12 +2325,14 @@ penultimate step during initialization.
 Key             Binding
 -------------------------------------------------------------------------------
 RET		emacsvox-aural-editor-edit-rule
-SPC		scroll-up-command
+SPC		emacsvox-aural-editor--panel-speak
 -		negative-argument
 0 .. 9		digit-argument
 <		beginning-of-buffer
 >		end-of-buffer
 ?		emacsvox-aural-editor-help
+D		emacsvox-aural-editor--panel-remove
+E		emacsvox-aural-editor-edit-rule
 N		emacsvox-aural-editor-add-rule
 P		emacsvox-aural-editor-preview-rule
 S		emacsvox-aural-ui-stop-preview
@@ -3371,6 +3373,7 @@ Key             Binding
 -------------------------------------------------------------------------------
 RET		emacsvox-aural-overrides-edit
 ?		emacsvox-aural-overrides-help
+E		emacsvox-aural-overrides-edit
 P		emacsvox-aural-overrides-preview
 a		emacsvox-aural-overrides-clear-filter
 d		emacsvox-aural-overrides-delete

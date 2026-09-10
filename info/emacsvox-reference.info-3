@@ -3578,41 +3578,41 @@ Function Index
 * emacsvox-aural-overrides-mode <1>:     emacsvox-aural-overrides.
                                                              (line   69)
 * emacsvox-aural-overrides-next:         emacsvox-aural-overrides.
-                                                             (line   93)
-* emacsvox-aural-overrides-next <1>:     emacsvox-aural-overrides.
                                                              (line   94)
+* emacsvox-aural-overrides-next <1>:     emacsvox-aural-overrides.
+                                                             (line   95)
 * emacsvox-aural-overrides-next-column:  emacsvox-aural-overrides.
-                                                             (line  100)
-* emacsvox-aural-overrides-next-column <1>: emacsvox-aural-overrides.
                                                              (line  101)
+* emacsvox-aural-overrides-next-column <1>: emacsvox-aural-overrides.
+                                                             (line  102)
 * emacsvox-aural-overrides-preview:      emacsvox-aural-overrides.
-                                                             (line  107)
-* emacsvox-aural-overrides-preview <1>:  emacsvox-aural-overrides.
                                                              (line  108)
+* emacsvox-aural-overrides-preview <1>:  emacsvox-aural-overrides.
+                                                             (line  109)
 * emacsvox-aural-overrides-previous:     emacsvox-aural-overrides.
-                                                             (line  114)
-* emacsvox-aural-overrides-previous <1>: emacsvox-aural-overrides.
                                                              (line  115)
+* emacsvox-aural-overrides-previous <1>: emacsvox-aural-overrides.
+                                                             (line  116)
 * emacsvox-aural-overrides-previous-column: emacsvox-aural-overrides.
-                                                             (line  121)
-* emacsvox-aural-overrides-previous-column <1>: emacsvox-aural-overrides.
                                                              (line  122)
+* emacsvox-aural-overrides-previous-column <1>: emacsvox-aural-overrides.
+                                                             (line  123)
 * emacsvox-aural-overrides-refresh:      emacsvox-aural-overrides.
-                                                             (line  128)
-* emacsvox-aural-overrides-refresh <1>:  emacsvox-aural-overrides.
                                                              (line  129)
+* emacsvox-aural-overrides-refresh <1>:  emacsvox-aural-overrides.
+                                                             (line  130)
 * emacsvox-aural-overrides-speak-current: emacsvox-aural-overrides.
-                                                             (line  137)
-* emacsvox-aural-overrides-speak-current <1>: emacsvox-aural-overrides.
                                                              (line  138)
+* emacsvox-aural-overrides-speak-current <1>: emacsvox-aural-overrides.
+                                                             (line  139)
 * emacsvox-aural-overrides-speak-current-cell: emacsvox-aural-overrides.
-                                                             (line  144)
-* emacsvox-aural-overrides-speak-current-cell <1>: emacsvox-aural-overrides.
                                                              (line  145)
+* emacsvox-aural-overrides-speak-current-cell <1>: emacsvox-aural-overrides.
+                                                             (line  146)
 * emacsvox-aural-overrides-toggle:       emacsvox-aural-overrides.
-                                                             (line  151)
-* emacsvox-aural-overrides-toggle <1>:   emacsvox-aural-overrides.
                                                              (line  152)
+* emacsvox-aural-overrides-toggle <1>:   emacsvox-aural-overrides.
+                                                             (line  153)
 * emacsvox-aural-prefer-engine:          emacsvox-aural-voice-workbench.
                                                              (line   17)
 * emacsvox-aural-prefer-engine <1>:      emacsvox-aural-voice-workbench.
@@ -4933,13 +4933,13 @@ Function Index
 * emacsvox-ediff-speak-current-difference <1>: emacsvox-ediff.
                                                              (line   26)
 * emacsvox-edit-aural-feature-fragment:  emacsvox-aural-editor.
-                                                             (line  209)
+                                                             (line  211)
 * emacsvox-edit-aural-feature-fragment <1>: emacsvox-aural-editor.
-                                                             (line  210)
+                                                             (line  212)
 * emacsvox-edit-aural-rules:             emacsvox-aural-editor.
-                                                             (line  218)
-* emacsvox-edit-aural-rules <1>:         emacsvox-aural-editor.
                                                              (line  220)
+* emacsvox-edit-aural-rules <1>:         emacsvox-aural-editor.
+                                                             (line  222)
 * emacsvox-ein-speak-current-cell:       emacsvox-ein.       (line   15)
 * emacsvox-ein-speak-current-cell <1>:   emacsvox-ein.       (line   16)
 * emacsvox-elfeed-eww-entry-at-point:    emacsvox-elfeed.    (line   17)

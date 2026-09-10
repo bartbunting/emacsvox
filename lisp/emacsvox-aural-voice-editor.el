@@ -231,8 +231,10 @@ Select a faithful wire form before any entry interrupts foreground speech."
     (emacsvox-aural-voice-editor--put key enabled)
     (emacsvox-aural-voice-editor-refresh)
     (emacsvox-aural-voice-editor--locate field)
-    (emacsvox-icon (if enabled 'on 'off))
-    (emacsvox-aural-voice-editor-speak)))
+    (if (memq key '(:expanded :effects))
+        (emacsvox-aural-ui--announce-expansion enabled)
+      (emacsvox-icon (if enabled 'on 'off))
+      (emacsvox-aural-voice-editor-speak))))
 
 (defun emacsvox-aural-voice-editor--locate (field)
   "Move to the button identified by FIELD, or the first available button."

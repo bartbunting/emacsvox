@@ -20,9 +20,16 @@
        ,@body)))
 
 (defun emacsvox-test--guided-choose (&rest answers)
-  "Choose a component change with scripted minibuffer ANSWERS."
-  (cl-letf (((symbol-function 'completing-read) (lambda (&rest _) (pop answers))))
-    (emacsvox-aural-change-feedback-change)))
+  "Choose a component row, with scripted ANSWERS for its remaining fields."
+  (let ((operation (pop answers)))
+    (setq emacsvox-aural-change-feedback--expanded nil)
+    (emacsvox-aural-change-feedback-change)
+    (emacsvox-aural-ui-goto-row (list 'operation operation))
+    (cl-letf (((symbol-function 'completing-read) (lambda (&rest _) (pop answers))))
+      (emacsvox-aural-change-feedback-open-row)
+      (when (equal operation "Change the content voice")
+        (should (emacsvox-aural-ui-goto-row (list 'voice (intern (pop answers)))))
+        (emacsvox-aural-change-feedback-open-row)))))
 
 (defun emacsvox-test--guided-proposed ()
   "Capture the real proposed concrete plan, without speech output."
@@ -114,10 +121,10 @@
   "Aborting a later minibuffer leaves the previous candidate and live state intact."
   (emacsvox-test--with-guided-feedback
     (emacsvox-test--guided-choose "Change the content voice" "bolden")
-    (let ((before (copy-tree emacsvox-aural-change-feedback-render)) (count 0))
+    (let ((before (copy-tree emacsvox-aural-change-feedback-render)))
       (cl-letf (((symbol-function 'completing-read)
-                 (lambda (&rest _) (if (= (cl-incf count) 1) "Add a sound" (signal 'quit nil)))))
-        (condition-case nil (emacsvox-aural-change-feedback-change) (quit nil)))
+                 (lambda (&rest _) (signal 'quit nil))))
+        (condition-case nil (emacsvox-aural-change-feedback--change "Add a sound") (quit nil)))
       (should (equal before emacsvox-aural-change-feedback-render)))
     (should (memq (current-buffer) (emacsvox-aural-home--pending-drafts)))
     (should-not emacsvox-aural-session-rules)))
@@ -190,7 +197,7 @@
     (should-not emacsvox-aural-session-rules)))
 
 (ert-deftest emacsvox-aural-guided-history-selects-and-replays-exact-part ()
-  "A multi-part record prompts for the part, keeps it frozen, and labels the target."
+  "A multi-part record expands parts, keeps the selection frozen, and labels it."
   (emacsvox-test--with-guided-feedback
     (let* ((second-facts '(:role heading :content "Second part"))
            (second-plan (emacsvox-aural-compile-plan
@@ -198,13 +205,184 @@
            (record (emacsvox-aural--make-presentation-record
                     :id 123 :plan concrete :plans (list concrete second-plan)))
            played)
-      (cl-letf (((symbol-function 'completing-read) (lambda (_prompt choices &rest _) (caadr choices))))
-        (emacsvox-aural-change-feedback record))
+      (emacsvox-aural-change-feedback record)
+      (should (emacsvox-aural-ui-goto-row '(part 2)))
+      (emacsvox-aural-change-feedback-open-row)
       (should (equal (plist-get (plist-get emacsvox-aural-change-feedback-input :facts) :content) "Second part"))
       (should (string-match-p "record 123, Part 2" (emacsvox-aural-change-feedback--summary)))
       (cl-letf (((symbol-function 'emacsvox-aural-preview-play-plan) (lambda (plan &rest _) (setq played plan))))
         (emacsvox-aural-change-feedback-original))
       (should (eq played second-plan)))))
+
+(ert-deftest emacsvox-aural-guided-parts-stay-in-playback-order-and-retain-voices ()
+  "More than nine parts stay ordered, and navigation uses frozen speech data."
+  (emacsvox-test--with-guided-feedback
+    (let* ((plans
+            (cl-loop for n from 1 to 12
+                     collect
+                     (let* ((plan (copy-emacsvox-aural-concrete-plan concrete))
+                            (content (copy-emacsvox-aural-concrete-content
+                                      (emacsvox-aural-concrete-plan-content plan))))
+                       (setf (emacsvox-aural-concrete-content-text content) (format "Example %d" n)
+                             (emacsvox-aural-concrete-content-voice-request content) 'lighten
+                             (emacsvox-aural-concrete-content-voice-style content) '(:echo 4)
+                             (emacsvox-aural-concrete-content-voice-command content) "[[logical_voice lighten]]"
+                             (emacsvox-aural-concrete-plan-content plan) content)
+                       plan)))
+           (record (emacsvox-aural--make-presentation-record
+                    :id 124 :plan (car plans) :plans plans))
+           spoken played)
+      (cl-letf (((symbol-function 'completing-read)
+                 (lambda (&rest _) (ert-fail "Parts must not use completion"))))
+        (emacsvox-aural-change-feedback record))
+      (should (equal (cl-loop for (id _) in tabulated-list-entries
+                              when (eq (car-safe id) 'part) collect (cadr id))
+                     (number-sequence 1 12)))
+      (should-error (emacsvox-aural-change-feedback-change) :type 'user-error)
+      (emacsvox-aural-ui-goto-row '(part 9))
+      (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text)))
+                ((symbol-function 'emacsvox-aural-ui-speak)
+                 (lambda (text) (funcall emacsvox-aural-ui-speech-function text)))
+                ((symbol-function 'emacsvox-icon) #'ignore))
+        (emacsvox-aural-ui-next-row))
+      (should (equal (tabulated-list-get-id) '(part 10)))
+      (let* ((plan (emacsvox-aural-concrete-plan-at (string-match "Example 10" spoken) spoken))
+             (content (emacsvox-aural-concrete-plan-content plan)))
+        (should (eq (emacsvox-aural-concrete-content-voice-request content) 'lighten))
+        (should (equal (emacsvox-aural-concrete-content-voice-style content) '(:echo 4)))
+        (should (equal (emacsvox-aural-concrete-content-voice-command content) "[[logical_voice lighten]]"))
+        (should-not (emacsvox-aural-concrete-plan-before plan)))
+      (cl-letf (((symbol-function 'emacsvox-aural-preview-play-plan)
+                 (lambda (plan &rest _) (setq played plan))))
+        (emacsvox-aural-change-feedback-original))
+      (should (eq played (nth 9 plans)))
+      (should (equal (emacsvox-aural-concrete-content-text
+                      (emacsvox-aural-concrete-plan-content played)) "Example 10")))))
+
+(ert-deftest emacsvox-aural-guided-voice-panel-identifies-original-and-proposal ()
+  "Alias voices are identified first; alternatives stay ordered and visible."
+  (emacsvox-test--with-guided-feedback
+    (setf (emacsvox-aural-concrete-content-voice-request
+           (emacsvox-aural-concrete-plan-content concrete)) 'voice-lighten)
+    (cl-letf (((symbol-function 'emacsvox-aural-change-feedback--named-voice)
+               (lambda (_) '(acss-default lighten)))
+              ((symbol-function 'emacsvox-aural-tools--voice-remap-candidates)
+               (lambda () '("lighten" "default" "bolden"))))
+      (emacsvox-aural-change-feedback-change)
+      (emacsvox-aural-ui-goto-row '(operation "Change the content voice"))
+      (emacsvox-aural-change-feedback-open-row)
+      (should (equal (cl-loop for (id _) in tabulated-list-entries
+                              when (eq (car-safe id) 'voice) collect (cadr id))
+                     '(lighten bolden default)))
+      (emacsvox-aural-ui-goto-row '(voice bolden))
+      (emacsvox-aural-change-feedback-open-row)
+      (should (equal (tabulated-list-get-id) '(voice bolden)))
+      (should (string-match-p "Selected for draft" (aref (tabulated-list-get-entry) 1)))
+      (should (string-match-p "Original voice: Voice lighten; proposed: Content voice bolden"
+                              (emacsvox-aural-change-feedback--voice-description)))
+      (should (eq emacsvox-aural-change-feedback--expanded 'voices))
+      (emacsvox-aural-change-feedback-change)
+      (should-not emacsvox-aural-change-feedback--expanded)
+      (should emacsvox-aural-change-feedback-render)
+      (should-not emacsvox-aural-session-rules))))
+
+(ert-deftest emacsvox-aural-guided-part-switch-keeps-unfinished-drafts ()
+  "Returning to another part restores its draft and keeps it resumable from Home."
+  (emacsvox-test--with-guided-feedback
+    (emacsvox-aural-change-feedback
+     (emacsvox-aural--make-presentation-record
+      :id 125 :plan concrete :plans (list concrete concrete)))
+    (emacsvox-aural-change-feedback--select-part 1)
+    (emacsvox-test--guided-choose "Change the content voice" "bolden")
+    (let ((draft (copy-tree emacsvox-aural-change-feedback-render)))
+      (emacsvox-aural-change-feedback--select-part 2)
+      (should-not emacsvox-aural-change-feedback-render)
+      (should (memq (current-buffer) (emacsvox-aural-home--pending-drafts)))
+      (emacsvox-aural-change-feedback--select-part 1)
+      (should (equal draft emacsvox-aural-change-feedback-render))
+      (setq emacsvox-aural-change-feedback-applied t)
+      (should-not (memq (current-buffer) (emacsvox-aural-home--pending-drafts))))))
+
+(ert-deftest emacsvox-aural-guided-match-can-ignore-notmuch-unread-state ()
+  "Excluding unread matches read and unread authors while retaining other limits."
+  (emacsvox-test--with-guided-feedback
+    (emacsvox-test--guided-choose "Change the content voice" "lighten")
+    (setq emacsvox-aural-change-feedback-selector
+          '(:role field :states (unread) :field-kind authors :module notmuch))
+    (cl-letf (((symbol-function 'completing-read)
+               (lambda (&rest _) (ert-fail "Matching must expand in the panel"))))
+      (emacsvox-aural-change-feedback-match))
+    (should (emacsvox-aural-ui-goto-row '(criterion (:states (unread)))))
+    (emacsvox-aural-change-feedback-open-row)
+    (should (equal (tabulated-list-get-id) '(criterion (:states (unread)))))
+    (should (string-prefix-p "Excluded" (aref (tabulated-list-get-entry) 1)))
+    (should (equal (emacsvox-aural-change-feedback--selector-description
+                    emacsvox-aural-change-feedback-selector)
+                   "role field, field kind authors, module notmuch"))
+    (let ((rule (emacsvox-aural-compile-rule (emacsvox-aural-change-feedback--rule) 'user)))
+      (dolist (states '(nil (unread)))
+        (should (emacsvox-aural-rule-matches-p
+                 rule (emacsvox-aural-normalize-input
+                       (list :role 'field :field-kind 'authors :states states)
+                       '(:module notmuch)))))
+      (should-not (emacsvox-aural-rule-matches-p
+                   rule (emacsvox-aural-normalize-input
+                         '(:role field :field-kind subject) '(:module notmuch))))
+      (should-not (emacsvox-aural-rule-matches-p
+                   rule (emacsvox-aural-normalize-input
+                         '(:role field :field-kind authors) '(:module gnus)))))
+    ;; Closing and reopening preserves the exclusion and offers it for restoration.
+    (emacsvox-aural-change-feedback-match)
+    (emacsvox-aural-change-feedback-match)
+    (should (emacsvox-aural-ui-goto-row '(criterion (:states (unread)))))
+    (emacsvox-aural-change-feedback-open-row)
+    (should (equal (plist-get emacsvox-aural-change-feedback-selector :states) '(unread)))
+    (should-not emacsvox-aural-session-rules)
+    (should-not emacsvox-aural-user-rules)))
+
+(ert-deftest emacsvox-aural-guided-match-toggles-states-individually ()
+  "Excluding one state preserves other states, and viewing keeps saved status."
+  (emacsvox-test--with-guided-feedback
+    (setq emacsvox-aural-change-feedback-selector
+          '(:role field :states (unread selected) :module notmuch)
+          emacsvox-aural-change-feedback-applied t)
+    (emacsvox-aural-change-feedback-match)
+    (should emacsvox-aural-change-feedback-applied)
+    (emacsvox-aural-ui-goto-row '(criterion (:states (unread))))
+    (emacsvox-aural-change-feedback-open-row)
+    (should (equal (plist-get emacsvox-aural-change-feedback-selector :states) '(selected)))
+    (should-not emacsvox-aural-change-feedback-applied)))
+
+(ert-deftest emacsvox-aural-guided-match-retains-at-least-one-criterion ()
+  "An empty match cannot be confused with matching criteria not yet chosen."
+  (emacsvox-test--with-guided-feedback
+    (setq emacsvox-aural-change-feedback-selector '(:module notmuch))
+    (emacsvox-aural-change-feedback-match)
+    (emacsvox-aural-ui-goto-row '(criterion (:module notmuch)))
+    (should-error (emacsvox-aural-change-feedback-open-row) :type 'user-error)
+    (should (equal emacsvox-aural-change-feedback-selector '(:module notmuch)))))
+
+(ert-deftest emacsvox-aural-guided-match-preserves-required-role-on-invalid-toggle ()
+  "A criterion needing a role cannot leave the draft with an invalid selector."
+  (emacsvox-test--with-guided-feedback
+    (setq emacsvox-aural-change-feedback-selector
+          '(:role field :field-kind authors :module notmuch))
+    (emacsvox-aural-change-feedback-match)
+    (emacsvox-aural-ui-goto-row '(criterion (:role field)))
+    (should-error (emacsvox-aural-change-feedback-open-row) :type 'emacsvox-aural-rule-error)
+    (should (eq (plist-get emacsvox-aural-change-feedback-selector :role) 'field))))
+
+(ert-deftest emacsvox-aural-guided-remap-matching-expands-under-applies-to ()
+  "The simple remap view also exposes its matching criteria in the panel."
+  (emacsvox-test--with-guided-feedback
+    (setq emacsvox-aural-change-feedback--voice-remap t
+          emacsvox-aural-change-feedback-selector '(:role heading :states (selected)))
+    (emacsvox-aural-change-feedback-refresh 'target)
+    (emacsvox-aural-change-feedback-open-row)
+    (should (eq emacsvox-aural-change-feedback--expanded 'match))
+    (should (emacsvox-aural-ui-goto-row '(criterion (:states (selected)))))
+    (emacsvox-aural-change-feedback-open-row)
+    (should (equal emacsvox-aural-change-feedback-selector '(:role heading)))))
 
 (provide 'emacsvox-aural-change-feedback-tests)
 ;;; emacsvox-aural-change-feedback-tests.el ends here

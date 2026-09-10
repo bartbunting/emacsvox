@@ -824,6 +824,7 @@
 (dolist
     (binding
      '(("RET" . emacsvox-aural-overrides-edit)
+       ("E" . emacsvox-aural-overrides-edit)
        ("e" . emacsvox-aural-overrides-edit)
        ("x" . emacsvox-aural-overrides-describe)
        ("P" . emacsvox-aural-overrides-preview)
