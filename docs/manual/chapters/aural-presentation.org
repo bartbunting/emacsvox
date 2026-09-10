@@ -585,7 +585,8 @@ child palette; saving adds only the requested direct entry to that child.
 Opening or previewing the draft does not save it.
 
 Press @@texinfo:@kbd{R}@@ to Reset a personal definition to its inherited
-entry. The confirmation names the source that will become effective. Use
+entry. The confirmation names the source that will become effective and rejects
+a source changed during confirmation. Reset preserves other saved settings. Use
 @@texinfo:@kbd{d}@@ to Delete a direct custom voice that has no inherited
 replacement. Built-in and inherited entries cannot be deleted here. If deletion
 would leave a known reference without a voice, remap that use first. Save or
@@ -605,7 +606,9 @@ Use at Startup, @@texinfo:@kbd{U}@@, changes the palette in the selected saved
 Presentation Profile while preserving its other saved fields. It does not
 apply that profile to the current session. If no startup profile exists, the
 action asks you to review a new profile captured from the current setup.
-An already open Profiles view refreshes to show the saved choice.
+It checks voice references in saved rules and the profile's saved options;
+session and buffer rules do not affect this startup check. An already open
+Profiles view refreshes to show the saved choice.
 
 For sharing, @@texinfo:@kbd{w}@@ exports effective portable entries and asks
 before omitting machine-local physical choices. @@texinfo:@kbd{W}@@ creates a

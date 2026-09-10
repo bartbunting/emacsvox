@@ -1,0 +1,88 @@
+#+title: Aural Interface — Focused Integration Review
+#+date: 2026-09-11
+#+startup: content
+
+* Outcome
+
+The implementation follows [[file:adr/0018-unified-voice-palette-model.org][ADR 0018]] after the corrections below. The focused
+review found no remaining blocker in the inspected code paths. Spoken acceptance
+is still required; passing data, transport and interface tests does not establish
+sound quality or listening usability.
+
+This reviews the implementation through the Medium table/manual slice and the
+XHI corrections in =4b4ec550b=. It does not repeat the original [[file:aural-interface-review.org][interface review]]. The
+[[file:aural-interface-consolidation-plan.org][delivery plan]] records the commits and next reasoning-level handoff.
+
+* Findings corrected
+
+1. Reset and other simple palette mutations used the old whole-settings writer.
+   A newer saved profile could be replaced by stale live settings while resetting
+   a voice. Mutations now merge only changed palettes into the saved document,
+   reject a changed saved destination, and check the file fingerprint before
+   writing. Failed persistence leaves the live registry intact.
+2. Reset named the immediate parent even when a grandparent supplied the voice.
+   The confirmation now names the actual defining palette.
+3. Reset did not recheck the inherited entry after confirmation. A changed
+   ancestor could silently change the reviewed result. The full inherited entry
+   and its owner are now checked again before mutation.
+4. Deleting the active palette could persist deletion before discovering that
+   the baseline lacked a voice required by current rules. The replacement
+   selection is now validated in the staged registry before writing.
+5. Whole-palette deletion did not protect unfinished voice drafts. It now uses
+   the existing pending-edit guard, rechecks uses after confirmation, and only
+   discards clean editor contexts after successful deletion.
+6. Use at Startup could accept a palette missing a custom voice required by the
+   saved rules. It now checks saved palette ancestry, personal rules and the
+   saved options selected by the profile. Unsaved personal changes and session
+   or buffer rules remain outside that check. Loaded integration declarations
+   retain runtime reference semantics. Rejection changes neither file nor
+   selected profile.
+
+Six regression cases fail against the preceding implementation and pass with
+these corrections. Additional cases cover a changed saved destination, saved
+option contents diverging from live contents, and exclusion of session rules.
+Palette action descriptions also say “for this session” instead of “override.”
+
+* Contract checks
+
+| Area | Finding and evidence |
+| Root and inheritance | One metadata reader supplies the nearest complete entry and its source. Rooted chains and cycle rejection are covered by resource/data/manager tests. |
+| Names and definitions | Declared aliases resolve once; terminal personalities do not re-enter named lookup. Generated handles have copied raw metadata and a reserved namespace. Transport tests cover preset reset, nil/zero, sampler and maths handles, cache reset, unknown names and both speech lanes. |
+| Entry ownership | Copy and inherited editing create correctly owned local snapshots. Reset reveals the parent entry; deletion remains separate. Source, known uses and independent-copy behavior agree with the manual. |
+| Sharing | Portable export materializes effective entries and reports omitted local choices. Backup includes ancestry and referenced snapshots. Import validates, creates an independent owner and retains unavailable choices. Frozen import retry has regression coverage. |
+| Save and apply | The coordinator distinguishes persistence, publication, application and playback. Existing delayed-callback tests preserve newer edits, reject stale selection retries and retain partial-save progress. Inactive saves do not apply or invalidate the current operation. |
+| Retirement | Old tuner/experiment screens and per-name routing editors/readers are unavailable. Retained tuner-named numeric helpers support the common editor; low-level adapter bindings remain protocol data. |
+| Workstation controls | Preferred/fallback engine order, disablement, recovery, output routing, previews and notification lanes remain. An ordinary preferred physical-voice workflow remains a separate bounded follow-up. |
+| Navigation | Tables preserve selected columns; Details captures source-buffer state. Tests cover nested returns, action reachability, retained drafts and preview ownership. Listening is still required. |
+
+* Validation and limits
+
+- 776 source-preferred tests passed across palettes, editor, Workbench, rules,
+  resources, profiles, UI and transport.
+- Isolated compiled aural parity passed; fresh normal compiled startup passed.
+- All nine focused regressions passed against normal compiled functions.
+- Byte-code preflight, Org preview, generated manual/reference updates and the
+  documentation release check passed.
+- Tests use isolated stores. No personal-file conversion or live-profile restart
+  was performed in this review. The pre-existing Home announcement edits remain
+  outside these commits.
+
+* Spoken acceptance — next slice
+
+Use Medium for the walkthrough and wording/navigation corrections. Switch to
+High if listening exposes a substantive state or runtime defect.
+
+1. Save or retain any current drafts appropriately, then start a fresh Emacsvox
+   session with current byte-code. Check the saved startup palette.
+2. In Voice Palettes and Workbench, move vertically from Parent, Source, Engine
+   and State columns. Check Details and return to the same row and column.
+3. Create a disposable child palette, copy a voice, edit its shared and individual
+   settings, compare, save without selecting, then activate it.
+4. Reset a direct standard voice and verify the spoken source and inherited row.
+   Delete a custom voice only after checking its known uses.
+5. Set the intended palette with Use at Startup, verify Profiles, and restart.
+   Check unavailable choices without mistaking inventory predictions for playback.
+6. Navigate rapidly during previews, then repeat with icons disabled and with
+   both speech streams in use. Check expanded/collapsed state and cancellation.
+7. Use the existing controlled failure fixtures for recovery evidence. Do not
+   damage personal stores or stop working speech to manufacture a failure.

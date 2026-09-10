@@ -2956,12 +2956,13 @@ child palette; saving adds only the requested direct entry to that
 child.  Opening or previewing the draft does not save it.
 
    Press ‘R’ to Reset a personal definition to its inherited entry.  The
-confirmation names the source that will become effective.  Use ‘d’ to
-Delete a direct custom voice that has no inherited replacement.
-Built-in and inherited entries cannot be deleted here.  If deletion
-would leave a known reference without a voice, remap that use first.
-Save or discard unfinished voice edits before deleting.  Press ‘o’ to
-return to the palette manager.
+confirmation names the source that will become effective and rejects a
+source changed during confirmation.  Reset preserves other saved
+settings.  Use ‘d’ to Delete a direct custom voice that has no inherited
+replacement.  Built-in and inherited entries cannot be deleted here.  If
+deletion would leave a known reference without a voice, remap that use
+first.  Save or discard unfinished voice edits before deleting.  Press
+‘o’ to return to the palette manager.
 
    In the palette manager, New Palette with ‘N’ creates a child of the
 chosen parent.  Copy Palette with ‘c’ instead saves an independent copy
@@ -2975,8 +2976,10 @@ current scheme's baseline palette again.  Use at Startup, ‘U’, changes
 the palette in the selected saved Presentation Profile while preserving
 its other saved fields.  It does not apply that profile to the current
 session.  If no startup profile exists, the action asks you to review a
-new profile captured from the current setup.  An already open Profiles
-view refreshes to show the saved choice.
+new profile captured from the current setup.  It checks voice references
+in saved rules and the profile's saved options; session and buffer rules
+do not affect this startup check.  An already open Profiles view
+refreshes to show the saved choice.
 
    For sharing, ‘w’ exports effective portable entries and asks before
 omitting machine-local physical choices.  ‘W’ creates a full local

@@ -6,8 +6,9 @@
 
 The maintainer authorized implementation and commits in slices after the
 [[file:aural-interface-review.org][interface review]]. [[file:adr/0018-unified-voice-palette-model.org][ADR 0018]] settles the root, names, inheritance,
-missing voices and retirement boundary. This design slice is ready for High
-implementation. It changes no live personal settings.
+missing voices and retirement boundary. Implementation and focused integration
+review are complete; spoken acceptance is the next slice. The XHI review changed
+no live personal settings.
 
 The earlier palette wording and selected-column navigation fixes are committed
 as =430b075e9=. The existing uncommitted Home announcement change is separate
@@ -357,13 +358,24 @@ functions. =make bytecode=, =make build-aural-test=, Org preview,
 The original Home announcement edits remain separate. Live spoken acceptance
 is still pending. Stop here for the XHI focused integration review.
 
-** TODO 7. Focused integration review — XHI
+** DONE 7. Focused integration review — XHI
 
 Review the changed code against ADR 0018 and the acceptance table, concentrating
 on name resolution, root/default behavior, whole-entry ownership, reset/deletion,
 startup selection and asynchronous publication. Check that obsolete entry points
 are gone and useful workstation controls survived. Do not repeat the broad
 original investigation unless new evidence warrants it.
+
+The [[file:aural-interface-integration-review.org][focused review]] records six integration gaps corrected in =4b4ec550b=:
+palette mutations preserve other saved settings; Reset names and rechecks its
+actual source; active deletion validates the baseline and protects drafts;
+startup validates saved rules and selected options. Nine focused regressions
+cover these behaviors, with six verified to fail against the preceding code.
+The broader 776 tests, compiled parity and fresh compiled startup passed.
+Public wording and manuals were updated through the normal documentation gates.
+No remaining blocker was found in the inspected contract paths. Audible behavior
+and the ordinary preferred physical-voice follow-up remain explicitly separate.
+Stop here and switch to Medium for the spoken walkthrough.
 
 ** TODO 8. Spoken acceptance and corrections — Medium or High
 
