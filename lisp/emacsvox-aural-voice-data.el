@@ -40,33 +40,7 @@
 (defun emacsvox-aural-voice-data--entries (palette-id registry &optional path)
   "Return effective owned metadata for PALETTE-ID in REGISTRY.
 Each result contains :palette and :entry.  PATH detects inheritance cycles."
-  (when (memq palette-id path)
-    (emacsvox-aural--resource-error "Palette inheritance cycle: %S" path))
-  (let* ((record (gethash palette-id registry))
-         (data (and record (emacsvox-aural-voice-palette-data-form record)))
-         (parent (plist-get data :parent))
-         entries)
-    (unless record
-      (emacsvox-aural--resource-error "Unknown voice palette: %S" palette-id))
-    (emacsvox-aural-compile-voice-palette-data data)
-    (when parent
-      (let ((parent-record (gethash parent registry)))
-        (unless (and parent-record
-                     (eq (plist-get data :routing)
-                         (plist-get (emacsvox-aural-voice-palette-data-form
-                                     parent-record) :routing)))
-          (emacsvox-aural--resource-error
-           "Missing parent or mixed palette ownership: %S" parent)))
-      (setq entries (emacsvox-aural-voice-data--entries
-                     parent registry (cons palette-id path))))
-    (dolist (entry (plist-get data :entries))
-      (let ((value (list :palette palette-id :schema-version (plist-get data :schema-version)
-                         :entry (copy-tree entry)))
-            (old (cl-position (car entry) entries
-                              :key (lambda (item) (car (plist-get item :entry))))))
-        (if old (setf (nth old entries) value)
-          (setq entries (append entries (list value))))))
-    entries))
+  (emacsvox-aural--effective-voice-metadata palette-id registry path))
 
 (defun emacsvox-aural-voice-data--names (name entries aliases)
   "Return NAME and applicable ALIASES, respecting direct names in ENTRIES."

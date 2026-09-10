@@ -1675,31 +1675,50 @@ PATH protects this helper from invalid inheritance cycles."
   (emacsvox-aural-validate-resource-pack
    pack-id (emacsvox-aural-scheme-required-cues scheme)))
 
+(defun emacsvox-aural--effective-voice-metadata (palette-id registry &optional path)
+  "Return whole inherited entries for PALETTE-ID in explicit REGISTRY.
+Each independent result has :palette, :schema-version and raw :entry data.
+The nearest definition replaces the entire entry.  PATH detects cycles."
+  (when (memq palette-id path)
+    (emacsvox-aural--resource-error "Palette inheritance cycle: %S" path))
+  (let* ((record (gethash palette-id registry))
+         (data (and record (emacsvox-aural-voice-palette-data-form record)))
+         (parent (plist-get data :parent))
+         entries)
+    (unless record
+      (emacsvox-aural--resource-error "Unknown voice palette: %S" palette-id))
+    (emacsvox-aural-compile-voice-palette-data data)
+    (when parent
+      (let ((parent-record (gethash parent registry)))
+        (unless (and parent-record
+                     (eq (plist-get data :routing)
+                         (plist-get (emacsvox-aural-voice-palette-data-form
+                                     parent-record) :routing)))
+          (emacsvox-aural--resource-error
+           "Missing parent or mixed palette ownership: %S" parent)))
+      (setq entries (emacsvox-aural--effective-voice-metadata
+                     parent registry (cons palette-id path))))
+    (dolist (entry (plist-get data :entries))
+      (let ((value (list :palette palette-id :schema-version (plist-get data :schema-version)
+                         :entry (copy-tree entry)))
+            (old (cl-position (car entry) entries
+                              :key (lambda (item) (car (plist-get item :entry))))))
+        (if old (setf (nth old entries) value)
+          (setq entries (append entries (list value))))))
+    entries))
+
 (defun emacsvox-aural-effective-voice-entries (palette-id &optional path)
   "Return inherited voice entries for PALETTE-ID, detecting cycles in PATH."
-  (when (memq palette-id path)
-    (emacsvox-aural--resource-error
-     "Voice palette inheritance cycle: %S"
-     (nreverse (cons palette-id path))))
-  (let ((palette (emacsvox-aural-voice-palette palette-id)))
-    (unless palette
-      (emacsvox-aural--resource-error
-       "Unknown voice palette: %S" palette-id))
-    (when-let* ((parent-id (emacsvox-aural-voice-palette-parent palette))
-                (parent (emacsvox-aural-voice-palette parent-id)))
-      (unless (eq (plist-get (emacsvox-aural-voice-palette-data palette) :routing)
-                  (plist-get (emacsvox-aural-voice-palette-data parent) :routing))
-        (emacsvox-aural--resource-error
-         "Cannot mix legacy and owned palette inheritance: %S -> %S"
-         palette-id parent-id)))
-    (let ((entries
-           (if-let* ((parent (emacsvox-aural-voice-palette-parent palette)))
-               (emacsvox-aural-effective-voice-entries
-                parent (cons palette-id path))
-             nil)))
-      (dolist (entry (emacsvox-aural-voice-palette-entries palette))
-        (setf (alist-get (car entry) entries) (cdr entry)))
-      entries)))
+  (mapcar
+   (lambda (item)
+     (let* ((entry (plist-get item :entry))
+            (properties (cdr entry)))
+       (cons (car entry)
+             (if (plist-member properties :personality)
+                 (plist-get properties :personality)
+               (plist-get properties :style)))))
+   (emacsvox-aural--effective-voice-metadata
+    palette-id emacsvox-aural-voice-palette-registry path)))
 
 (defun emacsvox-aural-voice (name &optional palette-id)
   "Return the complete voice preset for NAME in PALETTE-ID."

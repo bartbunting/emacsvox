@@ -266,6 +266,60 @@
     (let ((emacsvox-aural-voice-palette-registry registry))
       (should-error (emacsvox-aural-effective-voice-entries 'legacy)))))
 
+(ert-deftest emacsvox-aural-voice-data-shares-whole-entry-inheritance ()
+  "Public definitions and owned resolution agree through four palette levels."
+  (let* ((palettes
+          '((:schema-version 3 :id acss-default :summary "Standard" :parent nil
+             :routing owned
+             :entries ((bolden :personality voice-bolden :choices nil)
+                       (annotate :personality voice-annotate :choices nil)))
+            (:schema-version 3 :id c :summary "C" :parent acss-default
+             :routing owned
+             :entries ((bolden :personality voice-monotone :choices nil
+                        :language "en" :local-choices "parent-only")))
+            (:schema-version 3 :id b :summary "B" :parent c :routing owned
+             :entries ((bolden :style (:family nil :average-pitch 0
+                                      :pitch-range nil :stress 4 :richness nil
+                                      :rate-offset -2 :low-pass 0)
+                        :choices nil)))
+            (:schema-version 3 :id a :summary "A" :parent b :routing owned
+             :entries nil)))
+         (before (copy-tree palettes))
+         (registry (emacsvox-test--voice-data-registry palettes))
+         (emacsvox-aural-voice-palette-registry registry)
+         (metadata (emacsvox-aural-voice-data--entries 'a registry))
+         (resolved (emacsvox-aural-voice-data--resolve
+                    'voice-bolden 'a registry nil nil nil nil)))
+    (should (equal (mapcar (lambda (item) (plist-get item :palette)) metadata)
+                   '(b acss-default)))
+    (should (equal (emacsvox-aural-voice 'bolden 'a)
+                   (plist-get resolved :definition)))
+    (should (eq (plist-get resolved :palette) 'b))
+    (should (plist-get resolved :automatic))
+    ;; A replacement inherits no fields, even from a parent with missing locals.
+    (should-not (plist-get resolved :language))
+    (should-not (plist-get resolved :diagnostics))
+    (should (eq (emacsvox-aural-voice 'annotate 'a) 'voice-annotate))
+    (setf (plist-get (cdr (plist-get (car metadata) :entry)) :style) nil)
+    (setf (plist-get (emacsvox-aural-voice 'bolden 'a) :average-pitch) 9)
+    (should (equal (emacsvox-aural-voice 'bolden 'a)
+                   (plist-get resolved :definition)))
+    (should (equal palettes before))))
+
+(ert-deftest emacsvox-aural-voice-data-shares-inheritance-errors ()
+  "Both readers reject missing parents and cycles without modifying records."
+  (dolist (parent '(absent child))
+    (let* ((data (list :schema-version 3 :id 'child :summary "Child"
+                       :parent parent :routing 'owned :entries nil))
+           (registry (emacsvox-test--voice-data-registry (list data)))
+           (emacsvox-aural-voice-palette-registry registry))
+      (should-error (emacsvox-aural-voice-data--entries 'child registry)
+                    :type 'emacsvox-aural-resource-error)
+      (should-error (emacsvox-aural-effective-voice-entries 'child)
+                    :type 'emacsvox-aural-resource-error)
+      (should (equal data (emacsvox-aural-voice-palette-data-form
+                           (gethash 'child registry)))))))
+
 (ert-deftest emacsvox-aural-voice-data-owned-copy-has-new-owner ()
   "Local copies preserve complete chains with new ownership and immutable IDs."
   (let* ((conversion (emacsvox-test--voice-data-conversion))

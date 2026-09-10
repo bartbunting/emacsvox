@@ -973,14 +973,11 @@ ACTION describes the operation and defaults to renaming."
 
 (defun emacsvox-aural-voice-palettes--entry-provider (name palette-id)
   "Return the palette that directly provides voice NAME to PALETTE-ID."
-  (let ((current palette-id)
-        provider)
-    (while (and current (not provider))
-      (let ((palette (emacsvox-aural-voice-palette current)))
-        (when (assq name (emacsvox-aural-voice-palette-entries palette))
-          (setq provider current))
-        (setq current (emacsvox-aural-voice-palette-parent palette))))
-    provider))
+  (plist-get
+   (cl-find name (emacsvox-aural--effective-voice-metadata
+                  palette-id emacsvox-aural-voice-palette-registry)
+            :key (lambda (item) (car (plist-get item :entry))))
+   :palette))
 
 (defun emacsvox-aural-voice-palettes--preview-entries (palette)
   "Return effective entries for PALETTE in predictable voice-name order."

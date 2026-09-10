@@ -64,6 +64,21 @@ Design validation: local document links, =git diff --check= and
 
 ** TODO 2. Establish current standard data and shared lookup — High
 
+Foundation completed: resource lookup, owned data resolution and palette source
+inspection now use the same whole-entry inheritance reader. Independent tests
+cover the four-level chain, nearest source, replacement of all choice metadata,
+raw nil/zero preservation, isolation, missing parents and cycles. The 143
+resource/data/palette tests and two fresh compiled inheritance tests pass;
+=make bytecode= and =make docs-release-check= pass. This preparatory commit
+does not switch the standard root or change personal files. The existing older
+data reader remains temporarily until the root and personal-data steps below.
+
+Current-file inspection also found seven local-choice references in =bart= and
+17 retained snapshots. The four saved shared bindings all name direct entries
+already owned by =bart=, so none supplies its current choices. Recheck fingerprints
+before conversion; this observation does not authorize silently capturing session
+bindings.
+
 Create schema-3 standard entries without changing their raw style/personality
 representations. Make constructors produce current complete data. Give aliases,
 root inventory, inherited metadata and terminal personalities one resolution
