@@ -228,6 +228,46 @@
       (dolist (invalid '("none" "a" "b" "c" "orphan" "missing" "loop-one" "loop-two"))
         (should-not (member invalid candidates))))))
 
+(ert-deftest emacsvox-aural-voice-palettes-parent-change-reports-descendants-and-saves ()
+  (emacsvox-test--with-palette-rename
+    (emacsvox-aural-register-voice-palette-data
+     '(:schema-version 3 :id child :summary "Child" :parent reading :routing owned :entries nil))
+    (emacsvox-aural-save-user-data)
+    (let ((data (plist-put (emacsvox-aural-voice-drafts--palette-data 'reading) :parent 'acss-default)))
+      (let ((impact (emacsvox-aural-voice-palettes--parent-impact 'reading data)))
+        (should (cl-find 'reading impact :key (lambda (item) (plist-get item :palette))))
+        (should (cl-find 'child impact :key (lambda (item) (plist-get item :palette))))
+        ;; Direct entries retain their owner and settings.
+        (should-not (cl-find 'bolden impact :key (lambda (item) (plist-get item :voice)))))
+      (cl-letf (((symbol-function 'emacsvox-aural-voice-palettes--read-parent) (lambda (&rest _) 'acss-default))
+                ((symbol-function 'emacsvox-aural-voice-palettes-speak-current) #'ignore)
+                ((symbol-function 'yes-or-no-p)
+                 (lambda (prompt) (should (string-match-p "in child" prompt)) t)))
+        (emacsvox-aural-voice-palettes-edit-metadata))
+      (should (eq (plist-get (emacsvox-aural-voice-drafts--palette-data 'reading) :parent) 'acss-default))
+      (should (eq (plist-get (cl-find 'reading (plist-get (emacsvox-aural-read-user-data) :voice-palettes)
+                                     :key (lambda (item) (plist-get item :id))) :parent) 'acss-default)))))
+
+(ert-deftest emacsvox-aural-voice-palettes-parent-change-rejects-known-dangling-use ()
+  (emacsvox-test--with-palette-rename
+    (emacsvox-aural-voice-palettes--copy-owned-voice 'reading 'bolden 'custom-voice)
+    (emacsvox-aural-register-voice-palette-data
+     '(:schema-version 3 :id child :summary "Child" :parent reading :routing owned :entries nil))
+    (let ((emacsvox-aural-user-rules '((:id use :render (:content (:voice (bolden custom-voice)))))))
+      (should-error (emacsvox-aural-voice-palettes--parent-impact
+                     'child (plist-put (emacsvox-aural-voice-drafts--palette-data 'child) :parent 'acss-default))
+                    :type 'user-error))))
+
+(ert-deftest emacsvox-aural-voice-palettes-references-distinguish-terminal-personalities ()
+  (let* ((data '(:entries ((custom :personality implementation :choices nil))
+                :render (:content (:voice (implementation (:preset implementation :echo 3))))))
+         (renamed (emacsvox-aural-voice-palettes--rename-references data 'implementation 'new)))
+    (should (eq (plist-get (cdr (assq 'custom (plist-get renamed :entries))) :personality) 'implementation))
+    (should (equal (plist-get (plist-get (plist-get renamed :render) :content) :voice)
+                   '(new (:preset new :echo 3))))
+    (should-not (emacsvox-aural-voice-palettes--voice-reference-p
+                 '(:entries ((custom :personality implementation :choices nil))) 'implementation))))
+
 (ert-deftest emacsvox-aural-voice-palettes-rename-preserves-owned-tuning-and-references ()
   "Rename preserves complete choices, inheritance, profiles and selection on disk."
   (emacsvox-test--with-palette-rename
@@ -586,35 +626,18 @@
         (kill-buffer "*Aural Voice Palette Preview*")))))
 
 (ert-deftest emacsvox-aural-voice-palette-preview-edits-selected-voice ()
-  "The preview browser edits and refreshes a selected personal voice."
+  "Both edit actions pass the selected voice to the complete editor."
   (emacsvox-test--with-voice-palettes
-    (emacsvox-aural-register-voice-palette-data
-     emacsvox-test--voice-palette-data)
-    (unwind-protect
-        (save-window-excursion
-          (cl-letf
-              (((symbol-function 'emacsvox-aural-save-user-data) #'ignore)
-               ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live)
-                #'ignore)
-               ((symbol-function 'emacsvox-aural-voice-palettes--read-definition)
-                (lambda (current)
-                  (should (eq current 'voice-bolden))
-                  'voice-animate))
-               ((symbol-function 'tts-get-voice-command)
-                (lambda (voice) (format "<%s>" voice))))
-            (emacsvox-aural-list-voice-palette-previews 'reading)
-            (with-current-buffer "*Aural Voice Palette Preview*"
-              (should
-               (emacsvox-aural-voice-palette-previews--goto 'heading))
-              (should
-               (eq
-                (emacsvox-aural-voice-palette-previews-edit)
-                'heading))
-              (should
-               (eq (emacsvox-aural-voice 'heading 'reading) 'voice-animate))
-              (should (eq (tabulated-list-get-id) 'heading)))))
-      (when (get-buffer "*Aural Voice Palette Preview*")
-        (kill-buffer "*Aural Voice Palette Preview*")))))
+    (emacsvox-aural-register-voice-palette-data emacsvox-test--voice-palette-data)
+    (with-temp-buffer
+      (emacsvox-aural-voice-palette-previews-mode)
+      (setq emacsvox-aural-voice-palette-previews-palette 'reading)
+      (emacsvox-aural-voice-palette-previews-refresh 'heading)
+      (cl-letf (((symbol-function 'emacsvox-aural-voice-editor-open)
+                 (lambda (palette voice &rest _)
+                   (should (eq palette 'reading)) (should (eq voice 'heading)))))
+        (call-interactively (key-binding (kbd "E")))
+        (call-interactively (key-binding (kbd "e")))))))
 
 (defmacro emacsvox-test--with-voice-rename (&rest body)
   "Run BODY in a real voice list containing a saved custom voice."
@@ -673,9 +696,15 @@
       (should-error (emacsvox-aural-voice-palette-previews-delete) :type 'user-error))
     (should-error (emacsvox-aural-voice-palettes--delete-voice 'reading 'annotate) :type 'user-error)
     (should-error (emacsvox-aural-voice-palettes--delete-voice 'acss-default 'bolden) :type 'user-error)
+    ;; Reset uses actual ancestry, never a hidden standard fallback.
+    (puthash 'reading-parent
+             (emacsvox-aural-compile-voice-palette-data
+              '(:schema-version 3 :id reading-parent :summary "Rooted parent"
+                :parent acss-default :routing owned :entries nil))
+             emacsvox-aural-voice-palette-registry)
     (cl-letf (((symbol-function 'yes-or-no-p)
                (lambda (prompt) (should (string-match-p "restore" prompt)) t)))
-      (emacsvox-aural-voice-palettes--delete-voice 'reading 'bolden))
+      (emacsvox-aural-voice-palettes--delete-voice 'reading 'bolden t))
     (should-not (assq 'bolden (plist-get (emacsvox-aural-voice-palette-data-form
                                         (emacsvox-aural-voice-palette 'reading)) :entries)))))
 
@@ -747,7 +776,8 @@
 
 (ert-deftest emacsvox-aural-voice-palette-preview-rename-updates-mappings ()
   "Personal mappings survive restart; live maps and nested requests follow the rename."
-  (dolist (request '(custom-voice (:preset custom-voice :echo 3)))
+  (dolist (request '(custom-voice (:preset custom-voice :echo 3)
+                    (voice-smoothen custom-voice)))
     (emacsvox-test--with-voice-rename
       (let* ((rules `((:id custom-voice :match (:legacy-face bold)
                       :render (:content (:voice ,request)))))
@@ -766,8 +796,7 @@
               (emacsvox-aural-save-user-data)
               (emacsvox-aural-voice-palette-previews-rename)
               (let ((expected `((:id custom-voice :match (:legacy-face bold)
-                                 :render (:content (:voice ,(if (symbolp request) 'renamed
-                                                             '(:preset renamed :echo 3))))))))
+                                 :render (:content (:voice ,(cl-subst 'renamed 'custom-voice request)))))))
                 (should (equal emacsvox-aural-user-rules expected))
                 (should (equal emacsvox-aural-session-rules expected))
                 (should (equal (plist-get (emacsvox-aural-read-user-data) :user-rules) expected))
@@ -833,42 +862,6 @@
                        '((:id mapped :render (:content (:voice renamed))))))
         (should (eq 1 (plist-get (emacsvox-aural-voice-palette-data-form
                                   (emacsvox-aural-voice-palette 'reading)) :schema-version)))))))
-
-(ert-deftest emacsvox-aural-voice-palette-preview-copies-independent-voice ()
-  "Copying a personality-backed row creates an independent style entry."
-  (emacsvox-test--with-voice-palettes
-    (emacsvox-aural-register-voice-palette-data
-     emacsvox-test--voice-palette-data)
-    (unwind-protect
-        (save-window-excursion
-          (cl-letf
-              (((symbol-function 'emacsvox-aural-save-user-data) #'ignore)
-               ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live)
-                #'ignore)
-               ((symbol-function
-                 'emacsvox-aural-voice-palettes--read-new-entry-name)
-                (lambda (palette initial)
-                  (should (eq palette 'reading))
-                  (should (equal initial "heading-copy"))
-                  'voice-dired-directory))
-               ((symbol-function 'tts-get-voice-command)
-                (lambda (voice) (format "<%s>" voice))))
-            (emacsvox-aural-list-voice-palette-previews 'reading)
-            (with-current-buffer "*Aural Voice Palette Preview*"
-              (should
-               (emacsvox-aural-voice-palette-previews--goto 'heading))
-              (should
-               (eq
-                (emacsvox-aural-voice-palette-previews-copy)
-                'voice-dired-directory))
-              (let ((definition
-                     (emacsvox-aural-voice
-                      'voice-dired-directory 'reading)))
-                (should (emacsvox-aural-voice-style-p definition))
-                (should-not (symbolp definition)))
-              (should (eq (tabulated-list-get-id) 'voice-dired-directory)))))
-      (when (get-buffer "*Aural Voice Palette Preview*")
-        (kill-buffer "*Aural Voice Palette Preview*")))))
 
 (ert-deftest emacsvox-aural-voice-palette-preview-copies-owned-voice-completely ()
   "The c command saves and selects a copy with independent local choices."

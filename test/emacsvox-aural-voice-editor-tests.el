@@ -32,6 +32,77 @@
                        (let ((kill-buffer-query-functions nil)) (kill-buffer)))))
                  emacsvox-aural-voice-editor--contexts)))))
 
+(ert-deftest emacsvox-aural-voice-editor-manager-edit-retains-both-views ()
+  (require 'emacsvox-aural-voice-palettes)
+  (emacsvox-test--with-voice-editor
+    (with-temp-buffer
+      (emacsvox-aural-voice-palettes-mode)
+      (emacsvox-aural-voice-palettes-refresh 'acss-default)
+      (cl-letf (((symbol-function 'emacsvox-aural-voice-palettes--read-entry-name)
+                 (lambda (_) 'bolden)))
+        (save-current-buffer (call-interactively (key-binding (kbd "e")))))
+      (should (derived-mode-p 'emacsvox-aural-voice-palettes-mode))
+      (let ((editor (plist-get (gethash '(base acss-default bolden) emacsvox-aural-voice-editor--contexts) :buffer)))
+        (with-current-buffer editor
+          (should (derived-mode-p 'emacsvox-aural-voice-editor-mode))
+          (should-not tabulated-list-entries)
+          (should (eq (emacsvox-aural-voice-editor--get :voice) 'bolden)))))))
+
+(ert-deftest emacsvox-aural-voice-editor-inherited-edit-reset-and-edit-again ()
+  (require 'emacsvox-aural-voice-palettes)
+  (emacsvox-test--with-voice-editor
+    (emacsvox-aural-register-voice-palette-data
+     '(:schema-version 3 :id child :summary "Child" :parent reading-owned :routing owned :entries nil))
+    (emacsvox-aural-save-user-data)
+    (let ((parent (emacsvox-aural-voice-drafts--palette-data 'reading-owned))
+          (original (emacsvox-aural-voice-runtime--resolve 'bolden 'child))
+          (source (get-buffer-create "*Reset voice test*")))
+      (unwind-protect
+          (progn
+            (with-current-buffer source
+              (emacsvox-aural-voice-palette-previews-mode)
+              (setq emacsvox-aural-voice-palette-previews-palette 'child)
+              (emacsvox-aural-voice-palette-previews-refresh 'bolden)
+              (call-interactively (key-binding (kbd "e"))))
+            (set-buffer (plist-get (gethash '(base child bolden) emacsvox-aural-voice-editor--contexts) :buffer))
+            (emacsvox-aural-voice-editor--put :automatic-sample nil)
+            (emacsvox-aural-voice-editor--set 'average-pitch 8)
+            (emacsvox-aural-voice-editor-save-to-collection)
+            (should (assq 'bolden (plist-get (emacsvox-aural-voice-drafts--palette-data 'child) :entries)))
+            (with-current-buffer source
+              (emacsvox-aural-voice-palette-previews-refresh 'bolden)
+              (should-error (call-interactively (key-binding (kbd "d"))) :type 'user-error)
+              (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+                (call-interactively (key-binding (kbd "R"))))
+              (should (eq (tabulated-list-get-id) 'bolden))
+              (should-not (gethash '(base child bolden) emacsvox-aural-voice-editor--contexts))
+              (call-interactively (key-binding (kbd "e"))))
+            (set-buffer (plist-get (gethash '(base child bolden) emacsvox-aural-voice-editor--contexts) :buffer))
+            (should-not (plist-get (emacsvox-aural-voice-drafts--palette-data 'child) :entries))
+            (should (equal original (emacsvox-aural-voice-runtime--resolve 'bolden 'child)))
+            (should (equal parent (emacsvox-aural-voice-drafts--palette-data 'reading-owned)))
+            (should (equal (plist-get (emacsvox-aural-voice-editor--working) :definition)
+                           (plist-get original :definition))))
+        (when (buffer-live-p source) (kill-buffer source))))))
+
+(ert-deftest emacsvox-aural-voice-editor-copy-built-in-is-a-personal-draft ()
+  (emacsvox-test--with-voice-editor
+    (let ((before (emacsvox-aural-read-user-data))
+          (root (emacsvox-aural-voice-drafts--palette-data 'acss-default))
+          (selected (emacsvox-aural-effective-voice-palette)))
+      (emacsvox-aural-voice-editor--copy 'acss-default 'bolden 'custom-copy (current-buffer) "Sample")
+      (should (equal before (emacsvox-aural-read-user-data)))
+      (should (eq (emacsvox-aural-effective-voice-palette) selected))
+      (cl-letf (((symbol-function 'read-string) (lambda (&rest _) "copied-child")))
+        (emacsvox-aural-voice-editor-save-to-collection))
+      (let ((data (emacsvox-aural-voice-drafts--palette-data 'copied-child)))
+        (should (eq (plist-get data :parent) 'acss-default))
+        (should (equal (mapcar #'car (plist-get data :entries)) '(custom-copy)))
+        (should (equal (plist-get (emacsvox-aural-voice-runtime--resolve 'custom-copy 'copied-child) :definition)
+                       (plist-get (emacsvox-aural-voice-runtime--resolve 'bolden 'acss-default) :definition))))
+      (should (equal root (emacsvox-aural-voice-drafts--palette-data 'acss-default)))
+      (should (eq (emacsvox-aural-effective-voice-palette) selected)))))
+
 (ert-deftest emacsvox-aural-voice-editor-opening-is-read-only-and-labels-shared-scope ()
   (emacsvox-test--with-voice-editor
    (let ((before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file)))

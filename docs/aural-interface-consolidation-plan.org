@@ -190,7 +190,7 @@ late personality registration, unknown names, raw styles, and owned local data.
 Include the paths that actually deliver named and unstyled speech; testing only
 the palette row builder is insufficient.
 
-** TODO 3. Complete palette and voice operations — High
+** DONE 3. Complete palette and voice operations — High
 
 The manager's Copy Palette now uses the complete copy and two-store save services.
 It copies effective entries and their ordered tuning, allocates independent local
@@ -204,6 +204,27 @@ Validation: 130 affected source tests and three fresh compiled operation tests
 passed; incremental byte-code compilation, its final preflight and documentation
 release checks passed. Remaining slice-3 work is parent-change impact,
 common editor entry points and explicit Reset/Delete behavior.
+
+The remaining operations are now implemented. Both Edit entry points use the
+complete editor; copying a built-in voice opens an unsaved personal-child draft.
+Reset is a separate =R= action in both managers and requires a real parent entry;
+Delete accepts only direct custom voices without an inherited replacement. Clean
+obsolete editor contexts are removed when their source is reset. Composite rule
+and face references are checked and renamed, while terminal personality
+implementations retain their independent identity.
+
+Changing parent validates known references and reports changed effective voices
+in the palette and descendants before the normal confirmation. It rejects dirty
+affected drafts, freezes sources and files through the save service, and discards
+clean obsolete contexts after successful publication. The end-to-end editor test
+edits, saves, resets, retains the inherited row and opens it for editing again.
+
+Validation: 388 affected source tests passed, including the complete operations,
+save recovery, preview callbacks and speech transport fixtures. One additional
+manager-to-editor interaction check and eight fresh compiled checks passed. The
+full rebuild was followed by an incremental pass for the final declaration;
+its byte-code preflight passed. Command references were regenerated and the
+documentation release check passed.
 
 New Palette creates an empty current palette with an explicit parent. Editing
 the built-in root prepares a personal child draft; browsing and previewing write

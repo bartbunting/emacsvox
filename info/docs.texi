@@ -67,7 +67,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1565 commands and 207 options.
+This chapter documents a total of 1567 commands and 207 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -5670,7 +5670,8 @@ Open the spoken manager for voice PALETTE providers.
 @findex emacsvox-aural-voice-palette-previews-copy
 
 @format
-Copy the current voice to a new, independently routable voice.
+Copy the complete voice at point under a new name.
+A built-in voice opens a personal draft; save it to create a personal child.
 @end format
 @end deffn
 
@@ -5688,7 +5689,7 @@ Confirm deletion of the current personal voice and select a remaining row.
 @findex emacsvox-aural-voice-palette-previews-edit
 
 @format
-Replace the effective voice at point using the guided definition editor.
+Open the complete voice editor for the effective voice at point.
 @end format
 @end deffn
 
@@ -5730,6 +5731,7 @@ A		emacsvox-aural-voice-palette-previews-play-all
 E		emacsvox-aural-voice-palette-previews-edit
 N		emacsvox-aural-voice-palette-previews-new
 P		emacsvox-aural-voice-palette-previews-play
+R		emacsvox-aural-voice-palette-previews-reset
 S		emacsvox-aural-voice-palette-previews-stop
 T		emacsvox-aural-voice-palette-previews-set-text
 c		emacsvox-aural-voice-palette-previews-copy
@@ -5834,6 +5836,15 @@ Refresh palette voices, preserving VOICE and the current column.
 
 @format
 Rename a personal custom voice and update its personal and live face mappings.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-reset
+@deffn {Command} emacsvox-aural-voice-palette-previews-reset
+@findex emacsvox-aural-voice-palette-previews-reset
+
+@format
+Reset the direct voice at point to its parent’s complete entry.
 @end format
 @end deffn
 
@@ -5952,7 +5963,7 @@ Display and speak the effective voices in palette ID.
 @findex emacsvox-aural-voice-palettes-edit-entry
 
 @format
-Create or replace one direct voice entry in the personal palette at point.
+Open the complete editor for a voice in the palette at point.
 @end format
 @end deffn
 
@@ -6015,6 +6026,7 @@ D		emacsvox-aural-voice-palettes-delete-entry
 E		emacsvox-aural-voice-palettes-edit-metadata
 N		emacsvox-aural-voice-palettes-create
 P		emacsvox-aural-voice-palettes-audition
+R		emacsvox-aural-voice-palettes-reset-entry
 a		emacsvox-aural-voice-palettes-activate
 c		emacsvox-aural-voice-palettes-copy
 d		emacsvox-aural-voice-palettes-delete
@@ -6092,6 +6104,15 @@ Refresh palettes while preserving ID and the current column.
 
 @format
 Rename a personal palette, preserving tuning, inheritance and profile uses.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-reset-entry
+@deffn {Command} emacsvox-aural-voice-palettes-reset-entry
+@findex emacsvox-aural-voice-palettes-reset-entry
+
+@format
+Choose a direct voice to reset to its parent’s complete entry.
 @end format
 @end deffn
 

@@ -1064,6 +1064,21 @@ a personal child containing the new voice."
     (when text (setf (plist-get context :text) text))
     (emacsvox-aural-voice-editor--show context (or source (current-buffer)))))
 
+(defun emacsvox-aural-voice-editor--copy (palette voice name source text)
+  "Open an independent NAME draft from PALETTE's VOICE, returning to SOURCE.
+Use TEXT for previews.  Saving from a built-in palette creates a personal child."
+  (let* ((opened (emacsvox-aural-voice-editing--snapshot palette voice nil))
+         (key (list 'base palette name)))
+    (when (plist-get opened :diagnostics)
+      (user-error "Cannot copy %s: its saved local voice choices are missing" voice))
+    (when (gethash key emacsvox-aural-voice-editor--contexts)
+      (user-error "A draft named %s already exists; save or discard it first" name))
+    (let* ((context (emacsvox-aural-voice-editor--context-for palette name t))
+           (snapshot (emacsvox-aural-voice-editing--freeze (plist-get opened :snapshot) palette)))
+      (emacsvox-aural-voice-drafts--edit (plist-get context :draft) snapshot)
+      (when text (setf (plist-get context :text) text))
+      (emacsvox-aural-voice-editor--show context source))))
+
 (defun emacsvox-aural-voice-editor-experiment (pair source text)
   "Open an exact physical PAIR experiment with adapter defaults and sample TEXT."
   (let* ((selector (list :kind 'exact :scope 'local :engine-id (plist-get (car pair) :engine-id)
