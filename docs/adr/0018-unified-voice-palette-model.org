@@ -6,7 +6,7 @@
 
 Accepted direction under the maintainer's 2026-09-10 authorization to consolidate
 the aural interface and remove its unused old version. This record specifies
-the implementation contract; implementation is pending. It supersedes ADR 0015's
+the implementation contract; implementation is underway. It supersedes ADR 0015's
 long-term coexistence of legacy shared routing and owned palettes, and its
 user-facing conversion-on-first-save workflow. The remaining ownership, storage,
 preview and composition requirements of ADRs 0015–0017 remain in force.
@@ -83,6 +83,68 @@ This preserves Voice Lock and current personality callers while retiring the old
 palette-management model. Raw ACSS objects, explicit styles, unstyled speech and
 =inaudible= retain their established interpretation. They are not missing named
 palette entries and must not be reclassified as such.
+
+** Preserve generated concrete ACSS voices
+
+=voice-from-acss= is a supported style API that returns an interned symbol, such
+as =acss-a4-p5-s6-r7=. Maths speech and the voice sampler put these symbols into
+personality properties. They carry computed styles independently of the selected
+palette; they are not additional named entries to browse or manage.
+
+Keep the API's symbol return type and stable spelling. Record each issued handle
+in a session registry owned by =voice-setup=, with an independent copy of the raw
+effective ACSS passed to the adapter. Capture after the optional static-family
+projection, before backend normalization. Preserve omitted/nil dimensions and
+zero; the neutral style's handle =acss= is valid too. Copy on storage and lookup
+so later mutation of an input or returned record cannot redefine the handle.
+
+Registry membership establishes concrete identity. Neither a matching prefix,
+a bound variable nor an adapter cache entry is sufficient. First issuance must
+establish the supplied style even if an unrelated adapter entry has that name;
+subsequent issuance of the same style may reuse its definition. Reject attempts
+to associate an existing handle with a different raw style instead of silently
+changing its meaning. Keep this metadata across palette changes and adapter
+cache resets. Recreate a missing adapter definition from its stored raw ACSS
+through the existing adapter lifecycle; never reconstruct it by parsing the name.
+
+Reserve the exact voice name =acss= and names beginning with =acss-= for this API.
+Reject them in named-entry creation, import and rename, and in stable personality
+declarations before changing registration state. This reservation concerns voice
+names, not palette IDs such as =acss-default=. It prevents collisions regardless
+of whether a palette entry or a generated handle would be created first. An
+unissued lookalike is still an unknown runtime voice. Preparation reports existing
+collisions or persisted handle references; it never silently renames them.
+
+Share this classification between compilation, validation and explanation, while
+distinguishing runtime values from durable named references. A generated handle
+remains a complete preset in the rule cascade: selecting it replaces the prior
+base, and later explicit dimensions can adjust it. Raw ACSS records retain their
+existing partial-style composition. Do not eagerly turn a handle into a partial
+plist, which would accidentally retain dimensions from an earlier voice. Compile
+the concrete base directly, with raw style metadata for composition and inspection,
+without palette lookup or shared per-name routing. Existing workstation policy
+and backend capability handling still apply.
+
+Runtime personality properties and contextual =:preset= values may contain issued
+handles. Persistent named-reference fields must not depend on session issuance.
+If a computed style is saved for reuse, store its complete raw definition in a
+named voice through the common editor, not the opaque handle. A stored contextual
+style must also preserve the explicit base reset. This adds no separate generated
+voice manager. Terminal stable =:personality= references remain valid when their
+implementation returns a handle; decoding them does not re-enter palette lookup.
+
+Keep generated handles in low-level adapter registration and speech transport.
+Both speech lanes, frozen registration snapshots, reconnection and inline commands
+must preserve their style through the existing acknowledged publication path.
+Being absent from the editable palette inventory is not a reason to remove them
+from those registries. No new protocol field or speech replay is required.
+
+An isolated fresh-Emacs probe confirmed both the missing distinction and a current
+collision: a generated handle had adapter ACSS but no compiled style metadata;
+adding a palette entry with its exact name compiled as pitch 9 instead of pitch 4
+and changed its logical registration. The inspected current personal data contains
+no =acss= or =acss-= references. These observations constrain implementation;
+they do not establish audible equivalence or convert personal files.
 
 ** Define missing-name behavior once
 

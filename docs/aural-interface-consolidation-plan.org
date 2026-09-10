@@ -34,6 +34,11 @@ design problem; give the concrete question and evidence. Max is not planned.
 | New Voice in an empty personal palette | Open one complete editable draft; no definition-only rejection after collecting values. |
 | =bolden= and =voice-bolden= requests | Same named entry and choices; terminal personality decoding does not recurse. |
 | Registered nonstandard personality | Exact declared identity remains usable and visible; no arbitrary prefix guessing. |
+| Generated =voice-from-acss= handle | Issued identity resolves to copied raw ACSS independently of the palette; maths and sampler speech retain their style. |
+| Generated preset followed by a style adjustment | Replace the previous base, then apply the adjustment; retain raw-record partial composition and nil/zero distinctions. |
+| Palette entry or stable personality named =acss= or =acss-*= | Reject the declaration before mutation, even before such a handle is issued; an unissued lookalike remains unknown. |
+| Generated handle after adapter cache reset | Recreate from retained raw ACSS and use existing registration for both lanes; do not parse the name. |
+| Persisted generated-handle reference | Report it before saving/importing/conversion; reusable saved voices carry complete definitions or stable references. |
 | Unknown named voice | Authoring rejects it; unexpected runtime use preserves content and supplies a diagnostic. |
 | Ordinary unstyled speech, explicit ACSS and inaudible | Preserve established semantics independently of named-voice lookup. |
 | Current =bart= conversion | Keep identity, stored representations, ordered local choices, tuning and profile references; enumerate added standard inheritance. |
@@ -109,21 +114,33 @@ reported no temporary per-name routes; the current session had no dirty voice
 drafts. The proposal has not been applied. Recheck current files and sessions
 before applying it in slice 4, and retain durable originals then.
 
-Next step requires a bounded XHI handoff before missing-name enforcement.
-=voice-from-acss= returns a generated symbol, not an ACSS record.
-=emacsvox-maths-acss= and =emacsvox-wizards-generate-voice-sampler= put these
-symbols into speech personality properties. The existing raw-ACSS predicate
-recognizes records only. Consequently, rejecting every non-palette symbol would
-degrade these legitimate concrete voices; treating every bound or adapter-known
-symbol as a palette voice would restore the hidden fallback ADR 0018 rejects.
+The bounded XHI handoff requested in =1fca47d6f= is resolved by ADR 0018's generated
+concrete ACSS contract. An isolated fresh-process probe confirmed that the current
+compiler loses raw metadata for these symbols and accepts a colliding palette
+entry that changes their pitch in compilation and registration. Maths and sampler
+callers need their concrete style identity preserved. Current personal data has
+no reserved generated-name references. No runtime enforcement or personal data
+changed during this design handoff.
 
-Settle the identity and validation contract for generated concrete ACSS handles:
-how they retain raw-style behavior without entering the standard named inventory,
-how they are distinguished from unknown names without prefix guessing, and what
-happens if a personal name collides with a handle. Then return to High for the
-remaining implementation. No missing-name enforcement has been changed yet.
-The two implementation commits are checked and usable with the recorded
-transitional readers; the maintainer's Home edit remains separate and untouched.
+Return to High before implementation. Add the raw generated-handle registry at
+the style API, exact membership classification and generated-name reservation.
+Preserve complete-preset composition, terminal personality decoding and adapter
+registration independently of named palette lookup. Then replace arbitrary-symbol
+fallback with the agreed unknown-name behavior across runtime and authoring,
+including contextual presets and nested voice values. Persistent references need
+durable definitions or stable names even when a handle is currently issued.
+
+Test real API issuance rather than treating a mocked adapter cache hit as proof
+of identity. Cover repeated issuance, unrelated cached names, both collision
+orders, neutral and zero-valued styles, mutation isolation, static family
+projection, palette changes, adapter reset and context composition. Exercise the
+maths/sampler paths and both transport lanes, including frozen registrations.
+Retain useful low-level adapter coverage when retiring palette fallback tests.
+The maintainer's Home edit remains separate and untouched.
+
+Design verification: selected-Emacs and byte-code preflights, the isolated
+collision probe, =git diff --check= and =make docs-release-check= passed.
+This documentation-only decision requires no application rebuild.
 
 Create schema-3 standard entries without changing their raw style/personality
 representations. Make constructors produce current complete data. Give aliases,
