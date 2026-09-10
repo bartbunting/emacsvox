@@ -619,7 +619,7 @@
       "left/right column    . speak titled cell\n"
       "RET open details or group; TAB expand/collapse group\n"
       "/ search all actions, including collapsed groups\n"
-      "SPC speak complete row; source and draft count are announced on entry\n"
+      "SPC speak complete row; the current row is announced on entry\n"
       "c guided Change this feedback\n"
       "x explain this item   r choose a voice for this item\n"
       "T edit the named voice used here; affects every use\n"
@@ -707,7 +707,7 @@
       (emacsvox-aural-home-refresh))
     (emacsvox-aural-ui--pop-to-buffer
      buffer (and (called-interactively-p 'interactive)
-                 (lambda () (emacsvox-aural-home-speak-current t))))
+                 #'emacsvox-aural-home-speak-current))
     buffer))
 
 (add-hook
