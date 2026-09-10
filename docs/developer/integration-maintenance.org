@@ -356,7 +356,7 @@ Keep the two established orders explicit.  Validation checks preset, family,
 the four numeric ACSS fields, post-synthesis fields, relative rate, and legacy
 rate.  The accepted-key inventory places relative and legacy rate before the
 post-synthesis fields.  ACSS dimension order also determines positional legacy
-personality settings, and rich dimension order determines tuner rows.
+personality settings, and rich dimension order determines adjustment rows.
 
 Every accepted field allows ~nil~.  Validation preserves the original plist,
 including duplicate fields, for which the first value is used.  Field absence,
@@ -375,29 +375,22 @@ future inheritance, omission, or reset policy needs a separate decision.
 Compiler conversion, backend wire names, capability discovery, normalization,
 and delivery stay in their existing owners.  When adding a field, update those
 consumers explicitly and test final serialized output or an explicit
-degradation.  The palette editor and tuner's typed-entry and increment/decrement
-bounds use this metadata through ~emacsvox-aural--voice-style-field~.  The
-complete ACSS editor obtains its four numeric fields from the ACSS inventory;
-it does not expand into editing rate or post-synthesis fields.
+degradation. The common voice editor uses the shared field metadata for bounds
+and neutral values. It covers portable ACSS and optional rate and post-synthesis
+adjustments in the same retained draft.
 
-Input grammar, labels, neutral values, and preview descriptions remain UI
-policy.  Ordinary numeric input accepts a single digit; blank retains an
-existing value, including zero.  Relative-rate input accepts signed integers
-and blank clears the explicit adjustment to ~nil~.  From ~nil~, horizontal
-adjustment starts at five for ordinary fields and at plus/minus one for rate.
-Low-pass and high-pass are exceptions: increase starts at amount one, while
-decrease rejects a step below their neutral amount zero.
+Input grammar remains UI policy. In the common voice editor, blank numeric
+entry requests the adapter default; zero is explicit. Individual choice fields
+distinguish shared inheritance, custom values and explicit adapter defaults.
+Rule-editor input has its own scoped inheritance semantics; do not substitute
+one editor's blank-input behavior for the other's.
 
-The tuner displays both filters as amounts from zero through nine, increasing
-with stronger filtering.  Low-pass converts between amount and stored cutoff
-with ~9 - value~; high-pass retains its numeric direction.  Zero is labelled
-neutral rather than claiming a filter bypass.  Stored cutoff values and
-adapter-default ~nil~ retain their meaning, preserving saved styles' sound.
-Arrows, digit shortcuts, typed entry, demonstrations and spoken review use the
-amount scale; blank numeric entry retains the current value without changing
-its stored representation.  Preview and persistence continue to use stored
-cutoffs.  Invalid boundary steps must fail before history, dirty state,
-refresh, or audition changes.
+The common editor displays low-pass and high-pass as amounts from zero through
+nine, increasing with stronger filtering. Low-pass converts between amount and
+stored cutoff with =9 - value=; high-pass retains its numeric direction. Zero
+is labelled neutral. Stored cutoffs and adapter-default nil retain their
+meaning. Invalid boundary steps must fail before history, dirty state, refresh
+or audition changes.
 
 Delivery preparation has the limited helper boundaries described below;
 asynchronous operation ownership remains a separate refactoring proposal.
@@ -408,12 +401,12 @@ saved rich palettes and explicit-nil rules; transport tests check distinct
 ACSS mappings, zero and omitted wire fields, effects, and preset behavior.
 ~make compiled-aural-test~ also runs these style contracts with the isolated
 compiled subsystem loaded, checking that the implementations stay in that
-build.  The ~voice-style-ui~ tests in
-=test/emacsvox-aural-voice-palettes-tests.el= exercise interactive numeric
-commands, prompts, blank input, boundaries, unchanged values, and undo in both
-source and compiled runs.  They capture auditions and do not start audio.
+build. The ~voice-style-ui~ tests exercise common-editor entry, inherited
+reset and draft retention in source and compiled runs. Editor tests also cover
+numeric bounds, explicit defaults, undo and comparison. They capture auditions
+and do not start audio.
 The connected saved-style regression edits a custom =bolden=, reads its saved
-data back, and compares tuner and Workbench preview settings with the final
+data back, and compares common-editor and Workbench previews with the final
 normal-speech wire for =voice-bolden=.  Workbench uses the compiler's palette
 resolution and the shared effect normalizer: gain and pan level five must
 remain exactly neutral at 0.5.  Preserve both this path and the independently
@@ -877,21 +870,19 @@ acceptance in an appropriate staging environment.
 :TEXINFO_NODE: no
 :END:
 
-Physical experiments reuse the tuner with an exact engine/voice selector,
-an immutable opening snapshot, a mutable working style, and undo history.
-They do not modify the palette registry, active palette, or route profile
-until the user explicitly keeps a reviewed result.  Navigation and Help use
-the working style.  A failed exact preview must be reported before ordinary
-speech can provide navigation fallback; a fallback sample must never be
-reported as the requested physical voice.
+Physical experiments use the common voice editor with an exact engine/voice
+selector, an immutable opening snapshot, a mutable working style and undo
+history. Navigation uses the ordinary voice. Experiments write no settings;
+Keep prepares a named-voice draft, including any reviewed row placement and
+adjustment scope. The destination still requires an explicit save.
 
-Keep proposals snapshot the destination palette and routing profile as well
-as the proposed result.  Check those snapshots before writing, and retain
-separate completion flags for palette write, route write, and route apply.
-A retry must not repeat a successful write.  If routing saves but application
-fails, keep that distinction visible and retry the application step.  Never
-report the combined operation complete while one selected destination failed.
-Portable style storage and machine-local routing storage remain separate.
+The unified palette contract is recorded in ADR 0018. Every nonroot palette
+uses complete schema 3 entries and an explicit parent chain to =acss-default=.
+Palette definitions and immutable local-choice snapshots are saved through the
+common coordinator. Frozen proposals retain separate persistence and apply
+completion, and retry does not repeat a successful write. Save failures,
+acknowledged application and actual playback evidence remain separate.
+Workstation routing profiles contain global engine policy, not per-name routes.
 
 Labelled comparisons use one controlled preview sequence, with identical
 sample text and separately configurable labels.  Each sequence belongs to

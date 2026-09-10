@@ -19,16 +19,24 @@ Collect and triage live feedback on the validated Phase 9 support recorded in
 separately, preserving the documented privacy and conservative-speech
 boundaries.
 
+** TODO Design an ordinary preferred physical-voice control
+
+Aural Home already groups engine, rate, notification and spatial controls.
+Selecting a physical voice for ordinary speech needs a bounded runtime policy
+and configure-and-test journey. Do not reuse the global final fallback selector
+as though it were an ordinary preferred voice. Preserve the distinction between
+session choice, saved engine policy and palette-owned named voice choices.
+Notification output now says Use main output; a persistent mute would be a
+separate behavior, not a relabelling of that setting.
+
 ** TODO Complete spoken acceptance of the unified voice editor
 
 Follow [[file:../voice-editor-design.org][the voice editor design]] and [[file:../adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] for palette-owned base voices:
-preferred physical choices, fallback order and shared adjustments. Independent
-conversion on first save is accepted. Individual choice adjustments, preview
+preferred physical choices, fallback order and shared adjustments. The unified model in [[file:../adr/0018-unified-voice-palette-model.org][ADR 0018]] supersedes first-save conversion. Individual choice adjustments, preview
 and runtime delivery are implemented under the accepted contract.
 Simple editing should expose one voice, common adjustments, preview and one
 save action; fallback configuration and individual tuning expand on demand.
-The new formats, read-only conversion proposals and nonactivating writers are
-implemented. Owned runtime integration, draft/save recovery and the common base
+Complete entries and nonactivating writers are implemented. Owned runtime integration, draft/save recovery and the common base
 editor are tested. Optional context inspection and scoped field editing now
 preserve the existing cascade. Optional fallback controls, source explanations
 and experiment keeps are implemented. Live spoken acceptance remains pending.

@@ -317,7 +317,7 @@ startup passes, and all 12 new tool journeys pass against that compiled tree.
 Public references were regenerated; the documentation release preflight passes.
 The original Home announcement edits remain separate.
 
-** TODO 6. Simplify tables and finish common navigation — Medium
+** DONE 6. Simplify tables and finish common navigation — Medium
 
 Use selected-column vertical speech consistently in tables. Put voice or engine
 names first. Move aliases, repeated adapters, native IDs and detailed capability
@@ -335,6 +335,27 @@ all changed managers. Refresh an already open profile table after Use at Startup
 so its displayed saved palette follows the updated registry. Update maintained
 manual text and generated artifacts under
 the normal documentation workflow once wording settles.
+
+Completed in =5940ff522= plus the accompanying manual update. Selected-column
+movement now takes precedence over name/state summaries outside the first
+column. Compact Workbench tables lead with names, retaining choice order,
+availability, health and playback evidence. Details retains technical fields
+and captures the actual Workbench state before opening Help. Palette tables no
+longer repeat the adapter. Use at Startup refreshes an open Profiles view.
+Notification Customize says Use main output (notifications remain audible).
+
+The maintained user and developer guides now describe the common editor,
+whole-entry inheritance, aliases, source/uses, Reset versus Delete, startup and
+sharing. Existing output controls remain together in Home. The developer
+backlog records a bounded ordinary preferred physical-voice follow-up; no new
+runtime policy was inferred from final fallback.
+
+Validation: 767 source-preferred tests passed, isolated compiled parity passed,
+and 55 UI/tool tests passed in a fresh process asserting compiled application
+functions. =make bytecode=, =make build-aural-test=, Org preview,
+=make docs-reference=, =make docs-update= and =make docs-release-check= passed.
+The original Home announcement edits remain separate. Live spoken acceptance
+is still pending. Stop here for the XHI focused integration review.
 
 ** TODO 7. Focused integration review — XHI
 

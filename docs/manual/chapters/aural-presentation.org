@@ -182,7 +182,7 @@ the source cursor while Home is open does not change this target.  In Home,
 Returning through Home or Help preserves the selected row and unfinished
 edits.  Buffer rule editors retain separate drafts for each source buffer;
 reopening a modified editor resumes its draft.  Reopening the same voice in
-the tuner likewise preserves its working settings.  If a prepared remap's
+the voice editor likewise preserves its working settings.  If a prepared remap's
 source item changes or disappears, Emacsvox asks you to prepare that change
 again before applying it.
 
@@ -204,17 +204,18 @@ Panel entry, return, selection, and warning cues accompany their spoken
 feedback in one utterance.  Returning from a panel announces the destination
 and any unfinished draft warning together.  These cues follow the icon
 setting, sound pack, and cue remapping rules.
-The older tuner uses the normal navigation voice for these announcements;
+The voice editor uses the normal navigation voice for these announcements;
 auditions still play the working voice.
 
 The common controls are:
 
 #+attr_texinfo: :indic kbd :compact t
-- n, p, down, up :: Move by row; settings lists speak the name and current state.
+- n, p, down, up :: Move by row, retaining and speaking the selected column.
+  In the first column, settings lists announce the name and current state.
 - left, right :: Move among the titled columns.
 - . :: Speak the current column title and value.
 - SPC :: Speak the complete current row.
-- RET :: Open a destination, child list, or details. In the tuner, edit a value.
+- RET :: Open a destination, child list, or details. In the voice editor, edit a value.
 - C-c C-a :: Choose an applicable action by name.
 - N :: Create a new item where supported.
 - P :: Preview in managers and editors; Home retains its profiles shortcut.
@@ -234,7 +235,7 @@ The five groups are:
 | Troubleshoot | Aural Doctor and Omnivox engine modules. |
 
 Home announces the captured source and unfinished draft count on entry.
-Choose /Resume unfinished changes/ to visit the original rule editor, tuner,
+Choose /Resume unfinished changes/ to visit the original rule editor, voice editor,
 or routing Workbench.  The draft is still unsaved until you accept it there.
 Presentation Profiles capture options, palette, sound pack, and spatial
 settings.  Physical voice routes have their own saved routing profile.
@@ -392,7 +393,7 @@ frozen example.
 
 2. Press @@texinfo:@kbd{C-e H}@@.  Choose /Remap voice at point/ with
    @@texinfo:@kbd{r}@@ to use a different named voice here, or /Tune voice used
-   here/ with @@texinfo:@kbd{T}@@ to open the current named voice in its tuner.
+   here/ with @@texinfo:@kbd{T}@@ to open the current named voice in the common voice editor.
    Tuning changes that voice wherever it is used in the palette; remapping
    changes which voice is used for the face or item.  For example, at a shell
    prompt you can assign another voice to the prompt face, or tune the voice
@@ -536,7 +537,9 @@ Four terms help when adjusting voices:
   heading distinction without naming one synthesizer voice.
 
 - A /voice palette/ gives named logical voices portable style characteristics.
-  Palettes can inherit from another palette and travel between machines.
+  Each named entry includes its style, ordered physical choices and individual
+  adjustments. Palettes can inherit from another palette and travel between
+  machines; exact local choices may need replacement on another machine.
 
 - A /physical voice/ is an actual voice reported by an installed speech engine.
   Its exact identifier is usually machine-local.
@@ -548,24 +551,70 @@ Use the /Voice Palettes/ manager when you want to choose or edit the portable
 style vocabulary.  Press @@texinfo:@key{RET}@@ on a palette to browse its voices,
 use @@texinfo:@kbd{P}@@ to audition the palette sequence before editing, and use @@texinfo:@kbd{a}@@ in the palette manager to
 activate a selected palette.  Built-in palettes remain intact; editing can
-create a personal copy.
+open an unsaved personal child in the common editor.
 
 Opening the manager announces its selected palette.  Entering a palette
 announces its name, voice count, selected voice and main keys.
 
-In a personal palette's voice list, press @@texinfo:@kbd{c}@@ on a voice and
-enter a new name to save an independent copy.  For palette-owned voices this
-includes physical voice choices, their fallback order, and individual tuning.
-The new voice is selected after saving; the original voice is unchanged.
+The /Kind/ column distinguishes personal palettes, built-in palettes and the
+standard default. /Parent/ names the palette used for inherited entries.
+The read-only ~acss-default~ palette is the common root: a chain such as
+~a -> b -> c -> acss-default~ is supported. It supplies the standard named
+personalities declared by Emacsvox and loaded integrations; it is not a fixed
+list of every custom voice you may create. Only the root has no parent.
 
-Press @@texinfo:@kbd{d}@@ in the voice list to delete the selected direct voice
-from a personal palette, then confirm its name and palette.  Other voices and
-their tuning are preserved.  Deleting an override restores its inherited or
-standard voice; the confirmation says when this will happen.  Built-in and
-inherited entries cannot be deleted here.  If removing a custom voice would
-leave a registered mapping without its voice, remap that use first.  Save or
-discard unfinished voice edits before deleting.  An empty palette remains
-open; press @@texinfo:@kbd{o}@@ to return to the palette manager.
+Inheritance takes the nearest complete entry: its style, physical choice
+order and each choice's adjustments stay together. It does not combine pieces
+of the same voice from several parents. The voice list's /Source/ column names
+the palette supplying that entry. Press @@texinfo:@kbd{O}@@ to open its source,
+or @@texinfo:@kbd{u}@@ for Where Used. Where Used shows known loaded references,
+declared aliases and affected descendants; it cannot inspect configuration
+that has not been loaded. Editing an entry shared by descendants asks you to
+review the affected palettes and known uses.
+
+An /alias/ is a declared alternative spelling for a named voice, such as
+~voice-bolden~ for ~bolden~. It uses the same entry. Aliases are maintained by
+integrations, not edited as separate voices in the palette manager. Use Copy
+Voice when you want a separately adjustable voice.
+
+Press @@texinfo:@kbd{N}@@ in the voice list for New Voice or
+@@texinfo:@kbd{c}@@ for Copy Voice. Both open an unsaved draft in the common
+editor. Copy retains the complete effective voice, including fallback order and
+individual adjustments. Editing or copying a built-in voice asks for a personal
+child palette; saving adds only the requested direct entry to that child.
+Opening or previewing the draft does not save it.
+
+Press @@texinfo:@kbd{R}@@ to Reset a personal definition to its inherited
+entry. The confirmation names the source that will become effective. Use
+@@texinfo:@kbd{d}@@ to Delete a direct custom voice that has no inherited
+replacement. Built-in and inherited entries cannot be deleted here. If deletion
+would leave a known reference without a voice, remap that use first. Save or
+discard unfinished voice edits before deleting. Press @@texinfo:@kbd{o}@@ to
+return to the palette manager.
+
+In the palette manager, New Palette with @@texinfo:@kbd{N}@@ creates a child
+of the chosen parent. Copy Palette with @@texinfo:@kbd{c}@@ instead saves an
+independent copy of all effective entries with ~acss-default~ as its parent.
+Its local physical choices belong to the new palette. Use the summary and
+parent action, @@texinfo:@kbd{E}@@, to review or change a personal palette's
+parent; the manager rejects inheritance cycles.
+
+Activation with @@texinfo:@kbd{a}@@ lasts for this session. Press
+@@texinfo:@kbd{f}@@ to follow the current scheme's baseline palette again.
+Use at Startup, @@texinfo:@kbd{U}@@, changes the palette in the selected saved
+Presentation Profile while preserving its other saved fields. It does not
+apply that profile to the current session. If no startup profile exists, the
+action asks you to review a new profile captured from the current setup.
+An already open Profiles view refreshes to show the saved choice.
+
+For sharing, @@texinfo:@kbd{w}@@ exports effective portable entries and asks
+before omitting machine-local physical choices. @@texinfo:@kbd{W}@@ creates a
+full local backup containing the palette's ancestry and referenced local
+choices. Import with @@texinfo:@kbd{i}@@ accepts either file and creates an
+independent personal palette under an unused name; it does not replace the
+original ancestry tree or activate the imported palette. Missing installed
+voices are reported and retained for later replacement. A partial import keeps
+its proposal available for Retry or Discard.
 
 Press @@texinfo:@kbd{r}@@ in the voice list to rename a custom voice
 defined directly in that personal palette.  Enter the new name to save it;
@@ -578,7 +627,7 @@ global and buffer face maps.  Personal rules and the voice are saved together;
 a failed save leaves the old name and mappings usable.  Face mappings declared
 in your own Lisp configuration must also be updated there for future sessions.
 References in separately maintained schemes, fragments, other voice definitions
-or shared routes still block the rename; update those uses first.  Renaming also
+still block the rename; update those uses first.  Renaming also
 stops if another palette directly defines either name, because mappings are shared.
 
 To rename a personal palette, select it in /Voice Palettes/, press
@@ -701,18 +750,18 @@ require per-choice support; an individual audition is available only when its
 settings can be represented faithfully, including adapter defaults. Saving
 remains available when that preview is unavailable.
 
-For a legacy palette, the editor shows the saved routing profile used as its
-source. First save asks for an independent personal palette name and copies
-its effective definitions and explicit choices. Opening and previewing do not
-create that copy. Later edits save directly to the personal palette. Temporary
-routes are identified and excluded from this saved base. Presentation Profiles
-continue to refer to their existing palettes until explicitly changed.
+All named voices use the common editor and the same complete palette model.
+Workbench engine policy is shared across palettes: @@texinfo:@kbd{O}@@ toggles
+preferred engines and @@texinfo:@kbd{[}@@ / @@texinfo:@kbd{]}@@ reorder them;
+@@texinfo:@kbd{f}@@ toggles fallback engines and ~{~ / ~}~ reorder those. @@texinfo:@kbd{D}@@ enables or disables an
+engine, and @@texinfo:@kbd{K}@@ requests a recovery probe. These are staged
+policy edits; @@texinfo:@kbd{w}@@ saves and applies them. Physical choices for
+a named voice are saved in that voice's editor.
 
-The Workbench's advanced assignment and routing-profile commands remain
-available for legacy shared routing. Their staged edits still require the
-Workbench's own save action. Palette-owned physical choices are edited through
-@@texinfo:@kbd{t}@@; changing the shared routing profile does not replace them.
-Workstation engine order and fallback policy continue to apply to both models.
+Tables put voice or engine names first. Detailed adapter capabilities, native
+identifiers and registration information are available with @@texinfo:@kbd{x}@@
+for Details. Availability, failure reasons, predicted selection and observed
+playback remain distinct. Inventory predictions do not prove that audio played.
 
 Applying waits for each speech stream to acknowledge its configuration.  If
 an Omnivox apply times out, the Workbench reports /server outcome unconfirmed/.
@@ -723,7 +772,7 @@ the committed profile and obtain a fresh result.  Save or cancel any newer
 staged edits before retrying.  A partial result retains the streams that
 acknowledged success and identifies those that timed out.
 
-The tuner presents /Low-pass Amount/ and /High-pass Amount/ from zero through
+The voice editor presents /Low-pass Amount/ and /High-pass Amount/ from zero through
 nine. Higher amounts mean more filtering: low-pass removes more high
 frequencies, and high-pass removes more low frequencies. Zero is the neutral
 cutoff; blank numeric entry requests the adapter default. The amount scale
@@ -731,11 +780,11 @@ applies to arrows and numeric entry in the common editor. Existing
 saved styles retain their sound; stored low-pass cutoff values keep their
 original meaning.
 
-The tuner names other neutral effect values instead of speaking an ambiguous number:
+The voice editor names other neutral effect values instead of speaking an ambiguous number:
 gain five is /unchanged/, pan five is /centre/, and reverb, echo, or chorus zero is
 /disabled/.  Chorus adds a bounded doubled-voice modulation without changing
 speech duration or marker positions.  It is applied by Omnivox to buffered
-audio; the tuner reports when the selected route cannot apply it.  These
+audio; the voice editor reports when the selected route cannot apply it.  These
 portable levels are translated to the exact values required by the active
 adapter.
 
@@ -759,6 +808,16 @@ preference.  On a first run with no saved routing profile, the ordinary command
 uses the live Omnivox policy as an in-memory baseline and writes no file; the
 prefixed command explicitly saves that baseline and the selected preference.
 Explicit logical-voice routes still take precedence.
+
+Home groups speech engine, rate, notification output and spatial controls under
+/Choose voices and sounds/. Speech rate applies to the remembered source buffer;
+a prefix sets the global rate. Notification Output opens Customize:
+/Automatic/ uses the backend's normal notification arrangement, while
+/Use main output (notifications remain audible)/ sends notification speech
+through the main process. It does not mute notifications. Initialize the chosen
+notification arrangement with @@texinfo:@kbd{C-e d C-n}@@. /Stop notification
+speech/ stops the current notification stream; it is not a persistent mute.
+Use Customize's save action to retain output choices across restarts.
 
 Judge voices in context.  The goal is usually to distinguish nearby kinds of
 content, not to identify every named voice in isolation.  Use a portable
@@ -820,7 +879,7 @@ A physical voice can replace a selected row, become preferred, or be appended
 as a fallback. Row-level adjustments replace that row's tuning with the
 experiment's values and adapter defaults. This prevents unrelated destination
 shared settings from changing the experiment's base sound. Use =i= in the row's
-optional tuner for any field you want to inherit afterward.
+individual adjustment panel for any field you want to inherit afterward.
 
 Other rows and shared settings are retained during a row-level keep. Replacing
 only the physical voice asks whether to keep or reset an existing row's custom
@@ -854,9 +913,9 @@ Retained drafts survive closing the view and can be reopened from Home's
 /Resume unfinished changes/ during this Emacs session. They do not survive
 restarting Emacs. Leaving does not undo a completed save.
 
-/Save and apply/ selects the palette for this session. Use the existing
-Presentation Profile action to retain that selection after restart. Palette
-and local-choice files are separate; the editor coordinates their writes and
+/Save and apply/ selects the palette for this session. Use the
+/Use at Startup/ action, @@texinfo:@kbd{U}@@ in Voice Palettes, to retain
+that selection after restart. Palette and local-choice files are separate; the editor coordinates their writes and
 reports partial failures in the same view.
 
 *** Inspect Or Adjust A Voice In Context
@@ -879,8 +938,7 @@ relative-rate values do not add together.
 
 @@texinfo:@kbd{P}@@ plays the edited voice in this context;
 @@texinfo:@kbd{B}@@ compares original and edited using the same captured facts,
-rules and text. These voice-only previews omit cues, spatial placement and
-temporary routing overrides. Family remains a portable fallback outside full
+rules and text. These voice-only previews omit cues and spatial placement. Family remains a portable fallback outside full
 preview. On a server with per-choice support, the actual fallback's settings
 are applied before the captured context. An explicit rule value still overrides
 that row when it happens to equal the shared value. Requested values are
@@ -941,17 +999,16 @@ contextual result back into the palette.
 :END:
 
 After finding a useful setting in the physical experiment, press
-@@texinfo:@kbd{w}@@ and choose a destination palette and named voice. Keep
-/Physical voice only/ to retain the destination's shared adjustments, /Shared
-adjustments only/ to retain its existing physical choices, or /Both/. Shared
-adjustments affect every fallback choice in the destination voice.
+@@texinfo:@kbd{w}@@ and choose a destination palette and named voice. Keep the
+physical choice and its adjustments together, the physical voice only, the
+adjustments for a selected row, or shared adjustments for inheriting rows.
+Choose replacement, preferred or fallback placement when keeping a physical
+choice. Review the proposed combination in the destination editor and press
+@@texinfo:@kbd{P}@@ to hear it before saving with @@texinfo:@kbd{w}@@.
 
-For the physical choice, choose replacement, preferred, or fallback placement.
-The destination editor shows the proposed combination. Press @@texinfo:@kbd{P}@@
-to hear it, then @@texinfo:@kbd{w}@@ to save and apply. First saving a legacy
-palette asks for an independent personal palette name. A partial failure stays
+A built-in destination opens a personal-child draft. A partial save stays
 visible in that editor and can be retried. Selection lasts for this session;
-use a Presentation Profile to retain it after restart.
+use @@texinfo:@kbd{U}@@ in Voice Palettes to retain it after restart.
 
 **** Change A Heading Voice, Add A Cue, Or Silence One
 :PROPERTIES:

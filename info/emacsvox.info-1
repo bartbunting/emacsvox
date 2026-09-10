@@ -2537,9 +2537,9 @@ H’ afresh from that item in an ordinary buffer.
    Returning through Home or Help preserves the selected row and
 unfinished edits.  Buffer rule editors retain separate drafts for each
 source buffer; reopening a modified editor resumes its draft.  Reopening
-the same voice in the tuner likewise preserves its working settings.  If
-a prepared remap's source item changes or disappears, Emacsvox asks you
-to prepare that change again before applying it.
+the same voice in the voice editor likewise preserves its working
+settings.  If a prepared remap's source item changes or disappears,
+Emacsvox asks you to prepare that change again before applying it.
 
    Aural Home begins with five task groups in one spoken table.  Press
 <RET> or <TAB> to expand or collapse a group.  Each action names a
@@ -2558,14 +2558,15 @@ presentation rules.  Key instructions remain available in Help.
    Panel entry, return, selection, and warning cues accompany their
 spoken feedback in one utterance.  Returning from a panel announces the
 destination and any unfinished draft warning together.  These cues
-follow the icon setting, sound pack, and cue remapping rules.  The older
-tuner uses the normal navigation voice for these announcements;
+follow the icon setting, sound pack, and cue remapping rules.  The voice
+editor uses the normal navigation voice for these announcements;
 auditions still play the working voice.
 
    The common controls are:
 
 ‘n, p, down, up’
-     Move by row; settings lists speak the name and current state.
+     Move by row, retaining and speaking the selected column.  In the
+     first column, settings lists announce the name and current state.
 ‘left, right’
      Move among the titled columns.
 ‘.’
@@ -2573,8 +2574,8 @@ auditions still play the working voice.
 ‘SPC’
      Speak the complete current row.
 ‘RET’
-     Open a destination, child list, or details.  In the tuner, edit a
-     value.
+     Open a destination, child list, or details.  In the voice editor,
+     edit a value.
 ‘C-c C-a’
      Choose an applicable action by name.
 ‘N’
@@ -2609,10 +2610,10 @@ Troubleshoot              Aural Doctor and Omnivox engine modules.
 
    Home announces the captured source and unfinished draft count on
 entry.  Choose _Resume unfinished changes_ to visit the original rule
-editor, tuner, or routing Workbench.  The draft is still unsaved until
-you accept it there.  Presentation Profiles capture options, palette,
-sound pack, and spatial settings.  Physical voice routes have their own
-saved routing profile.
+editor, voice editor, or routing Workbench.  The draft is still unsaved
+until you accept it there.  Presentation Profiles capture options,
+palette, sound pack, and spatial settings.  Physical voice routes have
+their own saved routing profile.
 
    You can press <RET> on a row without memorizing its shortcut.  Aural
 Home also provides direct keys for frequent routes, including ‘x’ for
@@ -2769,12 +2770,12 @@ remain tied to the selected frozen example.
 
   2. Press ‘C-e H’.  Choose _Remap voice at point_ with ‘r’ to use a
      different named voice here, or _Tune voice used here_ with ‘T’ to
-     open the current named voice in its tuner.  Tuning changes that
-     voice wherever it is used in the palette; remapping changes which
-     voice is used for the face or item.  For example, at a shell prompt
-     you can assign another voice to the prompt face, or tune the voice
-     currently used by prompts.  You do not need to hear the prompt
-     first.
+     open the current named voice in the common voice editor.  Tuning
+     changes that voice wherever it is used in the palette; remapping
+     changes which voice is used for the face or item.  For example, at
+     a shell prompt you can assign another voice to the prompt face, or
+     tune the voice currently used by prompts.  You do not need to hear
+     the prompt first.
 
      In the remapping screen, move with ‘n’ and ‘p’ or the arrow keys.
      Press ‘RET’ on _Voice_ to choose a voice, _Preview original_ to
@@ -2904,8 +2905,10 @@ Four terms help when adjusting voices:
      voice.
 
    • A _voice palette_ gives named logical voices portable style
-     characteristics.  Palettes can inherit from another palette and
-     travel between machines.
+     characteristics.  Each named entry includes its style, ordered
+     physical choices and individual adjustments.  Palettes can inherit
+     from another palette and travel between machines; exact local
+     choices may need replacement on another machine.
 
    • A _physical voice_ is an actual voice reported by an installed
      speech engine.  Its exact identifier is usually machine-local.
@@ -2917,26 +2920,72 @@ Four terms help when adjusting voices:
 portable style vocabulary.  Press <RET> on a palette to browse its
 voices, use ‘P’ to audition the palette sequence before editing, and use
 ‘a’ in the palette manager to activate a selected palette.  Built-in
-palettes remain intact; editing can create a personal copy.
+palettes remain intact; editing can open an unsaved personal child in
+the common editor.
 
    Opening the manager announces its selected palette.  Entering a
 palette announces its name, voice count, selected voice and main keys.
 
-   In a personal palette's voice list, press ‘c’ on a voice and enter a
-new name to save an independent copy.  For palette-owned voices this
-includes physical voice choices, their fallback order, and individual
-tuning.  The new voice is selected after saving; the original voice is
-unchanged.
+   The _Kind_ column distinguishes personal palettes, built-in palettes
+and the standard default.  _Parent_ names the palette used for inherited
+entries.  The read-only ‘acss-default’ palette is the common root: a
+chain such as ‘a -> b -> c -> acss-default’ is supported.  It supplies
+the standard named personalities declared by Emacsvox and loaded
+integrations; it is not a fixed list of every custom voice you may
+create.  Only the root has no parent.
 
-   Press ‘d’ in the voice list to delete the selected direct voice from
-a personal palette, then confirm its name and palette.  Other voices and
-their tuning are preserved.  Deleting an override restores its inherited
-or standard voice; the confirmation says when this will happen.
-Built-in and inherited entries cannot be deleted here.  If removing a
-custom voice would leave a registered mapping without its voice, remap
-that use first.  Save or discard unfinished voice edits before deleting.
-An empty palette remains open; press ‘o’ to return to the palette
-manager.
+   Inheritance takes the nearest complete entry: its style, physical
+choice order and each choice's adjustments stay together.  It does not
+combine pieces of the same voice from several parents.  The voice list's
+_Source_ column names the palette supplying that entry.  Press ‘O’ to
+open its source, or ‘u’ for Where Used.  Where Used shows known loaded
+references, declared aliases and affected descendants; it cannot inspect
+configuration that has not been loaded.  Editing an entry shared by
+descendants asks you to review the affected palettes and known uses.
+
+   An _alias_ is a declared alternative spelling for a named voice, such
+as ‘voice-bolden’ for ‘bolden’.  It uses the same entry.  Aliases are
+maintained by integrations, not edited as separate voices in the palette
+manager.  Use Copy Voice when you want a separately adjustable voice.
+
+   Press ‘N’ in the voice list for New Voice or ‘c’ for Copy Voice.
+Both open an unsaved draft in the common editor.  Copy retains the
+complete effective voice, including fallback order and individual
+adjustments.  Editing or copying a built-in voice asks for a personal
+child palette; saving adds only the requested direct entry to that
+child.  Opening or previewing the draft does not save it.
+
+   Press ‘R’ to Reset a personal definition to its inherited entry.  The
+confirmation names the source that will become effective.  Use ‘d’ to
+Delete a direct custom voice that has no inherited replacement.
+Built-in and inherited entries cannot be deleted here.  If deletion
+would leave a known reference without a voice, remap that use first.
+Save or discard unfinished voice edits before deleting.  Press ‘o’ to
+return to the palette manager.
+
+   In the palette manager, New Palette with ‘N’ creates a child of the
+chosen parent.  Copy Palette with ‘c’ instead saves an independent copy
+of all effective entries with ‘acss-default’ as its parent.  Its local
+physical choices belong to the new palette.  Use the summary and parent
+action, ‘E’, to review or change a personal palette's parent; the
+manager rejects inheritance cycles.
+
+   Activation with ‘a’ lasts for this session.  Press ‘f’ to follow the
+current scheme's baseline palette again.  Use at Startup, ‘U’, changes
+the palette in the selected saved Presentation Profile while preserving
+its other saved fields.  It does not apply that profile to the current
+session.  If no startup profile exists, the action asks you to review a
+new profile captured from the current setup.  An already open Profiles
+view refreshes to show the saved choice.
+
+   For sharing, ‘w’ exports effective portable entries and asks before
+omitting machine-local physical choices.  ‘W’ creates a full local
+backup containing the palette's ancestry and referenced local choices.
+Import with ‘i’ accepts either file and creates an independent personal
+palette under an unused name; it does not replace the original ancestry
+tree or activate the imported palette.  Missing installed voices are
+reported and retained for later replacement.  A partial import keeps its
+proposal available for Retry or Discard.
 
    Press ‘r’ in the voice list to rename a custom voice defined directly
 in that personal palette.  Enter the new name to save it; the renamed
@@ -2949,10 +2998,10 @@ mappings, and loaded global and buffer face maps.  Personal rules and
 the voice are saved together; a failed save leaves the old name and
 mappings usable.  Face mappings declared in your own Lisp configuration
 must also be updated there for future sessions.  References in
-separately maintained schemes, fragments, other voice definitions or
-shared routes still block the rename; update those uses first.  Renaming
-also stops if another palette directly defines either name, because
-mappings are shared.
+separately maintained schemes, fragments, other voice definitions still
+block the rename; update those uses first.  Renaming also stops if
+another palette directly defines either name, because mappings are
+shared.
 
    To rename a personal palette, select it in _Voice Palettes_, press
 ‘r’, and enter its new name.  The rename is saved immediately.  It
@@ -3083,20 +3132,19 @@ available only when its settings can be represented faithfully,
 including adapter defaults.  Saving remains available when that preview
 is unavailable.
 
-   For a legacy palette, the editor shows the saved routing profile used
-as its source.  First save asks for an independent personal palette name
-and copies its effective definitions and explicit choices.  Opening and
-previewing do not create that copy.  Later edits save directly to the
-personal palette.  Temporary routes are identified and excluded from
-this saved base.  Presentation Profiles continue to refer to their
-existing palettes until explicitly changed.
+   All named voices use the common editor and the same complete palette
+model.  Workbench engine policy is shared across palettes: ‘O’ toggles
+preferred engines and ‘[’ / ‘]’ reorder them; ‘f’ toggles fallback
+engines and ‘{’ / ‘}’ reorder those.  ‘D’ enables or disables an engine,
+and ‘K’ requests a recovery probe.  These are staged policy edits; ‘w’
+saves and applies them.  Physical choices for a named voice are saved in
+that voice's editor.
 
-   The Workbench's advanced assignment and routing-profile commands
-remain available for legacy shared routing.  Their staged edits still
-require the Workbench's own save action.  Palette-owned physical choices
-are edited through ‘t’; changing the shared routing profile does not
-replace them.  Workstation engine order and fallback policy continue to
-apply to both models.
+   Tables put voice or engine names first.  Detailed adapter
+capabilities, native identifiers and registration information are
+available with ‘x’ for Details.  Availability, failure reasons,
+predicted selection and observed playback remain distinct.  Inventory
+predictions do not prove that audio played.
 
    Applying waits for each speech stream to acknowledge its
 configuration.  If an Omnivox apply times out, the Workbench reports
@@ -3108,21 +3156,22 @@ obtain a fresh result.  Save or cancel any newer staged edits before
 retrying.  A partial result retains the streams that acknowledged
 success and identifies those that timed out.
 
-   The tuner presents _Low-pass Amount_ and _High-pass Amount_ from zero
-through nine.  Higher amounts mean more filtering: low-pass removes more
-high frequencies, and high-pass removes more low frequencies.  Zero is
-the neutral cutoff; blank numeric entry requests the adapter default.
-The amount scale applies to arrows and numeric entry in the common
-editor.  Existing saved styles retain their sound; stored low-pass
-cutoff values keep their original meaning.
+   The voice editor presents _Low-pass Amount_ and _High-pass Amount_
+from zero through nine.  Higher amounts mean more filtering: low-pass
+removes more high frequencies, and high-pass removes more low
+frequencies.  Zero is the neutral cutoff; blank numeric entry requests
+the adapter default.  The amount scale applies to arrows and numeric
+entry in the common editor.  Existing saved styles retain their sound;
+stored low-pass cutoff values keep their original meaning.
 
-   The tuner names other neutral effect values instead of speaking an
-ambiguous number: gain five is _unchanged_, pan five is _centre_, and
-reverb, echo, or chorus zero is _disabled_.  Chorus adds a bounded
-doubled-voice modulation without changing speech duration or marker
-positions.  It is applied by Omnivox to buffered audio; the tuner
-reports when the selected route cannot apply it.  These portable levels
-are translated to the exact values required by the active adapter.
+   The voice editor names other neutral effect values instead of
+speaking an ambiguous number: gain five is _unchanged_, pan five is
+_centre_, and reverb, echo, or chorus zero is _disabled_.  Chorus adds a
+bounded doubled-voice modulation without changing speech duration or
+marker positions.  It is applied by Omnivox to buffered audio; the voice
+editor reports when the selected route cannot apply it.  These portable
+levels are translated to the exact values required by the active
+adapter.
 
    The built-in ‘acss-default’ palette also includes a ‘telephone’
 logical voice.  It combines high-pass and low-pass filtering to give any
@@ -3147,6 +3196,17 @@ command uses the live Omnivox policy as an in-memory baseline and writes
 no file; the prefixed command explicitly saves that baseline and the
 selected preference.  Explicit logical-voice routes still take
 precedence.
+
+   Home groups speech engine, rate, notification output and spatial
+controls under _Choose voices and sounds_.  Speech rate applies to the
+remembered source buffer; a prefix sets the global rate.  Notification
+Output opens Customize: _Automatic_ uses the backend's normal
+notification arrangement, while _Use main output (notifications remain
+audible)_ sends notification speech through the main process.  It does
+not mute notifications.  Initialize the chosen notification arrangement
+with ‘C-e d C-n’.  _Stop notification speech_ stops the current
+notification stream; it is not a persistent mute.  Use Customize's save
+action to retain output choices across restarts.
 
    Judge voices in context.  The goal is usually to distinguish nearby
 kinds of content, not to identify every named voice in isolation.  Use a
@@ -3208,8 +3268,8 @@ all inheriting choices.  A physical voice can replace a selected row,
 become preferred, or be appended as a fallback.  Row-level adjustments
 replace that row's tuning with the experiment's values and adapter
 defaults.  This prevents unrelated destination shared settings from
-changing the experiment's base sound.  Use ‘i’ in the row's optional
-tuner for any field you want to inherit afterward.
+changing the experiment's base sound.  Use ‘i’ in the row's individual
+adjustment panel for any field you want to inherit afterward.
 
    Other rows and shared settings are retained during a row-level keep.
 Replacing only the physical voice asks whether to keep or reset an
@@ -3246,9 +3306,9 @@ Retained drafts survive closing the view and can be reopened from Home's
 _Resume unfinished changes_ during this Emacs session.  They do not
 survive restarting Emacs.  Leaving does not undo a completed save.
 
-   _Save and apply_ selects the palette for this session.  Use the
-existing Presentation Profile action to retain that selection after
-restart.  Palette and local-choice files are separate; the editor
+   _Save and apply_ selects the palette for this session.  Use the _Use
+at Startup_ action, ‘U’ in Voice Palettes, to retain that selection
+after restart.  Palette and local-choice files are separate; the editor
 coordinates their writes and reports partial failures in the same view.
 
 6.7.2 Inspect Or Adjust A Voice In Context
@@ -3271,15 +3331,15 @@ do not add together.
 
    ‘P’ plays the edited voice in this context; ‘B’ compares original and
 edited using the same captured facts, rules and text.  These voice-only
-previews omit cues, spatial placement and temporary routing overrides.
-Family remains a portable fallback outside full preview.  On a server
-with per-choice support, the actual fallback's settings are applied
-before the captured context.  An explicit rule value still overrides
-that row when it happens to equal the shared value.  Requested values
-are separate from confirmed sample starts, accepted audio and
-unsupported adjustments.  A changed or deleted source is rejected.
-After saving a rule, use _Refresh facts and rules from this source item_
-to capture its new contribution.  ‘q’ returns to the base editor.
+previews omit cues and spatial placement.  Family remains a portable
+fallback outside full preview.  On a server with per-choice support, the
+actual fallback's settings are applied before the captured context.  An
+explicit rule value still overrides that row when it happens to equal
+the shared value.  Requested values are separate from confirmed sample
+starts, accepted audio and unsupported adjustments.  A changed or
+deleted source is rejected.  After saving a rule, use _Refresh facts and
+rules from this source item_ to capture its new contribution.  ‘q’
+returns to the base editor.
 
    _Adjust for this context_ presents the matching criteria and asks
 whether the rule lasts always (personal), for this Emacs session, or for
@@ -3327,19 +3387,18 @@ flattened contextual result back into the palette.
   2. Keep A Voice Experiment
 
      After finding a useful setting in the physical experiment, press
-     ‘w’ and choose a destination palette and named voice.  Keep
-     _Physical voice only_ to retain the destination's shared
-     adjustments, _Shared adjustments only_ to retain its existing
-     physical choices, or _Both_.  Shared adjustments affect every
-     fallback choice in the destination voice.
+     ‘w’ and choose a destination palette and named voice.  Keep the
+     physical choice and its adjustments together, the physical voice
+     only, the adjustments for a selected row, or shared adjustments for
+     inheriting rows.  Choose replacement, preferred or fallback
+     placement when keeping a physical choice.  Review the proposed
+     combination in the destination editor and press ‘P’ to hear it
+     before saving with ‘w’.
 
-     For the physical choice, choose replacement, preferred, or fallback
-     placement.  The destination editor shows the proposed combination.
-     Press ‘P’ to hear it, then ‘w’ to save and apply.  First saving a
-     legacy palette asks for an independent personal palette name.  A
-     partial failure stays visible in that editor and can be retried.
-     Selection lasts for this session; use a Presentation Profile to
-     retain it after restart.
+     A built-in destination opens a personal-child draft.  A partial
+     save stays visible in that editor and can be retried.  Selection
+     lasts for this session; use ‘U’ in Voice Palettes to retain it
+     after restart.
 
   3. Change A Heading Voice, Add A Cue, Or Silence One
 
@@ -6044,7 +6103,7 @@ family, the four numeric ACSS fields, post-synthesis fields, relative
 rate, and legacy rate.  The accepted-key inventory places relative and
 legacy rate before the post-synthesis fields.  ACSS dimension order also
 determines positional legacy personality settings, and rich dimension
-order determines tuner rows.
+order determines adjustment rows.
 
    Every accepted field allows ‘nil’.  Validation preserves the original
 plist, including duplicate fields, for which the first value is used.
@@ -6065,32 +6124,25 @@ a separate decision.
    Compiler conversion, backend wire names, capability discovery,
 normalization, and delivery stay in their existing owners.  When adding
 a field, update those consumers explicitly and test final serialized
-output or an explicit degradation.  The palette editor and tuner's
-typed-entry and increment/decrement bounds use this metadata through
-‘emacsvox-aural--voice-style-field’.  The complete ACSS editor obtains
-its four numeric fields from the ACSS inventory; it does not expand into
-editing rate or post-synthesis fields.
+output or an explicit degradation.  The common voice editor uses the
+shared field metadata for bounds and neutral values.  It covers portable
+ACSS and optional rate and post-synthesis adjustments in the same
+retained draft.
 
-   Input grammar, labels, neutral values, and preview descriptions
-remain UI policy.  Ordinary numeric input accepts a single digit; blank
-retains an existing value, including zero.  Relative-rate input accepts
-signed integers and blank clears the explicit adjustment to ‘nil’.  From
-‘nil’, horizontal adjustment starts at five for ordinary fields and at
-plus/minus one for rate.  Low-pass and high-pass are exceptions:
-increase starts at amount one, while decrease rejects a step below their
-neutral amount zero.
+   Input grammar remains UI policy.  In the common voice editor, blank
+numeric entry requests the adapter default; zero is explicit.
+Individual choice fields distinguish shared inheritance, custom values
+and explicit adapter defaults.  Rule-editor input has its own scoped
+inheritance semantics; do not substitute one editor's blank-input
+behavior for the other's.
 
-   The tuner displays both filters as amounts from zero through nine,
-increasing with stronger filtering.  Low-pass converts between amount
-and stored cutoff with ‘9 - value’; high-pass retains its numeric
-direction.  Zero is labelled neutral rather than claiming a filter
-bypass.  Stored cutoff values and adapter-default ‘nil’ retain their
-meaning, preserving saved styles' sound.  Arrows, digit shortcuts, typed
-entry, demonstrations and spoken review use the amount scale; blank
-numeric entry retains the current value without changing its stored
-representation.  Preview and persistence continue to use stored cutoffs.
-Invalid boundary steps must fail before history, dirty state, refresh,
-or audition changes.
+   The common editor displays low-pass and high-pass as amounts from
+zero through nine, increasing with stronger filtering.  Low-pass
+converts between amount and stored cutoff with ‘9 - value’; high-pass
+retains its numeric direction.  Zero is labelled neutral.  Stored
+cutoffs and adapter-default nil retain their meaning.  Invalid boundary
+steps must fail before history, dirty state, refresh or audition
+changes.
 
    Delivery preparation has the limited helper boundaries described
 below; asynchronous operation ownership remains a separate refactoring
@@ -6102,13 +6154,13 @@ cover saved rich palettes and explicit-nil rules; transport tests check
 distinct ACSS mappings, zero and omitted wire fields, effects, and
 preset behavior.  ‘make compiled-aural-test’ also runs these style
 contracts with the isolated compiled subsystem loaded, checking that the
-implementations stay in that build.  The ‘voice-style-ui’ tests in
-‘test/emacsvox-aural-voice-palettes-tests.el’ exercise interactive
-numeric commands, prompts, blank input, boundaries, unchanged values,
-and undo in both source and compiled runs.  They capture auditions and
-do not start audio.  The connected saved-style regression edits a custom
-‘bolden’, reads its saved data back, and compares tuner and Workbench
-preview settings with the final normal-speech wire for ‘voice-bolden’.
+implementations stay in that build.  The ‘voice-style-ui’ tests exercise
+common-editor entry, inherited reset and draft retention in source and
+compiled runs.  Editor tests also cover numeric bounds, explicit
+defaults, undo and comparison.  They capture auditions and do not start
+audio.  The connected saved-style regression edits a custom ‘bolden’,
+reads its saved data back, and compares common-editor and Workbench
+previews with the final normal-speech wire for ‘voice-bolden’.
 Workbench uses the compiler's palette resolution and the shared effect
 normalizer: gain and pan level five must remain exactly neutral at 0.5.
 Preserve both this path and the independently specified Workbench scale
@@ -6635,22 +6687,21 @@ an appropriate staging environment.
 16.3.15 Aural experiments and guided changes
 --------------------------------------------
 
-Physical experiments reuse the tuner with an exact engine/voice
-selector, an immutable opening snapshot, a mutable working style, and
-undo history.  They do not modify the palette registry, active palette,
-or route profile until the user explicitly keeps a reviewed result.
-Navigation and Help use the working style.  A failed exact preview must
-be reported before ordinary speech can provide navigation fallback; a
-fallback sample must never be reported as the requested physical voice.
+Physical experiments use the common voice editor with an exact
+engine/voice selector, an immutable opening snapshot, a mutable working
+style and undo history.  Navigation uses the ordinary voice.
+Experiments write no settings; Keep prepares a named-voice draft,
+including any reviewed row placement and adjustment scope.  The
+destination still requires an explicit save.
 
-   Keep proposals snapshot the destination palette and routing profile
-as well as the proposed result.  Check those snapshots before writing,
-and retain separate completion flags for palette write, route write, and
-route apply.  A retry must not repeat a successful write.  If routing
-saves but application fails, keep that distinction visible and retry the
-application step.  Never report the combined operation complete while
-one selected destination failed.  Portable style storage and
-machine-local routing storage remain separate.
+   The unified palette contract is recorded in ADR 0018.  Every nonroot
+palette uses complete schema 3 entries and an explicit parent chain to
+‘acss-default’.  Palette definitions and immutable local-choice
+snapshots are saved through the common coordinator.  Frozen proposals
+retain separate persistence and apply completion, and retry does not
+repeat a successful write.  Save failures, acknowledged application and
+actual playback evidence remain separate.  Workstation routing profiles
+contain global engine policy, not per-name routes.
 
    Labelled comparisons use one controlled preview sequence, with
 identical sample text and separately configurable labels.  Each sequence
