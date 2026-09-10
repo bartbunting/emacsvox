@@ -112,6 +112,32 @@
            (kbd (car binding)))
           (cdr binding)))))))
 
+(ert-deftest emacsvox-aural-voice-palettes-arrows-speak-selected-column ()
+  "Vertical arrows preserve the selected column and speak its new value."
+  (emacsvox-test--with-voice-palettes
+    (emacsvox-aural-register-voice-palette-data
+     emacsvox-test--voice-palette-data)
+    (with-temp-buffer
+      (emacsvox-aural-voice-palettes-mode)
+      (setq tabulated-list-entries
+            (mapcar #'emacsvox-aural-voice-palettes--row
+                    '(acss-default reading)))
+      (tabulated-list-print t)
+      (emacsvox-aural-ui-goto-row 'acss-default)
+      (emacsvox-aural-ui-goto-tabulated-column 2)
+      (let (spoken)
+        (cl-letf (((symbol-function 'tts-speak)
+                   (lambda (text) (push text spoken)))
+                  ((symbol-function 'emacsvox-icon) #'ignore))
+          (call-interactively (key-binding (kbd "<down>")))
+          (should (eq (tabulated-list-get-id) 'reading))
+          (should (= (emacsvox-aural-ui-tabulated-column-index) 2))
+          (call-interactively (key-binding (kbd "<up>")))
+          (should (eq (tabulated-list-get-id) 'acss-default))
+          (should (= (emacsvox-aural-ui-tabulated-column-index) 2)))
+        (should (equal (nreverse spoken)
+                       '("personal, Kind" "default, Kind")))))))
+
 (defmacro emacsvox-test--with-palette-rename (&rest body)
   "Run BODY with personal tuned voices and isolated writable stores."
   (declare (indent 0) (debug t))

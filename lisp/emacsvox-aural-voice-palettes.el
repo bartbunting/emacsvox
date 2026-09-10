@@ -165,11 +165,8 @@
   (let ((active (emacsvox-aural-voice-palettes--active-id))
         (count (hash-table-count emacsvox-aural-voice-palette-registry)))
     (format
-     "%s active; %d available%s"
-     active count
-     (if emacsvox-aural-voice-palette-override
-         " (override)"
-       " (from scheme)"))))
+     "%s active; %d palettes available"
+     active count)))
 
 (defun emacsvox-aural-voice-palettes--ids ()
   "Return registered palette identifiers in display order."
@@ -177,9 +174,13 @@
 
 (defun emacsvox-aural-voice-palettes--kind (palette)
   "Return a display kind for PALETTE."
-  (if (emacsvox-aural-voice-palette-built-in palette)
-      "built-in"
-    "personal"))
+  (cond
+   ((eq (emacsvox-aural-voice-palette-id palette)
+        (or (emacsvox-aural-effective-scheme-provider 'voice-palette)
+            'acss-default))
+    "default")
+   ((emacsvox-aural-voice-palette-built-in palette) "built-in")
+   (t "personal")))
 
 (defun emacsvox-aural-voice-palettes--validation (id)
   "Return validation details for palette ID."
@@ -2849,7 +2850,7 @@ When SPEAK is non-nil, include the selected row's full description."
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET browse voices    SPC speak palette\n"
-      "a activate override  f use compatibility baseline\n"
+      "a activate palette   f switch to default palette\n"
       "N create palette     c copy palette\n"
       "r rename personal palette\n"
       "e edit voice         E edit summary and parent\n"
@@ -2870,8 +2871,7 @@ When SPEAK is non-nil, include the selected row's full description."
   (emacsvox-aural-ui-configure-tabulated
    "voice palettes"
    #'emacsvox-aural-voice-palettes-speak-current
-   #'emacsvox-aural-voice-palettes-refresh
-   #'emacsvox-aural-ui-speak-name-and-state)
+   #'emacsvox-aural-voice-palettes-refresh)
   (setq
    tabulated-list-format
    [("Palette" 24 t)
