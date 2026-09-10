@@ -1,0 +1,206 @@
+#+title: Aural Interface Consolidation — Delivery Contract
+#+date: 2026-09-10
+#+startup: content
+
+* Status and working agreement
+
+The maintainer authorized implementation and commits in slices after the
+[[file:aural-interface-review.org][interface review]]. [[file:adr/0018-unified-voice-palette-model.org][ADR 0018]] settles the root, names, inheritance,
+missing voices and retirement boundary. This design slice is ready for High
+implementation. It changes no live personal settings.
+
+The earlier palette wording and selected-column navigation fixes are committed
+as =430b075e9=. The existing uncommitted Home announcement change is separate
+work and must remain preserved unless the maintainer includes it in this task.
+
+Use High for the substantive implementation slices below. Complete each slice,
+run the checks its behavior needs, and commit the exact relevant files. Do not
+repeat broad investigations or test suites after success without a new change or
+unresolved concern. Update this plan with the commit and concise evidence so the
+next slice can proceed from the recorded contract.
+
+Stop at the stated reasoning-level boundaries because the maintainer requested
+them. This is a level handoff, not a new request for permission to do already
+authorized work. Return to XHI earlier only for an unresolved cross-component
+design problem; give the concrete question and evidence. Max is not planned.
+
+* Acceptance cases fixed before implementation
+
+| Case | Required result |
+| =a → b → c → acss-default= | Nearest whole entry wins; the row names its defining palette. |
+| Edit inherited bolden in =a= | Create a complete entry and correctly owned local choices in =a=; ancestors remain unchanged. |
+| Reset that entry | The inherited row remains visible and can be edited again. |
+| Copy =a= independently | Copy effective definitions and ordered choices; keep per-choice tuning; new parent is the standard root. |
+| New Voice in an empty personal palette | Open one complete editable draft; no definition-only rejection after collecting values. |
+| =bolden= and =voice-bolden= requests | Same named entry and choices; terminal personality decoding does not recurse. |
+| Registered nonstandard personality | Exact declared identity remains usable and visible; no arbitrary prefix guessing. |
+| Unknown named voice | Authoring rejects it; unexpected runtime use preserves content and supplies a diagnostic. |
+| Ordinary unstyled speech, explicit ACSS and inaudible | Preserve established semantics independently of named-voice lookup. |
+| Current =bart= conversion | Keep identity, stored representations, ordered local choices, tuning and profile references; enumerate added standard inheritance. |
+| Save an inactive palette | Save without selecting is available; Save and Apply reports session selection separately from startup selection. |
+| Select a palette for startup | Change the intended profile field; preserve unrelated saved profile fields and current divergences. |
+| Export/import | Portable export declares omitted local choices; local copies retain complete choices; replacement requires explicit selection. |
+| Navigation in a non-first column | Read the new selected cell; full-row speech remains a separate action. |
+| Delayed or failed application | Saved state stays distinguishable from playback/application; old callbacks cannot clear newer edits. |
+
+* Commit slices
+
+** DONE 0. Palette wording and navigation — prior work
+
+=430b075e9=. Thirteen palette tests, fresh compiled navigation verification,
+byte-code preflight and documentation checks passed before this commit. The
+later review also passed 400 selected Aural tests with these changes present.
+
+** DONE 1. Review and design contract — XHI
+
+Record the review, ADR 0018 and this delivery plan. Inspect current data only as
+needed to constrain preservation. The reviewed =bart= has schema 2, 29 direct
+entries, 15 personality references, no reserved alias-name collision, and no
+direct =animate= entry. This inventory is evidence, not permission to overwrite
+the user's files without checking their latest state.
+
+Design validation: local document links, =git diff --check= and
+=make docs-release-check=. Reports and ADRs require no application rebuild.
+
+** TODO 2. Establish current standard data and shared lookup — High
+
+Create schema-3 standard entries without changing their raw style/personality
+representations. Make constructors produce current complete data. Give aliases,
+root inventory, inherited metadata and terminal personalities one resolution
+contract used by browser, editor, runtime registration and explanation.
+
+Preserve supported definition APIs by projecting definition-only arguments into
+the current complete model with Automatic choices, rather than retaining a
+second editable ownership model. Check fresh loading and compiled dependencies.
+Do not delete low-level personality or adapter support just because its name
+contains “legacy”.
+
+Before the root switch, account for current saved data and every maintained
+constructor. A bounded transitional reader may keep intermediate commits usable;
+record it explicitly and remove it in slice 4. Prepare the exact personal-data
+conversion against file fingerprints, with retained originals and before/after
+definition/choice comparisons. Do not silently convert on load or first edit.
+
+Tests: independent schema fixtures, multi-level inheritance, aliases and collisions,
+late personality registration, unknown names, raw styles, and owned local data.
+Include the paths that actually deliver named and unstyled speech; testing only
+the palette row builder is insufficient.
+
+** TODO 3. Complete palette and voice operations — High
+
+New Palette creates an empty current palette with an explicit parent. Editing
+the built-in root prepares a personal child draft; browsing and previewing write
+nothing. New Voice, Edit, Copy Voice and Copy Palette use the common complete
+data services. Parent changes exclude invalid targets and report affected entries.
+
+Copy Palette makes an independent effective copy. Do not add another “linked
+copy” operation: New Palette with a selected parent already expresses sharing.
+New custom voices start with an explicit neutral definition and Automatic choices,
+not with an implicit reference to a missing or guessed personality.
+
+Offer Reset where the parent provides the voice, and Delete only for direct custom
+voices with no inherited replacement. Reference checks cover loaded declarations,
+rules and descendants and state the limit for arbitrary Lisp references. Retain
+transactional rename/copy/delete, draft guards and immutable local snapshots.
+
+Tests: actual manager keys through draft, save, reopen, reset and subsequent edit;
+copy isolation including duplicate physical choices and individual adjustments;
+failed writes and conflicts; standard root remains intact.
+
+** TODO 4. Retire the old voice-management routes — High
+
+Finish the inspected one-time data conversion before removing its reader support.
+Route all named edits to the common editor. Remove definition-only dialogs,
+shared per-name assignment/save/migration routes and the standalone old tuner
+screen. Retain helpers used by the common editor, engine policy, local choice
+storage, speech adapters and active integration mappings.
+
+Old shared/session per-name bindings must not remain as a hidden route that
+overrides current owned data. Report any live use during preparation; preserve
+deliberate saved voice choices in the appropriate personal entries. Remove only
+obsolete ownership fields and commands, not unrelated user-data migrations.
+
+Update help with each removed route, and remove obsolete tests only when their
+old product behavior is intentionally retired. Replace them with current user
+journeys; do not weaken registration, apply, preview or transport coverage.
+
+Tests: reachable action inventory, fresh startup, both-lane registrations, current
+data reopening, unchanged engine policy, supported adapter compilation and the
+absence of actions that accept input before failing on ownership format.
+
+** TODO 5. Finish source, persistence and sharing tools — High
+
+Show Source in voice lists, and make source/reset/edit-here reachable by named
+actions. Show known uses and descendants before a change with wider effects.
+Keep base voice editing separate from contextual rule editing.
+
+Add Use at Startup beside palette activation. With a selected saved Presentation
+Profile, change only its palette field and explain that result. With no profile,
+offer to create a named setup from the reviewed current selections. Do not create
+a second independent startup-palette preference. Saving this choice need not
+overwrite other diverged fields or change an inactive palette's current use.
+
+Expose portable palette import/export using the existing validation and local
+choice services. Distinguish portable omission, a full same-machine backup, and
+independent local copy. Imported portable data uses the standard root and declares
+unavailable choices. Export copies effective entries before dropping local choices,
+so custom-parent dependencies are resolved without using rendered playback values.
+Full local backup includes the required ancestry and local snapshots. Never
+silently overwrite an existing ID or flatten an actual playback result into data.
+
+Tests: save/current/startup state independently, profile reference semantics,
+export omission versus local preservation, conflicts, missing local data,
+preview and persistence failures. All new actions have matching live help.
+
+** TODO 6. Simplify tables and finish common navigation — Medium
+
+Use selected-column vertical speech consistently in tables. Put voice or engine
+names first. Move aliases, repeated adapters, native IDs and detailed capability
+fields into Details. Keep uncertainty, availability and actual playback visible
+where they affect a choice. Preserve selection, preview cancellation and return
+positions. No data-format or routing changes belong in this slice.
+
+Clarify output-setting labels, including “use main output” versus disabling
+notifications. Group existing workstation controls coherently. A new ordinary
+physical-voice policy is not to be inferred by reusing a final-fallback setting;
+if a new runtime policy is needed, record that bounded follow-up separately.
+
+Tests: arrows, actions/help agreement, nested return and draft retention across
+all changed managers. Update maintained manual text and generated artifacts under
+the normal documentation workflow once wording settles.
+
+** TODO 7. Focused integration review — XHI
+
+Review the changed code against ADR 0018 and the acceptance table, concentrating
+on name resolution, root/default behavior, whole-entry ownership, reset/deletion,
+startup selection and asynchronous publication. Check that obsolete entry points
+are gone and useful workstation controls survived. Do not repeat the broad
+original investigation unless new evidence warrants it.
+
+** TODO 8. Spoken acceptance and corrections — Medium or High
+
+The maintainer walks through creating, copying, editing, resetting, selecting,
+restarting and recovering. Include unavailable engines, icons disabled, rapid
+navigation during previews and both speech streams. Use Medium for wording and
+navigation corrections; High for substantive state or runtime defects. Commit
+each correction with appropriate checks.
+
+* Deferred additions
+
+Bulk replacement across many named voices, a complete sound-pack authoring UI,
+new tone management and a redesigned ordinary-speech policy are not prerequisites
+for removing the contradictory voice-management model. Keep them as identified
+follow-ups instead of adding speculative tools during these slices. Existing
+sound, spatial, semantic-rule and notification functionality stays available.
+
+* Required checks and stopping point
+
+Follow =AGENTS.md= for the selected Emacs, byte-code rebuilds after interface
+changes, fresh-process verification, public reference generation and documentation
+release checks. Run relevant focused tests per slice, then the broader affected
+voice/transport and documentation gates before the final review. Never infer
+audible equivalence solely from valid data or successful registration.
+
+After committing slice 1, ask the maintainer to switch to High before slice 2.
+The contract is complete enough for implementation; no further broad review or
+additional model level is required at that boundary.

@@ -4,6 +4,10 @@
 
 * Status
 
+[[file:0018-unified-voice-palette-model.org][ADR 0018]] supersedes the long-term dual-model and first-save migration
+workflow below. The complete voice-ownership and persistence guarantees remain;
+the new consolidation is recorded separately with implementation pending.
+
 Accepted for palette ownership and independent conversion on first save,
 selected by the maintainer on 2026-09-08. The
 [[file:../voice-editor-data-contract.org][data and resolution contract]] specifies the implementation of that choice.

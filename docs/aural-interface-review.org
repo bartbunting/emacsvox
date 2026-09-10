@@ -1,0 +1,461 @@
+#+title: Aural Interface Coherence and User Tools Review
+#+date: 2026-09-10
+#+startup: content
+
+* Conclusion and scope
+
+The maintainer authorized consolidation after this review.
+[[file:adr/0018-unified-voice-palette-model.org][ADR 0018]] records the selected design, and the
+[[file:aural-interface-consolidation-plan.org][delivery plan]] records implementation slices and reasoning-level handoffs.
+The findings below retain the reviewed baseline rather than claiming fixes.
+
+The aural interface has most of the necessary capabilities, but it does not yet
+present one consistent product. The strongest part is the common voice editor:
+it combines physical choices, shared and individual adjustments, previews,
+drafts, saving and application. The weakest part is the surrounding management
+and discovery interface, which still teaches and creates the older model.
+
+Finish consolidating around current palette-owned voices. Do not add another
+editor or require users to learn the storage generations. Keep the separation
+between changing a named voice, choosing where that voice is used, and configuring
+the workstation that plays it.
+
+This is a review and proposed direction, not an accepted replacement ADR or an
+implementation. It covers Aural Home, palettes, the common voice editor and
+context view, Workbench, presentation options and rules, profiles, sounds,
+spatial settings, notifications and diagnostics. Source baseline: =98c887a88=,
+plus the existing uncommitted Home changes and this conversation's palette
+wording/navigation fixes. Those changes were preserved.
+
+The maintainer explicitly permits removing the old version because it has no
+users. For this review, that removes the need to retain the old palette/shared
+per-voice routing product workflow or build a general migration experience for
+other users. It does not imply that current integration calls, the maintainer's
+=bart= data, other supported speech adapters, or speech-lane semantics are unused.
+
+All 17 ADRs were read. ADRs 0015–0017 establish the current voice ownership,
+preview and adjustment model. Retiring legacy workflows would revise ADR 0015's
+dual-model and first-save conversion decisions. ADRs 0007, 0009 and 0010 still
+govern acknowledged application, foreground/notification separation and remote
+behavior. Simplifying the interface does not justify weakening those contracts.
+
+* What already works well
+
+- Home groups actions by task and searches collapsed destinations with =/=.
+  It captures the source item so a trip through settings does not silently
+  retarget a contextual change.
+- Change This Feedback supports original/proposed comparisons, matching
+  criteria, and explicit personal/session/buffer lifetimes. Advanced rules
+  remain available without requiring them for every small change.
+- The common voice editor keeps shared adjustments, physical choices and
+  per-choice adjustments in one draft and save operation. Physical experiments
+  can be auditioned before choosing a destination.
+- Draft retention, undo within the editor, partial-save recovery and separate
+  apply status are substantive capabilities, not missing features.
+- The context view and playback details already explain winning settings and
+  distinguish a simulation, requested settings and confirmed playback. They
+  should be made easier to reach, not replaced with a second explanation engine.
+- Presentation Options, Overrides and Profiles have different legitimate
+  purposes: optional behavior, precise rules, and saved selections respectively.
+- Inventory, availability, policy permission and actual playback are kept
+  distinct. Keep this accuracy while reducing the number of default columns.
+
+* Findings
+
+** F1 — High: normal creation and copying paths do not support current palettes
+
+The advertised palette-management operations are not complete for the format
+users now edit:
+
+1. =N= in the palette manager creates schema 1, with =acss-default= offered as
+   parent. New user work therefore starts in the legacy model.
+2. =c= on a schema-3 palette errors: “Copy this palette through the common voice
+   editor to preserve individual settings.” The common editor has no ordinary
+   named command to duplicate that current palette; its normal destination logic
+   saves an already-owned personal palette back to the same palette.
+3. =N= inside a current personal palette collects a name and definition, then
+   errors: “Use Tune in the common voice editor to preserve palette-owned choices.”
+4. The manager's =e= also leads to the old definition-only path and its guard.
+   The voice list's editing route is newer. The entry point changes the outcome.
+5. Keeping a physical experiment chooses an existing named destination voice;
+   that route does not fill the missing New Voice operation.
+
+These are functional gaps, not just terminology. Copying an existing voice
+within a current palette is implemented and should not be confused with the
+broken whole-palette copy or fresh-voice creation routes.
+
+Recommendation: one current-format New Palette, New Voice, Copy Palette and
+Copy Voice workflow, all using the existing complete-data services and common
+editor. Palette copies must duplicate local choice ownership correctly, retain
+individual tuning, and state whether the result is independent or inherits.
+No command should collect several answers before rejecting the selected format.
+
+Evidence: [[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes-create][palette creation]],
+[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--copy][palette copying]],
+[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palette-previews-new][voice creation]],
+[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--install-entry-definition][definition-only guard]],
+[[file:../lisp/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor--destination][save destination]] and
+[[file:../lisp/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor-keep-experiment][experiment destination]].
+
+** F2 — High: Workbench advertises a superseded editing workflow
+
+Workbench help says to select a logical voice, press =a=, choose and assign a
+physical voice, then save the route with Workbench =w=. It describes =t= as a
+separate style-only tuner. In current code, =t= opens the common editor and owns
+physical choices as well. Attempting the old route mutation for an owned voice
+is rejected with “This voice owns its choices in its palette; use Tune to edit it.”
+
+The action-availability predicate still offers assignment for an owned logical
+voice. The failure can occur after browsing and confirmation. Legacy migration,
+route presets, route copying and bulk shared-route tools remain alongside the
+new workflow.
+
+Recommendation: route every named-voice edit through the common editor. Make
+Workbench principally the installed-voice browser and workstation diagnostics.
+Retire shared per-voice routing mutation, migration and style-only editing screens
+once their current replacements cover the useful operations. Keep engine order,
+engine disablement, health and global fallback controls: those are still active
+workstation responsibilities.
+
+Evidence: [[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench-help][help]],
+[[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench--replace-binding][owned-voice guard]],
+[[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench--action-applicable-p][action applicability]],
+[[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench-tune][current editing route]].
+
+** F3 — High: the voice list does not explain all voices that can be heard
+
+The palette list shows effective entries from the palette and its explicit
+parents. The compiler can also use underlying personality definitions outside
+that list. Deletion explicitly recognizes standard personalities as fallback.
+Consequently, an entry can disappear from the browser without eliminating the
+corresponding standard voice from ordinary speech.
+
+This produces a recovery gap: opening a missing standard voice through the
+common editor fails with “Voice is not in this palette.” Together with F1,
+removing a customization can make the next customization unnecessarily difficult.
+
+The current source information is also scattered. The voice-data service returns
+the defining palette, and editor details can show it, but the ordinary voice list
+does not have a Source field. Its “Saved; palette-owned” label does not tell users
+whether the selected palette defines the entry or inherits it.
+
+Recommendation: show the complete effective named-voice vocabulary, with a concise
+source such as “bart”, “inherited from reading”, or “standard”. Provide distinct
+actions for Edit Here, Reset to Parent/Standard, Copy, and Delete Custom Voice.
+An inherited standard voice remains visible and editable by creating a local
+definition. Provide “Where used” and an impact summary for changes shared by
+several contexts or descendants.
+
+Important qualification to the earlier discussion: standard fallback is not a
+guaranteed implicit lookup of every missing name in =acss-default=. The ordinary
+=voice-bolden= personality path and a bare missing palette name need not resolve
+identically. Alias lookup and personality compilation must be tested explicitly;
+the UI must not promise that every deletion restores an equivalent voice.
+
+Evidence: [[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--preview-entries][listed entries]],
+[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--delete-voice][deletion fallback]],
+[[file:../lisp/emacsvox-aural-voice-editing.el::(defun emacsvox-aural-voice-editing--snapshot][editor lookup]],
+[[file:../lisp/emacsvox-aural-compiler.el::(defun emacsvox-aural-compile-voice-style][compiler resolution]],
+[[file:../lisp/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor-details][existing ownership details]].
+
+** F4 — Medium: Parent offers choices that the data model rejects
+
+Parent completion offers all palettes except the selected palette, including
+=acss-default= for a current owned palette. Resolution then rejects that link
+because legacy and owned palettes cannot share an inheritance chain. The default
+choice for an unset parent is itself =acss-default=.
+
+The current-format model already supports whole-entry inheritance and making a
+local copy when editing an inherited entry. This is useful functionality worth
+keeping. It is not field-by-field inheritance between palettes: replacing bolden
+in a child replaces its complete definition and choice chain. Individual choice
+fields inheriting shared settings are a different relationship.
+
+Recommendation: make the standard palette use the current ownership model, and
+make explicit inheritance usable without format restrictions in ordinary UI.
+Keep the user's preferred label Parent; show “none” instead of blank. Reject
+cycles before presenting a parent as selectable. Explain the impact of changing
+a parent and of editing an inherited voice. Do not change =bart='s parent or
+sound as an incidental review cleanup.
+
+Evidence: [[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--parent-candidates][parent choices]],
+[[file:../lisp/emacsvox-aural-resources.el::(defun emacsvox-aural-effective-voice-entries][inheritance validation]],
+[[file:voice-editor-data-contract.org::*Pure resolution and alias rules][alias and resolution contract]],
+[[file:voice-editor-data-contract.org::*Saved formats][current data contract]].
+
+** F5 — Medium: selected-column speech remains inconsistent across managers
+
+The palette navigation fix from this conversation restores selected-cell speech.
+Sound Packs, Presentation Profiles and Presentation Overrides still configure
+row movement to announce name and status regardless of the selected column.
+The independent probes preserve column three but hear the row's name/state.
+This is the same interaction problem the maintainer reported in palettes.
+
+Recommendation: in a multi-column table, vertical movement reads the new cell in
+the current column. Horizontal movement introduces the column title; =.= repeats
+the cell, and =SPC= reads the full row. First-column movement can include useful
+name/status orientation. Settings panels may use label-and-value rows, but their
+behavior should be visibly and audibly distinct from tables.
+
+Keep stopping previews on navigation, boundaries without wrapping, retained
+selection and predictable return positions. Give every manager the same contract
+and test it through its actual arrow bindings.
+
+Evidence: [[file:../lisp/emacsvox-aural-ui.el::(defun emacsvox-aural-ui-move-row][shared movement]],
+[[file:../lisp/emacsvox-aural-sound-packs.el::(define-derived-mode emacsvox-aural-sound-packs-mode][Sound Packs]],
+[[file:../lisp/emacsvox-aural-profiles.el::(define-derived-mode emacsvox-aural-profiles-mode][Profiles]],
+[[file:../lisp/emacsvox-aural-overrides.el::(define-derived-mode emacsvox-aural-overrides-mode][Overrides]].
+
+** F6 — Medium: saved data, current selection and restart behavior are too separate
+
+Saving a named voice can persist its data and select its palette for this session.
+Keeping that selection after restart requires an explicit Presentation Profile
+operation. The editor explains this in Details, and for an inactive palette in
+its header, but the normal successful “saved and applied” path does not make the
+restart outcome an obvious part of the task. Palette activation likewise lacks
+an immediate startup-selection control.
+
+Other controls behave differently: an option toggle persists its state, applying
+a Presentation Profile saves its selection, and ordinary-engine preference needs
+a prefix to save. These can be legitimate distinctions, but users should not
+have to infer them from key conventions or implementation history.
+
+Profiles also store palette and sound-pack identities, not snapshots of their
+contents. Editing voices inside =bart= need not make a profile that selects
+=bart= diverge. Applying that profile cannot undo those edits. “Complete setup”
+and “restore” therefore need a clearly stated boundary.
+
+Recommendation: expose three independent facts: changes saved, active now, and
+selected at startup. Add “Use at startup” or “Update selected setup” at the point
+of palette selection, using the profile service with an explicit summary of the
+fields affected. Avoid silently capturing unrelated settings. Describe profiles
+as saved selections; offer an independent palette copy or explicit checkpoint
+when the user wants a recoverable snapshot of voice definitions.
+
+Evidence: [[file:../lisp/emacsvox-aural-voice-editor.el::(defun emacsvox-aural-voice-editor-details][restart guidance]],
+[[file:../lisp/emacsvox-aural-schemes.el::(defun emacsvox-aural-select-voice-palette][palette selection]],
+[[file:../lisp/emacsvox-aural-profile-service.el::(defun emacsvox-aural-capture-profile-data][profile capture]],
+[[file:../lisp/emacsvox-aural-profile-service.el::(defun emacsvox-aural-profile-differences][profile differences]],
+[[file:../lisp/emacsvox-aural-profiles.el::(defun emacsvox-aural-profiles-activate][profile application]].
+
+** F7 — Medium: default tables spend attention on implementation details
+
+Workbench's logical view starts with Palette and Aliases before Logical Voice,
+and has thirteen columns. The engine view has fourteen, including identifiers,
+health/circuit, cooldown, markers and anchors. These are useful diagnostic facts,
+but an expensive route to finding and choosing a voice by speech. The palette
+manager repeats one global adapter value for every palette and exposes Direct
+and Effective counts without explaining why a user would compare them.
+
+Recommendation: start each ordinary list with the item users are choosing.
+Use compact default columns and a details action. For example:
+
+| List | Ordinary columns | Details |
+| Palettes | Palette, Active, Kind, Parent, Voices, Purpose | Validation, local/inherited counts |
+| Palette voices | Voice, Source, Preferred physical voice, Changes | Ordered fallbacks, tuning, aliases, last playback |
+| Installed voices | Voice, Engine, Language, Availability | Native ID, technical capabilities |
+| Engines | Engine, Availability, Use preference | Health, failures, policy, markers and audio details |
+
+Keep Alias as internal compatibility information. Do not add a general alias
+editor simply because the column exists. Labels such as “owned”, “legacy shared
+routing”, “compatibility baseline” and “adapter” should leave the ordinary flows
+as the old model is retired. Keep meaningful distinctions such as requested,
+available, applied and last played; those protect users from misleading results.
+
+Evidence: [[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench--format][Workbench columns]],
+[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palettes--row][palette rows]],
+[[file:../lisp/emacsvox-aural-voice-palettes.el::(defun emacsvox-aural-voice-palette-previews--row][voice summaries]].
+
+** F8 — Medium: everyday output controls need a clearer destination
+
+Home offers Ordinary Speech Engine, but selecting an engine is not the same task
+as selecting the physical voice for ordinary speech. Workbench has advanced
+engine/fallback controls, while =omnivox-global-default-selector= remains a
+structured Customize value. The ordinary UI needs a deliberate default-voice
+workflow rather than making users infer which routing control supplies it.
+
+Notification Output opens Customize. Its “Disabled” choice disables the separate
+notification process, not notifications: they fall back to the main process.
+That label can mislead a user who wants notification silence. The Home description
+also instructs a separate initialization key instead of providing one complete
+configure-and-test task.
+
+Recommendation: one Output Settings destination for ordinary voice/engine,
+rate, notification routing and spatial output, with individual controls showing
+their scope and save behavior. For notifications, distinguish separate output,
+use main output, and any deliberately implemented mute behavior. Preserve the
+accepted interruption semantics. Do not assume a global final fallback selector
+is automatically the right implementation of an ordinary preferred voice.
+
+An additional listening check should cover expanded/collapsed state with icons
+disabled. State is currently conveyed by cues, with spoken labels supplied by an
+optional Presentation Option. Every supported configuration should leave control
+state discoverable without guessing; this is a walkthrough question, not a
+claimed reproduced playback defect.
+
+Evidence: [[file:../lisp/emacsvox-aural-home.el::(defun emacsvox-aural-home--all-entries][Home actions]],
+[[file:../lisp/tts-speak.el::(defcustom tts-notification-device][notification choices]],
+[[file:../lisp/omnivox-voices.el::(defcustom omnivox-global-default-selector][global fallback setting]],
+[[file:../lisp/emacsvox-aural-ui.el::(defun emacsvox-aural-ui--expansion-text][panel state metadata]].
+
+* Missing tools, without adding another control center
+
+| User task | Present state | Recommended completion |
+| Make a fresh voice or duplicate a complete palette | Some normal paths fail for current data | Complete New/Copy operations in the existing manager/editor. |
+| Reset one voice and later customise it again | Delete removes its visible entry; standard behavior may survive outside the list | Explicit Reset, persistent inherited rows, Edit Here. |
+| Know what changing this voice affects | Context and ownership details exist; rename/delete have reference guards | A readable Where Used view, including known rules and descendants; identify uses in personal Lisp that cannot be exhaustively proven. |
+| Keep the chosen palette after restart | Possible through Profiles, separate from normal activation | A direct startup-selection action with precise scope. |
+| Share or back up a current palette | A pure portable-export service exists; no palette-manager import/export action was found | Export/import with clear portable versus same-machine choices and conflict handling. |
+| Replace a favourite physical voice across selected named voices | Older bulk route tools address shared bindings | A reviewed multi-voice operation on current data, after individual editing is coherent. |
+| Create a personal family of sounds | Browser, audition, validation and discovered-manifest editing exist; creation requires external file work | Optional New/Copy Sound Pack and per-cue replacement; lower priority than voice correctness. |
+| Define a reusable tone | Rules can choose registered tones and edit pauses/actions | Consider a small tone editor if actual demand warrants it; do not add a large new manager speculatively. |
+
+Portable exports must not silently include machine-local voice IDs. Same-machine
+copies must retain their owned local choices. Those are different user actions.
+Existing sound-pack editing is metadata editing, not a complete asset-authoring
+workflow; the current “edit sound pack” wording should reflect that.
+
+Evidence: [[file:../lisp/emacsvox-aural-voice-data.el::(defun emacsvox-aural-voice-data--portable-export][portable export service]],
+[[file:../lisp/emacsvox-aural-sound-packs.el::(defun emacsvox-aural-sound-packs-edit-manifest][sound-pack editing]],
+[[file:../lisp/emacsvox-aural-voice-workbench.el::(defun emacsvox-aural-voice-workbench-replace-engine][old bulk route operation]].
+
+* What to remove, and what to keep
+
+** Retire after replacing the useful paths
+
+- Schema-1 creation as the ordinary New Palette behavior, and the definition-only
+  editing dialogs that reject current palettes.
+- User-facing first-save migration and independent-conversion prompts once all
+  supported live palettes use the current model. The maintainer's allowance makes
+  a general legacy migration product unnecessary.
+- Shared per-logical-voice routing profiles and their separate assignment/save
+  UI. Split out and preserve the useful workstation policy currently stored with
+  them before removing that storage.
+- The old standalone tuner screen and obsolete Keep/review routes where the
+  common editor supersedes them. Some tuner helpers still provide dimensions,
+  capability labels and value conversions to the current editor; do not delete
+  those dependencies as if the whole file were dead.
+- Duplicate named-voice editing surfaces, outdated help, default diagnostic
+  columns, and legacy migration/bulk-route actions that no longer serve current
+  data. Keep a compatibility entry point only if a current caller needs it.
+
+** Keep
+
+- A read-only standard palette, upgraded to the current model.
+- Standard personality implementations and the declared mappings such as
+  =voice-bolden= to =bolden= while current integrations use them. “Legacy” in a
+  function name is not evidence that it is unused.
+- Voice Lock and explicit face mappings until current integrations have an
+  equivalent semantic replacement. They provide active behavior today.
+- Explicit parent inheritance, whole-entry ownership, and local edits that
+  preserve their parent. Avoid introducing field-by-field palette merging.
+- One common voice editor, contextual rules, optional presentation features,
+  profile selection, recorded feedback, and actual-playback evidence.
+- Engine inventory, health, fallback policy, acknowledged application, local
+  physical-ID ownership, and separate foreground/notification lanes.
+
+* Proposed coherent user model
+
+1. A named voice is a complete reusable sound: shared settings, preferred physical
+   choices, and optional adjustments for each choice.
+2. A palette collects these voices and may explicitly inherit complete voices
+   from a parent. The standard palette provides the built-in vocabulary and can
+   be that parent. New personal palettes should normally use it.
+3. Rules choose a named voice and may adjust it for particular content. Editing
+   the base voice and editing where it is used remain separate actions.
+4. Workstation settings decide availability, Automatic selection, global fallback
+   and output. They do not secretly own each palette's explicit voice choices.
+5. A saved setup selects palettes/options/sounds. It references their definitions;
+   it is not a historical backup unless an explicit snapshot feature is added.
+
+The common question should be answerable in one view: “What voice is this, where
+is it defined, why did it sound this way, and what will my edit affect?”
+
+For the standard-palette upgrade, preserve the existing personality definitions
+and backend-dependent interpretation initially. Merely copying today's rendered
+ACSS numbers into the new root could freeze a workstation-specific result or
+change existing sound. Current-format ownership can coexist with personality
+definitions; converting storage is not a reason to rewrite acoustics.
+
+Resolve aliases before one explicit named-voice lookup. Specify missing-name
+behavior once, including audible recovery for unknown custom names. Do not keep
+an unexplained second default-palette lookup behind the user's Parent column.
+Ordinary unstyled speech, standard named voices and physical synthesis fallback
+need separate, clearly named responsibilities.
+
+* Implementation order and acceptance
+
+** 1. Complete ordinary operations and remove dead ends
+
+Fix New Voice, New Palette, Copy Palette and manager Edit for current data.
+Route Workbench edits to the common editor and correct its help. Apply the
+selected-column speech contract across managers. These can be small patches.
+
+** 2. Settle the standard root and retire dual voice ownership
+
+Record the revised ADR, upgrade the standard palette, and give inheritance,
+alias lookup and missing names one documented contract. Inspect and preserve
+the maintainer's current =bart= definitions, physical choices, per-choice
+adjustments and profile selection before changing its relationship to the root.
+Remove old per-voice routing and migration paths after their useful controls
+have a current home. No new dependencies or server protocol are presumed.
+
+** 3. Make origin, lifetime and recovery obvious
+
+Add source/reset/edit-here actions, startup selection, appropriate copy/export,
+and clear profile-reference semantics. Simplify the ordinary columns. Put machine
+settings together while preserving their distinct meanings.
+
+** 4. Validate by tasks, including spoken use
+
+Required journeys:
+
+- Fresh setup → preview a physical voice → make a named voice → save → hear it
+  in context → restart with the intended palette.
+- Duplicate a current palette → edit one voice → confirm the original still
+  has its original choices and tuning.
+- Choose a parent → edit an inherited voice locally → reset it → edit it again;
+  also exercise a longer chain and reject cycles.
+- Request both =bolden= and =voice-bolden= through actual consumers; check that
+  standard and unknown names obey the chosen missing-name contract.
+- Change a voice only for headings in one buffer; verify ordinary uses elsewhere
+  stay unchanged, and explain which rule supplied the final values.
+- Try, undo, retain, resume, save and recover a failed apply; keep newer edits
+  when an older acknowledgement arrives.
+- Move vertically in every column in every manager; navigate during previews;
+  return from nested panels with selection retained and useful orientation.
+- Export/import with unavailable or missing local voices; explain retained and
+  omitted choices, then audition the actual fallback.
+- Set notification output and ordinary voice preferences, and confirm the two
+  speech streams retain their accepted interruption behavior.
+- Listen with icons enabled and disabled, different verbosity choices, and a
+  unavailable preferred voice. Automated state and receipt tests supplement,
+  but cannot replace, the maintainer's assessment of spoken usability.
+
+* Review evidence and limits
+
+No application code or personal configuration was changed during this review.
+The report is an internal Org artifact, not a published manual change.
+
+- =make check-emacs= passed using the Emacs selected by =local.mk=.
+- 400 selected Aural ERT tests passed. The selection loaded the UI, tools,
+  Change This Feedback, profiles, sound packs, palettes, common editor, context,
+  Workbench, voice-data and voice-editing test libraries and their dependencies.
+- =make docs-release-check= passed, including byte-code currency and structural
+  documentation checks. Passing this gate does not prove that help describes the
+  right user journey; F2 is an example of semantically stale but valid text.
+- Eleven isolated observations confirmed the New Palette generation, rejected
+  current-palette copy and voice creation, incompatible offered parent, offered
+  but rejected Workbench assignment, missing-standard-voice editor lookup, and
+  selected-column speech in three other managers. Registries were private copies;
+  the creation probe intercepted persistence and the other rejection probes
+  stopped before writes. No live speech server or personal data was changed.
+- Review logs and the temporary probe script were written under
+  =/tmp/emacsvox-aural-review-*=. The probe outcomes are recorded in the findings;
+  these scratch files are not required runtime or release artifacts.
+
+This establishes reproducible interface and source-level findings. It is not a
+full audible acceptance test, a complete audit of every integration, or evidence
+that current external voice names can all be deleted. The passing tests and
+failed user journeys support adding end-to-end interaction coverage rather than
+discarding the existing test suite.

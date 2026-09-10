@@ -1,0 +1,177 @@
+#+title: ADR 0018: One Voice-Palette Model and Explicit Standard Inheritance
+#+date: 2026-09-10
+#+startup: content
+
+* Status
+
+Accepted direction under the maintainer's 2026-09-10 authorization to consolidate
+the aural interface and remove its unused old version. This record specifies
+the implementation contract; implementation is pending. It supersedes ADR 0015's
+long-term coexistence of legacy shared routing and owned palettes, and its
+user-facing conversion-on-first-save workflow. The remaining ownership, storage,
+preview and composition requirements of ADRs 0015–0017 remain in force.
+
+The [[file:../aural-interface-review.org][interface review]] records the evidence. The
+[[file:../aural-interface-consolidation-plan.org][delivery plan]] defines tested commits and reasoning-level handoffs.
+
+* Decision
+
+** One complete voice model
+
+Every supported palette owns complete named entries: a definition, ordered
+physical choices, optional per-choice adjustments, and local-choice references.
+New and saved palette data use schema 3. No ordinary action creates a
+definition-only palette or edits a separate shared per-name route.
+
+Keep existing data services and immutable local choice snapshots. Do not invent
+a new format merely to rename the product concepts. Preserve personality-symbol
+definitions and explicit styles, including omitted fields, nil, zero, relative
+rate, optional effects and ordered unavailable choices. Standard personalities
+are still valid definition implementations, not obsolete user palettes.
+
+** Make the standard palette the explicit root
+
+=acss-default= remains the stable identifier of the read-only standard palette.
+It uses the same complete format, with Automatic physical choices unless a
+standard definition deliberately specifies otherwise. Do not bake today's
+installed engine, resolved physical voice or normalized ACSS values into it.
+
+Every personal palette has one explicit parent, and its chain terminates at
+=acss-default=. Only the standard root has no parent. New personal palettes
+normally inherit directly from it. Parent remains the user-facing label.
+Reject missing parents and cycles, and omit invalid choices from completion.
+
+This intentionally replaces standalone personal palettes with one explicit
+inheritance tree. It makes standard voices visible and removes the need for a
+second hidden standard-voice lookup. It does not prohibit independent copies:
+Copy Palette copies every effective entry, including its local choices, into
+the new owner and gives it the standard root as parent. Existing copied entries
+stop following the source; newly introduced standard names remain available.
+The copy action explains that distinction.
+
+Independence is from subsequent edits to the source palette. A retained
+personality-symbol definition still uses that personality's settings, and
+workstation availability still affects playback. Copy is not a frozen recording
+or a promise to ignore later changes to external personality implementations.
+
+Inheritance supplies whole entries. Editing an inherited voice creates a complete
+local entry; it does not merge fields from several parent palettes. Reusing a
+parent's local-choice reference under a different owner is invalid. Reset removes
+the local entry and reveals the parent, leaving the voice visible. The standard
+root cannot be edited or deleted from a personal editor.
+
+** Separate names from definition implementations
+
+Keep declared aliases such as =voice-bolden= → =bolden= for current integration
+callers. New Voice and Rename reject reserved alias names; users do not manage a
+second vocabulary of equivalent identities. Existing collisions must be reported
+by the preparation check, not silently collapsed or given a new meaning.
+
+Normalize a declared alias to its canonical name, then resolve that name through
+the explicit palette chain. A =:personality voice-bolden= inside the resolved
+entry is a terminal definition reference, not another palette lookup; otherwise
+the standard root would recursively resolve itself.
+
+The standard vocabulary includes the bundled palette names and explicitly
+registered stable personalities needed by current integrations. Registered
+personalities without a declared canonical alias retain their exact names.
+Registering one after startup updates the standard inventory and invalidates
+dependent resolution. Do not infer names by stripping arbitrary =voice-=
+prefixes or by collecting interned or generated =acss-*= symbols.
+
+This preserves Voice Lock and current personality callers while retiring the old
+palette-management model. Raw ACSS objects, explicit styles, unstyled speech and
+=inaudible= retain their established interpretation. They are not missing named
+palette entries and must not be reclassified as such.
+
+** Define missing-name behavior once
+
+An unknown custom named voice is an invalid reference. Authoring, import,
+activation and deletion checks reject known unresolved references before writes
+or application. Deleting a local entry is Reset when its parent supplies the
+name; deleting an unreferenced custom name removes it. Show which action applies.
+
+If an unknown name still reaches ordinary speech dynamically, preserve the
+content using ordinary unstyled speech and record a bounded diagnostic with the
+requested name and palette. Do not fabricate a standard definition or insert
+repeated warning speech into navigation. Explanations and Doctor expose the
+degradation. Preview and editing report the unresolved name rather than claiming
+that the intended voice was heard.
+
+Custom code can register a stable personality or define a palette voice. Merely
+being a bound Lisp symbol does not create another undocumented inheritance path.
+
+** Keep machine policy, remove shared per-voice ownership
+
+Keep engine availability, disablement, preferred engine order, global physical
+fallback, output routing and per-lane acknowledgement. Keep their existing
+storage and adapter services where suitable; removing old per-voice bindings
+does not mean deleting the file that also owns workstation policy and local
+choice snapshots.
+
+Retire shared per-logical-voice binding edits, route migration/preset screens,
+and independent route-saving instructions. Named-voice choices and tuning go
+through the common editor. Physical experiments remain unsaved until placed in
+a named voice's draft and saved there. Workstation changes cannot overwrite
+explicit palette choices.
+
+Temporary per-name route bindings are not a second supported voice-editing
+workflow in the final model. Preparation identifies any current bindings; none
+are silently materialized as saved choices. Keep previews and temporary engine
+preference, whose scope remains explicitly workstation/session policy.
+
+** Preserve current personal data deliberately
+
+The reviewed =bart= palette is schema 2, has no parent, and includes both stored
+styles and personality references. Removing old workflows must not delete it or
+reconstruct its settings from the most recently heard sound.
+
+Before retiring readers, prepare and inspect a one-time conversion of the
+maintainer's current data: promote owned choices to schema 3, retain palette
+identity and profile references, and link its former parentless root to
+=acss-default=. Preserve every direct entry and its complete local chain. Report
+newly inherited names and any legacy bindings that still affect live voices.
+Capture required explicit saved choices in personal entries before retiring
+shared routing; never move machine-specific choices into the standard root.
+
+Use retained originals and the existing ordered persistence service. Opening or
+previewing a palette never performs this conversion. Remove temporary conversion
+support after the current data and maintained fixtures are accounted for; do not
+retain a general migration product solely for hypothetical old users.
+
+** Make state and scope visible
+
+The ordinary voice list shows the defining source, including inherited voices.
+Edit Here, Reset to Parent, Copy and Delete Custom Voice have distinct outcomes.
+Known rules and descendants supply an impact report; arbitrary personal Lisp
+references cannot be claimed as exhaustively discoverable.
+
+Keep saved definitions, current selection, startup selection and acknowledged
+application distinct. Presentation Profiles remain references to selected
+palettes/options/sounds, not historical snapshots of their contents. A direct
+startup-selection action uses that existing profile service; it must not capture
+unrelated diverged settings without a separate explicit action.
+
+Portable export materializes the palette's effective entries under the standard
+root, so it does not leave unresolved personal-parent dependencies on the target
+machine. It preserves raw definitions and portable choice rows with their tuning,
+omits local choice references, and reports what was omitted. A same-machine backup
+instead includes the needed palette ancestry and owned local snapshots. Neither
+operation claims to preserve identical acoustic output on another workstation.
+
+* Alternatives and consequences
+
+Keeping two formats and hiding their names would leave incompatible creation,
+inheritance and editing behavior. An implicit fallback to the standard palette
+would preserve the misleading “no parent” state. Both are rejected.
+
+One explicit tree makes lookup, Reset, copying and source display predictable.
+It requires a deliberate change to current parentless data and fresh-process
+checks for registered personalities, aliases and non-Omnivox adapters. Independent
+copies follow the standard vocabulary for names absent from the copy, which must
+be explained rather than called a frozen backup.
+
+No new speech protocol, dependency, release publication, helper architecture or
+speech-lane change is authorized by this record. Preserve all applicable sibling
+ADRs. A new protocol requirement discovered during implementation requires a
+separate design review instead of expanding this cleanup silently.
