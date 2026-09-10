@@ -173,8 +173,8 @@
     (let (opened)
       (cl-letf (((symbol-function 'completing-read)
                  (lambda (_prompt choices &rest _)
-                   (should (assoc "Browse and adjust voices" choices))
-                   "Browse and adjust voices"))
+                   (should (assoc "Browse installed voices" choices))
+                   "Browse installed voices"))
                 ((symbol-function 'emacsvox-aural-voice-workbench)
                  (lambda (view) (setq opened view))))
         (emacsvox-aural-home-search))
@@ -721,7 +721,7 @@
               "1 personal, 1 session, 1 this buffer"))
             (save-window-excursion
               (emacsvox-aural-list-overrides source)
-              (with-current-buffer "*Aural Presentation Overrides*"
+              (with-current-buffer "*Aural Feedback Rules*"
                 (should
                  (derived-mode-p 'emacsvox-aural-overrides-mode))
                 (should
@@ -767,8 +767,8 @@
                      emacsvox-aural-overrides-mode-map
                      (kbd (car binding)))
                     (cdr binding)))))))
-        (when (get-buffer "*Aural Presentation Overrides*")
-          (kill-buffer "*Aural Presentation Overrides*"))
+        (when (get-buffer "*Aural Feedback Rules*")
+          (kill-buffer "*Aural Feedback Rules*"))
         (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-overrides-toggle-applies-session-rule ()
@@ -784,7 +784,7 @@
                 :render (:content (:voice bolden)))))
             (save-window-excursion
               (emacsvox-aural-list-overrides source)
-              (with-current-buffer "*Aural Presentation Overrides*"
+              (with-current-buffer "*Aural Feedback Rules*"
                 (emacsvox-aural-ui-goto-row
                  '(session temporary-heading))
                 (cl-letf
@@ -799,8 +799,8 @@
                    (plist-get
                     (car emacsvox-aural-session-rules)
                     :enabled))))))
-        (when (get-buffer "*Aural Presentation Overrides*")
-          (kill-buffer "*Aural Presentation Overrides*"))
+        (when (get-buffer "*Aural Feedback Rules*")
+          (kill-buffer "*Aural Feedback Rules*"))
         (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-overrides-filter-and-clear-preserve-layers ()
@@ -821,7 +821,7 @@
                 :render (:content (:voice smoothen)))))
             (save-window-excursion
               (emacsvox-aural-list-overrides source)
-              (with-current-buffer "*Aural Presentation Overrides*"
+              (with-current-buffer "*Aural Feedback Rules*"
                 (let ((answers '("session" "all" "all")))
                   (cl-letf
                       (((symbol-function 'completing-read)
@@ -842,8 +842,8 @@
                     (session session-mail))))
                 (should (= (length emacsvox-aural-user-rules) 1))
                 (should (= (length emacsvox-aural-session-rules) 1)))))
-        (when (get-buffer "*Aural Presentation Overrides*")
-          (kill-buffer "*Aural Presentation Overrides*"))
+        (when (get-buffer "*Aural Feedback Rules*")
+          (kill-buffer "*Aural Feedback Rules*"))
         (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-overrides-retain-captured-position ()
@@ -924,7 +924,7 @@
               (goto-char (point-min)))
             (save-window-excursion
               (emacsvox-aural-list-overrides source)
-              (with-current-buffer "*Aural Presentation Overrides*"
+              (with-current-buffer "*Aural Feedback Rules*"
                 (cl-letf
                     (((symbol-function 'emacsvox-aural-preview-play-plan)
                       (lambda (plan) (setq played plan))))
@@ -941,8 +941,8 @@
                       (emacsvox-aural-concrete-content-voice-request
                        (emacsvox-aural-concrete-plan-content plan))
                       'bolden)))))))
-        (when (get-buffer "*Aural Presentation Overrides*")
-          (kill-buffer "*Aural Presentation Overrides*"))
+        (when (get-buffer "*Aural Feedback Rules*")
+          (kill-buffer "*Aural Feedback Rules*"))
         (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-overrides-personal-delete-is-atomic ()
@@ -959,7 +959,7 @@
                 :render (:content (:voice bolden)))))
             (save-window-excursion
               (emacsvox-aural-list-overrides source)
-              (with-current-buffer "*Aural Presentation Overrides*"
+              (with-current-buffer "*Aural Feedback Rules*"
                 (emacsvox-aural-ui-goto-row
                  '(personal persistent-heading))
                 (cl-letf
@@ -984,8 +984,8 @@
                   (emacsvox-aural-overrides-delete))
                 (should saved)
                 (should-not emacsvox-aural-user-rules))))
-        (when (get-buffer "*Aural Presentation Overrides*")
-          (kill-buffer "*Aural Presentation Overrides*"))
+        (when (get-buffer "*Aural Feedback Rules*")
+          (kill-buffer "*Aural Feedback Rules*"))
         (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-editor-opens-the-selected-override-rule ()
@@ -2599,17 +2599,17 @@
                 (emacsvox-aural-home-previous)
                 (should (equal spoken "Top of aural home."))
                 (emacsvox-aural-home-toggle-group)
-                (should (equal "Understand or change feedback" spoken))
+                (should (equal "Understand and change feedback" spoken))
+                (emacsvox-aural-home-next)
+                (should (string-prefix-p "Explain this item: " spoken))
                 (emacsvox-aural-home-next)
                 (should (string-prefix-p "Change this feedback: " spoken))
                 (emacsvox-aural-home-next)
-                (should (string-prefix-p "Explain at point: " spoken))
+                (should (string-prefix-p "Recent aural feedback: " spoken))
                 (emacsvox-aural-home-next)
-                (should (string-prefix-p "Remap voice at point: " spoken))
+                (should (string-prefix-p "Choose a voice for this item: " spoken))
                 (emacsvox-aural-home-next)
-                (should (string-prefix-p "Tune voice used here: " spoken))
-                (emacsvox-aural-home-next)
-                (should (string-prefix-p "Remap earcon at point: " spoken))
+                (should (string-prefix-p "Edit the named voice used here: " spoken))
                 (emacsvox-aural-home-next-column)
                 (should
                  (string-prefix-p "Purpose, " spoken))
@@ -4066,7 +4066,7 @@
         (should (equal Info-current-node (cdr entry))))))
   (with-temp-buffer
     (emacsvox-aural-voice-editor-mode)
-    (should (equal (emacsvox-aural-ui--manual-node) "Voices And Routing"))
+    (should (equal (emacsvox-aural-ui--manual-node) "Editing Named Voices"))
     (should (eq (key-binding (kbd "C-c C-i")) #'emacsvox-aural-ui-open-manual))))
 
 (ert-deftest emacsvox-aural-editor-rejects-unresolved-voice-before-save ()

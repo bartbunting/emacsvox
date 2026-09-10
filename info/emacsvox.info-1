@@ -2402,7 +2402,7 @@ File: emacsvox.info,  Node: Aural Home,  Next: Presentation Model,  Up: Aural Pr
 
 For a first listening experiment:
 
-  1. Press ‘C-e H’, then ‘/’, and choose _Browse and adjust voices_ from
+  1. Press ‘C-e H’, then ‘/’, and choose _Browse installed voices_ from
      the searchable actions.
   2. Select an available engine and press <RET> to list its voices.
   3. Move to a voice and press ‘P’ to hear a sample.  ‘S’ stops it.
@@ -2428,7 +2428,7 @@ the same voice in the voice editor likewise preserves its working
 settings.  If a prepared remap's source item changes or disappears,
 Emacsvox asks you to prepare that change again before applying it.
 
-   Aural Home begins with five task groups in one spoken table.  Press
+   Aural Home begins with six task groups in one spoken table.  Press
 <RET> or <TAB> to expand or collapse a group.  Each action names a
 destination, reports its current status, and describes its purpose.  ‘/’
 searches all actions, including collapsed groups; the matching group
@@ -2478,21 +2478,26 @@ auditions still play the working voice.
      Go back or leave; an editor may first offer to retain or discard
      changes.
 
-   The five groups are:
+   The six groups are:
 
 Task group                Destinations
-Understand or change      Current item explanation and remapping,
-feedback                  Recent Feedback, semantic vocabulary, and
+Understand and change     Explain this item, Change this feedback,
+feedback                  Recent aural feedback, contextual voice and
+                          sound changes, semantic vocabulary, and
                           return to source.
-Choose voices and         Browse and adjust voices, palettes, sound
-sounds                    packs, speech engine and rate, notifications,
-                          spatial settings, and the full Voice
-                          Workbench.
-Choose optional           Presentation Options and training
-feedback                  explanations.
-Manage changes and        Unfinished drafts, overrides, buffer rules,
-saved setups              and Presentation Profiles.
-Troubleshoot              Aural Doctor and Omnivox engine modules.
+Voices and speech         Voice palettes, Browse installed voices,
+                          Preferred speech engine, Speech rate, and
+                          Voice Workbench.
+Sounds and output         Sound packs, Spatial settings, Notification
+                          output, Review notifications, and Stop
+                          notification speech.
+Optional feedback and     Presentation options, Your feedback rules,
+rules                     Current buffer rules, and Explain feedback as
+                          you navigate.
+Saved setups and          Presentation profiles and Resume unfinished
+unfinished changes        changes.
+Troubleshooting           Aural Doctor, Spatial capabilities, and
+                          Omnivox engine modules.
 
    The header identifies the captured source and the number of
 unfinished drafts.  Choose _Resume unfinished changes_ to visit the
@@ -2504,9 +2509,9 @@ voices; shared engine settings are saved separately.
 
    You can press <RET> on a row without memorizing its shortcut.  Aural
 Home also provides direct keys for frequent routes, including ‘x’ for
-explanation, ‘O’ for overrides, ‘H’ for recent feedback, ‘P’ for
-profiles, ‘V’ for voice palettes, ‘W’ for Voice Workbench, and ‘D’ for
-Aural Doctor.
+explanation, ‘O’ for your feedback rules, ‘H’ for recent feedback, ‘P’
+for profiles, ‘V’ for voice palettes, ‘W’ for Voice Workbench, and ‘D’
+for Aural Doctor.
 
    The voice editor contains fields and buttons rather than table
 columns: left/right changes a numeric value, and <RET> edits a field.
@@ -2664,11 +2669,11 @@ include:
 ‘L’
      Change the bounded history limit for the current session.
 
-   Training Mode, available from Aural Home, speaks concise semantic
-explanations after normal presentations.  It can help while learning the
-vocabulary used by an integration, but is intentionally more verbose
-than ordinary operation; turn it off when you no longer need the
-additional labels.
+   _Explain feedback as you navigate_, available from Aural Home, speaks
+concise semantic explanations after normal presentations.  It can help
+while learning the vocabulary used by an integration, but is
+intentionally more verbose than ordinary operation; turn it off when you
+no longer need the additional labels.
 
 
 File: emacsvox.info,  Node: Adjusting Presentation,  Next: Voices And Routing,  Prev: Explaining Presentation,  Up: Aural Presentation
@@ -2684,8 +2689,8 @@ supplied by Emacsvox or an                            configuration
 integration
 Change voice, sound, tone,     Change this feedback   Personal, session,
 label, or suppression                                 or current buffer
-Review or remove an existing   Presentation           Its recorded scope
-precise change                 Overrides
+Review or remove an existing   Your feedback rules    Its recorded scope
+precise change
 Try rules only in the          Current Buffer Rules   Life of that
 current work buffer                                   buffer
 Switch selected reading or     Presentation           Saved global
@@ -2777,14 +2782,14 @@ File: emacsvox.info,  Node: Choosing A Voice For An Item,  Next: Managing Feedba
   1. Move to a representative object and press ‘C-e E’ so you know what
      currently controls it.
 
-  2. Press ‘C-e H’.  Choose _Remap voice at point_ with ‘r’ to use a
-     different named voice here, or _Tune voice used here_ with ‘T’ to
-     open the current named voice in the common voice editor.  Tuning
-     changes that voice wherever it is used in the palette; remapping
-     changes which voice is used for the face or item.  For example, at
-     a shell prompt you can assign another voice to the prompt face, or
-     tune the voice currently used by prompts.  You do not need to hear
-     the prompt first.
+  2. Press ‘C-e H’.  Choose _Choose a voice for this item_ with ‘r’ to
+     use a different named voice here, or _Edit the named voice used
+     here_ with ‘T’ to open the current named voice in the common voice
+     editor.  Tuning changes that voice wherever it is used in the
+     palette; remapping changes which voice is used for the face or
+     item.  For example, at a shell prompt you can assign another voice
+     to the prompt face, or tune the voice currently used by prompts.
+     You do not need to hear the prompt first.
 
      In the remapping screen, move with ‘n’ and ‘p’ or the arrow keys.
      Press ‘RET’ on _Voice_ to choose a voice, _Preview original_ to
@@ -2817,7 +2822,7 @@ File: emacsvox.info,  Node: Managing Feedback Rules,  Next: Presentation Options
 6.4.3 Review And Remove Your Rules
 ----------------------------------
 
-In _Presentation Overrides_, ‘RET’ or ‘e’ opens the selected rule's
+In _Your feedback rules_, ‘RET’ or ‘e’ opens the selected rule's
 settings panel.  In the rule list, the same keys open that panel.  Only
 the selected rule appears while its panel is open; the other rules
 remain in the working draft.  ‘n’ and ‘p’ move through the visible
@@ -2840,11 +2845,11 @@ returns to _voice_, then _Content_.  At the top level it closes the
 panel and returns to the full rule list.  From the rule list, ‘N’ adds a
 rule and ‘q’ asks before discarding an unfinished draft.
 
-   Open _Presentation Overrides_ to manage these changes together.
-There, ‘P’ previews the complete current result, ‘t’ temporarily
-disables or enables a rule, and ‘d’ removes it.  Disabling or deleting
-an override restores the next weaker behavior; it does not leave a
-copied default behind.
+   Open _Your feedback rules_ to manage these changes together.  There,
+‘P’ previews the complete current result, ‘t’ temporarily disables or
+enables a rule, and ‘d’ removes it.  Disabling or deleting an override
+restores the next weaker behavior; it does not leave a copied default
+behind.
 
 
 File: emacsvox.info,  Node: Presentation Options,  Prev: Managing Feedback Rules,  Up: Adjusting Presentation
@@ -3002,11 +3007,12 @@ File: emacsvox.info,  Node: Editing Named Voices,  Next: Installed Voices And En
 ======================
 
 From _Voice Palettes_, open a palette, select a voice, and press ‘e’ to
-edit it.  From Aural Home, _Tune voice used here_ opens the named voice
-used by the captured source item.  Editing an inherited voice creates a
-complete entry in your destination palette when saved.  Editing a
-built-in palette asks for a personal child.  Opening the editor and
-previewing a draft do not change live feedback or save settings.
+edit it.  From Aural Home, _Edit the named voice used here_ opens the
+named voice used by the captured source item.  Editing an inherited
+voice creates a complete entry in your destination palette when saved.
+Editing a built-in palette asks for a personal child.  Opening the
+editor and previewing a draft do not change live feedback or save
+settings.
 
    The editor uses the ordinary navigation voice for its labelled
 fields.  ‘n/p’, up/down or Tab moves between fields.  Left/right adjusts
@@ -3252,7 +3258,7 @@ engines.  Open it from Aural Home with ‘W’.  Its main views are:
      Styles and effects for those logical roles.  Use this view to
      inspect their parameters and what their current engines support.
 
-   For physical voices, choose _Browse and adjust voices_ in Home, then
+   For physical voices, choose _Browse installed voices_ in Home, then
 press <RET> or ‘v’ on an engine to browse its voices.  <RET> on a voice
 shows details; ‘P’ plays a named sample.  Filters set with ‘F’ and each
 view's selected row and column survive navigation through Home.  The
@@ -3298,7 +3304,7 @@ File: emacsvox.info,  Node: Physical Voice Experiments,  Next: Speech Engine Pre
 6.7.1 Experiment With An Installed Voice
 ----------------------------------------
 
-In _Browse and adjust voices_, select a physical voice and press ‘t’.
+In _Browse installed voices_, select a physical voice and press ‘t’.
 This opens an experiment with that exact engine and voice,
 adapter-default speech characteristics, the current base speech rate,
 and neutral audio effects.  Opening, adjusting and comparing write no
@@ -3390,8 +3396,8 @@ sound character without rewriting every presentation rule.
      Activate the selected pack.
 
    Use a sound pack when you want to change a family of cues together.
-Use _Remap Earcon At Point_ or Presentation Overrides when one semantic
-event needs a different cue, suppression, or restoration.
+Use _Change a sound for this item_ or Your feedback rules when one
+semantic event needs a different cue, suppression, or restoration.
 
    Spatial requests are portable descriptions rather than assumptions
 about one device.  Aural Home separates _Spatial Capabilities_, which
@@ -3582,8 +3588,8 @@ Something heard earlier was     Open Recent Aural Feedback and explain
 wrong                           its frozen record.
 A broad optional behavior is    Inspect Presentation Options and
 unwanted                        preview or disable the matching option.
-One narrow exception is         Open Presentation Overrides, preview
-unwanted                        it, then disable or remove it.
+One narrow exception is         Open Your feedback rules, preview it,
+unwanted                        then disable or remove it.
 A named voice uses the wrong    Inspect its physical choices in the
 engine or physical voice        voice editor, then engine health in
                                 Voice Workbench.
@@ -3621,9 +3627,9 @@ Home's _Resume unfinished changes_ opens the original draft, including
 its source and working settings.  In the common voice editor, ‘u’ undoes
 and ‘q’ offers to keep the draft, discard changes, or continue.  Guided
 feedback ‘q’ goes back one level, then hides and retains the draft at
-the top level.  To undo an already applied rule, open _Presentation
-Overrides_, select it in the appropriate scope, and use ‘t’ to disable
-it or ‘d’ to remove it.
+the top level.  To undo an already applied rule, open _Your feedback
+rules_, select it in the appropriate scope, and use ‘t’ to disable it or
+‘d’ to remove it.
 
    Retained drafts last only until Emacs exits.  Discarding a draft
 abandons unsaved edits; it does not undo a completed save.  A voice

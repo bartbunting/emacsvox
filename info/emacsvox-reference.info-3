@@ -3820,85 +3820,85 @@ Function Index
 * emacsvox-aural-sound-pack-cues-next-column <1>: emacsvox-aural-sound-packs.
                                                              (line   86)
 * emacsvox-aural-sound-pack-cues-previous: emacsvox-aural-sound-packs.
-                                                             (line   92)
+                                                             (line   91)
 * emacsvox-aural-sound-pack-cues-previous <1>: emacsvox-aural-sound-packs.
-                                                             (line   93)
+                                                             (line   92)
 * emacsvox-aural-sound-pack-cues-previous-column: emacsvox-aural-sound-packs.
-                                                             (line   99)
+                                                             (line   98)
 * emacsvox-aural-sound-pack-cues-previous-column <1>: emacsvox-aural-sound-packs.
-                                                             (line  100)
+                                                             (line   99)
 * emacsvox-aural-sound-pack-cues-refresh: emacsvox-aural-sound-packs.
-                                                             (line  106)
+                                                             (line  105)
 * emacsvox-aural-sound-pack-cues-refresh <1>: emacsvox-aural-sound-packs.
-                                                             (line  107)
+                                                             (line  106)
 * emacsvox-aural-sound-pack-cues-show-validation: emacsvox-aural-sound-packs.
-                                                             (line  115)
+                                                             (line  114)
 * emacsvox-aural-sound-pack-cues-show-validation <1>: emacsvox-aural-sound-packs.
-                                                             (line  116)
+                                                             (line  115)
 * emacsvox-aural-sound-pack-cues-speak-current: emacsvox-aural-sound-packs.
-                                                             (line  122)
+                                                             (line  121)
 * emacsvox-aural-sound-pack-cues-speak-current <1>: emacsvox-aural-sound-packs.
-                                                             (line  123)
+                                                             (line  122)
 * emacsvox-aural-sound-pack-cues-speak-current-cell: emacsvox-aural-sound-packs.
-                                                             (line  129)
+                                                             (line  128)
 * emacsvox-aural-sound-pack-cues-speak-current-cell <1>: emacsvox-aural-sound-packs.
-                                                             (line  130)
+                                                             (line  129)
 * emacsvox-aural-sound-packs-activate:   emacsvox-aural-sound-packs.
-                                                             (line  136)
+                                                             (line  135)
 * emacsvox-aural-sound-packs-activate <1>: emacsvox-aural-sound-packs.
-                                                             (line  137)
+                                                             (line  136)
 * emacsvox-aural-sound-packs-audition:   emacsvox-aural-sound-packs.
-                                                             (line  143)
+                                                             (line  142)
 * emacsvox-aural-sound-packs-audition <1>: emacsvox-aural-sound-packs.
-                                                             (line  144)
+                                                             (line  143)
 * emacsvox-aural-sound-packs-edit-manifest: emacsvox-aural-sound-packs.
-                                                             (line  150)
+                                                             (line  149)
 * emacsvox-aural-sound-packs-edit-manifest <1>: emacsvox-aural-sound-packs.
-                                                             (line  151)
+                                                             (line  150)
 * emacsvox-aural-sound-packs-help:       emacsvox-aural-sound-packs.
-                                                             (line  157)
+                                                             (line  156)
 * emacsvox-aural-sound-packs-help <1>:   emacsvox-aural-sound-packs.
-                                                             (line  158)
+                                                             (line  157)
 * emacsvox-aural-sound-packs-mode:       emacsvox-aural-sound-packs.
-                                                             (line  164)
+                                                             (line  163)
 * emacsvox-aural-sound-packs-mode <1>:   emacsvox-aural-sound-packs.
-                                                             (line  165)
+                                                             (line  164)
 * emacsvox-aural-sound-packs-next:       emacsvox-aural-sound-packs.
-                                                             (line  187)
+                                                             (line  186)
 * emacsvox-aural-sound-packs-next <1>:   emacsvox-aural-sound-packs.
-                                                             (line  188)
+                                                             (line  187)
 * emacsvox-aural-sound-packs-next-column: emacsvox-aural-sound-packs.
-                                                             (line  194)
+                                                             (line  193)
 * emacsvox-aural-sound-packs-next-column <1>: emacsvox-aural-sound-packs.
-                                                             (line  195)
+                                                             (line  194)
 * emacsvox-aural-sound-packs-open-directory: emacsvox-aural-sound-packs.
-                                                             (line  201)
+                                                             (line  200)
 * emacsvox-aural-sound-packs-open-directory <1>: emacsvox-aural-sound-packs.
-                                                             (line  202)
+                                                             (line  201)
 * emacsvox-aural-sound-packs-previous:   emacsvox-aural-sound-packs.
-                                                             (line  208)
+                                                             (line  207)
 * emacsvox-aural-sound-packs-previous <1>: emacsvox-aural-sound-packs.
-                                                             (line  209)
+                                                             (line  208)
 * emacsvox-aural-sound-packs-previous-column: emacsvox-aural-sound-packs.
-                                                             (line  215)
+                                                             (line  214)
 * emacsvox-aural-sound-packs-previous-column <1>: emacsvox-aural-sound-packs.
-                                                             (line  216)
+                                                             (line  215)
 * emacsvox-aural-sound-packs-refresh:    emacsvox-aural-sound-packs.
-                                                             (line  222)
+                                                             (line  221)
 * emacsvox-aural-sound-packs-refresh <1>: emacsvox-aural-sound-packs.
-                                                             (line  223)
+                                                             (line  222)
 * emacsvox-aural-sound-packs-show-validation: emacsvox-aural-sound-packs.
-                                                             (line  231)
+                                                             (line  230)
 * emacsvox-aural-sound-packs-show-validation <1>: emacsvox-aural-sound-packs.
-                                                             (line  233)
+                                                             (line  232)
 * emacsvox-aural-sound-packs-speak-current: emacsvox-aural-sound-packs.
-                                                             (line  241)
+                                                             (line  240)
 * emacsvox-aural-sound-packs-speak-current <1>: emacsvox-aural-sound-packs.
-                                                             (line  242)
+                                                             (line  241)
 * emacsvox-aural-sound-packs-speak-current-cell: emacsvox-aural-sound-packs.
-                                                             (line  248)
+                                                             (line  247)
 * emacsvox-aural-sound-packs-speak-current-cell <1>: emacsvox-aural-sound-packs.
-                                                             (line  249)
+                                                             (line  248)
 * emacsvox-aural-tabulated-mode:         emacsvox-aural-ui.  (line   55)
 * emacsvox-aural-tabulated-mode <1>:     emacsvox-aural-ui.  (line   56)
 * emacsvox-aural-toggle-compatibility-voice: emacsvox-aural-compatibility-voice.

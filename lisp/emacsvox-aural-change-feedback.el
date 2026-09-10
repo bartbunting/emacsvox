@@ -829,7 +829,7 @@
                           "\n\nChoose Voice to use another named voice for this face or item. The named voice's settings stay unchanged.\n"
                           "RET opens the selected row. n/p or arrows move. P previews the change; O plays the original; S stops.\n"
                           "Choose How long, then Save or w. q goes back one level; at the top it hides and preserves the draft. e opens Advanced.\n"
-                          "To retune the named voice everywhere it is used, return to Home and choose Tune voice used here (T).\n")
+                          "To retune the named voice everywhere it is used, return to Home and choose Edit the named voice used here (T).\n")
                 (concat (emacsvox-aural-change-feedback--summary)
                       "\n\nRET on Parts expands parts in playback order. Moving reads their text in the captured voice; O replays a part.\n"
                       "c expands component changes. RET on Content voice expands voices: original first, then alphabetical.\n"

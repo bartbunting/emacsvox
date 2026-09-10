@@ -3152,7 +3152,7 @@ cascade.
 
  -- Command: emacsvox-aural-list-overrides (&optional source)
 
-     Open the unified Presentation Overrides manager for optional SOURCE.
+     Open the unified Feedback Rules manager for optional SOURCE.
 
      (fn &optional SOURCE)
 
@@ -3196,14 +3196,14 @@ cascade.
 
  -- Command: emacsvox-aural-overrides-help
 
-     Display and speak Presentation Overrides help.
+     Display and speak Feedback Rules help.
 
 2.29.1.8 emacsvox-aural-overrides-mode
 ......................................
 
  -- Command: emacsvox-aural-overrides-mode
 
-     Spoken manager for personal, session, and buffer presentation overrides.
+     Spoken manager for personal, session, and buffer feedback rules.
 
      In addition to any hooks its parent mode
      ‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
@@ -4008,7 +4008,6 @@ discovered-pack manifests without editing raw Lisp.
 ...................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-next-column
-
      Move right and speak the next cue column.
 
 2.46.1.9 emacsvox-aural-sound-pack-cues-previous

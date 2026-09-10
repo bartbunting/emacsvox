@@ -3297,7 +3297,7 @@ and mutates the existing strongest three layers in the aural cascade.
 @findex emacsvox-aural-list-overrides
 
 @format
-Open the unified Presentation Overrides manager for optional SOURCE.
+Open the unified Feedback Rules manager for optional SOURCE.
 
 (fn &optional SOURCE)
 @end format
@@ -3353,7 +3353,7 @@ Filter overrides by scope, module, and semantic role.
 @findex emacsvox-aural-overrides-help
 
 @format
-Display and speak Presentation Overrides help.
+Display and speak Feedback Rules help.
 @end format
 @end deffn
 
@@ -3362,7 +3362,7 @@ Display and speak Presentation Overrides help.
 @findex emacsvox-aural-overrides-mode
 
 @format
-Spoken manager for personal, session, and buffer presentation overrides.
+Spoken manager for personal, session, and buffer feedback rules.
 
 In addition to any hooks its parent mode
 ‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
@@ -4257,7 +4257,6 @@ Move to and speak the next cue.
 @subsubsection emacsvox-aural-sound-pack-cues-next-column
 @deffn {Command} emacsvox-aural-sound-pack-cues-next-column
 @findex emacsvox-aural-sound-pack-cues-next-column
-
 @format
 Move right and speak the next cue column.
 @end format
@@ -23193,6 +23192,7 @@ Speak ISO date-time.
 @end table
 
 @findex emacsvox-wizards-squeeze-blanks
+
 @format
 Squeeze multiple blank lines.
 

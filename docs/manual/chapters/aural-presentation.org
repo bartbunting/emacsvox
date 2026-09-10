@@ -48,7 +48,7 @@ order or open a task directly from its Info menu. In an Aural interface,
 For a first listening experiment:
 
 1. Press @@texinfo:@kbd{C-e H}@@, then @@texinfo:@kbd{/}@@, and choose
-   /Browse and adjust voices/ from the searchable actions.
+   /Browse installed voices/ from the searchable actions.
 2. Select an available engine and press @@texinfo:@key{RET}@@ to list its voices.
 3. Move to a voice and press @@texinfo:@kbd{P}@@ to hear a sample.
    @@texinfo:@kbd{S}@@ stops it. Browsing and previewing save no settings.
@@ -73,7 +73,7 @@ the voice editor likewise preserves its working settings.  If a prepared remap's
 source item changes or disappears, Emacsvox asks you to prepare that change
 again before applying it.
 
-Aural Home begins with five task groups in one spoken table.  Press
+Aural Home begins with six task groups in one spoken table.  Press
 @@texinfo:@key{RET}@@ or @@texinfo:@key{TAB}@@ to expand or collapse a group.
 Each action names a destination, reports its current status, and describes
 its purpose.  @@texinfo:@kbd{/}@@ searches all actions, including collapsed
@@ -110,15 +110,16 @@ In Home and other tables, the navigation controls are:
 - h :: Return to Aural Home from a manager or editor.
 - q :: Go back or leave; an editor may first offer to retain or discard changes.
 
-The five groups are:
+The six groups are:
 
 #+attr_texinfo: :columns 0.35 0.65
 | Task group | Destinations |
-| Understand or change feedback | Current item explanation and remapping, Recent Feedback, semantic vocabulary, and return to source. |
-| Choose voices and sounds | Browse and adjust voices, palettes, sound packs, speech engine and rate, notifications, spatial settings, and the full Voice Workbench. |
-| Choose optional feedback | Presentation Options and training explanations. |
-| Manage changes and saved setups | Unfinished drafts, overrides, buffer rules, and Presentation Profiles. |
-| Troubleshoot | Aural Doctor and Omnivox engine modules. |
+| Understand and change feedback | Explain this item, Change this feedback, Recent aural feedback, contextual voice and sound changes, semantic vocabulary, and return to source. |
+| Voices and speech | Voice palettes, Browse installed voices, Preferred speech engine, Speech rate, and Voice Workbench. |
+| Sounds and output | Sound packs, Spatial settings, Notification output, Review notifications, and Stop notification speech. |
+| Optional feedback and rules | Presentation options, Your feedback rules, Current buffer rules, and Explain feedback as you navigate. |
+| Saved setups and unfinished changes | Presentation profiles and Resume unfinished changes. |
+| Troubleshooting | Aural Doctor, Spatial capabilities, and Omnivox engine modules. |
 
 The header identifies the captured source and the number of unfinished drafts.
 Choose /Resume unfinished changes/ to visit the original rule editor, voice editor,
@@ -129,7 +130,7 @@ palette's named voices; shared engine settings are saved separately.
 
 You can press @@texinfo:@key{RET}@@ on a row without memorizing its shortcut.  Aural
 Home also provides direct keys for frequent routes, including @@texinfo:@kbd{x}@@ for
-explanation, @@texinfo:@kbd{O}@@ for overrides, @@texinfo:@kbd{H}@@ for recent feedback,
+explanation, @@texinfo:@kbd{O}@@ for your feedback rules, @@texinfo:@kbd{H}@@ for recent feedback,
 @@texinfo:@kbd{P}@@ for profiles, @@texinfo:@kbd{V}@@ for voice palettes, @@texinfo:@kbd{W}@@ for
 Voice Workbench, and @@texinfo:@kbd{D}@@ for Aural Doctor.
 
@@ -272,7 +273,7 @@ Useful commands in the feedback browser include:
 - R :: Replace, suppress, or restore one exact earcon.
 - L :: Change the bounded history limit for the current session.
 
-Training Mode, available from Aural Home, speaks concise semantic explanations
+/Explain feedback as you navigate/, available from Aural Home, speaks concise semantic explanations
 after normal presentations.  It can help while learning the vocabulary used by
 an integration, but is intentionally more verbose than ordinary operation;
 turn it off when you no longer need the additional labels.
@@ -292,7 +293,7 @@ Start by choosing the narrowest tool that matches your intention:
 | Intention | Use | Scope |
 | Try an optional behavior supplied by Emacsvox or an integration | Presentation Options | Global configuration |
 | Change voice, sound, tone, label, or suppression | Change this feedback | Personal, session, or current buffer |
-| Review or remove an existing precise change | Presentation Overrides | Its recorded scope |
+| Review or remove an existing precise change | Your feedback rules | Its recorded scope |
 | Try rules only in the current work buffer | Current Buffer Rules | Life of that buffer |
 | Switch selected reading or working settings | Presentation Profiles | Saved global configuration |
 
@@ -378,8 +379,8 @@ frozen example.
 1. Move to a representative object and press @@texinfo:@kbd{C-e E}@@ so you know what
    currently controls it.
 
-2. Press @@texinfo:@kbd{C-e H}@@.  Choose /Remap voice at point/ with
-   @@texinfo:@kbd{r}@@ to use a different named voice here, or /Tune voice used
+2. Press @@texinfo:@kbd{C-e H}@@.  Choose /Choose a voice for this item/ with
+   @@texinfo:@kbd{r}@@ to use a different named voice here, or /Edit the named voice used
    here/ with @@texinfo:@kbd{T}@@ to open the current named voice in the common voice editor.
    Tuning changes that voice wherever it is used in the palette; remapping
    changes which voice is used for the face or item.  For example, at a shell
@@ -418,7 +419,7 @@ frozen example.
 :DESCRIPTION: Inspect, change, disable, or remove personal and temporary rules.
 :END:
 
-In /Presentation Overrides/, @@texinfo:@kbd{RET}@@ or @@texinfo:@kbd{e}@@
+In /Your feedback rules/, @@texinfo:@kbd{RET}@@ or @@texinfo:@kbd{e}@@
 opens the selected rule's settings panel.  In the rule list, the same keys
 open that panel.  Only the selected rule appears while its panel is open;
 the other rules remain in the working draft.  @@texinfo:@kbd{n}@@ and
@@ -443,7 +444,7 @@ From the rule list,
 @@texinfo:@kbd{N}@@ adds a rule and @@texinfo:@kbd{q}@@ asks before discarding
 an unfinished draft.
 
-Open /Presentation Overrides/ to manage these changes together.  There,
+Open /Your feedback rules/ to manage these changes together.  There,
 @@texinfo:@kbd{P}@@ previews the complete current result, @@texinfo:@kbd{t}@@ temporarily disables
 or enables a rule, and @@texinfo:@kbd{d}@@ removes it.  Disabling or deleting an
 override restores the next weaker behavior; it does not leave a copied default
@@ -597,7 +598,7 @@ configuration can block a rename; its owner must update that reference first.
 :END:
 
 From /Voice Palettes/, open a palette, select a voice, and press
-@@texinfo:@kbd{e}@@ to edit it. From Aural Home, /Tune voice used here/
+@@texinfo:@kbd{e}@@ to edit it. From Aural Home, /Edit the named voice used here/
 opens the named voice used by the captured source item. Editing an inherited
 voice creates a complete entry in your destination palette when saved.
 Editing a built-in palette asks for a personal child. Opening the editor
@@ -823,7 +824,7 @@ Use /Voice Workbench/ when the question involves installed voices or engines.  O
 - s :: Styles and effects for those logical roles. Use this view to inspect
   their parameters and what their current engines support.
 
-For physical voices, choose /Browse and adjust voices/ in Home, then press
+For physical voices, choose /Browse installed voices/ in Home, then press
 @@texinfo:@key{RET}@@ or @@texinfo:@kbd{v}@@ on an engine to browse its voices.  @@texinfo:@key{RET}@@
 on a voice shows details; @@texinfo:@kbd{P}@@ plays a named sample.  Filters
 set with @@texinfo:@kbd{F}@@ and each view's selected row and column survive
@@ -864,7 +865,7 @@ adapter advertises; they are not a listening test of every parameter.
 :DESCRIPTION: Try physical voices without saving, then keep a useful experiment.
 :END:
 
-In /Browse and adjust voices/, select a physical voice and press
+In /Browse installed voices/, select a physical voice and press
 @@texinfo:@kbd{t}@@. This opens an experiment with that exact engine and
 voice, adapter-default speech characteristics, the current base speech rate,
 and neutral audio effects. Opening, adjusting and comparing write no settings.
@@ -950,7 +951,7 @@ Open /Sound Packs/ from Aural Home.  In the manager:
 - a :: Activate the selected pack.
 
 Use a sound pack when you want to change a family of cues together.  Use
-/Remap Earcon At Point/ or Presentation Overrides when one semantic event needs
+/Change a sound for this item/ or Your feedback rules when one semantic event needs
 a different cue, suppression, or restoration.
 
 Spatial requests are portable descriptions rather than assumptions about one
@@ -1138,7 +1139,7 @@ Use the symptom to choose the shortest diagnostic route:
 | The current object sounds wrong or too verbose | Press @@texinfo:@kbd{C-e E}@@ and inspect the strongest matching rule. |
 | Something heard earlier was wrong | Open Recent Aural Feedback and explain its frozen record. |
 | A broad optional behavior is unwanted | Inspect Presentation Options and preview or disable the matching option. |
-| One narrow exception is unwanted | Open Presentation Overrides, preview it, then disable or remove it. |
+| One narrow exception is unwanted | Open Your feedback rules, preview it, then disable or remove it. |
 | A named voice uses the wrong engine or physical voice | Inspect its physical choices in the voice editor, then engine health in Voice Workbench. |
 | A cue is missing or inappropriate | Validate and audition the active Sound Pack, then inspect earcon overrides. |
 | A saved setup no longer appears active | Check whether the selected Presentation Profile is active or diverged. |
@@ -1168,7 +1169,7 @@ its source and working settings.  In the common voice editor, @@texinfo:@kbd{u}@
 @@texinfo:@kbd{q}@@ offers to keep the draft, discard changes, or continue.  Guided feedback
 @@texinfo:@kbd{q}@@ goes back one level, then hides and retains the draft at
 the top level.  To undo an already applied
-rule, open /Presentation Overrides/, select it in the appropriate scope, and
+rule, open /Your feedback rules/, select it in the appropriate scope, and
 use @@texinfo:@kbd{t}@@ to disable it or @@texinfo:@kbd{d}@@ to remove it.
 
 Retained drafts last only until Emacs exits. Discarding a draft abandons

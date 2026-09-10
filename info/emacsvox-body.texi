@@ -2409,7 +2409,7 @@ For a first listening experiment:
 @enumerate
 @item
 Press @kbd{C-e H}@comma{} then @kbd{/}@comma{} and choose
-@emph{Browse and adjust voices} from the searchable actions.
+@emph{Browse installed voices} from the searchable actions.
 @item
 Select an available engine and press @key{RET} to list its voices.
 @item
@@ -2438,7 +2438,7 @@ the voice editor likewise preserves its working settings.  If a prepared remap's
 source item changes or disappears@comma{} Emacsvox asks you to prepare that change
 again before applying it.
 
-Aural Home begins with five task groups in one spoken table.  Press
+Aural Home begins with six task groups in one spoken table.  Press
 @key{RET} or @key{TAB} to expand or collapse a group.
 Each action names a destination@comma{} reports its current status@comma{} and describes
 its purpose.  @kbd{/} searches all actions@comma{} including collapsed
@@ -2488,21 +2488,23 @@ Return to Aural Home from a manager or editor.
 Go back or leave; an editor may first offer to retain or discard changes.
 @end table
 
-The five groups are:
+The six groups are:
 
 @multitable @columnfractions 0.35 0.65
 @item Task group
 @tab Destinations
-@item Understand or change feedback
-@tab Current item explanation and remapping@comma{} Recent Feedback@comma{} semantic vocabulary@comma{} and return to source.
-@item Choose voices and sounds
-@tab Browse and adjust voices@comma{} palettes@comma{} sound packs@comma{} speech engine and rate@comma{} notifications@comma{} spatial settings@comma{} and the full Voice Workbench.
-@item Choose optional feedback
-@tab Presentation Options and training explanations.
-@item Manage changes and saved setups
-@tab Unfinished drafts@comma{} overrides@comma{} buffer rules@comma{} and Presentation Profiles.
-@item Troubleshoot
-@tab Aural Doctor and Omnivox engine modules.
+@item Understand and change feedback
+@tab Explain this item@comma{} Change this feedback@comma{} Recent aural feedback@comma{} contextual voice and sound changes@comma{} semantic vocabulary@comma{} and return to source.
+@item Voices and speech
+@tab Voice palettes@comma{} Browse installed voices@comma{} Preferred speech engine@comma{} Speech rate@comma{} and Voice Workbench.
+@item Sounds and output
+@tab Sound packs@comma{} Spatial settings@comma{} Notification output@comma{} Review notifications@comma{} and Stop notification speech.
+@item Optional feedback and rules
+@tab Presentation options@comma{} Your feedback rules@comma{} Current buffer rules@comma{} and Explain feedback as you navigate.
+@item Saved setups and unfinished changes
+@tab Presentation profiles and Resume unfinished changes.
+@item Troubleshooting
+@tab Aural Doctor@comma{} Spatial capabilities@comma{} and Omnivox engine modules.
 @end multitable
 
 The header identifies the captured source and the number of unfinished drafts.
@@ -2514,7 +2516,7 @@ palette's named voices; shared engine settings are saved separately.
 
 You can press @key{RET} on a row without memorizing its shortcut.  Aural
 Home also provides direct keys for frequent routes@comma{} including @kbd{x} for
-explanation@comma{} @kbd{O} for overrides@comma{} @kbd{H} for recent feedback@comma{}
+explanation@comma{} @kbd{O} for your feedback rules@comma{} @kbd{H} for recent feedback@comma{}
 @kbd{P} for profiles@comma{} @kbd{V} for voice palettes@comma{} @kbd{W} for
 Voice Workbench@comma{} and @kbd{D} for Aural Doctor.
 
@@ -2686,7 +2688,7 @@ Replace@comma{} suppress@comma{} or restore one exact earcon.
 Change the bounded history limit for the current session.
 @end table
 
-Training Mode@comma{} available from Aural Home@comma{} speaks concise semantic explanations
+@emph{Explain feedback as you navigate}@comma{} available from Aural Home@comma{} speaks concise semantic explanations
 after normal presentations.  It can help while learning the vocabulary used by
 an integration@comma{} but is intentionally more verbose than ordinary operation;
 turn it off when you no longer need the additional labels.
@@ -2709,7 +2711,7 @@ Start by choosing the narrowest tool that matches your intention:
 @tab Change this feedback
 @tab Personal@comma{} session@comma{} or current buffer
 @item Review or remove an existing precise change
-@tab Presentation Overrides
+@tab Your feedback rules
 @tab Its recorded scope
 @item Try rules only in the current work buffer
 @tab Current Buffer Rules
@@ -2811,8 +2813,8 @@ Move to a representative object and press @kbd{C-e E} so you know what
 currently controls it.
 
 @item
-Press @kbd{C-e H}.  Choose @emph{Remap voice at point} with
-@kbd{r} to use a different named voice here@comma{} or @emph{Tune voice used
+Press @kbd{C-e H}.  Choose @emph{Choose a voice for this item} with
+@kbd{r} to use a different named voice here@comma{} or @emph{Edit the named voice used
 here} with @kbd{T} to open the current named voice in the common voice editor.
 Tuning changes that voice wherever it is used in the palette; remapping
 changes which voice is used for the face or item.  For example@comma{} at a shell
@@ -2856,7 +2858,7 @@ confirm which rule now wins.
 @node Managing Feedback Rules
 @subsection Review And Remove Your Rules
 
-In @emph{Presentation Overrides}@comma{} @kbd{RET} or @kbd{e}
+In @emph{Your feedback rules}@comma{} @kbd{RET} or @kbd{e}
 opens the selected rule's settings panel.  In the rule list@comma{} the same keys
 open that panel.  Only the selected rule appears while its panel is open;
 the other rules remain in the working draft.  @kbd{n} and
@@ -2881,7 +2883,7 @@ From the rule list@comma{}
 @kbd{N} adds a rule and @kbd{q} asks before discarding
 an unfinished draft.
 
-Open @emph{Presentation Overrides} to manage these changes together.  There@comma{}
+Open @emph{Your feedback rules} to manage these changes together.  There@comma{}
 @kbd{P} previews the complete current result@comma{} @kbd{t} temporarily disables
 or enables a rule@comma{} and @kbd{d} removes it.  Disabling or deleting an
 override restores the next weaker behavior; it does not leave a copied default
@@ -3029,7 +3031,7 @@ configuration can block a rename; its owner must update that reference first.
 @section Edit A Named Voice
 
 From @emph{Voice Palettes}@comma{} open a palette@comma{} select a voice@comma{} and press
-@kbd{e} to edit it. From Aural Home@comma{} @emph{Tune voice used here}
+@kbd{e} to edit it. From Aural Home@comma{} @emph{Edit the named voice used here}
 opens the named voice used by the captured source item. Editing an inherited
 voice creates a complete entry in your destination palette when saved.
 Editing a built-in palette asks for a personal child. Opening the editor
@@ -3250,7 +3252,7 @@ Styles and effects for those logical roles. Use this view to inspect
 their parameters and what their current engines support.
 @end table
 
-For physical voices@comma{} choose @emph{Browse and adjust voices} in Home@comma{} then press
+For physical voices@comma{} choose @emph{Browse installed voices} in Home@comma{} then press
 @key{RET} or @kbd{v} on an engine to browse its voices.  @key{RET}
 on a voice shows details; @kbd{P} plays a named sample.  Filters
 set with @kbd{F} and each view's selected row and column survive
@@ -3292,7 +3294,7 @@ adapter advertises; they are not a listening test of every parameter.
 @node Physical Voice Experiments
 @subsection Experiment With An Installed Voice
 
-In @emph{Browse and adjust voices}@comma{} select a physical voice and press
+In @emph{Browse installed voices}@comma{} select a physical voice and press
 @kbd{t}. This opens an experiment with that exact engine and
 voice@comma{} adapter-default speech characteristics@comma{} the current base speech rate@comma{}
 and neutral audio effects. Opening@comma{} adjusting and comparing write no settings.
@@ -3376,7 +3378,7 @@ Activate the selected pack.
 @end table
 
 Use a sound pack when you want to change a family of cues together.  Use
-@emph{Remap Earcon At Point} or Presentation Overrides when one semantic event needs
+@emph{Change a sound for this item} or Your feedback rules when one semantic event needs
 a different cue@comma{} suppression@comma{} or restoration.
 
 Spatial requests are portable descriptions rather than assumptions about one
@@ -3575,7 +3577,7 @@ Use the symptom to choose the shortest diagnostic route:
 @item A broad optional behavior is unwanted
 @tab Inspect Presentation Options and preview or disable the matching option.
 @item One narrow exception is unwanted
-@tab Open Presentation Overrides@comma{} preview it@comma{} then disable or remove it.
+@tab Open Your feedback rules@comma{} preview it@comma{} then disable or remove it.
 @item A named voice uses the wrong engine or physical voice
 @tab Inspect its physical choices in the voice editor@comma{} then engine health in Voice Workbench.
 @item A cue is missing or inappropriate
@@ -3610,7 +3612,7 @@ its source and working settings.  In the common voice editor@comma{} @kbd{u} und
 @kbd{q} offers to keep the draft@comma{} discard changes@comma{} or continue.  Guided feedback
 @kbd{q} goes back one level@comma{} then hides and retains the draft at
 the top level.  To undo an already applied
-rule@comma{} open @emph{Presentation Overrides}@comma{} select it in the appropriate scope@comma{} and
+rule@comma{} open @emph{Your feedback rules}@comma{} select it in the appropriate scope@comma{} and
 use @kbd{t} to disable it or @kbd{d} to remove it.
 
 Retained drafts last only until Emacs exits. Discarding a draft abandons

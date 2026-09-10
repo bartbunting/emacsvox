@@ -91,15 +91,16 @@
   "Task groups expanded in this Home buffer.")
 
 (defconst emacsvox-aural-home-task-groups
-  '((understand "Understand or change feedback"
-                change-feedback explain remap tune-voice remap-earcon recent-feedback semantics return-source)
-    (resources "Choose voices and sounds"
-               browse-voices voices sounds speech-engine speech-rate
-               notifications notification-log stop-notifications
-               spatial spatial-settings voice-workbench)
-    (optional "Choose optional feedback" features training)
-    (manage "Manage changes and saved setups" drafts overrides buffer-rules profiles)
-    (troubleshoot "Troubleshoot" diagnostics engine-modules))
+  '((understand "Understand and change feedback"
+                explain change-feedback recent-feedback remap tune-voice
+                remap-earcon semantics return-source)
+    (resources "Voices and speech"
+               voices browse-voices speech-engine speech-rate voice-workbench)
+    (output "Sounds and output"
+            sounds spatial-settings notifications notification-log stop-notifications)
+    (optional "Optional feedback and rules" features overrides buffer-rules training)
+    (manage "Saved setups and unfinished changes" profiles drafts)
+    (troubleshoot "Troubleshooting" diagnostics spatial engine-modules))
   "Ordered Home task groups with their stable action identifiers.")
 
 (defun emacsvox-aural-home--pending-drafts ()
@@ -235,11 +236,11 @@
            (vector "Change this feedback" source-name
                    "Preview a component change, then choose matching criteria and lifetime"))
      (list 'browse-voices
-           (vector "Browse and adjust voices" "Installed engines and voices"
+           (vector "Browse installed voices" "Installed engines and voices"
                    "Hear physical voices, compare samples, and try temporary tuning"))
      (list 'speech-engine
-           (vector "Ordinary speech engine" "Session; prefix to save"
-                   "Choose the preferred engine using the existing routing command"))
+           (vector "Preferred speech engine" "Session; prefix to save"
+                   "Set engine preference; explicit palette choices take precedence"))
      (list 'speech-rate
            (vector "Speech rate" (format "%s" (bound-and-true-p tts-speech-rate))
                    "Set the source buffer rate; prefix sets the global rate"))
@@ -251,63 +252,63 @@
                    "Open the existing notifications buffer"))
      (list 'stop-notifications
            (vector "Stop notification speech" "Current notification stream"
-                   "Stop background speech using the existing notification command"))
+                   "Stop the current background announcement without muting future notifications"))
      (list 'return-source
            (vector "Return to source item" source-name "Visit the captured source position"))
      (list 'drafts
            (vector "Resume unfinished changes"
                    (format "%d drafts" (length (emacsvox-aural-home--pending-drafts)))
-                   "Choose an unfinished rule, voice, or routing editor"))
+                   "Resume an unfinished rule, voice, or engine-settings editor"))
      (list
       'explain
       (vector
-       "Explain at point" source-name
+       "Explain this item" source-name
        "Show and speak why the current item sounds as it does"))
      (list
       'remap
       (vector
-       "Remap voice at point" source-name
+       "Choose a voice for this item" source-name
        "Choose another named voice here, preview it, and save the mapping"))
      (list
       'tune-voice
       (vector
-       "Tune voice used here" source-name
-       "Open the current named voice in its tuner; affects every use of that voice"))
+       "Edit the named voice used here" source-name
+       "Edit the current named voice; affects every use of that palette entry"))
      (list
       'remap-earcon
       (vector
-       "Remap earcon at point" source-name
-       "Audition and replace, suppress, or restore one exact before or after earcon"))
+       "Change a sound for this item" source-name
+       "Preview, replace, suppress, or restore one cue before or after content"))
      (list
       'overrides
       (vector
-       "Presentation overrides"
+       "Your feedback rules"
        (emacsvox-aural-home--overrides-status)
-       "Browse and manage personal, session, and current-buffer rule layers together"))
+       "Review saved, session, and buffer rules; disable or remove changes"))
      (list
       'recent-feedback
       (vector
        "Recent aural feedback"
        (emacsvox-aural-home--recent-feedback-status)
-       "Browse, explain, replay, audition, and remap bounded presentations that were heard"))
+       "Review recorded feedback, hear it again, explain it, or change similar feedback"))
      (list
       'profiles
       (vector
        "Presentation profiles"
        (emacsvox-aural-home--profile-status)
-       "Save and switch options, palette, sound pack, and spatial settings; routes are separate"))
+       "Save and switch selected options, palette, sound pack, and spatial settings"))
      (list
       'voices
       (vector
        "Voice palettes"
        (emacsvox-aural-home--voice-palette-status)
-       "Browse, create, edit, preview, explain, validate, and activate named voices"))
+       "Choose a palette and manage its named voices, physical choices, and adjustments"))
      (list
       'voice-workbench
       (vector
        "Voice Workbench"
        (emacsvox-aural-home--voice-workbench-status)
-       "Browse logical voices, installed physical voices, engines, routes, styles, and effects"))
+       "Advanced views of named voices, installed voices, effects, and shared engine settings"))
      (list
       'engine-modules
       (vector
@@ -350,9 +351,9 @@
      (list
       'training
       (vector
-       "Training mode"
+       "Explain feedback as you navigate"
        (if emacsvox-aural-training-mode "on" "off")
-       "Review concise semantic explanations; t toggles them for this session"))
+       "Read about extra explanations; t toggles them for this session"))
      (list
       'diagnostics
       (vector
@@ -612,7 +613,7 @@
      (concat
       "Emacsvox Aural Home\n\n"
       "Start with a task: change the captured item with c, review past feedback\n"
-      "with H, or use / to find Browse and adjust voices or any other action.\n"
+      "with H, or use / to find Browse installed voices or any other action.\n"
       "Home keeps your source position and unfinished drafts.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
@@ -620,9 +621,10 @@
       "/ search all actions, including collapsed groups\n"
       "SPC speak complete row; source and draft count are announced on entry\n"
       "c guided Change this feedback\n"
-      "x explain at point   r remap voice at point   T tune voice used here\n"
-      "R remap one exact earcon at point\n"
-      "O presentation overrides\n"
+      "x explain this item   r choose a voice for this item\n"
+      "T edit the named voice used here; affects every use\n"
+      "R change a sound for this item\n"
+      "O your feedback rules\n"
       "H recent feedback\n"
       "P presentation profiles\n"
       "V voice palettes\n"
@@ -637,7 +639,7 @@
       "C-e E explains presentation from any ordinary buffer\n"
       "To change an item, move to it, open C-e H, then press c.\n"
       "r chooses another named voice here; T tunes that voice wherever it is used.\n"
-      "The generated override opens unwritten; review it and press w to write.\n"
+      "A prepared rule remains unsaved until you accept it in its editor.\n"
       "h returns here from any aural manager or editor\n"
       "Reopening Home or an editor keeps its selection and unfinished edits.\n"
       "If the source item changes, reopen C-e H from its new location.\n"

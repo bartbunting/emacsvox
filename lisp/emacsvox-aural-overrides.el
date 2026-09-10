@@ -353,7 +353,7 @@
       (emacsvox-aural-overrides--here-status record input)))))
 
 (defun emacsvox-aural-overrides--set-entries ()
-  "Populate the current Presentation Overrides manager."
+  "Populate the current Feedback Rules manager."
   (let* ((source (emacsvox-aural-overrides--source-buffer))
          (input (emacsvox-aural-overrides--current-input source))
          (records
@@ -424,13 +424,13 @@
   "Move to and speak the next presentation override."
   (interactive)
   (emacsvox-aural-ui-move-row
-   1 "presentation overrides"))
+   1 "feedback rules"))
 
 (defun emacsvox-aural-overrides-previous ()
   "Move to and speak the previous presentation override."
   (interactive)
   (emacsvox-aural-ui-move-row
-   -1 "presentation overrides"))
+   -1 "feedback rules"))
 
 (defun emacsvox-aural-overrides-next-column ()
   "Move right and speak the next override column."
@@ -675,8 +675,8 @@
     (if (tabulated-list-get-id)
         (emacsvox-aural-overrides-speak-current)
       (if (fboundp 'tts-speak)
-          (tts-speak "No presentation overrides match the current filter.")
-        (message "No presentation overrides match the current filter.")))
+          (tts-speak "No feedback rules match the current filter.")
+        (message "No feedback rules match the current filter.")))
     id))
 
 (defun emacsvox-aural-overrides--filter-candidates (records key)
@@ -761,18 +761,18 @@
       (message "%s" text))))
 
 (defun emacsvox-aural-overrides-help ()
-  "Display and speak Presentation Overrides help."
+  "Display and speak Feedback Rules help."
   (interactive)
   (emacsvox-aural-ui-with-help-window
     (princ
      (concat
-      "Aural Presentation Overrides\n\n"
+      "Aural Feedback Rules\n\n"
       "This is one view over the existing personal, session, and remembered\n"
       "source-buffer rule layers. The fixed compatibility baseline and module\n"
       "defaults are followed by enabled Presentation Options, then these\n"
       "stronger override layers.\n"
-      "Personal overrides persist, session overrides last until Emacs exits,\n"
-      "and buffer overrides last only for the remembered live buffer.\n\n"
+      "Personal rules persist, session rules last until Emacs exits,\n"
+      "and buffer rules last only for the remembered live buffer.\n\n"
       "The Here column says whether a selector matches the remembered source\n"
       "item. Preview uses that live item when possible and otherwise a\n"
       "representative example, resolving the complete current cascade.\n\n"
@@ -789,10 +789,10 @@
 
 (define-derived-mode emacsvox-aural-overrides-mode
     emacsvox-aural-tabulated-mode
-  "Aural-Overrides"
-  "Spoken manager for personal, session, and buffer presentation overrides."
+  "Aural-Feedback-Rules"
+  "Spoken manager for personal, session, and buffer feedback rules."
   (emacsvox-aural-ui-configure-tabulated
-   "presentation overrides"
+   "feedback rules"
    #'emacsvox-aural-overrides-speak-current
    #'emacsvox-aural-overrides-refresh
    #'emacsvox-aural-ui-speak-name-and-state)
@@ -811,8 +811,8 @@
   (tabulated-list-init-header))
 
 (defun emacsvox-aural-overrides-refresh-if-live (&rest _ignored)
-  "Refresh the Presentation Overrides manager when it is open."
-  (when-let* ((buffer (get-buffer "*Aural Presentation Overrides*")))
+  "Refresh the Feedback Rules manager when it is open."
+  (when-let* ((buffer (get-buffer "*Aural Feedback Rules*")))
     (with-current-buffer buffer
       (when (derived-mode-p 'emacsvox-aural-overrides-mode)
         (emacsvox-aural-overrides-refresh)))))
@@ -841,7 +841,7 @@
 
 ;;;###autoload
 (defun emacsvox-aural-list-overrides (&optional source)
-  "Open the unified Presentation Overrides manager for optional SOURCE."
+  "Open the unified Feedback Rules manager for optional SOURCE."
   (interactive)
   (let ((source
          (or
@@ -849,7 +849,7 @@
                (emacsvox-aural-inspection-source-buffer source))
           (emacsvox-aural-inspection-remember-source-buffer)))
         (buffer
-         (get-buffer-create "*Aural Presentation Overrides*")))
+         (get-buffer-create "*Aural Feedback Rules*")))
     (with-current-buffer buffer
       (unless (derived-mode-p 'emacsvox-aural-overrides-mode)
         (emacsvox-aural-overrides-mode))
@@ -862,7 +862,7 @@
             (if (tabulated-list-get-id)
                 (emacsvox-aural-overrides-speak-current)
               (emacsvox-aural-ui-speak
-               "No personal, session, or source-buffer presentation overrides.")))))
+               "No personal, session, or source-buffer feedback rules.")))))
     buffer))
 
 (provide 'emacsvox-aural-overrides)
