@@ -796,7 +796,7 @@
   (interactive)
   (let ((text (if emacsvox-aural-change-feedback--voice-remap
                   (concat (emacsvox-aural-change-feedback--summary)
-                          "\n\nChoose Voice to use another named voice for this face or item. The named voice itself is not retuned.\n"
+                          "\n\nChoose Voice to use another named voice for this face or item. The named voice's settings stay unchanged.\n"
                           "RET opens the selected row. n/p or arrows move. P previews the change; O plays the original; S stops.\n"
                           "Choose How long, then Save or w. q hides and preserves the draft. e opens Advanced.\n"
                           "To retune the named voice everywhere it is used, return to Home and choose Tune voice used here (T).\n")
