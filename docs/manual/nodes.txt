@@ -39,11 +39,14 @@ Presentation Model
 Presentation Modalities
 Explaining Presentation
 Adjusting Presentation
+Heading Voice Walkthrough
 Guided Feedback Changes
 Choosing A Voice For An Item
 Managing Feedback Rules
 Presentation Options
 Voices And Routing
+Personal Palette Walkthrough
+Palette Inheritance Walkthrough
 Renaming Voices And Palettes
 Editing Named Voices
 Voice Adjustments
@@ -51,11 +54,17 @@ Voice Fallbacks
 Voices In Context
 Installed Voices And Engines
 Physical Voice Experiments
+Keeping A Voice Experiment
 Speech Engine Preferences
 Sounds And Space
+Sound Pack Walkthrough
+Changing One Sound
 Changing Tones
+Spatial Presentation Controls
+Personal Sound Packs
 Aural Speech Output
 Presentation Profiles
+Presentation Profile Walkthrough
 Saving And Startup
 Sharing Voice Palettes
 Presentation Troubleshooting
@@ -89,3 +98,4 @@ Developer Guide
 Documentation Maintenance
 Speech Server Protocols
 Integration Maintenance
+Authoring Sound Packs

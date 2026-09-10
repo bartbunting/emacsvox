@@ -2588,6 +2588,20 @@ A presentation profile is not another rule layer.  It records the
 selected options@comma{} sound pack@comma{} voice palette@comma{} and spatial choices so you can
 switch those choices together.
 
+For example@comma{} an Org integration identifies a level-two heading. A rule asks
+for @code{bolden} and a section cue. The active palette supplies @code{bolden}'s voice
+settings and physical choices; the active sound pack supplies the cue. The
+speech backend plays what it supports. Changing the rule changes which
+headings get that feedback. Editing @code{bolden} changes the voice wherever that
+entry is used. Switching sound packs changes the cue's recording while
+preserving its meaning.
+
+When two rules change the same voice field@comma{} the stronger explicit value wins;
+values are not added. Personal rules are weaker than session rules@comma{} which are
+weaker than current-buffer rules. Rules can also add actions before or after
+the content. Use Explain to see the actual contributors and winning values
+rather than inferring them from the order in which you made edits.
+
 @menu
 * Presentation Modalities::      Recognize speech, voices, cues, tones, pauses, and spatial output.
 @end menu
@@ -2610,9 +2624,9 @@ make distinctions such as headings@comma{} annotations@comma{} warnings@comma{} 
 portable across speech engines.
 
 @item
-@emph{Auditory cues}@comma{} also called @emph{earcons} or @emph{auditory icons}@comma{} are short sounds associated with semantic
-events or objects.  A sound pack supplies the concrete audio for those cue
-names.
+@emph{Auditory cues}@comma{} also called @emph{earcons} or @emph{auditory icons}@comma{} are short sounds
+associated with events or objects. A sound pack supplies the recordings for
+those cue names.
 
 @item
 @emph{Tones} convey compact information using a named pitch and duration.  They
@@ -2722,11 +2736,71 @@ Start by choosing the narrowest tool that matches your intention:
 @end multitable
 
 @menu
+* Walkthrough Change Headings In One Buffer: Heading Voice Walkthrough.  Try a heading voice, verify the scope, and undo the rule.
 * Guided Change This Feedback: Guided Feedback Changes.  Learn the controls and scope of this task.
 * Remap One Item At Point: Choosing A Voice For An Item.  Learn the controls and scope of this task.
 * Review And Remove Your Rules: Managing Feedback Rules.  Inspect, change, disable, or remove personal and temporary rules.
 * Try A Presentation Option: Presentation Options.  Learn the controls and scope of this task.
 @end menu
+
+@node Heading Voice Walkthrough
+@subsection Walkthrough: Change Headings In One Buffer
+
+This example changes headings in a temporary Org buffer. It leaves your
+palette definitions and saved rules alone.
+
+@enumerate
+@item
+Use @kbd{C-x b} to create a new buffer named @code{*aural-practice*}. Run
+@kbd{M-x org-mode} and insert this short document:
+
+@example
+* Reading notes
+An ordinary paragraph.
+* Next steps
+Another ordinary paragraph.
+@end example
+
+@item
+Move onto the first heading and press @kbd{C-e E}. Find its current named
+voice and the facts identifying a heading. The explanation should tell
+you whether it describes recorded output or a simulation.
+
+@item
+Open @kbd{C-e H c}. Press @kbd{c}@comma{} select @emph{Content voice}@comma{} and choose
+@code{annotate} with @kbd{RET}. If @code{annotate} is already the original@comma{} use
+@code{bolden} instead. @kbd{O} plays the original and @kbd{P} previews your choice.
+At this point the change exists only in the draft.
+
+@item
+Press @kbd{m} to inspect @emph{What should match}. Keep the Org module and
+heading role@comma{} plus heading level if shown. Leave other criteria as shown
+for this first example. Press @kbd{l} and choose @emph{Current buffer@comma{} until it
+is killed}. This means every matching heading in this buffer@comma{} not just
+the heading you started from.
+
+@item
+Review the summary@comma{} then press @kbd{a}. Return through Home with @kbd{h}@comma{}
+then @kbd{C-c C-o}. Move between the two headings using the same navigation
+action. Both matching headings should use your chosen voice; the ordinary
+paragraphs should keep their previous presentation.
+
+@item
+Press @kbd{C-e E} on a heading again. Check that the new buffer rule supplies
+the selected voice. If the sound is too similar to distinguish@comma{} the
+explanation still tells you whether the rule matched; compare voices in
+the palette or consult @ref{Presentation Troubleshooting,Troubleshooting,,emacsvox,}.
+
+@item
+To undo@comma{} open Home's @emph{Your feedback rules} with @kbd{O}. Find the new rule
+in the buffer scope and inspect its target. Press @kbd{t} to disable it or
+@kbd{d} to remove it@comma{} then revisit the heading. Killing this practice buffer
+also ends its buffer rules. Nothing from this example survives a restart.
+@end enumerate
+
+For a permanent change@comma{} repeat the task on a representative item and choose
+@emph{Saved personal rule} at step 4. Review the matching criteria carefully:
+a permanent rule can affect future matching buffers too.
 
 @node Guided Feedback Changes
 @subsection Guided Change This Feedback
@@ -2765,7 +2839,7 @@ cues and optional spoken labels.  At the top level@comma{}
 
 @item
 Press @kbd{P} to hear the proposed change before choosing how
-long to keep it.  @kbd{O} plays the frozen original example;
+long to keep it.  @kbd{O} plays the recorded original example;
 @kbd{S} stops.  Proposed preview resolves the selected example
 with current rules and its captured buffer context.  It does not apply
 your draft to live feedback.
@@ -2802,7 +2876,7 @@ therefore asks which edge to use and includes that placement in the summary.
 Ambiguous components require the Advanced editor.  Current-item changes
 recheck their captured source before applying; a changed or killed target
 must be inspected again.  Historical changes remain tied to the selected
-frozen example.
+recorded example.
 
 @node Choosing A Voice For An Item
 @subsection Remap One Item At Point
@@ -2918,6 +2992,11 @@ override usually expresses that intention more clearly.
 @node Voices And Routing
 @section Choose And Manage Voice Palettes
 
+@cindex voice palettes
+@cindex acss-default
+@cindex palette inheritance
+@cindex voice aliases
+
 A @emph{named voice} gives a reusable name@comma{} such as @code{bolden} or @code{annotate}@comma{} to a
 way of speaking. Some detailed views call it a @emph{logical voice}. A @emph{voice
 palette} is a collection of these named entries. Each entry includes its
@@ -2988,8 +3067,15 @@ Its local physical choices belong to the new palette. Use the summary and
 parent action@comma{} @kbd{E}@comma{} to review or change a personal palette's
 parent; the manager rejects inheritance cycles.
 
+To delete a whole personal palette@comma{} select it in the manager and press
+@kbd{d}. Children and known references@comma{} including saved profiles@comma{}
+must be changed first@comma{} and unfinished voice edits must be completed or
+discarded. Deleting an active palette returns to the standard baseline.
+
 Activation with @kbd{a} lasts for this session. Press
 @kbd{f} to follow the standard baseline palette again.
+This clears the session's explicit palette selection; it does not delete
+your saved palette or change the startup choice.
 Use at Startup@comma{} @kbd{U}@comma{} changes the palette in the selected saved
 Presentation Profile while preserving its other saved fields. It does not
 apply that profile to the current session. If no startup profile exists@comma{} the
@@ -2999,8 +3085,117 @@ session and buffer rules do not affect this startup check. An already open
 Profiles view refreshes to show the saved choice.
 
 @menu
+* Walkthrough Make A Personal Reading Palette: Personal Palette Walkthrough.  Create, edit, save, activate, and optionally select a palette for startup.
+* Walkthrough Inheritance@comma{} Aliases@comma{} And Reset: Palette Inheritance Walkthrough.  Follow an entry to its parent and distinguish an alias from a copy.
 * Rename Voices And Palettes: Renaming Voices And Palettes.  Rename personal entries while checking their known uses.
 @end menu
+
+@node Personal Palette Walkthrough
+@subsection Walkthrough: Make A Personal Reading Palette
+
+This example gives you a personal place to adjust standard voices. Use an
+unused palette name; @code{reading-demo} below is an example. Note your current
+palette before starting so you can return to it.
+
+@enumerate
+@item
+Open @kbd{C-e H V} for @emph{Voice palettes}. Press @kbd{N}@comma{} enter @code{reading-demo}@comma{}
+give it a purpose such as ``My reading experiments''@comma{} and choose
+@code{acss-default} as its parent. Creation saves the new palette@comma{} but does not
+activate it. Its standard voices are inherited.
+
+@item
+Press @kbd{RET} to enter the new palette. Find @code{bolden} and move to its
+@emph{Source} column. It should name @code{acss-default}. @kbd{.} repeats the column
+title and value; @kbd{SPC} reads the whole row. @kbd{P} previews the voice.
+
+@item
+Press @kbd{e} to edit @code{bolden} here. The editor identifies the destination
+palette and inherited source. Move to @emph{Average Pitch}@comma{} press @kbd{RET}@comma{}
+and enter @code{6} (or @code{5} if it is already six). @kbd{B} compares the opening
+voice with the edited voice using the same text. Unsupported adjustments
+are reported; see @ref{Voice Adjustments,Voice Adjustments,,emacsvox,} if the contrast is unclear.
+
+@item
+Choose @emph{Save to collection without selecting}. Wait for the save result@comma{}
+then use @kbd{q} to return to the voice list. @emph{Source} should now identify
+@code{reading-demo} for @code{bolden}. Other inherited entries still name their
+providers. Saving has created a complete local entry@comma{} not a pitch-only
+patch on the parent.
+
+@item
+Press @kbd{o} to return to the palette manager and @kbd{a} on @code{reading-demo}
+to activate it. Check its status@comma{} then revisit content that uses @code{bolden}.
+This affects all uses resolving to your edited entry. Explanation at the
+source helps distinguish palette settings from additional contextual rules.
+
+@item
+If you want this palette after restart@comma{} press @kbd{U} on it in the palette
+manager and review the startup proposal. It updates the palette selection
+in the saved startup profile. If no startup profile exists@comma{} review the
+proposed new profile's other settings too. Saving the palette and selecting
+it for startup are separate actions.
+
+@item
+To return to your previous sound@comma{} activate the original palette. If you
+also changed startup@comma{} use @kbd{U} on that original palette to restore the
+startup selection. Your saved @code{reading-demo} remains available for later
+experiments. To remove only its @code{bolden} customization@comma{} follow the Reset
+example in @ref{Palette Inheritance Walkthrough,Inheritance@comma{} Aliases@comma{} and Reset,,emacsvox,}.
+@end enumerate
+
+@node Palette Inheritance Walkthrough
+@subsection Walkthrough: Inheritance@comma{} Aliases@comma{} And Reset
+
+Use @code{reading-demo} from the previous example@comma{} or another personal palette
+with @code{acss-default} as its parent.
+
+@enumerate
+@item
+In the palette manager@comma{} create @code{reading-child-demo} with @kbd{N} and choose
+@code{reading-demo} as its parent. The chain is now
+@code{reading-child-demo -> reading-demo -> acss-default}.
+
+@item
+Enter the child and inspect @code{bolden}'s @emph{Source}. If @code{reading-demo} has a
+direct @code{bolden} entry@comma{} it supplies the child's whole entry. Otherwise
+@code{acss-default} supplies it. @kbd{O} opens the supplying palette; @kbd{u} shows
+Where Used@comma{} including known references@comma{} aliases@comma{} and affected descendants.
+
+@item
+The alias @code{voice-bolden} refers to the same named voice as @code{bolden}.
+It is an alternative spelling used by integrations@comma{} not another entry
+with independent settings. You do not create or edit aliases in this view.
+
+@item
+Return to the child palette and copy @code{bolden} with @kbd{c}. Give the copy an
+unused name such as @code{reading-heading-demo}. Change its pitch@comma{} compare it@comma{}
+and choose @emph{Save to collection without selecting}. You now have a separate
+named entry. A rule must select this new name before ordinary content uses
+it; copying alone does not remap headings.
+
+@item
+For a Reset experiment@comma{} edit the child's inherited @code{bolden}@comma{} change one
+field@comma{} and save to the collection. Its Source becomes the child. Back in
+the voice list@comma{} press @kbd{R} on @code{bolden}. The confirmation names the parent
+entry that will take over. After confirming@comma{} @code{bolden} remains in the list
+and Source returns to that provider.
+
+@item
+To remove the custom copy@comma{} select @code{reading-heading-demo} and press @kbd{d}.
+This deletes it if there is no inherited replacement or known use. If you
+assigned it to a rule@comma{} remove or remap that rule first. Reset is for a local
+entry with an inherited replacement; Delete is for a removable custom name.
+@end enumerate
+
+The standard root ensures standard voices remain available after Reset. It
+cannot be deleted or edited here. A palette can contain additional custom
+names; the standard list grows when loaded integrations register voices.
+Copy Palette is different from New Palette: it copies all current effective
+entries and stops following edits to the source palette@comma{} while still inheriting
+new standard names from @code{acss-default}. Definitions referring to an existing
+personality still use that personality's settings. A copy is not a recording
+of its sound.
 
 @node Renaming Voices And Palettes
 @subsection Rename Voices And Palettes
@@ -3030,12 +3225,19 @@ configuration can block a rename; its owner must update that reference first.
 @node Editing Named Voices
 @section Edit A Named Voice
 
+@cindex voice editor
+@cindex voice adjustments
+
 From @emph{Voice Palettes}@comma{} open a palette@comma{} select a voice@comma{} and press
 @kbd{e} to edit it. From Aural Home@comma{} @emph{Edit the named voice used here}
 opens the named voice used by the captured source item. Editing an inherited
 voice creates a complete entry in your destination palette when saved.
 Editing a built-in palette asks for a personal child. Opening the editor
 and previewing a draft do not change live feedback or save settings.
+
+If you opened an experiment from an installed physical voice@comma{} these same
+controls apply@comma{} but saving first asks for a destination. See
+@ref{Keeping A Voice Experiment,Keep an Installed Voice Experiment,,emacsvox,} for that sequence.
 
 The editor uses the ordinary navigation voice for its labelled fields.
 @kbd{n/p}@comma{} up/down or Tab moves between fields. Left/right adjusts
@@ -3054,7 +3256,8 @@ adjustments stop at their limits and announce the minimum or maximum.
 @kbd{P} plays the edited voice. @kbd{B} compares the
 captured original with the edited version using the same text@comma{} with spoken
 labels. @kbd{T} changes that text; @kbd{S} stops.
-An automatic sample follows each adjustment unless you turn that field off.
+An automatic sample follows each adjustment unless you turn off
+@emph{Automatic sample after adjustment}.
 The new value precedes the sample text@comma{} for example ``1. The quick brown fox…''.
 Toggling @emph{Automatic sample after adjustment} announces on or off with distinct
 cues. @emph{More adjustments and effects} and @emph{Fallbacks} present their visibility
@@ -3063,7 +3266,7 @@ when reached during field navigation.
 Navigation stops an outstanding sample. @kbd{u} undoes an edit@comma{}
 including a reset to adapter default. @kbd{q} dismisses the editor
 and returns to its originating view@comma{} offering to retain or discard unsaved
-changes. Quitting the workbench afterwards does not reopen the experiment.
+changes.
 
 Choose the @emph{Physical voice} field to search by engine or voice name. You can
 audition a candidate with the working adjustments before accepting it. Cancel
@@ -3083,8 +3286,9 @@ Changes made during an earlier apply remain unsaved when its acknowledgement
 arrives. A changed file or destination requires fresh review rather than an
 implicit merge.
 
-Named-voice previews test the complete choice chain without selecting the draft palette or changing live settings. They require an Omnivox
-server advertising complete-voice preview. Older servers report this operation
+Named-voice previews test the complete choice chain without selecting the
+draft palette or changing live settings. They require an Omnivox server
+advertising complete-voice preview. Older servers report this operation
 as unsupported; individual physical auditions remain available. Playback
 reports identify actual accepted audio when the server supplies that evidence@comma{}
 including unsupported adjustments. They do not infer a successful fallback
@@ -3098,8 +3302,8 @@ restarting Emacs. Leaving does not undo a completed save.
 
 @emph{Save and apply} selects the palette for this session. Use the
 @emph{Use at Startup} action@comma{} @kbd{U} in Voice Palettes@comma{} to retain
-that selection after restart. A save can involve more than one settings file. The editor reports partial
-failures and retains the proposal for retry; see
+that selection after restart. A save can involve more than one settings file.
+The editor reports partial failures and retains the proposal for retry; see
 @ref{Recovering Aural Changes,Recovering Unfinished Changes,,emacsvox,}.
 
 @menu
@@ -3110,6 +3314,57 @@ failures and retains the proposal for retry; see
 
 @node Voice Adjustments
 @subsection Understand Voice Adjustments
+
+Change one field at a time and compare with @kbd{B}. These are portable
+controls@comma{} not measurements in Hertz or decibels. Equal numbers can sound
+different on different engines. Most numeric fields use integer levels from
+zero through nine; Relative Rate is the exception.
+
+@itemize
+@item
+@emph{Relative Rate} ranges from -20 to 20. Negative values request slower
+speech@comma{} positive values faster speech@comma{} and zero leaves the base rate
+unchanged. The engine interprets those relative steps; they are not words
+per minute. A stronger contextual relative-rate value replaces this value
+rather than adding to it.
+@item
+@emph{Average Pitch} requests a lower or higher overall pitch. Start with a
+small difference between two voices intended to mark related content.
+@item
+@emph{Pitch Range} requests less or more pitch variation. A low range can make
+a supported voice more monotone; a high range makes intonation more varied.
+@item
+@emph{Stress} requests less or more emphasis. Its audible effect depends on how
+the engine implements stress.
+@item
+@emph{Richness} changes the voice's tonal character or fullness where supported.
+Compare samples rather than treating it as another volume control.
+@item
+@emph{Gain} changes output level. Five is unchanged; lower values reduce it and
+higher values increase it.
+@item
+@emph{Pan} places supported audio from left at zero@comma{} through center at five@comma{}
+to right at nine. Its effect also depends on your output arrangement.
+@item
+@emph{Low-pass Amount} and @emph{High-pass Amount} remove high and low frequencies@comma{}
+respectively. Both use zero for neutral and nine for strongest filtering.
+@item
+@emph{Reverb} adds a reverberant character@comma{} @emph{Echo} adds delayed repetitions@comma{}
+and @emph{Chorus} adds a doubled-voice effect. Zero disables each; higher levels
+increase the effect.
+@item
+@emph{Portable Fallback Family}@comma{} where offered under additional adjustments@comma{}
+is a compatibility family hint. Use @emph{Physical voice} for an installed voice
+choice. Family is not part of the complete Omnivox voice preview.
+@end itemize
+
+In shared settings@comma{} @kbd{d} or blank numeric input requests @emph{adapter default};
+@kbd{u} undoes that edit. In an individual physical choice@comma{} @kbd{i} instead means
+@emph{use the shared value}. Zero remains an explicit value in either view.
+Thus ``standard default palette''@comma{} ``Automatic physical selection''@comma{} and
+``adapter default adjustment'' answer three different questions: which
+collection supplies the voice@comma{} who selects its physical voice@comma{} and who supplies
+one adjustment value.
 
 The voice editor presents @emph{Low-pass Amount} and @emph{High-pass Amount} from zero through
 nine. Higher amounts mean more filtering: low-pass removes more high
@@ -3144,8 +3399,22 @@ setting applies to previews@comma{} structured speech@comma{} and legacy inline 
 @node Voice Fallbacks
 @subsection Choose And Tune Fallback Voices
 
-Shared settings provide the base for the whole voice. Expand @emph{Fallbacks} to
-see which rows @emph{use shared settings} and which are @emph{customized}. A row's action
+Shared settings provide the base for the whole voice.
+
+Physical choices are tried in their displayed order@comma{} subject to availability@comma{}
+engine policy@comma{} and synthesis failures. An empty explicit list means @emph{Automatic}:
+use the shared engine policy. Availability predicts a possible choice;
+the last sample's result identifies what actually played.
+
+There are two distinct kinds of inheritance. A parent palette supplies a
+whole named entry. Inside that entry@comma{} an individual physical choice can
+inherit each shared adjustment separately. For example@comma{} shared pitch six@comma{}
+choice pitch four@comma{} and a matching contextual rule setting pitch seven result
+in a requested pitch of seven. Without that rule@comma{} the choice requests four.
+Returning the choice field to @emph{Use shared value} makes it request six.
+
+Expand @emph{Fallbacks} to see which rows @emph{use shared settings} and which are
+@emph{customized}. A row's action
 menu can audition that row or compare its original and edited versions.
 Comparison follows the same row after reordering@comma{} including two rows mapped to
 the same physical voice. A newly added row has no original to compare yet;
@@ -3216,7 +3485,7 @@ contribution. @kbd{q} returns to the base editor.
 rule lasts always (personal)@comma{} for this Emacs session@comma{} or for this buffer. Choose
 one adjustment and its value. It opens the ordinary rule editor with that field
 prepared; changing richness alone produces a richness-only patch and does not
-select a complete preset. Review the rule's match with @key{RET}@comma{}
+select a different named voice. Review the rule's match with @key{RET}@comma{}
 use @kbd{V} to adjust another voice field@comma{} and save that scope with
 @kbd{w}. Palette definitions are unchanged. Existing unsaved work
 in that rule editor must be completed before preparing another contextual rule.
@@ -3234,6 +3503,10 @@ they do not replace the palette entry with the combined result. The
 @node Installed Voices And Engines
 @section Browse Installed Voices And Choose Engines
 
+@cindex Voice Workbench
+@cindex physical voices
+@cindex speech engine preference
+
 Use @emph{Voice Workbench} when the question involves installed voices or engines.  Open it from Aural Home with @kbd{W}.  Its main views are:
 
 @table @kbd
@@ -3248,7 +3521,7 @@ row@comma{} this key opens just that engine's voices.
 Named voices (the @emph{Logical voices} view): roles such as @emph{bolden} and @emph{annotate}. Start here
 to change which physical voice reads a role.
 @item s
-Styles and effects for those logical roles. Use this view to inspect
+Styles and effects for those named voices. Use this view to inspect
 their parameters and what their current engines support.
 @end table
 
@@ -3288,6 +3561,7 @@ adapter advertises; they are not a listening test of every parameter.
 
 @menu
 * Experiment With An Installed Voice: Physical Voice Experiments.  Try physical voices without saving, then keep a useful experiment.
+* Walkthrough Keep An Installed Voice Experiment: Keeping A Voice Experiment.  Place an experiment in a named voice and verify the saved combination.
 * Set Shared Engine Preferences: Speech Engine Preferences.  Choose engine order and distinguish it from explicit palette choices.
 @end menu
 
@@ -3302,6 +3576,27 @@ and neutral audio effects. Opening@comma{} adjusting and comparing write no sett
 The field navigation@comma{} adjustments and comparison controls are the same as
 in @ref{Editing Named Voices,Edit a Named Voice,,emacsvox,}. In an experiment@comma{} @kbd{w} first asks
 where to use the result; it cannot save a voice without a palette destination.
+
+To compare pitch on an installed voice:
+
+@enumerate
+@item
+From Home choose @emph{Browse installed voices}@comma{} select an available engine@comma{}
+and press @kbd{RET}. Select a physical voice and press @kbd{P}. You can use
+@kbd{B} to compare it with another available voice@comma{} using the same sentence.
+@item
+Press @kbd{t} on the physical voice to open an experiment. Move to @emph{Average
+Pitch}@comma{} enter @code{3}@comma{} and listen. Then enter @code{7} and listen again. If the engine
+cannot change pitch@comma{} the unsupported setting remains visible.
+@item
+Press @kbd{B} for the labelled original and edited comparison. Here
+``original'' means the experiment's captured starting voice@comma{} not the
+immediately preceding edit. @kbd{u} undoes an edit; @kbd{d} restores the
+adapter default for the current adjustment.
+@item
+To finish without saving@comma{} press @kbd{q} and choose to discard the experiment.
+To keep it@comma{} use the following walkthrough instead.
+@end enumerate
 
 For a physical experiment@comma{} @kbd{w} chooses a destination palette
 and named voice. The default keeps @emph{Physical voice and adjustments — this
@@ -3321,6 +3616,48 @@ changes or resume without adding. Other edits and pending save recovery remain.
 The destination opens in the same editor; preview plays the proposed saved
 combination@comma{} which may differ from the experiment because of the chosen scope
 and destination fallback order. Choosing a destination has not saved anything yet.
+
+@node Keeping A Voice Experiment
+@subsection Walkthrough: Keep An Installed Voice Experiment
+
+This example keeps the physical voice and its tuning together. First create
+@code{reading-demo} as in @ref{Personal Palette Walkthrough,Make a Personal Reading Palette,,emacsvox,}@comma{} or choose an existing
+personal destination. Note the active palette before beginning.
+
+@enumerate
+@item
+In the installed-voice browser@comma{} open an experiment with @kbd{t}@comma{} adjust a
+field@comma{} and use @kbd{P} or @kbd{B} to listen. Press @kbd{w} when ready to keep it.
+@item
+At @emph{Destination palette}@comma{} choose your personal palette. At @emph{Use for named
+voice}@comma{} choose @code{bolden}. Select @emph{Physical voice and adjustments — this
+choice}@comma{} then @emph{Add as preferred}. These choices put the experiment first
+while retaining existing alternative physical choices.
+@item
+The named-voice editor opens with the proposed combination. Nothing has
+been saved yet. Expand @emph{Fallbacks}: the new first choice should be marked
+customized@comma{} with any previous explicit choices after it. @kbd{P} plays the
+whole proposed voice. Review the reported engine and physical voice after
+the sample; an unavailable preferred choice can cause a fallback.
+@item
+Press @kbd{w} to save and apply. Wait for the editor's result. If it reports
+a partial save or failed application@comma{} keep the draft and follow
+@ref{Recovering Aural Changes,Recovering Unfinished Changes,,emacsvox,}. A successful save selects the destination
+palette for this session. Use @kbd{U} in Voice Palettes only if you also want
+that palette at startup.
+@item
+To reverse this change before saving@comma{} use @kbd{u} or discard the draft.
+After saving@comma{} reopen the named voice@comma{} expand @emph{Fallbacks}@comma{} open the added
+choice's action menu with @kbd{RET}@comma{} choose @emph{Remove}@comma{} preview@comma{} and save.
+Removing that row retains the other choices and shared settings. Reactivate
+your original palette if you also want to restore the session selection.
+@end enumerate
+
+To tune a fallback independently@comma{} open its action menu and choose @emph{Customize
+this voice}. Set one field@comma{} audition that choice@comma{} then select @emph{Play whole
+fallback chain} to test normal selection. Its custom field replaces the shared
+value only when that choice is used. @kbd{i} returns the field to the shared
+value. Reordering a choice carries its adjustments with it.
 
 @node Speech Engine Preferences
 @subsection Set Shared Engine Preferences
@@ -3391,24 +3728,154 @@ Named tones are another compact presentation resource.  They do not require a
 sampled sound file and may be used independently of the active sound pack.
 
 @menu
+* Walkthrough Try A Sound Pack: Sound Pack Walkthrough.  Preview, activate, retain, and restore a sound pack.
+* Walkthrough Silence One Cue: Changing One Sound.  Suppress a cue while retaining speech and restore it afterward.
 * Change A Blank-Line Tone: Changing Tones.  Change a recorded tone and distinguish it from a sampled cue.
+* Adjust Spatial Presentation: Spatial Presentation Controls.  Check stereo support, adjust placement, and restore centered output.
+* Inspect And Maintain A Personal Sound Pack: Personal Sound Packs.  Understand pack metadata, discovery, and the limits of the manager.
 @end menu
+
+@node Sound Pack Walkthrough
+@subsection Walkthrough: Try A Sound Pack
+
+@enumerate
+@item
+Open @kbd{C-e H}@comma{} choose @emph{Sound packs}@comma{} and note the currently active pack.
+Select another pack of kind @emph{sound} and press @kbd{P} for a representative
+cue. Preview does not select the pack.
+@item
+Press @kbd{RET} to browse its cues. Inspect @emph{Availability} and @emph{Provider}:
+a cue may come from the pack itself@comma{} its parent@comma{} or a registered fallback.
+Press @kbd{P} on a few cues you recognize. @kbd{S} stops playback.
+@item
+Press @kbd{s} to return to the pack manager@comma{} then @kbd{v} to validate the
+selected pack. Missing files and unresolved cues need attention before
+relying on the pack. Press @kbd{a} to activate it and revisit a familiar
+action@comma{} such as opening a list or moving between sections.
+@item
+To retain this selection@comma{} open Home's @emph{Presentation profiles} and save
+the current setup with @kbd{N}@comma{} or deliberately update the selected profile
+with @kbd{w}. Review its other fields: this saves the selected setup@comma{} not
+just the sound pack. See @ref{Presentation Profiles,Save@comma{} Switch@comma{} and Share Your Setup,,emacsvox,}.
+@item
+To restore the original@comma{} return to Sound packs and activate the pack you
+noted at the start. If you saved the experiment in a profile@comma{} restore or
+update that profile as well. Preview alone requires no restoration.
+@end enumerate
+
+If only one cue is unwanted@comma{} change the rule using that cue rather than
+changing the entire pack. The next walkthrough demonstrates this.
+
+@node Changing One Sound
+@subsection Walkthrough: Silence One Cue
+
+@enumerate
+@item
+Repeat the action that produces the unwanted cue. Open @kbd{C-e H H}@comma{} select
+that recorded feedback@comma{} and press @kbd{RET} to explain it. Find the cue name
+and whether it occurs before or after content.
+@item
+Return to the feedback list and press @kbd{C} for @emph{Change this feedback}.
+If the record has several parts@comma{} select the part containing that cue.
+Press @kbd{c}@comma{} choose @emph{Suppress one component}@comma{} and select the exact cue.
+@item
+Compare @kbd{O} and @kbd{P}. The proposed version should keep the speech and
+other components while omitting that cue. Review @emph{What should match} with
+@kbd{m}@comma{} then press @kbd{l} and choose @emph{This Emacs session} for this experiment.
+@item
+Press @kbd{a} and repeat the original action. The selected cue should be
+absent for matching feedback. Other cues with different identities or
+matching criteria should still sound.
+@item
+To restore it@comma{} open Home's @emph{Your feedback rules}@comma{} find the new session rule@comma{}
+and disable it with @kbd{t} or remove it with @kbd{d}. The session rule also
+expires when Emacs exits.
+@end enumerate
+
+To add a cue to feedback that has none@comma{} use @emph{Add a sound} instead. Choose
+@emph{Before content} or @emph{After content}@comma{} select a registered cue@comma{} preview@comma{} then
+review matching and lifetime. A cue addition and its later removal use the
+same rule-management workflow.
 
 @node Changing Tones
 @subsection Change A Blank-Line Tone
 
-Navigate onto a blank line so its feedback enters history.  Open
-@kbd{C-e H H}@comma{} select that blank-line record@comma{} and press
-@kbd{C}.  Choose @emph{Change a tone}@comma{} select the tone@comma{} then choose a
-named tone or explicit pitch in Hertz and duration in milliseconds.  Compare
-@kbd{O} and @kbd{P}.  Review the matching facts before
-choosing lifetime and applying.
+This changes a tone already present in recorded blank-line feedback. The
+available actions depend on what your integration actually produced.
 
-If that record contains a cue instead of a tone@comma{} the tone choice is absent.
-Use @emph{Explain} to see which rule supplied the cue; a guided change can suppress
-that cue@comma{} and a second change can add a tone.  The interface reports the
-actual presentation rather than assuming every visually blank line uses the
-same feedback.
+@enumerate
+@item
+Navigate onto a blank line@comma{} then open @kbd{C-e H H}. Select that feedback
+record and press @kbd{C}. Select its part if the record has several.
+@item
+Press @kbd{c} and choose @emph{Change a tone}. Select the tone@comma{} choose @emph{Pitch and
+duration}@comma{} then enter @code{500} Hertz and @code{80} milliseconds as a trial.
+If the tone was between other components@comma{} choose @emph{Before the other
+feedback} when asked about replacement placement. The summary includes
+this movement; inspect it along with the pitch and duration.
+@item
+Compare @kbd{O} and @kbd{P}. The changed example should retain its other
+content while changing that tone. A named tone can be selected instead
+of entering numbers.
+@item
+Press @kbd{m} to review the matching facts. Press @kbd{l} and choose @emph{This
+Emacs session}@comma{} review the summary@comma{} and press @kbd{a}. Navigate onto another
+matching blank line to hear the live result.
+@item
+Restore the earlier behavior by disabling or deleting this session rule
+in @emph{Your feedback rules}. It also expires when Emacs exits.
+@end enumerate
+
+If the record contains a sampled cue instead of a tone@comma{} @emph{Change a tone} is
+absent. Explain the record to identify the cue. You can suppress it with one
+rule and add a tone with another; remove both rules to restore the original.
+If no record was retained@comma{} check the history limit and repeat the action.
+The interface cannot infer a missing component from a visually blank line.
+
+@node Spatial Presentation Controls
+@subsection Adjust Spatial Presentation
+
+From Home@comma{} open @emph{Spatial capabilities} under @emph{Troubleshooting} to inspect
+what the current backend reports for speech and cues. Then open @emph{Spatial
+settings} under @emph{Sounds and output}. Speech and cues have separate enable
+controls. Output can follow the backend capability or be declared mono.
+Maximum separation ranges from zero (centered) to one (full separation);
+direction can stay normal@comma{} reverse left and right@comma{} or center some or all
+requests.
+
+To try a gentler layout@comma{} note the existing maximum separation@comma{} set it to @code{0.3}
+with Customize's @emph{Apply} action@comma{} and repeat feedback that already requests
+spatial placement. Stereo headphones make left/right differences easier to
+compare. If all feedback remains centered@comma{} use Explain to check that the
+presentation requests placement and inspect the reported capability.
+A sample with no spatial request cannot demonstrate this setting.
+
+For a centered comparison@comma{} temporarily select @emph{Mono output}@comma{} apply@comma{} and repeat
+the same action. Content should remain audible. Restore the values you noted
+when finished. Use Customize's save action or capture the spatial choices in
+a Presentation Profile to retain an intentional change across restarts.
+These controls govern presentation placement; a voice's explicit Pan effect
+and notification-device routing are separate settings.
+
+@node Personal Sound Packs
+@subsection Inspect And Maintain A Personal Sound Pack
+
+In the sound-pack manager@comma{} @kbd{o} opens the pack directory and @kbd{g} rescans
+and refreshes discovered resources. For a discovered personal pack@comma{} @kbd{e}
+offers guided metadata editing: summary@comma{} parent@comma{} coverage profiles@comma{} and
+default spatialization. Registered built-in packs are read-only in this editor.
+Editing metadata saves it; this is not an unsaved voice-style draft.
+
+A pack's @emph{coverage profiles} declare sets of cues it intends to supply. They
+are validation requirements@comma{} not Presentation Profiles that select your
+working setup. Native assets belong to the pack; effective assets also include
+inherited and fallback cues. Validation and individual cue details explain
+that distinction.
+
+The manager does not record or edit audio@comma{} and it has no New Palette-style
+sound-pack creator. Preparing a new pack requires its audio files and resource
+metadata. See @ref{Authoring Sound Packs,Authoring Sound Packs,,emacsvox,} in the Developer Guide; for an
+ordinary change to when a cue plays@comma{} use @emph{Change this feedback}.
 
 @node Aural Speech Output
 @section Speech Output And Notifications
@@ -3508,18 +3975,65 @@ copies of their contents. Editing a palette affects every profile selecting
 it. A profile is therefore a convenient selection of settings@comma{} not a backup.
 Profiles do not capture engine policy@comma{} speech rate@comma{} or notification output.
 
-Profiles do not copy presentation rules.  Edit rules in Presentation Options
-or Overrides.  They also do not capture buffer-local Voice Lock state or
+Profiles do not copy presentation rules. Edit rules through Presentation
+Options or @emph{Your feedback rules}. They also do not capture buffer-local Voice Lock state or
 current-buffer rules@comma{} because those belong to an individual buffer rather than
 a global setup.
 
 @menu
+* Walkthrough Switch Reading And Working Setups: Presentation Profile Walkthrough.  Save two selections, switch between them, and understand shared resources.
 * Choose What Persists: Saving And Startup.  Distinguish previews, drafts, saved resources, activation, and startup.
 * Export@comma{} Back Up@comma{} And Import Palettes: Sharing Voice Palettes.  Share portable voices or retain local choices in a backup.
 @end menu
 
+@node Presentation Profile Walkthrough
+@subsection Walkthrough: Switch Reading And Working Setups
+
+This example saves two profiles with different voice or sound selections.
+Use unused names and note the profile selected before starting.
+
+@enumerate
+@item
+Open @kbd{C-e H P}. If you want a restore point for the current selected
+options and resources@comma{} press @kbd{N} and save @code{before-demo} with a short
+purpose. This captures those selections and makes the new profile selected.
+It does not back up rules@comma{} resource definitions@comma{} or engine settings.
+@item
+From Home@comma{} activate the voice palette and sound pack you want for reading.
+Enable any desired Presentation Options and choose spatial settings.
+Return to Profiles and press @kbd{N} to save @code{reading-setup-demo}.
+@item
+Choose a different palette or sound pack for working@comma{} then save another
+new profile named @code{working-setup-demo}. Both profiles should show their
+selected resources in the list. @kbd{RET} describes a profile's saved fields.
+@item
+Select @code{reading-setup-demo} and press @kbd{a} to apply it. Check the active
+palette and sound pack in Home@comma{} then repeat familiar feedback. Select
+@code{working-setup-demo} and apply it to compare the two setups.
+@item
+Change one live option without updating the profile. The selected profile
+now reports @emph{Diverged}. Press @kbd{a} on it to restore its saved settings@comma{}
+or @kbd{w} if you intend to replace its saved values with the current ones.
+Read the confirmation before discarding live differences.
+@item
+Applying a profile also saves its selection for future sessions. Finish on
+the profile you want at startup. To restore the earlier setup@comma{} apply the
+original profile or @code{before-demo}. Delete unwanted demonstration profiles
+with @kbd{d} only after selecting the one you want to retain.
+@end enumerate
+
+If both profiles select @code{reading-demo}@comma{} later edits to that palette affect
+both profiles. For independently adjustable voices@comma{} first use @emph{Copy Palette}
+and select different palettes in the two profiles. A profile's @emph{Copy} action
+copies selections@comma{} not the selected resources. To change only the startup
+palette while preserving the profile's other saved fields@comma{} use @kbd{U} in
+Voice Palettes instead of capturing all current settings again.
+
 @node Saving And Startup
 @subsection Choose What Persists
+
+@cindex saving aural settings
+@cindex startup palette
 
 These actions answer different questions:
 
@@ -3560,6 +4074,20 @@ original ancestry tree or activate the imported palette. Missing installed
 voices are reported and retained for later replacement. A partial import keeps
 its proposal available for Retry or Discard.
 
+For example@comma{} select @code{reading-demo} in Voice Palettes and press @kbd{w} to
+export a portable file. Review any omitted local choices. Import that file
+with @kbd{i} under an unused name such as @code{reading-import-demo}. Enter the
+imported palette and preview its voices before activating it. A retained
+unavailable choice is a request to review@comma{} not evidence of successful audio.
+Delete the imported copy when finished if no profiles@comma{} children@comma{} or rules
+need it. The original palette is unchanged by this trial.
+
+Use uppercase @kbd{W} when the aim is to retain exact local choice data with
+the required palette ancestry. Importing that backup still creates a new@comma{}
+independent palette; it does not overwrite the original tree. Neither form
+contains speech engines or sound-pack audio@comma{} and a palette backup is not a
+backup of every Emacsvox setting.
+
 @node Presentation Troubleshooting
 @section Troubleshooting And Recovery
 
@@ -3573,7 +4101,7 @@ Use the symptom to choose the shortest diagnostic route:
 @item The current object sounds wrong or too verbose
 @tab Press @kbd{C-e E} and inspect the strongest matching rule.
 @item Something heard earlier was wrong
-@tab Open Recent Aural Feedback and explain its frozen record.
+@tab Open Recent Aural Feedback and explain its recorded presentation.
 @item A broad optional behavior is unwanted
 @tab Inspect Presentation Options and preview or disable the matching option.
 @item One narrow exception is unwanted
@@ -3599,6 +4127,32 @@ Press @kbd{?} in any Aural interface for its complete current keys.  If
 speech itself is absent rather than merely presented incorrectly@comma{} follow
 @ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}; presentation diagnostics assume that a speech route can run.
 
+If an adjustment appears to do nothing@comma{} check in this order:
+
+@enumerate
+@item
+Is the palette containing the edit active? Saving to the collection alone
+does not select it. A retained draft is not a saved voice.
+@item
+Does the item actually use that named voice? Explain it with @kbd{C-e E}.
+@item
+Does the physical choice that played have an individual adjustment masking
+the shared one? Inspect @emph{Fallbacks} and the last sample's result.
+@item
+Does a matching contextual rule replace that field? In the voice editor@comma{}
+inspect @emph{Effective sound / Where settings came from}.
+@item
+Does the engine support the requested adjustment? Check the reported
+unsupported fields and compare samples on an available supported voice.
+@end enumerate
+
+If speech uses another engine@comma{} first check explicit choices in the named
+voice: they outrank the shared preferred-engine setting. Then inspect engine
+availability@comma{} disablement@comma{} and failure information. A missing custom voice
+name is a configuration error. Ordinary speech preserves the text using an
+unstyled voice and records a diagnostic; it does not invent the missing
+palette entry. Doctor and Explain help locate the unresolved reference.
+
 @menu
 * Recover Unfinished Changes: Recovering Aural Changes.  Resume drafts and distinguish saved settings from confirmed application.
 @end menu
@@ -3623,8 +4177,8 @@ that distinction when deciding whether to retry or to edit the saved voice.
 Applying waits for each speech stream to acknowledge its configuration.  If
 an Omnivox apply times out@comma{} the Workbench reports @emph{server outcome unconfirmed}.
 Emacsvox stops that apply and sends no later steps@comma{} but changes already sent
-may still take effect on the server.  A timeout does not undo the saved engine settings
-or confirm that the server rejected it.  Press @kbd{r} to reapply
+may still take effect on the server. A timeout does not undo the saved engine
+settings or confirm that the server rejected them. Press @kbd{r} to reapply
 the saved engine settings and obtain a fresh result.  Save or cancel any newer
 staged edits before retrying.  A partial result retains the streams that
 acknowledged success and identifies those that timed out.
@@ -3647,7 +4201,7 @@ The three related policies are independent:
 @tab How to inspect or change it
 @item Semantic presentation
 @tab Rules based on roles@comma{} events@comma{} states@comma{} and attributes supplied by integrations.
-@tab Use @kbd{C-e E}@comma{} Presentation Options@comma{} and Overrides.
+@tab Use @kbd{C-e E}@comma{} Presentation options@comma{} and Your feedback rules.
 @item Explicit face presentation
 @tab Aural rules that deliberately match a named Emacs face.
 @tab Run @code{emacsvox-aural-toggle-face-presentation} or inspect it in Aural Doctor.
@@ -6079,6 +6633,10 @@ from the user task guides.  Optional package APIs and renderers evolve@comma{} s
 recheck the upstream interfaces and keep compatibility behavior bounded when
 changing an integration.
 
+@menu
+* Authoring Sound Packs::        Prepare a personal resource directory and validate its cue metadata.
+@end menu
+
 @subsection Source checkout and byte-code lifecycle
 
 Use the Emacs selected by the ignored repository-local @code{local.mk}.  When Emacs
@@ -6955,3 +7513,60 @@ return position.  New interfaces should use the shared parent modes and add
 a task-node mapping to @code{emacsvox-aural-ui-manual-nodes}.  Row action predicates
 should hide operations that cannot apply to that row; this includes editing
 built-in options and reordering items outside the active-order view.
+
+@node Authoring Sound Packs
+@subsection Authoring Sound Packs
+
+Ordinary selection@comma{} preview@comma{} and cue remapping are covered in
+@ref{Sounds And Space,Sounds@comma{} Tones@comma{} and Spatial Cues,,emacsvox,}. Preparing a new pack requires audio files
+and resource metadata. A pack supplies recordings for registered cue names;
+the presentation rules decide when those cues occur.
+
+The standard personal discovery root is @samp{~/.emacsvox/sounds/packs/}@comma{} controlled
+by @code{emacsvox-aural-personal-sound-packs-directory}. Each immediate child is a
+candidate pack@comma{} and its directory basename becomes its identifier. Choose an
+unused identifier. A directory containing @samp{button.ogg} is discovered without
+a manifest. A partial pack can instead supply the data-only manifest
+@samp{emacsvox-sound-pack.el} and inherit missing cues from another pack.
+
+For example@comma{} create @samp{my-cues/} below the personal root and put this single
+Lisp data form in @samp{my-cues/emacsvox-sound-pack.el}:
+
+@lisp
+(:schema-version 1
+ :summary "My personal cues@comma{} inheriting the remaining chimes"
+ :parent chimes
+ :default-spatialization neutral)
+@end lisp
+
+The file contains data@comma{} not executable initialization: do not wrap the form in
+@code{setq}@comma{} quote it@comma{} or add a second form. Put a replacement recording such as
+@samp{button.ogg} in the same directory. Its basename names the registered cue.
+Unknown cue names fail the resource audit; introducing a new semantic cue
+requires an integration to register its intent and use it. Every standalone
+sound pack must resolve @samp{button}@comma{} directly or through its declared parent.
+
+The optional @code{:profiles} field lists registered cue-coverage requirements.
+These are resource validation contracts@comma{} distinct from Presentation Profiles
+that select a user's setup. Keep the coverage appropriate to the intended
+uses rather than treating a successful single audition as complete coverage.
+Default spatialization is @code{neutral}@comma{} @code{stereo}@comma{} or @code{pre-spatialized}. Use the
+last for recordings that already encode their intended spatial placement@comma{}
+so runtime balance does not position them a second time.
+
+Open Aural Home's @emph{Sound packs} and press @kbd{g} to rescan.
+Inspect the new pack with @key{RET}: the replacement should be
+native@comma{} while unchanged cues identify their parent or fallback provider.
+Audition individual cues with @kbd{P} and validate with
+@kbd{v} before activating the pack. Missing or malformed assets
+are errors to resolve@comma{} not cues to copy from an unrelated installed pack.
+No activation follows from writing the directory or previewing it.
+
+The manager's @kbd{e} edits metadata for discovered packs only.
+It replaces the manifest atomically@comma{} retains the previous file with a @samp{~}
+suffix@comma{} and restores the old metadata if validation of the refreshed pack
+fails. It does not edit recordings. After changing files externally@comma{} refresh
+the pack; @code{emacsvox-aural-refresh-resource-pack} refreshes an already registered
+pack@comma{} and @code{emacsvox-aural-refresh-discovered-resource-packs} rescans discovery
+roots. Engine installation@comma{} remote sound-directory placement@comma{} and user
+startup selection remain separate tasks.

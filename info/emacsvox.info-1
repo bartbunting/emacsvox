@@ -2574,6 +2574,21 @@ relevant part rather than repeat the complete presentation.
 selected options, sound pack, voice palette, and spatial choices so you
 can switch those choices together.
 
+   For example, an Org integration identifies a level-two heading.  A
+rule asks for ‘bolden’ and a section cue.  The active palette supplies
+‘bolden’'s voice settings and physical choices; the active sound pack
+supplies the cue.  The speech backend plays what it supports.  Changing
+the rule changes which headings get that feedback.  Editing ‘bolden’
+changes the voice wherever that entry is used.  Switching sound packs
+changes the cue's recording while preserving its meaning.
+
+   When two rules change the same voice field, the stronger explicit
+value wins; values are not added.  Personal rules are weaker than
+session rules, which are weaker than current-buffer rules.  Rules can
+also add actions before or after the content.  Use Explain to see the
+actual contributors and winning values rather than inferring them from
+the order in which you made edits.
+
 * Menu:
 
 * Presentation Modalities::      Recognize speech, voices, cues, tones, pauses, and spatial output.
@@ -2595,8 +2610,8 @@ Aural Presentation can use one or more of these forms of feedback:
      quoted text portable across speech engines.
 
    • _Auditory cues_, also called _earcons_ or _auditory icons_, are
-     short sounds associated with semantic events or objects.  A sound
-     pack supplies the concrete audio for those cue names.
+     short sounds associated with events or objects.  A sound pack
+     supplies the recordings for those cue names.
 
    • _Tones_ convey compact information using a named pitch and
      duration.  They are useful when a short distinction is preferable
@@ -2698,15 +2713,71 @@ working settings               Profiles               configuration
 
 * Menu:
 
+* Walkthrough Change Headings In One Buffer: Heading Voice Walkthrough.  Try a heading voice, verify the scope, and undo the rule.
 * Guided Change This Feedback: Guided Feedback Changes.  Learn the controls and scope of this task.
 * Remap One Item At Point: Choosing A Voice For An Item.  Learn the controls and scope of this task.
 * Review And Remove Your Rules: Managing Feedback Rules.  Inspect, change, disable, or remove personal and temporary rules.
 * Try A Presentation Option: Presentation Options.  Learn the controls and scope of this task.
 
 
-File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For An Item,  Up: Adjusting Presentation
+File: emacsvox.info,  Node: Heading Voice Walkthrough,  Next: Guided Feedback Changes,  Up: Adjusting Presentation
 
-6.4.1 Guided Change This Feedback
+6.4.1 Walkthrough: Change Headings In One Buffer
+------------------------------------------------
+
+This example changes headings in a temporary Org buffer.  It leaves your
+palette definitions and saved rules alone.
+
+  1. Use ‘C-x b’ to create a new buffer named ‘*aural-practice*’.  Run
+     ‘M-x org-mode’ and insert this short document:
+
+          * Reading notes
+          An ordinary paragraph.
+          * Next steps
+          Another ordinary paragraph.
+
+  2. Move onto the first heading and press ‘C-e E’.  Find its current
+     named voice and the facts identifying a heading.  The explanation
+     should tell you whether it describes recorded output or a
+     simulation.
+
+  3. Open ‘C-e H c’.  Press ‘c’, select _Content voice_, and choose
+     ‘annotate’ with ‘RET’.  If ‘annotate’ is already the original, use
+     ‘bolden’ instead.  ‘O’ plays the original and ‘P’ previews your
+     choice.  At this point the change exists only in the draft.
+
+  4. Press ‘m’ to inspect _What should match_.  Keep the Org module and
+     heading role, plus heading level if shown.  Leave other criteria as
+     shown for this first example.  Press ‘l’ and choose _Current
+     buffer, until it is killed_.  This means every matching heading in
+     this buffer, not just the heading you started from.
+
+  5. Review the summary, then press ‘a’.  Return through Home with ‘h’,
+     then ‘C-c C-o’.  Move between the two headings using the same
+     navigation action.  Both matching headings should use your chosen
+     voice; the ordinary paragraphs should keep their previous
+     presentation.
+
+  6. Press ‘C-e E’ on a heading again.  Check that the new buffer rule
+     supplies the selected voice.  If the sound is too similar to
+     distinguish, the explanation still tells you whether the rule
+     matched; compare voices in the palette or consult *note
+     Troubleshooting: (emacsvox)Presentation Troubleshooting.
+
+  7. To undo, open Home's _Your feedback rules_ with ‘O’.  Find the new
+     rule in the buffer scope and inspect its target.  Press ‘t’ to
+     disable it or ‘d’ to remove it, then revisit the heading.  Killing
+     this practice buffer also ends its buffer rules.  Nothing from this
+     example survives a restart.
+
+   For a permanent change, repeat the task on a representative item and
+choose _Saved personal rule_ at step 4.  Review the matching criteria
+carefully: a permanent rule can affect future matching buffers too.
+
+
+File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For An Item,  Prev: Heading Voice Walkthrough,  Up: Adjusting Presentation
+
+6.4.2 Guided Change This Feedback
 ---------------------------------
 
   1. Move to a representative item, press ‘C-e H’, then ‘c’.  This
@@ -2738,7 +2809,7 @@ File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For
      leaves the panel and preserves the unfinished draft.
 
   3. Press ‘P’ to hear the proposed change before choosing how long to
-     keep it.  ‘O’ plays the frozen original example; ‘S’ stops.
+     keep it.  ‘O’ plays the recorded original example; ‘S’ stops.
      Proposed preview resolves the selected example with current rules
      and its captured buffer context.  It does not apply your draft to
      live feedback.
@@ -2771,12 +2842,12 @@ component therefore asks which edge to use and includes that placement
 in the summary.  Ambiguous components require the Advanced editor.
 Current-item changes recheck their captured source before applying; a
 changed or killed target must be inspected again.  Historical changes
-remain tied to the selected frozen example.
+remain tied to the selected recorded example.
 
 
 File: emacsvox.info,  Node: Choosing A Voice For An Item,  Next: Managing Feedback Rules,  Prev: Guided Feedback Changes,  Up: Adjusting Presentation
 
-6.4.2 Remap One Item At Point
+6.4.3 Remap One Item At Point
 -----------------------------
 
   1. Move to a representative object and press ‘C-e E’ so you know what
@@ -2819,7 +2890,7 @@ File: emacsvox.info,  Node: Choosing A Voice For An Item,  Next: Managing Feedba
 
 File: emacsvox.info,  Node: Managing Feedback Rules,  Next: Presentation Options,  Prev: Choosing A Voice For An Item,  Up: Adjusting Presentation
 
-6.4.3 Review And Remove Your Rules
+6.4.4 Review And Remove Your Rules
 ----------------------------------
 
 In _Your feedback rules_, ‘RET’ or ‘e’ opens the selected rule's
@@ -2854,7 +2925,7 @@ behind.
 
 File: emacsvox.info,  Node: Presentation Options,  Prev: Managing Feedback Rules,  Up: Adjusting Presentation
 
-6.4.4 Try A Presentation Option
+6.4.5 Try A Presentation Option
 -------------------------------
 
 Presentation Options are maintained additions such as richer heading
@@ -2955,24 +3026,142 @@ physical choices belong to the new palette.  Use the summary and parent
 action, ‘E’, to review or change a personal palette's parent; the
 manager rejects inheritance cycles.
 
+   To delete a whole personal palette, select it in the manager and
+press ‘d’.  Children and known references, including saved profiles,
+must be changed first, and unfinished voice edits must be completed or
+discarded.  Deleting an active palette returns to the standard baseline.
+
    Activation with ‘a’ lasts for this session.  Press ‘f’ to follow the
-standard baseline palette again.  Use at Startup, ‘U’, changes the
-palette in the selected saved Presentation Profile while preserving its
-other saved fields.  It does not apply that profile to the current
-session.  If no startup profile exists, the action asks you to review a
-new profile captured from the current setup.  It checks voice references
-in saved rules and the profile's saved options; session and buffer rules
-do not affect this startup check.  An already open Profiles view
-refreshes to show the saved choice.
+standard baseline palette again.  This clears the session's explicit
+palette selection; it does not delete your saved palette or change the
+startup choice.  Use at Startup, ‘U’, changes the palette in the
+selected saved Presentation Profile while preserving its other saved
+fields.  It does not apply that profile to the current session.  If no
+startup profile exists, the action asks you to review a new profile
+captured from the current setup.  It checks voice references in saved
+rules and the profile's saved options; session and buffer rules do not
+affect this startup check.  An already open Profiles view refreshes to
+show the saved choice.
 
 * Menu:
 
+* Walkthrough Make A Personal Reading Palette: Personal Palette Walkthrough.  Create, edit, save, activate, and optionally select a palette for startup.
+* Walkthrough Inheritance, Aliases, And Reset: Palette Inheritance Walkthrough.  Follow an entry to its parent and distinguish an alias from a copy.
 * Rename Voices And Palettes: Renaming Voices And Palettes.  Rename personal entries while checking their known uses.
 
 
-File: emacsvox.info,  Node: Renaming Voices And Palettes,  Up: Voices And Routing
+File: emacsvox.info,  Node: Personal Palette Walkthrough,  Next: Palette Inheritance Walkthrough,  Up: Voices And Routing
 
-6.5.1 Rename Voices And Palettes
+6.5.1 Walkthrough: Make A Personal Reading Palette
+--------------------------------------------------
+
+This example gives you a personal place to adjust standard voices.  Use
+an unused palette name; ‘reading-demo’ below is an example.  Note your
+current palette before starting so you can return to it.
+
+  1. Open ‘C-e H V’ for _Voice palettes_.  Press ‘N’, enter
+     ‘reading-demo’, give it a purpose such as "My reading experiments",
+     and choose ‘acss-default’ as its parent.  Creation saves the new
+     palette, but does not activate it.  Its standard voices are
+     inherited.
+
+  2. Press ‘RET’ to enter the new palette.  Find ‘bolden’ and move to
+     its _Source_ column.  It should name ‘acss-default’.  ‘.’ repeats
+     the column title and value; ‘SPC’ reads the whole row.  ‘P’
+     previews the voice.
+
+  3. Press ‘e’ to edit ‘bolden’ here.  The editor identifies the
+     destination palette and inherited source.  Move to _Average Pitch_,
+     press ‘RET’, and enter ‘6’ (or ‘5’ if it is already six).  ‘B’
+     compares the opening voice with the edited voice using the same
+     text.  Unsupported adjustments are reported; see *note Voice
+     Adjustments: (emacsvox)Voice Adjustments. if the contrast is
+     unclear.
+
+  4. Choose _Save to collection without selecting_.  Wait for the save
+     result, then use ‘q’ to return to the voice list.  _Source_ should
+     now identify ‘reading-demo’ for ‘bolden’.  Other inherited entries
+     still name their providers.  Saving has created a complete local
+     entry, not a pitch-only patch on the parent.
+
+  5. Press ‘o’ to return to the palette manager and ‘a’ on
+     ‘reading-demo’ to activate it.  Check its status, then revisit
+     content that uses ‘bolden’.  This affects all uses resolving to
+     your edited entry.  Explanation at the source helps distinguish
+     palette settings from additional contextual rules.
+
+  6. If you want this palette after restart, press ‘U’ on it in the
+     palette manager and review the startup proposal.  It updates the
+     palette selection in the saved startup profile.  If no startup
+     profile exists, review the proposed new profile's other settings
+     too.  Saving the palette and selecting it for startup are separate
+     actions.
+
+  7. To return to your previous sound, activate the original palette.
+     If you also changed startup, use ‘U’ on that original palette to
+     restore the startup selection.  Your saved ‘reading-demo’ remains
+     available for later experiments.  To remove only its ‘bolden’
+     customization, follow the Reset example in *note Inheritance,
+     Aliases, and Reset: (emacsvox)Palette Inheritance Walkthrough.
+
+
+File: emacsvox.info,  Node: Palette Inheritance Walkthrough,  Next: Renaming Voices And Palettes,  Prev: Personal Palette Walkthrough,  Up: Voices And Routing
+
+6.5.2 Walkthrough: Inheritance, Aliases, And Reset
+--------------------------------------------------
+
+Use ‘reading-demo’ from the previous example, or another personal
+palette with ‘acss-default’ as its parent.
+
+  1. In the palette manager, create ‘reading-child-demo’ with ‘N’ and
+     choose ‘reading-demo’ as its parent.  The chain is now
+     ‘reading-child-demo -> reading-demo -> acss-default’.
+
+  2. Enter the child and inspect ‘bolden’'s _Source_.  If ‘reading-demo’
+     has a direct ‘bolden’ entry, it supplies the child's whole entry.
+     Otherwise ‘acss-default’ supplies it.  ‘O’ opens the supplying
+     palette; ‘u’ shows Where Used, including known references, aliases,
+     and affected descendants.
+
+  3. The alias ‘voice-bolden’ refers to the same named voice as
+     ‘bolden’.  It is an alternative spelling used by integrations, not
+     another entry with independent settings.  You do not create or edit
+     aliases in this view.
+
+  4. Return to the child palette and copy ‘bolden’ with ‘c’.  Give the
+     copy an unused name such as ‘reading-heading-demo’.  Change its
+     pitch, compare it, and choose _Save to collection without
+     selecting_.  You now have a separate named entry.  A rule must
+     select this new name before ordinary content uses it; copying alone
+     does not remap headings.
+
+  5. For a Reset experiment, edit the child's inherited ‘bolden’, change
+     one field, and save to the collection.  Its Source becomes the
+     child.  Back in the voice list, press ‘R’ on ‘bolden’.  The
+     confirmation names the parent entry that will take over.  After
+     confirming, ‘bolden’ remains in the list and Source returns to that
+     provider.
+
+  6. To remove the custom copy, select ‘reading-heading-demo’ and press
+     ‘d’.  This deletes it if there is no inherited replacement or known
+     use.  If you assigned it to a rule, remove or remap that rule
+     first.  Reset is for a local entry with an inherited replacement;
+     Delete is for a removable custom name.
+
+   The standard root ensures standard voices remain available after
+Reset.  It cannot be deleted or edited here.  A palette can contain
+additional custom names; the standard list grows when loaded
+integrations register voices.  Copy Palette is different from New
+Palette: it copies all current effective entries and stops following
+edits to the source palette, while still inheriting new standard names
+from ‘acss-default’.  Definitions referring to an existing personality
+still use that personality's settings.  A copy is not a recording of its
+sound.
+
+
+File: emacsvox.info,  Node: Renaming Voices And Palettes,  Prev: Palette Inheritance Walkthrough,  Up: Voices And Routing
+
+6.5.3 Rename Voices And Palettes
 --------------------------------
 
 Press ‘r’ in the voice list to rename a custom voice defined directly in
@@ -3014,6 +3203,11 @@ Editing a built-in palette asks for a personal child.  Opening the
 editor and previewing a draft do not change live feedback or save
 settings.
 
+   If you opened an experiment from an installed physical voice, these
+same controls apply, but saving first asks for a destination.  See *note
+Keep an Installed Voice Experiment: (emacsvox)Keeping A Voice
+Experiment. for that sequence.
+
    The editor uses the ordinary navigation voice for its labelled
 fields.  ‘n/p’, up/down or Tab moves between fields.  Left/right adjusts
 a numeric field and moves between fields elsewhere; <RET> activates a
@@ -3031,16 +3225,15 @@ their limits and announce the minimum or maximum.
    ‘P’ plays the edited voice.  ‘B’ compares the captured original with
 the edited version using the same text, with spoken labels.  ‘T’ changes
 that text; ‘S’ stops.  An automatic sample follows each adjustment
-unless you turn that field off.  The new value precedes the sample text,
-for example "1.  The quick brown fox…".  Toggling _Automatic sample
-after adjustment_ announces on or off with distinct cues.  _More
-adjustments and effects_ and _Fallbacks_ present their visibility with
-open/close cues and optional spoken state labels, both when toggled and
-when reached during field navigation.  Navigation stops an outstanding
-sample.  ‘u’ undoes an edit, including a reset to adapter default.  ‘q’
-dismisses the editor and returns to its originating view, offering to
-retain or discard unsaved changes.  Quitting the workbench afterwards
-does not reopen the experiment.
+unless you turn off _Automatic sample after adjustment_.  The new value
+precedes the sample text, for example "1.  The quick brown fox…".
+Toggling _Automatic sample after adjustment_ announces on or off with
+distinct cues.  _More adjustments and effects_ and _Fallbacks_ present
+their visibility with open/close cues and optional spoken state labels,
+both when toggled and when reached during field navigation.  Navigation
+stops an outstanding sample.  ‘u’ undoes an edit, including a reset to
+adapter default.  ‘q’ dismisses the editor and returns to its
+originating view, offering to retain or discard unsaved changes.
 
    Choose the _Physical voice_ field to search by engine or voice name.
 You can audition a candidate with the working adjustments before
@@ -3094,13 +3287,58 @@ File: emacsvox.info,  Node: Voice Adjustments,  Next: Voice Fallbacks,  Up: Edit
 6.6.1 Understand Voice Adjustments
 ----------------------------------
 
-The voice editor presents _Low-pass Amount_ and _High-pass Amount_ from
-zero through nine.  Higher amounts mean more filtering: low-pass removes
-more high frequencies, and high-pass removes more low frequencies.  Zero
-is the neutral cutoff; blank numeric entry requests the adapter default.
-The amount scale applies to arrows and numeric entry in the common
-editor.  Existing saved styles retain their sound; stored low-pass
-cutoff values keep their original meaning.
+Change one field at a time and compare with ‘B’.  These are portable
+controls, not measurements in Hertz or decibels.  Equal numbers can
+sound different on different engines.  Most numeric fields use integer
+levels from zero through nine; Relative Rate is the exception.
+
+   • _Relative Rate_ ranges from -20 to 20.  Negative values request
+     slower speech, positive values faster speech, and zero leaves the
+     base rate unchanged.  The engine interprets those relative steps;
+     they are not words per minute.  A stronger contextual relative-rate
+     value replaces this value rather than adding to it.
+   • _Average Pitch_ requests a lower or higher overall pitch.  Start
+     with a small difference between two voices intended to mark related
+     content.
+   • _Pitch Range_ requests less or more pitch variation.  A low range
+     can make a supported voice more monotone; a high range makes
+     intonation more varied.
+   • _Stress_ requests less or more emphasis.  Its audible effect
+     depends on how the engine implements stress.
+   • _Richness_ changes the voice's tonal character or fullness where
+     supported.  Compare samples rather than treating it as another
+     volume control.
+   • _Gain_ changes output level.  Five is unchanged; lower values
+     reduce it and higher values increase it.
+   • _Pan_ places supported audio from left at zero, through center at
+     five, to right at nine.  Its effect also depends on your output
+     arrangement.
+   • _Low-pass Amount_ and _High-pass Amount_ remove high and low
+     frequencies, respectively.  Both use zero for neutral and nine for
+     strongest filtering.
+   • _Reverb_ adds a reverberant character, _Echo_ adds delayed
+     repetitions, and _Chorus_ adds a doubled-voice effect.  Zero
+     disables each; higher levels increase the effect.
+   • _Portable Fallback Family_, where offered under additional
+     adjustments, is a compatibility family hint.  Use _Physical voice_
+     for an installed voice choice.  Family is not part of the complete
+     Omnivox voice preview.
+
+   In shared settings, ‘d’ or blank numeric input requests _adapter
+default_; ‘u’ undoes that edit.  In an individual physical choice, ‘i’
+instead means _use the shared value_.  Zero remains an explicit value in
+either view.  Thus "standard default palette", "Automatic physical
+selection", and "adapter default adjustment" answer three different
+questions: which collection supplies the voice, who selects its physical
+voice, and who supplies one adjustment value.
+
+   The voice editor presents _Low-pass Amount_ and _High-pass Amount_
+from zero through nine.  Higher amounts mean more filtering: low-pass
+removes more high frequencies, and high-pass removes more low
+frequencies.  Zero is the neutral cutoff; blank numeric entry requests
+the adapter default.  The amount scale applies to arrows and numeric
+entry in the common editor.  Existing saved styles retain their sound;
+stored low-pass cutoff values keep their original meaning.
 
    The voice editor names other neutral effect values instead of
 speaking an ambiguous number: gain five is _unchanged_, pan five is
@@ -3133,10 +3371,25 @@ File: emacsvox.info,  Node: Voice Fallbacks,  Next: Voices In Context,  Prev: Vo
 6.6.2 Choose And Tune Fallback Voices
 -------------------------------------
 
-Shared settings provide the base for the whole voice.  Expand
-_Fallbacks_ to see which rows _use shared settings_ and which are
-_customized_.  A row's action menu can audition that row or compare its
-original and edited versions.  Comparison follows the same row after
+Shared settings provide the base for the whole voice.
+
+   Physical choices are tried in their displayed order, subject to
+availability, engine policy, and synthesis failures.  An empty explicit
+list means _Automatic_: use the shared engine policy.  Availability
+predicts a possible choice; the last sample's result identifies what
+actually played.
+
+   There are two distinct kinds of inheritance.  A parent palette
+supplies a whole named entry.  Inside that entry, an individual physical
+choice can inherit each shared adjustment separately.  For example,
+shared pitch six, choice pitch four, and a matching contextual rule
+setting pitch seven result in a requested pitch of seven.  Without that
+rule, the choice requests four.  Returning the choice field to _Use
+shared value_ makes it request six.
+
+   Expand _Fallbacks_ to see which rows _use shared settings_ and which
+are _customized_.  A row's action menu can audition that row or compare
+its original and edited versions.  Comparison follows the same row after
 reordering, including two rows mapped to the same physical voice.  A
 newly added row has no original to compare yet; audition it or compare
 the complete voice instead.  Replacing a customized physical voice asks
@@ -3216,11 +3469,11 @@ returns to the base editor.
 whether the rule lasts always (personal), for this Emacs session, or for
 this buffer.  Choose one adjustment and its value.  It opens the
 ordinary rule editor with that field prepared; changing richness alone
-produces a richness-only patch and does not select a complete preset.
-Review the rule's match with <RET>, use ‘V’ to adjust another voice
-field, and save that scope with ‘w’.  Palette definitions are unchanged.
-Existing unsaved work in that rule editor must be completed before
-preparing another contextual rule.
+produces a richness-only patch and does not select a different named
+voice.  Review the rule's match with <RET>, use ‘V’ to adjust another
+voice field, and save that scope with ‘w’.  Palette definitions are
+unchanged.  Existing unsaved work in that rule editor must be completed
+before preparing another contextual rule.
 
    In the scoped field control, _Inherit_ removes the field so weaker
 contributions can supply its value.  Removing the final voice field
@@ -3255,7 +3508,7 @@ engines.  Open it from Aural Home with ‘W’.  Its main views are:
      and _annotate_.  Start here to change which physical voice reads a
      role.
 ‘s’
-     Styles and effects for those logical roles.  Use this view to
+     Styles and effects for those named voices.  Use this view to
      inspect their parameters and what their current engines support.
 
    For physical voices, choose _Browse installed voices_ in Home, then
@@ -3296,10 +3549,11 @@ parameter.
 * Menu:
 
 * Experiment With An Installed Voice: Physical Voice Experiments.  Try physical voices without saving, then keep a useful experiment.
+* Walkthrough Keep An Installed Voice Experiment: Keeping A Voice Experiment.  Place an experiment in a named voice and verify the saved combination.
 * Set Shared Engine Preferences: Speech Engine Preferences.  Choose engine order and distinguish it from explicit palette choices.
 
 
-File: emacsvox.info,  Node: Physical Voice Experiments,  Next: Speech Engine Preferences,  Up: Installed Voices And Engines
+File: emacsvox.info,  Node: Physical Voice Experiments,  Next: Keeping A Voice Experiment,  Up: Installed Voices And Engines
 
 6.7.1 Experiment With An Installed Voice
 ----------------------------------------
@@ -3314,6 +3568,23 @@ settings.
 same as in *note Edit a Named Voice: (emacsvox)Editing Named Voices.  In
 an experiment, ‘w’ first asks where to use the result; it cannot save a
 voice without a palette destination.
+
+   To compare pitch on an installed voice:
+
+  1. From Home choose _Browse installed voices_, select an available
+     engine, and press ‘RET’.  Select a physical voice and press ‘P’.
+     You can use ‘B’ to compare it with another available voice, using
+     the same sentence.
+  2. Press ‘t’ on the physical voice to open an experiment.  Move to
+     _Average Pitch_, enter ‘3’, and listen.  Then enter ‘7’ and listen
+     again.  If the engine cannot change pitch, the unsupported setting
+     remains visible.
+  3. Press ‘B’ for the labelled original and edited comparison.  Here
+     "original" means the experiment's captured starting voice, not the
+     immediately preceding edit.  ‘u’ undoes an edit; ‘d’ restores the
+     adapter default for the current adjustment.
+  4. To finish without saving, press ‘q’ and choose to discard the
+     experiment.  To keep it, use the following walkthrough instead.
 
    For a physical experiment, ‘w’ chooses a destination palette and
 named voice.  The default keeps _Physical voice and adjustments — this
@@ -3338,9 +3609,54 @@ destination fallback order.  Choosing a destination has not saved
 anything yet.
 
 
-File: emacsvox.info,  Node: Speech Engine Preferences,  Prev: Physical Voice Experiments,  Up: Installed Voices And Engines
+File: emacsvox.info,  Node: Keeping A Voice Experiment,  Next: Speech Engine Preferences,  Prev: Physical Voice Experiments,  Up: Installed Voices And Engines
 
-6.7.2 Set Shared Engine Preferences
+6.7.2 Walkthrough: Keep An Installed Voice Experiment
+-----------------------------------------------------
+
+This example keeps the physical voice and its tuning together.  First
+create ‘reading-demo’ as in *note Make a Personal Reading Palette:
+(emacsvox)Personal Palette Walkthrough., or choose an existing personal
+destination.  Note the active palette before beginning.
+
+  1. In the installed-voice browser, open an experiment with ‘t’, adjust
+     a field, and use ‘P’ or ‘B’ to listen.  Press ‘w’ when ready to
+     keep it.
+  2. At _Destination palette_, choose your personal palette.  At _Use
+     for named voice_, choose ‘bolden’.  Select _Physical voice and
+     adjustments — this choice_, then _Add as preferred_.  These choices
+     put the experiment first while retaining existing alternative
+     physical choices.
+  3. The named-voice editor opens with the proposed combination.
+     Nothing has been saved yet.  Expand _Fallbacks_: the new first
+     choice should be marked customized, with any previous explicit
+     choices after it.  ‘P’ plays the whole proposed voice.  Review the
+     reported engine and physical voice after the sample; an unavailable
+     preferred choice can cause a fallback.
+  4. Press ‘w’ to save and apply.  Wait for the editor's result.  If it
+     reports a partial save or failed application, keep the draft and
+     follow *note Recovering Unfinished Changes: (emacsvox)Recovering
+     Aural Changes.  A successful save selects the destination palette
+     for this session.  Use ‘U’ in Voice Palettes only if you also want
+     that palette at startup.
+  5. To reverse this change before saving, use ‘u’ or discard the draft.
+     After saving, reopen the named voice, expand _Fallbacks_, open the
+     added choice's action menu with ‘RET’, choose _Remove_, preview,
+     and save.  Removing that row retains the other choices and shared
+     settings.  Reactivate your original palette if you also want to
+     restore the session selection.
+
+   To tune a fallback independently, open its action menu and choose
+_Customize this voice_.  Set one field, audition that choice, then
+select _Play whole fallback chain_ to test normal selection.  Its custom
+field replaces the shared value only when that choice is used.  ‘i’
+returns the field to the shared value.  Reordering a choice carries its
+adjustments with it.
+
+
+File: emacsvox.info,  Node: Speech Engine Preferences,  Prev: Keeping A Voice Experiment,  Up: Installed Voices And Engines
+
+6.7.3 Set Shared Engine Preferences
 -----------------------------------
 
 For a quick engine preference, ‘C-e d e’ chooses an available engine for
@@ -3412,25 +3728,159 @@ sound pack.
 
 * Menu:
 
+* Walkthrough Try A Sound Pack: Sound Pack Walkthrough.  Preview, activate, retain, and restore a sound pack.
+* Walkthrough Silence One Cue: Changing One Sound.  Suppress a cue while retaining speech and restore it afterward.
 * Change A Blank-Line Tone: Changing Tones.  Change a recorded tone and distinguish it from a sampled cue.
+* Adjust Spatial Presentation: Spatial Presentation Controls.  Check stereo support, adjust placement, and restore centered output.
+* Inspect And Maintain A Personal Sound Pack: Personal Sound Packs.  Understand pack metadata, discovery, and the limits of the manager.
 
 
-File: emacsvox.info,  Node: Changing Tones,  Up: Sounds And Space
+File: emacsvox.info,  Node: Sound Pack Walkthrough,  Next: Changing One Sound,  Up: Sounds And Space
 
-6.8.1 Change A Blank-Line Tone
+6.8.1 Walkthrough: Try A Sound Pack
+-----------------------------------
+
+  1. Open ‘C-e H’, choose _Sound packs_, and note the currently active
+     pack.  Select another pack of kind _sound_ and press ‘P’ for a
+     representative cue.  Preview does not select the pack.
+  2. Press ‘RET’ to browse its cues.  Inspect _Availability_ and
+     _Provider_: a cue may come from the pack itself, its parent, or a
+     registered fallback.  Press ‘P’ on a few cues you recognize.  ‘S’
+     stops playback.
+  3. Press ‘s’ to return to the pack manager, then ‘v’ to validate the
+     selected pack.  Missing files and unresolved cues need attention
+     before relying on the pack.  Press ‘a’ to activate it and revisit a
+     familiar action, such as opening a list or moving between sections.
+  4. To retain this selection, open Home's _Presentation profiles_ and
+     save the current setup with ‘N’, or deliberately update the
+     selected profile with ‘w’.  Review its other fields: this saves the
+     selected setup, not just the sound pack.  See *note Save, Switch,
+     and Share Your Setup: (emacsvox)Presentation Profiles.
+  5. To restore the original, return to Sound packs and activate the
+     pack you noted at the start.  If you saved the experiment in a
+     profile, restore or update that profile as well.  Preview alone
+     requires no restoration.
+
+   If only one cue is unwanted, change the rule using that cue rather
+than changing the entire pack.  The next walkthrough demonstrates this.
+
+
+File: emacsvox.info,  Node: Changing One Sound,  Next: Changing Tones,  Prev: Sound Pack Walkthrough,  Up: Sounds And Space
+
+6.8.2 Walkthrough: Silence One Cue
+----------------------------------
+
+  1. Repeat the action that produces the unwanted cue.  Open ‘C-e H H’,
+     select that recorded feedback, and press ‘RET’ to explain it.  Find
+     the cue name and whether it occurs before or after content.
+  2. Return to the feedback list and press ‘C’ for _Change this
+     feedback_.  If the record has several parts, select the part
+     containing that cue.  Press ‘c’, choose _Suppress one component_,
+     and select the exact cue.
+  3. Compare ‘O’ and ‘P’.  The proposed version should keep the speech
+     and other components while omitting that cue.  Review _What should
+     match_ with ‘m’, then press ‘l’ and choose _This Emacs session_ for
+     this experiment.
+  4. Press ‘a’ and repeat the original action.  The selected cue should
+     be absent for matching feedback.  Other cues with different
+     identities or matching criteria should still sound.
+  5. To restore it, open Home's _Your feedback rules_, find the new
+     session rule, and disable it with ‘t’ or remove it with ‘d’.  The
+     session rule also expires when Emacs exits.
+
+   To add a cue to feedback that has none, use _Add a sound_ instead.
+Choose _Before content_ or _After content_, select a registered cue,
+preview, then review matching and lifetime.  A cue addition and its
+later removal use the same rule-management workflow.
+
+
+File: emacsvox.info,  Node: Changing Tones,  Next: Spatial Presentation Controls,  Prev: Changing One Sound,  Up: Sounds And Space
+
+6.8.3 Change A Blank-Line Tone
 ------------------------------
 
-Navigate onto a blank line so its feedback enters history.  Open ‘C-e H
-H’, select that blank-line record, and press ‘C’.  Choose _Change a
-tone_, select the tone, then choose a named tone or explicit pitch in
-Hertz and duration in milliseconds.  Compare ‘O’ and ‘P’.  Review the
-matching facts before choosing lifetime and applying.
+This changes a tone already present in recorded blank-line feedback.
+The available actions depend on what your integration actually produced.
 
-   If that record contains a cue instead of a tone, the tone choice is
-absent.  Use _Explain_ to see which rule supplied the cue; a guided
-change can suppress that cue, and a second change can add a tone.  The
-interface reports the actual presentation rather than assuming every
-visually blank line uses the same feedback.
+  1. Navigate onto a blank line, then open ‘C-e H H’.  Select that
+     feedback record and press ‘C’.  Select its part if the record has
+     several.
+  2. Press ‘c’ and choose _Change a tone_.  Select the tone, choose
+     _Pitch and duration_, then enter ‘500’ Hertz and ‘80’ milliseconds
+     as a trial.  If the tone was between other components, choose
+     _Before the other feedback_ when asked about replacement placement.
+     The summary includes this movement; inspect it along with the pitch
+     and duration.
+  3. Compare ‘O’ and ‘P’.  The changed example should retain its other
+     content while changing that tone.  A named tone can be selected
+     instead of entering numbers.
+  4. Press ‘m’ to review the matching facts.  Press ‘l’ and choose _This
+     Emacs session_, review the summary, and press ‘a’.  Navigate onto
+     another matching blank line to hear the live result.
+  5. Restore the earlier behavior by disabling or deleting this session
+     rule in _Your feedback rules_.  It also expires when Emacs exits.
+
+   If the record contains a sampled cue instead of a tone, _Change a
+tone_ is absent.  Explain the record to identify the cue.  You can
+suppress it with one rule and add a tone with another; remove both rules
+to restore the original.  If no record was retained, check the history
+limit and repeat the action.  The interface cannot infer a missing
+component from a visually blank line.
+
+
+File: emacsvox.info,  Node: Spatial Presentation Controls,  Next: Personal Sound Packs,  Prev: Changing Tones,  Up: Sounds And Space
+
+6.8.4 Adjust Spatial Presentation
+---------------------------------
+
+From Home, open _Spatial capabilities_ under _Troubleshooting_ to
+inspect what the current backend reports for speech and cues.  Then open
+_Spatial settings_ under _Sounds and output_.  Speech and cues have
+separate enable controls.  Output can follow the backend capability or
+be declared mono.  Maximum separation ranges from zero (centered) to one
+(full separation); direction can stay normal, reverse left and right, or
+center some or all requests.
+
+   To try a gentler layout, note the existing maximum separation, set it
+to ‘0.3’ with Customize's _Apply_ action, and repeat feedback that
+already requests spatial placement.  Stereo headphones make left/right
+differences easier to compare.  If all feedback remains centered, use
+Explain to check that the presentation requests placement and inspect
+the reported capability.  A sample with no spatial request cannot
+demonstrate this setting.
+
+   For a centered comparison, temporarily select _Mono output_, apply,
+and repeat the same action.  Content should remain audible.  Restore the
+values you noted when finished.  Use Customize's save action or capture
+the spatial choices in a Presentation Profile to retain an intentional
+change across restarts.  These controls govern presentation placement; a
+voice's explicit Pan effect and notification-device routing are separate
+settings.
+
+
+File: emacsvox.info,  Node: Personal Sound Packs,  Prev: Spatial Presentation Controls,  Up: Sounds And Space
+
+6.8.5 Inspect And Maintain A Personal Sound Pack
+------------------------------------------------
+
+In the sound-pack manager, ‘o’ opens the pack directory and ‘g’ rescans
+and refreshes discovered resources.  For a discovered personal pack, ‘e’
+offers guided metadata editing: summary, parent, coverage profiles, and
+default spatialization.  Registered built-in packs are read-only in this
+editor.  Editing metadata saves it; this is not an unsaved voice-style
+draft.
+
+   A pack's _coverage profiles_ declare sets of cues it intends to
+supply.  They are validation requirements, not Presentation Profiles
+that select your working setup.  Native assets belong to the pack;
+effective assets also include inherited and fallback cues.  Validation
+and individual cue details explain that distinction.
+
+   The manager does not record or edit audio, and it has no New
+Palette-style sound-pack creator.  Preparing a new pack requires its
+audio files and resource metadata.  See *note Authoring Sound Packs:
+(emacsvox)Authoring Sound Packs. in the Developer Guide; for an ordinary
+change to when a cue plays, use _Change this feedback_.
 
 
 File: emacsvox.info,  Node: Aural Speech Output,  Next: Presentation Profiles,  Prev: Sounds And Space,  Up: Aural Presentation
@@ -3521,20 +3971,67 @@ profile selecting it.  A profile is therefore a convenient selection of
 settings, not a backup.  Profiles do not capture engine policy, speech
 rate, or notification output.
 
-   Profiles do not copy presentation rules.  Edit rules in Presentation
-Options or Overrides.  They also do not capture buffer-local Voice Lock
-state or current-buffer rules, because those belong to an individual
-buffer rather than a global setup.
+   Profiles do not copy presentation rules.  Edit rules through
+Presentation Options or _Your feedback rules_.  They also do not capture
+buffer-local Voice Lock state or current-buffer rules, because those
+belong to an individual buffer rather than a global setup.
 
 * Menu:
 
+* Walkthrough Switch Reading And Working Setups: Presentation Profile Walkthrough.  Save two selections, switch between them, and understand shared resources.
 * Choose What Persists: Saving And Startup.  Distinguish previews, drafts, saved resources, activation, and startup.
 * Export, Back Up, And Import Palettes: Sharing Voice Palettes.  Share portable voices or retain local choices in a backup.
 
 
-File: emacsvox.info,  Node: Saving And Startup,  Next: Sharing Voice Palettes,  Up: Presentation Profiles
+File: emacsvox.info,  Node: Presentation Profile Walkthrough,  Next: Saving And Startup,  Up: Presentation Profiles
 
-6.10.1 Choose What Persists
+6.10.1 Walkthrough: Switch Reading And Working Setups
+-----------------------------------------------------
+
+This example saves two profiles with different voice or sound
+selections.  Use unused names and note the profile selected before
+starting.
+
+  1. Open ‘C-e H P’.  If you want a restore point for the current
+     selected options and resources, press ‘N’ and save ‘before-demo’
+     with a short purpose.  This captures those selections and makes the
+     new profile selected.  It does not back up rules, resource
+     definitions, or engine settings.
+  2. From Home, activate the voice palette and sound pack you want for
+     reading.  Enable any desired Presentation Options and choose
+     spatial settings.  Return to Profiles and press ‘N’ to save
+     ‘reading-setup-demo’.
+  3. Choose a different palette or sound pack for working, then save
+     another new profile named ‘working-setup-demo’.  Both profiles
+     should show their selected resources in the list.  ‘RET’ describes
+     a profile's saved fields.
+  4. Select ‘reading-setup-demo’ and press ‘a’ to apply it.  Check the
+     active palette and sound pack in Home, then repeat familiar
+     feedback.  Select ‘working-setup-demo’ and apply it to compare the
+     two setups.
+  5. Change one live option without updating the profile.  The selected
+     profile now reports _Diverged_.  Press ‘a’ on it to restore its
+     saved settings, or ‘w’ if you intend to replace its saved values
+     with the current ones.  Read the confirmation before discarding
+     live differences.
+  6. Applying a profile also saves its selection for future sessions.
+     Finish on the profile you want at startup.  To restore the earlier
+     setup, apply the original profile or ‘before-demo’.  Delete
+     unwanted demonstration profiles with ‘d’ only after selecting the
+     one you want to retain.
+
+   If both profiles select ‘reading-demo’, later edits to that palette
+affect both profiles.  For independently adjustable voices, first use
+_Copy Palette_ and select different palettes in the two profiles.  A
+profile's _Copy_ action copies selections, not the selected resources.
+To change only the startup palette while preserving the profile's other
+saved fields, use ‘U’ in Voice Palettes instead of capturing all current
+settings again.
+
+
+File: emacsvox.info,  Node: Saving And Startup,  Next: Sharing Voice Palettes,  Prev: Presentation Profile Walkthrough,  Up: Presentation Profiles
+
+6.10.2 Choose What Persists
 ---------------------------
 
 These actions answer different questions:
@@ -3561,7 +4058,7 @@ turn these temporary rules or unfinished drafts into permanent settings.
 
 File: emacsvox.info,  Node: Sharing Voice Palettes,  Prev: Saving And Startup,  Up: Presentation Profiles
 
-6.10.2 Export, Back Up, And Import Palettes
+6.10.3 Export, Back Up, And Import Palettes
 -------------------------------------------
 
 For sharing, ‘w’ exports effective portable entries and asks before
@@ -3572,6 +4069,21 @@ palette under an unused name; it does not replace the original ancestry
 tree or activate the imported palette.  Missing installed voices are
 reported and retained for later replacement.  A partial import keeps its
 proposal available for Retry or Discard.
+
+   For example, select ‘reading-demo’ in Voice Palettes and press ‘w’ to
+export a portable file.  Review any omitted local choices.  Import that
+file with ‘i’ under an unused name such as ‘reading-import-demo’.  Enter
+the imported palette and preview its voices before activating it.  A
+retained unavailable choice is a request to review, not evidence of
+successful audio.  Delete the imported copy when finished if no
+profiles, children, or rules need it.  The original palette is unchanged
+by this trial.
+
+   Use uppercase ‘W’ when the aim is to retain exact local choice data
+with the required palette ancestry.  Importing that backup still creates
+a new, independent palette; it does not overwrite the original tree.
+Neither form contains speech engines or sound-pack audio, and a palette
+backup is not a backup of every Emacsvox setting.
 
 
 File: emacsvox.info,  Node: Presentation Troubleshooting,  Next: Voice Lock,  Prev: Presentation Profiles,  Up: Aural Presentation
@@ -3585,7 +4097,7 @@ Symptom                         First action
 The current object sounds       Press ‘C-e E’ and inspect the strongest
 wrong or too verbose            matching rule.
 Something heard earlier was     Open Recent Aural Feedback and explain
-wrong                           its frozen record.
+wrong                           its recorded presentation.
 A broad optional behavior is    Inspect Presentation Options and
 unwanted                        preview or disable the matching option.
 One narrow exception is         Open Your feedback rules, preview it,
@@ -3611,6 +4123,30 @@ repair, press ‘r’ on that row to run it.
 speech itself is absent rather than merely presented incorrectly, follow
 *note Backend Diagnostics And Responsibilities: Backend Diagnostics And
 Ownership.; presentation diagnostics assume that a speech route can run.
+
+   If an adjustment appears to do nothing, check in this order:
+
+  1. Is the palette containing the edit active?  Saving to the
+     collection alone does not select it.  A retained draft is not a
+     saved voice.
+  2. Does the item actually use that named voice?  Explain it with ‘C-e
+     E’.
+  3. Does the physical choice that played have an individual adjustment
+     masking the shared one?  Inspect _Fallbacks_ and the last sample's
+     result.
+  4. Does a matching contextual rule replace that field?  In the voice
+     editor, inspect _Effective sound / Where settings came from_.
+  5. Does the engine support the requested adjustment?  Check the
+     reported unsupported fields and compare samples on an available
+     supported voice.
+
+   If speech uses another engine, first check explicit choices in the
+named voice: they outrank the shared preferred-engine setting.  Then
+inspect engine availability, disablement, and failure information.  A
+missing custom voice name is a configuration error.  Ordinary speech
+preserves the text using an unstyled voice and records a diagnostic; it
+does not invent the missing palette entry.  Doctor and Explain help
+locate the unresolved reference.
 
 * Menu:
 
@@ -3642,7 +4178,7 @@ configuration.  If an Omnivox apply times out, the Workbench reports
 _server outcome unconfirmed_.  Emacsvox stops that apply and sends no
 later steps, but changes already sent may still take effect on the
 server.  A timeout does not undo the saved engine settings or confirm
-that the server rejected it.  Press ‘r’ to reapply the saved engine
+that the server rejected them.  Press ‘r’ to reapply the saved engine
 settings and obtain a fresh result.  Save or cancel any newer staged
 edits before retrying.  A partial result retains the streams that
 acknowledged success and identifies those that timed out.
@@ -3665,8 +4201,8 @@ Policy               What it controls               How to inspect or
                                                     change it
 Semantic             Rules based on roles,          Use ‘C-e E’,
 presentation         events, states, and            Presentation
-                     attributes supplied by         Options, and
-                     integrations.                  Overrides.
+                     attributes supplied by         options, and Your
+                     integrations.                  feedback rules.
 Explicit face        Aural rules that               Run
 presentation         deliberately match a named     ‘emacsvox-aural-toggle-face-presentation’
                      Emacs face.                    or inspect it in
@@ -5862,988 +6398,3 @@ time.
 
      *Immediately* set an alias in the TTS server mapping for example
      "en" to "en_GB". This can later be used by set_lang.
-
-
-File: emacsvox.info,  Node: Integration Maintenance,  Prev: Speech Server Protocols,  Up: Developer Guide
-
-16.3 Integration Maintenance
-============================
-
-This chapter collects source-level contracts that are deliberately
-omitted from the user task guides.  Optional package APIs and renderers
-evolve, so recheck the upstream interfaces and keep compatibility
-behavior bounded when changing an integration.
-
-16.3.1 Source checkout and byte-code lifecycle
-----------------------------------------------
-
-Use the Emacs selected by the ignored repository-local ‘local.mk’.  When
-Emacs 30.2 or newer is not the system ‘emacs’, set its absolute path
-there:
-
-     EMACS=/path/to/emacs-31/bin/emacs
-
-   Run ‘make check-emacs’ before diagnosing compilation.  After an
-ordinary Lisp edit, use the incremental build:
-
-     make bytecode
-
-   After switching branches, pulling changes, or changing a macro or
-public interface, use:
-
-     make bytecode-rebuild
-
-   That target removes ignored generated ‘.elc’ files and recompiles
-them with the selected Emacs; it does not clean or discard source
-changes.  ‘make bytecode-check’ is the non-mutating preflight for
-startup or deployment.  It reports missing, stale, orphaned, or
-wrong-Emacs byte-code.
-
-   Each ‘make config’ fully regenerates ‘lisp/emacsvox-loaddefs.el’ from
-the current sources, including edited autoloads, new modules, and
-deleted modules.  The build targets ‘make bytecode’, ‘make
-bytecode-rebuild’, ‘make emacsvox’, and ‘make all’ run configuration
-before compiling; ‘make compat-test’ runs it before testing.  The
-portable command ‘emacs -Q --batch -l etc/configure-emacsvox.el’ uses
-the same full regeneration.  Saving a source file or starting Emacs does
-not regenerate autoloads.  Neither ‘make bytecode-check’ nor ‘make
-docs-release-check’ does so.  Regenerating the index alone does not
-force all modules to be recompiled.
-
-   Tests deliberately prefer source and therefore do not prove that the
-byte-code used by a live profile is current.  Verify rebuilt byte-code
-in a fresh Emacs rather than relying on a file reload when compiled
-dependants may already be resident.
-
-   During development, load the changing setup source explicitly:
-
-     (load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
-
-   The setup entry point warns and prefers source when newer Lisp would
-otherwise be hidden by stale local byte-code.  In a stable checkout with
-current ‘.elc’ files, ‘(load-library "emacsvox-setup")’ may be used.  Do
-not use ‘load-library’ as the first load after editing the source tree:
-Emacs can select an old ‘emacsvox-setup.elc’ before the newer source
-checker runs.
-
-  1. Background startup ownership and failure recovery
-
-     ‘emacsvox’ starts two named background tasks: ‘core-advice’ loads
-     core command feedback and ‘package-preparation’ registers optional
-     package adapters.  The private task registry retains each thread,
-     state, start/end times, and original error for the Emacs session.
-     Repeated startup reuses these records, including completed and
-     failed tasks, instead of starting duplicate background work.  Other
-     startup effects, including speech-server initialization, still run
-     when ‘emacsvox’ is called again; this is not a general-purpose
-     retry command.
-
-     Registration completion is separate from adapter loading.  An
-     already-loaded package triggers its adapter immediately; another
-     package gets a deferred load callback.  Each package/adapter pair
-     is registered once.  Both load paths record failures without
-     aborting later registrations.  Failed or completed adapters are not
-     automatically retried on another package load.  User quit is
-     recorded and still propagates.  Source fallback from the setup
-     guard is preserved in both background tasks and deferred callbacks.
-
-     ‘M-x emacsvox-startup-status’ speaks a summary and selects a Help
-     report with task durations and original adapter errors.  Calling
-     ‘emacsvox-startup-status’ from Lisp returns the summary without
-     speech or a window.  Failures also issue a warning and attempt a
-     notification in interactive Emacs; retained records remain
-     available if either feedback path fails.  Successful completion
-     adds no new unconditional announcement.  The protocol and routing
-     checkpoints defined in the startup ADRs retain their separate
-     meanings; task completion does not declare the speech server ready,
-     or establish that every adapter has loaded.
-
-     Correct the reported cause and verify in a fresh session,
-     rebuilding changed Lisp first.  A failed adapter can leave partial
-     advice or hooks: error isolation does not roll those effects back.
-     Do not clear private ownership tables as a retry mechanism, since
-     deferred callbacks can still refer to their records.  Retain error
-     details, selected Emacs version, and phase durations when
-     debugging.  Background scheduling is preserved; these records do
-     not guarantee that core advice finishes before the first input
-     command, and batch timings do not measure interactive startup
-     latency.
-
-     The focused tests exercise real deferred loads, failure isolation,
-     task reuse, source fallback, and spoken status with speech
-     intercepted.  Check source with the selected Emacs using
-     ‘test/emacsvox-startup-tests.el’.  For fresh compiled parity, first
-     run ‘make bytecode-check’, then set
-     ‘EMACSVOX_STARTUP_TEST_LOAD=compiled’ when loading the same test
-     file in a new batch Emacs.  This selects ‘emacsvox.elc’ explicitly;
-     it does not make every test dependency compiled.  Audible diagnosis
-     and real startup latency still need an isolated interactive
-     session.
-
-  2. Supported Emacs versions
-
-     The Lisp runtime and all platform routes support Emacs 30.2 and
-     newer.  Run ‘make compat-test’ for the core compatibility contracts
-     without installing third-party packages.  CI builds all maintained
-     modules and runs this gate on Emacs 30.2 and 31.1.  The full ‘make
-     test’ suite additionally requires the optional integration
-     packages, including ‘lua-mode’ on Emacs 30.
-
-     The separate core speech CI job runs ‘make core-test’, ‘make
-     trace-test’, and ‘make compiled-aural-test’ on both versions with a
-     private home directory.  It covers speech, voice configuration,
-     transport, Voice Workbench, startup, and golden speech traces
-     without optional Emacs packages.  It requires GNU Make, Git, a
-     POSIX shell, and Tcl (‘tclsh’); missing prerequisites fail before
-     the core tests run.  The fresh CI checkout exercises source,
-     followed by an isolated compiled Aural check.  Optional integration
-     suites remain outside this job.
-
-     The separate integration CI job runs Agent Shell, Notmuch, and EAT
-     tests on both versions with a private home directory and six
-     reviewed dependency snapshots.  ‘make test-deps’ verifies the
-     archive hashes in ‘test/integration-dependencies.json’ and stages
-     sources and autoloads under ignored ‘.test-deps/’; it never changes
-     personal packages.  ‘make integration-test’ verifies that prepared
-     tree before loading it and fails on missing dependencies or skipped
-     tests.  Pin updates require upstream review, new archive hashes,
-     and fresh preparation for both Emacs versions.  These source tests
-     capture speech events and exercise disposable EAT subprocesses;
-     they do not replace listening tests or compiled integration checks.
-     See ‘test/README.org’ for preparation checks, directory overrides,
-     recovery, and coverage boundaries.
-
-     Keep each Emacs version's build in a separate checkout; never reuse
-     ‘.elc’ files across versions.  All platforms, including native
-     Windows x64, use this minimum.  The documentation toolchain retains
-     its independent pin.
-
-  3. Native Windows builds
-
-     Use a separate checkout on a Windows drive.  The native installer
-     regenerates autoloads and all modules from the ‘lisp/Makefile’
-     inventory with the selected Windows Emacs.  Its launcher verifies
-     that byte-code in a fresh process.  Do not share generated
-     byte-code with a WSL checkout using another Emacs.
-
-     Run the native installer checks from that Windows checkout:
-
-          .\test\emacsvox-windows-install-tests.ps1 -Emacs "C:\path\to\emacs.exe"
-          .\bin\emacsvox-install.ps1 -Role Desktop -Check
-          .\bin\emacsvox-install.ps1 -Role Desktop
-          .\bin\emacsvox.ps1 -Check
-
-     The PowerShell tests use temporary fixtures and an existing native
-     Emacs.  They check doctor behavior, explicit selections, incomplete
-     installations, platform rejection, checksums, archive paths,
-     argument handling, and atomic configuration replacement.
-     ‘test/emacsvox-native-bytecode-tests.el’ compares the native
-     inventory with GNU Make and checks dependency order and byte-code
-     preflight failures.  Keep the WSL x64/ARM64 and remote installer
-     tests passing.
-
-     Actual acquisition acceptance must start with a private toolchain
-     and the pinned archives, not a reused developer runtime.  Keep
-     MSYS2 package versions, compiler/configure/build/install logs, and
-     ‘emacsvox-build.json’ with the installed Emacs.  The installation
-     logs also include ‘native-install-provenance.json’ with Lisp source
-     hashes and selected pins.  MSYS2 packages are signed rolling
-     inputs; these records do not claim a frozen or bit-identical
-     compiler environment.  Verify fresh graphical startup, acknowledged
-     routing, and tracked completion on both speech lanes with a PATH
-     that contains neither WSL nor MSYS2 tools.  Human listening remains
-     a separate acceptance step.  Native Windows x64 is supported;
-     remote workstation speech remains preview, as recorded in ADR 0014
-     (../adr/0014-native-windows-support.org).
-
-  4. Remote preview validation
-
-     Keep remote installer fixtures separate from connected acceptance.
-     In the Omnivox checkout, run ‘make dev’ followed by ‘make
-     remote-test’; set ‘OMNIVOX_REMOTE_TEST_SLOW=1’ to cover heartbeat
-     expiry.  Set ‘OMNIVOX_REMOTE_TEST_EMACS’ to the selected Emacs and
-     ‘OMNIVOX_REMOTE_TEST_EMACSVOX’ to the matching Emacsvox checkout
-     for client acceptance.  The Omnivox ‘docs/REMOTE.md’ guide records
-     Windows relay tests, real-device options, and retained evidence.
-     Null-output tests do not establish audible playback or acceptance
-     through a separate SSH host.  Remote access remains preview
-     independently of native Windows desktop support.
-
-16.3.2 Debian package builds
-----------------------------
-
-‘make deb’ builds a local development package in ‘dist/’ using Python 3,
-‘dpkg-deb’, Git and the selected Emacs.  It stages runtime sources and
-generates autoloads in a private directory, preserving checkout
-byte-code and personal configuration.  The deb has architecture ‘all’,
-an Emacs 30.2 dependency (including terminal and graphical
-alternatives), and an Omnivox recommendation.  It loads source and does
-not install emacsen-common hooks or compile on install.  The ownership
-and release boundaries are recorded in ADR 0013
-(../adr/0013-debian-package.org).
-
-   ‘make deb-test’ checks the actual archive, reproducibility, source
-startup, remote diagnosis, dependency metadata and refusal of an
-unprepared release.  CI additionally installs, reinstalls and purges the
-package in a disposable Ubuntu 26.04 container using
-‘test/debian-install-smoke.sh’.  It uploads the development deb and
-checksum as CI artifacts, without publishing a release.
-
-   After preparing the checked source archive using the release
-procedure below, ‘make release-deb’ produces
-‘dist/emacsvox_VERSION-1_all.deb’ and its checksum.  The script itself
-verifies the existing clean-source artifact gate before and after
-packaging.  Local versions instead contain ‘+git’ with the source commit
-and source hash, and revision ‘-0local1’.  The included
-‘BUILD-INFO.json’ records the exact source identity and autoload Emacs
-version.  Neither package target creates a tag, uploads release assets,
-adds an apt repository or changes the manual release publication
-approval boundary.
-
-   After a maintainer publishes a stable GitHub release, the Release
-Debian package workflow checks out its exact annotated tag and downloads
-the source archive, checksum and provenance from that release.  It
-checks the source identity, installs from the archive, builds the
-release deb, and tests install, startup, reinstall and removal in Ubuntu
-26.04 before attaching the deb and checksum.  Build jobs have read-only
-repository access; only the attachment job can write release assets.  A
-rerun accepts identical existing assets and refuses to replace different
-files.  CI does not create tags or releases.
-
-   This workflow uses Emacs 30.2 for autoload generation; its recorded
-toolchain can differ from a locally prepared package.  Let CI attach the
-release deb instead of uploading a differently built local package with
-the same name.
-
-16.3.3 Emacsvox release staging and publication
------------------------------------------------
-
-The repository-level ‘VERSION’ file is the canonical stable release
-identifier.  Calendar-versioning policy, including delayed patches and
-backports, is recorded in ADR 0002
-(../adr/0002-calendar-versioning.org).  When advancing a release, update
-‘VERSION’, the literal package header in ‘lisp/emacsvox.el’, and the
-current heading in ‘etc/NEWS’ together, then run:
-
-     make version-check
-
-   Between releases, ‘etc/NEWS’ uses the ‘Emacsvox Unreleased’ heading,
-so changes can be recorded before deciding whether the next publication
-is a patch or a new feature-release series.  After publishing, preserve
-those notes verbatim as ‘etc/NEWS-VERSION’ and start a new unreleased
-file.  Ordinary ‘version-check’ accepts that state; ‘release-check’,
-‘release-tag’, and ‘release-publish’ require the current NEWS heading to
-match ‘VERSION’ exactly.
-
-   Prepare an artifact only from a separate clean, committed worktree.
-Build fresh byte-code and run the guarded artifact target:
-
-     make bytecode-rebuild
-     make release-artifact
-
-   ‘release-artifact’ runs the complete test and documentation gates
-before creating ‘dist/emacsvox-YYYY.MONTH.PATCH.tar.bz2’, its SHA-256
-checksum, and a provenance record naming the checked source commit.  For
-a patch-zero feature release, the series must match the current month.
-A corrective or backport release retains its original non-future series
-as required by ADR 0002.  The source archive includes the maintained
-‘utils/’ tools needed by the installers, launchers and build.  Before
-recording checked provenance, the artifact target extracts the actual
-archive into a temporary directory and runs the remote-only installer
-with the selected Emacs in a private home.  It checks fresh compiled
-startup, the offline manual and the remote helper's credential
-validation without opening a workstation connection or playing speech.
-‘make source-archive-check’ repeats this check on an existing archive;
-‘make source-archive-test’ checks export contents and rejection of
-missing helpers, local configuration and byte-code.  CI runs both checks
-before a release as well.  On native Windows, run
-‘test/emacsvox-source-archive-tests.ps1 -Archive PATH -Emacs PATH’ to
-check the actual archive's installer doctor, complete native compilation
-and fresh byte-code validation in a temporary Windows directory.
-
-   Inspect the archive, checksum, and provenance before proceeding.
-
-   Stop after artifact inspection unless fresh explicit permission names
-the release to be tagged and published.  Preparing an artifact,
-committing or pushing a branch, publishing documentation, or receiving a
-general instruction to continue is not permission to create or push a
-release tag.  Once that separate authorization has been given, the
-guarded commands are:
-
-     make release-tag
-     make release-publish
-
-   ‘release-tag’ validates the artifact against the still-clean ‘HEAD’
-and creates a local annotated, unsigned tag; it does not push the tag.
-The unsigned-tag policy and its trust boundary are recorded in ADR 0006
-(../adr/0006-annotated-unsigned-release-tags.org).  ‘release-publish’
-repeats the artifact and source-commit validation, pushes only that
-exact tag, and creates the GitHub release in the repository identified
-by ‘RELEASE_REMOTE’.  This explicit selection prevents the GitHub CLI
-from choosing an ‘upstream’ remote when releasing from a fork.  No
-release target pushes ‘master’ or the documentation branch.  Use ‘make
-release-check’ alone when a non-mutating preflight is wanted without
-creating an artifact.
-
-16.3.4 Future Aural contract decisions
---------------------------------------
-
-The completed Aural implementation diary is preserved under
-‘archive/emacsvox/migrations/’ rather than serving as current
-instructions.  Three questions from that diary remain deliberately
-undecided and require an explicit architecture decision before
-implementation:
-
-   • whether a critical alert may be completely suppressed or must
-     retain an alternative presentation;
-   • which deterministic ordering policy would apply before minor-mode
-     selectors can participate in the presentation cascade; and
-   • whether a new presentation occasion belongs to the core semantic
-     contract or to a module-owned extension.
-
-   Do not infer answers from the archived proposals.  Current behavior
-is defined by the Aural implementation, its generated reference, and
-accepted ADRs.
-
-16.3.5 Voice-style metadata ownership
--------------------------------------
-
-The private ‘emacsvox-aural--voice-style-fields’ table in
-‘lisp/emacsvox-aural-rules.el’ owns accepted field names, groups, value
-types, and integer bounds.  The existing public dimension lists and
-private accepted key list are derived from it; validation traverses the
-descriptors directly.  Composition and provenance continue to consume
-the accepted-key inventory.
-
-   Keep the two established orders explicit.  Validation checks preset,
-family, the four numeric ACSS fields, post-synthesis fields, relative
-rate, and legacy rate.  The accepted-key inventory places relative and
-legacy rate before the post-synthesis fields.  ACSS dimension order also
-determines positional legacy personality settings, and rich dimension
-order determines adjustment rows.
-
-   Every accepted field allows ‘nil’.  Validation preserves the original
-plist, including duplicate fields, for which the first value is used.
-Field absence, explicit ‘nil’, and zero remain distinct during
-composition and persistence.  Legacy ‘:rate’ is accepted for loading
-saved data but is not applied as a new rate; nonzero legacy values
-produce the existing retuning degradation.  The table supplies no
-implicit defaults and does not declare engine support.
-
-   An explicit ‘nil’ over a preset is a compatibility behavior to
-characterize, not an authoring decision settled by the metadata table.
-For example, the current compiler clears the reported average-pitch
-value for ‘(:preset base :average-pitch nil)’ while retaining the base
-voice command and emitting no pitch-reset command.  The tests preserve
-this distinction.  A future inheritance, omission, or reset policy needs
-a separate decision.
-
-   Compiler conversion, backend wire names, capability discovery,
-normalization, and delivery stay in their existing owners.  When adding
-a field, update those consumers explicitly and test final serialized
-output or an explicit degradation.  The common voice editor uses the
-shared field metadata for bounds and neutral values.  It covers portable
-ACSS and optional rate and post-synthesis adjustments in the same
-retained draft.
-
-   Input grammar remains UI policy.  In the common voice editor, blank
-numeric entry requests the adapter default; zero is explicit.
-Individual choice fields distinguish shared inheritance, custom values
-and explicit adapter defaults.  Rule-editor input has its own scoped
-inheritance semantics; do not substitute one editor's blank-input
-behavior for the other's.
-
-   The common editor displays low-pass and high-pass as amounts from
-zero through nine, increasing with stronger filtering.  Low-pass
-converts between amount and stored cutoff with ‘9 - value’; high-pass
-retains its numeric direction.  Zero is labelled neutral.  Stored
-cutoffs and adapter-default nil retain their meaning.  Invalid boundary
-steps must fail before history, dirty state, refresh or audition
-changes.
-
-   Delivery preparation has the limited helper boundaries described
-below; asynchronous operation ownership remains a separate refactoring
-proposal.
-
-   The rule tests state field inventories, bounds, error precedence, and
-composition expectations independently of the metadata.  Scheme tests
-cover saved rich palettes and explicit-nil rules; transport tests check
-distinct ACSS mappings, zero and omitted wire fields, effects, and
-preset behavior.  ‘make compiled-aural-test’ also runs these style
-contracts with the isolated compiled subsystem loaded, checking that the
-implementations stay in that build.  The ‘voice-style-ui’ tests exercise
-common-editor entry, inherited reset and draft retention in source and
-compiled runs.  Editor tests also cover numeric bounds, explicit
-defaults, undo and comparison.  They capture auditions and do not start
-audio.  The connected saved-style regression edits a custom ‘bolden’,
-reads its saved data back, and compares common-editor and Workbench
-previews with the final normal-speech wire for ‘voice-bolden’.
-Workbench uses the compiler's palette resolution and the shared effect
-normalizer: gain and pan level five must remain exactly neutral at 0.5.
-Preserve both this path and the independently specified Workbench scale
-cases when changing preview or palette lookup.  Preserve final-write,
-timeout, reentrancy, and trace regressions when working on later
-delivery slices; metadata validation alone cannot establish process
-lifecycle or audible behavior.
-
-16.3.6 Timeline preparation boundaries
---------------------------------------
-
-Two private helpers in ‘lisp/emacsvox-aural-transport.el’ make
-preparation inputs explicit.
-‘emacsvox-aural--timeline-effect-transition’ takes previous effects,
-normalized next effects, and a span ID, returning a directive and the
-next state.  Replacement copies the saved state separately from the
-directive; retention preserves the previous state.  The builder still
-owns the state accumulator, span numbering, and when normalization runs.
-Suppressed or empty content does not advance effects, while spoken
-boundary actions do.
-
-   ‘emacsvox-aural--encode-timeline-delivery-fields’ takes a policy and
-replacement key.  The existing
-‘emacsvox-aural--timeline-delivery-fields’ wrapper reads the dynamic
-submission variables at the end of timeline construction.  Preserve that
-capture point: resource resolution earlier in construction can re-enter
-Lisp and change the submission state.  The serializer preserves ordered
-defaults, key conversion, circular printing, diagnostics, and byte
-bounds.
-
-   The complete builder is not pure.  Cue resolution through
-‘omnivox-remote-resource’ may perform I/O; relative-rate support comes
-from the live speech process.  Those operations, action placement,
-dispatch registration, framing, fallback, and process writes retain
-their existing owners and sequence.  Separating a complete delivery
-candidate from those effects requires further design and failure-path
-characterization.
-
-   The ‘delivery-preparation’ tests in
-‘test/emacsvox-aural-transport-tests.el’ check complete serialized
-timelines and final writes, semantic bindings, state ownership, policy
-inputs, and capture timing.  The compiled Aural gate also runs these
-contracts and existing stop and send-failure regressions with the
-compiled implementation resident.  Keep the full failure, reentrancy,
-and golden-trace suites as regression checks; captured writes establish
-protocol behavior, not audible playback.
-
-16.3.7 Aural interface source ownership
----------------------------------------
-
-Ordinary-buffer entry captures a source buffer, a marker, and a guarded
-source line.  Child interfaces and Help inherit that context through the
-inspection and shared UI helpers.  Use
-‘emacsvox-aural-inspection-call-in-source’ for contextual commands so
-that moving the source cursor does not retarget an open interface.
-Re-entry from an ordinary buffer deliberately captures a new target.  A
-dead or replaced source is reported rather than resolved through an
-unrelated recent-buffer fallback.
-
-   Current-item lookup may reuse a frozen history record only when the
-captured source identity, position, and modification tick still match.
-Source identity is a buffer-local, data-only token that distinguishes
-buffers sharing a name; history continues to retain no buffer objects or
-markers.  Explicit historical selection remains valid after the source
-changes and is explained from its frozen plan.  Prepared current-item
-rules carry a source guard checked before their saved or live rule layer
-changes.
-
-   Find rule editors by scope and target identity, not by a formatted
-buffer name.  Buffer scopes belong to buffer objects, fragment scopes to
-fragment identifiers, and personal/session scopes each share one working
-editor.  Reopening a dirty editor preserves its draft and source
-association.
-
-16.3.8 Remote speech recovery
------------------------------
-
-Ordinary ‘tts-initialize’ startup schedules the existing remote retry
-when main speech starts but a configured notification connection fails.
-The scheduler respects ‘omnivox-remote-auto-reconnect’, explicit
-suspension, and its single pending timer.  The retry restores only
-missing lanes; it keeps a working main process and negotiates fresh
-configuration for the new notifier.  ‘omnivox-remote-disconnect’ cancels
-the timer and suspends even a retry callback that has already been
-dispatched.  Local speech and disabled notification streams do not start
-remote recovery.  Exercise these boundaries in
-‘test/omnivox-remote-tests.el’ with controlled connection failures and
-timers.
-
-16.3.9 Omnivox voice configuration applies
-------------------------------------------
-
-‘omnivox-apply-voice-configuration’ captures one generation and its
-definitions for the original speech processes.  Applies may overlap.
-Each owns its request identifiers and retires only those callbacks when
-a process result becomes terminal.  Acknowledging routing precedes
-logical registration; one aggregate reports applied, partial, or failed
-after all participating processes finish.
-
-   The timeout closes pending results as failed with phase ‘timeout’,
-cancels the timer, and releases the apply's pending callbacks.  A late
-acknowledgement cannot start another phase, update acknowledged
-configuration, or publish a second terminal result.  A reply from a
-stopped or replaced process also cannot advance its old apply.  Request
-ownership must remain correct when replies are dispatched while a send
-is still returning.
-
-   This closes client work; it cannot undo a change already sent to the
-server.  The Workbench therefore describes a timeout as an unconfirmed
-server outcome and offers reapplication of the committed profile.  No
-late-reply history is retained for expired applies.  Keep request-table,
-late-reply, overlapping-apply, and replacement regressions in
-‘test/emacsvox-tts-tests.el’ and spoken timeout feedback coverage in
-‘test/emacsvox-aural-voice-workbench-tests.el’.
-
-16.3.10 Notmuch contracts
--------------------------
-
-The live module is registered as an optional package integration.  Its
-stable extension points are the Hello, Search, Show, and Tree mode
-hooks; Search and Show mode maps; public interactive commands; and
-public Search/Show accessors.  Advice is installed only when a target
-exists and is target-aware, so a nested or programmatic upstream call
-does not claim the outer user's feedback.
-
-   The Show landing and visibility paths also read renderer metadata
-such as ‘:headers-overlay’, ‘:message-visible’, message extents,
-‘:notmuch-part’, part-hidden state, and Notmuch part-button types.
-Missing optional metadata should reduce presentation detail rather than
-authorize an operation.  Review these adapters whenever the Notmuch
-renderer changes.
-
-   Each user-owned asynchronous Search process carries its own
-completion state as a process property.  The upstream sentinel renders
-first; Emacsvox then clears that property before delivering exactly one
-terminal result.  The owning buffer and process status are
-authoritative.  A killed owner remains silent, concurrent buffers cannot
-overwrite one another, and the global refresh-all path intentionally
-acquires no ownership.
-
-   Run ‘make notmuch-test’ for the explicit source suite.  After current
-byte-code exists, run ‘make compiled-notmuch-test’; it verifies the
-exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
-focused selector, including real displayed-window reading for both
-advance paths.
-
-16.3.11 Agent Shell contracts
------------------------------
-
-Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
-deliberately disabling them or while testing live integration changes.
-
-  1. Internal ownership and renderer tests
-
-     The main ‘lisp/emacsvox-agent-shell.el’ module requires the
-     internal ‘lisp/emacsvox-agent-shell-render.el’ module.  The
-     renderer module depends only on Emacs libraries, with no reverse
-     dependency on the main integration.  Its private helper names and
-     argument contracts remain available through the main module.
-
-     Owner                  Responsibilities
-     --------------------------------------------------------------------------
-     Renderer module        Interpret prompt faces and chat label strings,
-                            current and legacy status glyphs, semantic
-                            fragment provenance, decorative controls, answer
-                            body ranges, and legacy clipboard properties.
-                            Most helpers inspect supplied strings; fragment
-                            classification can also read the current buffer
-                            without changing it.
-     Main integration       Capture buffer and overlay context; apply user
-                            customization, speech limits, and delivery; own
-                            response accumulation, event subscriptions,
-                            timers, callback generations, navigation,
-                            permission handling, activation, and cleanup.
-
-     Renderer metadata supplies presentation and navigation facts; it
-     does not authorize permission responses or establish lifecycle
-     completion.  Status label customization stays with the main
-     integration.  Keep compatibility interpretation together in the
-     renderer module, and keep registration and speech side effects in
-     the main owner.
-
-     This is the first bounded separation of responsibilities.  Event
-     state, navigation and table commands, and permission handling still
-     share the main module.  Assess their private dependencies and
-     lifecycle contracts before considering another extraction; a
-     heading or a line count alone is not a reason to create a module.
-
-     The independent ‘test/emacsvox-agent-shell-render-tests.el’ suite
-     runs in the core and integration gates without needing optional
-     packages of its own.  It checks property-preserving copies,
-     compatibility renderings, group provenance, answer selection, and a
-     fresh module load without integration registrations.  With the
-     Emacs selected by ‘local.mk’, it can also run directly:
-
-          /path/to/emacs -Q --batch -L lisp \
-            -l test/emacsvox-agent-shell-render-tests.el -f ert-run-tests-batch-and-exit
-
-     Keep the existing Agent Shell integration tests alongside these
-     smaller contracts.  They exercise real pinned upstream renderers,
-     speech delivery, enable/disable, and buffer-death cleanup.  After
-     preparing the pinned dependencies with ‘make test-deps’, run source
-     and compiled parity checks:
-
-          make integration-test
-          make bytecode
-          make bytecode-check
-          EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled make integration-test
-
-     The environment setting selects the exact renderer and main
-     integration ‘.elc’ files in a fresh Emacs; other dependencies
-     retain the runner's source preference.  Without it, both modules
-     load explicitly from ‘.el’ sources.  The tests capture speech
-     events and do not establish audible playback.
-
-  2. Upstream contract layers
-
-     The integration uses three deliberately different contract layers:
-
-     Layer         Agent Shell owner           Emacsvox rule
-     ---------------------------------------------------------------------------
-     Public        ‘agent-shell-subscribe-to’, Primary authority for
-     structured    ‘agent-shell-unsubscribe’,  processing, completion,
-     API           ‘agent-shell-status’, and   errors, permission urgency,
-                   ‘agent-shell-shell-buffer’; and tool status.  The public
-                   lifecycle, permission,      turn boundary triggers
-                   and tool events             inspection of renderer-owned
-                                               response sections.  Event and
-                                               response data is treated as
-                                               untrusted content and bounded
-                                               before automatic Aural
-                                               submission.
-     Experimental  ‘agent-shell-ui-state’,     Feature-detected navigation
-     renderer      ‘agent-shell-ui-section’,   and presentation input.
-     metadata      rendered Markdown           Renderer group provenance
-                   table/source properties,    outranks provider-controlled
-                   and renderer-owned faces    IDs; prose and IDs cannot
-                                               manufacture structured
-                                               permission or lifecycle
-                                               authority.
-     Private       The aggregate               Kept in narrow adapter
-     compatibility ‘agent-shell--state’, the   functions for older Agent
-     fallback      legacy viewport ownership   Shell releases or incomplete
-                   resolver, viewport          renderers.  A missing optional
-                   position helpers, and       detail may reduce header or
-                   legacy face, prompt, or     navigation richness but must
-                   ID inference                not create a permission action
-                                               or completed response.
-
-     The lifecycle subscription currently consumes ‘init-started’,
-     ‘init-finished’, ‘session-selected’, ‘session-restored’,
-     ‘input-submitted’, ‘turn-complete’, and ‘error’.  Dedicated
-     subscriptions consume ‘permission-request’, ‘permission-response’,
-     and ‘tool-call-update’.  Add new semantic behavior at the public
-     event layer when Agent Shell exposes it; keep renderer and private
-     fallbacks isolated and covered by compatibility tests.
-
-     The lifecycle subscription also observes ‘config-option-update’.
-     Configuration snapshots suppress initial inventory and duplicate
-     callback/event confirmation.  Late tool details are compared only
-     for permissions established by a public ‘permission-request’ event,
-     and their snapshots are removed on resolution.
-
-     Current Agent Shell omits rendered Codex ‘rawOutput’ and textual
-     diffs from ‘tool-call-update’.  A narrow
-     ‘agent-shell--on-notification’ adapter joins that public event to
-     the body rendered during the same call, matching both the owning
-     buffer and qualified fragment ID.  Full tool speech is submitted
-     after rendering returns.  Output digests and lifecycle statuses are
-     tracked separately so late output is spoken without repeating
-     identical updates.  Renderer IDs without a matching public event do
-     not authorize tool feedback.
-
-     Until upstream exposes public steering and push lifecycle events,
-     small adapters wrap the structured steering request's callbacks and
-     the accepted ‘session/push’ lifecycle.  Push speech finishes before
-     the original completion callback can drain the next queued prompt.
-     Callback generations invalidate pending speech feedback on session
-     change or integration cleanup; original transport callbacks still
-     run.  No transcript text is interpreted as a steering outcome or
-     push completion.
-
-     The queue adapter marks actual queue draining and lets
-     ‘input-submitted’ confirm that a queued prompt started.  Prompt
-     list editing and diff entry have native command feedback.  New
-     asynchronous tool, queue, steering, setting, and permission-detail
-     submissions explicitly select the notification lane; list editing
-     and diff entry remain foreground interactions.  All new events and
-     their outcome, count, or setting attributes are registered by the
-     workflow semantic provider so Aural rules can customize their
-     presentation.
-
-16.3.12 Magit contracts
------------------------
-
-Staging and selected synchronous operations collect Git outcomes at
-‘magit-process-finish’, before Magit can raise an error.  One
-interactive command owns the aggregate result across nested calls.  A
-process that Magit starts and waits for contributes only to the
-collector attached when it was started; unrelated process callbacks
-cannot change that result.  Uncollected asynchronous completions
-explicitly select the notification lane.  Neither a command's return
-value nor the absence of an Emacs error proves Git succeeded.
-
-   Magit's positional highlight overlays must not become source
-personalities.  The integration suppresses legacy overlay voice
-mirroring for those highlights and excludes their faces from source
-capture.  It preserves text faces, deliberate personalities, and
-customized hash voices.  Navigation still emits section facts; empty
-lines supply the core line-condition facts without a competing selection
-icon.
-
-   Regression tests use isolated repositories for real Git failures and
-real section trees for highlighting and visibility.  Run the Magit tests
-from source, then again in a fresh Emacs with
-‘EMACSVOX_MAGIT_TEST_LOAD=compiled’ after bringing byte-code current.  A
-live buffer created with the former highlight mirroring needs a Magit
-refresh to rebuild its source properties.
-
-16.3.13 WSL2 Omnivox development staging
-----------------------------------------
-
-The ordinary WSL2 user route is implemented by
-‘bin/emacsvox-wsl-install’ and pinned by ‘etc/wsl-install.conf’.  Treat
-either file as release tooling.  When advancing GNU Emacs or Omnivox,
-update the version, archive name, URL, and SHA-256 together; exercise
-x64 and ARM64 selection in the isolated installer tests; and perform one
-real installation of the newly pinned archive before updating the user
-manual.  The installer must remain per-user, must not invoke ‘sudo’ or
-edit shell startup files, and must preserve an explicit ‘EMACS’ or
-‘local.mk’ selection rather than silently replacing it.
-
-   The installed Omnivox executable is recorded as an absolute WSL path
-in the data-only ‘$XDG_CONFIG_HOME/emacsvox/omnivox-program’ file.
-Launcher selection is explicit ‘OMNIVOX_PROGRAM’, that per-user file,
-developer staging, then ‘PATH’.  Keep the selection tests synchronized
-with this order.  A configured but invalid path is a visible
-configuration error; silently falling through would hide a stale or
-damaged user installation.
-
-   This section describes the reproducible source-build path, not the
-ordinary pre-built WSL2 installation.  The complete source-build
-prerequisite checklist is in *note Building Omnivox For WSL2::.
-Dependency ownership is deliberately split across three boundaries:
-
-Boundary      Supplied by            Dependencies
----------------------------------------------------------------------------
-Windows and   Maintainer             WSL interoperation,
-WSL host                             ‘powershell.exe’, ‘wslpath’,
-                                     Windows .NET Framework 4.7.2 or
-                                     newer, Docker with Linux/AMD64
-                                     support, Git, Make, download and
-                                     checksum tools, standard GNU shell
-                                     utilities, network access, and
-                                     writable Windows ‘LocalAppData’.
-Pinned        Emacsvox target        The immutable Rust/Debian
-release                              container, MinGW cross tools and
-toolchain                            runtime DLLs, CMake, Clang and
-                                     libclang, eSpeak build
-                                     dependencies, Roslyn, .NET 4.0
-                                     reference assemblies, and official
-                                     Windows Piper companion.  The exact
-                                     versions, source commit, and
-                                     downloaded-package hashes live in
-                                     ‘servers/omnivox-release/toolchain.lock’.
-Build         Git checkouts          The current Emacsvox checkout and
-source                               the Omnivox checkout selected by
-                                     ‘OMNIVOX_DIR’, including Omnivox's
-                                     locked Rust dependencies and
-                                     checksum-locked Flite and RuTTS
-                                     source inputs.
-
-   ‘make verify-windows-omnivox-toolchain’ prepares the cached Roslyn
-inputs, builds the Docker image, and validates this boundary before
-compilation.  The full target then builds Omnivox's two 32-bit helper
-sources deterministically, builds native Windows Omnivox plus its
-RHVoice, Flite, and RuTTS helpers in the container, and stages their
-licenses, provenance, and checksums.  The clean target also builds Piper
-support and verifies that the pinned companion and main executable
-identify the same Omnivox source commit.  A host Rust installation,
-MinGW installation, Visual Studio, .NET SDK, or system eSpeak
-installation is not an input to this release path.  RHVoice's native
-library, languages, and voices remain external user-supplied runtime
-inputs.  Flite's CMU US SLT voice is compiled into its checksum-locked
-helper.  RuTTS's built-in male and female Russian voices are compiled
-from the checksum-locked 6.3.3 source; RuLex is not included.
-
-   After staging, the static verifier rechecks manifests, provenance,
-the Windows-local copy, and all configured external inputs.  The
-separate live verifier executes that exact Windows-local runtime,
-prewarms the bounded eSpeak voice cache tied to the verified
-content-addressed data, discovers the compiled Flite and RuTTS voices,
-and requires real WAV synthesis from both helpers.  Use ‘make
-verify-windows-omnivox-live’ to repeat only the executable smoke gate.
-
-   ‘OMNIVOX_PIPER_MODEL’ is an optional staging input, not a release
-payload.  When supplied, the target validates the adjacent
-configuration, copies both files into a content-addressed Windows-local
-model cache, records their hashes, and writes the Windows path used by
-the launcher.  The recursive runtime manifest deliberately excludes
-model files.  A different model therefore creates a distinct local build
-identity without changing the pinned companion.  The public-domain
-engineering voice used in Omnivox CI is approved only for that bounded
-test purpose and is not a model-distribution default.
-
-   Maintainers testing tracked Emacsvox or Omnivox changes may use ‘make
-windows-omnivox-dev’.  That target records both worktree-diff hashes and
-labels the result as a development build.  It builds the RHVoice, Flite,
-and RuTTS companions but omits Piper, because the currently pinned Piper
-companion must not be mixed with later Omnivox source.  It also rejects
-‘OMNIVOX_PIPER_MODEL’.  Advance the checked Piper companion and source
-commit together before these integrations enter the clean release path.
-See ‘servers/omnivox-release/README.org’ for the pinned toolchain,
-licensing, provenance, and restaging contract.
-
-   To test Piper before that release-pin advance, commit and push a
-clean Omnivox revision and run its ‘Piper Native Validation’ workflow.
-Download the ‘omnivox-piper-windows-x64’ artifact, which contains the
-companion archive and ‘piper-sha256sums.txt’, then stage it with a
-reviewed model:
-
-     OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.10.0-piper-windows-x64.zip \
-       OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256=64-character-sha256 \
-       OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx \
-       make windows-omnivox-piper-dev
-
-   This is a development-only bridge, not a release-pin bypass.  It
-verifies the outer archive hash, rejects unsafe archive members and
-symbolic links, checks the companion's internal manifest, and requires
-its source provenance to name the exact clean Omnivox ‘HEAD’ and the
-Windows MSVC target.  The staged runtime records the artifact hash and
-companion tree hash and labels the companion
-‘github-actions-native-development-build’ with version ‘development-ci’.
-The version-looking archive filename comes from Omnivox's current
-package metadata and does not assert that post-tag code was released.
-The final live gate loads the separately cached model and requires Piper
-to enumerate that voice and synthesize a non-empty WAV.
-
-   The ordinary ‘windows-omnivox-dev’ target remains appropriate for
-uncommitted Omnivox work because it rebuilds all included companions
-locally and omits Piper.  The CI-artifact target deliberately rejects a
-dirty Omnivox checkout: commit and push the change, let the native
-workflow build that exact commit, then use its new artifact.  Emacsvox
-itself may contain tracked changes; their diff hash remains part of the
-local runtime identity.
-
-   After one complete development runtime has been staged, use ‘make
-windows-omnivox-main-dev’ for changes confined to the main Rust server
-or its main-only audio output.  This guarded path uses the same pinned
-toolchain to rebuild only ‘omnivox.exe’, derives a new content-addressed
-runtime from the current hash-verified development payload, records the
-original complete build and reused manifest in provenance, hard-links
-the unchanged payload, and runs a focused live check of the new Windows
-main executable.  It refuses reuse when helper, helper-protocol,
-dependency, toolchain, or companion inputs changed; in that case rerun
-‘make windows-omnivox-dev’.  Run ‘make verify-windows-omnivox-runtime
-verify-windows-omnivox-live’ when a complete development audit is
-useful.  The clean ‘make windows-omnivox’ release path always rebuilds
-and verifies every payload and never uses incremental reuse.
-
-   The development target accepts ‘OMNIVOX_RHVOICE_LIBRARY’ and
-‘OMNIVOX_RHVOICE_DATA’ together, plus an optional
-‘OMNIVOX_RHVOICE_CONFIG’ directory.  It resolves WSL or Windows absolute
-paths, requires the C API DLL and the language/voice data layout,
-records content digests in provenance and machine-local Windows path
-pointers beside the selected runtime, and leaves all RHVoice files
-external.  Those pointers let the launcher restore the variables for
-every fresh Emacsvox process.  The runtime verifier rejects missing or
-changed external inputs.  Omitting all three variables leaves RHVoice
-unconfigured without affecting Flite, RuTTS, or the other engines.
-RuTTS requires no external installation; the staged helper always
-provides its built-in male and female Russian voices without RuLex.
-
-   Do not bypass the Omnivox release target manually or clean either
-repository to make its release guard pass.  Use ‘make windows-omnivox’
-only for the reproducible clean-release path documented in the
-user-facing WSL2 route.
-
-16.3.14 Windows staging implementation and fixtures
----------------------------------------------------
-
-Make owns option and clean-source guards, toolchain verification,
-companion preparation, Docker compilation, and final runtime
-verification.  Its ‘windows-omnivox’ target passes prepared build
-outputs to the internal ‘servers/omnivox-release/stage-runtime.sh’
-script.  Use the guarded Make targets rather than invoking this script
-directly.
-
-   The script owns host-side payload staging: input checks, content
-hashes, optional voice-data caches, diagnostics, provenance, path files,
-and selection of the completed runtime.  Make passes the Emacsvox root
-as ‘EMACSVOX_STAGE_ROOT’, the resolved ‘OMNIVOX_*’ source/build/runtime
-paths and feature switches, and the two pinned Roslyn/reference-assembly
-archive hashes.  The assignments at the call site and the script's
-initial parameter checks define the complete internal input list.
-Optional user inputs retain their ‘OMNIVOX_PIPER_MODEL’,
-‘OMNIVOX_RHVOICE_*’, and ‘OMNIVOX_ECI_DLL’ environment variables.
-Main-only development staging remains separately owned by
-‘stage-main-dev.sh’ with its existing reuse restrictions.
-
-   Run ‘make windows-staging-test’ on a GNU/Linux host with Python 3,
-Git, Make, and the standard GNU file/checksum tools.  The tests use
-private repositories, prepared payloads, runtime directories, and a
-simulated LocalAppData.  Docker, Windows commands, and compiler/verifier
-boundaries are replaced by fixtures; Git guards, copying, hashing,
-provenance, and link activation execute normally.  The suite is also
-included in ‘make test’ and its own CI job.  It exercises
-clean/development variants, optional companions and external voice
-inputs, paths containing spaces, corrupt caches, missing inputs,
-rejected main-only reuse, interruption, and activation failure.
-
-   Preserve the current activation sequence during maintenance.  The
-script selects the staged runtime before Make's final runtime and live
-checks; a failure in those final checks does not restore the previous
-selection.  Interruption before activation can leave temporary files in
-a new version directory while preserving the current link.  The fixture
-tests characterize these existing behaviors and successful retry.
-Changing cleanup or rollback requires a separate fix and acceptance
-decision.  Fixture success does not establish native compiler
-reproducibility, real Windows path conversion, engine startup, or
-audible playback; run the existing native gates for that acceptance in
-an appropriate staging environment.
-
-16.3.15 Aural experiments and guided changes
---------------------------------------------
-
-Physical experiments use the common voice editor with an exact
-engine/voice selector, an immutable opening snapshot, a mutable working
-style and undo history.  Navigation uses the ordinary voice.
-Experiments write no settings; Keep prepares a named-voice draft,
-including any reviewed row placement and adjustment scope.  The
-destination still requires an explicit save.
-
-   The unified palette contract is recorded in ADR 0018.  Every nonroot
-palette uses complete schema 3 entries and an explicit parent chain to
-‘acss-default’.  Palette definitions and immutable local-choice
-snapshots are saved through the common coordinator.  Frozen proposals
-retain separate persistence and apply completion, and retry does not
-repeat a successful write.  Save failures, acknowledged application and
-actual playback evidence remain separate.  Workstation routing profiles
-contain global engine policy, not per-name routes.
-
-   Labelled comparisons use one controlled preview sequence, with
-identical sample text and separately configurable labels.  Each sequence
-belongs to its speech lane.  Stopping that lane cancels remaining
-entries and invalidates late callbacks; stopping foreground speech must
-not cancel notifications.  Requested parameters and advertised
-capabilities are distinct from playback reports.  Do not fabricate exact
-effective numeric values when the adapter reports only support,
-acceptance, or degradation.
-
-   Guided feedback changes use existing declarative rules and registered
-facts.  The draft selects a component, matching criteria, and lifetime
-separately; preview dynamically overlays the intended layer without
-mutating live rules.  Explicit buffer-rule snapshots in captured context
-must also be overlaid.  Generated IDs remain stable for the matched
-component; new rules follow existing explicit order within the layer.
-Apply checks a Current-item source guard and refuses to overwrite
-another unfinished editor for the same scope.  Historical selection
-chooses a frozen part when a transaction contains several runs.
-Original replay uses that part; proposed preview deliberately resolves
-it with current rules and the captured buffer context.
-
-   Shared Help and offline task nodes preserve the original source and
-exact return position.  New interfaces should use the shared parent
-modes and add a task-node mapping to ‘emacsvox-aural-ui-manual-nodes’.
-Row action predicates should hide operations that cannot apply to that
-row; this includes editing built-in options and reordering items outside
-the active-order view.

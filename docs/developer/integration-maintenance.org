@@ -908,3 +908,64 @@ return position.  New interfaces should use the shared parent modes and add
 a task-node mapping to ~emacsvox-aural-ui-manual-nodes~.  Row action predicates
 should hide operations that cannot apply to that row; this includes editing
 built-in options and reordering items outside the active-order view.
+
+** Authoring Sound Packs
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Authoring Sound Packs
+:ALT_TITLE: Authoring Sound Packs
+:DESCRIPTION: Prepare a personal resource directory and validate its cue metadata.
+:END:
+
+Ordinary selection, preview, and cue remapping are covered in
+[[info:emacsvox#Sounds And Space][Sounds, Tones, and Spatial Cues]]. Preparing a new pack requires audio files
+and resource metadata. A pack supplies recordings for registered cue names;
+the presentation rules decide when those cues occur.
+
+The standard personal discovery root is =~/.emacsvox/sounds/packs/=, controlled
+by ~emacsvox-aural-personal-sound-packs-directory~. Each immediate child is a
+candidate pack, and its directory basename becomes its identifier. Choose an
+unused identifier. A directory containing =button.ogg= is discovered without
+a manifest. A partial pack can instead supply the data-only manifest
+=emacsvox-sound-pack.el= and inherit missing cues from another pack.
+
+For example, create =my-cues/= below the personal root and put this single
+Lisp data form in =my-cues/emacsvox-sound-pack.el=:
+
+#+begin_src emacs-lisp
+(:schema-version 1
+ :summary "My personal cues, inheriting the remaining chimes"
+ :parent chimes
+ :default-spatialization neutral)
+#+end_src
+
+The file contains data, not executable initialization: do not wrap the form in
+~setq~, quote it, or add a second form. Put a replacement recording such as
+=button.ogg= in the same directory. Its basename names the registered cue.
+Unknown cue names fail the resource audit; introducing a new semantic cue
+requires an integration to register its intent and use it. Every standalone
+sound pack must resolve =button=, directly or through its declared parent.
+
+The optional ~:profiles~ field lists registered cue-coverage requirements.
+These are resource validation contracts, distinct from Presentation Profiles
+that select a user's setup. Keep the coverage appropriate to the intended
+uses rather than treating a successful single audition as complete coverage.
+Default spatialization is ~neutral~, ~stereo~, or ~pre-spatialized~. Use the
+last for recordings that already encode their intended spatial placement,
+so runtime balance does not position them a second time.
+
+Open Aural Home's /Sound packs/ and press @@texinfo:@kbd{g}@@ to rescan.
+Inspect the new pack with @@texinfo:@key{RET}@@: the replacement should be
+native, while unchanged cues identify their parent or fallback provider.
+Audition individual cues with @@texinfo:@kbd{P}@@ and validate with
+@@texinfo:@kbd{v}@@ before activating the pack. Missing or malformed assets
+are errors to resolve, not cues to copy from an unrelated installed pack.
+No activation follows from writing the directory or previewing it.
+
+The manager's @@texinfo:@kbd{e}@@ edits metadata for discovered packs only.
+It replaces the manifest atomically, retains the previous file with a =~=
+suffix, and restores the old metadata if validation of the refreshed pack
+fails. It does not edit recordings. After changing files externally, refresh
+the pack; ~emacsvox-aural-refresh-resource-pack~ refreshes an already registered
+pack, and ~emacsvox-aural-refresh-discovered-resource-packs~ rescans discovery
+roots. Engine installation, remote sound-directory placement, and user
+startup selection remain separate tasks.
