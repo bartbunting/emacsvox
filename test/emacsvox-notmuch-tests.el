@@ -1835,10 +1835,12 @@ Return the beginning of the inserted row."
              #'emacsvox-aural-concrete-action-cue
              (emacsvox-aural-concrete-plan-before plan))
             (and icons-enabled '(item))))
+          ;; The face uses voice-annotate; concrete plans retain its
+          ;; canonical palette name after alias resolution.
           (should
            (eq
             (emacsvox-aural-concrete-content-voice-request content)
-            'voice-annotate))
+            'annotate))
           (should (eq (plist-get context :module) 'notmuch))
           (should (eq (plist-get context :occasion) 'navigation))
           (should
