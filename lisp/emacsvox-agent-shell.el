@@ -74,6 +74,7 @@
 ;; `check-declare' checking their source without presenting `&key' as positional
 ;; to the native byte compiler, whose declaration arglists follow `defun'.
 (declare-function agent-shell-shell-buffer "agent-shell" t)
+(declare-function agent-shell-session-id "agent-shell" t)
 (declare-function agent-shell-status "agent-shell" t)
 (declare-function agent-shell-subscribe-to "agent-shell" t)
 (declare-function agent-shell-unsubscribe "agent-shell" t)
@@ -534,7 +535,33 @@ Current Agent Shell uses `agent-shell-chat--tag'.  Releases before
      (and (stringp candidate)
           (not (string-empty-p (string-trim candidate)))))
    (list (overlay-get overlay 'before-string)
-         (overlay-get overlay 'display))))
+         ;; The live `me' overlay displays the input marker, not the name.
+         ;; Its name is either in its before-string or a separate label row.
+         (unless (eq (emacsvox-agent-shell--chat-overlay-tag overlay) 'me)
+           (overlay-get overlay 'display)))))
+
+(defun emacsvox-agent-shell--chat-label-predecessors (overlays)
+  "Include adjacent label rows preceding chat OVERLAYS.
+Recent Agent Shell draws each label row on a separate source character.
+The overlay ending at the response can therefore hide only padding; follow
+contiguous overlays of the same role back to the row carrying its name.
+Never cross intervening content or inspect unrelated transcript overlays."
+  (let ((result (copy-sequence overlays))
+        (pending (copy-sequence overlays)))
+    (while pending
+      (let* ((overlay (pop pending))
+             (category (emacsvox-agent-shell--chat-overlay-category overlay))
+             (start (overlay-start overlay)))
+        (when (and category (> start (point-min)))
+          (dolist (previous (overlays-in (1- start) start))
+            (when (and (= (overlay-end previous) start)
+                       (< (overlay-start previous) start)
+                       (eq category
+                           (emacsvox-agent-shell--chat-overlay-category previous))
+                       (not (memq previous result)))
+              (push previous result)
+              (push previous pending))))))
+    result))
 
 (defun emacsvox-agent-shell--live-chat-prompt-overlay-p (overlay)
   "Return non-nil when OVERLAY carries Agent Shell's live prompt marker."
@@ -572,10 +599,11 @@ ending at SOURCE-START labels the content that follows it."
             (and (< source-start source-end)
                  (overlays-in source-start source-end)))))
          (chat-overlays
-          (seq-filter
-           (lambda (candidate)
-             (emacsvox-agent-shell--chat-overlay-category candidate))
-           overlays))
+          (emacsvox-agent-shell--chat-label-predecessors
+           (seq-filter
+            (lambda (candidate)
+              (emacsvox-agent-shell--chat-overlay-category candidate))
+            overlays)))
          (preferred-category
           (and
            (cdr chat-overlays)
@@ -1508,7 +1536,7 @@ easy to detect and adapt."
   "Return semantic header state for BUFFER, or nil when unavailable.
 BUFFER may be an agent shell or one of its viewports.  Access to the private
 aggregate `agent-shell--state' is kept here so compatibility changes remain
-localized; individual model, thought-level, mode, and busy values use public
+localized; model, thought-level, mode, session ID, and busy values use public
 accessors where agent-shell provides them."
   (let* ((target (or buffer (current-buffer)))
          (viewport-p
@@ -1576,7 +1604,10 @@ accessors where agent-shell provides them."
              :session-id
              (when (bound-and-true-p agent-shell-show-session-id)
                (emacsvox-agent-shell--nonempty-text
-                (map-nested-elt state '(:session :id)))))))))))
+                (if (fboundp 'agent-shell-session-id)
+                    (ignore-errors
+                      (agent-shell-session-id :shell-buffer shell-buffer))
+                  (map-nested-elt state '(:session :id))))))))))))
 
 (defun emacsvox-agent-shell--format-brief-header (state)
   "Return a concise focus announcement for semantic header STATE."
@@ -2862,8 +2893,11 @@ prompt's end and extends to `point-max'."
     (dolist (overlay (overlays-at position))
       (when (and
              (memq (emacsvox-agent-shell--chat-overlay-tag overlay)
-                   '(me me-surplus agent))
-             (equal (overlay-get overlay 'display) "")
+                   '(me me-label me-surplus agent))
+             ;; Split label rows replace source characters with a nonempty
+             ;; display string.  Their underlying prompt/marker is still UI
+             ;; source and must not be read one character at a time.
+             (stringp (overlay-get overlay 'display))
              (< (overlay-start overlay) (overlay-end overlay))
              (or
               (null best)
@@ -2951,7 +2985,7 @@ chat source is crossed as one unit before core character speech runs."
       (emacsvox-agent-shell--input-boundary-feedback boundary)
       nil)
      (chat-destination
-      ;; The source replaced by a chat label has `display' "".  Bypass it so
+      ;; Chat overlays replace the underlying prompt/marker source.  Bypass it so
       ;; core character presentation cannot emit one ellipses icon per hidden
       ;; prompt character, then provide the same destination feedback here.
       (ems-interactive-p target)
@@ -6552,18 +6586,27 @@ Return nil when the configured verbosity requests status cues only."
             (emacsvox-agent-shell--notify-event text facts)))))))
 
 (defun emacsvox-agent-shell--record-tool-output-section (range)
-  "Capture RANGE's body only for the tool event in this rendering pass."
+  "Capture RANGE's rendered body for the tool event in this rendering pass."
   (when-let* ((update emacsvox-agent-shell--rendering-tool-update)
               ((eq (plist-get update :buffer) (current-buffer)))
               ((plist-get update :event))
               (start (map-nested-elt range '(:body :start)))
-              (end (map-nested-elt range '(:body :end)))
-              ((< start end))
+              ((< start (point-max)))
+              ((eq (get-text-property start 'agent-shell-ui-section) 'body))
               (state (get-text-property start 'agent-shell-ui-state))
               ((equal (map-elt state :qualified-id)
-                      (plist-get update :qualified-id))))
+                      (plist-get update :qualified-id)))
+              ;; Markdown can insert or delete characters after RANGE was
+              ;; computed.  Read the current body boundary, as response speech
+              ;; does, and stop if another fragment's state begins first.
+              (end (min
+                    (next-single-property-change
+                     start 'agent-shell-ui-section nil (point-max))
+                    (next-single-property-change
+                     start 'agent-shell-ui-state nil (point-max)))))
     (setf (plist-get emacsvox-agent-shell--rendering-tool-update :output)
-          (buffer-substring start end))))
+          (emacsvox-agent-shell--remove-visual-chrome-for-speech
+           (buffer-substring start end)))))
 
 (defun emacsvox-agent-shell--on-notification-around (original &rest arguments)
   "Join public tool status with the output rendered by ORIGINAL.

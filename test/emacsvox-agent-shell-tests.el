@@ -7434,6 +7434,87 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should (eq (get-text-property 0 'face spoken)
                     'agent-shell-chat-agent-label))))))
 
+(ert-deftest emacsvox-agent-shell-split-chat-labels-follow-only-adjacent-content ()
+  "Separate display rows should name the first response line, not later ones."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert (propertize "<shell-maker-end-of-prompt>"
+                        'shell-maker--marker t 'invisible t)
+            "\n")
+    (let ((answer-start (point))
+          (label (propertize " Codex \n" 'face 'agent-shell-chat-agent-label)))
+      (insert "answer\ncontinuation\n")
+      (dolist (row `((1 2 "\n") (2 3 ,label) (3 4 "\n")
+                     (4 ,answer-start "")))
+        (pcase-let ((`(,start ,end ,display) row))
+          (let ((overlay (make-overlay start end)))
+            (overlay-put overlay 'agent-shell-chat--tag 'agent)
+            (overlay-put overlay 'display display)
+            (overlay-put overlay 'before-string ""))))
+      (let ((source (buffer-string)))
+        (goto-char answer-start)
+        (let ((context (emacsvox-agent-shell--chat-label-context-at-point)))
+          (should (equal (plist-get context :text) "Codex"))
+          (should (eq (get-text-property 0 'face (plist-get context :text))
+                      'agent-shell-chat-agent-label)))
+        (forward-line)
+        (should-not (emacsvox-agent-shell--chat-label-context-at-point))
+        (should (equal-including-properties source (buffer-string)))))))
+
+(ert-deftest emacsvox-agent-shell-split-prompt-source-is-crossed-as-one-unit ()
+  "Character navigation must cross display label rows and hidden prompt text."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert "\nCodex> yes")
+    (dolist (row '((2 3 me-label " Me \n")
+                   (3 4 me-label "\n") (4 9 me "")))
+      (pcase-let ((`(,start ,end ,tag ,display) row))
+        (let ((overlay (make-overlay start end)))
+          (overlay-put overlay 'agent-shell-chat--tag tag)
+          (overlay-put overlay 'display display))))
+    (goto-char 1)
+    (should (= (emacsvox-agent-shell--horizontal-chat-destination 'forward 1) 9))
+    (goto-char 9)
+    (should (= (emacsvox-agent-shell--horizontal-chat-destination 'backward 1) 1))
+    (goto-char 10)
+    (should-not (emacsvox-agent-shell--horizontal-chat-destination 'forward 1))))
+
+(ert-deftest emacsvox-agent-shell-empty-chat-label-overlay-is-spoken ()
+  "A restored turn can carry its complete label on an empty overlay."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert "answer")
+    (let ((overlay (make-overlay (point-min) (point-min))))
+      (overlay-put overlay 'agent-shell-chat--tag 'agent)
+      (overlay-put overlay 'display "")
+      (overlay-put overlay 'before-string
+                   (propertize "\n Codex \n" 'face 'agent-shell-chat-agent-label))
+      (goto-char (point-min))
+      (should (equal (plist-get (emacsvox-agent-shell--chat-label-context-at-point)
+                                :text)
+                     "Codex")))))
+
+(ert-deftest emacsvox-agent-shell-header-prefers-public-session-id ()
+  "Use the resolved shell's public ID, retaining only an older-release fallback."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local agent-shell--state '((:session . ((:id . "private-id")))))
+    (let ((agent-shell-show-session-id t)
+          called)
+      (cl-letf (((symbol-function 'agent-shell-session-id)
+                 (lambda (&rest args)
+                   (setq called (plist-get args :shell-buffer))
+                   "public-id")))
+        (should (equal (plist-get (emacsvox-agent-shell--header-state) :session-id)
+                       "public-id"))
+        (should (eq called (current-buffer))))
+      (cl-letf (((symbol-function 'agent-shell-session-id)
+                 (lambda (&rest _) nil)))
+        (should-not (plist-get (emacsvox-agent-shell--header-state) :session-id)))
+      (cl-letf (((symbol-function 'agent-shell-session-id) nil))
+        (should (equal (plist-get (emacsvox-agent-shell--header-state) :session-id)
+                       "private-id"))))))
+
 (ert-deftest emacsvox-agent-shell-chat-quoted-marker-remains-content ()
   "Only Shell Maker's property-authenticated marker should be suppressed."
   (with-temp-buffer
@@ -7500,7 +7581,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (lambda (overlay)
             (eq (emacsvox-agent-shell--chat-overlay-tag overlay)
                 'me-label))
-          (overlays-in (1- prompt-start) prompt-start)))
+          (overlays-in (1- prompt-start) (1+ prompt-start))))
         (let* ((emacsvox-agent-shell--chat-label-context
                 (emacsvox-agent-shell--chat-label-context-between
                  prompt-start (point-max)))
@@ -7730,7 +7811,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 (lambda (overlay)
                   (eq (emacsvox-agent-shell--chat-overlay-tag overlay)
                       'me))
-                (overlays-at prompt-start))))
+                (overlays-at (1- input-start)))))
           (should prompt-overlay)
           (should (equal (overlay-get prompt-overlay 'display) ""))
           (should (= (overlay-end prompt-overlay) input-start)))
@@ -7979,7 +8060,13 @@ Return speech events plus the target character.  DIRECTION is `forward' or
 	(insert (propertize "<shell-maker-end-of-prompt>"
                             'invisible t 'shell-maker--marker t))
 	(insert "\nNext response\n")
-	(agent-shell-chat--relabel)
+	;; Preserve the older multiline before-string geometry explicitly.
+	;; New upstream labels start on prompt characters instead, so they no
+	;; longer reproduce this particular redisplay stall before the label.
+	(let ((label (make-overlay (1- prompt-start) prompt-start)))
+	  (overlay-put label 'agent-shell-chat--tag 'me-label)
+	  (overlay-put label 'before-string "\n Me \n")
+	  (overlay-put label 'display ""))
 	(dolist (case '((next-line emacsvox-agent-shell--next-line-around 1)
 			(previous-line emacsvox-agent-shell--previous-line-around -1)))
           (pcase-let ((`(,command ,wrapper ,count) case))
@@ -8232,7 +8319,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (lambda (overlay)
           (eq (emacsvox-agent-shell--chat-overlay-tag overlay)
               'me-label))
-        (overlays-in (1- prompt-start) prompt-start)))
+        (overlays-in (1- prompt-start) (1+ prompt-start))))
       ;; Model the live geometry: the display alias and first content row share
       ;; source bounds, followed by a distinct short continuation and another
       ;; explicit input line before the hidden prompt marker.
@@ -9094,6 +9181,44 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                     (plist-get (plist-get (cdar spoken) :facts) :events)))
       (dolist (entry spoken)
         (should (eq 'notification (plist-get (cdr entry) :lane)))))))
+
+(ert-deftest emacsvox-agent-shell-fenced-tool-output-survives-rendering ()
+  "Standard ACP output, including Pi terminal text, must retain its last line."
+  (dolist (expanded '(nil t))
+    (emacsvox-agent-shell-test--with-current-session
+      (let ((emacsvox-agent-shell-tool-output-verbosity 'full)
+            (agent-shell-tool-use-expand-by-default expanded)
+            spoken)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (push text spoken))))
+          (agent-shell--on-notification
+           :state agent-shell--state
+           :acp-notification
+           '((method . "session/update")
+             (params (update
+                      (sessionUpdate . "tool_call_update")
+                      (toolCallId . "terminal-1") (title . "Run tests")
+                      (status . "completed")
+                      (content . [((type . "content")
+                                   (content (type . "text")
+                                            (text . "```\nhello\nworld\n```")))]))))))
+        (should (= (length spoken) 1))
+        (should (string-match-p "hello\nworld" (car spoken)))
+        (should-not (string-match-p "⧉" (car spoken)))))))
+
+(ert-deftest emacsvox-agent-shell-tool-output-capture-stops-at-next-fragment ()
+  "Refresh stale Markdown bounds without reading the next fragment's body."
+  (with-temp-buffer
+    (let ((emacsvox-agent-shell--rendering-tool-update
+           (list :buffer (current-buffer) :event t :qualified-id "0-tool")))
+      (insert (propertize "complete output" 'agent-shell-ui-section 'body
+                          'agent-shell-ui-state '(:qualified-id "0-tool"))
+              (propertize "neighbour" 'agent-shell-ui-section 'body
+                          'agent-shell-ui-state '(:qualified-id "0-other")))
+      (emacsvox-agent-shell--record-tool-output-section
+       '((:body . ((:start . 1) (:end . 4)))))
+      (should (equal (plist-get emacsvox-agent-shell--rendering-tool-update :output)
+                     "complete output")))))
 
 (ert-deftest emacsvox-agent-shell-steering-confirms-actual-outcomes ()
   "Run upstream steering callbacks and confirm each outcome exactly once."
