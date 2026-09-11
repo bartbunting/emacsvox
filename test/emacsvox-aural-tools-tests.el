@@ -1469,7 +1469,12 @@
                                (emacsvox-aural-concrete-content-voice-request (cdr pair))))
                 (should (equal (emacsvox-aural-concrete-content-voice-style content)
                                (emacsvox-aural-concrete-content-voice-style (cdr pair))))
-                (should-not (emacsvox-aural-concrete-plan-before plan))
+                (should
+                 (equal
+                  (mapcar #'emacsvox-aural-concrete-action-cue
+                          (emacsvox-aural-concrete-plan-before plan))
+                  (and value-first (equal (car pair) "Hello")
+                       '(select-object))))
                 (should-not (emacsvox-aural-concrete-plan-after plan))))
             (should-not
              (emacsvox-aural-concrete-content-voice-request
@@ -1481,6 +1486,55 @@
                        0 'emacsvox-aural-recent-feedback-voice spoken)))
         (should (equal (emacsvox-aural-concrete-content-text first) "Hello "))
         (should (equal (emacsvox-aural-concrete-content-text second) "world"))))))
+
+(ert-deftest emacsvox-aural-tools-recent-feedback-navigation-cues-once ()
+  "Voice changes, cleaned whitespace, and truncation do not repeat UI cues."
+  (emacsvox-test--with-aural-tools
+    (let* ((plans
+            (mapcar
+             (lambda (entry)
+               (emacsvox-aural--make-concrete-plan
+                :content
+                (emacsvox-aural--make-concrete-content
+                 :text (car entry) :speak t :voice-request (cdr entry))))
+             '(("UniFi controller, " . lighten)
+               ("Network device has recorded another event near the front door. More details follow."
+                . bolden))))
+           (record (emacsvox-aural--make-presentation-record
+                    :id 1 :plan (car plans) :plans plans
+                    :queued-at (seconds-to-time 100))))
+      (with-temp-buffer
+        (emacsvox-aural-recent-feedback-mode)
+        (setq tabulated-list-entries
+              (list (emacsvox-aural-recent-feedback--entry record)))
+        (tabulated-list-print)
+        (emacsvox-aural-ui-goto-row 1)
+        (dolist (emacsvox-use-icons '(t nil))
+          (dolist (value-first '(nil t))
+            (let (spoken cues speech)
+              (cl-letf
+                  (((symbol-function 'tts-speak)
+                    (lambda (text) (setq spoken text)))
+                   ((symbol-function 'emacsvox-queue-resource)
+                    (lambda (resource) (push resource cues)))
+                   ((symbol-function 'tts-voice-reset-code)
+                    (lambda () "RESET"))
+                   ((symbol-function 'tts--protocol-queue-code) #'ignore)
+                   ((symbol-function 'tts--protocol-queue-text)
+                    (lambda (text) (push text speech)))
+                   ((symbol-function 'tts--protocol-silence) #'ignore))
+                (emacsvox-aural-ui-speak-current-cell value-first)
+                (should (string-match-p "\\.\\.\\." spoken))
+                (with-temp-buffer
+                  (insert spoken)
+                  (tts-audio-format (point-min) (point-max))))
+              (should
+               (equal cues
+                      (and emacsvox-use-icons
+                           (list (car (emacsvox-aural--resolve-cue
+                                       'select-object 'chimes))))))
+              (should (equal (apply #'concat (nreverse speech))
+                             (substring-no-properties spoken))))))))))
 
 (ert-deftest emacsvox-aural-tools-recent-feedback-browses-frozen-output ()
   "Recent feedback exposes exact records for explanation and audition."

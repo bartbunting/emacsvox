@@ -255,23 +255,36 @@
     (let ((prepared (emacsvox-aural-prepare-text text))
           (position 0))
       (while (< position (length text))
-        (let* ((end (next-single-property-change
-                     position 'emacsvox-aural-recent-feedback-voice
-                     text (length text)))
-               (voice (get-text-property
-                       position 'emacsvox-aural-recent-feedback-voice text)))
-          (when voice
-            (let ((plan (copy-emacsvox-aural-concrete-plan
-                         (emacsvox-aural-concrete-plan-at position prepared)))
-                  (content (copy-emacsvox-aural-concrete-content voice)))
+        (let* ((start position)
+               (original (emacsvox-aural-concrete-plan-at start prepared))
+               (limit (next-single-property-change
+                       start emacsvox-aural-concrete-plan-property
+                       prepared (length text))))
+          (while (< position limit)
+            (let* ((end (next-single-property-change
+                         position 'emacsvox-aural-recent-feedback-voice
+                         text limit))
+                   (voice (get-text-property
+                           position 'emacsvox-aural-recent-feedback-voice text))
+                   (plan (copy-emacsvox-aural-concrete-plan original))
+                   (content
+                    (copy-emacsvox-aural-concrete-content
+                     (or voice (emacsvox-aural-concrete-plan-content original)))))
+              ;; Split neutral gaps as well as retained voices.  Each original
+              ;; UI plan keeps its actions only at its real outer boundaries.
+              (unless (= position start)
+                (setf (emacsvox-aural-concrete-plan-before plan) nil
+                      (emacsvox-aural-concrete-plan-object-start-p plan) nil)
+                (remove-text-properties position end '(pause nil) prepared))
+              (unless (= end limit)
+                (setf (emacsvox-aural-concrete-plan-after plan) nil
+                      (emacsvox-aural-concrete-plan-object-end-p plan) nil))
               (setf (emacsvox-aural-concrete-content-text content)
                     (substring-no-properties text position end)
-                    (emacsvox-aural-concrete-plan-content plan) content
-                    (emacsvox-aural-concrete-plan-before plan) nil
-                    (emacsvox-aural-concrete-plan-after plan) nil)
+                    (emacsvox-aural-concrete-plan-content plan) content)
               (put-text-property
-               position end emacsvox-aural-concrete-plan-property plan prepared)))
-          (setq position end)))
+               position end emacsvox-aural-concrete-plan-property plan prepared)
+              (setq position end)))))
       (tts-speak prepared))))
 
 (defun emacsvox-aural-recent-feedback--entry (record)
