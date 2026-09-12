@@ -26,6 +26,33 @@
   edits, compilation, generated-file updates, and checks that consume their
   results. Do not silently fix unrelated findings.
 
+## Reasoning effort
+
+- Treat effort levels as recommendations suited to the remaining work. High is
+  the normal choice for substantive implementation, debugging, and review;
+  Low or Medium suits mechanical edits, straightforward documentation, and
+  routine Git operations.
+- Recommend Xhigh (XHI) for unresolved architecture, interactions between Emacs
+  and Omnivox, concurrency problems, or difficult failures with competing
+  explanations. Reserve Max for exceptional cases where Xhigh leaves a
+  specific, consequential question unresolved. Give the question and evidence
+  already gathered; task length alone does not justify higher effort. Missing
+  logs or a reproduction usually call for investigation first.
+- Reassess effort when an investigation or design decision settles and before
+  continuing implementation. When ongoing Xhigh or Max work no longer needs
+  that level, proactively recommend dropping to High, or Low or Medium for
+  routine remaining work, to conserve tokens and time. Do not retain elevated
+  effort merely because an earlier phase needed it.
+- Recommend a warranted change in one concise update naming the proposed level
+  and why it suits the remaining work. Avoid repeated suggestions or pauses for
+  minor adjustments. Continue authorized work at the current level unless the
+  maintainer requested an explicit handoff stop; honour those stops only for
+  the task they govern.
+- These instructions guide recommendations; they do not change the session's
+  configured effort. Leave the actual setting to the maintainer or an explicitly
+  authorized session control, and never claim a switch occurred without
+  confirmation from that control.
+
 ## Repository invariants
 
 - Before changing architecture, workflows, versioning, release tooling, or
