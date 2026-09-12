@@ -3083,6 +3083,26 @@ ARGUMENTS are passed to ORIGINAL-FUNCTION unchanged."
       (emacsvox-speak-region (min beginning end) (max beginning end))))
   (apply original-function beginning end arguments))
 
+(defun emacsvox-agent-shell--live-input-source-bounds (visual-bounds)
+  "Recover an empty or reversed VISUAL-BOUNDS interval in the live prompt.
+Prompt display strings can confuse `end-of-visual-line'.  Moving forward
+one display row from the draft still locates its end, including wrapped
+input.  Keep the prompt source on the first row so speech can name Me."
+  (when (<= (cdr visual-bounds) (car visual-bounds))
+    (when-let* ((input (emacsvox-agent-shell--live-input-bounds))
+                (prompt-start (marker-position (car comint-last-prompt)))
+                ((<= prompt-start (point))))
+      (save-excursion
+        (let ((inhibit-field-text-motion t))
+          (goto-char (max (point) (car input)))
+          (let* ((physical-end (line-end-position))
+                 (start (save-excursion (vertical-motion 0) (point)))
+                 (end (progn (vertical-motion 1)
+                             (min (point) physical-end))))
+            (setq start (if (<= start (car input)) prompt-start start))
+            (when (< start end)
+              (cons start end))))))))
+
 (defun emacsvox-agent-shell--speak-visual-line-around
     (original-function &rest arguments)
   "Add semantic block-entry context to Agent Shell visual-line speech.
@@ -3108,6 +3128,9 @@ Core visual-line presentation owns blank-line semantics and interruption."
                    (cdr folded-heading-bounds))
                   (emacsvox-agent-shell--visual-line-source-bounds))
               (emacsvox-agent-shell--visual-line-source-bounds)))
+           (input-source-bounds
+            (emacsvox-agent-shell--live-input-source-bounds source-bounds))
+           (source-bounds (or input-source-bounds source-bounds))
            (source-start (car source-bounds))
            (source-end (cdr source-bounds))
            (emacsvox-agent-shell--chat-label-context
@@ -3124,14 +3147,20 @@ Core visual-line presentation owns blank-line semantics and interruption."
           (emacsvox-agent-shell--synthetic-agent-row-p
            source-start source-end)
         (emacsvox-agent-shell--call-with-vertical-block-entry
-         (if folded-heading-bounds
-             (lambda (&rest call-arguments)
-               (save-restriction
-                 (narrow-to-region
-                  (car folded-heading-bounds)
-                  (cdr folded-heading-bounds))
-                 (apply original-function call-arguments)))
-           original-function)
+         (cond
+          (input-source-bounds
+           (lambda (&rest _)
+             (emacsvox-agent-shell--submit-text-feedback
+              (emacsvox-aural-source-substring source-start source-end)
+              emacsvox-aural-submission-facts 'navigation)))
+          (folded-heading-bounds
+           (lambda (&rest call-arguments)
+             (save-restriction
+               (narrow-to-region
+                (car folded-heading-bounds)
+                (cdr folded-heading-bounds))
+               (apply original-function call-arguments))))
+          (t original-function))
          arguments)))))
 
 (defun emacsvox-agent-shell--speak-line-around

@@ -7646,6 +7646,96 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            (equal-including-properties
             source (buffer-substring (point-min) (point-max)))))))))
 
+(ert-deftest emacsvox-agent-shell-live-input-empty-visual-range-speaks ()
+  "Display-only prompt positions must still announce the editable draft."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (dolist (draft '("" "draft" "first\nsecond"))
+    (dolist (reversed '(nil t))
+      (with-temp-buffer
+        (let* ((input (emacsvox-agent-shell-test--insert-live-chat-input draft))
+               (prompt-start (marker-position (car comint-last-prompt)))
+               (source (buffer-string))
+               (emacsvox-aural-source-transform-function
+                #'emacsvox-agent-shell--prepare-speech-text)
+               spoken)
+          (goto-char (car input))
+          (cl-letf
+              (((symbol-function 'emacsvox-agent-shell--visual-line-source-bounds)
+                (lambda ()
+                  (cons (+ prompt-start (if reversed 1 0)) prompt-start)))
+               ((symbol-function 'vertical-motion)
+                (lambda (lines &rest _)
+                  (goto-char
+                   (if (zerop lines) prompt-start
+                     (save-excursion
+                       (goto-char (car input))
+                       (forward-line 1)
+                       (point))))))
+               ((symbol-function 'tts-speak)
+                (lambda (text) (push (substring-no-properties text) spoken))))
+            (emacsvox-agent-shell--speak-visual-line-around
+             (lambda () (ert-fail "Empty display range reached core speech"))))
+          (should (equal spoken
+                         (list (if (string-empty-p draft)
+                                   "Me. Ready for input."
+                                 (concat "Me. " (car (split-string draft "\n")))))))
+          (should (= (point) (car input)))
+          (should (equal-including-properties source (buffer-string))))))))
+
+(ert-deftest emacsvox-agent-shell-live-input-graphical-visual-speech ()
+  "Real prompt overlays must speak without depending on mocked row bounds."
+  (skip-unless (display-graphic-p))
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (dolist (draft '("" "draft" "first\nsecond"))
+    (save-window-excursion
+      (with-temp-buffer
+        (let* ((input (emacsvox-agent-shell-test--insert-live-chat-input draft))
+               (emacsvox-aural-source-transform-function
+                #'emacsvox-agent-shell--prepare-speech-text))
+          (set-window-buffer (selected-window) (current-buffer))
+          (redisplay t)
+          (dolist (position (list (1+ (marker-position (car comint-last-prompt)))
+                                 (car input)))
+            (goto-char position)
+            (let (spoken)
+              (cl-letf (((symbol-function 'tts-speak)
+                         (lambda (text)
+                           (push (substring-no-properties text) spoken))))
+                (emacsvox-agent-shell--speak-visual-line-around
+                 #'emacsvox-speak-visual-line))
+              (should
+               (equal spoken
+                      (list (if (string-empty-p draft)
+                                "Me. Ready for input."
+                              (concat "Me. " (car (split-string draft "\n")))))))
+              (should (= position (point))))))))))
+
+(ert-deftest emacsvox-agent-shell-live-input-graphical-wrapped-speech ()
+  "Recover only the first wrapped draft row, preserving later row speech."
+  (skip-unless (display-graphic-p))
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (save-window-excursion
+    (with-temp-buffer
+      (let* ((draft (concat (apply #'concat (make-list 100 "word ")) "LAST"))
+             (input (emacsvox-agent-shell-test--insert-live-chat-input draft))
+             (emacsvox-aural-source-transform-function
+              #'emacsvox-agent-shell--prepare-speech-text)
+             spoken)
+        (set-window-buffer (selected-window) (current-buffer))
+        (goto-char (car input))
+        (redisplay t)
+        (cl-letf (((symbol-function 'tts-speak)
+                   (lambda (text) (push (substring-no-properties text) spoken))))
+          (emacsvox-agent-shell--speak-visual-line-around
+           #'emacsvox-speak-visual-line)
+          (should (string-prefix-p "Me. word" (car spoken)))
+          (should-not (string-match-p "LAST" (car spoken)))
+          (goto-char (point-max))
+          (emacsvox-agent-shell--speak-visual-line-around
+           #'emacsvox-speak-visual-line)
+          (should (string-match-p "LAST" (car spoken)))
+          (should-not (string-prefix-p "Me" (car spoken))))))))
+
 (ert-deftest emacsvox-agent-shell-live-input-horizontal-boundaries-are-semantic ()
   "Character motion should stop at live input edges without core artifacts."
   (skip-unless (require 'agent-shell-chat-mode nil t))
