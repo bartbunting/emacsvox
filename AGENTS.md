@@ -1,5 +1,33 @@
 # Emacsvox repository workflow
 
+## Working with the maintainer
+
+- Inspect the relevant code, local configuration, and `git status --short`
+  before editing. Explain the intended change briefly, then carry the requested
+  work through implementation and verification. Resolve routine implementation
+  choices from the repository and conversation instead of requesting approval
+  at each step.
+- Keep the active task and accepted constraints across follow-up messages.
+  Answer status questions briefly and continue the work; treat corrections as
+  steering unless the maintainer cancels or replaces the task.
+- Ask before broad refactors, dependency changes, destructive actions, public
+  API changes, file moves, or compatibility-layer removals when that scope has
+  not already been authorized. Complete independent, authorized preparation
+  while waiting. Release publication has its own fresh-approval rule below.
+- Apply instructions to the task they govern. Historical design handoffs are
+  not global requirements to stop or change models. If an applicable rule
+  prevents progress, name its file and exact requirement and explain what is
+  still needed; distinguish the rule from your interpretation.
+- Keep updates and final responses concise and easy to follow through speech.
+  Lead with the result, use plain language, and summarize changes, checks, and
+  remaining uncertainty. Avoid long log dumps, repeated plans, and elaborate
+  formatting for routine work.
+- Use `rg` and bounded reads. Parallelize independent inspections; serialize
+  edits, compilation, generated-file updates, and checks that consume their
+  results. Do not silently fix unrelated findings.
+
+## Repository invariants
+
 - Before changing architecture, workflows, versioning, release tooling, or
   documentation publication, read every architecture decision record under
   `docs/adr/` and follow all accepted decisions. Do not rely on a single ADR in
@@ -11,6 +39,9 @@
   to a file listed as an exception in `THIRD_PARTY_NOTICES`.
 - Preserve existing tracked and untracked work. Never clean, reset, stash, or
   discard a dirty worktree merely to satisfy a build precondition.
+
+## Lisp builds and verification
+
 - Use the Emacs selected by the ignored `local.mk` and run `make check-emacs`
   before diagnosing compiler failures. Emacsvox requires Emacs 30.2 or newer;
   never compile it with an older system `emacs`. Keep compatibility builds
@@ -25,8 +56,63 @@
 - Tests deliberately prefer source and therefore do not prove that live
   byte-code is current. Verify in a fresh Emacs after compiling; do not rely on
   reloading one file when compiled dependents may already be resident.
+  When testing optional integrations, check the actual loaded file paths and
+  versions: an installed package, a sibling checkout, and the live Emacs may
+  contain different code even when their version strings match.
 - Local `.elc` files are build and preflight inputs only. They are ignored and
   never distributed; releases contain the `.el` sources.
+- For behavioral fixes, reproduce the observable failure and add regression
+  coverage where it meaningfully protects that behavior. Avoid tests that only
+  restate the implementation. Run the affected suite and applicable gates;
+  broaden testing when shared behavior changes or failures warrant it. Reuse
+  checks that already passed for the same code and environment.
+- When a bug depends on graphical layout, overlays, wrapping, or focus, include
+  a real graphical Emacs check. Mocked visual bounds cannot establish that Emacs
+  renders or navigates the live buffer correctly. Report graphical tests skipped
+  in batch separately from tests that passed; state any unavailable acceptance
+  environment explicitly.
+- Finish `make bytecode` or `make bytecode-rebuild` before checks requiring
+  current byte-code, including `make docs-reference` and
+  `make docs-release-check`. Do not run these consumers concurrently with the
+  build. A stale-byte-code preflight is a prerequisite failure, not evidence
+  that the source fix failed.
+- Reports, internal notes, and `AGENTS.md` edits alone do not call for Lisp
+  compilation or new tests. The documentation review gate below still applies.
+
+## Live Emacs and speech diagnosis
+
+- Identify the affected Emacs PID, server socket, buffer, and its main and
+  notification speech processes before changing live state. Several sessions
+  may share a profile and window name. Use bounded `emacsclient` requests with
+  the selected Emacs toolchain; do not assume the default socket is the target.
+- Capture the exact command, text, point, and timing of the failure. For Agent
+  Shell, distinguish editable input from submitted transcript text. Point may
+  move while the maintainer sends a message; correlate logs or request a small
+  reproduction instead of guessing the affected line.
+- Trace the path from navigation and source extraction through aural submission,
+  Omnivox admission, synthesis, and playback. Read the configured
+  `emacsvox-aural-diagnostic-log-file` and the selected launcher's logs; the
+  default Omnivox log directory is
+  `${XDG_STATE_HOME:-$HOME/.local/state}/emacsvox/omnivox/`.
+  Correlate session, process, submission, and dispatch IDs across logs rather
+  than relying on timestamps alone. Speech logs may contain complete text;
+  quote only what is needed for the diagnosis.
+- Separate observation from inference. A live process does not prove a usable
+  audio device; completed playback does not prove the maintainer heard it;
+  cancelled speech can be normal navigation. Confirm the original interaction
+  after recovery, not just a separately submitted test utterance.
+- Keep live probes temporary and limited to the affected buffer or process.
+  Remove hooks, advice, and timers when finished, or give a waiting probe a
+  bounded lifetime. Preserve buffers, point, draft input, and unrelated sessions.
+  Once recovery is authorized, perform it without repeatedly asking; terminating
+  Emacs still requires authorization for that action.
+- Verify compiled changes in a fresh Emacs before applying them live. For a
+  narrow change whose callers remain compatible, use the integration's existing
+  reload path if it supports one. Changes to macros, interfaces, or dependent
+  loaded code need a fresh profile; do not claim a partial reload proves them.
+
+## Versioning and releases
+
 - `VERSION` is the canonical release identifier; accepted calendar-versioning
   policy is recorded under `docs/adr/`. Run `make version-check` after changing
   it, package metadata, or the current NEWS heading. During development,
@@ -45,6 +131,9 @@
   documentation is not permission to publish a tagged release. Publication
   derives the GitHub repository from `RELEASE_REMOTE`; do not rely on the
   GitHub CLI's implicit remote selection when a fork also has an upstream.
+
+## Documentation
+
 - Reports and internal notes do not require an Emacsvox build. The maintained
   manual source is `docs/manual/emacsvox.org`, its included user chapters under
   `docs/manual/chapters/`, and its final developer guide under
@@ -67,6 +156,9 @@
   targets never commit or push: inspect and commit the `gh-pages` worktree
   separately. Run `make docs-check-external` only when network link checking is
   intended.
+
+## Omnivox builds and installers
+
 - `make windows-omnivox` is the reproducible clean-release path. For local
   testing from dirty Emacsvox or Omnivox worktrees, use
   `make windows-omnivox-dev`; it records both tracked-diff hashes in provenance.
