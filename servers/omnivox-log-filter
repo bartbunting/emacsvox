@@ -10,6 +10,14 @@ log_directory=${OMNIVOX_LOG_FILTER_DIRECTORY:?}
 retained_files=${OMNIVOX_LOG_RETAINED_FILES:-16}
 retained_bytes=${OMNIVOX_LOG_RETAINED_BYTES:-268435456}
 
+# Commands below receive paths without the non-POSIX `--' option terminator.
+# Make those paths absolute so a caller-supplied directory beginning with a
+# dash cannot be interpreted as an option.
+case $log_directory in
+    /*) ;;
+    *) log_directory=$(pwd)/$log_directory ;;
+esac
+
 case $retained_files in
     ''|*[!0-9]*|0) retained_files=16 ;;
 esac
@@ -29,10 +37,24 @@ omnivox_pid_is_live()
         ''|*[!0-9]*) return 1 ;;
     esac
     kill -0 "$omnivox_checked_pid" 2>/dev/null || return 1
-    [ -r "/proc/$omnivox_checked_pid/cmdline" ] || return 1
-    omnivox_command_line=$(tr '\0' ' ' <"/proc/$omnivox_checked_pid/cmdline")
-    case $omnivox_command_line in
-        *omnivox.exe*) return 0 ;;
+    if [ -r "/proc/$omnivox_checked_pid/cmdline" ]; then
+        # Argument boundaries are NULs, not spaces in the executable path.
+        omnivox_command_name=$(
+            tr '\0' '\n' <"/proc/$omnivox_checked_pid/cmdline" | sed -n '1p')
+        omnivox_command_name=${omnivox_command_name##*/}
+        case $omnivox_command_name in
+            omnivox|omnivox.exe) return 0 ;;
+            *) return 1 ;;
+        esac
+    fi
+
+    # macOS has no procfs.  `ps -o comm=' is available on both BSD and GNU ps
+    # and reports the executable without exposing command arguments.
+    omnivox_command_name=$(ps -p "$omnivox_checked_pid" -o comm= 2>/dev/null) ||
+        return 1
+    omnivox_command_name=${omnivox_command_name##*/}
+    case $omnivox_command_name in
+        omnivox|omnivox.exe) return 0 ;;
         *) return 1 ;;
     esac
 }
@@ -73,7 +95,7 @@ omnivox_retention_list=
 omnivox_cleanup()
 {
     if [ -n "$omnivox_retention_list" ]; then
-        unlink -- "$omnivox_retention_list" 2>/dev/null || :
+        unlink "$omnivox_retention_list" 2>/dev/null || :
     fi
 }
 trap omnivox_cleanup 0
@@ -86,19 +108,20 @@ omnivox_prune_logs()
     omnivox_retention_list=$(mktemp \
         "$log_directory/.omnivox-retention.XXXXXX") || return 0
 
-    if find "$log_directory" -maxdepth 1 -type f -name 'omnivox-*.log' \
-        -printf '%T@\t%p\n' | sort -nr >"$omnivox_retention_list"
+    # Shell expansion plus POSIX `ls -t' avoids GNU find's `-printf'.  All
+    # generated log paths are absolute, so option-like names remain safe.
+    if ls -1dt "$log_directory"/omnivox-*.log \
+        >"$omnivox_retention_list" 2>/dev/null
     then
         omnivox_kept_files=0
         omnivox_kept_bytes=0
-        omnivox_tab=$(printf '\t')
-        while IFS="$omnivox_tab" read -r _omnivox_modified \
-            omnivox_retention_candidate
+        while IFS= read -r omnivox_retention_candidate
         do
+            # Match find's former -type f behavior: never follow symlinks.
+            [ -L "$omnivox_retention_candidate" ] && continue
             [ -f "$omnivox_retention_candidate" ] || continue
-            chmod 600 -- "$omnivox_retention_candidate" 2>/dev/null || :
-            omnivox_size=$(stat -c %s -- \
-                "$omnivox_retention_candidate" 2>/dev/null) || continue
+            chmod 600 "$omnivox_retention_candidate" 2>/dev/null || :
+            omnivox_size=$(wc -c <"$omnivox_retention_candidate") || continue
             omnivox_next_bytes=$((omnivox_kept_bytes + omnivox_size))
             if omnivox_log_is_live_target "$omnivox_retention_candidate" ||
                { [ "$omnivox_kept_files" -lt "$retained_files" ] &&
@@ -107,12 +130,12 @@ omnivox_prune_logs()
                 omnivox_kept_files=$((omnivox_kept_files + 1))
                 omnivox_kept_bytes=$omnivox_next_bytes
             else
-                unlink -- "$omnivox_retention_candidate" 2>/dev/null || :
+                unlink "$omnivox_retention_candidate" 2>/dev/null || :
             fi
         done <"$omnivox_retention_list"
     fi
 
-    unlink -- "$omnivox_retention_list" 2>/dev/null || :
+    unlink "$omnivox_retention_list" 2>/dev/null || :
     omnivox_retention_list=
 }
 
@@ -131,7 +154,7 @@ omnivox_open_stream_part()
             return 1
         fi
     done
-    chmod 600 -- "$FILE"
+    chmod 600 "$FILE"
     exec 3>>"$FILE"
 }
 

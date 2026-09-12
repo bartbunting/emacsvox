@@ -90,9 +90,24 @@
   "Return sorted Omnivox log files immediately inside DIRECTORY."
   (directory-files directory t "\\`omnivox-.*\\.log\\'" t))
 
+(defun emacsvox-launcher-tests--bsd-chmod (directory)
+  "Install a BSD-like chmod wrapper in DIRECTORY and return its path."
+  (let ((real-chmod (or (executable-find "chmod")
+                        (error "chmod is required for launcher tests"))))
+    (emacsvox-launcher-tests--write-executable
+     (expand-file-name "chmod" directory)
+     (concat
+      "#!/bin/sh\n"
+      "for argument\n"
+      "do\n"
+      "  [ \"$argument\" != -- ] || exit 64\n"
+      "done\n"
+      "exec " (shell-quote-argument real-chmod) " \"$@\"\n"))))
+
 (ert-deftest emacsvox-launcher-log-filter-secures-and-bounds-history ()
   "The log filter should secure retained files and prune older diagnostics."
   (let* ((directory (make-temp-file "emacsvox-log-filter-" t))
+         (tool-directory (expand-file-name "bsd-tools" directory))
          (filter
           (expand-file-name
            "servers/omnivox-log-filter" emacsvox-launcher-tests--root))
@@ -100,6 +115,9 @@
          (base-time (encode-time 0 0 0 1 1 2026 t)))
     (unwind-protect
         (progn
+          (make-directory tool-directory)
+          (emacsvox-launcher-tests--bsd-chmod tool-directory)
+          (setenv "PATH" (concat tool-directory path-separator (getenv "PATH")))
           (dotimes (index 3)
             (let ((file
                    (expand-file-name
@@ -146,6 +164,107 @@
                 (should (= (file-modes log) #o600))))))
       (delete-directory directory t))))
 
+(ert-deftest emacsvox-launcher-log-filter-preserves-live-paths-with-spaces ()
+  "Procfs argument boundaries should preserve live logs and reject other PIDs."
+  (let* ((directory (make-temp-file "emacsvox procfs fixture " t))
+         (proc-directory (expand-file-name "proc/" directory))
+         (log-directory (expand-file-name "logs" directory))
+         (filter (expand-file-name "omnivox-log-filter" directory))
+         (cmdline (expand-file-name (format "%d/cmdline" (emacs-pid))
+                                    proc-directory))
+         (live-log (expand-file-name
+                    (format "omnivox-20260101T000000Z-%d-part000001.log"
+                            (emacs-pid))
+                    log-directory))
+         (new-log (expand-file-name "omnivox-new.log" log-directory))
+         (base-time (encode-time 0 0 0 1 1 2026 t))
+         (process-environment (copy-sequence process-environment)))
+    (unwind-protect
+        (progn
+          (make-directory (file-name-directory cmdline) t)
+          (make-directory log-directory)
+          ;; Redirect only procfs reads in a private copy.  The real Emacs PID
+          ;; supplies kill -0 liveness on macOS as well as Linux; parsing and
+          ;; retention still execute the production shell code.
+          (emacsvox-launcher-tests--write-executable
+           filter
+           (with-temp-buffer
+             (insert-file-contents
+              (expand-file-name "servers/omnivox-log-filter"
+                                emacsvox-launcher-tests--root))
+             (should (search-forward "/proc/" nil t))
+             (replace-regexp-in-string
+              "/proc/" proc-directory (buffer-string) t t)))
+          (setenv "OMNIVOX_LOG_FILTER_DIRECTORY" log-directory)
+          (setenv "OMNIVOX_LOG_RETAINED_FILES" "1")
+          (setenv "OMNIVOX_LOG_RETAINED_BYTES" "100")
+          (dolist (case '(("/mnt/c/Users/Jane/omnivox.exe" t)
+                          ("/mnt/c/Users/Jane Doe/omnivox.exe" t)
+                          ("/opt/Speech Tools/omnivox" t)
+                          ("/usr/bin/emacs" nil)
+                          ("/opt/not-omnivox.exe" nil)))
+            (ert-info ((format "Executable: %s" (car case)))
+              (with-temp-file cmdline
+                (insert (car case) 0 "/argument/omnivox.exe" 0))
+              (with-temp-file live-log (insert "live diagnostic\n"))
+              (set-file-times live-log base-time)
+              (with-temp-file new-log (insert "new diagnostic\n"))
+              (set-file-times new-log (time-add base-time 1))
+              (should (equal (emacsvox-launcher-tests--call filter "--prune-only")
+                             '(0 "")))
+              (should (eq (file-exists-p live-log) (cadr case)))
+              (should (file-exists-p new-log)))))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-launcher-log-filter-excludes-symlinks ()
+  "Retention should ignore symlinks without touching their targets or quota."
+  (let* ((directory (make-temp-file "emacsvox-symlink-logs-" t))
+         (log-directory (expand-file-name "logs" directory))
+         (target-directory (expand-file-name "outside" directory))
+         (target (expand-file-name "private-data" target-directory))
+         (missing (expand-file-name "missing" target-directory))
+         (old-log (expand-file-name "omnivox-old.log" log-directory))
+         (new-log (expand-file-name "omnivox-new.log" log-directory))
+         (filter (expand-file-name "servers/omnivox-log-filter"
+                                   emacsvox-launcher-tests--root))
+         (base-time (encode-time 0 0 0 1 1 2026 t))
+         (process-environment (copy-sequence process-environment)))
+    (unwind-protect
+        (progn
+          (make-directory log-directory)
+          (make-directory target-directory)
+          (set-file-modes target-directory #o755)
+          (with-temp-file target (insert "unrelated contents\n"))
+          (set-file-modes target #o644)
+          (dolist (pair `(("omnivox-file.log" . ,target)
+                          ("omnivox-directory.log" . ,target-directory)
+                          ("omnivox-dangling.log" . ,missing)))
+            (make-symbolic-link (cdr pair)
+                               (expand-file-name (car pair) log-directory)))
+          (with-temp-file old-log (insert "old diagnostic\n"))
+          (set-file-times old-log base-time)
+          (with-temp-file new-log (insert "new diagnostic\n"))
+          (set-file-times new-log (time-add base-time 1))
+          (set-file-modes new-log #o644)
+          (setenv "OMNIVOX_LOG_FILTER_DIRECTORY" log-directory)
+          (setenv "OMNIVOX_LOG_RETAINED_FILES" "1")
+          (setenv "OMNIVOX_LOG_RETAINED_BYTES" "100")
+          (should (equal (emacsvox-launcher-tests--call filter "--prune-only")
+                         '(0 "")))
+          (should (= (file-modes target) #o644))
+          (should (= (file-modes target-directory) #o755))
+          (should (equal (with-temp-buffer
+                           (insert-file-contents target)
+                           (buffer-string))
+                         "unrelated contents\n"))
+          (dolist (name '("omnivox-file.log" "omnivox-directory.log"
+                          "omnivox-dangling.log"))
+            (should (file-symlink-p (expand-file-name name log-directory))))
+          (should-not (file-exists-p missing))
+          (should-not (file-exists-p old-log))
+          (should (= (file-modes new-log) #o600)))
+      (delete-directory directory t))))
+
 (ert-deftest emacsvox-launcher-rotates-omnivox-stderr-by-size ()
   "The launcher should stream stderr into private bounded session parts."
   (let* ((directory (make-temp-file "emacsvox-launcher-logs-" t))
@@ -177,7 +296,7 @@
              "index=0\n"
              "while [ \"$index\" -lt 30 ]; do\n"
              "  printf 'diagnostic-%02d %064d\\n' \"$index\" \"$index\" >&2\n"
-             "  if [ \"$index\" -eq 0 ]; then sleep 0.5; fi\n"
+             "  if [ \"$index\" -eq 0 ]; then sleep 1; fi\n"
              "  index=$((index + 1))\n"
              "done\n"))
           (dolist (file (list launcher filter program))
@@ -200,7 +319,7 @@
                          :connection-type 'pipe
                          :noquery t
                          :sentinel #'ignore))
-                  (let ((deadline (+ (float-time) 0.4)))
+                  (let ((deadline (+ (float-time) 1.5)))
                     (while
                         (and (< (float-time) deadline)
                              (not saw-live-diagnostic))
