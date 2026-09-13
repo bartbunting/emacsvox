@@ -84,6 +84,24 @@
     (should-not (buffer-local-value 'emacsvox-aural-buffer-rules source))
     (should-error (emacsvox-aural-change-feedback-apply) :type 'user-error)))
 
+(ert-deftest emacsvox-aural-guided-vocabulary-returns-to-matching-criteria ()
+  "Vocabulary lookup preserves the draft and q still closes its match section."
+  (emacsvox-test--with-guided-feedback
+    (emacsvox-test--guided-choose "Change the content voice" "bolden")
+    (emacsvox-aural-change-feedback-match)
+    (should (emacsvox-aural-ui-goto-row 'vocabulary))
+    (let ((editor (current-buffer))
+          (draft (copy-tree emacsvox-aural-change-feedback-render)))
+      (emacsvox-aural-change-feedback-open-row)
+      (should-not (eq (current-buffer) editor))
+      (emacsvox-aural-quit)
+      (should (eq (current-buffer) editor))
+      (should (eq (tabulated-list-get-id) 'vocabulary))
+      (emacsvox-aural-change-feedback--back)
+      (should (eq (tabulated-list-get-id) 'match))
+      (should-not emacsvox-aural-change-feedback--expanded)
+      (should (equal draft emacsvox-aural-change-feedback-render)))))
+
 (ert-deftest emacsvox-aural-guided-add-components-without-existing-cue ()
   "Sound, tone, and speech additions preserve spoken content and other phases."
   (emacsvox-test--with-guided-feedback

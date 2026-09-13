@@ -92,8 +92,7 @@
 
 (defconst emacsvox-aural-home-task-groups
   '((understand "Understand and change feedback"
-                explain change-feedback recent-feedback remap tune-voice
-                remap-earcon semantics return-source)
+                explain recent-feedback return-source)
     (resources "Voices and speech"
                voices browse-voices speech-engine speech-rate voice-workbench)
     (output "Sounds and output"
@@ -102,6 +101,11 @@
     (manage "Saved setups and unfinished changes" profiles drafts)
     (troubleshoot "Troubleshooting" diagnostics spatial engine-modules))
   "Ordered Home task groups with their stable action identifiers.")
+
+(defconst emacsvox-aural-home--shortcut-rows
+  '((change-feedback . explain) (remap . explain) (tune-voice . explain)
+    (remap-earcon . explain) (semantics . explain))
+  "Visible return rows for actions available through shortcuts, search, or Help.")
 
 (defun emacsvox-aural-home--pending-drafts ()
   "Return unfinished Aural editors without changing their working state."
@@ -262,8 +266,8 @@
      (list
       'explain
       (vector
-       "Explain this item" source-name
-       "Open Feedback Details for the captured item"))
+       "Feedback for this item" source-name
+       "Hear, understand, and change feedback for the captured item"))
      (list
       'remap
       (vector
@@ -288,7 +292,7 @@
      (list
       'recent-feedback
       (vector
-       "Recent aural feedback"
+       "Recent feedback"
        (emacsvox-aural-home--recent-feedback-status)
        "Review recorded feedback, hear it again, explain it, or change similar feedback"))
      (list
@@ -399,17 +403,20 @@
 (defun emacsvox-aural-home-search ()
   "Find and open any named Home action, including collapsed destinations."
   (interactive)
-  (let* ((actions (mapcar (lambda (row) (cons (aref (cadr row) 0) (car row)))
-                          (emacsvox-aural-home--all-entries)))
+  (let* ((actions (append
+                   (mapcar (lambda (row) (cons (aref (cadr row) 0) (car row)))
+                           (emacsvox-aural-home--all-entries))
+                   '(("Explain this item" . explain)
+                     ("Recent aural feedback" . recent-feedback))))
          (id (cdr (assoc (completing-read "Home action: " actions nil t) actions)))
-         (group (cl-find-if (lambda (entry) (memq id (cddr entry)))
-                            emacsvox-aural-home-task-groups)))
-    (cl-pushnew (car group) emacsvox-aural-home-expanded-groups)
-    (emacsvox-aural-home-refresh id)
-    (emacsvox-aural-home-activate)))
+         (column (emacsvox-aural-ui-tabulated-column-index)))
+    (emacsvox-aural-home--goto id)
+    (emacsvox-aural-ui-goto-tabulated-column column)
+    (emacsvox-aural-home--activate id)))
 
 (defun emacsvox-aural-home--goto (id)
   "Move to Home action ID, expanding its group when needed."
+  (setq id (or (alist-get id emacsvox-aural-home--shortcut-rows) id))
   (unless (emacsvox-aural-ui-goto-row id)
     (when-let* ((group (cl-find-if (lambda (entry) (memq id (cddr entry)))
                                   emacsvox-aural-home-task-groups)))
@@ -544,8 +551,13 @@
 (defun emacsvox-aural-home-activate ()
   "Perform the primary operation for the aural home row at point."
   (interactive)
-  (pcase (or (tabulated-list-get-id)
-             (user-error "Move to an aural home row first"))
+  (emacsvox-aural-home--activate
+   (or (tabulated-list-get-id)
+       (user-error "Move to an aural home row first"))))
+
+(defun emacsvox-aural-home--activate (id)
+  "Open action ID, including actions reached through search."
+  (pcase id
     (`(group ,_) (emacsvox-aural-home-toggle-group))
     ('change-feedback (emacsvox-aural-home-change-feedback))
     ('browse-voices (emacsvox-aural-home-browse-voices))
@@ -611,7 +623,7 @@
     (princ
      (concat
       "Emacsvox Aural Home\n\n"
-      "Start with a task: change the captured item with c, review past feedback\n"
+      "Start with Feedback for this item (x) to hear, understand, and change it; review past feedback\n"
       "with H, or use / to find Browse installed voices or any other action.\n"
       "Home keeps your source position and unfinished drafts.\n\n"
       "n or down next       p or up previous\n"
@@ -620,7 +632,7 @@
       "/ search all actions, including collapsed groups\n"
       "SPC speak complete row; the current row is announced on entry\n"
       "c guided Change this feedback\n"
-      "x explain this item   r choose a voice for this item\n"
+      "x feedback for this item   r choose a voice for this item\n"
       "T edit the named voice used here; affects every use\n"
       "R change a sound for this item\n"
       "O your feedback rules\n"
@@ -636,13 +648,18 @@
       "? display and speak this help\n"
       "C-e H opens this home from any ordinary buffer\n"
       "C-e E explains presentation from any ordinary buffer\n"
-      "To change an item, move to it, open C-e H, then press c.\n"
+      "To review or change feedback, move to the item, open C-e H, then press x.\n"
+      "c, r, T, and R remain direct shortcuts and searchable actions.\n"
       "r chooses another named voice here; T tunes that voice wherever it is used.\n"
       "A prepared rule remains unsaved until you accept it in its editor.\n"
       "h returns here from any aural manager or editor\n"
       "Reopening Home or an editor keeps its selection and unfinished edits.\n"
       "If the source item changes, reopen C-e H from its new location.\n"
-      "q quit\n")))
+      "q quit\n\nReference: "))
+    (insert-text-button "Semantic vocabulary"
+                        'follow-link t
+                        'action (lambda (_) (emacsvox-aural-list-semantics)))
+    (princ " — names used by feedback matching criteria.\n"))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 

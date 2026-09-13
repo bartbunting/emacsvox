@@ -114,7 +114,7 @@ The six groups are:
 
 #+attr_texinfo: :columns 0.35 0.65
 | Task group | Destinations |
-| Understand and change feedback | Explain this item, Change this feedback, Recent aural feedback, contextual voice and sound changes, semantic vocabulary, and return to source. |
+| Understand and change feedback | Feedback for this item, Recent feedback, and Return to source item. |
 | Voices and speech | Voice palettes, Browse installed voices, Preferred speech engine, Speech rate, and Voice Workbench. |
 | Sounds and output | Sound packs, Spatial settings, Notification output, Review notifications, and Stop notification speech. |
 | Optional feedback and rules | Presentation options, Your feedback rules, Current buffer rules, and Explain feedback as you navigate. |
@@ -130,9 +130,16 @@ palette's named voices; shared engine settings are saved separately.
 
 You can press @@texinfo:@key{RET}@@ on a row without memorizing its shortcut.  Aural
 Home also provides direct keys for frequent routes, including @@texinfo:@kbd{x}@@ for
-explanation, @@texinfo:@kbd{O}@@ for your feedback rules, @@texinfo:@kbd{H}@@ for recent feedback,
+Feedback Details, @@texinfo:@kbd{O}@@ for your feedback rules, @@texinfo:@kbd{H}@@ for recent feedback,
 @@texinfo:@kbd{P}@@ for profiles, @@texinfo:@kbd{V}@@ for voice palettes, @@texinfo:@kbd{W}@@ for
 Voice Workbench, and @@texinfo:@kbd{D}@@ for Aural Doctor.
+
+/Feedback for this item/ combines explanation, playback, and access to voice
+and sound changes. The direct shortcuts @@texinfo:@kbd{c}@@, @@texinfo:@kbd{r}@@,
+@@texinfo:@kbd{T}@@, and @@texinfo:@kbd{R}@@ still open their editors. Search with
+@@texinfo:@kbd{/}@@ also accepts their existing action names, including /Explain
+this item/. /Semantic vocabulary/ is available from Home's Help, search, and the
+matching-criteria section of a change editor.
 
 The voice editor contains fields and buttons rather than table columns:
 left/right changes a numeric value, and @@texinfo:@key{RET}@@ edits a field.
@@ -256,7 +263,7 @@ when a simpler backend uses fewer voice characteristics or centered output.
 Use this workflow when feedback is surprising, unclear, or especially useful:
 
 1. Leave point on the object and press @@texinfo:@kbd{C-e E}@@, or choose
-   /Explain this item/ in Aural Home. Both open /Feedback Details/ with a brief
+   /Feedback for this item/ in Aural Home. Both open /Feedback Details/ with a brief
    announcement rather than speaking the complete explanation.
 
 2. Read the explanation as a report of the object and occasion, matching
@@ -287,8 +294,8 @@ reported palette, affecting every use there. /Change field/ instead changes
 the feedback rule for that field. Leaving the voice editor returns to the
 same report link; opening it does not save or apply anything.
 
-To inspect something heard earlier, open Aural Home and choose /Recent Aural
-Feedback/, or press @@texinfo:@kbd{H}@@ there.  Each row preserves a recorded presentation; the history has a size limit.
+To inspect something heard earlier, open Aural Home and choose /Recent
+feedback/, or press @@texinfo:@kbd{H}@@ there.  Each row preserves a recorded presentation; the history has a size limit.
 Moving through the Content column speaks the preview using its recorded voices,
 including voice changes within an entry.  Column titles and the other fields use
 the normal interface voice.
@@ -394,7 +401,7 @@ Start by choosing the narrowest tool that matches your intention:
 #+attr_texinfo: :columns 0.42 0.30 0.28
 | Intention | Use | Scope |
 | Try an optional behavior supplied by Emacsvox or an integration | Presentation Options | Global configuration |
-| Change voice, sound, tone, label, or suppression | Change this feedback | Personal, session, or current buffer |
+| Change voice, sound, tone, label, or suppression | Feedback Details, then Change field | Personal, session, or current buffer |
 | Review or remove an existing precise change | Your feedback rules | Its recorded scope |
 | Try rules only in the current work buffer | Current Buffer Rules | Life of that buffer |
 | Switch selected reading or working settings | Presentation Profiles | Saved global configuration |
@@ -535,9 +542,9 @@ recorded example.
 1. Move to a representative object and press @@texinfo:@kbd{C-e E}@@ so you know what
    currently controls it.
 
-2. Press @@texinfo:@kbd{C-e H}@@.  Choose /Choose a voice for this item/ with
-   @@texinfo:@kbd{r}@@ to use a different named voice here, or /Edit the named voice used
-   here/ with @@texinfo:@kbd{T}@@ to open the current named voice in the common voice editor.
+2. Press @@texinfo:@kbd{C-e H}@@. Use the direct shortcut @@texinfo:@kbd{r}@@
+   for /Choose a voice for this item/, or @@texinfo:@kbd{T}@@ for /Edit the named
+   voice used here/ to open the current named voice in the common voice editor.
    Tuning changes that voice wherever it is used in the palette; remapping
    changes which voice is used for the face or item.  For example, at a shell
    prompt you can assign another voice to the prompt face, or tune the voice

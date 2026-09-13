@@ -2495,7 +2495,7 @@ The six groups are:
 @item Task group
 @tab Destinations
 @item Understand and change feedback
-@tab Explain this item@comma{} Change this feedback@comma{} Recent aural feedback@comma{} contextual voice and sound changes@comma{} semantic vocabulary@comma{} and return to source.
+@tab Feedback for this item@comma{} Recent feedback@comma{} and Return to source item.
 @item Voices and speech
 @tab Voice palettes@comma{} Browse installed voices@comma{} Preferred speech engine@comma{} Speech rate@comma{} and Voice Workbench.
 @item Sounds and output
@@ -2517,9 +2517,16 @@ palette's named voices; shared engine settings are saved separately.
 
 You can press @key{RET} on a row without memorizing its shortcut.  Aural
 Home also provides direct keys for frequent routes@comma{} including @kbd{x} for
-explanation@comma{} @kbd{O} for your feedback rules@comma{} @kbd{H} for recent feedback@comma{}
+Feedback Details@comma{} @kbd{O} for your feedback rules@comma{} @kbd{H} for recent feedback@comma{}
 @kbd{P} for profiles@comma{} @kbd{V} for voice palettes@comma{} @kbd{W} for
 Voice Workbench@comma{} and @kbd{D} for Aural Doctor.
+
+@emph{Feedback for this item} combines explanation@comma{} playback@comma{} and access to voice
+and sound changes. The direct shortcuts @kbd{c}@comma{} @kbd{r}@comma{}
+@kbd{T}@comma{} and @kbd{R} still open their editors. Search with
+@kbd{/} also accepts their existing action names@comma{} including @emph{Explain
+this item}. @emph{Semantic vocabulary} is available from Home's Help@comma{} search@comma{} and the
+matching-criteria section of a change editor.
 
 The voice editor contains fields and buttons rather than table columns:
 left/right changes a numeric value@comma{} and @key{RET} edits a field.
@@ -2662,7 +2669,7 @@ Use this workflow when feedback is surprising@comma{} unclear@comma{} or especia
 @enumerate
 @item
 Leave point on the object and press @kbd{C-e E}@comma{} or choose
-@emph{Explain this item} in Aural Home. Both open @emph{Feedback Details} with a brief
+@emph{Feedback for this item} in Aural Home. Both open @emph{Feedback Details} with a brief
 announcement rather than speaking the complete explanation.
 
 @item
@@ -2696,8 +2703,8 @@ reported palette@comma{} affecting every use there. @emph{Change field} instead 
 the feedback rule for that field. Leaving the voice editor returns to the
 same report link; opening it does not save or apply anything.
 
-To inspect something heard earlier@comma{} open Aural Home and choose @emph{Recent Aural
-Feedback}@comma{} or press @kbd{H} there.  Each row preserves a recorded presentation; the history has a size limit.
+To inspect something heard earlier@comma{} open Aural Home and choose @emph{Recent
+feedback}@comma{} or press @kbd{H} there.  Each row preserves a recorded presentation; the history has a size limit.
 Moving through the Content column speaks the preview using its recorded voices@comma{}
 including voice changes within an entry.  Column titles and the other fields use
 the normal interface voice.
@@ -2822,7 +2829,7 @@ Start by choosing the narrowest tool that matches your intention:
 @tab Presentation Options
 @tab Global configuration
 @item Change voice@comma{} sound@comma{} tone@comma{} label@comma{} or suppression
-@tab Change this feedback
+@tab Feedback Details@comma{} then Change field
 @tab Personal@comma{} session@comma{} or current buffer
 @item Review or remove an existing precise change
 @tab Your feedback rules
@@ -2987,9 +2994,9 @@ Move to a representative object and press @kbd{C-e E} so you know what
 currently controls it.
 
 @item
-Press @kbd{C-e H}.  Choose @emph{Choose a voice for this item} with
-@kbd{r} to use a different named voice here@comma{} or @emph{Edit the named voice used
-here} with @kbd{T} to open the current named voice in the common voice editor.
+Press @kbd{C-e H}. Use the direct shortcut @kbd{r}
+for @emph{Choose a voice for this item}@comma{} or @kbd{T} for @emph{Edit the named
+voice used here} to open the current named voice in the common voice editor.
 Tuning changes that voice wherever it is used in the palette; remapping
 changes which voice is used for the face or item.  For example@comma{} at a shell
 prompt you can assign another voice to the prompt face@comma{} or tune the voice

@@ -215,6 +215,7 @@
                       (eq expanded 'voices)) 'voices 'operations))
             (`(part ,_) 'parts)
             (`(criterion ,_) 'match)
+            ('vocabulary 'match)
             ('change (when (memq expanded '(operations voices))
                        (if emacsvox-aural-change-feedback--voice-remap 'voices 'operations)))
             ('match (when (eq expanded 'match) 'match))
@@ -449,14 +450,16 @@
   "Return matching criteria with their included or excluded state."
   (let ((selected (emacsvox-aural-change-feedback--criteria
                    emacsvox-aural-change-feedback-selector)))
-    (mapcar
+    (append (mapcar
      (lambda (criterion)
        (list (list 'criterion criterion)
              (vector (concat "  " (emacsvox-aural-change-feedback--criterion-description criterion))
                      (if (member criterion selected)
                          "Included; RET excludes this criterion"
                        "Excluded; RET includes this criterion"))))
-     emacsvox-aural-change-feedback--match-options)))
+     emacsvox-aural-change-feedback--match-options)
+     (list (list 'vocabulary (vector "  Semantic vocabulary"
+                                    "Look up the roles, states, and attributes used by these criteria"))))))
 
 (defun emacsvox-aural-change-feedback--toggle-criterion (criterion)
   "Include or exclude CRITERION in the draft, without changing live rules."
@@ -869,6 +872,7 @@
       (t (emacsvox-aural-change-feedback-details))))
     ('change (emacsvox-aural-change-feedback-change))
     ('match (emacsvox-aural-change-feedback-match))
+    ('vocabulary (emacsvox-aural-list-semantics))
     ('lifetime (emacsvox-aural-change-feedback-lifetime))
     ('original (emacsvox-aural-change-feedback-original))
     ('proposed (emacsvox-aural-change-feedback-proposed))
