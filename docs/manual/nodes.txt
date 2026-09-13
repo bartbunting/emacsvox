@@ -52,6 +52,7 @@ Editing Named Voices
 Voice Adjustments
 Voice Fallbacks
 Voices In Context
+Emoji Speech Names
 Installed Voices And Engines
 Physical Voice Experiments
 Keeping A Voice Experiment

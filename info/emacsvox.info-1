@@ -2387,6 +2387,7 @@ returns to the interface.  In interface Help, ‘i’ opens the same topic.
 * Adjusting Presentation::       Preview, scope, save, and undo presentation changes.
 * Choose And Manage Voice Palettes: Voices And Routing.  Understand named voices, standard inheritance, and personal palettes.
 * Edit A Named Voice: Editing Named Voices.  Adjust a voice, compare it, and save the complete result.
+* Name Occasional Emoji In Speech: Emoji Speech Names.  Keep occasional decoration from forcing a different speech engine.
 * Browse Installed Voices And Choose Engines: Installed Voices And Engines.  Find physical voices and configure shared engine preferences.
 * Sounds And Space::             Audition sound packs and inspect spatial fallback.
 * Speech Output And Notifications: Aural Speech Output.  Set speech rate and understand foreground and background output.
@@ -3283,7 +3284,7 @@ maintained integration configuration can block a rename; its owner must
 update that reference first.
 
 
-File: emacsvox.info,  Node: Editing Named Voices,  Next: Installed Voices And Engines,  Prev: Voices And Routing,  Up: Aural Presentation
+File: emacsvox.info,  Node: Editing Named Voices,  Next: Emoji Speech Names,  Prev: Voices And Routing,  Up: Aural Presentation
 
 6.6 Edit A Named Voice
 ======================
@@ -3582,9 +3583,85 @@ Developer Guide: (emacsvox)Integration Maintenance. explains the
 representation and compatibility details.
 
 
-File: emacsvox.info,  Node: Installed Voices And Engines,  Next: Sounds And Space,  Prev: Editing Named Voices,  Up: Aural Presentation
+File: emacsvox.info,  Node: Emoji Speech Names,  Next: Installed Voices And Engines,  Prev: Editing Named Voices,  Up: Aural Presentation
 
-6.7 Browse Installed Voices And Choose Engines
+6.7 Name Occasional Emoji In Speech
+===================================
+
+A voice such as Eloquence may need a fallback engine for an emoji in
+otherwise compatible text.  Optional emoji naming changes the speech
+text before engine selection: ‘Forecast 🔮’ becomes ‘Forecast crystal
+ball’.  The source buffer keeps its original text.  This can keep the
+preferred voice speaking when the rest of the text is compatible; the
+normal repertoire checks still decide which engine can handle it.
+
+   The feature starts disabled.  Use ‘M-x customize-group RET
+emacsvox-emoji RET’ to review its options.  Enable
+‘emacsvox-emoji-naming-enabled’ globally, or try it only in the current
+source buffer with:
+
+     (setq-local emacsvox-emoji-naming-enabled t)
+
+   To enable it for Org buffers through your configuration:
+
+     (add-hook 'org-mode-hook
+               (lambda () (setq-local emacsvox-emoji-naming-enabled t)))
+
+   All four options support buffer-local settings.  Set
+‘emacsvox-emoji-naming-enabled’ to nil locally to override an enabled
+global default.  Voice previews opened from an aural screen use the
+remembered source buffer's settings; contextual previews use their
+captured source policy.  Changing a setting during playback does not
+change the submitted sample.
+
+   The trial approval list, ‘emacsvox-emoji-approved-sequences’,
+contains ‘🔮’, ‘✨’, ‘✅’, ‘⚠️’, ‘🚀’ and ‘💡’.  Matching uses complete,
+exact sequences.  An unknown joined emoji stays intact, even when one of
+its components is approved.  Foreign-language letters, combining
+accents, flags, keycaps and unapproved symbols retain the existing
+fallback behaviour.  Exact character inspection also retains its
+existing behaviour.
+
+   ‘emacsvox-emoji-maximum-count’ defaults to two occurrences, counting
+repetitions separately.  With three approved occurrences in the original
+item, automatic naming is skipped for the whole item.  One captured
+presentation object can contain several voice runs; a standalone preview
+sample is one item.  Transport chunk sizes do not affect this limit.  A
+sequence crossing a style or positioned cue boundary is conservatively
+left unchanged.
+
+   Names come from the emoji table bundled with Emacs.  Coverage may
+vary between Emacs versions.  Missing data or an absent exact name
+leaves the original sequence available to normal fallback; nothing is
+downloaded.  The names are English, and enabled naming also applies to
+engines that could speak the original emoji.
+
+   Explicit pronunciation entries take precedence.  For approved
+sequences, set ‘emacsvox-emoji-custom-names’ to override a bundled name,
+for example:
+
+     (setq-local emacsvox-emoji-custom-names '(("🔮" . "prediction")))
+
+   Custom names must contain 1 to 80 characters and no control
+characters.  Empty names are invalid; use an explicit pronunciation when
+you want to omit something.  Approval and custom-name lists are limited
+to 64 entries, sequences to 32 characters, and the occurrence limit to
+the range 0 through 64.  Invalid settings skip automatic naming with an
+explanation rather than stopping speech.
+
+   In _Feedback Details_ (‘C-e E’), expand the relevant field to see the
+original sequence and its speech name, or why naming was skipped.  The
+voice editor's _Details and last playback evidence_ also reports sample
+substitutions.  These describe prepared text, not confirmation of what
+you heard.  _Play original_ keeps the retained speech text after
+settings change.  Rule proposals retain that captured text while
+changing its presentation; open a fresh source presentation to try a
+different naming policy.
+
+
+File: emacsvox.info,  Node: Installed Voices And Engines,  Next: Sounds And Space,  Prev: Emoji Speech Names,  Up: Aural Presentation
+
+6.8 Browse Installed Voices And Choose Engines
 ==============================================
 
 Use _Voice Workbench_ when the question involves installed voices or
@@ -3649,7 +3726,7 @@ parameter.
 
 File: emacsvox.info,  Node: Physical Voice Experiments,  Next: Keeping A Voice Experiment,  Up: Installed Voices And Engines
 
-6.7.1 Experiment With An Installed Voice
+6.8.1 Experiment With An Installed Voice
 ----------------------------------------
 
 In _Browse installed voices_, select a physical voice and press ‘t’.
@@ -3705,7 +3782,7 @@ anything yet.
 
 File: emacsvox.info,  Node: Keeping A Voice Experiment,  Next: Speech Engine Preferences,  Prev: Physical Voice Experiments,  Up: Installed Voices And Engines
 
-6.7.2 Walkthrough: Keep An Installed Voice Experiment
+6.8.2 Walkthrough: Keep An Installed Voice Experiment
 -----------------------------------------------------
 
 This example keeps the physical voice and its tuning together.  First
@@ -3750,7 +3827,7 @@ adjustments with it.
 
 File: emacsvox.info,  Node: Speech Engine Preferences,  Prev: Keeping A Voice Experiment,  Up: Installed Voices And Engines
 
-6.7.3 Set Shared Engine Preferences
+6.8.3 Set Shared Engine Preferences
 -----------------------------------
 
 For a quick engine preference, ‘C-e d e’ chooses an available engine for
@@ -3784,7 +3861,7 @@ Omnivox Engine Modules: (emacsvox)Optional Omnivox Engine Modules.
 
 File: emacsvox.info,  Node: Sounds And Space,  Next: Aural Speech Output,  Prev: Installed Voices And Engines,  Up: Aural Presentation
 
-6.8 Sounds, Tones, And Spatial Cues
+6.9 Sounds, Tones, And Spatial Cues
 ===================================
 
 Presentation rules refer to auditory cues by semantic name.  A sound
@@ -3831,7 +3908,7 @@ sound pack.
 
 File: emacsvox.info,  Node: Sound Pack Walkthrough,  Next: Changing One Sound,  Up: Sounds And Space
 
-6.8.1 Walkthrough: Try A Sound Pack
+6.9.1 Walkthrough: Try A Sound Pack
 -----------------------------------
 
   1. Open ‘C-e H’, choose _Sound packs_, and note the currently active
@@ -3861,7 +3938,7 @@ than changing the entire pack.  The next walkthrough demonstrates this.
 
 File: emacsvox.info,  Node: Changing One Sound,  Next: Changing Tones,  Prev: Sound Pack Walkthrough,  Up: Sounds And Space
 
-6.8.2 Walkthrough: Silence One Cue
+6.9.2 Walkthrough: Silence One Cue
 ----------------------------------
 
   1. Repeat the action that produces the unwanted cue.  Open ‘C-e H H’,
@@ -3890,7 +3967,7 @@ later removal use the same rule-management workflow.
 
 File: emacsvox.info,  Node: Changing Tones,  Next: Spatial Presentation Controls,  Prev: Changing One Sound,  Up: Sounds And Space
 
-6.8.3 Change A Blank-Line Tone
+6.9.3 Change A Blank-Line Tone
 ------------------------------
 
 This changes a tone already present in recorded blank-line feedback.
@@ -3924,7 +4001,7 @@ component from a visually blank line.
 
 File: emacsvox.info,  Node: Spatial Presentation Controls,  Next: Personal Sound Packs,  Prev: Changing Tones,  Up: Sounds And Space
 
-6.8.4 Adjust Spatial Presentation
+6.9.4 Adjust Spatial Presentation
 ---------------------------------
 
 From Home, open _Spatial capabilities_ under _Troubleshooting_ to
@@ -3954,7 +4031,7 @@ settings.
 
 File: emacsvox.info,  Node: Personal Sound Packs,  Prev: Spatial Presentation Controls,  Up: Sounds And Space
 
-6.8.5 Inspect And Maintain A Personal Sound Pack
+6.9.5 Inspect And Maintain A Personal Sound Pack
 ------------------------------------------------
 
 In the sound-pack manager, ‘o’ opens the pack directory and ‘g’ rescans
@@ -3979,8 +4056,8 @@ change to when a cue plays, use _Change this feedback_.
 
 File: emacsvox.info,  Node: Aural Speech Output,  Next: Presentation Profiles,  Prev: Sounds And Space,  Up: Aural Presentation
 
-6.9 Speech Output And Notifications
-===================================
+6.10 Speech Output And Notifications
+====================================
 
 Speech rate and output settings control how speech reaches you,
 independently of which presentation rule chose the content.  _Speech
@@ -4028,7 +4105,7 @@ explicit ‘tts-stop’ command stops both main and notification speech.
 
 File: emacsvox.info,  Node: Presentation Profiles,  Next: Presentation Troubleshooting,  Prev: Aural Speech Output,  Up: Aural Presentation
 
-6.10 Save, Switch, And Share Your Setup
+6.11 Save, Switch, And Share Your Setup
 =======================================
 
 A presentation profile records a coordinated setup: enabled Presentation
@@ -4079,7 +4156,7 @@ belong to an individual buffer rather than a global setup.
 
 File: emacsvox.info,  Node: Presentation Profile Walkthrough,  Next: Saving And Startup,  Up: Presentation Profiles
 
-6.10.1 Walkthrough: Switch Reading And Working Setups
+6.11.1 Walkthrough: Switch Reading And Working Setups
 -----------------------------------------------------
 
 This example saves two profiles with different voice or sound
@@ -4125,7 +4202,7 @@ settings again.
 
 File: emacsvox.info,  Node: Saving And Startup,  Next: Sharing Voice Palettes,  Prev: Presentation Profile Walkthrough,  Up: Presentation Profiles
 
-6.10.2 Choose What Persists
+6.11.2 Choose What Persists
 ---------------------------
 
 These actions answer different questions:
@@ -4152,7 +4229,7 @@ turn these temporary rules or unfinished drafts into permanent settings.
 
 File: emacsvox.info,  Node: Sharing Voice Palettes,  Prev: Saving And Startup,  Up: Presentation Profiles
 
-6.10.3 Export, Back Up, And Import Palettes
+6.11.3 Export, Back Up, And Import Palettes
 -------------------------------------------
 
 For sharing, ‘w’ exports effective portable entries and asks before
@@ -4182,7 +4259,7 @@ backup is not a backup of every Emacsvox setting.
 
 File: emacsvox.info,  Node: Presentation Troubleshooting,  Next: Voice Lock,  Prev: Presentation Profiles,  Up: Aural Presentation
 
-6.11 Troubleshooting And Recovery
+6.12 Troubleshooting And Recovery
 =================================
 
 Use the symptom to choose the shortest diagnostic route:
@@ -4249,7 +4326,7 @@ locate the unresolved reference.
 
 File: emacsvox.info,  Node: Recovering Aural Changes,  Up: Presentation Troubleshooting
 
-6.11.1 Recover Unfinished Changes
+6.12.1 Recover Unfinished Changes
 ---------------------------------
 
 Use ‘h’ to leave a working editor through Home without losing it.
@@ -4280,7 +4357,7 @@ acknowledged success and identifies those that timed out.
 
 File: emacsvox.info,  Node: Voice Lock,  Prev: Presentation Troubleshooting,  Up: Aural Presentation
 
-6.12 Voice Lock And Advanced Configuration
+6.13 Voice Lock And Advanced Configuration
 ==========================================
 
 Voice Lock is one compatibility input to Aural Presentation, not the

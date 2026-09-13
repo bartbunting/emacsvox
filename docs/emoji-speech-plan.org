@@ -8,6 +8,8 @@ Implementation authorized on 2026-09-13, in tested, committed slices. The
 maintainer selected Emacs's existing emoji-name table as the initial data
 source. Personal settings and release publication remain outside this work.
 The preceding voice-editor and graphical-test changes are already committed.
+Implementation and automated verification are complete. The opt-in listening
+trial remains pending; no personal settings have been enabled.
 
 The first acceptance example is =Forecast 🔮=: with the feature enabled,
 speech preparation supplies =Forecast crystal ball=, allowing Eloquence to
@@ -40,8 +42,7 @@ Follow all accepted [[file:adr/][ADRs]], particularly the Emacs minimum in
 - The inspected Emacs 31.0.90 provides =emoji-labels.el= and an =equal= hash
   table named =emoji--names=. Exact lookups returned =crystal ball= for =🔮=,
   =woman technologist= for =👩‍💻=, and =thumbs up: medium skin tone= for =👍🏽=.
-  This establishes availability on the selected toolchain only; Emacs 30.2
-  remains a required compatibility check.
+  The same trial names were subsequently verified on Emacs 30.2.
 - Normal speech applies pronunciation entries in a temporary speech buffer.
   Complete voice previews construct their own text requests in
   [[file:../lisp/emacsvox-aural-voice-editing.el][voice-editing.el]]. A change only in the ordinary speech cleanup would
@@ -150,7 +151,7 @@ unchanged. Carry the effective policy with an asynchronous operation so later
 buffer or settings changes cannot alter an in-flight request. Reuse existing
 transport; no Omnivox protocol or helper changes are planned.
 
-** TODO 4. Complete regression and compiled verification
+** DONE 4. Complete regression and compiled verification
 
 | Case | Required result |
 |------+-----------------|
@@ -175,7 +176,7 @@ interfaces. Verify actual loaded paths in fresh compiled Emacs processes.
 Keep Emacs 30.2 evidence separate. Test generated English labels and permitted
 sequence variants from the real table as well as boundary-focused fixtures.
 
-** TODO 5. Spoken acceptance and documentation
+** TODO 5. Complete spoken acceptance (documentation implemented)
 
 With the maintainer's chosen test buffers, enable the trial policy temporarily.
 Check actual Eloquence/eSpeak routing evidence and listen to the original
@@ -265,3 +266,28 @@ additional graphical-only case). Six isolated graphical checks pass, including
 explanation visibility and the voice editor's final Save actions. The whole
 unit suite exposed older palette/queue expectations and incomplete startup
 inventory. These are tracked separately from emoji regression evidence.
+
+** Final automated verification and remaining listening trial
+
+- Emacs 31.0.90: source emoji regression tests and fresh compiled aural parity
+  pass. The compiled gate verifies that naming, planning and preview functions
+  load from its isolated build directory.
+- Emacs 30.2: source emoji tests and compiled aural parity pass in a separate
+  checkout. No compatibility byte-code is written into the main checkout.
+- Six real graphical tests pass under the private Xvfb display. Batch runs
+  explicitly skip graphical-only cases; those skips are not counted as passes.
+- The startup guard now includes the new emoji module and nine previously
+  omitted runtime modules. All 23 startup tests pass. Its inventory child
+  suppresses speech and exits directly on errors, avoiding a stuck debugger.
+- The broad unit run initially reported 17 failures. Fourteen palette/queue
+  expectations reproduce identically in the preceding committed source and
+  the changed tree under the same focused selector. The two startup failures
+  are fixed separately. The remaining Corfu separator test passes in both
+  focused runs; it failed only during the original full-suite run with the
+  inherited real speech launcher. The whole unit suite is not claimed green.
+- Existing byte-code rebuild warnings in unrelated modules remain unchanged.
+- Live Eloquence/eSpeak routing and the maintainer's listening acceptance remain
+  pending. No personal naming settings or live Emacs profile have been changed.
+  A temporary-buffer listening trial was offered separately; automated results
+  do not establish what the maintainer hears or settle the two-versus-three
+  threshold's usability.

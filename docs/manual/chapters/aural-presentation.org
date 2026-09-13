@@ -1120,6 +1120,82 @@ explanation to identify that limitation. Contextual changes are saved as rules;
 they do not replace the palette entry with the combined result. The
 [[info:emacsvox#Integration Maintenance][Developer Guide]] explains the representation and compatibility details.
 
+** Name Occasional Emoji In Speech
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Emoji Speech Names
+:ALT_TITLE: Name Occasional Emoji In Speech
+:DESCRIPTION: Keep occasional decoration from forcing a different speech engine.
+:END:
+
+A voice such as Eloquence may need a fallback engine for an emoji in otherwise
+compatible text. Optional emoji naming changes the speech text before engine
+selection: =Forecast 🔮= becomes =Forecast crystal ball=. The source buffer
+keeps its original text. This can keep the preferred voice speaking when the
+rest of the text is compatible; the normal repertoire checks still decide
+which engine can handle it.
+
+The feature starts disabled. Use @@texinfo:@kbd{M-x customize-group RET emacsvox-emoji RET}@@
+to review its options. Enable ~emacsvox-emoji-naming-enabled~ globally, or try
+it only in the current source buffer with:
+
+#+begin_src emacs-lisp
+(setq-local emacsvox-emoji-naming-enabled t)
+#+end_src
+
+To enable it for Org buffers through your configuration:
+
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook
+          (lambda () (setq-local emacsvox-emoji-naming-enabled t)))
+#+end_src
+
+All four options support buffer-local settings. Set
+~emacsvox-emoji-naming-enabled~ to nil locally to override an enabled global
+default. Voice previews opened from an aural screen use the remembered source
+buffer's settings; contextual previews use their captured source policy.
+Changing a setting during playback does not change the submitted sample.
+
+The trial approval list, ~emacsvox-emoji-approved-sequences~, contains =🔮=,
+=✨=, =✅=, =⚠️=, =🚀= and =💡=. Matching uses complete, exact sequences.
+An unknown joined emoji stays intact, even when one of its components is
+approved. Foreign-language letters, combining accents, flags, keycaps and
+unapproved symbols retain the existing fallback behaviour. Exact character
+inspection also retains its existing behaviour.
+
+~emacsvox-emoji-maximum-count~ defaults to two occurrences, counting repetitions
+separately. With three approved occurrences in the original item, automatic
+naming is skipped for the whole item. One captured presentation object can
+contain several voice runs; a standalone preview sample is one item. Transport
+chunk sizes do not affect this limit. A sequence crossing a style or positioned
+cue boundary is conservatively left unchanged.
+
+Names come from the emoji table bundled with Emacs. Coverage may vary between
+Emacs versions. Missing data or an absent exact name leaves the original
+sequence available to normal fallback; nothing is downloaded. The names are
+English, and enabled naming also applies to engines that could speak the
+original emoji.
+
+Explicit pronunciation entries take precedence. For approved sequences, set
+~emacsvox-emoji-custom-names~ to override a bundled name, for example:
+
+#+begin_src emacs-lisp
+(setq-local emacsvox-emoji-custom-names '(("🔮" . "prediction")))
+#+end_src
+
+Custom names must contain 1 to 80 characters and no control characters.
+Empty names are invalid; use an explicit pronunciation when you want to omit
+something. Approval and custom-name lists are limited to 64 entries, sequences
+to 32 characters, and the occurrence limit to the range 0 through 64. Invalid
+settings skip automatic naming with an explanation rather than stopping speech.
+
+In /Feedback Details/ (@@texinfo:@kbd{C-e E}@@), expand the relevant field to
+see the original sequence and its speech name, or why naming was skipped.
+The voice editor's /Details and last playback evidence/ also reports sample
+substitutions. These describe prepared text, not confirmation of what you heard.
+/Play original/ keeps the retained speech text after settings change. Rule
+proposals retain that captured text while changing its presentation; open a
+fresh source presentation to try a different naming policy.
+
 ** Browse Installed Voices And Choose Engines
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Installed Voices And Engines

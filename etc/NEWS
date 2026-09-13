@@ -8,6 +8,19 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox Unreleased --- Current User-Visible Changes
 
+** Optional names for occasional emoji
+
+Enable =emacsvox-emoji-naming-enabled= to name approved occasional emoji before
+engine selection. For example, =Forecast 🔮= becomes =Forecast crystal ball=
+for speech, which can avoid an unnecessary engine fallback. The source text
+stays unchanged. The feature starts disabled, defaults to at most two approved
+occurrences per item, and supports buffer-local settings and custom names.
+
+Names come from Emacs's bundled table. Unknown sequences and other languages
+keep their existing fallback behaviour. Speech and voice previews share the
+policy, and Feedback Details records substitutions. Original replay preserves
+the prepared text after settings change. See /Emoji Speech Names/ in the manual.
+
 ** Optional fallback tuning
 Choose Customize this voice from an editor fallback row to set individual
 adjustments, use the shared value, or restore the adapter default. Automatic
