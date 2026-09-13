@@ -76,6 +76,8 @@
   "Pinned review that owns this field draft, or nil for a standalone editor.")
 (defvar-local emacsvox-aural-change-feedback--review-indices nil
   "Zero-based recorded run indices selected by the owning review.")
+(defvar-local emacsvox-aural-change-feedback--simulation nil
+  "Non-nil when the linked baseline is simulated rather than recorded.")
 
 (defun emacsvox-aural-change-feedback--pending-p ()
   "Return non-nil if this buffer retains an unapplied change for any part."
@@ -149,7 +151,7 @@
 (defun emacsvox-aural-change-feedback--voice-description ()
   "Describe the frozen content voice and the proposed replacement."
   (concat
-   "Original voice: "
+   (if emacsvox-aural-change-feedback--simulation "Simulated voice: " "Original voice: ")
    (emacsvox-aural-recent-feedback--voice
     (emacsvox-aural--make-presentation-record
      :plan (plist-get emacsvox-aural-change-feedback-input :concrete)
@@ -181,7 +183,8 @@
      (lambda (name)
        (list (list 'voice (intern name))
              (vector (concat "    " name)
-                     (concat (if (equal name current) "Original voice. " "")
+                     (concat (if (equal name current)
+                                 (if emacsvox-aural-change-feedback--simulation "Simulated voice. " "Original voice. ") "")
                              (if (and (plist-member selected :voice)
                                       (equal name (symbol-name (or (plist-get selected :voice) 'default))))
                                  "Selected for draft; P previews" "RET selects; P previews after selection")))))
@@ -786,10 +789,12 @@
               (emacsvox-aural-change-feedback--lifetime-description)
               (if emacsvox-aural-change-feedback-applied "Saved or applied." "Unsaved."))
     (format "%s. Change: %s. Matching criteria: %s. Lifetime: %s. %s"
-          (if emacsvox-aural-change-feedback-record
+          (if emacsvox-aural-change-feedback--simulation
+              (concat "Simulated feedback" (or emacsvox-aural-change-feedback-part ""))
+            (if emacsvox-aural-change-feedback-record
               (format "Recent Feedback record %s%s" (emacsvox-aural-presentation-record-id emacsvox-aural-change-feedback-record)
                       (or emacsvox-aural-change-feedback-part ""))
-            (concat "Current item: " (emacsvox-aural-inspection-source-description)))
+              (concat "Current item: " (emacsvox-aural-inspection-source-description))))
           (or emacsvox-aural-change-feedback-description "not chosen")
           (if emacsvox-aural-change-feedback-selector
               (concat "all items with " (emacsvox-aural-change-feedback--selector-description emacsvox-aural-change-feedback-selector))
@@ -808,7 +813,9 @@
            (if emacsvox-aural-change-feedback--voice-remap
                (emacsvox-aural-change-feedback--remap-rows)
              (list
-            (list 'target (vector "Target" (if emacsvox-aural-change-feedback-record (concat "Recent Feedback" (or emacsvox-aural-change-feedback-part "")) "Current item")))
+            (list 'target (vector "Target" (if emacsvox-aural-change-feedback-record
+                                               (concat (if emacsvox-aural-change-feedback--simulation "Simulated feedback" "Recent Feedback")
+                                                       (or emacsvox-aural-change-feedback-part "")) "Current item")))
             (list 'change (vector "Change" (or emacsvox-aural-change-feedback-description "Choose a component change")))
             (list 'match (vector "What should match"
                                  (if emacsvox-aural-change-feedback-selector
@@ -822,7 +829,9 @@
      (when emacsvox-aural-change-feedback--review-buffer
        (setq tabulated-list-entries
              (append tabulated-list-entries
-                     (list (list 'original (vector "Play original field" "O plays the captured field"))
+                     (list (list 'original (if emacsvox-aural-change-feedback--simulation
+                                               (vector "Play simulated field" "O plays the simulated baseline")
+                                             (vector "Play original field" "O plays the captured field")))
                            (list 'proposed (vector "Preview changed field" "P uses current rules plus drafts"))
                            (list 'whole-proposed (vector "Preview whole presentation" "V includes all linked field drafts"))))))
      (setq tabulated-list-entries
@@ -876,8 +885,13 @@
                           "To retune the named voice everywhere it is used, return to Home and choose Edit the named voice used here (T).\n")
                 (concat (emacsvox-aural-change-feedback--summary)
                       "\n\nRET on Parts expands parts in playback order. Moving reads their text in the captured voice; O replays a part.\n"
-                      "c expands component changes. RET on Content voice expands voices: original first, then alphabetical.\n"
-                      "RET selects a voice for the draft. P previews before choosing a lifetime. O plays the original. S stops.\n"
+                      (if emacsvox-aural-change-feedback--simulation
+                          "c expands component changes. RET on Content voice expands voices: simulated voice first, then alphabetical.\n"
+                        "c expands component changes. RET on Content voice expands voices: original first, then alphabetical.\n")
+                      "RET selects a voice for the draft. P previews before choosing a lifetime. "
+                      (if emacsvox-aural-change-feedback--simulation
+                          "O plays the simulated baseline. S stops.\n"
+                        "O plays the original. S stops.\n")
                       "m expands matching facts; RET on a criterion includes or excludes it. l chooses lifetime.\n"
                       "Exclude a state such as unread to match regardless of that state. A buffer rule affects every matching item in that buffer.\n"
                       "Preview uses the selected example with current rules and its captured buffer context.\n"

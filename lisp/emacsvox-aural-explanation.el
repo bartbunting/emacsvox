@@ -42,6 +42,9 @@
 (require 'emacsvox-aural-inspection)
 (require 'emacsvox-aural-semantics)
 
+(declare-function emacsvox-aural-feedback-details-explain
+                  "emacsvox-aural-feedback-details" (explanation &optional record))
+
 (declare-function emacsvox-icon "emacsvox-sounds" (icon))
 (declare-function emacsvox-speak-mode-line "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
@@ -131,11 +134,25 @@ Infer an informative occasion unless CHOOSE-OCCASION is non-nil, in which
 case prompt with the inferred occasion as the default.  A frozen concrete
 plan at point always supplies its actual occasion as the initial default."
   (let* ((plan (emacsvox-aural-inspection-plan-at-point))
+         (context (emacsvox-aural-context-at-point))
          (facts
           (if plan
               (copy-tree (emacsvox-aural-concrete-plan-facts plan))
-            (emacsvox-aural-semantics-facts-or-read)))
-         (context (emacsvox-aural-context-at-point))
+            (copy-tree (emacsvox-aural-facts-at-point))))
+         (_content
+          (unless (plist-member facts :content)
+            (setq facts (plist-put facts :content
+                                   (or (and plan
+                                            (emacsvox-aural-concrete-content-text
+                                             (emacsvox-aural-concrete-plan-content plan)))
+                                     (buffer-substring-no-properties
+                                      (line-beginning-position) (line-end-position)))))))
+         (_voice
+          (when (and (not plan) (not (plist-get context :legacy-personality)))
+            (when-let* ((voice (cl-loop for face in (plist-get context :legacy-faces)
+                                       thereis (voice-setup-get-voice-for-face face))))
+              (setq context (plist-put context :legacy-personality voice)
+                    context (plist-put context :legacy-source 'face)))))
          (inferred
           (if plan
               (or (plist-get context :occasion) 'continuous)
@@ -841,11 +858,10 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
     (&optional facts context record)
   "Explain exact queued RECORD or simulate FACTS in CONTEXT.
 
-Interactively, use the last queued presentation for the source buffer when
-available.  With a prefix argument, deliberately simulate an occasion chosen
-by the user.  When no queued record is available, infer the occasion that
-produces the most useful simulation.  The visual and spoken explanations
-always identify whether they describe queued output or a simulation."
+Interactively, open Feedback Details with a brief announcement, using a
+record that still matches the source item when available.  Otherwise show a
+labelled simulation.  A prefix argument chooses the simulated occasion.
+Noninteractive callers receive an explanation without displaying a report."
   (interactive
    (emacsvox-aural-explanation--interactive-explanation-input
     current-prefix-arg))
@@ -862,15 +878,10 @@ always identify whether they describe queued output or a simulation."
          (explanation
           (if record
               (emacsvox-aural-explain-record record)
-            (emacsvox-aural-explain facts context)))
-         (occasion-counts
-          (and
-           (null record)
-           (called-interactively-p 'interactive)
-           (emacsvox-aural-explanation--occasion-match-counts facts context))))
+            (emacsvox-aural-explain facts context))))
     (when (called-interactively-p 'interactive)
-      (emacsvox-aural-explanation-display
-       explanation t occasion-counts))
+      (require 'emacsvox-aural-feedback-details)
+      (emacsvox-aural-feedback-details-explain explanation record))
     explanation))
 
 

@@ -263,7 +263,7 @@
       'explain
       (vector
        "Explain this item" source-name
-       "Show and speak why the current item sounds as it does"))
+       "Open Feedback Details for the captured item"))
      (list
       'remap
       (vector
@@ -476,8 +476,7 @@
 (defun emacsvox-aural-home-explain ()
   "Explain presentation at point in the remembered source buffer."
   (interactive)
-  (emacsvox-aural-home--call-in-source
-   #'emacsvox-aural-explain-presentation))
+  (call-interactively #'emacsvox-aural-explain-presentation))
 
 (defun emacsvox-aural-home-remap-voice ()
   "Choose, preview, and save a voice mapping for the remembered source item."

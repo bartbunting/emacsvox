@@ -49,13 +49,16 @@
 (defvar emacsvox-aural-change-feedback--record-input)
 (defvar emacsvox-aural-change-feedback--review-buffer)
 (defvar emacsvox-aural-change-feedback--review-indices)
+(defvar emacsvox-aural-change-feedback--simulation)
 
 (defvar-local emacsvox-aural-feedback-details--record nil
   "Frozen presentation retained by this report.")
+(defvar-local emacsvox-aural-feedback-details--simulation nil
+  "Non-nil when this report describes a simulation, not submitted speech.")
 (defvar-local emacsvox-aural-feedback-details--expanded nil
-  "Field indices whose individual formatting runs are visible.")
-(defvar-local emacsvox-aural-feedback-details--technical nil
-  "Non-nil when the recorded technical details are visible.")
+  "Field indices whose content, explanation, and formatting runs are visible.")
+(defvar-local emacsvox-aural-feedback-details--debug-buffer nil
+  "Separate debug buffer for this report's frozen snapshot.")
 (defvar-local emacsvox-aural-feedback-details--drafts nil
   "Alist from lists of run indices to live guided editor buffers.")
 
@@ -120,7 +123,7 @@ Return lists of zero-based run indices in playback order."
     (user-error "Only a truncated preview was retained; record a complete example first")))
 
 (defun emacsvox-aural-feedback-details-play (&optional indices)
-  "Replay the original whole presentation, or only the supplied INDICES."
+  "Play the recorded or simulated baseline, or only the supplied INDICES."
   (interactive)
   (emacsvox-aural-feedback-details--complete)
   (let* ((emacsvox-aural--history-recording-inhibited t)
@@ -198,6 +201,7 @@ Return lists of zero-based run indices in playback order."
          (window (selected-window))
          (position (copy-marker (point)))
          (record emacsvox-aural-feedback-details--record)
+         (simulation emacsvox-aural-feedback-details--simulation)
          (label (emacsvox-aural-feedback-details--label indices))
          (plan (emacsvox-aural-feedback-details--plan (car indices)))
          (facts (emacsvox-aural-concrete-plan-facts plan))
@@ -246,13 +250,18 @@ Return lists of zero-based run indices in playback order."
         (setq emacsvox-aural-change-feedback--record-input nil
               emacsvox-aural-change-feedback-part (concat ", " label)
               emacsvox-aural-change-feedback--review-buffer origin
+              emacsvox-aural-change-feedback--simulation simulation
               emacsvox-aural-change-feedback--review-indices indices
               emacsvox-aural-change-feedback-selector
-              (append (list :role (plist-get facts :role))
+              (append (when-let* ((role (plist-get facts :role))) (list :role role))
                       (when-let* ((field (plist-get facts :field-kind))) (list :field-kind field))
                       (when-let* ((module (plist-get context :module))) (list :module module))
                       (when-let* ((mode (plist-get context :mode))) (list :mode mode))
                       (when-let* ((occasion (plist-get context :occasion))) (list :occasion occasion))
+                      (when (and (not spanp) (not (plist-get facts :role))
+                                 (not (plist-get facts :field-kind))
+                                 (plist-get context :legacy-faces))
+                        (list :legacy-face (car (plist-get context :legacy-faces))))
                       (when spanp
                         (if face (list :legacy-face face)
                           (list :legacy-personality personality)))))
@@ -288,126 +297,232 @@ Return lists of zero-based run indices in playback order."
                           'emacsvox-aural-recent-feedback-voice content)))))
 
 (defun emacsvox-aural-feedback-details-toggle ()
-  "Expand the selected field's voice spans or the technical details."
+  "Expand or collapse the selected field, including its voice spans."
   (interactive)
-  (if (get-text-property (point) 'emacsvox-aural-feedback-technical)
-      (setq emacsvox-aural-feedback-details--technical
-            (not emacsvox-aural-feedback-details--technical))
-    (let ((indices (emacsvox-aural-feedback-details--target)))
-      (if (member indices emacsvox-aural-feedback-details--expanded)
-          (setq emacsvox-aural-feedback-details--expanded
-                (delete indices emacsvox-aural-feedback-details--expanded))
-        (push indices emacsvox-aural-feedback-details--expanded))))
-  (emacsvox-aural-feedback-details--render)
-  (emacsvox-aural-feedback-details-speak-line))
+  (let* ((target (emacsvox-aural-feedback-details--target))
+         (indices (cl-find-if
+                   (lambda (group) (memq (car target) group))
+                   (emacsvox-aural-feedback-details--groups emacsvox-aural-feedback-details--record))))
+    (if (member indices emacsvox-aural-feedback-details--expanded)
+        (setq emacsvox-aural-feedback-details--expanded
+              (delete indices emacsvox-aural-feedback-details--expanded))
+      (push indices emacsvox-aural-feedback-details--expanded))
+    ;; Collapsing from a child span returns to the containing field.
+    (emacsvox-aural-feedback-details--render indices)
+    (emacsvox-aural-ui--announce-expansion
+     (member indices emacsvox-aural-feedback-details--expanded)
+     (buffer-substring (line-beginning-position) (line-end-position)))))
 
-(defun emacsvox-aural-feedback-details--render ()
-  "Render the pinned report, preserving the selected field where possible."
+(defun emacsvox-aural-feedback-details--source-description (source plan)
+  "Describe a winning SOURCE in frozen PLAN without consulting current rules."
+  (pcase source
+    ('face "the visual face")
+    ((or 'personality 'personality-property 'legacy-personality) "the text's voice annotation")
+    ('nil "the default presentation")
+    (_ (pcase (plist-get (cl-find source (emacsvox-aural-concrete-plan-rule-provenance plan)
+                                 :key (lambda (entry) (plist-get entry :id))) :origin)
+         ('user "your personal override")
+         ('session "your session override")
+         ('buffer "your buffer override")
+         ('scheme "the presentation scheme")
+         ('fragment "a presentation fragment")
+         ('module "the integration's presentation rule")
+         ('core "the default presentation rule")
+         (_ "a recorded presentation rule")))))
+
+(defun emacsvox-aural-feedback-details--action-description (action)
+  "Describe ACTION for ordinary review, keeping raw identifiers in debug output."
+  (pcase (emacsvox-aural-concrete-action-kind action)
+    ('cue (format "earcon %s" (emacsvox-aural-humanize (emacsvox-aural-concrete-action-cue action))))
+    ('speech (format "say %S%s" (emacsvox-aural-concrete-action-text action)
+                     (if-let* ((voice (emacsvox-aural-concrete-action-voice-request action)))
+                         (format " using %s" (emacsvox-aural-humanize voice)) "")))
+    ('pause (format "pause %s ms" (emacsvox-aural-concrete-action-duration action)))
+    ('tone (format "tone at %s Hz for %s ms" (emacsvox-aural-concrete-action-pitch action)
+                   (emacsvox-aural-concrete-action-duration action)))
+    (_ "recorded action")))
+
+(defun emacsvox-aural-feedback-details--limitation (diagnostic)
+  "Describe a captured DIAGNOSTIC briefly without dumping backend metadata."
+  (pcase (plist-get diagnostic :reason)
+    ((or 'unsupported-voice-dimension 'unavailable-voice-family)
+     (format "%s could not use the requested %s %s."
+             (emacsvox-aural-humanize (or (plist-get diagnostic :adapter) 'backend))
+             (emacsvox-aural-humanize (plist-get diagnostic :dimension))
+             (plist-get diagnostic :requested)))
+    ('unknown-voice (format "Voice %s was unavailable." (plist-get diagnostic :requested)))
+    (_ (concat (capitalize (emacsvox-aural-humanize (plist-get diagnostic :reason)))
+               ". See Debug details for the captured values."))))
+
+(defun emacsvox-aural-feedback-details--insert-explanation (indices)
+  "Insert only the voice sources, actions, and limitations belonging to INDICES."
+  (let (voices adjustments limitations)
+    (dolist (index indices)
+      (let* ((plan (emacsvox-aural-feedback-details--plan index))
+             (content (emacsvox-aural-concrete-plan-content plan))
+             (provenance (emacsvox-aural-concrete-content-provenance content))
+             (source (alist-get 'voice provenance)))
+        (cl-pushnew
+         (format "%s, from %s%s"
+                 (emacsvox-aural-recent-feedback--voice (emacsvox-aural--make-presentation-record :plan plan))
+                 (emacsvox-aural-feedback-details--source-description source plan)
+                 (if (emacsvox-aural-concrete-content-speak content) "" "; content is silent"))
+         voices :test #'equal)
+        (dolist (entry (emacsvox-aural-concrete-content-voice-provenance content))
+          (unless (or (eq (car entry) 'preset) (eq (cdr entry) source))
+            (cl-pushnew (format "%s from %s" (emacsvox-aural-humanize (car entry))
+                                (emacsvox-aural-feedback-details--source-description (cdr entry) plan))
+                        adjustments :test #'equal)))
+        (dolist (diagnostic (emacsvox-aural-concrete-plan-degradations plan))
+          (cl-pushnew (emacsvox-aural-feedback-details--limitation diagnostic) limitations :test #'equal))))
+    (insert "Voice: " (string-join (nreverse voices) "; ") ".\n")
+    (when adjustments (insert "Voice adjustments: " (string-join (nreverse adjustments) "; ") ".\n"))
+    (dolist (phase '(before after))
+      (let (descriptions)
+        (dolist (index indices)
+          (let* ((plan (emacsvox-aural-feedback-details--plan index))
+                 (actions (if (eq phase 'before) (emacsvox-aural-concrete-plan-before plan)
+                            (emacsvox-aural-concrete-plan-after plan))))
+            (dolist (action actions)
+              (push (format "%s, from %s"
+                            (emacsvox-aural-feedback-details--action-description action)
+                            (emacsvox-aural-feedback-details--source-description
+                             (emacsvox-aural-concrete-action-source action) plan)) descriptions))))
+        (insert (capitalize (symbol-name phase)) ": "
+                (if descriptions (string-join (nreverse descriptions) "; ") "Nothing") ".\n")))
+    (dolist (limitation (nreverse limitations)) (insert "Limitation: " limitation "\n"))))
+
+(defun emacsvox-aural-feedback-details-debug ()
+  "Open the frozen raw snapshot separately; q returns to this report."
+  (interactive)
+  (let ((origin (current-buffer)) (window (selected-window)) (position (copy-marker (point)))
+        (record emacsvox-aural-feedback-details--record)
+        (simulation emacsvox-aural-feedback-details--simulation)
+        (source (emacsvox-aural-inspection-remember-source-buffer)))
+    (unless (buffer-live-p emacsvox-aural-feedback-details--debug-buffer)
+      (setq emacsvox-aural-feedback-details--debug-buffer
+            (generate-new-buffer "*Aural Debug Details*")))
+    (with-current-buffer emacsvox-aural-feedback-details--debug-buffer
+      (when (markerp emacsvox-aural-ui-help-origin-position)
+        (set-marker emacsvox-aural-ui-help-origin-position nil))
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Aural Debug Details\n"
+                (if simulation "Simulation; not recorded speech.\n" "Recorded presentation snapshot.\n")
+                "Raw data for troubleshooting. q returns to Feedback Details.\n\n"
+                (pp-to-string record)))
+      (emacsvox-aural-interface-mode)
+      (use-local-map (copy-keymap (current-local-map)))
+      (local-set-key (kbd "q") #'emacsvox-aural-ui-help-quit)
+      (emacsvox-aural-inspection-attach-source source)
+      (setq-local emacsvox-aural-ui-help-origin-buffer origin)
+      (setq-local emacsvox-aural-ui-help-origin-window window)
+      (setq-local emacsvox-aural-ui-help-origin-position position)
+      (goto-char (point-min))
+      (set-buffer-modified-p nil))
+    (let ((emacsvox-aural--history-recording-inhibited t))
+      (emacsvox-aural-ui--pop-to-buffer
+       emacsvox-aural-feedback-details--debug-buffer
+       (lambda () (emacsvox-aural-ui-speak "Debug details. Raw troubleshooting data; q returns."))))))
+
+(defun emacsvox-aural-feedback-details--render (&optional selected-target)
+  "Render the report, preserving SELECTED-TARGET or the field at point."
   (let ((inhibit-read-only t)
-        (target (get-text-property (point) 'emacsvox-aural-feedback-target))
-        (technical (get-text-property (point) 'emacsvox-aural-feedback-technical))
+        (target (or selected-target (get-text-property (point) 'emacsvox-aural-feedback-target)))
         (record emacsvox-aural-feedback-details--record))
     (erase-buffer)
     (emacsvox-aural-feedback-details--heading "Aural Feedback Details")
-    (insert (format "Record %s. %s\nSource: %s\n\n"
+    (if emacsvox-aural-feedback-details--simulation
+        (insert (format "Simulation using captured current rules; not recorded speech.\nSource: %s\n\n"
+                        (or (emacsvox-aural-presentation-record-source-buffer-name record) "Unknown")))
+      (insert (format "Record %s. %s\nSource: %s\n\n"
                     (emacsvox-aural-presentation-record-id record)
                     (if (emacsvox-aural-presentation-record-effective-payload-truncated-p record)
                         "Truncated preview; complete playback unavailable."
                       "Exact retained presentation.")
-                    (or (emacsvox-aural-presentation-record-source-buffer-name record) "Unknown")))
-    (insert (format "Submitted: %s\nOccasion: %s\n\n"
+                    (or (emacsvox-aural-presentation-record-source-buffer-name record) "Unknown"))))
+    (insert (format "%s: %s\nOccasion: %s\n\n"
+                    (if emacsvox-aural-feedback-details--simulation "Simulated" "Submitted")
                     (format-time-string "%Y-%m-%d %H:%M:%S"
                                         (emacsvox-aural-presentation-record-queued-at record))
                     (emacsvox-aural-humanize
                      (plist-get (emacsvox-aural-concrete-plan-context
                                  (emacsvox-aural-presentation-record-plan record)) :occasion))))
-    (emacsvox-aural-feedback-details--button "Play original whole presentation" #'emacsvox-aural-feedback-details-play)
+    (emacsvox-aural-feedback-details--button
+     (if emacsvox-aural-feedback-details--simulation "Play simulation" "Play original whole presentation")
+     #'emacsvox-aural-feedback-details-play)
     (insert "\n")
     (emacsvox-aural-feedback-details--button "Preview whole presentation with changes" #'emacsvox-aural-feedback-details-preview)
-    (insert "\nProposals use current rules plus linked drafts; originals stay frozen.\n\n")
+    (insert (if emacsvox-aural-feedback-details--simulation
+                "\nProposals use current rules plus linked drafts; the simulated baseline stays frozen.\n\n"
+              "\nProposals use current rules plus linked drafts; originals stay frozen.\n\n"))
     (emacsvox-aural-feedback-details--heading "Fields in playback order")
     (dolist (indices (emacsvox-aural-feedback-details--groups record))
       (let ((start (point))
             (expanded (member indices emacsvox-aural-feedback-details--expanded)))
         (emacsvox-aural-feedback-details--heading
-         (format "%s (%s; %d voice %s; %s)"
-                 (emacsvox-aural-feedback-details--label indices)
-                 (emacsvox-aural-recent-feedback--voice
-                  (emacsvox-aural--make-presentation-record
-                   :plan (emacsvox-aural-feedback-details--plan (car indices))
-                   :plans (mapcar #'emacsvox-aural-feedback-details--plan indices)))
-                 (length indices)
-                 (if (= 1 (length indices)) "span" "spans")
-                 (if expanded "expanded" "collapsed")))
-        (emacsvox-aural-feedback-details--insert-content indices)
-        (insert "\n")
-        (emacsvox-aural-feedback-details--button "Play field" #'emacsvox-aural-feedback-details-play-field)
-        (insert "  ")
-        (emacsvox-aural-feedback-details--button "Change field" #'emacsvox-aural-feedback-details-change)
-        (insert "  ")
-        (emacsvox-aural-feedback-details--button (if expanded "Hide spans" "Show spans")
-                                                 #'emacsvox-aural-feedback-details-toggle)
-        (insert "\n")
+         (emacsvox-aural-ui--expansion-text
+          (format "%s (%s; %d voice %s)"
+                  (emacsvox-aural-feedback-details--label indices)
+                  (emacsvox-aural-recent-feedback--voice
+                   (emacsvox-aural--make-presentation-record
+                    :plan (emacsvox-aural-feedback-details--plan (car indices))
+                    :plans (mapcar #'emacsvox-aural-feedback-details--plan indices)))
+                  (length indices)
+                  (if (= 1 (length indices)) "span" "spans"))
+          expanded))
+        (make-text-button start (1- (point)) 'follow-link t
+                          'action (lambda (_) (emacsvox-aural-feedback-details-toggle)))
+        ;; Visibility owns the heading's cue; generic button marking would duplicate it.
+        (remove-text-properties start (point) '(auditory-icon nil))
         (put-text-property start (point) 'emacsvox-aural-feedback-target indices)
         (when expanded
-          (dolist (index indices)
-            (let* ((span-start (point))
-                   (plan (emacsvox-aural-feedback-details--plan index)))
-              (emacsvox-aural-feedback-details--heading
-               (format "  Span %d. Voice: %s" (1+ index)
-                       (emacsvox-aural-recent-feedback--voice
-                        (emacsvox-aural--make-presentation-record :plan plan))))
-              (emacsvox-aural-feedback-details--insert-content (list index))
-              (insert "\n")
-              (dolist (phase '(before after))
-                (let ((actions (if (eq phase 'before) (emacsvox-aural-concrete-plan-before plan)
-                                 (emacsvox-aural-concrete-plan-after plan))))
-                  (insert (format "  %s: %s\n" (capitalize (symbol-name phase))
-                                  (if actions
-                                      (mapconcat #'emacsvox-aural-describe-concrete-action actions "; ")
-                                    "Nothing")))))
-              (emacsvox-aural-feedback-details--button "Play span" #'emacsvox-aural-feedback-details-play-field)
-              (insert "  ")
-              (emacsvox-aural-feedback-details--button "Change span" #'emacsvox-aural-feedback-details-change)
-              (insert "\n")
-              (put-text-property span-start (point) 'emacsvox-aural-feedback-target (list index)))))
-        (insert "\n")))
-    (emacsvox-aural-feedback-details--heading "Why this feedback")
-    (dolist (indices (emacsvox-aural-feedback-details--groups record))
-      (insert (emacsvox-aural-feedback-details--label indices) ":\n")
-      (let (ids)
-        (dolist (index indices)
-          (dolist (rule (emacsvox-aural-concrete-plan-rule-provenance
-                         (emacsvox-aural-feedback-details--plan index)))
-            (cl-pushnew (plist-get rule :id) ids)))
-        (insert (if ids (format "  Rules involved in its containing object: %s\n" (mapconcat #'symbol-name (nreverse ids) ", "))
-                  "  No presentation rule matched.\n"))))
+          (emacsvox-aural-feedback-details--insert-content indices)
+          (insert "\n")
+          (emacsvox-aural-feedback-details--button "Play field" #'emacsvox-aural-feedback-details-play-field)
+          (insert "  ")
+          (emacsvox-aural-feedback-details--button "Change field" #'emacsvox-aural-feedback-details-change)
+          (insert "\n")
+          (emacsvox-aural-feedback-details--insert-explanation indices)
+          (put-text-property start (point) 'emacsvox-aural-feedback-target indices)
+          (when (cdr indices)
+            (cl-loop for index in indices for number from 1 do
+                     (let ((span-start (point)))
+                       (emacsvox-aural-feedback-details--heading
+                        (format "  Span %d. Voice: %s" number
+                                (emacsvox-aural-recent-feedback--voice
+                                 (emacsvox-aural--make-presentation-record
+                                  :plan (emacsvox-aural-feedback-details--plan index)))))
+                       (emacsvox-aural-feedback-details--insert-content (list index))
+                       (insert "\n")
+                       (emacsvox-aural-feedback-details--insert-explanation (list index))
+                       (emacsvox-aural-feedback-details--button "Play span" #'emacsvox-aural-feedback-details-play-field)
+                       (insert "  ")
+                       (emacsvox-aural-feedback-details--button "Change span" #'emacsvox-aural-feedback-details-change)
+                       (insert "\n")
+                       (put-text-property span-start (point) 'emacsvox-aural-feedback-target (list index))))))))
     (insert "\n")
     (let ((start (point)))
-      (emacsvox-aural-feedback-details--heading "Technical details")
-      (emacsvox-aural-feedback-details--button
-       (if emacsvox-aural-feedback-details--technical "Hide recorded details" "Show recorded details")
-       #'emacsvox-aural-feedback-details-toggle)
-      (insert "\n")
-      (put-text-property start (point) 'emacsvox-aural-feedback-technical t)
-      (when emacsvox-aural-feedback-details--technical
-        (insert (pp-to-string record))))
-    (insert "\nn/p headings; arrows read lines; TAB actions; O play field; P play all.\nC change field; V preview all changes; S stop; q return.\n")
+      (emacsvox-aural-feedback-details--heading "Debug details")
+      (make-text-button start (1- (point)) 'follow-link t
+                        'action (lambda (_) (emacsvox-aural-feedback-details-debug))))
+    (emacsvox-aural-feedback-details--button "Open raw snapshot in a separate buffer" #'emacsvox-aural-feedback-details-debug)
+    (insert "\nFor troubleshooting: recorded facts, rules, and backend settings.\n")
+    (insert "\nRET expands or collapses a field. n/p headings; arrows read lines; TAB actions; O play field; P play all.\nC change field; V preview all changes; S stop; q return.\n")
     (goto-char (point-min))
     (when-let* ((position
-                 (cond (technical (text-property-any (point-min) (point-max) 'emacsvox-aural-feedback-technical t))
-                       (target (cl-loop for pos = (point-min) then (next-single-property-change
+                 (when target (cl-loop for pos = (point-min) then (next-single-property-change
                                                                     pos 'emacsvox-aural-feedback-target nil (point-max))
                                         while (< pos (point-max))
                                         when (equal target (get-text-property pos 'emacsvox-aural-feedback-target))
-                                        return pos)))))
+                                        return pos))))
       (goto-char position))
     (set-buffer-modified-p nil)))
 
 (defun emacsvox-aural-feedback-details-speak-line ()
   "Read the current report line, retaining recorded content voices."
   (interactive)
-  (emacsvox-aural-ui-speak (buffer-substring (line-beginning-position) (line-end-position))))
+  (emacsvox-aural-ui--speak-control (buffer-substring (line-beginning-position) (line-end-position))))
 
 (defun emacsvox-aural-feedback-details-next-line (&optional previous)
   "Move one line and read it; PREVIOUS reverses direction."
@@ -427,7 +542,9 @@ Return lists of zero-based run indices in playback order."
     (while (and (not found) (zerop (forward-line (if previous -1 1))))
       (setq found (get-text-property (point) 'emacsvox-aural-feedback-heading)))
     (unless found (goto-char start))
-    (if-let* ((indices (get-text-property (point) 'emacsvox-aural-feedback-target)))
+    (if-let* ((indices (get-text-property (point) 'emacsvox-aural-feedback-target))
+              (expanded (cl-some (lambda (group) (memq (car indices) group))
+                                 emacsvox-aural-feedback-details--expanded)))
         (let ((label (buffer-substring (line-beginning-position) (line-end-position)))
               (text (apply #'concat
                            (mapcar
@@ -436,7 +553,7 @@ Return lists of zero-based run indices in playback order."
                                               (emacsvox-aural-feedback-details--plan index))))
                                 (propertize (or (emacsvox-aural-concrete-content-text content) "")
                                             'emacsvox-aural-recent-feedback-voice content))) indices))))
-          (emacsvox-aural-ui-speak (concat label ". " text)))
+          (emacsvox-aural-ui--speak-control (concat label ". " text)))
       (emacsvox-aural-feedback-details-speak-line))))
 
 (defun emacsvox-aural-feedback-details-previous-heading ()
@@ -448,7 +565,7 @@ Return lists of zero-based run indices in playback order."
   "Move to and speak the next action; PREVIOUS reverses direction."
   (interactive)
   (forward-button (if previous -1 1) t)
-  (emacsvox-aural-ui-speak (button-label (button-at (point)))))
+  (emacsvox-aural-ui--speak-control (button-label (button-at (point)))))
 
 (defun emacsvox-aural-feedback-details-previous-button ()
   "Move to and speak the previous action."
@@ -465,6 +582,11 @@ Return lists of zero-based run indices in playback order."
 (define-derived-mode emacsvox-aural-feedback-details-mode emacsvox-aural-interface-mode
   "Aural-Details" "Read and change a pinned presentation at your own pace."
   (setq-local emacsvox-aural-ui-speech-function #'emacsvox-aural-recent-feedback--speak))
+
+;; Text buttons bind RET to `push-button', overriding the mode's RET binding.
+;; Use our activation path so generic button advice cannot append a cue to replay.
+(define-key emacsvox-aural-feedback-details-mode-map [remap push-button]
+            #'emacsvox-aural-feedback-details-open)
 
 (dolist (binding '(("n" . emacsvox-aural-feedback-details-next-heading)
                    ("p" . emacsvox-aural-feedback-details-previous-heading)
@@ -484,8 +606,8 @@ Return lists of zero-based run indices in playback order."
                    ("q" . emacsvox-aural-ui-help-quit)))
   (define-key emacsvox-aural-feedback-details-mode-map (kbd (car binding)) (cdr binding)))
 
-(defun emacsvox-aural-feedback-details (record)
-  "Select a stable review buffer for RECORD and speak only a brief introduction."
+(defun emacsvox-aural-feedback-details--open (record &optional simulation)
+  "Open RECORD's report, marking a private SIMULATION explicitly."
   (let ((origin (current-buffer)) (window (selected-window)) (position (copy-marker (point)))
         (source (emacsvox-aural-inspection-remember-source-buffer))
         (buffer (or (cl-find-if
@@ -496,7 +618,8 @@ Return lists of zero-based run indices in playback order."
     (with-current-buffer buffer
       (unless (eq record emacsvox-aural-feedback-details--record)
         (emacsvox-aural-feedback-details-mode)
-        (setq emacsvox-aural-feedback-details--record record))
+        (setq emacsvox-aural-feedback-details--record record
+              emacsvox-aural-feedback-details--simulation simulation))
       (emacsvox-aural-inspection-attach-source source)
       (when (markerp emacsvox-aural-ui-help-origin-position)
         (set-marker emacsvox-aural-ui-help-origin-position nil))
@@ -504,10 +627,32 @@ Return lists of zero-based run indices in playback order."
             emacsvox-aural-ui-help-origin-window window
             emacsvox-aural-ui-help-origin-position position)
       (emacsvox-aural-feedback-details--render))
-    (emacsvox-aural-ui--pop-to-buffer
-     buffer (lambda () (emacsvox-aural-ui-speak
-                        "Feedback details. n and p move by heading; q returns.")))
+    (let ((emacsvox-aural--history-recording-inhibited t))
+      (emacsvox-aural-ui--pop-to-buffer
+       buffer (lambda () (emacsvox-aural-ui-speak
+                          (if simulation
+                              "Simulated feedback details; not recorded speech. n and p move by heading; q returns."
+                            "Feedback details. n and p move by heading; q returns.")))))
     buffer))
+
+(defun emacsvox-aural-feedback-details (record)
+  "Select a stable review buffer for RECORD and speak only a brief introduction."
+  (emacsvox-aural-feedback-details--open record))
+
+(defun emacsvox-aural-feedback-details-explain (explanation &optional record)
+  "Review EXPLANATION, using RECORD or an explicitly simulated baseline.
+Simulations are private snapshots and are never added to presentation history."
+  (if record
+      (emacsvox-aural-feedback-details record)
+    (let* ((plan (emacsvox-aural--freeze-presentation-plan
+                  (emacsvox-aural-explanation-concrete-plan explanation)))
+           (context (emacsvox-aural-concrete-plan-context plan)))
+      (emacsvox-aural-feedback-details--open
+       (emacsvox-aural--make-presentation-record
+        :plan plan :plans (list plan) :queued-at (current-time)
+        :source-buffer-name (plist-get context :source-buffer-name)
+        :source-position (plist-get context :source-position))
+       t))))
 
 (provide 'emacsvox-aural-feedback-details)
 ;;; emacsvox-aural-feedback-details.el ends here

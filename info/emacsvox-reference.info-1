@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1546 commands and 207 options.
+   This chapter documents a total of 1547 commands and 207 options.
 
 * Menu:
 
@@ -2426,11 +2426,10 @@ training mode.
 
      Explain exact queued RECORD or simulate FACTS in CONTEXT.
 
-     Interactively, use the last queued presentation for the source buffer when
-     available.  With a prefix argument, deliberately simulate an occasion chosen
-     by the user.  When no queued record is available, infer the occasion that
-     produces the most useful simulation.  The visual and spoken explanations
-     always identify whether they describe queued output or a simulation.
+     Interactively, open Feedback Details with a brief announcement, using a
+     record that still matches the source item when available.  Otherwise show a
+     labelled simulation.  A prefix argument chooses the simulated occasion.
+     Noninteractive callers receive an explanation without displaying a report.
 
      (fn &optional FACTS CONTEXT RECORD)
 
@@ -2473,11 +2472,10 @@ training mode.
 
      Explain exact queued RECORD or simulate FACTS in CONTEXT.
 
-     Interactively, use the last queued presentation for the source buffer when
-     available.  With a prefix argument, deliberately simulate an occasion chosen
-     by the user.  When no queued record is available, infer the occasion that
-     produces the most useful simulation.  The visual and spoken explanations
-     always identify whether they describe queued output or a simulation.
+     Interactively, open Feedback Details with a brief announcement, using a
+     record that still matches the source item when available.  Otherwise show a
+     labelled simulation.  A prefix argument chooses the simulated occasion.
+     Noninteractive callers receive an explanation without displaying a report.
 
      (fn &optional FACTS CONTEXT RECORD)
 
@@ -2869,7 +2867,14 @@ planner with private rule layers and captured source context.
 
      Open or resume a guided change to the field or span at point.
 
-2.26.1.2 emacsvox-aural-feedback-details-mode
+2.26.1.2 emacsvox-aural-feedback-details-debug
+..............................................
+
+ -- Command: emacsvox-aural-feedback-details-debug
+
+     Open the frozen raw snapshot separately; q returns to this report.
+
+2.26.1.3 emacsvox-aural-feedback-details-mode
 .............................................
 
  -- Command: emacsvox-aural-feedback-details-mode
@@ -2900,7 +2905,9 @@ planner with private rule layers and captured source context.
      <down>		emacsvox-aural-feedback-details-next-line
      <up>		emacsvox-aural-feedback-details-previous-line
 
-2.26.1.3 emacsvox-aural-feedback-details-next-button
+     <remap> <push-button>	emacsvox-aural-feedback-details-open
+
+2.26.1.4 emacsvox-aural-feedback-details-next-button
 ....................................................
 
  -- Command: emacsvox-aural-feedback-details-next-button (&optional
@@ -2910,7 +2917,7 @@ planner with private rule layers and captured source context.
 
      (fn &optional PREVIOUS)
 
-2.26.1.4 emacsvox-aural-feedback-details-next-heading
+2.26.1.5 emacsvox-aural-feedback-details-next-heading
 .....................................................
 
  -- Command: emacsvox-aural-feedback-details-next-heading (&optional
@@ -2920,7 +2927,7 @@ planner with private rule layers and captured source context.
 
      (fn &optional PREVIOUS)
 
-2.26.1.5 emacsvox-aural-feedback-details-next-line
+2.26.1.6 emacsvox-aural-feedback-details-next-line
 ..................................................
 
  -- Command: emacsvox-aural-feedback-details-next-line (&optional
@@ -2930,31 +2937,31 @@ planner with private rule layers and captured source context.
 
      (fn &optional PREVIOUS)
 
-2.26.1.6 emacsvox-aural-feedback-details-open
+2.26.1.7 emacsvox-aural-feedback-details-open
 .............................................
 
  -- Command: emacsvox-aural-feedback-details-open
 
      Activate an action or expand the field at point.
 
-2.26.1.7 emacsvox-aural-feedback-details-play
+2.26.1.8 emacsvox-aural-feedback-details-play
 .............................................
 
  -- Command: emacsvox-aural-feedback-details-play (&optional indices)
 
-     Replay the original whole presentation, or only the supplied INDICES.
+     Play the recorded or simulated baseline, or only the supplied INDICES.
 
      (fn &optional INDICES)
 
-2.26.1.8 emacsvox-aural-feedback-details-play-field
+2.26.1.9 emacsvox-aural-feedback-details-play-field
 ...................................................
 
  -- Command: emacsvox-aural-feedback-details-play-field
 
      Replay the field or span at point, with its recorded voices and actions.
 
-2.26.1.9 emacsvox-aural-feedback-details-preview
-................................................
+2.26.1.10 emacsvox-aural-feedback-details-preview
+.................................................
 
  -- Command: emacsvox-aural-feedback-details-preview (&optional indices)
 
@@ -2962,40 +2969,39 @@ planner with private rule layers and captured source context.
 
      (fn &optional INDICES)
 
-2.26.1.10 emacsvox-aural-feedback-details-previous-button
+2.26.1.11 emacsvox-aural-feedback-details-previous-button
 .........................................................
 
  -- Command: emacsvox-aural-feedback-details-previous-button
 
      Move to and speak the previous action.
 
-2.26.1.11 emacsvox-aural-feedback-details-previous-heading
+2.26.1.12 emacsvox-aural-feedback-details-previous-heading
 ..........................................................
 
  -- Command: emacsvox-aural-feedback-details-previous-heading
 
      Move to and read the previous heading.
 
-2.26.1.12 emacsvox-aural-feedback-details-previous-line
+2.26.1.13 emacsvox-aural-feedback-details-previous-line
 .......................................................
 
  -- Command: emacsvox-aural-feedback-details-previous-line
 
      Move to and read the previous report line.
 
-2.26.1.13 emacsvox-aural-feedback-details-speak-line
+2.26.1.14 emacsvox-aural-feedback-details-speak-line
 ....................................................
 
  -- Command: emacsvox-aural-feedback-details-speak-line
-
      Read the current report line, retaining recorded content voices.
 
-2.26.1.14 emacsvox-aural-feedback-details-toggle
+2.26.1.15 emacsvox-aural-feedback-details-toggle
 ................................................
 
  -- Command: emacsvox-aural-feedback-details-toggle
 
-     Expand the selected field’s voice spans or the technical details.
+     Expand or collapse the selected field, including its voice spans.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-history,  Next: emacsvox-aural-home,  Prev: emacsvox-aural-feedback-details,  Up: Emacsvox Commands And Options

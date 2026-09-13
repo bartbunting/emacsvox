@@ -2660,7 +2660,9 @@ Use this workflow when feedback is surprising@comma{} unclear@comma{} or especia
 
 @enumerate
 @item
-Leave point on the object and press @kbd{C-e E}.
+Leave point on the object and press @kbd{C-e E}@comma{} or choose
+@emph{Explain this item} in Aural Home. Both open @emph{Feedback Details} with a brief
+announcement rather than speaking the complete explanation.
 
 @item
 Read the explanation as a report of the object and occasion@comma{} matching
@@ -2678,7 +2680,13 @@ unchanged source text@comma{} the explanation
 describes the exact output that was queued@comma{} including its source location and
 resolved resources.  It does not reinterpret that old output using your latest
 settings.  Without an exact record@comma{} Emacsvox labels the explanation as a
-simulation of what the current rules would produce at point.
+simulation of what the current rules would produce at point. The simulation
+uses captured source text and context; @emph{Play simulation} plays that baseline@comma{}
+not a recording of something you previously heard. It supports the same field
+review and draft previews as recorded feedback@comma{} and is never added to Recent
+Feedback. Use a prefix argument with @kbd{C-e E} to choose a
+simulated occasion explicitly. Press @kbd{q} to return to the
+source position or Home row from which you opened the report.
 
 To inspect something heard earlier@comma{} open Aural Home and choose @emph{Recent Aural
 Feedback}@comma{} or press @kbd{H} there.  Each row preserves a recorded presentation; the history has a size limit.
@@ -2710,12 +2718,19 @@ Press @kbd{q} to return to the same row and column in Recent Feedback.
 The report groups consecutive voice spans into semantic fields where the
 integration supplies them. In a Notmuch search result@comma{} for example@comma{} you can
 visit @emph{Authors}@comma{} @emph{Subject}@comma{} @emph{Date}@comma{} @emph{Message count}@comma{} and @emph{Tags}. Headings identify
-the recorded voices; field content is read in those voices. Expand a field to
-inspect its individual spans and the feedback before and after each span.
+the recorded voices. Collapsed fields show only their headings. Visibility is
+conveyed through the selected aural presentation@comma{} using earcons or optional
+spoken labels; the words @emph{expanded} and @emph{collapsed} are not inserted into the
+heading text. Press
+@kbd{RET} on a heading to reveal its text@comma{} playback and change
+controls@comma{} voice source@comma{} sounds@comma{} and any backend limitations. Field content is
+read in its recorded voices. Only fields with multiple spans show separate
+span sections; a single-span field shows its text and controls once. Press
+@kbd{RET} on the field heading again to collapse it.
 
 @table @kbd
 @item n or p
-Move between headings@comma{} speaking the selected field in its recorded voices.
+Move between headings. Collapsed fields speak only their heading; expanded fields also speak their content in the recorded voices.
 @item Up or Down
 Review individual lines without speaking the complete report.
 @item TAB or Shift-TAB
@@ -2742,7 +2757,9 @@ criteria identify the field@comma{} integration@comma{} mode@comma{} and occasio
 criteria before choosing a buffer@comma{} session@comma{} or saved personal lifetime.
 Changing a field's voice mapping does not retune the shared named voice.
 
-Original playback uses retained output. Proposed playback uses current rules@comma{}
+Original playback uses retained output; a simulated report labels its baseline
+playback as simulated throughout the report and linked change editor.
+Proposed playback uses current rules@comma{}
 captured buffer context@comma{} and the linked drafts without applying them. A span
 can be targeted separately only when its semantic field@comma{} a distinct named
 face@comma{} or an explicit voice annotation identifies it. Truncated history cannot provide complete playback or a
@@ -2750,9 +2767,16 @@ comparable change preview. Older records missing preview inputs remain
 readable and replayable when complete; navigate over the source again to
 capture a new example before previewing changes.
 
-The @emph{Why this feedback} section lists the rules involved in the containing
-objects. @emph{Technical details} can be expanded to review all recorded facts@comma{}
-resolved voice properties@comma{} and fallback diagnostics.
+Each expanded field explains where its voice and sounds came from@comma{} such as
+a visual face or your personal override. These explanations use the captured
+sources that actually contributed to that field. Limitations@comma{} such as an
+unsupported voice family@comma{} appear beside the affected field.
+
+@emph{Debug details} opens the raw snapshot in a separate read-only buffer for
+troubleshooting. It contains all recorded facts@comma{} rule identifiers@comma{} resolved
+voice properties@comma{} and backend diagnostics. Opening it speaks only a brief
+announcement. Press @kbd{q} to return to the same place in Feedback
+Details; the report keeps its expanded fields and linked drafts.
 
 @emph{Explain feedback as you navigate}@comma{} available from Aural Home@comma{} speaks concise semantic explanations
 after normal presentations.  It can help while learning the vocabulary used by

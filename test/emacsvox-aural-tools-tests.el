@@ -158,7 +158,8 @@
       (should (= (emacsvox-aural-inspection-call-in-source #'point) 1))
       (let (seen)
         (cl-letf (((symbol-function 'emacsvox-aural-explain-presentation)
-                   (lambda () (interactive) (setq seen (point)))))
+                   (lambda () (interactive)
+                     (setq seen (emacsvox-aural-inspection-call-in-source #'point)))))
           (emacsvox-aural-home-explain))
         (should (= seen 1))))
     (should (= (with-current-buffer source (point)) 7))))
@@ -638,7 +639,8 @@
             (cl-letf (((symbol-function 'tts-speak) #'record-speech))
               (let ((noninteractive nil))
                 (emacsvox-aural-home-explain)))
-            (should (string-match-p "Aural explanation" (car spoken)))
+            (should (string-prefix-p "Feedback details" (car spoken)))
+            (should (< (length (car spoken)) 150))
             (should (equal history emacsvox-aural-presentation-history))
             (with-current-buffer source
               (should (eq original (emacsvox-aural-presentation-at-point))))
@@ -2340,7 +2342,7 @@
           (pcase-let
               ((`(,facts ,context)
                 (emacsvox-aural-explanation--read-explanation-input t)))
-            (should (equal facts '(:role heading :level 1)))
+            (should (equal facts '(:role heading :level 1 :content "Heading")))
             (should (eq (plist-get context :occasion) 'continuous))
             (should (equal default "navigation"))))))))
 
@@ -2363,7 +2365,7 @@
       (pcase-let
           ((`(,facts ,context)
             (emacsvox-aural-explanation--read-explanation-input nil)))
-        (should (equal facts '(:role heading :level 1)))
+        (should (equal facts '(:role heading :level 1 :content "Heading")))
         (should (eq (plist-get context :occasion) 'continuous))))))
 
 (ert-deftest emacsvox-aural-tools-explanation-speaks-concise-order ()
@@ -2790,7 +2792,7 @@
                  ((symbol-function 'emacsvox-aural-explain-presentation)
                   (lambda ()
                     (interactive)
-                    (setq explained-in (current-buffer)))))
+                    (setq explained-in (emacsvox-aural-inspection-source-buffer)))))
               (with-current-buffer "*Emacsvox Aural*"
                 (emacsvox-aural-home-previous)
                 (should (equal spoken "Top of aural home."))

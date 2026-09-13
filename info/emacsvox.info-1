@@ -2644,7 +2644,9 @@ File: emacsvox.info,  Node: Explaining Presentation,  Next: Adjusting Presentati
 Use this workflow when feedback is surprising, unclear, or especially
 useful:
 
-  1. Leave point on the object and press ‘C-e E’.
+  1. Leave point on the object and press ‘C-e E’, or choose _Explain
+     this item_ in Aural Home.  Both open _Feedback Details_ with a
+     brief announcement rather than speaking the complete explanation.
 
   2. Read the explanation as a report of the object and occasion,
      matching presentation rules, selected actions, concrete voices and
@@ -2660,7 +2662,14 @@ position, and unchanged source text, the explanation describes the exact
 output that was queued, including its source location and resolved
 resources.  It does not reinterpret that old output using your latest
 settings.  Without an exact record, Emacsvox labels the explanation as a
-simulation of what the current rules would produce at point.
+simulation of what the current rules would produce at point.  The
+simulation uses captured source text and context; _Play simulation_
+plays that baseline, not a recording of something you previously heard.
+It supports the same field review and draft previews as recorded
+feedback, and is never added to Recent Feedback.  Use a prefix argument
+with ‘C-e E’ to choose a simulated occasion explicitly.  Press ‘q’ to
+return to the source position or Home row from which you opened the
+report.
 
    To inspect something heard earlier, open Aural Home and choose
 _Recent Aural Feedback_, or press ‘H’ there.  Each row preserves a
@@ -2694,13 +2703,19 @@ Recent Feedback.
    The report groups consecutive voice spans into semantic fields where
 the integration supplies them.  In a Notmuch search result, for example,
 you can visit _Authors_, _Subject_, _Date_, _Message count_, and _Tags_.
-Headings identify the recorded voices; field content is read in those
-voices.  Expand a field to inspect its individual spans and the feedback
-before and after each span.
+Headings identify the recorded voices.  Collapsed fields show only their
+headings.  Visibility is conveyed through the selected aural
+presentation, using earcons or optional spoken labels; the words
+_expanded_ and _collapsed_ are not inserted into the heading text.
+Press ‘RET’ on a heading to reveal its text, playback and change
+controls, voice source, sounds, and any backend limitations.  Field
+content is read in its recorded voices.  Only fields with multiple spans
+show separate span sections; a single-span field shows its text and
+controls once.  Press ‘RET’ on the field heading again to collapse it.
 
 ‘n or p’
-     Move between headings, speaking the selected field in its recorded
-     voices.
+     Move between headings.  Collapsed fields speak only their heading;
+     expanded fields also speak their content in the recorded voices.
 ‘Up or Down’
      Review individual lines without speaking the complete report.
 ‘TAB or Shift-TAB’
@@ -2730,18 +2745,29 @@ inspect those criteria before choosing a buffer, session, or saved
 personal lifetime.  Changing a field's voice mapping does not retune the
 shared named voice.
 
-   Original playback uses retained output.  Proposed playback uses
-current rules, captured buffer context, and the linked drafts without
-applying them.  A span can be targeted separately only when its semantic
-field, a distinct named face, or an explicit voice annotation identifies
-it.  Truncated history cannot provide complete playback or a comparable
-change preview.  Older records missing preview inputs remain readable
-and replayable when complete; navigate over the source again to capture
-a new example before previewing changes.
+   Original playback uses retained output; a simulated report labels its
+baseline playback as simulated throughout the report and linked change
+editor.  Proposed playback uses current rules, captured buffer context,
+and the linked drafts without applying them.  A span can be targeted
+separately only when its semantic field, a distinct named face, or an
+explicit voice annotation identifies it.  Truncated history cannot
+provide complete playback or a comparable change preview.  Older records
+missing preview inputs remain readable and replayable when complete;
+navigate over the source again to capture a new example before
+previewing changes.
 
-   The _Why this feedback_ section lists the rules involved in the
-containing objects.  _Technical details_ can be expanded to review all
-recorded facts, resolved voice properties, and fallback diagnostics.
+   Each expanded field explains where its voice and sounds came from,
+such as a visual face or your personal override.  These explanations use
+the captured sources that actually contributed to that field.
+Limitations, such as an unsupported voice family, appear beside the
+affected field.
+
+   _Debug details_ opens the raw snapshot in a separate read-only buffer
+for troubleshooting.  It contains all recorded facts, rule identifiers,
+resolved voice properties, and backend diagnostics.  Opening it speaks
+only a brief announcement.  Press ‘q’ to return to the same place in
+Feedback Details; the report keeps its expanded fields and linked
+drafts.
 
    _Explain feedback as you navigate_, available from Aural Home, speaks
 concise semantic explanations after normal presentations.  It can help

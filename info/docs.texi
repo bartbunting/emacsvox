@@ -67,7 +67,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1546 commands and 207 options.
+This chapter documents a total of 1547 commands and 207 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -2432,11 +2432,10 @@ Describe current spatial backends and user policy.
 @format
 Explain exact queued RECORD or simulate FACTS in CONTEXT.
 
-Interactively, use the last queued presentation for the source buffer when
-available.  With a prefix argument, deliberately simulate an occasion chosen
-by the user.  When no queued record is available, infer the occasion that
-produces the most useful simulation.  The visual and spoken explanations
-always identify whether they describe queued output or a simulation.
+Interactively, open Feedback Details with a brief announcement, using a
+record that still matches the source item when available.  Otherwise show a
+labelled simulation.  A prefix argument chooses the simulated occasion.
+Noninteractive callers receive an explanation without displaying a report.
 
 (fn &optional FACTS CONTEXT RECORD)
 @end format
@@ -2484,11 +2483,10 @@ Describe current spatial backends and user policy.
 @format
 Explain exact queued RECORD or simulate FACTS in CONTEXT.
 
-Interactively, use the last queued presentation for the source buffer when
-available.  With a prefix argument, deliberately simulate an occasion chosen
-by the user.  When no queued record is available, infer the occasion that
-produces the most useful simulation.  The visual and spoken explanations
-always identify whether they describe queued output or a simulation.
+Interactively, open Feedback Details with a brief announcement, using a
+record that still matches the source item when available.  Otherwise show a
+labelled simulation.  A prefix argument chooses the simulated occasion.
+Noninteractive callers receive an explanation without displaying a report.
 
 (fn &optional FACTS CONTEXT RECORD)
 @end format
@@ -2960,6 +2958,15 @@ Open or resume a guided change to the field or span at point.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-feedback-details-debug
+@deffn {Command} emacsvox-aural-feedback-details-debug
+@findex emacsvox-aural-feedback-details-debug
+
+@format
+Open the frozen raw snapshot separately; q returns to this report.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-feedback-details-mode
 @deffn {Command} emacsvox-aural-feedback-details-mode
 @findex emacsvox-aural-feedback-details-mode
@@ -2990,6 +2997,8 @@ q		emacsvox-aural-ui-help-quit
 <backtab>	emacsvox-aural-feedback-details-previous-button
 <down>		emacsvox-aural-feedback-details-next-line
 <up>		emacsvox-aural-feedback-details-previous-line
+
+<remap> <push-button>	emacsvox-aural-feedback-details-open
 
 @end format
 @end deffn
@@ -3041,7 +3050,7 @@ Activate an action or expand the field at point.
 @findex emacsvox-aural-feedback-details-play
 
 @format
-Replay the original whole presentation, or only the supplied INDICES.
+Play the recorded or simulated baseline, or only the supplied INDICES.
 
 (fn &optional INDICES)
 @end format
@@ -3097,7 +3106,6 @@ Move to and read the previous report line.
 @subsubsection emacsvox-aural-feedback-details-speak-line
 @deffn {Command} emacsvox-aural-feedback-details-speak-line
 @findex emacsvox-aural-feedback-details-speak-line
-
 @format
 Read the current report line, retaining recorded content voices.
 @end format
@@ -3108,7 +3116,7 @@ Read the current report line, retaining recorded content voices.
 @findex emacsvox-aural-feedback-details-toggle
 
 @format
-Expand the selected field’s voice spans or the technical details.
+Expand or collapse the selected field, including its voice spans.
 @end format
 @end deffn
 
