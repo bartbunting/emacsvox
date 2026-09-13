@@ -80,6 +80,27 @@
        '(:role heading)
        '(:mode org-mode :occasion navigation))))))
 
+(ert-deftest emacsvox-aural-rules-event-free-inputs-keep-role-and-later-event-matches ()
+  "An event-free run keeps role rules and cannot hide another run's event."
+  (let* ((rules
+          (list (emacsvox-test--compile-rule
+                 'heading '(:role heading) '(:content (:voice bolden)))
+                (emacsvox-test--compile-rule
+                 'point '(:event point-located)
+                 '(:before ((:id point-label :kind speech :text "point"))))))
+         (plain (emacsvox-aural-resolve '(:role heading) nil rules))
+         (mixed (emacsvox-aural-resolve-inputs
+                 '(((:role heading) . nil)
+                   ((:role heading :event point-located) . nil)) rules)))
+    (should (equal (emacsvox-aural-render-plan-matched-rules plain) '(heading)))
+    (should (eq (emacsvox-aural-content-style-voice
+                 (emacsvox-aural-render-plan-content plain)) 'bolden))
+    (should-not (emacsvox-aural-render-plan-before plain))
+    (should (memq 'heading (emacsvox-aural-render-plan-matched-rules mixed)))
+    (should (memq 'point (emacsvox-aural-render-plan-matched-rules mixed)))
+    (should (equal (emacsvox-test--action-ids
+                    (emacsvox-aural-render-plan-before mixed)) '(point-label)))))
+
 (ert-deftest emacsvox-aural-rules-compile-named-tone-actions ()
   "Tone actions retain a backend-independent resource name."
   (let* ((rule

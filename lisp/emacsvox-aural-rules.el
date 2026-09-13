@@ -1738,40 +1738,44 @@ When VALUE is supplied, an attribute must also have that value."
 
 (defun emacsvox-aural-rule-matches-p (rule input)
   "Return non-nil when compiled RULE matches normalized INPUT."
-  (let* ((selector (emacsvox-aural-rule-selector rule))
-         (module (emacsvox-aural-selector-module selector))
-         (mode (emacsvox-aural-selector-mode selector))
-         (occasion (emacsvox-aural-selector-occasion selector))
-         (legacy-cue (emacsvox-aural-selector-legacy-cue selector))
-         (legacy-face (emacsvox-aural-selector-legacy-face selector))
-         (legacy-personality
-          (emacsvox-aural-selector-legacy-personality selector)))
-    (and
-     (emacsvox-aural-rule-enabled rule)
-     (not
-      (eq
-       (emacsvox-aural-rule-semantic-matches rule input)
-       'no-match))
-     (or (null module) (eq module (emacsvox-aural-input-module input)))
-     (or (null mode) (numberp (emacsvox-aural--mode-distance selector input)))
-     (or
-      (null occasion)
-      (eq occasion (emacsvox-aural-input-occasion input)))
-     (or
-      (null legacy-cue)
-      (eq legacy-cue (emacsvox-aural-input-legacy-cue input)))
-     (or
-      (null legacy-face)
-      (and
-       (emacsvox-aural-input-face-presentation-enabled input)
-       (memq legacy-face (emacsvox-aural-input-legacy-faces input))))
-     (or
-      (null legacy-personality)
-      (and
-       (emacsvox-aural-input-voice-lock-enabled input)
-       (equal
-        legacy-personality
-        (emacsvox-aural-input-legacy-personality input)))))))
+  (let ((selector (emacsvox-aural-rule-selector rule)))
+    ;; Event rules cannot match an input with no events.  This common case
+    ;; needs neither the remaining selector fields nor semantic provenance.
+    (and (emacsvox-aural-rule-enabled rule)
+         (or (null (emacsvox-aural-selector-events selector))
+             (emacsvox-aural-input-events input))
+         (let* ((module (emacsvox-aural-selector-module selector))
+		(mode (emacsvox-aural-selector-mode selector))
+		(occasion (emacsvox-aural-selector-occasion selector))
+		(legacy-cue (emacsvox-aural-selector-legacy-cue selector))
+		(legacy-face (emacsvox-aural-selector-legacy-face selector))
+		(legacy-personality
+		 (emacsvox-aural-selector-legacy-personality selector)))
+	   (and
+	    (not
+	     (eq
+	      (emacsvox-aural-rule-semantic-matches rule input)
+	      'no-match))
+	    (or (null module) (eq module (emacsvox-aural-input-module input)))
+	    (or (null mode) (numberp (emacsvox-aural--mode-distance selector input)))
+	    (or
+	     (null occasion)
+	     (eq occasion (emacsvox-aural-input-occasion input)))
+	    (or
+	     (null legacy-cue)
+	     (eq legacy-cue (emacsvox-aural-input-legacy-cue input)))
+	    (or
+	     (null legacy-face)
+	     (and
+	      (emacsvox-aural-input-face-presentation-enabled input)
+	      (memq legacy-face (emacsvox-aural-input-legacy-faces input))))
+	    (or
+	     (null legacy-personality)
+	     (and
+	      (emacsvox-aural-input-voice-lock-enabled input)
+	      (equal
+               legacy-personality
+               (emacsvox-aural-input-legacy-personality input)))))))))
 
 (defun emacsvox-aural-rule-score (rule input)
   "Return RULE specificity vector for normalized INPUT."
