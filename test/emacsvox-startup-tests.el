@@ -76,22 +76,34 @@
     (with-temp-buffer
       (let ((status
              (call-process
-              emacs nil t nil "-Q" "--batch" "-L" lisp "-l"
+              emacs nil t nil "-Q" "--batch" "-L" lisp
+              ;; Loading advised modules can announce messages even in batch.
+              ;; This inventory check must never contact the user's backend.
+              "--eval"
+              (prin1-to-string
+               '(progn
+                  (advice-add 'tts-speak :override #'ignore)
+                  (advice-add 'tts-notify :override #'ignore)
+                  (advice-add 'emacsvox-icon :override #'ignore)))
+              "-l"
               (expand-file-name "emacsvox-setup.el" lisp)
               "--eval"
               (prin1-to-string
-               `(progn
-                  ;; These are explicit interactive startup loads.  Do not
-                  ;; start speech or prepare arbitrary optional packages here.
-                  (require 'emacsvox-advice)
-                  (require 'emacsvox-websearch)
-                  (dolist (entry load-history)
-                    (when (and (stringp (car entry))
-                               (file-in-directory-p (car entry) ,lisp))
-                      (let ((source (concat (file-name-base (car entry)) ".el")))
-                        (unless (member source emacsvox-setup--startup-sources)
-                          (error "Startup dependency missing from guard: %s"
-                                 source))))))))))
+               `(condition-case failure
+                    (progn
+                      ;; These are explicit interactive startup loads.  Do not
+                      ;; start speech or prepare arbitrary optional packages here.
+                      (require 'emacsvox-advice)
+                      (require 'emacsvox-websearch)
+                      (dolist (entry load-history)
+                        (when (and (stringp (car entry))
+                                   (file-in-directory-p (car entry) ,lisp))
+                          (let ((source (concat (file-name-base (car entry)) ".el")))
+                            (unless (member source emacsvox-setup--startup-sources)
+                              (error "Startup dependency missing from guard: %s"
+                                     source)))))
+                      (kill-emacs 0))
+                  (error (princ (error-message-string failure)) (kill-emacs 1)))))))
         (unless (eq status 0) (ert-fail (buffer-string)))))))
 
 (ert-deftest emacsvox-setup-loads-newer-omnivox-and-advice-source ()
