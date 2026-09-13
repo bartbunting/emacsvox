@@ -8,6 +8,9 @@
 (require 'tts-queue-state)
 (defvar tts-queue-state-test--behavior nil)
 
+(defconst tts-queue-state-test--file
+  (or load-file-name buffer-file-name))
+
 (defconst tts-queue-state-test--fixture
   (expand-file-name "fixtures/voice-editor/queue-handoff.el"
                     (file-name-directory (or load-file-name buffer-file-name))))
@@ -182,7 +185,10 @@
            (should-not (tts-queue--send-typed process "s\n" 'clear)))
        (advice-remove 'process-send-string advice)))))
 
-(ert-deftest tts-queue-state-creation-auth-and-generation-handoff ()
+(defun tts-queue-state-test--creation-auth-and-generation-handoff ()
+  "Check native birth, authentication and generation in a clean child."
+  (should (subrp (symbol-function 'make-process)))
+  (should (subrp (symbol-function 'make-network-process)))
   (tts-queue-state-test--with-process
    (process-put process 'tts-queue--state nil)
    (tts-queue--create (lambda () process) nil)
@@ -214,6 +220,35 @@
        (tts-queue--authenticated process receipt)
        (should (equal (tts-queue-state-test--get process)
                       (if intervening '(unknown unproven unusable) '(empty boundary usable))))))))
+
+(ert-deftest tts-queue-state-creation-auth-and-generation-handoff ()
+  "Native-constructor checks must not inherit optional package advice."
+  (with-temp-buffer
+    (let ((status
+           (call-process
+            (expand-file-name invocation-name invocation-directory) nil t nil
+            "-Q" "--batch"
+            ;; Preserve source/compiled parity with the parent's exact module.
+            "-l" (symbol-file 'tts-queue--create 'defun)
+            "-l" tts-queue-state-test--file
+            "-f" "tts-queue-state-test--creation-auth-and-generation-handoff")))
+      (unless (eq status 0) (ert-fail (buffer-string))))))
+
+(ert-deftest tts-queue-state-advised-creation-remains-unproven ()
+  "Transparent constructor advice cannot grant proof of a fresh queue."
+  (tts-queue-state-test--with-process
+   (dolist (remote '(nil t))
+     (let ((constructor (if remote 'make-network-process 'make-process))
+           (wrapper (lambda (original &rest arguments) (apply original arguments))))
+       (unwind-protect
+           (progn
+             (advice-add constructor :around wrapper)
+             (process-put process 'tts-queue--state nil)
+             (tts-queue--create (lambda () process) remote)
+             (should (equal (tts-queue-state-test--get process)
+                            (if remote '(unknown unproven unusable)
+                              '(unknown unproven usable)))))
+         (advice-remove constructor wrapper))))))
 
 (ert-deftest tts-queue-state-encoding-bounds-and-rollover ()
   (tts-queue-state-test--with-process
