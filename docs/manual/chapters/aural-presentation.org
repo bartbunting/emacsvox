@@ -1155,15 +1155,17 @@ default. Voice previews opened from an aural screen use the remembered source
 buffer's settings; contextual previews use their captured source policy.
 Changing a setting during playback does not change the submitted sample.
 
-The trial approval list, ~emacsvox-emoji-approved-sequences~, contains =🔮=,
-=✨=, =✅=, =⚠️=, =🚀= and =💡=. Matching uses complete, exact sequences.
-An unknown joined emoji stays intact, even when one of its components is
-approved. Foreign-language letters, combining accents, flags, keycaps and
-unapproved symbols retain the existing fallback behaviour. Exact character
-inspection also retains its existing behaviour.
+Enabled naming uses every exact name in Emacs's emoji table, including =🌱=
+(seedling), flags, keycaps and joined emoji. There is no need to approve each
+new emoji. ~emacsvox-emoji-approved-sequences~ defaults to ~t~ for this full
+table; optionally set it to a list of complete sequences to restrict naming.
+An unknown joined emoji stays intact, even when a component has a name.
+Foreign-language letters, combining accents and symbols without an exact emoji
+name retain the existing fallback behaviour. Exact character inspection also
+retains its existing behaviour.
 
 ~emacsvox-emoji-maximum-count~ defaults to two occurrences, counting repetitions
-separately. With three approved occurrences in the original item, automatic
+separately. With three eligible occurrences in the original item, automatic
 naming is skipped for the whole item. One captured presentation object can
 contain several voice runs; a standalone preview sample is one item. Transport
 chunk sizes do not affect this limit. A sequence crossing a style or positioned
@@ -1175,7 +1177,7 @@ sequence available to normal fallback; nothing is downloaded. The names are
 English, and enabled naming also applies to engines that could speak the
 original emoji.
 
-Explicit pronunciation entries take precedence. For approved sequences, set
+Explicit pronunciation entries take precedence. For eligible sequences, set
 ~emacsvox-emoji-custom-names~ to override a bundled name, for example:
 
 #+begin_src emacs-lisp
@@ -1184,8 +1186,9 @@ Explicit pronunciation entries take precedence. For approved sequences, set
 
 Custom names must contain 1 to 80 characters and no control characters.
 Empty names are invalid; use an explicit pronunciation when you want to omit
-something. Approval and custom-name lists are limited to 64 entries, sequences
-to 32 characters, and the occurrence limit to the range 0 through 64. Invalid
+something. Explicit restriction and custom-name lists are limited to 64 entries,
+with sequences of up to 32 characters; the full-table setting has no entry limit.
+The occurrence limit accepts the range 0 through 64. Invalid
 settings skip automatic naming with an explanation rather than stopping speech.
 
 In /Feedback Details/ (@@texinfo:@kbd{C-e E}@@), expand the relevant field to

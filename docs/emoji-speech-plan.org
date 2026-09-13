@@ -6,10 +6,14 @@
 
 Implementation authorized on 2026-09-13, in tested, committed slices. The
 maintainer selected Emacs's existing emoji-name table as the initial data
-source. Personal settings and release publication remain outside this work.
+source. Release publication remains outside this work.
 The preceding voice-editor and graphical-test changes are already committed.
 Implementation and automated verification are complete. The opt-in listening
-trial remains pending; no personal settings have been enabled.
+trial found that a Workaway subject containing =🌱= still used eSpeak: naming
+was disabled and seedling was absent from the six-symbol trial list.
+On 2026-09-14 the maintainer requested full-table naming and enabling it in
+the newest session. The policy below reflects that follow-up; the original
+implementation evidence records the earlier restricted trial.
 
 The first acceptance example is =Forecast 🔮=: with the feature enabled,
 speech preparation supplies =Forecast crystal ball=, allowing Eloquence to
@@ -17,7 +21,7 @@ keep speaking when the rest of the text and the selected route are compatible.
 The buffer still contains the original emoji. Unsupported language text and
 unknown sequences continue through the existing fallback path.
 
-The first version names approved emoji before engine selection. Its names
+The first version names eligible emoji before engine selection. Its names
 therefore also reach engines that could handle the original emoji. Naming only
 when the actual preferred engine needs it is a possible later Omnivox design,
 not part of this implementation.
@@ -56,13 +60,13 @@ Start disabled by default, with a global default and buffer/mode overrides.
 Use the remembered source buffer's policy when opening a preview from an aural
 screen. Freeze the policy for each submitted item or preview operation.
 
-Provide an approved-sequence list, a maximum count, and custom spoken names.
-Proposed trial entries are =🔮=, =✨=, =✅=, =⚠️=, =🚀= and =💡=, subject to
-verification against both supported Emacs versions. These are proposed examples,
-not an exhaustive definition of decoration. A table entry alone does not make
-an emoji eligible: flags, keycaps and other symbols may carry meaningful text.
+Provide an optional sequence restriction, a maximum count, and custom spoken
+names. Default the restriction setting to =t=: every complete sequence with
+an exact Emacs emoji name or a custom name is eligible, including flags and
+keycaps. Preserve explicit lists for users who want a restricted set and for
+previously captured policies. This replaces the original six-symbol trial list.
 
-Initially allow two approved emoji occurrences per captured speech item.
+Initially allow two eligible emoji occurrences per captured speech item.
 Repeated occurrences count separately. Count before any replacements and before
 transport chunking; do not let backend chunk size decide the policy. If the
 count exceeds the limit, skip automatic emoji naming for the whole item.
@@ -73,7 +77,7 @@ constitutes an item in the first implementation slice.
 
 ** Names and boundaries
 
-Use explicit pronunciation entries first. For remaining approved sequences,
+Use explicit pronunciation entries first. For remaining eligible sequences,
 use a custom emoji name if present, otherwise an exact lookup in Emacs's table.
 Do not silently add full Unicode-name expansion for arbitrary characters.
 Automatic naming inserts a spoken description; omission requires an explicit
@@ -86,8 +90,8 @@ text properties divide their components. Establish conservative behaviour for
 such property boundaries before implementation. Accept only verified spelling
 variants; do not strip joiners or variation selectors indiscriminately.
 
-Leave foreign-language letters, combining accents, unapproved symbols and
-unknown sequences unchanged. An item may therefore contain a named approved
+Leave foreign-language letters, combining accents, unnamed symbols and
+unknown sequences unchanged. An item may therefore contain a named eligible
 emoji and still require fallback for its remaining text. Do not assume every
 English label is ASCII or encodable by every legacy engine; existing repertoire
 routing remains the final check.
@@ -157,12 +161,13 @@ transport; no Omnivox protocol or helper changes are planned.
 |------+-----------------|
 | Feature disabled | Identical prepared text and existing fallback behaviour. |
 | =Forecast 🔮=, enabled | =Forecast crystal ball=; original buffer unchanged. |
-| Two approved occurrences | Both named, independently of backend chunk size. |
-| Three approved occurrences | No automatic emoji substitutions at the trial limit of two. |
+| Two eligible occurrences | Both named, independently of backend chunk size. |
+| Three eligible occurrences | No automatic emoji substitutions at the trial limit of two. |
 | Approved compound emoji | One complete name and one occurrence, never separate component names. |
 | Unknown joined emoji with a recognised component | Complete sequence retained. |
-| Foreign-language text, including beside an approved emoji | Letters unchanged; normal repertoire fallback remains available. |
-| Combining accents, flags, keycaps and mathematical symbols outside approval | Original sequences retained. |
+| Foreign-language text, including beside a named emoji | Letters unchanged; normal repertoire fallback remains available. |
+| Flags, keycaps and known joined emoji | Exact names from the full table, subject to the occurrence limit. |
+| Combining accents and mathematical symbols without emoji names | Original sequences retained. |
 | Custom pronunciation/name | Correct precedence; no duplicate or recursive expansion. |
 | A name absent on one supported Emacs version | Original retained with an explainable fallback; no speech failure. |
 | Styling or positioned cues around a replacement | Correct style ownership, order and mapped boundaries. |
@@ -180,7 +185,7 @@ sequence variants from the real table as well as boundary-focused fixtures.
 
 With the maintainer's chosen test buffers, enable the trial policy temporarily.
 Check actual Eloquence/eSpeak routing evidence and listen to the original
-navigation interaction. Confirm the approved-symbol examples stay on Eloquence
+navigation interaction. Confirm the named-symbol examples stay on Eloquence
 when otherwise compatible, and language/unknown-sequence examples retain usable
 fallback. Exercise relevant previews with the same text and check verbosity,
 pauses, repeated decorations and the two-versus-three threshold.
@@ -267,7 +272,7 @@ explanation visibility and the voice editor's final Save actions. The whole
 unit suite exposed older palette/queue expectations and incomplete startup
 inventory. These are tracked separately from emoji regression evidence.
 
-** Final automated verification and remaining listening trial
+** Original automated verification and remaining listening trial
 
 - Emacs 31.0.90: source emoji regression tests and fresh compiled aural parity
   pass. The compiled gate verifies that naming, planning and preview functions
@@ -286,8 +291,41 @@ inventory. These are tracked separately from emoji regression evidence.
   focused runs; it failed only during the original full-suite run with the
   inherited real speech launcher. The whole unit suite is not claimed green.
 - Existing byte-code rebuild warnings in unrelated modules remain unchanged.
-- Live Eloquence/eSpeak routing and the maintainer's listening acceptance remain
-  pending. No personal naming settings or live Emacs profile have been changed.
+- At the end of the original implementation, live Eloquence/eSpeak routing and
+  the maintainer's listening acceptance remained pending. No personal naming
+  settings or live Emacs profile had been changed.
   A temporary-buffer listening trial was offered separately; automated results
   do not establish what the maintainer hears or settle the two-versus-three
   threshold's usability.
+
+** Full-table follow-up, 2026-09-14
+
+The newest session's main Omnivox log explicitly reported =U+1F331= (seedling)
+as the reason for rerouting the Workaway subject from Eloquence to eSpeak.
+The source's captured policy had naming disabled, and the default trial list
+did not contain that emoji. An exact Emacs lookup supplied =seedling=.
+
+Enabled naming now uses the full Emacs emoji table by default. Explicit
+restriction lists still work, including captured historical policies. Both
+the original-item count and speech preparation use the same exact eligibility
+check. Missing tables produce one bounded diagnostic; custom names still work.
+Unknown joined sequences, foreign-language letters and style/cue boundaries
+retain their previous protections. The default occurrence limit remains two.
+
+The pure helper's 12 tests pass on Emacs 30.2 and 31.0.90, including flags,
+keycaps, seedling, full-table counting and explicit restrictions. Fresh compiled
+aural parity passes. The mail regression uses a synthetic subject with the
+same seedling character at the normal speech and preview boundaries.
+
+After the full byte-code rebuild, all 26 nongraphical emoji checks pass in a
+fresh Emacs loading the compiled helper, planner and preview code. The
+graphical-only explanation check is excluded from this batch selector; this
+follow-up does not change graphical layout.
+
+The maintainer started a newer profile during verification. That session
+already had the updated helper; naming was enabled there and saved in the
+personal profile's Custom file. A silent preparation check in the Notmuch
+source buffer expands the original subject's seedling and leaves no non-ASCII
+characters. Buffer point and both speech processes are preserved. A fresh
+navigation/listening trial is still needed to establish the actual route and
+what the maintainer hears; retained recordings keep their original policy.
