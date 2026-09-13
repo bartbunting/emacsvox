@@ -1,0 +1,218 @@
+#+title: Occasional Emoji Naming for Speech — Implementation Plan
+#+date: 2026-09-13
+#+startup: content
+
+* Status and intended outcome
+
+Planning only. The maintainer selected Emacs's existing emoji-name table as
+the initial data source. This document records the proposed implementation;
+it does not enable the feature, change personal settings, or authorize commits
+or release publication. Preserve the existing voice-editor and graphical-test
+work while implementing this separate feature.
+
+The first acceptance example is =Forecast 🔮=: with the feature enabled,
+speech preparation supplies =Forecast crystal ball=, allowing Eloquence to
+keep speaking when the rest of the text and the selected route are compatible.
+The buffer still contains the original emoji. Unsupported language text and
+unknown sequences continue through the existing fallback path.
+
+The first version names approved emoji before engine selection. Its names
+therefore also reach engines that could handle the original emoji. Naming only
+when the actual preferred engine needs it is a possible later Omnivox design,
+not part of this implementation.
+
+Follow all accepted [[file:adr/][ADRs]], particularly the Emacs minimum in
+[[file:adr/0012-emacs-30-compatibility.org][ADR 0012]], speech lanes in
+[[file:adr/0009-foreground-and-notification-speech-lanes.org][ADR 0009]], remote behaviour in
+[[file:adr/0010-remote-workstation-speech.org][ADR 0010]], and voice/preview ownership in
+[[file:adr/0015-palette-owned-voices-and-migration.org][ADRs 0015]]–[[file:adr/0018-unified-voice-palette-model.org][0018]].
+
+* Evidence from the current implementation
+
+- [[file:../lisp/tts-speak.el][tts-speak.el]] already implements Unicode character names and explicit
+  character replacements. Its broad compatibility conversion can name letters
+  as well as symbols; re-enabling it globally would undermine language fallback.
+- [[file:../lisp/omnivox-voices.el][omnivox-voices.el]] disables that broad conversion after every live speech
+  process advertises =text_repertoire_routing_v1=. Preserve that negotiation.
+- Omnivox filters engine candidates by the text each engine can encode, per
+  synthesis chunk. This does not mark Eloquence unhealthy; a later compatible
+  chunk can return to it. The new feature changes the prepared speech text,
+  not Omnivox's repertoire declarations or fallback rules.
+- The inspected Emacs 31.0.90 provides =emoji-labels.el= and an =equal= hash
+  table named =emoji--names=. Exact lookups returned =crystal ball= for =🔮=,
+  =woman technologist= for =👩‍💻=, and =thumbs up: medium skin tone= for =👍🏽=.
+  This establishes availability on the selected toolchain only; Emacs 30.2
+  remains a required compatibility check.
+- Normal speech applies pronunciation entries in a temporary speech buffer.
+  Complete voice previews construct their own text requests in
+  [[file:../lisp/emacsvox-aural-voice-editing.el][voice-editing.el]]. A change only in the ordinary speech cleanup would
+  leave previews inconsistent.
+
+* Proposed policy for the first listening trial
+
+** Scope and controls
+
+Start disabled by default, with a global default and buffer/mode overrides.
+Use the remembered source buffer's policy when opening a preview from an aural
+screen. Freeze the policy for each submitted item or preview operation.
+
+Provide an approved-sequence list, a maximum count, and custom spoken names.
+Proposed trial entries are =🔮=, =✨=, =✅=, =⚠️=, =🚀= and =💡=, subject to
+verification against both supported Emacs versions. These are proposed examples,
+not an exhaustive definition of decoration. A table entry alone does not make
+an emoji eligible: flags, keycaps and other symbols may carry meaningful text.
+
+Initially allow two approved emoji occurrences per captured speech item.
+Repeated occurrences count separately. Count before any replacements and before
+transport chunking; do not let backend chunk size decide the policy. If the
+count exceeds the limit, skip automatic emoji naming for the whole item.
+Explicit pronunciation entries retain their existing behaviour independently.
+Assess the abrupt boundary at the third emoji during spoken acceptance before
+making this limit a lasting default. Define which current source/preview unit
+constitutes an item in the first implementation slice.
+
+** Names and boundaries
+
+Use explicit pronunciation entries first. For remaining approved sequences,
+use a custom emoji name if present, otherwise an exact lookup in Emacs's table.
+Do not silently add full Unicode-name expansion for arbitrary characters.
+Automatic naming inserts a spoken description; omission requires an explicit
+user pronunciation choice.
+
+Match complete emoji sequences. A recognised component inside an unknown
+joined sequence must not be replaced on its own. Handle presentation selectors,
+skin-tone modifiers, flags and joined emoji as complete units, including when
+text properties divide their components. Establish conservative behaviour for
+such property boundaries before implementation. Accept only verified spelling
+variants; do not strip joiners or variation selectors indiscriminately.
+
+Leave foreign-language letters, combining accents, unapproved symbols and
+unknown sequences unchanged. An item may therefore contain a named approved
+emoji and still require fallback for its remaining text. Do not assume every
+English label is ASCII or encodable by every legacy engine; existing repertoire
+routing remains the final check.
+
+* Implementation slices
+
+** TODO 1. Verify the data adapter and preparation boundaries
+
+Load =emoji-labels= lazily behind one private Emacsvox lookup function. Validate
+the table's type and require exact string keys. Do not modify Emacs's table or
+depend on its emoji picker and font-availability filtering. Avoid calling an
+internal name helper that falls back to naming only the first character of an
+unknown sequence.
+
+Verify the table and sequence segmentation on Emacs 30.2 and the selected newer
+Emacs, using separate checkouts for any compatibility builds. A missing table,
+unexpected table shape or missing entry must leave the original text usable
+through existing fallback, with a bounded diagnostic when naming is requested.
+Do not fail ordinary speech or download replacement data. Record the loaded
+data path and Emacs version because emoji coverage can differ between versions.
+
+Trace ordinary, notification, retained-feedback and voice-preview preparation.
+Choose the item boundary and the common helper's insertion points from those
+actual call paths. Preserve literal character inspection. Record how source
+policy reaches a preview and where it is frozen for comparison and replay.
+
+** TODO 2. Implement deterministic matching and conversion
+
+Build a helper that accepts original text plus an explicit policy snapshot and
+returns prepared text and replacement evidence. Evidence must associate each
+complete source sequence with its spoken name and source/output boundaries.
+
+Perform recognition and threshold decisions on the unmodified item. Preserve
+unmatched text exactly; prevent word concatenation around replacements. Bound
+custom-name expansion and reject invalid configuration before using it. Apply
+conversion once, without recursively matching generated names. Keep existing
+pronunciation precedence and make the new automatic step optional.
+
+Test this helper without an audio process. Avoid making the matching layer
+depend on the selected engine, font rendering or changes to personal palettes.
+
+** TODO 3. Integrate speech, previews and explanation
+
+Use the helper in normal speech on both lanes and in fresh preview preparation,
+including named-voice, individual-choice and contextual previews. Opening and
+playing a preview must not select a palette or change the source's settings.
+
+Preserve voice runs, semantic facts, positioned cues and speech markers across
+length-changing substitutions. The existing replacement helper preserves some
+properties, but that alone does not prove correct boundary mapping; test actions
+before, within and after a replaced sequence explicitly.
+
+Original replay must use the retained prepared presentation, not re-expand it
+with today's settings. Fresh simulations/proposals use the applicable captured
+policy and label their substitutions. Feedback Details should expose original
+sequence and spoken name without suggesting that the buffer was edited or that
+the inferred engine was actually heard.
+
+Keep cancellation, nested preparation, reconnect and main/notification ownership
+unchanged. Carry the effective policy with an asynchronous operation so later
+buffer or settings changes cannot alter an in-flight request. Reuse existing
+transport; no Omnivox protocol or helper changes are planned.
+
+** TODO 4. Complete regression and compiled verification
+
+| Case | Required result |
+|------+-----------------|
+| Feature disabled | Identical prepared text and existing fallback behaviour. |
+| =Forecast 🔮=, enabled | =Forecast crystal ball=; original buffer unchanged. |
+| Two approved occurrences | Both named, independently of backend chunk size. |
+| Three approved occurrences | No automatic emoji substitutions at the trial limit of two. |
+| Approved compound emoji | One complete name and one occurrence, never separate component names. |
+| Unknown joined emoji with a recognised component | Complete sequence retained. |
+| Foreign-language text, including beside an approved emoji | Letters unchanged; normal repertoire fallback remains available. |
+| Combining accents, flags, keycaps and mathematical symbols outside approval | Original sequences retained. |
+| Custom pronunciation/name | Correct precedence; no duplicate or recursive expansion. |
+| A name absent on one supported Emacs version | Original retained with an explainable fallback; no speech failure. |
+| Styling or positioned cues around a replacement | Correct style ownership, order and mapped boundaries. |
+| Normal speech versus fresh voice/context previews | Same naming decision under the same source policy. |
+| Retained original replay after policy changes | Original submitted speech retained. |
+| Cancellation, nested preparation and both lanes | No stale submission or cross-lane interruption introduced. |
+
+Run the focused source suites, then =make check-emacs= and =make bytecode=.
+Use =make bytecode-rebuild= if the implementation changes macros or public
+interfaces. Verify actual loaded paths in fresh compiled Emacs processes.
+Keep Emacs 30.2 evidence separate. Test generated English labels and permitted
+sequence variants from the real table as well as boundary-focused fixtures.
+
+** TODO 5. Spoken acceptance and documentation
+
+With the maintainer's chosen test buffers, enable the trial policy temporarily.
+Check actual Eloquence/eSpeak routing evidence and listen to the original
+navigation interaction. Confirm the approved-symbol examples stay on Eloquence
+when otherwise compatible, and language/unknown-sequence examples retain usable
+fallback. Exercise relevant previews with the same text and check verbosity,
+pauses, repeated decorations and the two-versus-three threshold.
+
+Trace the selected Emacs and speech processes before live probes. Restore
+temporary policy changes and remove probes after acceptance. A playback receipt
+does not establish what the maintainer heard. If explanation layout or focus
+changes, use the isolated graphical test runner and distinguish that evidence
+from spoken acceptance.
+
+Update the maintained user guide once behaviour settles. Document opt-in scope,
+the trial limit, overrides, version-dependent emoji coverage and the fact that
+enabled naming applies regardless of engine. Generate documentation through the
+normal targets and run =make docs-release-check= before review. Do not publish
+documentation or a release as part of this work.
+
+* Deferred work and design risks
+
+No separate CLDR package, dataset download, copied Emacs data or runtime network
+lookup is needed for this version. Localised names and identical coverage across
+Emacs versions may justify revisiting that choice later. Naming only after an
+actual engine repertoire rejection belongs to a separate Omnivox design.
+
+The largest implementation risks are sequence boundaries, text-position mapping,
+and independently prepared previews. The private Emacs table is a bounded
+compatibility risk, handled through one adapter and conservative missing-data
+behaviour. Use High for ordinary implementation. Recommend Xhigh only if the
+preparation audit leaves a consequential cross-component question unresolved;
+this plan imposes no automatic model switch or handoff stop.
+
+* Validation of this planning document
+
+Check local links and whitespace, and run the non-mutating documentation gate.
+This internal plan alone requires no Lisp compilation, generated-manual update,
+new application tests or live speech changes.
