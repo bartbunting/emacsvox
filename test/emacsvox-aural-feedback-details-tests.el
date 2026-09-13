@@ -112,6 +112,24 @@
        (should (equal played runs)))
      (should (equal emacsvox-aural-presentation-history (list record))))))
 
+(ert-deftest emacsvox-aural-feedback-details-links-distinct-recorded-voices ()
+  "A multivoice field links each named voice without remapping the field."
+  (emacsvox-test--with-feedback-report
+   (emacsvox-test--feedback-field "Message count")
+   (emacsvox-aural-feedback-details-toggle)
+   (let ((before (emacsvox-aural--history-value record)) opened)
+     (dolist (name '(bolden lighten))
+       (goto-char (point-min))
+       (search-forward (format "Edit named voice %s" name))
+       (backward-char)
+       (cl-letf (((symbol-function 'emacsvox-aural-voice-editor-open)
+                  (lambda (&rest args) (setq opened args))))
+         (call-interactively (key-binding (kbd "RET"))))
+       (should (eq (nth 1 opened) name))
+       (should (eq (nth 2 opened) report)))
+     (should-not emacsvox-aural-feedback-details--drafts)
+     (should (equal before (emacsvox-aural--history-value record))))))
+
 (ert-deftest emacsvox-aural-feedback-details-preview-subject-and-after-count ()
   "Two field drafts preview together; the count cue occurs once at its boundary."
   (emacsvox-test--with-feedback-report

@@ -2688,6 +2688,13 @@ Feedback. Use a prefix argument with @kbd{C-e E} to choose a
 simulated occasion explicitly. Press @kbd{q} to return to the
 source position or Home row from which you opened the report.
 
+Expand a field and choose @emph{Edit named voice bolden} (or the voice name shown)
+beside its voice explanation to open the existing voice editor. A field with
+several named voices offers a link for each. This edits the named voice in the
+reported palette@comma{} affecting every use there. @emph{Change field} instead changes
+the feedback rule for that field. Leaving the voice editor returns to the
+same report link; opening it does not save or apply anything.
+
 To inspect something heard earlier@comma{} open Aural Home and choose @emph{Recent Aural
 Feedback}@comma{} or press @kbd{H} there.  Each row preserves a recorded presentation; the history has a size limit.
 Moving through the Content column speaks the preview using its recorded voices@comma{}
@@ -3354,7 +3361,9 @@ adjustments apply to fields that a row inherits; @emph{Customize this voice} add
 optional individual settings.
 
 For a named voice@comma{} @kbd{w} or @kbd{C-c C-c} saves and
-applies the complete draft. @emph{Save to collection without selecting} saves an
+applies the complete draft. The save buttons are at the bottom of the editor@comma{}
+after the settings@comma{} previews and change details.
+@emph{Save to collection without selecting} saves an
 inactive palette without changing the current selection. The header reports
 unsaved changes@comma{} partial saves@comma{} applying@comma{} failures@comma{} or saved and applied.
 Retry uses the pending proposal and retains successful persistence steps.

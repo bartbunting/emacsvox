@@ -412,10 +412,64 @@
    (should (equal (car speech) "Automatic sample after adjustment: on"))
    (should-not requests)))
 
+(ert-deftest emacsvox-aural-voice-editor-feedback-link-resumes-and-returns ()
+  "A report edits its captured named base and returns to the same link."
+  (require 'emacsvox-aural-feedback-details)
+  (emacsvox-test--with-voice-editor
+   (save-window-excursion
+     (with-temp-buffer
+       (switch-to-buffer (current-buffer))
+       (emacsvox-aural-feedback-details-mode)
+       (let* ((report (current-buffer))
+              (plan (emacsvox-aural--make-concrete-plan
+                     :voice-palette 'reading-owned
+                     :content (emacsvox-aural--make-concrete-content
+                               :text "Captured heading"
+                               :voice-request '(:preset voice-bolden :average-pitch 8))))
+              (before (emacsvox-aural-read-user-data))
+              (inhibit-read-only t))
+         (setq emacsvox-aural-feedback-details--record
+               (emacsvox-aural--make-presentation-record :plan plan :plans (list plan)))
+         (emacsvox-aural-feedback-details--insert-voice-links '(0))
+         (goto-char (point-min))
+         (should (equal (button-label (button-at (point))) "Edit named voice bolden"))
+         ;; Changing the active palette must not redirect the report's link.
+         (let ((emacsvox-aural-voice-palette-override 'source-child))
+           (call-interactively (key-binding (kbd "RET"))))
+         (should (derived-mode-p 'emacsvox-aural-voice-editor-mode))
+         (should (eq (emacsvox-aural-voice-editor--get :palette) 'reading-owned))
+         (should (eq (emacsvox-aural-voice-editor--get :voice) 'bolden))
+         (should (equal (emacsvox-aural-voice-editor--get :text) "Captured heading"))
+         (emacsvox-aural-voice-editor--put :automatic-sample nil)
+         (emacsvox-aural-voice-editor--set 'average-pitch 7)
+         (let ((draft (emacsvox-aural-voice-editor--draft)))
+           (cl-letf (((symbol-function 'completing-read) (lambda (&rest _) "Keep draft and return")))
+             (call-interactively (key-binding (kbd "q"))))
+           (should (eq (current-buffer) report))
+           (should (button-at (point)))
+           (call-interactively (key-binding (kbd "RET")))
+           (should (eq draft (emacsvox-aural-voice-editor--draft))))
+         (should-not callbacks)
+         (should (equal before (emacsvox-aural-read-user-data))))))))
+
+(ert-deftest emacsvox-aural-voice-editor-save-actions-follow-settings-and-previews ()
+  (emacsvox-test--with-voice-editor
+   (emacsvox-aural-voice-editor-open 'reading-owned 'bolden)
+   (should (eq (get-text-property (point) 'voice-field) 'primary))
+   (emacsvox-aural-voice-editor--locate 'context)
+   (call-interactively (key-binding (kbd "TAB")))
+   (should (eq (get-text-property (point) 'voice-field) 'save))
+   (call-interactively (key-binding (kbd "TAB")))
+   (should (eq (get-text-property (point) 'voice-field) 'collection))
+   (should (= (point) (button-start (previous-button (point-max)))))
+   (emacsvox-aural-voice-editor--locate 'save)
+   (emacsvox-aural-voice-editor-refresh)
+   (should (eq (get-text-property (point) 'voice-field) 'save))))
+
 (ert-deftest emacsvox-aural-voice-editor-field-navigation-stops-at-both-ends ()
   (emacsvox-test--with-voice-editor
    (emacsvox-aural-voice-editor-open 'reading-owned 'bolden)
-   (emacsvox-aural-voice-editor--locate 'save)
+   (emacsvox-aural-voice-editor--locate 'primary)
    (let ((first (point)))
      (call-interactively (key-binding (kbd "<up>")))
      (should (= first (point)))
@@ -486,7 +540,7 @@
      (should (eq (get-text-property (point) 'voice-field) 'text))
      (goto-char (point-min))
      (call-interactively (key-binding (kbd "<right>")))
-     (should (eq (get-text-property (point) 'voice-field) 'save))
+     (should (eq (get-text-property (point) 'voice-field) 'primary))
      (should (equal before (emacsvox-aural-voice-editor--working)))
      (should-not requests))))
 

@@ -2671,6 +2671,14 @@ with ‘C-e E’ to choose a simulated occasion explicitly.  Press ‘q’ to
 return to the source position or Home row from which you opened the
 report.
 
+   Expand a field and choose _Edit named voice bolden_ (or the voice
+name shown) beside its voice explanation to open the existing voice
+editor.  A field with several named voices offers a link for each.  This
+edits the named voice in the reported palette, affecting every use
+there.  _Change field_ instead changes the feedback rule for that field.
+Leaving the voice editor returns to the same report link; opening it
+does not save or apply anything.
+
    To inspect something heard earlier, open Aural Home and choose
 _Recent Aural Feedback_, or press ‘H’ there.  Each row preserves a
 recorded presentation; the history has a size limit.  Moving through the
@@ -3331,13 +3339,14 @@ apply to fields that a row inherits; _Customize this voice_ adds
 optional individual settings.
 
    For a named voice, ‘w’ or ‘C-c C-c’ saves and applies the complete
-draft.  _Save to collection without selecting_ saves an inactive palette
-without changing the current selection.  The header reports unsaved
-changes, partial saves, applying, failures, or saved and applied.  Retry
-uses the pending proposal and retains successful persistence steps.
-Changes made during an earlier apply remain unsaved when its
-acknowledgement arrives.  A changed file or destination requires fresh
-review rather than an implicit merge.
+draft.  The save buttons are at the bottom of the editor, after the
+settings, previews and change details.  _Save to collection without
+selecting_ saves an inactive palette without changing the current
+selection.  The header reports unsaved changes, partial saves, applying,
+failures, or saved and applied.  Retry uses the pending proposal and
+retains successful persistence steps.  Changes made during an earlier
+apply remain unsaved when its acknowledgement arrives.  A changed file
+or destination requires fresh review rather than an implicit merge.
 
    Named-voice previews test the complete choice chain without selecting
 the draft palette or changing live settings.  They require an Omnivox

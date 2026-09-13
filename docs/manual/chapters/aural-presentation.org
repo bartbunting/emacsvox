@@ -280,6 +280,13 @@ Feedback. Use a prefix argument with @@texinfo:@kbd{C-e E}@@ to choose a
 simulated occasion explicitly. Press @@texinfo:@kbd{q}@@ to return to the
 source position or Home row from which you opened the report.
 
+Expand a field and choose /Edit named voice bolden/ (or the voice name shown)
+beside its voice explanation to open the existing voice editor. A field with
+several named voices offers a link for each. This edits the named voice in the
+reported palette, affecting every use there. /Change field/ instead changes
+the feedback rule for that field. Leaving the voice editor returns to the
+same report link; opening it does not save or apply anything.
+
 To inspect something heard earlier, open Aural Home and choose /Recent Aural
 Feedback/, or press @@texinfo:@kbd{H}@@ there.  Each row preserves a recorded presentation; the history has a size limit.
 Moving through the Content column speaks the preview using its recorded voices,
@@ -895,7 +902,9 @@ adjustments apply to fields that a row inherits; /Customize this voice/ adds
 optional individual settings.
 
 For a named voice, @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ saves and
-applies the complete draft. /Save to collection without selecting/ saves an
+applies the complete draft. The save buttons are at the bottom of the editor,
+after the settings, previews and change details.
+/Save to collection without selecting/ saves an
 inactive palette without changing the current selection. The header reports
 unsaved changes, partial saves, applying, failures, or saved and applied.
 Retry uses the pending proposal and retains successful persistence steps.

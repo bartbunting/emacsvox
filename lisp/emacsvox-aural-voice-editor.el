@@ -412,18 +412,6 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
                       (emacsvox-aural-voice-editor--get :owner))))
     (when (and palette (not (eq palette (emacsvox-aural-effective-voice-palette))))
       (insert "This palette is inactive. Save and apply will select it for this session.\n"))
-    (insert "\nDestination\n")
-    (emacsvox-aural-voice-editor--button 'save
-                                         (if voice
-                                             (format "%s to %s"
-                                                     (if (when-let* ((save (emacsvox-aural-voice-draft-proposal draft)))
-                                                           (memq (emacsvox-aural-voice-save-state save) '(partial failed apply-failed)))
-                                                         "Retry save and apply" "Save and apply") voice)
-                                           "Choose where to use this voice")
-                                         #'emacsvox-aural-voice-editor-save)
-    (when voice
-      (emacsvox-aural-voice-editor--button 'collection "Save to collection without selecting"
-                                           #'emacsvox-aural-voice-editor-save-to-collection))
     (insert "\nPhysical voice\n")
     (emacsvox-aural-voice-editor--button 'primary
                                          (if chain (emacsvox-aural-voice-workbench--selector-description (car chain)) "Automatic selection")
@@ -506,6 +494,18 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
     (when voice
       (emacsvox-aural-voice-editor--button 'context "Effective sound / Where settings came from…"
                                            #'emacsvox-aural-voice-context-open))
+    (insert "\nSave\n")
+    (emacsvox-aural-voice-editor--button 'save
+                                         (if voice
+                                             (format "%s to %s"
+                                                     (if (when-let* ((save (emacsvox-aural-voice-draft-proposal draft)))
+                                                           (memq (emacsvox-aural-voice-save-state save) '(partial failed apply-failed)))
+                                                         "Retry save and apply" "Save and apply") voice)
+                                           "Choose where to use this voice")
+                                         #'emacsvox-aural-voice-editor-save)
+    (when voice
+      (emacsvox-aural-voice-editor--button 'collection "Save to collection without selecting"
+                                           #'emacsvox-aural-voice-editor-save-to-collection))
     (setq header-line-format (format "%s | %s" (or voice "Experiment")
                                      (plist-get (emacsvox-aural-voice-drafts--status draft) :label)))
     (emacsvox-aural-voice-editor--locate field)
