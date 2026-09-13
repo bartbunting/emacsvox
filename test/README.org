@@ -22,6 +22,7 @@ when a check reports a missing prerequisite or stale build.
 | =compat-test= | Focused runtime, startup, input, reading, Org, and installer contracts without optional packages. | Runs =config= first, including regeneration of ignored autoloads. |
 | =unit-test= | The broad ERT suite, including installed optional integrations. | Requires generated autoloads; temporary fixtures, with no automatic in-tree rebuild or dependency installation. |
 | =integration-test= | Agent Shell, Notmuch, and EAT against the reviewed lock. | Requires =test-deps= first; verifies the prepared tree, without downloading or rebuilding it. |
+| =graphical-integration-test= | Agent Shell prompt overlays and wrapped display rows in a real graphical Emacs. | Uses the same verified dependencies on a private Xvfb display, with a hard deadline and no speech output. |
 | =compiled-notmuch-test= | Notmuch behaviour with the explicitly verified compiled adapter. | Requires current in-tree byte-code and the Notmuch package; does not rebuild it. |
 | =compiled-aural-test= | Compiled Aural parity in a fresh child Emacs. | Compiles into a temporary directory; leaves in-tree byte-code untouched. |
 | =build-aural-test= | Aural behaviour from the ordinary build tree. | Builds Aural byte-code under =lisp/=, then verifies it in a fresh Emacs. |
@@ -125,6 +126,7 @@ Run Agent Shell, Notmuch, and EAT tests with reviewed dependency snapshots:
 make test-deps-test
 make test-deps
 make integration-test
+make graphical-integration-test
 #+end_src
 
 These targets use the selected Emacs (30.2 or newer), Python 3, GNU Make, Git,
@@ -152,7 +154,13 @@ make integration-test TEST_DEPS_DIR=/tmp/emacsvox-test-deps-next
 
 Use a separate checkout for each Emacs version.  The runner verifies preparation
 again before loading dependency code and fails on missing prerequisites,
-unexpected results, skipped tests, or an empty test run.  It never downloads
+unexpected results, skipped selected tests, or an empty test run. The batch
+gate excludes exactly the two Agent Shell display-row cases owned by the
+graphical gate; both gates verify that those tests exist. The graphical gate
+requires =xvfb-run=, =Xvfb=, =xauth= and =timeout=, and runs without =--batch=
+so Emacs really renders the prompt overlays and wrapped rows. It always uses
+a private X display, captures diagnostics and exits within 60 seconds.
+The runner never downloads
 packages.  Update pins deliberately: review upstream changes, record the new
 commit and verified archive hash together, and rerun both CI matrix versions
 with fresh dependency directories.  A checksum failure is a reason to inspect

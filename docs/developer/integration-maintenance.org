@@ -140,8 +140,14 @@ both versions with a private home directory and six reviewed dependency
 snapshots.  ~make test-deps~ verifies the archive hashes in
 =test/integration-dependencies.json= and stages sources and autoloads under
 ignored =.test-deps/=; it never changes personal packages.  ~make integration-test~
-verifies that prepared tree before loading it and fails on missing dependencies
-or skipped tests.  Pin updates require upstream review, new archive hashes,
+verifies that prepared tree before loading it and runs the batch cases.
+~make graphical-integration-test~ uses the same verified tree for the two Agent
+Shell display-row cases in a real graphical Emacs on a private Xvfb display.
+Both gates fail on missing dependencies or skipped selected tests. The graphical
+runner requires =xvfb-run=, =Xvfb=, =xauth= and =timeout=, captures its log,
+disables speech output and stops its isolated session after 60 seconds.
+CI runs both gates on each supported Emacs version.
+Pin updates require upstream review, new archive hashes,
 and fresh preparation for both Emacs versions.  These source tests capture
 speech events and exercise disposable EAT subprocesses; they do not replace
 listening tests or compiled integration checks.  See =test/README.org= for
@@ -607,9 +613,11 @@ dependencies with ~make test-deps~, run source and compiled parity checks:
 
 #+begin_example
 make integration-test
+make graphical-integration-test
 make bytecode
 make bytecode-check
 EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled make integration-test
+EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled make graphical-integration-test
 #+end_example
 
 The environment setting selects the exact renderer and main integration

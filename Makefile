@@ -126,6 +126,11 @@ integration-test: check-emacs
 	EMACSVOX_TEST_DEPS_DIR="$(TEST_DEPS_DIR)" \
 	$(EMACS) -Q --batch -l test/run-integration-tests.el
 
+.PHONY: graphical-integration-test
+graphical-integration-test: check-emacs
+	EMACSVOX_TEST_DEPS_DIR="$(TEST_DEPS_DIR)" \
+	sh test/run-graphical-integration-tests.sh "$(EMACS)"
+
 unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el
 

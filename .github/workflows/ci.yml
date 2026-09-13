@@ -125,6 +125,8 @@ jobs:
       - uses: purcell/setup-emacs@master
         with:
           version: ${{ matrix.emacs }}
+      - name: Install isolated graphical test prerequisites
+        run: sudo apt-get update && sudo apt-get install --yes xvfb xauth fonts-dejavu-core
       - name: Verify preparation and run pinned integrations
         run: |
           emacs_binary=$(command -v emacs)
@@ -133,6 +135,11 @@ jobs:
           env HOME="$integration_home" make test-deps-test EMACS="$emacs_binary"
           env HOME="$integration_home" make test-deps EMACS="$emacs_binary"
           env HOME="$integration_home" make integration-test EMACS="$emacs_binary"
+      - name: Run pinned graphical Agent Shell regressions
+        run: |
+          emacs_binary=$(command -v emacs)
+          integration_home="$RUNNER_TEMP/emacsvox-integration-home"
+          env HOME="$integration_home" make graphical-integration-test EMACS="$emacs_binary"
 
   compatibility:
     name: Build and compatibility (Emacs ${{ matrix.emacs }})
