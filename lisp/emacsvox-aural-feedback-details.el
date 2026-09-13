@@ -581,7 +581,9 @@ The existing sound override editor owns its separate unsaved rule draft."
       (let ((inhibit-read-only t))
         (erase-buffer)
         (insert "Aural Debug Details\n"
-                (if simulation "Simulation; not recorded speech.\n" "Recorded presentation snapshot.\n")
+                (if simulation "Simulation; not recorded speech.\n"
+                  (format "Record %s. Recorded presentation snapshot.\n"
+                          (emacsvox-aural-presentation-record-id record)))
                 "Raw data for troubleshooting. q returns to Feedback Details.\n\n"
                 (pp-to-string record)))
       (emacsvox-aural-interface-mode)
@@ -605,15 +607,12 @@ The existing sound override editor owns its separate unsaved rule draft."
         (record emacsvox-aural-feedback-details--record))
     (erase-buffer)
     (emacsvox-aural-feedback-details--heading "Aural Feedback Details")
-    (if emacsvox-aural-feedback-details--simulation
-        (insert (format "Simulation using captured current rules; not recorded speech.\nSource: %s\n\n"
-                        (or (emacsvox-aural-presentation-record-source-buffer-name record) "Unknown")))
-      (insert (format "Record %s. %s\nSource: %s\n\n"
-                    (emacsvox-aural-presentation-record-id record)
-                    (if (emacsvox-aural-presentation-record-effective-payload-truncated-p record)
-                        "Truncated preview; complete playback unavailable."
-                      "Exact retained presentation.")
-                    (or (emacsvox-aural-presentation-record-source-buffer-name record) "Unknown"))))
+    (insert (if emacsvox-aural-feedback-details--simulation
+                "Simulated feedback.\n" "Captured feedback.\n"))
+    (when (emacsvox-aural-presentation-record-effective-payload-truncated-p record)
+      (insert "Truncated preview; complete playback unavailable.\n"))
+    (insert (format "Source: %s\n\n"
+                    (or (emacsvox-aural-presentation-record-source-buffer-name record) "Unknown")))
     (insert (format "%s: %s\nOccasion: %s\n\n"
                     (if emacsvox-aural-feedback-details--simulation "Simulated" "Submitted")
                     (format-time-string "%Y-%m-%d %H:%M:%S"

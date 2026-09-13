@@ -69,6 +69,8 @@
    (should (eq (current-buffer) report))
    (should (derived-mode-p 'emacsvox-aural-feedback-details-mode))
    (should buffer-read-only)
+   (should (string-match-p "^Captured feedback\\.$" (buffer-string)))
+   (should-not (string-match-p "^Record [0-9]" (buffer-string)))
    (emacsvox-aural-ui-help-quit)
    (emacsvox-aural-ui-goto-tabulated-column 3)
    (let ((origin (current-buffer)) (position (point)) spoken)
@@ -244,6 +246,8 @@
   "Incomplete history cannot masquerade as comparable original/proposed output."
   (emacsvox-test--with-feedback-report
    (setf (emacsvox-aural-presentation-record-payload-truncated-p record) t)
+   (emacsvox-aural-feedback-details--render)
+   (should (string-match-p "Truncated preview; complete playback unavailable" (buffer-string)))
    (should-error (emacsvox-aural-feedback-details-play) :type 'user-error)
    (emacsvox-test--feedback-field "Subject")
    (should-error (emacsvox-aural-feedback-details-change) :type 'user-error)
@@ -297,6 +301,7 @@
      (with-current-buffer report
        (should (derived-mode-p 'emacsvox-aural-feedback-details-mode))
        (should emacsvox-aural-feedback-details--simulation)
+       (should (string-match-p "^Simulated feedback\\.$" (buffer-string)))
        (should (string-match-p "not recorded speech" spoken))
        (should (< (length spoken) 150))
        (should (string-match-p "Play simulation" (buffer-string)))
@@ -417,6 +422,9 @@
      (with-current-buffer debug
        (should buffer-read-only)
        (should (string-match-p "#s(emacsvox-aural-presentation-record" (buffer-string)))
+       (should (string-match-p
+                (format "^Record %s\\." (emacsvox-aural-presentation-record-id record))
+                (buffer-string)))
        (should (< (length spoken) 100))
        (should (string-prefix-p "Debug details" spoken))
        (call-interactively (key-binding (kbd "q"))))
