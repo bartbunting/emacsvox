@@ -1180,7 +1180,7 @@
         (should
          (eq
           (emacsvox-aural-concrete-content-voice-request content)
-          'voice-lighten))
+          'lighten))
         (should
          (eq
           (plist-get

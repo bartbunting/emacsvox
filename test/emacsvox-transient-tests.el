@@ -693,7 +693,7 @@
               (should
                (eq
                 (emacsvox-aural-concrete-content-voice-request content)
-                (and voice-lock-enabled 'voice-lighten))))))))))
+                (and voice-lock-enabled 'lighten))))))))))
 
 (ert-deftest emacsvox-transient-browse-section-navigation-stays-in-browser ()
   "Browse-buffer section movement must not jump into a live menu window."

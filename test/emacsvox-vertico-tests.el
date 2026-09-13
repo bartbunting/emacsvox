@@ -633,7 +633,7 @@
         (should
          (eq
           (emacsvox-aural-concrete-content-voice-request content)
-          'voice-lighten))
+          'lighten))
         (should (eq (plist-get context :module) 'vertico))
         (should (eq (plist-get context :occasion) 'navigation))
         (should
@@ -720,7 +720,7 @@
           (should
            (eq
             (emacsvox-aural-concrete-content-voice-request content)
-            'voice-lighten))
+            'lighten))
           (should (eq (plist-get context :module) 'vertico))
           (should (eq (plist-get context :occasion) 'state-change))
           (should

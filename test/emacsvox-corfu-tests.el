@@ -142,10 +142,10 @@
                           (second voice-lighten voice-animate)))
       (pcase-let ((`(,palette ,candidate ,annotation) definition))
         (emacsvox-aural-register-voice-palette-data
-         `(:schema-version 1 :id ,palette :summary "Completion test voices"
-           :parent acss-default
-           :entries ((bolden :personality ,candidate)
-                     (annotate :personality ,annotation))))
+         `(:schema-version 3 :id ,palette :summary "Completion test voices"
+           :parent acss-default :routing owned
+           :entries ((bolden :personality ,candidate :choices nil)
+                     (annotate :personality ,annotation :choices nil))))
         (let ((emacsvox-aural-voice-palette-override palette))
           (dolist (enabled '(t nil))
             (let ((voice-lock-mode enabled))

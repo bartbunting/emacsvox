@@ -16,9 +16,9 @@
     (unwind-protect
         (save-current-buffer
           (emacsvox-aural-register-voice-palette-data
-           '(:schema-version 1 :id sampler-test :summary "Sampler test voices"
-             :parent acss-default
-             :entries ((bolden :personality voice-animate))))
+           '(:schema-version 3 :id sampler-test :summary "Sampler test voices"
+             :parent acss-default :routing owned
+             :entries ((bolden :personality voice-animate :choices nil))))
           (cl-letf (((symbol-function 'voice-setup-defined-voices)
                      (lambda () '(voice-bolden)))
                     ((symbol-function 'get-buffer-create) (lambda (_) buffer))

@@ -106,8 +106,9 @@
         (emacsvox-aural-voice-palette-override 'calendar-test)
         (voice-lock-mode t))
     (emacsvox-aural-register-voice-palette-data
-     '(:schema-version 1 :id calendar-test :summary "Calendar test voices"
-       :parent acss-default :entries ((bolden :personality voice-animate))))
+     '(:schema-version 3 :id calendar-test :summary "Calendar test voices"
+       :parent acss-default :routing owned
+       :entries ((bolden :personality voice-animate :choices nil))))
     (dolist (marked '(t nil))
       (dolist (personality '(voice-bolden voice-lighten nil))
         (let ((emacsvox-calendar-mark-personality personality)
@@ -132,8 +133,10 @@
             (emacsvox-calendar-speak-date))
           (should (equal requests
                          (list (and marked
-                                    (if (eq personality 'voice-bolden)
-                                        'bolden personality))))))))))
+                                    (pcase personality
+                                      ('voice-bolden 'bolden)
+                                      ('voice-lighten 'lighten)
+                                      (_ personality)))))))))))
 
 (ert-deftest emacsvox-calendar-movement-feedback-is-target-aware ()
   "Only the matching interactive Calendar movement produces feedback."

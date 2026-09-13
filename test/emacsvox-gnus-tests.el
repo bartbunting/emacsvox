@@ -325,7 +325,7 @@
         (should
          (eq
           (emacsvox-aural-concrete-content-voice-request content)
-          'voice-lighten))))))
+          'lighten))))))
 
 (ert-deftest emacsvox-gnus-close-feedback-is-target-aware ()
   "Only the matching interactive Gnus exit emits close feedback."

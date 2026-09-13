@@ -2722,7 +2722,7 @@
               (should
                (equal
                 (mapcar #'car tabulated-list-entries)
-                '((group understand) (group resources) (group optional)
+                '((group understand) (group resources) (group output) (group optional)
                   (group manage) (group troubleshoot))))
               (dolist (id '(explain remap remap-earcon overrides recent-feedback profiles
                             voices voice-workbench engine-modules features buffer-rules

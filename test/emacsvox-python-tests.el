@@ -582,7 +582,7 @@
           (should
            (eq
             (emacsvox-aural-concrete-content-voice-request content)
-            'voice-lighten))
+            'lighten))
           (should (eq (plist-get context :module) 'python))
           (should (eq (plist-get context :occasion) 'navigation))
           (should

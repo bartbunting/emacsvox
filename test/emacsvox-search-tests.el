@@ -200,10 +200,11 @@
             (emacsvox-aural-voice-palette-override 'search-test)
             spoken)
         (emacsvox-aural-register-voice-palette-data
-         '(:schema-version 1 :id search-test :summary "Search test voices"
-           :parent acss-default
+         '(:schema-version 3 :id search-test :summary "Search test voices"
+           :parent acss-default :routing owned
            :entries ((bolden :style (:family nil :average-pitch 4
-                                    :pitch-range 5 :stress 9 :richness 5)))))
+                                    :pitch-range 5 :stress 9 :richness 5)
+                              :choices nil))))
         (cl-letf (((symbol-function 'emacsvox-aural-submit)
                    (lambda (text &rest _) (setq spoken text)))
                   ((symbol-function 'emacsvox-icon) #'ignore))
@@ -264,8 +265,9 @@
          (copy-hash-table emacsvox-aural-voice-palette-registry))
         (emacsvox-aural-voice-palette-override 'isearch-test))
     (emacsvox-aural-register-voice-palette-data
-     '(:schema-version 1 :id isearch-test :summary "Isearch test voices"
-       :parent acss-default :entries ((bolden :personality voice-animate))))
+     '(:schema-version 3 :id isearch-test :summary "Isearch test voices"
+       :parent acss-default :routing owned
+       :entries ((bolden :personality voice-animate :choices nil))))
     (dolist (command '(isearch-search isearch-delete-char
                        isearch-yank-word isearch-yank-kill isearch-yank-line
                        isearch-ring-advance isearch-ring-retreat
