@@ -235,6 +235,13 @@ Unknown sequences and mixed-property candidates remain intact."
           (list :text (apply #'concat (nreverse pieces))
                 :replacements (nreverse replacements) :diagnostics diagnostics)))))))
 
+(defun emacsvox-emoji--retained-text (text evidence)
+  "Mark retained TEXT with its original naming EVIDENCE for voice auditions."
+  (if (and evidence (stringp text))
+      (propertize (copy-sequence text) 'emacsvox-emoji-retained t
+                  'emacsvox-emoji-evidence (copy-tree evidence))
+    text))
+
 (defun emacsvox-emoji--explanation (evidence)
   "Describe bounded preparation EVIDENCE without claiming playback."
   (append

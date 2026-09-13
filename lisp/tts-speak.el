@@ -3463,7 +3463,14 @@ Resolve the source before entering a scratch buffer or asynchronous adapter."
     (mapcar
      (lambda (entry)
        (let* ((entry (copy-tree entry))
-              (policy (if (plist-member entry :emoji-policy) (plist-get entry :emoji-policy) policy)))
+              (policy (if (plist-member entry :emoji-policy) (plist-get entry :emoji-policy) policy))
+              (text (plist-get entry :text))
+              (retained (and (stringp text)
+                             (text-property-any 0 (length text) 'emacsvox-emoji-retained t text))))
+         (when retained
+           (setq entry (plist-put entry :emoji-prepared t))
+           (setq entry (plist-put entry :emoji-naming
+                                  (get-text-property retained 'emacsvox-emoji-evidence text))))
          (unless (or (plist-get entry :emoji-prepared)
                      (not (plist-get policy :enabled)))
            (let* ((original (plist-get entry :text))

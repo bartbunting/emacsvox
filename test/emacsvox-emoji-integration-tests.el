@@ -186,4 +186,29 @@
         (should (pos-visible-in-window-p (point) (selected-window)))
         (should (eq (window-buffer (selected-window)) (current-buffer)))))))
 
+(ert-deftest emacsvox-emoji-retained-voice-link-does-not-name-custom-output-again ()
+  (let* ((emacsvox-emoji-naming-enabled t)
+         (emacsvox-emoji-custom-names '(("🔮" . "✨ prediction")))
+         (output (emacsvox-aural--prepare-emoji-text (emacsvox-aural-prepare-text "🔮")))
+         (plan (emacsvox-aural--freeze-presentation-plan
+                (get-text-property 0 emacsvox-aural-concrete-plan-property output) output))
+         (content (emacsvox-aural-concrete-plan-content plan))
+         sample)
+    (setf (emacsvox-aural-concrete-content-voice-request content) 'bolden)
+    (with-temp-buffer
+      (cl-letf (((symbol-function 'emacsvox-aural-feedback-details--plan) (lambda (_) plan))
+                ((symbol-function 'emacsvox-aural-voice-runtime--owned) (lambda (&rest _) '(:name bolden)))
+                ((symbol-function 'emacsvox-aural-voice-editor-open)
+                 (lambda (_palette _voice _source text) (setq sample text))))
+        (emacsvox-aural-feedback-details--insert-voice-links '(0))
+        (goto-char (point-min))
+        (button-activate (button-at (point-min)))))
+    (let* ((emacsvox-pronounce-table (make-hash-table :test #'equal))
+           (_ (puthash "prediction" "changed" emacsvox-pronounce-table))
+           (entry (car (tts--emoji-preview-entries
+                        (list (list :text (concat "Pitch 7. " sample)))))))
+      (should (equal (plist-get entry :text) "Pitch 7. ✨ prediction"))
+      (should (equal (plist-get entry :emoji-naming)
+                     (plist-get (emacsvox-aural-concrete-plan-context plan) :emoji-naming))))))
+
 (provide 'emacsvox-emoji-integration-tests)

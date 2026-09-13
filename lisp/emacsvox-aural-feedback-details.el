@@ -379,7 +379,9 @@ Return lists of zero-based run indices in playback order."
              (require 'emacsvox-aural-voice-editor)
              (emacsvox-aural-voice-editor-open
               palette name (current-buffer)
-              (emacsvox-aural-concrete-content-text content))))
+              (emacsvox-emoji--retained-text
+               (emacsvox-aural-concrete-content-text content)
+               (plist-get (emacsvox-aural-concrete-plan-context plan) :emoji-naming)))))
           (insert (format " — affects every use in palette %s.\n" palette)))))))
 
 (defun emacsvox-aural-feedback-details--insert-explanation (indices)
