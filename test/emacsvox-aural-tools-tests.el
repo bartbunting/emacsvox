@@ -16,6 +16,7 @@
 (require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-recent-feedback)
+(require 'emacsvox-aural-feedback-details)
 (require 'emacsvox-aural-feature-fragments)
 (require 'emacsvox-aural-home)
 (require 'emacsvox-aural-editor)
@@ -597,6 +598,110 @@
                         (should (eq voice 'animate))
                       (should-not (eq voice 'animate))))))))
         (delete-process process)))))
+
+(ert-deftest emacsvox-aural-tools-explain-then-remap-keeps-shell-item ()
+  "Explaining a shell prompt must not replace the item subsequently remapped."
+  (require 'shell)
+  (require 'emacsvox-comint)
+  (emacsvox-test--with-home-context
+    (switch-to-buffer source)
+    (erase-buffer)
+    (shell-mode)
+    (insert (propertize "user$ " 'font-lock-face 'comint-highlight-prompt))
+    (goto-char (point-min))
+    (let (spoken)
+      ;; Use real source planning and history retention, with a device-free
+      ;; speech sink so the explanation takes the same recording path.
+      (cl-labels
+          ((record-speech
+            (text)
+            (push text spoken)
+            (let* ((prepared
+                    (emacsvox-aural-prepare-text
+                     text nil (or emacsvox-aural-submission-context
+                                  (emacsvox-aural-capture-context))))
+                   (position 0))
+              (while (< position (length prepared))
+                (let ((end (next-single-property-change
+                            position emacsvox-aural-concrete-plan-property
+                            prepared (length prepared))))
+                  (emacsvox-aural-record-presentation
+                   (emacsvox-aural-concrete-plan-at position prepared)
+                   (substring prepared position end))
+                  (setq position end))))))
+        (record-speech (buffer-substring (point-min) (point-max)))
+        (let ((original (emacsvox-aural-presentation-at-point))
+              (history (copy-sequence emacsvox-aural-presentation-history)))
+          (should original)
+          (emacsvox-aural source)
+          (let ((home (current-buffer)))
+            (cl-letf (((symbol-function 'tts-speak) #'record-speech))
+              (let ((noninteractive nil))
+                (emacsvox-aural-home-explain)))
+            (should (string-match-p "Aural explanation" (car spoken)))
+            (should (equal history emacsvox-aural-presentation-history))
+            (with-current-buffer source
+              (should (eq original (emacsvox-aural-presentation-at-point))))
+            (switch-to-buffer home)
+            (emacsvox-aural-home-remap-voice)
+            (with-current-buffer (window-buffer (selected-window))
+              (should (eq source (plist-get emacsvox-aural-change-feedback-input :source)))
+              (should (equal emacsvox-aural-change-feedback-selector
+                             '(:module shell :legacy-face comint-highlight-prompt)))
+              (cl-letf (((symbol-function 'emacsvox-aural-preview-play-plan)
+                         (lambda (plan &rest _)
+                           (should (equal "user$ "
+                                          (emacsvox-aural-concrete-content-text
+                                           (emacsvox-aural-concrete-plan-content plan)))))))
+                (emacsvox-aural-change-feedback-original)))))))))
+
+(ert-deftest emacsvox-aural-tools-key-notification-does-not-retarget-shell-remap ()
+  "Key echo cannot become the current item, with or without a prompt recording."
+  (require 'shell)
+  (require 'emacsvox-comint)
+  (dolist (recorded-position '(nil 1 3))
+    (emacsvox-test--with-home-context
+      (switch-to-buffer source)
+      (erase-buffer)
+      (shell-mode)
+      (insert (propertize "user$ " 'font-lock-face 'comint-highlight-prompt))
+      (let (original notification)
+        (when recorded-position
+          (goto-char recorded-position)
+          (let* ((context (emacsvox-aural-capture-context 'shell 'continuous))
+                 (text (buffer-substring (point-min) (point-max)))
+                 (plan (emacsvox-aural-concrete-plan-at
+                        0 (emacsvox-aural-prepare-text text nil context))))
+            (emacsvox-aural-record-presentation plan text)
+            (setq original (emacsvox-aural-last-presentation source))))
+        (goto-char 1)
+        ;; Exercise the actual notification context capture, with a speech
+        ;; sink that retains planned output without requiring an audio device.
+        (cl-letf (((symbol-function 'tts-notify-process) (lambda () nil))
+                  ((symbol-function 'tts-speak)
+                   (lambda (text)
+                     (let ((plan (emacsvox-aural-concrete-plan-at
+                                  0 (emacsvox-aural-prepare-text
+                                     text nil emacsvox-aural-submission-context))))
+                       (emacsvox-aural-record-presentation plan text)))))
+          (tts-notify "C-e H" t))
+        (setq notification (emacsvox-aural-last-presentation source))
+        (should (equal "C-e H" (emacsvox-aural-presentation-record-payload-preview notification)))
+        (should (eq (emacsvox-aural-presentation-at-point)
+                    (and (eq recorded-position 1) original)))
+        (emacsvox-aural source)
+        (emacsvox-aural-home-remap-voice)
+        (with-current-buffer (window-buffer (selected-window))
+          (should (equal emacsvox-aural-change-feedback-selector
+                         '(:module shell :legacy-face comint-highlight-prompt)))
+          (cl-letf (((symbol-function 'emacsvox-aural-preview-play-plan)
+                     (lambda (plan &rest _)
+                       (should (equal "user$ "
+                                      (emacsvox-aural-concrete-content-text
+                                       (emacsvox-aural-concrete-plan-content plan)))))))
+            (emacsvox-aural-change-feedback-original)))
+        ;; Notifications remain explicitly inspectable in Recent Feedback.
+        (should (memq notification emacsvox-aural-presentation-history))))))
 
 (ert-deftest emacsvox-aural-tools-home-tunes-the-named-voice-at-source ()
   "Tuning follows the captured face, then its remap, without editing a rule."
@@ -1661,9 +1766,9 @@
                 (should (string-match-p detail spoken)))
               (cl-letf
                   (((symbol-function
-                     'emacsvox-aural-explanation-display)
-                    (lambda (explanation &rest _)
-                      (setq explained explanation)))
+                     'emacsvox-aural-feedback-details)
+                    (lambda (record)
+                      (setq explained (emacsvox-aural-explain-record record))))
                    ((symbol-function 'emacsvox-aural-preview-play-plan)
                     (lambda (plan) (setq replayed plan)))
                    ((symbol-function 'emacsvox-aural-preview-play-cues)

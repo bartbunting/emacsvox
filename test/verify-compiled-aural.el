@@ -128,6 +128,7 @@
          "emacsvox-aural-explanation"
          "emacsvox-aural-tools"
          "emacsvox-aural-recent-feedback"
+         "emacsvox-aural-feedback-details"
          "emacsvox-aural-feature-fragments"
          "emacsvox-omnivox-components"
          "emacsvox-aural-home"

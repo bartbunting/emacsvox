@@ -501,10 +501,21 @@ from any source."
        :test #'equal))))
 
 (defun emacsvox-aural-presentation-at-point ()
-  "Return the latest record only when it still belongs to the current item.
-Require source identity, position, and modification tick.  Older records
-remain available through Recent Feedback, including after source edits."
-  (when-let* ((record (emacsvox-aural-last-presentation (current-buffer)))
+  "Return the latest non-notification record if it belongs to the current item.
+Require source identity, position, and modification tick.  Notifications such
+as key echo describe activity rather than the item at point.  They and older
+records remain available through Recent Feedback, including after edits."
+  (when-let* ((record
+              (cl-find-if
+               (lambda (candidate)
+                 (and (equal (buffer-name)
+                             (emacsvox-aural-presentation-record-source-buffer-name candidate))
+                      (not (eq 'notification
+                               (plist-get
+                                (emacsvox-aural-concrete-plan-context
+                                 (emacsvox-aural-presentation-record-plan candidate))
+                                :occasion)))))
+               emacsvox-aural-presentation-history))
               (context (emacsvox-aural-concrete-plan-context
                         (emacsvox-aural-presentation-record-plan record)))
               (identity (plist-get context :source-buffer-id)))

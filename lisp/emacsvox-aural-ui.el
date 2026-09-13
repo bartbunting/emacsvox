@@ -116,6 +116,7 @@ When nil, movement speaks the current titled cell.")
 (defconst emacsvox-aural-ui-manual-nodes
   '((emacsvox-aural-home-mode . "Aural Home")
     (emacsvox-aural-recent-feedback-mode . "Explaining Presentation")
+    (emacsvox-aural-feedback-details-mode . "Explaining Presentation")
     (emacsvox-aural-semantics-mode . "Presentation Model")
     (emacsvox-aural-voice-workbench-mode . "Installed Voices And Engines")
     (emacsvox-aural-voice-palettes-mode . "Voices And Routing")

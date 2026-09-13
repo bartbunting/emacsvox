@@ -2671,7 +2671,8 @@ the normal interface voice.  Useful commands in the feedback browser
 include:
 
 ‘RET or e’
-     Explain the selected retained presentation.
+     Open a readable Feedback Details buffer for the selected
+     presentation.
 ‘P’
      Replay its complete ordered presentation without adding a history
      entry.
@@ -2683,6 +2684,64 @@ include:
      Replace, suppress, or restore one exact earcon.
 ‘L’
      Change the bounded history limit for the current session.
+
+   _Feedback Details_ selects a separate, read-only buffer and announces
+only a brief introduction.  Its report stays attached to that recorded
+presentation while new feedback arrives.  Ordinary Help commands do not
+replace the report.  Press ‘q’ to return to the same row and column in
+Recent Feedback.
+
+   The report groups consecutive voice spans into semantic fields where
+the integration supplies them.  In a Notmuch search result, for example,
+you can visit _Authors_, _Subject_, _Date_, _Message count_, and _Tags_.
+Headings identify the recorded voices; field content is read in those
+voices.  Expand a field to inspect its individual spans and the feedback
+before and after each span.
+
+‘n or p’
+     Move between headings, speaking the selected field in its recorded
+     voices.
+‘Up or Down’
+     Review individual lines without speaking the complete report.
+‘TAB or Shift-TAB’
+     Move between action buttons; RET activates an action or expands a
+     field.
+‘O’
+     Play the original field or span at point, including its recorded
+     actions.
+‘P’
+     Play the complete recorded presentation.
+‘C’
+     Open or resume a change to the selected field or distinguishable
+     span.
+‘V’
+     Preview the complete presentation with all linked draft changes.
+‘S’
+     Stop playback.
+
+   For example, select _Subject_, press ‘C’, and choose another content
+voice.  In that editor, ‘P’ previews the changed field and ‘V’ previews
+it within the whole line.  Return to the report and select _Message
+count_ to add a sound _After content_.  The sound is placed once after
+the complete count, even when that field contains several voices.  The
+subject and count editors retain their drafts separately.  Their
+matching criteria identify the field, integration, mode, and occasion;
+inspect those criteria before choosing a buffer, session, or saved
+personal lifetime.  Changing a field's voice mapping does not retune the
+shared named voice.
+
+   Original playback uses retained output.  Proposed playback uses
+current rules, captured buffer context, and the linked drafts without
+applying them.  A span can be targeted separately only when its semantic
+field, a distinct named face, or an explicit voice annotation identifies
+it.  Truncated history cannot provide complete playback or a comparable
+change preview.  Older records missing preview inputs remain readable
+and replayable when complete; navigate over the source again to capture
+a new example before previewing changes.
+
+   The _Why this feedback_ section lists the rules involved in the
+containing objects.  _Technical details_ can be expanded to review all
+recorded facts, resolved voice properties, and fallback diagnostics.
 
    _Explain feedback as you navigate_, available from Aural Home, speaks
 concise semantic explanations after normal presentations.  It can help

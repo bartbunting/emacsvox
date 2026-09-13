@@ -99,6 +99,7 @@
     "emacsvox-aural-explanation.el"
     "emacsvox-aural-tools.el"
     "emacsvox-aural-recent-feedback.el"
+    "emacsvox-aural-feedback-details.el"
     "emacsvox-aural-feature-fragments.el"
     "emacsvox-omnivox-components.el"
     "emacsvox-aural-home.el"

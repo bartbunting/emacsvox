@@ -162,7 +162,8 @@ endpoints.  The other dimensions use the ordinary linear mapping."
     :legacy-source :source-buffer :source-buffer-name :source-position
     :source-buffer-id :source-modification-tick
     :buffer-rules
-    :history-recording-inhibited :presentation-transaction-id)
+    :history-recording-inhibited :presentation-transaction-id
+    :aural-source-compatibility-actions)
   "Keys accepted in a presentation context plist.")
 
 (cl-defstruct
@@ -1583,6 +1584,16 @@ LAYER-ORDER records inheritance order within one origin."
       (emacsvox-aural--rule-error
        "Context history recording inhibition must be boolean: %S"
        history-recording-inhibited))
+    (when (plist-member context :aural-source-compatibility-actions)
+      (let ((actions (plist-get context :aural-source-compatibility-actions)))
+        (unless (and (proper-list-p actions)
+                     (cl-every
+                      (lambda (action)
+                        (and (proper-list-p action) (zerop (% (length action) 2))
+                             (memq (plist-get action :phase) '(before after))
+                             (eq (plist-get action :kind) 'legacy-icon)
+                             (symbolp (plist-get action :value)))) actions))
+          (emacsvox-aural--rule-error "Invalid captured source compatibility actions: %S" actions))))
     (when presentation-transaction-id
       (unless (natnump presentation-transaction-id)
         (emacsvox-aural--rule-error

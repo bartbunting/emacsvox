@@ -41,6 +41,8 @@
 
 (declare-function emacsvox-aural-change-feedback
                   "emacsvox-aural-change-feedback" (&optional record))
+(declare-function emacsvox-aural-feedback-details
+                  "emacsvox-aural-feedback-details" (record))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 
@@ -416,12 +418,10 @@ the value across sessions."
     summary))
 
 (defun emacsvox-aural-recent-feedback-explain ()
-  "Explain the retained frozen feedback record at point."
+  "Open a readable review of the retained feedback record at point."
   (interactive)
-  (emacsvox-aural-explanation-display
-   (emacsvox-aural-explain-record
-    (emacsvox-aural-recent-feedback--record))
-   t))
+  (require 'emacsvox-aural-feedback-details)
+  (emacsvox-aural-feedback-details (emacsvox-aural-recent-feedback--record)))
 
 (defun emacsvox-aural-recent-feedback-replay ()
   "Replay the complete frozen presentation at point when it was retained."
@@ -497,7 +497,7 @@ the value across sessions."
       "C opens a separate proposed change; its preview uses current rules.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "SPC speak record     RET or e explain retained output\n"
+      "SPC speak record     RET or e open feedback details\n"
       "P replay all         c audition only its earcons\n"
       "r prepare voice remap from this record\n"
       "R replace, suppress, or restore one exact earcon\n"

@@ -2689,7 +2689,7 @@ Useful commands in the feedback browser include:
 
 @table @kbd
 @item RET or e
-Explain the selected retained presentation.
+Open a readable Feedback Details buffer for the selected presentation.
 @item P
 Replay its complete ordered presentation without adding a history entry.
 @item c
@@ -2701,6 +2701,58 @@ Replace@comma{} suppress@comma{} or restore one exact earcon.
 @item L
 Change the bounded history limit for the current session.
 @end table
+
+@emph{Feedback Details} selects a separate@comma{} read-only buffer and announces only a
+brief introduction. Its report stays attached to that recorded presentation
+while new feedback arrives. Ordinary Help commands do not replace the report.
+Press @kbd{q} to return to the same row and column in Recent Feedback.
+
+The report groups consecutive voice spans into semantic fields where the
+integration supplies them. In a Notmuch search result@comma{} for example@comma{} you can
+visit @emph{Authors}@comma{} @emph{Subject}@comma{} @emph{Date}@comma{} @emph{Message count}@comma{} and @emph{Tags}. Headings identify
+the recorded voices; field content is read in those voices. Expand a field to
+inspect its individual spans and the feedback before and after each span.
+
+@table @kbd
+@item n or p
+Move between headings@comma{} speaking the selected field in its recorded voices.
+@item Up or Down
+Review individual lines without speaking the complete report.
+@item TAB or Shift-TAB
+Move between action buttons; RET activates an action or expands a field.
+@item O
+Play the original field or span at point@comma{} including its recorded actions.
+@item P
+Play the complete recorded presentation.
+@item C
+Open or resume a change to the selected field or distinguishable span.
+@item V
+Preview the complete presentation with all linked draft changes.
+@item S
+Stop playback.
+@end table
+
+For example@comma{} select @emph{Subject}@comma{} press @kbd{C}@comma{} and choose another
+content voice. In that editor@comma{} @kbd{P} previews the changed field
+and @kbd{V} previews it within the whole line. Return to the report
+and select @emph{Message count} to add a sound @emph{After content}. The sound is placed
+once after the complete count@comma{} even when that field contains several voices.
+The subject and count editors retain their drafts separately. Their matching
+criteria identify the field@comma{} integration@comma{} mode@comma{} and occasion; inspect those
+criteria before choosing a buffer@comma{} session@comma{} or saved personal lifetime.
+Changing a field's voice mapping does not retune the shared named voice.
+
+Original playback uses retained output. Proposed playback uses current rules@comma{}
+captured buffer context@comma{} and the linked drafts without applying them. A span
+can be targeted separately only when its semantic field@comma{} a distinct named
+face@comma{} or an explicit voice annotation identifies it. Truncated history cannot provide complete playback or a
+comparable change preview. Older records missing preview inputs remain
+readable and replayable when complete; navigate over the source again to
+capture a new example before previewing changes.
+
+The @emph{Why this feedback} section lists the rules involved in the containing
+objects. @emph{Technical details} can be expanded to review all recorded facts@comma{}
+resolved voice properties@comma{} and fallback diagnostics.
 
 @emph{Explain feedback as you navigate}@comma{} available from Aural Home@comma{} speaks concise semantic explanations
 after normal presentations.  It can help while learning the vocabulary used by

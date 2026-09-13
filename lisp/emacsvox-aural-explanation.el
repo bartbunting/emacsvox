@@ -595,7 +595,10 @@ selected occasion has no matching rule."
 
 When SPEAK is non-nil, speak a concise natural-language summary rather than
 the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
-  (let* ((render (emacsvox-aural-explanation-render-plan explanation))
+  ;; Home calls this while the ordinary source buffer is current.  Neither
+  ;; the help window's feedback nor the spoken summary is that source item.
+  (let* ((emacsvox-aural--history-recording-inhibited t)
+         (render (emacsvox-aural-explanation-render-plan explanation))
          (concrete (emacsvox-aural-explanation-concrete-plan explanation))
          (content (emacsvox-aural-concrete-plan-content concrete))
          (context (emacsvox-aural-explanation-context explanation))

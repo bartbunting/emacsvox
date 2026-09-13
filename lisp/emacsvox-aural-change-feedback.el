@@ -36,6 +36,7 @@
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-preview)
 (require 'emacsvox-aural-recent-feedback)
+(require 'emacsvox-aural-feedback-details)
 (declare-function emacsvox-aural-voice-runtime--resolve
                   "emacsvox-aural-voice-runtime" (voice &optional palette profile))
 (declare-function emacsvox-aural-voice-editor-open
@@ -71,6 +72,10 @@
   "Draft fields retained separately for each selected part.")
 (defvar-local emacsvox-aural-change-feedback--record-input nil
   "Original input from which each part's source context is selected.")
+(defvar-local emacsvox-aural-change-feedback--review-buffer nil
+  "Pinned review that owns this field draft, or nil for a standalone editor.")
+(defvar-local emacsvox-aural-change-feedback--review-indices nil
+  "Zero-based recorded run indices selected by the owning review.")
 
 (defun emacsvox-aural-change-feedback--pending-p ()
   "Return non-nil if this buffer retains an unapplied change for any part."
@@ -138,7 +143,8 @@
                                                          (emacsvox-aural-concrete-plan-content plan)) "feedback without content"))
           emacsvox-aural-change-feedback--expanded nil)
     (emacsvox-aural-change-feedback-refresh 'change)
-    (emacsvox-aural-ui-speak-name-and-state)))
+    (unless emacsvox-aural-ui--inhibit-opening-feedback
+      (emacsvox-aural-ui-speak-name-and-state))))
 
 (defun emacsvox-aural-change-feedback--voice-description ()
   "Describe the frozen content voice and the proposed replacement."
@@ -146,7 +152,12 @@
    "Original voice: "
    (emacsvox-aural-recent-feedback--voice
     (emacsvox-aural--make-presentation-record
-     :plan (plist-get emacsvox-aural-change-feedback-input :concrete)))
+     :plan (plist-get emacsvox-aural-change-feedback-input :concrete)
+     :plans (when emacsvox-aural-change-feedback--review-indices
+              (let ((plans (emacsvox-aural-presentation-record-effective-plans
+                            emacsvox-aural-change-feedback-record)))
+                (mapcar (lambda (index) (nth index plans))
+                        emacsvox-aural-change-feedback--review-indices)))))
    (when emacsvox-aural-change-feedback-description
      (concat "; proposed: " emacsvox-aural-change-feedback-description))))
 
@@ -206,7 +217,9 @@
             ('match (when (eq expanded 'match) 'match))
             ('target (when (memq expanded '(parts match)) expanded)))))
     (if (not section)
-        (emacsvox-aural-quit)
+        (if (buffer-live-p emacsvox-aural-change-feedback--review-buffer)
+            (emacsvox-aural-ui-help-quit)
+          (emacsvox-aural-quit))
       (let ((parent
              (pcase section
                ('voices
@@ -579,7 +592,11 @@
 									       (emacsvox-aural-tools--earcon-remap-candidates) nil t))))
                  ("Add a tone" (append '(:kind tone) (emacsvox-aural-change-feedback--tone-data)))
                  (_ (list :kind 'speech :text (read-string "Spoken label: "))))))
-         (setq render (list phase (list :append (list (append (list :id id :anchor 'object) data))))
+         (setq render (list phase (list :append
+                                       (list (append
+                                              (list :id id :anchor
+                                                    (if emacsvox-aural-change-feedback--review-buffer
+                                                        'transition 'object)) data))))
                description (format "%s %s content: %s" operation (substring (symbol-name phase) 1)
                                    (or (plist-get data :cue) (plist-get data :tone) (plist-get data :text)
                                        (format "%s Hertz, %s milliseconds" (plist-get data :pitch) (plist-get data :duration)))))))
@@ -662,7 +679,13 @@
   "Preview this draft with current rules, without applying it."
   (interactive)
   (unless emacsvox-aural-change-feedback-render (user-error "Choose a change first"))
-  (let* ((facts (copy-tree (plist-get emacsvox-aural-change-feedback-input :facts)))
+  (if emacsvox-aural-change-feedback--review-buffer
+      (let ((indices emacsvox-aural-change-feedback--review-indices))
+        (unless (buffer-live-p emacsvox-aural-change-feedback--review-buffer)
+          (user-error "The feedback review has been closed; reopen it to preview in context"))
+        (with-current-buffer emacsvox-aural-change-feedback--review-buffer
+          (emacsvox-aural-feedback-details-preview indices)))
+    (let* ((facts (copy-tree (plist-get emacsvox-aural-change-feedback-input :facts)))
          (context (copy-tree (plist-get emacsvox-aural-change-feedback-input :context)))
          (scope (or emacsvox-aural-change-feedback-scope 'buffer))
          (rules (emacsvox-aural-change-feedback--rules-with-draft scope))
@@ -672,12 +695,26 @@
     (when (eq scope 'buffer) (setq context (plist-put context :buffer-rules rules)))
     (emacsvox-aural-preview-play-plan
      (emacsvox-aural-compile-plan
-      (emacsvox-aural-resolve-active facts context) facts context))))
+      (emacsvox-aural-resolve-active facts context) facts context)))))
+
+(defun emacsvox-aural-change-feedback-preview-whole ()
+  "Preview all linked field drafts in their complete recorded presentation."
+  (interactive)
+  (unless (buffer-live-p emacsvox-aural-change-feedback--review-buffer)
+    (user-error "Open a field change from Feedback Details first"))
+  (with-current-buffer emacsvox-aural-change-feedback--review-buffer
+    (emacsvox-aural-feedback-details-preview)))
 
 (defun emacsvox-aural-change-feedback-original ()
   "Replay the frozen selected feedback or the captured Current item example."
   (interactive)
-  (let ((record emacsvox-aural-change-feedback-record))
+  (if emacsvox-aural-change-feedback--review-buffer
+      (let ((indices emacsvox-aural-change-feedback--review-indices))
+        (unless (buffer-live-p emacsvox-aural-change-feedback--review-buffer)
+          (user-error "The feedback review has been closed; reopen it to replay the complete field"))
+        (with-current-buffer emacsvox-aural-change-feedback--review-buffer
+          (emacsvox-aural-feedback-details-play indices)))
+    (let ((record emacsvox-aural-change-feedback-record))
     (when (and record (emacsvox-aural-presentation-record-effective-payload-truncated-p record))
       (user-error "The retained feedback is truncated and cannot be replayed completely"))
     (emacsvox-aural-preview-play-plan
@@ -685,7 +722,7 @@
          (nth (1- (cadr (tabulated-list-get-id)))
               (emacsvox-aural-presentation-record-effective-plans record))
        (emacsvox-aural-change-feedback--require-part)
-       (plist-get emacsvox-aural-change-feedback-input :concrete)))))
+       (plist-get emacsvox-aural-change-feedback-input :concrete))))))
 
 (defun emacsvox-aural-change-feedback--ready-p ()
   "Return whether matching criteria, change, and lifetime have all been chosen."
@@ -782,6 +819,12 @@
 							(if (eq emacsvox-aural-change-feedback-scope 'personal) "Saved" "Applied temporarily"))
                                                        ((emacsvox-aural-change-feedback--ready-p) "Ready; a or C-c C-c applies the reviewed change")
                                                        (t "Choose change, match, and lifetime first")))))))
+     (when emacsvox-aural-change-feedback--review-buffer
+       (setq tabulated-list-entries
+             (append tabulated-list-entries
+                     (list (list 'original (vector "Play original field" "O plays the captured field"))
+                           (list 'proposed (vector "Preview changed field" "P uses current rules plus drafts"))
+                           (list 'whole-proposed (vector "Preview whole presentation" "V includes all linked field drafts"))))))
      (setq tabulated-list-entries
            (emacsvox-aural-change-feedback--expand-rows tabulated-list-entries))) id 'change))
 
@@ -817,6 +860,7 @@
     ('lifetime (emacsvox-aural-change-feedback-lifetime))
     ('original (emacsvox-aural-change-feedback-original))
     ('proposed (emacsvox-aural-change-feedback-proposed))
+    ('whole-proposed (emacsvox-aural-change-feedback-preview-whole))
     ('apply (emacsvox-aural-change-feedback-apply))
     ('advanced (emacsvox-aural-change-feedback-advanced))
     (_ (emacsvox-aural-change-feedback-details))))
@@ -855,6 +899,8 @@
                   ((or 'emacsvox-aural-change-feedback-apply 'emacsvox-aural-change-feedback-advanced)
                    (emacsvox-aural-change-feedback--ready-p))
                   ('emacsvox-aural-change-feedback-proposed emacsvox-aural-change-feedback-render)
+                  ('emacsvox-aural-change-feedback-preview-whole
+                   (buffer-live-p emacsvox-aural-change-feedback--review-buffer))
                   (_ t))))
   (tabulated-list-init-header))
 
@@ -864,6 +910,7 @@
                    ("m" . emacsvox-aural-change-feedback-match)
                    ("l" . emacsvox-aural-change-feedback-lifetime)
                    ("P" . emacsvox-aural-change-feedback-proposed)
+                   ("V" . emacsvox-aural-change-feedback-preview-whole)
                    ("O" . emacsvox-aural-change-feedback-original)
                    ("a" . emacsvox-aural-change-feedback-apply)
                    ("w" . emacsvox-aural-change-feedback-apply)

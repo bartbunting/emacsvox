@@ -60,6 +60,7 @@
           emacsvox-aural-voice-palettes
           emacsvox-aural-voice-workbench
           emacsvox-aural-change-feedback
+          emacsvox-aural-feedback-details
           emacsvox-aural-provider-org
           emacsvox-aural-provider-org-srs
           emacsvox-aural-provider-workflows

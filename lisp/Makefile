@@ -111,6 +111,7 @@ emacsvox-aural-semantics.elc \
 emacsvox-aural-explanation.elc \
 emacsvox-aural-tools.elc \
 emacsvox-aural-recent-feedback.elc \
+emacsvox-aural-feedback-details.elc \
 emacsvox-aural-feature-fragments.elc \
 emacsvox-omnivox-components.elc \
 emacsvox-aural-home.elc \
@@ -446,6 +447,9 @@ emacsvox-aural-inspection.elc emacsvox-aural-semantics.elc \
 emacsvox-aural-explanation.elc
 emacsvox-aural-recent-feedback.elc: \
 emacsvox-aural-tools.elc emacsvox-aural-explanation.elc
+emacsvox-aural-feedback-details.elc: \
+emacsvox-aural-recent-feedback.elc emacsvox-aural-planner.elc
+emacsvox-aural-change-feedback.elc: emacsvox-aural-feedback-details.elc
 emacsvox-aural-feature-fragments.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc emacsvox-aural-preview.elc \

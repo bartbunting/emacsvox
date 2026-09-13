@@ -482,22 +482,9 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
        (next-single-property-change
         position emacsvox-aural-positioned-facts-property text end)))))
 
-(defun emacsvox-aural--prepare-object
-    (text start end base-facts base-context object-id
-          &optional compatibility-actions)
-  "Attach frozen nested plans to one object from START to END in TEXT."
-  (let ((object-icon (get-text-property start 'auditory-icon text))
-        (position start)
-        runs)
-    (while (< position end)
-      (let ((run-end (emacsvox-aural--run-end text position end)))
-        (push
-         (emacsvox-aural--capture-source-run
-          text position run-end base-facts base-context object-icon)
-         runs)
-        (setq position run-end)))
-    (setq runs (nreverse runs))
-    (let* ((object-render
+(defun emacsvox-aural--compile-source-runs (runs object-id compatibility-actions)
+  "Resolve and compile captured RUNS in OBJECT-ID with COMPATIBILITY-ACTIONS."
+  (let* ((object-render
             (emacsvox-aural--merge-object-compatibility
              (emacsvox-aural--resolve-source-object runs 'object)
              compatibility-actions
@@ -527,7 +514,7 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
        for next-render = (nth (1+ index) transition-renders)
        for first-p = (zerop index)
        for last-p = (= index (1- count))
-       do
+       collect
        (let* ((source-plan
                (emacsvox-aural--combine-run-plan
                 object-render run-render transition-render
@@ -535,11 +522,84 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
               (concrete
                (emacsvox-aural--compile-run-plan
                 source-plan run object-id index first-p last-p)))
-         (add-text-properties
-          (emacsvox-aural-source-run-start run)
-          (emacsvox-aural-source-run-end run)
-          (list emacsvox-aural-concrete-plan-property concrete)
-          text))))
+         concrete))))
+
+(defun emacsvox-aural-replan-runs (runs &optional context-function)
+  "Resolve captured RUNS using current rules, preserving object boundaries.
+RUNS contain (PLAN TEXT PAUSE) entries, as returned by presentation history.
+CONTEXT-FUNCTION may return a private context for each captured context.
+No source buffer is read and the original plans are never changed.  Older
+native records without captured adapter inputs must be recorded again."
+  (let (result)
+    (while runs
+      (let* ((first (caar runs))
+             (object-id (emacsvox-aural-concrete-plan-object-id first))
+             (context (emacsvox-aural-concrete-plan-context first))
+             (group (list (pop runs))))
+        (while (and object-id runs
+                    (not (emacsvox-aural-concrete-plan-object-end-p
+                          (caar group)))
+                    (not (emacsvox-aural-concrete-plan-object-start-p (caar runs)))
+                    (equal object-id
+                           (emacsvox-aural-concrete-plan-object-id (caar runs))))
+          (push (pop runs) group))
+        (setq group (nreverse group))
+        (when (and object-id
+                   (not (plist-member context :aural-source-compatibility-actions)))
+          (user-error "This older record lacks preview inputs; record the feedback again"))
+        (let* ((source-runs
+                (mapcar
+                 (lambda (entry)
+                   (let* ((plan (car entry))
+                          (captured (copy-tree (emacsvox-aural-concrete-plan-context plan))))
+                     (emacsvox-aural--make-source-run
+                      :facts (plist-put (copy-tree (emacsvox-aural-concrete-plan-facts plan))
+                                        :content (cadr entry))
+                      :context (if context-function (funcall context-function captured) captured)
+                      :icon (plist-get captured :legacy-cue))))
+                 group))
+               (plans (if object-id
+                          (emacsvox-aural--compile-source-runs
+                           source-runs object-id
+                           (plist-get context :aural-source-compatibility-actions))
+                        (mapcar
+                         (lambda (run)
+                           (let ((facts (emacsvox-aural-source-run-facts run))
+                                 (ctx (emacsvox-aural-source-run-context run)))
+                             (emacsvox-aural-compile-plan
+                              (emacsvox-aural-resolve-active facts ctx) facts ctx)))
+                         source-runs))))
+          (cl-mapc
+           (lambda (plan original)
+             (push (list plan (cadr original) (caddr original)) result))
+           plans group))))
+    (nreverse result)))
+
+(defun emacsvox-aural--prepare-object
+    (text start end base-facts base-context object-id
+          &optional compatibility-actions)
+  "Attach frozen nested plans to one object from START to END in TEXT."
+  (setq base-context
+        (plist-put (copy-tree base-context) :aural-source-compatibility-actions
+                   (copy-tree compatibility-actions)))
+  (let ((object-icon (get-text-property start 'auditory-icon text))
+        (position start)
+        runs)
+    (while (< position end)
+      (let ((run-end (emacsvox-aural--run-end text position end)))
+        (push
+         (emacsvox-aural--capture-source-run
+          text position run-end base-facts base-context object-icon)
+         runs)
+        (setq position run-end)))
+    (setq runs (nreverse runs))
+    (cl-mapc
+     (lambda (run concrete)
+       (add-text-properties
+        (emacsvox-aural-source-run-start run)
+        (emacsvox-aural-source-run-end run)
+        (list emacsvox-aural-concrete-plan-property concrete) text))
+     runs (emacsvox-aural--compile-source-runs runs object-id compatibility-actions))
     (emacsvox-aural--prepare-positioned-actions text start end)))
 
 (defun emacsvox-aural-prepare-text

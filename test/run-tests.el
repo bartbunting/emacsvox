@@ -61,6 +61,7 @@
   (require 'emacsvox-aural-voice-workbench-tests)
   (require 'emacsvox-aural-voice-palettes-tests)
   (require 'emacsvox-aural-change-feedback-tests)
+  (require 'emacsvox-aural-feedback-details-tests)
   (require 'emacsvox-aural-transport-tests)
   (require 'emacsvox-aural-preview-tests)
   (require 'emacsvox-aural-validation-tests)
