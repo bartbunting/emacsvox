@@ -481,5 +481,49 @@
                                 (emacsvox-aural-concrete-plan-after
                                  (emacsvox-aural-concrete-plan-at 0 prepared))) '("collapsed"))))))))
 
+(ert-deftest emacsvox-aural-feedback-details-word-movement-does-not-repeat-state ()
+  "Section entry and toggling cue state; words within the heading do not."
+  (require 'emacsvox-advice)
+  (emacsvox-test--with-feedback-report
+   (emacsvox-aural-register-workflow-provider)
+   (emacsvox-aural-set-enabled-feature-fragments '(aural-panel-state-labels))
+   (let (prepared)
+     (cl-letf (((symbol-function 'tts-speak)
+                (lambda (text) (setq prepared (emacsvox-aural-prepare-text text)))))
+       (cl-labels
+           ((step (command expected)
+              (setq prepared nil)
+              (let ((this-command command)
+                    (ems--interactive-fn-name command))
+                (run-hooks 'pre-command-hook)
+                (call-interactively command)
+                (run-hooks 'post-command-hook))
+              (should (stringp prepared))
+              (let ((plan (emacsvox-aural-concrete-plan-at 0 prepared)))
+                (ert-info ((format "%S at %d: %s" command (point) prepared))
+                  (should (equal (mapcar #'emacsvox-aural-concrete-action-cue
+                                        (emacsvox-aural-concrete-plan-before plan))
+                                 (when expected (list expected))))))))
+         (emacsvox-test--feedback-field "Message count")
+         (forward-line -1)
+         (step 'emacsvox-aural-feedback-details-next-line 'close-object)
+         (step 'forward-word nil)
+         (step 'backward-word nil)
+         (should-not (emacsvox-aural-concrete-plan-after
+                      (emacsvox-aural-concrete-plan-at 0 prepared)))
+         (should (eq (emacsvox-aural-ui--control-visibility) 'folded))
+         (step 'emacsvox-aural-feedback-details-toggle 'open-object)
+         (step 'forward-word nil)
+         (step 'backward-word nil)
+         (step 'emacsvox-aural-feedback-details-next-line nil)
+         (step 'emacsvox-aural-feedback-details-previous-line 'open-object)
+         (step 'emacsvox-aural-feedback-details-toggle 'close-object)
+         ;; Word movement across the heading boundary also restores the cue.
+         (end-of-line)
+         (step 'forward-word 'close-object)
+         (step 'backward-word nil)
+         (step 'backward-word 'close-object)
+         (step 'backward-word nil))))))
+
 (provide 'emacsvox-aural-feedback-details-tests)
 ;;; emacsvox-aural-feedback-details-tests.el ends here

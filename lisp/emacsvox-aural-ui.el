@@ -63,6 +63,9 @@
 (defvar-local emacsvox-aural-ui-interface-buffer nil
   "Non-nil when the current buffer is an aural interface.")
 
+(defvar-local emacsvox-aural-ui--command-control nil
+  "Control location and state before the current command.")
+
 (defvar-local emacsvox-aural-ui-source-buffer nil
   "Ordinary buffer from which the current aural interface was opened.")
 
@@ -276,6 +279,12 @@ metadata."
 When SOURCE-BUFFER is live and is not itself an aural interface, remember it
 as the ordinary buffer from which this interface was opened."
   (setq-local emacsvox-aural-ui-interface-buffer t)
+  (add-hook 'pre-command-hook #'emacsvox-aural-ui--remember-control nil t)
+  (add-hook 'post-command-hook #'emacsvox-aural-ui--forget-control t t)
+  (setq-local emacsvox-aural-source-annotation-functions
+              (cons #'emacsvox-aural-ui--annotate-control-navigation
+                    (remq #'emacsvox-aural-ui--annotate-control-navigation
+                          (bound-and-true-p emacsvox-aural-source-annotation-functions))))
   (when
       (and
        (buffer-live-p source-buffer)
@@ -528,6 +537,41 @@ When VALUE-FIRST is non-nil, put the cell value before its column title."
                  when (and (stringp cell) (> (length cell) 0))
                  thereis (plist-get (get-text-property 0 'emacsvox-aural-facts cell)
                                     :visibility)))))
+
+(defun emacsvox-aural-ui--control-location ()
+  "Identify the control line and state at point, or return nil."
+  (when-let* ((visibility (emacsvox-aural-ui--control-visibility)))
+    (list (line-beginning-position) visibility (buffer-chars-modified-tick))))
+
+(defun emacsvox-aural-ui--remember-control ()
+  "Remember the control before navigation begins."
+  (setq emacsvox-aural-ui--command-control
+        (emacsvox-aural-ui--control-location)))
+
+(defun emacsvox-aural-ui--forget-control ()
+  "End control tracking after command feedback has been submitted."
+  (setq emacsvox-aural-ui--command-control nil))
+
+(defun emacsvox-aural-ui--annotate-control-navigation (text)
+  "Keep TEXT's state feedback silent while navigating within one control."
+  (if (not (and (eq emacsvox-aural-submission-occasion 'navigation)
+                emacsvox-aural-ui--command-control
+                (equal emacsvox-aural-ui--command-control
+                       (emacsvox-aural-ui--control-location))))
+      text
+    ;; Only the spoken copy loses state feedback.  The heading retains its
+    ;; metadata for subsequent entry, inspection, and expansion commands.
+    (let ((text (copy-sequence text)) (position 0))
+      (while (< position (length text))
+        (let* ((end (next-single-property-change
+                     position 'emacsvox-aural-facts text (length text)))
+               (facts (copy-sequence
+                       (get-text-property position 'emacsvox-aural-facts text))))
+          (when (eq (plist-get facts :role) 'aural-interface)
+            (cl-remf facts :visibility)
+            (put-text-property position end 'emacsvox-aural-facts facts text))
+          (setq position end)))
+      text)))
 
 (defun emacsvox-aural-ui--speak-control (text &optional visibility occasion)
   "Present TEXT with control VISIBILITY for OCCASION in one speech transaction."
