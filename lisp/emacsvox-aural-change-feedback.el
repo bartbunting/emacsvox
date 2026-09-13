@@ -432,7 +432,9 @@
         (delete-dups
          (append emacsvox-aural-change-feedback--match-options
                  (emacsvox-aural-change-feedback--criteria
-                  emacsvox-aural-change-feedback-selector))))
+                  emacsvox-aural-change-feedback-selector)
+                 (emacsvox-aural-change-feedback--criteria
+                  (emacsvox-aural-change-feedback--suggested-selector)))))
   (emacsvox-aural-change-feedback--toggle
    'match (if emacsvox-aural-change-feedback--voice-remap 'target 'match)))
 
@@ -833,7 +835,11 @@
            (if emacsvox-aural-change-feedback--voice-remap
                (delq nil (emacsvox-aural-change-feedback--remap-rows))
              (list
-            (list 'target (vector "Target" (if emacsvox-aural-change-feedback-record
+            (list 'target (vector (if emacsvox-aural-change-feedback--review-buffer
+                                     (if emacsvox-aural-change-feedback--simulation
+                                         "Simulated example" "Captured example")
+                                   "Target")
+                                 (if emacsvox-aural-change-feedback-record
                                                (concat (if emacsvox-aural-change-feedback--simulation "Simulated feedback" "Recent Feedback")
                                                        (or emacsvox-aural-change-feedback-part "")) "Current item")))
             (list 'change (vector "Change" (or emacsvox-aural-change-feedback-description "Choose a component change")))
@@ -913,7 +919,8 @@
                           "Choose How long, then Save or w. q goes back one level; at the top it hides and preserves the draft. e opens Advanced.\n"
                           "To retune a named voice for all uses in its palette, use its Edit named voice link in Feedback Details, or Home's T shortcut.\n")
                 (concat (emacsvox-aural-change-feedback--summary)
-                      "\n\nRET on Parts expands parts in playback order. Moving reads their text in the captured voice; O replays a part.\n"
+                      "\n\nThe example describes the feedback being reviewed. Its facts stay unchanged; What should match chooses which facts limit your rule.\n"
+                      "\nRET on Parts expands parts in playback order. Moving reads their text in the captured voice; O replays a part.\n"
                       (if emacsvox-aural-change-feedback--simulation
                           "c expands component changes. RET on Content voice expands voices: simulated voice first, then alphabetical.\n"
                         "c expands component changes. RET on Content voice expands voices: original first, then alphabetical.\n")

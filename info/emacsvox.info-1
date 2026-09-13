@@ -2950,10 +2950,18 @@ File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For
   4. Press ‘m’ or ‘RET’ on _What should match_ to expand the matching
      criteria.  Each fact, state, event, and occasion shows _Included_
      or _Excluded_.  All included conditions must match; excluded
-     conditions are ignored, not forbidden.  Press ‘RET’ on a criterion
-     to exclude or include it; excluded criteria stay available to
-     restore.  For example, exclude _with state unread_ while keeping
-     _with role field_, _with field kind authors_, and _from the notmuch
+     conditions are ignored, not forbidden.  The _Captured example_ (or
+     _Simulated example_) row describes the original feedback.  Its
+     facts are not editable, but they are available as matching
+     conditions.  Opening the conditions preserves your current
+     selections; additional facts appear as _Excluded_ until you include
+     them.  For example, a mail action of _select_ describes the
+     operation that produced the feedback, not whether a row is selected
+     in this editor.  Include that action or an event such as _operation
+     failed_ to limit the rule to it.  Press ‘RET’ on a criterion to
+     exclude or include it; excluded criteria stay available to restore.
+     For example, exclude _with state unread_ while keeping _with role
+     field_, _with field kind authors_, and _from the notmuch
      integration_ to match authors in both read and unread messages.
      Keep at least one criterion.  The parent row shows the resulting
      match; ‘m’ collapses the criteria again.  These are rules for every

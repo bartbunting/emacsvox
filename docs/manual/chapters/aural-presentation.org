@@ -516,6 +516,13 @@ a permanent rule can affect future matching buffers too.
    to expand the matching criteria.  Each fact, state, event, and occasion
    shows /Included/ or /Excluded/.  All included conditions must match;
    excluded conditions are ignored, not forbidden.
+   The /Captured example/ (or /Simulated example/) row describes the original
+   feedback.  Its facts are not editable, but they are available as matching
+   conditions.  Opening the conditions preserves your current selections;
+   additional facts appear as /Excluded/ until you include them.  For example,
+   a mail action of /select/ describes the operation that produced the
+   feedback, not whether a row is selected in this editor.  Include that
+   action or an event such as /operation failed/ to limit the rule to it.
    Press @@texinfo:@kbd{RET}@@ on a criterion
    to exclude or include it; excluded criteria stay available to restore.
    For example, exclude /with state unread/ while keeping /with role field/,

@@ -138,6 +138,53 @@
      (should-not emacsvox-aural-feedback-details--drafts)
      (should (equal before (emacsvox-aural--history-value record))))))
 
+(ert-deftest emacsvox-aural-feedback-details-offers-captured-mail-action-conditions ()
+  "A boundary example exposes its action and event without changing draft scope."
+  (emacsvox-test--with-home-context
+   (with-current-buffer source
+     (setq major-mode 'notmuch-search-mode))
+   (let* ((record
+           (with-current-buffer source
+             (let (prepared)
+               (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq prepared text))))
+                 (emacsvox-notmuch--search-boundary-feedback 'forward))
+               (emacsvox-aural--make-history-record
+                (list (emacsvox-aural--freeze-presentation-plan
+                       (emacsvox-aural-concrete-plan-at 0 prepared) prepared)) nil 422))))
+          (report (emacsvox-aural-feedback-details record)))
+     (pop-to-buffer report)
+     (goto-char (text-property-not-all (point-min) (point-max) 'emacsvox-aural-feedback-target nil))
+     (emacsvox-aural-feedback-details-change)
+     (let ((initial (copy-tree emacsvox-aural-change-feedback-selector)))
+       (emacsvox-aural-change-feedback-match)
+       (should (equal emacsvox-aural-change-feedback-selector initial)))
+     (dolist (criterion '((:mail-action-kind select) (:mail-view-kind search)
+                          (:events (operation-failed))))
+       (should (emacsvox-aural-ui-goto-row (list 'criterion criterion)))
+       (should (equal (aref (tabulated-list-get-entry) 1) "Excluded"))
+       (emacsvox-aural-change-feedback-open-row)
+       (should (equal (aref (tabulated-list-get-entry) 1) "Included")))
+     (emacsvox-test--guided-choose "Change the content voice" "lighten")
+     (let ((rule (emacsvox-aural-compile-rule (emacsvox-aural-change-feedback--rule) 'user))
+           (context '(:module notmuch :mode notmuch-search-mode :occasion navigation)))
+       (should (emacsvox-aural-rule-matches-p
+                rule (emacsvox-aural-normalize-input
+                      (emacsvox-notmuch-view-facts 'search 'select 'operation-failed) context)))
+       (dolist (facts (list (emacsvox-notmuch-view-facts 'search 'scroll 'operation-failed)
+                            (emacsvox-notmuch-view-facts 'thread 'select 'operation-failed)
+                            (emacsvox-notmuch-view-facts 'search 'select 'focus-entered)))
+         (should-not (emacsvox-aural-rule-matches-p
+                      rule (emacsvox-aural-normalize-input facts context)))))
+     (emacsvox-aural-change-feedback-match)
+     (should (emacsvox-aural-ui-goto-row '(criterion (:events (operation-failed)))))
+     (emacsvox-aural-change-feedback-open-row)
+     (emacsvox-aural-change-feedback-match)
+     (emacsvox-aural-change-feedback-match)
+     (should (emacsvox-aural-ui-goto-row '(criterion (:events (operation-failed)))))
+     (should (equal (aref (tabulated-list-get-entry) 1) "Excluded"))
+     (should-not (plist-get emacsvox-aural-change-feedback-selector :events))
+     (should (eq (plist-get emacsvox-aural-change-feedback-selector :mail-action-kind) 'select)))))
+
 (ert-deftest emacsvox-aural-feedback-details-preview-subject-and-after-count ()
   "Two field drafts preview together; the count cue occurs once at its boundary."
   (emacsvox-test--with-feedback-report

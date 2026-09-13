@@ -2967,6 +2967,13 @@ Press @kbd{m} or @kbd{RET} on @emph{What should match}
 to expand the matching criteria.  Each fact@comma{} state@comma{} event@comma{} and occasion
 shows @emph{Included} or @emph{Excluded}.  All included conditions must match;
 excluded conditions are ignored@comma{} not forbidden.
+The @emph{Captured example} (or @emph{Simulated example}) row describes the original
+feedback.  Its facts are not editable@comma{} but they are available as matching
+conditions.  Opening the conditions preserves your current selections;
+additional facts appear as @emph{Excluded} until you include them.  For example@comma{}
+a mail action of @emph{select} describes the operation that produced the
+feedback@comma{} not whether a row is selected in this editor.  Include that
+action or an event such as @emph{operation failed} to limit the rule to it.
 Press @kbd{RET} on a criterion
 to exclude or include it; excluded criteria stay available to restore.
 For example@comma{} exclude @emph{with state unread} while keeping @emph{with role field}@comma{}
