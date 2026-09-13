@@ -12,8 +12,10 @@ Implementation and automated verification are complete. The opt-in listening
 trial found that a Workaway subject containing =🌱= still used eSpeak: naming
 was disabled and seedling was absent from the six-symbol trial list.
 On 2026-09-14 the maintainer requested full-table naming and enabling it in
-the newest session. The policy below reflects that follow-up; the original
-implementation evidence records the earlier restricted trial.
+the newest session, then confirmed that the Workaway row worked and requested
+this behaviour by default for new users. Naming now starts enabled. The policy
+below reflects those follow-ups; the original implementation evidence records
+the earlier restricted trial.
 
 The first acceptance example is =Forecast 🔮=: with the feature enabled,
 speech preparation supplies =Forecast crystal ball=, allowing Eloquence to
@@ -56,7 +58,8 @@ Follow all accepted [[file:adr/][ADRs]], particularly the Emacs minimum in
 
 ** Scope and controls
 
-Start disabled by default, with a global default and buffer/mode overrides.
+Start enabled by default, with a global default and buffer/mode overrides.
+An explicit nil setting still disables naming globally or in a source buffer.
 Use the remembered source buffer's policy when opening a preview from an aural
 screen. Freeze the policy for each submitted item or preview operation.
 
@@ -196,7 +199,7 @@ does not establish what the maintainer heard. If explanation layout or focus
 changes, use the isolated graphical test runner and distinguish that evidence
 from spoken acceptance.
 
-Update the maintained user guide once behaviour settles. Document opt-in scope,
+Update the maintained user guide once behaviour settles. Document default scope,
 the trial limit, overrides, version-dependent emoji coverage and the fact that
 enabled naming applies regardless of engine. Generate documentation through the
 normal targets and run =make docs-release-check= before review. Do not publish
@@ -329,3 +332,14 @@ source buffer expands the original subject's seedling and leaves no non-ASCII
 characters. Buffer point and both speech processes are preserved. A fresh
 navigation/listening trial is still needed to establish the actual route and
 what the maintainer hears; retained recordings keep their original policy.
+
+** Enabled-by-default follow-up, 2026-09-14
+
+The maintainer confirmed that the Workaway row now works and requested the
+same default for new users. Naming now starts enabled with the full table and
+the existing two-occurrence limit. Explicit nil settings remain effective.
+The mail regression exercises unmodified new-user defaults at the speech and
+preview boundaries, with separate coverage for disabling naming in a buffer.
+
+All 27 nongraphical emoji tests pass in a fresh Emacs using current byte-code.
+The isolated compiled aural gate and documentation release check also pass.

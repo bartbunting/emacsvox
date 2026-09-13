@@ -8999,7 +8999,7 @@ mode hook.  Source buffers keep their original text.
 Default Value:
 @verbatim
 
-nil
+t
 
 @end verbatim
 

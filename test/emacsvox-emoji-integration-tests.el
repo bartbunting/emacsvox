@@ -110,13 +110,12 @@
     (should (equal (plist-get (car (tts--emoji-preview-entries '((:text "Forecast 🔮")))) :text)
                    "Forecast crystal ball"))))
 
-(ert-deftest emacsvox-emoji-mail-seedling-reaches-speech-as-ascii ()
-  (let ((emacsvox-emoji-naming-enabled t)
-        (tts-stop-immediately nil) (tts-handle-unicode nil)
+(ert-deftest emacsvox-emoji-mail-seedling-reaches-speech-as-ascii-by-default ()
+  (let ((tts-stop-immediately nil) (tts-handle-unicode nil)
         (emacsvox-pronounce-table nil) (emacsvox-pronounce-personality nil)
         (text "Would love to visit 🌱 (via example.org)")
         observed)
-    ;; Exercise the default full-table policy at the real speech boundary.
+    ;; Exercise new-user defaults without enabling or restricting naming.
     (cl-letf (((symbol-function 'tts--protocol-sync) #'ignore)
               ((symbol-function 'tts--protocol-dispatch) #'ignore)
               ((symbol-function 'tts-audio-format)
@@ -127,6 +126,15 @@
                    "Would love to visit seedling (via example.org)"))
     (should (equal (plist-get (car (tts--emoji-preview-entries (list (list :text text)))) :text)
                    "Would love to visit seedling (via example.org)"))))
+
+(ert-deftest emacsvox-emoji-source-can-disable-default-naming ()
+  (with-temp-buffer
+    (setq-local emacsvox-emoji-naming-enabled nil)
+    (should (equal (emacsvox-aural--prepare-emoji-text
+                    (emacsvox-aural-prepare-text "Forecast 🌱"))
+                   "Forecast 🌱"))
+    (should (equal (plist-get (car (tts--emoji-preview-entries '((:text "Forecast 🌱")))) :text)
+                   "Forecast 🌱"))))
 
 (ert-deftest emacsvox-emoji-fresh-simulation-and-explanation-use-captured-policy ()
   (let* ((emacsvox-emoji-naming-enabled t)

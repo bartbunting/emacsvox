@@ -3589,23 +3589,23 @@ File: emacsvox.info,  Node: Emoji Speech Names,  Next: Installed Voices And Engi
 ===================================
 
 A voice such as Eloquence may need a fallback engine for an emoji in
-otherwise compatible text.  Optional emoji naming changes the speech
-text before engine selection: ‘Forecast 🔮’ becomes ‘Forecast crystal
-ball’.  The source buffer keeps its original text.  This can keep the
-preferred voice speaking when the rest of the text is compatible; the
-normal repertoire checks still decide which engine can handle it.
+otherwise compatible text.  Emoji naming changes the speech text before
+engine selection: ‘Forecast 🔮’ becomes ‘Forecast crystal ball’.  The
+source buffer keeps its original text.  This can keep the preferred
+voice speaking when the rest of the text is compatible; the normal
+repertoire checks still decide which engine can handle it.
 
-   The feature starts disabled.  Use ‘M-x customize-group RET
-emacsvox-emoji RET’ to review its options.  Enable
-‘emacsvox-emoji-naming-enabled’ globally, or try it only in the current
-source buffer with:
+   The feature is enabled by default.  Use ‘M-x customize-group RET
+emacsvox-emoji RET’ to review its options.  Set
+‘emacsvox-emoji-naming-enabled’ to nil to disable it globally, or
+disable it only in the current source buffer with:
 
-     (setq-local emacsvox-emoji-naming-enabled t)
+     (setq-local emacsvox-emoji-naming-enabled nil)
 
-   To enable it for Org buffers through your configuration:
+   To disable it for Org buffers through your configuration:
 
      (add-hook 'org-mode-hook
-               (lambda () (setq-local emacsvox-emoji-naming-enabled t)))
+               (lambda () (setq-local emacsvox-emoji-naming-enabled nil)))
 
    All four options support buffer-local settings.  Set
 ‘emacsvox-emoji-naming-enabled’ to nil locally to override an enabled

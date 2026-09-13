@@ -58,7 +58,7 @@ Failures are data, never speech errors.  No network or display is involved."
   "Optional names for occasional emoji in speech."
   :group 'emacsvox)
 
-(defcustom emacsvox-emoji-naming-enabled nil
+(defcustom emacsvox-emoji-naming-enabled t
   "Whether speech names occasional emoji, regardless of engine.
 This option and the other emoji options can be set buffer-locally or in a
 mode hook.  Source buffers keep their original text."

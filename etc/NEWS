@@ -8,13 +8,14 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox Unreleased --- Current User-Visible Changes
 
-** Optional names for occasional emoji
+** Names for occasional emoji enabled by default
 
-Enable =emacsvox-emoji-naming-enabled= to name occasional emoji before
-engine selection. For example, =Forecast 🔮= becomes =Forecast crystal ball=
+Occasional emoji are named before engine selection by default.
+For example, =Forecast 🔮= becomes =Forecast crystal ball=
 for speech, which can avoid an unnecessary engine fallback. The source text
-stays unchanged. The feature starts disabled, defaults to at most two eligible
-occurrences per item, and supports buffer-local settings and custom names.
+stays unchanged. Naming defaults to at most two eligible occurrences per item
+and supports buffer-local settings and custom names. Set
+=emacsvox-emoji-naming-enabled= to nil to disable it globally or in a buffer.
 
 Names come from Emacs's full bundled emoji table, including =🌱= (seedling),
 flags and keycaps. No per-emoji approval is needed; an explicit restriction
