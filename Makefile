@@ -307,6 +307,10 @@ docs-publish-pages: bytecode-check docs-org-check
 compiled-aural-test:
 	$(EMACS) -Q --batch -l test/run-compiled-aural-tests.el
 
+.PHONY: graphical-voice-test
+graphical-voice-test: check-emacs bytecode-check
+	sh test/run-graphical-voice-tests.sh "$(EMACS)"
+
 build-aural-test:
 	$(MAKE) -C lisp EMACS="$(EMACS)" aural
 	$(EMACS) -Q --batch -l test/verify-build-tree-aural.el

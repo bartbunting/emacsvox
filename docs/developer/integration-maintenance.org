@@ -405,6 +405,13 @@ build. The ~voice-style-ui~ tests exercise common-editor entry, inherited
 reset and draft retention in source and compiled runs. Editor tests also cover
 numeric bounds, explicit defaults, undo and comparison. They capture auditions
 and do not start audio.
+Run ~make graphical-voice-test~ for the voice editor's link, return navigation,
+and save-button checks in a fresh graphical Emacs with current byte-code.
+It requires Xvfb, xvfb-run and xauth, and uses a separate virtual display so
+test windows cannot take desktop focus. The launcher prints the graphical
+ERT log and exits unsuccessfully for failures, skips, startup errors or a
+45-second timeout. A missing virtual-display tool fails before starting Emacs.
+The graphical redisplay test is reported as skipped in ordinary batch runs.
 The connected saved-style regression edits a custom =bolden=, reads its saved
 data back, and compares common-editor and Workbench previews with the final
 normal-speech wire for =voice-bolden=.  Workbench uses the compiler's palette

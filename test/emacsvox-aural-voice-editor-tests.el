@@ -452,6 +452,30 @@
          (should-not callbacks)
          (should (equal before (emacsvox-aural-read-user-data))))))))
 
+(ert-deftest emacsvox-aural-voice-editor-graphical-save-remains-visible ()
+  "The bottom save actions remain visible after expansion and redisplay."
+  (skip-unless (display-graphic-p))
+  (emacsvox-test--with-voice-editor
+   (emacsvox-aural-voice-editor-open 'reading-owned 'bolden)
+   (should (frame-visible-p (selected-frame)))
+   (emacsvox-aural-voice-editor--put :effects t)
+   (emacsvox-aural-voice-editor--put :expanded t)
+   (emacsvox-aural-voice-editor-refresh)
+   (emacsvox-aural-voice-editor--locate 'context)
+   (call-interactively (key-binding (kbd "TAB")))
+   (redisplay t)
+   (should (eq (get-text-property (point) 'voice-field) 'save))
+   (should (pos-visible-in-window-p (point)))
+   (call-interactively (key-binding (kbd "TAB")))
+   (redisplay t)
+   (should (eq (get-text-property (point) 'voice-field) 'collection))
+   (should (pos-visible-in-window-p (point)))
+   (call-interactively (key-binding (kbd "<up>")))
+   (emacsvox-aural-voice-editor-refresh)
+   (redisplay t)
+   (should (eq (get-text-property (point) 'voice-field) 'save))
+   (should (pos-visible-in-window-p (point)))))
+
 (ert-deftest emacsvox-aural-voice-editor-save-actions-follow-settings-and-previews ()
   (emacsvox-test--with-voice-editor
    (emacsvox-aural-voice-editor-open 'reading-owned 'bolden)
