@@ -41,6 +41,7 @@
 (declare-function emacsvox-aural-change-feedback--select-part "emacsvox-aural-change-feedback" (number))
 (declare-function emacsvox-aural-change-feedback--rule "emacsvox-aural-change-feedback" ())
 (declare-function emacsvox-aural-change-feedback-refresh "emacsvox-aural-change-feedback" (&optional id))
+(declare-function emacsvox-aural-change-feedback--pending-p "emacsvox-aural-change-feedback" ())
 (declare-function emacsvox-aural-voice-editor-open "emacsvox-aural-voice-editor" (palette voice &optional source text))
 (defvar emacsvox-aural-change-feedback-render)
 (defvar emacsvox-aural-change-feedback-scope)
@@ -60,10 +61,54 @@
   "Non-nil when this report describes a simulation, not submitted speech.")
 (defvar-local emacsvox-aural-feedback-details--expanded nil
   "Field indices whose content, explanation, and formatting runs are visible.")
+(defvar-local emacsvox-aural-feedback-details--expanded-spans nil
+  "Field indices whose individual voice spans are expanded.")
 (defvar-local emacsvox-aural-feedback-details--debug-buffer nil
   "Separate debug buffer for this report's frozen snapshot.")
 (defvar-local emacsvox-aural-feedback-details--drafts nil
   "Alist from lists of run indices to live guided editor buffers.")
+
+(defun emacsvox-aural-feedback-details--pending-field-p (indices)
+  "Return non-nil when a field in INDICES has an unapplied linked draft."
+  (cl-some (lambda (entry)
+             (and (cl-intersection indices (car entry))
+                  (buffer-live-p (cdr entry))
+                  (with-current-buffer (cdr entry)
+                    (emacsvox-aural-change-feedback--pending-p))))
+           emacsvox-aural-feedback-details--drafts))
+
+(defun emacsvox-aural-feedback-details--draft-label (target)
+  "Describe unsaved changes for TARGET, a field or the symbol `summary'."
+  (if (eq target 'summary)
+      (let ((count (cl-count-if #'emacsvox-aural-feedback-details--pending-field-p
+                                (emacsvox-aural-feedback-details--groups
+                                 emacsvox-aural-feedback-details--record))))
+        (if (zerop count) "No unsaved field changes."
+          (format "%d %s with unsaved changes." count (if (= count 1) "field" "fields"))))
+    ;; Keep a property-bearing space so status can change without rebuilding the
+    ;; report and invalidating editors' exact return markers.
+    (if (emacsvox-aural-feedback-details--pending-field-p target) " — unsaved change" " ")))
+
+(defun emacsvox-aural-feedback-details--update-draft-status ()
+  "Refresh draft labels in place, preserving report content and return markers."
+  (interactive)
+  (unless (derived-mode-p 'emacsvox-aural-feedback-details-mode)
+    (user-error "Open Feedback Details to update its draft status"))
+  (let ((inhibit-read-only t) (position (point-min)))
+    (save-excursion
+      (while (< position (point-max))
+        (let* ((target (get-text-property position 'emacsvox-aural-feedback-draft-label))
+               (end (next-single-property-change
+                     position 'emacsvox-aural-feedback-draft-label nil (point-max)))
+               (label (and target (emacsvox-aural-feedback-details--draft-label target))))
+          (when (and label (not (equal label (buffer-substring-no-properties position end))))
+            (let ((properties (text-properties-at position)))
+              (goto-char position)
+              (delete-region position end)
+              (insert (apply #'propertize label properties))
+              (setq end (point))))
+          (setq position end))))
+    (set-buffer-modified-p nil)))
 
 (defun emacsvox-aural-feedback-details--groups (record)
   "Group RECORD's consecutive runs by semantic field within each object.
@@ -103,7 +148,7 @@ Return lists of zero-based run indices in playback order."
       ('count "Message count")
       ((and kind (pred identity)) (capitalize (emacsvox-aural-humanize kind)))
       (_ (if (string-match-p
-              "\\`[[:space:],;:]*\\'"
+              "\\`[[:space:],;:]+\\'"
               (mapconcat
                (lambda (index)
                  (or (emacsvox-aural-concrete-content-text
@@ -202,7 +247,17 @@ Return lists of zero-based run indices in playback order."
 (defun emacsvox-aural-feedback-details--choose-voice ()
   "Choose another named voice for items matching the selected field or span."
   (interactive)
+  (unless (emacsvox-aural-feedback-details--spoken-p
+           (emacsvox-aural-feedback-details--target))
+    (user-error "This feedback has no spoken content; use Change field or Sound overrides"))
   (emacsvox-aural-feedback-details--change t))
+
+(defun emacsvox-aural-feedback-details--spoken-p (indices)
+  "Return non-nil when INDICES contain spoken content."
+  (cl-some (lambda (index)
+             (when-let* ((content (emacsvox-aural-concrete-plan-content
+                                  (emacsvox-aural-feedback-details--plan index))))
+               (emacsvox-aural-concrete-content-speak content))) indices))
 
 (defun emacsvox-aural-feedback-details--change (&optional voice-only)
   "Resume the selected field's draft, using the compact view when VOICE-ONLY.
@@ -348,6 +403,54 @@ The existing sound override editor owns its separate unsaved rule draft."
     (emacsvox-aural-ui--announce-expansion
      (member indices emacsvox-aural-feedback-details--expanded)
      (buffer-substring (line-beginning-position) (line-end-position)))))
+
+(defun emacsvox-aural-feedback-details--toggle-spans ()
+  "Expand or collapse individual voice spans without closing their field."
+  (interactive)
+  (let ((indices (or (get-text-property (point) 'emacsvox-aural-feedback-span-section)
+                     (user-error "Move to Individual voice spans first"))))
+    (if (member indices emacsvox-aural-feedback-details--expanded-spans)
+        (setq emacsvox-aural-feedback-details--expanded-spans
+              (delete indices emacsvox-aural-feedback-details--expanded-spans))
+      (push indices emacsvox-aural-feedback-details--expanded-spans))
+    (emacsvox-aural-feedback-details--render indices)
+    (while (and (not (eobp))
+                (not (equal indices (get-text-property (point) 'emacsvox-aural-feedback-span-section))))
+      (forward-line 1))
+    (emacsvox-aural-ui--announce-expansion
+     (member indices emacsvox-aural-feedback-details--expanded-spans)
+     (buffer-substring (line-beginning-position) (line-end-position)))))
+
+(defun emacsvox-aural-feedback-details--insert-spans (indices)
+  "Insert a folded section for the individual voice spans in INDICES."
+  (let ((start (point))
+        (expanded (member indices emacsvox-aural-feedback-details--expanded-spans)))
+    (emacsvox-aural-feedback-details--heading
+     (emacsvox-aural-ui--expansion-text
+      (format "Individual voice spans (%d)" (length indices)) expanded))
+    (make-text-button start (1- (point)) 'follow-link t
+                      'action (lambda (_) (emacsvox-aural-feedback-details--toggle-spans)))
+    (remove-text-properties start (point) '(auditory-icon nil))
+    (put-text-property start (point) 'emacsvox-aural-feedback-target indices)
+    (put-text-property start (point) 'emacsvox-aural-feedback-span-section indices)
+    (when expanded
+      (cl-loop for index in indices for number from 1 do
+               (let ((span-start (point)))
+                 (emacsvox-aural-feedback-details--heading
+                  (format "  Span %d. Voice: %s" number
+                          (emacsvox-aural-recent-feedback--voice
+                           (emacsvox-aural--make-presentation-record
+                            :plan (emacsvox-aural-feedback-details--plan index)))))
+                 (emacsvox-aural-feedback-details--insert-content (list index))
+                 (insert "\n")
+                 (emacsvox-aural-feedback-details--insert-explanation (list index))
+                 (emacsvox-aural-feedback-details--button
+                  (if emacsvox-aural-feedback-details--simulation "Play simulated span" "Play original span")
+                  #'emacsvox-aural-feedback-details-play-field)
+                 (insert "  ")
+                 (emacsvox-aural-feedback-details--button "Change span" #'emacsvox-aural-feedback-details-change)
+                 (insert "\n")
+                 (put-text-property span-start (point) 'emacsvox-aural-feedback-target (list index)))))))
 
 (defun emacsvox-aural-feedback-details--source-description (source plan)
   "Describe a winning SOURCE in frozen PLAN without consulting current rules."
@@ -523,6 +626,8 @@ The existing sound override editor owns its separate unsaved rule draft."
      #'emacsvox-aural-feedback-details-play)
     (insert "\n")
     (emacsvox-aural-feedback-details--button "Preview whole presentation with changes" #'emacsvox-aural-feedback-details-preview)
+    (insert "\n" (propertize (emacsvox-aural-feedback-details--draft-label 'summary)
+                              'emacsvox-aural-feedback-draft-label 'summary))
     (insert (if emacsvox-aural-feedback-details--simulation
                 "\nProposals use current rules plus linked drafts; the simulated baseline stays frozen.\n\n"
               "\nProposals use current rules plus linked drafts; originals stay frozen.\n\n"))
@@ -531,16 +636,18 @@ The existing sound override editor owns its separate unsaved rule draft."
       (let ((start (point))
             (expanded (member indices emacsvox-aural-feedback-details--expanded)))
         (emacsvox-aural-feedback-details--heading
-         (emacsvox-aural-ui--expansion-text
-          (format "%s (%s; %d voice %s)"
+         (concat (emacsvox-aural-ui--expansion-text
+          (format "%s (%s)"
                   (emacsvox-aural-feedback-details--label indices)
-                  (emacsvox-aural-recent-feedback--voice
-                   (emacsvox-aural--make-presentation-record
-                    :plan (emacsvox-aural-feedback-details--plan (car indices))
-                    :plans (mapcar #'emacsvox-aural-feedback-details--plan indices)))
-                  (length indices)
-                  (if (= 1 (length indices)) "span" "spans"))
-          expanded))
+                  (if (emacsvox-aural-feedback-details--spoken-p indices)
+                      (emacsvox-aural-recent-feedback--voice
+                       (emacsvox-aural--make-presentation-record
+                        :plan (emacsvox-aural-feedback-details--plan (car indices))
+                        :plans (mapcar #'emacsvox-aural-feedback-details--plan indices)))
+                    "no spoken content"))
+          expanded)
+          (propertize (emacsvox-aural-feedback-details--draft-label indices)
+                      'emacsvox-aural-feedback-draft-label indices)))
         (make-text-button start (1- (point)) 'follow-link t
                           'action (lambda (_) (emacsvox-aural-feedback-details-toggle)))
         ;; Visibility owns the heading's cue; generic button marking would duplicate it.
@@ -549,11 +656,14 @@ The existing sound override editor owns its separate unsaved rule draft."
         (when expanded
           (emacsvox-aural-feedback-details--insert-content indices)
           (insert "\n")
-          (emacsvox-aural-feedback-details--button "Play field" #'emacsvox-aural-feedback-details-play-field)
+          (emacsvox-aural-feedback-details--button
+           (if emacsvox-aural-feedback-details--simulation "Play simulated field" "Play original field")
+           #'emacsvox-aural-feedback-details-play-field)
           (insert "  ")
           (emacsvox-aural-feedback-details--button "Change field" #'emacsvox-aural-feedback-details-change)
-          (insert "  ")
-          (emacsvox-aural-feedback-details--button "Choose another voice for matching items" #'emacsvox-aural-feedback-details--choose-voice)
+          (when (emacsvox-aural-feedback-details--spoken-p indices)
+            (insert "  ")
+            (emacsvox-aural-feedback-details--button "Choose another voice for matching items" #'emacsvox-aural-feedback-details--choose-voice))
           (insert "\n")
           (emacsvox-aural-feedback-details--insert-explanation indices)
           (when (cl-some (lambda (i)
@@ -565,29 +675,14 @@ The existing sound override editor owns its separate unsaved rule draft."
             (insert "\nOpens a separate sound rule draft; review and save it there.\n"))
           (put-text-property start (point) 'emacsvox-aural-feedback-target indices)
           (when (cdr indices)
-            (cl-loop for index in indices for number from 1 do
-                     (let ((span-start (point)))
-                       (emacsvox-aural-feedback-details--heading
-                        (format "  Span %d. Voice: %s" number
-                                (emacsvox-aural-recent-feedback--voice
-                                 (emacsvox-aural--make-presentation-record
-                                  :plan (emacsvox-aural-feedback-details--plan index)))))
-                       (emacsvox-aural-feedback-details--insert-content (list index))
-                       (insert "\n")
-                       (emacsvox-aural-feedback-details--insert-explanation (list index))
-                       (emacsvox-aural-feedback-details--button "Play span" #'emacsvox-aural-feedback-details-play-field)
-                       (insert "  ")
-                       (emacsvox-aural-feedback-details--button "Change span" #'emacsvox-aural-feedback-details-change)
-                       (insert "\n")
-                       (put-text-property span-start (point) 'emacsvox-aural-feedback-target (list index))))))))
+            (emacsvox-aural-feedback-details--insert-spans indices)))))
     (insert "\n")
     (let ((start (point)))
       (emacsvox-aural-feedback-details--heading "Debug details")
       (make-text-button start (1- (point)) 'follow-link t
                         'action (lambda (_) (emacsvox-aural-feedback-details-debug))))
-    (emacsvox-aural-feedback-details--button "Open raw snapshot in a separate buffer" #'emacsvox-aural-feedback-details-debug)
-    (insert "\nFor troubleshooting: recorded facts, rules, and backend settings.\n")
-    (insert "\nRET expands or collapses a field. n/p headings; arrows read lines; TAB actions; O play field; P play all.\nC change field; V preview all changes; S stop; q return.\n")
+    (insert "Open the raw snapshot in a separate buffer for troubleshooting.\n")
+    (insert "\nRET expands sections or activates actions. n/p headings; arrows read lines; TAB actions.\nO play field; P play all; C change field; r choose voice; R sound overrides.\nV preview all changes; S stop; g update draft status; q return.\n")
     (goto-char (point-min))
     (when-let* ((position
                  (when target (cl-loop for pos = (point-min) then (next-single-property-change
@@ -621,7 +716,8 @@ The existing sound override editor owns its separate unsaved rule draft."
     (while (and (not found) (zerop (forward-line (if previous -1 1))))
       (setq found (get-text-property (point) 'emacsvox-aural-feedback-heading)))
     (unless found (goto-char start))
-    (if-let* ((indices (get-text-property (point) 'emacsvox-aural-feedback-target))
+    (if-let* ((_ (not (get-text-property (point) 'emacsvox-aural-feedback-span-section)))
+              (indices (get-text-property (point) 'emacsvox-aural-feedback-target))
               (expanded (cl-some (lambda (group) (memq (car indices) group))
                                  emacsvox-aural-feedback-details--expanded)))
         (let ((label (buffer-substring (line-beginning-position) (line-end-position)))
@@ -682,6 +778,7 @@ The existing sound override editor owns its separate unsaved rule draft."
                    ("C" . emacsvox-aural-feedback-details-change)
                    ("r" . emacsvox-aural-feedback-details--choose-voice)
                    ("R" . emacsvox-aural-feedback-details--change-sound)
+                   ("g" . emacsvox-aural-feedback-details--update-draft-status)
                    ("V" . emacsvox-aural-feedback-details-preview)
                    ("h" . emacsvox-aural)
                    ("q" . emacsvox-aural-ui-help-quit)))

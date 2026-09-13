@@ -324,20 +324,30 @@ heading text. Press
 @@texinfo:@kbd{RET}@@ on a heading to reveal its text, playback and change
 controls, voice source, sounds, and any backend limitations. Field content is
 read in its recorded voices. Only fields with multiple spans show separate
-span sections; a single-span field shows its text and controls once. Press
+span sections, behind /Individual voice spans/. Expand that section only when
+you want to inspect or change an individual span. Its heading announces the
+section without repeating the field's content. A single-span field shows its
+text and controls once, and its heading omits the span count. Press
 @@texinfo:@kbd{RET}@@ on the field heading again to collapse it.
+
+Fields with unapplied drafts announce /unsaved change/ after their names. The
+report also shows how many fields have unsaved changes. These labels update as
+you edit or apply a change, preserving the report's buttons and your return
+position. @@texinfo:@kbd{g}@@ updates draft status, for example after killing a
+draft buffer. The original or simulated presentation remains the same.
 
 #+attr_texinfo: :indic kbd :compact t
 - n or p :: Move between headings. Collapsed fields speak only their heading; expanded fields also speak their content in the recorded voices.
 - Up or Down :: Review individual lines without speaking the complete report.
 - TAB or Shift-TAB :: Move between action buttons; RET activates an action or expands a field.
-- O :: Play the original field or span at point, including its recorded actions.
-- P :: Play the complete recorded presentation.
+- O :: Play the original field or span at point, or its labelled simulated baseline.
+- P :: Play the complete original presentation, or the labelled simulation.
 - C :: Open or resume a change to the selected field or distinguishable span.
 - r :: Choose another named voice for matching items in the compact editor.
 - R :: Replace, suppress, or restore an exact sound in the selected field or span.
 - V :: Preview the complete presentation with all linked draft changes.
 - S :: Stop playback.
+- g :: Update the report's draft status.
 
 For example, select /Subject/, press @@texinfo:@kbd{C}@@, and choose another
 content voice. In that editor, @@texinfo:@kbd{P}@@ previews the changed field

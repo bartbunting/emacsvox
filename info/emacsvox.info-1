@@ -2724,8 +2724,19 @@ _expanded_ and _collapsed_ are not inserted into the heading text.
 Press ‘RET’ on a heading to reveal its text, playback and change
 controls, voice source, sounds, and any backend limitations.  Field
 content is read in its recorded voices.  Only fields with multiple spans
-show separate span sections; a single-span field shows its text and
-controls once.  Press ‘RET’ on the field heading again to collapse it.
+show separate span sections, behind _Individual voice spans_.  Expand
+that section only when you want to inspect or change an individual span.
+Its heading announces the section without repeating the field's content.
+A single-span field shows its text and controls once, and its heading
+omits the span count.  Press ‘RET’ on the field heading again to
+collapse it.
+
+   Fields with unapplied drafts announce _unsaved change_ after their
+names.  The report also shows how many fields have unsaved changes.
+These labels update as you edit or apply a change, preserving the
+report's buttons and your return position.  ‘g’ updates draft status,
+for example after killing a draft buffer.  The original or simulated
+presentation remains the same.
 
 ‘n or p’
      Move between headings.  Collapsed fields speak only their heading;
@@ -2736,10 +2747,11 @@ controls once.  Press ‘RET’ on the field heading again to collapse it.
      Move between action buttons; RET activates an action or expands a
      field.
 ‘O’
-     Play the original field or span at point, including its recorded
-     actions.
+     Play the original field or span at point, or its labelled simulated
+     baseline.
 ‘P’
-     Play the complete recorded presentation.
+     Play the complete original presentation, or the labelled
+     simulation.
 ‘C’
      Open or resume a change to the selected field or distinguishable
      span.
@@ -2753,6 +2765,8 @@ controls once.  Press ‘RET’ on the field heading again to collapse it.
      Preview the complete presentation with all linked draft changes.
 ‘S’
      Stop playback.
+‘g’
+     Update the report's draft status.
 
    For example, select _Subject_, press ‘C’, and choose another content
 voice.  In that editor, ‘P’ previews the changed field and ‘V’ previews

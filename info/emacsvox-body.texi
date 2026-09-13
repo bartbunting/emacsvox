@@ -2740,8 +2740,17 @@ heading text. Press
 @kbd{RET} on a heading to reveal its text@comma{} playback and change
 controls@comma{} voice source@comma{} sounds@comma{} and any backend limitations. Field content is
 read in its recorded voices. Only fields with multiple spans show separate
-span sections; a single-span field shows its text and controls once. Press
+span sections@comma{} behind @emph{Individual voice spans}. Expand that section only when
+you want to inspect or change an individual span. Its heading announces the
+section without repeating the field's content. A single-span field shows its
+text and controls once@comma{} and its heading omits the span count. Press
 @kbd{RET} on the field heading again to collapse it.
+
+Fields with unapplied drafts announce @emph{unsaved change} after their names. The
+report also shows how many fields have unsaved changes. These labels update as
+you edit or apply a change@comma{} preserving the report's buttons and your return
+position. @kbd{g} updates draft status@comma{} for example after killing a
+draft buffer. The original or simulated presentation remains the same.
 
 @table @kbd
 @item n or p
@@ -2751,9 +2760,9 @@ Review individual lines without speaking the complete report.
 @item TAB or Shift-TAB
 Move between action buttons; RET activates an action or expands a field.
 @item O
-Play the original field or span at point@comma{} including its recorded actions.
+Play the original field or span at point@comma{} or its labelled simulated baseline.
 @item P
-Play the complete recorded presentation.
+Play the complete original presentation@comma{} or the labelled simulation.
 @item C
 Open or resume a change to the selected field or distinguishable span.
 @item r
@@ -2764,6 +2773,8 @@ Replace@comma{} suppress@comma{} or restore an exact sound in the selected field
 Preview the complete presentation with all linked draft changes.
 @item S
 Stop playback.
+@item g
+Update the report's draft status.
 @end table
 
 For example@comma{} select @emph{Subject}@comma{} press @kbd{C}@comma{} and choose another

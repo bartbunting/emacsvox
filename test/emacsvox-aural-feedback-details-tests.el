@@ -57,6 +57,12 @@
   (beginning-of-line)
   (emacsvox-aural-feedback-details--target))
 
+(defun emacsvox-test--feedback-spans ()
+  "Open the individual voice spans beneath the current expanded field."
+  (search-forward "Individual voice spans")
+  (beginning-of-line)
+  (call-interactively (key-binding (kbd "RET"))))
+
 (ert-deftest emacsvox-aural-feedback-details-enter-selects-quiet-pinned-report ()
   "Enter selects a readable report; q restores the exact history cell."
   (emacsvox-test--with-feedback-report
@@ -202,6 +208,7 @@
    (let* ((indices (emacsvox-test--feedback-field "Message count"))
           (last-index (car (last indices))))
      (emacsvox-aural-feedback-details-toggle)
+     (emacsvox-test--feedback-spans)
      (goto-char (point-min))
      (re-search-forward "^  Span 1\\.")
      (beginning-of-line)
@@ -293,7 +300,7 @@
        (should (string-match-p "not recorded speech" spoken))
        (should (< (length spoken) 150))
        (should (string-match-p "Play simulation" (buffer-string)))
-       (should (string-match-p "Open raw snapshot in a separate buffer" (buffer-string)))
+       (should (string-match-p "Open the raw snapshot in a separate buffer" (buffer-string)))
        (should-not (string-match-p "Play original\\|Submitted:\\|Exact retained" (buffer-string)))
        (cl-letf (((symbol-function 'emacsvox-aural-preview-play-runs)
                   (lambda (runs &rest _) (setq played runs))))
@@ -342,7 +349,7 @@
   "Collapsed fields hide their content; one span never creates a duplicate section."
   (emacsvox-test--with-feedback-report
    (let ((subject (emacsvox-test--feedback-field "Subject")) spoken)
-     (should-not (string-match-p "Meeting arrangements\\|^Play field\\|  Span " (buffer-string)))
+     (should-not (string-match-p "Meeting arrangements\\|^Play original field\\|  Span " (buffer-string)))
      (forward-line -1)
      (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text))))
        (emacsvox-aural-feedback-details-next-heading))
@@ -352,14 +359,16 @@
      (call-interactively (key-binding (kbd "RET")))
      (should (equal subject (emacsvox-aural-feedback-details--target)))
      (should (eq (emacsvox-aural-ui--control-visibility) 'expanded))
-     (should (string-match-p "Meeting arrangements\nPlay field" (buffer-string)))
+     (should (string-match-p "Meeting arrangements\nPlay original field" (buffer-string)))
      (should-not (string-match-p "  Span " (buffer-string)))
      (should (= 1 (how-many "Meeting arrangements" (point-min) (point-max))))
      (call-interactively (key-binding (kbd "RET")))
      (should (equal subject (emacsvox-aural-feedback-details--target)))
-     (should-not (string-match-p "Meeting arrangements\\|^Play field" (buffer-string))))
+     (should-not (string-match-p "Meeting arrangements\\|^Play original field" (buffer-string))))
    (let ((count (emacsvox-test--feedback-field "Message count")))
      (emacsvox-aural-feedback-details-toggle)
+     (should-not (string-match-p "^  Span " (buffer-string)))
+     (emacsvox-test--feedback-spans)
      (re-search-forward "^  Span 2\\.")
      (beginning-of-line)
      (call-interactively (key-binding (kbd "RET")))
@@ -398,7 +407,8 @@
   "Raw data opens quietly outside the report, and q restores its exact position."
   (emacsvox-test--with-feedback-report
    (goto-char (point-min))
-   (search-forward "Open raw snapshot")
+   (search-forward "Debug details")
+   (backward-char)
    (let ((position (point)) (contents (buffer-string)) debug spoken)
      (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text))))
        (call-interactively (key-binding (kbd "RET"))))
@@ -431,7 +441,7 @@
        (setf (emacsvox-aural-concrete-plan-after plan) after)
        (setq emacsvox-aural-feedback-details--expanded (list indices))
        (emacsvox-aural-feedback-details--render indices)
-       (search-forward "Play field")
+       (search-forward "Play original field")
        (backward-char 3)
        (let (events)
          (cl-letf (((symbol-function 'emacsvox-icon)
@@ -620,6 +630,120 @@
          (should emacsvox-aural-session-rules)
          (emacsvox-aural-editor-save)
          (should-not emacsvox-aural-session-rules))))))
+
+(ert-deftest emacsvox-aural-feedback-details-spans-fold-independently ()
+  "Span details stay optional and their section announces no repeated content."
+  (emacsvox-test--with-feedback-report
+   (let ((indices (emacsvox-test--feedback-field "Message count")) spoken)
+     (should-not (string-match-p "voice span" (thing-at-point 'line t)))
+     (emacsvox-aural-feedback-details-toggle)
+     (search-forward "Individual voice spans")
+     (beginning-of-line)
+     (should (eq (emacsvox-aural-ui--control-visibility) 'folded))
+     (forward-line -1)
+     (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text))))
+       (emacsvox-aural-feedback-details-next-heading))
+     (should (string-prefix-p "Individual voice spans" spoken))
+     (should-not (text-property-not-all 0 (length spoken) 'emacsvox-aural-recent-feedback-voice nil spoken))
+     (call-interactively (key-binding (kbd "RET")))
+     (should (eq (emacsvox-aural-ui--control-visibility) 'expanded))
+     (should (string-match-p "^  Span 1\\." (buffer-string)))
+     (call-interactively (key-binding (kbd "RET")))
+     (should (equal indices (get-text-property (point) 'emacsvox-aural-feedback-span-section)))
+     (should-not (string-match-p "^  Span " (buffer-string)))
+     (should (member indices emacsvox-aural-feedback-details--expanded))
+     (should (string-match-p "Play original field" (buffer-string))))))
+
+(ert-deftest emacsvox-aural-feedback-details-draft-status-keeps-return-button ()
+  "Live draft labels preserve field actions and the editor's exact return marker."
+  (emacsvox-test--with-feedback-report
+   (emacsvox-test--feedback-field "Subject")
+   (emacsvox-aural-feedback-details-toggle)
+   (search-forward "Change field")
+   (backward-char)
+   (let ((offset (- (point) (button-start (button-at (point)))))
+         (original (emacsvox-aural--history-value record)))
+     (call-interactively (key-binding (kbd "RET")))
+     (emacsvox-test--guided-choose "Change the content voice" "lighten")
+     (with-current-buffer report
+       (should (string-match-p "1 field with unsaved changes" (buffer-string)))
+       (emacsvox-test--feedback-field "Subject")
+       (should (string-match-p "unsaved change" (thing-at-point 'line t)))
+       (should (button-at (point)))
+       (should (eq (emacsvox-aural-ui--control-visibility) 'expanded)))
+     (dotimes (_ 3) (emacsvox-aural-change-feedback--back))
+     (should (eq (current-buffer) report))
+     (should (equal (button-label (button-at (point))) "Change field"))
+     (should (= offset (- (point) (button-start (button-at (point))))))
+     (call-interactively (key-binding (kbd "RET")))
+     (setq emacsvox-aural-change-feedback-scope 'session)
+     (emacsvox-aural-change-feedback-apply)
+     (with-current-buffer report
+       (should (string-match-p "No unsaved field changes" (buffer-string)))
+       (emacsvox-test--feedback-field "Subject")
+       (should-not (string-match-p "unsaved change" (thing-at-point 'line t))))
+     (emacsvox-aural-change-feedback--back)
+     (should (eq (current-buffer) report))
+     (should (equal (button-label (button-at (point))) "Change field"))
+     (should (equal original (emacsvox-aural--history-value record))))))
+
+(ert-deftest emacsvox-aural-feedback-details-graphical-folding-and-draft-return ()
+  "A real graphical report keeps its span control and returning change visible."
+  (skip-unless (display-graphic-p))
+  (emacsvox-test--with-feedback-report
+   (let ((window (selected-window)))
+     (should (eq (window-buffer window) report))
+     (emacsvox-test--feedback-field "Message count")
+     (call-interactively (key-binding (kbd "RET")))
+     (search-forward "Individual voice spans")
+     (beginning-of-line)
+     (call-interactively (key-binding (kbd "RET")))
+     (redisplay t)
+     (should (pos-visible-in-window-p (point) window))
+     (should (get-text-property (point) 'emacsvox-aural-feedback-span-section))
+     (call-interactively (key-binding (kbd "RET")))
+     (redisplay t)
+     (should (pos-visible-in-window-p (point) window))
+     (should-not (string-match-p "^  Span " (buffer-string)))
+     (emacsvox-test--feedback-field "Subject")
+     (call-interactively (key-binding (kbd "RET")))
+     (search-forward "Change field")
+     (backward-char)
+     (call-interactively (key-binding (kbd "RET")))
+     (emacsvox-test--guided-choose "Change the content voice" "lighten")
+     (dotimes (_ 3) (emacsvox-aural-change-feedback--back))
+     (redisplay t)
+     (should (eq (selected-window) window))
+     (should (eq (window-buffer window) report))
+     (should (equal (button-label (button-at (point))) "Change field"))
+     (should (pos-visible-in-window-p (point) window))
+     (should (string-match-p "1 field with unsaved changes" (buffer-string))))))
+
+(ert-deftest emacsvox-aural-feedback-details-sound-only-keeps-relevant-actions ()
+  "Feedback without spoken content keeps its meaning and offers sound changes."
+  (emacsvox-test--with-feedback-report
+   (let* ((plan (copy-emacsvox-aural-concrete-plan
+                 (emacsvox-aural-presentation-record-plan record)))
+          (content (copy-emacsvox-aural-concrete-content
+                    (emacsvox-aural-concrete-plan-content plan))))
+     (setf (emacsvox-aural-concrete-content-text content) ""
+           (emacsvox-aural-concrete-content-speak content) nil
+           (emacsvox-aural-concrete-plan-content plan) content
+           (emacsvox-aural-concrete-plan-facts plan) '(:role heading :events (state-changed))
+           (emacsvox-aural-concrete-plan-before plan)
+           (list (emacsvox-aural--make-concrete-action
+                  :id 'event-cue :kind 'cue :cue 'button :anchor 'transition))
+           (emacsvox-aural-presentation-record-plan record) plan
+           (emacsvox-aural-presentation-record-plans record) (list plan))
+     (setq emacsvox-aural-feedback-details--expanded '((0)))
+     (emacsvox-aural-feedback-details--render '(0))
+     (should-not (equal "Separator" (emacsvox-aural-feedback-details--label '(0))))
+     (should (string-match-p "no spoken content" (thing-at-point 'line t)))
+     (should (string-match-p "Sound overrides: replace, suppress, or restore" (buffer-string)))
+     (should-not (string-match-p "Choose another voice for matching items" (buffer-string)))
+     (should-error (call-interactively (key-binding (kbd "r"))) :type 'user-error)
+     (should-not emacsvox-aural-feedback-details--drafts)
+     (should (eq (current-buffer) report)))))
 
 (provide 'emacsvox-aural-feedback-details-tests)
 ;;; emacsvox-aural-feedback-details-tests.el ends here

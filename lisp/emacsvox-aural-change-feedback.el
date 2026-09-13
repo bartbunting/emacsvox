@@ -841,7 +841,10 @@
                            (list 'proposed (vector "Preview changed field" "P uses current rules plus drafts"))
                            (list 'whole-proposed (vector "Preview whole presentation" "V includes all linked field drafts"))))))
      (setq tabulated-list-entries
-           (emacsvox-aural-change-feedback--expand-rows tabulated-list-entries))) id 'change))
+           (emacsvox-aural-change-feedback--expand-rows tabulated-list-entries))) id 'change)
+  (when (buffer-live-p emacsvox-aural-change-feedback--review-buffer)
+    (with-current-buffer emacsvox-aural-change-feedback--review-buffer
+      (emacsvox-aural-feedback-details--update-draft-status))))
 
 (defun emacsvox-aural-change-feedback-details ()
   "Show the full reviewed summary without applying it."
@@ -887,9 +890,12 @@
   (let ((text (if emacsvox-aural-change-feedback--voice-remap
                   (concat (emacsvox-aural-change-feedback--summary)
                           "\n\nChoose Voice to use another named voice for this face or item. The named voice's settings stay unchanged.\n"
-                          "RET opens the selected row. n/p or arrows move. P previews the change; O plays the original; S stops.\n"
+                          "RET opens the selected row. n/p or arrows move. P previews the change; "
+                          (if emacsvox-aural-change-feedback--simulation
+                              "O plays the simulated baseline; S stops.\n"
+                            "O plays the original; S stops.\n")
                           "Choose How long, then Save or w. q goes back one level; at the top it hides and preserves the draft. e opens Advanced.\n"
-                          "To retune the named voice everywhere it is used, return to Home and choose Edit the named voice used here (T).\n")
+                          "To retune a named voice for all uses in its palette, use its Edit named voice link in Feedback Details, or Home's T shortcut.\n")
                 (concat (emacsvox-aural-change-feedback--summary)
                       "\n\nRET on Parts expands parts in playback order. Moving reads their text in the captured voice; O replays a part.\n"
                       (if emacsvox-aural-change-feedback--simulation

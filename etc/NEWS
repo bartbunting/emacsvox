@@ -8,6 +8,20 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox Unreleased --- Current User-Visible Changes
 
+** Simpler feedback controls
+
+Aural Home's /Understand and change feedback/ group now has three entries:
+/Feedback for this item/, /Recent feedback/, and /Return to source item/.
+Feedback Details combines explanation, playback, and access to changes.
+Existing direct shortcuts and searchable action names remain available.
+Semantic vocabulary is available through Help, search, and matching criteria.
+
+Feedback Details offers a compact voice choice for the selected field and
+access to exact sound overrides, including restoration. Individual voice spans
+expand separately, simple field headings are shorter, and unsaved field changes
+are marked in the report. Original and simulated playback remain clearly
+labelled; previews and retained drafts do not change the captured presentation.
+
 ** Names for occasional emoji enabled by default
 
 Occasional emoji are named before engine selection by default.
