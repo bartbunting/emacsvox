@@ -151,6 +151,7 @@
         (emacsvox-aural-editor--panel-row
          (list 'criterion criterion)
          (format "  %s %s" (pcase key (:states "state") (:events "event")
+                                  (:legacy-face "text style")
                                   (_ (emacsvox-aural-humanize (substring (symbol-name key) 1))))
                  (emacsvox-aural-humanize (if (memq key '(:states :events :requires)) (car value) value)))
          (if (member criterion selected) "Included" "Excluded"))))
@@ -998,7 +999,9 @@ LABEL identifies the speech or cue being edited."
 (defun emacsvox-aural-editor--panel-read-value (path value)
   "Read just the setting at PATH, using VALUE as its initial value."
   (let* ((key (car (last path)))
-         (name (if (integerp key) "Item" (substring (symbol-name key) 1)))
+         (name (cond ((integerp key) "Item")
+                     ((eq key :legacy-face) "Text style")
+                     (t (substring (symbol-name key) 1))))
          (prompt (format "%s (currently %S): " name value))
          (choices (pcase key
                     (:cue (emacsvox-aural-editor-cue-candidates))
@@ -1022,8 +1025,12 @@ LABEL identifies the speech or cue being edited."
   "Read one semantic or context criterion, returning an updated copy of RULE."
   (let* ((context '("module" "mode" "occasion" "legacy-face" "legacy-cue" "requires"))
          (name (completing-read "Criterion: "
-                                (append context (emacsvox-aural-semantic-candidates)) nil t))
+                                (append (mapcar (lambda (label)
+                                                  (if (equal label "legacy-face") "text style" label))
+                                                context)
+                                        (emacsvox-aural-semantic-candidates)) nil t))
          (selector (copy-tree (plist-get rule :match))))
+    (when (equal name "text style") (setq name "legacy-face"))
     (cond
      ((equal name "requires")
       (let ((attribute
