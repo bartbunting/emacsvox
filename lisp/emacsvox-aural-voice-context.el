@@ -247,6 +247,9 @@ Keep requested nil distinct from the ACSS transport's no-reset behavior."
                      (plist-get result :base-snapshot) (plist-get base :palette)
                      (plist-get base :policy) (plist-get base :text) (plist-get result :context))))
         (unless (plist-get result :speaks) (user-error "Content speech is suppressed in this context"))
+        (when (plist-member (plist-get input :context) :emoji-policy)
+          (setq entry (plist-put entry :emoji-policy
+                                 (plist-get (plist-get input :context) :emoji-policy))))
         (setq entry (plist-put entry :variant (if original 'original 'edited)))
         (setq entries (append entries
                               (list (plist-put (plist-put (copy-tree entry) :text

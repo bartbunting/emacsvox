@@ -54,6 +54,7 @@
     "emacsvox-loaddefs.el"
     "emacsvox-keymap.el"
     "tts-speak.el"
+    "emacsvox-emoji.el"
     "voice-setup.el"
     "voice-defs.el"
     "dectalk-voices.el"

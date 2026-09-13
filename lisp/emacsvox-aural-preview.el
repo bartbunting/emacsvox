@@ -99,6 +99,29 @@ their concrete audio resources do not use the speech queue."
    (process-live-p tts-speaker-process)
    (emacsvox-aural-structured-timeline-available-p)))
 
+(declare-function tts--emoji-preview-entries "tts-speak" (entries &optional captured-policy))
+
+(defun emacsvox-aural-preview--prepare-plan (plan)
+  "Prepare fresh PLAN's speech using its captured source naming policy.
+Exact replay never calls this function.  Existing preparation evidence marks
+an already prepared presentation, including custom names containing emoji."
+  (let* ((context (emacsvox-aural-concrete-plan-context plan))
+         (content (emacsvox-aural-concrete-plan-content plan))
+         (text (emacsvox-aural-concrete-content-text content)))
+    (if (or (plist-member context :emoji-naming) (not (stringp text))) plan
+      (require 'tts-speak)
+      (let* ((entry (car (tts--emoji-preview-entries
+                          (list (list :text text))
+                          (when (plist-member context :emoji-policy)
+                            (list (plist-get context :emoji-policy))))))
+             (copy (copy-emacsvox-aural-concrete-plan plan))
+             (content (copy-emacsvox-aural-concrete-content content)))
+        (setf (emacsvox-aural-concrete-content-text content) (plist-get entry :text)
+              (emacsvox-aural-concrete-plan-content copy) content
+              (emacsvox-aural-concrete-plan-context copy)
+              (plist-put (copy-tree context) :emoji-naming (plist-get entry :emoji-naming)))
+        copy))))
+
 (defun emacsvox-aural-preview-compiled-voice-plan (compiled text)
   "Return a concrete preview plan for COMPILED voice speaking TEXT.
 
@@ -111,30 +134,31 @@ legacy inline voice command."
   (when (eq (emacsvox-aural-compiled-voice-command compiled) 'inaudible)
     (user-error "Inaudible voices cannot be previewed"))
   (when-let* ((missing (cl-find 'unknown-voice
-                               (emacsvox-aural-compiled-voice-degradations compiled)
-                               :key (lambda (item) (plist-get item :reason)))))
+                                (emacsvox-aural-compiled-voice-degradations compiled)
+                                :key (lambda (item) (plist-get item :reason)))))
     (user-error "Cannot preview unresolved voice %s in palette %s%s"
                 (plist-get missing :requested) (plist-get missing :palette)
                 (if (plist-get missing :definition)
                     (format "; unavailable personality %s" (plist-get missing :definition)) "")))
-  (emacsvox-aural--make-concrete-plan
-   :content
-   (emacsvox-aural--make-concrete-content
-    :text text
-    :speak t
-    :voice-command (emacsvox-aural-compiled-voice-command compiled)
-    :voice-request
-    (copy-tree (emacsvox-aural-compiled-voice-request compiled))
-    :voice-style
-    (copy-tree (emacsvox-aural-compiled-voice-style compiled))
-    :voice-provenance
-    (copy-tree (emacsvox-aural-compiled-voice-provenance compiled))
-    :voice-capability
-    (copy-tree (emacsvox-aural-compiled-voice-capability compiled))
-    :voice-degradations
-    (copy-tree (emacsvox-aural-compiled-voice-degradations compiled)))
-   :degradations
-   (copy-tree (emacsvox-aural-compiled-voice-degradations compiled))))
+  (emacsvox-aural-preview--prepare-plan
+   (emacsvox-aural--make-concrete-plan
+    :content
+    (emacsvox-aural--make-concrete-content
+     :text text
+     :speak t
+     :voice-command (emacsvox-aural-compiled-voice-command compiled)
+     :voice-request
+     (copy-tree (emacsvox-aural-compiled-voice-request compiled))
+     :voice-style
+     (copy-tree (emacsvox-aural-compiled-voice-style compiled))
+     :voice-provenance
+     (copy-tree (emacsvox-aural-compiled-voice-provenance compiled))
+     :voice-capability
+     (copy-tree (emacsvox-aural-compiled-voice-capability compiled))
+     :voice-degradations
+     (copy-tree (emacsvox-aural-compiled-voice-degradations compiled)))
+    :degradations
+    (copy-tree (emacsvox-aural-compiled-voice-degradations compiled)))))
 
 (defun emacsvox-aural-preview-play-plan (concrete)
   "Stop old output, play concrete plan CONCRETE, and return it."

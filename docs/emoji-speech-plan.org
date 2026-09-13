@@ -128,7 +128,7 @@ pronunciation precedence and make the new automatic step optional.
 Test this helper without an audio process. Avoid making the matching layer
 depend on the selected engine, font rendering or changes to personal palettes.
 
-** TODO 3. Integrate speech, previews and explanation
+** DONE 3. Integrate speech, previews and explanation
 
 Use the helper in normal speech on both lanes and in fresh preview preparation,
 including named-voice, individual-choice and contextual previews. Opening and
@@ -245,3 +245,23 @@ on Emacs 30.2 and 31.0.90. A sequence split by styles or an internal positioned
 cue remains unchanged; a cue at its start stays on the first output character.
 Pronunciation-produced text and already prepared expansions carry opt-out
 properties. No speech path uses the helper until the integration slice.
+
+** Slice 3: speech and preview integration
+
+Ordinary and notification speech use captured source policy after explicit
+pronunciations, before Unicode cleanup and transport chunking. The original
+object count is frozen before cleanup, so shrinking or pronouncing an item
+cannot bypass the limit. Names and diagnostics are attached to cloned plans;
+source plans, semantic facts and source buffers remain unchanged.
+
+Named, individual-choice and contextual previews share preparation before
+asynchronous submission. Naming metadata stays on Emacs request snapshots and
+is removed before backend requests. Fresh concrete simulations are prepared;
+retained replay and rule proposals retain the captured prepared text and
+naming evidence, including custom expansions containing emoji.
+
+Focused source and fresh compiled emoji checks pass (21 batch tests; one
+additional graphical-only case). Six isolated graphical checks pass, including
+explanation visibility and the voice editor's final Save actions. The whole
+unit suite exposed older palette/queue expectations and incomplete startup
+inventory. These are tracked separately from emoji regression evidence.

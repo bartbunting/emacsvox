@@ -349,6 +349,8 @@
                   "tts-queue-state-tests.el"
                   "emacsvox-tts-tests.el"
                   "omnivox-preview-tests.el"
+                  "emacsvox-emoji-tests.el"
+                  "emacsvox-emoji-integration-tests.el"
                   "emacsvox-aural-voice-editor-tests.el"
                   "emacsvox-aural-voice-context-tests.el"
                   "emacsvox-aural-transport-tests.el"
@@ -394,6 +396,9 @@
                       emacsvox-aural-voice-editor--set-choice
                       emacsvox-aural-voice-editor--tuning-style
                       emacsvox-aural-voice-editor--submit-preview
+                      emacsvox-emoji--prepare
+                      emacsvox-aural--prepare-emoji-text
+                      tts--emoji-preview-entries
                       emacsvox-aural-voice-context--preview
                       emacsvox-aural-voice-editing--cascade
                       emacsvox-aural-voice-editing--legacy-preview
@@ -413,7 +418,9 @@
       (error "No compiled %S contracts were loaded" tag)))
   (let ((stats
          (ert-run-tests-batch
-          '(or "^emacsvox-aural-rules-"
+          '(and (not (member emacsvox-emoji-graphical-explanation-is-visible
+                             emacsvox-aural-voice-editor-graphical-save-remains-visible))
+                (or "^emacsvox-emoji-" "^emacsvox-aural-rules-"
                "^emacsvox-aural-voice-data-"
                "^emacsvox-aural-voice-runtime-"
                "^emacsvox-aural-voice-drafts-"
@@ -440,7 +447,7 @@
                emacsvox-aural-native-saved-style-matches-voice-previews
                emacsvox-aural-voice-workbench-logical-preview-carries-effects
                emacsvox-aural-voice-workbench-preview-preserves-effect-scale
-               emacsvox-aural-transport-preset-nil-and-zero-retain-current-behavior))))
+               emacsvox-aural-transport-preset-nil-and-zero-retain-current-behavior)))))
     (unless (and (> (ert-stats-total stats) 0)
                  (= (ert-stats-completed stats) (ert-stats-total stats))
                  (= (ert-stats-completed-unexpected stats) 0)

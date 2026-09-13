@@ -111,7 +111,7 @@ message notification policy."
          (facts (if content (plist-put facts :content content) facts))
          (render (emacsvox-aural-resolve facts context (list rule)))
          (concrete (emacsvox-aural-compile-plan render facts context)))
-      (emacsvox-aural-preview-play-plan concrete))))
+      (emacsvox-aural-preview-play-plan (emacsvox-aural-preview--prepare-plan concrete)))))
 
 (defalias 'emacsvox-aural-preview-rule #'emacsvox-preview-aural-rule)
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))

@@ -384,7 +384,7 @@ Return lists of zero-based run indices in playback order."
 
 (defun emacsvox-aural-feedback-details--insert-explanation (indices)
   "Insert only the voice sources, actions, and limitations belonging to INDICES."
-  (let (voices adjustments limitations)
+  (let (voices adjustments limitations substitutions)
     (dolist (index indices)
       (let* ((plan (emacsvox-aural-feedback-details--plan index))
              (content (emacsvox-aural-concrete-plan-content plan))
@@ -401,10 +401,14 @@ Return lists of zero-based run indices in playback order."
             (cl-pushnew (format "%s from %s" (emacsvox-aural-humanize (car entry))
                                 (emacsvox-aural-feedback-details--source-description (cdr entry) plan))
                         adjustments :test #'equal)))
+        (dolist (line (emacsvox-emoji--explanation
+                       (plist-get (emacsvox-aural-concrete-plan-context plan) :emoji-naming)))
+          (cl-pushnew line substitutions :test #'equal))
         (dolist (diagnostic (emacsvox-aural-concrete-plan-degradations plan))
           (cl-pushnew (emacsvox-aural-feedback-details--limitation diagnostic) limitations :test #'equal))))
     (insert "Voice: " (string-join (nreverse voices) "; ") ".\n")
     (emacsvox-aural-feedback-details--insert-voice-links indices)
+    (dolist (line (nreverse substitutions)) (insert line "\n"))
     (when adjustments (insert "Voice adjustments: " (string-join (nreverse adjustments) "; ") ".\n"))
     (dolist (phase '(before after))
       (let (descriptions)
@@ -674,7 +678,8 @@ Simulations are private snapshots and are never added to presentation history."
   (if record
       (emacsvox-aural-feedback-details record)
     (let* ((plan (emacsvox-aural--freeze-presentation-plan
-                  (emacsvox-aural-explanation-concrete-plan explanation)))
+                  (emacsvox-aural-preview--prepare-plan
+                   (emacsvox-aural-explanation-concrete-plan explanation))))
            (context (emacsvox-aural-concrete-plan-context plan)))
       (emacsvox-aural-feedback-details--open
        (emacsvox-aural--make-presentation-record

@@ -17,7 +17,8 @@
        (lisp-directory (expand-file-name "lisp/" root-directory))
        (build-directory (make-temp-file "emacsvox-compiled-aural-" t))
        (files
-        '("emacsvox-aural.el"
+        '("emacsvox-emoji.el"
+          "emacsvox-aural.el"
           "emacsvox-aural-compatibility-voice.el"
           "emacsvox-aural-concrete.el"
           "emacsvox-aural-history.el"

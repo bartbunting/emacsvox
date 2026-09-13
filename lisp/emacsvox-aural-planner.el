@@ -582,6 +582,10 @@ native records without captured adapter inputs must be recorded again."
   (setq base-context
         (plist-put (copy-tree base-context) :aural-source-compatibility-actions
                    (copy-tree compatibility-actions)))
+  (setq base-context
+        (plist-put base-context :emoji-policy
+                   (emacsvox-emoji--item-policy
+                    (substring text start end) (plist-get base-context :emoji-policy))))
   (let ((object-icon (get-text-property start 'auditory-icon text))
         (position start)
         runs)
@@ -628,6 +632,8 @@ adapter records applied to the first explicit presentation object."
          (position 0)
          (length (length prepared))
          (sequence 0))
+    (unless (plist-member base-context :emoji-policy)
+      (setq base-context (plist-put base-context :emoji-policy (emacsvox-emoji--snapshot))))
     (while (< position length)
       (let* ((end (emacsvox-aural--object-end prepared position))
              (explicit
@@ -642,6 +648,62 @@ adapter records applied to the first explicit presentation object."
         (setq position end
               compatibility-actions nil)))
     prepared))
+
+(defun emacsvox-aural--prepare-emoji-text (text)
+  "Name emoji in prepared TEXT once, using each object's captured policy.
+This runs after explicit pronunciations and before transport chunking.  Clone
+plans when adding explanation evidence; never alter retained source plans."
+  (let ((position 0) enabled)
+    (while (and (not enabled) (< position (length text)))
+      (let ((plan (get-text-property position emacsvox-aural-concrete-plan-property text)))
+        (setq enabled (and plan (plist-get (plist-get (emacsvox-aural-concrete-plan-context plan)
+                                                      :emoji-policy) :enabled))))
+      (setq position (next-single-property-change position emacsvox-aural-concrete-plan-property
+                                                  text (length text))))
+    (if (not enabled) text
+      (let ((text (copy-sequence text)) (position 0) pieces)
+        ;; An object boundary is allowed inside a joined sequence.  Protect the
+        ;; entire sequence before dividing into items, so neither piece is named.
+        (while (< position (length text))
+          (let ((end (emacsvox-emoji--sequence-end text position)))
+            (unless (emacsvox-emoji--replaceable-p text position end)
+              (put-text-property position end 'emacsvox-emoji-blocked t text))
+            (setq position end)))
+        (setq position 0)
+        (while (< position (length text))
+          (let* ((plan (get-text-property position emacsvox-aural-concrete-plan-property text))
+                 (id (and plan (emacsvox-aural-concrete-plan-object-id plan)))
+                 (end (next-single-property-change position emacsvox-aural-concrete-plan-property
+                                                   text (length text))))
+            (while (and id (< end (length text))
+                        (let ((next (get-text-property end emacsvox-aural-concrete-plan-property text)))
+                          (and next (equal id (emacsvox-aural-concrete-plan-object-id next))
+                               (not (emacsvox-aural-concrete-plan-object-start-p next)))))
+              (setq end (next-single-property-change end emacsvox-aural-concrete-plan-property
+                                                     text (length text))))
+            (let* ((policy (and plan (plist-get (emacsvox-aural-concrete-plan-context plan) :emoji-policy)))
+                   (result (emacsvox-emoji--prepare (substring text position end) policy))
+                   (output (plist-get result :text))
+                   (offset 0) (copies (make-hash-table :test #'eq)))
+              (when (or (plist-get result :replacements) (plist-get result :diagnostics))
+                (while (< offset (length output))
+                  (let* ((original (get-text-property offset emacsvox-aural-concrete-plan-property output))
+                         (limit (next-single-property-change offset emacsvox-aural-concrete-plan-property
+                                                             output (length output))))
+                    (when original
+                      (let ((copy (or (gethash original copies)
+                                      (let ((copy (copy-emacsvox-aural-concrete-plan original)))
+                                        (setf (emacsvox-aural-concrete-plan-context copy)
+                                              (plist-put (copy-tree (emacsvox-aural-concrete-plan-context original))
+                                                         :emoji-naming
+                                                         (list :replacements (plist-get result :replacements)
+                                                               :diagnostics (plist-get result :diagnostics))))
+                                        (puthash original copy copies)))))
+                        (put-text-property offset limit emacsvox-aural-concrete-plan-property copy output)))
+                    (setq offset limit))))
+              (push output pieces))
+            (setq position end)))
+        (apply #'concat (nreverse pieces))))))
 
 (defun emacsvox-aural-prepared-text-p (text)
   "Return non-nil when every character of nonempty TEXT has a concrete plan."

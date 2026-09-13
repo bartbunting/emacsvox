@@ -35,6 +35,7 @@
         (require 'emacsvox-preamble)
         (require 'emacsvox-aural-voice-editor-tests)
         (require 'emacsvox-aural-feedback-details)
+        (require 'emacsvox-emoji-integration-tests)
         (dolist (function '(emacsvox-aural-feedback-details--insert-voice-links
                             emacsvox-aural-voice-editor-refresh))
           (let ((file (symbol-file function)))
@@ -43,13 +44,14 @@
             (message "%s: %s" function file)))
         (let ((stats (ert-run-tests-batch
                       '(member
+                        emacsvox-emoji-graphical-explanation-is-visible
                         emacsvox-aural-voice-editor-feedback-link-resumes-and-returns
                         emacsvox-aural-voice-editor-save-actions-follow-settings-and-previews
                         emacsvox-aural-voice-editor-field-navigation-stops-at-both-ends
                         emacsvox-aural-voice-editor-horizontal-arrows-navigate-nonnumeric-fields
                         emacsvox-aural-voice-editor-graphical-save-remains-visible))))
-          (setq status (if (and (= (ert-stats-total stats) 5)
-                                (= (ert-stats-completed stats) 5)
+          (setq status (if (and (= (ert-stats-total stats) 6)
+                                (= (ert-stats-completed stats) 6)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

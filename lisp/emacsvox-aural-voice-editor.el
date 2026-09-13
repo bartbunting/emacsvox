@@ -55,7 +55,7 @@
 (defun emacsvox-aural-voice-editor--submit-preview (entries callback current)
   "Submit private ENTRIES with CALLBACK while CURRENT still owns the view.
 Select a faithful wire form before any entry interrupts foreground speech."
-  (let* ((entries (tts--dispatch-copy-data entries))
+  (let* ((entries (tts--emoji-preview-entries (tts--dispatch-copy-data entries)))
          (process tts-speaker-process)
          (adapter tts-voice-preview-function)
          (omnivox (and (eq adapter #'omnivox-preview-voice-sequence)
@@ -95,9 +95,11 @@ Select a faithful wire form before any entry interrupts foreground speech."
                               (/= (plist-get legacy :rate-offset) 0)
                               (not (omnivox--process-supports-p process "relative_rate_v1")))
                      (user-error "This audition needs relative rate support"))))))
-    (cond (layered (omnivox--preview-layered-sequence entries receive current))
+    (cond (layered (omnivox--preview-layered-sequence
+                    (tts--emoji-preview-wire-entries entries) receive current))
           (omnivox (omnivox--preview-sequence prepared receive individual current))
-          (t (tts-preview-voices prepared receive) nil))))
+          (t (let ((tts--emoji-preview-prepared t))
+               (tts-preview-voices prepared receive)) nil))))
 
 (defun emacsvox-aural-voice-editor--invalidate (context)
   "Invalidate CONTEXT before cancelling its exact operation or notifying views."
@@ -934,6 +936,12 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
          (unsupported (append (plist-get identity :degraded_acss) (plist-get identity :degraded_effects) nil)))
     (concat "Where the last sample's settings came from\n"
             (if result (concat (emacsvox-aural-voice-editor--preview-status result) "\n") "No preview result.\n")
+            (let (lines)
+              (dolist (item (plist-get result :results))
+                (dolist (line (emacsvox-emoji--explanation
+                              (plist-get (plist-get item :request-snapshot) :emoji-naming)))
+                  (cl-pushnew line lines :test #'equal)))
+              (if lines (concat (string-join (nreverse lines) "\n") "\n") ""))
             (if (not sample)
                 "No confirmed sample row is available for field-source details.\n"
               (concat

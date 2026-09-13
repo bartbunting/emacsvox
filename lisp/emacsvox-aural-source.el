@@ -33,6 +33,7 @@
 
 (require 'cl-lib)
 (require 'subr-x)
+(require 'emacsvox-emoji)
 (require 'emacsvox-aural-history)
 (require 'emacsvox-aural-schemes)
 
@@ -198,7 +199,7 @@ OBJECT defaults to the current buffer and may also be a string."
       (setq
        context
        (plist-put context :history-recording-inhibited t)))
-    context))
+    (plist-put context :emoji-policy (emacsvox-emoji--snapshot))))
 
 (defun emacsvox-aural-delivery-policy-for-occasion (occasion)
   "Return the default complete-submission delivery policy for OCCASION.

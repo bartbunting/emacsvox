@@ -406,7 +406,7 @@ emacsvox-aural-voice-runtime.elc \
 emacsvox-aural-concrete.elc emacsvox-aural-providers.elc \
 emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
 emacsvox-aural-source.elc: \
-emacsvox-aural-history.elc emacsvox-aural-schemes.elc
+emacsvox-emoji.elc emacsvox-aural-history.elc emacsvox-aural-schemes.elc
 emacsvox-aural-planner.elc: \
 emacsvox-aural-compiler.elc emacsvox-aural-concrete.elc \
 emacsvox-aural-schemes.elc emacsvox-aural-source.elc

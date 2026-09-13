@@ -163,7 +163,7 @@ endpoints.  The other dimensions use the ordinary linear mapping."
     :source-buffer-id :source-modification-tick
     :buffer-rules
     :history-recording-inhibited :presentation-transaction-id
-    :aural-source-compatibility-actions)
+    :aural-source-compatibility-actions :emoji-policy :emoji-naming)
   "Keys accepted in a presentation context plist.")
 
 (cl-defstruct

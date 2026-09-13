@@ -25,6 +25,7 @@
   (load (expand-file-name "emacsvox-preamble.el" lisp-directory)
         nil nil)
   (require 'emacsvox-emoji-tests)
+  (require 'emacsvox-emoji-integration-tests)
   (require 'emacsvox-version-tests)
   (require 'emacsvox-advice-tests)
   (require 'emacsvox-advice-audit-tests)

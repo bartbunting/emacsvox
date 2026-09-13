@@ -1724,7 +1724,7 @@ start of the source match."
      (cond
       ((stringp pronunciation)
        (while (search-forward w nil t)
-         (tts-replace-match pronunciation)))
+         (tts--replace-pronunciation pronunciation)))
       ((consp pronunciation)
        (let ((matcher (car pronunciation))
              (pronouncer (cdr pronunciation))
@@ -1736,7 +1736,7 @@ start of the source match."
               (funcall pronouncer
                        (buffer-substring
                         (match-beginning 0) (match-end 0)))))
-           (tts-replace-match pronunciation))))))))
+           (tts--replace-pronunciation pronunciation))))))))
 
 ;;;   Helpers to handle invisible text:
 
@@ -3435,6 +3435,60 @@ completion.")
   (when (eq (not (plist-member entry :selector)) (not (plist-member entry :selectors)))
     (error "Preview requires exactly one of :selector or :selectors")))
 
+(defvar tts--emoji-preview-prepared nil
+  "Non-nil while forwarding an already prepared editor preview.")
+
+(defun tts--emoji-preview-wire-entries (entries)
+  "Remove Emacs-only naming metadata from private adapter ENTRIES."
+  (mapcar (lambda (entry)
+            (let ((copy (copy-sequence entry)))
+              (dolist (key '(:emoji-policy :emoji-prepared :emoji-naming))
+                (cl-remf copy key))
+              copy)) entries))
+
+(defun tts--emoji-preview-entries (entries &optional captured-policy)
+  "Prepare fresh preview ENTRIES with the remembered source's frozen policy.
+CAPTURED-POLICY, when supplied as a one-element list, overrides current policy.
+Resolve the source before entering a scratch buffer or asynchronous adapter."
+  (let* ((source (if (fboundp 'emacsvox-aural-inspection-source-buffer)
+                     (emacsvox-aural-inspection-source-buffer)
+                   (current-buffer)))
+         (policy (if captured-policy (car captured-policy)
+                   (and (buffer-live-p source)
+                        (with-current-buffer source (emacsvox-emoji--snapshot)))))
+         (pronunciations (and (buffer-live-p source)
+                              (buffer-local-value 'emacsvox-pronounce-table source)))
+         (personality (and (buffer-live-p source)
+                           (buffer-local-value 'emacsvox-pronounce-personality source))))
+    (mapcar
+     (lambda (entry)
+       (let* ((entry (copy-tree entry))
+              (policy (if (plist-member entry :emoji-policy) (plist-get entry :emoji-policy) policy)))
+         (unless (or (plist-get entry :emoji-prepared)
+                     (not (plist-get policy :enabled)))
+           (let* ((original (plist-get entry :text))
+                  (policy (emacsvox-emoji--item-policy original policy))
+                  (text (if pronunciations
+                            (with-temp-buffer
+                              (let ((emacsvox-pronounce-personality personality))
+                                (insert original)
+                                (tts-apply-pronunciations pronunciations)
+                                (buffer-string)))
+                          original))
+                  (result (emacsvox-emoji--prepare text policy)))
+             (setq entry (plist-put entry :text (plist-get result :text)))
+             (setq entry (plist-put entry :emoji-naming
+                                    (list :replacements (plist-get result :replacements)
+                                          :diagnostics (plist-get result :diagnostics))))))
+         (setq entry (plist-put entry :emoji-prepared t))
+         entry)) entries)))
+
+(defun tts--replace-pronunciation (replacement)
+  "Apply explicit REPLACEMENT and protect its result from emoji naming."
+  (let ((start (match-beginning 0)))
+    (tts-replace-match replacement)
+    (put-text-property start (point) 'emacsvox-emoji-pronounced t)))
+
 (defun tts-preview-voices (entries callback)
   "Preview normalized ENTRIES and call CALLBACK with one terminal result."
   (unless (and (listp entries) entries)
@@ -3442,7 +3496,13 @@ completion.")
   (mapc #'tts--validate-voice-preview-entry entries)
   (unless (functionp tts-voice-preview-function)
     (error "The active speech adapter does not support voice preview"))
-  (funcall tts-voice-preview-function (copy-tree entries) callback))
+  (let ((prepared (if tts--emoji-preview-prepared (copy-tree entries)
+                    (tts--emoji-preview-entries entries))))
+    (funcall tts-voice-preview-function (tts--emoji-preview-wire-entries prepared)
+             (lambda (result)
+               (cl-loop for item in (plist-get result :results) for entry in prepared do
+                        (plist-put item :request-snapshot (copy-tree entry)))
+               (when callback (funcall callback result))))))
 
 (cl-defun tts-preview-voice
     (text selector &key acss rate-offset effects language callback)
@@ -3948,6 +4008,11 @@ by the audio device's buffering latency."
               (tts--delete-invisible-text)
               (tts-handle-repeating-patterns mode)
               (when pron-table (tts-apply-pronunciations pron-table))
+              (let* ((original (buffer-string))
+                     (prepared (emacsvox-aural--prepare-emoji-text original)))
+                (unless (eq original prepared)
+                  (erase-buffer)
+                  (insert prepared)))
               (when tts-handle-unicode (tts-unicode-replace-chars mode))
               (tts-quote mode)
               (goto-char (point-min))         ; text is ready to be spoken

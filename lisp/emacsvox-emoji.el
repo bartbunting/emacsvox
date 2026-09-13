@@ -147,7 +147,8 @@ Keep unknown joined sequences intact without depending on font composition."
 
 (defun emacsvox-emoji--replaceable-p (text start end)
   "Whether a sequence has uniform ownership and no internal positioned cue."
-  (and (not (get-text-property start 'emacsvox-emoji-prepared text))
+  (and (not (get-text-property start 'emacsvox-emoji-blocked text))
+       (not (get-text-property start 'emacsvox-emoji-prepared text))
        (not (get-text-property start 'emacsvox-emoji-pronounced text))
        (let ((properties (emacsvox-emoji--ordinary-properties text start))
              (position (1+ start)) (valid t))
@@ -159,6 +160,18 @@ Keep unknown joined sequences intact without depending on font composition."
            (cl-incf position))
          valid)))
 
+(defun emacsvox-emoji--item-policy (text policy)
+  "Freeze the original approved occurrence limit for TEXT under POLICY."
+  (let ((policy (copy-tree policy)) (position 0) (count 0))
+    (when (and (plist-get policy :enabled) (emacsvox-emoji--valid-policy-p policy))
+      (while (and (< position (length text)) (<= count (plist-get policy :maximum)))
+        (let ((end (emacsvox-emoji--sequence-end text position)))
+          (when (member (substring-no-properties text position end) (plist-get policy :approved))
+            (cl-incf count))
+          (setq position end)))
+      (setq policy (plist-put policy :count-exceeded (> count (plist-get policy :maximum)))))
+    policy))
+
 (defun emacsvox-emoji--prepare (text policy)
   "Prepare one original TEXT item under explicit frozen POLICY.
 Return :text, bounded :replacements and :diagnostics.  Replacement evidence
@@ -168,6 +181,7 @@ Unknown sequences and mixed-property candidates remain intact."
    ((not (plist-get policy :enabled)) (list :text text))
    ((not (emacsvox-emoji--valid-policy-p policy))
     (list :text text :diagnostics '(invalid-policy)))
+   ((plist-get policy :count-exceeded) (list :text text :diagnostics '(count-exceeded)))
    (t
     (let ((position 0) (count 0) candidates diagnostics)
       (while (< position (length text))
@@ -220,6 +234,24 @@ Unknown sequences and mixed-property candidates remain intact."
           (push (substring text source) pieces)
           (list :text (apply #'concat (nreverse pieces))
                 :replacements (nreverse replacements) :diagnostics diagnostics)))))))
+
+(defun emacsvox-emoji--explanation (evidence)
+  "Describe bounded preparation EVIDENCE without claiming playback."
+  (append
+   (mapcar (lambda (entry)
+             (format "Speech text: %s spoken as %s."
+                     (plist-get entry :sequence) (plist-get entry :name)))
+           (plist-get evidence :replacements))
+   (mapcar (lambda (diagnostic)
+             (concat "Emoji naming skipped: "
+                     (pcase diagnostic
+                       ('count-exceeded "the original item exceeds the occurrence limit")
+                       ('property-boundary "a sequence crosses a style or cue boundary")
+                       ('invalid-policy "invalid emoji settings")
+                       ('missing-name "this Emacs has no exact name")
+                       ('invalid-name "the name is empty, too long, or contains controls")
+                       (_ "Emacs emoji data is unavailable")) "."))
+           (plist-get evidence :diagnostics))))
 
 (provide 'emacsvox-emoji)
 ;;; emacsvox-emoji.el ends here
