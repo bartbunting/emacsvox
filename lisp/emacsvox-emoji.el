@@ -54,5 +54,172 @@ Failures are data, never speech errors.  No network or display is involved."
         (list :diagnostic 'unavailable-data))
     (error (list :diagnostic 'unavailable-data))))
 
+(defgroup emacsvox-emoji nil
+  "Optional names for occasional emoji in speech."
+  :group 'emacsvox)
+
+(defcustom emacsvox-emoji-naming-enabled nil
+  "Whether speech names approved occasional emoji, regardless of engine.
+This option and the other emoji options can be set buffer-locally or in a
+mode hook.  Source buffers keep their original text."
+  :type 'boolean :group 'emacsvox-emoji)
+
+(defcustom emacsvox-emoji-approved-sequences '("🔮" "✨" "✅" "⚠️" "🚀" "💡")
+  "Complete sequences eligible for automatic speech naming.
+Approval does not imply that this Emacs version supplies a name."
+  :type '(repeat string) :group 'emacsvox-emoji)
+
+(defcustom emacsvox-emoji-maximum-count 2
+  "Maximum approved occurrences per speech object or preview sample.
+Above this limit, the entire item retains its emoji."
+  :type 'natnum :group 'emacsvox-emoji)
+
+(defcustom emacsvox-emoji-custom-names nil
+  "Spoken names overriding Emacs data for approved complete sequences.
+Names must contain 1 to 80 characters with no control characters.  Empty
+names are invalid; use an explicit pronunciation to omit a symbol."
+  :type '(alist :key-type string :value-type string) :group 'emacsvox-emoji)
+
+(defun emacsvox-emoji--copy-policy-value (value)
+  "Copy policy VALUE, including mutable configuration strings."
+  (cond ((stringp value) (substring-no-properties value))
+        ((consp value) (cons (emacsvox-emoji--copy-policy-value (car value))
+                             (emacsvox-emoji--copy-policy-value (cdr value))))
+        (t value)))
+
+(defun emacsvox-emoji--snapshot ()
+  "Copy the current source's naming policy for one operation."
+  (list :enabled emacsvox-emoji-naming-enabled
+        :approved (emacsvox-emoji--copy-policy-value emacsvox-emoji-approved-sequences)
+        :maximum emacsvox-emoji-maximum-count
+        :names (emacsvox-emoji--copy-policy-value emacsvox-emoji-custom-names)))
+
+(defun emacsvox-emoji--valid-name-p (name)
+  "Whether NAME is a bounded nonempty spoken expansion."
+  (and (stringp name) (<= 1 (length name) 80)
+       (not (string-match-p "[[:cntrl:]]" name))
+       (not (string-empty-p (string-trim name)))))
+
+(defun emacsvox-emoji--valid-policy-p (policy)
+  "Whether POLICY is safe to use without unbounded expansion."
+  (let ((approved (plist-get policy :approved)) (names (plist-get policy :names))
+        (maximum (plist-get policy :maximum)))
+    (and (integerp maximum) (<= 0 maximum 64)
+         (proper-list-p approved) (<= (length approved) 64)
+         (cl-every (lambda (s) (and (stringp s) (<= 1 (length s) 32))) approved)
+         (proper-list-p names) (<= (length names) 64)
+         (cl-every (lambda (entry)
+                     (and (consp entry) (stringp (car entry))
+                          (<= 1 (length (car entry)) 32)
+                          (emacsvox-emoji--valid-name-p (cdr entry)))) names))))
+
+(defun emacsvox-emoji--extension-p (char)
+  "Whether CHAR must stay attached to its preceding base."
+  (and char
+       (or (memq (get-char-code-property char 'general-category) '(Mn Mc Me))
+           (<= #xFE00 char #xFE0F) (<= #xE0100 char #xE01EF)
+           (<= #x1F3FB char #x1F3FF) (<= #xE0020 char #xE007F))))
+
+(defun emacsvox-emoji--sequence-end (text start)
+  "Find a conservative complete sequence in TEXT at START.
+Keep unknown joined sequences intact without depending on font composition."
+  (let ((end (1+ start)) (length (length text)))
+    (when (and (<= #x1F1E6 (aref text start) #x1F1FF)
+               (< end length) (<= #x1F1E6 (aref text end) #x1F1FF))
+      (cl-incf end))
+    (while (and (< end length)
+                (or (emacsvox-emoji--extension-p (aref text end))
+                    (= (aref text end) #x200D)
+                    (= (aref text (1- end)) #x200D)))
+      (cl-incf end))
+    end))
+
+(defconst emacsvox-emoji--anchor-properties
+  '(emacsvox-aural-positioned-facts emacsvox-aural-concrete-positioned-actions)
+  "Properties that belong only to the first character of an expansion.")
+
+(defun emacsvox-emoji--ordinary-properties (text position)
+  "Copy TEXT properties at POSITION, excluding positioned anchors."
+  (let ((properties (copy-sequence (text-properties-at position text))))
+    (dolist (property emacsvox-emoji--anchor-properties)
+      (cl-remf properties property))
+    properties))
+
+(defun emacsvox-emoji--replaceable-p (text start end)
+  "Whether a sequence has uniform ownership and no internal positioned cue."
+  (and (not (get-text-property start 'emacsvox-emoji-prepared text))
+       (not (get-text-property start 'emacsvox-emoji-pronounced text))
+       (let ((properties (emacsvox-emoji--ordinary-properties text start))
+             (position (1+ start)) (valid t))
+         (while (and valid (< position end))
+           (setq valid
+                 (and (equal properties (emacsvox-emoji--ordinary-properties text position))
+                      (not (cl-some (lambda (p) (get-text-property position p text))
+                                    emacsvox-emoji--anchor-properties))))
+           (cl-incf position))
+         valid)))
+
+(defun emacsvox-emoji--prepare (text policy)
+  "Prepare one original TEXT item under explicit frozen POLICY.
+Return :text, bounded :replacements and :diagnostics.  Replacement evidence
+contains zero-based source and output boundaries.  Never modify TEXT or POLICY.
+Unknown sequences and mixed-property candidates remain intact."
+  (cond
+   ((not (plist-get policy :enabled)) (list :text text))
+   ((not (emacsvox-emoji--valid-policy-p policy))
+    (list :text text :diagnostics '(invalid-policy)))
+   (t
+    (let ((position 0) (count 0) candidates diagnostics)
+      (while (< position (length text))
+        (let* ((end (emacsvox-emoji--sequence-end text position))
+               (sequence (substring-no-properties text position end)))
+          (when (and (member sequence (plist-get policy :approved))
+                     (not (get-text-property position 'emacsvox-emoji-pronounced text))
+                     (not (get-text-property position 'emacsvox-emoji-prepared text)))
+            (cl-incf count)
+            ;; Never retain more candidates than can be expanded.
+            (when (<= count (plist-get policy :maximum))
+              (if (emacsvox-emoji--replaceable-p text position end)
+                  (push (list position end sequence) candidates)
+                (cl-pushnew 'property-boundary diagnostics))))
+          (setq position end)))
+      (if (> count (plist-get policy :maximum))
+          (list :text text :diagnostics '(count-exceeded))
+        (let ((source 0) (output 0) pieces replacements)
+          (dolist (candidate (nreverse candidates))
+            (pcase-let* ((`(,start ,end ,sequence) candidate)
+                         (custom (assoc sequence (plist-get policy :names)))
+                         (data (if custom (list :name (cdr custom) :source 'custom)
+                                 (emacsvox-emoji--lookup sequence)))
+                         (name (plist-get data :name)))
+              (if (not (emacsvox-emoji--valid-name-p name))
+                  (cl-pushnew (or (plist-get data :diagnostic) 'invalid-name) diagnostics)
+                (let* ((before (substring text source start))
+                       (prefix (if (and (> start 0)
+                                        (not (and (= start source) pieces
+                                                  (string-suffix-p " " (car pieces))))
+                                        (or (memq (char-syntax (aref text (1- start))) '(?w ?_))
+                                            (eq (get-char-code-property (aref text (1- start))
+                                                                        'general-category) 'So))) " " ""))
+                       (suffix (if (and (< end (length text))
+                                        (memq (char-syntax (aref text end)) '(?w ?_))) " " ""))
+                       (spoken (concat prefix name suffix)))
+                  (set-text-properties 0 (length spoken)
+                                       (emacsvox-emoji--ordinary-properties text start) spoken)
+                  (put-text-property 0 (length spoken) 'emacsvox-emoji-prepared t spoken)
+                  (dolist (property emacsvox-emoji--anchor-properties)
+                    (when-let* ((value (get-text-property start property text)))
+                      (put-text-property 0 1 property value spoken)))
+                  (push before pieces) (cl-incf output (length before))
+                  (push (append (list :sequence sequence :name name
+                                      :source-start start :source-end end
+                                      :output-start output :output-end (+ output (length spoken)))
+                                (copy-tree data)) replacements)
+                  (push spoken pieces) (cl-incf output (length spoken))
+                  (setq source end)))))
+          (push (substring text source) pieces)
+          (list :text (apply #'concat (nreverse pieces))
+                :replacements (nreverse replacements) :diagnostics diagnostics)))))))
+
 (provide 'emacsvox-emoji)
 ;;; emacsvox-emoji.el ends here

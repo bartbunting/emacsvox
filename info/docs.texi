@@ -67,7 +67,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1547 commands and 207 options.
+This chapter documents a total of 1547 commands and 211 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -8938,6 +8938,70 @@ Speak current track.
 Optional speech naming uses exact entries from Emacs's bundled emoji data.
 Keep the private upstream table behind this adapter; never use the picker
 helper, which can fall back to naming the first character of a sequence.
+
+@subsection emacsvox-emoji Options
+
+@defvar {User Option} emacsvox-emoji-approved-sequences
+@verbatim
+Complete sequences eligible for automatic speech naming.
+Approval does not imply that this Emacs version supplies a name.
+@end verbatim
+
+Default Value:
+@verbatim
+
+("🔮" "✨" "✅" "⚠️" "🚀" "💡")
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-emoji-custom-names
+@verbatim
+Spoken names overriding Emacs data for approved complete sequences.
+Names must contain 1 to 80 characters with no control characters.  Empty
+names are invalid; use an explicit pronunciation to omit a symbol.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-emoji-maximum-count
+@verbatim
+Maximum approved occurrences per speech object or preview sample.
+Above this limit, the entire item retains its emoji.
+@end verbatim
+
+Default Value:
+@verbatim
+
+2
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-emoji-naming-enabled
+@verbatim
+Whether speech names approved occasional emoji, regardless of engine.
+This option and the other emoji options can be set buffer-locally or in a
+mode hook.  Source buffers keep their original text.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
 
 @node emacsvox-empv
 @section emacsvox-empv

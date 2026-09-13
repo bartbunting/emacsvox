@@ -113,7 +113,7 @@ Choose the item boundary and the common helper's insertion points from those
 actual call paths. Preserve literal character inspection. Record how source
 policy reaches a preview and where it is frozen for comparison and replay.
 
-** TODO 2. Implement deterministic matching and conversion
+** DONE 2. Implement deterministic matching and conversion
 
 Build a helper that accepts original text plus an explicit policy snapshot and
 returns prepared text and replacement evidence. Evidence must associate each
@@ -235,3 +235,13 @@ components on both versions. Matching will use conservative sequence scanning:
 combining characters, selectors, modifiers, tags and joined bases remain
 attached. A property change inside a candidate prevents replacement. Positioned
 properties at its start belong only to the first output character.
+
+** Slice 2: deterministic preparation
+
+The pure helper implements the disabled default, six approved trial sequences,
+two-occurrence threshold, bounded custom names, immutable policy snapshots,
+complete sequence matching and source/output evidence. Nine focused tests pass
+on Emacs 30.2 and 31.0.90. A sequence split by styles or an internal positioned
+cue remains unchanged; a cue at its start stays on the first output character.
+Pronunciation-produced text and already prepared expansions carry opt-out
+properties. No speech path uses the helper until the integration slice.

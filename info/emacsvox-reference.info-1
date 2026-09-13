@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1547 commands and 207 options.
+   This chapter documents a total of 1547 commands and 211 options.
 
 * Menu:
 
@@ -8068,6 +8068,47 @@ Optional speech naming uses exact entries from Emacs's bundled emoji
 data.  Keep the private upstream table behind this adapter; never use
 the picker helper, which can fall back to naming the first character of
 a sequence.
+
+2.113.1 emacsvox-emoji Options
+------------------------------
+
+ -- Variable: User Option emacsvox-emoji-approved-sequences
+     Complete sequences eligible for automatic speech naming.
+     Approval does not imply that this Emacs version supplies a name.
+
+     Default Value:
+
+     ("🔮" "✨" "✅" "⚠️" "🚀" "💡")
+
+
+ -- Variable: User Option emacsvox-emoji-custom-names
+     Spoken names overriding Emacs data for approved complete sequences.
+     Names must contain 1 to 80 characters with no control characters.  Empty
+     names are invalid; use an explicit pronunciation to omit a symbol.
+
+     Default Value:
+
+     nil
+
+
+ -- Variable: User Option emacsvox-emoji-maximum-count
+     Maximum approved occurrences per speech object or preview sample.
+     Above this limit, the entire item retains its emoji.
+
+     Default Value:
+
+     2
+
+
+ -- Variable: User Option emacsvox-emoji-naming-enabled
+     Whether speech names approved occasional emoji, regardless of engine.
+     This option and the other emoji options can be set buffer-locally or in a
+     mode hook.  Source buffers keep their original text.
+
+     Default Value:
+
+     nil
+
 
 
 File: emacsvox-reference.info,  Node: emacsvox-empv,  Next: emacsvox-enriched,  Prev: emacsvox-emoji,  Up: Emacsvox Commands And Options
