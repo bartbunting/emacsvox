@@ -2749,6 +2749,10 @@ Play the original field or span at point@comma{} including its recorded actions.
 Play the complete recorded presentation.
 @item C
 Open or resume a change to the selected field or distinguishable span.
+@item r
+Choose another named voice for matching items in the compact editor.
+@item R
+Replace@comma{} suppress@comma{} or restore an exact sound in the selected field or span.
 @item V
 Preview the complete presentation with all linked draft changes.
 @item S
@@ -2764,6 +2768,18 @@ The subject and count editors retain their drafts separately. Their matching
 criteria identify the field@comma{} integration@comma{} mode@comma{} and occasion; inspect those
 criteria before choosing a buffer@comma{} session@comma{} or saved personal lifetime.
 Changing a field's voice mapping does not retune the shared named voice.
+
+@emph{Choose another voice for matching items} opens the compact voice editor for
+that field. Its @emph{Applies to} row identifies the matching items; choose @emph{How
+long} before saving. @emph{Change field} opens the full component editor and resumes
+the same draft. If the draft already changes a sound or another component@comma{} the
+full editor stays visible so that change is not hidden.
+
+@emph{Sound overrides: replace@comma{} suppress@comma{} or restore} uses the existing exact-sound
+workflow@comma{} limited to the selected field. It opens a separate rule draft for
+review and saving; that draft is not included in the report's linked-field
+preview. @emph{Restore inherited behavior} removes an override made by this sound
+workflow in the selected scope. Press @kbd{q} to return to the report.
 
 Original playback uses retained output; a simulated report labels its baseline
 playback as simulated throughout the report and linked change editor.

@@ -382,8 +382,10 @@
                            (or emacsvox-aural-change-feedback-description
                                (format "Currently %s; RET chooses another voice"
                                        (or (cadr identity) "default or custom voice")))))
-     (list 'original (vector "Preview original" "Hear the captured item"))
-     (list 'proposed (vector "Preview change" "Hear this item with the chosen voice"))
+     (unless emacsvox-aural-change-feedback--review-buffer
+       (list 'original (vector "Preview original" "Hear the captured item")))
+     (unless emacsvox-aural-change-feedback--review-buffer
+       (list 'proposed (vector "Preview change" "Hear this item with the chosen voice")))
      (list 'lifetime (vector "How long" (emacsvox-aural-change-feedback--lifetime-description)))
      (list 'apply (vector "Save"
                           (cond (emacsvox-aural-change-feedback-applied "Saved or applied")
@@ -655,7 +657,8 @@
                       (emacsvox-aural-change-feedback--suggested-selector))))
     (list :id (emacsvox-aural-tools--remap-rule-id
                (or emacsvox-aural-change-feedback-scope 'preview) selector
-               (if emacsvox-aural-change-feedback--voice-remap '(voice)
+               (if (and emacsvox-aural-change-feedback--voice-remap
+                        (not emacsvox-aural-change-feedback--review-buffer)) '(voice)
                  (cons 'guided emacsvox-aural-change-feedback-component)))
           :match selector :render (copy-tree emacsvox-aural-change-feedback-render))))
 
@@ -811,7 +814,7 @@
    (lambda ()
      (setq tabulated-list-entries
            (if emacsvox-aural-change-feedback--voice-remap
-               (emacsvox-aural-change-feedback--remap-rows)
+               (delq nil (emacsvox-aural-change-feedback--remap-rows))
              (list
             (list 'target (vector "Target" (if emacsvox-aural-change-feedback-record
                                                (concat (if emacsvox-aural-change-feedback--simulation "Simulated feedback" "Recent Feedback")

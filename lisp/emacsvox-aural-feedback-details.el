@@ -51,6 +51,8 @@
 (defvar emacsvox-aural-change-feedback--review-buffer)
 (defvar emacsvox-aural-change-feedback--review-indices)
 (defvar emacsvox-aural-change-feedback--simulation)
+(defvar emacsvox-aural-change-feedback--voice-remap)
+(defvar emacsvox-aural-change-feedback-component)
 
 (defvar-local emacsvox-aural-feedback-details--record nil
   "Frozen presentation retained by this report.")
@@ -195,6 +197,16 @@ Return lists of zero-based run indices in playback order."
 (defun emacsvox-aural-feedback-details-change ()
   "Open or resume a guided change to the field or span at point."
   (interactive)
+  (emacsvox-aural-feedback-details--change))
+
+(defun emacsvox-aural-feedback-details--choose-voice ()
+  "Choose another named voice for items matching the selected field or span."
+  (interactive)
+  (emacsvox-aural-feedback-details--change t))
+
+(defun emacsvox-aural-feedback-details--change (&optional voice-only)
+  "Resume the selected field's draft, using the compact view when VOICE-ONLY.
+A pending sound or other component change keeps the full editor visible."
   (emacsvox-aural-feedback-details--complete)
   (require 'emacsvox-aural-change-feedback)
   (let* ((indices (emacsvox-aural-feedback-details--target))
@@ -270,6 +282,11 @@ Return lists of zero-based run indices in playback order."
       (with-current-buffer origin
         (push (cons indices editor) emacsvox-aural-feedback-details--drafts)))
     (with-current-buffer editor
+      (setq emacsvox-aural-change-feedback--voice-remap
+            (and voice-only
+                 (or (null emacsvox-aural-change-feedback-render)
+                     (equal emacsvox-aural-change-feedback-component '(content)))))
+      (emacsvox-aural-change-feedback-refresh 'change)
       (when (markerp emacsvox-aural-ui-help-origin-position)
         (set-marker emacsvox-aural-ui-help-origin-position nil))
       (setq emacsvox-aural-ui-help-origin-buffer origin
@@ -278,6 +295,24 @@ Return lists of zero-based run indices in playback order."
     (emacsvox-aural-ui--pop-to-buffer
      editor (lambda () (emacsvox-aural-ui-speak
                         (concat "Change " label ". P previews this field; V previews the whole presentation."))))))
+
+(defun emacsvox-aural-feedback-details--change-sound ()
+  "Replace, suppress, or restore an exact sound in the selected field or span.
+The existing sound override editor owns its separate unsaved rule draft."
+  (interactive)
+  (emacsvox-aural-feedback-details--complete)
+  (let* ((indices (emacsvox-aural-feedback-details--target))
+         (record (copy-emacsvox-aural-presentation-record
+                  emacsvox-aural-feedback-details--record))
+         (plans (mapcar #'emacsvox-aural-feedback-details--plan indices)))
+    ;; Limit the existing sound chooser to this field without mutating history.
+    (setf (emacsvox-aural-presentation-record-plan record) (car plans)
+          (emacsvox-aural-presentation-record-plans record) plans
+          (emacsvox-aural-presentation-record-pauses record)
+          (mapcar (lambda (i)
+                    (nth i (emacsvox-aural-presentation-record-pauses
+                            emacsvox-aural-feedback-details--record))) indices))
+    (emacsvox-aural-remap-earcon-at-point record)))
 
 (defun emacsvox-aural-feedback-details--button (label command)
   "Insert a LABEL button invoking COMMAND without a mouse dependency."
@@ -517,8 +552,17 @@ Return lists of zero-based run indices in playback order."
           (emacsvox-aural-feedback-details--button "Play field" #'emacsvox-aural-feedback-details-play-field)
           (insert "  ")
           (emacsvox-aural-feedback-details--button "Change field" #'emacsvox-aural-feedback-details-change)
+          (insert "  ")
+          (emacsvox-aural-feedback-details--button "Choose another voice for matching items" #'emacsvox-aural-feedback-details--choose-voice)
           (insert "\n")
           (emacsvox-aural-feedback-details--insert-explanation indices)
+          (when (cl-some (lambda (i)
+                           (emacsvox-aural-tools--earcon-remap-choices
+                            (emacsvox-aural-feedback-details--plan i))) indices)
+            (emacsvox-aural-feedback-details--button
+             "Sound overrides: replace, suppress, or restore"
+             #'emacsvox-aural-feedback-details--change-sound)
+            (insert "\nOpens a separate sound rule draft; review and save it there.\n"))
           (put-text-property start (point) 'emacsvox-aural-feedback-target indices)
           (when (cdr indices)
             (cl-loop for index in indices for number from 1 do
@@ -636,6 +680,8 @@ Return lists of zero-based run indices in playback order."
                    ("O" . emacsvox-aural-feedback-details-play-field)
                    ("P" . emacsvox-aural-feedback-details-play)
                    ("C" . emacsvox-aural-feedback-details-change)
+                   ("r" . emacsvox-aural-feedback-details--choose-voice)
+                   ("R" . emacsvox-aural-feedback-details--change-sound)
                    ("V" . emacsvox-aural-feedback-details-preview)
                    ("h" . emacsvox-aural)
                    ("q" . emacsvox-aural-ui-help-quit)))

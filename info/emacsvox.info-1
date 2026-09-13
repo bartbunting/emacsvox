@@ -2738,6 +2738,12 @@ controls once.  Press ‘RET’ on the field heading again to collapse it.
 ‘C’
      Open or resume a change to the selected field or distinguishable
      span.
+‘r’
+     Choose another named voice for matching items in the compact
+     editor.
+‘R’
+     Replace, suppress, or restore an exact sound in the selected field
+     or span.
 ‘V’
      Preview the complete presentation with all linked draft changes.
 ‘S’
@@ -2753,6 +2759,20 @@ matching criteria identify the field, integration, mode, and occasion;
 inspect those criteria before choosing a buffer, session, or saved
 personal lifetime.  Changing a field's voice mapping does not retune the
 shared named voice.
+
+   _Choose another voice for matching items_ opens the compact voice
+editor for that field.  Its _Applies to_ row identifies the matching
+items; choose _How long_ before saving.  _Change field_ opens the full
+component editor and resumes the same draft.  If the draft already
+changes a sound or another component, the full editor stays visible so
+that change is not hidden.
+
+   _Sound overrides: replace, suppress, or restore_ uses the existing
+exact-sound workflow, limited to the selected field.  It opens a
+separate rule draft for review and saving; that draft is not included in
+the report's linked-field preview.  _Restore inherited behavior_ removes
+an override made by this sound workflow in the selected scope.  Press
+‘q’ to return to the report.
 
    Original playback uses retained output; a simulated report labels its
 baseline playback as simulated throughout the report and linked change

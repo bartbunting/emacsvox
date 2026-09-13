@@ -2897,11 +2897,13 @@ planner with private rule layers and captured source context.
      C		emacsvox-aural-feedback-details-change
      O		emacsvox-aural-feedback-details-play-field
      P		emacsvox-aural-feedback-details-play
+     R		emacsvox-aural-feedback-details-change-sound
      V		emacsvox-aural-feedback-details-preview
      h		emacsvox-aural
      n		emacsvox-aural-feedback-details-next-heading
      p		emacsvox-aural-feedback-details-previous-heading
      q		emacsvox-aural-ui-help-quit
+     r		emacsvox-aural-feedback-details-choose-voice
      <backtab>	emacsvox-aural-feedback-details-previous-button
      <down>		emacsvox-aural-feedback-details-next-line
      <up>		emacsvox-aural-feedback-details-previous-line
