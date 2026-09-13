@@ -8074,15 +8074,17 @@ a sequence.
 
  -- Variable: User Option emacsvox-emoji-approved-sequences
      Complete sequences eligible for automatic speech naming.
-     Approval does not imply that this Emacs version supplies a name.
+     The default t uses every exact name in Emacs’s emoji table, plus custom
+     names.  A list of strings restricts naming to those complete sequences;
+     inclusion does not imply that this Emacs version supplies a name.
 
      Default Value:
 
-     ("🔮" "✨" "✅" "⚠️" "🚀" "💡")
+     t
 
 
  -- Variable: User Option emacsvox-emoji-custom-names
-     Spoken names overriding Emacs data for approved complete sequences.
+     Spoken names overriding Emacs data for eligible complete sequences.
      Names must contain 1 to 80 characters with no control characters.  Empty
      names are invalid; use an explicit pronunciation to omit a symbol.
 
@@ -8092,7 +8094,7 @@ a sequence.
 
 
  -- Variable: User Option emacsvox-emoji-maximum-count
-     Maximum approved occurrences per speech object or preview sample.
+     Maximum eligible occurrences per speech object or preview sample.
      Above this limit, the entire item retains its emoji.
 
      Default Value:
@@ -8101,7 +8103,7 @@ a sequence.
 
 
  -- Variable: User Option emacsvox-emoji-naming-enabled
-     Whether speech names approved occasional emoji, regardless of engine.
+     Whether speech names occasional emoji, regardless of engine.
      This option and the other emoji options can be set buffer-locally or in a
      mode hook.  Source buffers keep their original text.
 

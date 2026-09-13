@@ -59,23 +59,27 @@ Failures are data, never speech errors.  No network or display is involved."
   :group 'emacsvox)
 
 (defcustom emacsvox-emoji-naming-enabled nil
-  "Whether speech names approved occasional emoji, regardless of engine.
+  "Whether speech names occasional emoji, regardless of engine.
 This option and the other emoji options can be set buffer-locally or in a
 mode hook.  Source buffers keep their original text."
   :type 'boolean :group 'emacsvox-emoji)
 
-(defcustom emacsvox-emoji-approved-sequences '("🔮" "✨" "✅" "⚠️" "🚀" "💡")
+(defcustom emacsvox-emoji-approved-sequences t
   "Complete sequences eligible for automatic speech naming.
-Approval does not imply that this Emacs version supplies a name."
-  :type '(repeat string) :group 'emacsvox-emoji)
+The default t uses every exact name in Emacs's emoji table, plus custom
+names.  A list of strings restricts naming to those complete sequences;
+inclusion does not imply that this Emacs version supplies a name."
+  :type '(choice (const :tag "All named emoji" t)
+                 (repeat :tag "Only these sequences" string))
+  :group 'emacsvox-emoji)
 
 (defcustom emacsvox-emoji-maximum-count 2
-  "Maximum approved occurrences per speech object or preview sample.
+  "Maximum eligible occurrences per speech object or preview sample.
 Above this limit, the entire item retains its emoji."
   :type 'natnum :group 'emacsvox-emoji)
 
 (defcustom emacsvox-emoji-custom-names nil
-  "Spoken names overriding Emacs data for approved complete sequences.
+  "Spoken names overriding Emacs data for eligible complete sequences.
 Names must contain 1 to 80 characters with no control characters.  Empty
 names are invalid; use an explicit pronunciation to omit a symbol."
   :type '(alist :key-type string :value-type string) :group 'emacsvox-emoji)
@@ -105,8 +109,9 @@ names are invalid; use an explicit pronunciation to omit a symbol."
   (let ((approved (plist-get policy :approved)) (names (plist-get policy :names))
         (maximum (plist-get policy :maximum)))
     (and (integerp maximum) (<= 0 maximum 64)
-         (proper-list-p approved) (<= (length approved) 64)
-         (cl-every (lambda (s) (and (stringp s) (<= 1 (length s) 32))) approved)
+         (or (eq approved t)
+             (and (proper-list-p approved) (<= (length approved) 64)
+                  (cl-every (lambda (s) (and (stringp s) (<= 1 (length s) 32))) approved)))
          (proper-list-p names) (<= (length names) 64)
          (cl-every (lambda (entry)
                      (and (consp entry) (stringp (car entry))
@@ -160,13 +165,22 @@ Keep unknown joined sequences intact without depending on font composition."
            (cl-incf position))
          valid)))
 
+(defun emacsvox-emoji--eligible-p (sequence policy)
+  "Whether complete SEQUENCE is eligible for naming under POLICY.
+The full-table policy requires an exact emoji or custom name, never a
+general Unicode character name or a name for part of a sequence."
+  (if (eq (plist-get policy :approved) t)
+      (or (assoc sequence (plist-get policy :names))
+          (plist-get (emacsvox-emoji--lookup sequence) :name))
+    (member sequence (plist-get policy :approved))))
+
 (defun emacsvox-emoji--item-policy (text policy)
-  "Freeze the original approved occurrence limit for TEXT under POLICY."
+  "Freeze the original eligible occurrence limit for TEXT under POLICY."
   (let ((policy (copy-tree policy)) (position 0) (count 0))
     (when (and (plist-get policy :enabled) (emacsvox-emoji--valid-policy-p policy))
       (while (and (< position (length text)) (<= count (plist-get policy :maximum)))
         (let ((end (emacsvox-emoji--sequence-end text position)))
-          (when (member (substring-no-properties text position end) (plist-get policy :approved))
+          (when (emacsvox-emoji--eligible-p (substring-no-properties text position end) policy)
             (cl-incf count))
           (setq position end)))
       (setq policy (plist-put policy :count-exceeded (> count (plist-get policy :maximum)))))
@@ -184,10 +198,15 @@ Unknown sequences and mixed-property candidates remain intact."
    ((plist-get policy :count-exceeded) (list :text text :diagnostics '(count-exceeded)))
    (t
     (let ((position 0) (count 0) candidates diagnostics)
+      ;; Missing individual names are ordinary text in full-table mode.
+      ;; Still report a broken table once, even with no eligible candidates.
+      (when (and (eq (plist-get policy :approved) t)
+                 (eq (plist-get (emacsvox-emoji--lookup "") :diagnostic) 'unavailable-data))
+        (push 'unavailable-data diagnostics))
       (while (< position (length text))
         (let* ((end (emacsvox-emoji--sequence-end text position))
                (sequence (substring-no-properties text position end)))
-          (when (and (member sequence (plist-get policy :approved))
+          (when (and (emacsvox-emoji--eligible-p sequence policy)
                      (not (get-text-property position 'emacsvox-emoji-pronounced text))
                      (not (get-text-property position 'emacsvox-emoji-prepared text)))
             (cl-incf count)
