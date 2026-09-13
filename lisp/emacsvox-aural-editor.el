@@ -153,7 +153,7 @@
          (format "  %s %s" (pcase key (:states "state") (:events "event")
                                   (_ (emacsvox-aural-humanize (substring (symbol-name key) 1))))
                  (emacsvox-aural-humanize (if (memq key '(:states :events :requires)) (car value) value)))
-         (if (member criterion selected) "Included; RET excludes" "Excluded; RET includes"))))
+         (if (member criterion selected) "Included" "Excluded"))))
     (emacsvox-aural-editor--panel-row '(add-criterion) "  Add or edit criterion" "RET chooses one fact or context field")))
 
 (defun emacsvox-aural-editor--panel-choices (rule path)
@@ -1495,6 +1495,7 @@ LABEL identifies the speech or cue being edited."
       "n/p or up/down move between rules and expanded settings. Space reads the row.\n"
       "RET or e opens a rule panel, expands a section, or edits only the selected field.\n"
       "What should match expands individual included/excluded criteria.\n"
+      "RET includes or excludes a criterion. All included criteria must match; excluded criteria are ignored.\n"
       "Content expands voice, speech, volume, and space; voice and speech choices expand inline.\n"
       "Before and After expand existing actions; Change operation replaces only that phase.\n"
       "D removes the selected setting; Inherit removes a voice or speech override.\n"

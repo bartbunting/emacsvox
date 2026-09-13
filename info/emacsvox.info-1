@@ -2948,14 +2948,22 @@ File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For
      live feedback.
 
   4. Press ‘m’ or ‘RET’ on _What should match_ to expand the matching
-     criteria.  Each fact, state, event, and occasion shows whether it
-     is included.  Press ‘RET’ on a criterion to exclude or include it;
-     excluded criteria stay available to restore.  For example, exclude
-     _state unread_ while keeping _role field_, _field kind authors_,
-     and _module notmuch_ to match authors in both read and unread
-     messages.  Keep at least one criterion.  The parent row shows the
-     resulting match; ‘m’ collapses the criteria again.  These are rules
-     for every matching item, not an edit to one object.
+     criteria.  Each fact, state, event, and occasion shows _Included_
+     or _Excluded_.  All included conditions must match; excluded
+     conditions are ignored, not forbidden.  Press ‘RET’ on a criterion
+     to exclude or include it; excluded criteria stay available to
+     restore.  For example, exclude _with state unread_ while keeping
+     _with role field_, _with field kind authors_, and _from the notmuch
+     integration_ to match authors in both read and unread messages.
+     Keep at least one criterion.  The parent row shows the resulting
+     match; ‘m’ collapses the criteria again.  These are rules for every
+     matching item, not an edit to one object.
+
+     The summary describes those conditions together.  For example,
+     shell prompt feedback may match "Items from the shell integration,
+     in shell mode, during navigation, and with text style comint
+     highlight prompt."  The text style names the Emacs face used to
+     display that text.
 
   5. Press ‘l’ for _How long_: the source buffer's lifetime, this Emacs
      session, or a saved personal rule.  A buffer rule affects every

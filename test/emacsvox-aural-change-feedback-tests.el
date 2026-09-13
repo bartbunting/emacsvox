@@ -367,12 +367,13 @@
                (lambda (&rest _) (ert-fail "Matching must expand in the panel"))))
       (emacsvox-aural-change-feedback-match))
     (should (emacsvox-aural-ui-goto-row '(criterion (:states (unread)))))
+    (should (equal (aref (tabulated-list-get-entry) 1) "Included"))
     (emacsvox-aural-change-feedback-open-row)
     (should (equal (tabulated-list-get-id) '(criterion (:states (unread)))))
-    (should (string-prefix-p "Excluded" (aref (tabulated-list-get-entry) 1)))
+    (should (equal (aref (tabulated-list-get-entry) 1) "Excluded"))
     (should (equal (emacsvox-aural-change-feedback--selector-description
                     emacsvox-aural-change-feedback-selector)
-                   "role field, field kind authors, module notmuch"))
+                   "Items with role field, with field kind authors, and from the notmuch integration"))
     (let ((rule (emacsvox-aural-compile-rule (emacsvox-aural-change-feedback--rule) 'user)))
       (dolist (states '(nil (unread)))
         (should (emacsvox-aural-rule-matches-p
@@ -393,6 +394,25 @@
     (should (equal (plist-get emacsvox-aural-change-feedback-selector :states) '(unread)))
     (should-not emacsvox-aural-session-rules)
     (should-not emacsvox-aural-user-rules)))
+
+(ert-deftest emacsvox-aural-guided-shell-match-summary-follows-included-conditions ()
+  "The shell summary explains every limit and drops excluded conditions."
+  (emacsvox-test--with-guided-feedback
+    (setq emacsvox-aural-change-feedback-selector
+          '(:module shell :mode shell-mode :occasion navigation
+            :legacy-face comint-highlight-prompt))
+    (emacsvox-aural-change-feedback-match)
+    (should (equal (aref (cadr (assq 'match tabulated-list-entries)) 1)
+                   (concat "Items from the shell integration, in shell mode, "
+                           "during navigation, and with text style comint highlight prompt")))
+    (should (emacsvox-aural-ui-goto-row '(criterion (:occasion navigation))))
+    (emacsvox-aural-change-feedback-open-row)
+    (should (equal (aref (tabulated-list-get-entry) 1) "Excluded"))
+    (should (equal (aref (cadr (assq 'match tabulated-list-entries)) 1)
+                   (concat "Items from the shell integration, in shell mode, "
+                           "and with text style comint highlight prompt")))
+    (should (equal emacsvox-aural-change-feedback-selector
+                   '(:module shell :mode shell-mode :legacy-face comint-highlight-prompt)))))
 
 (ert-deftest emacsvox-aural-guided-match-toggles-states-individually ()
   "Excluding one state preserves other states, and viewing keeps saved status."

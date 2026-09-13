@@ -407,11 +407,19 @@
            (plist-get emacsvox-aural-change-feedback-input :context)))
 
 (defun emacsvox-aural-change-feedback--selector-description (selector)
-  "Describe the breadth of SELECTOR using the established rule vocabulary."
-  (emacsvox-aural-describe-selector
-   (emacsvox-aural-rule-selector
-    (emacsvox-aural-compile-rule
-     (list :id 'guided-match-description :match selector :render '(:content (:voice default))) 'user))))
+  "Describe SELECTOR as conditions that must all hold for an item."
+  ;; Keep validation here: excluding a required role must not change the draft.
+  (emacsvox-aural-compile-rule
+   (list :id 'guided-match-description :match selector :render '(:content (:voice default))) 'user)
+  (let ((parts (mapcar #'emacsvox-aural-change-feedback--criterion-description
+                       (emacsvox-aural-change-feedback--criteria selector))))
+    (concat "Items "
+            (pcase (length parts)
+              (0 "of any kind")
+              (1 (car parts))
+              (2 (string-join parts " and "))
+              (_ (concat (string-join (butlast parts) ", ")
+                         ", and " (car (last parts))))))))
 
 (defun emacsvox-aural-change-feedback-match ()
   "Choose which facts should match, independently of the change's lifetime."
@@ -439,11 +447,17 @@
   "Describe CRITERION without requiring its accompanying role or other facts."
   (let ((key (car criterion)) (value (cadr criterion)))
     (pcase key
-      (:requires (format "%s present" (emacsvox-aural-humanize (car value))))
+      (:module (format "from the %s integration" (emacsvox-aural-humanize value)))
+      (:mode (format "in %s" (emacsvox-aural-humanize value)))
+      (:occasion (format "during %s" (emacsvox-aural-humanize value)))
+      (:legacy-face (format "with text style %s" (emacsvox-aural-humanize value)))
+      (:legacy-personality (format "with voice property %s" (emacsvox-aural-humanize value)))
+      (:legacy-cue (format "with sound %s" (emacsvox-aural-humanize value)))
+      (:requires (format "with %s present" (emacsvox-aural-humanize (car value))))
       ((or :states :events)
-       (format "%s %s" (if (eq key :states) "state" "event")
+       (format "with %s %s" (if (eq key :states) "state" "event")
                (emacsvox-aural-humanize (car value))))
-      (_ (format "%s %s" (emacsvox-aural-humanize (substring (symbol-name key) 1))
+      (_ (format "with %s %s" (emacsvox-aural-humanize (intern (substring (symbol-name key) 1)))
                  (emacsvox-aural-humanize value))))))
 
 (defun emacsvox-aural-change-feedback--match-rows ()
@@ -455,8 +469,8 @@
        (list (list 'criterion criterion)
              (vector (concat "  " (emacsvox-aural-change-feedback--criterion-description criterion))
                      (if (member criterion selected)
-                         "Included; RET excludes this criterion"
-                       "Excluded; RET includes this criterion"))))
+                         "Included"
+                       "Excluded"))))
      emacsvox-aural-change-feedback--match-options)
      (list (list 'vocabulary (vector "  Semantic vocabulary"
                                     "Look up the roles, states, and attributes used by these criteria"))))))
@@ -483,9 +497,9 @@
             emacsvox-aural-change-feedback-applied nil)
       (emacsvox-aural-change-feedback-refresh (list 'criterion criterion))
       (emacsvox-aural-ui-announce-result
-       "%s %s. Matches %s"
-       (if included "Excluded" "Included")
-       (emacsvox-aural-change-feedback--criterion-description criterion) description))))
+       "%s: %s. Applies to: %s"
+       (emacsvox-aural-change-feedback--criterion-description criterion)
+       (if included "Excluded" "Included") description))))
 
 (defun emacsvox-aural-change-feedback-lifetime ()
   "Choose current buffer, this session, or a saved personal rule."
@@ -788,7 +802,7 @@
 (defun emacsvox-aural-change-feedback--summary ()
   "Describe the target, proposed change, matching breadth, and lifetime."
   (if emacsvox-aural-change-feedback--voice-remap
-      (format "Voice mapping for %s. %s. How long: %s. %s"
+      (format "Voice mapping. Applies to: %s. %s. How long: %s. %s"
               (emacsvox-aural-change-feedback--selector-description emacsvox-aural-change-feedback-selector)
               (or emacsvox-aural-change-feedback-description
                   (aref (cadr (assq 'change (emacsvox-aural-change-feedback--remap-rows))) 1))
@@ -803,7 +817,7 @@
               (concat "Current item: " (emacsvox-aural-inspection-source-description))))
           (or emacsvox-aural-change-feedback-description "not chosen")
           (if emacsvox-aural-change-feedback-selector
-              (concat "all items with " (emacsvox-aural-change-feedback--selector-description emacsvox-aural-change-feedback-selector))
+              (emacsvox-aural-change-feedback--selector-description emacsvox-aural-change-feedback-selector)
             "not yet chosen")
           (emacsvox-aural-change-feedback--lifetime-description)
           (if emacsvox-aural-change-feedback-applied
@@ -894,6 +908,8 @@
                           (if emacsvox-aural-change-feedback--simulation
                               "O plays the simulated baseline; S stops.\n"
                             "O plays the original; S stops.\n")
+                          "Applies to expands the conditions. All included conditions must match. RET includes or excludes a condition.\n"
+                          "Excluded means ignored, not forbidden: excluding unread matches both read and unread items.\n"
                           "Choose How long, then Save or w. q goes back one level; at the top it hides and preserves the draft. e opens Advanced.\n"
                           "To retune a named voice for all uses in its palette, use its Edit named voice link in Feedback Details, or Home's T shortcut.\n")
                 (concat (emacsvox-aural-change-feedback--summary)
@@ -906,6 +922,7 @@
                           "O plays the simulated baseline. S stops.\n"
                         "O plays the original. S stops.\n")
                       "m expands matching facts; RET on a criterion includes or excludes it. l chooses lifetime.\n"
+                      "All included conditions must match. Excluded conditions are ignored, not forbidden.\n"
                       "Exclude a state such as unread to match regardless of that state. A buffer rule affects every matching item in that buffer.\n"
                       "Preview uses the selected example with current rules and its captured buffer context.\n"
                       "a or C-c C-c applies only after all choices are made; e opens the full Advanced rule editor.\n"

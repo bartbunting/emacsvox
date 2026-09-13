@@ -2965,13 +2965,20 @@ your draft to live feedback.
 @item
 Press @kbd{m} or @kbd{RET} on @emph{What should match}
 to expand the matching criteria.  Each fact@comma{} state@comma{} event@comma{} and occasion
-shows whether it is included.  Press @kbd{RET} on a criterion
+shows @emph{Included} or @emph{Excluded}.  All included conditions must match;
+excluded conditions are ignored@comma{} not forbidden.
+Press @kbd{RET} on a criterion
 to exclude or include it; excluded criteria stay available to restore.
-For example@comma{} exclude @emph{state unread} while keeping @emph{role field}@comma{}
-@emph{field kind authors}@comma{} and @emph{module notmuch} to match authors in both read
-and unread messages.  Keep at least one criterion.  The parent row shows
+For example@comma{} exclude @emph{with state unread} while keeping @emph{with role field}@comma{}
+@emph{with field kind authors}@comma{} and @emph{from the notmuch integration} to match
+authors in both read and unread messages.  Keep at least one criterion.  The parent row shows
 the resulting match; @kbd{m} collapses the criteria again.
 These are rules for every matching item@comma{} not an edit to one object.
+
+The summary describes those conditions together.  For example@comma{} shell
+prompt feedback may match "Items from the shell integration@comma{} in shell
+mode@comma{} during navigation@comma{} and with text style comint highlight prompt."
+The text style names the Emacs face used to display that text.
 
 @item
 Press @kbd{l} for @emph{How long}: the source buffer's lifetime@comma{}
