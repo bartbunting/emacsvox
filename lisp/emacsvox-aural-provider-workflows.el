@@ -67,7 +67,7 @@
      :kind role
      :summary "An Emacsvox aural manager, browser, or editor"
      :owner core
-     :occasions (navigation state-change inspection)
+     :occasions (navigation continuous state-change inspection)
      :phases (before content after))
     (aural-interface-opened
      :kind event

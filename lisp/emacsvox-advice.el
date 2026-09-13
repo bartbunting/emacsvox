@@ -305,7 +305,8 @@ beginning or end of a physical line produces an  auditory icon."
         (ems-with-messages-silenced
           (setq result (apply original arguments))
           (condition-case nil
-              (let* ((button (button-at (point)))
+              (let* ((emacsvox-aural-submission-occasion 'navigation)
+                     (button (button-at (point)))
                      (start (button-start button))
                      (end (button-end button)))
                 (tts-speak (buffer-substring start end))
@@ -345,33 +346,37 @@ beginning or end of a physical line produces an  auditory icon."
     (left-char right-char backward-char forward-char)
     "Speak char under point.
 When on a close delimiter, speak matching delimiter after a small delay. "
-  (and tts-stop-immediately (tts-stop))
-  (emacsvox-speak-char t)
-  (when
-      (and
-       (= ?\) (char-syntax (following-char)))
-       (sit-for 0.25))
-    (emacsvox-icon 'tick-tick)
-    (save-excursion
-      (forward-char 1)
-      (emacsvox-speak-matching-paren))))
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (and tts-stop-immediately (tts-stop))
+    (emacsvox-speak-char t)
+    (when
+        (and
+         (= ?\) (char-syntax (following-char)))
+         (sit-for 0.25))
+      (emacsvox-icon 'tick-tick)
+      (save-excursion
+        (forward-char 1)
+        (emacsvox-speak-matching-paren)))))
 
 (emacsvox-advice--define-interactive-after-advice
     (forward-word right-word)
     "Speak the word after moving forward."
   (skip-syntax-forward " ")
-  (emacsvox-speak-word))
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (emacsvox-speak-word)))
 
 (emacsvox-advice--define-interactive-after-advice
     (backward-word left-word)
     "Speak the word after moving backward."
-  (emacsvox-speak-word))
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (emacsvox-speak-word)))
 
 (emacsvox-advice--define-interactive-after-advice
     (beginning-of-buffer end-of-buffer)
     "Speak the line."
-  (emacsvox-icon 'large-movement)
-  (emacsvox-speak-line)
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (emacsvox-icon 'large-movement)
+    (emacsvox-speak-line))
   (tts-notify (emacsvox-get-current-percentage-verbosely)))
 
 (emacsvox-advice--define-interactive-after-advice
@@ -384,7 +389,8 @@ When on a close delimiter, speak matching delimiter after a small delay. "
 (emacsvox-advice--define-interactive-after-advice
     (backward-sentence forward-sentence)
     "Speak the sentence after moving."
-  (emacsvox-speak-sentence))
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (emacsvox-speak-sentence)))
 
 (defun emacsvox--sexp-movement-around (target original arguments)
   "Call ORIGINAL with ARGUMENTS and speak the movement made by TARGET."
@@ -394,11 +400,12 @@ When on a close delimiter, speak matching delimiter after a small delay. "
             (emacsvox-show-point t)
             result)
         (setq result (apply original arguments))
-        (emacsvox-icon 'large-movement)
-        (cond
-         ((>= end (point))
-          (emacsvox-speak-region start (point)))
-         (t (emacsvox-speak-line)))
+        (let ((emacsvox-aural-submission-occasion 'navigation))
+          (emacsvox-icon 'large-movement)
+          (cond
+           ((>= end (point))
+            (emacsvox-speak-region start (point)))
+           (t (emacsvox-speak-line))))
         result)
     (apply original arguments)))
 
@@ -424,36 +431,41 @@ When on a close delimiter, speak matching delimiter after a small delay. "
 (emacsvox-advice--define-interactive-after-advice
     (forward-paragraph backward-paragraph)
     "Speak the paragraph after moving."
-  (emacsvox-icon 'paragraph)
-  (emacsvox-speak-paragraph))
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (emacsvox-icon 'paragraph)
+    (emacsvox-speak-paragraph)))
 
 ;; list navigation:
 
 (emacsvox-advice--define-interactive-after-advice
     (forward-list backward-list up-list backward-up-list down-list)
     "Speak the line after list movement."
-  (let ((emacsvox-show-point t))
+  (let ((emacsvox-show-point t)
+        (emacsvox-aural-submission-occasion 'navigation))
     (emacsvox-icon 'large-movement)
     (emacsvox-speak-line)))
 
 (emacsvox-advice--define-interactive-after-advice
     (forward-page backward-page)
     "Speak the page after moving."
-  (emacsvox-icon 'scroll)
-  (emacsvox-speak-page))
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (emacsvox-icon 'scroll)
+    (emacsvox-speak-page)))
 
 (emacsvox-advice--define-interactive-after-advice
     (scroll-other-window scroll-other-window-up scroll-other-window-down)
     "Speak the window that was scrolled."
-  (save-window-excursion
-    (with-selected-window (other-window-for-scrolling)
-      (emacsvox-speak-windowful))))
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (save-window-excursion
+      (with-selected-window (other-window-for-scrolling)
+        (emacsvox-speak-windowful)))))
 
 (emacsvox-advice--define-interactive-after-advice
     (scroll-up scroll-down scroll-up-command scroll-down-command)
     "Speak the newly displayed screenful."
-  (emacsvox-icon 'scroll)
-  (tts-speak (emacsvox-get-window-contents))
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (emacsvox-icon 'scroll)
+    (tts-speak (emacsvox-get-window-contents)))
   (tts-notify
    (propertize
     (format "%s " (emacsvox-get-current-percentage-into-buffer))

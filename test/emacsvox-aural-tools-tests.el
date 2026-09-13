@@ -703,6 +703,43 @@
         ;; Notifications remain explicitly inspectable in Recent Feedback.
         (should (memq notification emacsvox-aural-presentation-history))))))
 
+(ert-deftest emacsvox-aural-tools-remap-control-supports-ordinary-word-reading ()
+  "Word reading on an actual voice control preserves its interface semantics."
+  (require 'shell)
+  (require 'emacsvox-comint)
+  (emacsvox-test--with-home-context
+    (switch-to-buffer source)
+    (erase-buffer)
+    (shell-mode)
+    (insert (propertize "user$ " 'font-lock-face 'comint-highlight-prompt))
+    (goto-char 1)
+    (emacsvox-aural source)
+    (emacsvox-aural-home-remap-voice)
+    (with-current-buffer (window-buffer (selected-window))
+      (dolist (expanded '(nil voices))
+        (setq emacsvox-aural-change-feedback--expanded expanded)
+        (emacsvox-aural-change-feedback-refresh 'change)
+        (should (emacsvox-aural-ui-goto-row 'change))
+        (search-forward "Voice")
+        (backward-word)
+        (let (spoken plan)
+          (cl-letf (((symbol-function 'tts-speak)
+                     (lambda (text)
+                       (setq spoken text
+                             plan (emacsvox-aural-concrete-plan-at
+                                   0 (emacsvox-aural-prepare-text
+                                      text nil (emacsvox-aural-capture-context))))
+                       (emacsvox-aural-record-presentation plan text))))
+            (emacsvox-speak-word))
+          (should (equal spoken "Voice"))
+          (should (eq 'aural-interface
+                      (plist-get (emacsvox-aural-concrete-plan-facts plan) :role)))
+          (should (eq (if expanded 'expanded 'folded)
+                      (plist-get (emacsvox-aural-concrete-plan-facts plan) :visibility)))
+          (should (eq 'continuous
+                      (plist-get (emacsvox-aural-concrete-plan-context plan) :occasion)))
+          (should-not emacsvox-aural-presentation-history))))))
+
 (ert-deftest emacsvox-aural-tools-home-tunes-the-named-voice-at-source ()
   "Tuning follows the captured face, then its remap, without editing a rule."
   (require 'shell)
