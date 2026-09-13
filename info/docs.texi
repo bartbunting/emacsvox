@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 289 loaded; 0 intentionally omitted.
+@c Modules: 290 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -24,42 +24,42 @@
 @c Loaded: emacsvox-dumb-jump.elc emacsvox-eat-core.elc emacsvox-eat-input.elc emacsvox-eat-review.elc emacsvox-eat.elc
 @c Loaded: emacsvox-ebuku.elc emacsvox-ediff.elc emacsvox-eglot.elc emacsvox-ein.elc emacsvox-elfeed.elc
 @c Loaded: emacsvox-elisp-refs.elc emacsvox-ellama.elc emacsvox-elpher.elc emacsvox-elpy.elc emacsvox-embark.elc
-@c Loaded: emacsvox-emms.elc emacsvox-empv.elc emacsvox-enriched.elc emacsvox-entertain.elc emacsvox-enwc.elc
-@c Loaded: emacsvox-epa.elc emacsvox-epub.elc emacsvox-erc.elc emacsvox-eshell.elc emacsvox-ess.elc
-@c Loaded: emacsvox-etable.elc emacsvox-eterm.elc emacsvox-eudc.elc emacsvox-evil.elc emacsvox-eww.elc
-@c Loaded: emacsvox-extras.elc emacsvox-exwm.elc emacsvox-feeds.elc emacsvox-ffap.elc emacsvox-ffip.elc
-@c Loaded: emacsvox-filtertext.elc emacsvox-flycheck.elc emacsvox-flymake.elc emacsvox-flyspell.elc emacsvox-folding.elc
-@c Loaded: emacsvox-forge.elc emacsvox-forms.elc emacsvox-geiser.elc emacsvox-gnuplot.elc emacsvox-gnus.elc
-@c Loaded: emacsvox-go-mode.elc emacsvox-gomoku.elc emacsvox-google.elc emacsvox-gptel.elc emacsvox-gridtext.elc
-@c Loaded: emacsvox-gud.elc emacsvox-haskell.elc emacsvox-helm.elc emacsvox-helpful.elc emacsvox-hide-lines.elc
-@c Loaded: emacsvox-hide.elc emacsvox-hideshow.elc emacsvox-hydra.elc emacsvox-ibuffer.elc emacsvox-ido.elc
-@c Loaded: emacsvox-iedit.elc emacsvox-info.elc emacsvox-ispell.elc emacsvox-ivy.elc emacsvox-journalctl.elc
-@c Loaded: emacsvox-js2.elc emacsvox-keymap.elc emacsvox-kmacro.elc emacsvox-librivox.elc emacsvox-lispy.elc
-@c Loaded: emacsvox-lua.elc emacsvox-m-player.elc emacsvox-magit.elc emacsvox-make-mode.elc emacsvox-man.elc
-@c Loaded: emacsvox-marginalia.elc emacsvox-markdown.elc emacsvox-maths.elc emacsvox-message.elc emacsvox-mines.elc
-@c Loaded: emacsvox-mu4e.elc emacsvox-multiple-cursors.elc emacsvox-net-utils.elc emacsvox-newsticker.elc emacsvox-nm.elc
-@c Loaded: emacsvox-notmuch.elc emacsvox-nov.elc emacsvox-nxml.elc emacsvox-ocr.elc emacsvox-omnivox-components.elc
-@c Loaded: emacsvox-org-srs.elc emacsvox-org.elc emacsvox-orgalist.elc emacsvox-outline.elc emacsvox-package.elc
-@c Loaded: emacsvox-perl.elc emacsvox-pipewire.elc emacsvox-popup.elc emacsvox-preamble.elc emacsvox-proced.elc
-@c Loaded: emacsvox-project.elc emacsvox-projectile.elc emacsvox-pronounce.elc emacsvox-py.elc emacsvox-pydoc.elc
-@c Loaded: emacsvox-python.elc emacsvox-racket.elc emacsvox-re-builder.elc emacsvox-reftex.elc emacsvox-related.elc
-@c Loaded: emacsvox-rg.elc emacsvox-rmail.elc emacsvox-rpm-spec.elc emacsvox-rst.elc emacsvox-ruby.elc
-@c Loaded: emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc emacsvox-setup.elc
-@c Loaded: emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-slime.elc emacsvox-smartparens.elc emacsvox-solitaire.elc
-@c Loaded: emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-sql.elc emacsvox-sudoku.elc
-@c Loaded: emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-ui.elc emacsvox-table.elc
-@c Loaded: emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc emacsvox-tempo.elc
-@c Loaded: emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-transient.elc emacsvox-treesit.elc
-@c Loaded: emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc
-@c Loaded: emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc
-@c Loaded: emacsvox-webspace.elc emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc
-@c Loaded: emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc
-@c Loaded: emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc
-@c Loaded: gm-nnir.elc gmaps.elc gweb.elc ladspa.elc light.elc
-@c Loaded: mac-voices.elc omaps.elc omnivox-choice-codec.elc omnivox-preview.elc omnivox-remote.elc
-@c Loaded: omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc soundscape.elc
-@c Loaded: sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc
-@c Loaded: tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
+@c Loaded: emacsvox-emms.elc emacsvox-emoji.elc emacsvox-empv.elc emacsvox-enriched.elc emacsvox-entertain.elc
+@c Loaded: emacsvox-enwc.elc emacsvox-epa.elc emacsvox-epub.elc emacsvox-erc.elc emacsvox-eshell.elc
+@c Loaded: emacsvox-ess.elc emacsvox-etable.elc emacsvox-eterm.elc emacsvox-eudc.elc emacsvox-evil.elc
+@c Loaded: emacsvox-eww.elc emacsvox-extras.elc emacsvox-exwm.elc emacsvox-feeds.elc emacsvox-ffap.elc
+@c Loaded: emacsvox-ffip.elc emacsvox-filtertext.elc emacsvox-flycheck.elc emacsvox-flymake.elc emacsvox-flyspell.elc
+@c Loaded: emacsvox-folding.elc emacsvox-forge.elc emacsvox-forms.elc emacsvox-geiser.elc emacsvox-gnuplot.elc
+@c Loaded: emacsvox-gnus.elc emacsvox-go-mode.elc emacsvox-gomoku.elc emacsvox-google.elc emacsvox-gptel.elc
+@c Loaded: emacsvox-gridtext.elc emacsvox-gud.elc emacsvox-haskell.elc emacsvox-helm.elc emacsvox-helpful.elc
+@c Loaded: emacsvox-hide-lines.elc emacsvox-hide.elc emacsvox-hideshow.elc emacsvox-hydra.elc emacsvox-ibuffer.elc
+@c Loaded: emacsvox-ido.elc emacsvox-iedit.elc emacsvox-info.elc emacsvox-ispell.elc emacsvox-ivy.elc
+@c Loaded: emacsvox-journalctl.elc emacsvox-js2.elc emacsvox-keymap.elc emacsvox-kmacro.elc emacsvox-librivox.elc
+@c Loaded: emacsvox-lispy.elc emacsvox-lua.elc emacsvox-m-player.elc emacsvox-magit.elc emacsvox-make-mode.elc
+@c Loaded: emacsvox-man.elc emacsvox-marginalia.elc emacsvox-markdown.elc emacsvox-maths.elc emacsvox-message.elc
+@c Loaded: emacsvox-mines.elc emacsvox-mu4e.elc emacsvox-multiple-cursors.elc emacsvox-net-utils.elc emacsvox-newsticker.elc
+@c Loaded: emacsvox-nm.elc emacsvox-notmuch.elc emacsvox-nov.elc emacsvox-nxml.elc emacsvox-ocr.elc
+@c Loaded: emacsvox-omnivox-components.elc emacsvox-org-srs.elc emacsvox-org.elc emacsvox-orgalist.elc emacsvox-outline.elc
+@c Loaded: emacsvox-package.elc emacsvox-perl.elc emacsvox-pipewire.elc emacsvox-popup.elc emacsvox-preamble.elc
+@c Loaded: emacsvox-proced.elc emacsvox-project.elc emacsvox-projectile.elc emacsvox-pronounce.elc emacsvox-py.elc
+@c Loaded: emacsvox-pydoc.elc emacsvox-python.elc emacsvox-racket.elc emacsvox-re-builder.elc emacsvox-reftex.elc
+@c Loaded: emacsvox-related.elc emacsvox-rg.elc emacsvox-rmail.elc emacsvox-rpm-spec.elc emacsvox-rst.elc
+@c Loaded: emacsvox-ruby.elc emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc
+@c Loaded: emacsvox-setup.elc emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-slime.elc emacsvox-smartparens.elc
+@c Loaded: emacsvox-solitaire.elc emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-sql.elc
+@c Loaded: emacsvox-sudoku.elc emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-ui.elc
+@c Loaded: emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc
+@c Loaded: emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-transient.elc
+@c Loaded: emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc
+@c Loaded: emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc
+@c Loaded: emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc
+@c Loaded: emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc
+@c Loaded: emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc
+@c Loaded: g-utils.elc gm-nnir.elc gmaps.elc gweb.elc ladspa.elc
+@c Loaded: light.elc mac-voices.elc omaps.elc omnivox-choice-codec.elc omnivox-preview.elc
+@c Loaded: omnivox-remote.elc omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc
+@c Loaded: soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc
+@c Loaded: tts-queue-state.elc tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -182,6 +182,7 @@ This chapter documents a total of 1547 commands and 207 options.
 * emacsvox-elpy:: Speech-enable ELPY.
 * emacsvox-embark:: Speech-enable EMBARK.
 * emacsvox-emms:: Speech-enable EMMS.
+* emacsvox-emoji:: Conservative emoji speech names.
 * emacsvox-empv:: Speech-enable EMPV.
 * emacsvox-enriched:: Audio FormatRichtext.
 * emacsvox-entertain:: Speech enable games.
@@ -3106,6 +3107,7 @@ Move to and read the previous report line.
 @subsubsection emacsvox-aural-feedback-details-speak-line
 @deffn {Command} emacsvox-aural-feedback-details-speak-line
 @findex emacsvox-aural-feedback-details-speak-line
+
 @format
 Read the current report line, retaining recorded content voices.
 @end format
@@ -8929,6 +8931,13 @@ M-x emacsvox-cvs-gnu-get-project-snapshot RET emms RET
 Speak current track.
 @end format
 @end deffn
+
+@node emacsvox-emoji
+@section emacsvox-emoji
+
+Optional speech naming uses exact entries from Emacs's bundled emoji data.
+Keep the private upstream table behind this adapter; never use the picker
+helper, which can fall back to naming the first character of a sequence.
 
 @node emacsvox-empv
 @section emacsvox-empv

@@ -18,7 +18,7 @@
   (add-to-list 'load-path (expand-file-name "test/" root))
   (add-to-list 'load-path (expand-file-name "utils/" root))
   (load (expand-file-name "emacsvox-preamble.el" lisp) nil nil)
-  (dolist (module '(emacsvox-startup-tests
+  (dolist (module '(emacsvox-emoji-tests emacsvox-startup-tests
                     emacsvox-input-tests emacsvox-voice-tests
                     emacsvox-widget-tests emacsvox-org-tests
                     emacsvox-eww-tests emacsvox-reading-dom-tests emacsvox-epub-tests

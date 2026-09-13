@@ -4,11 +4,10 @@
 
 * Status and intended outcome
 
-Planning only. The maintainer selected Emacs's existing emoji-name table as
-the initial data source. This document records the proposed implementation;
-it does not enable the feature, change personal settings, or authorize commits
-or release publication. Preserve the existing voice-editor and graphical-test
-work while implementing this separate feature.
+Implementation authorized on 2026-09-13, in tested, committed slices. The
+maintainer selected Emacs's existing emoji-name table as the initial data
+source. Personal settings and release publication remain outside this work.
+The preceding voice-editor and graphical-test changes are already committed.
 
 The first acceptance example is =Forecast 🔮=: with the feature enabled,
 speech preparation supplies =Forecast crystal ball=, allowing Eloquence to
@@ -94,7 +93,7 @@ routing remains the final check.
 
 * Implementation slices
 
-** TODO 1. Verify the data adapter and preparation boundaries
+** DONE 1. Verify the data adapter and preparation boundaries
 
 Load =emoji-labels= lazily behind one private Emacsvox lookup function. Validate
 the table's type and require exact string keys. Do not modify Emacs's table or
@@ -216,3 +215,23 @@ this plan imposes no automatic model switch or handoff stop.
 Check local links and whitespace, and run the non-mutating documentation gate.
 This internal plan alone requires no Lisp compilation, generated-manual update,
 new application tests or live speech changes.
+
+* Implementation evidence
+
+** Slice 1: adapter and boundary audit
+
+Both Emacs 30.2 and 31.0.90 provide all six trial names, as well as complete
+joined and skin-tone examples. The adapter records the loaded data file and
+version, validates the equal hash table, and reports missing data as a bounded
+symbol. It never falls back to a component name.
+
+The item boundary is the planner's presentation object, before transport
+chunking. A standalone preview sample is one item; comparison labels are
+separate items. Source context captures the effective naming policy. Exact
+retained replay bypasses fresh preparation.
+
+Emacs's display-oriented =string-glyph-split= splits the unknown =🔮‍🚀= into
+components on both versions. Matching will use conservative sequence scanning:
+combining characters, selectors, modifiers, tags and joined bases remain
+attached. A property change inside a candidate prevents replacement. Positioned
+properties at its start belong only to the first output character.

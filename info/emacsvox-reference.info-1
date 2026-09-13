@@ -534,6 +534,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-elpy:: Speech-enable ELPY.
 * emacsvox-embark:: Speech-enable EMBARK.
 * emacsvox-emms:: Speech-enable EMMS.
+* emacsvox-emoji:: Conservative emoji speech names.
 * emacsvox-empv:: Speech-enable EMPV.
 * emacsvox-enriched:: Audio FormatRichtext.
 * emacsvox-entertain:: Speech enable games.
@@ -2994,6 +2995,7 @@ planner with private rule layers and captured source context.
 ....................................................
 
  -- Command: emacsvox-aural-feedback-details-speak-line
+
      Read the current report line, retaining recorded content voices.
 
 2.26.1.15 emacsvox-aural-feedback-details-toggle
@@ -8036,7 +8038,7 @@ Embark provides a context-action framework for Emacs, similar to a
 right-click menu.  It works with vertico/consult for completion actions.
 
 
-File: emacsvox-reference.info,  Node: emacsvox-emms,  Next: emacsvox-empv,  Prev: emacsvox-embark,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-emms,  Next: emacsvox-emoji,  Prev: emacsvox-embark,  Up: Emacsvox Commands And Options
 
 2.112 emacsvox-emms
 ===================
@@ -8057,9 +8059,20 @@ command M-x emacsvox-cvs-gnu-get-project-snapshot RET emms RET
      Speak current track.
 
 
-File: emacsvox-reference.info,  Node: emacsvox-empv,  Next: emacsvox-enriched,  Prev: emacsvox-emms,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-emoji,  Next: emacsvox-empv,  Prev: emacsvox-emms,  Up: Emacsvox Commands And Options
 
-2.113 emacsvox-empv
+2.113 emacsvox-emoji
+====================
+
+Optional speech naming uses exact entries from Emacs's bundled emoji
+data.  Keep the private upstream table behind this adapter; never use
+the picker helper, which can fall back to naming the first character of
+a sequence.
+
+
+File: emacsvox-reference.info,  Node: emacsvox-empv,  Next: emacsvox-enriched,  Prev: emacsvox-emoji,  Up: Emacsvox Commands And Options
+
+2.114 emacsvox-empv
 ===================
 
 ‘EMPV’ == Emacs Front-End To ‘mpv’ -- the GNU media player -- Provides
@@ -8069,7 +8082,7 @@ better Youtube integration.
 interface of choice to the GNU ‘MPV’ media player.  This section should
 be read alongside the ‘EMPV’ documentation; Install ‘EMPV’ from ELPA.
 
-2.113.1 Interactive Commands
+2.114.1 Interactive Commands
 ----------------------------
 
 Emacsvox adds a few convenience commands to the those provided by
@@ -8081,7 +8094,7 @@ package ‘empv’:
   4. Command ‘emacsvox-empv-play-file to play local media and’ Internet
      streams.
 
-2.113.2 Navigating In Time
+2.114.2 Navigating In Time
 --------------------------
 
 Emacsvox defines additional convenience commands to seek in streams at
@@ -8102,7 +8115,7 @@ in the empv-map.
    • ‘emacsvox-empv-percentage-seek’
    • ‘emacsvox-empv-relative-seek’
 
-2.113.3 Toggling Filters
+2.114.3 Toggling Filters
 ------------------------
 
 Command ‘mpv’ provides a number of audio filters.  Emacsvox exposes a
@@ -8115,10 +8128,10 @@ select few for interactive use.
   5. Toggle left output: ‘emacsvox-empv-toggle-left’
   6. Toggle right output: ‘emacsvox-empv-toggle-right’
 
-2.113.4 Emacsvox-Empv Commands
+2.114.4 Emacsvox-Empv Commands
 ------------------------------
 
-2.113.4.1 emacsvox-empv-absolute-seek
+2.114.4.1 emacsvox-empv-absolute-seek
 .....................................
 
  -- Command: emacsvox-empv-absolute-seek (target)
@@ -8127,42 +8140,42 @@ select few for interactive use.
 
      (fn TARGET)
 
-2.113.4.2 emacsvox-empv-accumulate-to-register
+2.114.4.2 emacsvox-empv-accumulate-to-register
 ..............................................
 
  -- Command: emacsvox-empv-accumulate-to-register
 
      Accumulate media links to register u
 
-2.113.4.3 emacsvox-empv-backward-10-minutes
+2.114.4.3 emacsvox-empv-backward-10-minutes
 ...........................................
 
  -- Command: emacsvox-empv-backward-10-minutes
 
      Move backward by 10 minutes
 
-2.113.4.4 emacsvox-empv-backward-10-seconds
+2.114.4.4 emacsvox-empv-backward-10-seconds
 ...........................................
 
  -- Command: emacsvox-empv-backward-10-seconds
 
      Move back  10 seconds.
 
-2.113.4.5 emacsvox-empv-backward-30-minutes
+2.114.4.5 emacsvox-empv-backward-30-minutes
 ...........................................
 
  -- Command: emacsvox-empv-backward-30-minutes
 
      Move backward by 30 minutes
 
-2.113.4.6 emacsvox-empv-backward-5-minutes
+2.114.4.6 emacsvox-empv-backward-5-minutes
 ..........................................
 
  -- Command: emacsvox-empv-backward-5-minutes
 
      Move backward by 5 minutes
 
-2.113.4.7 emacsvox-empv-backward-minute
+2.114.4.7 emacsvox-empv-backward-minute
 .......................................
 
  -- Command: emacsvox-empv-backward-minute (&optional count)
@@ -8171,49 +8184,49 @@ select few for interactive use.
 
      (fn &optional COUNT)
 
-2.113.4.8 emacsvox-empv-clear-filter
+2.114.4.8 emacsvox-empv-clear-filter
 ....................................
 
  -- Command: emacsvox-empv-clear-filter
 
      Clear all filters.
 
-2.113.4.9 emacsvox-empv-current-title
+2.114.4.9 emacsvox-empv-current-title
 .....................................
 
  -- Command: emacsvox-empv-current-title
 
      Speak title of currently selected item.
 
-2.113.4.10 emacsvox-empv-forward-10-minutes
+2.114.4.10 emacsvox-empv-forward-10-minutes
 ...........................................
 
  -- Command: emacsvox-empv-forward-10-minutes
 
      Move forward by 10 minutes
 
-2.113.4.11 emacsvox-empv-forward-10-seconds
+2.114.4.11 emacsvox-empv-forward-10-seconds
 ...........................................
 
  -- Command: emacsvox-empv-forward-10-seconds
 
      Move forward 10 seconds.
 
-2.113.4.12 emacsvox-empv-forward-30-minutes
+2.114.4.12 emacsvox-empv-forward-30-minutes
 ...........................................
 
  -- Command: emacsvox-empv-forward-30-minutes
 
      Move forward by 30 minutes
 
-2.113.4.13 emacsvox-empv-forward-5-minutes
+2.114.4.13 emacsvox-empv-forward-5-minutes
 ..........................................
 
  -- Command: emacsvox-empv-forward-5-minutes
 
      Move forward by 5 minutes
 
-2.113.4.14 emacsvox-empv-forward-minute
+2.114.4.14 emacsvox-empv-forward-minute
 .......................................
 
  -- Command: emacsvox-empv-forward-minute (&optional count)
@@ -8222,7 +8235,7 @@ select few for interactive use.
 
      (fn &optional COUNT)
 
-2.113.4.15 emacsvox-empv-percentage-seek
+2.114.4.15 emacsvox-empv-percentage-seek
 ........................................
 
  -- Command: emacsvox-empv-percentage-seek (target)
@@ -8231,7 +8244,7 @@ select few for interactive use.
 
      (fn TARGET)
 
-2.113.4.16 emacsvox-empv-play-file
+2.114.4.16 emacsvox-empv-play-file
 ..................................
 
  -- Command: emacsvox-empv-play-file (file &optional prefix)
@@ -8243,7 +8256,7 @@ select few for interactive use.
 
      (fn FILE &optional PREFIX)
 
-2.113.4.17 emacsvox-empv-play-last
+2.114.4.17 emacsvox-empv-play-last
 ..................................
 
  -- Command: emacsvox-empv-play-last
@@ -8251,7 +8264,7 @@ select few for interactive use.
 
      Play most recently played URL.
 
-2.113.4.18 emacsvox-empv-play-url
+2.114.4.18 emacsvox-empv-play-url
 .................................
 
  -- Command: emacsvox-empv-play-url (url)
@@ -8261,7 +8274,7 @@ select few for interactive use.
 
      (fn URL)
 
-2.113.4.19 emacsvox-empv-relative-seek
+2.114.4.19 emacsvox-empv-relative-seek
 ......................................
 
  -- Command: emacsvox-empv-relative-seek (target)
@@ -8270,14 +8283,14 @@ select few for interactive use.
 
      (fn TARGET)
 
-2.113.4.20 emacsvox-empv-time-pos
+2.114.4.20 emacsvox-empv-time-pos
 .................................
 
  -- Command: emacsvox-empv-time-pos
 
      Speak time and percent position.
 
-2.113.4.21 emacsvox-empv-toggle-balance
+2.114.4.21 emacsvox-empv-toggle-balance
 .......................................
 
  -- Command: emacsvox-empv-toggle-balance (value)
@@ -8286,14 +8299,14 @@ select few for interactive use.
 
      (fn VALUE)
 
-2.113.4.22 emacsvox-empv-toggle-custom
+2.114.4.22 emacsvox-empv-toggle-custom
 ......................................
 
  -- Command: emacsvox-empv-toggle-custom
 
      Toggle our custom filters.
 
-2.113.4.23 emacsvox-empv-toggle-filter
+2.114.4.23 emacsvox-empv-toggle-filter
 ......................................
 
  -- Command: emacsvox-empv-toggle-filter (filter)
@@ -8303,35 +8316,35 @@ select few for interactive use.
 
      (fn FILTER)
 
-2.113.4.24 emacsvox-empv-toggle-left
+2.114.4.24 emacsvox-empv-toggle-left
 ....................................
 
  -- Command: emacsvox-empv-toggle-left
 
      Toggle output to being just on the left.
 
-2.113.4.25 emacsvox-empv-toggle-right
+2.114.4.25 emacsvox-empv-toggle-right
 .....................................
 
  -- Command: emacsvox-empv-toggle-right
 
      Toggle output to being just on the right.
 
-2.113.4.26 emacsvox-empv-yt-after
+2.114.4.26 emacsvox-empv-yt-after
 .................................
 
  -- Command: emacsvox-empv-yt-after
 
      Youtube Search  from calendar -- add after:date-at-point..
 
-2.113.4.27 emacsvox-empv-yt-before
+2.114.4.27 emacsvox-empv-yt-before
 ..................................
 
  -- Command: emacsvox-empv-yt-before
 
      Youtube Search  from calendar -- add before:date-at-point..
 
-2.113.4.28 emacsvox-empv-yt-search
+2.114.4.28 emacsvox-empv-yt-search
 ..................................
 
  -- Command: emacsvox-empv-yt-search (query)
@@ -8341,7 +8354,7 @@ select few for interactive use.
 
      (fn QUERY)
 
-2.113.5 emacsvox-empv Options
+2.114.5 emacsvox-empv Options
 -----------------------------
 
  -- Variable: User Option emacsvox-empv-custom-filters
@@ -8356,15 +8369,15 @@ select few for interactive use.
 
 File: emacsvox-reference.info,  Node: emacsvox-enriched,  Next: emacsvox-entertain,  Prev: emacsvox-empv,  Up: Emacsvox Commands And Options
 
-2.114 emacsvox-enriched
+2.115 emacsvox-enriched
 =======================
 
 emacsvox extensions to voiceify rich text.
 
-2.114.1 Emacsvox-Enriched Commands
+2.115.1 Emacsvox-Enriched Commands
 ----------------------------------
 
-2.114.1.1 emacsvox-enriched-voiceify-faces
+2.115.1.1 emacsvox-enriched-voiceify-faces
 ..........................................
 
  -- Command: emacsvox-enriched-voiceify-faces (start end)
@@ -8377,22 +8390,22 @@ emacsvox extensions to voiceify rich text.
 
 File: emacsvox-reference.info,  Node: emacsvox-entertain,  Next: emacsvox-enwc,  Prev: emacsvox-enriched,  Up: Emacsvox Commands And Options
 
-2.115 emacsvox-entertain
+2.116 emacsvox-entertain
 ========================
 
 Auditory interface to misc games
 
-2.115.1 Emacsvox-Entertain Commands
+2.116.1 Emacsvox-Entertain Commands
 -----------------------------------
 
-2.115.1.1 emacsvox-hangman-speak-guess
+2.116.1.1 emacsvox-hangman-speak-guess
 ......................................
 
  -- Command: emacsvox-hangman-speak-guess
 
      Speak current guessed string.
 
-2.115.1.2 emacsvox-hangman-speak-statistics
+2.116.1.2 emacsvox-hangman-speak-statistics
 ...........................................
 
  -- Command: emacsvox-hangman-speak-statistics
@@ -8402,7 +8415,7 @@ Auditory interface to misc games
 
 File: emacsvox-reference.info,  Node: emacsvox-enwc,  Next: emacsvox-epa,  Prev: emacsvox-entertain,  Up: Emacsvox Commands And Options
 
-2.116 emacsvox-enwc
+2.117 emacsvox-enwc
 ===================
 
 ENWC == Emacs Network Client Work easily with NM and friends.
@@ -8410,7 +8423,7 @@ ENWC == Emacs Network Client Work easily with NM and friends.
 
 File: emacsvox-reference.info,  Node: emacsvox-epa,  Next: emacsvox-epub,  Prev: emacsvox-enwc,  Up: Emacsvox Commands And Options
 
-2.117 emacsvox-epa
+2.118 emacsvox-epa
 ==================
 
 EPA == EasyPG Assistant Integrate GPG functionality into Emacs.
@@ -8419,10 +8432,10 @@ Speech-enable all interactive commands.
 
 File: emacsvox-reference.info,  Node: emacsvox-epub,  Next: emacsvox-erc,  Prev: emacsvox-epa,  Up: Emacsvox Commands And Options
 
-2.118 emacsvox-epub
+2.119 emacsvox-epub
 ===================
 
-2.118.1 Introduction
+2.119.1 Introduction
 --------------------
 
 This module implements the Emacsvox EPub Bookshelf -- a unified
@@ -8445,7 +8458,7 @@ the selected book using Emacs' built-in Web browser (‘eww’).
 Bookshelf and EPub interaction, followed by detailed documentation on
 the various commands and user options.
 
-2.118.2 Organizing EBooks On The Emacsvox Desktop
+2.119.2 Organizing EBooks On The Emacsvox Desktop
 -------------------------------------------------
 
 In the simplest case, EBooks can be placed under a specific directory
@@ -8481,7 +8494,7 @@ bookshelf:
 ‘C-x C-s’
      emacsvox-epub-bookshelf-save
 
-2.118.3 Integrating With Project Gutenberg
+2.119.3 Integrating With Project Gutenberg
 ------------------------------------------
 
 Gutenberg integration provides one-shot commands for downloading the
@@ -8496,7 +8509,7 @@ desired epub for offline reading.
 ‘emacsvox-epub-library-directory’ For more advanced usage, see the next
 section on integrating with Calibre catalogs.
 
-2.118.4 Calibre Integration
+2.119.4 Calibre Integration
 ---------------------------
 
 Project Calibre enables the indexing and searching of large EBook
@@ -8514,7 +8527,7 @@ integration provides the following commands from the *bookshelf* buffer:
 ‘T’
      emacsvox-epub-bookshelf-calibre-title
 
-2.118.5 Reading EBooks From The Bookshelf
+2.119.5 Reading EBooks From The Bookshelf
 -----------------------------------------
 
 The most efficient means to read an EBook is to have EWW render the
@@ -8535,10 +8548,10 @@ table of contents.
 ‘o’
      emacsvox-epub-open
 
-2.118.6 Emacsvox-Epub Commands
+2.119.6 Emacsvox-Epub Commands
 ------------------------------
 
-2.118.6.1 emacsvox-calibre-mode
+2.119.6.1 emacsvox-calibre-mode
 ...............................
 
  -- Command: emacsvox-calibre-mode
@@ -8554,7 +8567,7 @@ table of contents.
      run, this mode runs the hook ‘emacsvox-calibre-mode-hook’, as the
      final or penultimate step during initialization.
 
-2.118.6.2 emacsvox-epub
+2.119.6.2 emacsvox-epub
 .......................
 
  -- Command: emacsvox-epub
@@ -8564,7 +8577,7 @@ table of contents.
      When opened, displays a bookshelf consisting of  epubs found at the
      root directory,see M-x emacsvox-epub-mode
 
-2.118.6.3 emacsvox-epub-bookshelf-add-directory
+2.119.6.3 emacsvox-epub-bookshelf-add-directory
 ...............................................
 
  -- Command: emacsvox-epub-bookshelf-add-directory (directory &optional
@@ -8575,7 +8588,7 @@ table of contents.
 
      (fn DIRECTORY &optional RECURSIVE)
 
-2.118.6.4 emacsvox-epub-bookshelf-add-epub
+2.119.6.4 emacsvox-epub-bookshelf-add-epub
 ..........................................
 
  -- Command: emacsvox-epub-bookshelf-add-epub (epub-file)
@@ -8584,7 +8597,7 @@ table of contents.
 
      (fn EPUB-FILE)
 
-2.118.6.5 emacsvox-epub-bookshelf-calibre-author
+2.119.6.5 emacsvox-epub-bookshelf-calibre-author
 ................................................
 
  -- Command: emacsvox-epub-bookshelf-calibre-author (pattern)
@@ -8593,7 +8606,7 @@ table of contents.
 
      (fn PATTERN)
 
-2.118.6.6 emacsvox-epub-bookshelf-calibre-search
+2.119.6.6 emacsvox-epub-bookshelf-calibre-search
 ................................................
 
  -- Command: emacsvox-epub-bookshelf-calibre-search (pattern)
@@ -8602,7 +8615,7 @@ table of contents.
 
      (fn PATTERN)
 
-2.118.6.7 emacsvox-epub-bookshelf-calibre-title
+2.119.6.7 emacsvox-epub-bookshelf-calibre-title
 ...............................................
 
  -- Command: emacsvox-epub-bookshelf-calibre-title (pattern)
@@ -8611,21 +8624,21 @@ table of contents.
 
      (fn PATTERN)
 
-2.118.6.8 emacsvox-epub-bookshelf-clear
+2.119.6.8 emacsvox-epub-bookshelf-clear
 .......................................
 
  -- Command: emacsvox-epub-bookshelf-clear
 
      Clear all books from bookshelf.
 
-2.118.6.9 emacsvox-epub-bookshelf-load
+2.119.6.9 emacsvox-epub-bookshelf-load
 ......................................
 
  -- Command: emacsvox-epub-bookshelf-load
 
      Load bookshelf metadata from disk.
 
-2.118.6.10 emacsvox-epub-bookshelf-open
+2.119.6.10 emacsvox-epub-bookshelf-open
 .......................................
 
  -- Command: emacsvox-epub-bookshelf-open (bookshelf)
@@ -8634,7 +8647,7 @@ table of contents.
 
      (fn BOOKSHELF)
 
-2.118.6.11 emacsvox-epub-bookshelf-open-epub
+2.119.6.11 emacsvox-epub-bookshelf-open-epub
 ............................................
 
  -- Command: emacsvox-epub-bookshelf-open-epub (epub-file)
@@ -8643,7 +8656,7 @@ table of contents.
 
      (fn EPUB-FILE)
 
-2.118.6.12 emacsvox-epub-bookshelf-redraw
+2.119.6.12 emacsvox-epub-bookshelf-redraw
 .........................................
 
  -- Command: emacsvox-epub-bookshelf-redraw (&optional author-first)
@@ -8654,14 +8667,14 @@ table of contents.
 
      (fn &optional AUTHOR-FIRST)
 
-2.118.6.13 emacsvox-epub-bookshelf-refresh
+2.119.6.13 emacsvox-epub-bookshelf-refresh
 ..........................................
 
  -- Command: emacsvox-epub-bookshelf-refresh
 
      Refresh and redraw bookshelf.
 
-2.118.6.14 emacsvox-epub-bookshelf-remove-directory
+2.119.6.14 emacsvox-epub-bookshelf-remove-directory
 ...................................................
 
  -- Command: emacsvox-epub-bookshelf-remove-directory (directory
@@ -8672,7 +8685,7 @@ table of contents.
 
      (fn DIRECTORY &optional RECURSIVE)
 
-2.118.6.15 emacsvox-epub-bookshelf-remove-this-book
+2.119.6.15 emacsvox-epub-bookshelf-remove-this-book
 ...................................................
 
  -- Command: emacsvox-epub-bookshelf-remove-this-book
@@ -8680,7 +8693,7 @@ table of contents.
      Remove the book on current line from this bookshelf.
      No book files are deleted.
 
-2.118.6.16 emacsvox-epub-bookshelf-rename
+2.119.6.16 emacsvox-epub-bookshelf-rename
 .........................................
 
  -- Command: emacsvox-epub-bookshelf-rename (name &optional overwrite)
@@ -8690,14 +8703,14 @@ table of contents.
 
      (fn NAME &optional OVERWRITE)
 
-2.118.6.17 emacsvox-epub-bookshelf-save
+2.119.6.17 emacsvox-epub-bookshelf-save
 .......................................
 
  -- Command: emacsvox-epub-bookshelf-save
 
      Save bookshelf metadata.
 
-2.118.6.18 emacsvox-epub-browse-files
+2.119.6.18 emacsvox-epub-browse-files
 .....................................
 
  -- Command: emacsvox-epub-browse-files (epub)
@@ -8707,28 +8720,28 @@ table of contents.
 
      (fn EPUB)
 
-2.118.6.19 emacsvox-epub-calibre-dired-at-point
+2.119.6.19 emacsvox-epub-calibre-dired-at-point
 ...............................................
 
  -- Command: emacsvox-epub-calibre-dired-at-point
 
      Open directory containing current result.
 
-2.118.6.20 emacsvox-epub-calibre-results
+2.119.6.20 emacsvox-epub-calibre-results
 ........................................
 
  -- Command: emacsvox-epub-calibre-results
 
      Show most recent Calibre search results.
 
-2.118.6.21 emacsvox-epub-delete
+2.119.6.21 emacsvox-epub-delete
 ...............................
 
  -- Command: emacsvox-epub-delete
 
      Delete EPub under point.
 
-2.118.6.22 emacsvox-epub-eww
+2.119.6.22 emacsvox-epub-eww
 ............................
 
  -- Command: emacsvox-epub-eww (epub-file &optional use-ncx)
@@ -8741,7 +8754,7 @@ table of contents.
 
      (fn EPUB-FILE &optional USE-NCX)
 
-2.118.6.23 emacsvox-epub-google
+2.119.6.23 emacsvox-epub-google
 ...............................
 
  -- Command: emacsvox-epub-google (query)
@@ -8750,7 +8763,7 @@ table of contents.
 
      (fn QUERY)
 
-2.118.6.24 emacsvox-epub-gutenberg-catalog
+2.119.6.24 emacsvox-epub-gutenberg-catalog
 ..........................................
 
  -- Command: emacsvox-epub-gutenberg-catalog (&optional refresh)
@@ -8760,7 +8773,7 @@ table of contents.
 
      (fn &optional REFRESH)
 
-2.118.6.25 emacsvox-epub-gutenberg-download
+2.119.6.25 emacsvox-epub-gutenberg-download
 ...........................................
 
  -- Command: emacsvox-epub-gutenberg-download (book-id &optional
@@ -8772,7 +8785,7 @@ table of contents.
 
      (fn BOOK-ID &optional DOWNLOAD)
 
-2.118.6.26 emacsvox-epub-locate-epubs
+2.119.6.26 emacsvox-epub-locate-epubs
 .....................................
 
  -- Command: emacsvox-epub-locate-epubs (pattern)
@@ -8781,7 +8794,7 @@ table of contents.
 
      (fn PATTERN)
 
-2.118.6.27 emacsvox-epub-mode
+2.119.6.27 emacsvox-epub-mode
 .............................
 
  -- Command: emacsvox-epub-mode
@@ -8826,14 +8839,14 @@ table of contents.
      run, this mode runs the hook ‘emacsvox-epub-mode-hook’, as the final
      or penultimate step during initialization.
 
-2.118.6.28 emacsvox-epub-next
+2.119.6.28 emacsvox-epub-next
 .............................
 
  -- Command: emacsvox-epub-next
 
      Move to next book.
 
-2.118.6.29 emacsvox-epub-open
+2.119.6.29 emacsvox-epub-open
 .............................
 
  -- Command: emacsvox-epub-open (epub-file)
@@ -8844,21 +8857,21 @@ table of contents.
 
      (fn EPUB-FILE)
 
-2.118.6.30 emacsvox-epub-open-with-nov
+2.119.6.30 emacsvox-epub-open-with-nov
 ......................................
 
  -- Command: emacsvox-epub-open-with-nov
 
      Open ebook at point in nov-mode.
 
-2.118.6.31 emacsvox-epub-previous
+2.119.6.31 emacsvox-epub-previous
 .................................
 
  -- Command: emacsvox-epub-previous
 
      Move to previous book.
 
-2.118.6.32 emacsvox-epub-url-executor
+2.119.6.32 emacsvox-epub-url-executor
 .....................................
 
  -- Command: emacsvox-epub-url-executor (url)
@@ -8867,7 +8880,7 @@ table of contents.
 
      (fn URL)
 
-2.118.7 emacsvox-epub Options
+2.119.7 emacsvox-epub Options
 -----------------------------
 
  -- Variable: User Option emacsvox-epub-bookshelf-directory
@@ -8913,17 +8926,17 @@ table of contents.
 
 File: emacsvox-reference.info,  Node: emacsvox-erc,  Next: emacsvox-eshell,  Prev: emacsvox-epub,  Up: Emacsvox Commands And Options
 
-2.119 emacsvox-erc
+2.120 emacsvox-erc
 ==================
 
 erc.el is a modern Emacs client for IRC including color and font locking
 support.  erc.el - an Emacs IRC client (by Alexander L. Belikoff)
 http://www.cs.cmu.edu/~berez/irc/erc.el
 
-2.119.1 Emacsvox-Erc Commands
+2.120.1 Emacsvox-Erc Commands
 -----------------------------
 
-2.119.1.1 emacsvox-erc-add-name-to-monitor
+2.120.1.1 emacsvox-erc-add-name-to-monitor
 ..........................................
 
  -- Command: emacsvox-erc-add-name-to-monitor (name &optional
@@ -8935,7 +8948,7 @@ http://www.cs.cmu.edu/~berez/irc/erc.el
 
      (fn NAME &optional QUITEN-PRONUNCIATION)
 
-2.119.1.2 emacsvox-erc-delete-name-from-monitor
+2.120.1.2 emacsvox-erc-delete-name-from-monitor
 ...............................................
 
  -- Command: emacsvox-erc-delete-name-from-monitor (name)
@@ -8944,14 +8957,14 @@ http://www.cs.cmu.edu/~berez/irc/erc.el
 
      (fn NAME)
 
-2.119.1.3 emacsvox-erc-setup-cricket-rules
+2.120.1.3 emacsvox-erc-setup-cricket-rules
 ..........................................
 
  -- Command: emacsvox-erc-setup-cricket-rules
 
      Set up #cricket channels.
 
-2.119.1.4 emacsvox-erc-toggle-my-monitor
+2.120.1.4 emacsvox-erc-toggle-my-monitor
 ........................................
 
  -- Command: emacsvox-erc-toggle-my-monitor (&optional prefix)
@@ -8960,7 +8973,7 @@ http://www.cs.cmu.edu/~berez/irc/erc.el
      Interactive PREFIX arg means toggle the global default value, and then
      set the current local value to the result.
 
-2.119.1.5 emacsvox-erc-toggle-room-monitor
+2.120.1.5 emacsvox-erc-toggle-room-monitor
 ..........................................
 
  -- Command: emacsvox-erc-toggle-room-monitor (&optional prefix)
@@ -8970,7 +8983,7 @@ http://www.cs.cmu.edu/~berez/irc/erc.el
      PREFIX arg means toggle the global default value, and then
      set the current local value to the result.
 
-2.119.1.6 emacsvox-erc-toggle-speak-all-participants
+2.120.1.6 emacsvox-erc-toggle-speak-all-participants
 ....................................................
 
  -- Command: emacsvox-erc-toggle-speak-all-participants (&optional
@@ -8981,7 +8994,7 @@ http://www.cs.cmu.edu/~berez/irc/erc.el
      PREFIX arg means toggle the global default value, and then
      set the current local value to the result.
 
-2.119.2 emacsvox-erc Options
+2.120.2 emacsvox-erc Options
 ----------------------------
 
  -- Variable: User Option emacsvox-erc-ignore-notices
@@ -9012,7 +9025,7 @@ http://www.cs.cmu.edu/~berez/irc/erc.el
 
 File: emacsvox-reference.info,  Node: emacsvox-eshell,  Next: emacsvox-ess,  Prev: emacsvox-erc,  Up: Emacsvox Commands And Options
 
-2.120 emacsvox-eshell
+2.121 emacsvox-eshell
 =====================
 
 EShell is a shell implemented entirely in Emacs Lisp.  It is part of
@@ -9022,7 +9035,7 @@ speech-enables EShell
 
 File: emacsvox-reference.info,  Node: emacsvox-ess,  Next: emacsvox-etable,  Prev: emacsvox-eshell,  Up: Emacsvox Commands And Options
 
-2.121 emacsvox-ess
+2.122 emacsvox-ess
 ==================
 
 ESS == Emacs Speaks Statistics This module makes ESS speak.
@@ -9030,16 +9043,16 @@ ESS == Emacs Speaks Statistics This module makes ESS speak.
 
 File: emacsvox-reference.info,  Node: emacsvox-etable,  Next: emacsvox-eterm,  Prev: emacsvox-ess,  Up: Emacsvox Commands And Options
 
-2.122 emacsvox-etable
+2.123 emacsvox-etable
 =====================
 
 table.el provides rich table editing for emacs.  this module
 speech-enables table.el
 
-2.122.1 Emacsvox-Etable Commands
+2.123.1 Emacsvox-Etable Commands
 --------------------------------
 
-2.122.1.1 emacsvox-etable-speak-cell
+2.123.1.1 emacsvox-etable-speak-cell
 ....................................
 
  -- Command: emacsvox-etable-speak-cell
@@ -9049,7 +9062,7 @@ speech-enables table.el
 
 File: emacsvox-reference.info,  Node: emacsvox-eterm,  Next: emacsvox-eudc,  Prev: emacsvox-etable,  Up: Emacsvox Commands And Options
 
-2.123 emacsvox-eterm
+2.124 emacsvox-eterm
 ====================
 
 This module makes eterm talk.  Eterm is the new terminal emulator for
@@ -9058,10 +9071,10 @@ present, the only documentation is the source level documentation.  This
 module uses Control-t as an additional prefix key to allow the user To
 move around the terminal and have different parts spoken.
 
-2.123.1 Emacsvox-Eterm Commands
+2.124.1 Emacsvox-Eterm Commands
 -------------------------------
 
-2.123.1.1 emacsvox-eterm-copy-region-to-register
+2.124.1.1 emacsvox-eterm-copy-region-to-register
 ................................................
 
  -- Command: emacsvox-eterm-copy-region-to-register (register)
@@ -9073,7 +9086,7 @@ move around the terminal and have different parts spoken.
 
      (fn REGISTER)
 
-2.123.1.2 emacsvox-eterm-define-window
+2.124.1.2 emacsvox-eterm-define-window
 ......................................
 
  -- Command: emacsvox-eterm-define-window (id)
@@ -9086,7 +9099,7 @@ move around the terminal and have different parts spoken.
 
      (fn ID)
 
-2.123.1.3 emacsvox-eterm-describe-window
+2.124.1.3 emacsvox-eterm-describe-window
 ........................................
 
  -- Command: emacsvox-eterm-describe-window (id)
@@ -9096,7 +9109,7 @@ move around the terminal and have different parts spoken.
 
      (fn ID)
 
-2.123.1.4 emacsvox-eterm-goto-line
+2.124.1.4 emacsvox-eterm-goto-line
 ..................................
 
  -- Command: emacsvox-eterm-goto-line (line)
@@ -9105,7 +9118,7 @@ move around the terminal and have different parts spoken.
 
      (fn LINE)
 
-2.123.1.5 emacsvox-eterm-kill-ring-save-region
+2.124.1.5 emacsvox-eterm-kill-ring-save-region
 ..............................................
 
  -- Command: emacsvox-eterm-kill-ring-save-region
@@ -9115,7 +9128,7 @@ move around the terminal and have different parts spoken.
      set by command M-x emacsvox-eterm-set-marker and the
      emacsvox eterm pointer.
 
-2.123.1.6 emacsvox-eterm-maybe-send-raw
+2.124.1.6 emacsvox-eterm-maybe-send-raw
 .......................................
 
  -- Command: emacsvox-eterm-maybe-send-raw
@@ -9124,7 +9137,7 @@ move around the terminal and have different parts spoken.
      Execute end of line if
      in a non eterm buffer if executed via C-e C-e
 
-2.123.1.7 emacsvox-eterm-paste-register
+2.124.1.7 emacsvox-eterm-paste-register
 .......................................
 
  -- Command: emacsvox-eterm-paste-register (register)
@@ -9135,7 +9148,7 @@ move around the terminal and have different parts spoken.
 
      (fn REGISTER)
 
-2.123.1.8 emacsvox-eterm-pointer-backward-word
+2.124.1.8 emacsvox-eterm-pointer-backward-word
 ..............................................
 
  -- Command: emacsvox-eterm-pointer-backward-word (count)
@@ -9146,7 +9159,7 @@ move around the terminal and have different parts spoken.
 
      (fn COUNT)
 
-2.123.1.9 emacsvox-eterm-pointer-down
+2.124.1.9 emacsvox-eterm-pointer-down
 .....................................
 
  -- Command: emacsvox-eterm-pointer-down (count)
@@ -9156,7 +9169,7 @@ move around the terminal and have different parts spoken.
 
      (fn COUNT)
 
-2.123.1.10 emacsvox-eterm-pointer-forward-word
+2.124.1.10 emacsvox-eterm-pointer-forward-word
 ..............................................
 
  -- Command: emacsvox-eterm-pointer-forward-word (count)
@@ -9167,7 +9180,7 @@ move around the terminal and have different parts spoken.
 
      (fn COUNT)
 
-2.123.1.11 emacsvox-eterm-pointer-left
+2.124.1.11 emacsvox-eterm-pointer-left
 ......................................
 
  -- Command: emacsvox-eterm-pointer-left (count)
@@ -9177,7 +9190,7 @@ move around the terminal and have different parts spoken.
 
      (fn COUNT)
 
-2.123.1.12 emacsvox-eterm-pointer-right
+2.124.1.12 emacsvox-eterm-pointer-right
 .......................................
 
  -- Command: emacsvox-eterm-pointer-right (count)
@@ -9187,28 +9200,28 @@ move around the terminal and have different parts spoken.
 
      (fn COUNT)
 
-2.123.1.13 emacsvox-eterm-pointer-to-bottom
+2.124.1.13 emacsvox-eterm-pointer-to-bottom
 ...........................................
 
  -- Command: emacsvox-eterm-pointer-to-bottom
 
      Move the pointer to the bottom  of the screen.
 
-2.123.1.14 emacsvox-eterm-pointer-to-cursor
+2.124.1.14 emacsvox-eterm-pointer-to-cursor
 ...........................................
 
  -- Command: emacsvox-eterm-pointer-to-cursor
 
      Move the pointer to the cursor.
 
-2.123.1.15 emacsvox-eterm-pointer-to-left-edge
+2.124.1.15 emacsvox-eterm-pointer-to-left-edge
 ..............................................
 
  -- Command: emacsvox-eterm-pointer-to-left-edge
 
      Move the pointer to the right edge.
 
-2.123.1.16 emacsvox-eterm-pointer-to-next-color-change
+2.124.1.16 emacsvox-eterm-pointer-to-next-color-change
 ......................................................
 
  -- Command: emacsvox-eterm-pointer-to-next-color-change (&optional
@@ -9220,7 +9233,7 @@ move around the terminal and have different parts spoken.
 
      (fn &optional COUNT)
 
-2.123.1.17 emacsvox-eterm-pointer-to-previous-color-change
+2.124.1.17 emacsvox-eterm-pointer-to-previous-color-change
 ..........................................................
 
  -- Command: emacsvox-eterm-pointer-to-previous-color-change (&optional
@@ -9232,21 +9245,21 @@ move around the terminal and have different parts spoken.
 
      (fn &optional COUNT)
 
-2.123.1.18 emacsvox-eterm-pointer-to-right-edge
+2.124.1.18 emacsvox-eterm-pointer-to-right-edge
 ...............................................
 
  -- Command: emacsvox-eterm-pointer-to-right-edge
 
      Move the pointer to the right edge.
 
-2.123.1.19 emacsvox-eterm-pointer-to-top
+2.124.1.19 emacsvox-eterm-pointer-to-top
 ........................................
 
  -- Command: emacsvox-eterm-pointer-to-top
 
      Move the pointer to the top of the screen.
 
-2.123.1.20 emacsvox-eterm-pointer-up
+2.124.1.20 emacsvox-eterm-pointer-up
 ....................................
 
  -- Command: emacsvox-eterm-pointer-up (count)
@@ -9256,21 +9269,21 @@ move around the terminal and have different parts spoken.
 
      (fn COUNT)
 
-2.123.1.21 emacsvox-eterm-search-backward
+2.124.1.21 emacsvox-eterm-search-backward
 .........................................
 
  -- Command: emacsvox-eterm-search-backward
 
      Search backward on the terminal.
 
-2.123.1.22 emacsvox-eterm-search-forward
+2.124.1.22 emacsvox-eterm-search-forward
 ........................................
 
  -- Command: emacsvox-eterm-search-forward
 
      Search forward on the terminal.
 
-2.123.1.23 emacsvox-eterm-set-filter-window
+2.124.1.23 emacsvox-eterm-set-filter-window
 ...........................................
 
  -- Command: emacsvox-eterm-set-filter-window (flag)
@@ -9285,7 +9298,7 @@ move around the terminal and have different parts spoken.
 
      (fn FLAG)
 
-2.123.1.24 emacsvox-eterm-set-focus-window
+2.124.1.24 emacsvox-eterm-set-focus-window
 ..........................................
 
  -- Command: emacsvox-eterm-set-focus-window (flag)
@@ -9300,7 +9313,7 @@ move around the terminal and have different parts spoken.
 
      (fn FLAG)
 
-2.123.1.25 emacsvox-eterm-set-marker
+2.124.1.25 emacsvox-eterm-set-marker
 ....................................
 
  -- Command: emacsvox-eterm-set-marker
@@ -9309,21 +9322,21 @@ move around the terminal and have different parts spoken.
      This sets  the emacsvox eterm marker to the position pointed
      to by the emacsvox eterm pointer.
 
-2.123.1.26 emacsvox-eterm-speak-cursor
+2.124.1.26 emacsvox-eterm-speak-cursor
 ......................................
 
  -- Command: emacsvox-eterm-speak-cursor
 
      Speak cursor position.
 
-2.123.1.27 emacsvox-eterm-speak-pointer
+2.124.1.27 emacsvox-eterm-speak-pointer
 .......................................
 
  -- Command: emacsvox-eterm-speak-pointer
 
      Speak current pointer position.
 
-2.123.1.28 emacsvox-eterm-speak-pointer-char
+2.124.1.28 emacsvox-eterm-speak-pointer-char
 ............................................
 
  -- Command: emacsvox-eterm-speak-pointer-char (&optional prefix)
@@ -9333,28 +9346,28 @@ move around the terminal and have different parts spoken.
 
      (fn &optional PREFIX)
 
-2.123.1.29 emacsvox-eterm-speak-pointer-line
+2.124.1.29 emacsvox-eterm-speak-pointer-line
 ............................................
 
  -- Command: emacsvox-eterm-speak-pointer-line
 
      Speak the line the pointer is on.
 
-2.123.1.30 emacsvox-eterm-speak-pointer-word
+2.124.1.30 emacsvox-eterm-speak-pointer-word
 ............................................
 
  -- Command: emacsvox-eterm-speak-pointer-word
 
      Speak the word  the pointer is on.
 
-2.123.1.31 emacsvox-eterm-speak-predefined-window
+2.124.1.31 emacsvox-eterm-speak-predefined-window
 .................................................
 
  -- Command: emacsvox-eterm-speak-predefined-window
 
      Speak a predefined eterm window between 1 and 10.
 
-2.123.1.32 emacsvox-eterm-speak-screen
+2.124.1.32 emacsvox-eterm-speak-screen
 ......................................
 
  -- Command: emacsvox-eterm-speak-screen (&optional flag)
@@ -9365,7 +9378,7 @@ move around the terminal and have different parts spoken.
 
      (fn &optional FLAG)
 
-2.123.1.33 emacsvox-eterm-speak-window
+2.124.1.33 emacsvox-eterm-speak-window
 ......................................
 
  -- Command: emacsvox-eterm-speak-window (id)
@@ -9375,21 +9388,21 @@ move around the terminal and have different parts spoken.
 
      (fn ID)
 
-2.123.1.34 emacsvox-eterm-toggle-filter-window
+2.124.1.34 emacsvox-eterm-toggle-filter-window
 ..............................................
 
  -- Command: emacsvox-eterm-toggle-filter-window
 
      Toggle active state of filter window.
 
-2.123.1.35 emacsvox-eterm-toggle-focus-window
+2.124.1.35 emacsvox-eterm-toggle-focus-window
 .............................................
 
  -- Command: emacsvox-eterm-toggle-focus-window
 
      Toggle active state of focus window.
 
-2.123.1.36 emacsvox-eterm-toggle-pointer-mode
+2.124.1.36 emacsvox-eterm-toggle-pointer-mode
 .............................................
 
  -- Command: emacsvox-eterm-toggle-pointer-mode (&optional prefix)
@@ -9400,7 +9413,7 @@ move around the terminal and have different parts spoken.
      stays where it is rather than automatically moving to the terminal cursor when
      there is terminal activity.
 
-2.123.1.37 emacsvox-eterm-toggle-review
+2.124.1.37 emacsvox-eterm-toggle-review
 .......................................
 
  -- Command: emacsvox-eterm-toggle-review
@@ -9409,7 +9422,7 @@ move around the terminal and have different parts spoken.
      In review mode, you can move around the terminal and listen to the contents
      without sending input to the terminal itself.
 
-2.123.1.38 emacsvox-eterm-yank-window
+2.124.1.38 emacsvox-eterm-yank-window
 .....................................
 
  -- Command: emacsvox-eterm-yank-window (id)
@@ -9418,7 +9431,7 @@ move around the terminal and have different parts spoken.
 
      (fn ID)
 
-2.123.1.39 emacsvox-toggle-eterm-autospeak
+2.124.1.39 emacsvox-toggle-eterm-autospeak
 ..........................................
 
  -- Command: emacsvox-toggle-eterm-autospeak (&optional prefix)

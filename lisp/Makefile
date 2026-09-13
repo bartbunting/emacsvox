@@ -98,6 +98,7 @@ emacsvox-aural-profile-service.elc \
 emacsvox-aural-compatibility-voice.elc \
 emacsvox-aural-providers.elc \
 emacsvox-aural-compiler.elc \
+emacsvox-emoji.elc \
 emacsvox-aural-source.elc \
 emacsvox-aural-planner.elc \
 emacsvox-aural-submission.elc \
