@@ -1809,6 +1809,7 @@ Key             Binding
 -------------------------------------------------------------------------------
 RET		emacsvox-aural-change-feedback-open-row
 ?		emacsvox-aural-change-feedback-help
+B		emacsvox-aural-change-feedback--original-whole
 O		emacsvox-aural-change-feedback-original
 P		emacsvox-aural-change-feedback-proposed
 V		emacsvox-aural-change-feedback-preview-whole

@@ -2778,15 +2778,20 @@ presentation remains the same.
      Update the report's draft status.
 
    For example, select _Subject_, press ‘C’, and choose another content
-voice.  In that editor, ‘P’ previews the changed field and ‘V’ previews
-it within the whole line.  Return to the report and select _Message
-count_ to add a sound _After content_.  The sound is placed once after
-the complete count, even when that field contains several voices.  The
-subject and count editors retain their drafts separately.  Their
-matching criteria identify the field, integration, mode, and occasion;
-inspect those criteria before choosing a buffer, session, or saved
-personal lifetime.  Changing a field's voice mapping does not retune the
-shared named voice.
+voice.  In that editor, ‘O’ plays the original field and ‘P’ previews
+the changed field.  For a complete comparison, choose _Play whole
+original_ or press ‘B’, then use ‘V’ to preview the whole presentation
+with all linked drafts.  Both actions keep you in the change buffer.
+The original stays frozen even after you change a draft; it can be
+played before choosing a change or lifetime.  For simulated feedback,
+_Play whole simulation_ plays the frozen simulated baseline instead.
+Return to the report and select _Message count_ to add a sound _After
+content_.  The sound is placed once after the complete count, even when
+that field contains several voices.  The subject and count editors
+retain their drafts separately.  Their matching criteria identify the
+field, integration, mode, and occasion; inspect those criteria before
+choosing a buffer, session, or saved personal lifetime.  Changing a
+field's voice mapping does not retune the shared named voice.
 
    _Choose another voice for matching items_ opens the compact voice
 editor for that field.  Its _Applies to_ row identifies the matching

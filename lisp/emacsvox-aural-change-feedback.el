@@ -730,6 +730,14 @@
   (with-current-buffer emacsvox-aural-change-feedback--review-buffer
     (emacsvox-aural-feedback-details-preview)))
 
+(defun emacsvox-aural-change-feedback--original-whole ()
+  "Replay the complete frozen original or simulated baseline for this draft."
+  (interactive)
+  (unless (buffer-live-p emacsvox-aural-change-feedback--review-buffer)
+    (user-error "Open a field change from Feedback Details first"))
+  (with-current-buffer emacsvox-aural-change-feedback--review-buffer
+    (emacsvox-aural-feedback-details-play)))
+
 (defun emacsvox-aural-change-feedback-original ()
   "Replay the frozen selected feedback or the captured Current item example."
   (interactive)
@@ -859,6 +867,9 @@
                                                (vector "Play simulated field" "O plays the simulated baseline")
                                              (vector "Play original field" "O plays the captured field")))
                            (list 'proposed (vector "Preview changed field" "P uses current rules plus drafts"))
+                           (list 'whole-original (if emacsvox-aural-change-feedback--simulation
+                                                     (vector "Play whole simulation" "B plays the complete simulated baseline")
+                                                   (vector "Play whole original" "B plays the complete captured presentation")))
                            (list 'whole-proposed (vector "Preview whole presentation" "V includes all linked field drafts"))))))
      (setq tabulated-list-entries
            (emacsvox-aural-change-feedback--expand-rows tabulated-list-entries))) id 'change)
@@ -899,6 +910,7 @@
     ('lifetime (emacsvox-aural-change-feedback-lifetime))
     ('original (emacsvox-aural-change-feedback-original))
     ('proposed (emacsvox-aural-change-feedback-proposed))
+    ('whole-original (emacsvox-aural-change-feedback--original-whole))
     ('whole-proposed (emacsvox-aural-change-feedback-preview-whole))
     ('apply (emacsvox-aural-change-feedback-apply))
     ('advanced (emacsvox-aural-change-feedback-advanced))
@@ -935,6 +947,12 @@
                       "a or C-c C-c applies only after all choices are made; e opens the full Advanced rule editor.\n"
                       "RET opens choices or details. n/p and arrows navigate. Space reads the row.\n"
                       "C-c C-a lists applicable actions. h opens Home. q collapses one level and returns to its parent; at the top it hides and preserves the draft.\n"))))
+    (when emacsvox-aural-change-feedback--review-buffer
+      (setq text (concat text
+                         (if emacsvox-aural-change-feedback--simulation
+                             "B plays the whole simulated baseline. "
+                           "B plays the whole captured original. ")
+                         "V previews the whole presentation with all linked field drafts.\n")))
     (emacsvox-aural-ui-with-help-window (princ text))
     (emacsvox-aural-ui-speak text)))
 
@@ -950,7 +968,8 @@
                   ((or 'emacsvox-aural-change-feedback-apply 'emacsvox-aural-change-feedback-advanced)
                    (emacsvox-aural-change-feedback--ready-p))
                   ('emacsvox-aural-change-feedback-proposed emacsvox-aural-change-feedback-render)
-                  ('emacsvox-aural-change-feedback-preview-whole
+                  ((or 'emacsvox-aural-change-feedback-preview-whole
+                       'emacsvox-aural-change-feedback--original-whole)
                    (buffer-live-p emacsvox-aural-change-feedback--review-buffer))
                   (_ t))))
   (tabulated-list-init-header))
@@ -962,6 +981,7 @@
                    ("l" . emacsvox-aural-change-feedback-lifetime)
                    ("P" . emacsvox-aural-change-feedback-proposed)
                    ("V" . emacsvox-aural-change-feedback-preview-whole)
+                   ("B" . emacsvox-aural-change-feedback--original-whole)
                    ("O" . emacsvox-aural-change-feedback-original)
                    ("a" . emacsvox-aural-change-feedback-apply)
                    ("w" . emacsvox-aural-change-feedback-apply)

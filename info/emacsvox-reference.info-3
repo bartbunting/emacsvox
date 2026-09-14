@@ -3112,25 +3112,25 @@ Function Index
 * emacsvox-aural-change-feedback-mode <1>: emacsvox-aural-change-feedback.
                                                              (line   76)
 * emacsvox-aural-change-feedback-open-row: emacsvox-aural-change-feedback.
-                                                             (line  105)
-* emacsvox-aural-change-feedback-open-row <1>: emacsvox-aural-change-feedback.
                                                              (line  106)
+* emacsvox-aural-change-feedback-open-row <1>: emacsvox-aural-change-feedback.
+                                                             (line  107)
 * emacsvox-aural-change-feedback-original: emacsvox-aural-change-feedback.
-                                                             (line  112)
-* emacsvox-aural-change-feedback-original <1>: emacsvox-aural-change-feedback.
                                                              (line  113)
+* emacsvox-aural-change-feedback-original <1>: emacsvox-aural-change-feedback.
+                                                             (line  114)
 * emacsvox-aural-change-feedback-preview-whole: emacsvox-aural-change-feedback.
-                                                             (line  119)
-* emacsvox-aural-change-feedback-preview-whole <1>: emacsvox-aural-change-feedback.
                                                              (line  120)
+* emacsvox-aural-change-feedback-preview-whole <1>: emacsvox-aural-change-feedback.
+                                                             (line  121)
 * emacsvox-aural-change-feedback-proposed: emacsvox-aural-change-feedback.
-                                                             (line  126)
-* emacsvox-aural-change-feedback-proposed <1>: emacsvox-aural-change-feedback.
                                                              (line  127)
+* emacsvox-aural-change-feedback-proposed <1>: emacsvox-aural-change-feedback.
+                                                             (line  128)
 * emacsvox-aural-change-feedback-refresh: emacsvox-aural-change-feedback.
-                                                             (line  133)
-* emacsvox-aural-change-feedback-refresh <1>: emacsvox-aural-change-feedback.
                                                              (line  134)
+* emacsvox-aural-change-feedback-refresh <1>: emacsvox-aural-change-feedback.
+                                                             (line  135)
 * emacsvox-aural-copy-feature-fragment:  emacsvox-aural-feature-fragments.
                                                              (line   15)
 * emacsvox-aural-copy-feature-fragment <1>: emacsvox-aural-feature-fragments.

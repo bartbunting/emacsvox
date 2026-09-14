@@ -2786,9 +2786,15 @@ Update the report's draft status.
 @end table
 
 For example@comma{} select @emph{Subject}@comma{} press @kbd{C}@comma{} and choose another
-content voice. In that editor@comma{} @kbd{P} previews the changed field
-and @kbd{V} previews it within the whole line. Return to the report
-and select @emph{Message count} to add a sound @emph{After content}. The sound is placed
+content voice. In that editor@comma{} @kbd{O} plays the original field
+and @kbd{P} previews the changed field. For a complete comparison@comma{}
+choose @emph{Play whole original} or press @kbd{B}@comma{} then use
+@kbd{V} to preview the whole presentation with all linked drafts.
+Both actions keep you in the change buffer. The original stays frozen even
+after you change a draft; it can be played before choosing a change or lifetime.
+For simulated feedback@comma{} @emph{Play whole simulation} plays the frozen simulated
+baseline instead. Return to the report and select @emph{Message count} to add a
+sound @emph{After content}. The sound is placed
 once after the complete count@comma{} even when that field contains several voices.
 The subject and count editors retain their drafts separately. Their matching
 criteria identify the field@comma{} integration@comma{} mode@comma{} and occasion; inspect those

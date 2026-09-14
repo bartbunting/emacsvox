@@ -287,6 +287,44 @@
      (should (eq (current-buffer) subject-editor))
      (should emacsvox-aural-change-feedback-render))))
 
+(ert-deftest emacsvox-aural-feedback-details-change-compares-whole-original-and-proposal ()
+  "Both change views compare complete frozen output with drafts without leaving the editor."
+  (emacsvox-test--with-feedback-report
+   (let* ((runs (emacsvox-aural-presentation-record-runs record))
+          (indices (emacsvox-test--feedback-field "Subject"))
+          played)
+     (emacsvox-aural-feedback-details-change)
+     (let ((editor (current-buffer)))
+       (cl-letf (((symbol-function 'emacsvox-aural-preview-play-runs)
+                  (lambda (output &rest _)
+                    (should emacsvox-aural--history-recording-inhibited)
+                    (setq played output))))
+         ;; Baseline playback requires neither a proposed change nor a lifetime.
+         (should (emacsvox-aural-ui-goto-row 'whole-original))
+         (emacsvox-aural-change-feedback-open-row)
+         (should (equal played runs))
+         (emacsvox-test--guided-choose "Change the content voice" "lighten")
+         (dolist (compact '(nil t))
+           (setq emacsvox-aural-change-feedback--voice-remap compact)
+           (emacsvox-aural-change-feedback-refresh 'whole-original)
+           (let ((position (point)))
+             (call-interactively (key-binding (kbd "B")))
+             (should (equal played runs))
+             (should (eq (current-buffer) editor))
+             (should (eq (window-buffer (selected-window)) editor))
+             (should (= (point) position)))
+           (call-interactively (key-binding (kbd "V")))
+           (should (= (length played) (length runs)))
+           (should-not (equal played runs))
+           (dolist (index indices)
+             (should (eq (emacsvox-aural-concrete-content-voice-request
+                          (emacsvox-aural-concrete-plan-content (car (nth index played)))) 'lighten)))
+           (call-interactively (key-binding (kbd "O")))
+           (should (equal played (mapcar (lambda (index) (nth index runs)) indices)))))
+       (should-not emacsvox-aural-change-feedback-scope)
+       (should-not emacsvox-aural-session-rules)
+       (should (equal emacsvox-aural-presentation-history (list record)))))))
+
 (ert-deftest emacsvox-aural-feedback-details-span-targets-distinct-voice-only ()
   "A uniquely annotated span can change without broadening to its shared face."
   (emacsvox-test--with-feedback-report
@@ -399,6 +437,7 @@
      (with-current-buffer (window-buffer (selected-window))
        (should emacsvox-aural-change-feedback--simulation)
        (should (string-match-p "Play simulated field" (buffer-string)))
+       (should (string-match-p "Play whole simulation" (buffer-string)))
        (should-not (string-match-p "Play original\\|Recent Feedback" (buffer-string)))
        (save-window-excursion
          (cl-letf (((symbol-function 'emacsvox-aural-ui-speak)
@@ -410,6 +449,11 @@
        (emacsvox-test--guided-choose "Change the content voice" "bolden")
        (cl-letf (((symbol-function 'emacsvox-aural-preview-play-runs)
                   (lambda (runs &rest _) (setq played runs))))
+         (call-interactively (key-binding (kbd "B")))
+         (should (equal played
+                        (with-current-buffer report
+                          (emacsvox-aural-presentation-record-runs
+                           emacsvox-aural-feedback-details--record))))
          (emacsvox-aural-change-feedback-preview-whole))
        (should (equal (cadar played) "user$ "))
        (should (eq (emacsvox-aural-concrete-content-voice-request

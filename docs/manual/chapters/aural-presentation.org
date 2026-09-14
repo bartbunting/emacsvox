@@ -357,9 +357,15 @@ draft buffer. The original or simulated presentation remains the same.
 - g :: Update the report's draft status.
 
 For example, select /Subject/, press @@texinfo:@kbd{C}@@, and choose another
-content voice. In that editor, @@texinfo:@kbd{P}@@ previews the changed field
-and @@texinfo:@kbd{V}@@ previews it within the whole line. Return to the report
-and select /Message count/ to add a sound /After content/. The sound is placed
+content voice. In that editor, @@texinfo:@kbd{O}@@ plays the original field
+and @@texinfo:@kbd{P}@@ previews the changed field. For a complete comparison,
+choose /Play whole original/ or press @@texinfo:@kbd{B}@@, then use
+@@texinfo:@kbd{V}@@ to preview the whole presentation with all linked drafts.
+Both actions keep you in the change buffer. The original stays frozen even
+after you change a draft; it can be played before choosing a change or lifetime.
+For simulated feedback, /Play whole simulation/ plays the frozen simulated
+baseline instead. Return to the report and select /Message count/ to add a
+sound /After content/. The sound is placed
 once after the complete count, even when that field contains several voices.
 The subject and count editors retain their drafts separately. Their matching
 criteria identify the field, integration, mode, and occasion; inspect those
