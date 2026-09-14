@@ -37,6 +37,7 @@
 (require 'emacsvox-aural-recent-feedback)
 (require 'emacsvox-aural-planner)
 
+(declare-function emacsvox-speak-line "emacsvox-speak" (&optional arg))
 (declare-function emacsvox-aural-change-feedback "emacsvox-aural-change-feedback" (&optional record))
 (declare-function emacsvox-aural-change-feedback--select-part "emacsvox-aural-change-feedback" (number))
 (declare-function emacsvox-aural-change-feedback--rule "emacsvox-aural-change-feedback" ())
@@ -695,7 +696,12 @@ The existing sound override editor owns its separate unsaved rule draft."
 (defun emacsvox-aural-feedback-details-speak-line ()
   "Read the current report line, retaining recorded content voices."
   (interactive)
-  (emacsvox-aural-ui--speak-control (buffer-substring (line-beginning-position) (line-end-position))))
+  (let ((text (buffer-substring (line-beginning-position) (line-end-position))))
+    (if (string-match-p "\\`[[:space:]]*\\'" text)
+        (progn
+          (require 'emacsvox-speak)
+          (emacsvox-speak-line))
+      (emacsvox-aural-ui--speak-control text))))
 
 (defun emacsvox-aural-feedback-details-next-line (&optional previous)
   "Move one line and read it; PREVIOUS reverses direction."
