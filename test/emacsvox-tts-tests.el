@@ -3255,9 +3255,29 @@
     (should-not tts-notify-process)
     (should (equal observed '(old nil)))))
 
+(ert-deftest emacsvox-tts-notification-output-menu-offers-channel-choices ()
+  "Select channel routes from the notification Customize menu without typing."
+  (require 'wid-edit)
+  (dolist (case '(("Left" "left") ("Right" "right")
+                  ("Both channels" "both")))
+    (with-temp-buffer
+      (let ((widget
+             (widget-create
+              (get 'tts-notification-device 'custom-type) :value nil)))
+        (widget-setup)
+        (cl-letf (((symbol-function 'widget-choose)
+                   (lambda (_title choices &optional _event)
+                     (let ((choice (assoc (car case) choices)))
+                       (should choice)
+                       (cdr choice)))))
+          (widget-apply-action widget))
+        (should (equal (widget-value widget) (cadr case)))
+        (should-not (widget-apply widget :validate))))))
+
 (ert-deftest emacsvox-tts-omnivox-notification-process-gets-channel-target ()
   "A distinct Omnivox notifier receives its own validated process route."
-  (dolist (case '((nil "both") ("right" "right")))
+  (dolist (case '((nil "both") ("left" "left")
+                  ("right" "right") ("both" "both")))
     (let ((process-environment (copy-sequence process-environment))
           (tts-notify-process nil)
           (tts-program "omnivox")

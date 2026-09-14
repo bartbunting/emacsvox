@@ -3697,8 +3697,11 @@ For other servers, nil disables a separate notification stream.  If you name a
 device, make sure it exists first.  For SwiftMac, use `left' or `right'."
   :type '(choice
           (const :tag "Automatic" nil)
+          (const :tag "Left" "left")
+          (const :tag "Right" "right")
+          (const :tag "Both channels" "both")
           (const :tag "Use main output (notifications remain audible)" "default")
-          (string :value ""))
+          (string :tag "Other device" :value ""))
   :group 'tts)
 
 ;; Helper: tts-make-process:
