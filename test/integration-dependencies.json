@@ -4,9 +4,9 @@
     {
       "name": "compat",
       "commit": "df03e91f1fc47503ca71e11dd507ed18ca8b5ab0",
-      "url": "https://elpa.gnu.org/packages/compat-31.0.0.2.tar",
-      "sha256": "47d8693a10087f8b20c72e6a78b628db980cb7547c4f8f517fc5d11acd8b0f38",
-      "archive_root": "compat-31.0.0.2",
+      "url": "https://codeload.github.com/emacs-compat/compat/tar.gz/df03e91f1fc47503ca71e11dd507ed18ca8b5ab0",
+      "sha256": "0e635fc29132dfd82d306b36a2e619afd3fd8b3689a98f9ef2c92961d3174b2f",
+      "archive_root": "compat-df03e91f1fc47503ca71e11dd507ed18ca8b5ab0",
       "subdirectory": "."
     },
     {

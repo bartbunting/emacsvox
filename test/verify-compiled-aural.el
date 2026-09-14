@@ -419,7 +419,8 @@
   (let ((stats
          (ert-run-tests-batch
           '(and (not (member emacsvox-emoji-graphical-explanation-is-visible
-                             emacsvox-aural-voice-editor-graphical-save-remains-visible))
+                             emacsvox-aural-voice-editor-graphical-save-remains-visible
+                             emacsvox-aural-voice-editor-graphical-more-controls-below-button))
                 (or "^emacsvox-emoji-" "^emacsvox-aural-rules-"
                "^emacsvox-aural-voice-data-"
                "^emacsvox-aural-voice-runtime-"
