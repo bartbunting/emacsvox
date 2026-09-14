@@ -930,7 +930,10 @@ same. Zero is an explicit value, such as the lowest pitch or leftmost pan,
 whereas adapter default leaves that setting to the speech adapter. They may
 sound the same for some effects, but they are different settings.
 /More adjustments and effects/ exposes filters,
-gain, pan and other optional controls. Changed values say what they were before
+gain, pan and other optional controls below the button. Point stays on the
+button, and speech says ``More adjustments shown below'' or ``More adjustments
+hidden''. Move down or press Tab to enter the exposed controls; press Return
+on the button again to hide them. Changed values say what they were before
 editing; unsupported settings remain visible and are retained.
 Field navigation stops at the first and last field without wrapping. Numeric
 adjustments stop at their limits and announce the minimum or maximum.

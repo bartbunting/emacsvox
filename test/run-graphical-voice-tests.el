@@ -56,9 +56,10 @@
                         emacsvox-aural-voice-editor-field-navigation-stops-at-both-ends
                         emacsvox-aural-voice-editor-horizontal-arrows-navigate-nonnumeric-fields
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
+                        emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 8)
-                                (= (ert-stats-completed stats) 8)
+          (setq status (if (and (= (ert-stats-total stats) 9)
+                                (= (ert-stats-completed stats) 9)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

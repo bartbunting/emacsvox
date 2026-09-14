@@ -245,12 +245,19 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
 (defun emacsvox-aural-voice-editor--toggle (key field)
   "Toggle context KEY and announce FIELD's new state."
   (emacsvox-aural-voice-editor-stop)
-  (let ((enabled (not (emacsvox-aural-voice-editor--get key))))
+  (let* ((enabled (not (emacsvox-aural-voice-editor--get key)))
+         (window (and (eq key :effects) (get-buffer-window (current-buffer))))
+         ;; Refresh erases the buffer, which otherwise loses the scroll position.
+         (start (when window (window-start window))))
     (emacsvox-aural-voice-editor--put key enabled)
     (emacsvox-aural-voice-editor-refresh)
     (emacsvox-aural-voice-editor--locate field)
+    (when window (set-window-start window start))
     (if (memq key '(:expanded :effects))
-        (emacsvox-aural-ui--announce-expansion enabled)
+        (emacsvox-aural-ui--announce-expansion
+         enabled (when (eq key :effects)
+                   (if enabled "More adjustments shown below"
+                     "More adjustments hidden")))
       (emacsvox-aural-ui--call-with-feedback
        (if enabled 'on 'off) #'emacsvox-aural-voice-editor-speak))))
 
@@ -450,19 +457,24 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
     (insert "Left/right adjusts numeric fields; otherwise moves between fields.\n"
             "RET edits a value; d restores adapter default. Zero is an explicit value.\n")
     (when tuning (insert "RET also offers Use shared value; i restores inheritance. Only this row changes.\n"))
-    (dolist (dimension (unless (and tuning (null row))
-                        (append '(rate-offset average-pitch pitch-range stress richness)
-                               (when (emacsvox-aural-voice-editor--get :effects)
-                                 (append (unless tuning '(family))
-                                         '(gain low-pass high-pass pan reverb echo chorus))))))
-      (let ((field dimension))
-        (emacsvox-aural-voice-editor--button dimension
-                                             (emacsvox-aural-voice-editor--adjustment-text
-                                              dimension style (if tuning (list (plist-get row :selector)) chain))
-                                             (lambda () (emacsvox-aural-voice-editor-edit field)) dimension)))
-    (emacsvox-aural-voice-editor--button 'more
-                                         "More adjustments and effects"
-                                         (lambda () (emacsvox-aural-voice-editor--toggle :effects 'more)))
+    (dolist (dimension (append
+                       (unless (and tuning (null row))
+                         '(rate-offset average-pitch pitch-range stress richness))
+                       '(more)
+                       (when (and (emacsvox-aural-voice-editor--get :effects)
+                                  (not (and tuning (null row))))
+                         (append (unless tuning '(family))
+                                 '(gain low-pass high-pass pan reverb echo chorus)))))
+      (if (eq dimension 'more)
+          (emacsvox-aural-voice-editor--button
+           'more "More adjustments and effects"
+           (lambda () (emacsvox-aural-voice-editor--toggle :effects 'more)))
+        (let ((field dimension))
+          (emacsvox-aural-voice-editor--button
+           dimension
+           (emacsvox-aural-voice-editor--adjustment-text
+            dimension style (if tuning (list (plist-get row :selector)) chain))
+           (lambda () (emacsvox-aural-voice-editor-edit field)) dimension))))
     (insert "\nListen — base voice, without contextual rules\n")
     (emacsvox-aural-voice-editor--button 'play (if tuning "Audition this choice" "Play edited") #'emacsvox-aural-voice-editor-play)
     (emacsvox-aural-voice-editor--button 'compare (if tuning "Compare original and edited choice" "Compare original and edited") #'emacsvox-aural-voice-editor-compare)
