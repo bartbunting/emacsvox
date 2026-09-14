@@ -11,6 +11,9 @@ for program in xvfb-run Xvfb xauth timeout; do
     fi
 done
 
+"$1" -Q --batch --eval \
+    '(unless (featurep (quote x)) (error "Graphical integration tests require an Emacs build with X11 support"))'
+
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 log=$(mktemp "${TMPDIR:-/tmp}/emacsvox-graphical-integration.XXXXXX")
 trap 'rm -f "$log"' EXIT

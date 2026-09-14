@@ -166,9 +166,13 @@ commit and verified archive hash together, and rerun both CI matrix versions
 with fresh dependency directories.  A checksum failure is a reason to inspect
 the downloaded artifact, not to automatically accept a new hash.
 
-The =integrations= CI job runs these commands on Emacs 30.2 and 31.1 in a fresh
-checkout with a private home directory.  Tests capture speech and agent/mail
-events; EAT also exercises disposable terminal subprocesses.  They require no
+The =integrations= CI job builds checksum-pinned GNU Emacs 30.2 and 31.1 with
+GTK3/X11 support and caches each installation.  Both batch and graphical tests
+use that same executable in a fresh checkout with a private home directory.
+The launcher rejects terminal-only Emacs builds before starting Xvfb; the
+minimal Emacs builds used by the other CI jobs cannot run this graphical gate.
+Tests capture speech and agent/mail events; EAT also exercises disposable
+terminal subprocesses.  They require no
 live agent, mailbox, speech server, or audio device.  They do not establish
 audible timing or complete compiled integration parity.  Local runs prefer
 newer source but may load current compiled dependencies; the fresh CI checkout

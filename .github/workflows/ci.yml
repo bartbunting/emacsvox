@@ -115,18 +115,54 @@ jobs:
   integrations:
     name: Agent Shell, Notmuch, and EAT (Emacs ${{ matrix.emacs }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        emacs: ['30.2', '31.1']
+        include:
+          - emacs: '30.2'
+            sha256: b3f36f18a6dd2715713370166257de2fae01f9d38cfe878ced9b1e6ded5befd9
+          - emacs: '31.1'
+            sha256: 1da5790d9580c81932b5bf700633114468da7b3412d69faa767daebf974f4586
     steps:
       - uses: actions/checkout@v4
-      - uses: purcell/setup-emacs@master
+      # purcell/setup-emacs supplies terminal-only builds. These jobs need X11.
+      - name: Install graphical Emacs build and test prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes build-essential pkg-config libgtk-3-dev \
+            libgnutls28-dev libxml2-dev libncurses-dev libxpm-dev libgif-dev texinfo \
+            ca-certificates curl xz-utils xvfb xauth fonts-dejavu-core
+      - uses: actions/cache@v4
+        id: graphical-emacs
         with:
-          version: ${{ matrix.emacs }}
-      - name: Install isolated graphical test prerequisites
-        run: sudo apt-get update && sudo apt-get install --yes xvfb xauth fonts-dejavu-core
+          path: ${{ runner.temp }}/emacs-${{ matrix.emacs }}
+          key: graphical-emacs-${{ runner.os }}-${{ runner.arch }}-ubuntu24-${{ matrix.emacs }}-${{ hashFiles('.github/workflows/ci.yml') }}
+      - name: Build pinned graphical Emacs
+        if: steps.graphical-emacs.outputs.cache-hit != 'true'
+        env:
+          EMACS_VERSION: ${{ matrix.emacs }}
+          EMACS_SHA256: ${{ matrix.sha256 }}
+        run: |
+          build_dir=$(mktemp -d "$RUNNER_TEMP/emacs-build.XXXXXX")
+          archive="$build_dir/emacs.tar.xz"
+          curl --fail --location --retry 3 \
+            "https://ftp.gnu.org/gnu/emacs/emacs-$EMACS_VERSION.tar.xz" -o "$archive"
+          printf '%s  %s\n' "$EMACS_SHA256" "$archive" | sha256sum --check --strict
+          tar -xJf "$archive" --strip-components=1 -C "$build_dir"
+          cd "$build_dir"
+          ./configure --prefix="$RUNNER_TEMP/emacs-$EMACS_VERSION" \
+            --with-x-toolkit=gtk3 --without-native-compilation --without-sound --without-dbus
+          make -j2
+          make install
+      - name: Select and verify graphical Emacs
+        env:
+          EMACS_VERSION: ${{ matrix.emacs }}
+        run: |
+          emacs_binary="$RUNNER_TEMP/emacs-$EMACS_VERSION/bin/emacs"
+          "$emacs_binary" -Q --batch --eval \
+            '(unless (and (equal emacs-version (getenv "EMACS_VERSION")) (featurep (quote x))) (error "Expected the pinned Emacs release with X11 support"))'
+          echo "$RUNNER_TEMP/emacs-$EMACS_VERSION/bin" >> "$GITHUB_PATH"
       - name: Verify preparation and run pinned integrations
         run: |
           emacs_binary=$(command -v emacs)
