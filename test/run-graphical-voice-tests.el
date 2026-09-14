@@ -37,7 +37,11 @@
         (require 'emacsvox-aural-feedback-details)
         (require 'emacsvox-aural-feedback-details-tests)
         (require 'emacsvox-emoji-integration-tests)
-        (dolist (function '(emacsvox-aural-feedback-details--insert-voice-links
+        ;; Loading minibuffer speech advice must not send ERT's own reports
+        ;; to an audio device after a test's delivery stubs have unwound.
+        (setq-default emacsvox-speak-messages nil)
+        (dolist (function '(emacsvox-aural-capture-context
+                            emacsvox-aural-feedback-details--insert-voice-links
                             emacsvox-aural-voice-editor-refresh))
           (let ((file (symbol-file function)))
             (unless (and file (string-suffix-p ".elc" file))
@@ -51,9 +55,10 @@
                         emacsvox-aural-voice-editor-save-actions-follow-settings-and-previews
                         emacsvox-aural-voice-editor-field-navigation-stops-at-both-ends
                         emacsvox-aural-voice-editor-horizontal-arrows-navigate-nonnumeric-fields
-                        emacsvox-aural-voice-editor-graphical-save-remains-visible))))
-          (setq status (if (and (= (ert-stats-total stats) 7)
-                                (= (ert-stats-completed stats) 7)
+                        emacsvox-aural-voice-editor-graphical-save-remains-visible
+                        emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
+          (setq status (if (and (= (ert-stats-total stats) 8)
+                                (= (ert-stats-completed stats) 8)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

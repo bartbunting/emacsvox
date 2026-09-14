@@ -194,7 +194,13 @@ OBJECT defaults to the current buffer and may also be a string."
     (when
         (and
          (boundp 'emacsvox-aural-ui-interface-buffer)
-         emacsvox-aural-ui-interface-buffer
+         (or emacsvox-aural-ui-interface-buffer
+             ;; Prompts belong to the interface that opened them, including
+             ;; candidate navigation and the minibuffer's exit-hook sound.
+             (and (minibufferp)
+                  (when-let* ((window (minibuffer-selected-window)))
+                    (buffer-local-value 'emacsvox-aural-ui-interface-buffer
+                                        (window-buffer window)))))
          (not emacsvox-aural-history-record-interface-presentations))
       (setq
        context

@@ -2723,7 +2723,15 @@ Prepare a voice remap from the selected record.
 Replace@comma{} suppress@comma{} or restore one exact earcon.
 @item L
 Change the bounded history limit for the current session.
+@item i
+Include or exclude feedback from the Aural interfaces themselves.
 @end table
+
+Aural interface feedback is excluded by default so it does not displace the
+feedback you are investigating.  This includes prompts opened from an Aural
+screen@comma{} their completion choices@comma{} and their opening and closing sounds.
+Ordinary completion outside these screens remains eligible for history.
+The setting controls new recordings; it does not remove entries already retained.
 
 @emph{Feedback Details} selects a separate@comma{} read-only buffer and announces only a
 brief introduction. Its report stays attached to that recorded presentation

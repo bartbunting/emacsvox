@@ -461,5 +461,85 @@
     (should (eq (tabulated-list-get-id) 'target))
     (should-not emacsvox-aural-change-feedback--expanded)))
 
+(ert-deftest emacsvox-aural-guided-graphical-minibuffer-history-follows-origin ()
+  "Real lifetime prompts exclude Aural feedback but retain ordinary completion."
+  (skip-unless (display-graphic-p))
+  (require 'package)
+  (package-initialize)
+  (require 'vertico)
+  (require 'emacsvox-vertico)
+  (require 'emacsvox-advice)
+  (message "Vertico %s: %s"
+           (package-version-join (package-desc-version (cadr (assq 'vertico package-alist))))
+           (symbol-file 'vertico--exhibit))
+  (let ((original-vertico-mode vertico-mode))
+    (unwind-protect
+        (progn
+          (vertico-mode 1)
+          (emacsvox-test--with-guided-feedback
+            (let ((editor (current-buffer))
+                  (record (symbol-function 'emacsvox-aural-record-presentation))
+                  (emacsvox-use-icons t)
+                  (emacsvox-aural-plan-presented-hook nil)
+                  (vertico-sort-function nil)
+                  observed)
+              (cl-letf
+                  (((symbol-function 'tts-stop) #'ignore)
+                   ((symbol-function 'emacsvox-icon)
+                    (lambda (icon) (emacsvox-aural-present-legacy-icon icon)))
+                   ((symbol-function 'emacsvox-sounds-play-concrete-cue) #'ignore)
+                   ((symbol-function 'emacsvox-sounds-ensure-sample) (lambda (_resource sample-id) sample-id))
+                   ;; Replace only speech delivery; keep native source planning,
+                   ;; transaction history, and standalone icon recording real.
+                   ((symbol-function 'tts-speak)
+                    (lambda (text)
+                      (let ((position 0))
+                        (while (< position (length text))
+                          (let ((plan (emacsvox-aural-concrete-plan-at position text))
+                                (end (next-single-property-change
+                                      position emacsvox-aural-concrete-plan-property text (length text))))
+                            (when plan
+                              (emacsvox-aural-record-presentation plan (substring text position end)))
+                            (setq position end))))))
+                   ((symbol-function 'emacsvox-aural-record-presentation)
+                    (lambda (plan &rest arguments)
+                      (when (string-match-p
+                             "Minibuf-" (or (plist-get (emacsvox-aural-concrete-plan-context plan)
+                                                       :source-buffer-name) ""))
+                        (push plan observed))
+                      (apply record plan arguments))))
+                ;; Reuse the same minibuffer across both origins and settings.
+                (dolist (case '((t nil nil) (t t t) (nil nil t) (t nil nil)))
+                  (pcase-let ((`(,interface ,include ,retain) case))
+                    (switch-to-buffer (if interface editor source))
+                    (let ((emacsvox-aural-history-record-interface-presentations include)
+                          (emacsvox-aural-presentation-history nil))
+                      (setq observed nil)
+                      (minibuffer-with-setup-hook
+                          (lambda ()
+                            (with-current-buffer source
+                              (should-not (plist-get (emacsvox-aural-capture-context)
+                                                     :history-recording-inhibited)))
+                            (setq unread-command-events
+                                  (listify-key-sequence (kbd "C-n C-p RET"))))
+                        (if interface
+                            (emacsvox-aural-change-feedback-lifetime)
+                          (completing-read "Ordinary choice: " '("First" "Second") nil t)))
+                      (should (cl-some (lambda (plan)
+                                        (eq (plist-get (emacsvox-aural-concrete-plan-facts plan) :role)
+                                            'candidate)) observed))
+                      (dolist (cue '(open-object close-object))
+                        (should (cl-some
+                                 (lambda (plan)
+                                   (cl-find cue (append (emacsvox-aural-concrete-plan-before plan)
+                                                        (emacsvox-aural-concrete-plan-after plan))
+                                            :key #'emacsvox-aural-concrete-action-cue)) observed)))
+                      (should (eq (not (null emacsvox-aural-presentation-history)) retain))
+                      (dolist (plan observed)
+                        (should (eq (not (null (plist-get (emacsvox-aural-concrete-plan-context plan)
+                                                         :history-recording-inhibited)))
+                                    (not retain)))))))))))
+      (vertico-mode (if original-vertico-mode 1 -1)))))
+
 (provide 'emacsvox-aural-change-feedback-tests)
 ;;; emacsvox-aural-change-feedback-tests.el ends here
