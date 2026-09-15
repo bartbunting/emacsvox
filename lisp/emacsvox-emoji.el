@@ -37,7 +37,8 @@
 (defvar emoji--names)
 
 (defun emacsvox-emoji--lookup (sequence)
-  "Return exact name and data evidence for SEQUENCE, or a diagnostic.
+  "Return a bundled name and data evidence for SEQUENCE, or a diagnostic.
+The text right arrow also accepts the corresponding emoji's bundled name.
 Failures are data, never speech errors.  No network or display is involved."
   (condition-case nil
       (if (and (stringp sequence)
@@ -45,9 +46,15 @@ Failures are data, never speech errors.  No network or display is involved."
                (boundp 'emoji--names)
                (hash-table-p emoji--names)
                (eq (hash-table-test emoji--names) 'equal))
-          (let ((name (gethash sequence emoji--names)))
+          (let* ((lookup-sequence
+                  (if (and (equal sequence "→")
+                           (not (gethash sequence emoji--names)))
+                      "➡"
+                    sequence))
+                 (name (gethash lookup-sequence emoji--names)))
             (if (and (stringp name) (not (string-empty-p name)))
                 (list :name (substring-no-properties name)
+                      :name-sequence lookup-sequence
                       :emacs-version emacs-version
                       :data-file (symbol-file 'emoji--names 'defvar))
               (list :diagnostic 'missing-name)))
@@ -67,7 +74,8 @@ mode hook.  Source buffers keep their original text."
 (defcustom emacsvox-emoji-approved-sequences t
   "Complete sequences eligible for automatic speech naming.
 The default t uses every exact name in Emacs's emoji table, plus custom
-names.  A list of strings restricts naming to those complete sequences;
+names and the text right arrow →.  A list of strings restricts naming to those
+complete sequences;
 inclusion does not imply that this Emacs version supplies a name."
   :type '(choice (const :tag "All named emoji" t)
                  (repeat :tag "Only these sequences" string))
@@ -167,8 +175,8 @@ Keep unknown joined sequences intact without depending on font composition."
 
 (defun emacsvox-emoji--eligible-p (sequence policy)
   "Whether complete SEQUENCE is eligible for naming under POLICY.
-The full-table policy requires an exact emoji or custom name, never a
-general Unicode character name or a name for part of a sequence."
+The full-table policy requires a bundled name (including the text right arrow)
+or custom name, never a general Unicode name or a name for part of a sequence."
   (if (eq (plist-get policy :approved) t)
       (or (assoc sequence (plist-get policy :names))
           (plist-get (emacsvox-emoji--lookup sequence) :name))

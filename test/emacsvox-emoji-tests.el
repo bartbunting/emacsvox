@@ -19,6 +19,32 @@
   (should (eq (plist-get (emacsvox-emoji--lookup "🔮‍🚀") :diagnostic)
               'missing-name)))
 
+(ert-deftest emacsvox-emoji-text-right-arrow-uses-bundled-name ()
+  "Ordinary menu-path arrows are named without changing the source text."
+  (let* ((text "Aural Home → Sounds and output → Output volumes")
+         (policy (emacsvox-emoji-test--policy))
+         (result (emacsvox-emoji--prepare text policy)))
+    (should (equal (plist-get result :text)
+                   "Aural Home right arrow Sounds and output right arrow Output volumes"))
+    (should (equal text "Aural Home → Sounds and output → Output volumes"))
+    (should (= (length (plist-get result :replacements)) 2))
+    (dolist (replacement (plist-get result :replacements))
+      (should (equal (plist-get replacement :sequence) "→"))
+      (should (equal (plist-get replacement :name-sequence) "➡"))
+      (should (plist-get replacement :data-file)))))
+
+(ert-deftest emacsvox-emoji-text-right-arrow-preserves-policy-boundaries ()
+  "Text arrows follow restrictions, counts, custom names and sequence ownership."
+  (dolist (text '("→ → →" "→‍🚀" "→́" "→️"))
+    (should (equal (plist-get (emacsvox-emoji--prepare text (emacsvox-emoji-test--policy)) :text)
+                   text)))
+  (dolist (policy (list (emacsvox-emoji-test--policy :enabled nil)
+                        (emacsvox-emoji-test--policy :approved '("➡"))))
+    (should (equal (plist-get (emacsvox-emoji--prepare "→" policy) :text) "→")))
+  (should (equal (plist-get (emacsvox-emoji--prepare
+                            "→" (emacsvox-emoji-test--policy :names '(("→" . "then")))) :text)
+                 "then")))
+
 (ert-deftest emacsvox-emoji-lookup-data-failures-are-bounded ()
   (require 'emoji-labels)
   (dolist (table (list nil '(invalid) (make-hash-table :test 'eq)))

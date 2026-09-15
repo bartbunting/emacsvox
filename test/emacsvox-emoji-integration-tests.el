@@ -7,6 +7,20 @@
 (require 'emacsvox-aural-voice-editor)
 (require 'emacsvox-aural-feedback-details)
 
+(ert-deftest emacsvox-emoji-menu-path-retains-style-through-runtime-and-preview ()
+  "The arrow-containing styled span reaches runtime and previews as named text."
+  (let* ((emacsvox-emoji-naming-enabled t)
+         (path (propertize "Aural Home → Sounds and output → Output volumes" 'face 'bold))
+         (text (concat "Implemented under " path ":"))
+         (expected "Implemented under Aural Home right arrow Sounds and output right arrow Output volumes:")
+         (prepared (emacsvox-aural--prepare-emoji-text (emacsvox-aural-prepare-text text))))
+    (should (equal prepared expected))
+    (should (eq (get-text-property (string-match "right arrow" prepared) 'face prepared) 'bold))
+    (let ((entries (tts--emoji-preview-entries
+                    (list (list :text text :selector '(:voice-id "test"))))))
+      (should (equal (plist-get (car entries) :text) expected)))
+    (should (string-match-p "→" text))))
+
 (ert-deftest emacsvox-emoji-planned-policy-survives-source-changes ()
   (let* ((emacsvox-emoji-naming-enabled t)
          (text (emacsvox-aural-prepare-text "Forecast 🔮"))
