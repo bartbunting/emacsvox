@@ -2499,7 +2499,7 @@ The six groups are:
 @item Voices and speech
 @tab Voice palettes@comma{} Browse installed voices@comma{} Preferred speech engine@comma{} Speech rate@comma{} and Voice Workbench.
 @item Sounds and output
-@tab Sound packs@comma{} Spatial settings@comma{} Notification output@comma{} Review notifications@comma{} and Stop notification speech.
+@tab Sound packs@comma{} Spatial settings@comma{} Audio output@comma{} Review notifications@comma{} and Stop notification speech.
 @item Optional feedback and rules
 @tab Presentation options@comma{} Your feedback rules@comma{} Current buffer rules@comma{} and Explain feedback as you navigate.
 @item Saved setups and unfinished changes
@@ -3687,8 +3687,10 @@ Enabled naming uses every exact name in Emacs's emoji table@comma{} including @s
 new emoji. @code{emacsvox-emoji-approved-sequences} defaults to @code{t} for this full
 table; optionally set it to a list of complete sequences to restrict naming.
 An unknown joined emoji stays intact@comma{} even when a component has a name.
-Foreign-language letters@comma{} combining accents and symbols without an exact emoji
-name retain the existing fallback behaviour. Exact character inspection also
+The text right arrow @samp{→} also uses the bundled @emph{right arrow} name@comma{} so short menu
+paths such as @samp{Home → Audio output} do not require fallback for that symbol.
+Foreign-language letters@comma{} combining accents and other symbols without an exact
+emoji name retain the existing fallback behaviour. Exact character inspection also
 retains its existing behaviour.
 
 @code{emacsvox-emoji-maximum-count} defaults to two occurrences@comma{} counting repetitions
@@ -3698,7 +3700,8 @@ contain several voice runs; a standalone preview sample is one item. Transport
 chunk sizes do not affect this limit. A sequence crossing a style or positioned
 cue boundary is conservatively left unchanged.
 
-Names come from the emoji table bundled with Emacs. Coverage may vary between
+Names come from the emoji table bundled with Emacs; the text right arrow shares
+the name of @samp{➡}. Coverage may vary between
 Emacs versions. Missing data or an absent exact name leaves the original
 sequence available to normal fallback; nothing is downloaded. The names are
 English@comma{} and enabled naming also applies to engines that could speak the
@@ -4135,7 +4138,8 @@ notification cue and its associated speech are delivered together on this
 stream.
 @end itemize
 
-Open @emph{Notification output} in Home to choose the arrangement in Customize.
+Open @emph{Audio output} in Home to choose the notification arrangement and adjust
+volumes in Customize.
 With Omnivox@comma{} @emph{Automatic} normally uses an independent notification process.
 The left@comma{} right@comma{} and both choices select its output route.
 @emph{Use main output (notifications remain audible)} sends notifications through
@@ -4147,6 +4151,25 @@ After changing the setting@comma{} initialize the arrangement with
 @kbd{C-e d C-n}. Use Customize's save action to retain the choice
 across restarts. In Lisp@comma{} @code{default} or an empty string selects main output;
 prefer the descriptive Customize labels for ordinary configuration.
+
+The same @emph{Audio output} page provides five independent Omnivox volume controls:
+main-stream tones and earcons@comma{} and
+notification-stream speech@comma{} tones and earcons. Each accepts an integer
+percentage from 0 to 100. The default@comma{} 100@comma{} preserves normal volume; 0 silences
+that component. For example@comma{} reduce notification speech to 35 while keeping
+notification earcons at 70 to hear brief cues more prominently than messages.
+
+Customize applies volume changes to subsequent audio without restarting the
+server. Audio already prepared keeps its previous level. Save the settings in
+Customize to retain them across Emacs restarts; replacement and reconnected
+Omnivox processes receive the current settings automatically.
+
+Independent notification levels require the separate notification process
+selected by @emph{Automatic}@comma{} @emph{Left}@comma{} @emph{Right}@comma{} or @emph{Both channels}. With @emph{Use main
+output}@comma{} or when notifications fall back to main speech@comma{} they share the main
+process's levels. Earcon volume controls apply to sounds played by Omnivox;
+external sound players and other speech backends do not use these settings.
+Setting a volume to zero does not disable notification recording.
 
 @emph{Stop notification speech} in Home stops the current notification stream;
 it is not a persistent mute. @emph{Review notifications} opens the notification

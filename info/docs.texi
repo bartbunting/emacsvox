@@ -67,7 +67,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1547 commands and 211 options.
+This chapter documents a total of 1547 commands and 216 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -8949,7 +8949,8 @@ helper, which can fall back to naming the first character of a sequence.
 @verbatim
 Complete sequences eligible for automatic speech naming.
 The default t uses every exact name in Emacs’s emoji table, plus custom
-names.  A list of strings restricts naming to those complete sequences;
+names and the text right arrow →.  A list of strings restricts naming to those
+complete sequences;
 inclusion does not imply that this Emacs version supplies a name.
 @end verbatim
 
@@ -25799,6 +25800,37 @@ Default Value:
 
 @end defvar
 
+@defvar {User Option} tts-main-earcon-volume
+@verbatim
+Main-stream earcon volume as a percentage from 0 to 100.
+Zero silences earcons played by Omnivox.  External sound players are unaffected.
+Customize applies changes to subsequent audio.
+@end verbatim
+
+Default Value:
+@verbatim
+
+100
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} tts-main-tone-volume
+@verbatim
+Main-stream tone volume as a percentage from 0 to 100.
+Zero silences tones.  Customize applies changes to subsequent Omnivox audio.
+@end verbatim
+
+Default Value:
+@verbatim
+
+100
+
+@end verbatim
+
+@end defvar
+
 @defvar {User Option} tts-notification-device
 @verbatim
 Virtual sound device to use for notifications stream.
@@ -25813,6 +25845,55 @@ Default Value:
 @verbatim
 
 nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} tts-notification-earcon-volume
+@verbatim
+Notification earcon volume as a percentage from 0 to 100.
+Zero silences earcons played by the separate Omnivox notification process.
+Customize applies changes to subsequent audio.  Main output uses main settings.
+External sound players are unaffected.
+@end verbatim
+
+Default Value:
+@verbatim
+
+100
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} tts-notification-speech-volume
+@verbatim
+Notification speech volume as a percentage from 0 to 100.
+Zero silences speech on the separate Omnivox notification process.
+Customize applies changes to subsequent audio.  Main output uses main settings.
+@end verbatim
+
+Default Value:
+@verbatim
+
+100
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} tts-notification-tone-volume
+@verbatim
+Notification tone volume as a percentage from 0 to 100.
+Zero silences tones on the separate Omnivox notification process.
+Customize applies changes to subsequent audio.  Main output uses main settings.
+@end verbatim
+
+Default Value:
+@verbatim
+
+100
 
 @end verbatim
 

@@ -8,6 +8,22 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox Unreleased --- Current User-Visible Changes
 
+** Independent output volumes
+
+Aural Home's /Audio output/ combines notification device selection with five
+Omnivox volume controls in Customize:
+notification speech, tones and earcons, plus main-stream tones and earcons.
+Set each from 0 to 100 percent; 100 preserves its normal level and 0 silences
+that component. Changes affect subsequent audio, and saved settings survive
+restarts. Independent notification levels require a separate notification
+process; notifications using main output share that process's levels.
+
+** Agent Shell response navigation
+
+Upward movement now reaches indented response text that could previously be
+skipped with only a blank-line earcon. First response rows are spoken in both
+directions, including wrapped text, without leaking hidden prompt markers.
+
 ** Simpler feedback controls
 
 Aural Home's /Understand and change feedback/ group now has three entries:
@@ -32,7 +48,9 @@ and supports buffer-local settings and custom names. Set
 =emacsvox-emoji-naming-enabled= to nil to disable it globally or in a buffer.
 
 Names come from Emacs's full bundled emoji table, including =🌱= (seedling),
-flags and keycaps. No per-emoji approval is needed; an explicit restriction
+flags and keycaps. The text right arrow =→= also uses the bundled /right arrow/
+name, allowing short menu paths to be named before engine selection.
+No per-emoji approval is needed; an explicit restriction
 list remains optional. Unknown sequences and other languages
 keep their existing fallback behaviour. Speech and voice previews share the
 policy, and Feedback Details records substitutions. Original replay preserves

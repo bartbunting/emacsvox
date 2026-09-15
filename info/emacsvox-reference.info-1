@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1547 commands and 211 options.
+   This chapter documents a total of 1547 commands and 216 options.
 
 * Menu:
 
@@ -8079,7 +8079,8 @@ a sequence.
  -- Variable: User Option emacsvox-emoji-approved-sequences
      Complete sequences eligible for automatic speech naming.
      The default t uses every exact name in Emacs’s emoji table, plus custom
-     names.  A list of strings restricts naming to those complete sequences;
+     names and the text right arrow →.  A list of strings restricts naming to those
+     complete sequences;
      inclusion does not imply that this Emacs version supplies a name.
 
      Default Value:

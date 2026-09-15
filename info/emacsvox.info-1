@@ -2487,9 +2487,9 @@ feedback                  Return to source item.
 Voices and speech         Voice palettes, Browse installed voices,
                           Preferred speech engine, Speech rate, and
                           Voice Workbench.
-Sounds and output         Sound packs, Spatial settings, Notification
-                          output, Review notifications, and Stop
-                          notification speech.
+Sounds and output         Sound packs, Spatial settings, Audio output,
+                          Review notifications, and Stop notification
+                          speech.
 Optional feedback and     Presentation options, Your feedback rules,
 rules                     Current buffer rules, and Explain feedback as
                           you navigate.
@@ -3691,10 +3691,12 @@ including ‘🌱’ (seedling), flags, keycaps and joined emoji.  There is no
 need to approve each new emoji.  ‘emacsvox-emoji-approved-sequences’
 defaults to ‘t’ for this full table; optionally set it to a list of
 complete sequences to restrict naming.  An unknown joined emoji stays
-intact, even when a component has a name.  Foreign-language letters,
-combining accents and symbols without an exact emoji name retain the
-existing fallback behaviour.  Exact character inspection also retains
-its existing behaviour.
+intact, even when a component has a name.  The text right arrow ‘→’ also
+uses the bundled _right arrow_ name, so short menu paths such as ‘Home →
+Audio output’ do not require fallback for that symbol.  Foreign-language
+letters, combining accents and other symbols without an exact emoji name
+retain the existing fallback behaviour.  Exact character inspection also
+retains its existing behaviour.
 
    ‘emacsvox-emoji-maximum-count’ defaults to two occurrences, counting
 repetitions separately.  With three eligible occurrences in the original
@@ -3704,11 +3706,12 @@ sample is one item.  Transport chunk sizes do not affect this limit.  A
 sequence crossing a style or positioned cue boundary is conservatively
 left unchanged.
 
-   Names come from the emoji table bundled with Emacs.  Coverage may
-vary between Emacs versions.  Missing data or an absent exact name
-leaves the original sequence available to normal fallback; nothing is
-downloaded.  The names are English, and enabled naming also applies to
-engines that could speak the original emoji.
+   Names come from the emoji table bundled with Emacs; the text right
+arrow shares the name of ‘➡’.  Coverage may vary between Emacs versions.
+Missing data or an absent exact name leaves the original sequence
+available to normal fallback; nothing is downloaded.  The names are
+English, and enabled naming also applies to engines that could speak the
+original emoji.
 
    Explicit pronunciation entries take precedence.  For eligible
 sequences, set ‘emacsvox-emoji-custom-names’ to override a bundled name,
@@ -4156,19 +4159,40 @@ caused it:
      be heard concurrently.  A notification cue and its associated
      speech are delivered together on this stream.
 
-   Open _Notification output_ in Home to choose the arrangement in
-Customize.  With Omnivox, _Automatic_ normally uses an independent
-notification process.  The left, right, and both choices select its
-output route.  _Use main output (notifications remain audible)_ sends
-notifications through the main process instead.  Navigation can then
-interrupt them; this setting does not mute notifications.  Other
-backends may use their configured device or fall back to the main
-stream.
+   Open _Audio output_ in Home to choose the notification arrangement
+and adjust volumes in Customize.  With Omnivox, _Automatic_ normally
+uses an independent notification process.  The left, right, and both
+choices select its output route.  _Use main output (notifications remain
+audible)_ sends notifications through the main process instead.
+Navigation can then interrupt them; this setting does not mute
+notifications.  Other backends may use their configured device or fall
+back to the main stream.
 
    After changing the setting, initialize the arrangement with ‘C-e d
 C-n’.  Use Customize's save action to retain the choice across restarts.
 In Lisp, ‘default’ or an empty string selects main output; prefer the
 descriptive Customize labels for ordinary configuration.
+
+   The same _Audio output_ page provides five independent Omnivox volume
+controls: main-stream tones and earcons, and notification-stream speech,
+tones and earcons.  Each accepts an integer percentage from 0 to 100.
+The default, 100, preserves normal volume; 0 silences that component.
+For example, reduce notification speech to 35 while keeping notification
+earcons at 70 to hear brief cues more prominently than messages.
+
+   Customize applies volume changes to subsequent audio without
+restarting the server.  Audio already prepared keeps its previous level.
+Save the settings in Customize to retain them across Emacs restarts;
+replacement and reconnected Omnivox processes receive the current
+settings automatically.
+
+   Independent notification levels require the separate notification
+process selected by _Automatic_, _Left_, _Right_, or _Both channels_.
+With _Use main output_, or when notifications fall back to main speech,
+they share the main process's levels.  Earcon volume controls apply to
+sounds played by Omnivox; external sound players and other speech
+backends do not use these settings.  Setting a volume to zero does not
+disable notification recording.
 
    _Stop notification speech_ in Home stops the current notification
 stream; it is not a persistent mute.  _Review notifications_ opens the

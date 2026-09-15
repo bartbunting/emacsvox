@@ -1672,6 +1672,25 @@ This module defines the generic TTS interface.
      "outloud"
 
 
+ -- Variable: User Option tts-main-earcon-volume
+     Main-stream earcon volume as a percentage from 0 to 100.
+     Zero silences earcons played by Omnivox.  External sound players are unaffected.
+     Customize applies changes to subsequent audio.
+
+     Default Value:
+
+     100
+
+
+ -- Variable: User Option tts-main-tone-volume
+     Main-stream tone volume as a percentage from 0 to 100.
+     Zero silences tones.  Customize applies changes to subsequent Omnivox audio.
+
+     Default Value:
+
+     100
+
+
  -- Variable: User Option tts-notification-device
      Virtual sound device to use for notifications stream.
      For Omnivox, nil starts a second process routed to both channels; ‘left’,
@@ -1683,6 +1702,37 @@ This module defines the generic TTS interface.
      Default Value:
 
      nil
+
+
+ -- Variable: User Option tts-notification-earcon-volume
+     Notification earcon volume as a percentage from 0 to 100.
+     Zero silences earcons played by the separate Omnivox notification process.
+     Customize applies changes to subsequent audio.  Main output uses main settings.
+     External sound players are unaffected.
+
+     Default Value:
+
+     100
+
+
+ -- Variable: User Option tts-notification-speech-volume
+     Notification speech volume as a percentage from 0 to 100.
+     Zero silences speech on the separate Omnivox notification process.
+     Customize applies changes to subsequent audio.  Main output uses main settings.
+
+     Default Value:
+
+     100
+
+
+ -- Variable: User Option tts-notification-tone-volume
+     Notification tone volume as a percentage from 0 to 100.
+     Zero silences tones on the separate Omnivox notification process.
+     Customize applies changes to subsequent audio.  Main output uses main settings.
+
+     Default Value:
+
+     100
 
 
  -- Variable: User Option tts-punctuation-mode-policy-alist
