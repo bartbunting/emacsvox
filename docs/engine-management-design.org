@@ -5,8 +5,8 @@
 * Direction and status
 
 The maintainer wants useful engine status, a detailed screen for each engine,
-Piper model downloads, additional Flite voices, MBROLA support, per-voice
-enablement to control memory use, and room for other engines. This is a
+Piper model downloads, additional Flite voices, eSpeak voice variants, MBROLA
+support, per-voice enablement to control memory use, and room for other engines. This is a
 design and delivery plan, not an accepted ADR. Existing loading support is
 distinguished below from proposed management services and new backend work.
 
@@ -34,9 +34,10 @@ Omnivox owns the reusable download, installation and storage service;
 downloaded files belong to the user. Implementation proceeds in slices.
 
 Recommended order: useful engine details; Piper voice acquisition and multiple
-models; Flite acquisition using its existing loader; an isolated MBROLA
-prototype followed by integration; then other providers. A small Flite local
-import slice can proceed before Piper downloads if it helps exercise the UI.
+models; Flite acquisition using its existing loader; eSpeak variant selection;
+an isolated MBROLA prototype followed by integration; then other providers.
+A small Flite local import slice or bundled eSpeak variant discovery can proceed
+earlier if it helps exercise the UI without depending on downloads.
 
 Keep a short engine list for navigation. RET opens the selected engine's
 details. Its actions depend on that engine, the speech host and the available
@@ -738,12 +739,26 @@ delivered UI action must have a usable supported path.
    language data, a malformed file, preserved SLT and the two-lane memory cost.
    Verify batch enable/disable, no re-download when re-enabled, correct native
    load sets after restart, resource release and unchanged palette references.
-6. *MBROLA feasibility, then companion.* Separate the native prototype and
+6. *eSpeak voice variants and availability.* Discover variants from the actual
+   speech host's eSpeak data and establish how to expose them through Omnivox's
+   inventory and eligibility rules. Start with bundled variants; distinguish
+   making an existing choice available from downloading or importing a file.
+   Emacsvox should offer a base voice/language and variant picker, exact preview,
+   saved palette choices and enable/disable controls without listing every
+   possible combination at once. Omnivox owns validated combination identities,
+   synthesis and actual-voice reporting; preserve existing base-voice IDs.
+   Verify variant switching, interaction with pitch/rate settings, cache refresh,
+   missing or disabled variants, fallback, and consistent main/notification
+   behavior on Linux and native Windows. Document how users make a variant
+   available and select it. The upstream
+   [[https://github.com/espeak-ng/espeak-ng/blob/master/src/espeak-ng.1.ronn][eSpeak command reference]] describes variant listing and =voice+variant=
+   selection; confirm the equivalent path in the pinned native library.
+7. *MBROLA feasibility, then companion.* Separate the native prototype and
    recorded evidence from production integration. Prove text → frontend →
    database → PCM through one isolated helper, then cancel/replacement, both
    lanes, exact preview, high-rate reading and recovery. After that gate, add
    the verified module and reviewed database provider using the same UI.
-7. *Further providers.* Evaluate sherpa-onnx model families, then supported
+8. *Further providers.* Evaluate sherpa-onnx model families, then supported
    RHVoice/OS additions as separate slices. Speech Dispatcher has its own
    external-playback acceptance gate and cannot delay the PCM-based providers.
 
