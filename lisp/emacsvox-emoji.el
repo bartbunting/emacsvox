@@ -36,9 +36,27 @@
 
 (defvar emoji--names)
 
+(defun emacsvox-emoji--arrow-data (sequence)
+  "Return Unicode evidence for a complete arrow or harpoon SEQUENCE.
+Accept a single symbol, optionally followed by a text or emoji presentation
+selector.  Joined sequences and other combining characters stay intact."
+  (when (and (stringp sequence)
+             (or (= (length sequence) 1)
+                 (and (= (length sequence) 2)
+                      (memq (aref sequence 1) '(#xFE0E #xFE0F)))))
+    (let ((char (aref sequence 0)))
+      (when (and (> char 127)
+                 (memq (get-char-code-property char 'general-category)
+                       '(Sm So Sk)))
+        (let ((name (get-char-code-property char 'name)))
+          (when (and (stringp name)
+                     (string-match-p "\\b\\(?:ARROW\\|HARPOON\\)" name))
+            (list :name (downcase name) :source 'unicode-arrow
+                  :unicode-name name :emacs-version emacs-version)))))))
+
 (defun emacsvox-emoji--lookup (sequence)
   "Return a bundled name and data evidence for SEQUENCE, or a diagnostic.
-The text right arrow also accepts the corresponding emoji's bundled name.
+Arrows prefer emoji names, then use their exact Unicode symbol names.
 Failures are data, never speech errors.  No network or display is involved."
   (condition-case nil
       (if (and (stringp sequence)
@@ -46,18 +64,22 @@ Failures are data, never speech errors.  No network or display is involved."
                (boundp 'emoji--names)
                (hash-table-p emoji--names)
                (eq (hash-table-test emoji--names) 'equal))
-          (let* ((lookup-sequence
-                  (if (and (equal sequence "→")
-                           (not (gethash sequence emoji--names)))
-                      "➡"
-                    sequence))
+          (let* ((arrow (emacsvox-emoji--arrow-data sequence))
+                 (base (and arrow (substring sequence 0 1)))
+                 (lookup-sequence
+                  (cond ((gethash sequence emoji--names) sequence)
+                        ((and base (gethash base emoji--names)) base)
+                        (base (or (cdr (assoc base '(("←" . "⬅") ("↑" . "⬆")
+                                                    ("→" . "➡") ("↓" . "⬇"))))
+                                  base))
+                        (t sequence)))
                  (name (gethash lookup-sequence emoji--names)))
             (if (and (stringp name) (not (string-empty-p name)))
                 (list :name (substring-no-properties name)
                       :name-sequence lookup-sequence
                       :emacs-version emacs-version
                       :data-file (symbol-file 'emoji--names 'defvar))
-              (list :diagnostic 'missing-name)))
+              (or arrow (list :diagnostic 'missing-name))))
         (list :diagnostic 'unavailable-data))
     (error (list :diagnostic 'unavailable-data))))
 
@@ -73,17 +95,18 @@ mode hook.  Source buffers keep their original text."
 
 (defcustom emacsvox-emoji-approved-sequences t
   "Complete sequences eligible for automatic speech naming.
-The default t uses every exact name in Emacs's emoji table, plus custom
-names and the text right arrow →.  A list of strings restricts naming to those
-complete sequences;
-inclusion does not imply that this Emacs version supplies a name."
+The default t uses Emacs's emoji table, Unicode arrow and harpoon names,
+and custom names.  A list of strings restricts naming to those complete
+sequences; inclusion does not imply that this Emacs version supplies a name."
   :type '(choice (const :tag "All named emoji" t)
                  (repeat :tag "Only these sequences" string))
   :group 'emacsvox-emoji)
 
-(defcustom emacsvox-emoji-maximum-count 2
+(defcustom emacsvox-emoji-maximum-count 64
   "Maximum eligible occurrences per speech object or preview sample.
-Above this limit, the entire item retains its emoji."
+Accepts zero through 64; repetitions count separately.  The default 64 allows
+ordinary decorated messages to retain their preferred speech engine.
+Above this limit, the entire item retains its emoji and arrows."
   :type 'natnum :group 'emacsvox-emoji)
 
 (defcustom emacsvox-emoji-custom-names nil
@@ -175,8 +198,8 @@ Keep unknown joined sequences intact without depending on font composition."
 
 (defun emacsvox-emoji--eligible-p (sequence policy)
   "Whether complete SEQUENCE is eligible for naming under POLICY.
-The full-table policy requires a bundled name (including the text right arrow)
-or custom name, never a general Unicode name or a name for part of a sequence."
+The full-table policy requires an emoji, Unicode arrow or custom name,
+never a name for part of a sequence or an unrelated Unicode character."
   (if (eq (plist-get policy :approved) t)
       (or (assoc sequence (plist-get policy :names))
           (plist-get (emacsvox-emoji--lookup sequence) :name))

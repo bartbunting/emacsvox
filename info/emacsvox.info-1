@@ -3691,27 +3691,32 @@ including ‘🌱’ (seedling), flags, keycaps and joined emoji.  There is no
 need to approve each new emoji.  ‘emacsvox-emoji-approved-sequences’
 defaults to ‘t’ for this full table; optionally set it to a list of
 complete sequences to restrict naming.  An unknown joined emoji stays
-intact, even when a component has a name.  The text right arrow ‘→’ also
-uses the bundled _right arrow_ name, so short menu paths such as ‘Home →
-Audio output’ do not require fallback for that symbol.  Foreign-language
-letters, combining accents and other symbols without an exact emoji name
-retain the existing fallback behaviour.  Exact character inspection also
-retains its existing behaviour.
+intact, even when a component has a name.  Arrow and harpoon symbols
+also receive names, including all directions, diagonals, double arrows
+and curved arrows.  For example, ‘← ↑ → ↓’ becomes _left arrow up arrow
+right arrow down arrow_.  Symbols outside the emoji table, such as ‘⇒’
+and ‘⟶’, use their Unicode names.  Text and emoji presentation selectors
+are supported; unknown joined or accented sequences remain intact.
+Foreign-language letters and unrelated symbols retain the existing
+fallback behaviour.  Exact character inspection also retains its
+existing behaviour.
 
-   ‘emacsvox-emoji-maximum-count’ defaults to two occurrences, counting
-repetitions separately.  With three eligible occurrences in the original
-item, automatic naming is skipped for the whole item.  One captured
-presentation object can contain several voice runs; a standalone preview
-sample is one item.  Transport chunk sizes do not affect this limit.  A
-sequence crossing a style or positioned cue boundary is conservatively
-left unchanged.
+   ‘emacsvox-emoji-maximum-count’ defaults to 64 occurrences, counting
+repetitions separately.  A subject such as ‘🤔Dinner? 🍕🍕🍕’ is spoken
+as _thinking face Dinner?  pizza pizza pizza_, avoiding fallback caused
+by its four emoji.  Above the configured limit, automatic naming is
+skipped for the whole item.  One captured presentation object can
+contain several voice runs; a standalone preview sample is one item.
+Transport chunk sizes do not affect this limit.  A sequence crossing a
+style or positioned cue boundary is conservatively left unchanged.
 
-   Names come from the emoji table bundled with Emacs; the text right
-arrow shares the name of ‘➡’.  Coverage may vary between Emacs versions.
-Missing data or an absent exact name leaves the original sequence
-available to normal fallback; nothing is downloaded.  The names are
-English, and enabled naming also applies to engines that could speak the
-original emoji.
+   Names come from the emoji table and Unicode character data bundled
+with Emacs.  Arrows prefer the emoji names when available; the four
+plain directional arrows share the names of their emoji equivalents.
+Coverage may vary between Emacs versions.  Missing data or an absent
+exact name leaves the original sequence available to normal fallback;
+nothing is downloaded.  The names are English, and enabled naming also
+applies to engines that could speak the original emoji.
 
    Explicit pronunciation entries take precedence.  For eligible
 sequences, set ‘emacsvox-emoji-custom-names’ to override a bundled name,

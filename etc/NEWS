@@ -43,13 +43,16 @@ labelled; previews and retained drafts do not change the captured presentation.
 Occasional emoji are named before engine selection by default.
 For example, =Forecast 🔮= becomes =Forecast crystal ball=
 for speech, which can avoid an unnecessary engine fallback. The source text
-stays unchanged. Naming defaults to at most two eligible occurrences per item
+stays unchanged. Naming defaults to at most 64 eligible occurrences per item
 and supports buffer-local settings and custom names. Set
 =emacsvox-emoji-naming-enabled= to nil to disable it globally or in a buffer.
+The higher limit handles decorated mail subjects, including a thinking face
+followed by three pizza symbols, without skipping all naming at the third emoji.
 
 Names come from Emacs's full bundled emoji table, including =🌱= (seedling),
-flags and keycaps. The text right arrow =→= also uses the bundled /right arrow/
-name, allowing short menu paths to be named before engine selection.
+flags and keycaps. Arrow and harpoon symbols use bundled emoji names or their
+Unicode names, covering all directions, diagonal, double and curved arrows,
+including text and emoji presentation selectors.
 No per-emoji approval is needed; an explicit restriction
 list remains optional. Unknown sequences and other languages
 keep their existing fallback behaviour. Speech and voice previews share the

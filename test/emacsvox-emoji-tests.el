@@ -35,7 +35,7 @@
 
 (ert-deftest emacsvox-emoji-text-right-arrow-preserves-policy-boundaries ()
   "Text arrows follow restrictions, counts, custom names and sequence ownership."
-  (dolist (text '("→ → →" "→‍🚀" "→́" "→️"))
+  (dolist (text '("→ → →" "→‍🚀" "→́"))
     (should (equal (plist-get (emacsvox-emoji--prepare text (emacsvox-emoji-test--policy)) :text)
                    text)))
   (dolist (policy (list (emacsvox-emoji-test--policy :enabled nil)
@@ -59,8 +59,65 @@
                    '(:diagnostic unavailable-data)))))
 
 (defun emacsvox-emoji-test--policy (&rest overrides)
-  (let ((emacsvox-emoji-naming-enabled t))
+  "Return a policy with a small explicit limit for boundary tests."
+  (let ((emacsvox-emoji-naming-enabled t)
+        (emacsvox-emoji-maximum-count 2))
     (append overrides (emacsvox-emoji--snapshot))))
+
+(ert-deftest emacsvox-emoji-default-limit-handles-decorated-subjects ()
+  "Repeated symbols no longer suppress naming for an ordinary mail subject."
+  (let* ((text "🤔Dinner? 🍕🍕🍕")
+         (policy (emacsvox-emoji--snapshot))
+         (frozen (emacsvox-emoji--item-policy text policy)))
+    (should-not (plist-get frozen :count-exceeded))
+    (should (equal (plist-get (emacsvox-emoji--prepare text frozen) :text)
+                   "thinking face Dinner? pizza pizza pizza"))
+    (let ((excess (make-string 65 ?🍕)))
+      (should (equal (plist-get (emacsvox-emoji--prepare excess policy) :text)
+                     excess)))
+    (should (equal (plist-get (emacsvox-emoji--prepare
+                              text (emacsvox-emoji-test--policy)) :diagnostics)
+                   '(count-exceeded)))))
+
+(ert-deftest emacsvox-emoji-arrows-use-bundled-and-unicode-names ()
+  "Name ordinary directions and arrows outside the emoji repertoire."
+  (dolist (entry '(("←" . "left arrow") ("↑" . "up arrow")
+                   ("→" . "right arrow") ("↓" . "down arrow")
+                   ("↔" . "left-right arrow") ("↕" . "up-down arrow")
+                   ("↗" . "up-right arrow") ("↖" . "up-left arrow")
+                   ("↘" . "down-right arrow") ("↙" . "down-left arrow")
+                   ("⇒" . "rightwards double arrow")
+                   ("⟶" . "long rightwards arrow")
+                   ("➜" . "heavy round-tipped rightwards arrow")
+                   ("⮕" . "rightwards black arrow")
+                   ("🡆" . "rightwards heavy arrow")
+                   ("↼" . "leftwards harpoon with barb upwards")
+                   ("⤴" . "right arrow curving up")))
+    (dolist (suffix '("" "︎" "️"))
+      (let* ((text (concat (car entry) suffix))
+             (result (emacsvox-emoji--prepare text (emacsvox-emoji--snapshot))))
+        (should (equal (plist-get result :text) (cdr entry)))
+        (should-not (plist-get result :diagnostics))
+        (should (equal (plist-get (car (plist-get result :replacements)) :sequence)
+                       text)))))
+  (let ((result (emacsvox-emoji--lookup "⟶")))
+    (should (eq (plist-get result :source) 'unicode-arrow))
+    (should (equal (plist-get result :unicode-name) "LONG RIGHTWARDS ARROW"))))
+
+(ert-deftest emacsvox-emoji-arrow-names-preserve-sequences-and-restrictions ()
+  "Unicode arrow names must not expand unrelated text or unknown sequences."
+  (dolist (text '("⇒‍🚀" "←́" "⟶🏽" "⮕️‍🚀" "é ∑ 日本語 ⊢"))
+    (should (equal (plist-get (emacsvox-emoji--prepare
+                              text (emacsvox-emoji--snapshot)) :text)
+                   text)))
+  (should (equal (plist-get (emacsvox-emoji--prepare
+                            "← ↑ ⇒" (emacsvox-emoji-test--policy :approved '("←")))
+                           :text)
+                 "left arrow ↑ ⇒"))
+  (should (equal (plist-get (emacsvox-emoji--prepare
+                            "⇒" (emacsvox-emoji-test--policy :names '(("⇒" . "implies"))))
+                           :text)
+                 "implies")))
 
 (ert-deftest emacsvox-emoji-disabled-and-count-threshold ()
   (let ((original (propertize "Forecast 🔮" 'face 'bold)))

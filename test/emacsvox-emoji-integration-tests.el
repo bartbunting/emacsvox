@@ -21,6 +21,21 @@
       (should (equal (plist-get (car entries) :text) expected)))
     (should (string-match-p "→" text))))
 
+(ert-deftest emacsvox-emoji-decorated-text-matches-runtime-and-preview ()
+  "Repeated emoji and arrow families keep style through both speech paths."
+  (dolist (entry '(("🤔Dinner? 🍕🍕🍕" . "thinking face Dinner? pizza pizza pizza")
+                   ("← ↑ → ↓ ⇒ ⟶"
+                    . "left arrow up arrow right arrow down arrow rightwards double arrow long rightwards arrow")))
+    (let* ((text (concat "Read " (propertize (car entry) 'face 'bold)))
+           (expected (concat "Read " (cdr entry)))
+           (prepared (emacsvox-aural--prepare-emoji-text
+                      (emacsvox-aural-prepare-text text)))
+           (preview (car (tts--emoji-preview-entries (list (list :text text))))))
+      (should (equal prepared expected))
+      (should (eq (get-text-property 5 'face prepared) 'bold))
+      (should (equal (plist-get preview :text) expected))
+      (should-not (plist-get (plist-get preview :emoji-naming) :diagnostics)))))
+
 (ert-deftest emacsvox-emoji-planned-policy-survives-source-changes ()
   (let* ((emacsvox-emoji-naming-enabled t)
          (text (emacsvox-aural-prepare-text "Forecast 🔮"))
@@ -35,7 +50,8 @@
     (should (equal text "Forecast 🔮"))))
 
 (ert-deftest emacsvox-emoji-object-limit-spans-style-runs ()
-  (let ((emacsvox-emoji-naming-enabled t))
+  (let ((emacsvox-emoji-naming-enabled t)
+        (emacsvox-emoji-maximum-count 2))
     (let* ((text (concat (propertize "🔮 " 'face 'bold) "🔮 🔮"))
            (prepared (emacsvox-aural-prepare-text text)))
       (should (equal (emacsvox-aural--prepare-emoji-text prepared) text)))
@@ -53,6 +69,7 @@
 
 (ert-deftest emacsvox-emoji-original-count-survives-pronunciation-cleanup ()
   (let ((emacsvox-emoji-naming-enabled t)
+        (emacsvox-emoji-maximum-count 2)
         (table (make-hash-table :test #'equal)))
     (puthash "✨" "sparkle" table)
     (with-temp-buffer

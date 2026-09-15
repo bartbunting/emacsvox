@@ -2055,6 +2055,28 @@ Return the beginning of the inserted row."
       (should (= calls 2))
       (should (equal events '(result))))))
 
+(ert-deftest emacsvox-notmuch-decorated-subject-reaches-synthesis-as-names ()
+  "A thinking face and three pizzas must not force Unicode fallback."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-search-mode)
+    (let ((emacsvox-notmuch-search-result-fields '(authors subject))
+          (tts-stop-immediately nil) (tts-handle-unicode nil)
+          (emacsvox-pronounce-table nil) (emacsvox-pronounce-personality nil)
+          (subject "🤔Dinner? 🍕🍕🍕")
+          observed)
+      (cl-letf (((symbol-function 'tts--protocol-sync) #'ignore)
+                ((symbol-function 'tts--protocol-dispatch) #'ignore)
+                ((symbol-function 'tts-audio-format)
+                 (lambda (start end)
+                   (push (buffer-substring-no-properties start end) observed)))
+                ((symbol-function 'tts--speak) #'tts--speak-transaction))
+        (emacsvox-notmuch-speak-search-result
+         (list :authors "Pizza offers" :subject subject
+               :matched 1 :total 1 :tags nil)))
+      (should (equal (mapconcat #'identity (nreverse observed) "")
+                     "Pizza offers, thinking face Dinner? pizza pizza pizza"))
+      (should (equal subject "🤔Dinner? 🍕🍕🍕")))))
+
 (ert-deftest emacsvox-notmuch-search-navigation-announces-boundaries ()
   "Search navigation announces rather than rereads its boundary result."
   (dolist
