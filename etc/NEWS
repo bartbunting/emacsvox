@@ -22,6 +22,15 @@ voice editor, where an experiment can be saved to an explicit palette
 destination. q returns to engine details. Inventory updates preserve focus and
 selection, and browsing never starts a sample automatically.
 
+The bundled local launcher's engine details now provide file settings for
+Piper, Flite, Eloquence and DECtalk. Flite files have individual /Load file/
+switches; disabled files remain on disk and are omitted after speech restarts.
+Existing environment overrides retain precedence. A bounded, silent configured
+check retains the target and diagnostics without replacing live speech;
+incomplete Flite discovery is reported even when built-in SLT still works.
+Restarting local speech is an explicit action. Remote and direct native
+launches retain their own configuration paths.
+
 ** Independent output volumes
 
 Aural Home's /Audio output/ combines notification device selection with five

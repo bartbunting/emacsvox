@@ -36,6 +36,7 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'omnivox-remote)
+(declare-function omnivox-engine-settings--environment "omnivox-engine-settings" (program))
 (require 'emacsvox-aural-transport)
 
 ;;;  Forward Declarations:
@@ -3819,10 +3820,12 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
               (omnivox-remote-make-process name)
             (tts-queue--create
              (lambda ()
-               (make-process
-                :name name :command (list program) :connection-type 'pipe
-                :coding 'utf-8-unix
-                :stderr (get-buffer-create (format "*%s diagnostics*" name)))) nil)))
+               (require 'omnivox-engine-settings)
+               (let ((process-environment (omnivox-engine-settings--environment program)))
+                 (make-process
+                  :name name :command (list program) :connection-type 'pipe
+                  :coding 'utf-8-unix
+                  :stderr (get-buffer-create (format "*%s diagnostics*" name))))) nil)))
     (unless (process-live-p process) (error "Fail: Speech Server"))
     (set-process-coding-system process 'utf-8-unix 'utf-8-unix)
     (process-put

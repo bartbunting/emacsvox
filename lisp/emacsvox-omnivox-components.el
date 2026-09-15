@@ -35,6 +35,7 @@
 (require 'tabulated-list)
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-inspection)
+(require 'omnivox-engine-settings)
 
 (declare-function emacsvox-aural "emacsvox-aural-home"
                   (&optional source-buffer))
@@ -286,6 +287,7 @@
                          'emacsvox-operation)
        ('installation "installing")
        ('uninstallation "uninstalling")
+       ('configuration-check "checking")
        ('test "testing")))
    (let* ((id (plist-get record :id))
           (main (emacsvox-omnivox-components--engine id))
@@ -442,6 +444,8 @@ OUTPUT to the generic process sentinel EVENT."
 (defun emacsvox-omnivox-components--finish (process event)
   "Handle completion of component PROCESS described by EVENT."
   (when (memq (process-status process) '(exit signal))
+    (when-let* ((timer (process-get process 'emacsvox-check-timer)))
+      (cancel-timer timer))
     (let* ((manager (process-get process 'emacsvox-manager-buffer))
            (operation (process-get process 'emacsvox-operation))
            (name (process-get process 'emacsvox-component-name))
@@ -455,6 +459,17 @@ OUTPUT to the generic process sentinel EVENT."
             (if (buffer-live-p output)
                 (with-current-buffer output (buffer-string))
               ""))
+           (expected (process-get process 'emacsvox-expected-voice-count))
+           (found (and (string-match "Found \\([0-9]+\\) voices:" output-text)
+                       (string-to-number (match-string 1 output-text))))
+           (_checked-files
+            (when (and success expected (or (null found) (< found expected)))
+              (setq success nil
+                    output-text
+                    (concat output-text
+                            (format "\nExpected at least %d voices%s; found %s. Check selected files and duplicate voice names.\n"
+                                    expected (if (equal id "flite") " including built-in SLT" "")
+                                    (or found "no reported count"))))))
            (message-text
             (emacsvox-omnivox-components--result-message
              name operation success output-text event)))
@@ -700,6 +715,14 @@ OUTPUT to the generic process sentinel EVENT."
                                         (state (replace-regexp-in-string "-" " " state)))
                                       (or (plist-get record :detail) "No managed module information")))))
       (list 'scope (vector "Management target" "Configured WSL per-user installation; may differ from the speech target above")))
+     (when-let* ((description (omnivox-engine-settings--description id)))
+       (append
+        (list (list 'settings-state (vector "Startup settings" description)))
+        (when (omnivox-engine-settings--supported-p)
+          (list
+           (list 'settings (vector "Edit engine settings" "Files for this Emacs profile; applied on the next speech restart"))
+           (list 'check-settings (vector "Check configured engine" "Separate local discovery, 30 second limit; no sample or live restart"))
+           (list 'restart-settings (vector "Restart local speech" "Restart this session's main and notification workers with current settings"))))))
      (unless emacsvox-omnivox-components--listing-error
        (append
         (when (equal (plist-get record :state) "available")
@@ -772,6 +795,42 @@ OUTPUT to the generic process sentinel EVENT."
      ((eq action 'voices)
       (require 'emacsvox-aural-voice-workbench)
       (emacsvox-aural-voice-workbench--open-engine id (current-buffer)))
+     ((memq action '(settings check-settings restart-settings))
+      (unless (omnivox-engine-settings--supported-p)
+        (user-error "Engine file settings require the bundled local Omnivox launcher"))
+      (pcase action
+        ('settings
+         (customize-option (nth 1 (assoc id omnivox-engine-settings--providers))))
+        ('check-settings
+         (with-current-buffer manager
+           (let* ((emacsvox-omnivox-component-installer
+                   (expand-file-name "omnivox" emacsvox-servers-directory))
+                  (process-environment
+                   (omnivox-engine-settings--environment emacsvox-omnivox-component-installer))
+                  (record (emacsvox-omnivox-components--record id)))
+             (setenv "EMACSVOX_OMNIVOX_DIAGNOSTIC" "1")
+             (let ((process (emacsvox-omnivox-components--start
+                             record 'configuration-check (list "--engine" id "--list-voices"))))
+               (process-put process 'emacsvox-expected-voice-count
+                            (if (and (equal id "flite")
+                                     (not (omnivox-engine-settings--override
+                                           (assoc id omnivox-engine-settings--providers))))
+                                (1+ (cl-count-if #'car omnivox-flite-voice-files)) 1))
+               (process-put process 'emacsvox-check-timer
+                            (run-at-time 30 nil
+                                         (lambda ()
+                                           (when (process-live-p process)
+                                             (unwind-protect
+                                                 (when (buffer-live-p (process-buffer process))
+                                                   (with-current-buffer (process-buffer process)
+                                                     (let ((inhibit-read-only t))
+                                                       (goto-char (point-max))
+                                                       (insert "\nConfigured engine check timed out\n"))))
+                                               (delete-process process))))))))))
+        ('restart-settings
+         (tts-restart)
+         (emacsvox-omnivox-components--speak
+          "Speech restart requested. Refresh live voices to check both workers."))))
      ((memq action '(install uninstall test check-live))
       (with-current-buffer manager
         (let ((emacsvox-omnivox-components--engine-id id))
@@ -798,7 +857,7 @@ OUTPUT to the generic process sentinel EVENT."
     (forward-line 1)
     (while (and (not (eobp))
                 (not (memq (tabulated-list-get-id)
-                           '(voices check-live install uninstall test output back))))
+                           '(voices check-live settings check-settings restart-settings install uninstall test output back))))
       (forward-line 1))
     (when (eobp) (goto-char start))
     (emacsvox-aural-ui-speak-current-row)))

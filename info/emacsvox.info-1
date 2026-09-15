@@ -1523,6 +1523,39 @@ the managed release only.
      selected engine detail.  The browser refreshes quietly when
      inventory changes.  Notification inventory remains separately
      visible in engine details; samples use main speech.
+   • For the bundled local Omnivox launcher, _Edit engine settings_
+     opens the selected engine's file option in Customize.  Piper
+     accepts one local ONNX model with its matching JSON file.
+     Eloquence and DECtalk accept their runtime DLL paths.  Flite
+     accepts external ‘.flitevox’ files, each with a _Load file_ switch.
+     Use absolute paths as seen by Emacs; WSL converts them for the
+     chosen Windows executable.  Keep required companion files beside
+     their runtime or model.  Remote speech settings must be changed on
+     the speech host.
+   • _Check configured engine_ runs separate voice discovery using the
+     local launcher's current configuration, with a 30 second limit.  It
+     retains the executable target, voice list and diagnostic output.
+     It neither speaks a sample nor replaces live workers.  A failed
+     Flite file can leave built-in SLT usable; the check reports
+     incomplete discovery when fewer than the selected files plus SLT
+     are found.  Duplicate external voice names are not supported.
+   • File settings take effect in newly started workers.  Save through
+     Customize to retain them, then explicitly choose _Restart local
+     speech_ when ready; this interrupts this session's main and
+     notification speech.  Refresh live voices afterward to inspect both
+     workers.  Turning off a Flite file keeps its data and palette
+     references, but new helpers omit it.  Existing helpers keep it
+     loaded until restarted.  Built-in SLT remains loaded, and each
+     speech worker loads its own copy of enabled external voices.  These
+     file switches do not provide a general per-voice policy or a memory
+     measurement.
+   • Explicit ‘OMNIVOX_PIPER_MODEL’, ‘OMNIVOX_FLITE_VOICES’ and runtime
+     environment settings override these options; details identify such
+     overrides.  The legacy ‘EMACSVOX_ECI_DLL’ and
+     ‘EMACSVOX_DECTALK_DLL’ overrides also remain effective.  Clearing
+     an option returns to existing discovery or launcher defaults.
+     Direct native executable launches do not consume the bundled
+     launcher's file options.
    • To refresh discovery, press ‘g’ or use _Check live voices_ in
      details.  Both worker inventories are requested asynchronously.
      The managed installation check also runs asynchronously and reports
@@ -6219,43 +6252,3 @@ the chosen prefix; inspect them with Help.
    If live Help and this manual differ, live Help describes your running
 session.  Check customizations first, then compare the generated
 defaults in the *note (emacsvox-reference)Emacsvox Keymaps::.
-
-
-File: emacsvox.info,  Node: Copyright,  Next: Acknowledgments,  Prev: Emacsvox Keyboard Commands,  Up: Top
-
-14 Copyright
-************
-
-This manual documents Emacsvox, a speech extension to Emacs.
-
-   Copyright (C)1994 - 2024 T.  V.  Raman All Rights Reserved.
-
-   Permission is granted to make and distribute verbatim copies of this
-manual without charge provided the copyright notice and this permission
-notice are preserved on all copies.  Sections of this manual are
-auto-generated from the source code, and the documentation inherits the
-same license as the original source code.
-
-
-File: emacsvox.info,  Node: Acknowledgments,  Next: Developer Guide,  Prev: Copyright,  Up: Top
-
-15 Acknowledgments
-******************
-
-Emacsvox grows from Emacspeak, created by T.  V.  Raman.  Raman is the
-principal original author of the inherited system, and Emacsvox
-preserves his authorship and copyright notices throughout the source
-where that work remains.
-
-   The Emacsvox documentation began with the second-edition Emacspeak
-user manual.  Jim Van Zandt and Jason White contributed to that manual.
-Selected historical chapters remain available in the separate *note
-Emacspeak Heritage: (emacsvox-heritage)Top. manual, where their original
-terminology and period context can be read without confusing them with
-current setup guidance.
-
-   Thank you to everyone who has contributed code, documentation,
-testing, problem reports, and practical experience to Emacspeak and
-Emacsvox.  The current Emacsvox contributors continue that work while
-maintaining the user guidance and generated reference in this
-repository.

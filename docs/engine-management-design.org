@@ -15,7 +15,14 @@ counts, per-stream details and timestamps, asynchronous managed listing, and
 retained check output without automatic focus changes. The voice-browser part
 of slice 2 now connects engine details to a separate engine-scoped Workbench
 on main speech, with exact audition, the existing palette editor and return to
-details. Runtime-location providers, Flite local import, voice enablement,
+details. The bundled local POSIX launcher now consumes typed Piper, Eloquence,
+DECtalk and Flite file settings from the Emacs profile. Flite files have load
+switches using its existing external loader; configured discovery runs in a
+separate bounded process and restart remains explicit. Native Windows checks
+with an exported SLT fixture verified inclusion, exclusion, stable external
+identity and retained SLT after malformed data. This establishes file loading,
+not a multi-voice download catalogue, generic per-voice policy or measured RAM
+recovery. Remote/native-direct settings providers, the shared voice library,
 acquisition providers and the new backend contracts remain planned work.
 
 Recommended order: useful engine details; Piper voice acquisition and multiple

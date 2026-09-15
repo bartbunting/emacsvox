@@ -397,6 +397,33 @@ Installing a module changes the managed release only.
   change a palette. @@texinfo:@kbd{q}@@ returns to the selected engine detail.
   The browser refreshes quietly when inventory changes. Notification inventory
   remains separately visible in engine details; samples use main speech.
+- For the bundled local Omnivox launcher, /Edit engine settings/ opens the
+  selected engine's file option in Customize. Piper accepts one local ONNX
+  model with its matching JSON file. Eloquence and DECtalk accept their runtime
+  DLL paths. Flite accepts external =.flitevox= files, each with a /Load file/
+  switch. Use absolute paths as seen by Emacs; WSL converts them for the chosen
+  Windows executable. Keep required companion files beside their runtime or
+  model. Remote speech settings must be changed on the speech host.
+- /Check configured engine/ runs separate voice discovery using the local
+  launcher's current configuration, with a 30 second limit. It retains the
+  executable target, voice list and diagnostic output. It neither speaks a
+  sample nor replaces live workers. A failed Flite file can leave built-in SLT
+  usable; the check reports incomplete discovery when fewer than the selected
+  files plus SLT are found. Duplicate external voice names are not supported.
+- File settings take effect in newly started workers. Save through Customize
+  to retain them, then explicitly choose /Restart local speech/ when ready;
+  this interrupts this session's main and notification speech. Refresh live
+  voices afterward to inspect both workers. Turning off a Flite file keeps its
+  data and palette references, but new helpers omit it. Existing helpers keep
+  it loaded until restarted. Built-in SLT remains loaded, and each speech
+  worker loads its own copy of enabled external voices. These file switches
+  do not provide a general per-voice policy or a memory measurement.
+- Explicit =OMNIVOX_PIPER_MODEL=, =OMNIVOX_FLITE_VOICES= and runtime environment
+  settings override these options; details identify such overrides. The
+  legacy =EMACSVOX_ECI_DLL= and =EMACSVOX_DECTALK_DLL= overrides also remain
+  effective. Clearing an option returns to existing discovery or launcher
+  defaults. Direct native executable launches do not consume the bundled
+  launcher's file options.
 - To refresh discovery, press @@texinfo:@kbd{g}@@ or use /Check live voices/ in
   details. Both worker inventories are requested asynchronously. The managed
   installation check also runs asynchronously and reports a timeout if needed.

@@ -1,0 +1,154 @@
+;;; omnivox-engine-settings.el --- Local engine startup settings -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2026 Emacsvox contributors
+;; SPDX-License-Identifier: GPL-2.0-or-later
+;; Author: Emacsvox contributors
+;; Maintainer: Emacsvox contributors
+;; Keywords: accessibility, multimedia
+;; URL: https://github.com/bartbunting/emacsvox
+
+;; This file is part of Emacsvox.
+;;
+;; Emacsvox is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+;;
+;; Emacsvox is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with Emacsvox.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; Project typed settings into the bundled local launcher environment.  The
+;; launcher converts paths for its selected native target.  Explicit Omnivox
+;; environment settings retain precedence.  No remote provisioning or speech
+;; restart occurs when settings are edited.
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'subr-x)
+(defvar emacsvox-servers-directory)
+(defvar tts-program)
+(declare-function omnivox-remote-enabled-p "omnivox-remote" ())
+
+(defgroup omnivox-engine-settings nil
+  "Local engine settings for the bundled Omnivox launcher.
+Choose files as seen by Emacs; the WSL launcher converts them to Windows
+paths.  Existing OMNIVOX environment overrides take precedence.  Settings
+affect new speech workers only; editing never restarts speech.  Save through
+Customize to retain them in this Emacs profile.  Remote speech and direct
+native executable launches do not consume these settings."
+  :group 'tts)
+
+(defcustom omnivox-piper-model-file nil
+  "Local Piper ONNX model; nil keeps environment or launcher defaults.
+The matching JSON configuration must remain beside the model.  This selects
+one model with the existing loader; it is not a multi-model voice library."
+  :type '(choice (const :tag "Use existing configuration" nil) file)
+  :group 'omnivox-engine-settings)
+
+(defcustom omnivox-eloquence-runtime-file nil
+  "Local Eloquence ECI.DLL; nil keeps existing runtime discovery.
+Use the supported 32-bit runtime with its required companion files."
+  :type '(choice (const :tag "Use existing configuration" nil) file)
+  :group 'omnivox-engine-settings)
+
+(defcustom omnivox-dectalk-runtime-file nil
+  "Local DECtalk DLL; nil keeps existing runtime discovery.
+Keep its dictionaries and other required runtime files in place."
+  :type '(choice (const :tag "Use existing configuration" nil) file)
+  :group 'omnivox-engine-settings)
+
+(defcustom omnivox-flite-voice-files nil
+  "External Flite files and whether to load each at the next speech start.
+Each entry is (LOAD FILE).  FILE is an absolute local .flitevox path.
+Turning LOAD off retains the file and saved palette references, but omits
+it from newly started helpers.  Existing workers retain their loaded voices
+until restarted.  Built-in SLT remains loaded.  Both speech workers load
+the selected files, so their native memory costs are duplicated.
+An explicit OMNIVOX_FLITE_VOICES environment value overrides this list.
+Native discovery must validate compatibility; saving is not a load check."
+  :type '(repeat (list (boolean :tag "Load file") (file :tag "Voice file")))
+  :group 'omnivox-engine-settings)
+
+(defconst omnivox-engine-settings--providers
+  '(("piper" omnivox-piper-model-file "OMNIVOX_PIPER_MODEL" "EMACSVOX_LOCAL_PIPER_MODEL" ".onnx")
+    ("eloquence" omnivox-eloquence-runtime-file "OMNIVOX_ECI_DLL" "EMACSVOX_LOCAL_ECI_DLL" ".dll")
+    ("dectalk" omnivox-dectalk-runtime-file "OMNIVOX_DECTALK_DLL" "EMACSVOX_LOCAL_DECTALK_DLL" ".dll")
+    ("flite" omnivox-flite-voice-files "OMNIVOX_FLITE_VOICES" "EMACSVOX_LOCAL_FLITE_VOICES" ".flitevox"))
+  "Engine, option, native override, private launcher input and file suffix.")
+
+(defun omnivox-engine-settings--supported-p ()
+  "Whether this session selects the bundled local POSIX Omnivox launcher."
+  (and (not (eq system-type 'windows-nt))
+       (not (and (fboundp 'omnivox-remote-enabled-p) (omnivox-remote-enabled-p)))
+       (boundp 'tts-program)
+       (member tts-program (list "omnivox" (expand-file-name "omnivox" emacsvox-servers-directory)))))
+
+(defun omnivox-engine-settings--path (path suffix)
+  "Validate local PATH syntax for SUFFIX without loading or probing it."
+  (when (and (stringp path) (not (file-remote-p path)) (file-name-absolute-p path))
+    (setq path (expand-file-name path)))
+  (unless (and (stringp path) (not (file-remote-p path))
+               (file-name-absolute-p path)
+               (not (string-match-p "[\n\r\0\";:]" path))
+               (string-suffix-p suffix path t))
+    (user-error "Choose an absolute local %s file without path-list delimiters" suffix))
+  path)
+
+(defun omnivox-engine-settings--override (provider)
+  "Return the explicit environment override name for PROVIDER, if present."
+  (cl-find-if (lambda (name) (and (getenv name) (not (string-empty-p (getenv name)))))
+              (append (list (nth 2 provider))
+                      (pcase (car provider)
+                        ("eloquence" '("EMACSVOX_ECI_DLL"))
+                        ("dectalk" '("EMACSVOX_DECTALK_DLL"))))))
+
+(defun omnivox-engine-settings--environment (program)
+  "Return a private environment for local launcher PROGRAM.
+Keep process-wide environment and explicit native overrides unchanged."
+  (if (not (equal program (expand-file-name "omnivox" emacsvox-servers-directory)))
+      process-environment
+    (let ((process-environment (copy-sequence process-environment)))
+      (dolist (provider omnivox-engine-settings--providers)
+        (pcase-let ((`(,id ,option ,_override ,input ,suffix) provider))
+          (setenv input nil)
+          (unless (omnivox-engine-settings--override provider)
+            (when-let* ((value (symbol-value option)))
+              (setenv input
+                      (if (equal id "flite")
+                          (progn
+                            (unless (and (proper-list-p value) (<= (length value) 64)
+                                         (cl-every (lambda (entry)
+                                                     (and (proper-list-p entry) (= (length entry) 2)
+                                                          (memq (car entry) '(nil t)))) value))
+                              (user-error "Use at most 64 Flite (LOAD FILE) entries"))
+                            (mapconcat (lambda (entry) (omnivox-engine-settings--path (cadr entry) suffix))
+                                       (cl-remove-if-not #'car value) "\n"))
+                        (omnivox-engine-settings--path value suffix)))))))
+      process-environment)))
+
+(defun omnivox-engine-settings--description (id)
+  "Describe desired settings for ID without claiming live application."
+  (when-let* ((provider (assoc id omnivox-engine-settings--providers)))
+    (let ((override (omnivox-engine-settings--override provider))
+          (value (symbol-value (nth 1 provider))))
+      (cond
+       ((not (omnivox-engine-settings--supported-p))
+        "Configure files on the speech host; this launcher settings provider is unavailable")
+       (override
+        (format "Overridden by %s; edit that environment setting on the speech host" override))
+       ((equal id "flite")
+        (format "%d of %d external files selected for new workers; built-in SLT remains loaded"
+                (cl-count-if #'car value) (length value)))
+       (value (format "%s; used by new workers only, load not checked" value))
+       (t "Using existing environment, launcher or engine defaults")))))
+
+(provide 'omnivox-engine-settings)
+;;; omnivox-engine-settings.el ends here

@@ -12,6 +12,7 @@ set -eu
 server_directory=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 program="$server_directory/omnivox-bin/current/omnivox.exe"
 windows_runtime=false
+explicit_piper_model=${OMNIVOX_PIPER_MODEL-}
 omnivox_config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
 omnivox_config_file=${EMACSVOX_OMNIVOX_CONFIG_FILE:-"$omnivox_config_home/emacsvox/omnivox-program"}
 
@@ -125,6 +126,56 @@ else
     fi
 fi
 
+# Private per-Emacs-profile settings use paths visible to Emacs.  Convert only
+# after resolving the actual native target; explicit native environment values
+# keep precedence.  These inputs are data, never shell source.
+local_engine_path() {
+    case $1 in /*) ;; *) echo "Engine setting needs an absolute local path" >&2; return 1 ;; esac
+    if $windows_runtime; then wslpath -w "$1"; else printf '%s\n' "$1"; fi
+}
+local_engine_export() {
+    export "$1"
+    if $windows_runtime; then
+        # Generated values are already native paths and path lists.  Do not
+        # translate them a second time through inherited WSLENV /p or /l flags.
+        local_env_remaining="${WSLENV-}:"
+        local_env_result=
+        while [ -n "$local_env_remaining" ]; do
+            local_env_entry=${local_env_remaining%%:*}
+            local_env_remaining=${local_env_remaining#*:}
+            case $local_env_entry in "$1"/*) local_env_entry=$1 ;; esac
+            local_env_result="${local_env_result:+$local_env_result:}$local_env_entry"
+        done
+        WSLENV=$local_env_result
+    fi
+}
+if [ -z "$explicit_piper_model" ] && [ -n "${EMACSVOX_LOCAL_PIPER_MODEL-}" ]; then
+    OMNIVOX_PIPER_MODEL=$(local_engine_path "$EMACSVOX_LOCAL_PIPER_MODEL")
+    local_engine_export OMNIVOX_PIPER_MODEL
+fi
+if [ -z "${OMNIVOX_ECI_DLL-}${EMACSVOX_ECI_DLL-}" ] && [ -n "${EMACSVOX_LOCAL_ECI_DLL-}" ]; then
+    OMNIVOX_ECI_DLL=$(local_engine_path "$EMACSVOX_LOCAL_ECI_DLL")
+    local_engine_export OMNIVOX_ECI_DLL
+fi
+if [ -z "${OMNIVOX_DECTALK_DLL-}${EMACSVOX_DECTALK_DLL-}" ] && [ -n "${EMACSVOX_LOCAL_DECTALK_DLL-}" ]; then
+    OMNIVOX_DECTALK_DLL=$(local_engine_path "$EMACSVOX_LOCAL_DECTALK_DLL")
+    local_engine_export OMNIVOX_DECTALK_DLL
+fi
+if [ -z "${OMNIVOX_FLITE_VOICES-}" ] && [ -n "${EMACSVOX_LOCAL_FLITE_VOICES-}" ]; then
+    local_flite_voices=
+    local_path_separator=:
+    if $windows_runtime; then local_path_separator=';'; fi
+    while IFS= read -r local_voice_file; do
+        [ -n "$local_voice_file" ] || continue
+        local_voice_native=$(local_engine_path "$local_voice_file")
+        local_flite_voices="${local_flite_voices:+$local_flite_voices$local_path_separator}$local_voice_native"
+    done <<EOF
+$EMACSVOX_LOCAL_FLITE_VOICES
+EOF
+    OMNIVOX_FLITE_VOICES=$local_flite_voices
+    local_engine_export OMNIVOX_FLITE_VOICES
+fi
+
 # Let the top-level Emacsvox launcher validate the selected runtime without
 # starting it, producing audio, or creating a diagnostic-log session.  This is
 # an internal contract between the two tracked launchers, not an Omnivox CLI
@@ -140,6 +191,11 @@ fi
 # file-count and byte limits; live write targets remain protected when they
 # exceed either cap.
 omnivox_service=false
+if [ "${EMACSVOX_OMNIVOX_DIAGNOSTIC-}" = 1 ]; then
+    # Explicit isolated checks retain stderr with their own operation result.
+    omnivox_service=true
+    printf 'Omnivox check target: %s\n' "$resolved_program" >&2
+fi
 for omnivox_argument do
     case $omnivox_argument in --serve) omnivox_service=true ;; esac
 done
@@ -211,6 +267,7 @@ if $windows_runtime; then
         OMNIVOX_REMOTE_NOTIFICATION_TARGET \
         OMNIVOX_LOG_SYNTHESIS_TEXT \
         OMNIVOX_ELOQUENCE_HELPER OMNIVOX_ECI_DLL \
+        EMACSVOX_ECI_DLL EMACSVOX_DECTALK_DLL \
         OMNIVOX_DECTALK_HELPER OMNIVOX_DECTALK_DLL \
         OMNIVOX_RHVOICE_HELPER OMNIVOX_RHVOICE_LIBRARY \
         OMNIVOX_RHVOICE_DATA OMNIVOX_RHVOICE_CONFIG \

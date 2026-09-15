@@ -71,6 +71,7 @@ emacsvox-version.elc \
 emacsvox-preamble.elc \
 tts-queue-state.elc \
 omnivox-remote.elc \
+omnivox-engine-settings.elc \
 tts-speak.elc \
 $(VOICE_OBJECTS)
 
