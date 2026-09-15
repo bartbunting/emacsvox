@@ -1,0 +1,68 @@
+#+title: ADR 0019: Voice Library and Explicit Activation
+#+date: 2026-09-15
+#+startup: content
+
+* Status
+
+Proposed. Awaiting maintainer acceptance with Omnivox ADR 0012.
+
+* Context
+
+The [[file:../engine-management-design.org][engine-management design]] now has working engine details, scoped voice
+browsing, typed local runtime paths and external Flite file load switches.
+Piper downloads and general per-voice enablement need stable identities and
+an enforceable load set before the UI can promise useful memory control.
+Main and notification speech run independently and can observe different
+configuration unless activation establishes evidence from both.
+
+* Proposed decision
+
+Adopt the authoritative =docs/voice-library-contract.org= in the Omnivox
+repository, paired with its ADR 0012. Omnivox owns storage formats and native
+validation. Emacsvox owns the reviewed catalogue and accessible interaction;
+a reusable local management service performs bounded transactions.
+
+Keep installed, enabled and loaded states separate. New downloads start
+disabled; compatible updates preserve enablement. Both lanes use one desired
+enabled set, but residency is reported independently. Disabled references
+remain in palettes and are unavailable to selectors, fallback and exact
+preview. Existing engine disablement continues to override voice eligibility.
+
+Use immutable per-user package revisions and runtime generations outside
+executable releases. Imported files remain user-owned. Stable Piper IDs
+include the model identity and native speaker index, with explicit adoption
+preserving an existing default-speaker ID. Flite retains its native voice IDs.
+
+Offer explicit Apply after showing the voice and restart impact. Preflight
+the actual target and companions, retire the invoking session's old pair,
+start both lanes on one candidate, and require matching negotiated generation
+and eligibility evidence before committing the active pointer. Partial failure
+rolls back the pair; failed rollback remains visible. Other Emacs sessions keep
+their pinned generations. A manager crash does not silently restart speech.
+
+Existing explicit file settings retain precedence. Show overrides and resolve
+those affecting an activation plan before retiring working speech. Keep
+legacy startup and older-server discovery usable; feature negotiation governs
+the new status request. No model installation or path management is added to
+the remote speech socket.
+
+* Consequences and existing decisions
+
+Piper holds at most one resident model per lane; switching models can add
+latency. Enabling several speakers sharing a model does not require several
+model copies. Confirmed process exit establishes release; byte savings need
+measurement. Flite initially applies the load set at helper restart.
+
+Preserve all accepted ADRs 0001–0018: documentation and release policy,
+per-user/module ownership, readiness, lane/platform boundaries, palette
+ownership, exact preview and per-choice tuning. The first activation provider
+is the bundled WSL-to-Windows local launcher; native-direct and remote
+management remain separate delivery work. This proposal does not approve
+catalogue entries, model redistribution, MBROLA dependencies or publication.
+
+* Implementation status
+
+This record and the shared contract are proposals only. No new runtime
+behavior, public setting, protocol capability or live-session change is made
+by this documentation slice. After acceptance, implement and verify the
+contract in small backend and client commits before exposing downloads.

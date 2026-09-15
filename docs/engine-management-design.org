@@ -25,6 +25,13 @@ not a multi-voice download catalogue, generic per-voice policy or measured RAM
 recovery. Remote/native-direct settings providers, the shared voice library,
 acquisition providers and the new backend contracts remain planned work.
 
+The next boundary is now recorded in proposed
+[[file:adr/0019-voice-library-and-activation.org][ADR 0019]] and Omnivox ADR 0012. The authoritative version-1 format,
+stable identity rules, precedence, negotiated status and two-lane activation
+contract is =docs/voice-library-contract.org= in the Omnivox repository.
+These proposals await acceptance; no library flags or protocol capability
+are implemented by the design slice.
+
 Recommended order: useful engine details; Piper voice acquisition and multiple
 models; Flite acquisition using its existing loader; an isolated MBROLA
 prototype followed by integration; then other providers. A small Flite local
