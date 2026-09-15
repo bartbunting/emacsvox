@@ -84,7 +84,6 @@
 (declare-function emacsvox-aural-prefer-engine
                   "emacsvox-aural-voice-workbench" (engine-id &optional save))
 (declare-function tts-set-rate "tts-speak" (rate &optional prefix))
-(declare-function tts-notify-stop "tts-speak" ())
 (declare-function emacsvox-view-notifications "emacsvox-speak" ())
 
 (defvar-local emacsvox-aural-home-expanded-groups nil
@@ -96,7 +95,7 @@
     (resources "Voices and speech"
                voices browse-voices speech-engine speech-rate voice-workbench)
     (output "Sounds and output"
-            sounds spatial-settings output-volumes notification-log stop-notifications)
+            sounds spatial-settings output-volumes notification-log)
     (optional "Optional feedback and rules" features overrides buffer-rules training)
     (manage "Saved setups and unfinished changes" profiles drafts)
     (troubleshoot "Troubleshooting" diagnostics spatial engine-modules))
@@ -254,9 +253,6 @@
      (list 'notification-log
            (vector "Review notifications" "Notification history"
                    "Open the existing notifications buffer"))
-     (list 'stop-notifications
-           (vector "Stop notification speech" "Current notification stream"
-                   "Stop the current background announcement without muting future notifications"))
      (list 'return-source
            (vector "Return to source item" source-name "Visit the captured source position"))
      (list 'drafts
@@ -569,7 +565,6 @@
     ('speech-rate (emacsvox-aural-home--call-in-source #'tts-set-rate))
     ((or 'notifications 'output-volumes) (customize-group 'tts-output))
     ('notification-log (call-interactively #'emacsvox-view-notifications))
-    ('stop-notifications (call-interactively #'tts-notify-stop))
     ('explain
      (emacsvox-aural-home-explain))
     ('remap

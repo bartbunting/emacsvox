@@ -2499,7 +2499,7 @@ The six groups are:
 @item Voices and speech
 @tab Voice palettes@comma{} Browse installed voices@comma{} Preferred speech engine@comma{} Speech rate@comma{} and Voice Workbench.
 @item Sounds and output
-@tab Sound packs@comma{} Spatial settings@comma{} Audio output@comma{} Review notifications@comma{} and Stop notification speech.
+@tab Sound packs@comma{} Spatial settings@comma{} Audio output@comma{} and Review notifications.
 @item Optional feedback and rules
 @tab Presentation options@comma{} Your feedback rules@comma{} Current buffer rules@comma{} and Explain feedback as you navigate.
 @item Saved setups and unfinished changes
@@ -4176,9 +4176,8 @@ process's levels. Earcon volume controls apply to sounds played by Omnivox;
 external sound players and other speech backends do not use these settings.
 Setting a volume to zero does not disable notification recording.
 
-@emph{Stop notification speech} in Home stops the current notification stream;
-it is not a persistent mute. @emph{Review notifications} opens the notification
-history so you can read an announcement you missed.
+@emph{Review notifications} in Home opens the notification history so you can read
+an announcement you missed.
 
 Stopping obsolete main speech is local to the main stream.  An explicit
 @code{tts-stop} command stops both main and notification speech.

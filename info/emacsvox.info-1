@@ -2488,8 +2488,7 @@ Voices and speech         Voice palettes, Browse installed voices,
                           Preferred speech engine, Speech rate, and
                           Voice Workbench.
 Sounds and output         Sound packs, Spatial settings, Audio output,
-                          Review notifications, and Stop notification
-                          speech.
+                          and Review notifications.
 Optional feedback and     Presentation options, Your feedback rules,
 rules                     Current buffer rules, and Explain feedback as
                           you navigate.
@@ -4199,9 +4198,8 @@ sounds played by Omnivox; external sound players and other speech
 backends do not use these settings.  Setting a volume to zero does not
 disable notification recording.
 
-   _Stop notification speech_ in Home stops the current notification
-stream; it is not a persistent mute.  _Review notifications_ opens the
-notification history so you can read an announcement you missed.
+   _Review notifications_ in Home opens the notification history so you
+can read an announcement you missed.
 
    Stopping obsolete main speech is local to the main stream.  An
 explicit ‘tts-stop’ command stops both main and notification speech.
