@@ -4,7 +4,7 @@
 
 * Status
 
-Proposed. Awaiting maintainer acceptance with Omnivox ADR 0012.
+Accepted on 2026-09-15 with Omnivox ADR 0012.
 
 * Context
 
@@ -15,12 +15,14 @@ an enforceable load set before the UI can promise useful memory control.
 Main and notification speech run independently and can observe different
 configuration unless activation establishes evidence from both.
 
-* Proposed decision
+* Decision
 
 Adopt the authoritative =docs/voice-library-contract.org= in the Omnivox
-repository, paired with its ADR 0012. Omnivox owns storage formats and native
-validation. Emacsvox owns the reviewed catalogue and accessible interaction;
-a reusable local management service performs bounded transactions.
+repository, paired with its ADR 0012. Omnivox owns storage formats, native
+validation and the reusable download, installation and storage service.
+Downloaded files belong to the user; Omnivox manages their lifecycle.
+Emacsvox owns the reviewed catalogue, accessible interaction and coordination
+of its main and notification speech processes.
 
 Keep installed, enabled and loaded states separate. New downloads start
 disabled; compatible updates preserve enablement. Both lanes use one desired
@@ -57,12 +59,12 @@ Preserve all accepted ADRs 0001–0018: documentation and release policy,
 per-user/module ownership, readiness, lane/platform boundaries, palette
 ownership, exact preview and per-choice tuning. The first activation provider
 is the bundled WSL-to-Windows local launcher; native-direct and remote
-management remain separate delivery work. This proposal does not approve
+management remain separate delivery work. This decision does not approve
 catalogue entries, model redistribution, MBROLA dependencies or publication.
 
 * Implementation status
 
-This record and the shared contract are proposals only. No new runtime
-behavior, public setting, protocol capability or live-session change is made
-by this documentation slice. After acceptance, implement and verify the
-contract in small backend and client commits before exposing downloads.
+The maintainer accepted the contract and ownership split and authorized
+implementation in slices. This acceptance commit changes no runtime behavior
+or live session. Implement and verify the contract in small backend and client
+commits before exposing downloads.

@@ -25,12 +25,13 @@ not a multi-voice download catalogue, generic per-voice policy or measured RAM
 recovery. Remote/native-direct settings providers, the shared voice library,
 acquisition providers and the new backend contracts remain planned work.
 
-The next boundary is now recorded in proposed
+The shared library boundary is now recorded in accepted
 [[file:adr/0019-voice-library-and-activation.org][ADR 0019]] and Omnivox ADR 0012. The authoritative version-1 format,
 stable identity rules, precedence, negotiated status and two-lane activation
 contract is =docs/voice-library-contract.org= in the Omnivox repository.
-These proposals await acceptance; no library flags or protocol capability
-are implemented by the design slice.
+The maintainer accepted the contract and ownership split on 2026-09-15.
+Omnivox owns the reusable download, installation and storage service;
+downloaded files belong to the user. Implementation proceeds in slices.
 
 Recommended order: useful engine details; Piper voice acquisition and multiple
 models; Flite acquisition using its existing loader; an isolated MBROLA
@@ -694,10 +695,9 @@ design. The following decisions constrain implementation:
   measured rate behavior and truthful marker support. Audio-device failures
   remain output failures, consistent with ADR 0009.
 
-Before implementing acquisition, record the voice-library schema, stable IDs,
-per-voice eligibility, configuration precedence and activation lifecycle as a
-proposed cross-project contract for acceptance. This document chooses their
-behavior; it does not silently add public flags or change the helper/control wire protocols. Prefer
+The voice-library schema, stable IDs, per-voice eligibility, configuration
+precedence and activation lifecycle are now accepted in the cross-project
+contract above. Implement those public interfaces explicitly. Prefer
 existing physical voice fields and startup configuration. Any genuinely needed
 protocol extension must be additive, negotiated and tested with older peers.
 
