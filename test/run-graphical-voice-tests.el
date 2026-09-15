@@ -37,18 +37,21 @@
         (require 'emacsvox-aural-feedback-details)
         (require 'emacsvox-aural-feedback-details-tests)
         (require 'emacsvox-emoji-integration-tests)
+        (require 'emacsvox-omnivox-components-tests)
         ;; Loading minibuffer speech advice must not send ERT's own reports
         ;; to an audio device after a test's delivery stubs have unwound.
         (setq-default emacsvox-speak-messages nil)
         (dolist (function '(emacsvox-aural-capture-context
                             emacsvox-aural-feedback-details--insert-voice-links
-                            emacsvox-aural-voice-editor-refresh))
+                            emacsvox-aural-voice-editor-refresh
+                            emacsvox-omnivox-components--render-details))
           (let ((file (symbol-file function)))
             (unless (and file (string-suffix-p ".elc" file))
               (error "Expected current byte-code for %s; got %s" function file))
             (message "%s: %s" function file)))
         (let ((stats (ert-run-tests-batch
                       '(member
+                        emacsvox-omnivox-components-graphical-details-refresh-preserves-window
                         emacsvox-aural-feedback-details-graphical-folding-and-draft-return
                         emacsvox-emoji-graphical-explanation-is-visible
                         emacsvox-aural-voice-editor-feedback-link-resumes-and-returns
@@ -58,8 +61,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 9)
-                                (= (ert-stats-completed stats) 9)
+          (setq status (if (and (= (ert-stats-total stats) 10)
+                                (= (ert-stats-completed stats) 10)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

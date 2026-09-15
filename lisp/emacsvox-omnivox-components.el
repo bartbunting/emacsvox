@@ -1,4 +1,4 @@
-;;; emacsvox-omnivox-components.el --- Install Omnivox engine modules -*- lexical-binding: t; -*-
+;;; emacsvox-omnivox-components.el --- Inspect engines and manage modules -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Emacsvox contributors
 ;; SPDX-License-Identifier: GPL-2.0-or-later
@@ -25,8 +25,8 @@
 
 ;;; Commentary:
 
-;; Spoken front end to the pinned, verified WSL2 Omnivox component
-;; manager.  Proprietary runtimes and voice models remain user supplied.
+;; Spoken engine discovery and details, with separate evidence from the
+;; pinned WSL2 component manager.  Runtimes and voice models remain user supplied.
 
 ;;; Code:
 
@@ -51,6 +51,13 @@
 (defvar tts-notify-process)
 (defvar tts-program)
 (defvar tts-speaker-process)
+(defvar omnivox-engine-inventory)
+(defvar omnivox-engine-inventory-time)
+(defvar omnivox--control-inventory-property)
+(declare-function omnivox-voice-inventory "omnivox-voices" ())
+(declare-function omnivox-refresh-voice-inventory "omnivox-voices" ())
+(declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
+(declare-function tts-notify "tts-speak" (text &optional dont-log))
 
 (defgroup emacsvox-omnivox-components nil
   "Manage optional Omnivox engine modules."
@@ -72,6 +79,106 @@
 
 (defvar-local emacsvox-omnivox-components--process nil
   "Active install, uninstall, or engine-test process for this manager.")
+
+(defvar-local emacsvox-omnivox-components--snapshots nil
+  "Per-lane inventory evidence, retained across reconnects.")
+(defvar-local emacsvox-omnivox-components--results nil
+  "Last completed managed check or operation for each engine.")
+(defvar-local emacsvox-omnivox-components--listing-error nil
+  "Reason managed installation information could not be refreshed.")
+(defvar-local emacsvox-omnivox-components--listing-process nil
+  "Asynchronous managed-installation listing owned by this buffer.")
+(defvar-local emacsvox-omnivox-components--manager nil
+  "Parent engine-list buffer for an engine details view.")
+(defvar-local emacsvox-omnivox-components--engine-id nil
+  "Engine shown in a details view.")
+
+(defconst emacsvox-omnivox-components--fresh-seconds 300
+  "Age after which engine discovery is described as previous evidence.")
+
+(defun emacsvox-omnivox-components--lane-process (lane)
+  "Return the speech process for LANE without starting it."
+  (let ((symbol (if (eq lane 'main) 'tts-speaker-process 'tts-notify-process)))
+    (and (boundp symbol) (symbol-value symbol))))
+
+(defun emacsvox-omnivox-components--capture-inventory ()
+  "Capture each worker's own inventory without probing or starting speech."
+  (when (and (fboundp 'omnivox-voice-inventory)
+             (boundp 'omnivox--control-inventory-property))
+    (dolist (lane '(main notification))
+      (let* ((process (emacsvox-omnivox-components--lane-process lane))
+             (raw (and (processp process)
+                       (process-get process omnivox--control-inventory-property))))
+        (when raw
+          (let* ((tts-speaker-process process)
+                 (omnivox-engine-inventory raw)
+                 (omnivox-engine-inventory-time
+                  (process-get process 'omnivox-inventory-received-at)))
+            (setf (alist-get lane emacsvox-omnivox-components--snapshots)
+                  (list :process process
+                        :inventory (omnivox-voice-inventory)))))))))
+
+(defun emacsvox-omnivox-components--current-snapshot-p (lane)
+  "Whether LANE's evidence belongs to its current live worker and is recent."
+  (let* ((snapshot (alist-get lane emacsvox-omnivox-components--snapshots))
+         (process (plist-get snapshot :process))
+         (received (plist-get (plist-get snapshot :inventory) :received-at)))
+    (and (process-live-p process)
+         (eq process (emacsvox-omnivox-components--lane-process lane))
+         received
+         (< (float-time (time-subtract nil received))
+            emacsvox-omnivox-components--fresh-seconds))))
+
+(defun emacsvox-omnivox-components--engine (id &optional lane)
+  "Return engine ID from the retained inventory for LANE, normally main."
+  (cl-find id
+           (plist-get (plist-get
+                       (alist-get (or lane 'main)
+                                  emacsvox-omnivox-components--snapshots)
+                       :inventory) :engines)
+           :key (lambda (engine) (plist-get engine :engine-id)) :test #'equal))
+
+(defun emacsvox-omnivox-components--lane-state (id lane)
+  "Describe discovered engine ID in LANE without inferring runtime absence."
+  (let ((engine (emacsvox-omnivox-components--engine id lane)))
+    (cond
+     ((null engine) "Not checked")
+     ((not (emacsvox-omnivox-components--current-snapshot-p lane))
+      (if (equal (plist-get engine :availability) "available")
+          "Previously available" "Previous check; refresh needed"))
+     ((plist-get engine :disabled-by-policy) "Disabled")
+     ((equal (plist-get engine :availability) "available")
+      (if (member (plist-get engine :health) '("healthy" "unknown" nil))
+          "Available" "Available; needs attention"))
+     ((equal (plist-get engine :availability) "unknown") "Not checked")
+     (t "Needs attention"))))
+
+(defun emacsvox-omnivox-components--all-records ()
+  "Combine managed records with live engines, keeping their evidence separate."
+  (let ((records (copy-sequence emacsvox-omnivox-components--records)))
+    (dolist (lane '(main notification))
+      (dolist (engine (plist-get
+                      (plist-get (alist-get lane emacsvox-omnivox-components--snapshots)
+                                 :inventory) :engines))
+        (let ((id (plist-get engine :engine-id)))
+          (unless (cl-find id records :key (lambda (r) (plist-get r :id)) :test #'equal)
+            (setq records
+                  (append records (list (list :id id :name (plist-get engine :display-name)
+                                              :state "not-managed" :size 0))))))))
+    (or records '((:id "information" :name "Engine information"
+                   :state "not-managed" :size 0)))))
+
+(defun emacsvox-omnivox-components--inventory-changed ()
+  "Refresh open engine views from received evidence without changing focus."
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'emacsvox-omnivox-components-mode)
+        (emacsvox-omnivox-components--capture-inventory)
+        (emacsvox-omnivox-components--render)
+        (emacsvox-omnivox-components--refresh-details)))))
+
+(add-hook 'tts-voice-inventory-changed-hook
+          #'emacsvox-omnivox-components--inventory-changed)
 
 (defconst emacsvox-omnivox-components--output-buffer
   "*Omnivox Component Output*")
@@ -110,16 +217,54 @@
                :size (string-to-number size) :detail detail))))
    (split-string output "\n" t)))
 
-(defun emacsvox-omnivox-components--load-records ()
-  "Return current component records from the verified installer manifest."
-  (let ((program (emacsvox-omnivox-components--check-installer)))
-    (with-temp-buffer
-      (let ((status (process-file program nil '(t t) nil "--machine")))
-        (unless (and (integerp status) (zerop status))
-          (user-error
-           "Could not list Omnivox components: %s"
-           (string-trim (buffer-string))))
-        (emacsvox-omnivox-components--parse (buffer-string))))))
+(defun emacsvox-omnivox-components--request-records ()
+  "Start a bounded asynchronous managed-installation listing for this view."
+  (unless (process-live-p emacsvox-omnivox-components--listing-process)
+    (let ((manager (current-buffer))
+          (output (generate-new-buffer " *Omnivox module listing*")))
+      (condition-case err
+          (let* ((program (emacsvox-omnivox-components--check-installer))
+                 (process
+                  (make-process
+                   :name "omnivox-module-list" :buffer output
+                   :command (list program "--machine") :coding 'utf-8
+                   :connection-type 'pipe :noquery t
+                   :sentinel
+                   (lambda (process _event)
+                     (when (memq (process-status process) '(exit signal))
+                       (when-let* ((timer (process-get process 'listing-timer)))
+                         (cancel-timer timer))
+                       (unwind-protect
+                           (when (buffer-live-p manager)
+                             (with-current-buffer manager
+                               (when (eq process emacsvox-omnivox-components--listing-process)
+                                 (setq emacsvox-omnivox-components--listing-process nil)
+                                 (condition-case error-data
+                                     (let ((text (with-current-buffer output (buffer-string))))
+                                       (unless (and (eq (process-status process) 'exit)
+                                                    (zerop (process-exit-status process)))
+                                         (error "%s" (if (process-get process 'listing-timeout)
+                                                          "Managed installation check timed out"
+                                                        (string-trim text))))
+                                       (setq emacsvox-omnivox-components--records
+                                             (emacsvox-omnivox-components--parse text)
+                                             emacsvox-omnivox-components--listing-error nil))
+                                   (error
+                                    (setq emacsvox-omnivox-components--listing-error
+                                          (error-message-string error-data))))
+                                 (emacsvox-omnivox-components--render)
+                                 (emacsvox-omnivox-components--refresh-details))))
+                         (when (buffer-live-p output) (kill-buffer output))))))))
+            (setq emacsvox-omnivox-components--listing-process process)
+            (process-put process 'listing-timer
+                         (run-at-time 20 nil
+                                      (lambda ()
+                                        (when (process-live-p process)
+                                          (process-put process 'listing-timeout t)
+                                          (delete-process process))))))
+        (error
+         (kill-buffer output)
+         (setq emacsvox-omnivox-components--listing-error (error-message-string err)))))))
 
 (defun emacsvox-omnivox-components--human-size (bytes)
   "Return a compact human-readable description of BYTES."
@@ -140,9 +285,28 @@
        ('installation "installing")
        ('uninstallation "uninstalling")
        ('test "testing")))
-   (if (equal (plist-get record :state) "available")
-       "not installed"
-     (replace-regexp-in-string "-" " " (plist-get record :state)))))
+   (let* ((id (plist-get record :id))
+          (main (emacsvox-omnivox-components--engine id))
+          (notify (emacsvox-omnivox-components--engine id 'notification)))
+     (if (and (emacsvox-omnivox-components--current-snapshot-p 'main)
+              (emacsvox-omnivox-components--current-snapshot-p 'notification)
+              (not (equal (emacsvox-omnivox-components--signature main)
+                          (emacsvox-omnivox-components--signature notify))))
+         "Streams differ"
+       (emacsvox-omnivox-components--lane-state id 'main)))))
+
+(defun emacsvox-omnivox-components--signature (engine)
+  "Return comparable availability, policy and voice identity from ENGINE."
+  (list (plist-get engine :availability) (plist-get engine :health)
+        (plist-get engine :disabled-by-policy)
+        (sort (mapcar (lambda (voice) (plist-get voice :voice-id))
+                      (plist-get engine :voices)) #'string<)))
+
+(defun emacsvox-omnivox-components--voice-count (id &optional lane)
+  "Return discovered voice count for ID and LANE, or unknown."
+  (if-let* ((engine (emacsvox-omnivox-components--engine id lane)))
+      (number-to-string (length (plist-get engine :voices)))
+    "Unknown"))
 
 (defun emacsvox-omnivox-components--entries (records)
   "Return tabulated entries for component RECORDS."
@@ -153,15 +317,13 @@
       (vector
        (plist-get record :name)
        (emacsvox-omnivox-components--state record)
-       (emacsvox-omnivox-components--human-size
-        (plist-get record :size))
-       (plist-get record :detail))))
+       (emacsvox-omnivox-components--voice-count (plist-get record :id)))))
    records))
 
 (defun emacsvox-omnivox-components--record (&optional id)
   "Return the current component record, or the record named by ID."
-  (let ((id (or id (tabulated-list-get-id))))
-    (or (cl-find id emacsvox-omnivox-components--records
+  (let ((id (or id emacsvox-omnivox-components--engine-id (tabulated-list-get-id))))
+    (or (cl-find id (emacsvox-omnivox-components--all-records)
                  :test #'string= :key (lambda (record)
                                         (plist-get record :id)))
         (user-error "Move to an Omnivox component row first"))))
@@ -172,28 +334,29 @@
    (lambda ()
      (setq tabulated-list-entries
            (emacsvox-omnivox-components--entries
-            emacsvox-omnivox-components--records)))
+            (emacsvox-omnivox-components--all-records))))
    id "windows"))
 
 (defun emacsvox-omnivox-components-refresh (&optional id)
   "Refresh Omnivox module status, preserving row ID and current column."
   (interactive)
-  (setq emacsvox-omnivox-components--records
-        (emacsvox-omnivox-components--load-records))
-  (emacsvox-omnivox-components--render id))
+  (emacsvox-omnivox-components--request-records)
+  (emacsvox-omnivox-components--capture-inventory)
+  (emacsvox-omnivox-components--render id)
+  (emacsvox-omnivox-components--refresh-details)
+  (when (fboundp 'omnivox-refresh-voice-inventory)
+    (omnivox-refresh-voice-inventory)))
 
 (defun emacsvox-omnivox-components-speak-current ()
-  "Speak the complete Omnivox component row at point."
+  "Speak engine status and discovered voice count at point."
   (interactive)
   (let* ((record (emacsvox-omnivox-components--record))
          (text
           (format
-           "%s. %s. %s. %s."
+           "%s. %s. %s voices."
            (plist-get record :name)
            (emacsvox-omnivox-components--state record)
-           (emacsvox-omnivox-components--human-size
-            (plist-get record :size))
-           (plist-get record :detail))))
+           (emacsvox-omnivox-components--voice-count (plist-get record :id)))))
     (emacsvox-omnivox-components--speak text)))
 
 (defun emacsvox-omnivox-components--running-omnivox-p ()
@@ -245,10 +408,10 @@ OUTPUT to the generic process sentinel EVENT."
     (cond
      ((and success (eq operation 'test)
            (string-match "Found \\([0-9]+\\) voices:" output))
-      (format "%s is available with %s voices. Voice list opened"
+      (format "%s managed check found %s voices. Results in engine details"
               name (match-string 1 output)))
      ((and success (eq operation 'test))
-      (format "%s voice check succeeded%s. Results opened"
+      (format "%s managed voice check succeeded%s. Results in engine details"
               name (if last-line (format ": %s" last-line) "")))
      ((and success (eq operation 'installation))
       (format "%s installed" name))
@@ -257,7 +420,7 @@ OUTPUT to the generic process sentinel EVENT."
      (success
       (format "%s %s completed" name operation))
      (t
-      (format "%s %s failed: %s. Details opened"
+      (format "%s %s failed: %s. Results in engine details"
               name operation
               (or last-line (string-trim event) "unknown error"))))))
 
@@ -269,6 +432,10 @@ OUTPUT to the generic process sentinel EVENT."
       (local-set-key (kbd "h") #'emacsvox-aural)
       (goto-char (point-min)))
     (emacsvox-aural-ui-pop-to-buffer output)))
+
+(defun emacsvox-omnivox-components--notice (text)
+  "Report a short completion TEXT without interrupting foreground speech."
+  (if (fboundp 'tts-notify) (tts-notify text) (message "%s" text)))
 
 (defun emacsvox-omnivox-components--finish (process event)
   "Handle completion of component PROCESS described by EVENT."
@@ -293,10 +460,14 @@ OUTPUT to the generic process sentinel EVENT."
         (with-current-buffer manager
           (when (eq process emacsvox-omnivox-components--process)
             (setq emacsvox-omnivox-components--process nil)
+            (setf (alist-get id emacsvox-omnivox-components--results nil nil #'equal)
+                  (list :operation operation :success success :time (current-time)
+                        :installer (car (process-command process))
+                        :summary message-text :output output-text))
             (condition-case err
-                (emacsvox-omnivox-components-refresh id)
+                (emacsvox-omnivox-components-refresh)
               (error
-               (emacsvox-omnivox-components--render id)
+               (emacsvox-omnivox-components--render)
                (setq message-text
                      (format "%s; refresh failed: %s"
                              message-text (error-message-string err))))))))
@@ -313,10 +484,20 @@ OUTPUT to the generic process sentinel EVENT."
            (setq message-text
                  (format "%s; Omnivox restart failed: %s"
                          message-text (error-message-string err))))))
-      (when (or (not success) (eq operation 'test))
-        (emacsvox-omnivox-components--show-output output))
-      (message "%s" message-text)
-      (emacsvox-omnivox-components--speak message-text))))
+      (emacsvox-omnivox-components--notice
+       (format "%s %s %s. Results in engine details."
+               name operation
+               (cond ((string-match-p "restart failed" message-text)
+                      "completed; speech restart failed")
+                     (success "completed") (t "failed"))))
+      (when (buffer-live-p manager)
+        (with-current-buffer manager
+          (let ((result (alist-get id emacsvox-omnivox-components--results nil nil #'equal)))
+            (when result
+              (setf (plist-get result :summary) message-text
+                    (plist-get result :output)
+                    (concat output-text "\n" message-text "\n"))))
+          (emacsvox-omnivox-components--refresh-details))))))
 
 (defun emacsvox-omnivox-components--start (record operation arguments)
   "Start OPERATION for component RECORD using installer ARGUMENTS."
@@ -365,7 +546,8 @@ OUTPUT to the generic process sentinel EVENT."
     (process-put emacsvox-omnivox-components--process
                  'emacsvox-restore-omnivox restore-omnivox)
     (when (derived-mode-p 'emacsvox-omnivox-components-mode)
-      (emacsvox-omnivox-components--render))
+      (emacsvox-omnivox-components--render)
+      (emacsvox-omnivox-components--refresh-details))
     emacsvox-omnivox-components--process))
 
 (defun emacsvox-omnivox-components-install ()
@@ -419,12 +601,229 @@ OUTPUT to the generic process sentinel EVENT."
      record 'test (list "--test" (plist-get record :id)))))
 
 (defun emacsvox-omnivox-components-activate ()
-  "Install an available module, or test any other selected engine."
+  "Open details for the selected engine."
   (interactive)
-  (if (string= (plist-get (emacsvox-omnivox-components--record) :state)
-               "available")
-      (emacsvox-omnivox-components-install)
-    (emacsvox-omnivox-components-test)))
+  (let* ((id (plist-get (emacsvox-omnivox-components--record) :id))
+         (manager (current-buffer))
+         (buffer (get-buffer-create (format "*Omnivox Engine: %s*" id))))
+    (with-current-buffer buffer
+      (unless (derived-mode-p 'emacsvox-omnivox-engine-details-mode)
+        (emacsvox-omnivox-engine-details-mode))
+      (setq emacsvox-omnivox-components--manager manager
+            emacsvox-omnivox-components--engine-id id)
+      (emacsvox-aural-inspection-attach-source
+       (emacsvox-aural-inspection-source-buffer manager))
+      (emacsvox-omnivox-components--render-details))
+    (emacsvox-aural-ui--pop-to-buffer buffer nil)
+    (with-current-buffer manager
+      (emacsvox-omnivox-components-speak-current))))
+
+(defun emacsvox-omnivox-components--process-description (process)
+  "Describe PROCESS, including retained stopped workers, without credentials."
+  (if (not (processp process)) "No recorded worker"
+    (concat
+     (unless (process-live-p process) "Stopped; ")
+     (if (eq (process-type process) 'network)
+         (format "Remote speech connection %s via %s:%s"
+                 (process-name process)
+                 (process-contact process :host) (process-contact process :service))
+       (format "Process %s; %s" (process-id process)
+               (or (car (process-command process)) (process-name process)))))))
+
+(defun emacsvox-omnivox-components--detail-rows (id)
+  "Return detail rows for ID using this manager's retained evidence."
+  (let* ((record (or (cl-find id (emacsvox-omnivox-components--all-records)
+                              :key (lambda (entry) (plist-get entry :id)) :test #'equal)
+                     (list :id id :name id :state "not-managed" :size 0)))
+         (result (alist-get id emacsvox-omnivox-components--results nil nil #'equal))
+         (rows (list (list 'summary (vector (plist-get record :name)
+                                           (emacsvox-omnivox-components--state record))))))
+    (dolist (lane '(main notification))
+      (let* ((engine (emacsvox-omnivox-components--engine id lane))
+             (inventory (plist-get (alist-get lane emacsvox-omnivox-components--snapshots)
+                                   :inventory))
+             (time (plist-get inventory :received-at))
+             (label (if (eq lane 'main) "Main speech" "Notification speech")))
+        (setq rows
+              (append rows
+                      (list
+                       (list lane (vector label
+                                          (format "%s; %s voices"
+                                                  (emacsvox-omnivox-components--lane-state id lane)
+                                                  (emacsvox-omnivox-components--voice-count id lane))))
+                       (list (intern (format "%s-target" lane))
+                             (vector "Current worker"
+                                     (emacsvox-omnivox-components--process-description
+                                      (emacsvox-omnivox-components--lane-process lane))))
+                       (list (intern (format "%s-source" lane))
+                             (vector "Checked worker"
+                                     (emacsvox-omnivox-components--process-description
+                                      (plist-get (alist-get lane emacsvox-omnivox-components--snapshots)
+                                                 :process))))
+                       (list (intern (format "%s-time" lane))
+                             (vector "Inventory received"
+                                     (if time (format-time-string "%Y-%m-%d %H:%M:%S %Z" time)
+                                       "Not timed; check again")))
+                       (list (intern (format "%s-runtime" lane))
+                             (vector "Runtime discovery"
+                                     (cond
+                                      ((null engine) "Not checked")
+                                      ((equal (plist-get engine :availability) "available")
+                                       "Found and loaded at the recorded check")
+                                      (t (or (plist-get engine :availability-reason)
+                                             "Not available; no reason reported")))))
+                       (list (intern (format "%s-health" lane))
+                             (vector "Health"
+                                     (mapconcat
+                                      (lambda (value) (format "%s" value))
+                                      (delq nil (list (or (plist-get engine :health) "Not checked")
+                                                      (plist-get engine :health-reason)
+                                                      (plist-get engine :last-failure))) "; "))))))))
+    (append
+     rows
+     (list
+      (list 'check-live (vector "Check live voices" "Refresh both speech inventories; no sample is played"))
+      (list 'managed (vector "Managed installation"
+                            (if emacsvox-omnivox-components--listing-error
+                                (concat "Not checked: " emacsvox-omnivox-components--listing-error)
+                              (format "%s%s. %s"
+                                      (if (process-live-p emacsvox-omnivox-components--listing-process)
+                                          "Refreshing file information; " "")
+                                      (pcase (plist-get record :state)
+                                        ("runtime-required" "Bridge installed; runtime not checked here")
+                                        ("model-required" "Module installed; model not checked here")
+                                        ("available" "Not installed; downloadable")
+                                        (state (replace-regexp-in-string "-" " " state)))
+                                      (or (plist-get record :detail) "No managed module information")))))
+      (list 'scope (vector "Management target" "Configured WSL per-user installation; may differ from the speech target above")))
+     (unless emacsvox-omnivox-components--listing-error
+       (append
+        (when (equal (plist-get record :state) "available")
+          (list (list 'install (vector "Install module"
+                                      (emacsvox-omnivox-components--human-size (plist-get record :size))))))
+        (when (and (member id emacsvox-omnivox-components--managed-ids)
+                   (member (plist-get record :state) '("installed" "model-required")))
+          (list (list 'uninstall (vector "Uninstall module" "Remove this manager's module"))))
+        (unless (equal (plist-get record :state) "not-managed")
+          (list (list 'test (vector "Check managed engine" "Run voice discovery in the managed installation"))))))
+     (when result
+       (list
+        (list 'result (vector "Last managed operation"
+                              (format "%s; %s; %s"
+                                      (plist-get result :operation)
+                                      (if (plist-get result :success) "succeeded" "failed")
+                                      (format-time-string "%Y-%m-%d %H:%M:%S %Z" (plist-get result :time)))))
+        (list 'output (vector "Read last result" "Retained output from that operation"))))
+     (list (list 'back (vector "Back to engines" "Return to the selected engine"))))))
+
+(defun emacsvox-omnivox-components--render-details ()
+  "Redraw this details view, preserving its selected field and column."
+  (when (buffer-live-p emacsvox-omnivox-components--manager)
+    (let* ((id emacsvox-omnivox-components--engine-id)
+           (rows (with-current-buffer emacsvox-omnivox-components--manager
+                   (emacsvox-omnivox-components--detail-rows id))))
+      (emacsvox-aural-ui-refresh-tabulated
+       (lambda () (setq tabulated-list-entries rows)) nil 'summary))))
+
+(defun emacsvox-omnivox-components--refresh-details ()
+  "Redraw details belonging to this manager without selecting a window."
+  (let ((manager (current-buffer)))
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (and (derived-mode-p 'emacsvox-omnivox-engine-details-mode)
+                   (eq emacsvox-omnivox-components--manager manager))
+          (emacsvox-omnivox-components--render-details))))))
+
+(defun emacsvox-omnivox-components--check-live ()
+  "Request fresh discovery from the connected speech workers."
+  (interactive)
+  (unless (and (fboundp 'omnivox-refresh-voice-inventory)
+               (fboundp 'omnivox--process-supports-p)
+               (cl-some (lambda (lane)
+                          (let ((process (emacsvox-omnivox-components--lane-process lane)))
+                            (and (process-live-p process)
+                                 (omnivox--process-supports-p process "engine_inventory"))))
+                        '(main notification)))
+    (user-error "No connected Omnivox inventory service"))
+  (omnivox-refresh-voice-inventory))
+
+(defun emacsvox-omnivox-components--details-back ()
+  "Return to the parent engine row."
+  (interactive)
+  (let ((id emacsvox-omnivox-components--engine-id)
+        (manager emacsvox-omnivox-components--manager))
+    (unless (buffer-live-p manager) (user-error "The engine list was closed"))
+    (with-current-buffer manager (emacsvox-omnivox-components--render id))
+    (emacsvox-aural-ui-pop-to-buffer manager)))
+
+(defun emacsvox-omnivox-components--details-activate ()
+  "Perform the action on the selected detail row, or speak its value."
+  (interactive)
+  (let ((action (tabulated-list-get-id))
+        (id emacsvox-omnivox-components--engine-id)
+        (manager emacsvox-omnivox-components--manager))
+    (unless (buffer-live-p manager) (user-error "The engine list was closed"))
+    (cond
+     ((eq action 'back) (emacsvox-omnivox-components--details-back))
+     ((memq action '(install uninstall test check-live))
+      (with-current-buffer manager
+        (let ((emacsvox-omnivox-components--engine-id id))
+          (funcall (pcase action
+                     ('install #'emacsvox-omnivox-components-install)
+                     ('uninstall #'emacsvox-omnivox-components-uninstall)
+                     ('test #'emacsvox-omnivox-components-test)
+                     ('check-live #'emacsvox-omnivox-components--check-live))))))
+     ((eq action 'output)
+      (let* ((result (with-current-buffer manager
+                       (alist-get id emacsvox-omnivox-components--results nil nil #'equal)))
+             (output (get-buffer-create (format "*Omnivox Result: %s*" id))))
+        (with-current-buffer output
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (insert (or (plist-get result :output) "No retained output"))))
+        (emacsvox-omnivox-components--show-output output)))
+     (t (emacsvox-aural-ui-speak-current-row)))))
+
+(defun emacsvox-omnivox-components--details-next-action ()
+  "Move to the next actionable detail row."
+  (interactive)
+  (let ((start (point)))
+    (forward-line 1)
+    (while (and (not (eobp))
+                (not (memq (tabulated-list-get-id)
+                           '(check-live install uninstall test output back))))
+      (forward-line 1))
+    (when (eobp) (goto-char start))
+    (emacsvox-aural-ui-speak-current-row)))
+
+(defun emacsvox-omnivox-components--details-refresh ()
+  "Request fresh evidence while retaining the selected detail field."
+  (interactive)
+  (unless (buffer-live-p emacsvox-omnivox-components--manager)
+    (user-error "The engine list was closed"))
+  (with-current-buffer emacsvox-omnivox-components--manager
+    (emacsvox-omnivox-components-refresh)))
+
+(defun emacsvox-omnivox-components--speak-detail ()
+  "Speak the selected engine detail's label and value."
+  (let ((row (or (tabulated-list-get-entry) (user-error "Move to a detail first"))))
+    (emacsvox-aural-ui-speak (format "%s. %s" (aref row 0) (aref row 1)))))
+
+(define-derived-mode emacsvox-omnivox-engine-details-mode
+    emacsvox-aural-tabulated-mode "Omnivox-Engine"
+  "Spoken engine discovery, management scope, actions and retained results."
+  (emacsvox-aural-ui-configure-tabulated
+   "Omnivox engine details" #'emacsvox-omnivox-components--speak-detail
+   #'emacsvox-omnivox-components--details-refresh)
+  (setq tabulated-list-format '[("Item" 25 nil) ("Details" 0 nil)]
+        tabulated-list-padding 2)
+  (tabulated-list-init-header))
+
+(dolist (binding '(("RET" . emacsvox-omnivox-components--details-activate)
+                   ("TAB" . emacsvox-omnivox-components--details-next-action)
+                   ("q" . emacsvox-omnivox-components--details-back)
+                   ("h" . emacsvox-aural)))
+  (define-key emacsvox-omnivox-engine-details-mode-map (kbd (car binding)) (cdr binding)))
 
 (defun emacsvox-omnivox-components-help ()
   "Display and speak Omnivox engine-module manager help."
@@ -432,20 +831,24 @@ OUTPUT to the generic process sentinel EVENT."
   (emacsvox-aural-ui-with-help-window
     (princ
      (concat
-      "Omnivox Engine Modules\n\n"
+      "Omnivox Speech Engines\n\n"
       "This manager shows built-in engines, user-supplied runtime bridges,\n"
       "and optional modules pinned to the installed Omnivox release. Downloads\n"
       "are installed per user only after their SHA-256 checksum is verified.\n"
-      "Release state describes that managed release installation. Browse and\n"
-      "try voices reports the active server, which may use another installation.\n"
+      "Status and voice counts describe main speech discovery. Engine details\n"
+      "show each speech stream, check time, and the separate managed installation.\n"
+      "Previously available means discovery needs refreshing. Streams differ\n"
+      "means the workers report different availability, policy, or voices.\n"
       "Emacsvox never downloads Eloquence, DECtalk, or RHVoice runtimes, or a\n"
       "Piper voice model.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "Not installed means downloadable; installing marks an active download.\n"
+      "Installing marks an active managed download.\n"
       "Uninstalling and testing mark other operations in progress.\n"
-      "RET install missing module, otherwise test engine\n"
-      "i install module     t check engine; open voices or error\n"
+      "RET engine details; RET there activates the selected action\n"
+      "TAB next action in details; q returns to the engine row\n"
+      "i install module     t check the managed engine\n"
+      "Checks retain output in details and never open it automatically.\n"
       "u uninstall a manager-installed module\n"
       "g refresh            h aural home\n"
       "? help               q quit\n")))
@@ -454,17 +857,17 @@ OUTPUT to the generic process sentinel EVENT."
 
 (define-derived-mode emacsvox-omnivox-components-mode
     emacsvox-aural-tabulated-mode
-  "Omnivox-Modules"
-  "Spoken manager for verified Omnivox engine modules."
+  "Omnivox-Engines"
+  "Spoken engine status, details and verified module management."
   (emacsvox-aural-ui-configure-tabulated
-   "Omnivox engine module list"
+   "Omnivox speech engine list"
    #'emacsvox-omnivox-components-speak-current
    #'emacsvox-omnivox-components-refresh)
   (setq tabulated-list-format
         [("Engine" 16 t)
-         ("Release state" 21 t)
-         ("Download" 11 t)
-         ("Details" 0 t)]
+         ("Status" 34 t)
+         ("Voices" 8 t)]
+        header-line-format " Main speech discovery; RET for both streams and managed installation"
         tabulated-list-padding 2)
   (add-hook 'tabulated-list-revert-hook
             #'emacsvox-omnivox-components-refresh nil t)
@@ -483,7 +886,7 @@ OUTPUT to the generic process sentinel EVENT."
 
 ;;;###autoload
 (defun emacsvox-omnivox-manage-components ()
-  "Open the accessible Omnivox engine-module manager."
+  "Open accessible engine status, details and optional module management."
   (interactive)
   (let ((source (emacsvox-aural-inspection-remember-source-buffer))
         (buffer (get-buffer-create "*Omnivox Engine Modules*")))

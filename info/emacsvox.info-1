@@ -319,9 +319,9 @@ both the final tone and speech.  You can then skip to the last step in
 
    After the core installation works, optional speech engines are
 available from ‘M-x emacsvox-omnivox-manage-components RET’.  The same
-manager is the _Omnivox engine modules_ row in Aural Home, opened with
-‘C-e H’ and then ‘I’.  It distinguishes engines already included in the
-core, downloadable modules, and bridges that still need a user-supplied
+manager is the _Speech engines_ row in Aural Home, opened with ‘C-e H’
+and then ‘I’.  It distinguishes engines already included in the core,
+downloadable modules, and bridges that still need a user-supplied
 runtime.  Press ‘i’ on a downloadable row to confirm, checksum-verify,
 install, and validate that module without ‘sudo’.  Press ‘u’ on a
 manager-installed module to confirm and remove it while retaining the
@@ -1494,35 +1494,53 @@ chosen data.
 
      M-x emacsvox-omnivox-manage-components RET
 
-   You can also press ‘C-e H’ for Aural Home and then ‘I’ on _Omnivox
-engine modules_.  The spoken table reports each engine as installed,
-downloadable, unavailable on this architecture, needing a core update,
-or needing a separately supplied runtime or model.  _Release state_
-describes the managed release installation.  _Browse and try voices_
-reports the active speech server, which can use a different
-installation, such as a development runtime or a remote workstation.
-Installing a module here changes the managed release only.  Move to an
-engine row, then choose the task you want:
+   You can also press ‘C-e H’ for Aural Home and then ‘I’ on _Speech
+engines_.  The table speaks each engine's status and voice count from
+main speech discovery.  Press ‘RET’ for engine details: main and
+notification status, speech targets, the time each inventory was
+received, runtime discovery, and the separate managed installation.
 
-   • To install a _not installed_ module, press ‘i’ and confirm.  The
-     manager downloads the version matched to your Omnivox core,
-     verifies it, and announces when installation is complete.  Its
-     state changes to _installing_ immediately and stays that way if you
-     refresh or reopen the manager.
-   • To check any engine, press ‘t’.  Emacsvox announces how many voices
-     Omnivox found and selects an accessible buffer containing the
-     complete list.  If the check fails, it announces and displays the
-     actual diagnostic instead of only an exit code.  Press ‘q’ to
-     return to the manager or ‘h’ for Aural Home.
+   _Available_ means the current worker recently discovered the engine.
+_Previously available_ means that evidence is old or belongs to a
+stopped or replaced worker.  _Streams differ_ means the workers report
+different availability, policy, health or voice identities.  A bridge's
+presence alone never establishes that its runtime is usable.  _Not
+checked_ is not a claim that the runtime is missing.
+
+   Managed installation information describes the configured WSL
+per-user release.  It can differ from the active development runtime or
+remote speech workstation.  Its _runtime not checked here_ or _model not
+checked here_ text describes the limits of that file check; use live
+discovery above it for the active server.  Installing a module changes
+the managed release only.
+
+   • To refresh discovery, press ‘g’ or use _Check live voices_ in
+     details.  Both worker inventories are requested asynchronously.
+     The managed installation check also runs asynchronously and reports
+     a timeout if needed.
+   • To install a module shown as _Not installed; downloadable_ in
+     details, press ‘i’ in the engine list or activate _Install module_
+     in details, then confirm.  The manager verifies the version-matched
+     download.  The table shows _installing_ while that operation runs.
+   • To check the managed engine, press ‘t’ in the list or activate
+     _Check managed engine_ in details.  This lists voices in the
+     managed installation; it does not play a sample or prove that the
+     active speech server uses that copy.  Completion produces a short
+     notice without selecting another buffer.  The last result remains
+     in engine details; _Read last result_ opens its complete output.
+   • In details, ‘TAB’ moves to the next action and ‘RET’ activates it.
+     Arrow keys read fields and values.  ‘q’ returns to the selected
+     engine row and ‘h’ opens Aural Home.  Background refresh preserves
+     selection.
    • To remove an _installed_ module, press ‘u’ and confirm.  This is
      available only for Flite, RuTTS, Piper, and TGSpeechBox modules
      installed by this manager.  It cannot remove the Omnivox core,
      built-in engines, or runtime bridges.
 
    Removal keeps the verified download in the local cache.  If you
-change your mind, select the module again--its state will now be _not
-installed_--and press ‘i’ to reinstall it.  A valid cached download is
-reused.
+change your mind, select the module again--its managed state will be
+_not installed_--and press ‘i’ to reinstall it.  A valid cached download
+is reused.
 
    The module's whole managed directory is removed.  Move anything you
 placed inside that directory somewhere else before confirming.
@@ -1535,8 +1553,8 @@ After a successful installation, it also refreshes the table and
 restarts a running Omnivox server.  Operations run asynchronously so
 Emacs remains responsive.  The table shows _uninstalling_ during removal
 and _testing_ during a voice check.  Completion or failure refreshes the
-state; if that refresh fails, the last known state remains with a spoken
-error.
+view.  If the managed listing fails, its last known records remain with
+the error in details; live discovery remains available independently.
 
    If a removal reports that its helper is still in use, close any other
 Emacsvox or Omnivox session using that release and press ‘u’ again.  The
@@ -2495,7 +2513,7 @@ rules                     Current buffer rules, and Explain feedback as
 Saved setups and          Presentation profiles and Resume unfinished
 unfinished changes        changes.
 Troubleshooting           Aural Doctor, Spatial capabilities, and
-                          Omnivox engine modules.
+                          Speech engines.
 
    The header identifies the captured source and the number of
 unfinished drafts.  Choose _Resume unfinished changes_ to visit the
@@ -6257,105 +6275,3 @@ procedures that cannot be generated from those interfaces.
 * Documentation Maintenance::    Author, validate, and publish Emacsvox documentation.
 * Speech Server Protocols::      Understand speech-server protocols.
 * Integration Maintenance::      Maintain optional integrations and release staging.
-
-
-File: emacsvox.info,  Node: Documentation Maintenance,  Next: Speech Server Protocols,  Up: Developer Guide
-
-16.1 Documentation Maintenance
-==============================
-
-This chapter is for contributors changing the maintained manuals,
-generated reference, or public browser documentation.  Reports and
-internal notes do not require an Emacsvox build; use the smallest
-documentation target that covers the source being changed.
-
-16.1.1 Choose the canonical source
-----------------------------------
-
-The maintained Org master is ‘docs/manual/emacsvox.org’.  Current-user
-chapters live under ‘docs/manual/chapters/’, while developer and
-maintainer chapters live under ‘docs/developer/’.  The source layout and
-fast authoring loop are summarized in ‘docs/manual/README.org’.
-
-   The current project overview lives in ‘README.org’, and the complete
-user installation path lives in ‘docs/manual/chapters/installation.org’.
-Source checkout, byte-code, and release procedures live in
-‘docs/developer/integration-maintenance.org’.  Submit changes through
-the Emacsvox repository at <https://github.com/bartbunting/emacsvox>.
-Before changing a governed workflow or architecture, read ‘AGENTS.md’
-and every accepted record under ‘docs/adr/’.  Repository-local
-‘local.mk’ selects the Emacs used by supported targets; Emacsvox
-requires Emacs 30.2 or newer.
-
-   Do not hand-edit generated references.  ‘info/docs.texi’ and
-‘info/keys.texi’ come from the source documentation generator, and
-‘etc/aural-presentation-reference.org’ comes from
-‘utils/emacsvox-aural-audit.el’.  The first two sources form the
-separately installed ‘emacsvox-reference.info’ manual.  Selected
-historical chapters form the separately installed
-‘emacsvox-heritage.info’ manual.
-
-16.1.2 Use the fast authoring workflow
---------------------------------------
-
-Keep current operating instructions separate from historical accounts.
-State which backend or platform a procedure applies to, avoid
-duplicating detailed protocol contracts across repositories, and link to
-the owning document.  Apply the user-versus-developer audience test in
-ADR 0004 before choosing a source directory.
-
-   While editing Org prose, preview the complete manual without
-inspecting or rebuilding Lisp byte-code:
-
-     make docs-org-preview
-
-   The ignored Info, Texinfo, and HTML previews appear under
-‘.docs-preview/org-manual/’.  Once the text settles, run ‘make
-docs-update’ to update the tracked generated Texinfo body and checked
-Info files.  Do not edit those generated files directly.
-
-   When public Lisp documentation or keys change, first bring byte-code
-current with ‘make bytecode’.  Use ‘make bytecode-rebuild’ instead after
-changing macros or public interfaces, as described in ‘AGENTS.md’.  Then
-run ‘make docs-reference’.  ‘make docs-generate’ remains the
-comprehensive reference and manual update.
-
-   Before review, merge, or deployment, run the non-mutating ‘make
-docs-release-check’; ‘make docs-check’ is its compatibility alias.
-Commit the regenerated Info artifacts with their source changes.
-
-16.1.3 Publish the browser manual
----------------------------------
-
-Org on ‘master’ is the canonical maintained manual source.  GitHub Pages
-serves the generated static files committed on the separate ‘gh-pages’
-branch; never edit those HTML files as source.  Publishing is
-deliberately explicit:
-
-  1. Finish the manual change, update its checked Info output, run the
-     release validation target above, and commit the complete
-     source-side change on ‘master’.
-
-  2. Check out that exact commit in a clean source worktree.  Build its
-     local, ignored byte-code with the Emacs selected by ‘local.mk’ or
-     an ‘EMACS=’ override.  Use a separate sibling worktree checked out
-     on ‘gh-pages’ as the publication directory.
-
-  3. From the clean source worktree, run:
-
-          make docs-publish-pages DOCS_PUBLISH_DIR=/path/to/emacsvox-pages
-
-     The target validates the manual and publishes that same staged
-     render, replaces only its managed HTML files, writes ‘.nojekyll’,
-     and records the source commit, Emacs version, and Texinfo version
-     in ‘emacsvox-source.txt’.  It refuses an uncommitted source tree.
-
-  4. Inspect the ‘gh-pages’ worktree, including the provenance file and
-     the main browser entry points.  Commit the generated site with the
-     source commit in the commit message, then push ‘master’ and
-     ‘gh-pages’.  The GitHub Pages source setting must name the root of
-     ‘gh-pages’.
-
-   No documentation target creates a commit or pushes a branch.  This
-keeps the published bytes reviewable and makes publication a distinct
-maintainer action.

@@ -8,6 +8,14 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox Unreleased --- Current User-Visible Changes
 
+** Speech engine details
+
+Aural Home's /Speech engines/ shows discovered availability and voice counts.
+RET opens main and notification discovery, timestamps, runtime diagnostics,
+and the separate managed installation. Old inventory is labelled as previous
+evidence. Managed checks run asynchronously and retain their results in details;
+completion no longer opens an output buffer or speaks its full diagnostic.
+
 ** Independent output volumes
 
 Aural Home's /Audio output/ combines notification device selection with five

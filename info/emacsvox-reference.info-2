@@ -4740,8 +4740,9 @@ File: emacsvox-reference.info,  Node: emacsvox-omnivox-components,  Next: emacsv
 2.187 emacsvox-omnivox-components
 =================================
 
-Spoken front end to the pinned, verified WSL2 Omnivox component manager.
-Proprietary runtimes and voice models remain user supplied.
+Spoken engine discovery and details, with separate evidence from the
+pinned WSL2 component manager.  Runtimes and voice models remain user
+supplied.
 
 2.187.1 Emacsvox-Omnivox-Components Commands
 --------------------------------------------
@@ -4751,7 +4752,7 @@ Proprietary runtimes and voice models remain user supplied.
 
  -- Command: emacsvox-omnivox-components-activate
 
-     Install an available module, or test any other selected engine.
+     Open details for the selected engine.
 
 2.187.1.2 emacsvox-omnivox-components-help
 ..........................................
@@ -4772,7 +4773,7 @@ Proprietary runtimes and voice models remain user supplied.
 
  -- Command: emacsvox-omnivox-components-mode
 
-     Spoken manager for verified Omnivox engine modules.
+     Spoken engine status, details and verified module management.
 
      In addition to any hooks its parent mode
      ‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
@@ -4802,7 +4803,7 @@ Proprietary runtimes and voice models remain user supplied.
 
  -- Command: emacsvox-omnivox-components-speak-current
 
-     Speak the complete Omnivox component row at point.
+     Speak engine status and discovered voice count at point.
 
 2.187.1.7 emacsvox-omnivox-components-test
 ..........................................
@@ -4818,12 +4819,31 @@ Proprietary runtimes and voice models remain user supplied.
 
      Confirm and uninstall the selected manager-installed engine module.
 
-2.187.1.9 emacsvox-omnivox-manage-components
-............................................
+2.187.1.9 emacsvox-omnivox-engine-details-mode
+..............................................
+
+ -- Command: emacsvox-omnivox-engine-details-mode
+
+     Spoken engine discovery, management scope, actions and retained results.
+
+     In addition to any hooks its parent mode
+     ‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+     hook ‘emacsvox-omnivox-engine-details-mode-hook’, as the final or
+     penultimate step during initialization.
+
+     Key             Binding
+     -----------------------------------------------------
+     TAB		emacsvox-omnivox-components-details-next-action
+     RET		emacsvox-omnivox-components-details-activate
+     h		emacsvox-aural
+     q		emacsvox-omnivox-components-details-back
+
+2.187.1.10 emacsvox-omnivox-manage-components
+.............................................
 
  -- Command: emacsvox-omnivox-manage-components
 
-     Open the accessible Omnivox engine-module manager.
+     Open accessible engine status, details and optional module management.
 
 2.187.2 emacsvox-omnivox-components Options
 -------------------------------------------

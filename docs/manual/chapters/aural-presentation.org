@@ -119,7 +119,7 @@ The six groups are:
 | Sounds and output | Sound packs, Spatial settings, Audio output, and Review notifications. |
 | Optional feedback and rules | Presentation options, Your feedback rules, Current buffer rules, and Explain feedback as you navigate. |
 | Saved setups and unfinished changes | Presentation profiles and Resume unfinished changes. |
-| Troubleshooting | Aural Doctor, Spatial capabilities, and Omnivox engine modules. |
+| Troubleshooting | Aural Doctor, Spatial capabilities, and Speech engines. |
 
 The header identifies the captured source and the number of unfinished drafts.
 Choose /Resume unfinished changes/ to visit the original rule editor, voice editor,

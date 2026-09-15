@@ -433,7 +433,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
       (delete-directory root t))))
 
 (ert-deftest emacsvox-omnivox-components-parse-and-render ()
-  "Machine records become accessible rows with readable state and size."
+  "Managed prerequisites alone leave live availability and count unknown."
   (let* ((records
           (emacsvox-omnivox-components--parse
            (concat
@@ -442,9 +442,9 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
          (entries (emacsvox-omnivox-components--entries records)))
     (should (= (length records) 2))
     (should (equal (plist-get (car records) :id) "flite"))
-    (should (equal (aref (cadar entries) 1) "not installed"))
-    (should (equal (aref (cadar entries) 2) "2.9 MiB"))
-    (should (equal (aref (cadadr entries) 1) "runtime required"))))
+    (should (equal (aref (cadar entries) 1) "Not checked"))
+    (should (equal (aref (cadar entries) 2) "Unknown"))
+    (should (equal (aref (cadadr entries) 1) "Not checked"))))
 
 (ert-deftest emacsvox-omnivox-components-show-operation-until-completion ()
   "Rows and speech reflect active operations, refresh, success, and failure."
@@ -465,13 +465,17 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                      refresh-fails spoken)
                 (cl-letf (((symbol-function 'emacsvox-omnivox-components--check-installer)
                            (lambda () "/bin/sh"))
-                          ((symbol-function 'emacsvox-omnivox-components--load-records)
+                          ((symbol-function 'emacsvox-omnivox-components--request-records)
                            (lambda ()
-                             (if refresh-fails (error "fixture refresh failed") records)))
+                             (setq emacsvox-omnivox-components--records records
+                                   emacsvox-omnivox-components--listing-error
+                                   (and refresh-fails "fixture refresh failed"))))
                           ((symbol-function 'emacsvox-omnivox-components--running-omnivox-p)
                            #'ignore)
                           ((symbol-function 'emacsvox-omnivox-components--show-output) #'ignore)
                           ((symbol-function 'emacsvox-omnivox-components--speak)
+                           (lambda (text) (setq spoken text)))
+                          ((symbol-function 'emacsvox-omnivox-components--notice)
                            (lambda (text) (setq spoken text))))
                   (emacsvox-omnivox-components-refresh "flite")
                   (emacsvox-aural-ui-goto-tabulated-column 1)
@@ -487,7 +491,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                           (should (equal (aref (tabulated-list-get-entry) 1) (cadr case)))
                           (should (= (emacsvox-aural-ui-tabulated-column-index) 1))
                           (should (equal (aref (cadr (assoc "piper" tabulated-list-entries)) 1)
-                                         "not installed"))
+                                         "Not checked"))
                           (should-error (emacsvox-omnivox-components--start record 'test nil)
                                         :type 'user-error)
                           (when (zerop exit-code)
@@ -501,12 +505,12 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                               (accept-process-output process 0.05)))
                           (should-not emacsvox-omnivox-components--process)
                           (should (equal (aref (tabulated-list-get-entry) 1)
-                                         (if (equal (plist-get record :state) "available")
-                                             "not installed" "installed")))
+                                         "Not checked"))
                           (when (= exit-code 1)
                             (should (string-search "failed" spoken)))
                           (when refresh-fails
-                            (should (string-search "refresh failed" spoken))))
+                            (should (string-search "refresh failed"
+                                                   emacsvox-omnivox-components--listing-error))))
                       (when (process-live-p process)
                         (set-process-sentinel process #'ignore)
                         (delete-process process)))))))
@@ -517,9 +521,10 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
   (let ((buffer (get-buffer-create "*Omnivox Engine Modules*"))
         (process (make-pipe-process :name "component install fixture" :noquery t)))
     (unwind-protect
-        (cl-letf (((symbol-function 'emacsvox-omnivox-components--load-records)
-                   (lambda () '((:id "flite" :name "Flite" :state "available"
-                                 :size 1024 :detail "fixture"))))
+        (cl-letf (((symbol-function 'emacsvox-omnivox-components--request-records)
+                   (lambda () (setq emacsvox-omnivox-components--records
+                                    '((:id "flite" :name "Flite" :state "available"
+                                       :size 1024 :detail "fixture")))))
                   ((symbol-function 'emacsvox-aural-ui-pop-to-buffer) #'identity))
           (with-current-buffer buffer
             (emacsvox-omnivox-components-mode)
@@ -545,7 +550,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
      "TGSpeechBox" 'test t
      "Found 154 voices:\n\n en (1 voice):\n  TGSpeechBox Adam [en/adam]\n"
      "finished\n")
-    "TGSpeechBox is available with 154 voices. Voice list opened")))
+    "TGSpeechBox managed check found 154 voices. Results in engine details")))
 
 (ert-deftest emacsvox-omnivox-components-uninstall-result-is-concise ()
   "A successful removal has an unambiguous spoken result."
@@ -609,7 +614,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
           (cl-letf (((symbol-function
                       'emacsvox-omnivox-components--check-installer)
                      (lambda () "/bin/false"))
-                    ((symbol-function 'emacsvox-omnivox-components--load-records)
+                    ((symbol-function 'emacsvox-omnivox-components--request-records)
                      (lambda () nil))
                     ((symbol-function
                       'emacsvox-omnivox-components--running-omnivox-p)
@@ -622,6 +627,9 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                      #'ignore)
                     ((symbol-function
                       'emacsvox-omnivox-components--speak)
+                     #'identity)
+                    ((symbol-function
+                      'emacsvox-omnivox-components--notice)
                      #'identity)
                     ((symbol-function 'tts-restart)
                      (lambda () (setq restarted t))))
@@ -708,6 +716,244 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
       (should (string-search "manually added" prompt))
       (should (eq (cadr started) 'uninstallation))
       (should (equal (caddr started) '("--uninstall" "flite"))))))
+
+(cl-defmacro emacsvox-omnivox-components-tests--with-inventory (&rest body)
+  "Run BODY with distinct main/notification workers and normalized evidence."
+  (declare (indent 0))
+  `(let ((tts-speaker-process (make-pipe-process :name "engine-main-fixture" :noquery t
+                                                :sentinel #'ignore))
+         (tts-notify-process (make-pipe-process :name "engine-notify-fixture" :noquery t
+                                               :sentinel #'ignore)))
+     (unwind-protect
+         (with-temp-buffer
+           (emacsvox-omnivox-components-mode)
+           (setq emacsvox-omnivox-components--records
+                 '((:id "eloquence" :name "Eloquence" :state "runtime-required"
+                    :size 0 :detail "User runtime prerequisite")))
+           (dolist (lane '(main notification))
+             (setf (alist-get lane emacsvox-omnivox-components--snapshots)
+                   (list :process (if (eq lane 'main) tts-speaker-process tts-notify-process)
+                         :inventory
+                         (list :received-at (current-time)
+                               :engines (copy-tree
+                                         '((:engine-id "eloquence" :display-name "Eloquence"
+                                            :availability "available" :health "healthy"
+                                            :disabled-by-policy nil
+                                            :voices ((:voice-id "reed") (:voice-id "shelley")))))))))
+           (emacsvox-omnivox-components--render "eloquence")
+           ,@body)
+       (delete-process tts-speaker-process)
+       (delete-process tts-notify-process))))
+
+(ert-deftest emacsvox-omnivox-components-live-discovery-overrides-prerequisite ()
+  "Usable runtime discovery is not obscured by a managed bridge prerequisite."
+  (emacsvox-omnivox-components-tests--with-inventory
+    (should (equal (aref (tabulated-list-get-entry) 1) "Available"))
+    (should (equal (aref (tabulated-list-get-entry) 2) "2"))
+    (let ((rows (emacsvox-omnivox-components--detail-rows "eloquence")))
+      (should (string-search "Found and loaded" (aref (cadr (assq 'main-runtime rows)) 1)))
+      (should (string-search "runtime not checked here" (aref (cadr (assq 'managed rows)) 1))))))
+
+(ert-deftest emacsvox-omnivox-components-old-or-replaced-worker-is-not-current ()
+  "Age, disconnect and replacement cannot reuse evidence as current discovery."
+  (emacsvox-omnivox-components-tests--with-inventory
+    (let* ((record (emacsvox-omnivox-components--record))
+           (inventory (plist-get (alist-get 'main emacsvox-omnivox-components--snapshots)
+                                 :inventory)))
+      (setf (plist-get inventory :received-at) (time-subtract nil 600))
+      (should (equal (emacsvox-omnivox-components--state record) "Previously available"))
+      (setf (plist-get inventory :received-at) (current-time))
+      (let ((tts-speaker-process tts-notify-process))
+        (should (equal (emacsvox-omnivox-components--state record) "Previously available"))
+        (let ((rows (emacsvox-omnivox-components--detail-rows "eloquence")))
+          (should (string-search "engine-notify-fixture" (aref (cadr (assq 'main-target rows)) 1)))
+          (should (string-search "engine-main-fixture" (aref (cadr (assq 'main-source rows)) 1)))))
+      (delete-process tts-speaker-process)
+      (should (equal (emacsvox-omnivox-components--state record) "Previously available")))))
+
+(ert-deftest emacsvox-omnivox-components-compares-voice-identities-between-streams ()
+  "Equal voice counts do not prove the two workers agree."
+  (emacsvox-omnivox-components-tests--with-inventory
+    (let ((engine (emacsvox-omnivox-components--engine "eloquence" 'notification)))
+      (setf (plist-get engine :voices) '((:voice-id "reed") (:voice-id "sandy")))
+      (should (equal (emacsvox-omnivox-components--state
+                      (emacsvox-omnivox-components--record)) "Streams differ"))
+      (setf (plist-get engine :disabled-by-policy) t)
+      (should (equal (emacsvox-omnivox-components--lane-state "eloquence" 'notification)
+                     "Disabled")))))
+
+(ert-deftest emacsvox-omnivox-components-details-retain-focus-and-speak-values ()
+  "RET opens details; asynchronous redraw keeps its field, and q returns."
+  (emacsvox-omnivox-components-tests--with-inventory
+    (let ((manager (current-buffer)) (spoken nil) details)
+      (unwind-protect
+          (save-window-excursion
+            (switch-to-buffer manager)
+            (cl-letf (((symbol-function 'emacsvox-omnivox-components--speak) #'identity)
+                      ((symbol-function 'emacsvox-aural-ui-speak)
+                       (lambda (text) (setq spoken text)))
+                      ((symbol-function 'emacsvox-omnivox-components--start)
+                       (lambda (&rest _) (ert-fail "Opening details started an operation"))))
+              (emacsvox-omnivox-components-activate)
+              (setq details (current-buffer))
+              (should (derived-mode-p 'emacsvox-omnivox-engine-details-mode))
+              (goto-char (point-min))
+              (forward-line 1)
+              (should (eq (tabulated-list-get-id) 'main))
+              (emacsvox-omnivox-components--speak-detail)
+              (should (string-search "Available; 2 voices" spoken))
+              (with-current-buffer manager (emacsvox-omnivox-components--refresh-details))
+              (should (eq (current-buffer) details))
+              (should (eq (tabulated-list-get-id) 'main))
+              (emacsvox-omnivox-components--details-next-action)
+              (should (eq (tabulated-list-get-id) 'check-live))
+              (emacsvox-omnivox-components--details-back)
+              (should (eq (current-buffer) manager))
+              (should (equal (tabulated-list-get-id) "eloquence"))))
+        (when (buffer-live-p details) (kill-buffer details))))))
+
+(ert-deftest emacsvox-omnivox-components-graphical-details-refresh-preserves-window ()
+  "Real redisplay keeps details and the selected action in the same window."
+  (skip-unless (display-graphic-p))
+  (emacsvox-omnivox-components-tests--with-inventory
+    (let ((manager (current-buffer)) details)
+      (unwind-protect
+          (save-window-excursion
+            (switch-to-buffer manager)
+            (cl-letf (((symbol-function 'emacsvox-omnivox-components--speak) #'identity)
+                      ((symbol-function 'emacsvox-aural-ui-speak) #'identity))
+              (emacsvox-omnivox-components-activate)
+              (setq details (current-buffer))
+              (emacsvox-omnivox-components--details-next-action)
+              (redisplay t)
+              (let ((window (selected-window)) (id (tabulated-list-get-id)))
+                (with-current-buffer manager (emacsvox-omnivox-components--refresh-details))
+                (redisplay t)
+                (should (eq window (selected-window)))
+                (should (eq details (window-buffer window)))
+                (should (eq id (tabulated-list-get-id)))
+                (should (pos-visible-in-window-p (point) window)))
+              (emacsvox-omnivox-components--details-back)
+              (redisplay t)
+              (should (equal (tabulated-list-get-id) "eloquence"))
+              (should (pos-visible-in-window-p (point)))))
+        (when (buffer-live-p details) (kill-buffer details))))))
+
+(ert-deftest emacsvox-omnivox-components-listing-failure-retains-live-engines ()
+  "A managed-platform error leaves live discovery accessible and unchanged."
+  (emacsvox-omnivox-components-tests--with-inventory
+    (let ((program (make-temp-file "engine-listing-" nil ".sh"
+                                   "#!/bin/sh\necho unsupported-platform >&2\nexit 1\n")))
+      (unwind-protect
+          (progn
+            (set-file-modes program #o700)
+            (let ((emacsvox-omnivox-component-installer program))
+              (emacsvox-omnivox-components-refresh)
+              (let ((process emacsvox-omnivox-components--listing-process)
+                    (deadline (+ (float-time) 3)))
+                (while (and emacsvox-omnivox-components--listing-process
+                            (< (float-time) deadline))
+                  (accept-process-output process 0.05)))
+              (should-not emacsvox-omnivox-components--listing-process)
+              (should (string-search "unsupported-platform" emacsvox-omnivox-components--listing-error))
+              (should (equal (aref (tabulated-list-get-entry) 1) "Available"))))
+        (delete-file program)))))
+
+(ert-deftest emacsvox-omnivox-components-completion-keeps-selection-and-results ()
+  "A completed check neither moves the row nor opens or speaks long output."
+  (emacsvox-omnivox-components-tests--with-inventory
+    (let ((output (generate-new-buffer " *retained engine result*")) notice)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-omnivox-components--check-installer)
+                     (lambda () "/bin/sh"))
+                    ((symbol-function 'emacsvox-omnivox-components--request-records) #'ignore)
+                    ((symbol-function 'emacsvox-omnivox-components--speak) #'identity)
+                    ((symbol-function 'emacsvox-omnivox-components--notice)
+                     (lambda (text) (setq notice text)))
+                    ((symbol-function 'emacsvox-omnivox-components--show-output)
+                     (lambda (&rest _) (ert-fail "Completion stole focus"))))
+            (let* ((emacsvox-omnivox-components--output-buffer (buffer-name output))
+                   (process (emacsvox-omnivox-components--start
+                             (emacsvox-omnivox-components--record) 'test
+                             '("-c" "read -r ignored; printf 'Found 2 voices:\\nlong diagnostic\\n'"))))
+              (push '(:id "flite" :name "Flite" :state "available" :size 12)
+                    emacsvox-omnivox-components--records)
+              (emacsvox-omnivox-components--render "flite")
+              (process-send-string process "finish\n")
+              (let ((deadline (+ (float-time) 3)))
+                (while (and emacsvox-omnivox-components--process (< (float-time) deadline))
+                  ;; The command has a separate stderr pipe.  Service both
+                  ;; pipes so Emacs can deliver its completion sentinel.
+                  (accept-process-output nil 0.05)))
+              (should-not emacsvox-omnivox-components--process)
+              (should (stringp notice))
+              (should (equal (tabulated-list-get-id) "flite"))
+              (should (< (length notice) 100))
+              (should-not (string-search "long diagnostic" notice))
+              (emacsvox-omnivox-components-refresh)
+              (should (string-search "long diagnostic"
+                                     (plist-get (alist-get "eloquence" emacsvox-omnivox-components--results
+                                                           nil nil #'equal) :output)))))
+        (kill-buffer output)))))
+
+(ert-deftest emacsvox-omnivox-components-listing-success-is-asynchronous ()
+  "A successful managed listing refreshes the existing row without native checks."
+  (with-temp-buffer
+    (emacsvox-omnivox-components-mode)
+    (let ((program (make-temp-file "engine-listing-" nil ".sh"
+                                   "#!/bin/sh\nprintf 'flite\\tFlite\\tavailable\\t12\\tFixture\\n'\n")))
+      (unwind-protect
+          (progn
+            (set-file-modes program #o700)
+            (let ((emacsvox-omnivox-component-installer program))
+              (emacsvox-omnivox-components-refresh)
+              (should (processp emacsvox-omnivox-components--listing-process))
+              (let ((process emacsvox-omnivox-components--listing-process)
+                    (deadline (+ (float-time) 3)))
+                (while (and emacsvox-omnivox-components--listing-process
+                            (< (float-time) deadline))
+                  (accept-process-output process 0.05)))
+              (should-not emacsvox-omnivox-components--listing-process)
+              (should-not emacsvox-omnivox-components--listing-error)
+              (should (equal (tabulated-list-get-id) "flite"))
+              (should (equal (aref (tabulated-list-get-entry) 1) "Not checked"))))
+        (delete-file program)))))
+
+(ert-deftest emacsvox-omnivox-components-captures-each-workers-own-inventory ()
+  "Both inventory replies are timed and published without mixing worker data."
+  (require 'omnivox-voices)
+  (emacsvox-omnivox-components-tests--with-inventory
+    (let* ((calls 0)
+           (omnivox-engine-inventory nil)
+           (omnivox-engine-inventory-time nil)
+           (omnivox-routing-policy-registration nil)
+           (tts-voice-inventory-changed-hook (list (lambda () (cl-incf calls))))
+           (raw '(:type "inventory" :engines
+                  ((:id "eloquence" :display_name "Eloquence"
+                    :availability (:status "available") :health (:status "healthy")))))
+           (notify (copy-tree raw)))
+      (setf (plist-get (car (plist-get notify :engines)) :availability)
+            '(:status "unavailable" :reason "Runtime failed to load"))
+      (cl-letf (((symbol-function 'omnivox--process-supports-p) #'ignore))
+        (omnivox--handle-inventory-response tts-speaker-process raw)
+        (omnivox--handle-inventory-response tts-notify-process notify))
+      (should (= calls 2))
+      (should (process-get tts-notify-process 'omnivox-inventory-received-at))
+      (emacsvox-omnivox-components--capture-inventory)
+      (should (equal (emacsvox-omnivox-components--lane-state "eloquence" 'main) "Available"))
+      (should (equal (emacsvox-omnivox-components--lane-state "eloquence" 'notification)
+                     "Needs attention")))))
+
+(ert-deftest emacsvox-omnivox-components-details-handle-disappearing-record ()
+  "An open detail view survives a record disappearing during async discovery."
+  (with-temp-buffer
+    (emacsvox-omnivox-components-mode)
+    (setq emacsvox-omnivox-components--records
+          '((:id "flite" :name "Flite" :state "installed" :size 0)))
+    (let ((rows (emacsvox-omnivox-components--detail-rows "information")))
+      (should (equal (aref (cadr (assq 'summary rows)) 1) "Not checked"))
+      (should-not (assq 'install rows))
+      (should-not (assq 'test rows)))))
 
 (provide 'emacsvox-omnivox-components-tests)
 ;;; emacsvox-omnivox-components-tests.el ends here

@@ -67,7 +67,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1547 commands and 216 options.
+This chapter documents a total of 1548 commands and 216 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -256,7 +256,7 @@ This chapter documents a total of 1547 commands and 216 options.
 * emacsvox-nov:: Speech-enable NOV.
 * emacsvox-nxml:: Speech enable nxml mode.
 * emacsvox-ocr:: ocr Front-end desktop.
-* emacsvox-omnivox-components:: Install Omnivox engine modules.
+* emacsvox-omnivox-components:: Inspect engines and manage modules.
 * emacsvox-org:: Speech-enable org.
 * emacsvox-org-srs:: Speech-enable Org-srs reviews.
 * emacsvox-orgalist:: Speech-enable ORGALIST.
@@ -16375,8 +16375,8 @@ Default Value:
 @node emacsvox-omnivox-components
 @section emacsvox-omnivox-components
 
-Spoken front end to the pinned, verified WSL2 Omnivox component
-manager.  Proprietary runtimes and voice models remain user supplied.
+Spoken engine discovery and details, with separate evidence from the
+pinned WSL2 component manager.  Runtimes and voice models remain user supplied.
 
 @subsection Emacsvox-Omnivox-Components Commands
 
@@ -16385,7 +16385,7 @@ manager.  Proprietary runtimes and voice models remain user supplied.
 @findex emacsvox-omnivox-components-activate
 
 @format
-Install an available module, or test any other selected engine.
+Open details for the selected engine.
 @end format
 @end deffn
 
@@ -16412,7 +16412,7 @@ Download, verify, and install the selected optional engine module.
 @findex emacsvox-omnivox-components-mode
 
 @format
-Spoken manager for verified Omnivox engine modules.
+Spoken engine status, details and verified module management.
 
 In addition to any hooks its parent mode
 ‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
@@ -16447,7 +16447,7 @@ Refresh Omnivox module status, preserving row ID and current column.
 @findex emacsvox-omnivox-components-speak-current
 
 @format
-Speak the complete Omnivox component row at point.
+Speak engine status and discovered voice count at point.
 @end format
 @end deffn
 
@@ -16469,12 +16469,34 @@ Confirm and uninstall the selected manager-installed engine module.
 @end format
 @end deffn
 
+@subsubsection emacsvox-omnivox-engine-details-mode
+@deffn {Command} emacsvox-omnivox-engine-details-mode
+@findex emacsvox-omnivox-engine-details-mode
+
+@format
+Spoken engine discovery, management scope, actions and retained results.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-omnivox-engine-details-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+TAB		emacsvox-omnivox-components--details-next-action
+RET		emacsvox-omnivox-components--details-activate
+h		emacsvox-aural
+q		emacsvox-omnivox-components--details-back
+
+@end format
+@end deffn
+
 @subsubsection emacsvox-omnivox-manage-components
 @deffn {Command} emacsvox-omnivox-manage-components
 @findex emacsvox-omnivox-manage-components
 
 @format
-Open the accessible Omnivox engine-module manager.
+Open accessible engine status, details and optional module management.
 @end format
 @end deffn
 

@@ -2162,12 +2162,14 @@ taken effect on the server.  Reapply to confirm the desired configuration."
   (if (equal (plist-get response :type) "inventory")
       (progn
         (process-put process omnivox--control-inventory-property response)
+        (process-put process 'omnivox-inventory-received-at (current-time))
         (when (eq process tts-speaker-process)
           (setq omnivox-engine-inventory response
-                omnivox-engine-inventory-time (current-time)
+                omnivox-engine-inventory-time
+                (process-get process 'omnivox-inventory-received-at)
                 omnivox-routing-policy-registration
-                (copy-tree (plist-get response :routing_policy)))
-          (run-hooks 'tts-voice-inventory-changed-hook))
+                (copy-tree (plist-get response :routing_policy))))
+        (run-hooks 'tts-voice-inventory-changed-hook)
         (if (omnivox--process-supports-p process "runtime_routing_policy")
             (if (omnivox--set-process-routing-policy process)
                 nil

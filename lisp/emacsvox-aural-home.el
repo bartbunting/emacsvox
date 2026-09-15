@@ -312,8 +312,8 @@
      (list
       'engine-modules
       (vector
-       "Omnivox engine modules" "WSL2 per-user manager"
-       "Browse, download, verify, install, and test optional speech engines"))
+       "Speech engines" "Status, checks and modules"
+       "Inspect engine availability and runtime checks; manage optional modules"))
      (list
       'features
       (vector
@@ -635,7 +635,7 @@
       "P presentation profiles\n"
       "V voice palettes\n"
       "W voice workbench\n"
-      "I Omnivox engine modules\n"
+      "I Speech engines\n"
       "D aural doctor\n"
       "t toggle training explanations for this session\n"
       "g refresh\n"

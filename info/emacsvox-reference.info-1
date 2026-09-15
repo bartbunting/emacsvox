@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1547 commands and 216 options.
+   This chapter documents a total of 1548 commands and 216 options.
 
 * Menu:
 
@@ -608,7 +608,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-nov:: Speech-enable NOV.
 * emacsvox-nxml:: Speech enable nxml mode.
 * emacsvox-ocr:: ocr Front-end desktop.
-* emacsvox-omnivox-components:: Install Omnivox engine modules.
+* emacsvox-omnivox-components:: Inspect engines and manage modules.
 * emacsvox-org:: Speech-enable org.
 * emacsvox-org-srs:: Speech-enable Org-srs reviews.
 * emacsvox-orgalist:: Speech-enable ORGALIST.
