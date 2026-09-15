@@ -3255,6 +3255,125 @@
     (should-not tts-notify-process)
     (should (equal observed '(old nil)))))
 
+(ert-deftest emacsvox-tts-output-volumes-adjust-only-the-selected-component ()
+  "Customize preserves the other lane and components, including at zero."
+  (let* ((speaker (make-pipe-process :name "volume-main" :noquery t))
+         (notifier (make-pipe-process :name "volume-notify" :noquery t))
+         (tts-speaker-process speaker) (tts-notify-process notifier)
+         (tts-program "omnivox")
+         (tts-main-tone-volume 100) (tts-main-earcon-volume 100)
+         (tts-notification-speech-volume 100)
+         (tts-notification-tone-volume 100) (tts-notification-earcon-volume 100)
+         writes)
+    (unwind-protect
+        (progn
+          (process-put speaker tts--speech-process-role-property 'speaker)
+          (process-put notifier tts--speech-process-role-property 'notification)
+          (cl-letf (((symbol-function 'process-send-string)
+                     (lambda (process command) (push (list process command) writes))))
+            (dolist (case '((tts-main-tone-volume 20 "tts_set_tone_volume 0.20\n")
+                            (tts-main-earcon-volume 30 "tts_set_sound_volume 0.30\n")
+                            (tts-notification-speech-volume 40 "tts_set_voice_volume 0.40\n")
+                            (tts-notification-tone-volume 0 "tts_set_tone_volume 0.00\n")
+                            (tts-notification-earcon-volume 100 "tts_set_sound_volume 1.00\n")))
+              (setq writes nil)
+              (funcall (get (car case) 'custom-set) (car case) (cadr case))
+              (should (= (default-value (car case)) (cadr case)))
+              (should (equal writes
+                             (list (list (if (memq (car case)
+                                                   '(tts-main-tone-volume tts-main-earcon-volume))
+                                             speaker notifier)
+                                         (nth 2 case))))))
+            ;; Notification delivery temporarily binds the speaker to its lane.
+            (let ((tts-speaker-process notifier))
+              (setq writes nil)
+              (tts--set-output-volume 'tts-notification-speech-volume 25)
+              (should (equal writes (list (list notifier "tts_set_voice_volume 0.25\n")))))
+            ;; Shared/fallback output must never acquire notification attenuation.
+            (dolist (shared (list nil speaker))
+              (let ((tts-notify-process shared))
+                (setq writes nil)
+                (tts--set-output-volume 'tts-notification-speech-volume 0)
+                (should-not writes)))))
+      (delete-process speaker)
+      (delete-process notifier))))
+
+(ert-deftest emacsvox-tts-output-volumes-reject-invalid-percentages ()
+  "Invalid Customize input leaves the saved value and live output untouched."
+  (let ((tts-main-tone-volume 35))
+    (cl-letf (((symbol-function 'tts--send-output-volume)
+               (lambda (&rest _) (ert-fail "Invalid volume reached the server"))))
+      (dolist (value '(-1 101 0.5 "50" nil))
+        (should-error (tts--set-output-volume 'tts-main-tone-volume value)
+                      :type 'user-error)
+        (should (= tts-main-tone-volume 35))))))
+
+(ert-deftest emacsvox-tts-output-volumes-restore-on-local-and-remote-creation ()
+  "Fresh and replacement workers receive only their own saved audio levels."
+  (let ((tts-program "omnivox")
+        (tts-main-tone-volume 20) (tts-main-earcon-volume 30)
+        (tts-notification-speech-volume 40)
+        (tts-notification-tone-volume 50) (tts-notification-earcon-volume 60)
+        processes writes remote-called)
+    (unwind-protect
+        (dolist (remote '(nil t))
+          (cl-letf (((symbol-function 'omnivox-remote-enabled-p) (lambda () remote))
+                    ((symbol-function 'tts--resolve-program) (lambda (_) "/unused/omnivox"))
+                    ((symbol-function 'make-process)
+                     (lambda (&rest _) (make-pipe-process :name "volume-local" :noquery t)))
+                    ((symbol-function 'omnivox-remote-make-process)
+                     (lambda (_name)
+                       (setq remote-called t)
+                       (let ((process (make-pipe-process :name "volume-remote" :noquery t)))
+                         ;; The real remote factory returns an authenticated
+                         ;; connection with its input observer already attached.
+                         (process-put process 'tts-queue--state
+                                      (tts-queue--make-state :remote t :queue 0 :framing 0))
+                         process)))
+                    ((symbol-function 'process-send-string)
+                     (lambda (process command) (push (list process command) writes))))
+            (dotimes (_generation 2)
+              (dolist (name '("Speaker" "Notify"))
+                (setq writes nil remote-called nil)
+                (let ((process (tts-make-process name)))
+                  (push process processes)
+                  (should (eq remote-called remote))
+                  (should
+                   (equal (nreverse writes)
+                          (mapcar
+                           (lambda (command) (list process command))
+                           (if (equal name "Speaker")
+                               '("tts_set_tone_volume 0.20\n" "tts_set_sound_volume 0.30\n")
+                             '("tts_set_voice_volume 0.40\n" "tts_set_tone_volume 0.50\n"
+                               "tts_set_sound_volume 0.60\n"))))))))))
+      (dolist (process processes)
+        (set-process-sentinel process nil)
+        (delete-process process)))))
+
+(ert-deftest emacsvox-tts-output-volume-startup-failure-retires-new-process ()
+  "A failed initial level write does not leak an unpublished speech worker."
+  (let ((tts-program "omnivox") process)
+    (unwind-protect
+        (cl-letf (((symbol-function 'omnivox-remote-enabled-p) (lambda () nil))
+                  ((symbol-function 'tts--resolve-program) (lambda (_) "/unused/omnivox"))
+                  ((symbol-function 'make-process)
+                   (lambda (&rest _)
+                     (setq process (make-pipe-process :name "volume-failed" :noquery t))))
+                  ((symbol-function 'process-send-string)
+                   (lambda (&rest _) (error "Volume write failed"))))
+          (should-error (tts-make-process "Speaker"))
+          (should-not (process-live-p process)))
+      (when (process-live-p process) (delete-process process)))))
+
+(ert-deftest emacsvox-tts-output-volumes-leave-other-backends-alone ()
+  "Unsupported speech servers never receive Omnivox output settings."
+  (let ((tts-program "espeak") (tts-main-tone-volume 100))
+    (cl-letf (((symbol-function 'tts--send-output-volume)
+               (lambda (&rest _) (ert-fail "Sent Omnivox settings to another backend"))))
+      (tts--set-output-volume 'tts-main-tone-volume 25)
+      (tts--initialize-output-volumes nil)
+      (should (= tts-main-tone-volume 25)))))
+
 (ert-deftest emacsvox-tts-notification-output-menu-offers-channel-choices ()
   "Select channel routes from the notification Customize menu without typing."
   (require 'wid-edit)

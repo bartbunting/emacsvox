@@ -96,7 +96,7 @@
     (resources "Voices and speech"
                voices browse-voices speech-engine speech-rate voice-workbench)
     (output "Sounds and output"
-            sounds spatial-settings notifications notification-log stop-notifications)
+            sounds spatial-settings output-volumes notification-log stop-notifications)
     (optional "Optional feedback and rules" features overrides buffer-rules training)
     (manage "Saved setups and unfinished changes" profiles drafts)
     (troubleshoot "Troubleshooting" diagnostics spatial engine-modules))
@@ -248,9 +248,9 @@
      (list 'speech-rate
            (vector "Speech rate" (format "%s" (bound-and-true-p tts-speech-rate))
                    "Set the source buffer rate; prefix sets the global rate"))
-     (list 'notifications
-           (vector "Notification output" "Customize"
-                   "Choose the notification device; initialize it with C-e d C-n"))
+     (list 'output-volumes
+           (vector "Audio output" "Customize"
+                   "Choose notification output and adjust speech, tone and earcon volumes"))
      (list 'notification-log
            (vector "Review notifications" "Notification history"
                    "Open the existing notifications buffer"))
@@ -567,7 +567,7 @@
      (require 'emacsvox-aural-voice-workbench)
      (call-interactively #'emacsvox-aural-prefer-engine))
     ('speech-rate (emacsvox-aural-home--call-in-source #'tts-set-rate))
-    ('notifications (customize-variable 'tts-notification-device))
+    ((or 'notifications 'output-volumes) (customize-group 'tts-output))
     ('notification-log (call-interactively #'emacsvox-view-notifications))
     ('stop-notifications (call-interactively #'tts-notify-stop))
     ('explain

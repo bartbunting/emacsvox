@@ -3687,6 +3687,90 @@ program. Port defaults to tts-local-server-port"
 ;;;   initialize the speech process
 (defconst tts-pamixer (executable-find "pamixer") "pamixer")
 
+(defgroup tts-output nil
+  "Output routing and independent Omnivox audio levels.
+Volumes are percentages of the normal output level.  Changes made with
+Customize affect subsequent audio; audio already prepared keeps its level.
+Notification volumes require a separate notification process.  When using
+main output, notifications follow the main process settings instead.
+Earcon levels apply to sounds played by Omnivox, not external sound players."
+  :tag "Audio output"
+  :group 'tts)
+
+(defconst tts--output-volume-settings
+  '((tts-main-tone-volume speaker "tts_set_tone_volume")
+    (tts-main-earcon-volume speaker "tts_set_sound_volume")
+    (tts-notification-speech-volume notification "tts_set_voice_volume")
+    (tts-notification-tone-volume notification "tts_set_tone_volume")
+    (tts-notification-earcon-volume notification "tts_set_sound_volume"))
+  "Output volume options, process roles and existing Omnivox commands.")
+
+(defun tts--validate-output-volume (value)
+  "Reject VALUE unless it is an integer percentage from zero to 100."
+  (unless (and (integerp value) (<= 0 value 100))
+    (user-error "Output volume must be an integer from 0 to 100")))
+
+(defun tts--send-output-volume (process setting value)
+  "Send SETTING's percentage VALUE to PROCESS without interrupting audio."
+  (tts--validate-output-volume value)
+  (tts-queue--send-typed
+   process (format "%s %.2f\n" (nth 2 setting) (/ value 100.0)) 'neutral))
+
+(defun tts--set-output-volume (symbol value)
+  "Set output option SYMBOL to VALUE and update its live Omnivox process."
+  (tts--validate-output-volume value)
+  (set-default symbol value)
+  (when (tts--omnivox-program-p)
+    (let ((setting (assq symbol tts--output-volume-settings)))
+      (dolist (process
+               (delete-dups (list (bound-and-true-p tts-speaker-process)
+                                  (bound-and-true-p tts-notify-process))))
+        ;; Roles also protect against a dynamically rebound speaker variable
+        ;; while notification feedback is being delivered.
+        (when (and (processp process) (process-live-p process)
+                   (eq (process-get process tts--speech-process-role-property)
+                       (nth 1 setting)))
+          (tts--send-output-volume process setting value))))))
+
+(defcustom tts-main-tone-volume 100
+  "Main-stream tone volume as a percentage from 0 to 100.
+Zero silences tones.  Customize applies changes to subsequent Omnivox audio."
+  :type 'integer :set #'tts--set-output-volume :group 'tts-output)
+
+(defcustom tts-main-earcon-volume 100
+  "Main-stream earcon volume as a percentage from 0 to 100.
+Zero silences earcons played by Omnivox.  External sound players are unaffected.
+Customize applies changes to subsequent audio."
+  :type 'integer :set #'tts--set-output-volume :group 'tts-output)
+
+(defcustom tts-notification-speech-volume 100
+  "Notification speech volume as a percentage from 0 to 100.
+Zero silences speech on the separate Omnivox notification process.
+Customize applies changes to subsequent audio.  Main output uses main settings."
+  :type 'integer :set #'tts--set-output-volume :group 'tts-output)
+
+(defcustom tts-notification-tone-volume 100
+  "Notification tone volume as a percentage from 0 to 100.
+Zero silences tones on the separate Omnivox notification process.
+Customize applies changes to subsequent audio.  Main output uses main settings."
+  :type 'integer :set #'tts--set-output-volume :group 'tts-output)
+
+(defcustom tts-notification-earcon-volume 100
+  "Notification earcon volume as a percentage from 0 to 100.
+Zero silences earcons played by the separate Omnivox notification process.
+Customize applies changes to subsequent audio.  Main output uses main settings.
+External sound players are unaffected."
+  :type 'integer :set #'tts--set-output-volume :group 'tts-output)
+
+(defun tts--initialize-output-volumes (process)
+  "Restore saved output levels on a newly created Omnivox PROCESS."
+  (when (tts--omnivox-program-p)
+    (dolist (setting tts--output-volume-settings)
+      (when (eq (process-get process tts--speech-process-role-property)
+                (nth 1 setting))
+        (tts--send-output-volume
+         process setting (default-value (car setting)))))))
+
 (defcustom tts-notification-device
   nil
   "Virtual sound device to use for notifications stream.
@@ -3702,7 +3786,8 @@ device, make sure it exists first.  For SwiftMac, use `left' or `right'."
           (const :tag "Both channels" "both")
           (const :tag "Use main output (notifications remain audible)" "default")
           (string :tag "Other device" :value ""))
-  :group 'tts)
+  :group 'tts
+  :group 'tts-output)
 
 ;; Helper: tts-make-process:
 (defun tts--resolve-program (program)
@@ -3751,6 +3836,12 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
      process (if (process-get process 'omnivox-remote-managed)
                  #'omnivox-remote--sentinel
                #'tts--speech-process-sentinel))
+    (let (configured)
+      (unwind-protect
+          (progn
+            (tts--initialize-output-volumes process)
+            (setq configured t))
+        (unless configured (tts--retire-process process))))
     process))
 
 (declare-function voice-setup "voice-setup" ())
