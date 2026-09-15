@@ -1,0 +1,785 @@
+#+title: Engine Details and Additional Voice Management
+#+date: 2026-09-15
+#+startup: content
+
+* Direction and status
+
+The maintainer wants useful engine status, a detailed screen for each engine,
+Piper model downloads, additional Flite voices, MBROLA support, per-voice
+enablement to control memory use, and room for other engines. This is a
+design and delivery plan, not an accepted ADR. Existing loading support is
+distinguished below from proposed management services and new backend work.
+
+The first UI slice is implemented in the current worktree: engine status and
+counts, per-stream details and timestamps, asynchronous managed listing, and
+retained check output without automatic focus changes. Voice enablement,
+acquisition providers and the new backend contracts remain planned work.
+
+Recommended order: useful engine details; Piper voice acquisition and multiple
+models; Flite acquisition using its existing loader; an isolated MBROLA
+prototype followed by integration; then other providers. A small Flite local
+import slice can proceed before Piper downloads if it helps exercise the UI.
+
+Keep a short engine list for navigation. RET opens the selected engine's
+details. Its actions depend on that engine, the speech host and the available
+management provider. Reuse the existing voice browser, audition service and
+palette editor. Engine management owns installation and availability; palette
+editing owns how a named voice sounds and where it is used.
+
+Home now calls the entry /Speech engines/, covering built-in engines as well
+as optional modules. This design does not install anything or change runtime
+configuration or palettes.
+
+* Findings in the current implementation
+
+- =bin/emacsvox-omnivox-components= checks for a helper executable and then
+  unconditionally labels Eloquence, DECtalk and RHVoice /runtime required/.
+  This identifies a prerequisite, not whether it has been satisfied. Piper's
+  /model required/ state has the same limitation.
+- The component list describes the pinned managed WSL installation. The live
+  speech server can use another installation or a remote workstation.
+- =omnivox-voice-inventory= already exposes engine availability, reasons,
+  health, policy disablement, voices, inventory age and process agreement.
+  An inventory received earlier is evidence of earlier discovery; a running
+  process alone does not make that information current.
+- The component test runs the managed executable with =--list-voices=. Its
+  output is presented, but the row returns to manifest-derived status after
+  refresh. Voice discovery is not an audible synthesis test.
+- Component downloads cover engine payloads. There is no user voice catalogue
+  or general voice download service in Emacsvox.
+- Omnivox's current Piper configuration selects one model path. A library of
+  downloaded models needs additional discovery and stable voice identities
+  before they can be independently selected in palettes. Its vendored libpiper
+  already exposes speaker selection, but the adapter currently advertises one
+  voice and uses the default speaker.
+- Flite already accepts explicit local =.flitevox= paths through
+  =OMNIVOX_FLITE_VOICES=. The pinned v2.2 companion supports external English
+  Clustergen voices, with =eng= or =usenglish= language initializers. It loads
+  up to 64 external voices at startup. This is a usable foundation for voice
+  management, not a promise that every upstream Flite voice is compatible.
+- There is no dedicated MBROLA adapter or managed MBROLA payload. The locked
+  eSpeak dependency's CMake configuration auto-detects MBROLA on the build
+  machine. Installing databases alone therefore does not establish a supported,
+  reproducible MBROLA route in an Omnivox release.
+- Omnivox's RHVoice bridge uses the C API and matching data. An NVDA addon or
+  SAPI voice installer is not automatically a compatible payload for it.
+
+Code evidence: [[file:../lisp/emacsvox-omnivox-components.el][component view]],
+[[file:../bin/emacsvox-omnivox-components][component installer]],
+[[file:../lisp/omnivox-voices.el][live inventory]], and
+[[file:../lisp/emacsvox-aural-voice-workbench.el][voice browsing and workstation policy]].
+The sibling Omnivox checkout at =54d401d= was also inspected:
+=omnivox-cli/src/engine.rs=, =omnivox-tts/src/piper.rs=,
+=omnivox-flite-helper/src/lib.rs=, =docs/FLITE.md=, =docs/RHVOICE.md=,
+the vendored =third-party/piper1-gpl/libpiper/include/piper.h=, and
+=docs/plans/NEXT_STEPS.md=. Its roadmap names sherpa-onnx with Inflect Micro
+and Kitten Nano, and Speech Dispatcher, as future proposals. These are the
+additional named candidates in this design; they are not implemented features.
+
+* Engine list
+
+Default columns: /Engine/, /Status/, /Voices/. Speak only those fields during
+ordinary vertical navigation, for example “Eloquence, available, 8 voices.”
+Show download sizes, paths and long explanations in details.
+
+Use these status meanings:
+
+| Status | Evidence |
+|--------+----------|
+| Available | The identified server discovered usable voices. |
+| Disabled | Workstation policy prevents use; retain discovery details. |
+| Needs attention | A known load, runtime, model or synthesis problem exists. |
+| Not installed | A supported managed component is absent. |
+| Not checked | No applicable discovery or check result is available. |
+| Previously available | Positive evidence exists, but the target or configuration has changed or the check is old. |
+| Unsupported here | No supported runtime or management route exists for this target. |
+| Checking / Installing | An operation is in progress for this engine. |
+
+The details explain /Needs attention/ precisely: runtime missing, runtime found
+but unable to load, model missing, no voices found, or a recorded failure.
+Unknown information must not be converted into a missing-runtime claim.
+
+Keep availability, health and policy as separate facts even when the row has
+one summary. Prefer an actionable warning, such as /Available; one voice
+failed/, when some voices remain usable. Label a lane disagreement /Streams
+differ/ and expose main and notification results. An absent managed module
+must not override positive evidence from a different active installation.
+Experimental candidates appear in a separate discoverable section until
+supported, rather than looking like broken installed engines.
+
+RET consistently opens details. Keep explicit installation and test shortcuts
+available; document the change from RET's current install-or-test behavior.
+
+* Detailed engine screen
+
+Illustrative layout, not a report of current Piper availability:
+
+#+begin_example
+Piper
+Status: Available — 3 installed voices
+Speech host: This computer
+Last checked: Just now
+Main speech: Ready
+Notification speech: Ready
+
+Voices
+  Installed voices
+  Get more voices
+  Use a local model
+
+Engine setup
+  Check again
+  Engine settings
+  Enable or disable engine
+
+Details
+  Installation and storage
+  Last check and diagnostic output
+#+end_example
+
+Open with a concise status announcement. Use headings and ordinary Emacs
+navigation, with TAB between actions, RET to activate, q to return to the same
+engine row and h for Home. Refresh preserves engine, selected voice, focus and
+expanded sections. A background completion must not move focus or open output
+over the user's current task.
+
+The upper section names the speech host and says if installation actions target
+a different installation. Paths and versions are available in details. Remote
+sessions offer local inspection only when its scope is explicit; a download
+must never silently land on the Emacs host when speech runs elsewhere.
+
+Offer actions supported by an engine's management provider. Temporarily
+unavailable actions explain the missing prerequisite. Do not infer download
+support from synthesis support, or advertise unsupported operations as working.
+
+Show bridge, runtime and voice-data checks separately: /Found and loaded/,
+/Found; load failed/, /Missing/, or /Not checked/. A filesystem check can
+establish only /Found/. Offer a short reason and a relevant repair action, such
+as /Locate runtime/, /Install engine module/, or /Choose model/. Keep the last
+test result and diagnostics available after refresh. /Check again/ inspects
+discovery; /Speak sample/ deliberately produces audio. Output settings link
+back to the existing audio controls, including independent notification speech,
+tone and earcon volumes, rather than introducing another set of gain controls.
+
+* Installed voices and voice details
+
+Show name, language/locale, enablement and availability in the voice list. Voice
+details can add loading state, measured memory, quality, model size, speaker
+choices, storage, source and licence.
+Engine-specific fields appear only when the provider supplies them.
+
+- /Speak sample/ uses exact physical voice audition. Report a failed or
+  substituted audition accurately; do not change the user's normal voice.
+- /Use in a palette/ hands the physical choice to the existing palette editor,
+  with an explicit destination. Downloading or auditioning changes no palette.
+- /Remove downloaded voice/ is offered only for data owned by this manager.
+  Show known palette references and the selected speech host before removal.
+  System voices and imported files retain their existing ownership.
+- /Enable voice/ and /Disable voice/ change eligibility for speech and native
+  loading while keeping the files on disk. Use these labels consistently;
+  /activation/ describes applying the resulting configuration, not another
+  per-voice switch. /Remove/ additionally deletes eligible managed data. Neither
+  silently edits palette choices; unresolved references remain visible and
+  follow the existing fallback policy. Do not remove a shared dependency
+  while another installed voice needs it.
+- Keep engine-wide resource settings here. Shared tuning and per-choice
+  adjustments remain in the palette editor, preserving ADRs 0015–0018.
+
+** Enablement and memory use
+
+Keep three independent facts for each physical voice:
+
+| Fact | Meaning |
+|------+---------|
+| Installed | Its required files exist on this speech host. |
+| Enabled | Workstation policy permits this voice to be selected. |
+| Loaded | Its runtime/model is currently resident in a particular speech worker. |
+
+An enabled Piper voice may be unloaded until used. A disabled Flite voice may
+remain loaded until a pending configuration change is applied. Display these
+cases accurately, including /Disable pending; restart required/ and /Loading
+state unknown/ when the engine cannot report it. Disabling is not a claim that
+a measured number of megabytes has already been released.
+
+Provide per-voice controls, mark/unmark selection and /Enable selected/ or
+/Disable selected/ for batches. Keep disabled voices visible, with filters for
+enabled and disabled voices. Summarize engines as, for example, “Flite, 3 of
+8 voices enabled.” A batch is one configuration change and one apply/restart
+operation, rather than a restart or spoken notification per voice.
+
+Persist enablement by stable engine/physical-voice ID in the target's
+workstation configuration. Initially one selection applies to both lanes;
+report each lane's actual loading state separately. Engine disablement overrides
+voice enablement without erasing individual selections. Re-enabling an engine
+restores those selections. Newly downloaded voices stay disabled until enabled
+explicitly; an update preserves existing choices. Migrating an existing setup
+retains its current configured voice set rather than silently disabling it.
+
+Once applied, disabled voices are excluded from ordinary selection, Automatic,
+engine defaults and fallback chains. Preserve palette references and report
+them as disabled on this workstation; speech follows the remaining eligible
+choices under the existing fallback policy. Do not silently enable a voice
+because a palette mentions it. Validate the resulting route before applying a
+batch, preserving the existing readiness and mandatory fallback requirements.
+
+Derive the native load set from enabled voices and their shared dependencies.
+Providers omit disabled-only data from eager loading and prevent lazy loading
+from selecting it. Release an unused model when its last enabled consumer in
+that worker is disabled and its current work has ended. Where native unloading
+is unsupported, apply the change through the coordinated two-lane restart below.
+An engine with no eligible voices need not start an optional helper solely to
+list its installed data. Engine enablement and helper residency remain distinct.
+
+Providers declare whether disabling can release individual voices, a shared
+model, or only an entire helper, and whether restart is required. Compiled-in
+voices and OS-managed voices may have no independently reclaimable allocation;
+their control can still exclude them from selection but must say when memory
+savings are unknown or unavailable. Missing backend support is reported as an
+unsupported action, never implemented by merely hiding a list row.
+
+Group speakers by model and profiles by shared database in voice details.
+Disabling one Piper speaker does not free a model still used by another enabled
+speaker. Offer /Disable all voices using this model/ with affected choices and
+palette references listed. Attribute shared memory once per worker, not once
+per speaker; show download bytes separately from measured or estimated runtime
+memory and name which kind is available. Background discovery must not load
+disabled models just to count them or measure memory.
+
+Ordinary audition respects enablement. An explicitly labelled /Preview once/
+may temporarily load a disabled voice only if its provider can isolate the
+preview and release its resources afterwards; it changes no saved policy.
+Otherwise offer enabling and applying the voice before audition. This exception
+must not let automatic previews or normal speech bypass disablement.
+
+* Get more voices
+
+The catalogue supports search and language/locale filters first. Add quality,
+size and speaker filters only when that metadata is reliable. Distinguish
+/Installed/, /Available to download/, /Downloading/ and /Downloaded; awaiting
+activation/ from /Ready to use/.
+
+Each voice has a detail page with its source, compatibility, required files,
+download size, licence/model card and the intended installation destination.
+An optional published recording can be heard before downloading; label it as
+a recorded sample. Local synthesis of typed sample text requires the installed
+model and is a separate action.
+
+Download flow:
+
+1. Select a voice and review the concrete files, size and destination.
+2. Start the download explicitly. Report progress quietly, with detailed
+   progress available on demand and a Cancel action.
+3. Stage and verify the complete payload before activation. Preserve the last
+   working installation on cancellation, failed verification or failed checks.
+4. Check discovery through the intended speech server. Show an explicit
+   activation/restart step when required, preserving both speech streams.
+5. Offer /Speak sample/ and /Use in a palette/. Successful downloading alone
+   does not establish successful discovery or audible playback.
+
+Catalogue records need stable IDs, immutable source revisions, file hashes,
+sizes, platform/runtime compatibility and licensing evidence. Keep models
+separate from exact-version engine modules and user-supplied files. Use one
+operation identity through download, validation, activation and completion;
+reopening the view must retain progress and results. Cached catalogues remain
+browsable offline and show when they were last updated.
+
+The operation list is the durable place for progress and failures. Ordinary
+progress is silent. Default to one short completion or failure notice, using
+the notification policy already in force; allow notices to be muted. Long
+diagnostics are spoken only when requested. Downloading must not cancel a
+foreground utterance, and an automatic preview must never follow completion.
+
+* Architecture and ownership
+
+Use one management model with engine-specific providers. It must distinguish
+the synthesizer, its runtime, its data packages, and the physical voices those
+packages produce. A Piper model can contain several speakers; two MBROLA
+language profiles can share one database. A download is therefore not always
+one selectable voice.
+
+** Responsibilities
+
+| Layer | Owns |
+|-------+------|
+| Emacsvox engine UI | Navigation, concise speech, explicit actions, operation history, existing preview and palette handoff. |
+| Management service | Target identity, evidence, catalogue, download transactions, installed-data records and activation plans. |
+| Platform provider | Per-user paths, target-native path conversion, verified module installation and controlled speech-server restart. |
+| Engine provider | Compatible file sets, validation, physical voice identities and engine-specific settings. |
+| Omnivox core | Runtime discovery, physical selection, fallback, per-lane helper lifetime, PCM mixing, gains and playback tracking. |
+| Engine helper | Native loading and synthesis with bounded IPC; no catalogue access or network downloads. |
+
+Keep the download/transaction implementation reusable by command-line and Emacs
+callers. Put shared asset/configuration formats and native validation in
+Omnivox; keep the initial reviewed catalogue and Emacs interaction in Emacsvox.
+Reuse the existing component installer for version-matched executable modules.
+Its installer does not become a general script runner. Engine providers are
+reviewed project code; downloaded catalogue data cannot define executable code,
+shell commands, arbitrary configuration keys or new providers.
+
+Do not probe files, contact servers or run native tests from a renderer.
+Inspection and mutations are asynchronous operations with deadlines. Use the
+existing normalized inventory and audition contracts, adding management
+metadata alongside them rather than requiring download features of every
+synthesis adapter.
+
+** Provider contract
+
+These are proposed responsibilities, not final public function signatures:
+
+- =describe(target)= supplies engine identity, supported actions, typed settings
+  and target constraints. Unsupported, supported-but-blocked, and ready are
+  distinct action states with reasons.
+- =inspect(target)= produces separately sourced module, runtime, data, voice,
+  policy and health evidence. Each result includes target/configuration identity
+  and check time; live results also identify worker/session and inventory.
+- =plan(target, action, selection)= returns exact files, dependencies, bytes,
+  changes to active voices, known references, and any restart impact. It makes
+  the user's chosen operation concrete before execution.
+- =execute(plan, operation-id)= and =cancel(operation-id)= run and track the
+  bounded transaction. Execution checks that the target and current generation
+  still match the plan; stale plans are rebuilt, not blindly applied.
+- =validate(staged-set)= checks format, runtime compatibility and discovery in
+  a disposable helper; =activate(plan)= publishes a configuration generation
+  through the platform's supported lifecycle. Validation never hijacks a live
+  speech worker.
+
+Support optional actions such as catalogue browsing, import, locate-runtime,
+OS-settings handoff, update, enable/disable voices and remove. Describe native
+unload granularity and restart requirements alongside those actions. Add a new
+engine by implementing these capabilities and its synthesis adapter; the screen does
+not need a new engine-specific control flow. Future unsupported capabilities
+remain absent or explanatory until implemented.
+
+** Evidence and targets
+
+A management target identifies the speech host, installation, platform,
+architecture and configuration profile. It is not just an executable name or
+a local path. Runtime evidence additionally identifies the current process
+generation and main or notification lane. Filesystem evidence, a managed
+executable's test and the live inventory are merged only when they refer to
+the same target. An old result remains viewable with its age and provenance.
+
+Recheck on request and invalidate evidence after relevant file/configuration
+changes or worker replacement. On opening a view, request fresh inventory
+asynchronously if needed. Late responses cannot overwrite a newer generation.
+Live discovery establishes loadability at the check time; only a separate
+sample establishes synthesis, and only a listener confirms audibility.
+
+First acquisition target: the existing per-user Windows speech installation
+managed from WSL2. Store data on the speech host, outside versioned executable
+directories. Convert WSL paths into absolute Windows paths before native use;
+do not pass POSIX path-list separators to a Windows helper. Preserve other
+profiles and sessions sharing the installed files.
+
+Native Windows, Linux and macOS can share the data contract, but each needs a
+tested platform provider before offering write actions. Remote sessions retain
+inventory, details and supported audition. The current authenticated speech
+socket is not a management transport: it cannot upload models, install helpers
+or select arbitrary runtime paths. Initial remote details direct installation
+to the speech host. Remote provisioning needs its own authorization/transport
+decision and is outside the first delivery.
+
+* Voice catalogue, storage and activation contract
+
+** Stable identities and records
+
+| Record | Required information |
+|--------+----------------------|
+| Engine | Existing engine ID; provider and runtime requirements; platform support. |
+| Package | Stable namespaced package ID; immutable revision; provider format; files with roles, hashes and byte sizes; licence/model card; source provenance; dependency IDs and compatible runtime/format versions. |
+| Physical voice | Existing engine/voice ID pair; package ID; stable speaker or language-profile selector; display name and locale; discovery state. |
+| Installation | Target and package revision; managed or imported ownership; absolute resolved paths; validation evidence; configuration generation. |
+| Voice enablement | Target profile and stable physical voice ID; desired and applied enabled state; configuration generation; pending change or overriding engine policy. |
+| Runtime load evidence | Worker/generation and shared model or database ID; loaded/unloaded/unknown; observation time; memory measurement or estimate when supported. |
+| Operation | ID, target, immutable plan, phase, progress, cancellation state, terminal result and diagnostics location. |
+
+Package revisions identify exact bytes; physical voice IDs identify choices
+that can persist across compatible updates. Filenames, catalogue row numbers
+and translated display names are not identities. An update that changes speaker
+meaning or identity is a different physical choice, with explicit palette
+migration if wanted. Identical hashes may share storage while retaining
+distinct source and licence records.
+
+The first catalogue is a small reviewed, versioned data file shipped with
+Emacsvox. Project maintainers review additions through ordinary changes. It
+pins voice files and upstream revisions independently of executable module
+versions, with a tested compatibility range. Upstream's full catalogue is a
+discovery source, not automatically an approved download list. Preserve the
+distinction between model quality labels, download size and measured memory.
+
+Do not fetch an unreviewed 'latest' model during synthesis or startup. A future
+independently updated catalogue needs an authenticated update contract; it is
+not required for the first implementation. Initial entries are selected during
+provider acceptance, with separate licences and source records for runtime,
+frontend data and voice files. Missing licensing or compatibility evidence
+blocks a managed catalogue entry without preventing supported local import.
+
+** Storage and configuration
+
+Use a per-user voice-data root on the speech host, with immutable revision
+directories, temporary staging, an installation index, and a small atomic
+active-configuration file. Keep model data through executable upgrades, then
+revalidate against the selected core/helper; retained files are not proof of
+compatibility. Imported files stay in place unless the user explicitly chooses
+to copy them into managed storage. Removal never deletes unowned source files.
+
+Share immutable package files where useful, but scope active configuration to
+the target profile. Every running session keeps its chosen generation until
+explicitly restarted. Activating one profile must not change another profile's
+voice set or retire another session's helpers.
+
+Introduce a versioned Omnivox voice-library configuration for adapters needing
+multiple packages. It contains only checked local package paths, provider
+formats, stable voice/speaker mappings and the enabled voice set. It has no
+download URLs or commands. Keep installed-but-disabled metadata in the management
+index so it remains browsable without requiring native loading.
+Pass one immutable generation to both lane workers at startup. Piper consumes
+its multi-model entries and eligibility policy; Flite's initial provider can
+translate enabled external voices into its existing path-list input. Disabling
+a built-in voice additionally needs selection-policy support, because omitting
+an external path cannot remove a compiled-in voice. MBROLA adds its own typed
+database/profile entries later. Reject unsupported schemas and report unavailable records
+individually where safe.
+
+Existing explicit command-line/environment configuration takes precedence over
+managed configuration, which takes precedence over engine defaults. Explain
+overrides in the details screen; writing a managed setting cannot be reported
+as activation while an explicit override prevents its use. Preserve
+=OMNIVOX_PIPER_MODEL= and =OMNIVOX_FLITE_VOICES=, along with existing IDs.
+Do not edit shell startup files or overwrite unrelated user configuration.
+
+** Transaction and recovery
+
+The operation moves through =planned → downloading → verifying → validating →
+staged → activating → ready=. Failure and cancellation are terminal outcomes
+with a retry action. /Staged/ is a successful download awaiting explicit
+activation, not a usable voice. Record checkpoints so closing the UI or losing
+the connection does not falsely report failure or success.
+
+1. Check target identity, dependencies, available space and write access. Lock
+   mutation of this installation; repeated requests for the same package
+   revision reuse or join the operation.
+2. Download to staging with bounded size/time, verify every file hash, and
+   reject unexpected archive paths, links and unbounded expansion. A resumed
+   partial transfer must still pass complete verification.
+3. Validate metadata and run bounded native discovery/sample-to-PCM checks in
+   an isolated process. No audible sample is automatic. Do not load every model
+   concurrently to populate the catalogue.
+4. Atomically record verified files as installed but inactive. Retain the old
+   active configuration and revisions. Cancellation before activation leaves
+   active speech unchanged; unreferenced staging is eligible for cleanup.
+5. Offer /Activate now/ or /Later/ with the affected speech session named. The
+   initial implementation uses the existing coordinated speech-server restart
+   and readiness path for both lanes, not a new general live-reload protocol.
+   Emacs itself stays running. Activation can stop current speech, so it is a
+   deliberate action, never an incidental download callback.
+6. Confirm both workers report the intended configuration and discover the
+   intended enabled voice set. Disabled voices must remain excluded from
+   selection and disabled-only load units must be released where promised by
+   the provider. Retain unknown load state when it cannot be observed. Only
+   then mark the change applied for both streams. If either fails,
+   restore the previous configuration and recover the pair. Persist and report
+   any remaining lane mismatch; never call partial activation success.
+7. Offer exact audition and explicit palette handoff. Defer deletion of old
+   files while any known worker/session retains that generation. When ownership
+   cannot be established, keep the data and explain the pending cleanup.
+
+The operation journal distinguishes a crash before publication, publication
+awaiting worker acknowledgment, and completed activation. Reconcile that state
+on reopening; do not automatically replay a restart. Failed rollback leaves
+diagnostics and the last working configuration intact, with a retry/recovery
+action. Undoing removal is possible only while its retained managed revision
+still exists; do not promise recovery of deleted external files.
+
+Cancellation during activation enters recovery and is terminal only after
+rollback completes or a recovery failure is recorded. Once activation is
+committed, cancellation reports that it has finished; restoring the previous
+revision is a separate explicit operation. Updates use this same staging and
+activation path, preserving physical IDs only for compatible voice revisions.
+
+Voice enable/disable batches enter this transaction at planning and validation,
+skipping download and file verification when already valid. Show desired and
+applied policy separately until acknowledgment. A restart-free application is
+offered only when both the selection-policy and native unload behavior are
+supported; it is not inferred from the presence of a live policy command.
+
+* Engine-specific design
+
+** Piper: first managed model provider
+
+An entry contains the =.onnx= model, matching configuration and model card.
+Verify the pair, language, speaker map and required phonemizer data. Native
+acceptance uses the exact libpiper version staged with the intended helper.
+Models selected for CI are not automatically approved catalogue defaults.
+
+Keep one =piper= engine in the registry and one Piper helper per lane. The
+helper enumerates validated model/speaker records without keeping every model
+loaded. Each speaker is independently selectable and previewable. The initial
+catalogue may contain only single-speaker models while the identity contract
+and adapter handle explicit speaker IDs. Enumerate enabled choices for routing
+without loading disabled models; the management index supplies the full list.
+
+Retain the existing =piper:FILENAME_STEM= choice for the legacy single-model
+configuration, bound to that configured model and its default speaker. New
+managed choices use a reserved, versioned namespace carrying stable package
+and speaker keys, for example =piper:v1/PACKAGE_KEY/SPEAKER_KEY=. Imported
+multi-model records receive persistent local IDs stored in the index. Define
+escaping and reserved namespaces in the schema; never infer an alias from a
+colliding filename. A legacy ID is not reassigned to a different model during
+import or update. Both ordinary speech and exact preview resolve to the same
+record, and reported actual voice identifies the selected model and speaker.
+
+Start with one resident model per Piper helper, hence up to two per Emacs
+speech session. Serialize synthesis within each helper. On model change, wait
+for or cancel its current operation using the existing policy, release its
+model, and load the selected one. Installed catalogue size must not determine
+resident model count. A failed load is a voice/model failure; it does not make
+every installed model absent. Keep load failure evidence per model and retain
+existing engine-level helper/circuit diagnostics.
+
+Bound model admission with validated per-package resource measurements and
+target limits; file size is not a RAM estimate. Record the memory cost of two
+lanes and transient validation. Set conservative defaults from the prototype,
+with typed engine settings where useful. Do not add an unbounded warm-model
+cache or a helper for every downloaded voice. A larger cache is later measured
+work. The independent lane helpers prevent notification voice selection from
+mutating the main lane's synthesizer; they do not guarantee CPU isolation.
+
+** Flite: extend the existing external-voice path
+
+Use the current loader, =cmu_us_slt= built-in ID, and
+=flitevox:INTERNAL_NAME= external IDs. A verified download becomes another
+explicit path in the configured set after activation. Validate the internal
+name, v2.2-compatible Clustergen format and supported English frontend in a
+disposable helper. Reject duplicate external names; do not rename identities
+to fit catalogue labels. An update changing the internal name is a different
+voice. Upstream AWB, RMS and other English voices are candidates for validation,
+not yet a tested download selection.
+
+The current helper eagerly loads configured voices and caps the external list
+at 64. Keep downloading separate from activation so a large collection does
+not automatically consume memory in both workers. Start with a small tested
+set, report measured memory where known, and retain the current loading policy.
+Enable/disable controls select which external files enter that eager load set.
+Applying a disablement restarts the affected workers without that file, releasing
+its per-helper voice allocation. The built-in SLT allocation is not removed by
+changing this external list.
+Lazy loading would be a later backend change if measurements justify it.
+
+Invalid paths or rejected voices currently degrade the engine while preserving
+SLT. Malformed native data can instead terminate the helper. Acquisition must
+test the prospective set outside live speech and retain the old active set.
+The first catalogue covers only voices the compiled language initializers can
+use; Indic and other Flite languages require separate companion work.
+
+** MBROLA: a dedicated helper and compound voice provider
+
+MBROLA converts phonemes, durations and pitch into audio. The proposed text
+frontend is eSpeak NG; the resulting physical voice and actual-engine report
+are MBROLA. This is different from falling back to eSpeak's own synthesizer.
+The engine details show these prerequisites independently:
+
+1. Omnivox MBROLA companion and its compatible native runtime.
+2. Pinned eSpeak frontend data, voice definition and phoneme translation.
+3. Compatible MBROLA voice database and its licence.
+
+Follow Omnivox's helper boundary: a dedicated =omnivox-mbrola-helper= with a
+private, serialized eSpeak frontend and a source-pinned MBROLA runtime. The
+initial prototype uses an owned MBROLA subprocess receiving generated phoneme
+instructions and returning PCM. Invoke a fixed verified executable with
+structured arguments, explicit paths and bounded pipes. Do not use shell
+pipelines, launch an external audio player, or share the core eSpeak global
+state. Retire the entire helper/subprocess tree on cancellation timeout.
+
+Prove that the pinned frontend can produce the required MBROLA instructions
+and translation data in a reproducible build; build-machine auto-detection is
+insufficient. Start with bounded buffered synthesis if streaming boundaries
+are not yet verified. Adopt progressive PCM only after native tests establish
+flush, completion and cancellation behavior. Audio uses Omnivox's normal
+conversion/mixer path, preserving independent stream gains, device selection,
+pan, effects and tone/earcon handling. A missing database fails before audio
+and can use the existing fallback policy. Failure after accepted PCM must not
+replay the utterance in another engine.
+
+Use engine ID =mbrola=. A physical voice identifies a validated frontend
+profile plus database, for example =mbrola:v1/mb-en1/en1=. Profiles that use one
+database for different languages/accent mappings are separate choices sharing
+the package. List only verified combinations; downloading a database for which
+the companion has no frontend mapping yields /Installed; unsupported profile/,
+not an available voice. Compatibility includes frontend/runtime versions and
+the translation table, not just a matching database filename.
+
+Do not advertise eSpeak's word timing as MBROLA playback timing. Initially
+declare no source-accurate markers or anchors unless the prototype proves
+their correspondence to produced PCM. Measure rate/pitch behavior and rate
+calibration; inherited frontend controls are not automatically valid ACSS
+capabilities. Keep capability degradation visible through the existing model.
+
+Review runtime and database licensing separately before publishing a companion
+or catalogue entry. The upstream runtime and voice repository have different
+terms; helper isolation does not settle distribution rights. Existing
+user-supplied databases can support the first native experiment. A managed
+database catalogue follows only after that engine/voice pair is accepted.
+
+First acceptance targets are the maintainer's Windows x64 speech host and a
+native Linux development path. Other architectures/platforms remain unclaimed
+until their runtime, data, cancellation and playback checks pass. The first
+MBROLA milestone is one voice working through normal Omnivox selection,
+preview, both lanes and recovery, not merely a standalone WAV file.
+
+** Other engines and future additions
+
+| Engine or provider | Extension path |
+|--------------------+----------------|
+| RHVoice | Inspect and locate the C API runtime plus matching language/voice data. Add data downloads only for demonstrated compatible layouts. NVDA/SAPI installation alone is insufficient. |
+| Windows speech / macOS speech | Browse actual OS adapter inventory and offer supported OS-settings handoff. The OS owns downloads/removal; only rediscovered voices become usable choices. |
+| Eloquence / DECtalk | Distinguish bridge presence, runtime presence, load failure and discovered voices. Locate user-supplied runtimes with the existing restricted loading policy. |
+| RuTTS | Existing fixed voices and companion management. Additional lexical resources or runtimes need their own review; they are not interchangeable voice files. |
+| TGSpeechBox | Existing experimental language/profile inventory and companion management. Advertise only actual supported profiles; no arbitrary native feature editor. |
+| sherpa-onnx | Candidate separate helper with model-format providers for Inflect Micro and Kitten Nano. Runtime and model packages remain separate; each model's dependencies, speakers, licence and performance are validated. |
+| Speech Dispatcher | Candidate Linux adapter with externally owned playback. Needs a truthful external-playback lifecycle and explicit limits on volume, pan, mixing, effects, completion and independent notification routing. |
+
+Prefer direct PCM-producing helpers for the current speech experience.
+Speech Dispatcher remains an investigation: installing its modules does not
+establish that it respects Omnivox's main/notification audio controls. Its
+retained proposal must be reconciled with current contracts before adoption.
+
+An engine candidate graduates only after proving discovery, exact selection,
+first-audio latency, cancellation, memory use with both lanes, useful reading
+speed, intelligibility, failure recovery and truthful capabilities on its
+target platform. Keep experimental opt-in separate from ordinary availability.
+These gates apply equally to future unnamed engines; the engine screen and
+catalogue do not need to be redesigned for each one.
+
+* Architecture decisions and compatibility
+
+All 18 Emacsvox ADRs and all 11 sibling Omnivox ADRs were reviewed for this
+design. The following decisions constrain implementation:
+
+- Extend the accepted [[file:adr/0008-modular-omnivox-engine-installation.org][module-installation ADR]] with explicit, user-selected
+  reviewed voice acquisition. Keep exact-version executable modules,
+  proprietary-runtime ownership and the small initial installation. Do not
+  silently select or download a default model.
+- Preserve the [[file:adr/0009-foreground-and-notification-speech-lanes.org][two speech lanes]], readiness and acknowledged workstation
+  policy. Both lanes use one activated library generation; their helper state
+  and cancellation remain independent.
+- Preserve platform/role boundaries and remote restrictions from Emacsvox
+  ADRs 0010–0014 and Omnivox ADR 0008. A general screen is not permission for
+  remote installation over the speech socket.
+- Preserve palette ownership and exact/complete preview contracts from
+  Emacsvox ADRs 0015–0018 and Omnivox ADRs 0010–0011. Package management cannot
+  quietly rewrite named voices or their fallback-specific tuning.
+- Keep Omnivox ADRs 0001–0003 and 0005 helper boundaries. Record the MBROLA
+  companion, dependencies, licensing and platform evidence in an Omnivox ADR
+  before implementing its production integration.
+- Keep Omnivox ADR 0006 bounded delivery and the rule that fallback cannot
+  replay speech after PCM has been accepted. Follow ADRs 0004 and 0007 for
+  measured rate behavior and truthful marker support. Audio-device failures
+  remain output failures, consistent with ADR 0009.
+
+Before implementing acquisition, record the voice-library schema, stable IDs,
+per-voice eligibility, configuration precedence and activation lifecycle as a
+proposed cross-project contract for acceptance. This document chooses their
+behavior; it does not silently add public flags or change the helper/control wire protocols. Prefer
+existing physical voice fields and startup configuration. Any genuinely needed
+protocol extension must be additive, negotiated and tested with older peers.
+
+* Delivery slices and acceptance
+
+Each numbered slice is independently reviewable and can be committed separately.
+Backend and Emacs integration changes stay separate where possible; every
+delivered UI action must have a usable supported path.
+
+1. *Truthful status and engine details.* Short list, details, voice counts,
+   per-lane evidence, freshness, retained test results and diagnostics. Reuse
+   the current live inventory and module installer. Accept missing/available/
+   failed/disabled/unknown/old evidence, differing installations, reconnects
+   and late responses. Verify graphical focus and navigation in a fresh Emacs
+   and walk through the spoken experience with the maintainer.
+2. *Installed voices and supported actions.* Existing browse/preview/palette
+   handoff, typed runtime-location/settings providers, and explicit target
+   selection. Validate Flite local import through its current loader without
+   changing IDs. Confirm a failed sample cannot be reported as the requested
+   voice and that discovery checks do not unexpectedly speak. Add enablement
+   controls only for providers whose selection and loading paths support them;
+   identify the backend work needed for the remaining engines.
+3. *Acquisition foundation and Piper library.* Accept the ADR/schema, build
+   transaction/storage services, then implement multi-model/speaker selection
+   in the Piper helper. Verify legacy IDs, same-named imports, speaker mapping,
+   updates, repeated model switches, cancellation while loading and bounded
+   memory with concurrent main/notification speech. Cover persisted per-voice
+   enablement, last-speaker disablement, shared models, engine disable/re-enable,
+   explicit audition and exclusion from Automatic/default/fallback selection.
+   Full Windows development staging is required for helper/configuration changes.
+4. *First Piper downloads.* A small reviewed catalogue and the complete path
+   from explicit download to activation, exact sample and saved palette choice.
+   Cover interrupted/corrupt downloads, disk exhaustion, dependency mismatch,
+   stale plans, crash recovery, failed second-lane activation and rollback,
+   offline browsing, removal with references and preserved imported files.
+5. *Additional Flite downloads.* Reuse that service with the existing external
+   loader. Accept several compatible voices, duplicate names, unsupported
+   language data, a malformed file, preserved SLT and the two-lane memory cost.
+   Verify batch enable/disable, no re-download when re-enabled, correct native
+   load sets after restart, resource release and unchanged palette references.
+6. *MBROLA feasibility, then companion.* Separate the native prototype and
+   recorded evidence from production integration. Prove text → frontend →
+   database → PCM through one isolated helper, then cancel/replacement, both
+   lanes, exact preview, high-rate reading and recovery. After that gate, add
+   the verified module and reviewed database provider using the same UI.
+7. *Further providers.* Evaluate sherpa-onnx model families, then supported
+   RHVoice/OS additions as separate slices. Speech Dispatcher has its own
+   external-playback acceptance gate and cannot delay the PCM-based providers.
+
+For every acquisition slice, verify that progress preserves point, drafts and
+foreground speech, and that restart affects only the identified session.
+Test platform providers independently. Passing Linux tests or creating valid
+PCM is not evidence of native Windows playback or audible usability.
+
+* Remaining experiments and reasoning-effort handoff
+
+The shared screen, ownership, identity strategy and delivery order are now
+specified sufficiently for the first two slices. Switch back to *High (HI)*
+for that implementation; use Low or Medium for subsequent mechanical commits
+and straightforward documentation. This is advice, not a claim that the
+session setting has changed.
+
+Return to *Xhigh (XHI)* when accepting the multi-model/activation contract or
+reviewing the MBROLA prototype if evidence leaves a consequential boundary
+question unresolved. The bounded questions are:
+
+- Can Piper switch its single resident model promptly enough for interactive
+  reading, and what measured model/thread limits preserve both lanes? Start
+  with the defined one-model-per-helper policy before proposing a larger cache.
+- Does the pinned eSpeak/MBROLA path provide bounded conversion, reliable flush
+  and cancellation on native Windows and Linux? Measure the owned-subprocess
+  design before considering an in-helper library alternative.
+- Which concrete voice packages pass format, per-voice licensing and native
+  acceptance? Catalogue population follows those results; no entire upstream
+  collection is promised.
+- Can externally owned playback satisfy the required notification controls?
+  That question belongs to the later Speech Dispatcher investigation.
+
+Routine investigation and implementation can proceed at High. Escalate for a
+specific unresolved architectural choice, then return to High once it settles.
+These experiments do not block the detailed engine screen or compatible Flite
+local-voice support.
+
+* Primary external references
+
+Reviewed on 2026-09-15; source links are discovery references, not download pins.
+
+- [[https://github.com/OHF-Voice/piper1-gpl/blob/main/docs/VOICES.md][Piper voice documentation]]: paired model/config files, samples and model cards.
+  [[https://github.com/OHF-Voice/piper1-gpl/blob/main/libpiper/include/piper.h][libpiper C interface]]: explicit speaker selection. Compatibility is checked
+  against the vendored version, not assumed from the latest documentation.
+- [[https://github.com/festvox/flite][Flite upstream documentation]]: external Clustergen voices and sample/download
+  sources. Omnivox's pinned companion has a narrower frontend/language scope.
+- [[https://github.com/numediart/MBROLA][MBROLA upstream]]: phoneme input, PCM output and runtime build information.
+  [[https://github.com/espeak-ng/espeak-ng/blob/master/docs/mbrola.md][eSpeak NG's MBROLA guide]]: frontend definitions and phoneme translation.
+  [[https://github.com/numediart/MBROLA-voices][MBROLA voice repository]] and its
+  [[https://github.com/numediart/MBROLA-voices/blob/master/LICENSE.md][database terms]]: voice-specific provenance/licensing review inputs.
+- [[https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kitten.html][sherpa-onnx Kitten support]] and
+  [[https://k2-fsa.github.io/sherpa/onnx/tts/all/English/vits-inflect-en-micro-v2.html][Inflect Micro model example]]: candidate model families for one runtime adapter.
+- [[https://rhvoice.org/installation/][RHVoice installation]]: distinct platform installation routes; C API compatibility
+  needs separate verification.
+- [[https://support.microsoft.com/en-au/accessibility/windows/narrator/appendix-a-supported-languages-and-voices][Microsoft voice guidance]]: OS voice acquisition. Actual WinRT discovery remains
+  the application-level check.
