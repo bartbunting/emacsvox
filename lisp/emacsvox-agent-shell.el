@@ -665,6 +665,20 @@ ending at SOURCE-START labels the content that follows it."
         (end-of-visual-line)
         (cons start (point))))))
 
+(defun emacsvox-agent-shell--response-row-source-bounds (bounds)
+  "Return visible response bounds when BOUNDS starts in its hidden marker.
+The chat indent can make visual motion land in the empty display overlay
+before the first response character, including when approaching from below."
+  (let ((start (car bounds)) (end (cdr bounds)))
+    (when (get-text-property start 'shell-maker--marker)
+      (cl-loop for overlay in (overlays-at start)
+               when (and (eq (emacsvox-agent-shell--chat-overlay-tag overlay)
+                             'agent)
+                         (equal (overlay-get overlay 'display) "")
+                         (< start (overlay-end overlay))
+                         (< (overlay-end overlay) end))
+               return (cons (overlay-end overlay) end)))))
+
 (defun emacsvox-agent-shell--add-chat-label-for-speech (text)
   "Return TEXT prefixed by the visible chat label captured for speech."
   (if-let* ((context emacsvox-agent-shell--chat-label-context)
@@ -999,6 +1013,16 @@ a positive argument to the advised command."
                     direction)))
         (emacsvox-agent-shell--move-beyond-visual-source-row
          direction adjacent-padding))
+      ;; A retained goal column can land in the first response row's hidden
+      ;; marker.  Recover its content before skipping marker-only rows.  Do
+      ;; not repeat this row when motion started within it.
+      (when-let* (((eq direction 'backward))
+                  (response-bounds
+                   (emacsvox-agent-shell--response-row-source-bounds
+                    (emacsvox-agent-shell--visual-line-source-bounds)))
+                  ((> origin-point (cdr response-bounds)))
+                  ((< (point) (car response-bounds))))
+        (goto-char (car response-bounds)))
       (let (previous padding)
         ;; A folded or transient row can make core visual motion return while
         ;; point remains at the row anchor.  Escape when source remains in the
@@ -3130,7 +3154,11 @@ Core visual-line presentation owns blank-line semantics and interruption."
               (emacsvox-agent-shell--visual-line-source-bounds)))
            (input-source-bounds
             (emacsvox-agent-shell--live-input-source-bounds source-bounds))
-           (source-bounds (or input-source-bounds source-bounds))
+           (raw-source-bounds source-bounds)
+           (response-source-bounds
+            (emacsvox-agent-shell--response-row-source-bounds source-bounds))
+           (source-bounds
+            (or input-source-bounds response-source-bounds source-bounds))
            (source-start (car source-bounds))
            (source-end (cdr source-bounds))
            (emacsvox-agent-shell--chat-label-context
@@ -3145,10 +3173,10 @@ Core visual-line presentation owns blank-line semantics and interruption."
               ems--speak-max-length)))
       (unless
           (emacsvox-agent-shell--synthetic-agent-row-p
-           source-start source-end)
+           (car raw-source-bounds) (cdr raw-source-bounds))
         (emacsvox-agent-shell--call-with-vertical-block-entry
          (cond
-          (input-source-bounds
+          ((or input-source-bounds response-source-bounds)
            (lambda (&rest _)
              (emacsvox-agent-shell--submit-text-feedback
               (emacsvox-aural-source-substring source-start source-end)

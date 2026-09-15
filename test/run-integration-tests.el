@@ -16,7 +16,8 @@
 
 (defconst emacsvox-integration-test--graphical-tests
   '(emacsvox-agent-shell-live-input-graphical-visual-speech
-    emacsvox-agent-shell-live-input-graphical-wrapped-speech)
+    emacsvox-agent-shell-live-input-graphical-wrapped-speech
+    emacsvox-agent-shell-response-graphical-bidirectional-speech)
   "Cases owned by the graphical gate and excluded from the batch gate.")
 
 (defun emacsvox-integration-test--run ()

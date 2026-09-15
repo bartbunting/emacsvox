@@ -7736,6 +7736,79 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should (string-match-p "LAST" (car spoken)))
           (should-not (string-prefix-p "Me" (car spoken))))))))
 
+(ert-deftest emacsvox-agent-shell-response-graphical-bidirectional-speech ()
+  "Indented response rows must be reached and spoken in both directions."
+  (skip-unless (display-graphic-p))
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (dolist (response (list "RESPONSE is ready."
+                         (concat "RESPONSE "
+                                 (apply #'concat (make-list 100 "word "))
+                                 "END")))
+    (save-window-excursion
+      (with-temp-buffer
+        (setq major-mode 'agent-shell-mode)
+        (setq-local agent-shell--state
+                    '((:agent-config . ((:mode-line-name . "Codex"))))
+                    agent-shell-chat--labeled t)
+        (insert (propertize "Codex> " 'field 'output
+                            'font-lock-face '(comint-highlight-prompt)
+                            'inhibit-line-move-field-capture t)
+                "A question\ncontinued question\n"
+                (propertize "\n" 'field 'boundary
+                            'inhibit-line-move-field-capture t)
+                (propertize "<shell-maker-end-of-prompt>"
+                            'field 'output 'invisible t
+                            'shell-maker--marker t)
+                (propertize "\n" 'field 'output
+                            'inhibit-line-move-field-capture t))
+        (let ((response-start (point))
+              (emacsvox-aural-source-transform-function
+               #'emacsvox-agent-shell--prepare-speech-text)
+              downward upward)
+          (insert (propertize response 'field 'output
+                              'line-prefix "  " 'wrap-prefix "  ")
+                  (propertize "\n\n" 'field 'output))
+          (agent-shell-chat--relabel)
+          (visual-line-mode 1)
+          (set-window-buffer (selected-window) (current-buffer))
+          (redisplay t)
+          (dolist (direction '(down up))
+            (goto-char (if (eq direction 'down) (point-min) (point-max)))
+            (let* ((command (if (eq direction 'down) 'next-line 'previous-line))
+                   (wrapper (if (eq direction 'down)
+                                #'emacsvox-agent-shell--next-line-around
+                              #'emacsvox-agent-shell--previous-line-around))
+                   (last-command nil)
+                   (temporary-goal-column nil)
+                   (goal-column nil))
+              (dotimes (_ 30)
+                (let ((this-command command)
+                      (ems--interactive-fn-name command))
+                  (emacsvox-agent-shell--vertical-navigation-pre-command)
+                  (cl-letf (((symbol-function 'tts-speak)
+                             (lambda (text)
+                               (should-not (string-match-p "shell-maker" text))
+                               (when (and (>= (point) response-start)
+                                          (< (point) (+ response-start
+                                                        (length response))))
+                                 (if (eq direction 'down)
+                                     (push (substring-no-properties text) downward)
+                                   (push (substring-no-properties text) upward)))))
+                            ((symbol-function 'emacsvox-icon) #'ignore))
+                    (condition-case nil
+                        (funcall wrapper (symbol-function command) 1)
+                      ((beginning-of-buffer end-of-buffer) nil)))
+                  (emacsvox-agent-shell--vertical-navigation-post-command)
+                  ;; Consecutive arrow keys retain the goal column.  Resetting
+                  ;; this between steps hides the marker/indent regression.
+                  (setq last-command command)))))
+          (should downward)
+          (should (equal (nreverse downward) upward))
+          (should (string-prefix-p "Codex. RESPONSE" (car upward)))
+          (should (equal-including-properties
+                   response (buffer-substring-no-properties
+                             response-start (+ response-start (length response))))))))))
+
 (ert-deftest emacsvox-agent-shell-live-input-horizontal-boundaries-are-semantic ()
   "Character motion should stop at live input edges without core artifacts."
   (skip-unless (require 'agent-shell-chat-mode nil t))
