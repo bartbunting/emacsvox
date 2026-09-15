@@ -781,6 +781,9 @@ OUTPUT to the generic process sentinel EVENT."
         (manager emacsvox-omnivox-components--manager))
     (unless (buffer-live-p manager) (user-error "The engine list was closed"))
     (with-current-buffer manager (emacsvox-omnivox-components--render id))
+    ;; Unwind the details window before returning, so quitting the engine
+    ;; list cannot restore these details from its window history.
+    (quit-window)
     (emacsvox-aural-ui-pop-to-buffer manager)))
 
 (defun emacsvox-omnivox-components--details-activate ()

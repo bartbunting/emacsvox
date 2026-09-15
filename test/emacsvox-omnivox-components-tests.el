@@ -782,6 +782,46 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
       (should (equal (emacsvox-omnivox-components--lane-state "eloquence" 'notification)
                      "Disabled")))))
 
+(defun emacsvox-omnivox-components-tests--check-details-quit ()
+  "Check that two quits leave the engine UI in either window layout."
+  (dolist (action '(display-buffer-same-window display-buffer-pop-up-window))
+    (emacsvox-omnivox-components-tests--with-inventory
+      (let ((manager (current-buffer))
+            (origin (generate-new-buffer "*engine quit origin*"))
+            (display-buffer-overriding-action (list action))
+            details)
+        (unwind-protect
+            (save-window-excursion
+              (delete-other-windows)
+              (with-current-buffer manager (rename-buffer "*engine quit manager*" t))
+              (switch-to-buffer origin)
+              (insert "Return here after closing engines.")
+              (cl-letf (((symbol-function 'emacsvox-omnivox-components--speak) #'ignore)
+                        ((symbol-function 'emacsvox-aural-ui-speak) #'ignore)
+                        ((symbol-function 'emacsvox-aural-ui--speak-feedback) #'ignore))
+                ;; Revisit retained buffers to catch stale window return history.
+                (dotimes (_ 2)
+                  (emacsvox-aural-ui-pop-to-buffer manager)
+                  (call-interactively (key-binding (kbd "RET")))
+                  (setq details (current-buffer))
+                  (should (derived-mode-p 'emacsvox-omnivox-engine-details-mode))
+                  (call-interactively (key-binding (kbd "q")))
+                  (redisplay t)
+                  (should (eq (window-buffer (selected-window)) manager))
+                  (should (equal (tabulated-list-get-id) "eloquence"))
+                  (call-interactively (key-binding (kbd "q")))
+                  (redisplay t)
+                  (should (eq (window-buffer (selected-window)) origin))
+                  (should (= (point) (point-max)))
+                  (should-not (get-buffer-window details))
+                  (should-not (get-buffer-window manager)))))
+          (dolist (buffer (list details origin))
+            (when (buffer-live-p buffer) (kill-buffer buffer))))))))
+
+(ert-deftest emacsvox-omnivox-components-details-quit-does-not-cycle ()
+  "Quitting details then engines returns to the original buffer."
+  (emacsvox-omnivox-components-tests--check-details-quit))
+
 (ert-deftest emacsvox-omnivox-components-details-retain-focus-and-speak-values ()
   "RET opens details; asynchronous redraw keeps its field, and q returns."
   (emacsvox-omnivox-components-tests--with-inventory
@@ -815,6 +855,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
 (ert-deftest emacsvox-omnivox-components-graphical-details-refresh-preserves-window ()
   "Real redisplay keeps details and the selected action in the same window."
   (skip-unless (display-graphic-p))
+  (emacsvox-omnivox-components-tests--check-details-quit)
   (emacsvox-omnivox-components-tests--with-inventory
     (let ((manager (current-buffer)) details)
       (unwind-protect
