@@ -6520,7 +6520,8 @@ Preview usable matching voices in displayed order, identifying each sample.
 Return from an engine’s voice list, or dismiss the workbench.
 
 When an engine row opened this voice list, restore its selected row and
-column.  Otherwise hide the workbench, retaining staged edits and warning
+column.  A dedicated browser returns to its engine details.  Otherwise
+hide the workbench, retaining staged edits and warning
 when they remain unsaved.
 @end format
 @end deffn

@@ -1514,6 +1514,15 @@ checked here_ text describes the limits of that file check; use live
 discovery above it for the active server.  Installing a module changes
 the managed release only.
 
+   • _Browse main voices_ opens that engine's reported voices on the
+     main speech target.  This separate browser keeps the general Voice
+     Workbench's filters and staged edits intact.  ‘P’ explicitly speaks
+     an exact sample; ‘t’ opens the existing voice editor for an unsaved
+     experiment.  Saving there asks for a palette destination.  Browsing
+     and auditioning do not change a palette.  ‘q’ returns to the
+     selected engine detail.  The browser refreshes quietly when
+     inventory changes.  Notification inventory remains separately
+     visible in engine details; samples use main speech.
    • To refresh discovery, press ‘g’ or use _Check live voices_ in
      details.  Both worker inventories are requested asynchronously.
      The managed installation check also runs asynchronously and reports
@@ -6250,28 +6259,3 @@ testing, problem reports, and practical experience to Emacspeak and
 Emacsvox.  The current Emacsvox contributors continue that work while
 maintaining the user guidance and generated reference in this
 repository.
-
-
-File: emacsvox.info,  Node: Developer Guide,  Next: Concept Index,  Prev: Acknowledgments,  Up: Top
-
-16 Developer And Maintainer Guide
-*********************************
-
-This guide is for people changing Emacsvox source, documentation,
-integrations, speech-server protocols, build machinery, or release
-staging.  It is included at the end of the published manual so that an
-installed Info manual and an offline checkout remain complete, but it is
-not part of the ordinary installation and use path.
-
-   Before making a governed change, read ‘AGENTS.md’ and every accepted
-record in ‘docs/adr/’.  Use the Emacs selected by ‘local.mk’ for
-repository checks.  The generated *note Emacsvox Reference Manual:
-(emacsvox-reference)Top. is the exact inventory of Lisp commands,
-options, and keymaps; the chapters that follow explain contracts and
-procedures that cannot be generated from those interfaces.
-
-* Menu:
-
-* Documentation Maintenance::    Author, validate, and publish Emacsvox documentation.
-* Speech Server Protocols::      Understand speech-server protocols.
-* Integration Maintenance::      Maintain optional integrations and release staging.

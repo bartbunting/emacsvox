@@ -16,6 +16,12 @@ and the separate managed installation. Old inventory is labelled as previous
 evidence. Managed checks run asynchronously and retain their results in details;
 completion no longer opens an output buffer or speaks its full diagnostic.
 
+/Browse main voices/ opens an engine-specific voice browser without disturbing
+the general Voice Workbench. P speaks an exact sample; t opens the existing
+voice editor, where an experiment can be saved to an explicit palette
+destination. q returns to engine details. Inventory updates preserve focus and
+selection, and browsing never starts a sample automatically.
+
 ** Independent output volumes
 
 Aural Home's /Audio output/ combines notification device selection with five

@@ -12,7 +12,10 @@ distinguished below from proposed management services and new backend work.
 
 The first UI slice is implemented in the current worktree: engine status and
 counts, per-stream details and timestamps, asynchronous managed listing, and
-retained check output without automatic focus changes. Voice enablement,
+retained check output without automatic focus changes. The voice-browser part
+of slice 2 now connects engine details to a separate engine-scoped Workbench
+on main speech, with exact audition, the existing palette editor and return to
+details. Runtime-location providers, Flite local import, voice enablement,
 acquisition providers and the new backend contracts remain planned work.
 
 Recommended order: useful engine details; Piper voice acquisition and multiple

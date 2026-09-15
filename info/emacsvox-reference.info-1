@@ -5922,7 +5922,8 @@ palettes or routing profiles.
      Return from an engine’s voice list, or dismiss the workbench.
 
      When an engine row opened this voice list, restore its selected row and
-     column.  Otherwise hide the workbench, retaining staged edits and warning
+     column.  A dedicated browser returns to its engine details.  Otherwise
+     hide the workbench, retaining staged edits and warning
      when they remain unsaved.
 
 2.62.1.24 emacsvox-aural-voice-workbench-refresh

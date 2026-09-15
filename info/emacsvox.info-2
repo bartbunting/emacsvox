@@ -14,6 +14,31 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Developer Guide,  Next: Concept Index,  Prev: Acknowledgments,  Up: Top
+
+16 Developer And Maintainer Guide
+*********************************
+
+This guide is for people changing Emacsvox source, documentation,
+integrations, speech-server protocols, build machinery, or release
+staging.  It is included at the end of the published manual so that an
+installed Info manual and an offline checkout remain complete, but it is
+not part of the ordinary installation and use path.
+
+   Before making a governed change, read ‘AGENTS.md’ and every accepted
+record in ‘docs/adr/’.  Use the Emacs selected by ‘local.mk’ for
+repository checks.  The generated *note Emacsvox Reference Manual:
+(emacsvox-reference)Top. is the exact inventory of Lisp commands,
+options, and keymaps; the chapters that follow explain contracts and
+procedures that cannot be generated from those interfaces.
+
+* Menu:
+
+* Documentation Maintenance::    Author, validate, and publish Emacsvox documentation.
+* Speech Server Protocols::      Understand speech-server protocols.
+* Integration Maintenance::      Maintain optional integrations and release staging.
+
+
 File: emacsvox.info,  Node: Documentation Maintenance,  Next: Speech Server Protocols,  Up: Developer Guide
 
 16.1 Documentation Maintenance

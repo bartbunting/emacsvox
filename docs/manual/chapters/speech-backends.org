@@ -389,6 +389,14 @@ Its /runtime not checked here/ or /model not checked here/ text describes the
 limits of that file check; use live discovery above it for the active server.
 Installing a module changes the managed release only.
 
+- /Browse main voices/ opens that engine's reported voices on the main speech
+  target. This separate browser keeps the general Voice Workbench's filters and
+  staged edits intact. @@texinfo:@kbd{P}@@ explicitly speaks an exact sample;
+  @@texinfo:@kbd{t}@@ opens the existing voice editor for an unsaved experiment.
+  Saving there asks for a palette destination. Browsing and auditioning do not
+  change a palette. @@texinfo:@kbd{q}@@ returns to the selected engine detail.
+  The browser refreshes quietly when inventory changes. Notification inventory
+  remains separately visible in engine details; samples use main speech.
 - To refresh discovery, press @@texinfo:@kbd{g}@@ or use /Check live voices/ in
   details. Both worker inventories are requested asynchronously. The managed
   installation check also runs asynchronously and reports a timeout if needed.

@@ -1504,6 +1504,15 @@ Installing a module changes the managed release only.
 
 @itemize
 @item
+@emph{Browse main voices} opens that engine's reported voices on the main speech
+target. This separate browser keeps the general Voice Workbench's filters and
+staged edits intact. @kbd{P} explicitly speaks an exact sample;
+@kbd{t} opens the existing voice editor for an unsaved experiment.
+Saving there asks for a palette destination. Browsing and auditioning do not
+change a palette. @kbd{q} returns to the selected engine detail.
+The browser refreshes quietly when inventory changes. Notification inventory
+remains separately visible in engine details; samples use main speech.
+@item
 To refresh discovery@comma{} press @kbd{g} or use @emph{Check live voices} in
 details. Both worker inventories are requested asynchronously. The managed
 installation check also runs asynchronously and reports a timeout if needed.

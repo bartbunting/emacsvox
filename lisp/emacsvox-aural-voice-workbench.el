@@ -88,6 +88,9 @@
 (defvar-local emacsvox-aural-voice-workbench--voice-list-parent nil
   "Engine whose row opened the current physical voice list, or nil.")
 
+(defvar-local emacsvox-aural-voice-workbench--details-parent nil
+  "Engine details buffer to return to from a dedicated voice browser.")
+
 (defvar-local emacsvox-aural-voice-workbench-preview-generation 0
   "Generation identifying the current preview and its callbacks.")
 
@@ -245,7 +248,7 @@
       " %s | adapter %s | inventory %s%s, generation %s, age %s | "
       "%d engines, %d voices | processes %s | routing %s, %s, %s, "
       "apply %s | filter %s | "
-      "preview %s ")
+      "preview %s%s ")
      (alist-get emacsvox-aural-voice-workbench-view
                 emacsvox-aural-voice-workbench--views)
      (or (plist-get inventory :adapter) "unknown")
@@ -261,7 +264,9 @@
      (emacsvox-aural-voice-workbench--apply-status-description)
      (emacsvox-aural-voice-workbench--filter-description)
      (or (plist-get emacsvox-aural-voice-workbench-last-preview :status)
-         "not run"))))
+         "not run")
+     (if emacsvox-aural-voice-workbench--details-parent
+         " | Main speech target; q returns to engine details" ""))))
 
 (defun emacsvox-aural-voice-workbench-status ()
   "Return concise Voice Workbench status for Aural Home."
@@ -1956,16 +1961,21 @@ Outside the engine view, leave any temporary engine browsing scope."
   "Return from an engine's voice list, or dismiss the workbench.
 
 When an engine row opened this voice list, restore its selected row and
-column.  Otherwise hide the workbench, retaining staged edits and warning
+column.  A dedicated browser returns to its engine details.  Otherwise
+hide the workbench, retaining staged edits and warning
 when they remain unsaved."
   (interactive)
-  (if (and (eq emacsvox-aural-voice-workbench-view 'physical)
+  (cond
+   ((buffer-live-p emacsvox-aural-voice-workbench--details-parent)
+    (let ((warning (emacsvox-aural-voice-workbench--dismiss-warning)))
+      (emacsvox-aural-ui-pop-to-buffer emacsvox-aural-voice-workbench--details-parent)
+      (when warning (tts-speak warning))))
+   ((and (eq emacsvox-aural-voice-workbench-view 'physical)
            emacsvox-aural-voice-workbench--voice-list-parent)
-      (progn
-        (puthash 'engines emacsvox-aural-voice-workbench--voice-list-parent
-                 emacsvox-aural-voice-workbench-selections)
-        (emacsvox-aural-voice-workbench--switch 'engines))
-    (emacsvox-aural-quit)))
+    (puthash 'engines emacsvox-aural-voice-workbench--voice-list-parent
+             emacsvox-aural-voice-workbench-selections)
+    (emacsvox-aural-voice-workbench--switch 'engines))
+   (t (emacsvox-aural-quit))))
 
 (defun emacsvox-aural-voice-workbench-describe ()
   "Display and speak exact Workbench row and configuration details."
@@ -2176,9 +2186,30 @@ when they remain unsaved."
                      (tts-speak "Voice Workbench has no rows")))))
     buffer))
 
+(defun emacsvox-aural-voice-workbench--open-engine (engine parent)
+  "Browse ENGINE on the main speech target, returning to details PARENT.
+Keep the general workbench's filters, selection and staged edits intact."
+  (let ((source (emacsvox-aural-inspection-source-buffer parent))
+        (buffer (get-buffer-create (format "*Omnivox Voices: %s*" engine))))
+    (with-current-buffer buffer
+      (unless (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+        (emacsvox-aural-voice-workbench-mode))
+      (emacsvox-aural-inspection-attach-source source)
+      (setq emacsvox-aural-voice-workbench--details-parent parent
+            emacsvox-aural-voice-workbench--voice-list-parent engine
+            emacsvox-aural-voice-workbench-view 'physical)
+      (emacsvox-aural-voice-workbench-refresh))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer
+     (lambda ()
+       (tts-speak
+        (format "%s voices on main speech. P speaks a sample; t opens the voice editor; q returns to engine details.%s"
+                engine (if (tabulated-list-get-id) "" " No voices reported.")))))
+    buffer))
+
 (defun emacsvox-aural-voice-workbench-refresh-if-live (&rest _ignored)
   "Quietly refresh a live Voice Workbench after configuration changes."
-  (when-let* ((buffer (get-buffer "*Aural Voice Workbench*")))
+  (dolist (buffer (buffer-list))
     (with-current-buffer buffer
       (when (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
         (unless (emacsvox-aural-voice-workbench--dirty-p)

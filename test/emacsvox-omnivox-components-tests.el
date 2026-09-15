@@ -806,7 +806,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
               (should (eq (current-buffer) details))
               (should (eq (tabulated-list-get-id) 'main))
               (emacsvox-omnivox-components--details-next-action)
-              (should (eq (tabulated-list-get-id) 'check-live))
+              (should (eq (tabulated-list-get-id) 'voices))
               (emacsvox-omnivox-components--details-back)
               (should (eq (current-buffer) manager))
               (should (equal (tabulated-list-get-id) "eloquence"))))

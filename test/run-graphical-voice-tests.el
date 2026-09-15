@@ -38,19 +38,22 @@
         (require 'emacsvox-aural-feedback-details-tests)
         (require 'emacsvox-emoji-integration-tests)
         (require 'emacsvox-omnivox-components-tests)
+        (require 'emacsvox-aural-voice-workbench-tests)
         ;; Loading minibuffer speech advice must not send ERT's own reports
         ;; to an audio device after a test's delivery stubs have unwound.
         (setq-default emacsvox-speak-messages nil)
         (dolist (function '(emacsvox-aural-capture-context
                             emacsvox-aural-feedback-details--insert-voice-links
                             emacsvox-aural-voice-editor-refresh
-                            emacsvox-omnivox-components--render-details))
+                            emacsvox-omnivox-components--render-details
+                            emacsvox-aural-voice-workbench--open-engine))
           (let ((file (symbol-file function)))
             (unless (and file (string-suffix-p ".elc" file))
               (error "Expected current byte-code for %s; got %s" function file))
             (message "%s: %s" function file)))
         (let ((stats (ert-run-tests-batch
                       '(member
+                        emacsvox-aural-voice-workbench-graphical-engine-browser-return
                         emacsvox-omnivox-components-graphical-details-refresh-preserves-window
                         emacsvox-aural-feedback-details-graphical-folding-and-draft-return
                         emacsvox-emoji-graphical-explanation-is-visible
@@ -61,8 +64,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 10)
-                                (= (ert-stats-completed stats) 10)
+          (setq status (if (and (= (ert-stats-total stats) 11)
+                                (= (ert-stats-completed stats) 11)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

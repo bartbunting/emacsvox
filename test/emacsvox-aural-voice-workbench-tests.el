@@ -9,6 +9,8 @@
 (require 'cl-lib)
 (require 'ert)
 (require 'emacsvox-aural-voice-workbench)
+(require 'emacsvox-aural-voice-editor)
+(require 'emacsvox-omnivox-components)
 
 (defconst emacsvox-test--workbench-inventory
   '(:adapter "omnivox" :source "live" :status "available"
@@ -902,6 +904,124 @@
     (setq emacsvox-aural-voice-workbench-view 'engines)
     (emacsvox-aural-voice-workbench-refresh "eloquence")
     (should (equal (aref (tabulated-list-get-entry) 0) "Eloquence"))))
+
+(ert-deftest emacsvox-aural-voice-workbench-engine-details-browse-and-return ()
+  "Engine details open scoped voices without disturbing another workbench."
+  (emacsvox-test--with-voice-workbench
+    (let ((general (current-buffer))
+          (manager (generate-new-buffer " *engine manager fixture*"))
+          details browser
+          (staged (copy-tree emacsvox-aural-voice-workbench-staged-profile)))
+      (unwind-protect
+          (save-window-excursion
+            (setq emacsvox-aural-voice-workbench-filter '(:language "en-US"))
+            (cl-letf (((symbol-function 'emacsvox-omnivox-components--speak) #'ignore)
+                      ((symbol-function 'emacsvox-aural-ui-speak) #'ignore)
+                      ((symbol-function 'tts-preview-voices)
+                       (lambda (&rest _) (ert-fail "Browsing played a sample"))))
+              (switch-to-buffer manager)
+              (emacsvox-omnivox-components-mode)
+              (setq emacsvox-omnivox-components--records
+                    '((:id "eloquence" :name "Eloquence" :state "runtime-required" :size 0)))
+              (emacsvox-omnivox-components--render "eloquence")
+              (emacsvox-omnivox-components-activate)
+              (setq details (current-buffer))
+              (should (emacsvox-aural-ui-goto-row 'voices))
+              (emacsvox-omnivox-components--details-activate)
+              (setq browser (current-buffer))
+              (should (derived-mode-p 'emacsvox-aural-voice-workbench-mode))
+              (should (equal (mapcar #'car tabulated-list-entries)
+                             '(("eloquence" "eci:Reed"))))
+              (should (string-search "Main speech target" (emacsvox-aural-voice-workbench--header)))
+              (should (equal (plist-get (emacsvox-aural-voice-workbench--current-preview-entry) :selector)
+                             '(:kind exact :engine-id "eloquence" :voice-id "eci:Reed" :scope session)))
+              (with-current-buffer general
+                (should (eq emacsvox-aural-voice-workbench-view 'logical))
+                (should (equal emacsvox-aural-voice-workbench-filter '(:language "en-US")))
+                (should (equal staged emacsvox-aural-voice-workbench-staged-profile)))
+              (emacsvox-aural-voice-workbench-quit)
+              (should (eq (current-buffer) details))
+              (should (eq (tabulated-list-get-id) 'voices))
+              (emacsvox-omnivox-components--details-back)
+              (should (eq (current-buffer) manager))
+              (should (equal (tabulated-list-get-id) "eloquence"))))
+        (dolist (buffer (list browser details manager))
+          (when (buffer-live-p buffer) (kill-buffer buffer)))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-engine-browser-refresh-and-editor ()
+  "Dedicated browsers refresh quietly, retain drafts and hand off exact voices."
+  (emacsvox-test--with-voice-workbench
+    (let* ((parent (current-buffer)) browser editor-call
+           (inventory (copy-tree emacsvox-test--workbench-inventory))
+           (tts-voice-inventory-function (lambda () inventory)))
+      (unwind-protect
+          (save-window-excursion
+            (setq browser (emacsvox-aural-voice-workbench--open-engine "eloquence" parent))
+            (setf (plist-get emacsvox-aural-voice-workbench-staged-profile :engine-order)
+                  '("winrt" "eloquence"))
+            (setf (plist-get (car (plist-get inventory :engines)) :health) "degraded")
+            (with-current-buffer parent (emacsvox-aural-voice-workbench-refresh-if-live))
+            (should (eq (current-buffer) browser))
+            (should (equal (tabulated-list-get-id) '("eloquence" "eci:Reed")))
+            (should (equal (aref (tabulated-list-get-entry) 6) "degraded"))
+            (should (equal (plist-get emacsvox-aural-voice-workbench-staged-profile :engine-order)
+                           '("winrt" "eloquence")))
+            (cl-letf (((symbol-function 'emacsvox-aural-voice-editor-experiment)
+                       (lambda (pair source text) (setq editor-call (list pair source text)))))
+              (emacsvox-aural-voice-workbench-tune))
+            (should (equal (plist-get (cadar editor-call) :voice-id) "eci:Reed"))
+            (should (eq (cadr editor-call) browser))
+            (should (equal (caddr editor-call) emacsvox-aural-voice-workbench-preview-text))
+            (cl-letf (((symbol-function 'tts-preview-voices)
+                       (lambda (_entries callback)
+                         (funcall callback '(:status failed :results ((:message "Exact voice unavailable"))))))
+                      ((symbol-function 'emacsvox-aural-preview-message) #'ignore)
+                      ((symbol-function 'emacsvox-aural-ui-announce-result) #'ignore))
+              (emacsvox-aural-voice-workbench-preview))
+            (should (eq (plist-get emacsvox-aural-voice-workbench-last-preview :status) 'failed)))
+        (when (buffer-live-p browser) (kill-buffer browser))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-graphical-engine-browser-return ()
+  "Real redisplay preserves the browser through refresh, editing and return."
+  (skip-unless (display-graphic-p))
+  (emacsvox-test--with-voice-workbench
+    (let ((parent (current-buffer)) browser editor
+          (emacsvox-aural-voice-drafts--registry (make-hash-table :test #'equal))
+          (emacsvox-aural-voice-editor--contexts (make-hash-table :test #'equal))
+          (emacsvox-aural-voice-editor--preview-owner nil))
+      (unwind-protect
+          (save-window-excursion
+            (switch-to-buffer parent)
+            (setq browser (emacsvox-aural-voice-workbench--open-engine "eloquence" parent))
+            (redisplay t)
+            (let ((window (selected-window)) (row (tabulated-list-get-id)))
+              (with-current-buffer parent (emacsvox-aural-voice-workbench-refresh-if-live))
+              (redisplay t)
+              (should (eq (selected-window) window))
+              (should (eq (window-buffer window) browser))
+              (should (equal (tabulated-list-get-id) row))
+              (should (pos-visible-in-window-p (point) window)))
+            (cl-letf (((symbol-function 'tts-stop) #'ignore)
+                      ((symbol-function 'emacsvox-icon) #'ignore)
+                      ((symbol-function 'tts-preview-voices)
+                       (lambda (&rest _) (ert-fail "Opening the editor played a sample"))))
+              (emacsvox-aural-voice-workbench-tune)
+              (setq editor (current-buffer))
+              (redisplay t)
+              (should (derived-mode-p 'emacsvox-aural-voice-editor-mode))
+              (should (emacsvox-aural-voice-editor--get :experiment))
+              (should (eq (marker-buffer (emacsvox-aural-voice-editor--get :origin)) browser))
+              (emacsvox-aural-voice-editor-leave)
+              (redisplay t)
+              (should (eq (current-buffer) browser))
+              (should (equal (tabulated-list-get-id) '("eloquence" "eci:Reed"))))
+            (emacsvox-aural-voice-workbench-quit)
+            (redisplay t)
+            (should (eq (window-buffer (selected-window)) parent)))
+        (dolist (buffer (list editor browser))
+          (when (buffer-live-p buffer)
+            (with-current-buffer buffer
+              (let ((kill-buffer-query-functions nil)) (kill-buffer)))))))))
 
 (provide 'emacsvox-aural-voice-workbench-tests)
 ;;; emacsvox-aural-voice-workbench-tests.el ends here

@@ -58,6 +58,8 @@
 (declare-function omnivox-refresh-voice-inventory "omnivox-voices" ())
 (declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
 (declare-function tts-notify "tts-speak" (text &optional dont-log))
+(declare-function emacsvox-aural-voice-workbench--open-engine
+                  "emacsvox-aural-voice-workbench" (engine parent))
 
 (defgroup emacsvox-omnivox-components nil
   "Manage optional Omnivox engine modules."
@@ -682,6 +684,8 @@ OUTPUT to the generic process sentinel EVENT."
     (append
      rows
      (list
+      (list 'voices (vector "Browse main voices"
+                            "Reported voices on the main speech target; samples and palette editing"))
       (list 'check-live (vector "Check live voices" "Refresh both speech inventories; no sample is played"))
       (list 'managed (vector "Managed installation"
                             (if emacsvox-omnivox-components--listing-error
@@ -765,6 +769,9 @@ OUTPUT to the generic process sentinel EVENT."
     (unless (buffer-live-p manager) (user-error "The engine list was closed"))
     (cond
      ((eq action 'back) (emacsvox-omnivox-components--details-back))
+     ((eq action 'voices)
+      (require 'emacsvox-aural-voice-workbench)
+      (emacsvox-aural-voice-workbench--open-engine id (current-buffer)))
      ((memq action '(install uninstall test check-live))
       (with-current-buffer manager
         (let ((emacsvox-omnivox-components--engine-id id))
@@ -791,7 +798,7 @@ OUTPUT to the generic process sentinel EVENT."
     (forward-line 1)
     (while (and (not (eobp))
                 (not (memq (tabulated-list-get-id)
-                           '(check-live install uninstall test output back))))
+                           '(voices check-live install uninstall test output back))))
       (forward-line 1))
     (when (eobp) (goto-char start))
     (emacsvox-aural-ui-speak-current-row)))
