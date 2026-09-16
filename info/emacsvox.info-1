@@ -319,16 +319,17 @@ both the final tone and speech.  You can then skip to the last step in
 
    After the core installation works, optional speech engines are
 available from ‘M-x emacsvox-omnivox-manage-components RET’.  The same
-manager is the _Speech engines_ row in Aural Home, opened with ‘C-e H’
-and then ‘I’.  It distinguishes engines already included in the core,
-downloadable modules, and bridges that still need a user-supplied
-runtime.  Press ‘i’ on a downloadable row to confirm, checksum-verify,
-install, and validate that module without ‘sudo’.  Press ‘u’ on a
+engine list is _Browse voices_ in Aural Home, opened with ‘C-e H’ and
+then ‘I’.  Select an engine and press ‘RET’ for details.  It
+distinguishes engines already included in the core, downloadable
+modules, and bridges that still need a user-supplied runtime.  Choose
+_Install module_ to confirm, checksum-verify, install, and validate that
+module without ‘sudo’.  Choose _Uninstall module_ for a
 manager-installed module to confirm and remove it while retaining the
-verified download cache; press ‘i’ to reinstall it later.  The manager
-never removes core engines or separately supplied runtimes.  *Note
-Optional Omnivox Engine Modules:: explains the choices and licensing
-boundaries.
+verified download cache; choose _Install module_ to reinstall it later.
+The manager never removes core engines or separately supplied runtimes.
+*Note Optional Omnivox Engine Modules:: explains the choices and
+licensing boundaries.
 
 
 File: emacsvox.info,  Node: Installing Remote Emacsvox,  Next: Updating Emacsvox Under WSL2,  Prev: Obtaining Emacsvox,  Up: Installation
@@ -1494,11 +1495,16 @@ chosen data.
 
      M-x emacsvox-omnivox-manage-components RET
 
-   You can also press ‘C-e H’ for Aural Home and then ‘I’ on _Speech
-engines_.  The table speaks each engine's status and voice count from
-main speech discovery.  Press ‘RET’ for engine details: main and
+   You can also press ‘C-e H’ for Aural Home and then ‘I’, or choose
+_Browse voices_.  These routes open the same engine list.  Opening
+speaks the selected engine using the current speech inventory, without
+waiting for file checks or fresh discovery.  Optional engines absent
+from that inventory remain visible as _not reported_, so their
+installation controls are still reachable.  Press ‘v’ to browse an
+engine's voices directly, or ‘RET’ for engine details: main and
 notification status, speech targets, the time each inventory was
 received, runtime discovery, and the separate managed installation.
+Details announce the engine before starting background file checks.
 
    _Available_ means the current worker recently discovered the engine.
 _Previously available_ means that evidence is old or belongs to a
@@ -1598,28 +1604,28 @@ the managed release only.
      The managed installation check also runs asynchronously and reports
      a timeout if needed.
    • To install a module shown as _Not installed; downloadable_ in
-     details, press ‘i’ in the engine list or activate _Install module_
-     in details, then confirm.  The manager verifies the version-matched
-     download.  The table shows _installing_ while that operation runs.
-   • To check the managed engine, press ‘t’ in the list or activate
-     _Check managed engine_ in details.  This lists voices in the
-     managed installation; it does not play a sample or prove that the
-     active speech server uses that copy.  Completion produces a short
-     notice without selecting another buffer.  The last result remains
-     in engine details; _Read last result_ opens its complete output.
+     details, activate _Install module_ with ‘RET’, then confirm.  The
+     manager verifies the version-matched download.  The table shows
+     _installing_ while that operation runs.
+   • To check the managed engine, activate _Check managed engine_ in
+     details.  This lists voices in the managed installation; it does
+     not play a sample or prove that the active speech server uses that
+     copy.  Completion produces a short notice without selecting another
+     buffer.  The last result remains in engine details; _Read last
+     result_ opens its complete output.
    • In details, ‘TAB’ moves to the next action and ‘RET’ activates it.
      Arrow keys read fields and values.  ‘q’ returns to the selected
      engine row and ‘h’ opens Aural Home.  Background refresh preserves
      selection.
-   • To remove an _installed_ module, press ‘u’ and confirm.  This is
-     available only for Flite, RuTTS, Piper, and TGSpeechBox modules
-     installed by this manager.  It cannot remove the Omnivox core,
-     built-in engines, or runtime bridges.
+   • To remove an _installed_ module, activate _Uninstall module_ in
+     details and confirm.  This is available only for Flite, RuTTS,
+     Piper, and TGSpeechBox modules installed by this manager.  It
+     cannot remove the Omnivox core, built-in engines, or runtime
+     bridges.
 
    Removal keeps the verified download in the local cache.  If you
-change your mind, select the module again--its managed state will be
-_not installed_--and press ‘i’ to reinstall it.  A valid cached download
-is reused.
+change your mind, open its details again and choose _Install module_ to
+reinstall it.  A valid cached download is reused.
 
    The module's whole managed directory is removed.  Move anything you
 placed inside that directory somewhere else before confirming.
@@ -2500,9 +2506,10 @@ File: emacsvox.info,  Node: Aural Home,  Next: Presentation Model,  Up: Aural Pr
 
 For a first listening experiment:
 
-  1. Press ‘C-e H’, then ‘/’, and choose _Browse installed voices_ from
-     the searchable actions.
-  2. Select an available engine and press <RET> to list its voices.
+  1. Press ‘C-e H’, then ‘/’, and choose _Browse voices_ from the
+     searchable actions.
+  2. Select an available engine and press ‘v’ to list its voices.  <RET>
+     opens an Omnivox engine's status, downloads, and settings.
   3. Move to a voice and press ‘P’ to hear a sample.  ‘S’ stops it.
      Browsing and previewing save no settings.
   4. Press ‘h’ to return to Home.  From Home, ‘C-c C-o’ returns to the
@@ -2581,9 +2588,9 @@ auditions still play the working voice.
 Task group                Destinations
 Understand and change     Feedback for this item, Recent feedback, and
 feedback                  Return to source item.
-Voices and speech         Voice palettes, Browse installed voices,
-                          Preferred speech engine, Speech rate, and
-                          Voice Workbench.
+Voices and speech         Voice palettes, Browse voices, Preferred
+                          speech engine, Speech rate, and Voice
+                          Workbench.
 Sounds and output         Sound packs, Spatial settings, Audio output,
                           and Review notifications.
 Optional feedback and     Presentation options, Your feedback rules,
@@ -2591,8 +2598,7 @@ rules                     Current buffer rules, and Explain feedback as
                           you navigate.
 Saved setups and          Presentation profiles and Resume unfinished
 unfinished changes        changes.
-Troubleshooting           Aural Doctor, Spatial capabilities, and
-                          Speech engines.
+Troubleshooting           Aural Doctor and Spatial capabilities.
 
    The header identifies the captured source and the number of
 unfinished drafts.  Choose _Resume unfinished changes_ to visit the
@@ -3861,11 +3867,13 @@ engines.  Open it from Aural Home with ‘W’.  Its main views are:
      Styles and effects for those named voices.  Use this view to
      inspect their parameters and what their current engines support.
 
-   For physical voices, choose _Browse installed voices_ in Home, then
-press <RET> or ‘v’ on an engine to browse its voices.  <RET> on a voice
-shows details; ‘P’ plays a named sample.  Filters set with ‘F’ and each
-view's selected row and column survive navigation through Home.  The
-engine selected for browsing is a temporary limit: switching to the
+   For physical voices, choose _Browse voices_ in Home, then press ‘v’
+on an engine to browse its voices.  On an Omnivox engine, <RET> opens
+its status, downloads, and settings; ‘q’ returns to the selected engine.
+Other speech adapters use <RET> to browse voices directly.  <RET> on a
+voice shows details; ‘P’ plays a named sample.  Filters set with ‘F’ and
+each view's selected row and column survive navigation through Home.
+The engine selected for browsing is a temporary limit: switching to the
 logical, styles, or engine view removes it.  Pressing ‘v’ from a voice
 list also removes that temporary limit.  Your explicit filters still
 apply; ‘C’ clears all filters to show voices across engines.  Press ‘q’
@@ -3908,11 +3916,10 @@ File: emacsvox.info,  Node: Physical Voice Experiments,  Next: Keeping A Voice E
 6.8.1 Experiment With An Installed Voice
 ----------------------------------------
 
-In _Browse installed voices_, select a physical voice and press ‘t’.
-This opens an experiment with that exact engine and voice,
-adapter-default speech characteristics, the current base speech rate,
-and neutral audio effects.  Opening, adjusting and comparing write no
-settings.
+In _Browse voices_, select a physical voice and press ‘t’.  This opens
+an experiment with that exact engine and voice, adapter-default speech
+characteristics, the current base speech rate, and neutral audio
+effects.  Opening, adjusting and comparing write no settings.
 
    The field navigation, adjustments and comparison controls are the
 same as in *note Edit a Named Voice: (emacsvox)Editing Named Voices.  In
@@ -3921,10 +3928,10 @@ voice without a palette destination.
 
    To compare pitch on an installed voice:
 
-  1. From Home choose _Browse installed voices_, select an available
-     engine, and press ‘RET’.  Select a physical voice and press ‘P’.
-     You can use ‘B’ to compare it with another available voice, using
-     the same sentence.
+  1. From Home choose _Browse voices_, select an available engine, and
+     press ‘v’.  Select a physical voice and press ‘P’.  You can use ‘B’
+     to compare it with another available voice, using the same
+     sentence.
   2. Press ‘t’ on the physical voice to open an experiment.  Move to
      _Average Pitch_, enter ‘3’, and listen.  Then enter ‘7’ and listen
      again.  If the engine cannot change pitch, the unsupported setting

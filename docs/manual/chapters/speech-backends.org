@@ -372,10 +372,15 @@ M-x emacsvox-omnivox-manage-components RET
 #+end_example
 
 You can also press @@texinfo:@kbd{C-e H}@@ for Aural Home and then
-@@texinfo:@kbd{I}@@ on /Speech engines/. The table speaks each engine's
-status and voice count from main speech discovery. Press @@texinfo:@kbd{RET}@@
+@@texinfo:@kbd{I}@@, or choose /Browse voices/. These routes open the same
+engine list. Opening speaks the selected engine using the current speech
+inventory, without waiting for file checks or fresh discovery. Optional engines
+absent from that inventory remain visible as /not reported/, so their installation
+controls are still reachable. Press @@texinfo:@kbd{v}@@ to browse an engine's
+voices directly, or @@texinfo:@kbd{RET}@@
 for engine details: main and notification status, speech targets, the time each
 inventory was received, runtime discovery, and the separate managed installation.
+Details announce the engine before starting background file checks.
 
 /Available/ means the current worker recently discovered the engine. /Previously
 available/ means that evidence is old or belongs to a stopped or replaced worker.
@@ -462,12 +467,12 @@ Installing a module changes the managed release only.
 - To refresh discovery, press @@texinfo:@kbd{g}@@ or use /Check live voices/ in
   details. Both worker inventories are requested asynchronously. The managed
   installation check also runs asynchronously and reports a timeout if needed.
-- To install a module shown as /Not installed; downloadable/ in details, press
-  @@texinfo:@kbd{i}@@ in the engine list or activate /Install module/ in details,
+- To install a module shown as /Not installed; downloadable/ in details, activate
+  /Install module/ with @@texinfo:@kbd{RET}@@,
   then confirm. The manager verifies the version-matched download. The table
   shows /installing/ while that operation runs.
-- To check the managed engine, press @@texinfo:@kbd{t}@@ in the list or activate
-  /Check managed engine/ in details. This lists voices in the managed installation;
+- To check the managed engine, activate /Check managed engine/ in details.
+  This lists voices in the managed installation;
   it does not play a sample or prove that the active speech server uses that copy.
   Completion produces a short notice without selecting another buffer. The last
   result remains in engine details; /Read last result/ opens its complete output.
@@ -475,14 +480,14 @@ Installing a module changes the managed release only.
   @@texinfo:@kbd{RET}@@ activates it. Arrow keys read fields and values.
   @@texinfo:@kbd{q}@@ returns to the selected engine row and
   @@texinfo:@kbd{h}@@ opens Aural Home. Background refresh preserves selection.
-- To remove an /installed/ module, press @@texinfo:@kbd{u}@@ and confirm.  This
+- To remove an /installed/ module, activate /Uninstall module/ in details and confirm. This
   is available only for Flite, RuTTS, Piper, and TGSpeechBox modules installed
   by this manager.  It cannot remove the Omnivox core, built-in engines, or
   runtime bridges.
 
 Removal keeps the verified download in the local cache.  If you change your
-mind, select the module again---its managed state will be /not installed/---and press
-@@texinfo:@kbd{i}@@ to reinstall it.  A valid cached download is reused.
+mind, open its details again and choose /Install module/ to reinstall it.
+A valid cached download is reused.
 
 The module's whole managed directory is removed.  Move anything you placed
 inside that directory somewhere else before confirming.  User-supplied

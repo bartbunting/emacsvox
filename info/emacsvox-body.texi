@@ -243,15 +243,16 @@ tone and speech.  You can then skip to the last step in
 @ref{Quick Installation} and start Emacsvox.
 
 After the core installation works@comma{} optional speech engines are available from
-@kbd{M-x emacsvox-omnivox-manage-components RET}.  The same manager
-is the @emph{Speech engines} row in Aural Home@comma{} opened with
-@kbd{C-e H} and then @kbd{I}.  It distinguishes engines
+@kbd{M-x emacsvox-omnivox-manage-components RET}. The same engine list
+is @emph{Browse voices} in Aural Home@comma{} opened with
+@kbd{C-e H} and then @kbd{I}. Select an engine and press
+@kbd{RET} for details. It distinguishes engines
 already included in the core@comma{} downloadable modules@comma{} and bridges that still
-need a user-supplied runtime.  Press @kbd{i} on a downloadable row
-to confirm@comma{} checksum-verify@comma{} install@comma{} and validate that module without @samp{sudo}.
-Press @kbd{u} on a manager-installed module to confirm and remove
-it while retaining the verified download cache; press @kbd{i} to
-reinstall it later.  The manager never removes core engines or separately
+need a user-supplied runtime. Choose @emph{Install module} to confirm@comma{}
+checksum-verify@comma{} install@comma{} and validate that module without @samp{sudo}.
+Choose @emph{Uninstall module} for a manager-installed module to confirm and remove
+it while retaining the verified download cache; choose @emph{Install module} to
+reinstall it later. The manager never removes core engines or separately
 supplied runtimes.
 @xref{Optional Omnivox Engine Modules} explains the choices and
 licensing boundaries.
@@ -1485,10 +1486,15 @@ M-x emacsvox-omnivox-manage-components RET
 @end example
 
 You can also press @kbd{C-e H} for Aural Home and then
-@kbd{I} on @emph{Speech engines}. The table speaks each engine's
-status and voice count from main speech discovery. Press @kbd{RET}
+@kbd{I}@comma{} or choose @emph{Browse voices}. These routes open the same
+engine list. Opening speaks the selected engine using the current speech
+inventory@comma{} without waiting for file checks or fresh discovery. Optional engines
+absent from that inventory remain visible as @emph{not reported}@comma{} so their installation
+controls are still reachable. Press @kbd{v} to browse an engine's
+voices directly@comma{} or @kbd{RET}
 for engine details: main and notification status@comma{} speech targets@comma{} the time each
 inventory was received@comma{} runtime discovery@comma{} and the separate managed installation.
+Details announce the engine before starting background file checks.
 
 @emph{Available} means the current worker recently discovered the engine. @emph{Previously
 available} means that evidence is old or belongs to a stopped or replaced worker.
@@ -1587,13 +1593,13 @@ To refresh discovery@comma{} press @kbd{g} or use @emph{Check live voices} in
 details. Both worker inventories are requested asynchronously. The managed
 installation check also runs asynchronously and reports a timeout if needed.
 @item
-To install a module shown as @emph{Not installed; downloadable} in details@comma{} press
-@kbd{i} in the engine list or activate @emph{Install module} in details@comma{}
+To install a module shown as @emph{Not installed; downloadable} in details@comma{} activate
+@emph{Install module} with @kbd{RET}@comma{}
 then confirm. The manager verifies the version-matched download. The table
 shows @emph{installing} while that operation runs.
 @item
-To check the managed engine@comma{} press @kbd{t} in the list or activate
-@emph{Check managed engine} in details. This lists voices in the managed installation;
+To check the managed engine@comma{} activate @emph{Check managed engine} in details.
+This lists voices in the managed installation;
 it does not play a sample or prove that the active speech server uses that copy.
 Completion produces a short notice without selecting another buffer. The last
 result remains in engine details; @emph{Read last result} opens its complete output.
@@ -1603,15 +1609,15 @@ In details@comma{} @kbd{TAB} moves to the next action and
 @kbd{q} returns to the selected engine row and
 @kbd{h} opens Aural Home. Background refresh preserves selection.
 @item
-To remove an @emph{installed} module@comma{} press @kbd{u} and confirm.  This
+To remove an @emph{installed} module@comma{} activate @emph{Uninstall module} in details and confirm. This
 is available only for Flite@comma{} RuTTS@comma{} Piper@comma{} and TGSpeechBox modules installed
 by this manager.  It cannot remove the Omnivox core@comma{} built-in engines@comma{} or
 runtime bridges.
 @end itemize
 
 Removal keeps the verified download in the local cache.  If you change your
-mind@comma{} select the module again---its managed state will be @emph{not installed}---and press
-@kbd{i} to reinstall it.  A valid cached download is reused.
+mind@comma{} open its details again and choose @emph{Install module} to reinstall it.
+A valid cached download is reused.
 
 The module's whole managed directory is removed.  Move anything you placed
 inside that directory somewhere else before confirming.  User-supplied
@@ -2507,9 +2513,10 @@ For a first listening experiment:
 @enumerate
 @item
 Press @kbd{C-e H}@comma{} then @kbd{/}@comma{} and choose
-@emph{Browse installed voices} from the searchable actions.
+@emph{Browse voices} from the searchable actions.
 @item
-Select an available engine and press @key{RET} to list its voices.
+Select an available engine and press @kbd{v} to list its voices.
+@key{RET} opens an Omnivox engine's status@comma{} downloads@comma{} and settings.
 @item
 Move to a voice and press @kbd{P} to hear a sample.
 @kbd{S} stops it. Browsing and previewing save no settings.
@@ -2594,7 +2601,7 @@ The six groups are:
 @item Understand and change feedback
 @tab Feedback for this item@comma{} Recent feedback@comma{} and Return to source item.
 @item Voices and speech
-@tab Voice palettes@comma{} Browse installed voices@comma{} Preferred speech engine@comma{} Speech rate@comma{} and Voice Workbench.
+@tab Voice palettes@comma{} Browse voices@comma{} Preferred speech engine@comma{} Speech rate@comma{} and Voice Workbench.
 @item Sounds and output
 @tab Sound packs@comma{} Spatial settings@comma{} Audio output@comma{} and Review notifications.
 @item Optional feedback and rules
@@ -2602,7 +2609,7 @@ The six groups are:
 @item Saved setups and unfinished changes
 @tab Presentation profiles and Resume unfinished changes.
 @item Troubleshooting
-@tab Aural Doctor@comma{} Spatial capabilities@comma{} and Speech engines.
+@tab Aural Doctor and Spatial capabilities.
 @end multitable
 
 The header identifies the captured source and the number of unfinished drafts.
@@ -3856,8 +3863,11 @@ Styles and effects for those named voices. Use this view to inspect
 their parameters and what their current engines support.
 @end table
 
-For physical voices@comma{} choose @emph{Browse installed voices} in Home@comma{} then press
-@key{RET} or @kbd{v} on an engine to browse its voices.  @key{RET}
+For physical voices@comma{} choose @emph{Browse voices} in Home@comma{} then press
+@kbd{v} on an engine to browse its voices. On an Omnivox engine@comma{}
+@key{RET} opens its status@comma{} downloads@comma{} and settings;
+@kbd{q} returns to the selected engine.
+Other speech adapters use @key{RET} to browse voices directly. @key{RET}
 on a voice shows details; @kbd{P} plays a named sample.  Filters
 set with @kbd{F} and each view's selected row and column survive
 navigation through Home. The engine selected for browsing is a temporary
@@ -3899,7 +3909,7 @@ adapter advertises; they are not a listening test of every parameter.
 @node Physical Voice Experiments
 @subsection Experiment With An Installed Voice
 
-In @emph{Browse installed voices}@comma{} select a physical voice and press
+In @emph{Browse voices}@comma{} select a physical voice and press
 @kbd{t}. This opens an experiment with that exact engine and
 voice@comma{} adapter-default speech characteristics@comma{} the current base speech rate@comma{}
 and neutral audio effects. Opening@comma{} adjusting and comparing write no settings.
@@ -3912,8 +3922,8 @@ To compare pitch on an installed voice:
 
 @enumerate
 @item
-From Home choose @emph{Browse installed voices}@comma{} select an available engine@comma{}
-and press @kbd{RET}. Select a physical voice and press @kbd{P}. You can use
+From Home choose @emph{Browse voices}@comma{} select an available engine@comma{}
+and press @kbd{v}. Select a physical voice and press @kbd{P}. You can use
 @kbd{B} to compare it with another available voice@comma{} using the same sentence.
 @item
 Press @kbd{t} on the physical voice to open an experiment. Move to @emph{Average

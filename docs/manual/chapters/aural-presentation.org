@@ -48,8 +48,9 @@ order or open a task directly from its Info menu. In an Aural interface,
 For a first listening experiment:
 
 1. Press @@texinfo:@kbd{C-e H}@@, then @@texinfo:@kbd{/}@@, and choose
-   /Browse installed voices/ from the searchable actions.
-2. Select an available engine and press @@texinfo:@key{RET}@@ to list its voices.
+   /Browse voices/ from the searchable actions.
+2. Select an available engine and press @@texinfo:@kbd{v}@@ to list its voices.
+   @@texinfo:@key{RET}@@ opens an Omnivox engine's status, downloads, and settings.
 3. Move to a voice and press @@texinfo:@kbd{P}@@ to hear a sample.
    @@texinfo:@kbd{S}@@ stops it. Browsing and previewing save no settings.
 4. Press @@texinfo:@kbd{h}@@ to return to Home. From Home,
@@ -115,11 +116,11 @@ The six groups are:
 #+attr_texinfo: :columns 0.35 0.65
 | Task group | Destinations |
 | Understand and change feedback | Feedback for this item, Recent feedback, and Return to source item. |
-| Voices and speech | Voice palettes, Browse installed voices, Preferred speech engine, Speech rate, and Voice Workbench. |
+| Voices and speech | Voice palettes, Browse voices, Preferred speech engine, Speech rate, and Voice Workbench. |
 | Sounds and output | Sound packs, Spatial settings, Audio output, and Review notifications. |
 | Optional feedback and rules | Presentation options, Your feedback rules, Current buffer rules, and Explain feedback as you navigate. |
 | Saved setups and unfinished changes | Presentation profiles and Resume unfinished changes. |
-| Troubleshooting | Aural Doctor, Spatial capabilities, and Speech engines. |
+| Troubleshooting | Aural Doctor and Spatial capabilities. |
 
 The header identifies the captured source and the number of unfinished drafts.
 Choose /Resume unfinished changes/ to visit the original rule editor, voice editor,
@@ -1292,8 +1293,11 @@ Use /Voice Workbench/ when the question involves installed voices or engines.  O
 - s :: Styles and effects for those named voices. Use this view to inspect
   their parameters and what their current engines support.
 
-For physical voices, choose /Browse installed voices/ in Home, then press
-@@texinfo:@key{RET}@@ or @@texinfo:@kbd{v}@@ on an engine to browse its voices.  @@texinfo:@key{RET}@@
+For physical voices, choose /Browse voices/ in Home, then press
+@@texinfo:@kbd{v}@@ on an engine to browse its voices. On an Omnivox engine,
+@@texinfo:@key{RET}@@ opens its status, downloads, and settings;
+@@texinfo:@kbd{q}@@ returns to the selected engine.
+Other speech adapters use @@texinfo:@key{RET}@@ to browse voices directly. @@texinfo:@key{RET}@@
 on a voice shows details; @@texinfo:@kbd{P}@@ plays a named sample.  Filters
 set with @@texinfo:@kbd{F}@@ and each view's selected row and column survive
 navigation through Home. The engine selected for browsing is a temporary
@@ -1333,7 +1337,7 @@ adapter advertises; they are not a listening test of every parameter.
 :DESCRIPTION: Try physical voices without saving, then keep a useful experiment.
 :END:
 
-In /Browse installed voices/, select a physical voice and press
+In /Browse voices/, select a physical voice and press
 @@texinfo:@kbd{t}@@. This opens an experiment with that exact engine and
 voice, adapter-default speech characteristics, the current base speech rate,
 and neutral audio effects. Opening, adjusting and comparing write no settings.
@@ -1344,8 +1348,8 @@ where to use the result; it cannot save a voice without a palette destination.
 
 To compare pitch on an installed voice:
 
-1. From Home choose /Browse installed voices/, select an available engine,
-   and press @@texinfo:@kbd{RET}@@. Select a physical voice and press @@texinfo:@kbd{P}@@. You can use
+1. From Home choose /Browse voices/, select an available engine,
+   and press @@texinfo:@kbd{v}@@. Select a physical voice and press @@texinfo:@kbd{P}@@. You can use
    @@texinfo:@kbd{B}@@ to compare it with another available voice, using the same sentence.
 2. Press @@texinfo:@kbd{t}@@ on the physical voice to open an experiment. Move to /Average
    Pitch/, enter ~3~, and listen. Then enter ~7~ and listen again. If the engine
