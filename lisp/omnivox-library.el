@@ -73,6 +73,97 @@
 (defconst omnivox-library--prefix "OMNIVOX-LOCAL ")
 (defconst omnivox-library--timeout 45)
 
+(defun omnivox-library--source-key ()
+  "Identify the selected launcher and native library location."
+  (let ((program (tts--resolve-program tts-program)))
+    (list program (and program (file-attribute-modification-time
+                               (file-attributes program)))
+          (mapcar #'getenv '("OMNIVOX_PROGRAM" "OMNIVOX_VOICE_ROOT"
+                            "XDG_DATA_HOME" "LOCALAPPDATA" "HOME")))))
+
+(defun omnivox-library--inspect-async (callback)
+  "Inspect the selected library without waiting for native processes.
+Call CALLBACK once with REPLY and ERROR, either of which may be nil.
+Return a cancellation function which releases only this private inspection.
+Cancellation suppresses CALLBACK.  Capability discovery is asynchronous too."
+  (let* ((source (omnivox-library--source-key))
+         (program (car source))
+         (key (list program (getenv "OMNIVOX_PROGRAM") (cadr source)))
+         process timer done
+         (help ""))
+    (cl-labels
+        ((finish (reply failure &optional cancel)
+           (unless done
+             (setq done t)
+             (when timer (cancel-timer timer))
+             (when process
+               (process-put process 'omnivox-library-pending nil)
+               (set-process-sentinel process #'ignore)
+               (when (process-live-p process) (delete-process process)))
+             (unless cancel (funcall callback reply failure))))
+         (inspect ()
+           (condition-case err
+               (progn
+                 (unless (equal source (omnivox-library--source-key))
+                   (error "Voice library target changed"))
+                 (setq process (omnivox-library--service))
+                 (set-process-filter
+                  process (lambda (worker output)
+                            (condition-case failure
+                                (omnivox-library--service-filter worker output)
+                              (error (finish nil (error-message-string failure))))))
+                 (set-process-sentinel
+                  process (lambda (worker _event)
+                            (unless (process-live-p worker)
+                              (finish nil "Voice library inspection process exited"))))
+                 (let ((id (cl-incf omnivox-library--sequence))
+                       (pending (make-hash-table :test #'eql)))
+                   (process-put process 'omnivox-library-pending pending)
+                   ;; Install correlation before sending: a reply can be immediate.
+                   (puthash id
+                            (lambda (reply)
+                              (cond
+                               ((not (equal source (omnivox-library--source-key)))
+                                (finish nil "Voice library target changed"))
+                               ((equal (plist-get reply :type) "library")
+                                (finish reply nil))
+                               (t (finish nil (or (plist-get reply :message)
+                                                  "Unexpected voice library response")))))
+                            pending)
+                   (process-send-string
+                    process (concat (json-serialize (list :request_id id :command "inspect")) "\n"))))
+             (error (finish nil (error-message-string err))))))
+      (setq timer (run-at-time omnivox-library--timeout nil
+                               (lambda () (finish nil "Voice library inspection timed out"))))
+      (condition-case err
+          (cond
+           ((not (and program (omnivox-engine-settings--supported-p)))
+            (finish nil "Voice management requires the bundled local Omnivox launcher"))
+           ((assoc key omnivox-library--support-cache)
+            (if (cdr (assoc key omnivox-library--support-cache)) (inspect)
+              (finish nil "This launcher does not support voice management")))
+           (t
+            (setq process
+                  (make-process
+                   :name "Omnivox library capability" :command (list program "--help")
+                   :connection-type 'pipe :coding 'utf-8-unix :noquery t
+                   :filter (lambda (_worker output)
+                             (setq help (concat help output))
+                             (when (> (string-bytes help) (* 1024 1024))
+                               (finish nil "Voice library capability output exceeds bound")))
+                   :sentinel
+                   (lambda (worker _event)
+                     (when (and (not done) (memq (process-status worker) '(exit signal)))
+                       (let ((supported
+                              (and (eq (process-status worker) 'exit)
+                                   (zerop (process-exit-status worker))
+                                   (string-match-p "--voice-library-owner" help))))
+                         (push (cons key (and supported t)) omnivox-library--support-cache)
+                         (if supported (inspect)
+                           (finish nil "This launcher does not support voice management")))))))))
+        (error (finish nil (error-message-string err))))
+      (lambda () (finish nil nil t)))))
+
 (defun omnivox-library--wait (predicate process description &optional seconds)
   "Wait boundedly for PREDICATE from PROCESS, describing failure with DESCRIPTION."
   (let ((deadline (+ (float-time) (or seconds omnivox-library--timeout))))

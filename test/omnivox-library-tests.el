@@ -7,6 +7,97 @@
 (require 'omnivox-library)
 (require 'omnivox-voices)
 
+(ert-deftest omnivox-library-async-inspection-probes-capabilities-without-waiting ()
+  (let ((program (make-temp-file "omnivox-library-probe-"))
+        (omnivox-library--support-cache nil)
+        reply failure cancel)
+    (unwind-protect
+        (progn
+          (with-temp-file program
+            (insert "#!/bin/sh\nprintf '%s\\n' --voice-library-owner\n"))
+          (set-file-modes program #o700)
+          (cl-letf (((symbol-function 'omnivox-library--source-key)
+                     (lambda () (list program nil)))
+                    ((symbol-function 'omnivox-engine-settings--supported-p) (lambda () t))
+                    ((symbol-function 'omnivox-library--service)
+                     (lambda () (make-pipe-process :name "probed library fixture" :noquery t)))
+                    ((symbol-function 'process-send-string)
+                     (lambda (worker line)
+                       (let ((id (plist-get (json-parse-string line :object-type 'plist) :request_id)))
+                         (omnivox-library--handle-line
+                          worker (format "OMNIVOX-LOCAL {\"request_id\":%d,\"type\":\"library\"}" id))))))
+            (cl-letf (((symbol-function 'accept-process-output)
+                       (lambda (&rest _) (ert-fail "Opening must not wait for a process"))))
+              (setq cancel (omnivox-library--inspect-async
+                            (lambda (result error-text) (setq reply result failure error-text)))))
+            (let ((deadline (+ (float-time) 3)))
+              (while (and (not reply) (not failure) (< (float-time) deadline))
+                (accept-process-output nil 0.01)))
+            (should (equal "library" (plist-get reply :type)))
+            (should-not failure)
+            (should (cdr (assoc (list program (getenv "OMNIVOX_PROGRAM") nil)
+                               omnivox-library--support-cache)))))
+      (when cancel (funcall cancel))
+      (delete-file program))))
+
+(ert-deftest omnivox-library-async-inspection-correlates-and-cleans-up ()
+  (let* ((process (make-pipe-process :name "async library fixture" :noquery t))
+         (omnivox-library--support-cache '((("fixture" nil nil) . t)))
+         reply failure (calls 0))
+    (unwind-protect
+        (cl-letf (((symbol-function 'omnivox-library--source-key) (lambda () '("fixture" nil)))
+                  ((symbol-function 'getenv) (lambda (_) nil))
+                  ((symbol-function 'omnivox-engine-settings--supported-p) (lambda () t))
+                  ((symbol-function 'omnivox-library--service) (lambda () process))
+                  ((symbol-function 'process-send-string)
+                   (lambda (worker line)
+                     (let ((id (plist-get (json-parse-string line :object-type 'plist) :request_id)))
+                       (omnivox-library--handle-line
+                        worker (format "OMNIVOX-LOCAL {\"request_id\":%d,\"type\":\"library\",\"index\":{},\"sha256\":\"test\"}" id))))))
+          (let ((cancel (omnivox-library--inspect-async
+                         (lambda (result error-text)
+                           (cl-incf calls) (setq reply result failure error-text)))))
+            (should (equal "test" (plist-get reply :sha256)))
+            (should-not failure)
+            (should-not (process-live-p process))
+            (should-not (process-get process 'omnivox-library-pending))
+            (funcall cancel)
+            (should (= calls 1))))
+      (when (process-live-p process) (delete-process process)))))
+
+(ert-deftest omnivox-library-async-inspection-cancel-and-timeout ()
+  (dolist (outcome '(cancel timeout retarget malformed))
+    (let* ((process (make-pipe-process :name "pending library fixture" :noquery t))
+           (omnivox-library--support-cache '((("fixture" nil nil) . t)))
+           (source '("fixture" nil)) expire failure callback-called request-id)
+      (unwind-protect
+          (cl-letf (((symbol-function 'omnivox-library--source-key) (lambda () source))
+                    ((symbol-function 'getenv) (lambda (_) nil))
+                    ((symbol-function 'omnivox-engine-settings--supported-p) (lambda () t))
+                    ((symbol-function 'omnivox-library--service) (lambda () process))
+                    ((symbol-function 'run-at-time)
+                     (lambda (_time _repeat callback) (setq expire callback) nil))
+                    ((symbol-function 'process-send-string)
+                     (lambda (_worker line)
+                       (setq request-id (plist-get (json-parse-string line :object-type 'plist) :request_id)))))
+            (let ((cancel (omnivox-library--inspect-async
+                           (lambda (_reply error-text) (setq callback-called t failure error-text)))))
+              (should-not callback-called)
+              (pcase outcome
+                ('cancel (funcall cancel) (should-not callback-called))
+                ('timeout (funcall expire) (should (string-search "timed out" failure)))
+                ('retarget
+                 (setq source '("different" nil))
+                 (omnivox-library--handle-line
+                  process (format "OMNIVOX-LOCAL {\"request_id\":%d,\"type\":\"library\"}" request-id))
+                 (should (string-search "target changed" failure)))
+                ('malformed
+                 (funcall (process-filter process) process "OMNIVOX-LOCAL invalid\n")
+                 (should failure)))
+              (should-not (process-live-p process))
+              (should-not (process-get process 'omnivox-library-pending))))
+        (when (process-live-p process) (delete-process process))))))
+
 (ert-deftest omnivox-library-empty-state-explains-actions-and-clears-on-install ()
   "An empty library is readable, and adding a voice replaces its explanation."
   (with-temp-buffer
