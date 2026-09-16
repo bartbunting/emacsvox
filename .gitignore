@@ -46,3 +46,6 @@ aster-math
 /servers/omnivox-release/cache/
 sounds/pan-chimes
 *~
+
+# Maintainer voice catalogue downloads and native validation scratch.
+/.voice-catalogue-work/
