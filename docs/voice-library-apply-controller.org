@@ -17,8 +17,10 @@ enablement, =a= reviews and applies both managed providers, =b= explicitly
 includes built-in Flite SLT, =i= imports a completed native validation operation
 and =r= displays the last result. Import registers the validated files in place,
 initially disabled. Their original paths must remain available. This initial
-import action takes a validation UUID; managed asset copying, the catalogue
-downloader and a friendly file-selection flow remain follow-up.
+import action takes a validation UUID. Reviewed catalogue downloads and
+managed storage are now provided by =omnivox-catalogue=; see the
+[[file:voice-catalogue-review.org][catalogue implementation and review]]. A friendly file-selection import flow
+remains follow-up.
 An ordinary speech restart does not commit pending desired-library edits.
 
 This separation is intentional: deleting an Emacs process handle cannot prove
@@ -179,5 +181,6 @@ they are not natural-voice listening samples.
 The graphical voice suite checks real rendering, spoken navigation in both
 directions, refresh and return to the exact engine-details action. Native CI
 checks local ownership, installation and snapshots on Linux, Windows, Apple
-Silicon and Intel Macs. The catalogue/download flow, richer installation UI,
-and recovery after an uncertain commit or power loss remain further work.
+Silicon and Intel Macs. Catalogue downloads and installation now have a
+separate accessible screen. Recovery after an uncertain commit or power loss
+remains further work.

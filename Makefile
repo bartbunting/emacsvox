@@ -610,7 +610,7 @@ windows-omnivox:
 			flite_dir="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/flite"; \
 			flite_manifest="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/flite-SHA256SUMS"; \
 			(cd "$$flite_dir" && \
-				find . -type f ! -name SHA256SUMS -print0 | LC_ALL=C sort -z | \
+				find . -type f ! -name SHA256SUMS -printf "%P\0" | LC_ALL=C sort -z | \
 				xargs -0 sha256sum) > "$$flite_manifest"; \
 			mv "$$flite_manifest" "$$flite_dir/SHA256SUMS"; \
 			rutts_dir="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/rutts"; \

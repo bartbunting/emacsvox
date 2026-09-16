@@ -28,6 +28,8 @@
 (setenv "OMNIVOX_VOICE_ROOT" (or (getenv "EMACSVOX_LIBRARY_TEST_ROOT") (make-temp-file "omnivox-catalogue-acceptance-" t)))
 (setenv "OMNIVOX_ENGINE" "espeak")
 (setenv "OMNIVOX_AUDIO_OUTPUT" "null")
+;; Initialize the same voice adapter as the full profile before opening speech UI.
+(omnivox-configure-tts)
 (princ (format "Private voice root: %s\n" (getenv "OMNIVOX_VOICE_ROOT")))
 
 (defun omnivox-catalogue-test--inspect ()

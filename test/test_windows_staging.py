@@ -45,6 +45,7 @@ class WindowsStagingTests(unittest.TestCase):
             "TMPDIR": str(self.root / "tmp"),
             "STAGING_EVENTS": str(self.events_file),
             "STAGING_LOCAL_APP_DATA": str(self.local),
+            "STAGING_BUILD_OUTPUT": str(self.output),
             "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null",
             "GIT_AUTHOR_DATE": "2026-09-07T00:00:00Z",
             "GIT_COMMITTER_DATE": "2026-09-07T00:00:00Z",
@@ -190,6 +191,18 @@ class WindowsStagingTests(unittest.TestCase):
         self.stage()
         self.assertEqual(current, self.current())
         self.assertEqual(snapshot, {str(p.relative_to(current)): p.read_bytes() for p in current.rglob("*") if p.is_file()})
+
+    def test_flite_manifest_uses_native_validation_paths_after_stripping(self):
+        self.stage(env={"STAGING_TEST_FLITE_MANIFEST": "1"})
+        current = self.runtime / "current"
+        manifest = dict(line.split("  ", 1)[::-1]
+                        for line in (current / "flite/SHA256SUMS").read_text().splitlines())
+        self.assertIn("omnivox-flite-helper.exe", manifest)
+        self.assertIn("voice sample.txt", manifest)
+        for name, expected in manifest.items():
+            self.assertFalse(name.startswith("./"), name)
+            self.assertNotIn("..", Path(name).parts)
+            self.assertEqual(digest(current / "flite" / name), expected)
 
     def test_development_records_both_dirty_sources(self):
         for repository in (self.emacsvox, self.omnivox):

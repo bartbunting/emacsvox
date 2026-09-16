@@ -26,6 +26,16 @@ if name == "docker":
         print("mingw fixture")
     elif args[:1] == ["run"] and "sh" in args:
         record("build")  # Prepared fixture files stand in for compiler output.
+        # Execute the actual post-strip Flite manifest recipe from Make. This
+        # protects compatibility with native validation while compilers remain
+        # replaced by fixtures. Paths containing spaces are deliberately used.
+        script = args[-1]
+        if "flite_dir=" in script and os.environ.get("STAGING_TEST_FLITE_MANIFEST") == "1":
+            start = script.index("flite_dir=")
+            end = script.index("rutts_dir=", start)
+            environment = dict(os.environ, CARGO_TARGET_DIR=os.environ["STAGING_BUILD_OUTPUT"])
+            subprocess.run(["/bin/sh", "-eu", "-c", script[start:end]],
+                           env=environment, check=True)
     else:
         raise SystemExit(f"Unexpected Docker invocation: {args!r}")
 elif name == "powershell.exe":
