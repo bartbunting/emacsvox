@@ -93,6 +93,7 @@
         (delete-directory root t)))))
 
 (ert-deftest omnivox-engine-settings-both-local-workers-receive-settings ()
+  (require 'omnivox-library)
   (omnivox-engine-settings-tests--isolated
     (let ((omnivox-piper-model-file "/voices/model.onnx") processes received)
       (unwind-protect
@@ -100,7 +101,8 @@
                      (lambda (&rest args)
                        (push (cons (plist-get args :name) (getenv "EMACSVOX_LOCAL_PIPER_MODEL")) received)
                        (make-pipe-process :name "engine-settings-fixture" :noquery t)))
-                    ((symbol-function 'tts--initialize-output-volumes) #'ignore))
+                    ((symbol-function 'tts--initialize-output-volumes) #'ignore)
+                    ((symbol-function 'omnivox-library--supported-p) (lambda (_) t)))
             (dolist (name '("Speaker" "Notify")) (push (tts-make-process name) processes))
             (should (equal (nreverse received) '(("Speaker" . "/voices/model.onnx") ("Notify" . "/voices/model.onnx")))))
         (dolist (process processes) (set-process-sentinel process #'ignore) (delete-process process))))))
