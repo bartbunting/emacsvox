@@ -170,7 +170,7 @@ is /Browse voices/ in Aural Home, opened with
 already included in the core, downloadable modules, and bridges that still
 need a user-supplied runtime. Choose /Install module/ to confirm,
 checksum-verify, install, and validate that module without =sudo=.
-Choose /Uninstall module/ for a manager-installed module to confirm and remove
+Expand /Module management/ and choose /Uninstall module/ for a manager-installed module to confirm and remove
 it while retaining the verified download cache; choose /Install module/ to
 reinstall it later. The manager never removes core engines or separately
 supplied runtimes.

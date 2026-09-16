@@ -377,24 +377,31 @@ engine list. Opening speaks the selected engine using the current speech
 inventory, without waiting for file checks or fresh discovery. Optional engines
 absent from that inventory remain visible as /not reported/, so their installation
 controls are still reachable. Press @@texinfo:@kbd{v}@@ to browse an engine's
-voices directly, or @@texinfo:@kbd{RET}@@
-for engine details: main and notification status, speech targets, the time each
-inventory was received, runtime discovery, and the separate managed installation.
-Details announce the engine before starting background file checks.
+voices directly, or @@texinfo:@kbd{RET}@@ for engine details.
+Details start with a short status summary and the voice actions, with /Browse
+voices/ selected. Matching main and notification status is combined. Problems
+remain visible near the top. /Startup settings/, /Module management/, and
+/Diagnostics/ start collapsed; press @@texinfo:@kbd{RET}@@ on a section to
+expand or collapse it. Each engine remembers its expanded sections and selection.
 
-/Available/ means the current worker recently discovered the engine. /Previously
-available/ means that evidence is old or belongs to a stopped or replaced worker.
+/Available/ describes discovery from the current running worker. An older check
+does not by itself make the engine unavailable. /Previously available/ means the
+evidence belongs to a stopped or replaced worker. Details announce the engine
+before requesting newer inventory in the background when its check is over five
+minutes old, or belongs to another worker. File checks also run in the background.
 /Streams differ/ means the workers report different availability, policy, health
 or voice identities. A bridge's presence alone never establishes that its runtime
 is usable. /Not checked/ is not a claim that the runtime is missing.
+/Diagnostics/ contains each stream's status, worker paths, inventory time,
+runtime discovery, and health.
 
-Managed installation information describes the configured WSL per-user release.
+Expand /Module management/ for the configured WSL per-user release.
 It can differ from the active development runtime or remote speech workstation.
 Its /runtime not checked here/ or /model not checked here/ text describes the
-limits of that file check; use live discovery above it for the active server.
+limits of that file check; use speech discovery in /Diagnostics/ for the active server.
 Installing a module changes the managed release only.
 
-- /Browse main voices/ opens that engine's reported voices on the main speech
+- /Browse voices/ opens that engine's reported voices on the main speech
   target. This separate browser keeps the general Voice Workbench's filters and
   staged edits intact. @@texinfo:@kbd{P}@@ explicitly speaks an exact sample;
   @@texinfo:@kbd{t}@@ opens the existing voice editor for an unsaved experiment.
@@ -402,14 +409,17 @@ Installing a module changes the managed release only.
   change a palette. @@texinfo:@kbd{q}@@ returns to the selected engine detail.
   The browser refreshes quietly when inventory changes. Notification inventory
   remains separately visible in engine details; samples use main speech.
-- For the bundled local Omnivox launcher, /Edit engine settings/ opens the
+- Under /Startup settings/, /Edit file settings/ for the bundled local Omnivox launcher opens the
   selected engine's file option in Customize. Piper accepts one local ONNX
   model with its matching JSON file. Eloquence and DECtalk accept their runtime
   DLL paths. Flite accepts external =.flitevox= files, each with a /Load file/
   switch. Use absolute paths as seen by Emacs; WSL converts them for the chosen
   Windows executable. Keep required companion files beside their runtime or
   model. Remote speech settings must be changed on the speech host.
-- /Installed voice library/ manages installed Piper and Flite voices on the
+  These are manual overrides. Having no manual files selected does not mean
+  there are no downloaded voices: the installed voice library or launcher
+  defaults apply. A manual Flite file list overrides its installed library.
+- /Installed voices/ manages installed Piper and Flite voices on the
   local speech host. Press @@texinfo:@kbd{e}@@ to enable or disable a voice in
   the desired configuration, then @@texinfo:@kbd{a}@@ to review and Apply.
   Apply checks both replacements, restarts main and notification speech, and
@@ -464,23 +474,26 @@ Installing a module changes the managed release only.
   effective. Clearing an option returns to existing discovery or launcher
   defaults. Direct native executable launches do not consume the bundled
   launcher's file options.
-- To refresh discovery, press @@texinfo:@kbd{g}@@ or use /Check live voices/ in
+- To refresh discovery, press @@texinfo:@kbd{g}@@ or use /Refresh status/ in
   details. Both worker inventories are requested asynchronously. The managed
   installation check also runs asynchronously and reports a timeout if needed.
 - To install a module shown as /Not installed; downloadable/ in details, activate
   /Install module/ with @@texinfo:@kbd{RET}@@,
   then confirm. The manager verifies the version-matched download. The table
   shows /installing/ while that operation runs.
-- To check the managed engine, activate /Check managed engine/ in details.
+- To check the managed engine, expand /Module management/ and activate /Check managed engine/.
   This lists voices in the managed installation;
   it does not play a sample or prove that the active speech server uses that copy.
   Completion produces a short notice without selecting another buffer. The last
   result remains in engine details; /Read last result/ opens its complete output.
-- In details, @@texinfo:@kbd{TAB}@@ moves to the next action and
-  @@texinfo:@kbd{RET}@@ activates it. Arrow keys read fields and values.
+- In details, @@texinfo:@kbd{TAB}@@ moves to the next action or section;
+  @@texinfo:@kbd{S-TAB}@@ moves to the previous one.
+  @@texinfo:@kbd{RET}@@ activates an action or toggles a section.
+  Arrow keys read visible fields and values.
   @@texinfo:@kbd{q}@@ returns to the selected engine row and
-  @@texinfo:@kbd{h}@@ opens Aural Home. Background refresh preserves selection.
-- To remove an /installed/ module, activate /Uninstall module/ in details and confirm. This
+  @@texinfo:@kbd{h}@@ opens Aural Home, and @@texinfo:@kbd{?}@@ opens help.
+  Background refresh preserves selection and expanded sections.
+- To remove an /installed/ module, expand /Module management/, activate /Uninstall module/, and confirm. This
   is available only for Flite, RuTTS, Piper, and TGSpeechBox modules installed
   by this manager.  It cannot remove the Omnivox core, built-in engines, or
   runtime bridges.

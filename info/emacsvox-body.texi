@@ -250,7 +250,7 @@ is @emph{Browse voices} in Aural Home@comma{} opened with
 already included in the core@comma{} downloadable modules@comma{} and bridges that still
 need a user-supplied runtime. Choose @emph{Install module} to confirm@comma{}
 checksum-verify@comma{} install@comma{} and validate that module without @samp{sudo}.
-Choose @emph{Uninstall module} for a manager-installed module to confirm and remove
+Expand @emph{Module management} and choose @emph{Uninstall module} for a manager-installed module to confirm and remove
 it while retaining the verified download cache; choose @emph{Install module} to
 reinstall it later. The manager never removes core engines or separately
 supplied runtimes.
@@ -1491,26 +1491,33 @@ engine list. Opening speaks the selected engine using the current speech
 inventory@comma{} without waiting for file checks or fresh discovery. Optional engines
 absent from that inventory remain visible as @emph{not reported}@comma{} so their installation
 controls are still reachable. Press @kbd{v} to browse an engine's
-voices directly@comma{} or @kbd{RET}
-for engine details: main and notification status@comma{} speech targets@comma{} the time each
-inventory was received@comma{} runtime discovery@comma{} and the separate managed installation.
-Details announce the engine before starting background file checks.
+voices directly@comma{} or @kbd{RET} for engine details.
+Details start with a short status summary and the voice actions@comma{} with @emph{Browse
+voices} selected. Matching main and notification status is combined. Problems
+remain visible near the top. @emph{Startup settings}@comma{} @emph{Module management}@comma{} and
+@emph{Diagnostics} start collapsed; press @kbd{RET} on a section to
+expand or collapse it. Each engine remembers its expanded sections and selection.
 
-@emph{Available} means the current worker recently discovered the engine. @emph{Previously
-available} means that evidence is old or belongs to a stopped or replaced worker.
+@emph{Available} describes discovery from the current running worker. An older check
+does not by itself make the engine unavailable. @emph{Previously available} means the
+evidence belongs to a stopped or replaced worker. Details announce the engine
+before requesting newer inventory in the background when its check is over five
+minutes old@comma{} or belongs to another worker. File checks also run in the background.
 @emph{Streams differ} means the workers report different availability@comma{} policy@comma{} health
 or voice identities. A bridge's presence alone never establishes that its runtime
 is usable. @emph{Not checked} is not a claim that the runtime is missing.
+@emph{Diagnostics} contains each stream's status@comma{} worker paths@comma{} inventory time@comma{}
+runtime discovery@comma{} and health.
 
-Managed installation information describes the configured WSL per-user release.
+Expand @emph{Module management} for the configured WSL per-user release.
 It can differ from the active development runtime or remote speech workstation.
 Its @emph{runtime not checked here} or @emph{model not checked here} text describes the
-limits of that file check; use live discovery above it for the active server.
+limits of that file check; use speech discovery in @emph{Diagnostics} for the active server.
 Installing a module changes the managed release only.
 
 @itemize
 @item
-@emph{Browse main voices} opens that engine's reported voices on the main speech
+@emph{Browse voices} opens that engine's reported voices on the main speech
 target. This separate browser keeps the general Voice Workbench's filters and
 staged edits intact. @kbd{P} explicitly speaks an exact sample;
 @kbd{t} opens the existing voice editor for an unsaved experiment.
@@ -1519,15 +1526,18 @@ change a palette. @kbd{q} returns to the selected engine detail.
 The browser refreshes quietly when inventory changes. Notification inventory
 remains separately visible in engine details; samples use main speech.
 @item
-For the bundled local Omnivox launcher@comma{} @emph{Edit engine settings} opens the
+Under @emph{Startup settings}@comma{} @emph{Edit file settings} for the bundled local Omnivox launcher opens the
 selected engine's file option in Customize. Piper accepts one local ONNX
 model with its matching JSON file. Eloquence and DECtalk accept their runtime
 DLL paths. Flite accepts external @samp{.flitevox} files@comma{} each with a @emph{Load file}
 switch. Use absolute paths as seen by Emacs; WSL converts them for the chosen
 Windows executable. Keep required companion files beside their runtime or
 model. Remote speech settings must be changed on the speech host.
+These are manual overrides. Having no manual files selected does not mean
+there are no downloaded voices: the installed voice library or launcher
+defaults apply. A manual Flite file list overrides its installed library.
 @item
-@emph{Installed voice library} manages installed Piper and Flite voices on the
+@emph{Installed voices} manages installed Piper and Flite voices on the
 local speech host. Press @kbd{e} to enable or disable a voice in
 the desired configuration@comma{} then @kbd{a} to review and Apply.
 Apply checks both replacements@comma{} restarts main and notification speech@comma{} and
@@ -1589,7 +1599,7 @@ effective. Clearing an option returns to existing discovery or launcher
 defaults. Direct native executable launches do not consume the bundled
 launcher's file options.
 @item
-To refresh discovery@comma{} press @kbd{g} or use @emph{Check live voices} in
+To refresh discovery@comma{} press @kbd{g} or use @emph{Refresh status} in
 details. Both worker inventories are requested asynchronously. The managed
 installation check also runs asynchronously and reports a timeout if needed.
 @item
@@ -1598,18 +1608,21 @@ To install a module shown as @emph{Not installed; downloadable} in details@comma
 then confirm. The manager verifies the version-matched download. The table
 shows @emph{installing} while that operation runs.
 @item
-To check the managed engine@comma{} activate @emph{Check managed engine} in details.
+To check the managed engine@comma{} expand @emph{Module management} and activate @emph{Check managed engine}.
 This lists voices in the managed installation;
 it does not play a sample or prove that the active speech server uses that copy.
 Completion produces a short notice without selecting another buffer. The last
 result remains in engine details; @emph{Read last result} opens its complete output.
 @item
-In details@comma{} @kbd{TAB} moves to the next action and
-@kbd{RET} activates it. Arrow keys read fields and values.
+In details@comma{} @kbd{TAB} moves to the next action or section;
+@kbd{S-TAB} moves to the previous one.
+@kbd{RET} activates an action or toggles a section.
+Arrow keys read visible fields and values.
 @kbd{q} returns to the selected engine row and
-@kbd{h} opens Aural Home. Background refresh preserves selection.
+@kbd{h} opens Aural Home@comma{} and @kbd{?} opens help.
+Background refresh preserves selection and expanded sections.
 @item
-To remove an @emph{installed} module@comma{} activate @emph{Uninstall module} in details and confirm. This
+To remove an @emph{installed} module@comma{} expand @emph{Module management}@comma{} activate @emph{Uninstall module}@comma{} and confirm. This
 is available only for Flite@comma{} RuTTS@comma{} Piper@comma{} and TGSpeechBox modules installed
 by this manager.  It cannot remove the Omnivox core@comma{} built-in engines@comma{} or
 runtime bridges.
