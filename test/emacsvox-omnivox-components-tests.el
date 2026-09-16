@@ -781,7 +781,8 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
       (should (assq 'prototype visible))
       (should (string-search "OMNIVOX_MBROLA_HELPER"
                              (aref (cadr (assq 'prototype-setup visible)) 1)))
-      (dolist (action '(install uninstall test download-voices))
+      (should (assq 'download-voices rows))
+      (dolist (action '(install uninstall test))
         (should-not (assq action rows))))))
 
 (ert-deftest emacsvox-omnivox-components-live-discovery-overrides-prerequisite ()

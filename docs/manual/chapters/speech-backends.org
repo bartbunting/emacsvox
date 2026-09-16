@@ -452,7 +452,7 @@ before retrying.
   Disabled choices and saved palette references are retained. This requires a
   development Omnivox build with variant discovery and the bundled local
   launcher. It uses bundled variants and does not download files.
-- /Get more voices/ in Piper or Flite details opens the reviewed download
+- /Get more voices/ in Piper, Flite or MBROLA details opens the reviewed download
   catalogue. Piper is grouped by language, voice name and quality; Flite
   offers AWB and RMS. Voices with one quality appear directly in their
   language group; only voices with several qualities need another group.
@@ -474,9 +474,18 @@ before retrying.
   The shipped collection contains reviewed, pinned models that passed native
   validation. Models with unresolved terms or unsupported configurations are
   withheld; the catalogue is not a live listing of every upstream download.
+- MBROLA offers US1, US2 and US3; British English en1 is already included.
+  These downloads require the updated, separately configured development
+  companion on Linux or Windows. Older runtimes keep their Piper and Flite
+  catalogues and report that MBROLA downloads need an update. The individual
+  database licence and README accompany each download; review the terms in
+  its details. The first installation retains en1 as an enabled included
+  voice, unless it was explicitly disabled. Enable several MBROLA voices to
+  assign them to different palette choices or speech streams. Each request
+  opens its selected database; enabled databases do not all remain loaded.
 - After installation, press @@texinfo:@kbd{l}@@ to browse voices,
   @@texinfo:@kbd{+}@@ to enable the voice, and @@texinfo:@kbd{a}@@ to review
-  Apply. Review covers both managed engines and both speech streams.
+  Apply. Review covers the managed engines and both speech streams.
   Installation alone does not load the voice or change speech.
   Downloaded files belong to you and stay in Omnivox's per-user voice storage
   across executable upgrades. Failed and interrupted operations retain files

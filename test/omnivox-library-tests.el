@@ -194,5 +194,12 @@
     (should (equal "2 Flite voices enabled; 1 Piper voice enabled"
                    (omnivox-library--enabled-summary index '("flite" "piper"))))))
 
+(ert-deftest omnivox-library-apply-manages-mbrola-after-first-installation ()
+  (should (equal '("piper" "flite") (omnivox-library--managed-providers "both" '(:voices []))))
+  (should (equal '("piper" "flite" "mbrola")
+                 (omnivox-library--managed-providers
+                  "both" '(:voices [(:engine_id "mbrola" :enabled :false)]))))
+  (should (equal '("mbrola") (omnivox-library--managed-providers "mbrola" nil))))
+
 (provide 'omnivox-library-tests)
 ;;; omnivox-library-tests.el ends here

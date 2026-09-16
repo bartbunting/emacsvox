@@ -814,7 +814,7 @@ OUTPUT to the generic process sentinel EVENT."
      (when (equal id "mbrola")
        (list
         (list 'prototype (vector "Prototype"
-                                 "Supplied separately; no managed engine or voice download"))
+                                 "Engine supplied separately; US1, US2 and US3 voice downloads available with the updated companion; en1 included"))
         (list 'prototype-setup
               (vector "Prototype setup"
                       "Set OMNIVOX_MBROLA_HELPER in the speech host's launcher to the absolute native helper path, with its complete prototype bundle; restart both streams, then Refresh status"))))
@@ -834,7 +834,7 @@ OUTPUT to the generic process sentinel EVENT."
                                         (state (replace-regexp-in-string "-" " " state)))
                                       (or (plist-get record :detail) "No managed engine information")))))
       (list 'scope (vector "Management target" "Configured WSL per-user installation; may differ from the speech target above")))
-     (when (member id '("piper" "flite"))
+     (when (member id '("piper" "flite" "mbrola"))
        (list
         (list 'download-voices (vector "Get more voices" "Download voices, then enable and Apply"))))
      (when (equal id "espeak")

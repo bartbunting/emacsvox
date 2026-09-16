@@ -1572,7 +1572,7 @@ Disabled choices and saved palette references are retained. This requires a
 development Omnivox build with variant discovery and the bundled local
 launcher. It uses bundled variants and does not download files.
 @item
-@emph{Get more voices} in Piper or Flite details opens the reviewed download
+@emph{Get more voices} in Piper@comma{} Flite or MBROLA details opens the reviewed download
 catalogue. Piper is grouped by language@comma{} voice name and quality; Flite
 offers AWB and RMS@. Voices with one quality appear directly in their
 language group; only voices with several qualities need another group.
@@ -1595,9 +1595,19 @@ The shipped collection contains reviewed@comma{} pinned models that passed nativ
 validation. Models with unresolved terms or unsupported configurations are
 withheld; the catalogue is not a live listing of every upstream download.
 @item
+MBROLA offers US1@comma{} US2 and US3; British English en1 is already included.
+These downloads require the updated@comma{} separately configured development
+companion on Linux or Windows. Older runtimes keep their Piper and Flite
+catalogues and report that MBROLA downloads need an update. The individual
+database licence and README accompany each download; review the terms in
+its details. The first installation retains en1 as an enabled included
+voice@comma{} unless it was explicitly disabled. Enable several MBROLA voices to
+assign them to different palette choices or speech streams. Each request
+opens its selected database; enabled databases do not all remain loaded.
+@item
 After installation@comma{} press @kbd{l} to browse voices@comma{}
 @kbd{+} to enable the voice@comma{} and @kbd{a} to review
-Apply. Review covers both managed engines and both speech streams.
+Apply. Review covers the managed engines and both speech streams.
 Installation alone does not load the voice or change speech.
 Downloaded files belong to you and stay in Omnivox's per-user voice storage
 across executable upgrades. Failed and interrupted operations retain files

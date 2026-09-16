@@ -1582,12 +1582,12 @@ using that engine before retrying.
      references are retained.  This requires a development Omnivox build
      with variant discovery and the bundled local launcher.  It uses
      bundled variants and does not download files.
-   • _Get more voices_ in Piper or Flite details opens the reviewed
-     download catalogue.  Piper is grouped by language, voice name and
-     quality; Flite offers AWB and RMS.  Voices with one quality appear
-     directly in their language group; only voices with several
-     qualities need another group.  Press ‘RET’ to open a group or
-     model, and ‘q’ to return.  ‘/’ searches all models by name or
+   • _Get more voices_ in Piper, Flite or MBROLA details opens the
+     reviewed download catalogue.  Piper is grouped by language, voice
+     name and quality; Flite offers AWB and RMS.  Voices with one
+     quality appear directly in their language group; only voices with
+     several qualities need another group.  Press ‘RET’ to open a group
+     or model, and ‘q’ to return.  ‘/’ searches all models by name or
      language, including outside the current group.  Model details show
      download size, source, licence information and storage location.
      ‘s’ shows or hides the speakers sharing that model.  A model with
@@ -1605,8 +1605,19 @@ using that engine before retrying.
      native validation.  Models with unresolved terms or unsupported
      configurations are withheld; the catalogue is not a live listing of
      every upstream download.
+   • MBROLA offers US1, US2 and US3; British English en1 is already
+     included.  These downloads require the updated, separately
+     configured development companion on Linux or Windows.  Older
+     runtimes keep their Piper and Flite catalogues and report that
+     MBROLA downloads need an update.  The individual database licence
+     and README accompany each download; review the terms in its
+     details.  The first installation retains en1 as an enabled included
+     voice, unless it was explicitly disabled.  Enable several MBROLA
+     voices to assign them to different palette choices or speech
+     streams.  Each request opens its selected database; enabled
+     databases do not all remain loaded.
    • After installation, press ‘l’ to browse voices, ‘+’ to enable the
-     voice, and ‘a’ to review Apply.  Review covers both managed engines
+     voice, and ‘a’ to review Apply.  Review covers the managed engines
      and both speech streams.  Installation alone does not load the
      voice or change speech.  Downloaded files belong to you and stay in
      Omnivox's per-user voice storage across executable upgrades.
@@ -6143,29 +6154,3 @@ window-return policy.  In particular,
 ‘eshell-destroy-buffer-when-process-dies’ determines whether a
 successful visual-command buffer is killed and Eshell is restored;
 Emacsvox does not change that option.
-
-
-File: emacsvox.info,  Node: Running Terminal Based Applications,  Next: Emacsvox Keyboard Commands,  Prev: EAT Terminal Access,  Up: Top
-
-12 Term Terminal Access
-***********************
-
-Emacsvox speech-enables the built-in Emacs Term terminal emulator
-through the module named ‘emacsvox-eterm’.  The module name is
-inherited; users do not install a separate Eterm package.
-
-   For a new full-terminal workflow, prefer *note EAT Terminal Access::.
-EAT has the richer current guide for bounded screen output,
-terminal-side completion, scrollback, alternate screens, and
-asynchronous rendering.  Use built-in Term when avoiding an additional
-package matters or an application specifically works better there.  For
-ordinary line-oriented shell commands, ‘M-x shell’ is usually simpler
-than either terminal emulator.
-
-* Menu:
-
-* Starting Term::
-* Term Input Modes::
-* Term Speech Feedback::
-* Reviewing The Term Screen::
-* Term Help And Recovery::

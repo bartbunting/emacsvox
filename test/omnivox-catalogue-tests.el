@@ -247,5 +247,27 @@
       (goto-char (point-min))
       (should (equal '(group "kristin") (tabulated-list-get-id))))))
 
+(ert-deftest omnivox-catalogue-mbrola-requires-native-provider-support ()
+  (should-not (omnivox-catalogue--optional-files '(:type "host") "piper"))
+  (should-error (omnivox-catalogue--optional-files '(:type "host") "mbrola") :type 'user-error)
+  (should (= 1 (length (omnivox-catalogue--optional-files
+                       '(:catalogue_providers ["piper" "flite" "mbrola"]) "mbrola")))))
+
+(ert-deftest omnivox-catalogue-mbrola-voices-have-direct-action-rows ()
+  (with-temp-buffer
+    (omnivox-catalogue-mode)
+    (setq omnivox-catalogue--engine "mbrola"
+          omnivox-catalogue--metadata '(:piper-example (:voice_name "example"))
+          omnivox-catalogue--entries
+          (plist-get (json-parse-string
+                      (with-temp-buffer
+                        (insert-file-contents (expand-file-name "omnivox-mbrola-catalogue.json"
+                                                               emacsvox-etc-directory))
+                        (buffer-string)) :object-type 'plist :array-type 'array) :entries))
+    (omnivox-catalogue--render)
+    (should (equal (mapcar #'car tabulated-list-entries) '("mbrola-us1" "mbrola-us2" "mbrola-us3")))
+    (goto-char (point-min))
+    (should (equal (plist-get (omnivox-catalogue--selected) :id) "mbrola-us1"))))
+
 (provide 'omnivox-catalogue-tests)
 ;;; omnivox-catalogue-tests.el ends here

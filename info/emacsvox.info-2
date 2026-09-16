@@ -14,6 +14,32 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Running Terminal Based Applications,  Next: Emacsvox Keyboard Commands,  Prev: EAT Terminal Access,  Up: Top
+
+12 Term Terminal Access
+***********************
+
+Emacsvox speech-enables the built-in Emacs Term terminal emulator
+through the module named ‘emacsvox-eterm’.  The module name is
+inherited; users do not install a separate Eterm package.
+
+   For a new full-terminal workflow, prefer *note EAT Terminal Access::.
+EAT has the richer current guide for bounded screen output,
+terminal-side completion, scrollback, alternate screens, and
+asynchronous rendering.  Use built-in Term when avoiding an additional
+package matters or an application specifically works better there.  For
+ordinary line-oriented shell commands, ‘M-x shell’ is usually simpler
+than either terminal emulator.
+
+* Menu:
+
+* Starting Term::
+* Term Input Modes::
+* Term Speech Feedback::
+* Reviewing The Term Screen::
+* Term Help And Recovery::
+
+
 File: emacsvox.info,  Node: Starting Term,  Next: Term Input Modes,  Up: Running Terminal Based Applications
 
 12.1 Starting Term

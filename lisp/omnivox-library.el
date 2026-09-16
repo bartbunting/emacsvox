@@ -578,6 +578,15 @@ All attempted replacement processes remain owned until retirement is confirmed."
               omnivox-library--retained-processes (append old-pair probes pair nil)))
       omnivox-library-last-result)))
 
+(defun omnivox-library--managed-providers (providers index)
+  "Resolve PROVIDERS against the installed voices in INDEX."
+  (if (equal providers "both")
+      (append '("piper" "flite")
+              (when (seq-some (lambda (voice) (equal "mbrola" (plist-get voice :engine_id)))
+                              (plist-get index :voices))
+                '("mbrola")))
+    (list providers)))
+
 ;;;###autoload
 (defun omnivox-library-apply (providers)
   "Review and apply installed enabled voices for PROVIDERS to both speech lanes."
@@ -592,15 +601,16 @@ All attempted replacement processes remain owned until retirement is confirmed."
     (unwind-protect
         (let* ((library (omnivox-library--request service '(:command "inspect")))
                (index (plist-get library :index))
-               (managed (if (equal providers "both") '("piper" "flite") (list providers)))
+               (managed (omnivox-library--managed-providers providers index))
                (previous (vector (omnivox-library--snapshot (aref old-pair 0) 'speaker)
                                  (omnivox-library--snapshot (aref old-pair 1) 'notification)))
                (generation (omnivox-library--uuid))
                (staged (omnivox-library--request service
-                                                (list :command "stage" :generation generation
+                                                (append (list :command "stage" :generation generation
                                                       :expected_sha256 (plist-get library :sha256)
                                                       :piper (if (member "piper" managed) t :false)
-                                                      :flite (if (member "flite" managed) t :false))))
+                                                      :flite (if (member "flite" managed) t :false))
+                                                        (when (member "mbrola" managed) '(:mbrola t)))))
                (candidate (plist-get staged :candidate))
                (startups
                 (vector (omnivox-library--candidate-startup generation 'speaker (aref old-pair 0))
@@ -619,7 +629,7 @@ All attempted replacement processes remain owned until retirement is confirmed."
           (with-current-buffer (get-buffer-create "*Omnivox Apply review*")
             (let ((inhibit-read-only t))
               (erase-buffer)
-              (insert (format "Apply enabled %s voices\n\n%s\n\nBoth speech streams will stop and restart.\nFiles and saved palette references are retained.\n\nVoices becoming unavailable: %d\n" providers summary (length removed)))
+              (insert (format "Apply enabled voices\n\n%s\n\nBoth speech streams will stop and restart.\nFiles and saved palette references are retained.\n\nVoices becoming unavailable: %d\n" summary (length removed)))
               (seq-doseq (voice removed) (insert (format "%s: %s\n" (plist-get voice :engine_id) (plist-get voice :voice_id))))
               (insert "\nIf either replacement fails, both previous configurations will be restored.\n")
               (special-mode)))

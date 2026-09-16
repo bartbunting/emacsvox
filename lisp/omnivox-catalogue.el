@@ -87,7 +87,7 @@
                              (equal (cadr omnivox-catalogue--scope) (omnivox-catalogue--name entry)))))))
            omnivox-catalogue--entries))
          (grouping (and omnivox-catalogue--metadata (not searching)
-                        (not (equal omnivox-catalogue--engine "flite"))
+                        (not (member omnivox-catalogue--engine '("flite" "mbrola")))
                         (< (length omnivox-catalogue--scope) 2))))
     (if grouping
         (let ((groups (make-hash-table :test #'equal)) rows)
@@ -482,6 +482,13 @@
         header-line-format "RET details; i install; c cancel; l installed voices; / filter; g refresh; q back")
   (tabulated-list-init-header))
 
+(defun omnivox-catalogue--optional-files (host engine)
+  "Return additional catalogues supported by HOST, checking requested ENGINE."
+  (if (member "mbrola" (append (plist-get host :catalogue_providers) nil))
+      (list (expand-file-name "omnivox-mbrola-catalogue.json" emacsvox-etc-directory))
+    (when (equal engine "mbrola")
+      (user-error "MBROLA downloads need an updated Omnivox runtime and MBROLA companion"))))
+
 ;;;###autoload
 (defun omnivox-catalogue (&optional engine)
   "Browse reviewed downloadable voices, optionally restricted to ENGINE."
@@ -501,7 +508,8 @@
                               (append (plist-get manifest :catalogues) nil))))
          (service (omnivox-library--service)) entries documents)
     (unwind-protect
-        (dolist (file files)
+        (dolist (file (append files (omnivox-catalogue--optional-files
+                                    (omnivox-library--request service '(:command "host")) engine)))
           (let* ((json (with-temp-buffer (insert-file-contents file) (buffer-string)))
                  (reply (omnivox-library--request service (list :command "catalogue" :plan_json json))))
             (seq-doseq (entry (plist-get (plist-get reply :catalogue) :entries))

@@ -1,0 +1,120 @@
+{
+  "schema_version": 2,
+  "revision": "2026-09-17.1",
+  "entries": [
+    {
+      "id": "mbrola-us1",
+      "provider": "mbrola",
+      "name": "US1",
+      "language": "en-US",
+      "description": "US English. Requires the updated, separately configured MBROLA companion. The British English en1 voice is already included.",
+      "source": "https://github.com/numediart/MBROLA-voices",
+      "source_revision": "fe05a0ccef6a941207fd6aaad0b31294a1f93a51",
+      "licence": "MBROLA-only use; sale or incorporation into a sold product requires the database owner’s permission. Individual notice and README retained.",
+      "licence_url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us1/license.txt",
+      "files": [
+        {
+          "role": "database",
+          "url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us1/us1",
+          "bytes": 7238094,
+          "sha256": "9f1cd90de6334f43cb4f7348cacd0806fb414b0fbc762492bde7000b9e192a9a"
+        },
+        {
+          "role": "licence",
+          "url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us1/license.txt",
+          "bytes": 1651,
+          "sha256": "f9f7a5205240dc9957ba8b336b253a1fccec8627e9d1153e295f8593944ecb7e"
+        },
+        {
+          "role": "readme",
+          "url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us1/README.txt",
+          "bytes": 4125,
+          "sha256": "a3ee173369df15511b876d46c7909a36bbc3c565e2978caa6c249dee6df187e3"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "mbrola:v1/mb-us1/us1",
+          "name": "MBROLA US1 (US English)",
+          "speaker_index": null
+        }
+      ]
+    },
+    {
+      "id": "mbrola-us2",
+      "provider": "mbrola",
+      "name": "US2",
+      "language": "en-US",
+      "description": "US English. Requires the updated, separately configured MBROLA companion. The British English en1 voice is already included.",
+      "source": "https://github.com/numediart/MBROLA-voices",
+      "source_revision": "fe05a0ccef6a941207fd6aaad0b31294a1f93a51",
+      "licence": "MBROLA-only use; sale or incorporation into a sold product requires the database owner’s permission. Individual notice and README retained.",
+      "licence_url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us2/license.txt",
+      "files": [
+        {
+          "role": "database",
+          "url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us2/us2",
+          "bytes": 7080251,
+          "sha256": "75f7f6b605945f4b65713c3ad1fba5be38fb720cde01bdc3d2facf988634c0d5"
+        },
+        {
+          "role": "licence",
+          "url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us2/license.txt",
+          "bytes": 1652,
+          "sha256": "2e3c3d9bc970dc81d99fc1d3d8ab3cb60f50dde60d09e76be599703978c4e76c"
+        },
+        {
+          "role": "readme",
+          "url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us2/README.txt",
+          "bytes": 4126,
+          "sha256": "6faf2ba98c85bad28ebc33bfd1c65368c4bdc99ecea40b8e7bc1f7e891ce5b78"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "mbrola:v1/mb-us2/us2",
+          "name": "MBROLA US2 (US English)",
+          "speaker_index": null
+        }
+      ]
+    },
+    {
+      "id": "mbrola-us3",
+      "provider": "mbrola",
+      "name": "US3",
+      "language": "en-US",
+      "description": "US English. Requires the updated, separately configured MBROLA companion. The British English en1 voice is already included.",
+      "source": "https://github.com/numediart/MBROLA-voices",
+      "source_revision": "fe05a0ccef6a941207fd6aaad0b31294a1f93a51",
+      "licence": "MBROLA-only use; sale or incorporation into a sold product requires the database owner’s permission. Individual notice and README retained.",
+      "licence_url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us3/license.txt",
+      "files": [
+        {
+          "role": "database",
+          "url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us3/us3",
+          "bytes": 7410252,
+          "sha256": "7cc5c49e098f80091e34ed0bd50f0af3908ac2427fbbe7d2b16c57defb7611ec"
+        },
+        {
+          "role": "licence",
+          "url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us3/license.txt",
+          "bytes": 1768,
+          "sha256": "3cc9f62f529c0e4d2652674bb5924d19add30abb92728b08659e41cfdb9d89d1"
+        },
+        {
+          "role": "readme",
+          "url": "https://raw.githubusercontent.com/numediart/MBROLA-voices/fe05a0ccef6a941207fd6aaad0b31294a1f93a51/data/us3/README.txt",
+          "bytes": 3563,
+          "sha256": "bb8bfe001e96f1215c941b064d3db0956d24c5804d3717a4dbaea5bdd33135c5"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "mbrola:v1/mb-us3/us3",
+          "name": "MBROLA US3 (US English)",
+          "speaker_index": null
+        }
+      ]
+    }
+  ]
+}
