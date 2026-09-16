@@ -115,6 +115,8 @@ elif [ -x "$program" ]; then
         OMNIVOX_PIPER_MODEL=$(sed -n '1p' "$piper_model_path_file")
         if [ -n "$OMNIVOX_PIPER_MODEL" ]; then
             export OMNIVOX_PIPER_MODEL
+            OMNIVOX_LAUNCHER_PIPER_DEFAULT=$OMNIVOX_PIPER_MODEL
+            export OMNIVOX_LAUNCHER_PIPER_DEFAULT
         fi
     fi
 else
@@ -264,6 +266,8 @@ if $windows_runtime; then
     # WSL passes selected Linux variables to Windows programs through WSLENV.
     # Preserve existing entries and add Omnivox's compatibility settings once.
     for variable in OMNIVOX_ENGINE OMNIVOX_AUDIO_TARGET OMNIVOX_AUDIO_OUTPUT \
+        OMNIVOX_VOICE_ROOT OMNIVOX_VOICE_LIBRARY OMNIVOX_LAUNCHER_PIPER_DEFAULT \
+        OMNIVOX_OWNED_STARTUP OMNIVOX_OWNED_STARTUP_SHA256 OMNIVOX_OWNED_LIBRARY \
         OMNIVOX_REMOTE_NOTIFICATION_TARGET \
         OMNIVOX_LOG_SYNTHESIS_TEXT \
         OMNIVOX_ELOQUENCE_HELPER OMNIVOX_ECI_DLL \

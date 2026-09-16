@@ -880,6 +880,53 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
               (should (pos-visible-in-window-p (point)))))
         (when (buffer-live-p details) (kill-buffer details))))))
 
+(ert-deftest emacsvox-omnivox-components-graphical-library-navigation-and-return ()
+  "The installed library speaks both directions and returns to engine details."
+  (skip-unless (display-graphic-p))
+  (require 'omnivox-library)
+  (emacsvox-omnivox-components-tests--with-inventory
+    (let ((manager (current-buffer)) details library spoken)
+      (unwind-protect
+          (save-window-excursion
+            (switch-to-buffer manager)
+            (cl-letf (((symbol-function 'emacsvox-omnivox-components--speak) #'ignore)
+                      ((symbol-function 'emacsvox-aural-ui-speak) (lambda (text) (setq spoken text)))
+                      ((symbol-function 'omnivox-library--service)
+                       (lambda (&rest _) (make-pipe-process :name "library UI fixture" :noquery t)))
+                      ((symbol-function 'omnivox-library--request)
+                       (lambda (&rest _)
+                         '(:index (:voices [(:engine_id "flite" :physical_id "cmu_us_slt"
+                                                         :display_name "SLT" :enabled t)
+                                            (:engine_id "piper" :physical_id "fixture"
+                                                         :display_name "Test voice" :enabled :false)])
+                                  :sha256 "fixture"))))
+              (emacsvox-omnivox-components-activate)
+              (setq details (current-buffer))
+              (goto-char (point-min))
+              (while (and (not (eobp)) (not (eq (tabulated-list-get-id) 'voice-library)))
+                (forward-line))
+              (should (eq (tabulated-list-get-id) 'voice-library))
+              (emacsvox-omnivox-components--details-activate)
+              (setq library (current-buffer))
+              (redisplay t)
+              (should (derived-mode-p 'omnivox-library-mode))
+              (goto-char (point-min))
+              (emacsvox-aural-ui-next-row)
+              (should (string-search "Test voice. Disabled" spoken))
+              (emacsvox-aural-ui-previous-row)
+              (should (string-search "SLT. Enabled" spoken))
+              (omnivox-library-refresh)
+              (redisplay t)
+              (should (pos-visible-in-window-p (point)))
+              (should (equal (tabulated-list-get-id) '("flite" . "cmu_us_slt")))
+              (emacsvox-aural-quit)
+              (redisplay t)
+              (should (eq (current-buffer) details))
+              (should (eq (tabulated-list-get-id) 'voice-library))
+              (should (pos-visible-in-window-p (point)))))
+        (dolist (buffer (list library details))
+          (when (buffer-live-p buffer) (kill-buffer buffer)))))))
+
 (ert-deftest emacsvox-omnivox-components-listing-failure-retains-live-engines ()
   "A managed-platform error leaves live discovery accessible and unchanged."
   (emacsvox-omnivox-components-tests--with-inventory

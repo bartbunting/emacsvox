@@ -702,6 +702,7 @@ OUTPUT to the generic process sentinel EVENT."
       (list 'voices (vector "Browse main voices"
                             "Reported voices on the main speech target; samples and palette editing"))
       (list 'check-live (vector "Check live voices" "Refresh both speech inventories; no sample is played"))
+      (list 'voice-library (vector "Installed voice library" "Enable or disable installed voices; review and Apply to both speech streams"))
       (list 'managed (vector "Managed installation"
                             (if emacsvox-omnivox-components--listing-error
                                 (concat "Not checked: " emacsvox-omnivox-components--listing-error)
@@ -795,6 +796,9 @@ OUTPUT to the generic process sentinel EVENT."
     (unless (buffer-live-p manager) (user-error "The engine list was closed"))
     (cond
      ((eq action 'back) (emacsvox-omnivox-components--details-back))
+     ((eq action 'voice-library)
+      (require 'omnivox-library)
+      (omnivox-library))
      ((eq action 'voices)
       (require 'emacsvox-aural-voice-workbench)
       (emacsvox-aural-voice-workbench--open-engine id (current-buffer)))
@@ -860,7 +864,7 @@ OUTPUT to the generic process sentinel EVENT."
     (forward-line 1)
     (while (and (not (eobp))
                 (not (memq (tabulated-list-get-id)
-                           '(voices check-live settings check-settings restart-settings install uninstall test output back))))
+                           '(voices voice-library check-live settings check-settings restart-settings install uninstall test output back))))
       (forward-line 1))
     (when (eobp) (goto-char start))
     (emacsvox-aural-ui-speak-current-row)))

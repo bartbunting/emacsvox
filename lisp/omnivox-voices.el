@@ -441,7 +441,8 @@ Return non-nil when LINE is a control event, including a malformed one."
                (response (omnivox--decode-control-response payload))
                (operation (process-get process 'omnivox--preview-operation)))
           (omnivox--control-response-identity response)
-          (when (or (equal (plist-get response :type) "preview_voice_completed_v2")
+          (when (or (equal (plist-get response :type) "voice_library_status_v1")
+                    (equal (plist-get response :type) "preview_voice_completed_v2")
                     (and operation
                          (eql (plist-get response :request_id) (omnivox--preview-pending operation))
                          (plist-member (caar (omnivox--preview-items operation)) :voice)))
@@ -873,7 +874,9 @@ Return non-nil for every marker-prefixed line, including malformed records."
       (tts--consume-process-lines
        process output omnivox--control-fragment-property 'omnivox--input-draining
        (lambda (owner line)
-         (unless (or (omnivox--handle-control-line owner line)
+         (unless (or (and (fboundp 'omnivox-library--handle-line)
+                          (omnivox-library--handle-line owner line))
+                     (omnivox--handle-control-line owner line)
                      (omnivox--handle-marker-line owner line))
            (omnivox--forward-process-output owner (concat line "\n"))))
        omnivox--maximum-event-line-bytes)
@@ -1634,6 +1637,8 @@ Read raw ownership once so the wire values and their sources cannot diverge."
                                  :response (tts--dispatch-copy-data response))))
             (when (omnivox--choice-tuning-supported-p process)
               (emacsvox-aural-enable-structured-timeline process 4))
+            (process-put process 'omnivox-library-accepted-registration
+                         (tts--dispatch-copy-data content))
             (omnivox--handle-registration-response process response)))
         (omnivox--choice-warn-unapplied process content)
         t)
@@ -1641,6 +1646,8 @@ Read raw ownership once so the wire values and their sources cannot diverge."
       (when (>= generation (or (plist-get (process-get process omnivox--choice-registration-property)
                                           :registry-generation) 0))
         (process-put process omnivox--choice-registration-property nil)
+        (process-put process 'omnivox-library-accepted-registration
+                     (tts--dispatch-copy-data content))
         (when (eql (process-get process emacsvox-aural--structured-timeline-process-property) 4)
           (emacsvox-aural-enable-structured-timeline process 3))
         (omnivox--handle-registration-response process response))
@@ -1663,7 +1670,8 @@ Read raw ownership once so the wire values and their sources cannot diverge."
 
 (defun omnivox--routing-policy-content (process)
   "Return desired global routing policy for Omnivox PROCESS."
-  (let* ((inventory
+  (or (process-get process 'omnivox-library-frozen-policy)
+      (let* ((inventory
           (process-get process omnivox--control-inventory-property))
          (startup-preferred (plist-get inventory :preferred_engine_id))
          (preferred
@@ -1682,7 +1690,7 @@ Read raw ownership once so the wire values and their sources cannot diverge."
      :disabled_engine_ids
      (vconcat
       (omnivox--routing-engine-list
-       omnivox-disabled-engine-ids "disabled engine list")))))
+       omnivox-disabled-engine-ids "disabled engine list"))))))
 
 (defun omnivox--routing-policy-lists (policy)
   "Return comparable ordered lists from wire POLICY."
@@ -1837,7 +1845,8 @@ Return the number of processes sent a generation-safe policy replacement."
 
 (defun omnivox--process-logical-registry-content (process)
   "Return logical registry content late-bound for Omnivox PROCESS."
-  (let* ((inventory
+  (or (process-get process 'omnivox-library-frozen-registration)
+      (let* ((inventory
           (process-get process omnivox--control-inventory-property))
          (runtime-routing-policy
           (omnivox--process-supports-p process "runtime_routing_policy"))
@@ -1867,7 +1876,7 @@ Return the number of processes sent a generation-safe policy replacement."
                (print-circle t) (print-length nil) (print-level nil))
           (when (> (string-bytes (prin1-to-string snapshot)) tts--dispatch-metadata-limit)
             (error "Individual voice registration metadata is too large"))
-          (tts--dispatch-copy-data snapshot))))))
+          (tts--dispatch-copy-data snapshot)))))))
 
 (defun omnivox-register-logical-voices ()
   "Register all Emacsvox logical voices with live Omnivox processes.

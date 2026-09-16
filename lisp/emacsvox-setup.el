@@ -66,6 +66,7 @@
     "swiftmac-voices.el"
     "omnivox-choice-codec.el"
     "omnivox-library-apply.el"
+    "omnivox-library.el"
     "omnivox-preview.el"
     "omnivox-voices.el"
     "omnivox-remote.el"

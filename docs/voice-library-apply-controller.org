@@ -7,9 +7,19 @@
 The private =omnivox-library-apply= module implements Emacs's activation
 sequence under [[file:adr/0019-voice-library-and-activation.org][ADR 0019]]. It issues one action at a time to a native provider
 and consumes one correlated receipt. It performs no process or filesystem
-operations and has no user command. The native WSL/Windows provider and
-accessible Apply screen still need to be connected before live activation
-is available. Ordinary =tts-restart= is unchanged.
+operations itself. The =omnivox-library= driver connects it to local native
+ownership, installation storage and an accessible Installed voice library
+screen. The bundled launcher supports Linux, macOS and WSL-to-Windows native
+targets. This management path does not operate on remote speech hosts.
+
+From engine details, open /Installed voice library/. =e= changes desired
+enablement, =a= reviews and applies both managed providers, =b= explicitly
+includes built-in Flite SLT, =i= imports a completed native validation operation
+and =r= displays the last result. Import registers the validated files in place,
+initially disabled. Their original paths must remain available. This initial
+import action takes a validation UUID; managed asset copying, the catalogue
+downloader and a friendly file-selection flow remain follow-up.
+An ordinary speech restart does not commit pending desired-library edits.
 
 This separation is intentional: deleting an Emacs process handle cannot prove
 that its native Windows helpers exited. The native provider must retain the
@@ -39,6 +49,15 @@ binding. Plans contain data, never process handles or executable callbacks.
 Inputs, actions and receipts are copied, including mutable strings. Cycles,
 excessive data, malformed identities, duplicate fields and unordered or
 duplicate eligibility entries are rejected.
+
+Each native owner saves the exact executable identity, arguments, directory,
+environment and generation in private native storage. Emacs retains its path
+and digest. Candidate records capture the current launcher settings separately;
+the original workers' records remain frozen for rollback. Clearing a file
+override therefore changes the candidate without rewriting the old settings.
+Preflight refuses explicit file overrides of a provider being applied. A
+launcher-supplied Piper default is identified separately and can be replaced
+by managed voices.
 
 * Action sequence
 
@@ -105,7 +124,28 @@ require explicit reconciliation, with no automatic rollback or speech restart.
 Additional crash-recovery and power-loss hardening remains follow-up work; it
 does not expand this slice into a recovery project.
 
-* Verification and remaining integration
+* Native ownership and readiness
+
+The native service holds the profile lease through the complete operation.
+Owners retain their actual child and helper trees using a Windows Job or the
+platform's private process-group ownership. Cleanup receipts cover the tree
+and output readers; an exited Emacs pipe alone is insufficient. Startup
+failure leaves an owner available for cleanup, and the Emacs driver records
+each attempted process before initialization can fail.
+
+Candidates complete ordinary capability negotiation, inventory discovery,
+routing-policy acknowledgement and logical-voice registration before their
+correlated library status is accepted. Rollback reinstates the acknowledged
+old policy and registration, including empty JSON arrays. After success or
+verified rollback, the pair becomes this session's main and notification
+speech and receives normal speech/output settings.
+
+The implementation requires a fresh Emacs using current byte-code and the
+matching native build. Existing unowned workers are rejected by Apply with
+instructions to restart speech. Older servers retain ordinary startup without
+the local ownership extension.
+
+* Verification and remaining work
 
 The isolated ERT suite exercises complete Apply ordering, partial startup,
 different actual previous configurations, legacy rollback, mismatched status,
@@ -113,17 +153,31 @@ stale plans and replies, unconfirmed cleanup, cancelled transitions, commit
 ambiguity, failed rollback and final journal failure. These are client control
 flow tests with simulated native receipts. They do not establish Windows
 cleanup, native atomic pointer publication, live Emacs activation or audible
-acceptance.
+acceptance. The transport regression suite additionally checks immediate replies,
+native owner correlation and restoration of wire-format policy arrays.
 
-The 18 focused tests passed against source and in a fresh Emacs loading the
-compiled coordinator. The full byte-code rebuild and current-byte-code check
-passed, followed by 530 core regression tests with no failures. One existing
-graphical Workbench test was skipped in batch mode; this slice introduces no
-interactive screen. Header and documentation release checks passed after
-regenerating the reference and updating the startup source inventory.
+The opt-in =test/run-live-library-tests.el= uses fresh compiled Emacs code,
+actual local native processes and a private library root. It checks enabled
+Flite SLT, failure of the real notification replacement, startup refusal,
+cancellation after retirement, paired rollback, and a second successful commit
+which disables the voice and replaces the active pointer. It uses null audio;
+this establishes process and protocol behavior, not what a listener heard.
+Set =EMACSVOX_LIBRARY_TEST_SERVER= to a complete staged server. For WSL, also
+set =EMACSVOX_LIBRARY_TEST_ROOT= to a fresh native Windows directory. Run with
+the selected Emacs's =-Q --batch -l test/run-live-library-tests.el= after
+=make bytecode-check=. Test roots retain private startup records for diagnosis.
 
-Next, connect the native provider's retained lease and exact startup snapshots,
-the per-connection negotiated status reader, and durable pointer/journal actions.
-Then exercise the complete WSL-to-Windows Apply and rollback path in a fresh
-Emacs before exposing its confirmation and result screen. Keep installation
-and desired enablement usable independently of live activation.
+=test/run-live-library-tests.py= additionally prepares the Omnivox repository's
+small deterministic Piper fixture with the actual native validator, then runs
+the same Emacs checks plus disabled import, individual speaker enablement and
+managed Piper Apply. Pass =--server= for the complete staged executable,
+=--omnivox-source= for its source checkout and =--emacs= for the selected
+Emacs binary. The runner creates its own native test directory, including on
+Windows through WSL. These fixtures test model loading and speaker identity;
+they are not natural-voice listening samples.
+
+The graphical voice suite checks real rendering, spoken navigation in both
+directions, refresh and return to the exact engine-details action. Native CI
+checks local ownership, installation and snapshots on Linux, Windows, Apple
+Silicon and Intel Macs. The catalogue/download flow, richer installation UI,
+and recovery after an uncertain commit or power loss remain further work.

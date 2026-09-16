@@ -404,6 +404,25 @@ Installing a module changes the managed release only.
   switch. Use absolute paths as seen by Emacs; WSL converts them for the chosen
   Windows executable. Keep required companion files beside their runtime or
   model. Remote speech settings must be changed on the speech host.
+- /Installed voice library/ manages installed Piper and Flite voices on the
+  local speech host. Press @@texinfo:@kbd{e}@@ to enable or disable a voice in
+  the desired configuration, then @@texinfo:@kbd{a}@@ to review and Apply.
+  Apply checks both replacements, restarts main and notification speech, and
+  verifies both before committing. If a replacement fails, it restores both
+  previous configurations. Disabling keeps the files and saved palette
+  references. The /Desired state/ column describes the next Apply, not which
+  voices an existing worker has loaded.
+- In the library, @@texinfo:@kbd{b}@@ includes built-in Flite SLT explicitly.
+  @@texinfo:@kbd{i}@@ installs a completed native validation operation by its
+  identifier; imported voices initially remain disabled. Their files stay at
+  the validated paths and must remain there. This initial screen does not yet
+  copy files into managed storage or provide a catalogue downloader
+  or file-selection wizard. @@texinfo:@kbd{r}@@ shows the last Apply result,
+  @@texinfo:@kbd{g}@@ refreshes, and @@texinfo:@kbd{q}@@ returns to details.
+  Apply requires separate main and notification streams started with the
+  updated local Omnivox build. Explicit Piper or Flite file overrides must be
+  cleared before applying that engine's installed voices. An uncertain native
+  cleanup or commit blocks further Apply and remains visible in the result.
 - /Check configured engine/ runs separate voice discovery using the local
   launcher's current configuration, with a 30 second limit. It retains the
   executable target, voice list and diagnostic output. It neither speaks a

@@ -3791,6 +3791,10 @@ device, make sure it exists first.  For SwiftMac, use `left' or `right'."
   :group 'tts-output)
 
 ;; Helper: tts-make-process:
+(defvar omnivox-library--birth-collector)
+(declare-function omnivox-library--owner "omnivox-library" (process))
+(declare-function omnivox-library--command "omnivox-library" (program))
+(declare-function omnivox-library--startup-environment "omnivox-library" (environment))
 (defun tts--resolve-program (program)
   "Return the executable used for speech-server PROGRAM, or nil.
 
@@ -3821,11 +3825,16 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
             (tts-queue--create
              (lambda ()
                (require 'omnivox-engine-settings)
+               (require 'omnivox-library)
                (let ((process-environment (omnivox-engine-settings--environment program)))
+                 (setq process-environment
+                       (omnivox-library--startup-environment process-environment))
                  (make-process
-                  :name name :command (list program) :connection-type 'pipe
+                  :name name :command (omnivox-library--command program) :connection-type 'pipe
                   :coding 'utf-8-unix
                   :stderr (get-buffer-create (format "*%s diagnostics*" name))))) nil)))
+    (when (and (boundp 'omnivox-library--birth-collector) omnivox-library--birth-collector)
+      (funcall omnivox-library--birth-collector process))
     (unless (process-live-p process) (error "Fail: Speech Server"))
     (set-process-coding-system process 'utf-8-unix 'utf-8-unix)
     (process-put
@@ -3842,9 +3851,17 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
     (let (configured)
       (unwind-protect
           (progn
+            (when (member "--voice-library-owner" (process-command process))
+              (require 'omnivox-voices)
+              (let ((owner (omnivox-library--owner process)))
+                (when (or (stringp (plist-get owner :startup_error))
+                          (process-get process 'omnivox-library-retired))
+                  (error "Native speech startup failed; see the speech diagnostics"))))
             (tts--initialize-output-volumes process)
             (setq configured t))
-        (unless configured (tts--retire-process process))))
+        (unless (or configured
+                    (and (boundp 'omnivox-library--birth-collector) omnivox-library--birth-collector))
+          (tts--retire-process process))))
     process))
 
 (declare-function voice-setup "voice-setup" ())

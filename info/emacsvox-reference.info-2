@@ -5962,7 +5962,6 @@ of emacsvox from becoming dependent on the speech server modules
 ...................................
 
  -- Command: emacsvox-beginning-or-end
-
      Move to start or end of buffer.
 
 2.224.1.2 emacsvox-buffer-select
