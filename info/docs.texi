@@ -6406,6 +6406,7 @@ penultimate step during initialization.
 Key             Binding
 -------------------------------------------------------------------------------
 RET		emacsvox-aural-voice-workbench-open-row
++		emacsvox-aural-voice-workbench--library-toggle
 ?		emacsvox-aural-voice-workbench-help
 A		emacsvox-aural-voice-workbench-preview-all
 B		emacsvox-aural-voice-workbench-compare
@@ -6423,9 +6424,13 @@ T		emacsvox-aural-voice-workbench-edit-preview-text
 U		emacsvox-aural-voice-workbench-undo-applied
 [		emacsvox-aural-voice-workbench-move-preferred-engine-up
 ]		emacsvox-aural-voice-workbench-move-preferred-engine-down
+a		emacsvox-aural-voice-workbench--library-apply
+b		emacsvox-aural-voice-workbench--library-slt
+d		emacsvox-aural-voice-workbench--library-download
 e		emacsvox-aural-voice-workbench-engine-view
 f		emacsvox-aural-voice-workbench-toggle-fallback-engine
 h		emacsvox-aural
+i		emacsvox-aural-voice-workbench--library-import
 l		emacsvox-aural-voice-workbench-logical-view
 q		emacsvox-aural-voice-workbench-quit
 r		emacsvox-aural-voice-workbench-retry-apply
@@ -6440,6 +6445,7 @@ x		emacsvox-aural-voice-workbench-describe
 
 C-c C-c		emacsvox-aural-voice-workbench-save-and-apply
 C-c C-k		emacsvox-aural-voice-workbench-cancel-staged
+C-c r		omnivox-library-show-result
 
 @end format
 @end deffn
@@ -23110,6 +23116,7 @@ Locate content matching  pattern.  The results can be
 @format
 Display MLB standings as of today.
 Optional interactive prefix arg shows  unprocessed results.
+
 (fn &optional RAW)
 @end format
 @end deffn

@@ -1517,14 +1517,20 @@ Installing a module changes the managed release only.
 
 @itemize
 @item
-@emph{Browse voices} opens that engine's reported voices on the main speech
-target. This separate browser keeps the general Voice Workbench's filters and
+@emph{Browse voices} combines that engine's reported voices with its installed
+library@comma{} including disabled downloads. This separate browser keeps the general Voice Workbench's filters and
 staged edits intact. @kbd{P} explicitly speaks an exact sample;
 @kbd{t} opens the existing voice editor for an unsaved experiment.
 Saving there asks for a palette destination. Browsing and auditioning do not
 change a palette. @kbd{q} returns to the selected engine detail.
-The browser refreshes quietly when inventory changes. Notification inventory
-remains separately visible in engine details; samples use main speech.
+Library information loads in the background; the browser refreshes quietly.
+@emph{Installed} distinguishes library entries from engine-supplied voices.
+@emph{Enabled} is the desired selection for the next Apply. @emph{Active} reports
+current eligibility on both streams@comma{} main only@comma{} notification only@comma{} or neither.
+@emph{Unknown} means current worker evidence is missing or inconsistent; press
+@kbd{R} to refresh. Active does not mean a model is resident in
+memory@comma{} and is not a listening test. Samples use main speech; an inactive
+downloaded voice must be enabled and applied before sampling.
 @item
 Under @emph{Startup settings}@comma{} @emph{Edit file settings} for the bundled local Omnivox launcher opens the
 selected engine's file option in Customize. Piper accepts one local ONNX
@@ -1537,14 +1543,13 @@ These are manual overrides. Having no manual files selected does not mean
 there are no downloaded voices: the installed voice library or launcher
 defaults apply. A manual Flite file list overrides its installed library.
 @item
-@emph{Installed voices} manages installed Piper and Flite voices on the
-local speech host. Press @kbd{e} to enable or disable a voice in
+In @emph{Browse voices}@comma{} manage installed Piper and Flite voices on the
+local speech host. Press @kbd{+} to enable or disable a voice in
 the desired configuration@comma{} then @kbd{a} to review and Apply.
 Apply checks both replacements@comma{} restarts main and notification speech@comma{} and
 verifies both before committing. If a replacement fails@comma{} it restores both
 previous configurations. Disabling keeps the files and saved palette
-references. The @emph{Desired state} column describes the next Apply@comma{} not which
-voices an existing worker has loaded.
+references. Changing @emph{Enabled} leaves @emph{Active} unchanged until Apply.
 @item
 @emph{Get more voices} in Piper or Flite details opens the reviewed download
 catalogue. The initial choices are Flite AWB and RMS@comma{} and Piper Kristin
@@ -1555,22 +1560,22 @@ The download runs in the background without speaking each progress update.
 Omnivox checks each file and validates the voice before adding it disabled.
 Press @kbd{c} to request cancellation and wait for cleanup.
 @item
-After installation@comma{} press @kbd{l} for installed voices@comma{}
-@kbd{e} to enable the voice@comma{} and @kbd{a} to review
+After installation@comma{} press @kbd{l} to browse voices@comma{}
+@kbd{+} to enable the voice@comma{} and @kbd{a} to review
 Apply. Review covers both managed engines and both speech streams.
 Installation alone does not load the voice or change speech.
 Downloaded files belong to you and stay in Omnivox's per-user voice storage
 across executable upgrades. Failed and interrupted operations retain files
 for inspection; automatic resume and package updates are not provided yet.
 @item
-In the library@comma{} @kbd{d} opens the download catalogue and
+In the voice browser@comma{} @kbd{d} opens the download catalogue and
 @kbd{b} includes built-in Flite SLT explicitly.
 @kbd{i} installs a completed native validation operation by its
 identifier; imported voices initially remain disabled. Their files stay at
 the validated paths and must remain there. This advanced import action is
 separate from catalogue installation; a file-selection wizard is not yet
-provided. @kbd{r} shows the last Apply result@comma{}
-@kbd{g} refreshes@comma{} and @kbd{q} returns to details.
+provided. @kbd{C-c r} shows the last Apply result@comma{}
+@kbd{R} refreshes@comma{} and @kbd{q} returns to details.
 Apply requires separate main and notification streams started with the
 updated local Omnivox build. Explicit Piper or Flite file overrides must be
 cleared before applying that engine's installed voices. An uncertain native
@@ -3865,7 +3870,7 @@ Use @emph{Voice Workbench} when the question involves installed voices or engine
 Engines@comma{} such as Flite or Eloquence. Start here to try voices from a
 particular synthesizer or inspect its availability.
 @item v
-Physical voices: the actual installed voices you can hear. Use this
+Physical voices: engine voices and@comma{} for Omnivox@comma{} installed downloads. Use this
 list to listen@comma{} compare@comma{} and experiment with their parameters. On an engine
 row@comma{} this key opens just that engine's voices.
 @item l
@@ -3891,6 +3896,17 @@ filters to show voices across engines.
 Press @kbd{q} in an engine's voice list to return to that engine's
 row and column.  Press @kbd{q} again from the engine list to leave
 the workbench.  The direct view shortcuts remain available.
+
+Omnivox's physical list combines browsing and installed-voice management.
+@emph{Installed} shows library membership or an engine-supplied voice; @emph{Enabled}
+is the desired selection for the next Apply. @emph{Active} shows current usability
+on main speech@comma{} notification speech@comma{} or both. It does not describe model memory
+residency. Missing or inconsistent worker evidence appears as @emph{Unknown}.
+Library information loads in the background. Press @kbd{+} to
+enable or disable a managed voice@comma{} @kbd{a} to review Apply@comma{}
+and @kbd{d} for downloads. Downloads start disabled; enable and
+Apply before previewing them. Engine-managed voices retain their engine's own
+selection mechanism. Other adapters retain the existing physical inventory view.
 
 The engine list reports @emph{Availability} before routing preferences.  An engine
 with a missing runtime stays visible as @emph{unavailable}@comma{} with its reason under

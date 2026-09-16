@@ -1285,7 +1285,7 @@ Use /Voice Workbench/ when the question involves installed voices or engines.  O
 #+attr_texinfo: :indic kbd :compact t
 - e :: Engines, such as Flite or Eloquence. Start here to try voices from a
   particular synthesizer or inspect its availability.
-- v :: Physical voices: the actual installed voices you can hear. Use this
+- v :: Physical voices: engine voices and, for Omnivox, installed downloads. Use this
   list to listen, compare, and experiment with their parameters. On an engine
   row, this key opens just that engine's voices.
 - l :: Named voices (the /Logical voices/ view): roles such as /bolden/ and /annotate/. Start here
@@ -1308,6 +1308,17 @@ filters to show voices across engines.
 Press @@texinfo:@kbd{q}@@ in an engine's voice list to return to that engine's
 row and column.  Press @@texinfo:@kbd{q}@@ again from the engine list to leave
 the workbench.  The direct view shortcuts remain available.
+
+Omnivox's physical list combines browsing and installed-voice management.
+/Installed/ shows library membership or an engine-supplied voice; /Enabled/
+is the desired selection for the next Apply. /Active/ shows current usability
+on main speech, notification speech, or both. It does not describe model memory
+residency. Missing or inconsistent worker evidence appears as /Unknown/.
+Library information loads in the background. Press @@texinfo:@kbd{+}@@ to
+enable or disable a managed voice, @@texinfo:@kbd{a}@@ to review Apply,
+and @@texinfo:@kbd{d}@@ for downloads. Downloads start disabled; enable and
+Apply before previewing them. Engine-managed voices retain their engine's own
+selection mechanism. Other adapters retain the existing physical inventory view.
 
 The engine list reports /Availability/ before routing preferences.  An engine
 with a missing runtime stays visible as /unavailable/, with its reason under

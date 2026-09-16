@@ -1527,15 +1527,22 @@ text describes the limits of that file check; use speech discovery in
 _Diagnostics_ for the active server.  Installing a module changes the
 managed release only.
 
-   • _Browse voices_ opens that engine's reported voices on the main
-     speech target.  This separate browser keeps the general Voice
-     Workbench's filters and staged edits intact.  ‘P’ explicitly speaks
-     an exact sample; ‘t’ opens the existing voice editor for an unsaved
-     experiment.  Saving there asks for a palette destination.  Browsing
-     and auditioning do not change a palette.  ‘q’ returns to the
-     selected engine detail.  The browser refreshes quietly when
-     inventory changes.  Notification inventory remains separately
-     visible in engine details; samples use main speech.
+   • _Browse voices_ combines that engine's reported voices with its
+     installed library, including disabled downloads.  This separate
+     browser keeps the general Voice Workbench's filters and staged
+     edits intact.  ‘P’ explicitly speaks an exact sample; ‘t’ opens the
+     existing voice editor for an unsaved experiment.  Saving there asks
+     for a palette destination.  Browsing and auditioning do not change
+     a palette.  ‘q’ returns to the selected engine detail.  Library
+     information loads in the background; the browser refreshes quietly.
+     _Installed_ distinguishes library entries from engine-supplied
+     voices.  _Enabled_ is the desired selection for the next Apply.
+     _Active_ reports current eligibility on both streams, main only,
+     notification only, or neither.  _Unknown_ means current worker
+     evidence is missing or inconsistent; press ‘R’ to refresh.  Active
+     does not mean a model is resident in memory, and is not a listening
+     test.  Samples use main speech; an inactive downloaded voice must
+     be enabled and applied before sampling.
    • Under _Startup settings_, _Edit file settings_ for the bundled
      local Omnivox launcher opens the selected engine's file option in
      Customize.  Piper accepts one local ONNX model with its matching
@@ -1548,14 +1555,14 @@ managed release only.
      manual files selected does not mean there are no downloaded voices:
      the installed voice library or launcher defaults apply.  A manual
      Flite file list overrides its installed library.
-   • _Installed voices_ manages installed Piper and Flite voices on the
-     local speech host.  Press ‘e’ to enable or disable a voice in the
+   • In _Browse voices_, manage installed Piper and Flite voices on the
+     local speech host.  Press ‘+’ to enable or disable a voice in the
      desired configuration, then ‘a’ to review and Apply.  Apply checks
      both replacements, restarts main and notification speech, and
      verifies both before committing.  If a replacement fails, it
      restores both previous configurations.  Disabling keeps the files
-     and saved palette references.  The _Desired state_ column describes
-     the next Apply, not which voices an existing worker has loaded.
+     and saved palette references.  Changing _Enabled_ leaves _Active_
+     unchanged until Apply.
    • _Get more voices_ in Piper or Flite details opens the reviewed
      download catalogue.  The initial choices are Flite AWB and RMS, and
      Piper Kristin medium.  Press ‘RET’ for the voice description,
@@ -1565,26 +1572,26 @@ managed release only.
      update.  Omnivox checks each file and validates the voice before
      adding it disabled.  Press ‘c’ to request cancellation and wait for
      cleanup.
-   • After installation, press ‘l’ for installed voices, ‘e’ to enable
-     the voice, and ‘a’ to review Apply.  Review covers both managed
-     engines and both speech streams.  Installation alone does not load
-     the voice or change speech.  Downloaded files belong to you and
-     stay in Omnivox's per-user voice storage across executable
-     upgrades.  Failed and interrupted operations retain files for
-     inspection; automatic resume and package updates are not provided
-     yet.
-   • In the library, ‘d’ opens the download catalogue and ‘b’ includes
-     built-in Flite SLT explicitly.  ‘i’ installs a completed native
-     validation operation by its identifier; imported voices initially
-     remain disabled.  Their files stay at the validated paths and must
-     remain there.  This advanced import action is separate from
-     catalogue installation; a file-selection wizard is not yet
-     provided.  ‘r’ shows the last Apply result, ‘g’ refreshes, and ‘q’
-     returns to details.  Apply requires separate main and notification
-     streams started with the updated local Omnivox build.  Explicit
-     Piper or Flite file overrides must be cleared before applying that
-     engine's installed voices.  An uncertain native cleanup or commit
-     blocks further Apply and remains visible in the result.
+   • After installation, press ‘l’ to browse voices, ‘+’ to enable the
+     voice, and ‘a’ to review Apply.  Review covers both managed engines
+     and both speech streams.  Installation alone does not load the
+     voice or change speech.  Downloaded files belong to you and stay in
+     Omnivox's per-user voice storage across executable upgrades.
+     Failed and interrupted operations retain files for inspection;
+     automatic resume and package updates are not provided yet.
+   • In the voice browser, ‘d’ opens the download catalogue and ‘b’
+     includes built-in Flite SLT explicitly.  ‘i’ installs a completed
+     native validation operation by its identifier; imported voices
+     initially remain disabled.  Their files stay at the validated paths
+     and must remain there.  This advanced import action is separate
+     from catalogue installation; a file-selection wizard is not yet
+     provided.  ‘C-c r’ shows the last Apply result, ‘R’ refreshes, and
+     ‘q’ returns to details.  Apply requires separate main and
+     notification streams started with the updated local Omnivox build.
+     Explicit Piper or Flite file overrides must be cleared before
+     applying that engine's installed voices.  An uncertain native
+     cleanup or commit blocks further Apply and remains visible in the
+     result.
    • _Check configured engine_ runs separate voice discovery using the
      local launcher's current configuration, with a 30 second limit.  It
      retains the executable target, voice list and diagnostic output.
@@ -3868,9 +3875,10 @@ engines.  Open it from Aural Home with ‘W’.  Its main views are:
      Engines, such as Flite or Eloquence.  Start here to try voices from
      a particular synthesizer or inspect its availability.
 ‘v’
-     Physical voices: the actual installed voices you can hear.  Use
-     this list to listen, compare, and experiment with their parameters.
-     On an engine row, this key opens just that engine's voices.
+     Physical voices: engine voices and, for Omnivox, installed
+     downloads.  Use this list to listen, compare, and experiment with
+     their parameters.  On an engine row, this key opens just that
+     engine's voices.
 ‘l’
      Named voices (the _Logical voices_ view): roles such as _bolden_
      and _annotate_.  Start here to change which physical voice reads a
@@ -3892,6 +3900,18 @@ apply; ‘C’ clears all filters to show voices across engines.  Press ‘q’
 in an engine's voice list to return to that engine's row and column.
 Press ‘q’ again from the engine list to leave the workbench.  The direct
 view shortcuts remain available.
+
+   Omnivox's physical list combines browsing and installed-voice
+management.  _Installed_ shows library membership or an engine-supplied
+voice; _Enabled_ is the desired selection for the next Apply.  _Active_
+shows current usability on main speech, notification speech, or both.
+It does not describe model memory residency.  Missing or inconsistent
+worker evidence appears as _Unknown_.  Library information loads in the
+background.  Press ‘+’ to enable or disable a managed voice, ‘a’ to
+review Apply, and ‘d’ for downloads.  Downloads start disabled; enable
+and Apply before previewing them.  Engine-managed voices retain their
+engine's own selection mechanism.  Other adapters retain the existing
+physical inventory view.
 
    The engine list reports _Availability_ before routing preferences.
 An engine with a missing runtime stays visible as _unavailable_, with
@@ -6186,50 +6206,3 @@ coordinates.  It does not provide EAT's bounded screen transactions,
 terminal-completion model, or alternate-screen policy.  Use explicit
 review whenever automatic output is too brief or an application redraw
 is ambiguous.
-
-
-File: emacsvox.info,  Node: Reviewing The Term Screen,  Next: Term Help And Recovery,  Prev: Term Speech Feedback,  Up: Running Terminal Based Applications
-
-12.4 Reviewing The Term Screen
-==============================
-
-The Emacsvox review pointer is independent of the terminal cursor, so
-reviewing old screen text does not send keys or move the child
-application.  These core commands keep the normal ‘C-t’ prefix:
-
-‘C-t .’
-     Move the review pointer to the terminal cursor and announce its
-     coordinates.
-‘C-t p’
-‘C-t n’
-     Move the review pointer to the previous or next line and speak it.
-     The Up and Down arrow keys are equivalent after the ‘C-t’ prefix.
-‘C-t <LEFT>’
-‘C-t <RIGHT>’
-     Move the pointer by a character and speak the character reached.
-‘C-t M-b’
-‘C-t M-f’
-     Move the pointer backward or forward by a word and speak it.
-‘C-t l’
-‘C-t w’
-‘C-t c’
-     Speak the line, word, or character at the review pointer without
-     moving it.
-‘C-t <SPC>’
-     Speak from the review pointer to the current end of the Term
-     buffer.
-‘C-t s’
-     Prompt for text, search forward from the review pointer, and speak
-     the matching line.
-
-   In character mode, ‘C-t q’ enters dedicated review mode.  The
-terminal stops receiving ordinary keys while this review keymap is
-active.  Use ‘p’, ‘n’, the arrow keys, ‘M-b’, ‘M-f’, ‘l’, ‘w’, ‘c’, and
-‘s’ without the ‘C-t’ prefix; press ‘q’ to return to character mode.  To
-copy reviewed text, press ‘m’ at one endpoint, move the pointer, and
-press ‘y’ to copy the region to the kill ring.
-
-   The integration also supports named rectangular screen regions and
-focus or filter windows.  Those are advanced, coordinate-based
-facilities; inspect the live ‘C-h m’ output and the generated module
-reference before using them.

@@ -9927,6 +9927,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Display MLB standings as of today.
      Optional interactive prefix arg shows  unprocessed results.
+
      (fn &optional RAW)
 
 2.258.1.64 emacsvox-wizards-module-enumerate-uncovered-commands

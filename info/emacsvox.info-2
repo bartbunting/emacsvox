@@ -14,6 +14,53 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Reviewing The Term Screen,  Next: Term Help And Recovery,  Prev: Term Speech Feedback,  Up: Running Terminal Based Applications
+
+12.4 Reviewing The Term Screen
+==============================
+
+The Emacsvox review pointer is independent of the terminal cursor, so
+reviewing old screen text does not send keys or move the child
+application.  These core commands keep the normal ‘C-t’ prefix:
+
+‘C-t .’
+     Move the review pointer to the terminal cursor and announce its
+     coordinates.
+‘C-t p’
+‘C-t n’
+     Move the review pointer to the previous or next line and speak it.
+     The Up and Down arrow keys are equivalent after the ‘C-t’ prefix.
+‘C-t <LEFT>’
+‘C-t <RIGHT>’
+     Move the pointer by a character and speak the character reached.
+‘C-t M-b’
+‘C-t M-f’
+     Move the pointer backward or forward by a word and speak it.
+‘C-t l’
+‘C-t w’
+‘C-t c’
+     Speak the line, word, or character at the review pointer without
+     moving it.
+‘C-t <SPC>’
+     Speak from the review pointer to the current end of the Term
+     buffer.
+‘C-t s’
+     Prompt for text, search forward from the review pointer, and speak
+     the matching line.
+
+   In character mode, ‘C-t q’ enters dedicated review mode.  The
+terminal stops receiving ordinary keys while this review keymap is
+active.  Use ‘p’, ‘n’, the arrow keys, ‘M-b’, ‘M-f’, ‘l’, ‘w’, ‘c’, and
+‘s’ without the ‘C-t’ prefix; press ‘q’ to return to character mode.  To
+copy reviewed text, press ‘m’ at one endpoint, move the pointer, and
+press ‘y’ to copy the region to the kill ring.
+
+   The integration also supports named rectangular screen regions and
+focus or filter windows.  Those are advanced, coordinate-based
+facilities; inspect the live ‘C-h m’ output and the generated module
+reference before using them.
+
+
 File: emacsvox.info,  Node: Term Help And Recovery,  Prev: Reviewing The Term Screen,  Up: Running Terminal Based Applications
 
 12.5 Help And Recovery
