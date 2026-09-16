@@ -41,6 +41,91 @@
 (defvar-local omnivox-catalogue--entry nil)
 (defvar-local omnivox-catalogue--parent nil)
 (defvar-local omnivox-catalogue--query "")
+(defvar-local omnivox-catalogue--documents nil)
+(defvar-local omnivox-catalogue--metadata nil)
+(defvar-local omnivox-catalogue--scope nil)
+(defvar-local omnivox-catalogue--history nil)
+(defvar-local omnivox-catalogue--show-speakers nil)
+
+(defun omnivox-catalogue-speakers ()
+  "Show or hide the speakers sharing this model download."
+  (interactive)
+  (unless omnivox-catalogue--entry (user-error "Open a model with RET first"))
+  (setq omnivox-catalogue--show-speakers (not omnivox-catalogue--show-speakers))
+  (omnivox-catalogue--render)
+  (message "Speakers %s; each can be enabled separately after installation"
+           (if omnivox-catalogue--show-speakers "shown" "hidden")))
+
+(defun omnivox-catalogue--meta (entry field)
+  "Return manifest FIELD for ENTRY, keeping native catalogue data separate."
+  (plist-get (plist-get omnivox-catalogue--metadata
+                        (intern (concat ":" (plist-get entry :id)))) field))
+
+(defun omnivox-catalogue--name (entry)
+  "Return the voice set name of ENTRY without its quality choice."
+  (or (omnivox-catalogue--meta entry :voice_name) (plist-get entry :name)))
+
+(defun omnivox-catalogue--rows ()
+  "Build language, voice set or model rows from cached entries."
+  (let* ((searching (not (string-empty-p omnivox-catalogue--query)))
+         (entries
+          (seq-filter
+           (lambda (entry)
+             (and (or (null omnivox-catalogue--engine)
+                      (equal omnivox-catalogue--engine (plist-get entry :provider)))
+                  (if searching
+                      (string-match-p
+                       (regexp-quote (downcase omnivox-catalogue--query))
+                       (downcase (format "%s %s %s" (plist-get entry :name)
+                                         (plist-get entry :language)
+                                         (omnivox-catalogue--meta entry :language_name))))
+                    (and (or (null omnivox-catalogue--scope)
+                             (equal (car omnivox-catalogue--scope) (plist-get entry :language)))
+                         (or (null (cdr omnivox-catalogue--scope))
+                             (equal (cadr omnivox-catalogue--scope) (omnivox-catalogue--name entry)))))))
+           omnivox-catalogue--entries))
+         (grouping (and omnivox-catalogue--metadata (not searching)
+                        (not (equal omnivox-catalogue--engine "flite"))
+                        (< (length omnivox-catalogue--scope) 2))))
+    (if grouping
+        (let ((groups (make-hash-table :test #'equal)) rows)
+          (seq-doseq (entry entries)
+            (let ((key (if omnivox-catalogue--scope (omnivox-catalogue--name entry)
+                         (plist-get entry :language))))
+              (puthash key (cons entry (gethash key groups)) groups)))
+          (maphash
+           (lambda (key members)
+             (push (list (list 'group key)
+                         (vector (if omnivox-catalogue--scope key
+                                   (format "%s (%s)" (or (omnivox-catalogue--meta (car members) :language_name) key) key))
+                                 "" "" ""
+                                 (format "%d %s; RET opens" (length members)
+                                         (if omnivox-catalogue--scope "quality choices" "models")))) rows)) groups)
+          (sort rows (lambda (a b) (string-lessp (aref (cadr a) 0) (aref (cadr b) 0)))))
+      (mapcar (lambda (entry)
+                (list (plist-get entry :id)
+                      (vector (plist-get entry :name) (plist-get entry :provider)
+                              (plist-get entry :language) (omnivox-catalogue--size entry)
+                              (omnivox-catalogue--status entry)))) (append entries nil)))))
+
+(defun omnivox-catalogue-back ()
+  "Return to the preceding catalogue group or screen."
+  (interactive)
+  (cond
+   ((not (string-empty-p omnivox-catalogue--query))
+    (setq omnivox-catalogue--query "")
+    (omnivox-catalogue--render)
+    (goto-char (point-min))
+    (omnivox-catalogue--speak-row))
+   (omnivox-catalogue--history
+    (pcase-let ((`(,scope ,id ,column) (pop omnivox-catalogue--history)))
+      (setq omnivox-catalogue--scope scope)
+      (omnivox-catalogue--render)
+      (goto-char (point-min))
+      (while (and (not (eobp)) (not (equal id (tabulated-list-get-id)))) (forward-line 1))
+      (move-to-column column)
+      (omnivox-catalogue--speak-row)))
+   (t (emacsvox-aural-quit))))
 
 (defun omnivox-catalogue--key (host entry)
   "Identify ENTRY on the exact native HOST."
@@ -87,6 +172,7 @@
                             (list 'language "Language" (plist-get entry :language))
                             (list 'description "Description" (plist-get entry :description))
                             (list 'size "Download" (omnivox-catalogue--size entry))
+                            (list 'speakers "Speakers" (format "%d; one shared model download" (length (plist-get entry :voices))))
                             (list 'licence "Licence" (plist-get entry :licence))
                             (list 'terms "Licence source" (plist-get entry :licence_url))
                             (list 'source "Voice source" (plist-get entry :source))
@@ -99,16 +185,21 @@
                             (list 'install "Install" "Download and validate; add disabled")
                             (list 'cancel "Cancel installation" "Wait for native validation cleanup")
                             (list 'library "Installed voices" "Enable the voice, then review Apply"))))
-          (cl-loop for entry across omnivox-catalogue--entries
-                   when (and (or (null omnivox-catalogue--engine)
-                                 (equal omnivox-catalogue--engine (plist-get entry :provider)))
-                             (string-match-p (regexp-quote (downcase omnivox-catalogue--query))
-                                             (downcase (format "%s %s" (plist-get entry :name)
-                                                               (plist-get entry :language)))))
-                   collect (list (plist-get entry :id)
-                                 (vector (plist-get entry :name) (plist-get entry :provider)
-                                         (plist-get entry :language) (omnivox-catalogue--size entry)
-                                         (omnivox-catalogue--status entry))))))
+          (omnivox-catalogue--rows)))
+  (when (and omnivox-catalogue--entry omnivox-catalogue--show-speakers)
+    (setq tabulated-list-entries
+          (append tabulated-list-entries
+                  (mapcar (lambda (voice)
+                            (list (list 'speaker (plist-get voice :speaker_index))
+                                  (vector (format "Speaker %s" (plist-get voice :speaker_index))
+                                          (plist-get voice :name))))
+                          (append (plist-get omnivox-catalogue--entry :voices) nil)))))
+  (setq header-line-format
+        (if omnivox-catalogue--entry
+            "i install disabled; s show speakers; c cancel; l installed voices; q back"
+          (concat (when omnivox-catalogue--scope
+                    (concat (string-join omnivox-catalogue--scope " / ") " — "))
+                  "RET opens; i install model; / search all; g refresh; q back")))
   (tabulated-list-print t)
   (unless tabulated-list-entries
     (let ((inhibit-read-only t))
@@ -248,7 +339,8 @@
   "Filter available voices by name or language QUERY."
   (interactive "sVoice name or language (empty for all): ")
   (setq omnivox-catalogue--query query)
-  (omnivox-catalogue--render))
+  (omnivox-catalogue--render)
+  (goto-char (point-min)))
 
 (defun omnivox-catalogue--speak-row ()
   "Speak the current catalogue row."
@@ -260,14 +352,25 @@
 (defun omnivox-catalogue-details ()
   "Show details or activate the selected detail action."
   (interactive)
-  (if omnivox-catalogue--entry
+  (if (eq (car-safe (tabulated-list-get-id)) 'group)
+      (progn
+        (push (list omnivox-catalogue--scope (tabulated-list-get-id) (current-column))
+              omnivox-catalogue--history)
+        (setq omnivox-catalogue--scope
+              (append omnivox-catalogue--scope (list (cadr (tabulated-list-get-id)))))
+        (omnivox-catalogue--render)
+        (goto-char (point-min))
+        (omnivox-catalogue--speak-row))
+    (if omnivox-catalogue--entry
       (pcase (tabulated-list-get-id)
         ('install (omnivox-catalogue-install))
         ('cancel (omnivox-catalogue-cancel))
         ('library (omnivox-catalogue-library))
         (_ (omnivox-catalogue--speak-row)))
     (let ((entry (omnivox-catalogue--selected)) (parent (current-buffer))
-          (host omnivox-catalogue--host) (json omnivox-catalogue--json)
+          (host omnivox-catalogue--host)
+          (json (or (cdr (assoc (plist-get (omnivox-catalogue--selected) :id)
+                               omnivox-catalogue--documents)) omnivox-catalogue--json))
           (entries omnivox-catalogue--entries) (installed omnivox-catalogue--installed)
           (buffer (get-buffer-create "*Omnivox Voice Download*")))
       (with-current-buffer buffer
@@ -279,11 +382,13 @@
         (tabulated-list-init-header)
         (omnivox-catalogue--render)
         (goto-char (point-min)))
-      (emacsvox-aural-ui--pop-to-buffer buffer #'omnivox-catalogue--speak-row))))
+      (emacsvox-aural-ui--pop-to-buffer buffer #'omnivox-catalogue--speak-row)))))
 
 (defvar-keymap omnivox-catalogue-mode-map
   :doc "Available voice actions."
   "RET" #'omnivox-catalogue-details
+  "q" #'omnivox-catalogue-back
+  "s" #'omnivox-catalogue-speakers
   "i" #'omnivox-catalogue-install "c" #'omnivox-catalogue-cancel
   "l" #'omnivox-catalogue-library "/" #'omnivox-catalogue-search)
 
@@ -300,18 +405,37 @@
 (defun omnivox-catalogue (&optional engine)
   "Browse reviewed downloadable voices, optionally restricted to ENGINE."
   (interactive)
-  (let* ((json (with-temp-buffer
-                 (insert-file-contents (expand-file-name "omnivox-voice-catalogue.json" emacsvox-etc-directory))
-                 (buffer-string)))
-         (service (omnivox-library--service)) entries)
+  (let* ((directory (expand-file-name "omnivox-piper-catalogues" emacsvox-etc-directory))
+         (manifest-file (expand-file-name "manifest.json" directory))
+         (manifest (when (file-readable-p manifest-file)
+                     (with-temp-buffer
+                       (insert-file-contents manifest-file)
+                       (json-parse-buffer :object-type 'plist :array-type 'array))))
+         (files (cons (expand-file-name "omnivox-voice-catalogue.json" emacsvox-etc-directory)
+                      (mapcar (lambda (name)
+                                (unless (and (stringp name) (equal name (file-name-nondirectory name))
+                                             (string-suffix-p ".json" name))
+                                  (error "Invalid catalogue manifest filename"))
+                                (expand-file-name name directory))
+                              (append (plist-get manifest :catalogues) nil))))
+         (service (omnivox-library--service)) entries documents)
     (unwind-protect
-        (setq entries (plist-get (plist-get (omnivox-library--request service (list :command "catalogue" :plan_json json))
-                                            :catalogue) :entries))
+        (dolist (file files)
+          (let* ((json (with-temp-buffer (insert-file-contents file) (buffer-string)))
+                 (reply (omnivox-library--request service (list :command "catalogue" :plan_json json))))
+            (seq-doseq (entry (plist-get (plist-get reply :catalogue) :entries))
+              ;; The original catalogue wins for existing identities such as Kristin.
+              (unless (assoc (plist-get entry :id) documents)
+                (push (cons (plist-get entry :id) json) documents)
+                (push entry entries)))))
       (when (process-live-p service) (delete-process service)))
     (let ((buffer (get-buffer-create "*Omnivox Available Voices*")))
       (with-current-buffer buffer
         (omnivox-catalogue-mode)
-        (setq omnivox-catalogue--engine engine omnivox-catalogue--json json omnivox-catalogue--entries entries)
+        (setq omnivox-catalogue--engine engine
+              omnivox-catalogue--documents documents
+              omnivox-catalogue--metadata (plist-get manifest :models)
+              omnivox-catalogue--entries (vconcat (nreverse entries)))
         (omnivox-catalogue-refresh))
       (emacsvox-aural-ui--pop-to-buffer buffer #'omnivox-catalogue--speak-row))))
 

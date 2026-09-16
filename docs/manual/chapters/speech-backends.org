@@ -446,13 +446,20 @@ before retrying.
   development Omnivox build with variant discovery and the bundled local
   launcher. It uses bundled variants and does not download files.
 - /Get more voices/ in Piper or Flite details opens the reviewed download
-  catalogue. The initial choices are Flite AWB and RMS, and Piper Kristin
-  medium. Press @@texinfo:@kbd{RET}@@ for the voice description, download
-  size, source, licence information and storage location; @@texinfo:@kbd{/}@@
-  filters the list by name or language. Press @@texinfo:@kbd{i}@@ to install.
+  catalogue. Piper is grouped by language, voice name and quality; Flite
+  offers AWB and RMS. Press @@texinfo:@kbd{RET}@@ to open a group or model,
+  and @@texinfo:@kbd{q}@@ to return. @@texinfo:@kbd{/}@@ searches all models
+  by name or language, including outside the current group. Model details
+  show download size, source, licence information and storage location.
+  @@texinfo:@kbd{s}@@ shows or hides the speakers sharing that model.
+  A model with several speakers downloads once; each speaker can be enabled
+  separately after installation. Press @@texinfo:@kbd{i}@@ to install.
   The download runs in the background without speaking each progress update.
   Omnivox checks each file and validates the voice before adding it disabled.
   Press @@texinfo:@kbd{c}@@ to request cancellation and wait for cleanup.
+  The shipped collection contains reviewed, pinned models that passed native
+  validation. Models with unresolved terms or unsupported configurations are
+  withheld; the catalogue is not a live listing of every upstream download.
 - After installation, press @@texinfo:@kbd{l}@@ to browse voices,
   @@texinfo:@kbd{+}@@ to enable the voice, and @@texinfo:@kbd{a}@@ to review
   Apply. Review covers both managed engines and both speech streams.

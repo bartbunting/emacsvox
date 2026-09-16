@@ -1577,14 +1577,21 @@ using that engine before retrying.
      with variant discovery and the bundled local launcher.  It uses
      bundled variants and does not download files.
    • _Get more voices_ in Piper or Flite details opens the reviewed
-     download catalogue.  The initial choices are Flite AWB and RMS, and
-     Piper Kristin medium.  Press ‘RET’ for the voice description,
-     download size, source, licence information and storage location;
-     ‘/’ filters the list by name or language.  Press ‘i’ to install.
-     The download runs in the background without speaking each progress
-     update.  Omnivox checks each file and validates the voice before
-     adding it disabled.  Press ‘c’ to request cancellation and wait for
-     cleanup.
+     download catalogue.  Piper is grouped by language, voice name and
+     quality; Flite offers AWB and RMS.  Press ‘RET’ to open a group or
+     model, and ‘q’ to return.  ‘/’ searches all models by name or
+     language, including outside the current group.  Model details show
+     download size, source, licence information and storage location.
+     ‘s’ shows or hides the speakers sharing that model.  A model with
+     several speakers downloads once; each speaker can be enabled
+     separately after installation.  Press ‘i’ to install.  The download
+     runs in the background without speaking each progress update.
+     Omnivox checks each file and validates the voice before adding it
+     disabled.  Press ‘c’ to request cancellation and wait for cleanup.
+     The shipped collection contains reviewed, pinned models that passed
+     native validation.  Models with unresolved terms or unsupported
+     configurations are withheld; the catalogue is not a live listing of
+     every upstream download.
    • After installation, press ‘l’ to browse voices, ‘+’ to enable the
      voice, and ‘a’ to review Apply.  Review covers both managed engines
      and both speech streams.  Installation alone does not load the
@@ -6168,29 +6175,3 @@ buffer and adds speech feedback and review commands.  See *note
 (emacs)Term Mode:: for the emulator itself and *note
 (emacsvox-reference)emacsvox-eterm:: for the complete Emacsvox API
 inventory.
-
-
-File: emacsvox.info,  Node: Term Input Modes,  Next: Term Speech Feedback,  Prev: Starting Term,  Up: Running Terminal Based Applications
-
-12.2 Character And Line Input Modes
-===================================
-
-Term starts in character mode.  Choose the mode according to who should
-receive your keys:
-
-Character mode
-     Most keys are sent immediately to the terminal program.  Use this
-     for full-screen or key-driven terminal applications.  Press ‘C-c
-     C-j’ to enter line mode.  Because normal Emacs prefixes may belong
-     to the child program, use ‘C-c C-h m’ for mode help and ‘C-c M-x’
-     to run an Emacs command.
-Line mode
-     Normal Emacs editing commands edit the pending input.  <RET> sends
-     that input to the terminal program.  Use ‘C-h m’ and other ordinary
-     Emacs Help keys directly.  Press ‘C-c C-k’ to return to character
-     mode.
-
-   Emacsvox announces ‘Terminal line mode’ or ‘Terminal character mode’
-after an interactive switch.  In either mode, ‘C-t’ begins the Emacsvox
-Term review prefix.  To send a literal ‘C-t’ to the child program in
-character mode, press ‘C-t C-t’.

@@ -14,6 +14,32 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Term Input Modes,  Next: Term Speech Feedback,  Prev: Starting Term,  Up: Running Terminal Based Applications
+
+12.2 Character And Line Input Modes
+===================================
+
+Term starts in character mode.  Choose the mode according to who should
+receive your keys:
+
+Character mode
+     Most keys are sent immediately to the terminal program.  Use this
+     for full-screen or key-driven terminal applications.  Press ‘C-c
+     C-j’ to enter line mode.  Because normal Emacs prefixes may belong
+     to the child program, use ‘C-c C-h m’ for mode help and ‘C-c M-x’
+     to run an Emacs command.
+Line mode
+     Normal Emacs editing commands edit the pending input.  <RET> sends
+     that input to the terminal program.  Use ‘C-h m’ and other ordinary
+     Emacs Help keys directly.  Press ‘C-c C-k’ to return to character
+     mode.
+
+   Emacsvox announces ‘Terminal line mode’ or ‘Terminal character mode’
+after an interactive switch.  In either mode, ‘C-t’ begins the Emacsvox
+Term review prefix.  To send a literal ‘C-t’ to the child program in
+character mode, press ‘C-t C-t’.
+
+
 File: emacsvox.info,  Node: Term Speech Feedback,  Next: Reviewing The Term Screen,  Prev: Term Input Modes,  Up: Running Terminal Based Applications
 
 12.3 Automatic Speech Feedback

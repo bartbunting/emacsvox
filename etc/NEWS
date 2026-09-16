@@ -8,6 +8,15 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox Unreleased --- Current User-Visible Changes
 
+** Expanded Piper voice catalogue
+
+Piper downloads are grouped by language, voice and quality. Slash searches
+across the collection; q returns to the preceding group. Model details can
+show the speakers sharing one download, with separate enablement after
+installation. Catalogue generation pins upstream files, records model-card
+review, verifies checksums and requires native validation before export.
+Pending and unsupported models remain in a maintainer review report.
+
 ** Bundled eSpeak variants
 
 eSpeak engine details now offer a base-voice and variant picker with retained
