@@ -447,7 +447,9 @@ before retrying.
   launcher. It uses bundled variants and does not download files.
 - /Get more voices/ in Piper or Flite details opens the reviewed download
   catalogue. Piper is grouped by language, voice name and quality; Flite
-  offers AWB and RMS. Press @@texinfo:@kbd{RET}@@ to open a group or model,
+  offers AWB and RMS. Voices with one quality appear directly in their
+  language group; only voices with several qualities need another group.
+  Press @@texinfo:@kbd{RET}@@ to open a group or model,
   and @@texinfo:@kbd{q}@@ to return. @@texinfo:@kbd{/}@@ searches all models
   by name or language, including outside the current group. Model details
   show download size, source, licence information and storage location.
@@ -456,6 +458,11 @@ before retrying.
   separately after installation. Press @@texinfo:@kbd{i}@@ to install.
   The download runs in the background without speaking each progress update.
   Omnivox checks each file and validates the voice before adding it disabled.
+  Stay in the catalogue and press @@texinfo:@kbd{e}@@ to enable or disable
+  the installed voice, then @@texinfo:@kbd{a}@@ to review and Apply to both
+  speech streams. For a shared model, @@texinfo:@kbd{e}@@ asks which speaker
+  to change. Enabling alone does not restart speech. These actions also appear
+  near the top of model details, alongside the installed and enabled status.
   Press @@texinfo:@kbd{c}@@ to request cancellation and wait for cleanup.
   The shipped collection contains reviewed, pinned models that passed native
   validation. Models with unresolved terms or unsupported configurations are

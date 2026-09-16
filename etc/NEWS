@@ -13,7 +13,10 @@ Maintained by Emacsvox Contributors.
 Piper downloads are grouped by language, voice and quality. Slash searches
 across the collection; q returns to the preceding group. Model details can
 show the speakers sharing one download, with separate enablement after
-installation. Catalogue generation pins upstream files, records model-card
+installation. Single-quality voices appear directly in their language group.
+The catalogue now supports e to enable or disable an installed speaker and
+a to review Apply, with actions near the top of model details.
+Catalogue generation pins upstream files, records model-card
 review, verifies checksums and requires native validation before export.
 Pending and unsupported models remain in a maintainer review report.
 

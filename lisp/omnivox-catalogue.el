@@ -37,6 +37,8 @@
 (defvar-local omnivox-catalogue--json nil)
 (defvar-local omnivox-catalogue--entries nil)
 (defvar-local omnivox-catalogue--installed nil)
+(defvar-local omnivox-catalogue--voices nil)
+(defvar-local omnivox-catalogue--index-sha nil)
 (defvar-local omnivox-catalogue--host nil)
 (defvar-local omnivox-catalogue--entry nil)
 (defvar-local omnivox-catalogue--parent nil)
@@ -95,18 +97,72 @@
               (puthash key (cons entry (gethash key groups)) groups)))
           (maphash
            (lambda (key members)
-             (push (list (list 'group key)
+             (push (if (and omnivox-catalogue--scope (= 1 (length members)))
+                       (omnivox-catalogue--model-row (car members))
+                     (list (list 'group key)
                          (vector (if omnivox-catalogue--scope key
                                    (format "%s (%s)" (or (omnivox-catalogue--meta (car members) :language_name) key) key))
                                  "" "" ""
                                  (format "%d %s; RET opens" (length members)
-                                         (if omnivox-catalogue--scope "quality choices" "models")))) rows)) groups)
+                                         (if omnivox-catalogue--scope "quality choices" "models"))))) rows)) groups)
           (sort rows (lambda (a b) (string-lessp (aref (cadr a) 0) (aref (cadr b) 0)))))
-      (mapcar (lambda (entry)
-                (list (plist-get entry :id)
-                      (vector (plist-get entry :name) (plist-get entry :provider)
-                              (plist-get entry :language) (omnivox-catalogue--size entry)
-                              (omnivox-catalogue--status entry)))) (append entries nil)))))
+      (mapcar #'omnivox-catalogue--model-row (append entries nil)))))
+
+(defun omnivox-catalogue--model-row (entry)
+  "Return a selectable model row for ENTRY."
+  (list (plist-get entry :id)
+        (vector (plist-get entry :name) (plist-get entry :provider)
+                (plist-get entry :language) (omnivox-catalogue--size entry)
+                (omnivox-catalogue--status entry))))
+
+(defun omnivox-catalogue--installed-speakers (entry)
+  "Return installed library speakers belonging to ENTRY."
+  (seq-filter
+   (lambda (voice)
+     (and (equal (plist-get voice :engine_id) (plist-get entry :provider))
+          (seq-some (lambda (projection)
+                      (equal (plist-get projection :physical_id) (plist-get voice :physical_id)))
+                    (plist-get entry :voices))))
+   omnivox-catalogue--voices))
+
+(defun omnivox-catalogue-toggle ()
+  "Enable or disable an installed speaker, leaving Apply explicit."
+  (interactive)
+  (let ((entry (omnivox-catalogue--selected)))
+    (omnivox-catalogue-refresh)
+    (let* ((voices (append (omnivox-catalogue--installed-speakers entry) nil))
+           (choices (mapcar (lambda (voice)
+                              (cons (format "%s [%s; speaker %s]" (plist-get voice :display_name)
+                                            (if (eq t (plist-get voice :enabled)) "enabled" "disabled")
+                                            (plist-get voice :speaker_index)) voice)) voices))
+           (voice (cond ((null voices) (user-error "Install this model with i first"))
+                        ((= 1 (length voices)) (car voices))
+                        (t (cdr (assoc (completing-read "Speaker to enable or disable: " choices nil t) choices)))))
+           (service (omnivox-library--service)))
+      (unwind-protect
+          (progn
+            (unless voice (user-error "Choose a speaker first"))
+            (unless (equal (omnivox-catalogue--key omnivox-catalogue--host nil)
+                           (omnivox-catalogue--key (omnivox-library--request service '(:command "host")) nil))
+              (user-error "Speech target changed; reopen the voice catalogue"))
+            (omnivox-library--request
+             service (list :command "enable" :engine (plist-get voice :engine_id)
+                           :voice (plist-get voice :physical_id)
+                           :enabled (if (eq t (plist-get voice :enabled)) :false t)
+                           :expected_sha256 omnivox-catalogue--index-sha)))
+        (when (process-live-p service) (delete-process service)))
+      (omnivox-catalogue-refresh)
+      (run-hooks 'omnivox-library--changed-hook)
+      (message "%s %s; press a to review and Apply to both speech streams"
+               (plist-get voice :display_name)
+               (if (eq t (plist-get voice :enabled)) "disabled" "enabled")))))
+
+(defun omnivox-catalogue-apply ()
+  "Review and Apply enabled voices to both speech streams."
+  (interactive)
+  (omnivox-catalogue-refresh)
+  (call-interactively #'omnivox-library-apply)
+  (omnivox-catalogue-refresh))
 
 (defun omnivox-catalogue-back ()
   "Return to the preceding catalogue group or screen."
@@ -150,7 +206,11 @@
      ((seq-some (lambda (package)
                   (equal (plist-get (plist-get package :catalogue) :entry_id)
                          (plist-get entry :id))) omnivox-catalogue--installed)
-      "Installed")
+      (let* ((voices (omnivox-catalogue--installed-speakers entry))
+             (enabled (seq-count (lambda (voice) (eq t (plist-get voice :enabled))) voices)))
+        (cond ((null voices) "Installed")
+              ((zerop enabled) "Installed; disabled")
+              (t (format "Installed; %d of %d enabled" enabled (length voices))))))
      ((plist-get operation :error) (plist-get operation :error))
      (progress
       (format "%s%s" (plist-get progress :state)
@@ -168,6 +228,11 @@
                    (operation (omnivox-catalogue--operation entry)))
               (mapcar (lambda (row) (list (car row) (vector (cadr row) (or (caddr row) ""))))
                       (list (list 'name "Voice" (plist-get entry :name))
+                            (list 'status "Status" (omnivox-catalogue--status entry))
+                            (list 'install "Install (i)" "Download and validate; add disabled")
+                            (list 'enable "Enable or disable (e)" "Change desired state; choose a speaker for shared models")
+                            (list 'apply "Apply (a)" "Review enabled voices and restart both speech streams")
+                            (list 'library "Browse voices (l)" "Installed, enabled and active states; samples and palette editing")
                             (list 'engine "Engine" (plist-get entry :provider))
                             (list 'language "Language" (plist-get entry :language))
                             (list 'description "Description" (plist-get entry :description))
@@ -178,13 +243,10 @@
                             (list 'source "Voice source" (plist-get entry :source))
                             (list 'revision "Source revision" (plist-get entry :source_revision))
                             (list 'destination "Voice storage" (plist-get omnivox-catalogue--host :root))
-                            (list 'status "Status" (omnivox-catalogue--status entry))
                             (list 'detail "Progress detail" (or (plist-get operation :error)
                                                                 (plist-get (plist-get operation :progress) :detail)))
                             (list 'operation "Operation" (plist-get (plist-get operation :progress) :operation_id))
-                            (list 'install "Install" "Download and validate; add disabled")
-                            (list 'cancel "Cancel installation" "Wait for native validation cleanup")
-                            (list 'library "Installed voices" "Enable the voice, then review Apply"))))
+                            (list 'cancel "Cancel installation" "Wait for native validation cleanup"))))
           (omnivox-catalogue--rows)))
   (when (and omnivox-catalogue--entry omnivox-catalogue--show-speakers)
     (setq tabulated-list-entries
@@ -196,10 +258,10 @@
                           (append (plist-get omnivox-catalogue--entry :voices) nil)))))
   (setq header-line-format
         (if omnivox-catalogue--entry
-            "i install disabled; s show speakers; c cancel; l installed voices; q back"
+            "i install; e enable/disable; a Apply; s speakers; l browse voices; q back"
           (concat (when omnivox-catalogue--scope
                     (concat (string-join omnivox-catalogue--scope " / ") " — "))
-                  "RET opens; i install model; / search all; g refresh; q back")))
+                  "RET opens; i install; e enable/disable; a Apply; / search; q back")))
   (tabulated-list-print t)
   (unless tabulated-list-entries
     (let ((inhibit-read-only t))
@@ -216,10 +278,24 @@
             (unless (equal (omnivox-catalogue--key host nil)
                            (omnivox-catalogue--key omnivox-catalogue--host nil))
               (user-error "Speech target changed; reopen the voice catalogue")))
-          (setq omnivox-catalogue--host host
-                omnivox-catalogue--installed
-                (plist-get (plist-get (omnivox-library--request service '(:command "inspect")) :index) :packages)))
+          (let* ((reply (omnivox-library--request service '(:command "inspect")))
+                 (index (plist-get reply :index)))
+            (setq omnivox-catalogue--host host
+                  omnivox-catalogue--index-sha (plist-get reply :sha256)
+                  omnivox-catalogue--voices (plist-get index :voices)
+                  omnivox-catalogue--installed (plist-get index :packages))))
       (when (process-live-p service) (delete-process service))))
+  (let ((origin (current-buffer)) (host omnivox-catalogue--host)
+        (installed omnivox-catalogue--installed) (voices omnivox-catalogue--voices)
+        (sha omnivox-catalogue--index-sha))
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (and (not (eq buffer origin)) (derived-mode-p 'omnivox-catalogue-mode)
+                   (equal (omnivox-catalogue--key host nil)
+                          (omnivox-catalogue--key omnivox-catalogue--host nil)))
+          (setq omnivox-catalogue--installed installed omnivox-catalogue--voices voices
+                omnivox-catalogue--index-sha sha)
+          (omnivox-catalogue--render)))))
   (omnivox-catalogue--render))
 
 (defun omnivox-catalogue--selected ()
@@ -267,7 +343,7 @@
                          (if (equal "installed-disabled" (plist-get progress :state))
                              (progn
                                (run-hooks 'omnivox-library--changed-hook)
-                               (message "Voice installed disabled. Press l to browse voices, plus to enable, then a to Apply"))
+                               (message "Voice installed disabled. Press e to enable, then a to review and Apply"))
                            (message "Voice installation: %s" (plist-get progress :state))))))
                     ("error" (setq operation (plist-put operation :error (plist-get reply :message))))
                     (_ (error "Unknown installer response"))))))
@@ -301,7 +377,7 @@
     (omnivox-catalogue-refresh)
     (when (seq-some (lambda (package) (equal (plist-get (plist-get package :catalogue) :entry_id)
                                              (plist-get entry :id))) omnivox-catalogue--installed)
-      (user-error "Voice already installed; press l to enable it"))
+      (user-error "Voice already installed; press e to enable it"))
     (unless omnivox-catalogue--entry (omnivox-catalogue-details))
     (when (yes-or-no-p (format "Download %s (%s), validate and install disabled? "
                                (plist-get entry :name) (omnivox-catalogue--size entry)))
@@ -364,6 +440,8 @@
     (if omnivox-catalogue--entry
       (pcase (tabulated-list-get-id)
         ('install (omnivox-catalogue-install))
+        ('enable (omnivox-catalogue-toggle))
+        ('apply (omnivox-catalogue-apply))
         ('cancel (omnivox-catalogue-cancel))
         ('library (omnivox-catalogue-library))
         (_ (omnivox-catalogue--speak-row)))
@@ -372,12 +450,14 @@
           (json (or (cdr (assoc (plist-get (omnivox-catalogue--selected) :id)
                                omnivox-catalogue--documents)) omnivox-catalogue--json))
           (entries omnivox-catalogue--entries) (installed omnivox-catalogue--installed)
+          (voices omnivox-catalogue--voices) (sha omnivox-catalogue--index-sha)
           (buffer (get-buffer-create "*Omnivox Voice Download*")))
       (with-current-buffer buffer
         (omnivox-catalogue-mode)
         (setq omnivox-catalogue--entry entry omnivox-catalogue--host host
               omnivox-catalogue--json json omnivox-catalogue--entries entries
               omnivox-catalogue--installed installed omnivox-catalogue--parent parent
+              omnivox-catalogue--voices voices omnivox-catalogue--index-sha sha
               tabulated-list-format [("Field" 22 nil) ("Value" 0 nil)])
         (tabulated-list-init-header)
         (omnivox-catalogue--render)
@@ -389,11 +469,12 @@
   "RET" #'omnivox-catalogue-details
   "q" #'omnivox-catalogue-back
   "s" #'omnivox-catalogue-speakers
+  "e" #'omnivox-catalogue-toggle "a" #'omnivox-catalogue-apply
   "i" #'omnivox-catalogue-install "c" #'omnivox-catalogue-cancel
   "l" #'omnivox-catalogue-library "/" #'omnivox-catalogue-search)
 
 (define-derived-mode omnivox-catalogue-mode emacsvox-aural-tabulated-mode "Available Voices"
-  "Available voices: RET details; i install disabled; c cancel; l installed."
+  "Available voices: RET opens; i installs; e enables/disables; a reviews Apply."
   (emacsvox-aural-ui-configure-tabulated "Available Omnivox voices"
                                          #'omnivox-catalogue--speak-row #'omnivox-catalogue-refresh
                                          #'omnivox-catalogue--speak-row)
