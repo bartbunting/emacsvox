@@ -39,6 +39,10 @@
 (require 'omnivox-engine-settings)
 (require 'omnivox-library-apply)
 
+(declare-function emacsvox-aural-voice-workbench "emacsvox-aural-voice-workbench" (&optional view))
+(declare-function emacsvox-aural-voice-workbench--open-engine "emacsvox-aural-voice-workbench" (engine parent))
+(declare-function emacsvox-aural-voice-workbench--library-action "emacsvox-aural-voice-workbench" (action &optional operation))
+(declare-function emacsvox-aural-voice-workbench--library-start "emacsvox-aural-voice-workbench" ())
 (defvar tts-program)
 (defvar tts-speaker-process)
 (defvar tts-notify-process)
@@ -66,6 +70,7 @@
 (defvar omnivox-library--support-cache nil)
 (defvar omnivox-library--sequence 0)
 (defvar omnivox-library--busy nil)
+(defvar omnivox-library--changed-hook nil "Hook after installed voice selections change.")
 (defvar omnivox-library-last-result nil "Most recent local Apply result.")
 (defvar-local omnivox-library--engine nil)
 (defvar-local omnivox-library--index nil)
@@ -654,73 +659,84 @@ Press q to return to engine details.
 (defun omnivox-library-refresh ()
   "Refresh installed metadata without loading models or changing speech."
   (interactive)
-  (let ((service (omnivox-library--service)))
-    (unwind-protect
-        (let ((reply (omnivox-library--request service '(:command "inspect"))))
-          (setq omnivox-library--index (plist-get reply :index)
-                omnivox-library--index-sha (plist-get reply :sha256)
-                tabulated-list-entries
-                (mapcar (lambda (row)
-                          (list (cons (plist-get row :engine_id) (plist-get row :physical_id))
-                                (vector (plist-get row :engine_id) (plist-get row :display_name)
-                                        (if (eq (plist-get row :enabled) t) "Enabled" "Disabled")
-                                        (plist-get row :physical_id))))
-                        (seq-filter (lambda (row)
-                                      (or (null omnivox-library--engine)
-                                          (equal omnivox-library--engine (plist-get row :engine_id))))
-                                    (plist-get omnivox-library--index :voices))))
-          (tabulated-list-print t)
-          (unless tabulated-list-entries
-            (let ((inhibit-read-only t))
-              (insert (if (equal omnivox-library--engine "piper")
-                          "No Piper voices have been added.\n\nPress d to browse downloadable voices; q returns to engine details.\n"
-                        omnivox-library--empty-help))
-              (goto-char (point-min)))))
-      (when (process-live-p service) (delete-process service)))))
+  (if (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+      (emacsvox-aural-voice-workbench--library-start)
+    (let ((service (omnivox-library--service)))
+      (unwind-protect
+          (let ((reply (omnivox-library--request service '(:command "inspect"))))
+            (setq omnivox-library--index (plist-get reply :index)
+                  omnivox-library--index-sha (plist-get reply :sha256)
+                  tabulated-list-entries
+                  (mapcar (lambda (row)
+                            (list (cons (plist-get row :engine_id) (plist-get row :physical_id))
+                                  (vector (plist-get row :engine_id) (plist-get row :display_name)
+                                          (if (eq (plist-get row :enabled) t) "Enabled" "Disabled")
+                                          (plist-get row :physical_id))))
+                          (seq-filter (lambda (row)
+                                        (or (null omnivox-library--engine)
+                                            (equal omnivox-library--engine (plist-get row :engine_id))))
+                                      (plist-get omnivox-library--index :voices))))
+            (tabulated-list-print t)
+            (unless tabulated-list-entries
+              (let ((inhibit-read-only t))
+                (insert (if (equal omnivox-library--engine "piper")
+                            "No Piper voices have been added.\n\nPress d to browse downloadable voices; q returns to engine details.\n"
+                          omnivox-library--empty-help))
+                (goto-char (point-min)))))
+        (when (process-live-p service) (delete-process service))))))
 
 (defun omnivox-library-toggle ()
   "Toggle desired enablement of the installed voice at point. Apply is separate."
   (interactive)
-  (let* ((id (or (tabulated-list-get-id) (user-error "No installed voice on this row")))
-         (row (seq-find (lambda (row) (and (equal (car id) (plist-get row :engine_id))
-                                           (equal (cdr id) (plist-get row :physical_id))))
-                        (plist-get omnivox-library--index :voices)))
-         (service (omnivox-library--service)))
-    (unwind-protect
-        (omnivox-library--request service (list :command "enable" :engine (car id) :voice (cdr id)
-                                               :enabled (if (eq (plist-get row :enabled) t) :false t)
-                                               :expected_sha256 omnivox-library--index-sha))
-      (when (process-live-p service) (delete-process service)))
-    (omnivox-library-refresh)
-    (message "%s %s; press a to review and Apply"
-             (plist-get row :display_name)
-             (if (eq (plist-get row :enabled) t) "disabled" "enabled"))))
+  (if (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+      (emacsvox-aural-voice-workbench--library-action 'toggle)
+    (let* ((id (or (tabulated-list-get-id) (user-error "No installed voice on this row")))
+           (row (seq-find (lambda (row) (and (equal (car id) (plist-get row :engine_id))
+                                             (equal (cdr id) (plist-get row :physical_id))))
+                          (plist-get omnivox-library--index :voices)))
+           (service (omnivox-library--service)))
+      (unwind-protect
+          (omnivox-library--request service (list :command "enable" :engine (car id) :voice (cdr id)
+                                                  :enabled (if (eq (plist-get row :enabled) t) :false t)
+                                                  :expected_sha256 omnivox-library--index-sha))
+        (when (process-live-p service) (delete-process service)))
+      (omnivox-library-refresh)
+      (run-hooks 'omnivox-library--changed-hook)
+      (message "%s %s; press a to review and Apply"
+               (plist-get row :display_name)
+               (if (eq (plist-get row :enabled) t) "disabled" "enabled")))))
 
 (defun omnivox-library-import-validated (operation)
   "Install a successfully validated native OPERATION, initially disabled."
   (interactive "sNative validation operation UUID: ")
-  (omnivox-library-apply--uuid operation)
-  (let ((service (omnivox-library--service)))
-    (unwind-protect
-        (omnivox-library--request service (list :command "import" :operation operation
-                                               :package (omnivox-library--uuid) :revision (omnivox-library--uuid)
-                                               :expected_sha256 omnivox-library--index-sha))
-      (when (process-live-p service) (delete-process service))))
-  (omnivox-library-refresh)
-  (message "Voices installed disabled; original files retained"))
+  (if (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+      (emacsvox-aural-voice-workbench--library-action 'import operation)
+    (omnivox-library-apply--uuid operation)
+    (let ((service (omnivox-library--service)))
+      (unwind-protect
+          (omnivox-library--request service (list :command "import" :operation operation
+                                                  :package (omnivox-library--uuid) :revision (omnivox-library--uuid)
+                                                  :expected_sha256 omnivox-library--index-sha))
+        (when (process-live-p service) (delete-process service))))
+    (omnivox-library-refresh)
+    (run-hooks 'omnivox-library--changed-hook)
+    (message "Voices installed disabled; original files retained")))
 
 (defun omnivox-library-include-flite-slt ()
   "Include built-in Flite SLT in desired state, enabled for the next Apply."
   (interactive)
-  (when (equal omnivox-library--engine "piper")
-    (user-error "Bundled SLT belongs to Flite; open the Flite library to add it"))
-  (let ((service (omnivox-library--service)))
-    (unwind-protect
-        (omnivox-library--request service (list :command "include-flite-slt"
-                                               :expected_sha256 omnivox-library--index-sha))
-      (when (process-live-p service) (delete-process service))))
-  (omnivox-library-refresh)
-  (message "Built-in Flite SLT included and enabled for the next Apply"))
+  (if (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+      (emacsvox-aural-voice-workbench--library-action 'slt)
+    (when (equal omnivox-library--engine "piper")
+      (user-error "Bundled SLT belongs to Flite; open the Flite library to add it"))
+    (let ((service (omnivox-library--service)))
+      (unwind-protect
+          (omnivox-library--request service (list :command "include-flite-slt"
+                                                  :expected_sha256 omnivox-library--index-sha))
+        (when (process-live-p service) (delete-process service))))
+    (omnivox-library-refresh)
+    (run-hooks 'omnivox-library--changed-hook)
+    (message "Built-in Flite SLT included and enabled for the next Apply")))
 
 (defun omnivox-library-show-result ()
   "Show the last Apply outcome and any retained native process attempts."
@@ -780,15 +796,10 @@ Press q to return to engine details.
 (defun omnivox-library (&optional engine)
   "Open installed voices on the local speech target, optionally for ENGINE."
   (interactive)
-  (require 'emacsvox-aural-ui)
-  (let ((buffer (get-buffer-create "*Omnivox Installed Voices*")))
-    (with-current-buffer buffer
-      (omnivox-library-mode)
-      (setq omnivox-library--engine (and (member engine '("piper" "flite")) engine))
-      (omnivox-library-refresh)
-      (goto-char (point-min)))
-    (emacsvox-aural-ui--pop-to-buffer
-     buffer (lambda () (omnivox-library--speak-row t)))))
+  (require 'emacsvox-aural-voice-workbench)
+  (if engine
+      (emacsvox-aural-voice-workbench--open-engine engine (current-buffer))
+    (emacsvox-aural-voice-workbench 'physical)))
 
 (provide 'omnivox-library)
 ;;; omnivox-library.el ends here

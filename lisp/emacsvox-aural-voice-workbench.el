@@ -42,6 +42,21 @@
 (require 'emacsvox-aural-inspection)
 (require 'emacsvox-aural-preview)
 (require 'emacsvox-aural-voice-palettes)
+(require 'omnivox-library)
+(declare-function omnivox-voice-inventory "omnivox-voices" ())
+(defvar omnivox-engine-inventory)
+(defvar omnivox--control-inventory-property)
+(declare-function omnivox--send-control-request "omnivox-voices" (process request callback))
+(declare-function omnivox--pending-requests "omnivox-voices" (process))
+(declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
+(defvar-local emacsvox-aural-voice-workbench--library-source nil)
+(defvar-local emacsvox-aural-voice-workbench--library-reply nil)
+(defvar-local emacsvox-aural-voice-workbench--library-error nil)
+(defvar-local emacsvox-aural-voice-workbench--library-cancel nil)
+(defvar-local emacsvox-aural-voice-workbench--library-ticket nil)
+(defvar-local emacsvox-aural-voice-workbench--library-lanes nil)
+
+
 (declare-function emacsvox-aural-voice-editor-open "emacsvox-aural-voice-editor" (palette voice &optional source text))
 (declare-function emacsvox-aural-voice-editor-experiment "emacsvox-aural-voice-editor" (pair source text))
 (declare-function emacsvox-aural-voice-editor--status-for "emacsvox-aural-voice-editor" (palette voice))
@@ -241,7 +256,12 @@
 
 (defun emacsvox-aural-voice-workbench--header ()
   "Return the non-speaking status header for the current workbench."
-  (let* ((inventory emacsvox-aural-voice-workbench-inventory)
+  (if (emacsvox-aural-voice-workbench--library-p)
+      (format " P sample; t tune; + enable/disable; a Apply; d download; b include SLT; R refresh; q back | %s"
+              (cond (emacsvox-aural-voice-workbench--library-ticket "Loading library")
+                    (emacsvox-aural-voice-workbench--library-error emacsvox-aural-voice-workbench--library-error)
+                    (t "Enabled is desired; Active is usable on a stream, not memory residency")))
+    (let* ((inventory emacsvox-aural-voice-workbench-inventory)
          (counts (emacsvox-aural-voice-workbench--inventory-counts))
          (generation (plist-get inventory :generation))
          (profile (or (plist-get
@@ -270,7 +290,7 @@
      (or (plist-get emacsvox-aural-voice-workbench-last-preview :status)
          "not run")
      (if emacsvox-aural-voice-workbench--details-parent
-         " | Main speech target; q returns to engine details" ""))))
+         " | Main speech target; q returns to engine details" "")))))
 
 (defun emacsvox-aural-voice-workbench-status ()
   "Return concise Voice Workbench status for Aural Home."
@@ -425,6 +445,240 @@
    for engine in (plist-get emacsvox-aural-voice-workbench-inventory :engines)
    append (mapcar (lambda (voice) (list engine voice))
                   (plist-get engine :voices))))
+
+(defun emacsvox-aural-voice-workbench--library-p ()
+  "Whether this view can show Omnivox library information."
+  (and (eq emacsvox-aural-voice-workbench-view 'physical)
+       (equal "omnivox" (plist-get emacsvox-aural-voice-workbench-inventory :adapter))))
+
+(defun emacsvox-aural-voice-workbench--library-index ()
+  "Return installed metadata only while its native target is selected."
+  (when (and emacsvox-aural-voice-workbench--library-source
+             (equal emacsvox-aural-voice-workbench--library-source
+                    (omnivox-library--source-key)))
+    (plist-get emacsvox-aural-voice-workbench--library-reply :index)))
+
+(defun emacsvox-aural-voice-workbench--library-row (id)
+  "Find installed metadata for physical ID, an engine and voice list."
+  (seq-find (lambda (row)
+              (equal id (list (plist-get row :engine_id) (plist-get row :physical_id))))
+            (plist-get (emacsvox-aural-voice-workbench--library-index) :voices)))
+
+(defun emacsvox-aural-voice-workbench--browse-pairs ()
+  "Combine live and installed voices for browsing, leaving routing untouched."
+  (let ((pairs (emacsvox-aural-voice-workbench--all-engine-voices)))
+    (when (emacsvox-aural-voice-workbench--library-p)
+      (dolist (row (append (plist-get (emacsvox-aural-voice-workbench--library-index) :voices) nil))
+        (let ((engine (plist-get row :engine_id)) (voice (plist-get row :physical_id)))
+          (unless (seq-some (lambda (pair)
+                              (and (equal engine (plist-get (car pair) :engine-id))
+                                   (equal voice (plist-get (cadr pair) :voice-id)))) pairs)
+            (setq pairs
+                  (append pairs
+                          (list (list (list :engine-id engine :availability "unavailable")
+                                      (list :voice-id voice :display-name (plist-get row :display_name)
+                                            :language (let ((language (plist-get row :language)))
+                                                        (unless (eq language :null) language))
+                                            :availability "not active on main speech")))))))))
+    pairs))
+
+(defun emacsvox-aural-voice-workbench--library-stop ()
+  "Cancel this buffer's private inspection and pending status requests."
+  (when emacsvox-aural-voice-workbench--library-cancel
+    (funcall emacsvox-aural-voice-workbench--library-cancel))
+  (setq emacsvox-aural-voice-workbench--library-cancel nil
+        emacsvox-aural-voice-workbench--library-ticket nil)
+  (dolist (lane emacsvox-aural-voice-workbench--library-lanes)
+    (when-let* ((cancel (plist-get (cdr lane) :cancel))) (funcall cancel)))
+  (setq emacsvox-aural-voice-workbench--library-lanes nil))
+
+(defun emacsvox-aural-voice-workbench--library-check-lanes ()
+  "Request eligibility once for each current worker and inventory generation."
+  (when (emacsvox-aural-voice-workbench--library-p)
+    (require 'omnivox-voices)
+    (dolist (role '(main notification))
+      (let* ((process (if (eq role 'main) tts-speaker-process tts-notify-process))
+             (raw (and process (process-get process omnivox--control-inventory-property)))
+             (generation (plist-get raw :inventory_generation))
+             (old (alist-get role emacsvox-aural-voice-workbench--library-lanes)))
+        (unless (and (eq process (plist-get old :process))
+                     (equal generation (plist-get old :generation)))
+          (when-let* ((cancel (plist-get old :cancel))) (funcall cancel))
+          (let ((record (list :process process :generation generation :status nil
+                              :cancel nil :normalized nil :normalized-source nil))
+                (buffer (current-buffer)) id timer done)
+            (setf (alist-get role emacsvox-aural-voice-workbench--library-lanes) record)
+            (when (and process (process-live-p process) generation
+                       (omnivox--process-supports-p process "voice_library_v1"))
+              (cl-labels
+                  ((finish (&optional response)
+                     (unless done
+                       (setq done t)
+                       (when timer (cancel-timer timer))
+                       (when id (remhash id (omnivox--pending-requests process)))
+                       (when (buffer-live-p buffer)
+                         (with-current-buffer buffer
+                           (when (eq record (alist-get role emacsvox-aural-voice-workbench--library-lanes))
+                             (when (and (equal (plist-get response :type) "voice_library_status_v1")
+                                        (equal generation (plist-get response :inventory_generation)))
+                               (setf (plist-get record :status) response))
+                             (emacsvox-aural-voice-workbench-refresh)))))))
+                (setf (plist-get record :cancel) (lambda ()
+                                                   (setq done t)
+                                                   (when timer (cancel-timer timer))
+                                                   (when id (remhash id (omnivox--pending-requests process)))))
+                (setq timer (run-at-time 10 nil #'finish))
+                (condition-case nil
+                    (setq id (omnivox--send-control-request
+                              process '(:type "voice_library_status_v1")
+                              (lambda (worker response)
+                                (when (eq worker process) (finish response)))))
+                  (error (finish)))))))))))
+
+(defun emacsvox-aural-voice-workbench--library-start ()
+  "Refresh installed metadata in the background after presenting this view."
+  (when (emacsvox-aural-voice-workbench--library-p)
+    (emacsvox-aural-voice-workbench--library-stop)
+    (let ((buffer (current-buffer)) (ticket (list t)))
+      (unless (equal emacsvox-aural-voice-workbench--library-source (omnivox-library--source-key))
+        (setq emacsvox-aural-voice-workbench--library-reply nil))
+      (setq emacsvox-aural-voice-workbench--library-source (omnivox-library--source-key)
+            emacsvox-aural-voice-workbench--library-ticket ticket
+            emacsvox-aural-voice-workbench--library-error nil)
+      (setq emacsvox-aural-voice-workbench--library-cancel
+            (omnivox-library--inspect-async
+             (lambda (reply failure)
+               (when (buffer-live-p buffer)
+                 (with-current-buffer buffer
+                   (when (eq ticket emacsvox-aural-voice-workbench--library-ticket)
+                     (unless (equal emacsvox-aural-voice-workbench--library-source
+                                    (omnivox-library--source-key))
+                       (setq reply nil failure "Voice library target changed; press R to refresh"))
+                     (setq emacsvox-aural-voice-workbench--library-reply reply
+                           emacsvox-aural-voice-workbench--library-error failure
+                           emacsvox-aural-voice-workbench--library-ticket nil)
+                     (emacsvox-aural-voice-workbench-refresh)))))))
+      (emacsvox-aural-voice-workbench--library-check-lanes))))
+
+(defun emacsvox-aural-voice-workbench--library-active (id role)
+  "Return yes, no or unknown eligibility for physical ID on ROLE."
+  (let* ((record (alist-get role emacsvox-aural-voice-workbench--library-lanes))
+         (process (if (eq role 'main) tts-speaker-process tts-notify-process))
+         (status (plist-get record :status))
+         (configuration (plist-get status :configuration))
+         (index (emacsvox-aural-voice-workbench--library-index))
+         (raw (and process (process-get process omnivox--control-inventory-property))))
+    (if (not (and process (process-live-p process)
+                  (eq process (plist-get record :process)) status
+                  (plist-member status :eligible_voices)
+                  (plist-member status :configuration)
+                  (equal (plist-get raw :inventory_generation) (plist-get record :generation))
+                  (or (not (emacsvox-aural-voice-workbench--library-row id))
+                      (eq configuration :null)
+                      (and (equal (plist-get index :target_id) (plist-get configuration :target_id))
+                           (equal (plist-get index :profile_id) (plist-get configuration :profile_id))))))
+        'unknown
+      (if (not (seq-some (lambda (voice)
+                           (equal id (list (plist-get voice :engine_id) (plist-get voice :voice_id))))
+                         (plist-get status :eligible_voices)))
+          'no
+        (unless (eq raw (plist-get record :normalized-source))
+          (let ((tts-speaker-process process)
+                (omnivox-engine-inventory raw))
+            (setf (plist-get record :normalized) (omnivox-voice-inventory)
+                  (plist-get record :normalized-source) raw)
+            (setf (alist-get role emacsvox-aural-voice-workbench--library-lanes) record)))
+        (let* ((inventory (plist-get record :normalized))
+               (engine (seq-find (lambda (engine) (equal (car id) (plist-get engine :engine-id)))
+                                 (plist-get inventory :engines))))
+          (cond
+           ((null engine) 'unknown)
+           ((or (not (tts--voice-preview-available-p (plist-get engine :availability)))
+                (equal (plist-get engine :health) "failed")
+                (member (plist-get engine :circuit) '("open" "cooldown"))) 'no)
+           (t 'yes)))))))
+
+(defun emacsvox-aural-voice-workbench--library-states (id)
+  "Return Installed, Enabled and Active descriptions for ID."
+  (let* ((row (emacsvox-aural-voice-workbench--library-row id))
+         (main (emacsvox-aural-voice-workbench--library-active id 'main))
+         (notify (emacsvox-aural-voice-workbench--library-active id 'notification)))
+    (list (cond (row "Library")
+                ((or emacsvox-aural-voice-workbench--library-ticket
+                     emacsvox-aural-voice-workbench--library-error) "Unknown")
+                (t "Engine supplied"))
+          (cond (row (if (eq (plist-get row :enabled) t) "Yes" "No"))
+                ((or emacsvox-aural-voice-workbench--library-ticket
+                     emacsvox-aural-voice-workbench--library-error) "Unknown")
+                (t "Engine managed"))
+          (pcase (list main notify)
+            (`(yes yes) "Both") (`(yes no) "Main only") (`(no yes) "Notification only")
+            (`(no no) "No") (`(yes unknown) "Main; notification unknown")
+            (`(unknown yes) "Notification; main unknown") (_ "Unknown")))))
+
+(defun emacsvox-aural-voice-workbench--library-action (action &optional operation)
+  "Perform explicit library ACTION, optionally importing validated OPERATION."
+  (unless (emacsvox-aural-voice-workbench--library-p)
+    (user-error "Open Omnivox physical voices first"))
+  (let* ((id (tabulated-list-get-id))
+         (engine (or (car-safe id) emacsvox-aural-voice-workbench--voice-list-parent))
+         (index (emacsvox-aural-voice-workbench--library-index))
+         (source emacsvox-aural-voice-workbench--library-source)
+         (sha (plist-get emacsvox-aural-voice-workbench--library-reply :sha256))
+         (row (emacsvox-aural-voice-workbench--library-row id)))
+    (pcase action
+      ('download (require 'omnivox-catalogue) (omnivox-catalogue engine))
+      ('apply (call-interactively #'omnivox-library-apply))
+      ((or 'toggle 'slt 'import)
+       (unless (and index (not emacsvox-aural-voice-workbench--library-ticket))
+         (user-error "Wait for library information or press R to refresh"))
+       (when (and (eq action 'toggle) (not row))
+         (user-error "This voice is engine managed; b adds bundled Flite SLT to the library"))
+       (when (and (eq action 'slt) (not (equal engine "flite")))
+         (user-error "Open Flite voices to include bundled SLT"))
+       (when (eq action 'import)
+         (setq operation (or operation (read-string "Native validation operation UUID: ")))
+         (omnivox-library-apply--uuid operation))
+       (let ((service (omnivox-library--service)))
+         (unwind-protect
+             (progn
+               (unless (equal source (omnivox-library--source-key))
+                 (user-error "Voice library target changed; press R to refresh"))
+               (omnivox-library--request
+                service (append
+                         (cond ((eq action 'slt) '(:command "include-flite-slt"))
+                               ((eq action 'import) (list :command "import" :operation operation
+                                                          :package (omnivox-library--uuid) :revision (omnivox-library--uuid)))
+                               (t (list :command "enable" :engine (car id) :voice (cadr id)
+                                        :enabled (if (eq (plist-get row :enabled) t) :false t))))
+                         (list :expected_sha256 sha))))
+           (when (process-live-p service) (delete-process service))))
+       (message "Desired voice selection saved; a reviews Apply")))
+    (unless (eq action 'download)
+      (run-hooks 'omnivox-library--changed-hook))))
+
+(defun emacsvox-aural-voice-workbench--library-toggle ()
+  "Enable or disable this installed voice for the next Apply."
+  (interactive) (emacsvox-aural-voice-workbench--library-action 'toggle))
+(defun emacsvox-aural-voice-workbench--library-apply ()
+  "Review and Apply desired voices to both speech streams."
+  (interactive) (emacsvox-aural-voice-workbench--library-action 'apply))
+(defun emacsvox-aural-voice-workbench--library-download ()
+  "Browse downloads for this engine."
+  (interactive) (emacsvox-aural-voice-workbench--library-action 'download))
+(defun emacsvox-aural-voice-workbench--library-import ()
+  "Import a completed native validation operation, initially disabled."
+  (interactive) (emacsvox-aural-voice-workbench--library-action 'import))
+(defun emacsvox-aural-voice-workbench--library-slt ()
+  "Include bundled Flite SLT in the managed selection."
+  (interactive) (emacsvox-aural-voice-workbench--library-action 'slt))
+
+(defun emacsvox-aural-voice-workbench--library-changed ()
+  "Update open combined browsers after installation or desired-state changes."
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+        (emacsvox-aural-voice-workbench--library-start)))))
 
 (defun emacsvox-aural-voice-workbench--same-value-p (left right)
   "Return non-nil when optional inventory values LEFT and RIGHT match."
@@ -633,7 +887,9 @@ or persisting a routing choice."
   "Return one physical voice row from engine/voice PAIR."
   (let* ((engine (car pair))
          (voice (cadr pair))
-         (users (emacsvox-aural-voice-workbench--voice-users engine voice)))
+         (users (emacsvox-aural-voice-workbench--voice-users engine voice))
+         (states (emacsvox-aural-voice-workbench--library-states
+                  (list (plist-get engine :engine-id) (plist-get voice :voice-id)))))
     (list
      (list (plist-get engine :engine-id) (plist-get voice :voice-id))
      (vector
@@ -654,7 +910,10 @@ or persisting a routing choice."
        (plist-get engine :health) "unknown")
       (if users (mapconcat #'identity users ", ") "none")
       (emacsvox-aural-voice-workbench--display
-       (plist-get voice :voice-id))))))
+       (plist-get voice :voice-id))
+      (nth 0 states)
+      (nth 1 states)
+      (nth 2 states)))))
 
 (defun emacsvox-aural-voice-workbench--join-symbols (values)
   "Return printable comma-separated VALUES."
@@ -762,7 +1021,8 @@ or persisting a routing choice."
     ('physical
      [("Physical voice" 28 t) ("Engine" 14 t) ("Language" 12 t)
       ("Gender" 10 t) ("Quality" 12 t) ("Availability" 14 t)
-      ("Health" 12 t) ("Selected by" 28 t) ("Native ID" 0 t)])
+      ("Health" 12 t) ("Selected by" 28 t) ("Native ID" 0 t)
+      ("Installed" 16 t) ("Enabled" 16 t) ("Active" 28 t)])
     ('engines
      [("Engine ID" 16 t) ("Engine" 20 t) ("Availability" 14 t)
       ("Preferred" 12 t) ("Fallback" 10 t) ("Routing policy" 16 t)
@@ -790,7 +1050,7 @@ or persisting a routing choice."
        (lambda (pair)
          (emacsvox-aural-voice-workbench--physical-visible-p
           (car pair) (cadr pair)))
-       (emacsvox-aural-voice-workbench--all-engine-voices))))
+       (emacsvox-aural-voice-workbench--browse-pairs))))
     ('engines
      (mapcar
       #'emacsvox-aural-voice-workbench--engine-row
@@ -816,7 +1076,8 @@ or persisting a routing choice."
   "Return detail column indices to display in the current view."
   (pcase emacsvox-aural-voice-workbench-view
     ('logical '(2 3 4 5 6 10))
-    ('physical '(0 1 2 3 4 5 6 7))
+    ('physical (if (emacsvox-aural-voice-workbench--library-p)
+                   '(0 1 2 9 10 11) '(0 1 2 3 4 5 6 7)))
     ('engines '(1 2 3 4 5 6 7 8 10))
     ('styles '(0 2 3 4 8))))
 
@@ -844,7 +1105,7 @@ or persisting a routing choice."
      (equal id
             (list (plist-get (car pair) :engine-id)
                   (plist-get (cadr pair) :voice-id))))
-   (emacsvox-aural-voice-workbench--all-engine-voices)))
+   (emacsvox-aural-voice-workbench--browse-pairs)))
 
 (defun emacsvox-aural-voice-workbench--explicit-selectors (logical-voice)
   "Return LOGICAL-VOICE's explicitly staged selectors."
@@ -1565,6 +1826,10 @@ command does not stop speech already playing."
   (let ((engine (car pair)) (voice (cadr pair)))
     (cond
      ((null pair) "The selected voice is no longer installed")
+     ((and (emacsvox-aural-voice-workbench--library-p)
+           (eq 'no (emacsvox-aural-voice-workbench--library-active
+                    (list (plist-get engine :engine-id) (plist-get voice :voice-id)) 'main)))
+      "This voice is not active on main speech; review selection and Apply")
      ((not (tts--voice-preview-available-p (plist-get engine :availability)))
       (format "Engine %s is %s" (plist-get engine :engine-id)
               (plist-get engine :availability)))
@@ -1595,7 +1860,7 @@ command does not stop speech already playing."
     (cl-remove-if-not
      (lambda (pair) (emacsvox-aural-voice-workbench--physical-visible-p
                      (car pair) (cadr pair)))
-     (emacsvox-aural-voice-workbench--all-engine-voices))))
+     (emacsvox-aural-voice-workbench--browse-pairs))))
 
 (defun emacsvox-aural-voice-workbench--pair-name (pair)
   "Return the engine and physical voice name for PAIR."
@@ -1880,7 +2145,8 @@ Outside the engine view, leave any temporary engine browsing scope."
               (or (tabulated-list-get-id) (user-error "Select an engine first")))
         (emacsvox-aural-voice-workbench--switch 'physical))
     (setq emacsvox-aural-voice-workbench--voice-list-parent nil)
-    (emacsvox-aural-voice-workbench--switch 'physical)))
+    (emacsvox-aural-voice-workbench--switch 'physical))
+  (emacsvox-aural-voice-workbench--library-start))
 
 (defun emacsvox-aural-voice-workbench-engine-view ()
   "Show speech engines and their capabilities."
@@ -1898,6 +2164,7 @@ Outside the engine view, leave any temporary engine browsing scope."
   (setq emacsvox-aural-voice-workbench-inventory
         (tts-refresh-voice-inventory))
   (emacsvox-aural-voice-workbench-refresh)
+  (emacsvox-aural-voice-workbench--library-start)
   (let ((text
          (format "Inventory refresh requested. %s"
                  (emacsvox-aural-voice-workbench--header))))
@@ -1907,7 +2174,7 @@ Outside the engine view, leave any temporary engine browsing scope."
 (defun emacsvox-aural-voice-workbench--filter-values (field)
   "Return available physical inventory values for filter FIELD."
   (let (values)
-    (dolist (pair (emacsvox-aural-voice-workbench--all-engine-voices))
+    (dolist (pair (emacsvox-aural-voice-workbench--browse-pairs))
       (let ((engine (car pair)) (voice (cadr pair)))
         (when-let* ((value
                      (pcase field
@@ -2044,6 +2311,10 @@ when they remain unsaved."
       ". speaks the cell; SPC speaks the whole row; x shows details.\n\n"
       "P previews; S stops; T changes the comparison text.\n"
       "In physical voices, A plays all visible voices and B compares two.\n"
+      "Omnivox voices: + enables/disables; a reviews Apply; d downloads; b includes SLT.\n"
+      "i imports a validated operation; C-c r shows the last library Apply result.\n"
+      "Installed records library membership; Enabled is desired; Active is stream eligibility.\n"
+      "Active does not mean a model is resident in memory. Unknown needs a fresh status check.\n"
       "F filters voices; C clears filters; R refreshes the inventory.\n"
       "t opens the complete editor for a named voice or physical experiment.\n"
       "Physical experiments stay unsaved until kept in a named voice draft.\n"
@@ -2071,6 +2342,13 @@ when they remain unsaved."
   (let ((row (tabulated-list-get-id))
         (view emacsvox-aural-voice-workbench-view))
     (pcase command
+      ((or 'emacsvox-aural-voice-workbench--library-toggle
+           'emacsvox-aural-voice-workbench--library-apply
+           'emacsvox-aural-voice-workbench--library-download
+           'emacsvox-aural-voice-workbench--library-slt
+           'emacsvox-aural-voice-workbench--library-import
+           'omnivox-library-show-result)
+       (emacsvox-aural-voice-workbench--library-p))
       ((or 'emacsvox-aural-voice-workbench-logical-view
            'emacsvox-aural-voice-workbench-physical-view
            'emacsvox-aural-voice-workbench-engine-view
@@ -2139,6 +2417,8 @@ when they remain unsaved."
   (setq tabulated-list-format (emacsvox-aural-voice-workbench--format)
         tabulated-list-padding 2
         header-line-format '(:eval (emacsvox-aural-voice-workbench--header)))
+  (add-hook 'kill-buffer-hook #'emacsvox-aural-voice-workbench--library-stop nil t)
+  (add-hook 'change-major-mode-hook #'emacsvox-aural-voice-workbench--library-stop nil t)
   (add-hook 'tabulated-list-revert-hook
             #'emacsvox-aural-voice-workbench-refresh nil t)
   (tabulated-list-init-header))
@@ -2153,6 +2433,12 @@ when they remain unsaved."
        ("F" . emacsvox-aural-voice-workbench-set-filter)
        ("C" . emacsvox-aural-voice-workbench-clear-filters)
        ("R" . emacsvox-aural-voice-workbench-refresh-inventory)
+       ("+" . emacsvox-aural-voice-workbench--library-toggle)
+       ("a" . emacsvox-aural-voice-workbench--library-apply)
+       ("d" . emacsvox-aural-voice-workbench--library-download)
+       ("b" . emacsvox-aural-voice-workbench--library-slt)
+       ("i" . emacsvox-aural-voice-workbench--library-import)
+       ("C-c r" . omnivox-library-show-result)
        ("P" . emacsvox-aural-voice-workbench-preview)
        ("A" . emacsvox-aural-voice-workbench-preview-all)
        ("B" . emacsvox-aural-voice-workbench-compare)
@@ -2212,6 +2498,7 @@ when they remain unsaved."
       (emacsvox-aural-voice-workbench-refresh))
     (emacsvox-aural-ui--pop-to-buffer
      buffer #'emacsvox-aural-voice-workbench--speak-opening)
+    (with-current-buffer buffer (emacsvox-aural-voice-workbench--library-start))
     buffer))
 
 (defun emacsvox-aural-voice-workbench--open-engine (engine parent)
@@ -2231,8 +2518,9 @@ Keep the general workbench's filters, selection and staged edits intact."
      buffer
      (lambda ()
        (tts-speak
-        (format "%s voices on main speech. P speaks a sample; t opens the voice editor; q returns to engine details.%s"
-                engine (if (tabulated-list-get-id) "" " No voices reported.")))))
+        (format "%s voices. P speaks a sample; plus enables or disables; a reviews Apply; d downloads; q returns.%s"
+                engine (if (tabulated-list-get-id) "" " Loading library information.")))))
+    (with-current-buffer buffer (emacsvox-aural-voice-workbench--library-start))
     buffer))
 
 (defun emacsvox-aural-voice-workbench-refresh-if-live (&rest _ignored)
@@ -2246,7 +2534,8 @@ Keep the general workbench's filters, selection and staged edits intact."
                 emacsvox-aural-voice-workbench-staged-profile
                 (copy-tree
                  emacsvox-aural-voice-workbench-committed-profile)))
-        (emacsvox-aural-voice-workbench-refresh)))))
+        (emacsvox-aural-voice-workbench-refresh)
+        (emacsvox-aural-voice-workbench--library-check-lanes)))))
 
 (add-hook 'emacsvox-aural-routing-profile-changed-hook
           #'emacsvox-aural-voice-workbench-refresh-if-live)
@@ -2254,6 +2543,8 @@ Keep the general workbench's filters, selection and staged edits intact."
           #'emacsvox-aural-voice-workbench-refresh-if-live)
 (add-hook 'emacsvox-aural-routing-apply-status-hook
           #'emacsvox-aural-voice-workbench-refresh-if-live)
+(add-hook 'omnivox-library--changed-hook
+          #'emacsvox-aural-voice-workbench--library-changed)
 (add-hook 'tts-voice-inventory-changed-hook
           #'emacsvox-aural-voice-workbench-refresh-if-live)
 (add-hook 'tts-realized-voice-changed-hook

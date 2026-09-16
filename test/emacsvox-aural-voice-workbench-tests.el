@@ -11,6 +11,7 @@
 (require 'emacsvox-aural-voice-workbench)
 (require 'emacsvox-aural-voice-editor)
 (require 'emacsvox-omnivox-components)
+(require 'omnivox-voices)
 
 (defconst emacsvox-test--workbench-inventory
   '(:adapter "omnivox" :source "live" :status "available"
@@ -502,7 +503,7 @@
   (emacsvox-test--with-voice-workbench
     (setq emacsvox-aural-voice-workbench-view 'physical)
     (emacsvox-aural-voice-workbench-refresh '("eloquence" "eci:Reed"))
-    (let ((entry (tabulated-list-get-entry)))
+    (let ((entry (cadr (assoc '("eloquence" "eci:Reed") (emacsvox-aural-voice-workbench--detail-entries)))))
       (should (string-match-p "\\bbolden\\b" (aref entry 7))))))
 
 (ert-deftest emacsvox-aural-voice-workbench-shows-portable-and-realized-identity ()
@@ -933,7 +934,7 @@
               (should (derived-mode-p 'emacsvox-aural-voice-workbench-mode))
               (should (equal (mapcar #'car tabulated-list-entries)
                              '(("eloquence" "eci:Reed"))))
-              (should (string-search "Main speech target" (emacsvox-aural-voice-workbench--header)))
+              (should (string-search "a Apply" (emacsvox-aural-voice-workbench--header)))
               (should (equal (plist-get (emacsvox-aural-voice-workbench--current-preview-entry) :selector)
                              '(:kind exact :engine-id "eloquence" :voice-id "eci:Reed" :scope session)))
               (with-current-buffer general
@@ -964,7 +965,7 @@
             (with-current-buffer parent (emacsvox-aural-voice-workbench-refresh-if-live))
             (should (eq (current-buffer) browser))
             (should (equal (tabulated-list-get-id) '("eloquence" "eci:Reed")))
-            (should (equal (aref (tabulated-list-get-entry) 6) "degraded"))
+            (should (equal (aref (cadr (assoc '("eloquence" "eci:Reed") (emacsvox-aural-voice-workbench--detail-entries))) 6) "degraded"))
             (should (equal (plist-get emacsvox-aural-voice-workbench-staged-profile :engine-order)
                            '("winrt" "eloquence")))
             (cl-letf (((symbol-function 'emacsvox-aural-voice-editor-experiment)
@@ -1142,6 +1143,148 @@
               (should-not (assoc 'main-target tabulated-list-entries))))
         (dolist (buffer (list details manager))
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-library-merges-without-changing-routing ()
+  (emacsvox-test--with-voice-workbench
+    (cl-letf (((symbol-function 'omnivox-library--source-key) (lambda () '(fixture))))
+      (setq emacsvox-aural-voice-workbench-view 'physical
+            emacsvox-aural-voice-workbench--library-source '(fixture)
+            emacsvox-aural-voice-workbench--library-reply
+            '(:index (:voices [(:engine_id "eloquence" :physical_id "eci:Reed" :display_name "Installed Reed" :enabled :false)
+                              (:engine_id "piper" :physical_id "download" :display_name "Downloaded voice" :enabled t)])))
+      (emacsvox-aural-voice-workbench-refresh)
+      (should (= 3 (length tabulated-list-entries)))
+      (should (= 2 (length (emacsvox-aural-voice-workbench--all-engine-voices))))
+      (let ((row (cadr (assoc '("eloquence" "eci:Reed") tabulated-list-entries))))
+        (should (equal "Reed" (aref row 0)))
+        (should (equal "Library" (aref row 3)))
+        (should (equal "No" (aref row 4))))
+      (should (emacsvox-aural-voice-workbench--unavailable-reason
+               (emacsvox-aural-voice-workbench--physical-pair '("piper" "download"))))
+      (let ((emacsvox-aural-voice-workbench--library-source '(different)))
+        (should (= 2 (length (emacsvox-aural-voice-workbench--browse-pairs))))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-library-active-is-worker-eligibility ()
+  (emacsvox-test--with-voice-workbench
+    (let ((main (make-pipe-process :name "active main fixture" :noquery t))
+          (notify (make-pipe-process :name "active notify fixture" :noquery t)))
+      (unwind-protect
+          (let ((tts-speaker-process main) (tts-notify-process notify))
+            (cl-letf (((symbol-function 'omnivox-library--source-key) (lambda () '(fixture)))
+                      ((symbol-function 'omnivox-voice-inventory) (lambda () emacsvox-test--workbench-inventory)))
+              (setq emacsvox-aural-voice-workbench-view 'physical
+                    emacsvox-aural-voice-workbench--library-source '(fixture)
+                    emacsvox-aural-voice-workbench--library-reply
+                    '(:index (:target_id "target" :profile_id "profile"
+                              :voices [(:engine_id "eloquence" :physical_id "eci:Reed" :enabled :false)])))
+              (dolist (worker (list main notify))
+                (process-put worker omnivox--control-inventory-property '(:inventory_generation 12)))
+              (let ((status '(:type "voice_library_status_v1" :inventory_generation 12
+                             :configuration (:target_id "target" :profile_id "profile")
+                             :eligible_voices [(:engine_id "eloquence" :voice_id "eci:Reed")])))
+                (setq emacsvox-aural-voice-workbench--library-lanes
+                      (list (cons 'main (list :process main :generation 12 :status (copy-tree status t)))
+                            (cons 'notification (list :process notify :generation 12 :status (copy-tree status t))))))
+              (should (equal '("Library" "No" "Both")
+                             (emacsvox-aural-voice-workbench--library-states '("eloquence" "eci:Reed"))))
+              ;; Desired changes do not manufacture an applied result.
+              (setf (plist-get (aref (plist-get (emacsvox-aural-voice-workbench--library-index) :voices) 0) :enabled) t)
+              (should (equal "Both" (nth 2 (emacsvox-aural-voice-workbench--library-states '("eloquence" "eci:Reed")))))
+              (setf (plist-get (plist-get (alist-get 'notification emacsvox-aural-voice-workbench--library-lanes) :status) :eligible_voices) [])
+              (should (equal "Main only" (nth 2 (emacsvox-aural-voice-workbench--library-states '("eloquence" "eci:Reed")))))
+              (process-put main omnivox--control-inventory-property '(:inventory_generation 13))
+              (should (eq 'unknown (emacsvox-aural-voice-workbench--library-active '("eloquence" "eci:Reed") 'main)))
+              (process-put main omnivox--control-inventory-property '(:inventory_generation 12))
+              (let ((tts-speaker-process notify))
+                (should (eq 'unknown (emacsvox-aural-voice-workbench--library-active '("eloquence" "eci:Reed") 'main))))
+              (delete-process main)
+              (should (eq 'unknown (emacsvox-aural-voice-workbench--library-active '("eloquence" "eci:Reed") 'main)))))
+        (dolist (worker (list main notify)) (when (process-live-p worker) (delete-process worker)))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-library-late-inspection-is-discarded ()
+  (emacsvox-test--with-voice-workbench
+    (let ((source '(first)) callbacks)
+      (cl-letf (((symbol-function 'omnivox-library--source-key) (lambda () source))
+                ((symbol-function 'omnivox-library--inspect-async)
+                 (lambda (callback) (push callback callbacks) #'ignore))
+                ((symbol-function 'emacsvox-aural-voice-workbench--library-check-lanes) #'ignore))
+        (setq emacsvox-aural-voice-workbench-view 'physical)
+        (emacsvox-aural-voice-workbench--library-start)
+        (setq source '(second))
+        (emacsvox-aural-voice-workbench--library-start)
+        (funcall (cadr callbacks) '(:index (:voices [(:engine_id "piper" :physical_id "old")])) nil)
+        (should-not (emacsvox-aural-voice-workbench--library-index))
+        (funcall (car callbacks) '(:index (:voices [])) nil)
+        (should (equal [] (plist-get (emacsvox-aural-voice-workbench--library-index) :voices)))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-library-status-replies-stay-correlated ()
+  (emacsvox-test--with-voice-workbench
+    (let ((worker (make-pipe-process :name "status correlation fixture" :noquery t))
+          receive timeout (count 0))
+      (unwind-protect
+          (let ((tts-speaker-process worker) (tts-notify-process nil))
+            (process-put worker omnivox--control-inventory-property '(:inventory_generation 12))
+            (setq emacsvox-aural-voice-workbench-view 'physical)
+            (cl-letf (((symbol-function 'omnivox--process-supports-p) (lambda (&rest _) t))
+                      ((symbol-function 'run-at-time) (lambda (_time _repeat callback) (setq timeout callback) nil))
+                      ((symbol-function 'omnivox--send-control-request)
+                       (lambda (_process request callback)
+                         (should (equal request '(:type "voice_library_status_v1")))
+                         (cl-incf count) (setq receive callback) count)))
+              (emacsvox-aural-voice-workbench--library-check-lanes)
+              (emacsvox-aural-voice-workbench--library-check-lanes)
+              (should (= count 1))
+              (funcall receive worker '(:type "voice_library_status_v1" :inventory_generation 11))
+              (should-not (plist-get (alist-get 'main emacsvox-aural-voice-workbench--library-lanes) :status))
+              (process-put worker omnivox--control-inventory-property '(:inventory_generation 13))
+              (emacsvox-aural-voice-workbench--library-check-lanes)
+              (should (= count 2))
+              (funcall timeout)
+              ;; A response after the deadline cannot promote Unknown to Active.
+              (funcall receive worker '(:type "voice_library_status_v1" :inventory_generation 13))
+              (should-not (plist-get (alist-get 'main emacsvox-aural-voice-workbench--library-lanes) :status))
+              (process-put worker omnivox--control-inventory-property '(:inventory_generation 14))
+              (emacsvox-aural-voice-workbench--library-check-lanes)
+              (funcall receive worker '(:type "voice_library_status_v1" :inventory_generation 14
+                                        :configuration :null :eligible_voices []))
+              (should (equal 14 (plist-get (plist-get (alist-get 'main emacsvox-aural-voice-workbench--library-lanes) :status) :inventory_generation)))
+              (emacsvox-aural-voice-workbench--library-stop)))
+        (when (process-live-p worker) (delete-process worker))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-library-uses-each-lanes-health ()
+  "Real normalization must use notification inventory even from compiled code."
+  (emacsvox-test--with-voice-workbench
+    (let* ((main (make-pipe-process :name "health main fixture" :noquery t))
+           (notify (make-pipe-process :name "health notify fixture" :noquery t))
+           (tts-speaker-process main) (tts-notify-process notify)
+           (raw '(:inventory_generation 12
+                  :engines [(:id "eloquence" :display_name "Eloquence"
+                                 :availability (:status "available") :health (:status "healthy")
+                                 :voices [(:id (:engine_id "eloquence" :voice_id "eci:Reed")
+                                               :display_name "Reed" :availability (:status "available"))])]))
+           (other (copy-tree raw t))
+           (omnivox-engine-inventory raw)
+           (status '(:type "voice_library_status_v1" :configuration :null
+                     :inventory_generation 12
+                     :eligible_voices [(:engine_id "eloquence" :voice_id "eci:Reed")])))
+      (unwind-protect
+          (progn
+            (setf (plist-get (aref (plist-get other :engines) 0) :health) '(:status "failed"))
+            (process-put main omnivox--control-inventory-property raw)
+            (process-put notify omnivox--control-inventory-property other)
+            (setq emacsvox-aural-voice-workbench-view 'physical
+                  emacsvox-aural-voice-workbench--library-lanes
+                  (list (cons 'main (list :process main :generation 12 :status status))
+                        (cons 'notification (list :process notify :generation 12 :status status))))
+            (should (eq 'yes (emacsvox-aural-voice-workbench--library-active '("eloquence" "eci:Reed") 'main)))
+            (should (eq 'no (emacsvox-aural-voice-workbench--library-active '("eloquence" "eci:Reed") 'notification)))
+            (let ((normalize (symbol-function 'omnivox-voice-inventory)) (count 0))
+              (cl-letf (((symbol-function 'omnivox-voice-inventory)
+                         (lambda () (cl-incf count) (funcall normalize))))
+                (dotimes (_ 10)
+                  (emacsvox-aural-voice-workbench--library-active '("eloquence" "eci:Reed") 'notification))
+                (should (<= count 1)))))
+        (delete-process main) (delete-process notify)))))
 
 (provide 'emacsvox-aural-voice-workbench-tests)
 ;;; emacsvox-aural-voice-workbench-tests.el ends here

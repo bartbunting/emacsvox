@@ -783,7 +783,7 @@ OUTPUT to the generic process sentinel EVENT."
     (append
      rows
      (list
-      (list 'voices (vector "Browse voices" "Hear samples and try voice adjustments"))
+      (list 'voices (vector "Browse voices" "Sample voices, enable or disable, and Apply"))
       (list 'check-live (vector "Refresh status" "Update speech and module information"))
       (list 'managed (vector "Managed installation"
                             (if emacsvox-omnivox-components--listing-error
@@ -800,7 +800,6 @@ OUTPUT to the generic process sentinel EVENT."
       (list 'scope (vector "Management target" "Configured WSL per-user installation; may differ from the speech target above")))
      (when (member id '("piper" "flite"))
        (list
-        (list 'voice-library (vector "Installed voices" "Enable, disable, and Apply"))
         (list 'download-voices (vector "Get more voices" "Download voices, then enable and Apply"))))
      (when-let* ((description (omnivox-engine-settings--description id)))
        (append
@@ -867,7 +866,7 @@ OUTPUT to the generic process sentinel EVENT."
          (visible (delq nil (mapcar (lambda (id) (assq id rows))
                                    (append '(summary main-problem notification-problem operation-error)
                                            (when failed '(output))
-                                           '(voices voice-library download-voices install check-live))))))
+                                           '(voices download-voices install check-live))))))
     (dolist (section emacsvox-omnivox-components--detail-sections)
       (let* ((id (car section))
              (expanded (memq id emacsvox-omnivox-components--expanded-sections))

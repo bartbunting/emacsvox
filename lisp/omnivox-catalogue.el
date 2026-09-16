@@ -174,7 +174,9 @@
                                   (not (plist-get operation :announced)))
                          (setq operation (plist-put operation :announced t))
                          (if (equal "installed-disabled" (plist-get progress :state))
-                             (message "Voice installed disabled. Press l for installed voices, e to enable, then a to Apply")
+                             (progn
+                               (run-hooks 'omnivox-library--changed-hook)
+                               (message "Voice installed disabled. Press l to browse voices, plus to enable, then a to Apply"))
                            (message "Voice installation: %s" (plist-get progress :state))))))
                     ("error" (setq operation (plist-put operation :error (plist-get reply :message))))
                     (_ (error "Unknown installer response"))))))

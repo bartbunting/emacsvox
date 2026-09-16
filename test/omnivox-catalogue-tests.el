@@ -63,7 +63,7 @@
               (omnivox-catalogue--filter process terminal)
               (omnivox-catalogue--filter process terminal)
               (should (= 1 (length notices)))
-              (should (string-search "Press l for installed voices, e to enable, then a to Apply"
+              (should (string-search "Press l to browse voices, plus to enable, then a to Apply"
                                      (apply #'format (car notices))))))
           (delete-process process)
           (omnivox-catalogue--sentinel process "finished")
