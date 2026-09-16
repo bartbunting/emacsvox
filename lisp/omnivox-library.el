@@ -529,6 +529,15 @@ All attempted replacement processes remain owned until retirement is confirmed."
       (unless (eq service omnivox-library--retained-service)
         (when (process-live-p service) (delete-process service))))))
 
+(defconst omnivox-library--empty-help
+  "No voices have been added to this library.
+
+This screen lists managed voices, including disabled voices.
+Press b to add the bundled Flite SLT voice, then a to review Apply.
+Press q to return to engine details.
+"
+  "Explanation displayed when the managed voice library is empty.")
+
 (defun omnivox-library-refresh ()
   "Refresh installed metadata without loading models or changing speech."
   (interactive)
@@ -544,7 +553,11 @@ All attempted replacement processes remain owned until retirement is confirmed."
                                         (if (eq (plist-get row :enabled) t) "Enabled" "Disabled")
                                         (plist-get row :physical_id))))
                         (plist-get omnivox-library--index :voices)))
-          (tabulated-list-print t))
+          (tabulated-list-print t)
+          (unless tabulated-list-entries
+            (let ((inhibit-read-only t))
+              (insert omnivox-library--empty-help)
+              (goto-char (point-min)))))
       (when (process-live-p service) (delete-process service)))))
 
 (defun omnivox-library-toggle ()
@@ -613,9 +626,12 @@ All attempted replacement processes remain owned until retirement is confirmed."
 
 (defun omnivox-library--speak-row ()
   "Speak the selected voice and desired state."
-  (when-let* ((row (tabulated-list-get-entry)))
-    (emacsvox-aural-ui-speak
-     (format "%s. %s. %s" (aref row 0) (aref row 1) (aref row 2)))))
+  (if (null tabulated-list-entries)
+      (emacsvox-aural-ui-speak
+       "No voices added. Press b to include bundled Flite SLT; q returns to engine details.")
+    (when-let* ((row (tabulated-list-get-entry)))
+      (emacsvox-aural-ui-speak
+       (format "%s. %s. %s" (aref row 0) (aref row 1) (aref row 2))))))
 
 (define-derived-mode omnivox-library-mode emacsvox-aural-tabulated-mode "Omnivox Voices"
   "Installed voices: e toggles enablement; a reviews Apply; i installs an import."

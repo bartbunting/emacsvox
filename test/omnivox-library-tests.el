@@ -7,6 +7,32 @@
 (require 'omnivox-library)
 (require 'omnivox-voices)
 
+(ert-deftest omnivox-library-empty-state-explains-actions-and-clears-on-install ()
+  "An empty library is readable, and adding a voice replaces its explanation."
+  (with-temp-buffer
+    (omnivox-library-mode)
+    (let (voices spoken)
+      (cl-letf (((symbol-function 'omnivox-library--service)
+                 (lambda () (make-pipe-process :name "empty library fixture" :noquery t)))
+                ((symbol-function 'omnivox-library--request)
+                 (lambda (&rest _) (list :index (list :voices voices) :sha256 "fixture")))
+                ((symbol-function 'emacsvox-aural-ui-speak)
+                 (lambda (text) (setq spoken text))))
+        (omnivox-library-refresh)
+        (should (string-search "Press b to add the bundled Flite SLT voice" (buffer-string)))
+        (should-not (tabulated-list-get-id))
+        (should-error (omnivox-library-toggle) :type 'user-error)
+        (omnivox-library--speak-row)
+        (should (string-search "No voices added" spoken))
+        (setq voices '((:engine_id "flite" :physical_id "cmu_us_slt"
+                                  :display_name "SLT" :enabled t)))
+        (omnivox-library-refresh)
+        (should-not (string-search "No voices have been added" (buffer-string)))
+        (goto-char (point-min))
+        (should (equal (tabulated-list-get-id) '("flite" . "cmu_us_slt")))
+        (omnivox-library--speak-row)
+        (should (equal spoken "flite. SLT. Enabled"))))))
+
 (ert-deftest omnivox-library-retains-an-attempt-that-exits-before-initialization ()
   (require 'tts-speak)
   (let* ((process (make-pipe-process :name "library exited startup" :noquery t))
