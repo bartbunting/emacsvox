@@ -69,8 +69,7 @@
 
 (defun omnivox-espeak-variants--render ()
   "Update rows without moving focus or losing the selected variant."
-  (let ((id (tabulated-list-get-id))
-        (variants (copy-tree (plist-get omnivox-espeak-variants--catalogue :variants))))
+  (let ((variants (copy-tree (plist-get omnivox-espeak-variants--catalogue :variants))))
     (dolist (entry omnivox-espeak-variants)
       (when (and (equal (nth 1 entry) omnivox-espeak-variants--base)
                  (not (cl-find (nth 2 entry) variants :key (lambda (v) (plist-get v :id)) :test #'equal)))
@@ -78,16 +77,19 @@
     (setq header-line-format
           (format "%s | %s | RET toggle, b base, s save, a restart, p sample, v voices, q back"
                   (or omnivox-espeak-variants--base "eSpeak variants") omnivox-espeak-variants--status))
-    (setq tabulated-list-entries
-          (mapcar (lambda (v)
-                    (let* ((variant (plist-get v :id)) (entry (omnivox-espeak-variants--entry variant)))
-                      (list variant (vector (plist-get v :display_name)
-                                            (if (car entry) "Enabled at next start" "Disabled") variant))))
-                  variants))
-    (tabulated-list-print t)
-    (when id
-      (goto-char (point-min))
-      (while (and (not (eobp)) (not (equal id (tabulated-list-get-id)))) (forward-line 1)))))
+    (emacsvox-aural-ui-refresh-tabulated
+     (lambda ()
+       (setq tabulated-list-entries
+             (mapcar (lambda (v)
+                       (let* ((variant (plist-get v :id)) (entry (omnivox-espeak-variants--entry variant)))
+                         (list variant (vector (plist-get v :display_name)
+                                               (if (car entry) "Enabled at next start" "Disabled") variant))))
+                     variants))))))
+
+(defun omnivox-espeak-variants--speak-row ()
+  "Speak the selected variant's name and desired availability."
+  (let ((row (or (tabulated-list-get-entry) (user-error "Choose a variant row"))))
+    (emacsvox-aural-ui-speak (format "%s, %s." (aref row 0) (aref row 1)))))
 
 (defun omnivox-espeak-variants--stop ()
   "Retire only this buffer's private discovery request."
@@ -248,7 +250,7 @@
 
 (defvar omnivox-espeak-variants-mode-map
   (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map tabulated-list-mode-map)
+    (set-keymap-parent map emacsvox-aural-tabulated-mode-map)
     (dolist (binding '(("RET" . omnivox-espeak-variants-toggle)
                        ("b" . omnivox-espeak-variants-base) ("s" . omnivox-espeak-variants-save)
                        ("a" . omnivox-espeak-variants-apply) ("p" . omnivox-espeak-variants-preview)
@@ -257,10 +259,14 @@
       (define-key map (kbd (car binding)) (cdr binding)))
     map))
 
-(define-derived-mode omnivox-espeak-variants-mode tabulated-list-mode "eSpeak variants"
+(define-derived-mode omnivox-espeak-variants-mode emacsvox-aural-tabulated-mode "eSpeak variants"
   "Select bundled variants one base voice at a time.
 RET toggles desired availability; s saves; a restarts both speech lanes.
 Use p for exact samples after restart and v to save a voice in a palette."
+  (emacsvox-aural-ui-configure-tabulated "eSpeak variants"
+                                        #'omnivox-espeak-variants--speak-row
+                                        #'omnivox-espeak-variants-refresh
+                                        #'omnivox-espeak-variants--speak-row)
   (setq tabulated-list-format [("Variant" 28 t) ("Desired availability" 23 t) ("ID" 20 t)])
   (tabulated-list-init-header)
   (add-hook 'kill-buffer-hook #'omnivox-espeak-variants--stop nil t))
