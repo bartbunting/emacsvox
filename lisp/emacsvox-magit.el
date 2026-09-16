@@ -2039,7 +2039,8 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
 ;;; Selection highlights must not overwrite source personalities:
 
 (defconst emacsvox-magit--focus-faces
-  '(magit-section-highlight magit-section-heading-selection)
+  '(magit-section-highlight magit-section-heading-selection
+    magit-diff-file-heading-highlight magit-diff-file-heading-selection)
   "Positional highlights already represented by Magit navigation facts.")
 
 (defun emacsvox-magit--focus-overlay-p (overlay)

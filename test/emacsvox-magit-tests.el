@@ -2495,18 +2495,60 @@
              (snapshot (emacsvox-aural--string-face-snapshot text 0)))
         (should (eq (emacsvox-aural--string-style text 0 snapshot) voice))))))
 
+(ert-deftest emacsvox-magit-untracked-file-voices-survive-navigation ()
+  "File voices agree before and after Magit's post-command highlighting."
+  (save-window-excursion
+    (emacsvox-magit-test--with-repository
+      (write-region "first\n" nil "01-first.txt" nil 'silent)
+      (write-region "second\n" nil "02-second.txt" nil 'silent)
+      (switch-to-buffer (magit-status-setup-buffer directory))
+      (goto-char (point-min))
+      (search-forward "Untracked files")
+      (beginning-of-line)
+      (magit-section-show (magit-current-section))
+      (magit-section-update-highlight t)
+      (font-lock-ensure)
+      (redisplay t)
+      (let (spoken read-back)
+        (cl-letf (((symbol-function 'tts-stop) #'ignore)
+                  ((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _)
+                     (push (list (substring-no-properties text)
+                                 (emacsvox-aural--string-style text 0))
+                           spoken))))
+          (dolist (command '(magit-next-line magit-next-line magit-previous-line))
+            (magit-section-pre-command-hook)
+            (funcall-interactively command 1 nil)
+            (magit-section-post-command-hook)
+            (font-lock-ensure)
+            (redisplay t)
+            ;; Explicit reading also captures the current highlight overlay.
+            (let* ((text (emacsvox-aural-source-substring
+                          (line-beginning-position) (line-end-position)))
+                   (snapshot (emacsvox-aural--string-face-snapshot text 0)))
+              (push (emacsvox-aural--string-style text 0 snapshot) read-back))))
+        (should (equal (nreverse spoken)
+                       '(("01-first.txt" voice-bolden)
+                         ("02-second.txt" voice-bolden)
+                         ("01-first.txt" voice-bolden))))
+        (should (equal read-back '(voice-bolden voice-bolden voice-bolden)))))))
+
 (ert-deftest emacsvox-magit-highlighting-preserves-deliberate-personalities ()
-  (emacsvox-magit-test--with-sections
-    (forward-line 1)
-    (let ((inhibit-read-only t))
-      (put-text-property (point) (1+ (point)) 'personality 'voice-animate))
-    (magit-section-update-highlight t)
-    (let ((overlay (car magit-section-highlight-overlays)))
-      ;; Font Lock can later copy font-lock-face into face outside Magit.
-      (overlay-put overlay 'face 'magit-section-highlight)
-      (move-overlay overlay (1+ (point)) (line-end-position))
-      (delete-overlay overlay))
-    (should (eq (get-text-property (point) 'personality) 'voice-animate))))
+  (dolist (face '(magit-section-highlight
+                  magit-diff-file-heading-highlight
+                  magit-diff-file-heading-selection))
+    (emacsvox-magit-test--with-sections
+      (forward-line 1)
+      (let ((inhibit-read-only t))
+        (put-text-property (point) (1+ (point)) 'personality 'voice-animate))
+      (magit-section-update-highlight t)
+      (let ((overlay (car magit-section-highlight-overlays)))
+        (overlay-put overlay 'font-lock-face face)
+        ;; Font Lock can later copy font-lock-face into face outside Magit.
+        (overlay-put overlay 'face face)
+        (move-overlay overlay (1+ (point)) (line-end-position))
+        (delete-overlay overlay))
+      (should (eq (get-text-property (point) 'personality) 'voice-animate)))))
 
 (ert-deftest emacsvox-magit-completion-and-entry-have-independent-lanes ()
   (let ((process (make-process :name "emacsvox-magit-test" :command '("true")
