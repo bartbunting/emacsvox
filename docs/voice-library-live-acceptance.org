@@ -1,0 +1,103 @@
+#+title: Local Voice Library Apply Acceptance
+#+date: 2026-09-16
+#+startup: content
+
+* Checked implementation
+
+Emacsvox =6aae4a9d4= connects the installed-voice screen and private local driver
+to the paired Apply coordinator. Omnivox =82f523a= adds native ownership,
+installation service and activation publication; =57f5f3e= separates current
+candidate launcher inputs from the original workers' rollback snapshots.
+See [[file:voice-library-apply-controller.org][the controller and provider design]] for ownership and failure behavior.
+
+Both source worktrees were preserved. Native changes were pushed only to the
+dedicated CI branch. No main branch or release tag was published. Existing
+interactive Emacs sessions were not reloaded, restarted or terminated.
+
+* Local checks
+
+- Pinned native workspace: 822 passed, zero failed, one existing ignored test.
+  Relevant CLI/TTS Clippy with Piper features and formatting checks passed.
+- Selected Emacs: GNU Emacs 31.0.90. Full byte-code rebuild, final incremental
+  compilation and current-byte-code preflight passed.
+- Core ERT: 535 passed, zero failed; one existing graphical Workbench test
+  skipped in batch. All 23 focused Apply/transport tests passed in fresh Emacs
+  using compiled implementation files.
+- Graphical voice suite: all 13 passed on a private Xvfb display. This includes
+  the Workbench test skipped in batch, plus installed-library rendering,
+  spoken navigation in both directions, refresh and return to engine details.
+- Header checks and the documentation release gate passed after regeneration
+  of the public manual and reference.
+
+* Actual installation and activation
+
+=test/run-live-library-tests.py= passed using complete Linux and native Windows
+payloads. Each run used a fresh Emacs loading compiled implementation files,
+separate actual main/notification workers, a new private native library root,
+and null audio. Native cleanup receipts were required when retiring workers.
+The test established:
+
+1. Explicitly including built-in Flite SLT and applying it makes the voice
+   eligible on both workers.
+2. Cancellation before admission leaves the exact original process pair intact.
+3. Losing the actual notification replacement causes paired rollback. Both
+   old configurations, old eligible voice and previous active pointer remain.
+4. A native startup refusal before a usable worker exists still permits
+   confirmed cleanup and paired rollback.
+5. Cancellation after original-worker retirement restores both previous workers.
+6. A later successful commit replaces an existing active pointer and disables
+   SLT on both streams.
+7. A real native-validated two-speaker Piper fixture imports with both speakers
+   disabled. Enabling one and applying both providers makes only that speaker
+   eligible on both workers. Disabling it and applying again removes it from
+   both workers' eligible sets.
+
+The Windows payload was staged with the complete guarded
+=make windows-omnivox-piper-dev= route, including runtime integrity and native
+engine checks. Build ID: =b4bfc8ba50b4d5c5=. Main executable SHA-256:
+=ea0b7b9d47619e46319cffd1fe2d2f6ea306491d74a0ac89bf73dde4bb993e51=.
+Its Piper companion came from the successful native CI job for the exact
+clean Omnivox commit =57f5f3e1943f4714d5ed0ef6d8978a44a2ed810e=.
+Archive SHA-256:
+=688cebb05425ace31b8db2f00c2ee05a4976a1bad8376d29213a1ff8a08565d4=.
+
+* Cross-platform CI
+
+At that same native source commit:
+
+- [[https://github.com/bartbunting/omnivox/actions/runs/35066427298][Piper Native Validation]] passed on Linux x64, Windows x64, Apple Silicon and
+  Intel Macs. It includes real Piper synthesis, native installation tests,
+  local ownership/lease checks and current-versus-previous startup snapshots.
+- [[https://github.com/bartbunting/omnivox/actions/runs/35066405393][macOS Voice Validation]] passed on both Mac architectures, including native
+  voice validation, installation and ownership fault recovery.
+
+* Limits and next work
+
+These checks establish loading, eligibility, process cleanup and control flow.
+They do not establish audible acceptance. The complete Emacs Apply interaction
+was tested on Linux and WSL-to-Windows; Mac CI covers the native provider and
+helpers, not a graphical Mac Emacs session.
+
+A fresh Emacsvox session is required to load the new client interfaces. Import
+currently registers validated files at their existing paths. Catalogue-backed
+downloads, managed copying and a friendlier validation/import screen remain
+separate work. Unknown cleanup or commit outcomes stay blocking and visible;
+automated reconciliation and additional crash/power-loss hardening are deferred.
+
+* Starting the checked local development session
+
+The maintainer's per-user launcher selection still points to the installed
+Omnivox 1.10.0 release. Staging a development runtime does not replace that
+selection. From a shell, this one-session override starts a fresh Emacsvox
+using the checked native build:
+
+#+begin_src sh
+OMNIVOX_PROGRAM=/mnt/c/Users/bart/AppData/Local/Emacsvox/Omnivox/runtime/b4bfc8ba50b4d5c5/omnivox.exe emacsvox
+#+end_src
+
+Open =C-e H=, /Speech engines/, an engine's details, then /Installed voice
+library/. =e= changes desired enablement; =a= reviews and applies the changes;
+=r= shows the result. =b= explicitly includes built-in Flite SLT for a first
+library configuration. Applying both providers uses only their enabled
+installed entries, so review unavailable voices before confirming an empty
+or partial library. This command does not terminate any existing session.
