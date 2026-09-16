@@ -84,16 +84,63 @@ downloads, managed copying and a friendlier validation/import screen remain
 separate work. Unknown cleanup or commit outcomes stay blocking and visible;
 automated reconciliation and additional crash/power-loss hardening are deferred.
 
+* Local earcon regression follow-up
+
+The initial launcher readiness check missed a playback regression in owned
+local workers. Their shared remote-worker flag also selected the remote
+restriction on audio file paths. A local earcon therefore rejected its whole
+mixed request, including speech. The development session's main and
+notification logs confirmed this failure, explaining why plain speech and
+tones could work while buffer-boundary announcements disappeared.
+
+Omnivox =9c7692f50581f0a58c52ca7a206e0267a22d801f= gives local children a
+separate ownership flag. START admission and EOF cancellation remain shared;
+local file access and remote restrictions remain distinct. The permanent
+=omnivox-cli/tests/check_local_earcons.py= regression reproduced the failure
+before the fix. It passes against the complete Linux and Windows payloads,
+including the check that remote workers still reject local file earcons.
+
+All 822 native workspace tests passed, with one existing ignored test.
+Formatting, relevant Piper-enabled CLI Clippy, native documentation links and
+Linux ownership/lease checks passed. In fresh Emacs processes loading current
+byte-code, a real =previous-line= error at the beginning of a buffer reached
+the command error handler and completed on the notification stream with its
+warning earcon. Main-stream speech with a movement earcon also completed.
+These checks passed with both Linux and WSL-to-Windows workers using null
+audio; they do not establish what the maintainer hears.
+
+The complete guarded =make windows-omnivox-piper-dev= route staged build
+=2f55382a9dc1125b= and passed integrity and native engine checks. Main SHA-256:
+=1acfa4fad4e4874a078b14e43808098caa55f9c62aff2830ba70197abc5ef526=.
+Its matching Piper archive SHA-256:
+=3495e7d95ca43b0572cf65efeb92e7f97d7c5edb740743b371203c78ceb49c49=.
+At that exact source commit,
+[[https://github.com/bartbunting/omnivox/actions/runs/35069852271][Piper Native Validation]] passed on all four platforms, and
+[[https://github.com/bartbunting/omnivox/actions/runs/35069851982][macOS Voice Validation]] passed on both Mac architectures.
+
+The reported development Emacs session closed before recovery. The local
+desktop wrapper now selects the corrected runtime for new sessions; existing
+Emacs sessions were not restarted. A subsequently opened desktop session
+confirmed both streams running the corrected native executable. Its real
+=previous-line= attempts at point 1 in =*scratch*= submitted "Beginning of
+buffer" as dispatches 3 and 4; both reached observed mixer playback and
+completed. Neither stream logged an earcon preparation failure. Audible
+acceptance remains a separate maintainer check.
+
 * Starting the checked local development session
 
 The maintainer's per-user launcher selection still points to the installed
 Omnivox 1.10.0 release. Staging a development runtime does not replace that
-selection. From a shell, this one-session override starts a fresh Emacsvox
-using the checked native build:
+selection. On this machine, open the /Emacsvox Development/ Windows desktop
+shortcut, or run its per-user wrapper from WSL:
 
 #+begin_src sh
-OMNIVOX_PROGRAM=/mnt/c/Users/bart/AppData/Local/Emacsvox/Omnivox/runtime/b4bfc8ba50b4d5c5/omnivox.exe emacsvox
+/home/bart/bin/emacsvox-development
 #+end_src
+
+The wrapper uses the maintainer's normal Emacsvox profile, selected Emacs 31
+toolchain and the verified =2f55382a9dc1125b= native runtime. The wrapper and
+desktop shortcut are local installation files, not distributed launchers.
 
 Open =C-e H=, /Speech engines/, an engine's details, then /Installed voice
 library/. =e= changes desired enablement; =a= reviews and applies the changes;
