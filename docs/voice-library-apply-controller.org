@@ -1,0 +1,129 @@
+#+title: Voice Library Apply Coordinator
+#+date: 2026-09-16
+#+startup: content
+
+* Scope
+
+The private =omnivox-library-apply= module implements Emacs's activation
+sequence under [[file:adr/0019-voice-library-and-activation.org][ADR 0019]]. It issues one action at a time to a native provider
+and consumes one correlated receipt. It performs no process or filesystem
+operations and has no user command. The native WSL/Windows provider and
+accessible Apply screen still need to be connected before live activation
+is available. Ordinary =tts-restart= is unchanged.
+
+This separation is intentional: deleting an Emacs process handle cannot prove
+that its native Windows helpers exited. The native provider must retain the
+profile lease and live ownership needed to make that claim. The coordinator
+does not signal recorded PIDs or infer cleanup from elapsed time.
+
+* Frozen input and identity
+
+=omnivox-library-apply--begin= takes a reviewed plan containing the operation
+UUID, candidate configuration, previous active configuration (or explicit
+=:null=), desired-index digest, expected overrides and eligible physical IDs.
+It also takes both candidate startup snapshots, the invoking session's actual
+previous lane snapshots and the voice/restart impact already shown to the user.
+
+The old snapshots are separate from the previous active pointer. They contain
+each lane's native owner UUID, actual startup inputs, configuration or legacy
+null, overrides and eligible voices. Another Emacs session may have advanced
+the pointer, and the two old lanes may have different actual configurations.
+Rollback must restore those individual snapshots. It cannot reconstruct them
+from current Customize values or the latest active pointer.
+
+Startup records are opaque to this coordinator. The native provider must
+resolve and validate executable/companion identities, arguments, paths and
+environment; persist exact inputs; and bind each owner UUID to a live owned
+worker. A caller-generated UUID or copied status JSON is not evidence of that
+binding. Plans contain data, never process handles or executable callbacks.
+Inputs, actions and receipts are copied, including mutable strings. Cycles,
+excessive data, malformed identities, duplicate fields and unordered or
+duplicate eligibility entries are rejected.
+
+* Action sequence
+
+=omnivox-library-apply--action= issues an action only once. The provider feeds
+its receipt to =omnivox-library-apply--complete= with the exact operation UUID,
+ticket and phase. Old, duplicate and other-operation replies cannot advance
+the operation. A failed or timed-out native action must return a failure;
+the driver must not leave it waiting indefinitely or invent a success receipt.
+
+| Action | Required native effect or evidence |
+|--------+------------------------------------|
+| preflight | Probe both candidate startup configurations before disturbing the old pair; obtain readiness and correlated library status, then confirm probe-tree/reader cleanup. |
+| activating | Hold the profile lease, recheck exact files, settings, index, pointer and original pair ownership, then persist activating before retirement. |
+| retire-old | Retire both original workers and helpers and confirm full native cleanup. |
+| start-candidate | Start both candidate lanes with fresh native owner identities and the frozen settings. Retain every attempted spawn, including partial failures. |
+| verify-candidate | Require ordinary readiness and matching negotiated status from each exact new worker. |
+| commit | Recheck the owned pair and frozen plan under the lease; atomically publish the candidate pointer and persist success. |
+
+Status proofs bind role, worker UUID, request ID and the inventory generation
+of the same snapshot. Both candidate lanes must acknowledge the exact target,
+profile, generation digest, eligible set and declared overrides. Configuration
+UUID text alone, one successful lane or an unnegotiated status is insufficient.
+Inventory counters may differ between lanes; each status must match its own
+inventory snapshot.
+
+The provider is responsible for correlating these proofs with the actual
+Emacs connection, native session and request, checking readiness after routing
+and logical registration, and enforcing deadlines. The coordinator validates
+the resulting records; its tests do not replace that transport integration.
+
+* Rollback, cancellation and uncertain outcomes
+
+Candidate startup or verification failure requests =rolling-back=, which
+must persist that state and confirm the previous active pointer remains intact.
+=retire-candidate= covers every attempted candidate spawn, including workers
+whose startup reply was lost. Only confirmed quiescence permits =start-previous=.
+=verify-previous= checks both restored configurations independently. Legacy
+workers require ordinary readiness without a fabricated library reply.
+=finish= records =rolled-back= only after both pass. Desired edits remain pending.
+
+Unconfirmed retirement blocks replacement. Failed rollback is reported as
+=recovery-failed=. A failed final journal write is =interrupted=, even when the
+in-memory sequence reached rollback completion. Retained worker records are
+observations, not a claim that those workers are still alive at inspection time.
+The native provider retains ownership and exposes actual per-lane state on
+failure; a terminal coordinator result is not permission to clear unresolved
+native ownership or discard a journal.
+
+If the rolling-back journal write fails, candidate cleanup is still requested.
+After confirmed cleanup, report recovery failure without starting another model
+load under uncertain journal state. Retain both the original activation failure
+and the later rollback failure in the result.
+
+Cancellation before issuing retirement leaves the original pair intact. A
+pending action retains its ticket until the provider reports its outcome and
+cleanup; cancelling must not discard a spawn that may already have happened.
+After retirement, cancellation follows paired rollback. An unissued commit can
+be withdrawn; cancellation racing an issued, confirmed commit reports success.
+
+A lost commit reply does not prove that the pointer write failed. The provider
+may report =not-committed= only after confirming the exact previous pointer
+under its lease. Other uncertain commit outcomes stop as =interrupted= and
+require explicit reconciliation, with no automatic rollback or speech restart.
+Additional crash-recovery and power-loss hardening remains follow-up work; it
+does not expand this slice into a recovery project.
+
+* Verification and remaining integration
+
+The isolated ERT suite exercises complete Apply ordering, partial startup,
+different actual previous configurations, legacy rollback, mismatched status,
+stale plans and replies, unconfirmed cleanup, cancelled transitions, commit
+ambiguity, failed rollback and final journal failure. These are client control
+flow tests with simulated native receipts. They do not establish Windows
+cleanup, native atomic pointer publication, live Emacs activation or audible
+acceptance.
+
+The 18 focused tests passed against source and in a fresh Emacs loading the
+compiled coordinator. The full byte-code rebuild and current-byte-code check
+passed, followed by 530 core regression tests with no failures. One existing
+graphical Workbench test was skipped in batch mode; this slice introduces no
+interactive screen. Header and documentation release checks passed after
+regenerating the reference and updating the startup source inventory.
+
+Next, connect the native provider's retained lease and exact startup snapshots,
+the per-connection negotiated status reader, and durable pointer/journal actions.
+Then exercise the complete WSL-to-Windows Apply and rollback path in a fresh
+Emacs before exposing its confirmation and result screen. Keep installation
+and desired enablement usable independently of live activation.

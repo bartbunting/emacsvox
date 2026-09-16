@@ -63,6 +63,7 @@ outloud-voices.elc \
 mac-voices.elc \
 swiftmac-voices.elc \
 omnivox-choice-codec.elc \
+omnivox-library-apply.elc \
 omnivox-preview.elc \
 omnivox-voices.elc
 

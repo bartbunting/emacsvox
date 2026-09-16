@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 291 loaded; 0 intentionally omitted.
+@c Modules: 292 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -57,10 +57,10 @@
 @c Loaded: emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc
 @c Loaded: g-utils.elc gm-nnir.elc gmaps.elc gweb.elc ladspa.elc
 @c Loaded: light.elc mac-voices.elc omaps.elc omnivox-choice-codec.elc omnivox-engine-settings.elc
-@c Loaded: omnivox-preview.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc pip.elc
-@c Loaded: plain-voices.elc soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc
-@c Loaded: tetris.elc tts-queue-state.elc tts-speak.elc voice-defs.elc voice-setup.elc
-@c Loaded: xbacklight.elc
+@c Loaded: omnivox-library-apply.elc omnivox-preview.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc
+@c Loaded: pip.elc plain-voices.elc soundscape.elc sox-gen.elc sox.elc
+@c Loaded: swiftmac-voices.elc tetris.elc tts-queue-state.elc tts-speak.elc voice-defs.elc
+@c Loaded: voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -346,6 +346,7 @@ This chapter documents a total of 1548 commands and 216 options.
 * omaps:: Open street  Maps.
 * omnivox-choice-codec:: Individual voice wire values.
 * omnivox-engine-settings:: Local engine startup settings.
+* omnivox-library-apply:: Coordinate voice-library activation.
 * omnivox-preview:: Owned Omnivox preview sequences.
 * omnivox-remote:: Workstation speech transport.
 * omnivox-voices:: Omnivox voice adapter.
@@ -20447,6 +20448,7 @@ Can recognize the columns in tabulated output, e.g. ps, ls output
 TABULATED-LIST ==  tabulated list mode
 Speech-enable tabulated lists and provide commands for intelligent
 spoken output
+
 @subsection Emacsvox-Tabulated-List Commands
 
 @subsubsection emacsvox-tabulated-list-next-row
@@ -24459,6 +24461,16 @@ Project typed settings into the bundled local launcher environment.  The
 launcher converts paths for its selected native target.  Explicit Omnivox
 environment settings retain precedence.  No remote provisioning or speech
 restart occurs when settings are edited.
+
+@node omnivox-library-apply
+@section omnivox-library-apply
+
+Private, effect-driven Apply coordinator.  A native provider executes one
+issued action and returns its correlated receipt.  This module decides when
+retirement, replacement, commit and paired rollback may follow.  It performs
+no process or file operations itself.  There is deliberately no interactive
+entry point until a native provider supplies ownership and durable receipts.
+See docs/voice-library-apply-controller.org for the provider boundary.
 
 @node omnivox-preview
 @section omnivox-preview

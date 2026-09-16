@@ -697,6 +697,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * omaps:: Open street  Maps.
 * omnivox-choice-codec:: Individual voice wire values.
 * omnivox-engine-settings:: Local engine startup settings.
+* omnivox-library-apply:: Coordinate voice-library activation.
 * omnivox-preview:: Owned Omnivox preview sequences.
 * omnivox-remote:: Workstation speech transport.
 * omnivox-voices:: Omnivox voice adapter.

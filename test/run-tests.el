@@ -58,6 +58,7 @@
   (require 'tts-queue-handoff-tests)
   (require 'tts-queue-state-tests)
   (require 'omnivox-preview-tests)
+  (require 'omnivox-library-apply-tests)
   (require 'emacsvox-aural-voice-editor-tests)
   (require 'emacsvox-aural-voice-context-tests)
   (require 'emacsvox-aural-voice-workbench-tests)

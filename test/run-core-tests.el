@@ -28,6 +28,7 @@
   (dolist (module '(emacsvox-tts-tests
                     tts-dispatch-handoff-tests
                     omnivox-remote-tests
+                    omnivox-library-apply-tests
                     emacsvox-voice-tests
                     emacsvox-speak-tests
                     emacsvox-aural-transport-tests
