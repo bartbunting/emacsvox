@@ -24,7 +24,12 @@ def main():
     parser.add_argument("--server", type=Path, required=True)
     parser.add_argument("--omnivox-source", type=Path, required=True)
     parser.add_argument("--emacs", type=Path, required=True)
+    parser.add_argument("--mbrola-root", type=Path,
+                        help="Private four-voice root from verify_mbrola_library.py")
+    parser.add_argument("--mbrola-helper", type=Path)
     args = parser.parse_args()
+    if bool(args.mbrola_root) != bool(args.mbrola_helper):
+        parser.error("--mbrola-root and --mbrola-helper must be supplied together")
     server = args.server.resolve()
     windows = server.suffix == ".exe"
     helper = server.parent / "piper" / ("omnivox-piper-helper.exe" if windows else "omnivox-piper-helper")
@@ -38,19 +43,34 @@ def main():
     if windows:
         temporary = subprocess.check_output(["cmd.exe", "/c", "echo", "%TEMP%"], text=True).strip()
         temporary_parent = subprocess.check_output(["wslpath", "-u", temporary], text=True).strip()
-    root = Path(tempfile.mkdtemp(prefix="omnivox-emacs-apply-", dir=temporary_parent))
+    root = (args.mbrola_root.resolve() if args.mbrola_root else
+            Path(tempfile.mkdtemp(prefix="omnivox-emacs-apply-", dir=temporary_parent)))
+    if not root.is_dir():
+        raise RuntimeError("The private test root must already exist")
     print(f"Private native test root retained: {native(root)}", flush=True)
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith("OMNIVOX_") and key != "ESPEAK_NG_DATA"}
     environment["OMNIVOX_VOICE_ROOT"] = native(root)
+    if args.mbrola_helper:
+        environment["OMNIVOX_MBROLA_HELPER"] = native(args.mbrola_helper.resolve())
+    forwarded = ["OMNIVOX_VOICE_ROOT", "OMNIVOX_MBROLA_HELPER"]
     environment["WSLENV"] = ":".join(
         [entry for entry in environment.get("WSLENV", "").split(":")
-         if entry and entry.split("/", 1)[0] != "OMNIVOX_VOICE_ROOT"] + ["OMNIVOX_VOICE_ROOT"])
+         if entry and entry.split("/", 1)[0] not in forwarded] + forwarded)
     response = subprocess.run([str(server), "--voice-library-service"],
                               input='{"request_id":1,"command":"host"}\n', env=environment,
                               capture_output=True, text=True, timeout=30, check=True)
     host = json.loads(response.stdout.removeprefix("OMNIVOX-LOCAL "))
     assert host["type"] == "host", host
+    if args.mbrola_root:
+        response = subprocess.run([str(server), "--voice-library-service"],
+                                  input='{"request_id":1,"command":"inspect"}\n', env=environment,
+                                  capture_output=True, text=True, timeout=30, check=True)
+        initial = json.loads(response.stdout.removeprefix("OMNIVOX-LOCAL "))
+        voices = initial.get("index", {}).get("voices", [])
+        if (initial.get("active") is not None or len(voices) != 4 or
+                any(voice["engine_id"] != "mbrola" for voice in voices)):
+            raise RuntimeError("Use the untouched private four-voice MBROLA acceptance root")
     source = args.omnivox_source.resolve() / "test-fixtures" / "piper-speakers"
     model, config = root / "alpha.onnx", root / "alpha.onnx.json"
     shutil.copyfile(source / "alpha.onnx", model)
@@ -88,7 +108,8 @@ def main():
                 process.wait(timeout=15)
     environment.update(EMACSVOX_LIBRARY_TEST_ROOT=native(root),
                        EMACSVOX_LIBRARY_TEST_SERVER=str(server), EMACSVOX_LIBRARY_TEST_IMPORT=operation)
-    runner = Path(__file__).resolve().with_suffix(".el")
+    runner = (Path(__file__).resolve().with_name("run-live-mbrola-library-tests.el")
+              if args.mbrola_root else Path(__file__).resolve().with_suffix(".el"))
     subprocess.run([str(args.emacs), "-Q", "--batch", "-l", str(runner)], env=environment,
                    check=True, timeout=600)
 
