@@ -238,14 +238,16 @@ def native_validate(work, record, server, helper, timeout, memory):
         raise ValueError(record["blocked"])
     if record["review"].get("entry_sha256") != digest(record["entry"]):
         raise ValueError("Entry requires current model-card review")
-    download(work, record, "model")
-    if not validation_ready(record):
-        raise ValueError("Reviewed entry or verified files changed")
     # Paths in generations are native paths. WSL callers can select a Windows server.
     def native(path):
         if server.suffix.lower() == ".exe" and os.name != "nt":
             return subprocess.check_output(["wslpath", "-w", str(path.resolve())], text=True).strip()
         return str(path.resolve())
+    if server.suffix.lower() == ".exe" and os.name != "nt" and not re.match(r"^[A-Za-z]:\\", native(work)):
+        raise ValueError("Windows validation requires --work on a native Windows filesystem, such as /mnt/c; WSL report publication is unsupported")
+    download(work, record, "model")
+    if not validation_ready(record):
+        raise ValueError("Reviewed entry or verified files changed")
     entry = record["entry"]
     assets = {f["role"]: {"path": native(asset_path(work, record, f["role"])),
                          "bytes": f["bytes"], "sha256": f["sha256"]} for f in entry["files"]}
@@ -277,7 +279,10 @@ def native_validate(work, record, server, helper, timeout, memory):
                     process.wait()
                 raise
     if result != 0:
-        raise ValueError(f"Native validation failed; see {run / 'output.log'}")
+        detail = next((line.removeprefix("Error: ") for line in
+                       (run / "output.log").read_text(errors="replace").splitlines()
+                       if line.startswith("Error: ") and "scratch retained" not in line), "worker failed")
+        raise ValueError(f"Native validation failed: {detail[:512]}; see {run / 'output.log'}")
     evidence = read(report)
     snapshot = evidence["snapshot"]
     if (evidence.get("kind") != "native-validation-observation" or not evidence.get("cleanup_confirmed")

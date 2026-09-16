@@ -215,6 +215,18 @@ report.write_text(json.dumps({'kind':'native-validation-observation',
                     with self.assertRaisesRegex(ValueError, "evidence"):
                         CAT.native_validate(work, candidate, server, server, 1, 256)
                     self.assertFalse(CAT.approved(work, candidate))
+            server.write_text(f"#!{sys.executable}\nimport sys\nprint('Error: unsupported phoneme type')\nsys.exit(1)\n")
+            with self.assertRaisesRegex(ValueError, "unsupported phoneme type"):
+                CAT.native_validate(work, copy.deepcopy(record), server, server, 1, 256)
+
+    @unittest.skipIf(sys.platform == "win32", "WSL-specific path check")
+    def test_windows_validation_requires_native_report_filesystem(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            work = Path(tmp)
+            _, record = self.prepared(work)
+            with patch.object(CAT.subprocess, "check_output", return_value="\\\\wsl.localhost\\Ubuntu\\work\n"):
+                with self.assertRaisesRegex(ValueError, "native Windows filesystem"):
+                    CAT.native_validate(work, record, work / "omnivox.exe", work / "helper.exe", 1, 256)
 
 
 if __name__ == "__main__":

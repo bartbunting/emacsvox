@@ -67,6 +67,14 @@ records the platform, validator identity and cleanup result; passing on one
 platform does not establish acceptance on another or guarantee speech quality.
 End-user installation still performs validation on the user's native host.
 
+Use a stable validator build: replacing its executable during a batch can
+interrupt worker startup or invalidate evidence. When running a Windows
+validator from WSL, put `--work` on a native Windows filesystem, for example
+below `/mnt/c/Users/NAME/AppData/Local/Temp/`. Windows cannot publish its
+immutable validation report through the WSL filesystem. Select both the
+Windows server and its matching `.exe` helper explicitly. Linux and Windows
+validation can use separate work directories at the same pinned revision.
+
 Export includes only entries with current review, verified file hashes and
 matching native evidence. It writes language shards within Omnivox's limits of
 128 entries and 1 MiB per document. Content-derived filenames and an atomic
