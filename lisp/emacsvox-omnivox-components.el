@@ -61,6 +61,10 @@
 (declare-function tts-notify "tts-speak" (text &optional dont-log))
 (declare-function emacsvox-aural-voice-workbench--open-engine
                   "emacsvox-aural-voice-workbench" (engine parent))
+(declare-function emacsvox-aural-voice-workbench
+                  "emacsvox-aural-voice-workbench" (&optional view))
+(declare-function emacsvox-aural-voice-workbench-speak-current
+                  "emacsvox-aural-voice-workbench" ())
 
 (defgroup emacsvox-omnivox-components nil
   "Manage optional Omnivox engine modules."
@@ -95,6 +99,8 @@
   "Parent engine-list buffer for an engine details view.")
 (defvar-local emacsvox-omnivox-components--engine-id nil
   "Engine shown in a details view.")
+(defvar-local emacsvox-omnivox-components--details-parent nil
+  "Engine browser to return to from details, independent of management state.")
 
 (defconst emacsvox-omnivox-components--fresh-seconds 300
   "Age after which engine discovery is described as previous evidence.")
@@ -189,6 +195,19 @@
 (defconst emacsvox-omnivox-components--managed-ids
   '("flite" "rutts" "piper" "tgspeechbox")
   "Component identifiers that this manager may install and uninstall.")
+
+(defun emacsvox-omnivox-components--browse-engines (engines)
+  "Include optional engines missing from live ENGINES as unchecked rows."
+  (let ((result (copy-sequence engines)))
+    (dolist (id emacsvox-omnivox-components--managed-ids)
+      (unless (cl-find id result :key (lambda (engine) (plist-get engine :engine-id)) :test #'equal)
+        (setq result
+              (append result
+                      (list (list :engine-id id
+                                  :display-name (pcase id ("rutts" "RuTTS") ("tgspeechbox" "TGSpeechBox")
+                                                      (_ (capitalize id)))
+                                  :availability "not reported" :voices nil))))))
+    result))
 
 (defun emacsvox-omnivox-components--speak (text)
   "Speak TEXT when speech is available, otherwise display it."
@@ -620,20 +639,52 @@ OUTPUT to the generic process sentinel EVENT."
 (defun emacsvox-omnivox-components-activate ()
   "Open details for the selected engine."
   (interactive)
-  (let* ((id (plist-get (emacsvox-omnivox-components--record) :id))
-         (manager (current-buffer))
-         (buffer (get-buffer-create (format "*Omnivox Engine: %s*" id))))
+  (emacsvox-omnivox-components--show-details
+   (plist-get (emacsvox-omnivox-components--record) :id)
+   (current-buffer) (current-buffer)))
+
+(defun emacsvox-omnivox-components--show-details (id manager parent)
+  "Show engine ID from MANAGER, returning to browser PARENT."
+  (let ((buffer (get-buffer-create (format "*Omnivox Engine: %s*" id))))
     (with-current-buffer buffer
       (unless (derived-mode-p 'emacsvox-omnivox-engine-details-mode)
         (emacsvox-omnivox-engine-details-mode))
       (setq emacsvox-omnivox-components--manager manager
+            emacsvox-omnivox-components--details-parent parent
             emacsvox-omnivox-components--engine-id id)
       (emacsvox-aural-inspection-attach-source
        (emacsvox-aural-inspection-source-buffer manager))
       (emacsvox-omnivox-components--render-details))
-    (emacsvox-aural-ui--pop-to-buffer buffer nil)
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (lambda ()
+              (with-current-buffer manager
+                (emacsvox-omnivox-components-speak-current))))))
+
+(defun emacsvox-omnivox-components--manager-buffer (&optional source)
+  "Prepare retained management state from cached speech discovery and SOURCE."
+  (let ((buffer (get-buffer-create "*Omnivox Engine Modules*")))
+    (with-current-buffer buffer
+      (unless (derived-mode-p 'emacsvox-omnivox-components-mode)
+        (emacsvox-omnivox-components-mode))
+      (emacsvox-aural-inspection-attach-source source)
+      (emacsvox-omnivox-components--capture-inventory)
+      (emacsvox-omnivox-components--render))
+    buffer))
+
+(defun emacsvox-omnivox-components--open-engine (id parent)
+  "Open ID's details from PARENT before starting background file checks."
+  (let ((manager (emacsvox-omnivox-components--manager-buffer
+                  (emacsvox-aural-inspection-source-buffer parent))))
     (with-current-buffer manager
-      (emacsvox-omnivox-components-speak-current))))
+      (unless (cl-find id (emacsvox-omnivox-components--all-records)
+                       :key (lambda (record) (plist-get record :id)) :test #'equal)
+        (let ((engine (cl-find id (emacsvox-omnivox-components--browse-engines nil)
+                               :key (lambda (entry) (plist-get entry :engine-id)) :test #'equal)))
+          (push (list :id id :name (or (plist-get engine :display-name) id)
+                      :state "not-checked" :size 0) emacsvox-omnivox-components--records)))
+      (emacsvox-omnivox-components--render id))
+    (emacsvox-omnivox-components--show-details id manager parent)
+    (with-current-buffer manager (emacsvox-omnivox-components--request-records))))
 
 (defun emacsvox-omnivox-components--process-description (process)
   "Describe PROCESS, including retained stopped workers, without credentials."
@@ -781,13 +832,23 @@ OUTPUT to the generic process sentinel EVENT."
   "Return to the parent engine row."
   (interactive)
   (let ((id emacsvox-omnivox-components--engine-id)
-        (manager emacsvox-omnivox-components--manager))
-    (unless (buffer-live-p manager) (user-error "The engine list was closed"))
-    (with-current-buffer manager (emacsvox-omnivox-components--render id))
+        (parent (or emacsvox-omnivox-components--details-parent
+                    emacsvox-omnivox-components--manager)))
+    (unless (buffer-live-p parent) (user-error "The engine list was closed"))
+    (with-current-buffer parent
+      (if (derived-mode-p 'emacsvox-omnivox-components-mode)
+          (emacsvox-omnivox-components--render id)
+        (let ((column (emacsvox-aural-ui-tabulated-column-index)))
+          (emacsvox-aural-ui-goto-row id)
+          (emacsvox-aural-ui-goto-tabulated-column column))))
     ;; Unwind the details window before returning, so quitting the engine
     ;; list cannot restore these details from its window history.
     (quit-window)
-    (emacsvox-aural-ui-pop-to-buffer manager)))
+    (emacsvox-aural-ui--pop-to-buffer
+     parent (if (with-current-buffer parent
+                  (derived-mode-p 'emacsvox-omnivox-components-mode))
+                #'emacsvox-omnivox-components-speak-current
+              #'emacsvox-aural-voice-workbench-speak-current))))
 
 (defun emacsvox-omnivox-components--details-activate ()
   "Perform the action on the selected detail row, or speak its value."
@@ -964,18 +1025,10 @@ OUTPUT to the generic process sentinel EVENT."
 
 ;;;###autoload
 (defun emacsvox-omnivox-manage-components ()
-  "Open accessible engine status, details and optional module management."
+  "Open Browse Voices for engine status, details and optional modules."
   (interactive)
-  (let ((source (emacsvox-aural-inspection-remember-source-buffer))
-        (buffer (get-buffer-create "*Omnivox Engine Modules*")))
-    (with-current-buffer buffer
-      (unless (derived-mode-p 'emacsvox-omnivox-components-mode)
-        (emacsvox-omnivox-components-mode))
-      (emacsvox-aural-inspection-attach-source source)
-      (emacsvox-omnivox-components-refresh))
-    (emacsvox-aural-ui--pop-to-buffer
-     buffer (and (called-interactively-p 'interactive) #'emacsvox-omnivox-components-speak-current))
-    buffer))
+  (require 'emacsvox-aural-voice-workbench)
+  (emacsvox-aural-voice-workbench 'engines))
 
 (provide 'emacsvox-omnivox-components)
 

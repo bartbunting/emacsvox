@@ -3084,7 +3084,7 @@ diagnosis, and contextual remapping.
 
  -- Command: emacsvox-aural-home-browse-voices
 
-     Browse installed engines and try their physical voices.
+     Browse voices, engine details, downloads, and settings.
 
 2.28.1.4 emacsvox-aural-home-change-feedback
 ............................................
@@ -3105,7 +3105,7 @@ diagnosis, and contextual remapping.
 
  -- Command: emacsvox-aural-home-engine-modules
 
-     Open the verified Omnivox engine-module manager.
+     Open Browse Voices for engine details and optional modules.
 
 2.28.1.7 emacsvox-aural-home-explain
 ....................................
@@ -5894,7 +5894,7 @@ palettes or routing profiles.
 
  -- Command: emacsvox-aural-voice-workbench-open-row
 
-     Browse the selected engine’s physical voices, or show details of another row.
+     Open selected engine details, or describe the selected voice or style.
 
 2.62.1.20 emacsvox-aural-voice-workbench-physical-view
 ......................................................

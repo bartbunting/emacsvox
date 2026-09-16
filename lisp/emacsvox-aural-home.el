@@ -98,12 +98,13 @@
             sounds spatial-settings output-volumes notification-log)
     (optional "Optional feedback and rules" features overrides buffer-rules training)
     (manage "Saved setups and unfinished changes" profiles drafts)
-    (troubleshoot "Troubleshooting" diagnostics spatial engine-modules))
+    (troubleshoot "Troubleshooting" diagnostics spatial))
   "Ordered Home task groups with their stable action identifiers.")
 
 (defconst emacsvox-aural-home--shortcut-rows
   '((change-feedback . explain) (remap . explain) (tune-voice . explain)
-    (remap-earcon . explain) (semantics . explain))
+    (remap-earcon . explain) (semantics . explain)
+    (engine-modules . browse-voices))
   "Visible return rows for actions available through shortcuts, search, or Help.")
 
 (defun emacsvox-aural-home--pending-drafts ()
@@ -143,7 +144,7 @@
         (emacsvox-aural-voice-editor--show selected (current-buffer))))))
 
 (defun emacsvox-aural-home-browse-voices ()
-  "Browse installed engines and try their physical voices."
+  "Browse voices, engine details, downloads, and settings."
   (interactive)
   (require 'emacsvox-aural-voice-workbench)
   (emacsvox-aural-voice-workbench 'engines))
@@ -239,8 +240,8 @@
            (vector "Change this feedback" source-name
                    "Preview a component change, then choose matching criteria and lifetime"))
      (list 'browse-voices
-           (vector "Browse installed voices" "Installed engines and voices"
-                   "Hear physical voices, compare samples, and try temporary tuning"))
+           (vector "Browse voices" "Voices, engines, and downloads"
+                   "Hear voices; inspect engines, download voices, and manage enablement"))
      (list 'speech-engine
            (vector "Preferred speech engine" "Session; prefix to save"
                    "Set engine preference; explicit palette choices take precedence"))
@@ -309,11 +310,6 @@
        "Voice Workbench"
        (emacsvox-aural-home--voice-workbench-status)
        "Advanced views of named voices, installed voices, effects, and shared engine settings"))
-     (list
-      'engine-modules
-      (vector
-       "Speech engines" "Status, checks and modules"
-       "Inspect engine availability and runtime checks; manage optional modules"))
      (list
       'features
       (vector
@@ -533,10 +529,9 @@
   (emacsvox-aural-voice-workbench))
 
 (defun emacsvox-aural-home-engine-modules ()
-  "Open the verified Omnivox engine-module manager."
+  "Open Browse Voices for engine details and optional modules."
   (interactive)
-  (require 'emacsvox-omnivox-components)
-  (emacsvox-omnivox-manage-components))
+  (emacsvox-aural-home-browse-voices))
 
 (defun emacsvox-aural-home-change-feedback ()
   "Guide a change to the captured Current item's feedback."
@@ -619,7 +614,7 @@
      (concat
       "Emacsvox Aural Home\n\n"
       "Start with Feedback for this item (x) to hear, understand, and change it; review past feedback\n"
-      "with H, or use / to find Browse installed voices or any other action.\n"
+      "with H, or use / to find Browse voices or any other action.\n"
       "Home keeps your source position and unfinished drafts.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
@@ -635,7 +630,7 @@
       "P presentation profiles\n"
       "V voice palettes\n"
       "W voice workbench\n"
-      "I Speech engines\n"
+      "I Browse voices, engine details, and downloads\n"
       "D aural doctor\n"
       "t toggle training explanations for this session\n"
       "g refresh\n"

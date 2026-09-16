@@ -533,7 +533,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
             (process-put process 'emacsvox-operation 'installation)
             (emacsvox-omnivox-components-refresh "flite")
             (emacsvox-aural-ui-goto-tabulated-column 1)
-            (emacsvox-omnivox-manage-components)
+            (emacsvox-omnivox-components--manager-buffer)
             (should (eq emacsvox-omnivox-components--process process))
             (should (equal (aref (tabulated-list-get-entry) 1) "installing"))
             (should (= (emacsvox-aural-ui-tabulated-column-index) 1))

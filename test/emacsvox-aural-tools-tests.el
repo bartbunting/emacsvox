@@ -169,6 +169,7 @@
   (emacsvox-test--with-home-context
     (let ((all (mapcar #'car (emacsvox-aural-home--all-entries)))
           (grouped (apply #'append (mapcar #'cddr emacsvox-aural-home-task-groups))))
+      (should-not (memq 'engine-modules all))
       (should (= (length grouped) (length (delete-dups (copy-sequence grouped)))))
       (dolist (id all)
         (should (memq (or (alist-get id emacsvox-aural-home--shortcut-rows) id) grouped))))
@@ -176,8 +177,8 @@
     (let (opened)
       (cl-letf (((symbol-function 'completing-read)
                  (lambda (_prompt choices &rest _)
-                   (should (assoc "Browse installed voices" choices))
-                   "Browse installed voices"))
+                   (should (assoc "Browse voices" choices))
+                   "Browse voices"))
                 ((symbol-function 'emacsvox-aural-voice-workbench)
                  (lambda (view) (setq opened view))))
         (emacsvox-aural-home-search))
@@ -2753,7 +2754,7 @@
                 '((group understand) (group resources) (group output) (group optional)
                   (group manage) (group troubleshoot))))
               (dolist (id '(explain remap remap-earcon overrides recent-feedback profiles
-                            voices voice-workbench engine-modules features buffer-rules
+                            voices voice-workbench features buffer-rules
                             semantics sounds spatial spatial-settings training diagnostics))
                 (should (assq id (emacsvox-aural-home--all-entries))))
               (dolist

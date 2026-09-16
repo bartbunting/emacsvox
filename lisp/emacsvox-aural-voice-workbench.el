@@ -50,6 +50,10 @@
                   (&optional source-buffer))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
+(declare-function emacsvox-omnivox-components--open-engine
+                  "emacsvox-omnivox-components" (id parent))
+(declare-function emacsvox-omnivox-components--browse-engines
+                  "emacsvox-omnivox-components" (engines))
 
 (defcustom emacsvox-aural-voice-workbench-preview-text
   "The quick brown fox jumps over the lazy dog."
@@ -790,7 +794,12 @@ or persisting a routing choice."
     ('engines
      (mapcar
       #'emacsvox-aural-voice-workbench--engine-row
-      (plist-get emacsvox-aural-voice-workbench-inventory :engines)))
+      (if (equal "omnivox" (plist-get emacsvox-aural-voice-workbench-inventory :adapter))
+          (progn
+            (require 'emacsvox-omnivox-components)
+            (emacsvox-omnivox-components--browse-engines
+             (plist-get emacsvox-aural-voice-workbench-inventory :engines)))
+        (plist-get emacsvox-aural-voice-workbench-inventory :engines))))
     ('styles
      (let ((palette (emacsvox-aural-voice-workbench--active-palette)))
        (if (emacsvox-aural-voice-palette palette)
@@ -1866,7 +1875,10 @@ command does not stop speech already playing."
 Outside the engine view, leave any temporary engine browsing scope."
   (interactive)
   (if (eq emacsvox-aural-voice-workbench-view 'engines)
-      (emacsvox-aural-voice-workbench-open-row)
+      (progn
+        (setq emacsvox-aural-voice-workbench--voice-list-parent
+              (or (tabulated-list-get-id) (user-error "Select an engine first")))
+        (emacsvox-aural-voice-workbench--switch 'physical))
     (setq emacsvox-aural-voice-workbench--voice-list-parent nil)
     (emacsvox-aural-voice-workbench--switch 'physical)))
 
@@ -1949,12 +1961,15 @@ Outside the engine view, leave any temporary engine browsing scope."
     (message "Physical voice filters cleared")))
 
 (defun emacsvox-aural-voice-workbench-open-row ()
-  "Browse the selected engine's physical voices, or show details of another row."
+  "Open selected engine details, or describe the selected voice or style."
   (interactive)
   (if (eq emacsvox-aural-voice-workbench-view 'engines)
-      (let ((engine (or (tabulated-list-get-id) (user-error "Select an engine first"))))
-        (setq emacsvox-aural-voice-workbench--voice-list-parent engine)
-        (emacsvox-aural-voice-workbench--switch 'physical))
+      (if (equal "omnivox" (plist-get emacsvox-aural-voice-workbench-inventory :adapter))
+          (progn
+            (require 'emacsvox-omnivox-components)
+            (emacsvox-omnivox-components--open-engine
+             (or (tabulated-list-get-id) (user-error "Select an engine first")) (current-buffer)))
+        (emacsvox-aural-voice-workbench-physical-view))
     (emacsvox-aural-voice-workbench-describe)))
 
 (defun emacsvox-aural-voice-workbench-quit ()
@@ -2023,7 +2038,8 @@ when they remain unsaved."
      (concat
       "Voice Workbench\n\n"
       "e engines; v physical voices; l named voices; s styles and effects.\n"
-      "On an engine, RET browses its voices; q returns to that engine.\n"
+      "On an Omnivox engine, RET opens status, downloads, and settings.\n"
+      "v browses its voices directly; q returns to the engine.\n"
       "n/p or up/down moves rows; left/right moves columns.\n"
       ". speaks the cell; SPC speaks the whole row; x shows details.\n\n"
       "P previews; S stops; T changes the comparison text.\n"
@@ -2166,6 +2182,22 @@ when they remain unsaved."
   (define-key emacsvox-aural-voice-workbench-mode-map
               (kbd (car binding)) (cdr binding)))
 
+(defun emacsvox-aural-voice-workbench--speak-opening ()
+  "Announce the prepared view and selected engine without starting discovery."
+  (cond
+   ((not (tabulated-list-get-id)) (tts-speak "Voice Workbench has no rows"))
+   ((eq emacsvox-aural-voice-workbench-view 'engines)
+    (let* ((entry (tabulated-list-get-entry))
+           (count (string-to-number (aref entry 8))))
+      (tts-speak
+       (format "Browse voices. %s. %s. %d voice%s. %s"
+               (aref entry 0) (aref entry 1)
+               count (if (= count 1) "" "s")
+               (if (equal "omnivox" (plist-get emacsvox-aural-voice-workbench-inventory :adapter))
+                   "Return opens engine details; v browses voices"
+                 "Return browses voices")))))
+   (t (emacsvox-aural-voice-workbench-speak-current))))
+
 ;;;###autoload
 (defun emacsvox-aural-voice-workbench (&optional view)
   "Open the accessible Voice Workbench in VIEW."
@@ -2179,11 +2211,7 @@ when they remain unsaved."
       (when view (setq emacsvox-aural-voice-workbench-view view))
       (emacsvox-aural-voice-workbench-refresh))
     (emacsvox-aural-ui--pop-to-buffer
-     buffer (and (called-interactively-p 'interactive)
-                 (lambda ()
-                   (if (tabulated-list-get-id)
-                       (emacsvox-aural-voice-workbench-speak-current)
-                     (tts-speak "Voice Workbench has no rows")))))
+     buffer #'emacsvox-aural-voice-workbench--speak-opening)
     buffer))
 
 (defun emacsvox-aural-voice-workbench--open-engine (engine parent)

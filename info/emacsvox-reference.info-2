@@ -4843,7 +4843,7 @@ supplied.
 
  -- Command: emacsvox-omnivox-manage-components
 
-     Open accessible engine status, details and optional module management.
+     Open Browse Voices for engine status, details and optional modules.
 
 2.187.2 emacsvox-omnivox-components Options
 -------------------------------------------

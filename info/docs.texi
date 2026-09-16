@@ -3213,7 +3213,7 @@ Perform the primary operation for the aural home row at point.
 @findex emacsvox-aural-home-browse-voices
 
 @format
-Browse installed engines and try their physical voices.
+Browse voices, engine details, downloads, and settings.
 @end format
 @end deffn
 
@@ -3240,7 +3240,7 @@ Resume an unfinished rule, voice, or routing editor, including retained drafts.
 @findex emacsvox-aural-home-engine-modules
 
 @format
-Open the verified Omnivox engine-module manager.
+Open Browse Voices for engine details and optional modules.
 @end format
 @end deffn
 
@@ -6485,7 +6485,7 @@ Move the selected engine earlier in preferred engine order.
 @findex emacsvox-aural-voice-workbench-open-row
 
 @format
-Browse the selected engine’s physical voices, or show details of another row.
+Open selected engine details, or describe the selected voice or style.
 @end format
 @end deffn
 
@@ -16502,7 +16502,7 @@ q		emacsvox-omnivox-components--details-back
 @findex emacsvox-omnivox-manage-components
 
 @format
-Open accessible engine status, details and optional module management.
+Open Browse Voices for engine status, details and optional modules.
 @end format
 @end deffn
 

@@ -58,6 +58,7 @@
                         omnivox-catalogue-graphical-navigation-and-background-refresh
                         omnivox-engine-settings-graphical-customize-returns-to-details
                         emacsvox-aural-voice-workbench-graphical-engine-browser-return
+                        emacsvox-aural-workbench-graphical-engine-management-round-trip
                         emacsvox-omnivox-components-graphical-details-refresh-preserves-window
                         emacsvox-omnivox-components-graphical-library-navigation-and-return
                         emacsvox-aural-feedback-details-graphical-folding-and-draft-return
@@ -69,8 +70,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 14)
-                                (= (ert-stats-completed stats) 14)
+          (setq status (if (and (= (ert-stats-total stats) 15)
+                                (= (ert-stats-completed stats) 15)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))
