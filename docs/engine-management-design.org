@@ -646,6 +646,16 @@ until their runtime, data, cancellation and playback checks pass. The first
 MBROLA milestone is one voice working through normal Omnivox selection,
 preview, both lanes and recovery, not merely a standalone WAV file.
 
+The development prototype now implements the pinned en1 compound voice in an
+isolated helper, with a private frontend that produces phoneme instructions and
+an owned MBROLA subprocess returning bounded PCM. It uses the existing inventory,
+exact preview, palette references and fallback paths. Explicit
+=OMNIVOX_MBROLA_HELPER= selects its absolute helper path; the local launcher
+forwards a native Windows path through WSL. This is developer opt-in, without a
+component installer or managed database catalogue. Omnivox's
+=docs/MBROLA-PROTOTYPE.md= records builds, checks, provisional controls, licences
+and the separate production boundary decision still required by ADR 0012.
+
 ** Other engines and future additions
 
 | Engine or provider | Extension path |
