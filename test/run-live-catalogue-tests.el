@@ -5,6 +5,7 @@
 ;; Opt-in network test in a fresh Emacs using current byte-code and a complete
 ;; native runtime. EMACSVOX_LIBRARY_TEST_SERVER selects the executable.
 ;; Windows tests also supply an empty native EMACSVOX_LIBRARY_TEST_ROOT.
+;; EMACSVOX_LIBRARY_TEST_ENGINE optionally selects piper instead of flite.
 ;; Speech output is muted. No user profile or existing Emacs is modified.
 ;;; Code:
 (let ((root (expand-file-name "../" (file-name-directory load-file-name))))
@@ -44,6 +45,14 @@
                                          :adjustments nil))))))
          emacsvox-aural-voice-palette-registry)
 (setq emacsvox-aural-voice-palette-override 'catalogue-acceptance)
+(defconst omnivox-catalogue-test--engine (or (getenv "EMACSVOX_LIBRARY_TEST_ENGINE") "flite"))
+(defconst omnivox-catalogue-test--entry
+  (pcase omnivox-catalogue-test--engine
+    ("flite" "flite-cmu-us-awb") ("piper" "piper-en-us-kristin-medium")
+    (_ (error "Test engine must be flite or piper"))))
+(defconst omnivox-catalogue-test--voice
+  (if (equal "flite" omnivox-catalogue-test--engine) "flitevox:cmu_us_awb"
+    "piper:v1/c/piper-en-us-kristin-medium/0"))
 (princ (format "Private voice root: %s\n" (getenv "OMNIVOX_VOICE_ROOT")))
 
 (defun omnivox-catalogue-test--inspect ()
@@ -76,9 +85,9 @@
                                process "Initial registration")
         (omnivox-catalogue-test--check-choice process))
       (let ((before (list tts-speaker-process tts-notify-process)))
-        (omnivox-catalogue "flite")
+        (omnivox-catalogue omnivox-catalogue-test--engine)
         (goto-char (point-min))
-        (unless (equal (tabulated-list-get-id) "flite-cmu-us-awb") (error "Missing AWB catalogue row"))
+        (unless (equal (tabulated-list-get-id) omnivox-catalogue-test--entry) (error "Missing catalogue row"))
         (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
           (omnivox-catalogue-install))
         (let* ((key (omnivox-catalogue--key omnivox-catalogue--host omnivox-catalogue--entry))
@@ -98,22 +107,27 @@
           (unless (and (= 1 (length voices)) (eq :false (plist-get (aref voices 0) :enabled))
                        (eq :null (plist-get library :active)))
             (error "Install changed enablement or active state")))
-        (princ "PASS: accessible catalogue downloaded and installed AWB disabled; exact speech pair retained\n"))
+        (princ "PASS: accessible catalogue downloaded and installed voice disabled; exact speech pair retained\n"))
       (omnivox-catalogue-library)
       (goto-char (point-min))
-      (unless (equal omnivox-library--engine "flite") (error "Library lost provider scope"))
+      (unless (equal omnivox-library--engine omnivox-catalogue-test--engine) (error "Library lost provider scope"))
       (omnivox-library-toggle)
-      (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
-        (call-interactively #'omnivox-library-apply))
+      (let* (observed-pair
+             (tts-voice-inventory-changed-hook
+              (list (lambda () (setq observed-pair (list tts-speaker-process tts-notify-process))))))
+        (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+          (call-interactively #'omnivox-library-apply))
+        (unless (equal observed-pair (list tts-speaker-process tts-notify-process))
+          (error "Views did not receive the final published speech pair")))
       (unless (eq 'succeeded (plist-get omnivox-library-last-result :status))
         (error "Apply failed: %S" omnivox-library-last-result))
       (dolist (process (list tts-speaker-process tts-notify-process))
         (omnivox-catalogue-test--check-choice process)
         (let ((status (plist-get (omnivox-library--proof process 'speaker) :status)))
-          (unless (seq-find (lambda (voice) (equal "flitevox:cmu_us_awb" (plist-get voice :voice_id)))
+          (unless (seq-find (lambda (voice) (equal omnivox-catalogue-test--voice (plist-get voice :voice_id)))
                             (plist-get status :eligible_voices))
-            (error "Downloaded AWB absent from replacement worker"))))
-      (princ "PASS: explicit enable and reviewed Apply made AWB eligible on both replacement workers\n"))
+            (error "Downloaded voice absent from replacement worker"))))
+      (princ "PASS: explicit enable and reviewed Apply made voice eligible on both replacement workers and refreshed views\n"))
   (dolist (process (list tts-speaker-process tts-notify-process))
     (when (process-live-p process) (omnivox-library--retire process))))
 ;;; run-live-catalogue-tests.el ends here

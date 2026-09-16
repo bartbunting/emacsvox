@@ -386,7 +386,12 @@ All attempted replacement processes remain owned until retirement is confirmed."
              (process-put process 'omnivox-library-frozen-policy nil)
              (process-put process 'omnivox-library-frozen-registration nil)
              (let ((tts-speaker-process process)) (tts--protocol-sync)))
-           (setq omnivox-engine-inventory (process-get tts-speaker-process omnivox--control-inventory-property)))
+           (setq omnivox-engine-inventory (process-get tts-speaker-process omnivox--control-inventory-property))
+           ;; Inventory arrived during preflight, before these workers became
+           ;; the current pair.  Views must now capture the published pair.
+           (condition-case err
+               (run-hooks 'tts-voice-inventory-changed-hook)
+             (error (message "Voices applied; display refresh failed: %s" (error-message-string err)))))
          (action (action)
            (pcase (plist-get action :phase)
              ('preflight
