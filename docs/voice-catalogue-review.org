@@ -92,3 +92,52 @@ flow. No unavailable feature is labelled as completed.
   this verifies routing and activation, not what a listener heard.
 - Byte-code rebuild/preflight, header checks, Org preview, generated manual
   and reference update, and the documentation release check passed.
+
+* Native platform and desktop acceptance
+
+The final native source is =1a611627a0a00a8ca8e7ad3d692394f2c4a2d7f5=.
+[[https://github.com/bartbunting/omnivox/actions/runs/35077808412][Piper native validation run 35077808412]] passed on Linux x64, Windows x64,
+Apple Silicon and Intel macOS. It includes actual HTTPS acquisition, native
+validation, cancellation, incorrect-size rejection, disabled installation and
+duplicate rejection. Windows canonical paths are converted to ordinary
+metadata paths only after a filesystem round-trip proves the same target;
+the Windows acquisition regression also passed in a native test executable.
+
+The desktop build exposed an additional Flite packaging mismatch: the
+post-strip checksum writer used =./name= while native evidence requires
+canonical relative names. Emacsvox =76c4e7d8a= fixes that writer. The actual
+Make manifest recipe is now exercised by the staging fixture, including a
+filename containing spaces. All 13 staging tests pass. Native path validation
+remains unchanged. AWB also synthesized 184338 PCM frames in the real Windows
+Flite helper before the final installation check.
+
+The full guarded =windows-omnivox-piper-dev= target staged runtime
+=d81362fdc8a0b47f= from Emacsvox =76c4e7d8a= and native source =1a611627=.
+Its Windows executable is:
+
+=C:\Users\bart\AppData\Local\Emacsvox\Omnivox\runtime\d81362fdc8a0b47f\omnivox.exe=
+
+Main executable SHA-256:
+=309e3ef3581a70f0c9a85d25c4cb069d100abab4c0bdb409ee7c2cb34491a5cb=.
+The checked Piper development archive SHA-256 is
+=6f592ca2721d96030e1550863be1da789f959c10ae131a27fc80f4e8616199d0=.
+Staging verified eSpeak, Flite, RuTTS, TGSpeechBox and Piper discovery.
+The local speech/file-earcon regression and remote file restrictions passed
+with this same main executable digest.
+
+A fresh compiled Emacs completed =test/run-live-catalogue-tests.el= against
+that Windows runtime. The test uses the configured Omnivox voice adapter,
+null audio, and a private Windows voice root. It opened the real catalogue,
+downloaded AWB, confirmed disabled installation without replacing either
+original speech process, enabled the voice through the library, and completed
+reviewed Apply. Both replacement workers reported =flitevox:cmu_us_awb=
+eligible. The native test root was
+=C:\Users\bart\AppData\Local\Temp\omnivox-catalogue-acceptance-w90w24ro=.
+This was a routing/activation and synthesis check, not an audible listening
+acceptance by the maintainer.
+
+The existing Windows /Emacsvox Development/ shortcut still calls
+=/home/bart/bin/emacsvox-development= through its local launcher. That wrapper
+now selects =d81362fdc8a0b47f=; its diagnostic command confirms the executable
+and Emacs 31.0.90. Existing Emacs sessions were not restarted. A fresh
+Development window loads the compiled catalogue interface and this runtime.
