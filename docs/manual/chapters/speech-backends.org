@@ -439,9 +439,16 @@ before retrying.
 - /Voice variants/ in eSpeak details discovers the bundled choices on your
   selected local speech host. Choose a base voice with @@texinfo:@kbd{b}@@,
   then toggle a variant with @@texinfo:@kbd{RET}@@. @@texinfo:@kbd{s}@@ saves
-  your choices; @@texinfo:@kbd{a}@@ explicitly restarts both speech lanes.
-  After restart, @@texinfo:@kbd{p}@@ auditions that exact combination and
+  your choices for future Emacs sessions; @@texinfo:@kbd{a}@@ explicitly
+  restarts both speech lanes with the current choices. Arrow keys and
+  @@texinfo:@kbd{C-n}@@/@@texinfo:@kbd{C-p}@@ navigate spoken rows without
+  changing columns. /Desired availability/ records your selection;
+  /Live preview/ says /Restart required/ until the enabled combination is
+  available for preview. When it says /Ready/, @@texinfo:@kbd{p}@@ auditions
+  that exact combination and
   @@texinfo:@kbd{v}@@ opens the voice browser for the usual palette editor.
+  Enabling a variant does not change your normal speaking voice; select it
+  in a palette to use it for ordinary reading.
   Disabled choices and saved palette references are retained. This requires a
   development Omnivox build with variant discovery and the bundled local
   launcher. It uses bundled variants and does not download files.

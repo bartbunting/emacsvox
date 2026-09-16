@@ -1558,9 +1558,16 @@ references. Changing @emph{Enabled} leaves @emph{Active} unchanged until Apply.
 @emph{Voice variants} in eSpeak details discovers the bundled choices on your
 selected local speech host. Choose a base voice with @kbd{b}@comma{}
 then toggle a variant with @kbd{RET}. @kbd{s} saves
-your choices; @kbd{a} explicitly restarts both speech lanes.
-After restart@comma{} @kbd{p} auditions that exact combination and
+your choices for future Emacs sessions; @kbd{a} explicitly
+restarts both speech lanes with the current choices. Arrow keys and
+@kbd{C-n}/@kbd{C-p} navigate spoken rows without
+changing columns. @emph{Desired availability} records your selection;
+@emph{Live preview} says @emph{Restart required} until the enabled combination is
+available for preview. When it says @emph{Ready}@comma{} @kbd{p} auditions
+that exact combination and
 @kbd{v} opens the voice browser for the usual palette editor.
+Enabling a variant does not change your normal speaking voice; select it
+in a palette to use it for ordinary reading.
 Disabled choices and saved palette references are retained. This requires a
 development Omnivox build with variant discovery and the bundled local
 launcher. It uses bundled variants and does not download files.

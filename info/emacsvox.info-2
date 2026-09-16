@@ -14,6 +14,25 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Starting Term,  Next: Term Input Modes,  Up: Running Terminal Based Applications
+
+12.1 Starting Term
+==================
+
+Run ‘M-x term <RET>’.  At the ‘Run program:’ prompt, accept the proposed
+shell or enter another executable and press <RET>.  Emacsvox currently
+makes the selected Term window fill the frame when ‘term’ or ‘ansi-term’
+starts.  This changes only the window layout: it does not kill the
+buffers that were displayed in the other windows.
+
+   Term handles terminal emulation, while the child program handles its
+prompts, input, and completion.  Emacsvox observes the rendered Term
+buffer and adds speech feedback and review commands.  See *note
+(emacs)Term Mode:: for the emulator itself and *note
+(emacsvox-reference)emacsvox-eterm:: for the complete Emacsvox API
+inventory.
+
+
 File: emacsvox.info,  Node: Term Input Modes,  Next: Term Speech Feedback,  Prev: Starting Term,  Up: Running Terminal Based Applications
 
 12.2 Character And Line Input Modes

@@ -67,9 +67,29 @@
   (cl-find-if (lambda (entry) (equal (cdr entry) (list omnivox-espeak-variants--base variant)))
               omnivox-espeak-variants))
 
+(defun omnivox-espeak-variants--preview-state (variant inventory)
+  "Describe whether VARIANT can be previewed in live main-lane INVENTORY."
+  (let* ((desired (car (omnivox-espeak-variants--entry variant)))
+         (engine (cl-find "espeak" (plist-get inventory :engines)
+                          :key (lambda (entry) (plist-get entry :engine-id)) :test #'equal))
+         (voice (cl-find (concat omnivox-espeak-variants--base "+" variant)
+                         (plist-get engine :voices)
+                         :key (lambda (entry) (plist-get entry :voice-id)) :test #'equal)))
+    (cond
+     ((or (plist-get inventory :stale)
+          (not (equal (plist-get inventory :status) "available"))) "Waiting for inventory")
+     ((and voice (equal (plist-get engine :availability) "available")
+           (equal (plist-get voice :availability) "available"))
+      (if desired "Ready" "Disable pending"))
+     ((or voice (and engine (not (equal (plist-get engine :availability) "available"))))
+      "Unavailable")
+     (desired "Restart required")
+     (t "Not loaded"))))
+
 (defun omnivox-espeak-variants--render ()
   "Update rows without moving focus or losing the selected variant."
-  (let ((variants (copy-tree (plist-get omnivox-espeak-variants--catalogue :variants))))
+  (let ((variants (copy-tree (plist-get omnivox-espeak-variants--catalogue :variants)))
+        (inventory (tts-voice-inventory)))
     (dolist (entry omnivox-espeak-variants)
       (when (and (equal (nth 1 entry) omnivox-espeak-variants--base)
                  (not (cl-find (nth 2 entry) variants :key (lambda (v) (plist-get v :id)) :test #'equal)))
@@ -83,13 +103,28 @@
              (mapcar (lambda (v)
                        (let* ((variant (plist-get v :id)) (entry (omnivox-espeak-variants--entry variant)))
                          (list variant (vector (plist-get v :display_name)
-                                               (if (car entry) "Enabled at next start" "Disabled") variant))))
+                                               (if (car entry) "Enabled" "Disabled")
+                                               (omnivox-espeak-variants--preview-state variant inventory)
+                                               variant))))
                      variants))))))
 
 (defun omnivox-espeak-variants--speak-row ()
-  "Speak the selected variant's name and desired availability."
+  "Speak the variant's name, desired setting and relevant live preview state."
   (let ((row (or (tabulated-list-get-entry) (user-error "Choose a variant row"))))
-    (emacsvox-aural-ui-speak (format "%s, %s." (aref row 0) (aref row 1)))))
+    (emacsvox-aural-ui-speak
+     (format "%s, %s%s." (aref row 0) (aref row 1)
+             (if (or (equal (aref row 1) "Enabled")
+                     (equal (aref row 2) "Disable pending"))
+                 (concat ", " (aref row 2)) "")))))
+
+(defun omnivox-espeak-variants--inventory-changed ()
+  "Refresh live preview availability without moving focus or speaking."
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'omnivox-espeak-variants-mode)
+        (omnivox-espeak-variants--render)))))
+
+(add-hook 'tts-voice-inventory-changed-hook #'omnivox-espeak-variants--inventory-changed)
 
 (defun omnivox-espeak-variants--stop ()
   "Retire only this buffer's private discovery request."
@@ -185,6 +220,7 @@
   (interactive)
   (omnivox-espeak-variants--editable)
   (let* ((variant (or (tabulated-list-get-id) (user-error "Choose a variant row")))
+         (name (aref (tabulated-list-get-entry) 0))
          (old (omnivox-espeak-variants--entry variant))
          (entry (list (not (car old)) omnivox-espeak-variants--base variant))
          (choices (append (cl-remove old omnivox-espeak-variants :test #'equal) (list entry))))
@@ -192,7 +228,8 @@
     (setq omnivox-espeak-variants choices
           omnivox-espeak-variants--status "Edited; s saves, a restarts both speech lanes")
     (omnivox-espeak-variants--render)
-    (emacsvox-aural-ui-announce-result "%s for next speech start" (if (car entry) "Enabled" "Disabled"))))
+    (emacsvox-aural-ui-announce-result "%s %s. s saves; a applies; p previews."
+                                     name (if (car entry) "enabled" "disabled"))))
 
 (defun omnivox-espeak-variants-save ()
   "Save desired combinations in this Emacs profile without restarting speech."
@@ -200,9 +237,9 @@
   (omnivox-espeak-variants--editable)
   (omnivox-engine-settings--variants-json omnivox-espeak-variants)
   (customize-save-variable 'omnivox-espeak-variants omnivox-espeak-variants)
-  (setq omnivox-espeak-variants--status "Saved; restart speech to apply")
+  (setq omnivox-espeak-variants--status "Saved; Live preview shows whether restart is needed")
   (omnivox-espeak-variants--render)
-  (emacsvox-aural-ui-announce-result "Variant choices saved. Restart speech to apply."))
+  (emacsvox-aural-ui-announce-result "Choices saved for future Emacs sessions. a applies; p previews."))
 
 (defun omnivox-espeak-variants-apply ()
   "Restart this session's speech lanes with the current desired choices."
@@ -210,15 +247,19 @@
   (omnivox-espeak-variants--editable)
   (omnivox-engine-settings--variants-json omnivox-espeak-variants)
   (tts-restart)
-  (setq omnivox-espeak-variants--status "Restart requested; browse voices to check live availability")
+  (setq omnivox-espeak-variants--status "Speech restart requested; wait for Live preview Ready")
   (omnivox-espeak-variants--render))
 
 (defun omnivox-espeak-variants-preview ()
   "Audition the exact selected combination through the live main lane."
   (interactive)
-  (let ((variant (or (tabulated-list-get-id) (user-error "Choose a variant row")))
-        (buffer (current-buffer)) (token (list t)))
+  (let* ((variant (or (tabulated-list-get-id) (user-error "Choose a variant row")))
+         (name (aref (tabulated-list-get-entry) 0))
+         (buffer (current-buffer)) (token (list t)))
     (unless (car (omnivox-espeak-variants--entry variant)) (user-error "Enable this combination and restart speech first"))
+    (let ((state (omnivox-espeak-variants--preview-state variant (tts-voice-inventory))))
+      (unless (equal state "Ready")
+        (user-error "%s: %s. Press a to restart speech, then wait for Live preview Ready" name state)))
     (setq omnivox-espeak-variants--preview-token token)
     (tts-preview-voices
      (list (list :text "This is the selected eSpeak voice variant."
@@ -230,9 +271,12 @@
          (with-current-buffer buffer
            (when (eq token omnivox-espeak-variants--preview-token)
              (setq omnivox-espeak-variants--status
-                   (format "Exact sample: %s. Newly enabled choices need restart." (plist-get result :status)))
+                   (format "%s sample: %s" name (plist-get result :status)))
              (omnivox-espeak-variants--render)
-             (emacsvox-aural-ui-announce-result "%s" omnivox-espeak-variants--status))))))))
+             (if (eq (plist-get result :status) 'failed)
+                 (emacsvox-aural-ui-announce-result "%s" omnivox-espeak-variants--status)
+               (let ((emacsvox-speak-messages nil))
+                 (message "%s" omnivox-espeak-variants--status))))))))))
 
 (defun omnivox-espeak-variants-voices ()
   "Browse live eSpeak voices and use the existing palette editor."
@@ -267,7 +311,8 @@ Use p for exact samples after restart and v to save a voice in a palette."
                                         #'omnivox-espeak-variants--speak-row
                                         #'omnivox-espeak-variants-refresh
                                         #'omnivox-espeak-variants--speak-row)
-  (setq tabulated-list-format [("Variant" 28 t) ("Desired availability" 23 t) ("ID" 20 t)])
+  (setq tabulated-list-format [("Variant" 28 t) ("Desired availability" 20 t)
+                               ("Live preview" 23 t) ("ID" 20 t)])
   (tabulated-list-init-header)
   (add-hook 'kill-buffer-hook #'omnivox-espeak-variants--stop nil t))
 
