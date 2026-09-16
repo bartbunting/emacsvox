@@ -411,8 +411,9 @@ All attempted replacement processes remain owned until retirement is confirmed."
                            (eq (aref old-pair 1) tts-notify-process))
                 (error "Speech pair changed during Apply review"))
               (dotimes (index 2)
-                (unless (equal (aref previous index)
-                               (omnivox-library--snapshot (aref old-pair index) (if (= index 0) 'speaker 'notification)))
+                (unless (omnivox-library-apply--equal
+                         (aref previous index)
+                         (omnivox-library--snapshot (aref old-pair index) (if (= index 0) 'speaker 'notification)))
                   (error "Actual speech settings changed during preflight")))
               (omnivox-library--request service '(:command "activating"))
               (list :ok t :previous-active (plist-get plan :previous-active)

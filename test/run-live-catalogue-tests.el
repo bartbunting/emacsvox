@@ -30,12 +30,39 @@
 (setenv "OMNIVOX_AUDIO_OUTPUT" "null")
 ;; Initialize the same voice adapter as the full profile before opening speech UI.
 (omnivox-configure-tts)
+;; Exercise Apply with an owned voice choice as in a customized live profile.
+;; Its empty adjustment is a JSON object, represented by an Emacs hash table.
+(puthash 'catalogue-acceptance
+         (emacsvox-aural-compile-voice-palette-data
+          '(:schema-version 3 :id catalogue-acceptance :summary "Catalogue acceptance"
+            :parent acss-default :routing owned
+            :entries ((bolden :style (:family nil :average-pitch nil :pitch-range nil
+                                     :stress 5 :richness nil)
+                              :choices ((:id "espeak-default"
+                                         :selector (:kind engine-default :scope portable
+                                                    :engine-id "espeak")
+                                         :adjustments nil))))))
+         emacsvox-aural-voice-palette-registry)
+(setq emacsvox-aural-voice-palette-override 'catalogue-acceptance)
 (princ (format "Private voice root: %s\n" (getenv "OMNIVOX_VOICE_ROOT")))
 
 (defun omnivox-catalogue-test--inspect ()
   (let ((service (omnivox-library--service)))
     (unwind-protect (omnivox-library--request service '(:command "inspect"))
       (delete-process service))))
+
+(defun omnivox-catalogue-test--check-choice (process)
+  "Check that PROCESS acknowledged the fixture's unchanged owned choice."
+  (let* ((registration (process-get process 'omnivox-library-accepted-registration))
+         (row (seq-find
+               (lambda (entry) (equal "voice-bolden" (plist-get (plist-get entry :definition) :id)))
+               (plist-get registration :definitions)))
+         (choices (plist-get (plist-get row :definition) :choices)))
+    (unless (and (equal "layered" (plist-get row :mode)) (= 1 (length choices))
+                 (equal "espeak-default" (plist-get (aref choices 0) :id))
+                 (hash-table-p (plist-get (aref choices 0) :adjustments))
+                 (zerop (hash-table-count (plist-get (aref choices 0) :adjustments))))
+      (error "Owned voice choice or empty adjustment object was lost"))))
 
 (unwind-protect
     (progn
@@ -46,7 +73,8 @@
       (dolist (process (list tts-speaker-process tts-notify-process))
         (omnivox--negotiate-process process)
         (omnivox-library--wait (lambda () (process-get process 'omnivox-library-accepted-registration))
-                               process "Initial registration"))
+                               process "Initial registration")
+        (omnivox-catalogue-test--check-choice process))
       (let ((before (list tts-speaker-process tts-notify-process)))
         (omnivox-catalogue "flite")
         (goto-char (point-min))
@@ -80,6 +108,7 @@
       (unless (eq 'succeeded (plist-get omnivox-library-last-result :status))
         (error "Apply failed: %S" omnivox-library-last-result))
       (dolist (process (list tts-speaker-process tts-notify-process))
+        (omnivox-catalogue-test--check-choice process)
         (let ((status (plist-get (omnivox-library--proof process 'speaker) :status)))
           (unless (seq-find (lambda (voice) (equal "flitevox:cmu_us_awb" (plist-get voice :voice_id)))
                             (plist-get status :eligible_voices))

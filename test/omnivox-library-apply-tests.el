@@ -296,5 +296,64 @@
     (setcdr cycle cycle)
     (should-error (omnivox-library-apply--copy cycle))))
 
+(ert-deftest omnivox-library-apply-freezes-json-objects-through-completion ()
+  "Empty adjustment objects survive Apply; caller mutations cannot change it."
+  (require 'omnivox-library)
+  (let* ((empty (make-hash-table :test #'equal))
+         (objects (make-hash-table :test #'equal))
+         (key (copy-sequence "adjustments"))
+         (value (vector (copy-sequence "saved") empty))
+         (plan (omnivox-library-apply-test--plan)))
+    (puthash key value objects)
+    (setf (plist-get (plist-get (aref (plist-get plan :candidate-startup) 0) :startup)
+                     :registration) objects)
+    (setf (plist-get (plist-get (aref (plist-get plan :previous-lanes) 0) :startup)
+                     :registration) objects)
+    (let ((operation (omnivox-library-apply--begin plan)))
+      (aset key 0 ?X)
+      (aset (aref value 0) 0 ?X)
+      (puthash "changed" t empty)
+      (while (not (omnivox-library-apply--operation-result operation))
+        (let* ((action (omnivox-library-apply--action operation))
+               (registration
+                (plist-get (plist-get (aref (plist-get (plist-get action :plan)
+                                                      :candidate-startup) 0) :startup)
+                           :registration)))
+          (should (equal (omnivox-library--json registration)
+                         "{\"adjustments\":[\"saved\",{}]}"))
+          (clrhash registration)
+          (omnivox-library-apply-test--complete
+           operation action (omnivox-library-apply-test--receipt action))))
+      (should (eq (plist-get (omnivox-library-apply--operation-result operation) :status)
+                  'succeeded)))))
+
+(ert-deftest omnivox-library-apply-detects-changes-inside-json-objects ()
+  "Object content equality must still reject a changed native startup receipt."
+  (let* ((plan (omnivox-library-apply-test--plan))
+         (objects (make-hash-table :test #'equal)))
+    (puthash "voice" "AWB" objects)
+    (setf (plist-get (plist-get (aref (plist-get plan :previous-lanes) 0) :startup)
+                     :registration) objects)
+    (let ((operation (omnivox-library-apply--begin plan)))
+      (omnivox-library-apply-test--reach operation 'activating)
+      (omnivox-library-apply-test--step
+       operation
+       (lambda (receipt _action)
+         (puthash "voice" "awb"
+                  (plist-get (plist-get (aref (plist-get receipt :previous-lanes) 0) :startup)
+                             :registration))
+         receipt))
+      (should-not (eq (omnivox-library-apply--operation-phase operation) 'retire-old))
+      (should (omnivox-library-apply--operation-failure operation)))))
+
+(ert-deftest omnivox-library-apply-rejects-cycles-and-handles-inside-json-objects ()
+  (let ((table (make-hash-table :test #'equal)))
+    (puthash "cycle" (vector table) table)
+    (should-error (omnivox-library-apply--copy table))
+    (clrhash table)
+    (with-temp-buffer
+      (puthash "buffer" (current-buffer) table)
+      (should-error (omnivox-library-apply--copy table)))))
+
 (provide 'omnivox-library-apply-tests)
 ;;; omnivox-library-apply-tests.el ends here

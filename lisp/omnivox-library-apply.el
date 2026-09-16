@@ -53,17 +53,51 @@
              (when (> (cl-incf bytes (string-bytes item)) (* 16 1024 1024))
                (error "Activation data exceeds 16 MiB"))
              (substring-no-properties item))
-            ((or (consp item) (vectorp item))
+            ((or (consp item) (vectorp item) (hash-table-p item))
              (when (gethash item path) (error "Activation data contains a cycle"))
              (puthash item t path)
              (prog1
-                 (if (consp item)
-                     (cons (walk (car item) (1+ depth)) (walk (cdr item) (1+ depth)))
-                   (vconcat (mapcar (lambda (child) (walk child (1+ depth))) item)))
+                 (cond
+                  ((consp item)
+                   (cons (walk (car item) (1+ depth)) (walk (cdr item) (1+ depth))))
+                  ((hash-table-p item)
+                   ;; Voice-choice adjustments use tables for JSON objects,
+                   ;; particularly {}.  Freeze their contents like other data.
+                   (let ((copy (make-hash-table :test (hash-table-test item))))
+                     (maphash (lambda (key child)
+                                (puthash (walk key (1+ depth))
+                                         (walk child (1+ depth)) copy)) item)
+                     copy))
+                  (t (vconcat (mapcar (lambda (child) (walk child (1+ depth))) item))))
                (remhash item path)))
             ((or (null item) (symbolp item) (numberp item)) item)
             (t (error "Activation plans must contain data, not live handles")))))
       (walk value 0))))
+
+(defun omnivox-library-apply--equal (left right)
+  "Compare frozen data LEFT and RIGHT, including JSON object contents."
+  (cond
+   ((eq left right) t)
+   ((and (hash-table-p left) (hash-table-p right))
+    (and (eq (hash-table-test left) (hash-table-test right))
+         (= (hash-table-count left) (hash-table-count right))
+         (let ((missing (make-symbol "missing")))
+           (catch 'different
+             (maphash
+              (lambda (key value)
+                (let ((other (gethash key right missing)))
+                  (unless (and (not (eq other missing))
+                               (omnivox-library-apply--equal value other))
+                    (throw 'different nil)))) left)
+             t))))
+   ((and (consp left) (consp right))
+    (and (omnivox-library-apply--equal (car left) (car right))
+         (omnivox-library-apply--equal (cdr left) (cdr right))))
+   ((and (vectorp left) (vectorp right))
+    (and (= (length left) (length right))
+         (cl-loop for a across left for b across right
+                  always (omnivox-library-apply--equal a b))))
+   (t (equal left right))))
 
 (defun omnivox-library-apply--keys (object keys)
   "Require exactly KEYS once each in plist OBJECT."
@@ -318,7 +352,8 @@ not-committed; never restart old workers under a possibly committed pointer."
             ('activating
              (unless (and (equal (plist-get receipt :previous-active) (plist-get plan :previous-active))
                           (equal (plist-get receipt :index-sha256) (plist-get plan :index-sha256))
-                          (equal (plist-get receipt :previous-lanes) (plist-get plan :previous-lanes)))
+                          (omnivox-library-apply--equal
+                           (plist-get receipt :previous-lanes) (plist-get plan :previous-lanes)))
                (error "Apply plan changed before retirement"))
              (if cancelled (omnivox-library-apply--finish operation 'cancelled)
                (omnivox-library-apply--next operation 'retire-old)))
