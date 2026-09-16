@@ -35,6 +35,35 @@
                     ((t "espeak:en" "variant-name-too-long-for-the-native-buffer"))))
     (should-error (omnivox-engine-settings--variants-json entries) :type 'user-error)))
 
+(ert-deftest omnivox-espeak-variants-discovery-keeps-launcher-diagnostics-out-of-json ()
+  (skip-unless (and (not (eq system-type 'windows-nt)) (executable-find "sh")))
+  (let* ((directory (make-temp-file "omnivox-variant-launcher-" t))
+         (emacsvox-servers-directory (file-name-as-directory directory))
+         (tts-program "omnivox")
+         (process-environment (copy-sequence process-environment))
+         (launcher (expand-file-name "omnivox" directory)))
+    (unwind-protect
+        (progn
+          (with-temp-file launcher
+            (insert "#!/bin/sh\n"
+                    "printf '%s\\n' 'Omnivox check target: fixture' >&2\n"
+                    "printf '%s\\n' '" omnivox-espeak-variants-tests--catalogue "'\n"))
+          (set-file-modes launcher #o700)
+          (with-temp-buffer
+            (omnivox-espeak-variants-mode)
+            (unwind-protect
+                (progn
+                  (omnivox-espeak-variants-refresh)
+                  (let ((deadline (+ (float-time) 5)))
+                    (while (and omnivox-espeak-variants--process
+                                (< (float-time) deadline))
+                      (accept-process-output nil 0.05)))
+                  (should-not omnivox-espeak-variants--process)
+                  (should (= (length tabulated-list-entries) 2))
+                  (should (equal omnivox-espeak-variants--base "espeak:gmw/en-US")))
+              (omnivox-espeak-variants--stop))))
+      (delete-directory directory t))))
+
 (ert-deftest omnivox-espeak-variants-toggle-never-saves-restarts-or-rewrites-palettes ()
   (let ((omnivox-espeak-variants nil) (process-environment (copy-sequence process-environment)))
     (setenv "OMNIVOX_ESPEAK_VARIANTS" nil)

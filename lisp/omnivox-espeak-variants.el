@@ -133,6 +133,7 @@
               (make-process
                :name "eSpeak variant discovery" :noquery t :connection-type 'pipe :coding 'utf-8-unix
                :command (list (car source) "--list-espeak-variants")
+               :stderr (get-buffer-create "*eSpeak variant discovery diagnostics*")
                :filter (lambda (worker text)
                          (setq output (concat output text))
                          (when (> (string-bytes output) (* 1024 1024))
