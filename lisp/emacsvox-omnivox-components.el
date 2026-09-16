@@ -460,7 +460,10 @@ OUTPUT to the generic process sentinel EVENT."
      ((and success (eq operation 'installation))
       (format "%s installed" name))
      ((and success (eq operation 'uninstallation))
-      (format "%s uninstalled" name))
+      (format "%s removed from managed installation; other runtimes may still provide voices" name))
+     ((and (not success) (eq operation 'uninstallation)
+           (string-search "helper is still in use" output))
+      (format "%s removal failed: its helper is still in use. Stop sessions using it, then retry" name))
      (success
       (format "%s %s completed" name operation))
      (t
@@ -542,11 +545,15 @@ OUTPUT to the generic process sentinel EVENT."
                  (format "%s; Omnivox restart failed: %s"
                          message-text (error-message-string err))))))
       (emacsvox-omnivox-components--notice
-       (format "%s %s %s. Results in engine details."
-               name operation
-               (cond ((string-match-p "restart failed" message-text)
-                      "completed; speech restart failed")
-                     (success "completed") (t "failed"))))
+       (cond
+        ((string-match-p "restart failed" message-text)
+         (format "%s %s %s; speech restart failed. Read last result."
+                 name operation (if success "completed" "failed")))
+        ((and (eq operation 'uninstallation)
+              (or success (string-search "helper is still in use" output-text)))
+         message-text)
+        (t (format "%s %s %s. Results in engine details."
+                   name operation (if success "completed" "failed")))))
       (when (buffer-live-p manager)
         (with-current-buffer manager
           (let ((result (alist-get id emacsvox-omnivox-components--results nil nil #'equal)))
@@ -644,7 +651,8 @@ OUTPUT to the generic process sentinel EVENT."
     (when
         (yes-or-no-p
          (concat
-          (format "Uninstall %s? " name)
+          (format "Uninstall %s from the managed installation? " name)
+          "Other speech runtimes may still provide this engine. "
           "Its verified download remains cached. "
           "Files manually added inside its managed directory are also removed. "))
       (emacsvox-omnivox-components--start
@@ -816,7 +824,7 @@ OUTPUT to the generic process sentinel EVENT."
                                       (emacsvox-omnivox-components--human-size (plist-get record :size))))))
         (when (and (member id emacsvox-omnivox-components--managed-ids)
                    (member (plist-get record :state) '("installed" "model-required")))
-          (list (list 'uninstall (vector "Uninstall module" "Remove this manager's module"))))
+          (list (list 'uninstall (vector "Uninstall managed module" "Remove from managed installation; other runtimes may still provide voices"))))
         (unless (equal (plist-get record :state) "not-managed")
           (list (list 'test (vector "Check managed engine" "Run voice discovery in the managed installation"))))))
      (when result
@@ -830,7 +838,9 @@ OUTPUT to the generic process sentinel EVENT."
      (when (and result (not (plist-get result :success)))
        (list (list 'operation-error
                    (vector "Last operation failed"
-                           "Read last result for the error and next steps"))))
+                           (if (string-search "helper is still in use" (or (plist-get result :output) ""))
+                               "Module was not removed: helper still in use. Stop sessions using it, then retry"
+                             "Read last result for the error and next steps")))))
      (list (list 'back (vector "Back to engines" "Return to the selected engine"))))))
 
 (defun emacsvox-omnivox-components--summary (record)

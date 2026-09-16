@@ -1513,7 +1513,11 @@ Expand @emph{Module management} for the configured WSL per-user release.
 It can differ from the active development runtime or remote speech workstation.
 Its @emph{runtime not checked here} or @emph{model not checked here} text describes the
 limits of that file check; use speech discovery in @emph{Diagnostics} for the active server.
-Installing a module changes the managed release only.
+Installing or uninstalling a module changes the managed release only; another
+runtime may still provide the engine. A failed removal leaves its live availability
+separate from the operation result. If a helper is still in use@comma{} the screen and
+spoken result say that removal failed. Stop speech sessions using that module
+before retrying.
 
 @itemize
 @item

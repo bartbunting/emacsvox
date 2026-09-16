@@ -558,7 +558,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
    (equal
     (emacsvox-omnivox-components--result-message
      "Flite" 'uninstallation t "Uninstalled Flite.\n" "finished\n")
-    "Flite uninstalled")))
+    "Flite removed from managed installation; other runtimes may still provide voices")))
 
 (ert-deftest emacsvox-omnivox-components-failure-announces-diagnostic ()
   "A failed voice check reports Omnivox's diagnostic, not only its exit code."
@@ -714,6 +714,8 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                    (setq started (list record operation arguments)))))
         (emacsvox-omnivox-components-uninstall))
       (should (string-search "manually added" prompt))
+      (should (string-search "from the managed installation" prompt))
+      (should (string-search "Other speech runtimes" prompt))
       (should (eq (cadr started) 'uninstallation))
       (should (equal (caddr started) '("--uninstall" "flite"))))))
 
@@ -1151,6 +1153,35 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                    (emacsvox-omnivox-components--detail-rows "eloquence"))))
         (should (string-search "notification: Previously available" (aref (cadr (assq 'summary rows)) 1)))
         (should-not (assq 'notification-problem rows))))))
+
+(ert-deftest emacsvox-omnivox-components-locked-removal-is-visible-and-spoken ()
+  "The actual completion path exposes a locked helper without hiding live voices."
+  (emacsvox-omnivox-components-tests--with-inventory
+    (let ((output (generate-new-buffer " *locked helper result*")) notice)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-omnivox-components--check-installer) (lambda () "/bin/sh"))
+                    ((symbol-function 'emacsvox-omnivox-components--request-records) #'ignore)
+                    ((symbol-function 'emacsvox-omnivox-components--running-omnivox-p) (lambda () nil))
+                    ((symbol-function 'emacsvox-omnivox-components--speak) #'ignore)
+                    ((symbol-function 'emacsvox-omnivox-components--notice) (lambda (text) (setq notice text))))
+            (let ((emacsvox-omnivox-components--output-buffer (buffer-name output)))
+              (emacsvox-omnivox-components--start
+               (emacsvox-omnivox-components--record) 'uninstallation
+               '("-c" "read -r ignored; echo 'could not remove engine; its helper is still in use by an Omnivox session'; exit 1"))
+              (process-send-string emacsvox-omnivox-components--process "finish\n")
+              (let ((deadline (+ (float-time) 3)))
+                (while (and emacsvox-omnivox-components--process (< (float-time) deadline))
+                  (accept-process-output nil 0.05)))
+              (should (string-search "removal failed" notice))
+              (should (string-search "helper is still in use" notice))
+              (should-not (string-search "completed" notice))
+              (let* ((rows (emacsvox-omnivox-components--layout-details
+                            (emacsvox-omnivox-components--detail-rows "eloquence")))
+                     (failure (aref (cadr (assq 'operation-error rows)) 1)))
+                (should (string-search "Module was not removed" failure))
+                (should (string-search "helper still in use" failure))
+                (should (string-search "Available" (aref (cadr (assq 'summary rows)) 1))))))
+        (kill-buffer output)))))
 
 (provide 'emacsvox-omnivox-components-tests)
 ;;; emacsvox-omnivox-components-tests.el ends here

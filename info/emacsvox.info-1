@@ -1524,8 +1524,12 @@ inventory time, runtime discovery, and health.
 It can differ from the active development runtime or remote speech
 workstation.  Its _runtime not checked here_ or _model not checked here_
 text describes the limits of that file check; use speech discovery in
-_Diagnostics_ for the active server.  Installing a module changes the
-managed release only.
+_Diagnostics_ for the active server.  Installing or uninstalling a
+module changes the managed release only; another runtime may still
+provide the engine.  A failed removal leaves its live availability
+separate from the operation result.  If a helper is still in use, the
+screen and spoken result say that removal failed.  Stop speech sessions
+using that module before retrying.
 
    • _Browse voices_ combines that engine's reported voices with its
      installed library, including disabled downloads.  This separate
@@ -6181,28 +6185,3 @@ Line mode
 after an interactive switch.  In either mode, ‘C-t’ begins the Emacsvox
 Term review prefix.  To send a literal ‘C-t’ to the child program in
 character mode, press ‘C-t C-t’.
-
-
-File: emacsvox.info,  Node: Term Speech Feedback,  Next: Reviewing The Term Screen,  Prev: Term Input Modes,  Up: Running Terminal Based Applications
-
-12.3 Automatic Speech Feedback
-==============================
-
-Automatic feedback is controlled by the buffer-local setting
-‘emacsvox-eterm-autospeak’, which is on by default.  Toggle it for the
-current Term buffer with ‘C-t C-q’.  The older spelling
-‘eterm-autospeak’ is not an Emacsvox variable.
-
-   The Term buffer must be displayed in a live window for output to be
-spoken automatically.  A hidden Term buffer can continue running without
-speaking.  In line mode, Emacsvox reads the newly inserted output range
-without interrupting it for every character.  In character mode, it
-presents rendered cursor movement, characters, words, or the reached
-line according to how the screen changed; new terminal activity can stop
-earlier speech.
-
-   This feedback is based on Term's rendered buffer and cursor
-coordinates.  It does not provide EAT's bounded screen transactions,
-terminal-completion model, or alternate-screen policy.  Use explicit
-review whenever automatic output is too brief or an application redraw
-is ambiguous.

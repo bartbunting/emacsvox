@@ -399,7 +399,11 @@ Expand /Module management/ for the configured WSL per-user release.
 It can differ from the active development runtime or remote speech workstation.
 Its /runtime not checked here/ or /model not checked here/ text describes the
 limits of that file check; use speech discovery in /Diagnostics/ for the active server.
-Installing a module changes the managed release only.
+Installing or uninstalling a module changes the managed release only; another
+runtime may still provide the engine. A failed removal leaves its live availability
+separate from the operation result. If a helper is still in use, the screen and
+spoken result say that removal failed. Stop speech sessions using that module
+before retrying.
 
 - /Browse voices/ combines that engine's reported voices with its installed
   library, including disabled downloads. This separate browser keeps the general Voice Workbench's filters and
