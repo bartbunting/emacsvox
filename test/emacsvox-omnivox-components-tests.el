@@ -747,6 +747,43 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
        (delete-process tts-speaker-process)
        (delete-process tts-notify-process))))
 
+(ert-deftest emacsvox-omnivox-components-mbrola-missing-and-live-status ()
+  "Missing MBROLA stays discoverable; its configuration never implies availability."
+  (let ((process-environment (copy-sequence process-environment)))
+    (setenv "OMNIVOX_MBROLA_HELPER" nil)
+    (cl-letf (((symbol-function 'omnivox-engine-settings--supported-p) (lambda () t)))
+      (let* ((engines (emacsvox-omnivox-components--browse-engines nil))
+             (mbrola (cl-find "mbrola" engines :test #'equal
+                              :key (lambda (engine) (plist-get engine :engine-id)))))
+        (should (equal (plist-get mbrola :availability) "Prototype; not configured"))
+        (should-not (plist-get mbrola :voices)))
+      (setenv "OMNIVOX_MBROLA_HELPER" "C:/prototype/omnivox-mbrola-helper.exe")
+      (should (equal (plist-get (emacsvox-omnivox-components--mbrola-placeholder) :availability)
+                     "Prototype; not reported")))
+    (setenv "OMNIVOX_MBROLA_HELPER" nil)
+    (cl-letf (((symbol-function 'omnivox-engine-settings--supported-p) (lambda () nil)))
+      (should (equal (plist-get (emacsvox-omnivox-components--mbrola-placeholder) :availability)
+                     "Prototype; not reported")))
+    (let* ((live '(:engine-id "mbrola" :display-name "MBROLA" :availability "available"
+                   :voices ((:voice-id "mbrola:v1/mb-en1/en1"))))
+           (engines (emacsvox-omnivox-components--browse-engines (list live))))
+      (should (eq live (car engines)))
+      (should (= 1 (cl-count "mbrola" engines :test #'equal
+                            :key (lambda (engine) (plist-get engine :engine-id))))))))
+
+(ert-deftest emacsvox-omnivox-components-mbrola-details-explain-unmanaged-setup ()
+  "Opening the prototype explains setup without offering unsupported management."
+  (with-temp-buffer
+    (emacsvox-omnivox-components-mode)
+    (let* ((rows (emacsvox-omnivox-components--detail-rows "mbrola"))
+           (visible (emacsvox-omnivox-components--layout-details rows)))
+      (should (equal (aref (cadr (assq 'summary rows)) 0) "MBROLA"))
+      (should (assq 'prototype visible))
+      (should (string-search "OMNIVOX_MBROLA_HELPER"
+                             (aref (cadr (assq 'prototype-setup visible)) 1)))
+      (dolist (action '(install uninstall test download-voices))
+        (should-not (assq action rows))))))
+
 (ert-deftest emacsvox-omnivox-components-live-discovery-overrides-prerequisite ()
   "Usable runtime discovery is not obscured by a managed bridge prerequisite."
   (emacsvox-omnivox-components-tests--with-inventory
@@ -1047,7 +1084,9 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                   (accept-process-output process 0.05)))
               (should-not emacsvox-omnivox-components--listing-process)
               (should-not emacsvox-omnivox-components--listing-error)
-              (should (equal (tabulated-list-get-id) "flite"))
+              ;; The explanatory prototype row survives the background listing.
+              (should (equal (tabulated-list-get-id) "mbrola"))
+              (should (emacsvox-aural-ui-goto-row "flite"))
               (should (equal (aref (tabulated-list-get-entry) 1) "Not checked"))))
         (delete-file program)))))
 

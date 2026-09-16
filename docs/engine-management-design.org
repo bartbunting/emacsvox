@@ -656,6 +656,13 @@ component installer or managed database catalogue. Omnivox's
 =docs/MBROLA-PROTOTYPE.md= records builds, checks, provisional controls, licences
 and the separate production boundary decision still required by ADR 0012.
 
+Browse Voices retains an explanatory MBROLA prototype row when live discovery
+does not report it. Local launcher configuration is distinguished from actual
+worker availability; remote configuration is left unknown. Details explain
+the explicit helper setting and restarting both streams, without offering an
+unsupported managed installation or voice download. Persist the helper setting
+in the development launcher so subsequent desktop sessions inherit it.
+
 ** Other engines and future additions
 
 | Engine or provider | Extension path |

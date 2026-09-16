@@ -359,8 +359,10 @@
     (emacsvox-aural-voice-workbench-physical-view)
     (should (= (length tabulated-list-entries) 2))
     (emacsvox-aural-voice-workbench-engine-view)
-    (should (= (length tabulated-list-entries) 6))
+    (should (= (length tabulated-list-entries) 7))
     (should (equal (aref (cadr (assoc "piper" tabulated-list-entries)) 1) "not reported"))
+    (should (string-prefix-p "Prototype;"
+                             (aref (cadr (assoc "mbrola" tabulated-list-entries)) 1)))
     (emacsvox-aural-voice-workbench-style-view)
     (should tabulated-list-entries)))
 
@@ -1053,7 +1055,7 @@
   (emacsvox-test--with-voice-workbench
     (let ((browser (current-buffer))
           (manager (generate-new-buffer " *browse management state*"))
-          details voices events)
+          details mbrola-details voices events)
       (unwind-protect
           (save-window-excursion
             (switch-to-buffer browser)
@@ -1094,8 +1096,18 @@
               (should (equal "eloquence" (tabulated-list-get-id)))
               (should (= 2 (emacsvox-aural-ui-tabulated-column-index)))
               (should (equal '(:language "en-US") emacsvox-aural-voice-workbench-filter))
-              (should (emacsvox-aural-voice-workbench--dirty-p))))
-        (dolist (buffer (list voices details manager))
+              (should (emacsvox-aural-voice-workbench--dirty-p))
+              (emacsvox-aural-ui-goto-row "mbrola")
+              (call-interactively (key-binding (kbd "RET")))
+              (setq mbrola-details (current-buffer))
+              (redisplay t)
+              (should (equal emacsvox-omnivox-components--engine-id "mbrola"))
+              (should (assq 'prototype-setup tabulated-list-entries))
+              (should-not (assq 'install tabulated-list-entries))
+              (call-interactively (key-binding (kbd "q")))
+              (should (eq browser (current-buffer)))
+              (should (equal "mbrola" (tabulated-list-get-id)))))
+        (dolist (buffer (list voices details mbrola-details manager))
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
 
 (ert-deftest emacsvox-aural-workbench-other-adapters-browse-voices-directly ()

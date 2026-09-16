@@ -172,6 +172,8 @@
   "Describe discovered engine ID in LANE without inferring runtime absence."
   (let ((engine (emacsvox-omnivox-components--engine id lane)))
     (cond
+     ((and (null engine) (equal id "mbrola"))
+      (plist-get (emacsvox-omnivox-components--mbrola-placeholder) :availability))
      ((null engine) "Not checked")
      ((not (emacsvox-omnivox-components--current-snapshot-p lane))
       (if (equal (plist-get engine :availability) "available")
@@ -195,8 +197,11 @@
             (setq records
                   (append records (list (list :id id :name (plist-get engine :display-name)
                                               :state "not-managed" :size 0))))))))
-    (or records '((:id "information" :name "Engine information"
-                   :state "not-managed" :size 0)))))
+    (unless (cl-find "mbrola" records :key (lambda (r) (plist-get r :id)) :test #'equal)
+      (setq records
+            (append records '((:id "mbrola" :name "MBROLA" :state "not-managed"
+                               :size 0 :detail "Prototype; supplied separately")))))
+    records))
 
 (defun emacsvox-omnivox-components--inventory-changed ()
   "Refresh open engine views from received evidence without changing focus."
@@ -217,6 +222,19 @@
   '("flite" "rutts" "piper" "tgspeechbox")
   "Component identifiers that this manager may install and uninstall.")
 
+(defun emacsvox-omnivox-components--mbrola-placeholder ()
+  "Describe an unreported prototype without claiming runtime discovery."
+  (let ((unconfigured
+         (and (omnivox-engine-settings--supported-p)
+              (string-empty-p (or (getenv "OMNIVOX_MBROLA_HELPER") "")))))
+    (list :engine-id "mbrola" :display-name "MBROLA"
+          :availability (if unconfigured "Prototype; not configured"
+                          "Prototype; not reported")
+          :availability-reason
+          (if unconfigured "Open details for prototype setup"
+            "Check configuration on the speech host, restart both streams, then refresh")
+          :voices nil)))
+
 (defun emacsvox-omnivox-components--browse-engines (engines)
   "Include optional engines missing from live ENGINES as unchecked rows."
   (let ((result (copy-sequence engines)))
@@ -228,6 +246,9 @@
                                   :display-name (pcase id ("rutts" "RuTTS") ("tgspeechbox" "TGSpeechBox")
                                                       (_ (capitalize id)))
                                   :availability "not reported" :voices nil))))))
+    (unless (cl-find "mbrola" result :key (lambda (engine) (plist-get engine :engine-id))
+                     :test #'equal)
+      (setq result (append result (list (emacsvox-omnivox-components--mbrola-placeholder)))))
     result))
 
 (defun emacsvox-omnivox-components--speak (text)
@@ -790,6 +811,13 @@ OUTPUT to the generic process sentinel EVENT."
                                                       (plist-get engine :last-failure))) "; "))))))))
     (append
      rows
+     (when (equal id "mbrola")
+       (list
+        (list 'prototype (vector "Prototype"
+                                 "Supplied separately; no managed engine or voice download"))
+        (list 'prototype-setup
+              (vector "Prototype setup"
+                      "Set OMNIVOX_MBROLA_HELPER in the speech host's launcher to the absolute native helper path, with its complete prototype bundle; restart both streams, then Refresh status"))))
      (list
       (list 'voices (vector "Browse voices" "Sample voices, enable or disable, and Apply"))
       (list 'check-live (vector "Refresh status" "Update speech and engine installation information"))
@@ -876,9 +904,9 @@ OUTPUT to the generic process sentinel EVENT."
   "Present ROWS with common actions first and optional sections collapsed."
   (let* ((failed (assq 'operation-error rows))
          (visible (delq nil (mapcar (lambda (id) (assq id rows))
-                                   (append '(summary main-problem notification-problem operation-error)
+                                   (append '(summary main-problem notification-problem operation-error prototype)
                                            (when failed '(output))
-                                           '(voices download-voices espeak-variants install check-live))))))
+                                           '(voices download-voices espeak-variants install check-live prototype-setup))))))
     (dolist (section emacsvox-omnivox-components--detail-sections)
       (let* ((id (car section))
              (expanded (memq id emacsvox-omnivox-components--expanded-sections))
