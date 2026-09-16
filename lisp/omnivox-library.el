@@ -512,6 +512,7 @@ All attempted replacement processes remain owned until retirement is confirmed."
                (eligible (omnivox-library--eligible index (append (plist-get (aref previous 0) :eligible-voices) nil)
                                                     managed (plist-get (plist-get (aref startups 0) :startup) :policy)))
                (removed (seq-difference (plist-get (aref previous 0) :eligible-voices) eligible #'equal))
+               (summary (omnivox-library--enabled-summary index managed))
                (plan (list :operation-id (omnivox-library--uuid) :candidate (plist-get candidate :configuration)
                            :previous-active (omnivox-library--configuration (plist-get library :active))
                            :index-sha256 (plist-get library :sha256)
@@ -522,19 +523,32 @@ All attempted replacement processes remain owned until retirement is confirmed."
           (with-current-buffer (get-buffer-create "*Omnivox Apply review*")
             (let ((inhibit-read-only t))
               (erase-buffer)
-              (insert (format "Apply enabled %s voices\n\nBoth speech streams will stop and restart.\nFiles and saved palette references are retained.\n\nVoices becoming unavailable: %d\n" providers (length removed)))
+              (insert (format "Apply enabled %s voices\n\n%s\n\nBoth speech streams will stop and restart.\nFiles and saved palette references are retained.\n\nVoices becoming unavailable: %d\n" providers summary (length removed)))
               (seq-doseq (voice removed) (insert (format "%s: %s\n" (plist-get voice :engine_id) (plist-get voice :voice_id))))
               (insert "\nIf either replacement fails, both previous configurations will be restored.\n")
               (special-mode)))
           (display-buffer "*Omnivox Apply review*")
-          (when (yes-or-no-p (format "Apply %s voices and restart both speech streams? " providers))
+          (when (yes-or-no-p (format "%s. Apply and restart both speech streams? " summary))
             (let ((result (omnivox-library--execute service plan old-pair)))
               (message "Voice library: %s%s" (plist-get result :status)
                        (if-let* ((failures (plist-get result :failures)))
-                           (format "; %s" (plist-get (car failures) :reason)) ""))
+                           (format "; %s" (plist-get (car failures) :reason))
+                         (format "; %s" summary)))
               result)))
       (unless (eq service omnivox-library--retained-service)
         (when (process-live-p service) (delete-process service))))))
+
+(defun omnivox-library--enabled-summary (index providers)
+  "Describe desired enablement in INDEX for the selected PROVIDERS."
+  (mapconcat
+   (lambda (engine)
+     (let ((count (seq-count (lambda (voice)
+                              (and (equal engine (plist-get voice :engine_id))
+                                   (eq t (plist-get voice :enabled))))
+                            (plist-get index :voices))))
+       (if (zerop count) (format "No %s voices enabled" (capitalize engine))
+         (format "%d %s voice%s enabled" count (capitalize engine) (if (= count 1) "" "s")))))
+   providers "; "))
 
 (defconst omnivox-library--empty-help
   "No voices have been added to this library.
@@ -587,7 +601,9 @@ Press q to return to engine details.
                                                :expected_sha256 omnivox-library--index-sha))
       (when (process-live-p service) (delete-process service)))
     (omnivox-library-refresh)
-    (message "Desired enablement saved; press a to review and Apply")))
+    (message "%s %s; press a to review and Apply"
+             (plist-get row :display_name)
+             (if (eq (plist-get row :enabled) t) "disabled" "enabled"))))
 
 (defun omnivox-library-import-validated (operation)
   "Install a successfully validated native OPERATION, initially disabled."
@@ -645,8 +661,8 @@ Press q to return to engine details.
   "a" #'omnivox-library-apply "i" #'omnivox-library-import-validated
   "b" #'omnivox-library-include-flite-slt "r" #'omnivox-library-show-result)
 
-(defun omnivox-library--speak-row ()
-  "Speak the selected voice and desired state."
+(defun omnivox-library--speak-row (&optional actions)
+  "Speak the selected voice and desired state, optionally with ACTIONS."
   (if (null tabulated-list-entries)
       (emacsvox-aural-ui-speak
        (if (equal omnivox-library--engine "piper")
@@ -654,7 +670,10 @@ Press q to return to engine details.
          "No voices added. Press d to download voices; b includes bundled Flite SLT; q returns."))
     (when-let* ((row (tabulated-list-get-entry)))
       (emacsvox-aural-ui-speak
-       (format "%s. %s. %s" (aref row 0) (aref row 1) (aref row 2))))))
+       (concat (format "%s. %s. %s" (aref row 0) (aref row 1) (aref row 2))
+               (when actions
+                 (format ". Press e to %s; a reviews Apply"
+                         (if (equal "Enabled" (aref row 2)) "disable" "enable"))))))))
 
 (define-derived-mode omnivox-library-mode emacsvox-aural-tabulated-mode "Omnivox Voices"
   "Installed voices: e toggles enablement; a reviews Apply; i installs an import."
@@ -671,10 +690,14 @@ Press q to return to engine details.
   "Open installed voices on the local speech target, optionally for ENGINE."
   (interactive)
   (require 'emacsvox-aural-ui)
-  (pop-to-buffer (get-buffer-create "*Omnivox Installed Voices*"))
-  (omnivox-library-mode)
-  (setq omnivox-library--engine (and (member engine '("piper" "flite")) engine))
-  (omnivox-library-refresh))
+  (let ((buffer (get-buffer-create "*Omnivox Installed Voices*")))
+    (with-current-buffer buffer
+      (omnivox-library-mode)
+      (setq omnivox-library--engine (and (member engine '("piper" "flite")) engine))
+      (omnivox-library-refresh)
+      (goto-char (point-min)))
+    (emacsvox-aural-ui--pop-to-buffer
+     buffer (lambda () (omnivox-library--speak-row t)))))
 
 (provide 'omnivox-library)
 ;;; omnivox-library.el ends here

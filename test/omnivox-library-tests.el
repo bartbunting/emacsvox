@@ -92,5 +92,16 @@
     (should (equal (omnivox-library--eligible index previous '("piper" "flite") '(:disabled_engine_ids ["piper"]))
                    [(:engine_id "espeak" :voice_id "en")]))))
 
+(ert-deftest omnivox-library-review-exposes-installed-but-disabled-provider ()
+  "A successful Apply must not imply that a disabled downloaded voice is active."
+  (let ((index '(:voices [(:engine_id "flite" :display_name "AWB" :enabled t)
+                          (:engine_id "flite" :display_name "RMS" :enabled t)
+                          (:engine_id "piper" :display_name "Kristin" :enabled :false)])))
+    (should (equal "2 Flite voices enabled; No Piper voices enabled"
+                   (omnivox-library--enabled-summary index '("flite" "piper"))))
+    (setf (plist-get (aref (plist-get index :voices) 2) :enabled) t)
+    (should (equal "2 Flite voices enabled; 1 Piper voice enabled"
+                   (omnivox-library--enabled-summary index '("flite" "piper"))))))
+
 (provide 'omnivox-library-tests)
 ;;; omnivox-library-tests.el ends here

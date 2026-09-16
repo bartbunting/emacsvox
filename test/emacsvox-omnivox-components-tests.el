@@ -910,6 +910,8 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
               (setq library (current-buffer))
               (redisplay t)
               (should (derived-mode-p 'omnivox-library-mode))
+              (should (string-search "SLT. Enabled. Press e to disable; a reviews Apply" spoken))
+              (should (equal (tabulated-list-get-id) '("flite" . "cmu_us_slt")))
               (goto-char (point-min))
               (emacsvox-aural-ui-next-row)
               (should (string-search "Test voice. Disabled" spoken))
