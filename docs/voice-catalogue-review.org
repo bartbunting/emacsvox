@@ -1,0 +1,94 @@
+#+title: Initial Voice Catalogue Review
+#+date: 2026-09-16
+#+startup: content
+
+* Scope and provenance
+
+Under [[file:adr/0019-voice-library-and-activation.org][ADR 0019]], Emacsvox ships
+=etc/omnivox-voice-catalogue.json= as reviewed input to Omnivox's local
+acquisition service. This file contains source references and checksums, not
+voice weights. Each download retains the exact catalogue and its licence or
+model-card files. Omnivox owns download, validation and installation; the user
+owns the resulting files. Native implementation starts at =cdccd32=.
+
+The initial catalogue is deliberately small. Entries were downloaded and
+checked against the pinned sizes and SHA-256 digests on 2026-09-16, then loaded
+and synthesized by the native validation service on Linux before publication
+into an isolated installed index. All three appeared disabled, with no active
+pointer change. Native CI and Windows deployment acceptance are recorded below
+when completed.
+
+* Flite AWB and RMS
+
+The official [[https://github.com/festvox/flite][Flite repository]] documents
+external Clustergen voices in the upstream
+=http://festvox.org/flite/packed/flite-2.1/voices/= directory. These files
+identify themselves natively as =cmu_us_awb= and =cmu_us_rms=. The catalogue
+pins the exact 2017 files and retains the upstream collection's =COPYING=
+at source revision =e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88=.
+
+The file header's copyright field says =unknown=; it is not an independent
+per-file licence grant. The displayed licence therefore points to the Flite
+collection's terms, without inventing an SPDX model identifier. The matching
+upstream =lang/cmu_us_awb/cmu_us_awb.c= source carries CMU's permissive notice.
+The downloaded COPYING includes the collection's component exceptions and is
+retained intact. These voices are not redistributed in Emacsvox archives.
+
+FestVox's HTTPS endpoint did not accept connections during this review.
+Omnivox narrowly permits the published HTTP voice directory, with exact byte
+count and checksum required before native loading. Hash verification detects
+changes to the reviewed bytes; it does not authenticate the initial HTTP
+source. Other catalogue URLs require HTTPS.
+
+* Piper Kristin medium
+
+The source is =rhasspy/piper-voices= on Hugging Face at
+=39ab474be869e9181350af6a65e4953eef67aaa0=, path
+=en/en_US/kristin/medium=. Model, configuration and MODEL_CARD hashes are
+pinned independently. The card identifies a single-speaker 22050 Hz medium
+model trained from scratch on a LibriVox dataset it declares public domain.
+The UI reports that declaration and links the card; it does not invent a
+separate model-weight licence. The card is retained beside the model.
+
+This uses the same upstream bytes as Omnivox's existing CI-only synthesis
+fixture. Its CI approval and no-release-redistribution setting remain
+unchanged. Catalogue installation is an explicit user download, not inclusion
+of model weights in either project's release artifacts.
+
+* Interaction and remaining work
+
+The catalogue shows available and installed states separately. Enter opens
+source, terms, size and destination details. Installation requires explicit
+confirmation, starts a private asynchronous native process, and leaves voices
+disabled. Progress redraws preserve point and focus and do not speak each
+update. One short terminal notice reports the result. Cancellation closes
+stdin and retains the supervisor until native cleanup completes. Lost
+connections remain uncertain; the screen retains the native operation ID.
+
+Installed voices can then be enabled and explicitly applied. Engine-specific
+library entry points filter the displayed voices; Apply retains its existing
+review of both managed providers and both speech streams. The review and
+confirmation identify this scope before any worker is replaced.
+
+Further hardening can add automatic interrupted-download recovery, durable
+operation discovery after restarting Emacs, resumable downloads, updates and
+package removal. Those are separate from this first working installation
+flow. No unavailable feature is labelled as completed.
+
+* Checks before native deployment
+
+- Native workspace: 826 tests passed, one deliberately ignored; locked Clippy
+  with the Piper feature and formatting checks passed.
+- Real acquisition: AWB, RMS and Kristin were downloaded, hash checked,
+  validated and installed disabled in private Linux storage. Cancellation,
+  incorrect size, corrupted copy and duplicate registration were checked.
+- Fresh compiled Emacs: 47 affected tests passed; three graphical tests were
+  skipped in batch and subsequently covered by the real graphical runner.
+  All 14 graphical tests passed, including catalogue navigation in both
+  directions, focus preservation during progress, and return to the list.
+- A fresh compiled Emacs completed the real AWB download, retained the exact
+  original speech pair during installation, then enabled and applied the
+  voice. Both replacement workers reported AWB eligible. Output was muted;
+  this verifies routing and activation, not what a listener heard.
+- Byte-code rebuild/preflight, header checks, Org preview, generated manual
+  and reference update, and the documentation release check passed.

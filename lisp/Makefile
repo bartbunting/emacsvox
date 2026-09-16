@@ -65,6 +65,7 @@ swiftmac-voices.elc \
 omnivox-choice-codec.elc \
 omnivox-library-apply.elc \
 omnivox-library.elc \
+omnivox-catalogue.elc \
 omnivox-preview.elc \
 omnivox-voices.elc
 

@@ -14,6 +14,28 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Term Help And Recovery,  Prev: Reviewing The Term Screen,  Up: Running Terminal Based Applications
+
+12.5 Help And Recovery
+======================
+
+   • If terminal output is visible but silent, press ‘C-t C-q’ once and
+     retry.  Automatic speech applies only while the Term buffer is
+     displayed.
+
+   • If an Emacs command is being sent to the child program, remember
+     that you are probably in character mode.  Use ‘C-c C-h m’, ‘C-c
+     M-x’, or switch to line mode with ‘C-c C-j’.
+
+   • If review has drifted away from live output, press ‘C-t .’.  If
+     dedicated review mode controls the keys, press ‘q’ first to return
+     to character mode.
+
+   • If a full-screen application redraws in a way that Term cannot
+     present reliably, retry it in *note EAT Terminal Access:: and use
+     EAT's explicit review commands.
+
+
 File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Copyright,  Prev: Running Terminal Based Applications,  Up: Top
 
 13 Emacsvox Keyboard Commands.

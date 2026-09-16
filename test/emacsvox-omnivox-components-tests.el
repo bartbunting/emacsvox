@@ -927,7 +927,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                 (should (pos-visible-in-window-p (point)))
                 (should (looking-at "No voices have been added"))
                 (omnivox-library--speak-row)
-                (should (string-search "Press b to include bundled Flite SLT" spoken)))
+                (should (string-search "Press d to download voices" spoken)))
               (emacsvox-aural-quit)
               (redisplay t)
               (should (eq (current-buffer) details))

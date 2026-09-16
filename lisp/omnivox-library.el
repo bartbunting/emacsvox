@@ -67,6 +67,7 @@
 (defvar omnivox-library--sequence 0)
 (defvar omnivox-library--busy nil)
 (defvar omnivox-library-last-result nil "Most recent local Apply result.")
+(defvar-local omnivox-library--engine nil)
 (defvar-local omnivox-library--index nil)
 (defvar-local omnivox-library--index-sha nil)
 (defconst omnivox-library--prefix "OMNIVOX-LOCAL ")
@@ -533,6 +534,7 @@ All attempted replacement processes remain owned until retirement is confirmed."
   "No voices have been added to this library.
 
 This screen lists managed voices, including disabled voices.
+Press d to browse downloadable voices.
 Press b to add the bundled Flite SLT voice, then a to review Apply.
 Press q to return to engine details.
 "
@@ -552,11 +554,16 @@ Press q to return to engine details.
                                 (vector (plist-get row :engine_id) (plist-get row :display_name)
                                         (if (eq (plist-get row :enabled) t) "Enabled" "Disabled")
                                         (plist-get row :physical_id))))
-                        (plist-get omnivox-library--index :voices)))
+                        (seq-filter (lambda (row)
+                                      (or (null omnivox-library--engine)
+                                          (equal omnivox-library--engine (plist-get row :engine_id))))
+                                    (plist-get omnivox-library--index :voices))))
           (tabulated-list-print t)
           (unless tabulated-list-entries
             (let ((inhibit-read-only t))
-              (insert omnivox-library--empty-help)
+              (insert (if (equal omnivox-library--engine "piper")
+                          "No Piper voices have been added.\n\nPress d to browse downloadable voices; q returns to engine details.\n"
+                        omnivox-library--empty-help))
               (goto-char (point-min)))))
       (when (process-live-p service) (delete-process service)))))
 
@@ -592,6 +599,8 @@ Press q to return to engine details.
 (defun omnivox-library-include-flite-slt ()
   "Include built-in Flite SLT in desired state, enabled for the next Apply."
   (interactive)
+  (when (equal omnivox-library--engine "piper")
+    (user-error "Bundled SLT belongs to Flite; open the Flite library to add it"))
   (let ((service (omnivox-library--service)))
     (unwind-protect
         (omnivox-library--request service (list :command "include-flite-slt"
@@ -618,9 +627,15 @@ Press q to return to engine details.
       (goto-char (point-min)) (special-mode)))
   (pop-to-buffer "*Omnivox Apply result*"))
 
+(defun omnivox-library-download ()
+  "Browse downloadable voices for this library engine."
+  (interactive)
+  (require 'omnivox-catalogue)
+  (omnivox-catalogue omnivox-library--engine))
+
 (defvar-keymap omnivox-library-mode-map
   :doc "Installed-voice actions."
-  "g" #'omnivox-library-refresh "e" #'omnivox-library-toggle
+  "d" #'omnivox-library-download "g" #'omnivox-library-refresh "e" #'omnivox-library-toggle
   "a" #'omnivox-library-apply "i" #'omnivox-library-import-validated
   "b" #'omnivox-library-include-flite-slt "r" #'omnivox-library-show-result)
 
@@ -628,7 +643,9 @@ Press q to return to engine details.
   "Speak the selected voice and desired state."
   (if (null tabulated-list-entries)
       (emacsvox-aural-ui-speak
-       "No voices added. Press b to include bundled Flite SLT; q returns to engine details.")
+       (if (equal omnivox-library--engine "piper")
+           "No Piper voices added. Press d to download voices; q returns."
+         "No voices added. Press d to download voices; b includes bundled Flite SLT; q returns."))
     (when-let* ((row (tabulated-list-get-entry)))
       (emacsvox-aural-ui-speak
        (format "%s. %s. %s" (aref row 0) (aref row 1) (aref row 2))))))
@@ -640,16 +657,17 @@ Press q to return to engine details.
    #'omnivox-library--speak-row #'omnivox-library-refresh
    #'omnivox-library--speak-row)
   (setq tabulated-list-format [("Engine" 10 t) ("Voice" 28 t) ("Desired state" 14 t) ("Physical ID" 0 nil)])
-  (setq header-line-format "e enable/disable; a Apply; b include SLT; i validated import; r result; g refresh; q back")
+  (setq header-line-format "d download; e enable/disable; a Apply both engines; b include SLT; i validated import; r result; g refresh; q back")
   (tabulated-list-init-header))
 
 ;;;###autoload
-(defun omnivox-library ()
-  "Open the native installed-voice library for the selected local speech target."
+(defun omnivox-library (&optional engine)
+  "Open installed voices on the local speech target, optionally for ENGINE."
   (interactive)
   (require 'emacsvox-aural-ui)
   (pop-to-buffer (get-buffer-create "*Omnivox Installed Voices*"))
   (omnivox-library-mode)
+  (setq omnivox-library--engine (and (member engine '("piper" "flite")) engine))
   (omnivox-library-refresh))
 
 (provide 'omnivox-library)

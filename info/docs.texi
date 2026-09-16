@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 293 loaded; 0 intentionally omitted.
+@c Modules: 294 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -56,11 +56,11 @@
 @c Loaded: emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc
 @c Loaded: emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc
 @c Loaded: g-utils.elc gm-nnir.elc gmaps.elc gweb.elc ladspa.elc
-@c Loaded: light.elc mac-voices.elc omaps.elc omnivox-choice-codec.elc omnivox-engine-settings.elc
-@c Loaded: omnivox-library-apply.elc omnivox-library.elc omnivox-preview.elc omnivox-remote.elc omnivox-voices.elc
-@c Loaded: outloud-voices.elc pip.elc plain-voices.elc soundscape.elc sox-gen.elc
-@c Loaded: sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc tts-speak.elc
-@c Loaded: voice-defs.elc voice-setup.elc xbacklight.elc
+@c Loaded: light.elc mac-voices.elc omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc
+@c Loaded: omnivox-engine-settings.elc omnivox-library-apply.elc omnivox-library.elc omnivox-preview.elc omnivox-remote.elc
+@c Loaded: omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc soundscape.elc
+@c Loaded: sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc
+@c Loaded: tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -344,6 +344,7 @@ This chapter documents a total of 1548 commands and 216 options.
 * light:: Control Brightness.
 * mac-voices:: Define  Mac tags.
 * omaps:: Open street  Maps.
+* omnivox-catalogue:: Available voices and downloads.
 * omnivox-choice-codec:: Individual voice wire values.
 * omnivox-engine-settings:: Local engine startup settings.
 * omnivox-library:: Local installed voices and Apply.
@@ -13862,6 +13863,7 @@ This module provides complete access to all @code{mplayer} functionality
 from a convenient Emacs interface.
 
 @subsection Usage
+
 The main entry-point is command @code{emacsvox-multimedia} bound
 to @kbd{C-e ;}.  This prompts for and launches the desired media
 stream.  Once a stream is playing, you can control it with
@@ -17716,6 +17718,7 @@ from becoming dependent on the speech server modules
 @subsubsection emacsvox-beginning-or-end
 @deffn {Command} emacsvox-beginning-or-end
 @findex emacsvox-beginning-or-end
+
 @format
 Move to start or end of buffer.
 @end format
@@ -24445,6 +24448,12 @@ Default Value:
 
 Implements geocoding via the Open Street Maps API
 https://nominatim.org/
+
+@node omnivox-catalogue
+@section omnivox-catalogue
+
+Reviewed catalogue data is shipped with Emacsvox.  Omnivox owns network
+access, native validation and installation.  Progress never changes speech.
 
 @node omnivox-choice-codec
 @section omnivox-choice-codec

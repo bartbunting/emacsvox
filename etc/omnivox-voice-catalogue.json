@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "revision": "2026-09-16.1",
+  "entries": [
+    {
+      "id": "flite-cmu-us-awb",
+      "provider": "flite",
+      "name": "AWB",
+      "language": "en",
+      "description": "Scottish-accent English, external Clustergen voice.",
+      "source": "https://github.com/festvox/flite",
+      "source_revision": "flite-2.1-voices-2017",
+      "licence": "CMU Flite terms; upstream collection COPYING retained",
+      "licence_url": "https://raw.githubusercontent.com/festvox/flite/e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88/COPYING",
+      "files": [
+        {
+          "role": "voice",
+          "url": "http://festvox.org/flite/packed/flite-2.1/voices/cmu_us_awb.flitevox",
+          "bytes": 11113361,
+          "sha256": "5f9d6ff1d333f30a1ed357574e63b5c8bb2b42b56ebf988570ac020a467ef82a"
+        },
+        {
+          "role": "licence",
+          "url": "https://raw.githubusercontent.com/festvox/flite/e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88/COPYING",
+          "bytes": 10022,
+          "sha256": "d31bceaf2823d56a8c9400f7bde3b17140e739e991eb4f203bdcf9827754ab59"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "flitevox:cmu_us_awb",
+          "name": "AWB",
+          "speaker_index": null
+        }
+      ]
+    },
+    {
+      "id": "flite-cmu-us-rms",
+      "provider": "flite",
+      "name": "RMS",
+      "language": "en",
+      "description": "US English, external Clustergen voice.",
+      "source": "https://github.com/festvox/flite",
+      "source_revision": "flite-2.1-voices-2017",
+      "licence": "CMU Flite terms; upstream collection COPYING retained",
+      "licence_url": "https://raw.githubusercontent.com/festvox/flite/e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88/COPYING",
+      "files": [
+        {
+          "role": "voice",
+          "url": "http://festvox.org/flite/packed/flite-2.1/voices/cmu_us_rms.flitevox",
+          "bytes": 12845352,
+          "sha256": "cf49e138caa926c2551079efe561254eb3bb50340139484d3aa20670b5cb0c55"
+        },
+        {
+          "role": "licence",
+          "url": "https://raw.githubusercontent.com/festvox/flite/e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88/COPYING",
+          "bytes": 10022,
+          "sha256": "d31bceaf2823d56a8c9400f7bde3b17140e739e991eb4f203bdcf9827754ab59"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "flitevox:cmu_us_rms",
+          "name": "RMS",
+          "speaker_index": null
+        }
+      ]
+    },
+    {
+      "id": "piper-en-us-kristin-medium",
+      "provider": "piper",
+      "name": "Kristin medium",
+      "language": "en-US",
+      "description": "US English, one speaker, medium quality, 22050 Hz.",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "39ab474be869e9181350af6a65e4953eef67aaa0",
+      "licence": "Model card declares the LibriVox dataset public domain; review upstream terms",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/39ab474be869e9181350af6a65e4953eef67aaa0/en/en_US/kristin/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/39ab474be869e9181350af6a65e4953eef67aaa0/en/en_US/kristin/medium/en_US-kristin-medium.onnx",
+          "bytes": 63531379,
+          "sha256": "5849957f929cbf720c258f8458692d6103fff2f0e3d3b19c8259474bb06a18d4"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/39ab474be869e9181350af6a65e4953eef67aaa0/en/en_US/kristin/medium/en_US-kristin-medium.onnx.json",
+          "bytes": 4968,
+          "sha256": "5681426d4aead22195de70531eeeeddb46493cfaffc5764b2ea3db73428b651c"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/39ab474be869e9181350af6a65e4953eef67aaa0/en/en_US/kristin/medium/MODEL_CARD",
+          "bytes": 479,
+          "sha256": "8c181b1d5f7d8152b914faab941fcbe6b8f0495e63e5189d6f27b8c68c8393fc"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-en-us-kristin-medium/0",
+          "name": "Kristin",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}
