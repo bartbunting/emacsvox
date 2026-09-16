@@ -16400,7 +16400,7 @@ Open details for the selected engine.
 @findex emacsvox-omnivox-components-help
 
 @format
-Display and speak Omnivox engine-module manager help.
+Display and speak engine details and navigation help.
 @end format
 @end deffn
 
@@ -16480,7 +16480,7 @@ Confirm and uninstall the selected manager-installed engine module.
 @findex emacsvox-omnivox-engine-details-mode
 
 @format
-Spoken engine discovery, management scope, actions and retained results.
+Spoken engine actions with collapsible settings and diagnostics.
 
 In addition to any hooks its parent mode
 ‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
@@ -16491,8 +16491,10 @@ Key             Binding
 -------------------------------------------------------------------------------
 TAB		emacsvox-omnivox-components--details-next-action
 RET		emacsvox-omnivox-components--details-activate
+?		emacsvox-omnivox-components-help
 h		emacsvox-aural
 q		emacsvox-omnivox-components--details-back
+<backtab>	emacsvox-omnivox-components--details-previous-action
 
 @end format
 @end deffn
@@ -23108,7 +23110,6 @@ Locate content matching  pattern.  The results can be
 @format
 Display MLB standings as of today.
 Optional interactive prefix arg shows  unprocessed results.
-
 (fn &optional RAW)
 @end format
 @end deffn

@@ -4759,7 +4759,7 @@ supplied.
 
  -- Command: emacsvox-omnivox-components-help
 
-     Display and speak Omnivox engine-module manager help.
+     Display and speak engine details and navigation help.
 
 2.187.1.3 emacsvox-omnivox-components-install
 .............................................
@@ -4824,7 +4824,7 @@ supplied.
 
  -- Command: emacsvox-omnivox-engine-details-mode
 
-     Spoken engine discovery, management scope, actions and retained results.
+     Spoken engine actions with collapsible settings and diagnostics.
 
      In addition to any hooks its parent mode
      ‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
@@ -4835,8 +4835,10 @@ supplied.
      -----------------------------------------------------
      TAB		emacsvox-omnivox-components-details-next-action
      RET		emacsvox-omnivox-components-details-activate
+     ?		emacsvox-omnivox-components-help
      h		emacsvox-aural
      q		emacsvox-omnivox-components-details-back
+     <backtab>	emacsvox-omnivox-components-details-previous-action
 
 2.187.1.10 emacsvox-omnivox-manage-components
 .............................................
@@ -9925,7 +9927,6 @@ Contains various wizards for the Emacsvox desktop.
 
      Display MLB standings as of today.
      Optional interactive prefix arg shows  unprocessed results.
-
      (fn &optional RAW)
 
 2.258.1.64 emacsvox-wizards-module-enumerate-uncovered-commands

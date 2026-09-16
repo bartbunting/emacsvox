@@ -144,8 +144,10 @@ Keep process-wide environment and explicit native overrides unchanged."
         "Configure files on the speech host; this launcher settings provider is unavailable")
        (override
         (format "Overridden by %s; edit that environment setting on the speech host" override))
+       ((and (member id '("flite" "piper")) (null value))
+        "No manual file override; installed voice library or launcher defaults apply")
        ((equal id "flite")
-        (format "%d of %d external files selected for new workers; built-in SLT remains loaded"
+        (format "%d of %d manual voice files selected for new workers; overrides the installed Flite library"
                 (cl-count-if #'car value) (length value)))
        (value (format "%s; used by new workers only, load not checked" value))
        (t "Using existing environment, launcher or engine defaults")))))

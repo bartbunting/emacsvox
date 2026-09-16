@@ -755,14 +755,16 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
       (should (string-search "runtime not checked here" (aref (cadr (assq 'managed rows)) 1))))))
 
 (ert-deftest emacsvox-omnivox-components-old-or-replaced-worker-is-not-current ()
-  "Age, disconnect and replacement cannot reuse evidence as current discovery."
+  "Age requests refresh; only disconnect or replacement invalidates the worker."
   (emacsvox-omnivox-components-tests--with-inventory
     (let* ((record (emacsvox-omnivox-components--record))
            (inventory (plist-get (alist-get 'main emacsvox-omnivox-components--snapshots)
                                  :inventory)))
       (setf (plist-get inventory :received-at) (time-subtract nil 600))
-      (should (equal (emacsvox-omnivox-components--state record) "Previously available"))
+      (should (equal (emacsvox-omnivox-components--state record) "Available"))
+      (should (emacsvox-omnivox-components--refresh-due-p 'main))
       (setf (plist-get inventory :received-at) (current-time))
+      (should-not (emacsvox-omnivox-components--refresh-due-p 'main))
       (let ((tts-speaker-process tts-notify-process))
         (should (equal (emacsvox-omnivox-components--state record) "Previously available"))
         (let ((rows (emacsvox-omnivox-components--detail-rows "eloquence")))
@@ -837,14 +839,15 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
               (emacsvox-omnivox-components-activate)
               (setq details (current-buffer))
               (should (derived-mode-p 'emacsvox-omnivox-engine-details-mode))
+              (should (eq (tabulated-list-get-id) 'voices))
+              (should-not (assq 'main tabulated-list-entries))
               (goto-char (point-min))
-              (forward-line 1)
-              (should (eq (tabulated-list-get-id) 'main))
+              (should (eq (tabulated-list-get-id) 'summary))
               (emacsvox-omnivox-components--speak-detail)
-              (should (string-search "Available; 2 voices" spoken))
+              (should (string-search "Available; 2 voices on both streams" spoken))
               (with-current-buffer manager (emacsvox-omnivox-components--refresh-details))
               (should (eq (current-buffer) details))
-              (should (eq (tabulated-list-get-id) 'main))
+              (should (eq (tabulated-list-get-id) 'summary))
               (emacsvox-omnivox-components--details-next-action)
               (should (eq (tabulated-list-get-id) 'voices))
               (emacsvox-omnivox-components--details-back)
@@ -874,6 +877,31 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                 (should (eq details (window-buffer window)))
                 (should (eq id (tabulated-list-get-id)))
                 (should (pos-visible-in-window-p (point) window)))
+              (should-not (string-search "engine-main-fixture" (buffer-string)))
+              (should (emacsvox-aural-ui-goto-row 'diagnostics-section))
+              (should (eq 'folded (emacsvox-aural-ui--control-visibility)))
+              (call-interactively (key-binding (kbd "RET")))
+              (redisplay t)
+              (should (eq 'expanded (emacsvox-aural-ui--control-visibility)))
+              (should (string-search "engine-main-fixture" (buffer-string)))
+              (should (emacsvox-aural-ui-goto-row 'main-time))
+              (emacsvox-aural-ui-goto-tabulated-column 1)
+              (let ((window (selected-window)))
+                (with-current-buffer manager (emacsvox-omnivox-components--refresh-details))
+                (redisplay t)
+                (should (eq window (selected-window)))
+                (should (eq 'main-time (tabulated-list-get-id)))
+                (should (= 1 (emacsvox-aural-ui-tabulated-column-index)))
+                (should (pos-visible-in-window-p (point))))
+              (emacsvox-aural-ui-goto-row 'diagnostics-section)
+              (call-interactively (key-binding (kbd "RET")))
+              (redisplay t)
+              (should (eq 'folded (emacsvox-aural-ui--control-visibility)))
+              (should-not (string-search "engine-main-fixture" (buffer-string)))
+              (call-interactively (key-binding (kbd "TAB")))
+              (should (eq 'back (tabulated-list-get-id)))
+              (call-interactively (key-binding (kbd "<backtab>")))
+              (should (eq 'diagnostics-section (tabulated-list-get-id)))
               (emacsvox-omnivox-components--details-back)
               (redisplay t)
               (should (equal (tabulated-list-get-id) "eloquence"))
@@ -885,6 +913,9 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
   (skip-unless (display-graphic-p))
   (require 'omnivox-library)
   (emacsvox-omnivox-components-tests--with-inventory
+    (setq emacsvox-omnivox-components--records
+          '((:id "flite" :name "Flite" :state "installed" :size 0)))
+    (emacsvox-omnivox-components--render "flite")
     (let ((manager (current-buffer)) details library spoken)
       (unwind-protect
           (save-window-excursion
@@ -897,7 +928,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                        (lambda (&rest _)
                          '(:index (:voices [(:engine_id "flite" :physical_id "cmu_us_slt"
                                                          :display_name "SLT" :enabled t)
-                                            (:engine_id "piper" :physical_id "fixture"
+                                            (:engine_id "flite" :physical_id "fixture"
                                                          :display_name "Test voice" :enabled :false)])
                                   :sha256 "fixture"))))
               (emacsvox-omnivox-components-activate)
@@ -1053,6 +1084,73 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
       (should (equal (aref (cadr (assq 'summary rows)) 1) "Not checked"))
       (should-not (assq 'install rows))
       (should-not (assq 'test rows)))))
+
+(ert-deftest emacsvox-omnivox-components-details-prioritize-voice-actions ()
+  "Common actions stay visible while diagnostics and disruptive actions collapse."
+  (with-temp-buffer
+    (emacsvox-omnivox-components-mode)
+    (setq emacsvox-omnivox-components--records
+          '((:id "flite" :name "Flite" :state "installed" :size 0)))
+    (let* ((all (emacsvox-omnivox-components--detail-rows "flite"))
+           (visible (emacsvox-omnivox-components--layout-details all)))
+      (should (equal (seq-take (mapcar #'car visible) 5)
+                     '(summary voices voice-library download-voices check-live)))
+      (should-not (assq 'uninstall visible))
+      (should-not (assq 'main-target visible))
+      (let ((emacsvox-omnivox-components--expanded-sections '(module-section)))
+        (should (assq 'uninstall (emacsvox-omnivox-components--layout-details all)))))
+    (let ((rows (emacsvox-omnivox-components--layout-details
+                 (emacsvox-omnivox-components--detail-rows "eloquence"))))
+      (should-not (assq 'voice-library rows))
+      (should-not (assq 'download-voices rows)))
+    (setf (alist-get "flite" emacsvox-omnivox-components--results nil nil #'equal)
+          (list :operation 'test :success nil :time (current-time) :output "fixture failure"))
+    (let ((rows (emacsvox-omnivox-components--layout-details
+                 (emacsvox-omnivox-components--detail-rows "flite"))))
+      (should (equal (seq-take (mapcar #'car rows) 3) '(summary operation-error output))))))
+
+(ert-deftest emacsvox-omnivox-components-details-refresh-old-evidence-after-announcement ()
+  "Old evidence for a running worker remains usable and refreshes after speech."
+  (emacsvox-omnivox-components-tests--with-inventory
+    (let ((manager (current-buffer)) details events)
+      (setf (plist-get (plist-get (alist-get 'main emacsvox-omnivox-components--snapshots)
+                                 :inventory) :received-at) (time-subtract nil 600))
+      (unwind-protect
+          (save-window-excursion
+            (switch-to-buffer manager)
+            (cl-letf (((symbol-function 'omnivox--process-supports-p) (lambda (&rest _) t))
+                      ((symbol-function 'emacsvox-omnivox-components--speak)
+                       (lambda (text)
+                         (should (string-search "Available; 2 voices on both streams" text))
+                         (push 'announcement events)))
+                      ((symbol-function 'omnivox-refresh-voice-inventory)
+                       (lambda () (push 'inventory-request events))))
+              (emacsvox-omnivox-components-activate)
+              (setq details (current-buffer))
+              (should (equal (reverse events) '(announcement inventory-request)))
+              (with-current-buffer manager (emacsvox-omnivox-components--refresh-details))
+              (should (= 2 (length events)))
+              (should (eq 'voices (tabulated-list-get-id)))))
+        (when (buffer-live-p details) (kill-buffer details))))))
+
+(ert-deftest emacsvox-omnivox-components-collapsed-details-expose-speech-problems ()
+  "Notification problems remain visible even when diagnostics is collapsed."
+  (emacsvox-omnivox-components-tests--with-inventory
+    (let ((engine (emacsvox-omnivox-components--engine "eloquence" 'notification)))
+      (setf (plist-get engine :availability) "unavailable")
+      (nconc engine (list :availability-reason "Runtime could not be loaded"))
+      (let ((rows (emacsvox-omnivox-components--layout-details
+                   (emacsvox-omnivox-components--detail-rows "eloquence"))))
+        (should (string-search "notification: Needs attention" (aref (cadr (assq 'summary rows)) 1)))
+        (should (equal (aref (cadr (assq 'notification-problem rows)) 1)
+                       "Runtime could not be loaded"))
+        (should-not (assq 'notification-runtime rows)))
+      (delete-process tts-notify-process)
+      (setf (plist-get engine :availability) "available")
+      (let ((rows (emacsvox-omnivox-components--layout-details
+                   (emacsvox-omnivox-components--detail-rows "eloquence"))))
+        (should (string-search "notification: Previously available" (aref (cadr (assq 'summary rows)) 1)))
+        (should-not (assq 'notification-problem rows))))))
 
 (provide 'emacsvox-omnivox-components-tests)
 ;;; emacsvox-omnivox-components-tests.el ends here

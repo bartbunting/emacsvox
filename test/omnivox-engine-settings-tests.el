@@ -152,6 +152,8 @@
                 (setq emacsvox-omnivox-components--manager manager
                       emacsvox-omnivox-components--engine-id "flite")
                 (emacsvox-omnivox-components--render-details)
+                (should (emacsvox-aural-ui-goto-row 'startup-section))
+                (emacsvox-omnivox-components--details-activate)
                 (should (emacsvox-aural-ui-goto-row 'check-settings))
                 (emacsvox-omnivox-components--details-activate))
               (with-current-buffer manager
@@ -208,6 +210,8 @@
               (setq emacsvox-omnivox-components--manager manager
                     emacsvox-omnivox-components--engine-id "flite")
               (emacsvox-omnivox-components--render-details)
+              (should (emacsvox-aural-ui-goto-row 'startup-section))
+              (emacsvox-omnivox-components--details-activate)
               (should (emacsvox-aural-ui-goto-row 'settings))
               (emacsvox-omnivox-components--details-activate)
               (setq custom (current-buffer))
@@ -221,6 +225,13 @@
               (should (pos-visible-in-window-p (point)))))
         (dolist (buffer (list custom details manager))
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
+
+(ert-deftest omnivox-engine-settings-unset-files-do-not-deny-library-voices ()
+  "No manual files does not imply that a worker has only its built-in voice."
+  (omnivox-engine-settings-tests--isolated
+    (dolist (id '("flite" "piper"))
+      (should (equal (omnivox-engine-settings--description id)
+                     "No manual file override; installed voice library or launcher defaults apply")))))
 
 (provide 'omnivox-engine-settings-tests)
 ;;; omnivox-engine-settings-tests.el ends here

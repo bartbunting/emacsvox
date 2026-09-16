@@ -1137,8 +1137,9 @@
               (should (equal "piper" emacsvox-omnivox-components--engine-id))
               (should (eq browser emacsvox-omnivox-components--details-parent))
               (should (assoc 'download-voices tabulated-list-entries))
-              (should (equal (aref (cadr (assoc 'main tabulated-list-entries)) 1)
-                             "Not checked; Unknown voices"))))
+              (should (equal (aref (cadr (assoc 'summary tabulated-list-entries)) 1)
+                             "Not checked"))
+              (should-not (assoc 'main-target tabulated-list-entries))))
         (dolist (buffer (list details manager))
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
 
