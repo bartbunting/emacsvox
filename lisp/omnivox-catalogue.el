@@ -71,7 +71,7 @@
       (format "%s%s" (plist-get progress :state)
               (if (equal (plist-get progress :state) "downloading")
                   (format " %d%%" (/ (* 100 (plist-get progress :downloaded_bytes))
-                                      (max 1 (plist-get progress :total_bytes)))) "")))
+                                     (max 1 (plist-get progress :total_bytes)))) "")))
      (operation "Starting")
      (t "Available"))))
 
@@ -94,7 +94,7 @@
                             (list 'destination "Voice storage" (plist-get omnivox-catalogue--host :root))
                             (list 'status "Status" (omnivox-catalogue--status entry))
                             (list 'detail "Progress detail" (or (plist-get operation :error)
-                                                              (plist-get (plist-get operation :progress) :detail)))
+                                                                (plist-get (plist-get operation :progress) :detail)))
                             (list 'operation "Operation" (plist-get (plist-get operation :progress) :operation_id))
                             (list 'install "Install" "Download and validate; add disabled")
                             (list 'cancel "Cancel installation" "Wait for native validation cleanup")
@@ -205,11 +205,11 @@
     (when (process-live-p (plist-get old :process)) (user-error "This installation is still running"))
     (omnivox-catalogue-refresh)
     (when (seq-some (lambda (package) (equal (plist-get (plist-get package :catalogue) :entry_id)
-                                           (plist-get entry :id))) omnivox-catalogue--installed)
+                                             (plist-get entry :id))) omnivox-catalogue--installed)
       (user-error "Voice already installed; press l to enable it"))
     (unless omnivox-catalogue--entry (omnivox-catalogue-details))
     (when (yes-or-no-p (format "Download %s (%s), validate and install disabled? "
-                              (plist-get entry :name) (omnivox-catalogue--size entry)))
+                               (plist-get entry :name) (omnivox-catalogue--size entry)))
       (let* ((program (tts--resolve-program tts-program))
              (process-environment (omnivox-engine-settings--environment program))
              (process (make-process :name "Omnivox voice download" :command (list program "--voice-library-acquire")
@@ -248,8 +248,10 @@
 
 (defun omnivox-catalogue--speak-row ()
   "Speak the current catalogue row."
-  (when-let* ((row (tabulated-list-get-entry)))
-    (emacsvox-aural-ui-speak (mapconcat #'identity row ". "))))
+  (emacsvox-aural-ui-speak
+   (if-let* ((row (tabulated-list-get-entry)))
+       (mapconcat #'identity row ". ")
+     "No reviewed voices match. Press slash to change the filter; q returns.")))
 
 (defun omnivox-catalogue-details ()
   "Show details or activate the selected detail action."
@@ -262,16 +264,18 @@
         (_ (omnivox-catalogue--speak-row)))
     (let ((entry (omnivox-catalogue--selected)) (parent (current-buffer))
           (host omnivox-catalogue--host) (json omnivox-catalogue--json)
-          (entries omnivox-catalogue--entries) (installed omnivox-catalogue--installed))
-      (pop-to-buffer (get-buffer-create "*Omnivox Voice Download*"))
-      (omnivox-catalogue-mode)
-      (setq omnivox-catalogue--entry entry omnivox-catalogue--host host
-            omnivox-catalogue--json json omnivox-catalogue--entries entries
-            omnivox-catalogue--installed installed omnivox-catalogue--parent parent
-            tabulated-list-format [("Field" 22 nil) ("Value" 0 nil)])
-      (tabulated-list-init-header)
-      (omnivox-catalogue--render)
-      (goto-char (point-min)))))
+          (entries omnivox-catalogue--entries) (installed omnivox-catalogue--installed)
+          (buffer (get-buffer-create "*Omnivox Voice Download*")))
+      (with-current-buffer buffer
+        (omnivox-catalogue-mode)
+        (setq omnivox-catalogue--entry entry omnivox-catalogue--host host
+              omnivox-catalogue--json json omnivox-catalogue--entries entries
+              omnivox-catalogue--installed installed omnivox-catalogue--parent parent
+              tabulated-list-format [("Field" 22 nil) ("Value" 0 nil)])
+        (tabulated-list-init-header)
+        (omnivox-catalogue--render)
+        (goto-char (point-min)))
+      (emacsvox-aural-ui--pop-to-buffer buffer #'omnivox-catalogue--speak-row))))
 
 (defvar-keymap omnivox-catalogue-mode-map
   :doc "Available voice actions."
@@ -282,8 +286,8 @@
 (define-derived-mode omnivox-catalogue-mode emacsvox-aural-tabulated-mode "Available Voices"
   "Available voices: RET details; i install disabled; c cancel; l installed."
   (emacsvox-aural-ui-configure-tabulated "Available Omnivox voices"
-                                       #'omnivox-catalogue--speak-row #'omnivox-catalogue-refresh
-                                       #'omnivox-catalogue--speak-row)
+                                         #'omnivox-catalogue--speak-row #'omnivox-catalogue-refresh
+                                         #'omnivox-catalogue--speak-row)
   (setq tabulated-list-format [("Voice" 24 t) ("Engine" 9 t) ("Language" 10 t) ("Download" 10 nil) ("Status" 0 nil)]
         header-line-format "RET details; i install; c cancel; l installed voices; / filter; g refresh; q back")
   (tabulated-list-init-header))
@@ -300,10 +304,12 @@
         (setq entries (plist-get (plist-get (omnivox-library--request service (list :command "catalogue" :plan_json json))
                                             :catalogue) :entries))
       (when (process-live-p service) (delete-process service)))
-    (pop-to-buffer (get-buffer-create "*Omnivox Available Voices*"))
-    (omnivox-catalogue-mode)
-    (setq omnivox-catalogue--engine engine omnivox-catalogue--json json omnivox-catalogue--entries entries)
-    (omnivox-catalogue-refresh)))
+    (let ((buffer (get-buffer-create "*Omnivox Available Voices*")))
+      (with-current-buffer buffer
+        (omnivox-catalogue-mode)
+        (setq omnivox-catalogue--engine engine omnivox-catalogue--json json omnivox-catalogue--entries entries)
+        (omnivox-catalogue-refresh))
+      (emacsvox-aural-ui--pop-to-buffer buffer #'omnivox-catalogue--speak-row))))
 
 (provide 'omnivox-catalogue)
 ;;; omnivox-catalogue.el ends here

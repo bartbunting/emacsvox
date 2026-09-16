@@ -24,6 +24,10 @@
     (omnivox-catalogue-search "nonexistent")
     (should-not (tabulated-list-get-id))
     (should (string-search "No reviewed voices match" (buffer-string)))
+    (let (spoken)
+      (cl-letf (((symbol-function 'emacsvox-aural-ui-speak) (lambda (text) (setq spoken text))))
+        (omnivox-catalogue--speak-row)
+        (should (string-search "No reviewed voices match" spoken))))
     (should-error (omnivox-catalogue--selected) :type 'user-error)))
 
 (ert-deftest omnivox-catalogue-refreshed-installation-supersedes-old-operation-status ()
@@ -98,6 +102,7 @@
             (should (string-prefix-p "AWB" spoken))
             (omnivox-catalogue-details)
             (setq details (current-buffer))
+            (should (equal spoken "Voice. AWB"))
             (emacsvox-aural-ui-next-row)
             (let ((selected (tabulated-list-get-id)) (window (selected-window)))
               (omnivox-catalogue--redraw '(nil nil nil "flite-cmu-us-awb"))
