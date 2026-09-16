@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-fi-fi-harri-low",
+      "provider": "piper",
+      "name": "harri low",
+      "language": "fi-FI",
+      "description": "Finnish; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fi/fi_FI/harri/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fi/fi_FI/harri/low/fi_FI-harri-low.onnx",
+          "bytes": 69795191,
+          "sha256": "208847719a1906e2af69dfabc3be4f192536beb1394e253e294690a8ea239853"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fi/fi_FI/harri/low/fi_FI-harri-low.onnx.json",
+          "bytes": 4155,
+          "sha256": "1dc3a84f99cc744902dcc89f43c60e3c7158ee66d23c480d105315d795e22915"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fi/fi_FI/harri/low/MODEL_CARD",
+          "bytes": 284,
+          "sha256": "13bf9449148f5ec5167094561b41812be309893b9b93a29eff07bc0b592230b7"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fi-fi-harri-low/0",
+          "name": "harri",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-fi-fi-harri-medium",
+      "provider": "piper",
+      "name": "harri medium",
+      "language": "fi-FI",
+      "description": "Finnish; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fi/fi_FI/harri/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fi/fi_FI/harri/medium/fi_FI-harri-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "a44167faa34caed940e4fcad139fcc35922266b2593bcebe77701774c0fb2389"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fi/fi_FI/harri/medium/fi_FI-harri-medium.onnx.json",
+          "bytes": 4873,
+          "sha256": "3f9c9f76f74adf1fbe7279e41eea17d6610757e45effd6808bbea6be74b8916d"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fi/fi_FI/harri/medium/MODEL_CARD",
+          "bytes": 304,
+          "sha256": "a0a7fa3f046f1e582689db76f93099735530343a3126f3f40ed64380c419a0b2"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fi-fi-harri-medium/0",
+          "name": "harri",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

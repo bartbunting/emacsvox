@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-bg-bg-dimitar-medium",
+      "provider": "piper",
+      "name": "dimitar medium",
+      "language": "bg-BG",
+      "description": "Bulgarian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/bg/bg_BG/dimitar/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/bg/bg_BG/dimitar/medium/bg_BG-dimitar-medium.onnx",
+          "bytes": 63221984,
+          "sha256": "4972fe764468e8501416407ad81662de94cc6c9cdc680fcf807daef04e319f13"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/bg/bg_BG/dimitar/medium/bg_BG-dimitar-medium.onnx.json",
+          "bytes": 5123,
+          "sha256": "ec9a9abdd17384d3db225e83085b2f68b790b112f058417c3a8a2ac58b79e7f0"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/bg/bg_BG/dimitar/medium/MODEL_CARD",
+          "bytes": 282,
+          "sha256": "f7d396772659ed6e277171d19d23e57c502878d01c90d7c51ad6105ac05d2b8e"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-bg-bg-dimitar-medium/0",
+          "name": "dimitar",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

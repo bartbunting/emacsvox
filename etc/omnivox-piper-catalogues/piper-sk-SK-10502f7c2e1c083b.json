@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-sk-sk-lili-medium",
+      "provider": "piper",
+      "name": "lili medium",
+      "language": "sk-SK",
+      "description": "Slovak; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sk/sk_SK/lili/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sk/sk_SK/lili/medium/sk_SK-lili-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "d8e21603e0165252849efe0bcb3fbffd1b3193c36bd1f556e1106911e8015526"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sk/sk_SK/lili/medium/sk_SK-lili-medium.onnx.json",
+          "bytes": 4963,
+          "sha256": "b7c474eba411913f9feb65b9da322463e8698e7b200d2b757f6e684802951333"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sk/sk_SK/lili/medium/MODEL_CARD",
+          "bytes": 276,
+          "sha256": "d1df98a436e1b22f6bd1792a14fb3592dd816ee250ee3ff9ff3be62cd39c59b0"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-sk-sk-lili-medium/0",
+          "name": "lili",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

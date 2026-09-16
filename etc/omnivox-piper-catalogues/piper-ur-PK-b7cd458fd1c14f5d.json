@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-ur-pk-aegis-female-medium",
+      "provider": "piper",
+      "name": "aegis female medium",
+      "language": "ur-PK",
+      "description": "Urdu; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares MIT. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ur/ur_PK/aegis_female/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ur/ur_PK/aegis_female/medium/ur_PK-aegis_female-medium.onnx",
+          "bytes": 63515589,
+          "sha256": "3ec306035cfd0bbc22342fee5890450708a16dd231809522731678aa583c961f"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ur/ur_PK/aegis_female/medium/ur_PK-aegis_female-medium.onnx.json",
+          "bytes": 5236,
+          "sha256": "a8385c217a7e276acf5234bf01dbd0adb007a57c32ffbcc57d2db7eac3979bb6"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ur/ur_PK/aegis_female/medium/MODEL_CARD",
+          "bytes": 611,
+          "sha256": "f9f16fbcfeec2c233be21c734125d6c1ada7ac0037c6ffd7751065f566b53b6e"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-ur-pk-aegis-female-medium/0",
+          "name": "aegis_female",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-ur-pk-fasih-medium",
+      "provider": "piper",
+      "name": "fasih medium",
+      "language": "ur-PK",
+      "description": "Urdu; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares MIT. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ur/ur_PK/fasih/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ur/ur_PK/fasih/medium/ur_PK-fasih-medium.onnx",
+          "bytes": 63532015,
+          "sha256": "46d590b90fbb41e4d4f2c54ded44874917f8b11b6e0500de2a89e5d3731b5917"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ur/ur_PK/fasih/medium/ur_PK-fasih-medium.onnx.json",
+          "bytes": 3146,
+          "sha256": "cfcf484a50b4036cb55675b6bbcdb9ddb9061ac10a51cfb2b3ce8391213205ec"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ur/ur_PK/fasih/medium/MODEL_CARD",
+          "bytes": 3017,
+          "sha256": "0d6419e74f99fdb0240180fc26067e2f71cff465c61b59e218a7cf53351cf91f"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-ur-pk-fasih-medium/0",
+          "name": "fasih",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

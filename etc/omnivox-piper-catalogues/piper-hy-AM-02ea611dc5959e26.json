@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-hy-am-gor-medium",
+      "provider": "piper",
+      "name": "gor medium",
+      "language": "hy-AM",
+      "description": "Armenian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares GPL 2.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hy/hy_AM/gor/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hy/hy_AM/gor/medium/hy_AM-gor-medium.onnx",
+          "bytes": 63511038,
+          "sha256": "1c91fc33fecbbfc6b7921f9d11fd7487a859053a3a1987147f5c361155b89e7c"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hy/hy_AM/gor/medium/hy_AM-gor-medium.onnx.json",
+          "bytes": 4967,
+          "sha256": "01a8458d4ff226fac1b7dc7b1f619851fdbc8a9bd09d6a604e65e304c9600c2e"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hy/hy_AM/gor/medium/MODEL_CARD",
+          "bytes": 269,
+          "sha256": "8aa657540385acbc6e651185eb60f162a9317ab1cce1d50ab08f9604975c401b"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-hy-am-gor-medium/0",
+          "name": "gor",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

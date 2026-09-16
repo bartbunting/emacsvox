@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-fa-ir-amir-medium",
+      "provider": "piper",
+      "name": "amir medium",
+      "language": "fa-IR",
+      "description": "Farsi; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/amir/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/amir/medium/fa_IR-amir-medium.onnx",
+          "bytes": 63531379,
+          "sha256": "fb815380d969ea372b0b21b0de14421f58fe481047e153e69685d079b6e1a9d1"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/amir/medium/fa_IR-amir-medium.onnx.json",
+          "bytes": 4958,
+          "sha256": "75f918a3bf0f57a9179abe725af529f2a5c79d6c899e2a84aec76c685d5dfb9a"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/amir/medium/MODEL_CARD",
+          "bytes": 264,
+          "sha256": "0d7d315699945ac830162f82d485d79af51a33081a7649e8992726bd4bba2384"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fa-ir-amir-medium/0",
+          "name": "amir",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-fa-ir-ganji-medium",
+      "provider": "piper",
+      "name": "ganji medium",
+      "language": "fa-IR",
+      "description": "Farsi; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/ganji/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/ganji/medium/fa_IR-ganji-medium.onnx",
+          "bytes": 63516050,
+          "sha256": "6a98504bb77dc2fd3a863c977d37e67a6a525fdf661917385d569a3ff78e6cae"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/ganji/medium/fa_IR-ganji-medium.onnx.json",
+          "bytes": 4958,
+          "sha256": "9d3e0c0cf00156d8bf38fb7f96bdfbcb21911b37e062a328da0632e3c2cbc465"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/ganji/medium/MODEL_CARD",
+          "bytes": 247,
+          "sha256": "8ad13000ccc8fa6e249b00659aa5b4a938661fa4ac272baf3a2d50faa2504c69"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fa-ir-ganji-medium/0",
+          "name": "ganji",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-fa-ir-ganji-adabi-medium",
+      "provider": "piper",
+      "name": "ganji adabi medium",
+      "language": "fa-IR",
+      "description": "Farsi; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/ganji_adabi/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/ganji_adabi/medium/fa_IR-ganji_adabi-medium.onnx",
+          "bytes": 63516050,
+          "sha256": "e9073b41ae65759dcf95778e569c8f3780406dac99549436f6ab8e7d2336ed72"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/ganji_adabi/medium/fa_IR-ganji_adabi-medium.onnx.json",
+          "bytes": 4964,
+          "sha256": "aa430ceebaa7c96d9cd6b1e73231a393901cabb23a1b7f53e8d85178a5ae70c9"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/ganji_adabi/medium/MODEL_CARD",
+          "bytes": 253,
+          "sha256": "9d4b44c97de206ab47d770ea6f3bbea3963a72c2b1b4306630aa88312a6ad575"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fa-ir-ganji-adabi-medium/0",
+          "name": "ganji_adabi",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-fa-ir-reza-ibrahim-medium",
+      "provider": "piper",
+      "name": "reza ibrahim medium",
+      "language": "fa-IR",
+      "description": "Farsi; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/reza_ibrahim/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/reza_ibrahim/medium/fa_IR-reza_ibrahim-medium.onnx",
+          "bytes": 63511038,
+          "sha256": "99f0c31464a2120831ca87d079e10a9a2b3e426cc1ee662d80ff9042df15cd3c"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/reza_ibrahim/medium/fa_IR-reza_ibrahim-medium.onnx.json",
+          "bytes": 4967,
+          "sha256": "e9866c88c16245f8b8f4d0eaeaa6eab4f2e193db69a2ab4683d83fe78a30b6ca"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/reza_ibrahim/medium/MODEL_CARD",
+          "bytes": 635,
+          "sha256": "eec97d7df2143f981debaa929fced55086667e5ff1f61a3e1eda7b7f51f89a53"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fa-ir-reza-ibrahim-medium/0",
+          "name": "reza_ibrahim",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-da-dk-talesyntese-medium",
+      "provider": "piper",
+      "name": "talesyntese medium",
+      "language": "da-DK",
+      "description": "Danish; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/da/da_DK/talesyntese/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/da/da_DK/talesyntese/medium/da_DK-talesyntese-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "b9271efd25f7b8494bbd28d48dd675c8c119daa284f3ee488008935f515f1241"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/da/da_DK/talesyntese/medium/da_DK-talesyntese-medium.onnx.json",
+          "bytes": 4878,
+          "sha256": "89fe13bd251406cc0088570d103ea7ac35823211d8466faf913268ab8506f41b"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/da/da_DK/talesyntese/medium/MODEL_CARD",
+          "bytes": 308,
+          "sha256": "b5b7a51d4d815a307594619a519eb389b2e17839b30c0eb69a39d3ade5b1ed65"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-da-dk-talesyntese-medium/0",
+          "name": "talesyntese",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

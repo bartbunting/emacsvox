@@ -104,7 +104,11 @@ deb-test: check-emacs
 release-deb: check-emacs
 	python3 utils/emacsvox-package-deb.py --release --emacs "$(EMACS)" --output-dir "$(DIST_DIR)"
 
-test: version-check headers-check source-archive-test windows-staging-test unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
+test: version-check headers-check source-archive-test windows-staging-test piper-catalogue-test unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
+
+.PHONY: piper-catalogue-test
+piper-catalogue-test:
+	python3 -m unittest discover -s test -p 'test_piper_catalogue.py' -v
 
 windows-staging-test:
 	python3 -m unittest discover -s test -p 'test_windows_staging.py' -v

@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-et-ee-news-medium",
+      "provider": "piper",
+      "name": "news medium",
+      "language": "et-EE",
+      "description": "Estonian; medium quality; 4 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY (META-SHARE \"Available - Unrestricted Use\"). See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/et/et_EE/news/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/et/et_EE/news/medium/et_EE-news-medium.onnx",
+          "bytes": 76757937,
+          "sha256": "ddd679e874e0f6ec4e8f76c99cef77d490341b001aa6e839415028be5d04f9bf"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/et/et_EE/news/medium/et_EE-news-medium.onnx.json",
+          "bytes": 5320,
+          "sha256": "2f56bbaf9cd2c44bf4b1e02fb36cfd31876f7ed3f78ca199f2aca6727e96441a"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/et/et_EE/news/medium/MODEL_CARD",
+          "bytes": 449,
+          "sha256": "5ad77aaa52c3eff92822252136c4ac4f23550e4acf128cb50cf9b30bfcb22b0d"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-et-ee-news-medium/0",
+          "name": "news: Albert",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-et-ee-news-medium/1",
+          "name": "news: Kalev",
+          "speaker_index": 1
+        },
+        {
+          "physical_id": "piper:v1/c/piper-et-ee-news-medium/2",
+          "name": "news: Mari",
+          "speaker_index": 2
+        },
+        {
+          "physical_id": "piper:v1/c/piper-et-ee-news-medium/3",
+          "name": "news: Vesta",
+          "speaker_index": 3
+        }
+      ]
+    }
+  ]
+}

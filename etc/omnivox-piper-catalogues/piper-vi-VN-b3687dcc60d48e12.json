@@ -1,0 +1,402 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-vi-vn-vais1000-medium",
+      "provider": "piper",
+      "name": "vais1000 medium",
+      "language": "vi-VN",
+      "description": "Vietnamese; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares https://creativecommons.org/licenses/by/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/vi/vi_VN/vais1000/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/vi/vi_VN/vais1000/medium/vi_VN-vais1000-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "ec7c89e2c85f4d1edc24b6120c18aaf1bda614f06b511567eb9c7c0de15e2dab"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/vi/vi_VN/vais1000/medium/vi_VN-vais1000-medium.onnx.json",
+          "bytes": 4860,
+          "sha256": "fafb9da1354ed4b77c31af228ed41fb41cd825c14cffa105454b25e6ae751ee0"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/vi/vi_VN/vais1000/medium/MODEL_CARD",
+          "bytes": 361,
+          "sha256": "302db8a930ffc2b1c2181db26deaf8272116eca2b08b8f80da6375b0a994af7b"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vais1000-medium/0",
+          "name": "vais1000",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-vi-vn-vivos-x-low",
+      "provider": "piper",
+      "name": "vivos x_low",
+      "language": "vi-VN",
+      "description": "Vietnamese; x_low quality; 65 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC BY-NC-SA 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/vi/vi_VN/vivos/x_low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/vi/vi_VN/vivos/x_low/vi_VN-vivos-x_low.onnx",
+          "bytes": 27789413,
+          "sha256": "6ab13374eb0862021a545befe7727aef59e16117f1c075aa9e0362237ecc98ae"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/vi/vi_VN/vivos/x_low/vi_VN-vivos-x_low.onnx.json",
+          "bytes": 5592,
+          "sha256": "9dc373d69b0e4f39d864cb8ac9fe42cee49817a0f02d831e57a9ce6e944e234a"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/vi/vi_VN/vivos/x_low/MODEL_CARD",
+          "bytes": 272,
+          "sha256": "175c37c171f7f4a66ee2e37546775cb366bd1e00d027d10b18918b5cc1484c86"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/0",
+          "name": "vivos: VIVOSSPK13",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/1",
+          "name": "vivos: VIVOSSPK14",
+          "speaker_index": 1
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/2",
+          "name": "vivos: VIVOSSPK15",
+          "speaker_index": 2
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/3",
+          "name": "vivos: VIVOSSPK16",
+          "speaker_index": 3
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/4",
+          "name": "vivos: VIVOSSPK17",
+          "speaker_index": 4
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/5",
+          "name": "vivos: VIVOSSPK18",
+          "speaker_index": 5
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/6",
+          "name": "vivos: VIVOSSPK19",
+          "speaker_index": 6
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/7",
+          "name": "vivos: VIVOSSPK20",
+          "speaker_index": 7
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/8",
+          "name": "vivos: VIVOSSPK21",
+          "speaker_index": 8
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/9",
+          "name": "vivos: VIVOSSPK22",
+          "speaker_index": 9
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/10",
+          "name": "vivos: VIVOSSPK26",
+          "speaker_index": 10
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/11",
+          "name": "vivos: VIVOSSPK34",
+          "speaker_index": 11
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/12",
+          "name": "vivos: VIVOSSPK40",
+          "speaker_index": 12
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/13",
+          "name": "vivos: VIVOSSPK41",
+          "speaker_index": 13
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/14",
+          "name": "vivos: VIVOSSPK42",
+          "speaker_index": 14
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/15",
+          "name": "vivos: VIVOSSPK43",
+          "speaker_index": 15
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/16",
+          "name": "vivos: VIVOSSPK44",
+          "speaker_index": 16
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/17",
+          "name": "vivos: VIVOSSPK45",
+          "speaker_index": 17
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/18",
+          "name": "vivos: VIVOSSPK46",
+          "speaker_index": 18
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/19",
+          "name": "vivos: VIVOSSPK38",
+          "speaker_index": 19
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/20",
+          "name": "vivos: VIVOSSPK31",
+          "speaker_index": 20
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/21",
+          "name": "vivos: VIVOSSPK35",
+          "speaker_index": 21
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/22",
+          "name": "vivos: VIVOSSPK01",
+          "speaker_index": 22
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/23",
+          "name": "vivos: VIVOSSPK02",
+          "speaker_index": 23
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/24",
+          "name": "vivos: VIVOSSPK03",
+          "speaker_index": 24
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/25",
+          "name": "vivos: VIVOSSPK04",
+          "speaker_index": 25
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/26",
+          "name": "vivos: VIVOSSPK05",
+          "speaker_index": 26
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/27",
+          "name": "vivos: VIVOSSPK06",
+          "speaker_index": 27
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/28",
+          "name": "vivos: VIVOSSPK07",
+          "speaker_index": 28
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/29",
+          "name": "vivos: VIVOSSPK08",
+          "speaker_index": 29
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/30",
+          "name": "vivos: VIVOSSPK09",
+          "speaker_index": 30
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/31",
+          "name": "vivos: VIVOSSPK10",
+          "speaker_index": 31
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/32",
+          "name": "vivos: VIVOSSPK11",
+          "speaker_index": 32
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/33",
+          "name": "vivos: VIVOSSPK12",
+          "speaker_index": 33
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/34",
+          "name": "vivos: VIVOSSPK27",
+          "speaker_index": 34
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/35",
+          "name": "vivos: VIVOSSPK36",
+          "speaker_index": 35
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/36",
+          "name": "vivos: VIVOSSPK33",
+          "speaker_index": 36
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/37",
+          "name": "vivos: VIVOSSPK32",
+          "speaker_index": 37
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/38",
+          "name": "vivos: VIVOSSPK29",
+          "speaker_index": 38
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/39",
+          "name": "vivos: VIVOSSPK39",
+          "speaker_index": 39
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/40",
+          "name": "vivos: VIVOSSPK25",
+          "speaker_index": 40
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/41",
+          "name": "vivos: VIVOSSPK28",
+          "speaker_index": 41
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/42",
+          "name": "vivos: VIVOSSPK30",
+          "speaker_index": 42
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/43",
+          "name": "vivos: VIVOSSPK37",
+          "speaker_index": 43
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/44",
+          "name": "vivos: VIVOSSPK23",
+          "speaker_index": 44
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/45",
+          "name": "vivos: VIVOSSPK24",
+          "speaker_index": 45
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/46",
+          "name": "vivos: VIVOSDEV02",
+          "speaker_index": 46
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/47",
+          "name": "vivos: VIVOSDEV03",
+          "speaker_index": 47
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/48",
+          "name": "vivos: VIVOSDEV01",
+          "speaker_index": 48
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/49",
+          "name": "vivos: VIVOSDEV04",
+          "speaker_index": 49
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/50",
+          "name": "vivos: VIVOSDEV05",
+          "speaker_index": 50
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/51",
+          "name": "vivos: VIVOSDEV06",
+          "speaker_index": 51
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/52",
+          "name": "vivos: VIVOSDEV07",
+          "speaker_index": 52
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/53",
+          "name": "vivos: VIVOSDEV08",
+          "speaker_index": 53
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/54",
+          "name": "vivos: VIVOSDEV09",
+          "speaker_index": 54
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/55",
+          "name": "vivos: VIVOSDEV10",
+          "speaker_index": 55
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/56",
+          "name": "vivos: VIVOSDEV11",
+          "speaker_index": 56
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/57",
+          "name": "vivos: VIVOSDEV12",
+          "speaker_index": 57
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/58",
+          "name": "vivos: VIVOSDEV13",
+          "speaker_index": 58
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/59",
+          "name": "vivos: VIVOSDEV14",
+          "speaker_index": 59
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/60",
+          "name": "vivos: VIVOSDEV15",
+          "speaker_index": 60
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/61",
+          "name": "vivos: VIVOSDEV16",
+          "speaker_index": 61
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/62",
+          "name": "vivos: VIVOSDEV17",
+          "speaker_index": 62
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/63",
+          "name": "vivos: VIVOSDEV18",
+          "speaker_index": 63
+        },
+        {
+          "physical_id": "piper:v1/c/piper-vi-vn-vivos-x-low/64",
+          "name": "vivos: VIVOSDEV19",
+          "speaker_index": 64
+        }
+      ]
+    }
+  ]
+}

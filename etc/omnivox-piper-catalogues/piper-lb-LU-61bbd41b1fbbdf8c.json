@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-lb-lu-marylux-medium",
+      "provider": "piper",
+      "name": "marylux medium",
+      "language": "lb-LU",
+      "description": "Luxembourgish; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares http://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/lb/lb_LU/marylux/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/lb/lb_LU/marylux/medium/lb_LU-marylux-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "4147ecacdd98932951d0f956555542de358d3ccff708d4996e305c3ce287097a"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/lb/lb_LU/marylux/medium/lb_LU-marylux-medium.onnx.json",
+          "bytes": 4979,
+          "sha256": "e5c5dec5433d33ff573e76fa567e80dcf636d05de5dcc817b273963f0733d742"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/lb/lb_LU/marylux/medium/MODEL_CARD",
+          "bytes": 330,
+          "sha256": "613dc86e24d7ebd06ca1a91b04584636528a25fad1ba62318ff5622211b1dc10"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-lb-lu-marylux-medium/0",
+          "name": "marylux",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

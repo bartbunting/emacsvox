@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-hu-hu-anna-medium",
+      "provider": "piper",
+      "name": "anna medium",
+      "language": "hu-HU",
+      "description": "Hungarian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/anna/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/anna/medium/hu_HU-anna-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "968c0c3a66cb667811242cc88653bff9247395fc7a0517fbeef7d8c08cdae62a"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/anna/medium/hu_HU-anna-medium.onnx.json",
+          "bytes": 5018,
+          "sha256": "ccf967d8db8018c9d8ffdb0edc8814ffcb6b75273bb0d84337317240f710283a"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/anna/medium/MODEL_CARD",
+          "bytes": 278,
+          "sha256": "2134551c09f616ba333640f419267d45aeed5443b53ffde79a11a715737f8546"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-hu-hu-anna-medium/0",
+          "name": "anna",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-hu-hu-berta-medium",
+      "provider": "piper",
+      "name": "berta medium",
+      "language": "hu-HU",
+      "description": "Hungarian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/berta/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/berta/medium/hu_HU-berta-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "4eed05f767573b77fd2c07e6bccaa9b3c77089a55b9239c3099ecd3d17a59be3"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/berta/medium/hu_HU-berta-medium.onnx.json",
+          "bytes": 4961,
+          "sha256": "3fd75422fcb0da86d54391256607a08d1ee4fb70f031941197e4400b9067b603"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/berta/medium/MODEL_CARD",
+          "bytes": 279,
+          "sha256": "d7b73edbe69c0ca179680839a063306796dcef1d3cc50b342e2144a2a8297865"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-hu-hu-berta-medium/0",
+          "name": "berta",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-hu-hu-imre-medium",
+      "provider": "piper",
+      "name": "imre medium",
+      "language": "hu-HU",
+      "description": "Hungarian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/imre/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/imre/medium/hu_HU-imre-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "af7d98e2031b4f00cf3693cafc47b0b5347f23c28cd6a5957a693f76d7202c2d"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/imre/medium/hu_HU-imre-medium.onnx.json",
+          "bytes": 5019,
+          "sha256": "bb9c31dd8429b1414d486e5d52d52f0790949c63bfaf1345075d42e23ad10c83"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/imre/medium/MODEL_CARD",
+          "bytes": 278,
+          "sha256": "7816348278ffe352e0b41183705b163810c5439f9d4e361cbc7ee87aa919d612"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-hu-hu-imre-medium/0",
+          "name": "imre",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

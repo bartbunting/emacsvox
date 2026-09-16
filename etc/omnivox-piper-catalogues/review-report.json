@@ -1,0 +1,4273 @@
+{
+  "source": "https://huggingface.co/rhasspy/piper-voices",
+  "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "index_sha256": "982969c7f28796bfdd738f239155eaa3de5526b30d537a5d0ed941dc5d01ffc1",
+  "records": [
+    {
+      "id": "piper-ar-jo-kareem-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ar/ar_JO/kareem/low/MODEL_CARD",
+        "bytes": 274,
+        "sha256": "a5e47b466d41ad33d4bccd081c8184efc60caca25f0eef4d102fde62e11ed85c"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-ar-jo-kareem-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ar/ar_JO/kareem/medium/MODEL_CARD",
+        "bytes": 283,
+        "sha256": "38e1e4f94c4cb9eda041a639096763a8c5681d0be5a5b3e22f990aed6bb4b86e"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-bg-bg-dimitar-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/bg/bg_BG/dimitar/medium/MODEL_CARD",
+        "bytes": 282,
+        "sha256": "f7d396772659ed6e277171d19d23e57c502878d01c90d7c51ad6105ac05d2b8e"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "014dc3110b79a723011431f412387820a5cd94aea147c790dd54682a804cb1dc"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "014dc3110b79a723011431f412387820a5cd94aea147c790dd54682a804cb1dc",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "1a64b6fe3f24a39239ba06d6704c7b3c7fbee8fbdc2293f700231b88cdde4355"
+      }
+    },
+    {
+      "id": "piper-bn-bd-google-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/bn/bn_BD/google/medium/MODEL_CARD",
+        "bytes": 2419,
+        "sha256": "7646ee0bb29179780877708f270b8071fffee4114d880fa3bc28029c1bd44e14"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: no explicit licence in model card"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-ca-es-upc-ona-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_ona/medium/MODEL_CARD",
+        "bytes": 296,
+        "sha256": "2961b53af17c66971b3ebe3b174566a16ae6e9302997eed111a7d2b1954d31fd"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY-SA 3.0 ES. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "6bb9c2ca856544990e7834fcd7fa7faf0bb7768c84a8ad343c007859cd976f5c"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "6bb9c2ca856544990e7834fcd7fa7faf0bb7768c84a8ad343c007859cd976f5c",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "e8c433cbdd93414d71050d099a4c8174361abb4fa489c9739b39f21b19d516df"
+      }
+    },
+    {
+      "id": "piper-ca-es-upc-ona-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_ona/x_low/MODEL_CARD",
+        "bytes": 258,
+        "sha256": "f2163819cd82d535c060affadf04ffbb7b918cd4f5249e636c41d816fa40ba16"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY-SA 3.0 ES. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "f461bfddecc330322d246c230aeafbc0a10be934227d4e55b75e36f8eb19093a"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "f461bfddecc330322d246c230aeafbc0a10be934227d4e55b75e36f8eb19093a",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "31b1cbd1b211104fe21abfe45c2d0f5eaf7b76f31151c429e8164b39a98018ca"
+      }
+    },
+    {
+      "id": "piper-ca-es-upc-pau-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_pau/x_low/MODEL_CARD",
+        "bytes": 258,
+        "sha256": "82d24aa9943e3b2f7303ef863fefb31a95c270ad62083ee37af77a92c74e918e"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY-SA 3.0 ES. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "10854287d21335e093c165c4e2ac9b6f72b720fc6a329cf8a86d915d472f237a"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "10854287d21335e093c165c4e2ac9b6f72b720fc6a329cf8a86d915d472f237a",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "6b93a31edbdcfae8eea726afc88490ee0b806878335d2e4a9c5b639ee7e6d3e9"
+      }
+    },
+    {
+      "id": "piper-cs-cz-jirka-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/jirka/low/MODEL_CARD",
+        "bytes": 273,
+        "sha256": "faf2bec4b13f88c0a312238aaac9c4714352b401abf988ba02741a0ee1ca070f"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "7b098b4a4d0e999b4891bf4c68f5dd6315a19ee841a3ca017f9a5c16c4a758cc"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "7b098b4a4d0e999b4891bf4c68f5dd6315a19ee841a3ca017f9a5c16c4a758cc",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "bcec536098dd50e6480f9a89264c0c3220f62879ec5d4f584accc2c404a9fcdc"
+      }
+    },
+    {
+      "id": "piper-cs-cz-jirka-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/jirka/medium/MODEL_CARD",
+        "bytes": 282,
+        "sha256": "b8043c32e43496b109d49bbc28290e570c064a4ed949962a71a5ff6b2ad647e7"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "a856ae6243f4dff089b402e29c1b34020014c940a56c8dc3cf194355c2ae8d5e"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "a856ae6243f4dff089b402e29c1b34020014c940a56c8dc3cf194355c2ae8d5e",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "fb1ecb4987cd286eb925a534c387fb89945d6c595ccb56f09d483fd97bd7ba56"
+      }
+    },
+    {
+      "id": "piper-cs-cz-kasandra-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/kasandra/medium/MODEL_CARD",
+        "bytes": 424,
+        "sha256": "328794737f2a0d0f8111f5c628a9965e9924712e55a0e9f50100f9dd3c34f639"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares Creative Commons Attribution 4.0 International (CC BY 4.0). See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "49a382b9e79c0d7f0292d049e87bb84103a454013cefd5bd9c5c6218c8f10643"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "49a382b9e79c0d7f0292d049e87bb84103a454013cefd5bd9c5c6218c8f10643",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "0d76286af4fda475bc9bbfabd50af126a4830a0ce1756b5e892399f8c89a224e"
+      }
+    },
+    {
+      "id": "piper-cy-gb-bu-tts-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cy/cy_GB/bu_tts/medium/MODEL_CARD",
+        "bytes": 295,
+        "sha256": "b6dea17117b4dba58b6e836616ab639fb21c154e6045414cf4cb855b4d71299c"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "7a6124fd0889547e4a89cdaa1c090f28c99467b030c8f31d5fa8ffe79c78a11b"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "7a6124fd0889547e4a89cdaa1c090f28c99467b030c8f31d5fa8ffe79c78a11b",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "3429afc256afb1bd7696f61ab1655e21f9d914420117e2fb5962c0a8543c0b57"
+      }
+    },
+    {
+      "id": "piper-cy-gb-gwryw-gogleddol-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cy/cy_GB/gwryw_gogleddol/medium/MODEL_CARD",
+        "bytes": 337,
+        "sha256": "0528d8184faf7c0b4ab5ba7418a73a0a2109aeccb9d82136952c1618d5be9588"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-da-dk-talesyntese-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/da/da_DK/talesyntese/medium/MODEL_CARD",
+        "bytes": 308,
+        "sha256": "b5b7a51d4d815a307594619a519eb389b2e17839b30c0eb69a39d3ade5b1ed65"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "756d4ad13cf7c765e82cb2eedee7f25aa17e38ff8555089819824601937480fc"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "756d4ad13cf7c765e82cb2eedee7f25aa17e38ff8555089819824601937480fc",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "7b8438c30d29e59b4de65c21ceb9c1aa12f718221a59195a41d37ac2178621ca"
+      }
+    },
+    {
+      "id": "piper-de-de-eva-k-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/eva_k/x_low/MODEL_CARD",
+        "bytes": 246,
+        "sha256": "187741f947241c18a8d8cdf773fcec75325172628442a866c2da44a5f23e590f"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-de-de-karlsson-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/karlsson/low/MODEL_CARD",
+        "bytes": 289,
+        "sha256": "bf2374f1a9b25b4357f3a9b4ab064c55b06c5e9af35250428ec835df9d349b3d"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-de-de-kerstin-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/kerstin/low/MODEL_CARD",
+        "bytes": 272,
+        "sha256": "7019006374a5fe5358186d5f3333e9f904385e7bdfbb68bc85dafce1a3cddae5"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "ebfe30308a427fc271ba6a783ba0a08edd6c1b9503ca3f7e44ddf494b8e71546"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "ebfe30308a427fc271ba6a783ba0a08edd6c1b9503ca3f7e44ddf494b8e71546",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "2ee6895894b65ef2c6c32377eb2011ce3723fc79f5e0681431c5da4254399299"
+      }
+    },
+    {
+      "id": "piper-de-de-mls-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/mls/medium/MODEL_CARD",
+        "bytes": 223,
+        "sha256": "ca1bf03a3c287fb6968acfa010e1917f85f0aa59db0f371efc3a2857f4035ffd"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "c7b2871dffba0a9ad33adca7de58aac95b9a4ec3d3321f12abbf54e82db5c5e9"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "c7b2871dffba0a9ad33adca7de58aac95b9a4ec3d3321f12abbf54e82db5c5e9",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "b02b4ffe7039418cc17ff1645ebf71ab5dc18f0f4b05495b1837eefb09390a4e"
+      }
+    },
+    {
+      "id": "piper-de-de-pavoque-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/pavoque/low/MODEL_CARD",
+        "bytes": 309,
+        "sha256": "c28ca951bc48c69f4a33c2166ac6356ac3f0d5e4efb9bb57ef41f6d306f7ff8b"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares http://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "7723518cf6beab0f37f4cdf5b6210c1105182002f5a0678257954c0f42fb08c4"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "7723518cf6beab0f37f4cdf5b6210c1105182002f5a0678257954c0f42fb08c4",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "b431e3a1dd2b9e7bf608da40e2283f1c1086198bc193128554b74495a39ab19a"
+      }
+    },
+    {
+      "id": "piper-de-de-ramona-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/ramona/low/MODEL_CARD",
+        "bytes": 255,
+        "sha256": "3b6dbf2cde464e35cbdd3c06fccb34bf8cd590878c251391e9fd0a6f1bb993da"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-de-de-thorsten-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/high/MODEL_CARD",
+        "bytes": 279,
+        "sha256": "a49334fc36286c9d67f007605969a33f416cc4e35eb770c9c7f716d44711fc3a"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "8682ee355bc065b9ec7ef61116ad81ac1bd1595addee0cc5d3fe512754e746eb"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "8682ee355bc065b9ec7ef61116ad81ac1bd1595addee0cc5d3fe512754e746eb",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "f3d073ea4a0e831e3174ef9a49de41051557af9052691304eea170708540d2d6"
+      }
+    },
+    {
+      "id": "piper-de-de-thorsten-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/low/MODEL_CARD",
+        "bytes": 274,
+        "sha256": "f09e67d4e0dfcf53df996349fc0219d0dddeab502dc2bd0cf0512c6170bc944d"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "541b472212546c642adb3a9796bc603d04bf60bd946d626e96c7c68e75c106d5"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "541b472212546c642adb3a9796bc603d04bf60bd946d626e96c7c68e75c106d5",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "8fc3050554daa46463b7eb979c93569649c87aa9fd2110dd399ba30fe4c2e859"
+      }
+    },
+    {
+      "id": "piper-de-de-thorsten-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/medium/MODEL_CARD",
+        "bytes": 285,
+        "sha256": "5196b5ab0794e6056263a1f37c18bec407b61ac187529bee29d1c366871e5c9e"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "ad30ef1e0ce7ed5aed4448542d25c7244288d89f582164f29e1521a4cb35135b"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "ad30ef1e0ce7ed5aed4448542d25c7244288d89f582164f29e1521a4cb35135b",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "740b1b6d751a3f309b86ebe24c81987568860e936371f9a41b42d189e4b4a99a"
+      }
+    },
+    {
+      "id": "piper-de-de-thorsten-emotional-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten_emotional/medium/MODEL_CARD",
+        "bytes": 302,
+        "sha256": "7c3201dbccb062f071a3cdda0dce7eb05fe1f889fba2c6180994f97ec5eeafd8"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "a2dd582160e710b79e08018e0a779209c3cf865b9f27d5074d6bd4250361914a"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "a2dd582160e710b79e08018e0a779209c3cf865b9f27d5074d6bd4250361914a",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "1f2274cf8d2e7616980d0bd4265b06951438735dc8f53ccf050b15111f12bfa8"
+      }
+    },
+    {
+      "id": "piper-el-gr-joy-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/joy/medium/MODEL_CARD",
+        "bytes": 349,
+        "sha256": "a38d735f47d9c520ce067fa72645fae16caa8b60fcf20e7207ea2f6c289dc80e"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY-NC 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "88b4900f7d8dfd2b6c709432f20a6100ead6306d5e617a92398a01ea504ddb78"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "88b4900f7d8dfd2b6c709432f20a6100ead6306d5e617a92398a01ea504ddb78",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "5d95f05bc72d900da18c3c0dcdd67c80ba0627ff23b1862d50573374c16f65a1"
+      }
+    },
+    {
+      "id": "piper-el-gr-rapunzelina-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/rapunzelina/low/MODEL_CARD",
+        "bytes": 303,
+        "sha256": "741740e84ad0a46bed544ef96e9885d70ebcc3544bcb1bc49ca459ddb1c748ca"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "640a98dd2832f0ecf10463194df0b4de1cc0ab3dec6dfffff40d45f54df705fa"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "640a98dd2832f0ecf10463194df0b4de1cc0ab3dec6dfffff40d45f54df705fa",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "057043e103f0ff383391db4e75ac91d7e416aeb33e7188ec48125d69cde04f14"
+      }
+    },
+    {
+      "id": "piper-el-gr-rapunzelina-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/rapunzelina/medium/MODEL_CARD",
+        "bytes": 276,
+        "sha256": "dc69f15382dabed061fa8d31b65c14e5c4b57ba2fe6906012c756478da156b50"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "d4a3a5b179a524214fed6e8212b04260bbae64b6a19a9cc66444e92d6012c73d"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "d4a3a5b179a524214fed6e8212b04260bbae64b6a19a9cc66444e92d6012c73d",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "06ce428c69ddfcd7ddb438d43d6ba473f64fd7686335a58b6e9e67100b13a887"
+      }
+    },
+    {
+      "id": "piper-en-gb-alan-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/alan/low/MODEL_CARD",
+        "bytes": 309,
+        "sha256": "5cd8a9b65a185dbbe96cc80305e620f1b165de8df572c49d66b53bcef9fcb1fe"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-gb-alan-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/alan/medium/MODEL_CARD",
+        "bytes": 320,
+        "sha256": "abcbc3e961124398911436acd9eaaa0ab167cdf221d5a24146aa08732c52630f"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-gb-alba-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/alba/medium/MODEL_CARD",
+        "bytes": 324,
+        "sha256": "fa166b1779404c470b0b6b4ba0238bc4a35bf89d2cd130c6788f697188b737d6"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "6c9d493dd26cc7f81a57a0e82825d9161404e60d20600dad846dd8a6dfa6c999"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "6c9d493dd26cc7f81a57a0e82825d9161404e60d20600dad846dd8a6dfa6c999",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "a8d51b07847f602f386e4f2fc4e55a3e8bc70b31772c7539f26329a8c9937d3f"
+      }
+    },
+    {
+      "id": "piper-en-gb-aru-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/aru/medium/MODEL_CARD",
+        "bytes": 368,
+        "sha256": "b9a880778b6cc58330e78f862ba3554836f4ac9194f613533dbfdf28fce0a7ff"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "6750ff3ffbf3d57704355b41c041da38fe6ecaafbc30801804606880b70d83fb"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "6750ff3ffbf3d57704355b41c041da38fe6ecaafbc30801804606880b70d83fb",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "745a7e24cf14f98341dfb54f30fb32767a541a21f1c727b3a38462b634b93b5f"
+      }
+    },
+    {
+      "id": "piper-en-gb-cori-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/cori/high/MODEL_CARD",
+        "bytes": 468,
+        "sha256": "136e7bd168b6c35b4a5df01a0253297e5773b5775ceae0af5160f264aa58208f"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares public domain. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "5e8b589095f5d9e0949f683be537e2173fe9adf8f7903e906ff4821bc5c7baea"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "5e8b589095f5d9e0949f683be537e2173fe9adf8f7903e906ff4821bc5c7baea",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "6fe17afdc1949afe7b783075df559cdc09641fbdf8f22b28400783a93ca4613c"
+      }
+    },
+    {
+      "id": "piper-en-gb-cori-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/cori/medium/MODEL_CARD",
+        "bytes": 474,
+        "sha256": "38d76dfde845837b184668f8bab1c6426ad740b1af0fcebc349037822739e536"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares public domain. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "6af28c4733a4d0f1fbee9b365c086d7460adb80124812213713f2ea4f65bbce2"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "6af28c4733a4d0f1fbee9b365c086d7460adb80124812213713f2ea4f65bbce2",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "a6e1cc9d974bd5ca6780b7b56e83d4c24d70a8113cef50d67d36b8c1ba43512c"
+      }
+    },
+    {
+      "id": "piper-en-gb-jenny-dioco-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/jenny_dioco/medium/MODEL_CARD",
+        "bytes": 298,
+        "sha256": "bc8aec32196ab14f46260ab6e002cf004b0793ddd7886011145fe00106e20d45"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-gb-northern-english-male-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/northern_english_male/medium/MODEL_CARD",
+        "bytes": 305,
+        "sha256": "75661c3a50c0ba82b32b3a438e54103d8dfe5bbe8fbb864ac687a040e79948bb"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY-SA 4.0 International. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "c980b77b5277ea0bb3c31569dc023bc73e4ed6bba828e8fdff9f584357982b54"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "c980b77b5277ea0bb3c31569dc023bc73e4ed6bba828e8fdff9f584357982b54",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "980b7765257b6e777d604cb5c7cbc35cb719ca0d3b713ac728fb237994cf580a"
+      }
+    },
+    {
+      "id": "piper-en-gb-semaine-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/semaine/medium/MODEL_CARD",
+        "bytes": 332,
+        "sha256": "d3c370c9c73b69347f9487cc24b0cfa5f2a400c47d209f0aa4ce20123562e46d"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares http://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "fa905ccf8ce22541af2efd3e8dd8f8def1a1a770a96ca8b89257126cfedefcda"
+      },
+      "blocked": null,
+      "error": "Native validation failed: Voice not found: Piper model unavailable: configuration is invalid or contains duplicate keys",
+      "exported": false,
+      "validation": {
+        "status": "failed"
+      }
+    },
+    {
+      "id": "piper-en-gb-southern-english-female-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/southern_english_female/low/MODEL_CARD",
+        "bytes": 296,
+        "sha256": "41a64585a49d46362042b1a01b0a4b54127518eb50063c45846e2703e5790260"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY-SA 4.0 International. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "97875c8fc34c2230d2695ba1f762cf5b567453a032f566c607268e394b988c14"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "97875c8fc34c2230d2695ba1f762cf5b567453a032f566c607268e394b988c14",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "11a70ceee79d28e924274fe27711746810f44da6ae8243e597c37c5fd525877b"
+      }
+    },
+    {
+      "id": "piper-en-gb-vctk-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/vctk/medium/MODEL_CARD",
+        "bytes": 326,
+        "sha256": "53ec6b1fd90d9125d5bebac55261efd27f7e8d6dc962f605a5b5f796df2ec7fb"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "d9f5ba76a83e60e1976f1fa5d6d8c1a6947db9d0f2811e8f23da5945f0eff6e3"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "d9f5ba76a83e60e1976f1fa5d6d8c1a6947db9d0f2811e8f23da5945f0eff6e3",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "2865cd8a11deccba8d366397e1256156a54eeabf1088e1a71171c2700d3fa88b"
+      }
+    },
+    {
+      "id": "piper-en-us-amy-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/amy/low/MODEL_CARD",
+        "bytes": 273,
+        "sha256": "71b07ded301a96346096a71d8f0d64cbb5f49d5d51004dce28bbb7504e3f65f0"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-us-amy-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/amy/medium/MODEL_CARD",
+        "bytes": 284,
+        "sha256": "858419ea604c427ff2e9918556345667eb46397da3c965de75f4f7f0bb50a962"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-us-arctic-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/arctic/medium/MODEL_CARD",
+        "bytes": 289,
+        "sha256": "791f25701640291365e1799966565fa4e388c4c96b5ae478e8f6b74b6e6e22b0"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See LICENSE file"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-us-bryce-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/bryce/medium/MODEL_CARD",
+        "bytes": 405,
+        "sha256": "96042c4ddbd405f6e40e2938b069987f4016a35832114bbefed1ed04242ee532"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares public domain. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "381714499c3127c4b5901e8fd73bd2a301b709feb4079d427ad39a3b087469c0"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "381714499c3127c4b5901e8fd73bd2a301b709feb4079d427ad39a3b087469c0",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "80b4b1190c05b67e1d8b5676709c5139806a4375cdeff6b835a7b21ed1b41e92"
+      }
+    },
+    {
+      "id": "piper-en-us-danny-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/danny/low/MODEL_CARD",
+        "bytes": 275,
+        "sha256": "28a96e3a87f774b964f9b8ce21d9a504dc2fd1c685ab7992ba2487a8a883f5f7"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-us-hfc-female-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/hfc_female/medium/MODEL_CARD",
+        "bytes": 354,
+        "sha256": "108e287f2128ef724e67b0e7b5f886c3f9b5ec7eaa0e07554b815d7d683c4fc3"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "93e616119d8645b65895d3e89c7c132fe4293383462b611bd4cb459fef669e9d"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "93e616119d8645b65895d3e89c7c132fe4293383462b611bd4cb459fef669e9d",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "b7111e66c2adcf1a5e06fad6ffdec841aaa18d29060269903beb1e309f72c7ab"
+      }
+    },
+    {
+      "id": "piper-en-us-hfc-male-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/hfc_male/medium/MODEL_CARD",
+        "bytes": 352,
+        "sha256": "acd9f3607969454dead836c1939d4906a7b7b618f38dfd2c282856d13e4e968c"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "649e3bd89b467cd3d2b97b0f92f1f33756dbc8c8d23fdf9e80f40cc1517affbc"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "649e3bd89b467cd3d2b97b0f92f1f33756dbc8c8d23fdf9e80f40cc1517affbc",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "7246f51e6234041c9994626ea8d7f1ec5055bddad5dd8921c8427d91745f7b01"
+      }
+    },
+    {
+      "id": "piper-en-us-joe-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/joe/medium/MODEL_CARD",
+        "bytes": 281,
+        "sha256": "d2caa63aca0fccb155105e959e393e5c0c0f03a1f388ef5ba217b83ef860c760"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "482fd7c37f9d28145dc14162938918ea7adc6d67896e24af9aa6ccdecbfbaf3f"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "482fd7c37f9d28145dc14162938918ea7adc6d67896e24af9aa6ccdecbfbaf3f",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "5e495cdb59656f21298a1164514ede1e6c93d8b5b897e1b1b7925769e890490b"
+      }
+    },
+    {
+      "id": "piper-en-us-john-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/john/medium/MODEL_CARD",
+        "bytes": 498,
+        "sha256": "a056da65cd70dcbda96fc3420fe8d3442dbf3c8b75f49cdf800a715b42e299d1"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares public domain. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "12a2fc8d7ce9d3511cc2c244d499b6128a664aa1d502c41d9d0f82202840191b"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "12a2fc8d7ce9d3511cc2c244d499b6128a664aa1d502c41d9d0f82202840191b",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "2e7b9badb68123045b34e634e4a324c6068e5f4282632d683d3535f76fcfc3f9"
+      }
+    },
+    {
+      "id": "piper-en-us-kathleen-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/kathleen/low/MODEL_CARD",
+        "bytes": 281,
+        "sha256": "a1b189f4ef14800ce46e85752daf6ef1bc9d3f0d9ac876065dcd8518e7d3e680"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "399af2bc6d75d76d1ed8b28f7f54080fd451cba75645ef403c3affba7938afe8"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "399af2bc6d75d76d1ed8b28f7f54080fd451cba75645ef403c3affba7938afe8",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "fd29570e19fd3cf47350811c42d33c386872fdd2c5534ecb5cf3db5affd93aae"
+      }
+    },
+    {
+      "id": "piper-en-us-kristin-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/kristin/medium/MODEL_CARD",
+        "bytes": 479,
+        "sha256": "8c181b1d5f7d8152b914faab941fcbe6b8f0495e63e5189d6f27b8c68c8393fc"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares the LibriVox dataset public domain; see the retained model card for provenance and training details.",
+        "entry_sha256": "21faf55f6292648b8222a2661efe2d6ee2120fbfccfb980a5df393a7c12bbeaf"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "21faf55f6292648b8222a2661efe2d6ee2120fbfccfb980a5df393a7c12bbeaf",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "8646b96a4bb595c0563e89e338683da2ca93719532e014f027b014b33dd63d01"
+      }
+    },
+    {
+      "id": "piper-en-us-kusal-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/kusal/medium/MODEL_CARD",
+        "bytes": 279,
+        "sha256": "a454839f8e027b64aa4be40edb33d7fb4dd17cb9cab6d406a872c130f35ba763"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-us-l2arctic-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/l2arctic/medium/MODEL_CARD",
+        "bytes": 365,
+        "sha256": "23b87cd6d134dae7bb4faac7ba8f6013b9e412d7a56e28099d2338e20a8b5cb2"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by-nc/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "76233d2eec6d4a64a6c0d2efa466c938850dd7fccb05267e8cc1e0df969ee1b9"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "76233d2eec6d4a64a6c0d2efa466c938850dd7fccb05267e8cc1e0df969ee1b9",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "4ce842f65a8567281461f84095789d20019450628f362e06b4ff735848ae4d38"
+      }
+    },
+    {
+      "id": "piper-en-us-lessac-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/lessac/high/MODEL_CARD",
+        "bytes": 347,
+        "sha256": "7671826d947a0ffc11dd76af0bd890d93e956b00358696ad71348f21aa827100"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-us-lessac-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/lessac/low/MODEL_CARD",
+        "bytes": 345,
+        "sha256": "f4f5b5ab354ab71dd2c71b571bcd0879b259ddfabaa5169b968a60427d0b73f3"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-us-lessac-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/lessac/medium/MODEL_CARD",
+        "bytes": 351,
+        "sha256": "ce49eb457742208166d399a40cdec2c7fa9db77960930031564ab56f12882645"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-us-libritts-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/libritts/high/MODEL_CARD",
+        "bytes": 255,
+        "sha256": "c478d826aae8a6332f69509271a56083b9ece014a993e16fc79cb94968106a5f"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "3399522591d5c97720324eff6cb380a01aeb5de8ceaeb90bf5beebe37f4baa2c"
+      },
+      "blocked": "904 speakers exceeds native limit 256",
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-us-libritts-r-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/libritts_r/medium/MODEL_CARD",
+        "bytes": 279,
+        "sha256": "0ccde6927e5bb4d743f4ea39618a9387ba18cca3351220a8a9cfdbc68b30fcb9"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "d70d129efe8a0c012573c049f7f5284a181da62369a80b3f6de0e79e9837b92c"
+      },
+      "blocked": "904 speakers exceeds native limit 256",
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-en-us-ljspeech-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/ljspeech/high/MODEL_CARD",
+        "bytes": 513,
+        "sha256": "289f7421072d689a3d91f6c632f486af46f9b8b04417536104a4ea667b8a394b"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares public domain. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "365c2c741036ee2f64385469dc5ae51cec5f359f9de906e854853fcd490ed206"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "365c2c741036ee2f64385469dc5ae51cec5f359f9de906e854853fcd490ed206",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "d0db73a5d15001d343c786bda84b5e92fc3be880db4ac808f901c4096c869802"
+      }
+    },
+    {
+      "id": "piper-en-us-ljspeech-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/ljspeech/medium/MODEL_CARD",
+        "bytes": 517,
+        "sha256": "fbee1529c89d36b3fe76d7e9f3f832dce17f44900a52d76a9bda735654766b4d"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares public domain. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "d0874b3fae0aa1e7ac23973203c8f4dda74877269605afbc9f35dff5ba45c649"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "d0874b3fae0aa1e7ac23973203c8f4dda74877269605afbc9f35dff5ba45c649",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "906d79a9557cc7508cca3d26f4c2e80ef15e003b8682ff2818ca8d9907994d7c"
+      }
+    },
+    {
+      "id": "piper-en-us-mike-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/mike/medium/MODEL_CARD",
+        "bytes": 282,
+        "sha256": "c67ea6767edcfd28684b6414a2311a74c4d72e6ad7414316d5d8d6faa067f2ab"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "5f46e73f172a38c8614c531aaa94f036698d3a7fcb1cf761bab9692562b7c5fa"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "5f46e73f172a38c8614c531aaa94f036698d3a7fcb1cf761bab9692562b7c5fa",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "0c5718161f242c673f3c4df6038ae13dd109f4ffc232c6f398150a69b200fa84"
+      }
+    },
+    {
+      "id": "piper-en-us-norman-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/norman/medium/MODEL_CARD",
+        "bytes": 528,
+        "sha256": "60eaf4d10009d1bd4a1aa555d337dae00f60421d72fee415b9139a021e7cb5d0"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares public domain. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "4429df057f81917e1d3001d8062098094a698c042162e1d4221414e8cc26ed92"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "4429df057f81917e1d3001d8062098094a698c042162e1d4221414e8cc26ed92",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "82e338b9e37e5db5694ed19728b594902cdf8a58ed1c308ff8188d5181728375"
+      }
+    },
+    {
+      "id": "piper-en-us-reza-ibrahim-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/reza_ibrahim/medium/MODEL_CARD",
+        "bytes": 635,
+        "sha256": "eec97d7df2143f981debaa929fced55086667e5ff1f61a3e1eda7b7f51f89a53"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "246634e4a581c55fdb5218d46299f2560eb8574e4c5d1e732b52549ff66a513b"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "246634e4a581c55fdb5218d46299f2560eb8574e4c5d1e732b52549ff66a513b",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "47a18901b1e755104dd5820f03decd373d8eabf12eaba4738741d1a6974526cb"
+      }
+    },
+    {
+      "id": "piper-en-us-ryan-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/ryan/high/MODEL_CARD",
+        "bytes": 265,
+        "sha256": "7c3b337dd4e96c3f311f476118b15d93867aefa4bee54263e250c45f759fad0d"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY-NC-SA 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "3bacf07b47b212ab29dafc1793dcbe9bce1bf4858d7e611ad18cbf292f95a39d"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "3bacf07b47b212ab29dafc1793dcbe9bce1bf4858d7e611ad18cbf292f95a39d",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "bef62ceaaf3e87972d6aa7b21cf4ec6185038bebad1c3ce93baf0be51cfc5335"
+      }
+    },
+    {
+      "id": "piper-en-us-ryan-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/ryan/low/MODEL_CARD",
+        "bytes": 263,
+        "sha256": "82409c9c68863650e407a89dcebfc946afd992203593f0e4af234bce83c4144d"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY-NC-SA 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "b97e13ad7a8a0946ce290ab18b21db69d93764031f1a4ba4a4508760811da354"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "b97e13ad7a8a0946ce290ab18b21db69d93764031f1a4ba4a4508760811da354",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "c39c4f066171fecad2e6ab05ca5b2eaa269fcd6baa6fce0a105a4409bac36de4"
+      }
+    },
+    {
+      "id": "piper-en-us-ryan-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/ryan/medium/MODEL_CARD",
+        "bytes": 306,
+        "sha256": "3a24ae5f7aa856199f338ad9af784cda796734f397f7e1b4a1bd3c07d06945b1"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY-NC-SA 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "84fd6ee86c987c8ec2dea72b19c19725be1298b425733a59ad447b9969fdabab"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "84fd6ee86c987c8ec2dea72b19c19725be1298b425733a59ad447b9969fdabab",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "0305d6e5ba9b64755a35b52fe955a5541f96e7f05c22be93603ae7d5585a3368"
+      }
+    },
+    {
+      "id": "piper-en-us-sam-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_US/sam/medium/MODEL_CARD",
+        "bytes": 354,
+        "sha256": "37dd0ccae2a39c9ad24ed43d277b71826b4f221f212a3f6754d3a960530450b5"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://www.apache.org/licenses/LICENSE-2.0.txt. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "b2372a1cd1794bd582e90f0bc5cd65f26f447112371f85b1c27faec6d2f0959a"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "b2372a1cd1794bd582e90f0bc5cd65f26f447112371f85b1c27faec6d2f0959a",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "3f1649f47b471a99433f9ffc33e7b6b491d767f3efab56900655ab1e719bb3fb"
+      }
+    },
+    {
+      "id": "piper-es-ar-daniela-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_AR/daniela/high/MODEL_CARD",
+        "bytes": 353,
+        "sha256": "39fda44bb85009b0bd7aabb455b113e50abf1f2a2013f3264c482691105e4e3b"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares Attribution-ShareAlike 4.0 International. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "c32af3b08461e45ab18db970444cd1aa15a612d718a567966642908fe57df586"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "c32af3b08461e45ab18db970444cd1aa15a612d718a567966642908fe57df586",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "800f980d885216cc62a23e618acb4311203bf9fb0c1dfd3d03253f4ac70d325d"
+      }
+    },
+    {
+      "id": "piper-es-es-carlfm-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_ES/carlfm/x_low/MODEL_CARD",
+        "bytes": 250,
+        "sha256": "a6e62a3d36c37c7702d877f784001208b952e2bf4d17c72a6b5da442fbefb4b3"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares Public domain. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "1068619e1dd1505966840e2206972ec997675083b36d2bfdd7b757fec3339fe4"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "1068619e1dd1505966840e2206972ec997675083b36d2bfdd7b757fec3339fe4",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "2f66c4f77f060b2cbaca7e108abbdf06d64e427b652c825ff2d2e5ee0d17ad8c"
+      }
+    },
+    {
+      "id": "piper-es-es-davefx-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_ES/davefx/medium/MODEL_CARD",
+        "bytes": 276,
+        "sha256": "420703b5d8ea239b729f13d83f31eea9bae5fcb89447de23ebc94aa8a4768f95"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "0bb5cfc6103e2281d34d2f8224cf3f43bea0436f8aaa5f622dd2610020829df0"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "0bb5cfc6103e2281d34d2f8224cf3f43bea0436f8aaa5f622dd2610020829df0",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "59ed4fb3246a828f2dd028389009a96a33bb12bfe568d37105de3550d6999b62"
+      }
+    },
+    {
+      "id": "piper-es-es-mls-10246-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_ES/mls_10246/low/MODEL_CARD",
+        "bytes": 257,
+        "sha256": "fa4273e09b6814c17cacd4d509d62392c31db877e23a1661166886896aa461a6"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "b04eb784d8a6389e71eb96786aac4638a0c3320e218881ab0266a635b3dbd122"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "b04eb784d8a6389e71eb96786aac4638a0c3320e218881ab0266a635b3dbd122",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "c6924d27150d703a0a821debbeca4b29a6e35399e651382ff03bcbaa196ca0d6"
+      }
+    },
+    {
+      "id": "piper-es-es-mls-9972-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_ES/mls_9972/low/MODEL_CARD",
+        "bytes": 256,
+        "sha256": "6b56ddebd760bf25091b5c0f52da28f89da9d0cf97e30fc29027a0fa95979f2c"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "dcc514343b00ffd2368bdcb68ce310e97c8a275ef5a1b6b6fee7f390c4fec45c"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "dcc514343b00ffd2368bdcb68ce310e97c8a275ef5a1b6b6fee7f390c4fec45c",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "39d7cfde7ac3352b771f743b148687819a6aecf5874b0c0fac1fddadd9a97776"
+      }
+    },
+    {
+      "id": "piper-es-es-sharvard-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_ES/sharvard/medium/MODEL_CARD",
+        "bytes": 392,
+        "sha256": "37655314d08fe8a0900abc628d3bcbee48ffbdd8fad9306b89525a0ada20fefc"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares http://creativecommons.org/licenses/by/3.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "50a889a5d1520e643e6db2ddb65058b743557e5ec730cdbd28d0362fc88be95e"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "50a889a5d1520e643e6db2ddb65058b743557e5ec730cdbd28d0362fc88be95e",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "c70da36128da76a3a3a76a59479abf01cb8ef3750a3c782b7688fa90c9fe2a28"
+      }
+    },
+    {
+      "id": "piper-es-mx-ald-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_MX/ald/medium/MODEL_CARD",
+        "bytes": 320,
+        "sha256": "1f0694ceb3f1e78c1e2ee0e2d5da40f19f965bc638e1b4fb4fca9bdca420d713"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares http://unlicense.org. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "49f8a48e64df10380c536a6cd0109f7958449885d164c147351fb020e5bd829d"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "49f8a48e64df10380c536a6cd0109f7958449885d164c147351fb020e5bd829d",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "d8518ef5da33a124f37aa983850b00185f429ceb5455162dcc6df3a17abcc8a2"
+      }
+    },
+    {
+      "id": "piper-es-mx-ald-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_MX/ald/x_low/MODEL_CARD",
+        "bytes": 589,
+        "sha256": "75de85e71247db75274624efd6d816babf37cfd34358abed402b0e979f4aa5b9"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: no explicit licence in model card"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-es-mx-claude-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_MX/claude/high/MODEL_CARD",
+        "bytes": 247,
+        "sha256": "f03da57c1e945f6d709b01e7699d26018e145570139de52ac7569aaa8962a174"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares apache-2.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "90f3ae9fac25d68331f223059551e8a6f5111b17cbecffa5c24dc58e0878795d"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "90f3ae9fac25d68331f223059551e8a6f5111b17cbecffa5c24dc58e0878795d",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "dc279b931f80086603ac68fff2a1ccd734ebba991b2ba45da2d08421601688f7"
+      }
+    },
+    {
+      "id": "piper-et-ee-news-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/et/et_EE/news/medium/MODEL_CARD",
+        "bytes": 449,
+        "sha256": "5ad77aaa52c3eff92822252136c4ac4f23550e4acf128cb50cf9b30bfcb22b0d"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY (META-SHARE \"Available - Unrestricted Use\"). See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "440ffe800d91d138e0b5e5f1d6b308c7283ab128b885713d0d99b0f760b6e691"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "440ffe800d91d138e0b5e5f1d6b308c7283ab128b885713d0d99b0f760b6e691",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "88551bc931646eace4d5c89ffdf61960888076202644fd519cbb67ffc9542370"
+      }
+    },
+    {
+      "id": "piper-eu-es-antton-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/eu/eu_ES/antton/medium/MODEL_CARD",
+        "bytes": 310,
+        "sha256": "61e1cf7bba48a290be225a1afb3167094fc16c479cea655b11c8ff87e9245264"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares Creative Commons Attribution 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "731f25d6a3a66b91930d2eef51f4dd2314c3fdd225af122c6d28c04f8d0115a9"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "731f25d6a3a66b91930d2eef51f4dd2314c3fdd225af122c6d28c04f8d0115a9",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "5aa83133cb9b838945c738adee817415d2d665f64ebed24df7d571e23b86b4fd"
+      }
+    },
+    {
+      "id": "piper-eu-es-maider-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/eu/eu_ES/maider/medium/MODEL_CARD",
+        "bytes": 310,
+        "sha256": "bb7f284582ddd497f500b5275e2bd4f06031f483a63b0f5367dae18c9ae214ff"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares Creative Commons Attribution 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "75cf8e806016346e32b68ad32e8f2c291d534c8fe024c13609e6726b647ec2a0"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "75cf8e806016346e32b68ad32e8f2c291d534c8fe024c13609e6726b647ec2a0",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "0d39f0648a071512b903f1a48eab4c1d2770ac52693c939a7883c46cafaa8750"
+      }
+    },
+    {
+      "id": "piper-fa-ir-amir-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/amir/medium/MODEL_CARD",
+        "bytes": 264,
+        "sha256": "0d7d315699945ac830162f82d485d79af51a33081a7649e8992726bd4bba2384"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "f9d08e7a47aa5794f67e7b4bca457380a2779c817974f5e09e918995f8b9bcd4"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "f9d08e7a47aa5794f67e7b4bca457380a2779c817974f5e09e918995f8b9bcd4",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "42cef274612f9e436c8e81e709fd81cdefc2c04ecfb2d2782af0e5e07db9b40d"
+      }
+    },
+    {
+      "id": "piper-fa-ir-ganji-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/ganji/medium/MODEL_CARD",
+        "bytes": 247,
+        "sha256": "8ad13000ccc8fa6e249b00659aa5b4a938661fa4ac272baf3a2d50faa2504c69"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "1d58a3c56c785d2b844a7b22491491ac1938db7e2ee41f884fbf13421011f0e3"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "1d58a3c56c785d2b844a7b22491491ac1938db7e2ee41f884fbf13421011f0e3",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "d0b0888a2b2c9648e209054befa09d129050e1ba377d4300c754de412d738fc4"
+      }
+    },
+    {
+      "id": "piper-fa-ir-ganji-adabi-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/ganji_adabi/medium/MODEL_CARD",
+        "bytes": 253,
+        "sha256": "9d4b44c97de206ab47d770ea6f3bbea3963a72c2b1b4306630aa88312a6ad575"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "c46d3628063a9d1829f9e5fc86d7b3dcb1fadd6faa8117c9e7609fbf5a8dec4b"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "c46d3628063a9d1829f9e5fc86d7b3dcb1fadd6faa8117c9e7609fbf5a8dec4b",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "51f0415f7f1f2d7f0a79fdd903d22966793f706969a3e1a74f831c17daa95988"
+      }
+    },
+    {
+      "id": "piper-fa-ir-gyro-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/gyro/medium/MODEL_CARD",
+        "bytes": 262,
+        "sha256": "a51ac7671fae4cf3f4e2448328ca192d934a9057ceb2fda60c4378dc80067778"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-fa-ir-reza-ibrahim-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fa/fa_IR/reza_ibrahim/medium/MODEL_CARD",
+        "bytes": 635,
+        "sha256": "eec97d7df2143f981debaa929fced55086667e5ff1f61a3e1eda7b7f51f89a53"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "b128cd402dd320b6ba6953b23cc63a27f80f1a46a08ba0684920d202404d2ef4"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "b128cd402dd320b6ba6953b23cc63a27f80f1a46a08ba0684920d202404d2ef4",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "d29b3f940ca4baa01fb3f5f31680af7bb2d1ae9dcd3fd9cb072ed92e609811b1"
+      }
+    },
+    {
+      "id": "piper-fi-fi-harri-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fi/fi_FI/harri/low/MODEL_CARD",
+        "bytes": 284,
+        "sha256": "13bf9449148f5ec5167094561b41812be309893b9b93a29eff07bc0b592230b7"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "2289bc01eba7f1f8efb8225f601dea65435f3d79d2bdec831213261caf6d2ec8"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "2289bc01eba7f1f8efb8225f601dea65435f3d79d2bdec831213261caf6d2ec8",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "764171bbfe90449ef970f1ff3348ac8a0c67ec80e0b189ce5bdec53764b5c271"
+      }
+    },
+    {
+      "id": "piper-fi-fi-harri-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fi/fi_FI/harri/medium/MODEL_CARD",
+        "bytes": 304,
+        "sha256": "a0a7fa3f046f1e582689db76f93099735530343a3126f3f40ed64380c419a0b2"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "73d9f39a979913a62f488bd810e09ad700432927c3bd53b212496efd50f58917"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "73d9f39a979913a62f488bd810e09ad700432927c3bd53b212496efd50f58917",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "e1039021051e41114e4c4487197f195e13e44c9747930d45721049721a81b0b3"
+      }
+    },
+    {
+      "id": "piper-fr-fr-gilles-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/gilles/low/MODEL_CARD",
+        "bytes": 300,
+        "sha256": "29d0964475ce042f5cd59c46bbd996fac785a84476c09d0973295d3528456974"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "58f21f8419158a036d4b919a37cfad97cafb1df67a647bb1dd5d71b0154b163a"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "58f21f8419158a036d4b919a37cfad97cafb1df67a647bb1dd5d71b0154b163a",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "aceb08ad706159327162587157aeb7217c8a7d01112bfcd2b2995e4dc68d411b"
+      }
+    },
+    {
+      "id": "piper-fr-fr-mls-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/mls/medium/MODEL_CARD",
+        "bytes": 222,
+        "sha256": "443ca90f1ed8e57d9fb802da6dc19c302d5d9b51ddbfbf27a17f3fb5c37ad154"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "ea8368f71a46da8039bba5bd16d72c73634cb8fdc277c2eb0cee7d5e7b3f0447"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "ea8368f71a46da8039bba5bd16d72c73634cb8fdc277c2eb0cee7d5e7b3f0447",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "1cda5d03ab6ae075c0076ed1e51c1369e8cf852d6202d257da2ca357c37c9eb0"
+      }
+    },
+    {
+      "id": "piper-fr-fr-mls-1840-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/mls_1840/low/MODEL_CARD",
+        "bytes": 257,
+        "sha256": "2816c84deb72d3a46c0a6588852f7d4be16e8b76cac48c8d807c77f1a0df9044"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "8595fff850d6f2306f1b741bfaa0e69f00dc1924cdb215cdec22799dbc257739"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "8595fff850d6f2306f1b741bfaa0e69f00dc1924cdb215cdec22799dbc257739",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "76a5edf589d78e27a010a30f2d82e1564db082f1c7b9c4b69aa85170db20952f"
+      }
+    },
+    {
+      "id": "piper-fr-fr-siwis-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/siwis/low/MODEL_CARD",
+        "bytes": 274,
+        "sha256": "ba5175f04dadf9ce2d0e19b9ae2164320f1ada740377166620259e321470d488"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "dfe47e188736ac499f88afe7725d4152080625f28a0c116699f44b2645c02fbe"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "dfe47e188736ac499f88afe7725d4152080625f28a0c116699f44b2645c02fbe",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "4428295e143159d3e03d83d21df30598ea6e6d4a6d0c7fa662f868abd12e30cd"
+      }
+    },
+    {
+      "id": "piper-fr-fr-siwis-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/siwis/medium/MODEL_CARD",
+        "bytes": 284,
+        "sha256": "bd8b8d079d4d3d2c4cc20345889bbcd586d72f021a132f93357a763eb5232cce"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "93da93dde8d3cea2047ed96df4429a5d520f48d63845eff703698d8d5c5f7379"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "93da93dde8d3cea2047ed96df4429a5d520f48d63845eff703698d8d5c5f7379",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "670bec4dfb868dc2ae1a27a6de2887fc1d7d6b11c8aaaf4ef2d1eafaff172611"
+      }
+    },
+    {
+      "id": "piper-fr-fr-tom-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/tom/medium/MODEL_CARD",
+        "bytes": 233,
+        "sha256": "ece4132df4a1ae2f90e22c9f01539aec14acb7f8dc8ded64edd2051945d0f1e9"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares AGPLv3. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "000830a1d35afdb226612aa07ad906b144d8fded8b16263af01260478c377e42"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "000830a1d35afdb226612aa07ad906b144d8fded8b16263af01260478c377e42",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "bf257871fb371b4c6d3cb06ce95e033af7ae2bb78b238966191af599d61a61e2"
+      }
+    },
+    {
+      "id": "piper-fr-fr-upmc-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/upmc/medium/MODEL_CARD",
+        "bytes": 316,
+        "sha256": "cf1ac7309e0e04bb159b7e6ae80bc8f66bfce9bdfb3e62ae93a6f57e210ab98a"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares http://creativecommons.org/licenses/by-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "bd4ddb02548ab390b821e4d10d9871a127588a41c331b565d1a3e53a8af42c69"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "bd4ddb02548ab390b821e4d10d9871a127588a41c331b565d1a3e53a8af42c69",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "7a7adf5aff610c6783ff8eb1f2ef7c920850d37a99c0385913a37da15821cea3"
+      }
+    },
+    {
+      "id": "piper-he-il-saspeech-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/he/he_IL/saspeech/medium/MODEL_CARD",
+        "bytes": 269,
+        "sha256": "78846f04e22c2912a1af332026cff9063b711dd7c9bb7c0c8c505e6c2e984ba6"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See dataset URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-hi-in-pratham-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hi/hi_IN/pratham/medium/MODEL_CARD",
+        "bytes": 304,
+        "sha256": "89cf491ea99e69b27c94599cecea3f0fc6aeacb30f4ccdb12897f659868df29e"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares http://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "d5ca1bea0a110d26b1c9019b5e4ef507147cee9c96b29c138c6815f50816f194"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "d5ca1bea0a110d26b1c9019b5e4ef507147cee9c96b29c138c6815f50816f194",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "90850f6947b74076b284da9b99453a6bfe1c5e2f56024da9426ce0d561b68186"
+      }
+    },
+    {
+      "id": "piper-hi-in-priyamvada-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hi/hi_IN/priyamvada/medium/MODEL_CARD",
+        "bytes": 307,
+        "sha256": "8ce0324466010a59127fe8cab16416befcca136abf4b57ebd8ad5a2033c2021e"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares http://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "bd25c49a17fd26ad2a1a13c464ff23ff7621bcbd26c39d6d3223efb274a1f20e"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "bd25c49a17fd26ad2a1a13c464ff23ff7621bcbd26c39d6d3223efb274a1f20e",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "bdc521506c2b9480ff1616bbe0233d5f88d23d35e3c7beb9281b28462196bbfa"
+      }
+    },
+    {
+      "id": "piper-hi-in-rohan-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hi/hi_IN/rohan/medium/MODEL_CARD",
+        "bytes": 359,
+        "sha256": "231592a0c299bacae6e5945ee27d5a36204e14ee9d83f01ee15e34a26810651e"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: https://www.iitm.ac.in/donlab/indictts/downloads/license.pdf"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-hu-hu-anna-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/anna/medium/MODEL_CARD",
+        "bytes": 278,
+        "sha256": "2134551c09f616ba333640f419267d45aeed5443b53ffde79a11a715737f8546"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "9a56ac415a45a3d45cd46f8ce69c3c6b5833fa62a0d193323e1ec4324125cba5"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "9a56ac415a45a3d45cd46f8ce69c3c6b5833fa62a0d193323e1ec4324125cba5",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "6fa4079583e533b5f01c24296220b98df5aae3331cfe9d58e9919bf55e34404c"
+      }
+    },
+    {
+      "id": "piper-hu-hu-berta-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/berta/medium/MODEL_CARD",
+        "bytes": 279,
+        "sha256": "d7b73edbe69c0ca179680839a063306796dcef1d3cc50b342e2144a2a8297865"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "5966cdcef03ef250f7adcae0510b80e17ab33a9e3ff57f3a7bfe8fa586fbb6aa"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "5966cdcef03ef250f7adcae0510b80e17ab33a9e3ff57f3a7bfe8fa586fbb6aa",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "40ff5cf5a9678b664aa9505dc2f7bc80bb5e97fb25846ec2f0f11c3e75f77610"
+      }
+    },
+    {
+      "id": "piper-hu-hu-imre-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hu/hu_HU/imre/medium/MODEL_CARD",
+        "bytes": 278,
+        "sha256": "7816348278ffe352e0b41183705b163810c5439f9d4e361cbc7ee87aa919d612"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "3a2561d8a3571bff60e3229f2fcdbece04aa13a0ccb56537264fc573638a28b6"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "3a2561d8a3571bff60e3229f2fcdbece04aa13a0ccb56537264fc573638a28b6",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "0e83500199474e8809c0434f0a6b46100af4a4c0ebf0a7f0e29b54b23fe378db"
+      }
+    },
+    {
+      "id": "piper-hy-am-gor-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hy/hy_AM/gor/medium/MODEL_CARD",
+        "bytes": 269,
+        "sha256": "8aa657540385acbc6e651185eb60f162a9317ab1cce1d50ab08f9604975c401b"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares GPL 2.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "1673f4b99845d0ef6b6abbcbf09a4d59f49b8bc92c6d2fddf066db0de61de6d6"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "1673f4b99845d0ef6b6abbcbf09a4d59f49b8bc92c6d2fddf066db0de61de6d6",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "f7891f0db00cce0e403eaefd03764fa19db96ac6bc7996a224c0982d37a50cc7"
+      }
+    },
+    {
+      "id": "piper-id-id-news-tts-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/id/id_ID/news_tts/medium/MODEL_CARD",
+        "bytes": 316,
+        "sha256": "cc134d8c8fce95d2486a0e5ae60b40c17451a876cf7d36df0f4110589fc40538"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-is-is-bui-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/is/is_IS/bui/medium/MODEL_CARD",
+        "bytes": 246,
+        "sha256": "b01efb62ec770a1c1ebe2015d8f9985e6e1bf43fd72a42a6710d142e93752ce3"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-is-is-salka-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/is/is_IS/salka/medium/MODEL_CARD",
+        "bytes": 241,
+        "sha256": "38f98bebab87c693a99382d48d538f9b7d741d9d41ef9135dbd8eb5f7c23348a"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-is-is-steinn-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/is/is_IS/steinn/medium/MODEL_CARD",
+        "bytes": 242,
+        "sha256": "245e1fe50676587d9a0f1b4219ee076722b5f0287f8aa0c83be84bd75e40fe46"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-is-is-ugla-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/is/is_IS/ugla/medium/MODEL_CARD",
+        "bytes": 240,
+        "sha256": "7ebe554f5261950caa98624a3758a3b37371a8101ec532836e99018925c6ddca"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-it-it-paola-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/paola/medium/MODEL_CARD",
+        "bytes": 303,
+        "sha256": "c53fd0070dc93b438edbce06728eb83759ba030fff0cce523209ee4a0a6363c0"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-it-it-riccardo-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/riccardo/x_low/MODEL_CARD",
+        "bytes": 260,
+        "sha256": "7ce3b2fc4f454c84936887971574e436cc2154049b427a530f70bee050b2fdc6"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-it-it-serena-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/serena/high/MODEL_CARD",
+        "bytes": 262,
+        "sha256": "5c388e5b6df184359af472b665a4318b8da8948455dcc39eb48de408ad2d693c"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY-4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "e15eafa41719de99fd5514034388fa6086e24616e407d8b6c381a93ac5fa743e"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "e15eafa41719de99fd5514034388fa6086e24616e407d8b6c381a93ac5fa743e",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "8537f78162d3d730d662c6342e6bb73b8f37ed9a39d2768f518f69e8dd717adc"
+      }
+    },
+    {
+      "id": "piper-it-it-serena-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/serena/medium/MODEL_CARD",
+        "bytes": 266,
+        "sha256": "1d0dbdc0182d19f6510fd3dcd2893587912a65f8cafe6da57754863f168bbe7e"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY-4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "58aaabbf5b470a1d29d357d28dbd64a2957849d1f0dd4ed39678cba01a4fe6b1"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "58aaabbf5b470a1d29d357d28dbd64a2957849d1f0dd4ed39678cba01a4fe6b1",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "6f036b8d38b135e8a5e43531fff87d6d661584afa8c782334ac2716d079b4642"
+      }
+    },
+    {
+      "id": "piper-ja-ja-hi-fi-captain-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ja/ja_JA/hi_fi_captain/medium/MODEL_CARD",
+        "bytes": 361,
+        "sha256": "73e9bfa50a268cc1dd62fda8c6cd7cb9f1857c599e006585cdae247d05217b13"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "b01a4ea6ce0623bc55810213ccf69884d03a635ae30cc2481e5a84992a27405b"
+      },
+      "blocked": null,
+      "error": "Native validation failed: Voice not found: Piper model unavailable: unsupported phoneme type",
+      "exported": false,
+      "validation": {
+        "status": "failed"
+      }
+    },
+    {
+      "id": "piper-ka-ge-natia-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ka/ka_GE/natia/medium/MODEL_CARD",
+        "bytes": 288,
+        "sha256": "67224b9fa87999fc78c8289305f40348941423c5ad3fd1f1baefb2be0b8a6c18"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See LICENSE file"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-kk-kz-iseke-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/kk/kk_KZ/iseke/x_low/MODEL_CARD",
+        "bytes": 239,
+        "sha256": "331b0fc4cd0fa5f35fd84d4e6952840322f1e98b4de3b67ae235ba9165eb97f8"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY-4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "fb49d96ef68aeea1c5d6fdf3404659283305891346da9ed9f97bfe29b4e4b6c1"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "fb49d96ef68aeea1c5d6fdf3404659283305891346da9ed9f97bfe29b4e4b6c1",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "0491b7ec57c2b2b9cec637b0b8a2e19bc3e1c503d48cf9167c35de5a519c221c",
+        "evidence_sha256": "deec35bfc688c85ddc5b0cc92a854ec2f216dee1e39a9651a2ae0ca4527941b3"
+      }
+    },
+    {
+      "id": "piper-kk-kz-issai-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/kk/kk_KZ/issai/high/MODEL_CARD",
+        "bytes": 237,
+        "sha256": "1b0704348a17a5f84fba84caa20d14a116eea9953bb9bc147ada4234d18687a2"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY-4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "976d296284a34a85289e3d73f17b3e21244b22a201ec8d6dc2f3ea80d9144c71"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "976d296284a34a85289e3d73f17b3e21244b22a201ec8d6dc2f3ea80d9144c71",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "37c560b705acd33dee38ea28cbb9ed312aafe3601a2f89330e49bec0de3a070d"
+      }
+    },
+    {
+      "id": "piper-kk-kz-raya-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/kk/kk_KZ/raya/x_low/MODEL_CARD",
+        "bytes": 238,
+        "sha256": "e71341b5c00109f19061694306ce84d95de4cec4e403916397ba7d1147dbc87b"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY-4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "031d8f82a642d4acbae286293164cb42b7171afe12931ca5f418864cd5aee0c5"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "031d8f82a642d4acbae286293164cb42b7171afe12931ca5f418864cd5aee0c5",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "b6a8efa94c1b316d171bd55c10fd807333c747ca1e2600bcaca9ddf3647287b0"
+      }
+    },
+    {
+      "id": "piper-ko-kr-kss-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ko/ko_KR/kss/medium/MODEL_CARD",
+        "bytes": 333,
+        "sha256": "792db9e4889b69bf56bf49ed584809292110e16bf1fc904ff2b99faf8f778d6d"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "93407d821cb19f7c1dfccfd7e4c93c8020db759df64736de1e72f0e6535c2f95"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "93407d821cb19f7c1dfccfd7e4c93c8020db759df64736de1e72f0e6535c2f95",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "f85cd7b4b997a93fce690f8e27b1fba3d1680585ee097dd86bec96f016fcc58e"
+      }
+    },
+    {
+      "id": "piper-ku-tr-berfin-renas-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ku/ku_TR/berfin_renas/medium/MODEL_CARD",
+        "bytes": 3756,
+        "sha256": "9c65915ac8c7e3536e322fb8f3f4b285e2e007068588def12eaac815e3bed615"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY-NC 4.0; commercial use restricted. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "18270602ae3a3404f93109d932a72fc16b52231eefa3924196158e910835fbde"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "18270602ae3a3404f93109d932a72fc16b52231eefa3924196158e910835fbde",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "d259c56905d0d5e85338122cd66b2c61d437976888fc6678995c9e15b8b2a23d"
+      }
+    },
+    {
+      "id": "piper-lb-lu-marylux-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/lb/lb_LU/marylux/medium/MODEL_CARD",
+        "bytes": 330,
+        "sha256": "613dc86e24d7ebd06ca1a91b04584636528a25fad1ba62318ff5622211b1dc10"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares http://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "adecd34238d2a165e258d82be6951273557fced38341259601c0abdc29f34139"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "adecd34238d2a165e258d82be6951273557fced38341259601c0abdc29f34139",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "655584755a1672fd29f3f79b45c29b07a60141ff83a8257d3d3c5f0c9b9dba81"
+      }
+    },
+    {
+      "id": "piper-lv-lv-aivars-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/lv/lv_LV/aivars/medium/MODEL_CARD",
+        "bytes": 257,
+        "sha256": "6a950a9f9c95b893b7fd3553f5b42f5b1025fb5fbc004d3924d99e92250b69cf"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0 1.0 Universal. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "defe765f7e8cbd432d5b065843d42575e2aa1c4e34b8fef2c16ecff3e5c72d66"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "defe765f7e8cbd432d5b065843d42575e2aa1c4e34b8fef2c16ecff3e5c72d66",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "a723119fca2382215c5e817e0f90af696c5fd84ebfe0c2275ffccfb2504d3fc7"
+      }
+    },
+    {
+      "id": "piper-ml-in-arjun-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ml/ml_IN/arjun/medium/MODEL_CARD",
+        "bytes": 308,
+        "sha256": "0115bfc12e2b7d9cc28b43e2ebc746e402b6ed867c619ae61bc80d0427a95c83"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-ml-in-meera-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ml/ml_IN/meera/medium/MODEL_CARD",
+        "bytes": 308,
+        "sha256": "a1aea09d7a2b82180f2833cc07495f9d1d4999c9fa937f0f1756d38b1474f80c"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-mr-in-google-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/mr/mr_IN/google/medium/MODEL_CARD",
+        "bytes": 272,
+        "sha256": "1591a13ba1c4b97af9f33571ed804a198705a01c37e96d604fe151cb004fb40e"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares Attribution-ShareAlike 4.0 International. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "d2a29bbab713c1f13612c3f241a0582a1e14560299092bcf6b027c0dc4008296"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "d2a29bbab713c1f13612c3f241a0582a1e14560299092bcf6b027c0dc4008296",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "bc8619ea1a6c29c8b1847f5d2275c23c62c3af0e8002998c7abc574260477bfb"
+      }
+    },
+    {
+      "id": "piper-ne-np-chitwan-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ne/ne_NP/chitwan/medium/MODEL_CARD",
+        "bytes": 276,
+        "sha256": "127e85643329612dbebd7a071dd0f69a03439ceecdec5b637ed8641379b4ba00"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "0ba468a0927894a9bca6996a9a8c6c75872d63f755adf3b5c3864e31a51b24de"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "0ba468a0927894a9bca6996a9a8c6c75872d63f755adf3b5c3864e31a51b24de",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "3fdcba3c264c7645a18c8f0c777121a3c033d6d55d9113247780fa30747156cf"
+      }
+    },
+    {
+      "id": "piper-ne-np-google-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ne/ne_NP/google/medium/MODEL_CARD",
+        "bytes": 283,
+        "sha256": "8c5adac354771cc5f85cde49062ea8ef4286acc84f360d1008d0758d6c816b5c"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY-SA-4.0 International. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "64e3752a7ce86193883f72bc0ba7dbc986678a247fc6a97fead889bced4efe76"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "64e3752a7ce86193883f72bc0ba7dbc986678a247fc6a97fead889bced4efe76",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "23a74a2af224e0d7a59a7e6180f33ccd5c2d0c09f88adf1d4edecc0037c30b6c"
+      }
+    },
+    {
+      "id": "piper-ne-np-google-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ne/ne_NP/google/x_low/MODEL_CARD",
+        "bytes": 244,
+        "sha256": "3dad407f45e6002d50495db69582b630fae222699eb36c2e7a9cf39edf3ae6f0"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY-SA-4.0 International. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "a04141ee1d7a2626780fddf5a66003f8ef4376fb03f32c05d36bed3c5f9cce3c"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "a04141ee1d7a2626780fddf5a66003f8ef4376fb03f32c05d36bed3c5f9cce3c",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "66c9971f0ce7b10517d95b8bd9a6eb66f24348684731ad730614dd0172c10122"
+      }
+    },
+    {
+      "id": "piper-nl-be-nathalie-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/nathalie/medium/MODEL_CARD",
+        "bytes": 284,
+        "sha256": "129daeda6c74903efac7aa522ae4fd6628a6acdd0975ee897384e1079acbcd2f"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "4d7e4e0d04cbf9ec521446caf63abe4cf4096db833eb8ad05b9229fd7590222b"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "4d7e4e0d04cbf9ec521446caf63abe4cf4096db833eb8ad05b9229fd7590222b",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "b0f26f520f8d08490f35966bc19c84a54b03b061192bb83995e835ac6cf10a40"
+      }
+    },
+    {
+      "id": "piper-nl-be-nathalie-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/nathalie/x_low/MODEL_CARD",
+        "bytes": 246,
+        "sha256": "25ac2af86bd2d49c02dd52a46377f3471695c359a64ea51cc891f7933c59547f"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "16081a862a32c8f0f44916e4776ff799e555fc7387b0430f30b254ddcb833512"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "16081a862a32c8f0f44916e4776ff799e555fc7387b0430f30b254ddcb833512",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "4902bc68b41511d04788a636769c740e9e9ff3c5dca59179232eb957a517678d"
+      }
+    },
+    {
+      "id": "piper-nl-be-rdh-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/rdh/medium/MODEL_CARD",
+        "bytes": 244,
+        "sha256": "a0ac804376a1b4be5aeba0f982e43380bccd105b84af3477208f8a2b0fb89cc3"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0 1.0 Universal. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "a752b3230e15822c5bc2beaeb5852077dea845edba5da30e17d3f4297d8bdd0b"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "a752b3230e15822c5bc2beaeb5852077dea845edba5da30e17d3f4297d8bdd0b",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "e38ac700a010ea6256cc85a83d93bbade72235a74cbd2773a200dcbd5358f53f"
+      }
+    },
+    {
+      "id": "piper-nl-be-rdh-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/rdh/x_low/MODEL_CARD",
+        "bytes": 242,
+        "sha256": "93803121905ddba966ad0ea89fdf26b7e34f1f700c0c3bbbd504fdeaede98009"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0 1.0 Universal. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "e841edf6a5012dd1528a08dee51728062e7dab4f617fbf57e84fe37072e60a38"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "e841edf6a5012dd1528a08dee51728062e7dab4f617fbf57e84fe37072e60a38",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "2fd831dbe246a490c8fdcf1a4ea96377b8b8cea3f3ff781375cc8c10252bf1c9"
+      }
+    },
+    {
+      "id": "piper-nl-nl-alex-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/alex/medium/MODEL_CARD",
+        "bytes": 268,
+        "sha256": "1c359231626d8bd5b86a8deafb8598ef2004ba5d7fd239297a95eeac48b6f07b"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "130f0effa48bb83af0564fc3006d7817983f649de2b4cea16ae46ea46daedeb9"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "130f0effa48bb83af0564fc3006d7817983f649de2b4cea16ae46ea46daedeb9",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "57e02a7367b290688f8fa62b35e63eb25e1e9d221a2d95bdf03989e84546df20"
+      }
+    },
+    {
+      "id": "piper-nl-nl-mls-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls/medium/MODEL_CARD",
+        "bytes": 225,
+        "sha256": "73d70ff5a8501a80335498135bd773cd9ae01133cf0ac33916538f4d51e13e6e"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "b17e2f77724e2c5feaf4a0d63fe20a9a4de9cbeab8475058e50feb1f4fdc8ddf"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "b17e2f77724e2c5feaf4a0d63fe20a9a4de9cbeab8475058e50feb1f4fdc8ddf",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "5ac3470d0eee82a5797d7d6e9f16ae94bf1ccf290769989c66540ae5f85220e7"
+      }
+    },
+    {
+      "id": "piper-nl-nl-mls-5809-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls_5809/low/MODEL_CARD",
+        "bytes": 261,
+        "sha256": "eb1b0778b69163ecfc73c5d82d344de31392ef5a4b7fb7c232edaec8af9485ad"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "e6718e45ee6c22b85faed2261c9bb2e50dbd90ef54267c3e6d0a1afece66bf97"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "e6718e45ee6c22b85faed2261c9bb2e50dbd90ef54267c3e6d0a1afece66bf97",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "b3c7ab61e183d947b8fcb29d44b185e2c2c6a70b8a24a365b7a63d8d819deb5e"
+      }
+    },
+    {
+      "id": "piper-nl-nl-mls-7432-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls_7432/low/MODEL_CARD",
+        "bytes": 260,
+        "sha256": "f5f450c09037a6093a74672078aafd0aad7c9cb56899fd13da6bd00068a87cf1"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "5a3c115c378bf119c885b93af04b174d4768f92c5add86ab6801c7f05a726997"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "5a3c115c378bf119c885b93af04b174d4768f92c5add86ab6801c7f05a726997",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "d7520d07054bba5ca3c00609c8a3353188f6b2478a794386855d2170ed8495dc"
+      }
+    },
+    {
+      "id": "piper-nl-nl-pim-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/pim/medium/MODEL_CARD",
+        "bytes": 277,
+        "sha256": "512ccabe7312e8709abdb04df03f1bf3eee84a5a8420e189b4f5bda0d08b6a44"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "6dc67be35df859c96b667b29706e7ab3aec2019a74775b9458eb330d9005362e"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "6dc67be35df859c96b667b29706e7ab3aec2019a74775b9458eb330d9005362e",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "8d5b32ef6eb89b7586c8b5563f687a132a85f53f180cdeff3b3b6ed1cd1762d9"
+      }
+    },
+    {
+      "id": "piper-nl-nl-ronnie-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/ronnie/medium/MODEL_CARD",
+        "bytes": 280,
+        "sha256": "f2c1697b528901ba7e7178500d6d06da6fc93ba43129b2f40d13ff1c197d0884"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "b6f18ea47aa138f19bcf5324373175706ce3ccd9581a721c0b6117731f562d08"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "b6f18ea47aa138f19bcf5324373175706ce3ccd9581a721c0b6117731f562d08",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "e6edf16f36a9ff7e68003d94d4c4e7cf2b9b49451358178031c7a8a83b1651da"
+      }
+    },
+    {
+      "id": "piper-no-no-nvcc-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/no/no_NO/nvcc/medium/MODEL_CARD",
+        "bytes": 268,
+        "sha256": "309bb60e631d9c826e862bb0f5732eefd9d2fc4a2ca442b8f93fcf69c78cb3bd"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "ae545cb5087fed8509e6e0b09822ef4e10c89643079c90ec1dc8f038f31d85e6"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "ae545cb5087fed8509e6e0b09822ef4e10c89643079c90ec1dc8f038f31d85e6",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "bfdb5b86ffb33e4d1c6fe2e61d4515baed8bd32a9f0c0fc169f08b5087e7e9cf"
+      }
+    },
+    {
+      "id": "piper-no-no-talesyntese-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/no/no_NO/talesyntese/medium/MODEL_CARD",
+        "bytes": 312,
+        "sha256": "0a03b201db00e1bdc384e2dee4f8710075ef8d32ca3c64ed16782b04d2605f6c"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "0af61b71ddf37f169689e1208bc22ee3c983867ee0bb1e63918f1ceb46fb4268"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "0af61b71ddf37f169689e1208bc22ee3c983867ee0bb1e63918f1ceb46fb4268",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "dd9a1890baecc7ae9c198020d27cfcb19898c8ae3c40c9f8d1c842b54df845f6"
+      }
+    },
+    {
+      "id": "piper-pl-pl-bass-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/bass/high/MODEL_CARD",
+        "bytes": 289,
+        "sha256": "208d244b9aa23500595aeffe011f065cfa57f7de82bb17052d1b505a1d8e5658"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares Apache 2.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "27d2d3380a980d5ef32b126b9894fc65024efeed743f40b19a2c06b777f7ffde"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "27d2d3380a980d5ef32b126b9894fc65024efeed743f40b19a2c06b777f7ffde",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "96530c52ce64ca5ea65bb0bd36dd098cea0fafa84e8649bab65c47cc92ad1e29"
+      }
+    },
+    {
+      "id": "piper-pl-pl-darkman-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/darkman/medium/MODEL_CARD",
+        "bytes": 277,
+        "sha256": "8d860f0cf7dd85e84c923006c5aeaa779a2ff3b1fe89cf499116d93e3a62a4bd"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "b9a9c85f8c7cb0bc92bcee59b77278477a6d9ef648b69c4af1c86790ad39691b"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "b9a9c85f8c7cb0bc92bcee59b77278477a6d9ef648b69c4af1c86790ad39691b",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "d5df1d6db1d8c5c44a50cdb9e4b8369f4940af2a8ca0ab233ceb9ff45f5922d5"
+      }
+    },
+    {
+      "id": "piper-pl-pl-gosia-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/gosia/medium/MODEL_CARD",
+        "bytes": 275,
+        "sha256": "6b4de033dfff0da758bbe4d438fd87fbd917ab843bdd83f591fa0f32b8eb5780"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "fb6d56c86c38b4c19a7cfe71611dcbf4ddd68b39e70c52eaf9096785a0080ca9"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "fb6d56c86c38b4c19a7cfe71611dcbf4ddd68b39e70c52eaf9096785a0080ca9",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "5d7dad10f4f03699b9d9086d74345a638161899da66347b57fd6fdb34ba34f05"
+      }
+    },
+    {
+      "id": "piper-pl-pl-mc-speech-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/mc_speech/medium/MODEL_CARD",
+        "bytes": 296,
+        "sha256": "defd8213e3a438ebb80130dc1db17b6995bf5bf8d57fdee7b5b74a5a69c2c0d2"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "cd8371787e01f0e5e580789572fc276140b04d1382cd013d29fbae91e36fc53a"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "cd8371787e01f0e5e580789572fc276140b04d1382cd013d29fbae91e36fc53a",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "06ad860a0c4cec1236bda7bed5d2f22128f20070a4a0bd52931ef7b95efd28e7"
+      }
+    },
+    {
+      "id": "piper-pl-pl-mls-6892-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/mls_6892/low/MODEL_CARD",
+        "bytes": 257,
+        "sha256": "19990928dfd1f571f399bd227f9fa74c38617d7d181ee1478f84df9deecf1e4c"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "609ec7042b2cb8a6e291a3b299d1fea8ea3352f8acffabe503d9bf1b0d8598ef"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "609ec7042b2cb8a6e291a3b299d1fea8ea3352f8acffabe503d9bf1b0d8598ef",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "b21be21d4288ef12bc5e4958dbacfa63b07c556e23cb5967bd6112de547bea97"
+      }
+    },
+    {
+      "id": "piper-pt-br-cadu-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pt/pt_BR/cadu/medium/MODEL_CARD",
+        "bytes": 278,
+        "sha256": "b867e819f48365b592c7789f71bba5ca79e1cb3b8a499853485db417d8031427"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "d7e3d334d99c94825d95289f0c43d4ef2fafa13b63842331836980975e1b0148"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "d7e3d334d99c94825d95289f0c43d4ef2fafa13b63842331836980975e1b0148",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "24d24ff3daa5603794638c96e674273f79108675fb0406949092457c49ffdffa"
+      }
+    },
+    {
+      "id": "piper-pt-br-edresson-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pt/pt_BR/edresson/low/MODEL_CARD",
+        "bytes": 283,
+        "sha256": "d8fb0dab2d61ad9796904836fb2fc0ac7e324d89e80bc9ef14e328b77e5cb66f"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "d33515c83a9fb4f40dd6b3cb3d743965480afc8e28d4ccb278197846faf65e09"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "d33515c83a9fb4f40dd6b3cb3d743965480afc8e28d4ccb278197846faf65e09",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "e5d9f3dd3848326ccf17ab558e9ebe86a3709ae06e7cd10cf70c1398b9b97db7"
+      }
+    },
+    {
+      "id": "piper-pt-br-faber-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pt/pt_BR/faber/medium/MODEL_CARD",
+        "bytes": 279,
+        "sha256": "01f1a5bcfd0538782726059ae407eae9c2dd1b5b35f7298fd53a68de91afe563"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "a3085cde4157d1ed38dcb295f3d9172fde80a2623c83ffb2091711fe925de42b"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "a3085cde4157d1ed38dcb295f3d9172fde80a2623c83ffb2091711fe925de42b",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "b5a8a308b7e2cad3c5034bd6c96bd3812bff5ed0775867904742b0f4d0c476c2"
+      }
+    },
+    {
+      "id": "piper-pt-br-jeff-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pt/pt_BR/jeff/medium/MODEL_CARD",
+        "bytes": 278,
+        "sha256": "acdea1b233a478a8ce3bac1f4886a14c8bb6a6287cefb41a26a657a3a7418b08"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "a3df18294df0648a352b244521c779ecc98e7c2bf6b448c296594e1893e69887"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "a3df18294df0648a352b244521c779ecc98e7c2bf6b448c296594e1893e69887",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "286b5cc8a38c90239ba7eb97f3651eee4cb1dd838b0a72c41d2aab94ca83d8c6"
+      }
+    },
+    {
+      "id": "piper-pt-pt-tug-u00e3-o-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pt/pt_PT/tug%C3%A3o/medium/MODEL_CARD",
+        "bytes": 282,
+        "sha256": "1d6c23095980c0c58a044f1cb23e26fdc1d27bd95b68db0b5b0c548788b99d50"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "c88aed24a63e019e1b0c35d5f3d0d4fd50f54577dfe782180180fad934524e36"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "c88aed24a63e019e1b0c35d5f3d0d4fd50f54577dfe782180180fad934524e36",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "87c5e51dc472f49e5a3c7940e26d1676b519cc5d1ea010e3475e1c4a80301180"
+      }
+    },
+    {
+      "id": "piper-ro-ro-mihai-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ro/ro_RO/mihai/medium/MODEL_CARD",
+        "bytes": 278,
+        "sha256": "e06fb69411b3614636fdec4af646ac74548c6c323a8ac4030e34cb54e99016a1"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "9cd2d916a8e70f52930055ecde12487820e0b55faad27da2b01cbd6430093a5b"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "9cd2d916a8e70f52930055ecde12487820e0b55faad27da2b01cbd6430093a5b",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "f7e585fb2b6a0fcc5bd350e005911728c61bda28c38a0f18f263cdc8f1b6f7bf"
+      }
+    },
+    {
+      "id": "piper-ru-ru-denis-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/denis/medium/MODEL_CARD",
+        "bytes": 276,
+        "sha256": "8b5d685dd80f8ad3f8dbbe1c56b16bb0809f00c144af3642dbcf3b707eb89c12"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "5f5445d1d62c150bc6420e5ca57202b4dd4bb98a51c44c8e391ca4e28b946032"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "5f5445d1d62c150bc6420e5ca57202b4dd4bb98a51c44c8e391ca4e28b946032",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "fa6475b6639871d204dfa4181fba80098ecaa9f8353732a04b91a90a1c7e0f1d"
+      }
+    },
+    {
+      "id": "piper-ru-ru-dmitri-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/dmitri/medium/MODEL_CARD",
+        "bytes": 277,
+        "sha256": "6d59c756776d57860232cea6484e1b2ea1fc1c8d2c3446ef246f706fd9875821"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "da971947822cdb716338e41ee39b4bf695cb2adcc14d1aad8039295f2cf4f4e3"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "da971947822cdb716338e41ee39b4bf695cb2adcc14d1aad8039295f2cf4f4e3",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "ab63d5825e8697c498b444f8eaf9ef2e647e062ecd37d585922a65290756d166"
+      }
+    },
+    {
+      "id": "piper-ru-ru-irina-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/irina/medium/MODEL_CARD",
+        "bytes": 271,
+        "sha256": "f4fc2deb0e8c6219f29202b8dd06c9638c5ffd50ad5c6b2c90cf1aa59d507593"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: Unknown"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-ru-ru-ruslan-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/ruslan/medium/MODEL_CARD",
+        "bytes": 313,
+        "sha256": "28f5c0381c1234eb17bfd77e77f893b008948c29bc351fb811abd2d6a69e7662"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "d302a6cf248f56dd4bc615e5eccad5b4566dddbdfe15cdaa6b92691858eee5e3"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "d302a6cf248f56dd4bc615e5eccad5b4566dddbdfe15cdaa6b92691858eee5e3",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "49d9c11e2549fef419878dec3de7ab6b9cbe9d2aa1c4988b53fc736b5d884ea7"
+      }
+    },
+    {
+      "id": "piper-sk-sk-lili-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sk/sk_SK/lili/medium/MODEL_CARD",
+        "bytes": 276,
+        "sha256": "d1df98a436e1b22f6bd1792a14fb3592dd816ee250ee3ff9ff3be62cd39c59b0"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "821479278100b2d5b810baec5bb8dfc60d2f6eb3c4c65ff0b81419f59e0b7662"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "821479278100b2d5b810baec5bb8dfc60d2f6eb3c4c65ff0b81419f59e0b7662",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "5f5fea9c8b8ce03a699ceb9b91c3a1097d71d739ce749a4b8dfbd4b91bf31d07"
+      }
+    },
+    {
+      "id": "piper-sl-si-artur-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sl/sl_SI/artur/medium/MODEL_CARD",
+        "bytes": 329,
+        "sha256": "fe8431d0830a41260379ba7f8813e3dfb515c02684a0663702f45e047e31bba9"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "487ebdb22aacf0fbb4b4f9fff98046ff58d400a4afad27b21f29e13d23b4c9e4"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "487ebdb22aacf0fbb4b4f9fff98046ff58d400a4afad27b21f29e13d23b4c9e4",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "384060fa75803ea94decaa1d9b1b5253ce7b545b34d9c91fe5d290805a2cb7cd"
+      }
+    },
+    {
+      "id": "piper-sq-al-edon-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sq/sq_AL/edon/medium/MODEL_CARD",
+        "bytes": 280,
+        "sha256": "3849de03579aaeabf996ca2e08792ee457f8d55bd473332cd0d7684fc728cfb0"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "6929f42086db056e9cd25e58dcdf77b4426a6fc2650fe4623457fdc430db896c"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "6929f42086db056e9cd25e58dcdf77b4426a6fc2650fe4623457fdc430db896c",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "79ca632a5232b7f9849521c791bb435be53de58345a984b13f88dde44d0839f7"
+      }
+    },
+    {
+      "id": "piper-sr-rs-serbski-institut-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sr/sr_RS/serbski_institut/medium/MODEL_CARD",
+        "bytes": 343,
+        "sha256": "1ed2209d4d01b359416f17772c6c11272bdb59359d0b0b076e31a5ccb87446ac"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "ea820a1e4ffb21a2b8b1c2ee6a7fac49b831ef001962e888c49ea1c571e26296"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "ea820a1e4ffb21a2b8b1c2ee6a7fac49b831ef001962e888c49ea1c571e26296",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "a74143cee0f89c6ec103c789be0f6356506412c38e207c1c2a1570cb91257c24"
+      }
+    },
+    {
+      "id": "piper-sv-se-alma-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sv/sv_SE/alma/medium/MODEL_CARD",
+        "bytes": 462,
+        "sha256": "3e4347b72a1d396ca0905470094331fee8dd3a9a641a834466cdbf7812df9396"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY 4.0 for model weights. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "957a18f892ef96ada0ea416bba887f2eb1c8a6f12df756a156c754aecf60844c"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "957a18f892ef96ada0ea416bba887f2eb1c8a6f12df756a156c754aecf60844c",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "2c1fe5973ba1998e6b1fe86a874782a34f92de4a4a977d6039581ae51275670b"
+      }
+    },
+    {
+      "id": "piper-sv-se-lisa-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sv/sv_SE/lisa/medium/MODEL_CARD",
+        "bytes": 198,
+        "sha256": "952c05227c175d48aafe40eb73935d8cf6b7a214ad4f9772b4180c084e5094c3"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: no explicit licence in model card"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-sv-se-nst-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sv/sv_SE/nst/medium/MODEL_CARD",
+        "bytes": 306,
+        "sha256": "c85d3e26e47d93e9d9b8572d3c89537c3f8ff212595cb9a3fbd2e07c19432317"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "34dfd8315bfe66c8871eb70deeafeef915f8e3387d9e857cdf487bbce25c57d6"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "34dfd8315bfe66c8871eb70deeafeef915f8e3387d9e857cdf487bbce25c57d6",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "5b875f04dfd40fb60ac04d11d1f02b32773825a29f97f663dd1ca96701dc1d65"
+      }
+    },
+    {
+      "id": "piper-sw-cd-lanfrica-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sw/sw_CD/lanfrica/medium/MODEL_CARD",
+        "bytes": 315,
+        "sha256": "763a444ca0e205ac08bd3bf3a4d3d44da58f56d244a145adf22eb0a863638ab2"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: See URL"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-te-in-maya-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/te/te_IN/maya/medium/MODEL_CARD",
+        "bytes": 318,
+        "sha256": "fe0a4b70db1f6c952df23492ed1fe6c09a85a2b0df3df5f8975dbf2d84f07992"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: www.iitm.ac.in/donlab/indictts/downloads/license.pdf"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-te-in-padmavathi-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/te/te_IN/padmavathi/medium/MODEL_CARD",
+        "bytes": 278,
+        "sha256": "8cdccd0ca4c26d1e949431f03180bcf9eaeb3c013f627087c6a806a3f7487b07"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY-4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "79e7cb83c56126b8590990cbf9a5ad145a96c6795a4dedf7da6ce6bee0ab864e"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "79e7cb83c56126b8590990cbf9a5ad145a96c6795a4dedf7da6ce6bee0ab864e",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "41de47881a3c266e453aef044e912223120daf4abd6b25bcb98697d48d81aa02"
+      }
+    },
+    {
+      "id": "piper-te-in-venkatesh-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/te/te_IN/venkatesh/medium/MODEL_CARD",
+        "bytes": 277,
+        "sha256": "1e72b79b6453653bd6c43722f80fb34f429dbeccaf18116480d6faa20b01e685"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC-BY-4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "a09c35721afdca2d9f478540422bac426f4c4af0546ca8a820d9dba9b293d20e"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "a09c35721afdca2d9f478540422bac426f4c4af0546ca8a820d9dba9b293d20e",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "0d75bdf974e11d3b91c562e08b13f81de7e3bf38a7b50fa5e1d0597d3608f32d"
+      }
+    },
+    {
+      "id": "piper-th-th-tsync2-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/th/th_TH/tsync2/medium/MODEL_CARD",
+        "bytes": 467,
+        "sha256": "b980358b9a6055eff8006f12ee929e67882c4451eb8e9b2c34cf022fa025b4b2"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY-NC-SA 3.0 (**non-commercial**). See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "887a5c7a6581589638fb161f8cc61b6d2989f169820cae3b78f85531e6a788d6"
+      },
+      "blocked": null,
+      "error": "Native validation failed: Voice not found: Piper model unavailable: unsupported phoneme type",
+      "exported": false,
+      "validation": {
+        "status": "failed"
+      }
+    },
+    {
+      "id": "piper-tr-tr-dfki-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/tr/tr_TR/dfki/medium/MODEL_CARD",
+        "bytes": 319,
+        "sha256": "a3e08c57b9c6d428f8e4fb146512c8b1fb96a68c99d43820ed1dfea6d39cb35f"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "d3549ac87b0e608fbb298bd365f4dea1babff83a1e76e847e82b71655b22ee3c"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "d3549ac87b0e608fbb298bd365f4dea1babff83a1e76e847e82b71655b22ee3c",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "948b0973431f0e2a4d29ba8c7fdfa1be7f0a4e8c85a6f580baf598e0e9f80a06"
+      }
+    },
+    {
+      "id": "piper-uk-ua-lada-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/uk/uk_UA/lada/x_low/MODEL_CARD",
+        "bytes": 267,
+        "sha256": "e573364d00e4497e2aa96475d785887eb3ce901b3af9fda49f7f772c3cc5ff4a"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares Apache 2.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "c9d58572ed8e17a442d10cbabc865f5cbb75f8727f4f54b44ee9af5d27751cd6"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "c9d58572ed8e17a442d10cbabc865f5cbb75f8727f4f54b44ee9af5d27751cd6",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "f474703e9a57ce123d76b0eb742d0609ad29452f22665ebcd2c2d9cf01eb1954",
+        "evidence_sha256": "8d0016b3bfed994499d9ba3f9ddbbe988e35717747da3f8e78a83f85ff75de0d"
+      }
+    },
+    {
+      "id": "piper-uk-ua-mykyta-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/uk/uk_UA/mykyta/high/MODEL_CARD",
+        "bytes": 292,
+        "sha256": "2fb2c84c0e89b91f3e69bdc94dedc07c60f2b95d51ae6e4245942c65d4c06b61"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares Apache 2.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "53da26ffe6f84c49ed9f8f55566a6d19ed9759656ac66dc79887148032363563"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "53da26ffe6f84c49ed9f8f55566a6d19ed9759656ac66dc79887148032363563",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "e68c14afbea9ed22e498f74b309993637363e1bebbc62428b37547b1babed5f7",
+        "evidence_sha256": "066ba0c0adc9f3db2f8de7df6252bf034b006f2be7ebdfc13020850fdf477272"
+      }
+    },
+    {
+      "id": "piper-uk-ua-oleksa-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/uk/uk_UA/oleksa/high/MODEL_CARD",
+        "bytes": 292,
+        "sha256": "38740dbed053f7e944332b06d47c0f231e174032a4beb973e0abae5be5649057"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares Apache 2.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "e1d74685c960c62b0f8335dd8cd91e9cd2124ced476b4b0384d12b53be6d18e5"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "e1d74685c960c62b0f8335dd8cd91e9cd2124ced476b4b0384d12b53be6d18e5",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "e68c14afbea9ed22e498f74b309993637363e1bebbc62428b37547b1babed5f7",
+        "evidence_sha256": "912ddae318b00f8472c9904bef04b2dc0cfc08422992922327f1a269e5cc5664"
+      }
+    },
+    {
+      "id": "piper-uk-ua-tetiana-high",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/uk/uk_UA/tetiana/high/MODEL_CARD",
+        "bytes": 294,
+        "sha256": "78aa34be26a6b2bc087767f28d824831f1e8614dcbc92f2d80fd745011fffdcc"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares Apache 2.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "4aff72b774e1d2e7e0da874886fdff9a452f25eec7a06947d02b86862ea377de"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "4aff72b774e1d2e7e0da874886fdff9a452f25eec7a06947d02b86862ea377de",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "e68c14afbea9ed22e498f74b309993637363e1bebbc62428b37547b1babed5f7",
+        "evidence_sha256": "95036b094b432ad13febb726e1f874decdfbc698bbc4c9f6e447007d12a62711"
+      }
+    },
+    {
+      "id": "piper-uk-ua-ukrainian-tts-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/uk/uk_UA/ukrainian_tts/medium/MODEL_CARD",
+        "bytes": 267,
+        "sha256": "ce09d0c9d1d90cdc98d1ea8a4ecbdeb5e937d44593876e4194302c5eabbaad9d"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "20d88e8141b4f439ae8d230f8d8d6e86dbb9c1a43fd0adae828a296abdabf16c"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "20d88e8141b4f439ae8d230f8d8d6e86dbb9c1a43fd0adae828a296abdabf16c",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "e68c14afbea9ed22e498f74b309993637363e1bebbc62428b37547b1babed5f7",
+        "evidence_sha256": "026909630b329d2ba767de1af6d991e3f3cfceb030fafb5b31ae7c54b89265bf"
+      }
+    },
+    {
+      "id": "piper-ur-pk-aegis-female-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ur/ur_PK/aegis_female/medium/MODEL_CARD",
+        "bytes": 611,
+        "sha256": "f9f16fbcfeec2c233be21c734125d6c1ada7ac0037c6ffd7751065f566b53b6e"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares MIT. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "568bc44ce7d3ecd1ba0abeb6e115cfe2076edf7cd24830cd886df1ef936e3967"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "568bc44ce7d3ecd1ba0abeb6e115cfe2076edf7cd24830cd886df1ef936e3967",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "e68c14afbea9ed22e498f74b309993637363e1bebbc62428b37547b1babed5f7",
+        "evidence_sha256": "b5c847e35c4b04ac9545676aa782142e938488e9a245d9fa42d9d2bad307a85a"
+      }
+    },
+    {
+      "id": "piper-ur-pk-fasih-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ur/ur_PK/fasih/medium/MODEL_CARD",
+        "bytes": 3017,
+        "sha256": "0d6419e74f99fdb0240180fc26067e2f71cff465c61b59e218a7cf53351cf91f"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares MIT. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "b57ea7694f3fb6dd0e226672241426282cb9e71bd36f0ae910e314a1a4425822"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "b57ea7694f3fb6dd0e226672241426282cb9e71bd36f0ae910e314a1a4425822",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "e68c14afbea9ed22e498f74b309993637363e1bebbc62428b37547b1babed5f7",
+        "evidence_sha256": "7ec2d782b9a4593b287c59b93fdb845acaa1de0c1f517a62af06a6541d529700"
+      }
+    },
+    {
+      "id": "piper-vi-vn-25hours-single-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/vi/vi_VN/25hours_single/low/MODEL_CARD",
+        "bytes": 343,
+        "sha256": "ff9abd90c4f33fb318ce2bfa97fa94abe36683216fe8f091c552e6d71ab4ec16"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: Unknown"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-vi-vn-vais1000-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/vi/vi_VN/vais1000/medium/MODEL_CARD",
+        "bytes": 361,
+        "sha256": "302db8a930ffc2b1c2181db26deaf8272116eca2b08b8f80da6375b0a994af7b"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares https://creativecommons.org/licenses/by/4.0/. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "4422041d5ab54ff4222f250b5c3343e607d0ceb8821282e6ede8c9c6b5b193a0"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "4422041d5ab54ff4222f250b5c3343e607d0ceb8821282e6ede8c9c6b5b193a0",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "e68c14afbea9ed22e498f74b309993637363e1bebbc62428b37547b1babed5f7",
+        "evidence_sha256": "b273b048887c2451aa4fdf19540a8a5990fd918d3a950f9a2089a7ea35024226"
+      }
+    },
+    {
+      "id": "piper-vi-vn-vivos-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/vi/vi_VN/vivos/x_low/MODEL_CARD",
+        "bytes": 272,
+        "sha256": "175c37c171f7f4a66ee2e37546775cb366bd1e00d027d10b18918b5cc1484c86"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC BY-NC-SA 4.0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "8231451ce812e24910ed64f8613d9e2b0dfa500827d1551d05e44f1e0b526e09"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": true,
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "8231451ce812e24910ed64f8613d9e2b0dfa500827d1551d05e44f1e0b526e09",
+        "platform": "linux",
+        "arch": "x86_64",
+        "validator_sha256": "e68c14afbea9ed22e498f74b309993637363e1bebbc62428b37547b1babed5f7",
+        "evidence_sha256": "d3b2d46e1f421a63c67bc8fa951699e545443b16488550c6f336c46360f4b198"
+      }
+    },
+    {
+      "id": "piper-zh-cn-chaowen-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/zh/zh_CN/chaowen/medium/MODEL_CARD",
+        "bytes": 273,
+        "sha256": "7155212ec9192b1201898500621ae562dc5eeb6d90fa183f3267cd06dc7d5b6b"
+      },
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex",
+        "note": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+        "entry_sha256": "d8f83c0acfaf5a4ffa4bd712c5120c643260a17ed05a8a1e6af42c1252298658"
+      },
+      "blocked": null,
+      "error": "Native validation failed: Voice not found: Piper model unavailable: unsupported phoneme type",
+      "exported": false,
+      "validation": {
+        "status": "failed"
+      }
+    },
+    {
+      "id": "piper-zh-cn-huayan-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/zh/zh_CN/huayan/medium/MODEL_CARD",
+        "bytes": 276,
+        "sha256": "25d7d8f7a03e9382e629c5c4f074176e7ca84e08be12a873022e91fcac98c2c7"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: Unknown"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-zh-cn-huayan-x-low",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/zh/zh_CN/huayan/x_low/MODEL_CARD",
+        "bytes": 237,
+        "sha256": "dc6f68f3036a32d0a74eae7ae07682a0cae06a84be17e681b59e3d11ccb1353d"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: Unknown"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    },
+    {
+      "id": "piper-zh-cn-xiao-ya-medium",
+      "model_card": {
+        "role": "model_card",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/zh/zh_CN/xiao_ya/medium/MODEL_CARD",
+        "bytes": 434,
+        "sha256": "5720e170d3872dcea10803c77a4a6b4424a9af366431fdc5668adafd95e33f42"
+      },
+      "review": {
+        "status": "pending",
+        "note": "Further terms review required: Non-commercial use (see https://www.data-baker.com/data/index/TNtts/)"
+      },
+      "blocked": null,
+      "error": null,
+      "exported": false,
+      "validation": {
+        "status": "pending"
+      }
+    }
+  ]
+}

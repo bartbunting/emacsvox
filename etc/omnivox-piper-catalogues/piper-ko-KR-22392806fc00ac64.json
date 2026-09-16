@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-ko-kr-kss-medium",
+      "provider": "piper",
+      "name": "kss medium",
+      "language": "ko-KR",
+      "description": "Korean; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares https://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ko/ko_KR/kss/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ko/ko_KR/kss/medium/ko_KR-kss-medium.onnx",
+          "bytes": 63221984,
+          "sha256": "624fd774e26895f24bebae1bd9a3379e3394baeade4b584924f83e414096e2c9"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ko/ko_KR/kss/medium/ko_KR-kss-medium.onnx.json",
+          "bytes": 5232,
+          "sha256": "153b5619d0580f824a59108d83ca19434de410eb8e4fe80325b58684fdc8a1df"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ko/ko_KR/kss/medium/MODEL_CARD",
+          "bytes": 333,
+          "sha256": "792db9e4889b69bf56bf49ed584809292110e16bf1fc904ff2b99faf8f778d6d"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-ko-kr-kss-medium/0",
+          "name": "kss",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,897 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-fr-fr-gilles-low",
+      "provider": "piper",
+      "name": "gilles low",
+      "language": "fr-FR",
+      "description": "French; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/gilles/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/gilles/low/fr_FR-gilles-low.onnx",
+          "bytes": 63104526,
+          "sha256": "5cd711846720e261c2a176f6924c198a7424d0a75dd4b0a5357a5fb9cb739285"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/gilles/low/fr_FR-gilles-low.onnx.json",
+          "bytes": 4158,
+          "sha256": "5a47cc0789e91267d17666bbec842dd92950669271a09023eb6970ee364cf88a"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/gilles/low/MODEL_CARD",
+          "bytes": 300,
+          "sha256": "29d0964475ce042f5cd59c46bbd996fac785a84476c09d0973295d3528456974"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-gilles-low/0",
+          "name": "gilles",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-fr-fr-mls-medium",
+      "provider": "piper",
+      "name": "mls medium",
+      "language": "fr-FR",
+      "description": "French; medium quality; 125 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/mls/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/mls/medium/fr_FR-mls-medium.onnx",
+          "bytes": 76733750,
+          "sha256": "0ed223f78466917f2bae05ee90096ce69ab1fdeb251f55590d0e7422d234e162"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/mls/medium/fr_FR-mls-medium.onnx.json",
+          "bytes": 7036,
+          "sha256": "252b0b0a6e4cc4949e23eccb956f9c779986c32f934f2f7e2191e5fdc2edca61"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/mls/medium/MODEL_CARD",
+          "bytes": 222,
+          "sha256": "443ca90f1ed8e57d9fb802da6dc19c302d5d9b51ddbfbf27a17f3fb5c37ad154"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/0",
+          "name": "mls: 1840",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/1",
+          "name": "mls: 3698",
+          "speaker_index": 1
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/2",
+          "name": "mls: 123",
+          "speaker_index": 2
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/3",
+          "name": "mls: 1474",
+          "speaker_index": 3
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/4",
+          "name": "mls: 12709",
+          "speaker_index": 4
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/5",
+          "name": "mls: 7423",
+          "speaker_index": 5
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/6",
+          "name": "mls: 9242",
+          "speaker_index": 6
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/7",
+          "name": "mls: 8778",
+          "speaker_index": 7
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/8",
+          "name": "mls: 3060",
+          "speaker_index": 8
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/9",
+          "name": "mls: 4512",
+          "speaker_index": 9
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/10",
+          "name": "mls: 6249",
+          "speaker_index": 10
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/11",
+          "name": "mls: 12541",
+          "speaker_index": 11
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/12",
+          "name": "mls: 13634",
+          "speaker_index": 12
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/13",
+          "name": "mls: 10065",
+          "speaker_index": 13
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/14",
+          "name": "mls: 6128",
+          "speaker_index": 14
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/15",
+          "name": "mls: 5232",
+          "speaker_index": 15
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/16",
+          "name": "mls: 5764",
+          "speaker_index": 16
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/17",
+          "name": "mls: 12713",
+          "speaker_index": 17
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/18",
+          "name": "mls: 12823",
+          "speaker_index": 18
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/19",
+          "name": "mls: 6070",
+          "speaker_index": 19
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/20",
+          "name": "mls: 12501",
+          "speaker_index": 20
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/21",
+          "name": "mls: 9121",
+          "speaker_index": 21
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/22",
+          "name": "mls: 1649",
+          "speaker_index": 22
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/23",
+          "name": "mls: 2776",
+          "speaker_index": 23
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/24",
+          "name": "mls: 11772",
+          "speaker_index": 24
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/25",
+          "name": "mls: 5612",
+          "speaker_index": 25
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/26",
+          "name": "mls: 11822",
+          "speaker_index": 26
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/27",
+          "name": "mls: 1590",
+          "speaker_index": 27
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/28",
+          "name": "mls: 5525",
+          "speaker_index": 28
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/29",
+          "name": "mls: 10827",
+          "speaker_index": 29
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/30",
+          "name": "mls: 1243",
+          "speaker_index": 30
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/31",
+          "name": "mls: 13142",
+          "speaker_index": 31
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/32",
+          "name": "mls: 62",
+          "speaker_index": 32
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/33",
+          "name": "mls: 13177",
+          "speaker_index": 33
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/34",
+          "name": "mls: 10620",
+          "speaker_index": 34
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/35",
+          "name": "mls: 8102",
+          "speaker_index": 35
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/36",
+          "name": "mls: 8582",
+          "speaker_index": 36
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/37",
+          "name": "mls: 11875",
+          "speaker_index": 37
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/38",
+          "name": "mls: 7239",
+          "speaker_index": 38
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/39",
+          "name": "mls: 9854",
+          "speaker_index": 39
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/40",
+          "name": "mls: 7377",
+          "speaker_index": 40
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/41",
+          "name": "mls: 10082",
+          "speaker_index": 41
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/42",
+          "name": "mls: 12512",
+          "speaker_index": 42
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/43",
+          "name": "mls: 1329",
+          "speaker_index": 43
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/44",
+          "name": "mls: 2506",
+          "speaker_index": 44
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/45",
+          "name": "mls: 6856",
+          "speaker_index": 45
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/46",
+          "name": "mls: 10058",
+          "speaker_index": 46
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/47",
+          "name": "mls: 103",
+          "speaker_index": 47
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/48",
+          "name": "mls: 14",
+          "speaker_index": 48
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/49",
+          "name": "mls: 6381",
+          "speaker_index": 49
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/50",
+          "name": "mls: 1664",
+          "speaker_index": 50
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/51",
+          "name": "mls: 11954",
+          "speaker_index": 51
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/52",
+          "name": "mls: 66",
+          "speaker_index": 52
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/53",
+          "name": "mls: 1127",
+          "speaker_index": 53
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/54",
+          "name": "mls: 3270",
+          "speaker_index": 54
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/55",
+          "name": "mls: 13611",
+          "speaker_index": 55
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/56",
+          "name": "mls: 13658",
+          "speaker_index": 56
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/57",
+          "name": "mls: 12968",
+          "speaker_index": 57
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/58",
+          "name": "mls: 1989",
+          "speaker_index": 58
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/59",
+          "name": "mls: 12981",
+          "speaker_index": 59
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/60",
+          "name": "mls: 7193",
+          "speaker_index": 60
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/61",
+          "name": "mls: 6348",
+          "speaker_index": 61
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/62",
+          "name": "mls: 7679",
+          "speaker_index": 62
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/63",
+          "name": "mls: 2284",
+          "speaker_index": 63
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/64",
+          "name": "mls: 3182",
+          "speaker_index": 64
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/65",
+          "name": "mls: 3503",
+          "speaker_index": 65
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/66",
+          "name": "mls: 2033",
+          "speaker_index": 66
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/67",
+          "name": "mls: 2771",
+          "speaker_index": 67
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/68",
+          "name": "mls: 7614",
+          "speaker_index": 68
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/69",
+          "name": "mls: 125",
+          "speaker_index": 69
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/70",
+          "name": "mls: 3204",
+          "speaker_index": 70
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/71",
+          "name": "mls: 5595",
+          "speaker_index": 71
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/72",
+          "name": "mls: 5553",
+          "speaker_index": 72
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/73",
+          "name": "mls: 694",
+          "speaker_index": 73
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/74",
+          "name": "mls: 1624",
+          "speaker_index": 74
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/75",
+          "name": "mls: 1887",
+          "speaker_index": 75
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/76",
+          "name": "mls: 2926",
+          "speaker_index": 76
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/77",
+          "name": "mls: 7150",
+          "speaker_index": 77
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/78",
+          "name": "mls: 3190",
+          "speaker_index": 78
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/79",
+          "name": "mls: 3344",
+          "speaker_index": 79
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/80",
+          "name": "mls: 4699",
+          "speaker_index": 80
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/81",
+          "name": "mls: 1798",
+          "speaker_index": 81
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/82",
+          "name": "mls: 1745",
+          "speaker_index": 82
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/83",
+          "name": "mls: 5077",
+          "speaker_index": 83
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/84",
+          "name": "mls: 753",
+          "speaker_index": 84
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/85",
+          "name": "mls: 52",
+          "speaker_index": 85
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/86",
+          "name": "mls: 4174",
+          "speaker_index": 86
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/87",
+          "name": "mls: 4018",
+          "speaker_index": 87
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/88",
+          "name": "mls: 12899",
+          "speaker_index": 88
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/89",
+          "name": "mls: 1844",
+          "speaker_index": 89
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/90",
+          "name": "mls: 4396",
+          "speaker_index": 90
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/91",
+          "name": "mls: 1817",
+          "speaker_index": 91
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/92",
+          "name": "mls: 2155",
+          "speaker_index": 92
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/93",
+          "name": "mls: 2946",
+          "speaker_index": 93
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/94",
+          "name": "mls: 4336",
+          "speaker_index": 94
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/95",
+          "name": "mls: 4609",
+          "speaker_index": 95
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/96",
+          "name": "mls: 1977",
+          "speaker_index": 96
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/97",
+          "name": "mls: 10957",
+          "speaker_index": 97
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/98",
+          "name": "mls: 204",
+          "speaker_index": 98
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/99",
+          "name": "mls: 4650",
+          "speaker_index": 99
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/100",
+          "name": "mls: 5295",
+          "speaker_index": 100
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/101",
+          "name": "mls: 5968",
+          "speaker_index": 101
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/102",
+          "name": "mls: 4744",
+          "speaker_index": 102
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/103",
+          "name": "mls: 2825",
+          "speaker_index": 103
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/104",
+          "name": "mls: 9804",
+          "speaker_index": 104
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/105",
+          "name": "mls: 707",
+          "speaker_index": 105
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/106",
+          "name": "mls: 30",
+          "speaker_index": 106
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/107",
+          "name": "mls: 115",
+          "speaker_index": 107
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/108",
+          "name": "mls: 5840",
+          "speaker_index": 108
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/109",
+          "name": "mls: 2587",
+          "speaker_index": 109
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/110",
+          "name": "mls: 2607",
+          "speaker_index": 110
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/111",
+          "name": "mls: 2544",
+          "speaker_index": 111
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/112",
+          "name": "mls: 28",
+          "speaker_index": 112
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/113",
+          "name": "mls: 27",
+          "speaker_index": 113
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/114",
+          "name": "mls: 177",
+          "speaker_index": 114
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/115",
+          "name": "mls: 112",
+          "speaker_index": 115
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/116",
+          "name": "mls: 94",
+          "speaker_index": 116
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/117",
+          "name": "mls: 2596",
+          "speaker_index": 117
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/118",
+          "name": "mls: 3595",
+          "speaker_index": 118
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/119",
+          "name": "mls: 7032",
+          "speaker_index": 119
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/120",
+          "name": "mls: 7848",
+          "speaker_index": 120
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/121",
+          "name": "mls: 11247",
+          "speaker_index": 121
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/122",
+          "name": "mls: 7439",
+          "speaker_index": 122
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/123",
+          "name": "mls: 2904",
+          "speaker_index": 123
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-medium/124",
+          "name": "mls: 6362",
+          "speaker_index": 124
+        }
+      ]
+    },
+    {
+      "id": "piper-fr-fr-mls-1840-low",
+      "provider": "piper",
+      "name": "mls 1840 low",
+      "language": "fr-FR",
+      "description": "French; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/mls_1840/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/mls_1840/low/fr_FR-mls_1840-low.onnx",
+          "bytes": 63104526,
+          "sha256": "dcea3d495b760f168179b6bd27c7daefa1d8304ce6ec48867e42bae7cb2e507a"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/mls_1840/low/fr_FR-mls_1840-low.onnx.json",
+          "bytes": 4160,
+          "sha256": "294a643de0ae6a4a885d841d9b74470263efe35c81e7cf37dd43e2d663fbd8b3"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/mls_1840/low/MODEL_CARD",
+          "bytes": 257,
+          "sha256": "2816c84deb72d3a46c0a6588852f7d4be16e8b76cac48c8d807c77f1a0df9044"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-mls-1840-low/0",
+          "name": "mls_1840",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-fr-fr-siwis-low",
+      "provider": "piper",
+      "name": "siwis low",
+      "language": "fr-FR",
+      "description": "French; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/siwis/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/siwis/low/fr_FR-siwis-low.onnx",
+          "bytes": 28130791,
+          "sha256": "a7b7dcaf87229b32af8275cb1a719371234ea677bc0313d2289d5c50ab0ac53d"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/siwis/low/fr_FR-siwis-low.onnx.json",
+          "bytes": 4157,
+          "sha256": "9722527d748c284f6dd7639c4b4e661853d4f7d4514079571f67d6a97a652b69"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/siwis/low/MODEL_CARD",
+          "bytes": 274,
+          "sha256": "ba5175f04dadf9ce2d0e19b9ae2164320f1ada740377166620259e321470d488"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-siwis-low/0",
+          "name": "siwis",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-fr-fr-siwis-medium",
+      "provider": "piper",
+      "name": "siwis medium",
+      "language": "fr-FR",
+      "description": "French; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/siwis/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/siwis/medium/fr_FR-siwis-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "641d1ab097da2b81128c076810edb052b385decc8be3381814802a64a73baf99"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/siwis/medium/fr_FR-siwis-medium.onnx.json",
+          "bytes": 4875,
+          "sha256": "39479916c2db192b5ac9764daddd0c744d83e023ad890c6976c0633ae4df8959"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/siwis/medium/MODEL_CARD",
+          "bytes": 284,
+          "sha256": "bd8b8d079d4d3d2c4cc20345889bbcd586d72f021a132f93357a763eb5232cce"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-siwis-medium/0",
+          "name": "siwis",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-fr-fr-tom-medium",
+      "provider": "piper",
+      "name": "tom medium",
+      "language": "fr-FR",
+      "description": "French; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares AGPLv3. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/tom/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/tom/medium/fr_FR-tom-medium.onnx",
+          "bytes": 63511038,
+          "sha256": "bf65074ccdeeeeaa832e75edb1c0a513c01c9a972bdf085ff8a6e71ea234fd41"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/tom/medium/fr_FR-tom-medium.onnx.json",
+          "bytes": 4959,
+          "sha256": "2f7f885ad5a0aad802e3cc24e4f57239febdcb142b4876de5d238094674361cc"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/tom/medium/MODEL_CARD",
+          "bytes": 233,
+          "sha256": "ece4132df4a1ae2f90e22c9f01539aec14acb7f8dc8ded64edd2051945d0f1e9"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-tom-medium/0",
+          "name": "tom",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-fr-fr-upmc-medium",
+      "provider": "piper",
+      "name": "upmc medium",
+      "language": "fr-FR",
+      "description": "French; medium quality; 2 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares http://creativecommons.org/licenses/by-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/upmc/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/upmc/medium/fr_FR-upmc-medium.onnx",
+          "bytes": 76733615,
+          "sha256": "9abb3800c199148897a9ed64e100d224f3de83579f100044174ad19418f1786f"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/upmc/medium/fr_FR-upmc-medium.onnx.json",
+          "bytes": 4996,
+          "sha256": "e8636ec15dfd5d72db37a02cb5320a20f2b8d339f2a0e4337da64c58a33a5868"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/fr/fr_FR/upmc/medium/MODEL_CARD",
+          "bytes": 316,
+          "sha256": "cf1ac7309e0e04bb159b7e6ae80bc8f66bfce9bdfb3e62ae93a6f57e210ab98a"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-upmc-medium/0",
+          "name": "upmc: jessica",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-fr-fr-upmc-medium/1",
+          "name": "upmc: pierre",
+          "speaker_index": 1
+        }
+      ]
+    }
+  ]
+}

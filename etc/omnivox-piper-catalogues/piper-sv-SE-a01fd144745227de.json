@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-sv-se-alma-medium",
+      "provider": "piper",
+      "name": "alma medium",
+      "language": "sv-SE",
+      "description": "Swedish; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC BY 4.0 for model weights. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sv/sv_SE/alma/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sv/sv_SE/alma/medium/sv_SE-alma-medium.onnx",
+          "bytes": 63434611,
+          "sha256": "f75455eb6afeb1db9e2905d5bd7e4115afcd3710e0d399b6a40981766d32fedc"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sv/sv_SE/alma/medium/sv_SE-alma-medium.onnx.json",
+          "bytes": 6059,
+          "sha256": "6924380892f769afa92fc6b28ff91d558690d7fb4e3ef8cbf821cefadc8f38fe"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sv/sv_SE/alma/medium/MODEL_CARD",
+          "bytes": 462,
+          "sha256": "3e4347b72a1d396ca0905470094331fee8dd3a9a641a834466cdbf7812df9396"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-sv-se-alma-medium/0",
+          "name": "alma",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-sv-se-nst-medium",
+      "provider": "piper",
+      "name": "nst medium",
+      "language": "sv-SE",
+      "description": "Swedish; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sv/sv_SE/nst/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx",
+          "bytes": 63104526,
+          "sha256": "df011f56825a59dd1efc080c38a65a1ef70407e60f63050e9246f43a3d7e471e"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx.json",
+          "bytes": 4157,
+          "sha256": "d45dd74cbb4eca58694bf04a97e243044092476f28a55ae26424f0653086980a"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sv/sv_SE/nst/medium/MODEL_CARD",
+          "bytes": 306,
+          "sha256": "c85d3e26e47d93e9d9b8572d3c89537c3f8ff212595cb9a3fbd2e07c19432317"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-sv-se-nst-medium/0",
+          "name": "nst",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-el-gr-joy-medium",
+      "provider": "piper",
+      "name": "joy medium",
+      "language": "el-GR",
+      "description": "Greek; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC BY-NC 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/joy/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/joy/medium/el_GR-joy-medium.onnx",
+          "bytes": 63516050,
+          "sha256": "31b1d51dc72dd43a5429b67798e27599f8cdcfce8a80265bc6f50d932bf144bc"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/joy/medium/el_GR-joy-medium.onnx.json",
+          "bytes": 7367,
+          "sha256": "451a8885a0ea72e4432fffe22e65a75bbd2e65f6757273d1a5a9ed8a3419852e"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/joy/medium/MODEL_CARD",
+          "bytes": 349,
+          "sha256": "a38d735f47d9c520ce067fa72645fae16caa8b60fcf20e7207ea2f6c289dc80e"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-el-gr-joy-medium/0",
+          "name": "joy",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-el-gr-rapunzelina-low",
+      "provider": "piper",
+      "name": "rapunzelina low",
+      "language": "el-GR",
+      "description": "Greek; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/rapunzelina/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/rapunzelina/low/el_GR-rapunzelina-low.onnx",
+          "bytes": 63104526,
+          "sha256": "eebb335946c5d868743ff35fbb66b6f00e431b5b9b2e18caf47d3f609a2bf2e1"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/rapunzelina/low/el_GR-rapunzelina-low.onnx.json",
+          "bytes": 4198,
+          "sha256": "24ccc31c1306df4364fd85b56aeb09aba8c185a1fdf7db1367a72d4affe478e4"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/rapunzelina/low/MODEL_CARD",
+          "bytes": 303,
+          "sha256": "741740e84ad0a46bed544ef96e9885d70ebcc3544bcb1bc49ca459ddb1c748ca"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-el-gr-rapunzelina-low/0",
+          "name": "rapunzelina",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-el-gr-rapunzelina-medium",
+      "provider": "piper",
+      "name": "rapunzelina medium",
+      "language": "el-GR",
+      "description": "Greek; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/rapunzelina/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/rapunzelina/medium/el_GR-rapunzelina-medium.onnx",
+          "bytes": 62950044,
+          "sha256": "3ca9fb3092215ee92edfc019b43feb0115ff4dfe638eb34474833ab1de840952"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/rapunzelina/medium/el_GR-rapunzelina-medium.onnx.json",
+          "bytes": 4973,
+          "sha256": "3a6182ec7c7550e14ef15e5d9badbb18f973a434086ac9658a1b10991fd192f8"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/el/el_GR/rapunzelina/medium/MODEL_CARD",
+          "bytes": 276,
+          "sha256": "dc69f15382dabed061fa8d31b65c14e5c4b57ba2fe6906012c756478da156b50"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-el-gr-rapunzelina-medium/0",
+          "name": "rapunzelina",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

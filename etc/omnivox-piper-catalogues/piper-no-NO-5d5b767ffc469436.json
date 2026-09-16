@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-no-no-nvcc-medium",
+      "provider": "piper",
+      "name": "nvcc medium",
+      "language": "no-NO",
+      "description": "Norwegian; medium quality; 10 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/no/no_NO/nvcc/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/no/no_NO/nvcc/medium/no_NO-nvcc-medium.onnx",
+          "bytes": 76770227,
+          "sha256": "3f51702946d9544898440a1a66906155661a9d680ee103130ff68f73360b512e"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/no/no_NO/nvcc/medium/no_NO-nvcc-medium.onnx.json",
+          "bytes": 5397,
+          "sha256": "98410e911e5a9076ac4677a79b08b20f98c54f550c4388e29978f6bafa32b83d"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/no/no_NO/nvcc/medium/MODEL_CARD",
+          "bytes": 268,
+          "sha256": "309bb60e631d9c826e862bb0f5732eefd9d2fc4a2ca442b8f93fcf69c78cb3bd"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-no-no-nvcc-medium/0",
+          "name": "nvcc: KNN",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-no-no-nvcc-medium/1",
+          "name": "nvcc: KSV",
+          "speaker_index": 1
+        },
+        {
+          "physical_id": "piper:v1/c/piper-no-no-nvcc-medium/2",
+          "name": "nvcc: MMN",
+          "speaker_index": 2
+        },
+        {
+          "physical_id": "piper:v1/c/piper-no-no-nvcc-medium/3",
+          "name": "nvcc: KON",
+          "speaker_index": 3
+        },
+        {
+          "physical_id": "piper:v1/c/piper-no-no-nvcc-medium/4",
+          "name": "nvcc: MNN",
+          "speaker_index": 4
+        },
+        {
+          "physical_id": "piper:v1/c/piper-no-no-nvcc-medium/5",
+          "name": "nvcc: MSV",
+          "speaker_index": 5
+        },
+        {
+          "physical_id": "piper:v1/c/piper-no-no-nvcc-medium/6",
+          "name": "nvcc: MON",
+          "speaker_index": 6
+        },
+        {
+          "physical_id": "piper:v1/c/piper-no-no-nvcc-medium/7",
+          "name": "nvcc: MNV",
+          "speaker_index": 7
+        },
+        {
+          "physical_id": "piper:v1/c/piper-no-no-nvcc-medium/8",
+          "name": "nvcc: KMN",
+          "speaker_index": 8
+        },
+        {
+          "physical_id": "piper:v1/c/piper-no-no-nvcc-medium/9",
+          "name": "nvcc: KNV",
+          "speaker_index": 9
+        }
+      ]
+    },
+    {
+      "id": "piper-no-no-talesyntese-medium",
+      "provider": "piper",
+      "name": "talesyntese medium",
+      "language": "no-NO",
+      "description": "Norwegian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/no/no_NO/talesyntese/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/no/no_NO/talesyntese/medium/no_NO-talesyntese-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "b763aebe02e72c4628c4074c4b8b448f05ffe523b975bfcd58e2c5d531270c13"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/no/no_NO/talesyntese/medium/no_NO-talesyntese-medium.onnx.json",
+          "bytes": 4880,
+          "sha256": "b0eb0491fc8bf9843d2beac8acf8773b6cf59274316406b36ff579ae8a1909d5"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/no/no_NO/talesyntese/medium/MODEL_CARD",
+          "bytes": 312,
+          "sha256": "0a03b201db00e1bdc384e2dee4f8710075ef8d32ca3c64ed16782b04d2605f6c"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-no-no-talesyntese-medium/0",
+          "name": "talesyntese",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

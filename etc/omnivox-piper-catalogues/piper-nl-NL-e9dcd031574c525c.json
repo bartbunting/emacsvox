@@ -1,0 +1,489 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-nl-nl-alex-medium",
+      "provider": "piper",
+      "name": "alex medium",
+      "language": "nl-NL",
+      "description": "Dutch; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/alex/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/alex/medium/nl_NL-alex-medium.onnx",
+          "bytes": 63531476,
+          "sha256": "22f0497c4d895a09fbc6a469459aa8954ea0955d3c6e19dbcc2e23acbb93e30b"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/alex/medium/nl_NL-alex-medium.onnx.json",
+          "bytes": 4965,
+          "sha256": "9ea643871742c038511b6aaf20e6fc098a78a11968122d2f6ca3e50403423f95"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/alex/medium/MODEL_CARD",
+          "bytes": 268,
+          "sha256": "1c359231626d8bd5b86a8deafb8598ef2004ba5d7fd239297a95eeac48b6f07b"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-alex-medium/0",
+          "name": "alex",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-nl-nl-mls-medium",
+      "provider": "piper",
+      "name": "mls medium",
+      "language": "nl-NL",
+      "description": "Dutch; medium quality; 52 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls/medium/nl_NL-mls-medium.onnx",
+          "bytes": 76584246,
+          "sha256": "88312e0fbf505b87caf2373d94c1384892e86b1bf2ee482cf65dc8ba179cc7d3"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls/medium/nl_NL-mls-medium.onnx.json",
+          "bytes": 5856,
+          "sha256": "6ddb215d38f1392ab935ad45441b82ada1eeae0452a2d6849ed71ea4f2e0aa63"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls/medium/MODEL_CARD",
+          "bytes": 225,
+          "sha256": "73d70ff5a8501a80335498135bd773cd9ae01133cf0ac33916538f4d51e13e6e"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/0",
+          "name": "mls: 2450",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/1",
+          "name": "mls: 1724",
+          "speaker_index": 1
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/2",
+          "name": "mls: 1666",
+          "speaker_index": 2
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/3",
+          "name": "mls: 5809",
+          "speaker_index": 3
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/4",
+          "name": "mls: 496",
+          "speaker_index": 4
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/5",
+          "name": "mls: 2506",
+          "speaker_index": 5
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/6",
+          "name": "mls: 7432",
+          "speaker_index": 6
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/7",
+          "name": "mls: 3619",
+          "speaker_index": 7
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/8",
+          "name": "mls: 4429",
+          "speaker_index": 8
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/9",
+          "name": "mls: 3798",
+          "speaker_index": 9
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/10",
+          "name": "mls: 12500",
+          "speaker_index": 10
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/11",
+          "name": "mls: 10587",
+          "speaker_index": 11
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/12",
+          "name": "mls: 2951",
+          "speaker_index": 12
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/13",
+          "name": "mls: 1775",
+          "speaker_index": 13
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/14",
+          "name": "mls: 9861",
+          "speaker_index": 14
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/15",
+          "name": "mls: 880",
+          "speaker_index": 15
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/16",
+          "name": "mls: 3034",
+          "speaker_index": 16
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/17",
+          "name": "mls: 2825",
+          "speaker_index": 17
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/18",
+          "name": "mls: 5438",
+          "speaker_index": 18
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/19",
+          "name": "mls: 3245",
+          "speaker_index": 19
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/20",
+          "name": "mls: 4396",
+          "speaker_index": 20
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/21",
+          "name": "mls: 11290",
+          "speaker_index": 21
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/22",
+          "name": "mls: 11936",
+          "speaker_index": 22
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/23",
+          "name": "mls: 6916",
+          "speaker_index": 23
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/24",
+          "name": "mls: 10294",
+          "speaker_index": 24
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/25",
+          "name": "mls: 10079",
+          "speaker_index": 25
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/26",
+          "name": "mls: 7588",
+          "speaker_index": 26
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/27",
+          "name": "mls: 7579",
+          "speaker_index": 27
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/28",
+          "name": "mls: 123",
+          "speaker_index": 28
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/29",
+          "name": "mls: 3024",
+          "speaker_index": 29
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/30",
+          "name": "mls: 960",
+          "speaker_index": 30
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/31",
+          "name": "mls: 10984",
+          "speaker_index": 31
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/32",
+          "name": "mls: 2792",
+          "speaker_index": 32
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/33",
+          "name": "mls: 7723",
+          "speaker_index": 33
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/34",
+          "name": "mls: 4174",
+          "speaker_index": 34
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/35",
+          "name": "mls: 2981",
+          "speaker_index": 35
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/36",
+          "name": "mls: 5764",
+          "speaker_index": 36
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/37",
+          "name": "mls: 6513",
+          "speaker_index": 37
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/38",
+          "name": "mls: 7884",
+          "speaker_index": 38
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/39",
+          "name": "mls: 6697",
+          "speaker_index": 39
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/40",
+          "name": "mls: 12749",
+          "speaker_index": 40
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/41",
+          "name": "mls: 11157",
+          "speaker_index": 41
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/42",
+          "name": "mls: 2239",
+          "speaker_index": 42
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/43",
+          "name": "mls: 10879",
+          "speaker_index": 43
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/44",
+          "name": "mls: 1085",
+          "speaker_index": 44
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/45",
+          "name": "mls: 8480",
+          "speaker_index": 45
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/46",
+          "name": "mls: 8331",
+          "speaker_index": 46
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/47",
+          "name": "mls: 6282",
+          "speaker_index": 47
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/48",
+          "name": "mls: 10632",
+          "speaker_index": 48
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/49",
+          "name": "mls: 2602",
+          "speaker_index": 49
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/50",
+          "name": "mls: 5367",
+          "speaker_index": 50
+        },
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-medium/51",
+          "name": "mls: 11472",
+          "speaker_index": 51
+        }
+      ]
+    },
+    {
+      "id": "piper-nl-nl-mls-5809-low",
+      "provider": "piper",
+      "name": "mls 5809 low",
+      "language": "nl-NL",
+      "description": "Dutch; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls_5809/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls_5809/low/nl_NL-mls_5809-low.onnx",
+          "bytes": 63104526,
+          "sha256": "b7860ada7fa27e5e29b08e7531b0e0d74b3f0602e466a22ff95f59f80a0c4327"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls_5809/low/nl_NL-mls_5809-low.onnx.json",
+          "bytes": 4165,
+          "sha256": "d2192a4ed90b26166243be2cef9d71bcc4fbbbaa9461c413050bac758fafc1c3"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls_5809/low/MODEL_CARD",
+          "bytes": 261,
+          "sha256": "eb1b0778b69163ecfc73c5d82d344de31392ef5a4b7fb7c232edaec8af9485ad"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-5809-low/0",
+          "name": "mls_5809",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-nl-nl-mls-7432-low",
+      "provider": "piper",
+      "name": "mls 7432 low",
+      "language": "nl-NL",
+      "description": "Dutch; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls_7432/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls_7432/low/nl_NL-mls_7432-low.onnx",
+          "bytes": 63104526,
+          "sha256": "02feb278732c77f34c4e106d0cdc446e7e577ce29c5d7051da85a9c241ee42f0"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls_7432/low/nl_NL-mls_7432-low.onnx.json",
+          "bytes": 4165,
+          "sha256": "450d6d809962943e0b88e18da142fba32011ea5e326a627c64a87ec94144185b"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/mls_7432/low/MODEL_CARD",
+          "bytes": 260,
+          "sha256": "f5f450c09037a6093a74672078aafd0aad7c9cb56899fd13da6bd00068a87cf1"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-mls-7432-low/0",
+          "name": "mls_7432",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-nl-nl-pim-medium",
+      "provider": "piper",
+      "name": "pim medium",
+      "language": "nl-NL",
+      "description": "Dutch; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/pim/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/pim/medium/nl_NL-pim-medium.onnx",
+          "bytes": 63516050,
+          "sha256": "403e58c3675c394f505c2428117bf34cc56e9542dcf6eadbdd3a84706c12e048"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/pim/medium/nl_NL-pim-medium.onnx.json",
+          "bytes": 5037,
+          "sha256": "08b58456ca00cf77123826b1712758f99d5fd19ddfb7ec7da8e1a715b047f642"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/pim/medium/MODEL_CARD",
+          "bytes": 277,
+          "sha256": "512ccabe7312e8709abdb04df03f1bf3eee84a5a8420e189b4f5bda0d08b6a44"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-pim-medium/0",
+          "name": "pim",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-nl-nl-ronnie-medium",
+      "provider": "piper",
+      "name": "ronnie medium",
+      "language": "nl-NL",
+      "description": "Dutch; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/ronnie/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/ronnie/medium/nl_NL-ronnie-medium.onnx",
+          "bytes": 62950044,
+          "sha256": "ac9aba346d2088ed1ddea646a843ef97dc8e1514cc75e969c90a0c843bb5cbf5"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/ronnie/medium/nl_NL-ronnie-medium.onnx.json",
+          "bytes": 5040,
+          "sha256": "4329a4deb198d119b7f7364173e388afb8efec9eca10e849f9394aa1a92bb7bc"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_NL/ronnie/medium/MODEL_CARD",
+          "bytes": 280,
+          "sha256": "f2c1697b528901ba7e7178500d6d06da6fc93ba43129b2f40d13ff1c197d0884"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-nl-nl-ronnie-medium/0",
+          "name": "ronnie",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

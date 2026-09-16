@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-ro-ro-mihai-medium",
+      "provider": "piper",
+      "name": "mihai medium",
+      "language": "ro-RO",
+      "description": "Romanian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ro/ro_RO/mihai/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ro/ro_RO/mihai/medium/ro_RO-mihai-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "e0608bbbd53c80267c09ece681b09f5199f54e792356684c8073738e5f15d29f"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ro/ro_RO/mihai/medium/ro_RO-mihai-medium.onnx.json",
+          "bytes": 4877,
+          "sha256": "8cc0c9f077dc0cec3c25a6a055ec8046db8e40a2510591582f2c9c869f4bc47e"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ro/ro_RO/mihai/medium/MODEL_CARD",
+          "bytes": 278,
+          "sha256": "e06fb69411b3614636fdec4af646ac74548c6c323a8ac4030e34cb54e99016a1"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-ro-ro-mihai-medium/0",
+          "name": "mihai",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

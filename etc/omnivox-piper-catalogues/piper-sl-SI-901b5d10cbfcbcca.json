@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-sl-si-artur-medium",
+      "provider": "piper",
+      "name": "artur medium",
+      "language": "sl-SI",
+      "description": "Slovenian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares https://creativecommons.org/licenses/by/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sl/sl_SI/artur/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sl/sl_SI/artur/medium/sl_SI-artur-medium.onnx",
+          "bytes": 63200492,
+          "sha256": "9222ed93ef425524ad4be0b083369af8ea8db18455576a6016b154192f4ed38c"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sl/sl_SI/artur/medium/sl_SI-artur-medium.onnx.json",
+          "bytes": 4970,
+          "sha256": "741283430f1fa2be5c61717c6f1fe795a7b9f537491927340dd12f90f3b3cc04"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sl/sl_SI/artur/medium/MODEL_CARD",
+          "bytes": 329,
+          "sha256": "fe8431d0830a41260379ba7f8813e3dfb515c02684a0663702f45e047e31bba9"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-sl-si-artur-medium/0",
+          "name": "artur",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

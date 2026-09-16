@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-eu-es-antton-medium",
+      "provider": "piper",
+      "name": "antton medium",
+      "language": "eu-ES",
+      "description": "Basque; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares Creative Commons Attribution 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/eu/eu_ES/antton/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/eu/eu_ES/antton/medium/eu_ES-antton-medium.onnx",
+          "bytes": 63531379,
+          "sha256": "dc8305fda17b22e922f011cd7450c50c76b2f2630c2cfa5c35564326daef1454"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/eu/eu_ES/antton/medium/eu_ES-antton-medium.onnx.json",
+          "bytes": 5076,
+          "sha256": "bc26d21295427594330bb8ea579c8b922d1d1f9dde1b51dc9949fbf3f559dcea"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/eu/eu_ES/antton/medium/MODEL_CARD",
+          "bytes": 310,
+          "sha256": "61e1cf7bba48a290be225a1afb3167094fc16c479cea655b11c8ff87e9245264"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-eu-es-antton-medium/0",
+          "name": "antton",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-eu-es-maider-medium",
+      "provider": "piper",
+      "name": "maider medium",
+      "language": "eu-ES",
+      "description": "Basque; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares Creative Commons Attribution 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/eu/eu_ES/maider/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/eu/eu_ES/maider/medium/eu_ES-maider-medium.onnx",
+          "bytes": 63531379,
+          "sha256": "a36ac807ad130dc192b74d738e39552f9be704f069c405dbf4abd358b014a39a"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/eu/eu_ES/maider/medium/eu_ES-maider-medium.onnx.json",
+          "bytes": 5076,
+          "sha256": "d8526770ee8a765bb9bcabc98f1e03d8ab95f1c6ebdaa47e8cbf74e2f9e9bf28"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/eu/eu_ES/maider/medium/MODEL_CARD",
+          "bytes": 310,
+          "sha256": "bb7f284582ddd497f500b5275e2bd4f06031f483a63b0f5367dae18c9ae214ff"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-eu-es-maider-medium/0",
+          "name": "maider",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

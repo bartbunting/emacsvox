@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-mr-in-google-medium",
+      "provider": "piper",
+      "name": "google medium",
+      "language": "mr-IN",
+      "description": "Marathi; medium quality; 9 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares Attribution-ShareAlike 4.0 International. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/mr/mr_IN/google/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/mr/mr_IN/google/medium/mr_IN-google-medium.onnx",
+          "bytes": 76768179,
+          "sha256": "e1200d474a74ebd6d1737be2c7affe56f1f9efc18915d4595d7f5c2b15cf06f4"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/mr/mr_IN/google/medium/mr_IN-google-medium.onnx.json",
+          "bytes": 5467,
+          "sha256": "11055302ee1e3c9902e5e96c03cbfc0a9eec29b1b06b91ef52a3c66e9873edbb"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/mr/mr_IN/google/medium/MODEL_CARD",
+          "bytes": 272,
+          "sha256": "1591a13ba1c4b97af9f33571ed804a198705a01c37e96d604fe151cb004fb40e"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-mr-in-google-medium/0",
+          "name": "google: mrt_01523",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-mr-in-google-medium/1",
+          "name": "google: mrt_02436",
+          "speaker_index": 1
+        },
+        {
+          "physical_id": "piper:v1/c/piper-mr-in-google-medium/2",
+          "name": "google: mrt_02484",
+          "speaker_index": 2
+        },
+        {
+          "physical_id": "piper:v1/c/piper-mr-in-google-medium/3",
+          "name": "google: mrt_02624",
+          "speaker_index": 3
+        },
+        {
+          "physical_id": "piper:v1/c/piper-mr-in-google-medium/4",
+          "name": "google: mrt_03349",
+          "speaker_index": 4
+        },
+        {
+          "physical_id": "piper:v1/c/piper-mr-in-google-medium/5",
+          "name": "google: mrt_03397",
+          "speaker_index": 5
+        },
+        {
+          "physical_id": "piper:v1/c/piper-mr-in-google-medium/6",
+          "name": "google: mrt_03398",
+          "speaker_index": 6
+        },
+        {
+          "physical_id": "piper:v1/c/piper-mr-in-google-medium/7",
+          "name": "google: mrt_04310",
+          "speaker_index": 7
+        },
+        {
+          "physical_id": "piper:v1/c/piper-mr-in-google-medium/8",
+          "name": "google: mrt_09697",
+          "speaker_index": 8
+        }
+      ]
+    }
+  ]
+}

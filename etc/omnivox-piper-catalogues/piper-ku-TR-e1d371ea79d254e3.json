@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-ku-tr-berfin-renas-medium",
+      "provider": "piper",
+      "name": "berfin renas medium",
+      "language": "ku-TR",
+      "description": "Kurmanji Kurdish; medium quality; 2 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC BY-NC 4.0; commercial use restricted. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ku/ku_TR/berfin_renas/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ku/ku_TR/berfin_renas/medium/ku_TR-berfin_renas-medium.onnx",
+          "bytes": 77060307,
+          "sha256": "bc0b2cf086f9a33ca1d7ca2ca80b6f35f8917d0c89afe4a645c5b9d56ac355c4"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ku/ku_TR/berfin_renas/medium/ku_TR-berfin_renas-medium.onnx.json",
+          "bytes": 5131,
+          "sha256": "66d0da87aa8e572c7e6ee67647aa6af6008e85e38819679f17dc9b86e3affca8"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ku/ku_TR/berfin_renas/medium/MODEL_CARD",
+          "bytes": 3756,
+          "sha256": "9c65915ac8c7e3536e322fb8f3f4b285e2e007068588def12eaac815e3bed615"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-ku-tr-berfin-renas-medium/0",
+          "name": "berfin_renas: Berfin",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-ku-tr-berfin-renas-medium/1",
+          "name": "berfin_renas: Renas",
+          "speaker_index": 1
+        }
+      ]
+    }
+  ]
+}

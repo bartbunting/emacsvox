@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-nl-be-nathalie-medium",
+      "provider": "piper",
+      "name": "nathalie medium",
+      "language": "nl-BE",
+      "description": "Dutch; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/nathalie/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/nathalie/medium/nl_BE-nathalie-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "49cf48023861f9fd42e13a8632f068fee67d1ce244a6ee38f29595afbf0a6be4"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/nathalie/medium/nl_BE-nathalie-medium.onnx.json",
+          "bytes": 4879,
+          "sha256": "4704af2736022e910a3f32672480d5530dd39da5c2bcc079f315f604166ff0de"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/nathalie/medium/MODEL_CARD",
+          "bytes": 284,
+          "sha256": "129daeda6c74903efac7aa522ae4fd6628a6acdd0975ee897384e1079acbcd2f"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-nl-be-nathalie-medium/0",
+          "name": "nathalie",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-nl-be-nathalie-x-low",
+      "provider": "piper",
+      "name": "nathalie x_low",
+      "language": "nl-BE",
+      "description": "Dutch; x_low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/nathalie/x_low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/nathalie/x_low/nl_BE-nathalie-x_low.onnx",
+          "bytes": 20628813,
+          "sha256": "7d005d2d9b3db4326fc4a1ac86b61ab40252ccf97b76d527f4ffd76d4e3f7dbe"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/nathalie/x_low/nl_BE-nathalie-x_low.onnx.json",
+          "bytes": 4163,
+          "sha256": "390d21992bd734a49c015fcd7027e4af7b2779f5867ff762e6453e323f554bd8"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/nathalie/x_low/MODEL_CARD",
+          "bytes": 246,
+          "sha256": "25ac2af86bd2d49c02dd52a46377f3471695c359a64ea51cc891f7933c59547f"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-nl-be-nathalie-x-low/0",
+          "name": "nathalie",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-nl-be-rdh-medium",
+      "provider": "piper",
+      "name": "rdh medium",
+      "language": "nl-BE",
+      "description": "Dutch; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0 1.0 Universal. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/rdh/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/rdh/medium/nl_BE-rdh-medium.onnx",
+          "bytes": 63104526,
+          "sha256": "fb1a9d89ff53dbd510c5d10bd1365c36a5f76249c3ca603076646fd778003db1"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/rdh/medium/nl_BE-rdh-medium.onnx.json",
+          "bytes": 4159,
+          "sha256": "65deb256664d22099b0db5bb36d96237a3e32e43885c6ce4ee6811e6c04a8d79"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/rdh/medium/MODEL_CARD",
+          "bytes": 244,
+          "sha256": "a0ac804376a1b4be5aeba0f982e43380bccd105b84af3477208f8a2b0fb89cc3"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-nl-be-rdh-medium/0",
+          "name": "rdh",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-nl-be-rdh-x-low",
+      "provider": "piper",
+      "name": "rdh x_low",
+      "language": "nl-BE",
+      "description": "Dutch; x_low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0 1.0 Universal. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/rdh/x_low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/rdh/x_low/nl_BE-rdh-x_low.onnx",
+          "bytes": 20628813,
+          "sha256": "fe43651248219b4e816e47d9708f2812f2a09af99470ed822113f3e913430d52"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/rdh/x_low/nl_BE-rdh-x_low.onnx.json",
+          "bytes": 4158,
+          "sha256": "15724b7ef0247d566d9c2bac252c1b0b6ec9ceb7ccbb2c0a0d1ed57bf03b4f5d"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/nl/nl_BE/rdh/x_low/MODEL_CARD",
+          "bytes": 242,
+          "sha256": "93803121905ddba966ad0ea89fdf26b7e34f1f700c0c3bbbd504fdeaede98009"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-nl-be-rdh-x-low/0",
+          "name": "rdh",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-it-it-serena-high",
+      "provider": "piper",
+      "name": "serena high",
+      "language": "it-IT",
+      "description": "Italian; high quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY-4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/serena/high/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/serena/high/it_IT-serena-high.onnx",
+          "bytes": 114199010,
+          "sha256": "743240dae6ecab12cdc3eee9260cbf688a04e066775d0ce28b8007dad12f42d0"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/serena/high/it_IT-serena-high.onnx.json",
+          "bytes": 4957,
+          "sha256": "ce7e3319aee3b687ab6e8be8d49eae350e5ef942eaf95189dec80fb89110d4ee"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/serena/high/MODEL_CARD",
+          "bytes": 262,
+          "sha256": "5c388e5b6df184359af472b665a4318b8da8948455dcc39eb48de408ad2d693c"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-it-it-serena-high/0",
+          "name": "serena",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-it-it-serena-medium",
+      "provider": "piper",
+      "name": "serena medium",
+      "language": "it-IT",
+      "description": "Italian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY-4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/serena/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/serena/medium/it_IT-serena-medium.onnx",
+          "bytes": 63511037,
+          "sha256": "3f1493311db17fec0e95cdf3c92f82b5006159b7743e057a749187469dfa7cf0"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/serena/medium/it_IT-serena-medium.onnx.json",
+          "bytes": 4959,
+          "sha256": "0c5ecb9a9f574f1363993df8f641dd3ed433cd940045e137809e25651057c550"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/it/it_IT/serena/medium/MODEL_CARD",
+          "bytes": 266,
+          "sha256": "1d0dbdc0182d19f6510fd3dcd2893587912a65f8cafe6da57754863f168bbe7e"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-it-it-serena-medium/0",
+          "name": "serena",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

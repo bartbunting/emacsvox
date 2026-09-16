@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-es-ar-daniela-high",
+      "provider": "piper",
+      "name": "daniela high",
+      "language": "es-AR",
+      "description": "Spanish; high quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares Attribution-ShareAlike 4.0 International. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_AR/daniela/high/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_AR/daniela/high/es_AR-daniela-high.onnx",
+          "bytes": 114199011,
+          "sha256": "7ceb1fc0dab349418c5b54a639ae9ee595212d7c9ea422220d8419163d5cc985"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_AR/daniela/high/es_AR-daniela-high.onnx.json",
+          "bytes": 7248,
+          "sha256": "aedbf69647e1d754c62ecf8e0366ca5f16af3e768e3c6b5329af6eb6bde3852b"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_AR/daniela/high/MODEL_CARD",
+          "bytes": 353,
+          "sha256": "39fda44bb85009b0bd7aabb455b113e50abf1f2a2013f3264c482691105e4e3b"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-es-ar-daniela-high/0",
+          "name": "daniela",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

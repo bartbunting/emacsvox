@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-lv-lv-aivars-medium",
+      "provider": "piper",
+      "name": "aivars medium",
+      "language": "lv-LV",
+      "description": "Latvian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0 1.0 Universal. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/lv/lv_LV/aivars/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/lv/lv_LV/aivars/medium/lv_LV-aivars-medium.onnx",
+          "bytes": 63511038,
+          "sha256": "9d855a47c22e2b94795be9e0eb9e8c4c02ce251dc89461dede94de20ff08bd8e"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/lv/lv_LV/aivars/medium/lv_LV-aivars-medium.onnx.json",
+          "bytes": 7242,
+          "sha256": "08ae2c297be8aa04f15f3f97b7ffeae0146b30b0bd8f7baebcdc46bc2c2f33dc"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/lv/lv_LV/aivars/medium/MODEL_CARD",
+          "bytes": 257,
+          "sha256": "6a950a9f9c95b893b7fd3553f5b42f5b1025fb5fbc004d3924d99e92250b69cf"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-lv-lv-aivars-medium/0",
+          "name": "aivars",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

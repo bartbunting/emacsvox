@@ -1,0 +1,1482 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-de-de-kerstin-low",
+      "provider": "piper",
+      "name": "kerstin low",
+      "language": "de-DE",
+      "description": "German; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/kerstin/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/kerstin/low/de_DE-kerstin-low.onnx",
+          "bytes": 63104526,
+          "sha256": "d352a7641892cebf2903859af94e9ba81a141110215fe3943bcda7f7da401b7a"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/kerstin/low/de_DE-kerstin-low.onnx.json",
+          "bytes": 4158,
+          "sha256": "56e708556b7b9b7a53c4f8957e021421e69f11a600962bba554cffbe72cf2d47"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/kerstin/low/MODEL_CARD",
+          "bytes": 272,
+          "sha256": "7019006374a5fe5358186d5f3333e9f904385e7bdfbb68bc85dafce1a3cddae5"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-de-de-kerstin-low/0",
+          "name": "kerstin",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-de-de-mls-medium",
+      "provider": "piper",
+      "name": "mls medium",
+      "language": "de-DE",
+      "description": "German; medium quality; 236 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/mls/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/mls/medium/de_DE-mls-medium.onnx",
+          "bytes": 76961079,
+          "sha256": "69cd1d2aa5a35839a518966fcc4924b5f93e5f8c948ed0752b1a616ad53f65bf"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/mls/medium/de_DE-mls-medium.onnx.json",
+          "bytes": 8948,
+          "sha256": "b0af1c89ddfdc72d32e015729b0e89b99eec13c2c8caa1db7488d98e9e570b40"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/mls/medium/MODEL_CARD",
+          "bytes": 223,
+          "sha256": "ca1bf03a3c287fb6968acfa010e1917f85f0aa59db0f371efc3a2857f4035ffd"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/0",
+          "name": "mls: 2422",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/1",
+          "name": "mls: 4536",
+          "speaker_index": 1
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/2",
+          "name": "mls: 2037",
+          "speaker_index": 2
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/3",
+          "name": "mls: 9565",
+          "speaker_index": 3
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/4",
+          "name": "mls: 10148",
+          "speaker_index": 4
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/5",
+          "name": "mls: 6507",
+          "speaker_index": 5
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/6",
+          "name": "mls: 5055",
+          "speaker_index": 6
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/7",
+          "name": "mls: 3503",
+          "speaker_index": 7
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/8",
+          "name": "mls: 252",
+          "speaker_index": 8
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/9",
+          "name": "mls: 9132",
+          "speaker_index": 9
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/10",
+          "name": "mls: 3990",
+          "speaker_index": 10
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/11",
+          "name": "mls: 5753",
+          "speaker_index": 11
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/12",
+          "name": "mls: 5424",
+          "speaker_index": 12
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/13",
+          "name": "mls: 2602",
+          "speaker_index": 13
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/14",
+          "name": "mls: 4174",
+          "speaker_index": 14
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/15",
+          "name": "mls: 3885",
+          "speaker_index": 15
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/16",
+          "name": "mls: 12415",
+          "speaker_index": 16
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/17",
+          "name": "mls: 8470",
+          "speaker_index": 17
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/18",
+          "name": "mls: 11927",
+          "speaker_index": 18
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/19",
+          "name": "mls: 9639",
+          "speaker_index": 19
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/20",
+          "name": "mls: 3494",
+          "speaker_index": 20
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/21",
+          "name": "mls: 2946",
+          "speaker_index": 21
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/22",
+          "name": "mls: 5283",
+          "speaker_index": 22
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/23",
+          "name": "mls: 4533",
+          "speaker_index": 23
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/24",
+          "name": "mls: 2497",
+          "speaker_index": 24
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/25",
+          "name": "mls: 12275",
+          "speaker_index": 25
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/26",
+          "name": "mls: 1649",
+          "speaker_index": 26
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/27",
+          "name": "mls: 146",
+          "speaker_index": 27
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/28",
+          "name": "mls: 8337",
+          "speaker_index": 28
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/29",
+          "name": "mls: 4542",
+          "speaker_index": 29
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/30",
+          "name": "mls: 589",
+          "speaker_index": 30
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/31",
+          "name": "mls: 1998",
+          "speaker_index": 31
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/32",
+          "name": "mls: 3797",
+          "speaker_index": 32
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/33",
+          "name": "mls: 5244",
+          "speaker_index": 33
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/34",
+          "name": "mls: 7328",
+          "speaker_index": 34
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/35",
+          "name": "mls: 7998",
+          "speaker_index": 35
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/36",
+          "name": "mls: 10179",
+          "speaker_index": 36
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/37",
+          "name": "mls: 9610",
+          "speaker_index": 37
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/38",
+          "name": "mls: 20",
+          "speaker_index": 38
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/39",
+          "name": "mls: 253",
+          "speaker_index": 39
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/40",
+          "name": "mls: 12899",
+          "speaker_index": 40
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/41",
+          "name": "mls: 7194",
+          "speaker_index": 41
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/42",
+          "name": "mls: 3759",
+          "speaker_index": 42
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/43",
+          "name": "mls: 2677",
+          "speaker_index": 43
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/44",
+          "name": "mls: 6719",
+          "speaker_index": 44
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/45",
+          "name": "mls: 1897",
+          "speaker_index": 45
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/46",
+          "name": "mls: 11990",
+          "speaker_index": 46
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/47",
+          "name": "mls: 6880",
+          "speaker_index": 47
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/48",
+          "name": "mls: 19",
+          "speaker_index": 48
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/49",
+          "name": "mls: 9515",
+          "speaker_index": 49
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/50",
+          "name": "mls: 327",
+          "speaker_index": 50
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/51",
+          "name": "mls: 3244",
+          "speaker_index": 51
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/52",
+          "name": "mls: 5324",
+          "speaker_index": 52
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/53",
+          "name": "mls: 2234",
+          "speaker_index": 53
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/54",
+          "name": "mls: 3124",
+          "speaker_index": 54
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/55",
+          "name": "mls: 2043",
+          "speaker_index": 55
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/56",
+          "name": "mls: 143",
+          "speaker_index": 56
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/57",
+          "name": "mls: 8139",
+          "speaker_index": 57
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/58",
+          "name": "mls: 9646",
+          "speaker_index": 58
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/59",
+          "name": "mls: 8659",
+          "speaker_index": 59
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/60",
+          "name": "mls: 9538",
+          "speaker_index": 60
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/61",
+          "name": "mls: 989",
+          "speaker_index": 61
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/62",
+          "name": "mls: 5405",
+          "speaker_index": 62
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/63",
+          "name": "mls: 10087",
+          "speaker_index": 63
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/64",
+          "name": "mls: 8294",
+          "speaker_index": 64
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/65",
+          "name": "mls: 4396",
+          "speaker_index": 65
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/66",
+          "name": "mls: 1474",
+          "speaker_index": 66
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/67",
+          "name": "mls: 139",
+          "speaker_index": 67
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/68",
+          "name": "mls: 136",
+          "speaker_index": 68
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/69",
+          "name": "mls: 10791",
+          "speaker_index": 69
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/70",
+          "name": "mls: 7242",
+          "speaker_index": 70
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/71",
+          "name": "mls: 3631",
+          "speaker_index": 71
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/72",
+          "name": "mls: 9908",
+          "speaker_index": 72
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/73",
+          "name": "mls: 7906",
+          "speaker_index": 73
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/74",
+          "name": "mls: 1171",
+          "speaker_index": 74
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/75",
+          "name": "mls: 7479",
+          "speaker_index": 75
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/76",
+          "name": "mls: 5632",
+          "speaker_index": 76
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/77",
+          "name": "mls: 3731",
+          "speaker_index": 77
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/78",
+          "name": "mls: 4650",
+          "speaker_index": 78
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/79",
+          "name": "mls: 135",
+          "speaker_index": 79
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/80",
+          "name": "mls: 145",
+          "speaker_index": 80
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/81",
+          "name": "mls: 137",
+          "speaker_index": 81
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/82",
+          "name": "mls: 1757",
+          "speaker_index": 82
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/83",
+          "name": "mls: 91",
+          "speaker_index": 83
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/84",
+          "name": "mls: 9514",
+          "speaker_index": 84
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/85",
+          "name": "mls: 13494",
+          "speaker_index": 85
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/86",
+          "name": "mls: 1946",
+          "speaker_index": 86
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/87",
+          "name": "mls: 3277",
+          "speaker_index": 87
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/88",
+          "name": "mls: 5595",
+          "speaker_index": 88
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/89",
+          "name": "mls: 278",
+          "speaker_index": 89
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/90",
+          "name": "mls: 7120",
+          "speaker_index": 90
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/91",
+          "name": "mls: 7406",
+          "speaker_index": 91
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/92",
+          "name": "mls: 11695",
+          "speaker_index": 92
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/93",
+          "name": "mls: 1593",
+          "speaker_index": 93
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/94",
+          "name": "mls: 3862",
+          "speaker_index": 94
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/95",
+          "name": "mls: 138",
+          "speaker_index": 95
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/96",
+          "name": "mls: 141",
+          "speaker_index": 96
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/97",
+          "name": "mls: 9948",
+          "speaker_index": 97
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/98",
+          "name": "mls: 1163",
+          "speaker_index": 98
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/99",
+          "name": "mls: 1054",
+          "speaker_index": 99
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/100",
+          "name": "mls: 1844",
+          "speaker_index": 100
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/101",
+          "name": "mls: 4911",
+          "speaker_index": 101
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/102",
+          "name": "mls: 7261",
+          "speaker_index": 102
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/103",
+          "name": "mls: 8223",
+          "speaker_index": 103
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/104",
+          "name": "mls: 7624",
+          "speaker_index": 104
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/105",
+          "name": "mls: 144",
+          "speaker_index": 105
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/106",
+          "name": "mls: 13871",
+          "speaker_index": 106
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/107",
+          "name": "mls: 2974",
+          "speaker_index": 107
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/108",
+          "name": "mls: 5934",
+          "speaker_index": 108
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/109",
+          "name": "mls: 7002",
+          "speaker_index": 109
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/110",
+          "name": "mls: 8769",
+          "speaker_index": 110
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/111",
+          "name": "mls: 3363",
+          "speaker_index": 111
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/112",
+          "name": "mls: 3040",
+          "speaker_index": 112
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/113",
+          "name": "mls: 6067",
+          "speaker_index": 113
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/114",
+          "name": "mls: 9494",
+          "speaker_index": 114
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/115",
+          "name": "mls: 8743",
+          "speaker_index": 115
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/116",
+          "name": "mls: 13255",
+          "speaker_index": 116
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/117",
+          "name": "mls: 1660",
+          "speaker_index": 117
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/118",
+          "name": "mls: 3588",
+          "speaker_index": 118
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/119",
+          "name": "mls: 4748",
+          "speaker_index": 119
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/120",
+          "name": "mls: 8450",
+          "speaker_index": 120
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/121",
+          "name": "mls: 5295",
+          "speaker_index": 121
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/122",
+          "name": "mls: 4705",
+          "speaker_index": 122
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/123",
+          "name": "mls: 8125",
+          "speaker_index": 123
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/124",
+          "name": "mls: 7272",
+          "speaker_index": 124
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/125",
+          "name": "mls: 7320",
+          "speaker_index": 125
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/126",
+          "name": "mls: 1874",
+          "speaker_index": 126
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/127",
+          "name": "mls: 1262",
+          "speaker_index": 127
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/128",
+          "name": "mls: 10870",
+          "speaker_index": 128
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/129",
+          "name": "mls: 12379",
+          "speaker_index": 129
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/130",
+          "name": "mls: 4463",
+          "speaker_index": 130
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/131",
+          "name": "mls: 10349",
+          "speaker_index": 131
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/132",
+          "name": "mls: 2252",
+          "speaker_index": 132
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/133",
+          "name": "mls: 8325",
+          "speaker_index": 133
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/134",
+          "name": "mls: 3052",
+          "speaker_index": 134
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/135",
+          "name": "mls: 4001",
+          "speaker_index": 135
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/136",
+          "name": "mls: 7456",
+          "speaker_index": 136
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/137",
+          "name": "mls: 140",
+          "speaker_index": 137
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/138",
+          "name": "mls: 4739",
+          "speaker_index": 138
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/139",
+          "name": "mls: 11299",
+          "speaker_index": 139
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/140",
+          "name": "mls: 4730",
+          "speaker_index": 140
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/141",
+          "name": "mls: 6659",
+          "speaker_index": 141
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/142",
+          "name": "mls: 2034",
+          "speaker_index": 142
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/143",
+          "name": "mls: 2732",
+          "speaker_index": 143
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/144",
+          "name": "mls: 2158",
+          "speaker_index": 144
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/145",
+          "name": "mls: 3698",
+          "speaker_index": 145
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/146",
+          "name": "mls: 5675",
+          "speaker_index": 146
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/147",
+          "name": "mls: 6315",
+          "speaker_index": 147
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/148",
+          "name": "mls: 10904",
+          "speaker_index": 148
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/149",
+          "name": "mls: 7202",
+          "speaker_index": 149
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/150",
+          "name": "mls: 11480",
+          "speaker_index": 150
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/151",
+          "name": "mls: 10625",
+          "speaker_index": 151
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/152",
+          "name": "mls: 11546",
+          "speaker_index": 152
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/153",
+          "name": "mls: 4576",
+          "speaker_index": 153
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/154",
+          "name": "mls: 4512",
+          "speaker_index": 154
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/155",
+          "name": "mls: 8634",
+          "speaker_index": 155
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/156",
+          "name": "mls: 13626",
+          "speaker_index": 156
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/157",
+          "name": "mls: 1613",
+          "speaker_index": 157
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/158",
+          "name": "mls: 287",
+          "speaker_index": 158
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/159",
+          "name": "mls: 9207",
+          "speaker_index": 159
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/160",
+          "name": "mls: 6982",
+          "speaker_index": 160
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/161",
+          "name": "mls: 1724",
+          "speaker_index": 161
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/162",
+          "name": "mls: 10191",
+          "speaker_index": 162
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/163",
+          "name": "mls: 1091",
+          "speaker_index": 163
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/164",
+          "name": "mls: 2909",
+          "speaker_index": 164
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/165",
+          "name": "mls: 1965",
+          "speaker_index": 165
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/166",
+          "name": "mls: 2506",
+          "speaker_index": 166
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/167",
+          "name": "mls: 4414",
+          "speaker_index": 167
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/168",
+          "name": "mls: 5764",
+          "speaker_index": 168
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/169",
+          "name": "mls: 12776",
+          "speaker_index": 169
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/170",
+          "name": "mls: 1033",
+          "speaker_index": 170
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/171",
+          "name": "mls: 13726",
+          "speaker_index": 171
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/172",
+          "name": "mls: 2314",
+          "speaker_index": 172
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/173",
+          "name": "mls: 6826",
+          "speaker_index": 173
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/174",
+          "name": "mls: 9706",
+          "speaker_index": 174
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/175",
+          "name": "mls: 8427",
+          "speaker_index": 175
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/176",
+          "name": "mls: 9168",
+          "speaker_index": 176
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/177",
+          "name": "mls: 9287",
+          "speaker_index": 177
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/178",
+          "name": "mls: 6905",
+          "speaker_index": 178
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/179",
+          "name": "mls: 4153",
+          "speaker_index": 179
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/180",
+          "name": "mls: 3330",
+          "speaker_index": 180
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/181",
+          "name": "mls: 2859",
+          "speaker_index": 181
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/182",
+          "name": "mls: 5406",
+          "speaker_index": 182
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/183",
+          "name": "mls: 2840",
+          "speaker_index": 183
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/184",
+          "name": "mls: 1920",
+          "speaker_index": 184
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/185",
+          "name": "mls: 9241",
+          "speaker_index": 185
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/186",
+          "name": "mls: 10163",
+          "speaker_index": 186
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/187",
+          "name": "mls: 8305",
+          "speaker_index": 187
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/188",
+          "name": "mls: 12461",
+          "speaker_index": 188
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/189",
+          "name": "mls: 3276",
+          "speaker_index": 189
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/190",
+          "name": "mls: 11413",
+          "speaker_index": 190
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/191",
+          "name": "mls: 10536",
+          "speaker_index": 191
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/192",
+          "name": "mls: 10614",
+          "speaker_index": 192
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/193",
+          "name": "mls: 7579",
+          "speaker_index": 193
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/194",
+          "name": "mls: 8675",
+          "speaker_index": 194
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/195",
+          "name": "mls: 7483",
+          "speaker_index": 195
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/196",
+          "name": "mls: 7270",
+          "speaker_index": 196
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/197",
+          "name": "mls: 8704",
+          "speaker_index": 197
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/198",
+          "name": "mls: 4468",
+          "speaker_index": 198
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/199",
+          "name": "mls: 6611",
+          "speaker_index": 199
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/200",
+          "name": "mls: 11497",
+          "speaker_index": 200
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/201",
+          "name": "mls: 11772",
+          "speaker_index": 201
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/202",
+          "name": "mls: 2792",
+          "speaker_index": 202
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/203",
+          "name": "mls: 11481",
+          "speaker_index": 203
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/204",
+          "name": "mls: 10162",
+          "speaker_index": 204
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/205",
+          "name": "mls: 10819",
+          "speaker_index": 205
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/206",
+          "name": "mls: 8732",
+          "speaker_index": 206
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/207",
+          "name": "mls: 11328",
+          "speaker_index": 207
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/208",
+          "name": "mls: 11920",
+          "speaker_index": 208
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/209",
+          "name": "mls: 6646",
+          "speaker_index": 209
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/210",
+          "name": "mls: 7486",
+          "speaker_index": 210
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/211",
+          "name": "mls: 11870",
+          "speaker_index": 211
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/212",
+          "name": "mls: 12417",
+          "speaker_index": 212
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/213",
+          "name": "mls: 10364",
+          "speaker_index": 213
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/214",
+          "name": "mls: 6117",
+          "speaker_index": 214
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/215",
+          "name": "mls: 6448",
+          "speaker_index": 215
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/216",
+          "name": "mls: 10433",
+          "speaker_index": 216
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/217",
+          "name": "mls: 7515",
+          "speaker_index": 217
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/218",
+          "name": "mls: 5823",
+          "speaker_index": 218
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/219",
+          "name": "mls: 8567",
+          "speaker_index": 219
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/220",
+          "name": "mls: 10947",
+          "speaker_index": 220
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/221",
+          "name": "mls: 11869",
+          "speaker_index": 221
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/222",
+          "name": "mls: 12335",
+          "speaker_index": 222
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/223",
+          "name": "mls: 12500",
+          "speaker_index": 223
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/224",
+          "name": "mls: 13755",
+          "speaker_index": 224
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/225",
+          "name": "mls: 7006",
+          "speaker_index": 225
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/226",
+          "name": "mls: 3685",
+          "speaker_index": 226
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/227",
+          "name": "mls: 5819",
+          "speaker_index": 227
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/228",
+          "name": "mls: 9353",
+          "speaker_index": 228
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/229",
+          "name": "mls: 11355",
+          "speaker_index": 229
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/230",
+          "name": "mls: 12174",
+          "speaker_index": 230
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/231",
+          "name": "mls: 7150",
+          "speaker_index": 231
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/232",
+          "name": "mls: 6952",
+          "speaker_index": 232
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/233",
+          "name": "mls: 11987",
+          "speaker_index": 233
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/234",
+          "name": "mls: 3995",
+          "speaker_index": 234
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-mls-medium/235",
+          "name": "mls: 7449",
+          "speaker_index": 235
+        }
+      ]
+    },
+    {
+      "id": "piper-de-de-pavoque-low",
+      "provider": "piper",
+      "name": "pavoque low",
+      "language": "de-DE",
+      "description": "German; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares http://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/pavoque/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/pavoque/low/de_DE-pavoque-low.onnx",
+          "bytes": 63104526,
+          "sha256": "96cd41fe2303dfe4745422a2580658bdbc5f935b7ee67640a94da7435a502a26"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/pavoque/low/de_DE-pavoque-low.onnx.json",
+          "bytes": 4158,
+          "sha256": "07d43d8946e869209a12d9b4fd780e3f277fe9afb305c21491a68bd97e01b74f"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/pavoque/low/MODEL_CARD",
+          "bytes": 309,
+          "sha256": "c28ca951bc48c69f4a33c2166ac6356ac3f0d5e4efb9bb57ef41f6d306f7ff8b"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-de-de-pavoque-low/0",
+          "name": "pavoque",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-de-de-thorsten-high",
+      "provider": "piper",
+      "name": "thorsten high",
+      "language": "de-DE",
+      "description": "German; high quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/high/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/high/de_DE-thorsten-high.onnx",
+          "bytes": 113895201,
+          "sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/high/de_DE-thorsten-high.onnx.json",
+          "bytes": 4875,
+          "sha256": "6de734444e4c3f9e33b7ebe2746dbc19b71e85f613e79c65acf623200b99a76a"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/high/MODEL_CARD",
+          "bytes": 279,
+          "sha256": "a49334fc36286c9d67f007605969a33f416cc4e35eb770c9c7f716d44711fc3a"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-de-de-thorsten-high/0",
+          "name": "thorsten",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-de-de-thorsten-low",
+      "provider": "piper",
+      "name": "thorsten low",
+      "language": "de-DE",
+      "description": "German; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/low/de_DE-thorsten-low.onnx",
+          "bytes": 63104526,
+          "sha256": "9ac27fad17cec5c1a791161976a64f026f16fc058b400b1fea62565b8b2cf375"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/low/de_DE-thorsten-low.onnx.json",
+          "bytes": 4159,
+          "sha256": "df38e892ed949f62d0c40978bc666de0b341c5f7921840ae7c72f4df8e8ffa05"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/low/MODEL_CARD",
+          "bytes": 274,
+          "sha256": "f09e67d4e0dfcf53df996349fc0219d0dddeab502dc2bd0cf0512c6170bc944d"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-de-de-thorsten-low/0",
+          "name": "thorsten",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-de-de-thorsten-medium",
+      "provider": "piper",
+      "name": "thorsten medium",
+      "language": "de-DE",
+      "description": "German; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "7e64762d8e5118bb578f2eea6207e1a35a8e0c30595010b666f983fc87bb7819"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx.json",
+          "bytes": 4819,
+          "sha256": "974adee790533adb273a1ac88f49027d2a1b8f0f2cf4905954a4791e79264e85"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten/medium/MODEL_CARD",
+          "bytes": 285,
+          "sha256": "5196b5ab0794e6056263a1f37c18bec407b61ac187529bee29d1c366871e5c9e"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-de-de-thorsten-medium/0",
+          "name": "thorsten",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-de-de-thorsten-emotional-medium",
+      "provider": "piper",
+      "name": "thorsten emotional medium",
+      "language": "de-DE",
+      "description": "German; medium quality; 8 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten_emotional/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten_emotional/medium/de_DE-thorsten_emotional-medium.onnx",
+          "bytes": 76745905,
+          "sha256": "c1764e652266cd6dcebf1b95c61973df5970a5f5272e94b655ff1ddf9a99d1ff"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten_emotional/medium/de_DE-thorsten_emotional-medium.onnx.json",
+          "bytes": 5031,
+          "sha256": "92895b9e99f7cfc13f4a9879da615c3d6e0baa4d660e26d7b685abdd27a6d1d3"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/de/de_DE/thorsten_emotional/medium/MODEL_CARD",
+          "bytes": 302,
+          "sha256": "7c3201dbccb062f071a3cdda0dce7eb05fe1f889fba2c6180994f97ec5eeafd8"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-de-de-thorsten-emotional-medium/0",
+          "name": "thorsten_emotional: amused",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-thorsten-emotional-medium/1",
+          "name": "thorsten_emotional: angry",
+          "speaker_index": 1
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-thorsten-emotional-medium/2",
+          "name": "thorsten_emotional: disgusted",
+          "speaker_index": 2
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-thorsten-emotional-medium/3",
+          "name": "thorsten_emotional: drunk",
+          "speaker_index": 3
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-thorsten-emotional-medium/4",
+          "name": "thorsten_emotional: neutral",
+          "speaker_index": 4
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-thorsten-emotional-medium/5",
+          "name": "thorsten_emotional: sleepy",
+          "speaker_index": 5
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-thorsten-emotional-medium/6",
+          "name": "thorsten_emotional: surprised",
+          "speaker_index": 6
+        },
+        {
+          "physical_id": "piper:v1/c/piper-de-de-thorsten-emotional-medium/7",
+          "name": "thorsten_emotional: whisper",
+          "speaker_index": 7
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-es-mx-ald-medium",
+      "provider": "piper",
+      "name": "ald medium",
+      "language": "es-MX",
+      "description": "Spanish; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares http://unlicense.org. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_MX/ald/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_MX/ald/medium/es_MX-ald-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "019b3803293c93e34a206dd2e53a3889209a514e786fd7144f7b70196c579b63"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_MX/ald/medium/es_MX-ald-medium.onnx.json",
+          "bytes": 4878,
+          "sha256": "5a71498158e04afc8099bfd019c7e87c68eb9d042505a2b1a87e5c1ac2b1a61d"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_MX/ald/medium/MODEL_CARD",
+          "bytes": 320,
+          "sha256": "1f0694ceb3f1e78c1e2ee0e2d5da40f19f965bc638e1b4fb4fca9bdca420d713"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-es-mx-ald-medium/0",
+          "name": "ald",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-es-mx-claude-high",
+      "provider": "piper",
+      "name": "claude high",
+      "language": "es-MX",
+      "description": "Spanish; high quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares apache-2.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_MX/claude/high/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_MX/claude/high/es_MX-claude-high.onnx",
+          "bytes": 63122309,
+          "sha256": "3ef40a71ea63852cd8ab7e6fa7d2ecdcfa67a0b47c9c48e3f10e02ee02083ea0"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_MX/claude/high/es_MX-claude-high.onnx.json",
+          "bytes": 4963,
+          "sha256": "1afc81f703c0e4cb3b4d7c0dca096b8b54a98806807f0170cf5eb5557723c12d"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/es/es_MX/claude/high/MODEL_CARD",
+          "bytes": 247,
+          "sha256": "f03da57c1e945f6d709b01e7699d26018e145570139de52ac7569aaa8962a174"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-es-mx-claude-high/0",
+          "name": "claude",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

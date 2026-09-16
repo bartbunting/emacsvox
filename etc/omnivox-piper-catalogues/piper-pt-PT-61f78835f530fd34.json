@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-pt-pt-tug-u00e3-o-medium",
+      "provider": "piper",
+      "name": "tugão medium",
+      "language": "pt-PT",
+      "description": "Portuguese; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pt/pt_PT/tug%C3%A3o/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pt/pt_PT/tug%C3%A3o/medium/pt_PT-tug%C3%A3o-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "223a7aaca69a155c61897e8ada7c3b13bc306e16c72dbb9c2fed733e2b0927d4"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pt/pt_PT/tug%C3%A3o/medium/pt_PT-tug%C3%A3o-medium.onnx.json",
+          "bytes": 5026,
+          "sha256": "fe0918dfc0f1a89264a6eea4afe8e95d8e9fed3cc6c81b5c2f87fcb2b50c7320"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pt/pt_PT/tug%C3%A3o/medium/MODEL_CARD",
+          "bytes": 282,
+          "sha256": "1d6c23095980c0c58a044f1cb23e26fdc1d27bd95b68db0b5b0c548788b99d50"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-pt-pt-tug-u00e3-o-medium/0",
+          "name": "tugão",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

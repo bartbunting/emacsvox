@@ -1,0 +1,867 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-en-gb-alba-medium",
+      "provider": "piper",
+      "name": "alba medium",
+      "language": "en-GB",
+      "description": "English; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares https://creativecommons.org/licenses/by/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/alba/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/alba/medium/en_GB-alba-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "401369c4a81d09fdd86c32c5c864440811dbdcc66466cde2d64f7133a66ad03b"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/alba/medium/en_GB-alba-medium.onnx.json",
+          "bytes": 4888,
+          "sha256": "aa965a2f02ecced632c2694e1fc72bbff6d65f265fab567ca945918c73dd89f4"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/alba/medium/MODEL_CARD",
+          "bytes": 324,
+          "sha256": "fa166b1779404c470b0b6b4ba0238bc4a35bf89d2cd130c6788f697188b737d6"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-alba-medium/0",
+          "name": "alba",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-en-gb-aru-medium",
+      "provider": "piper",
+      "name": "aru medium",
+      "language": "en-GB",
+      "description": "English; medium quality; 12 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares https://creativecommons.org/licenses/by/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/aru/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/aru/medium/en_GB-aru-medium.onnx",
+          "bytes": 76754097,
+          "sha256": "9e74d089a8563f8b2446426d01becb046cd3c3bfbafe1a20fd03a9a79bd82619"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/aru/medium/en_GB-aru-medium.onnx.json",
+          "bytes": 5048,
+          "sha256": "00529fabf0e79f29a9cb10fda5b60f9b7cf80671faac2b316e13af20e7816d5e"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/aru/medium/MODEL_CARD",
+          "bytes": 368,
+          "sha256": "b9a880778b6cc58330e78f862ba3554836f4ac9194f613533dbfdf28fce0a7ff"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/0",
+          "name": "aru: 03",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/1",
+          "name": "aru: 06",
+          "speaker_index": 1
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/2",
+          "name": "aru: 10",
+          "speaker_index": 2
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/3",
+          "name": "aru: 01",
+          "speaker_index": 3
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/4",
+          "name": "aru: 09",
+          "speaker_index": 4
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/5",
+          "name": "aru: 08",
+          "speaker_index": 5
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/6",
+          "name": "aru: 11",
+          "speaker_index": 6
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/7",
+          "name": "aru: 05",
+          "speaker_index": 7
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/8",
+          "name": "aru: 12",
+          "speaker_index": 8
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/9",
+          "name": "aru: 02",
+          "speaker_index": 9
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/10",
+          "name": "aru: 07",
+          "speaker_index": 10
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-aru-medium/11",
+          "name": "aru: 04",
+          "speaker_index": 11
+        }
+      ]
+    },
+    {
+      "id": "piper-en-gb-cori-high",
+      "provider": "piper",
+      "name": "cori high",
+      "language": "en-GB",
+      "description": "English; high quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares public domain. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/cori/high/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/cori/high/en_GB-cori-high.onnx",
+          "bytes": 114219352,
+          "sha256": "470b4dd634c98f8a4850d7626ffc3dfc90774628eeef6605a6dd8f88f30a5903"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/cori/high/en_GB-cori-high.onnx.json",
+          "bytes": 4963,
+          "sha256": "9e7fb5b5671612c22f3c81cbe46c1ae87b031a4632bcb509e499dad6f1e2adec"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/cori/high/MODEL_CARD",
+          "bytes": 468,
+          "sha256": "136e7bd168b6c35b4a5df01a0253297e5773b5775ceae0af5160f264aa58208f"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-cori-high/0",
+          "name": "cori",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-en-gb-cori-medium",
+      "provider": "piper",
+      "name": "cori medium",
+      "language": "en-GB",
+      "description": "English; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares public domain. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/cori/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/cori/medium/en_GB-cori-medium.onnx",
+          "bytes": 63531379,
+          "sha256": "1899f98e5fb8310154f3c2973f4b8a929ba7245e722b3d3a85680b833d95f10d"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/cori/medium/en_GB-cori-medium.onnx.json",
+          "bytes": 4966,
+          "sha256": "e262c16d7f192f69d4edd6b4ef8a5915379e67495fcc402f1ab15eeb33da3d36"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/cori/medium/MODEL_CARD",
+          "bytes": 474,
+          "sha256": "38d76dfde845837b184668f8bab1c6426ad740b1af0fcebc349037822739e536"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-cori-medium/0",
+          "name": "cori",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-en-gb-northern-english-male-medium",
+      "provider": "piper",
+      "name": "northern english male medium",
+      "language": "en-GB",
+      "description": "English; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY-SA 4.0 International. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/northern_english_male/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/northern_english_male/medium/en_GB-northern_english_male-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "57a219ae8e638873db7d18893304be5069c42868f392bb95c3ff17f0690d0689"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/northern_english_male/medium/en_GB-northern_english_male-medium.onnx.json",
+          "bytes": 4847,
+          "sha256": "69557ed3d974463453e9b0c09dd99a7ed0e52b8b87b64b357dbeeb2540a97d47"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/northern_english_male/medium/MODEL_CARD",
+          "bytes": 305,
+          "sha256": "75661c3a50c0ba82b32b3a438e54103d8dfe5bbe8fbb864ac687a040e79948bb"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-northern-english-male-medium/0",
+          "name": "northern_english_male",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-en-gb-southern-english-female-low",
+      "provider": "piper",
+      "name": "southern english female low",
+      "language": "en-GB",
+      "description": "English; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY-SA 4.0 International. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/southern_english_female/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/southern_english_female/low/en_GB-southern_english_female-low.onnx",
+          "bytes": 63104526,
+          "sha256": "f2f37aed1b3a093476f719d1379ba0c0b1b1cf6f1ef99288e2ebf502971a07c3"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/southern_english_female/low/en_GB-southern_english_female-low.onnx.json",
+          "bytes": 4189,
+          "sha256": "a1af43310f8756161506e849a2863d342a98b0853af9e2437581d39e9922d0e5"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/southern_english_female/low/MODEL_CARD",
+          "bytes": 296,
+          "sha256": "41a64585a49d46362042b1a01b0a4b54127518eb50063c45846e2703e5790260"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-southern-english-female-low/0",
+          "name": "southern_english_female",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-en-gb-vctk-medium",
+      "provider": "piper",
+      "name": "vctk medium",
+      "language": "en-GB",
+      "description": "English; medium quality; 109 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares https://creativecommons.org/licenses/by/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/vctk/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/vctk/medium/en_GB-vctk-medium.onnx",
+          "bytes": 76952753,
+          "sha256": "4e9fc85ab9009385319fc6bae7f55577f8a2d7ee77fd9159a5500eb6531f41e6"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/vctk/medium/en_GB-vctk-medium.onnx.json",
+          "bytes": 6637,
+          "sha256": "7f85e6391ed0f7f46e4abd19345929a16be931a0c9945086f96692dce2087fa8"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/en/en_GB/vctk/medium/MODEL_CARD",
+          "bytes": 326,
+          "sha256": "53ec6b1fd90d9125d5bebac55261efd27f7e8d6dc962f605a5b5f796df2ec7fb"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/0",
+          "name": "vctk: p239",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/1",
+          "name": "vctk: p236",
+          "speaker_index": 1
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/2",
+          "name": "vctk: p264",
+          "speaker_index": 2
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/3",
+          "name": "vctk: p250",
+          "speaker_index": 3
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/4",
+          "name": "vctk: p259",
+          "speaker_index": 4
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/5",
+          "name": "vctk: p247",
+          "speaker_index": 5
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/6",
+          "name": "vctk: p261",
+          "speaker_index": 6
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/7",
+          "name": "vctk: p263",
+          "speaker_index": 7
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/8",
+          "name": "vctk: p283",
+          "speaker_index": 8
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/9",
+          "name": "vctk: p286",
+          "speaker_index": 9
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/10",
+          "name": "vctk: p274",
+          "speaker_index": 10
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/11",
+          "name": "vctk: p276",
+          "speaker_index": 11
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/12",
+          "name": "vctk: p270",
+          "speaker_index": 12
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/13",
+          "name": "vctk: p281",
+          "speaker_index": 13
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/14",
+          "name": "vctk: p277",
+          "speaker_index": 14
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/15",
+          "name": "vctk: p231",
+          "speaker_index": 15
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/16",
+          "name": "vctk: p271",
+          "speaker_index": 16
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/17",
+          "name": "vctk: p238",
+          "speaker_index": 17
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/18",
+          "name": "vctk: p257",
+          "speaker_index": 18
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/19",
+          "name": "vctk: p273",
+          "speaker_index": 19
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/20",
+          "name": "vctk: p284",
+          "speaker_index": 20
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/21",
+          "name": "vctk: p329",
+          "speaker_index": 21
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/22",
+          "name": "vctk: p361",
+          "speaker_index": 22
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/23",
+          "name": "vctk: p287",
+          "speaker_index": 23
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/24",
+          "name": "vctk: p360",
+          "speaker_index": 24
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/25",
+          "name": "vctk: p374",
+          "speaker_index": 25
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/26",
+          "name": "vctk: p376",
+          "speaker_index": 26
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/27",
+          "name": "vctk: p310",
+          "speaker_index": 27
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/28",
+          "name": "vctk: p304",
+          "speaker_index": 28
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/29",
+          "name": "vctk: p334",
+          "speaker_index": 29
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/30",
+          "name": "vctk: p340",
+          "speaker_index": 30
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/31",
+          "name": "vctk: p323",
+          "speaker_index": 31
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/32",
+          "name": "vctk: p347",
+          "speaker_index": 32
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/33",
+          "name": "vctk: p330",
+          "speaker_index": 33
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/34",
+          "name": "vctk: p308",
+          "speaker_index": 34
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/35",
+          "name": "vctk: p314",
+          "speaker_index": 35
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/36",
+          "name": "vctk: p317",
+          "speaker_index": 36
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/37",
+          "name": "vctk: p339",
+          "speaker_index": 37
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/38",
+          "name": "vctk: p311",
+          "speaker_index": 38
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/39",
+          "name": "vctk: p294",
+          "speaker_index": 39
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/40",
+          "name": "vctk: p305",
+          "speaker_index": 40
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/41",
+          "name": "vctk: p266",
+          "speaker_index": 41
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/42",
+          "name": "vctk: p335",
+          "speaker_index": 42
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/43",
+          "name": "vctk: p318",
+          "speaker_index": 43
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/44",
+          "name": "vctk: p351",
+          "speaker_index": 44
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/45",
+          "name": "vctk: p333",
+          "speaker_index": 45
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/46",
+          "name": "vctk: p313",
+          "speaker_index": 46
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/47",
+          "name": "vctk: p316",
+          "speaker_index": 47
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/48",
+          "name": "vctk: p244",
+          "speaker_index": 48
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/49",
+          "name": "vctk: p307",
+          "speaker_index": 49
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/50",
+          "name": "vctk: p363",
+          "speaker_index": 50
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/51",
+          "name": "vctk: p336",
+          "speaker_index": 51
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/52",
+          "name": "vctk: p297",
+          "speaker_index": 52
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/53",
+          "name": "vctk: p312",
+          "speaker_index": 53
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/54",
+          "name": "vctk: p267",
+          "speaker_index": 54
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/55",
+          "name": "vctk: p275",
+          "speaker_index": 55
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/56",
+          "name": "vctk: p295",
+          "speaker_index": 56
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/57",
+          "name": "vctk: p258",
+          "speaker_index": 57
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/58",
+          "name": "vctk: p288",
+          "speaker_index": 58
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/59",
+          "name": "vctk: p301",
+          "speaker_index": 59
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/60",
+          "name": "vctk: p232",
+          "speaker_index": 60
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/61",
+          "name": "vctk: p292",
+          "speaker_index": 61
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/62",
+          "name": "vctk: p272",
+          "speaker_index": 62
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/63",
+          "name": "vctk: p280",
+          "speaker_index": 63
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/64",
+          "name": "vctk: p278",
+          "speaker_index": 64
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/65",
+          "name": "vctk: p341",
+          "speaker_index": 65
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/66",
+          "name": "vctk: p268",
+          "speaker_index": 66
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/67",
+          "name": "vctk: p298",
+          "speaker_index": 67
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/68",
+          "name": "vctk: p299",
+          "speaker_index": 68
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/69",
+          "name": "vctk: p279",
+          "speaker_index": 69
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/70",
+          "name": "vctk: p285",
+          "speaker_index": 70
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/71",
+          "name": "vctk: p326",
+          "speaker_index": 71
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/72",
+          "name": "vctk: p300",
+          "speaker_index": 72
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/73",
+          "name": "vctk: s5",
+          "speaker_index": 73
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/74",
+          "name": "vctk: p230",
+          "speaker_index": 74
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/75",
+          "name": "vctk: p345",
+          "speaker_index": 75
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/76",
+          "name": "vctk: p254",
+          "speaker_index": 76
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/77",
+          "name": "vctk: p269",
+          "speaker_index": 77
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/78",
+          "name": "vctk: p293",
+          "speaker_index": 78
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/79",
+          "name": "vctk: p252",
+          "speaker_index": 79
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/80",
+          "name": "vctk: p262",
+          "speaker_index": 80
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/81",
+          "name": "vctk: p243",
+          "speaker_index": 81
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/82",
+          "name": "vctk: p227",
+          "speaker_index": 82
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/83",
+          "name": "vctk: p343",
+          "speaker_index": 83
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/84",
+          "name": "vctk: p255",
+          "speaker_index": 84
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/85",
+          "name": "vctk: p229",
+          "speaker_index": 85
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/86",
+          "name": "vctk: p240",
+          "speaker_index": 86
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/87",
+          "name": "vctk: p248",
+          "speaker_index": 87
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/88",
+          "name": "vctk: p253",
+          "speaker_index": 88
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/89",
+          "name": "vctk: p233",
+          "speaker_index": 89
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/90",
+          "name": "vctk: p228",
+          "speaker_index": 90
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/91",
+          "name": "vctk: p282",
+          "speaker_index": 91
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/92",
+          "name": "vctk: p251",
+          "speaker_index": 92
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/93",
+          "name": "vctk: p246",
+          "speaker_index": 93
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/94",
+          "name": "vctk: p234",
+          "speaker_index": 94
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/95",
+          "name": "vctk: p226",
+          "speaker_index": 95
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/96",
+          "name": "vctk: p260",
+          "speaker_index": 96
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/97",
+          "name": "vctk: p245",
+          "speaker_index": 97
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/98",
+          "name": "vctk: p241",
+          "speaker_index": 98
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/99",
+          "name": "vctk: p303",
+          "speaker_index": 99
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/100",
+          "name": "vctk: p265",
+          "speaker_index": 100
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/101",
+          "name": "vctk: p306",
+          "speaker_index": 101
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/102",
+          "name": "vctk: p237",
+          "speaker_index": 102
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/103",
+          "name": "vctk: p249",
+          "speaker_index": 103
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/104",
+          "name": "vctk: p256",
+          "speaker_index": 104
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/105",
+          "name": "vctk: p302",
+          "speaker_index": 105
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/106",
+          "name": "vctk: p364",
+          "speaker_index": 106
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/107",
+          "name": "vctk: p225",
+          "speaker_index": 107
+        },
+        {
+          "physical_id": "piper:v1/c/piper-en-gb-vctk-medium/108",
+          "name": "vctk: p362",
+          "speaker_index": 108
+        }
+      ]
+    }
+  ]
+}

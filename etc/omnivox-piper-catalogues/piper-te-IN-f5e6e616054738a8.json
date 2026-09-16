@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-te-in-padmavathi-medium",
+      "provider": "piper",
+      "name": "padmavathi medium",
+      "language": "te-IN",
+      "description": "Telugu; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY-4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/te/te_IN/padmavathi/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/te/te_IN/padmavathi/medium/te_IN-padmavathi-medium.onnx",
+          "bytes": 63516050,
+          "sha256": "414aa5960d91ceb6e45bbdf8c27fdc71af09f205130d7be4e99470f3c2cfa57d"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/te/te_IN/padmavathi/medium/te_IN-padmavathi-medium.onnx.json",
+          "bytes": 4974,
+          "sha256": "6c86e4ee99d379815f78a75f23cdad62ccf50370062dd915c233d6e22de7109f"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/te/te_IN/padmavathi/medium/MODEL_CARD",
+          "bytes": 278,
+          "sha256": "8cdccd0ca4c26d1e949431f03180bcf9eaeb3c013f627087c6a806a3f7487b07"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-te-in-padmavathi-medium/0",
+          "name": "padmavathi",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-te-in-venkatesh-medium",
+      "provider": "piper",
+      "name": "venkatesh medium",
+      "language": "te-IN",
+      "description": "Telugu; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY-4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/te/te_IN/venkatesh/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/te/te_IN/venkatesh/medium/te_IN-venkatesh-medium.onnx",
+          "bytes": 63516050,
+          "sha256": "dfaa5b7833cd48d946f3fe18c9c934aaa4e8590aac6922fddf34783a694c3c87"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/te/te_IN/venkatesh/medium/te_IN-venkatesh-medium.onnx.json",
+          "bytes": 4973,
+          "sha256": "59bad556763d1f24b3434201d7bdee275bb1a70db3e1c65d38e6c3d39b224343"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/te/te_IN/venkatesh/medium/MODEL_CARD",
+          "bytes": 277,
+          "sha256": "1e72b79b6453653bd6c43722f80fb34f429dbeccaf18116480d6faa20b01e685"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-te-in-venkatesh-medium/0",
+          "name": "venkatesh",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

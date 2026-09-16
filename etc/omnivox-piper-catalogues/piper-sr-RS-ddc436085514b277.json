@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-sr-rs-serbski-institut-medium",
+      "provider": "piper",
+      "name": "serbski institut medium",
+      "language": "sr-RS",
+      "description": "Serbian; medium quality; 2 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares https://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sr/sr_RS/serbski_institut/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sr/sr_RS/serbski_institut/medium/sr_RS-serbski_institut-medium.onnx",
+          "bytes": 76733615,
+          "sha256": "d7003890cf596e653f660a4fd97fd17f57f1eceb6d9727abad9cd76d2fda0d80"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sr/sr_RS/serbski_institut/medium/sr_RS-serbski_institut-medium.onnx.json",
+          "bytes": 4999,
+          "sha256": "39ad6531b46ac629c0bed10aa9205dd2431e2dab3808b8535808711db87c2bc0"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sr/sr_RS/serbski_institut/medium/MODEL_CARD",
+          "bytes": 343,
+          "sha256": "1ed2209d4d01b359416f17772c6c11272bdb59359d0b0b076e31a5ccb87446ac"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-sr-rs-serbski-institut-medium/0",
+          "name": "serbski_institut: dsb",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-sr-rs-serbski-institut-medium/1",
+          "name": "serbski_institut: hsb",
+          "speaker_index": 1
+        }
+      ]
+    }
+  ]
+}

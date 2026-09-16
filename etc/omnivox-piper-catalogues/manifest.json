@@ -1,0 +1,703 @@
+{
+  "schema_version": 1,
+  "catalogues": [
+    "piper-bg-BG-6b636b1c161203c7.json",
+    "piper-ca-ES-8d425857b76e4865.json",
+    "piper-cs-CZ-5b2c519fc8b2662c.json",
+    "piper-cy-GB-4e18a9cb14db7b80.json",
+    "piper-da-DK-7bf19427fd09dd94.json",
+    "piper-de-DE-72b817e9a6f7233c.json",
+    "piper-el-GR-6c5723d996d85724.json",
+    "piper-en-GB-db043db512de3453.json",
+    "piper-en-US-c07cd7cfa5c5e36e.json",
+    "piper-es-AR-d61d91d5a10c4b12.json",
+    "piper-es-ES-3a8b203b331ce92f.json",
+    "piper-es-MX-9f3d955960a35028.json",
+    "piper-et-EE-2b08b118234e0694.json",
+    "piper-eu-ES-4ad97e643b4b77b1.json",
+    "piper-fa-IR-e80ec22f1521cd4d.json",
+    "piper-fi-FI-b7aa094047e08f3e.json",
+    "piper-fr-FR-ef0a8630ad1ab5e6.json",
+    "piper-hi-IN-6bb894e167c2e4bb.json",
+    "piper-hu-HU-336392278ef4ab9d.json",
+    "piper-hy-AM-02ea611dc5959e26.json",
+    "piper-it-IT-915c7a8ea7ae438c.json",
+    "piper-kk-KZ-3de3b141a20f9f44.json",
+    "piper-ko-KR-22392806fc00ac64.json",
+    "piper-ku-TR-e1d371ea79d254e3.json",
+    "piper-lb-LU-61bbd41b1fbbdf8c.json",
+    "piper-lv-LV-fdbe492468a55c1c.json",
+    "piper-mr-IN-01ff5c721f5db33b.json",
+    "piper-ne-NP-324154a309e2ac2a.json",
+    "piper-nl-BE-df823b61310f706e.json",
+    "piper-nl-NL-e9dcd031574c525c.json",
+    "piper-no-NO-5d5b767ffc469436.json",
+    "piper-pl-PL-dc24dee5777dd90e.json",
+    "piper-pt-BR-10723404cf229efa.json",
+    "piper-pt-PT-61f78835f530fd34.json",
+    "piper-ro-RO-531b3f7f0fb63c22.json",
+    "piper-ru-RU-ada2c0a873dfae94.json",
+    "piper-sk-SK-10502f7c2e1c083b.json",
+    "piper-sl-SI-901b5d10cbfcbcca.json",
+    "piper-sq-AL-7767771e3325c088.json",
+    "piper-sr-RS-ddc436085514b277.json",
+    "piper-sv-SE-a01fd144745227de.json",
+    "piper-te-IN-f5e6e616054738a8.json",
+    "piper-tr-TR-6a82f2a7e6958ab6.json",
+    "piper-uk-UA-83a92885f8c5d630.json",
+    "piper-ur-PK-b7cd458fd1c14f5d.json",
+    "piper-vi-VN-b3687dcc60d48e12.json"
+  ],
+  "models": {
+    "piper-bg-bg-dimitar-medium": {
+      "voice_name": "dimitar",
+      "quality": "medium",
+      "language_name": "Bulgarian"
+    },
+    "piper-ca-es-upc-ona-medium": {
+      "voice_name": "upc_ona",
+      "quality": "medium",
+      "language_name": "Catalan"
+    },
+    "piper-ca-es-upc-ona-x-low": {
+      "voice_name": "upc_ona",
+      "quality": "x_low",
+      "language_name": "Catalan"
+    },
+    "piper-ca-es-upc-pau-x-low": {
+      "voice_name": "upc_pau",
+      "quality": "x_low",
+      "language_name": "Catalan"
+    },
+    "piper-cs-cz-jirka-low": {
+      "voice_name": "jirka",
+      "quality": "low",
+      "language_name": "Czech"
+    },
+    "piper-cs-cz-jirka-medium": {
+      "voice_name": "jirka",
+      "quality": "medium",
+      "language_name": "Czech"
+    },
+    "piper-cs-cz-kasandra-medium": {
+      "voice_name": "kasandra",
+      "quality": "medium",
+      "language_name": "Czech"
+    },
+    "piper-cy-gb-bu-tts-medium": {
+      "voice_name": "bu_tts",
+      "quality": "medium",
+      "language_name": "Welsh"
+    },
+    "piper-da-dk-talesyntese-medium": {
+      "voice_name": "talesyntese",
+      "quality": "medium",
+      "language_name": "Danish"
+    },
+    "piper-de-de-kerstin-low": {
+      "voice_name": "kerstin",
+      "quality": "low",
+      "language_name": "German"
+    },
+    "piper-de-de-mls-medium": {
+      "voice_name": "mls",
+      "quality": "medium",
+      "language_name": "German"
+    },
+    "piper-de-de-pavoque-low": {
+      "voice_name": "pavoque",
+      "quality": "low",
+      "language_name": "German"
+    },
+    "piper-de-de-thorsten-high": {
+      "voice_name": "thorsten",
+      "quality": "high",
+      "language_name": "German"
+    },
+    "piper-de-de-thorsten-low": {
+      "voice_name": "thorsten",
+      "quality": "low",
+      "language_name": "German"
+    },
+    "piper-de-de-thorsten-medium": {
+      "voice_name": "thorsten",
+      "quality": "medium",
+      "language_name": "German"
+    },
+    "piper-de-de-thorsten-emotional-medium": {
+      "voice_name": "thorsten_emotional",
+      "quality": "medium",
+      "language_name": "German"
+    },
+    "piper-el-gr-joy-medium": {
+      "voice_name": "joy",
+      "quality": "medium",
+      "language_name": "Greek"
+    },
+    "piper-el-gr-rapunzelina-low": {
+      "voice_name": "rapunzelina",
+      "quality": "low",
+      "language_name": "Greek"
+    },
+    "piper-el-gr-rapunzelina-medium": {
+      "voice_name": "rapunzelina",
+      "quality": "medium",
+      "language_name": "Greek"
+    },
+    "piper-en-gb-alba-medium": {
+      "voice_name": "alba",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-gb-aru-medium": {
+      "voice_name": "aru",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-gb-cori-high": {
+      "voice_name": "cori",
+      "quality": "high",
+      "language_name": "English"
+    },
+    "piper-en-gb-cori-medium": {
+      "voice_name": "cori",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-gb-northern-english-male-medium": {
+      "voice_name": "northern_english_male",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-gb-southern-english-female-low": {
+      "voice_name": "southern_english_female",
+      "quality": "low",
+      "language_name": "English"
+    },
+    "piper-en-gb-vctk-medium": {
+      "voice_name": "vctk",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-bryce-medium": {
+      "voice_name": "bryce",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-hfc-female-medium": {
+      "voice_name": "hfc_female",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-hfc-male-medium": {
+      "voice_name": "hfc_male",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-joe-medium": {
+      "voice_name": "joe",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-john-medium": {
+      "voice_name": "john",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-kathleen-low": {
+      "voice_name": "kathleen",
+      "quality": "low",
+      "language_name": "English"
+    },
+    "piper-en-us-kristin-medium": {
+      "voice_name": "kristin",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-l2arctic-medium": {
+      "voice_name": "l2arctic",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-ljspeech-high": {
+      "voice_name": "ljspeech",
+      "quality": "high",
+      "language_name": "English"
+    },
+    "piper-en-us-ljspeech-medium": {
+      "voice_name": "ljspeech",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-mike-medium": {
+      "voice_name": "mike",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-norman-medium": {
+      "voice_name": "norman",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-reza-ibrahim-medium": {
+      "voice_name": "reza_ibrahim",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-ryan-high": {
+      "voice_name": "ryan",
+      "quality": "high",
+      "language_name": "English"
+    },
+    "piper-en-us-ryan-low": {
+      "voice_name": "ryan",
+      "quality": "low",
+      "language_name": "English"
+    },
+    "piper-en-us-ryan-medium": {
+      "voice_name": "ryan",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-en-us-sam-medium": {
+      "voice_name": "sam",
+      "quality": "medium",
+      "language_name": "English"
+    },
+    "piper-es-ar-daniela-high": {
+      "voice_name": "daniela",
+      "quality": "high",
+      "language_name": "Spanish"
+    },
+    "piper-es-es-carlfm-x-low": {
+      "voice_name": "carlfm",
+      "quality": "x_low",
+      "language_name": "Spanish"
+    },
+    "piper-es-es-davefx-medium": {
+      "voice_name": "davefx",
+      "quality": "medium",
+      "language_name": "Spanish"
+    },
+    "piper-es-es-mls-10246-low": {
+      "voice_name": "mls_10246",
+      "quality": "low",
+      "language_name": "Spanish"
+    },
+    "piper-es-es-mls-9972-low": {
+      "voice_name": "mls_9972",
+      "quality": "low",
+      "language_name": "Spanish"
+    },
+    "piper-es-es-sharvard-medium": {
+      "voice_name": "sharvard",
+      "quality": "medium",
+      "language_name": "Spanish"
+    },
+    "piper-es-mx-ald-medium": {
+      "voice_name": "ald",
+      "quality": "medium",
+      "language_name": "Spanish"
+    },
+    "piper-es-mx-claude-high": {
+      "voice_name": "claude",
+      "quality": "high",
+      "language_name": "Spanish"
+    },
+    "piper-et-ee-news-medium": {
+      "voice_name": "news",
+      "quality": "medium",
+      "language_name": "Estonian"
+    },
+    "piper-eu-es-antton-medium": {
+      "voice_name": "antton",
+      "quality": "medium",
+      "language_name": "Basque"
+    },
+    "piper-eu-es-maider-medium": {
+      "voice_name": "maider",
+      "quality": "medium",
+      "language_name": "Basque"
+    },
+    "piper-fa-ir-amir-medium": {
+      "voice_name": "amir",
+      "quality": "medium",
+      "language_name": "Farsi"
+    },
+    "piper-fa-ir-ganji-medium": {
+      "voice_name": "ganji",
+      "quality": "medium",
+      "language_name": "Farsi"
+    },
+    "piper-fa-ir-ganji-adabi-medium": {
+      "voice_name": "ganji_adabi",
+      "quality": "medium",
+      "language_name": "Farsi"
+    },
+    "piper-fa-ir-reza-ibrahim-medium": {
+      "voice_name": "reza_ibrahim",
+      "quality": "medium",
+      "language_name": "Farsi"
+    },
+    "piper-fi-fi-harri-low": {
+      "voice_name": "harri",
+      "quality": "low",
+      "language_name": "Finnish"
+    },
+    "piper-fi-fi-harri-medium": {
+      "voice_name": "harri",
+      "quality": "medium",
+      "language_name": "Finnish"
+    },
+    "piper-fr-fr-gilles-low": {
+      "voice_name": "gilles",
+      "quality": "low",
+      "language_name": "French"
+    },
+    "piper-fr-fr-mls-medium": {
+      "voice_name": "mls",
+      "quality": "medium",
+      "language_name": "French"
+    },
+    "piper-fr-fr-mls-1840-low": {
+      "voice_name": "mls_1840",
+      "quality": "low",
+      "language_name": "French"
+    },
+    "piper-fr-fr-siwis-low": {
+      "voice_name": "siwis",
+      "quality": "low",
+      "language_name": "French"
+    },
+    "piper-fr-fr-siwis-medium": {
+      "voice_name": "siwis",
+      "quality": "medium",
+      "language_name": "French"
+    },
+    "piper-fr-fr-tom-medium": {
+      "voice_name": "tom",
+      "quality": "medium",
+      "language_name": "French"
+    },
+    "piper-fr-fr-upmc-medium": {
+      "voice_name": "upmc",
+      "quality": "medium",
+      "language_name": "French"
+    },
+    "piper-hi-in-pratham-medium": {
+      "voice_name": "pratham",
+      "quality": "medium",
+      "language_name": "Hindi"
+    },
+    "piper-hi-in-priyamvada-medium": {
+      "voice_name": "priyamvada",
+      "quality": "medium",
+      "language_name": "Hindi"
+    },
+    "piper-hu-hu-anna-medium": {
+      "voice_name": "anna",
+      "quality": "medium",
+      "language_name": "Hungarian"
+    },
+    "piper-hu-hu-berta-medium": {
+      "voice_name": "berta",
+      "quality": "medium",
+      "language_name": "Hungarian"
+    },
+    "piper-hu-hu-imre-medium": {
+      "voice_name": "imre",
+      "quality": "medium",
+      "language_name": "Hungarian"
+    },
+    "piper-hy-am-gor-medium": {
+      "voice_name": "gor",
+      "quality": "medium",
+      "language_name": "Armenian"
+    },
+    "piper-it-it-serena-high": {
+      "voice_name": "serena",
+      "quality": "high",
+      "language_name": "Italian"
+    },
+    "piper-it-it-serena-medium": {
+      "voice_name": "serena",
+      "quality": "medium",
+      "language_name": "Italian"
+    },
+    "piper-kk-kz-iseke-x-low": {
+      "voice_name": "iseke",
+      "quality": "x_low",
+      "language_name": "Kazakh"
+    },
+    "piper-kk-kz-issai-high": {
+      "voice_name": "issai",
+      "quality": "high",
+      "language_name": "Kazakh"
+    },
+    "piper-kk-kz-raya-x-low": {
+      "voice_name": "raya",
+      "quality": "x_low",
+      "language_name": "Kazakh"
+    },
+    "piper-ko-kr-kss-medium": {
+      "voice_name": "kss",
+      "quality": "medium",
+      "language_name": "Korean"
+    },
+    "piper-ku-tr-berfin-renas-medium": {
+      "voice_name": "berfin_renas",
+      "quality": "medium",
+      "language_name": "Kurmanji Kurdish"
+    },
+    "piper-lb-lu-marylux-medium": {
+      "voice_name": "marylux",
+      "quality": "medium",
+      "language_name": "Luxembourgish"
+    },
+    "piper-lv-lv-aivars-medium": {
+      "voice_name": "aivars",
+      "quality": "medium",
+      "language_name": "Latvian"
+    },
+    "piper-mr-in-google-medium": {
+      "voice_name": "google",
+      "quality": "medium",
+      "language_name": "Marathi"
+    },
+    "piper-ne-np-chitwan-medium": {
+      "voice_name": "chitwan",
+      "quality": "medium",
+      "language_name": "Nepali"
+    },
+    "piper-ne-np-google-medium": {
+      "voice_name": "google",
+      "quality": "medium",
+      "language_name": "Nepali"
+    },
+    "piper-ne-np-google-x-low": {
+      "voice_name": "google",
+      "quality": "x_low",
+      "language_name": "Nepali"
+    },
+    "piper-nl-be-nathalie-medium": {
+      "voice_name": "nathalie",
+      "quality": "medium",
+      "language_name": "Dutch"
+    },
+    "piper-nl-be-nathalie-x-low": {
+      "voice_name": "nathalie",
+      "quality": "x_low",
+      "language_name": "Dutch"
+    },
+    "piper-nl-be-rdh-medium": {
+      "voice_name": "rdh",
+      "quality": "medium",
+      "language_name": "Dutch"
+    },
+    "piper-nl-be-rdh-x-low": {
+      "voice_name": "rdh",
+      "quality": "x_low",
+      "language_name": "Dutch"
+    },
+    "piper-nl-nl-alex-medium": {
+      "voice_name": "alex",
+      "quality": "medium",
+      "language_name": "Dutch"
+    },
+    "piper-nl-nl-mls-medium": {
+      "voice_name": "mls",
+      "quality": "medium",
+      "language_name": "Dutch"
+    },
+    "piper-nl-nl-mls-5809-low": {
+      "voice_name": "mls_5809",
+      "quality": "low",
+      "language_name": "Dutch"
+    },
+    "piper-nl-nl-mls-7432-low": {
+      "voice_name": "mls_7432",
+      "quality": "low",
+      "language_name": "Dutch"
+    },
+    "piper-nl-nl-pim-medium": {
+      "voice_name": "pim",
+      "quality": "medium",
+      "language_name": "Dutch"
+    },
+    "piper-nl-nl-ronnie-medium": {
+      "voice_name": "ronnie",
+      "quality": "medium",
+      "language_name": "Dutch"
+    },
+    "piper-no-no-nvcc-medium": {
+      "voice_name": "nvcc",
+      "quality": "medium",
+      "language_name": "Norwegian"
+    },
+    "piper-no-no-talesyntese-medium": {
+      "voice_name": "talesyntese",
+      "quality": "medium",
+      "language_name": "Norwegian"
+    },
+    "piper-pl-pl-bass-high": {
+      "voice_name": "bass",
+      "quality": "high",
+      "language_name": "Polish"
+    },
+    "piper-pl-pl-darkman-medium": {
+      "voice_name": "darkman",
+      "quality": "medium",
+      "language_name": "Polish"
+    },
+    "piper-pl-pl-gosia-medium": {
+      "voice_name": "gosia",
+      "quality": "medium",
+      "language_name": "Polish"
+    },
+    "piper-pl-pl-mc-speech-medium": {
+      "voice_name": "mc_speech",
+      "quality": "medium",
+      "language_name": "Polish"
+    },
+    "piper-pl-pl-mls-6892-low": {
+      "voice_name": "mls_6892",
+      "quality": "low",
+      "language_name": "Polish"
+    },
+    "piper-pt-br-cadu-medium": {
+      "voice_name": "cadu",
+      "quality": "medium",
+      "language_name": "Portuguese"
+    },
+    "piper-pt-br-edresson-low": {
+      "voice_name": "edresson",
+      "quality": "low",
+      "language_name": "Portuguese"
+    },
+    "piper-pt-br-faber-medium": {
+      "voice_name": "faber",
+      "quality": "medium",
+      "language_name": "Portuguese"
+    },
+    "piper-pt-br-jeff-medium": {
+      "voice_name": "jeff",
+      "quality": "medium",
+      "language_name": "Portuguese"
+    },
+    "piper-pt-pt-tug-u00e3-o-medium": {
+      "voice_name": "tugão",
+      "quality": "medium",
+      "language_name": "Portuguese"
+    },
+    "piper-ro-ro-mihai-medium": {
+      "voice_name": "mihai",
+      "quality": "medium",
+      "language_name": "Romanian"
+    },
+    "piper-ru-ru-denis-medium": {
+      "voice_name": "denis",
+      "quality": "medium",
+      "language_name": "Russian"
+    },
+    "piper-ru-ru-dmitri-medium": {
+      "voice_name": "dmitri",
+      "quality": "medium",
+      "language_name": "Russian"
+    },
+    "piper-ru-ru-ruslan-medium": {
+      "voice_name": "ruslan",
+      "quality": "medium",
+      "language_name": "Russian"
+    },
+    "piper-sk-sk-lili-medium": {
+      "voice_name": "lili",
+      "quality": "medium",
+      "language_name": "Slovak"
+    },
+    "piper-sl-si-artur-medium": {
+      "voice_name": "artur",
+      "quality": "medium",
+      "language_name": "Slovenian"
+    },
+    "piper-sq-al-edon-medium": {
+      "voice_name": "edon",
+      "quality": "medium",
+      "language_name": "Albanian"
+    },
+    "piper-sr-rs-serbski-institut-medium": {
+      "voice_name": "serbski_institut",
+      "quality": "medium",
+      "language_name": "Serbian"
+    },
+    "piper-sv-se-alma-medium": {
+      "voice_name": "alma",
+      "quality": "medium",
+      "language_name": "Swedish"
+    },
+    "piper-sv-se-nst-medium": {
+      "voice_name": "nst",
+      "quality": "medium",
+      "language_name": "Swedish"
+    },
+    "piper-te-in-padmavathi-medium": {
+      "voice_name": "padmavathi",
+      "quality": "medium",
+      "language_name": "Telugu"
+    },
+    "piper-te-in-venkatesh-medium": {
+      "voice_name": "venkatesh",
+      "quality": "medium",
+      "language_name": "Telugu"
+    },
+    "piper-tr-tr-dfki-medium": {
+      "voice_name": "dfki",
+      "quality": "medium",
+      "language_name": "Turkish"
+    },
+    "piper-uk-ua-lada-x-low": {
+      "voice_name": "lada",
+      "quality": "x_low",
+      "language_name": "Ukrainian"
+    },
+    "piper-uk-ua-mykyta-high": {
+      "voice_name": "mykyta",
+      "quality": "high",
+      "language_name": "Ukrainian"
+    },
+    "piper-uk-ua-oleksa-high": {
+      "voice_name": "oleksa",
+      "quality": "high",
+      "language_name": "Ukrainian"
+    },
+    "piper-uk-ua-tetiana-high": {
+      "voice_name": "tetiana",
+      "quality": "high",
+      "language_name": "Ukrainian"
+    },
+    "piper-uk-ua-ukrainian-tts-medium": {
+      "voice_name": "ukrainian_tts",
+      "quality": "medium",
+      "language_name": "Ukrainian"
+    },
+    "piper-ur-pk-aegis-female-medium": {
+      "voice_name": "aegis_female",
+      "quality": "medium",
+      "language_name": "Urdu"
+    },
+    "piper-ur-pk-fasih-medium": {
+      "voice_name": "fasih",
+      "quality": "medium",
+      "language_name": "Urdu"
+    },
+    "piper-vi-vn-vais1000-medium": {
+      "voice_name": "vais1000",
+      "quality": "medium",
+      "language_name": "Vietnamese"
+    },
+    "piper-vi-vn-vivos-x-low": {
+      "voice_name": "vivos",
+      "quality": "x_low",
+      "language_name": "Vietnamese"
+    }
+  }
+}

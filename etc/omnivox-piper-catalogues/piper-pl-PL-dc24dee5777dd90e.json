@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-pl-pl-bass-high",
+      "provider": "piper",
+      "name": "bass high",
+      "language": "pl-PL",
+      "description": "Polish; high quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares Apache 2.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/bass/high/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/bass/high/pl_PL-bass-high.onnx",
+          "bytes": 114204024,
+          "sha256": "73b8408967c58118700f21eb2413cd8b666c7844c6136cf674bf5dd56bde72c2"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/bass/high/pl_PL-bass-high.onnx.json",
+          "bytes": 4954,
+          "sha256": "7bb41aa14fee87a31cc32264119c09e3553335196d3db15b39b1c18790e13c59"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/bass/high/MODEL_CARD",
+          "bytes": 289,
+          "sha256": "208d244b9aa23500595aeffe011f065cfa57f7de82bb17052d1b505a1d8e5658"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-pl-pl-bass-high/0",
+          "name": "bass",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-pl-pl-darkman-medium",
+      "provider": "piper",
+      "name": "darkman medium",
+      "language": "pl-PL",
+      "description": "Polish; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/darkman/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/darkman/medium/pl_PL-darkman-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "db505438a5364e8e2e0242c4324130a873ed660dfbe8d9689cef428ffb1b645f"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/darkman/medium/pl_PL-darkman-medium.onnx.json",
+          "bytes": 4816,
+          "sha256": "70f999f11fa8ad13d3ef779041ee93c9f38be5abdbacdfad42449712fe91c81b"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/darkman/medium/MODEL_CARD",
+          "bytes": 277,
+          "sha256": "8d860f0cf7dd85e84c923006c5aeaa779a2ff3b1fe89cf499116d93e3a62a4bd"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-pl-pl-darkman-medium/0",
+          "name": "darkman",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-pl-pl-gosia-medium",
+      "provider": "piper",
+      "name": "gosia medium",
+      "language": "pl-PL",
+      "description": "Polish; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/gosia/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/gosia/medium/pl_PL-gosia-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "38f66464240ed74f186e6b7dc13c6e3b22e023426299f25c2b3cc9dfa9373fbc"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/gosia/medium/pl_PL-gosia-medium.onnx.json",
+          "bytes": 4814,
+          "sha256": "1aefb31a9d53ffe44a8163ff73ec833acb7a6253848f6bb0403d8a66f9c7510d"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/gosia/medium/MODEL_CARD",
+          "bytes": 275,
+          "sha256": "6b4de033dfff0da758bbe4d438fd87fbd917ab843bdd83f591fa0f32b8eb5780"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-pl-pl-gosia-medium/0",
+          "name": "gosia",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-pl-pl-mc-speech-medium",
+      "provider": "piper",
+      "name": "mc speech medium",
+      "language": "pl-PL",
+      "description": "Polish; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/mc_speech/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/mc_speech/medium/pl_PL-mc_speech-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "a6b043358bc81e6c111a5140606a21959ce7f34969b8b7207f62869787cc3907"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/mc_speech/medium/pl_PL-mc_speech-medium.onnx.json",
+          "bytes": 4961,
+          "sha256": "b8bb11228e15c505219846a88fdc129e93f57e774ed7f9bac263156d1aa3d324"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/mc_speech/medium/MODEL_CARD",
+          "bytes": 296,
+          "sha256": "defd8213e3a438ebb80130dc1db17b6995bf5bf8d57fdee7b5b74a5a69c2c0d2"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-pl-pl-mc-speech-medium/0",
+          "name": "mc_speech",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-pl-pl-mls-6892-low",
+      "provider": "piper",
+      "name": "mls 6892 low",
+      "language": "pl-PL",
+      "description": "Polish; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC BY 4.0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/mls_6892/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/mls_6892/low/pl_PL-mls_6892-low.onnx",
+          "bytes": 63104526,
+          "sha256": "b572ab1a0f1d3b722b2a545e0b38834e6f932852cd0f11a44c022baa8f104c10"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/mls_6892/low/pl_PL-mls_6892-low.onnx.json",
+          "bytes": 4157,
+          "sha256": "52f7b16a1590277028fce10a259c41d755c3d565c6f4eff9806e1c1d433ea7a2"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/pl/pl_PL/mls_6892/low/MODEL_CARD",
+          "bytes": 257,
+          "sha256": "19990928dfd1f571f399bd227f9fa74c38617d7d181ee1478f84df9deecf1e4c"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-pl-pl-mls-6892-low/0",
+          "name": "mls_6892",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

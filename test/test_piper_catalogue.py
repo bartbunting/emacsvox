@@ -18,6 +18,34 @@ SPEC.loader.exec_module(CAT)
 
 
 class PiperCatalogueTests(unittest.TestCase):
+    def test_shipped_catalogues_match_manifest_and_review_evidence(self):
+        directory = Path(__file__).resolve().parents[1] / "etc/omnivox-piper-catalogues"
+        manifest = CAT.read(directory / "manifest.json")
+        report = CAT.read(directory / "review-report.json")
+        reviewed = {r["id"]: r for r in report["records"] if r["exported"]}
+        entries = {}
+        for name in manifest["catalogues"]:
+            self.assertEqual(name, Path(name).name)
+            path = directory / name
+            self.assertIn(hashlib.sha256(path.read_bytes()).hexdigest()[:16], name)
+            self.assertLessEqual(path.stat().st_size, 1024 * 1024)
+            catalogue = CAT.read(path)
+            self.assertEqual(report["source_revision"], catalogue["revision"])
+            self.assertTrue(1 <= len(catalogue["entries"]) <= 128)
+            for entry in catalogue["entries"]:
+                self.assertNotIn(entry["id"], entries)
+                entries[entry["id"]] = entry
+                evidence = reviewed[entry["id"]]
+                self.assertEqual("approved", evidence["review"]["status"])
+                self.assertEqual("passed", evidence["validation"]["status"])
+                self.assertFalse(evidence["blocked"])
+                self.assertEqual(CAT.digest(entry), evidence["review"]["entry_sha256"])
+                self.assertEqual(CAT.digest(entry), evidence["validation"]["entry_sha256"])
+        self.assertEqual(set(entries), set(manifest["models"]))
+        self.assertEqual(set(entries), set(reviewed))
+        for check in CAT.read(directory / "platform-checks.json")["checks"]:
+            self.assertEqual(CAT.digest(entries[check["id"]]), check["validation"]["entry_sha256"])
+
     def fixture(self, name="kristin", speakers=1):
         key = f"en_US-{name}-medium"
         directory = f"en/en_US/{name}/medium"

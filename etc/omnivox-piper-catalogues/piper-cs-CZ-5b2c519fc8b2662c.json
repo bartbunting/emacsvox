@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-cs-cz-jirka-low",
+      "provider": "piper",
+      "name": "jirka low",
+      "language": "cs-CZ",
+      "description": "Czech; low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/jirka/low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/jirka/low/cs_CZ-jirka-low.onnx",
+          "bytes": 63201294,
+          "sha256": "72e73fb306a165b41927d2c9d882f71e9f1c86ac5edf37c5441370a6e4e6ef7d"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/jirka/low/cs_CZ-jirka-low.onnx.json",
+          "bytes": 5022,
+          "sha256": "fc32d8cdd23a6461fdd355de422daad6271cbf15033b754343b8a9262cca1f76"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/jirka/low/MODEL_CARD",
+          "bytes": 273,
+          "sha256": "faf2bec4b13f88c0a312238aaac9c4714352b401abf988ba02741a0ee1ca070f"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-cs-cz-jirka-low/0",
+          "name": "jirka",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-cs-cz-jirka-medium",
+      "provider": "piper",
+      "name": "jirka medium",
+      "language": "cs-CZ",
+      "description": "Czech; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/jirka/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/jirka/medium/cs_CZ-jirka-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "cbd5c900acacc8e8cbecd64347abb8de39c00a9d3104bed06fee92e4f319efc8"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/jirka/medium/cs_CZ-jirka-medium.onnx.json",
+          "bytes": 5025,
+          "sha256": "fb38b1799b7354808227c065efa97b1ffa2b0cde59505babb56a36d35af9c637"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/jirka/medium/MODEL_CARD",
+          "bytes": 282,
+          "sha256": "b8043c32e43496b109d49bbc28290e570c064a4ed949962a71a5ff6b2ad647e7"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-cs-cz-jirka-medium/0",
+          "name": "jirka",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-cs-cz-kasandra-medium",
+      "provider": "piper",
+      "name": "kasandra medium",
+      "language": "cs-CZ",
+      "description": "Czech; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares Creative Commons Attribution 4.0 International (CC BY 4.0). See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/kasandra/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/kasandra/medium/cs_CZ-kasandra-medium.onnx",
+          "bytes": 63511038,
+          "sha256": "09d08aa23691ed2d53fb3db242cfe82b189adf9c1812dd5fe928b5789ed76df7"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/kasandra/medium/cs_CZ-kasandra-medium.onnx.json",
+          "bytes": 3232,
+          "sha256": "5039f9e49def4f4f8438db031868800a13bf4c6246b62afdb0947f4c5478770e"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cs/cs_CZ/kasandra/medium/MODEL_CARD",
+          "bytes": 424,
+          "sha256": "328794737f2a0d0f8111f5c628a9965e9924712e55a0e9f50100f9dd3c34f639"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-cs-cz-kasandra-medium/0",
+          "name": "kasandra",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "scope": "Representative Windows x86_64 checks. Every exported model separately passed Linux x86_64 validation. macOS acceptance has not been run.",
+  "checks": [
+    {
+      "id": "piper-en-gb-aru-medium",
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "6750ff3ffbf3d57704355b41c041da38fe6ecaafbc30801804606880b70d83fb",
+        "platform": "windows",
+        "arch": "x86_64",
+        "validator_sha256": "309e3ef3581a70f0c9a85d25c4cb069d100abab4c0bdb409ee7c2cb34491a5cb",
+        "evidence_sha256": "69e8d76f61ebf856ab499b055303bbd27043a34bb00b4a0e90f1d92128b2e129"
+      }
+    },
+    {
+      "id": "piper-en-gb-cori-high",
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "5e8b589095f5d9e0949f683be537e2173fe9adf8f7903e906ff4821bc5c7baea",
+        "platform": "windows",
+        "arch": "x86_64",
+        "validator_sha256": "309e3ef3581a70f0c9a85d25c4cb069d100abab4c0bdb409ee7c2cb34491a5cb",
+        "evidence_sha256": "557b0684aaaa6a6255a3c6fc62b7600949b49b1e4abc1e4794b2d33fa8ded6ed"
+      }
+    },
+    {
+      "id": "piper-de-de-thorsten-low",
+      "validation": {
+        "status": "passed",
+        "entry_sha256": "541b472212546c642adb3a9796bc603d04bf60bd946d626e96c7c68e75c106d5",
+        "platform": "windows",
+        "arch": "x86_64",
+        "validator_sha256": "309e3ef3581a70f0c9a85d25c4cb069d100abab4c0bdb409ee7c2cb34491a5cb",
+        "evidence_sha256": "a7fc46e401f55fd872a0fb8fccd39743ad9f8991bee8093f871b117ee04b9a24"
+      }
+    }
+  ]
+}

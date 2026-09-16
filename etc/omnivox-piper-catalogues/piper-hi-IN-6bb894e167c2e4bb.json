@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-hi-in-pratham-medium",
+      "provider": "piper",
+      "name": "pratham medium",
+      "language": "hi-IN",
+      "description": "Hindi; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares http://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hi/hi_IN/pratham/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hi/hi_IN/pratham/medium/hi_IN-pratham-medium.onnx",
+          "bytes": 63516050,
+          "sha256": "169964b0871667f6793416d4b35e97357a68ba1ad01df8580c28048989ee7693"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hi/hi_IN/pratham/medium/hi_IN-pratham-medium.onnx.json",
+          "bytes": 4970,
+          "sha256": "b68edd2cd7950dd436314013b7cd12e9699e5a3f6fe5af5af94294cf6aa7b9fd"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hi/hi_IN/pratham/medium/MODEL_CARD",
+          "bytes": 304,
+          "sha256": "89cf491ea99e69b27c94599cecea3f0fc6aeacb30f4ccdb12897f659868df29e"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-hi-in-pratham-medium/0",
+          "name": "pratham",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-hi-in-priyamvada-medium",
+      "provider": "piper",
+      "name": "priyamvada medium",
+      "language": "hi-IN",
+      "description": "Hindi; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares http://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hi/hi_IN/priyamvada/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hi/hi_IN/priyamvada/medium/hi_IN-priyamvada-medium.onnx",
+          "bytes": 63516050,
+          "sha256": "aa63bcf2cd493b55a450f280e23cf77f03afc9af7015e6e5acd43b652f166c88"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hi/hi_IN/priyamvada/medium/hi_IN-priyamvada-medium.onnx.json",
+          "bytes": 4973,
+          "sha256": "5efc0ccf7529f3528996d46e0fac1f969f681d44a8e55bfa6236ff8841b5d52d"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/hi/hi_IN/priyamvada/medium/MODEL_CARD",
+          "bytes": 307,
+          "sha256": "8ce0324466010a59127fe8cab16416befcca136abf4b57ebd8ad5a2033c2021e"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-hi-in-priyamvada-medium/0",
+          "name": "priyamvada",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

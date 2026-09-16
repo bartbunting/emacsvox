@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-cy-gb-bu-tts-medium",
+      "provider": "piper",
+      "name": "bu tts medium",
+      "language": "cy-GB",
+      "description": "Welsh; medium quality; 7 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC-BY. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cy/cy_GB/bu_tts/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cy/cy_GB/bu_tts/medium/cy_GB-bu_tts-medium.onnx",
+          "bytes": 77061326,
+          "sha256": "411b513cd35975b4248cbaa8e3e5a9d9a3b8db6b77680b821e37b75d984be329"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cy/cy_GB/bu_tts/medium/cy_GB-bu_tts-medium.onnx.json",
+          "bytes": 5145,
+          "sha256": "c318e3b8700b8eb4ed5deb276872b036dcb67e2882cc8dfb2d59d4a64018b285"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/cy/cy_GB/bu_tts/medium/MODEL_CARD",
+          "bytes": 295,
+          "sha256": "b6dea17117b4dba58b6e836616ab639fb21c154e6045414cf4cb855b4d71299c"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-cy-gb-bu-tts-medium/0",
+          "name": "bu_tts: benyw-de-pro",
+          "speaker_index": 0
+        },
+        {
+          "physical_id": "piper:v1/c/piper-cy-gb-bu-tts-medium/1",
+          "name": "bu_tts: benyw-gogledd-pro",
+          "speaker_index": 1
+        },
+        {
+          "physical_id": "piper:v1/c/piper-cy-gb-bu-tts-medium/2",
+          "name": "bu_tts: gwryw-gogledd-pro",
+          "speaker_index": 2
+        },
+        {
+          "physical_id": "piper:v1/c/piper-cy-gb-bu-tts-medium/3",
+          "name": "bu_tts: gwryw-gogledd-2",
+          "speaker_index": 3
+        },
+        {
+          "physical_id": "piper:v1/c/piper-cy-gb-bu-tts-medium/4",
+          "name": "bu_tts: gwryw-de-1",
+          "speaker_index": 4
+        },
+        {
+          "physical_id": "piper:v1/c/piper-cy-gb-bu-tts-medium/5",
+          "name": "bu_tts: gwryw-gogledd-1",
+          "speaker_index": 5
+        },
+        {
+          "physical_id": "piper:v1/c/piper-cy-gb-bu-tts-medium/6",
+          "name": "bu_tts: benyw-gogledd-1",
+          "speaker_index": 6
+        }
+      ]
+    }
+  ]
+}

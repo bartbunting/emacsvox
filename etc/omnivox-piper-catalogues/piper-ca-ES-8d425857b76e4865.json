@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-ca-es-upc-ona-medium",
+      "provider": "piper",
+      "name": "upc ona medium",
+      "language": "ca-ES",
+      "description": "Catalan; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC BY-SA 3.0 ES. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_ona/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_ona/medium/ca_ES-upc_ona-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "fdb652db8c11a4475527346cf3241cb064d1ba393cf370f3f2ec09a872d118fd"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_ona/medium/ca_ES-upc_ona-medium.onnx.json",
+          "bytes": 4875,
+          "sha256": "7f76acc9c06f4eda9e6aef2997b75782d97855aab48d4b401eb956a6e655eddc"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_ona/medium/MODEL_CARD",
+          "bytes": 296,
+          "sha256": "2961b53af17c66971b3ebe3b174566a16ae6e9302997eed111a7d2b1954d31fd"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-ca-es-upc-ona-medium/0",
+          "name": "upc_ona",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-ca-es-upc-ona-x-low",
+      "provider": "piper",
+      "name": "upc ona x_low",
+      "language": "ca-ES",
+      "description": "Catalan; x_low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC BY-SA 3.0 ES. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_ona/x_low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_ona/x_low/ca_ES-upc_ona-x_low.onnx",
+          "bytes": 20628813,
+          "sha256": "13661d26423e0c791823823a5971f4e1aaf644a62e65e0e94d299c0e70560e14"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_ona/x_low/ca_ES-upc_ona-x_low.onnx.json",
+          "bytes": 4159,
+          "sha256": "00e12b206e6ca676e6f992973551b4e068edd9823608144a60365c010dc6bb2f"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_ona/x_low/MODEL_CARD",
+          "bytes": 258,
+          "sha256": "f2163819cd82d535c060affadf04ffbb7b918cd4f5249e636c41d816fa40ba16"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-ca-es-upc-ona-x-low/0",
+          "name": "upc_ona",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-ca-es-upc-pau-x-low",
+      "provider": "piper",
+      "name": "upc pau x_low",
+      "language": "ca-ES",
+      "description": "Catalan; x_low quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC BY-SA 3.0 ES. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_pau/x_low/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_pau/x_low/ca_ES-upc_pau-x_low.onnx",
+          "bytes": 28130791,
+          "sha256": "c936a1a78b0a795af3c2422a0f2edb26303c389ff961616902ba12e26b489071"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_pau/x_low/ca_ES-upc_pau-x_low.onnx.json",
+          "bytes": 4159,
+          "sha256": "f3e76f0640c73a0a87482b37e5c85dd93532127f81e37ea2875e0dace28bb1e2"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ca/ca_ES/upc_pau/x_low/MODEL_CARD",
+          "bytes": 258,
+          "sha256": "82d24aa9943e3b2f7303ef863fefb31a95c270ad62083ee37af77a92c74e918e"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-ca-es-upc-pau-x-low/0",
+          "name": "upc_pau",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

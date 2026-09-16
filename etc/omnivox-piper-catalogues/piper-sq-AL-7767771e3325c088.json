@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-sq-al-edon-medium",
+      "provider": "piper",
+      "name": "edon medium",
+      "language": "sq-AL",
+      "description": "Albanian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sq/sq_AL/edon/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sq/sq_AL/edon/medium/sq_AL-edon-medium.onnx",
+          "bytes": 63511038,
+          "sha256": "5d0ae8af36a00ac6813517b2af47bc4cda42e88ece04f6076ae3b0f5479c57c8"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sq/sq_AL/edon/medium/sq_AL-edon-medium.onnx.json",
+          "bytes": 4961,
+          "sha256": "e9ee77beea52d8042bca589448bb48033ac0f7c1d86daee84ad1d5692d1270f7"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/sq/sq_AL/edon/medium/MODEL_CARD",
+          "bytes": 280,
+          "sha256": "3849de03579aaeabf996ca2e08792ee457f8d55bd473332cd0d7684fc728cfb0"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-sq-al-edon-medium/0",
+          "name": "edon",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}

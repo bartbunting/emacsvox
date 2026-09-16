@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+  "entries": [
+    {
+      "id": "piper-ru-ru-denis-medium",
+      "provider": "piper",
+      "name": "denis medium",
+      "language": "ru-RU",
+      "description": "Russian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/denis/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/denis/medium/ru_RU-denis-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "15fab56e11a097858ee115545d0f697fc2a316c41a291a5362349fb870411b0a"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/denis/medium/ru_RU-denis-medium.onnx.json",
+          "bytes": 4823,
+          "sha256": "831c860dac0b5073eaa81610a0a638ec23d90a6cf8e5f871b4485c2cec3767c8"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/denis/medium/MODEL_CARD",
+          "bytes": 276,
+          "sha256": "8b5d685dd80f8ad3f8dbbe1c56b16bb0809f00c144af3642dbcf3b707eb89c12"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-ru-ru-denis-medium/0",
+          "name": "denis",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-ru-ru-dmitri-medium",
+      "provider": "piper",
+      "name": "dmitri medium",
+      "language": "ru-RU",
+      "description": "Russian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares CC0. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/dmitri/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/dmitri/medium/ru_RU-dmitri-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "f073356ebc4bd0f80c5af58df2953a5988bd5bdab1eb38635ce960b071fbefcb"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/dmitri/medium/ru_RU-dmitri-medium.onnx.json",
+          "bytes": 4824,
+          "sha256": "667ef3117bc642c2892dff7690d8bdc8ca4228aeaa783b2dc1416df632855e0d"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/dmitri/medium/MODEL_CARD",
+          "bytes": 277,
+          "sha256": "6d59c756776d57860232cea6484e1b2ea1fc1c8d2c3446ef246f706fd9875821"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-ru-ru-dmitri-medium/0",
+          "name": "dmitri",
+          "speaker_index": 0
+        }
+      ]
+    },
+    {
+      "id": "piper-ru-ru-ruslan-medium",
+      "provider": "piper",
+      "name": "ruslan medium",
+      "language": "ru-RU",
+      "description": "Russian; medium quality; 1 speaker(s).",
+      "source": "https://huggingface.co/rhasspy/piper-voices",
+      "source_revision": "1162a9173d0ce503555aed757976b7a9912eae4c",
+      "licence": "Model card declares https://creativecommons.org/licenses/by-nc-sa/4.0/. See retained model card for attribution, dataset and training terms.",
+      "licence_url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/ruslan/medium/MODEL_CARD",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/ruslan/medium/ru_RU-ruslan-medium.onnx",
+          "bytes": 63201294,
+          "sha256": "72a5f88e0b20928064eb45d88e1daa21f8af62d18613580d32cbb4aed48dcf7f"
+        },
+        {
+          "role": "config",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/ruslan/medium/ru_RU-ruslan-medium.onnx.json",
+          "bytes": 4882,
+          "sha256": "706a4fb17bc304abd07809b552deae615e64dcbffbfbd09854ba37ca59e88117"
+        },
+        {
+          "role": "model_card",
+          "url": "https://huggingface.co/rhasspy/piper-voices/resolve/1162a9173d0ce503555aed757976b7a9912eae4c/ru/ru_RU/ruslan/medium/MODEL_CARD",
+          "bytes": 313,
+          "sha256": "28f5c0381c1234eb17bfd77e77f893b008948c29bc351fb811abd2d6a69e7662"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "piper:v1/c/piper-ru-ru-ruslan-medium/0",
+          "name": "ruslan",
+          "speaker_index": 0
+        }
+      ]
+    }
+  ]
+}
