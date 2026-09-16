@@ -257,7 +257,7 @@ This chapter documents a total of 1548 commands and 216 options.
 * emacsvox-nov:: Speech-enable NOV.
 * emacsvox-nxml:: Speech enable nxml mode.
 * emacsvox-ocr:: ocr Front-end desktop.
-* emacsvox-omnivox-components:: Inspect engines and manage modules.
+* emacsvox-omnivox-components:: Inspect and manage speech engines.
 * emacsvox-org:: Speech-enable org.
 * emacsvox-org-srs:: Speech-enable Org-srs reviews.
 * emacsvox-orgalist:: Speech-enable ORGALIST.
@@ -16415,7 +16415,7 @@ Display and speak engine details and navigation help.
 @findex emacsvox-omnivox-components-install
 
 @format
-Download, verify, and install the selected optional engine module.
+Download, verify, and install the selected optional engine.
 @end format
 @end deffn
 
@@ -16424,7 +16424,7 @@ Download, verify, and install the selected optional engine module.
 @findex emacsvox-omnivox-components-mode
 
 @format
-Spoken engine status, details and verified module management.
+Spoken engine status, details and verified engine installation.
 
 In addition to any hooks its parent mode
 ‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
@@ -16448,7 +16448,7 @@ u		emacsvox-omnivox-components-uninstall
 @findex emacsvox-omnivox-components-refresh
 
 @format
-Refresh Omnivox module status, preserving row ID and current column.
+Refresh Omnivox engine status, preserving row ID and current column.
 
 (fn &optional ID)
 @end format
@@ -16477,7 +16477,7 @@ Ask Omnivox to list voices through the selected engine.
 @findex emacsvox-omnivox-components-uninstall
 
 @format
-Confirm and uninstall the selected manager-installed engine module.
+Confirm and uninstall the selected manager-installed engine.
 @end format
 @end deffn
 
@@ -16510,7 +16510,7 @@ q		emacsvox-omnivox-components--details-back
 @findex emacsvox-omnivox-manage-components
 
 @format
-Open Browse Voices for engine status, details and optional modules.
+Open Browse Voices for engine status, details and optional engines.
 @end format
 @end deffn
 
@@ -16518,7 +16518,7 @@ Open Browse Voices for engine status, details and optional modules.
 
 @defvar {User Option} emacsvox-omnivox-component-installer
 @verbatim
-Program that lists, installs, uninstalls, and tests Omnivox modules.
+Program that lists, installs, uninstalls, and tests Omnivox engines.
 @end verbatim
 
 Default Value:
@@ -16532,7 +16532,7 @@ Default Value:
 
 @defvar {User Option} emacsvox-omnivox-restart-after-component-install
 @verbatim
-Whether to restart running Omnivox after a managed module change.
+Whether to restart running Omnivox after a managed engine change.
 @end verbatim
 
 Default Value:

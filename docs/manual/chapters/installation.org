@@ -167,14 +167,14 @@ After the core installation works, optional speech engines are available from
 is /Browse voices/ in Aural Home, opened with
 @@texinfo:@kbd{C-e H}@@ and then @@texinfo:@kbd{I}@@. Select an engine and press
 @@texinfo:@kbd{RET}@@ for details. It distinguishes engines
-already included in the core, downloadable modules, and bridges that still
-need a user-supplied runtime. Choose /Install module/ to confirm,
-checksum-verify, install, and validate that module without =sudo=.
-Expand /Module management/ and choose /Uninstall module/ for a manager-installed module to confirm and remove
-it while retaining the verified download cache; choose /Install module/ to
+already included in the core, downloadable engines, and bridges that still
+need a user-supplied runtime. Choose /Install engine/ to confirm,
+checksum-verify, install, and validate that engine without =sudo=.
+Expand /Engine installation/ and choose /Uninstall engine/ for a manager-installed engine to confirm and remove
+it while retaining the verified download cache; choose /Install engine/ to
 reinstall it later. The manager never removes core engines or separately
 supplied runtimes.
-@@texinfo:@xref{Optional Omnivox Engine Modules}@@ explains the choices and
+@@texinfo:@ref{Optional Omnivox Engine Modules,,Optional Omnivox Engines}@@ explains the choices and
 licensing boundaries.
 
 ** Installing On A Remote Linux Host

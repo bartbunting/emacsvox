@@ -142,7 +142,7 @@ private token files, and restart.  Typing ~quit~ in the service terminal or
 interrupting it stops its workers.
 
 The voice inventory describes your workstation.  Install engines and use the
-engine-module manager on that workstation.  Bundled icons resolve there by
+engine installation manager on that workstation.  Bundled icons resolve there by
 pack-relative name; personal sounds outside the bundled sound directory and
 sound uploads are not supported in this first version.  Omitting
 ~--sound-root~ disables file-based icons.  If the remote port is occupied,
@@ -354,7 +354,7 @@ user-supplied files.  Flite and RuTTS need no external runtime installation in
 the source-built bundle.  Eloquence and DECtalk remain separately licensed,
 user-supplied runtimes.
 
-*** Optional Omnivox Engine Modules
+*** Optional Omnivox Engines
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Optional Omnivox Engine Modules
 :DESCRIPTION: Install, check, remove, and reinstall optional engines from Emacs.
@@ -380,7 +380,7 @@ controls are still reachable. Press @@texinfo:@kbd{v}@@ to browse an engine's
 voices directly, or @@texinfo:@kbd{RET}@@ for engine details.
 Details start with a short status summary and the voice actions, with /Browse
 voices/ selected. Matching main and notification status is combined. Problems
-remain visible near the top. /Startup settings/, /Module management/, and
+remain visible near the top. /Startup settings/, /Engine installation/, and
 /Diagnostics/ start collapsed; press @@texinfo:@kbd{RET}@@ on a section to
 expand or collapse it. Each engine remembers its expanded sections and selection.
 
@@ -395,14 +395,14 @@ is usable. /Not checked/ is not a claim that the runtime is missing.
 /Diagnostics/ contains each stream's status, worker paths, inventory time,
 runtime discovery, and health.
 
-Expand /Module management/ for the configured WSL per-user release.
+Expand /Engine installation/ for the configured WSL per-user release.
 It can differ from the active development runtime or remote speech workstation.
 Its /runtime not checked here/ or /model not checked here/ text describes the
 limits of that file check; use speech discovery in /Diagnostics/ for the active server.
-Installing or uninstalling a module changes the managed release only; another
+Installing or uninstalling a engine changes the managed release only; another
 runtime may still provide the engine. A failed removal leaves its live availability
 separate from the operation result. If a helper is still in use, the screen and
-spoken result say that removal failed. Stop speech sessions using that module
+spoken result say that removal failed. Stop speech sessions using that engine
 before retrying.
 
 - /Browse voices/ combines that engine's reported voices with its installed
@@ -486,11 +486,11 @@ before retrying.
 - To refresh discovery, press @@texinfo:@kbd{g}@@ or use /Refresh status/ in
   details. Both worker inventories are requested asynchronously. The managed
   installation check also runs asynchronously and reports a timeout if needed.
-- To install a module shown as /Not installed; downloadable/ in details, activate
-  /Install module/ with @@texinfo:@kbd{RET}@@,
+- To install a engine shown as /Not installed; downloadable/ in details, activate
+  /Install engine/ with @@texinfo:@kbd{RET}@@,
   then confirm. The manager verifies the version-matched download. The table
   shows /installing/ while that operation runs.
-- To check the managed engine, expand /Module management/ and activate /Check managed engine/.
+- To check the managed engine, expand /Engine installation/ and activate /Check managed engine/.
   This lists voices in the managed installation;
   it does not play a sample or prove that the active speech server uses that copy.
   Completion produces a short notice without selecting another buffer. The last
@@ -502,21 +502,21 @@ before retrying.
   @@texinfo:@kbd{q}@@ returns to the selected engine row and
   @@texinfo:@kbd{h}@@ opens Aural Home, and @@texinfo:@kbd{?}@@ opens help.
   Background refresh preserves selection and expanded sections.
-- To remove an /installed/ module, expand /Module management/, activate /Uninstall module/, and confirm. This
-  is available only for Flite, RuTTS, Piper, and TGSpeechBox modules installed
+- To remove an /installed/ engine, expand /Engine installation/, activate /Uninstall engine/, and confirm. This
+  is available only for Flite, RuTTS, Piper, and TGSpeechBox engines installed
   by this manager.  It cannot remove the Omnivox core, built-in engines, or
   runtime bridges.
 
 Removal keeps the verified download in the local cache.  If you change your
-mind, open its details again and choose /Install module/ to reinstall it.
+mind, open its details again and choose /Install engine/ to reinstall it.
 A valid cached download is reused.
 
-The module's whole managed directory is removed.  Move anything you placed
+The engine's whole managed directory is removed.  Move anything you placed
 inside that directory somewhere else before confirming.  User-supplied
 runtimes and models stored outside it are not touched; remove those separately
 using their supplier's instructions.  Before removal, the manager announces
 the operation and briefly stops its active Omnivox speech streams so Windows
-can release the module helper.  It restores speech when removal finishes,
+can release the engine helper.  It restores speech when removal finishes,
 including after an error.  After a successful installation, it also refreshes
 the table and restarts a running Omnivox server.  Operations run asynchronously
 so Emacs remains responsive.  The table shows /uninstalling/ during removal and
@@ -534,7 +534,7 @@ The manager reads =etc/omnivox-components.conf=.  Every archive name, byte size,
 and SHA-256 hash is pinned to the same Omnivox version as the installed core.
 The WSL2 installer rejects a mismatched core, an unsafe archive layout, missing
 source provenance, or a helper that cannot pass its staged voice-discovery
-check.  It then installs the module below the same versioned Windows
+check.  It then installs the engine below the same versioned Windows
 =LocalAppData= release directory.  It does not invoke =sudo= or edit shell
 startup files.
 
@@ -545,7 +545,7 @@ The choices have different boundaries:
 - Piper installs native engine support, but appears only after you separately
   review and configure an ONNX voice model and its model card.
 - TGSpeechBox is an explicitly experimental multilingual formant engine.  The
-  1.10.0 module calibrates rate control to the Eloquence scale and supplies exact
+  1.10.0 engine calibrates rate control to the Eloquence scale and supplies exact
   requested text anchors for capitalization and timed presentation.
 - RHVoice, Eloquence, and DECtalk use distributable bridges, but Emacsvox never
   downloads their external runtimes, voices, dictionaries, or licence material.
@@ -553,7 +553,7 @@ The choices have different boundaries:
 
 For a terminal-only installation, run
 =./bin/emacsvox-omnivox-components --list= and then, for example,
-=./bin/emacsvox-omnivox-components --install flite=.  Multiple module names may
+=./bin/emacsvox-omnivox-components --install flite=.  Multiple engine names may
 follow =--install= or =--uninstall=.  For example, use
 =./bin/emacsvox-omnivox-components --uninstall flite= to remove the managed
 Flite directory while retaining its cached archive.  Restart Omnivox after a

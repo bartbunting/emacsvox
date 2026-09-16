@@ -1460,7 +1460,7 @@ playback remain distinct. Inventory predictions do not prove that audio played.
 Saving engine policy is separate from saving a named voice or a Presentation
 Profile. If an apply fails or is unconfirmed, see
 [[info:emacsvox#Recovering Aural Changes][Recovering Unfinished Changes]]. Installation and optional engine modules are
-covered in [[info:emacsvox#Optional Omnivox Engine Modules][Optional Omnivox Engine Modules]].
+covered in [[info:emacsvox#Optional Omnivox Engine Modules][Optional Omnivox Engines]].
 
 ** Sounds, Tones, And Spatial Cues
 :PROPERTIES:

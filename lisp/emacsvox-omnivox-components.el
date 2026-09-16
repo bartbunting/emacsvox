@@ -1,4 +1,4 @@
-;;; emacsvox-omnivox-components.el --- Inspect engines and manage modules -*- lexical-binding: t; -*-
+;;; emacsvox-omnivox-components.el --- Inspect and manage speech engines -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Emacsvox contributors
 ;; SPDX-License-Identifier: GPL-2.0-or-later
@@ -67,17 +67,17 @@
                   "emacsvox-aural-voice-workbench" ())
 
 (defgroup emacsvox-omnivox-components nil
-  "Manage optional Omnivox engine modules."
+  "Manage optional Omnivox engines."
   :group 'emacsvox)
 
 (defcustom emacsvox-omnivox-component-installer
   (expand-file-name "bin/emacsvox-omnivox-components" emacsvox-directory)
-  "Program that lists, installs, uninstalls, and tests Omnivox modules."
+  "Program that lists, installs, uninstalls, and tests Omnivox engines."
   :type 'file
   :group 'emacsvox-omnivox-components)
 
 (defcustom emacsvox-omnivox-restart-after-component-install t
-  "Whether to restart running Omnivox after a managed module change."
+  "Whether to restart running Omnivox after a managed engine change."
   :type 'boolean
   :group 'emacsvox-omnivox-components)
 
@@ -264,7 +264,7 @@
   "Start a bounded asynchronous managed-installation listing for this view."
   (unless (process-live-p emacsvox-omnivox-components--listing-process)
     (let ((manager (current-buffer))
-          (output (generate-new-buffer " *Omnivox module listing*")))
+          (output (generate-new-buffer " *Omnivox engine listing*")))
       (condition-case err
           (let* ((program (emacsvox-omnivox-components--check-installer))
                  (process
@@ -373,7 +373,7 @@
         (user-error "Move to an Omnivox component row first"))))
 
 (defun emacsvox-omnivox-components--render (&optional id)
-  "Redraw current module records, preserving row ID and current column."
+  "Redraw current engine records, preserving row ID and current column."
   (emacsvox-aural-ui-refresh-tabulated
    (lambda ()
      (setq tabulated-list-entries
@@ -382,7 +382,7 @@
    id "windows"))
 
 (defun emacsvox-omnivox-components-refresh (&optional id)
-  "Refresh Omnivox module status, preserving row ID and current column."
+  "Refresh Omnivox engine status, preserving row ID and current column."
   (interactive)
   (emacsvox-omnivox-components--request-records)
   (emacsvox-omnivox-components--capture-inventory)
@@ -413,10 +413,10 @@
 (defun emacsvox-omnivox-components--suspend-omnivox ()
   "Retire active Omnivox streams and return non-nil when any were stopped.
 
-This releases persistent Windows helper executables before module removal."
+This releases persistent Windows helper executables before engine removal."
   (when (emacsvox-omnivox-components--running-omnivox-p)
     (unless (fboundp 'tts--retire-process)
-      (error "Cannot safely stop Omnivox before module removal"))
+      (error "Cannot safely stop Omnivox before engine removal"))
     (let ((speaker tts-speaker-process)
           (notifier (and (boundp 'tts-notify-process)
                          tts-notify-process)))
@@ -615,7 +615,7 @@ OUTPUT to the generic process sentinel EVENT."
     emacsvox-omnivox-components--process))
 
 (defun emacsvox-omnivox-components-install ()
-  "Download, verify, and install the selected optional engine module."
+  "Download, verify, and install the selected optional engine."
   (interactive)
   (let* ((record (emacsvox-omnivox-components--record))
          (state (plist-get record :state))
@@ -637,7 +637,7 @@ OUTPUT to the generic process sentinel EVENT."
        record 'installation (list "--install" id)))))
 
 (defun emacsvox-omnivox-components-uninstall ()
-  "Confirm and uninstall the selected manager-installed engine module."
+  "Confirm and uninstall the selected manager-installed engine."
   (interactive)
   (let* ((record (emacsvox-omnivox-components--record))
          (state (plist-get record :state))
@@ -691,7 +691,7 @@ OUTPUT to the generic process sentinel EVENT."
 
 (defun emacsvox-omnivox-components--manager-buffer (&optional source)
   "Prepare retained management state from cached speech discovery and SOURCE."
-  (let ((buffer (get-buffer-create "*Omnivox Engine Modules*")))
+  (let ((buffer (get-buffer-create "*Omnivox Engines*")))
     (with-current-buffer buffer
       (unless (derived-mode-p 'emacsvox-omnivox-components-mode)
         (emacsvox-omnivox-components-mode))
@@ -792,7 +792,7 @@ OUTPUT to the generic process sentinel EVENT."
      rows
      (list
       (list 'voices (vector "Browse voices" "Sample voices, enable or disable, and Apply"))
-      (list 'check-live (vector "Refresh status" "Update speech and module information"))
+      (list 'check-live (vector "Refresh status" "Update speech and engine installation information"))
       (list 'managed (vector "Managed installation"
                             (if emacsvox-omnivox-components--listing-error
                                 (concat "Not checked: " emacsvox-omnivox-components--listing-error)
@@ -801,10 +801,10 @@ OUTPUT to the generic process sentinel EVENT."
                                           "Refreshing file information; " "")
                                       (pcase (plist-get record :state)
                                         ("runtime-required" "Bridge installed; runtime not checked here")
-                                        ("model-required" "Module installed; model not checked here")
+                                        ("model-required" "Engine installed; model not checked here")
                                         ("available" "Not installed; downloadable")
                                         (state (replace-regexp-in-string "-" " " state)))
-                                      (or (plist-get record :detail) "No managed module information")))))
+                                      (or (plist-get record :detail) "No managed engine information")))))
       (list 'scope (vector "Management target" "Configured WSL per-user installation; may differ from the speech target above")))
      (when (member id '("piper" "flite"))
        (list
@@ -820,11 +820,11 @@ OUTPUT to the generic process sentinel EVENT."
      (unless emacsvox-omnivox-components--listing-error
        (append
         (when (equal (plist-get record :state) "available")
-          (list (list 'install (vector "Install module"
+          (list (list 'install (vector "Install engine"
                                       (emacsvox-omnivox-components--human-size (plist-get record :size))))))
         (when (and (member id emacsvox-omnivox-components--managed-ids)
                    (member (plist-get record :state) '("installed" "model-required")))
-          (list (list 'uninstall (vector "Uninstall managed module" "Remove from managed installation; other runtimes may still provide voices"))))
+          (list (list 'uninstall (vector "Uninstall engine" "Remove from managed installation; other runtimes may still provide voices"))))
         (unless (equal (plist-get record :state) "not-managed")
           (list (list 'test (vector "Check managed engine" "Run voice discovery in the managed installation"))))))
      (when result
@@ -839,7 +839,7 @@ OUTPUT to the generic process sentinel EVENT."
        (list (list 'operation-error
                    (vector "Last operation failed"
                            (if (string-search "helper is still in use" (or (plist-get result :output) ""))
-                               "Module was not removed: helper still in use. Stop sessions using it, then retry"
+                               "Engine was not removed: helper still in use. Stop sessions using it, then retry"
                              "Read last result for the error and next steps")))))
      (list (list 'back (vector "Back to engines" "Return to the selected engine"))))))
 
@@ -863,7 +863,7 @@ OUTPUT to the generic process sentinel EVENT."
 
 (defconst emacsvox-omnivox-components--detail-sections
   '((startup-section "Startup settings" settings-state settings check-settings restart-settings)
-    (module-section "Module management" managed scope uninstall test result output)
+    (module-section "Engine installation" managed scope uninstall test result output)
     (diagnostics-section "Diagnostics"
                          main main-target main-source main-time main-runtime main-health
                          notification notification-target notification-source
@@ -1108,7 +1108,7 @@ OUTPUT to the generic process sentinel EVENT."
       "Browse voices opens samples and adjustments. Installed voices and\n"
       "Get more voices manage voices for engines that support them.\n\n"
       "Startup settings contains manual file overrides and speech restart.\n"
-      "Module management contains installation checks, removal, and results.\n"
+      "Engine installation contains installation checks, removal, and results.\n"
       "It describes the configured WSL installation, which can differ from\n"
       "the speech target. Diagnostics contains worker paths, check times,\n"
       "runtime discovery, and health. Sections remember their expanded state.\n\n"
@@ -1128,7 +1128,7 @@ OUTPUT to the generic process sentinel EVENT."
 (define-derived-mode emacsvox-omnivox-components-mode
     emacsvox-aural-tabulated-mode
   "Omnivox-Engines"
-  "Spoken engine status, details and verified module management."
+  "Spoken engine status, details and verified engine installation."
   (emacsvox-aural-ui-configure-tabulated
    "Omnivox speech engine list"
    #'emacsvox-omnivox-components-speak-current
@@ -1156,7 +1156,7 @@ OUTPUT to the generic process sentinel EVENT."
 
 ;;;###autoload
 (defun emacsvox-omnivox-manage-components ()
-  "Open Browse Voices for engine status, details and optional modules."
+  "Open Browse Voices for engine status, details and optional engines."
   (interactive)
   (require 'emacsvox-aural-voice-workbench)
   (emacsvox-aural-voice-workbench 'engines))

@@ -608,7 +608,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-nov:: Speech-enable NOV.
 * emacsvox-nxml:: Speech enable nxml mode.
 * emacsvox-ocr:: ocr Front-end desktop.
-* emacsvox-omnivox-components:: Inspect engines and manage modules.
+* emacsvox-omnivox-components:: Inspect and manage speech engines.
 * emacsvox-org:: Speech-enable org.
 * emacsvox-org-srs:: Speech-enable Org-srs reviews.
 * emacsvox-orgalist:: Speech-enable ORGALIST.

@@ -518,7 +518,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
 
 (ert-deftest emacsvox-omnivox-components-reopening-retains-active-operation ()
   "Reopening the manager retains its installer, displayed state, and selection."
-  (let ((buffer (get-buffer-create "*Omnivox Engine Modules*"))
+  (let ((buffer (get-buffer-create "*Omnivox Engines*"))
         (process (make-pipe-process :name "component install fixture" :noquery t)))
     (unwind-protect
         (cl-letf (((symbol-function 'emacsvox-omnivox-components--request-records)
@@ -1178,7 +1178,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
               (let* ((rows (emacsvox-omnivox-components--layout-details
                             (emacsvox-omnivox-components--detail-rows "eloquence")))
                      (failure (aref (cadr (assq 'operation-error rows)) 1)))
-                (should (string-search "Module was not removed" failure))
+                (should (string-search "Engine was not removed" failure))
                 (should (string-search "helper still in use" failure))
                 (should (string-search "Available" (aref (cadr (assq 'summary rows)) 1))))))
         (kill-buffer output)))))

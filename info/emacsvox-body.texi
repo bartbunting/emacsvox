@@ -247,14 +247,14 @@ After the core installation works@comma{} optional speech engines are available 
 is @emph{Browse voices} in Aural Home@comma{} opened with
 @kbd{C-e H} and then @kbd{I}. Select an engine and press
 @kbd{RET} for details. It distinguishes engines
-already included in the core@comma{} downloadable modules@comma{} and bridges that still
-need a user-supplied runtime. Choose @emph{Install module} to confirm@comma{}
-checksum-verify@comma{} install@comma{} and validate that module without @samp{sudo}.
-Expand @emph{Module management} and choose @emph{Uninstall module} for a manager-installed module to confirm and remove
-it while retaining the verified download cache; choose @emph{Install module} to
+already included in the core@comma{} downloadable engines@comma{} and bridges that still
+need a user-supplied runtime. Choose @emph{Install engine} to confirm@comma{}
+checksum-verify@comma{} install@comma{} and validate that engine without @samp{sudo}.
+Expand @emph{Engine installation} and choose @emph{Uninstall engine} for a manager-installed engine to confirm and remove
+it while retaining the verified download cache; choose @emph{Install engine} to
 reinstall it later. The manager never removes core engines or separately
 supplied runtimes.
-@xref{Optional Omnivox Engine Modules} explains the choices and
+@ref{Optional Omnivox Engine Modules,,Optional Omnivox Engines} explains the choices and
 licensing boundaries.
 
 @node Installing Remote Emacsvox
@@ -1256,7 +1256,7 @@ private token files@comma{} and restart.  Typing @code{quit} in the service term
 interrupting it stops its workers.
 
 The voice inventory describes your workstation.  Install engines and use the
-engine-module manager on that workstation.  Bundled icons resolve there by
+engine installation manager on that workstation.  Bundled icons resolve there by
 pack-relative name; personal sounds outside the bundled sound directory and
 sound uploads are not supported in this first version.  Omitting
 @code{--sound-root} disables file-based icons.  If the remote port is occupied@comma{}
@@ -1394,7 +1394,7 @@ runtime.  WinRT speech is included in Windows.  Use
 installation where a separate audible check will be performed later.
 
 @menu
-* Optional Omnivox Engine Modules:: Install, check, remove, and reinstall optional engines from Emacs.
+* Optional Omnivox Engines: Optional Omnivox Engine Modules.  Install, check, remove, and reinstall optional engines from Emacs.
 @end menu
 
 @subsection Manual Release Installation
@@ -1472,7 +1472,7 @@ the source-built bundle.  Eloquence and DECtalk remain separately licensed@comma
 user-supplied runtimes.
 
 @node Optional Omnivox Engine Modules
-@subsection Optional Omnivox Engine Modules
+@subsection Optional Omnivox Engines
 
 The ordinary WSL2 archive is the Omnivox core@comma{} not a claim that every supported
 engine is installed.  It keeps first speech small while matching companion
@@ -1494,7 +1494,7 @@ controls are still reachable. Press @kbd{v} to browse an engine's
 voices directly@comma{} or @kbd{RET} for engine details.
 Details start with a short status summary and the voice actions@comma{} with @emph{Browse
 voices} selected. Matching main and notification status is combined. Problems
-remain visible near the top. @emph{Startup settings}@comma{} @emph{Module management}@comma{} and
+remain visible near the top. @emph{Startup settings}@comma{} @emph{Engine installation}@comma{} and
 @emph{Diagnostics} start collapsed; press @kbd{RET} on a section to
 expand or collapse it. Each engine remembers its expanded sections and selection.
 
@@ -1509,14 +1509,14 @@ is usable. @emph{Not checked} is not a claim that the runtime is missing.
 @emph{Diagnostics} contains each stream's status@comma{} worker paths@comma{} inventory time@comma{}
 runtime discovery@comma{} and health.
 
-Expand @emph{Module management} for the configured WSL per-user release.
+Expand @emph{Engine installation} for the configured WSL per-user release.
 It can differ from the active development runtime or remote speech workstation.
 Its @emph{runtime not checked here} or @emph{model not checked here} text describes the
 limits of that file check; use speech discovery in @emph{Diagnostics} for the active server.
-Installing or uninstalling a module changes the managed release only; another
+Installing or uninstalling a engine changes the managed release only; another
 runtime may still provide the engine. A failed removal leaves its live availability
 separate from the operation result. If a helper is still in use@comma{} the screen and
-spoken result say that removal failed. Stop speech sessions using that module
+spoken result say that removal failed. Stop speech sessions using that engine
 before retrying.
 
 @itemize
@@ -1612,12 +1612,12 @@ To refresh discovery@comma{} press @kbd{g} or use @emph{Refresh status} in
 details. Both worker inventories are requested asynchronously. The managed
 installation check also runs asynchronously and reports a timeout if needed.
 @item
-To install a module shown as @emph{Not installed; downloadable} in details@comma{} activate
-@emph{Install module} with @kbd{RET}@comma{}
+To install a engine shown as @emph{Not installed; downloadable} in details@comma{} activate
+@emph{Install engine} with @kbd{RET}@comma{}
 then confirm. The manager verifies the version-matched download. The table
 shows @emph{installing} while that operation runs.
 @item
-To check the managed engine@comma{} expand @emph{Module management} and activate @emph{Check managed engine}.
+To check the managed engine@comma{} expand @emph{Engine installation} and activate @emph{Check managed engine}.
 This lists voices in the managed installation;
 it does not play a sample or prove that the active speech server uses that copy.
 Completion produces a short notice without selecting another buffer. The last
@@ -1631,22 +1631,22 @@ Arrow keys read visible fields and values.
 @kbd{h} opens Aural Home@comma{} and @kbd{?} opens help.
 Background refresh preserves selection and expanded sections.
 @item
-To remove an @emph{installed} module@comma{} expand @emph{Module management}@comma{} activate @emph{Uninstall module}@comma{} and confirm. This
-is available only for Flite@comma{} RuTTS@comma{} Piper@comma{} and TGSpeechBox modules installed
+To remove an @emph{installed} engine@comma{} expand @emph{Engine installation}@comma{} activate @emph{Uninstall engine}@comma{} and confirm. This
+is available only for Flite@comma{} RuTTS@comma{} Piper@comma{} and TGSpeechBox engines installed
 by this manager.  It cannot remove the Omnivox core@comma{} built-in engines@comma{} or
 runtime bridges.
 @end itemize
 
 Removal keeps the verified download in the local cache.  If you change your
-mind@comma{} open its details again and choose @emph{Install module} to reinstall it.
+mind@comma{} open its details again and choose @emph{Install engine} to reinstall it.
 A valid cached download is reused.
 
-The module's whole managed directory is removed.  Move anything you placed
+The engine's whole managed directory is removed.  Move anything you placed
 inside that directory somewhere else before confirming.  User-supplied
 runtimes and models stored outside it are not touched; remove those separately
 using their supplier's instructions.  Before removal@comma{} the manager announces
 the operation and briefly stops its active Omnivox speech streams so Windows
-can release the module helper.  It restores speech when removal finishes@comma{}
+can release the engine helper.  It restores speech when removal finishes@comma{}
 including after an error.  After a successful installation@comma{} it also refreshes
 the table and restarts a running Omnivox server.  Operations run asynchronously
 so Emacs remains responsive.  The table shows @emph{uninstalling} during removal and
@@ -1664,7 +1664,7 @@ The manager reads @samp{etc/omnivox-components.conf}.  Every archive name@comma{
 and SHA-256 hash is pinned to the same Omnivox version as the installed core.
 The WSL2 installer rejects a mismatched core@comma{} an unsafe archive layout@comma{} missing
 source provenance@comma{} or a helper that cannot pass its staged voice-discovery
-check.  It then installs the module below the same versioned Windows
+check.  It then installs the engine below the same versioned Windows
 @samp{LocalAppData} release directory.  It does not invoke @samp{sudo} or edit shell
 startup files.
 
@@ -1680,7 +1680,7 @@ Piper installs native engine support@comma{} but appears only after you separate
 review and configure an ONNX voice model and its model card.
 @item
 TGSpeechBox is an explicitly experimental multilingual formant engine.  The
-1.10.0 module calibrates rate control to the Eloquence scale and supplies exact
+1.10.0 engine calibrates rate control to the Eloquence scale and supplies exact
 requested text anchors for capitalization and timed presentation.
 @item
 RHVoice@comma{} Eloquence@comma{} and DECtalk use distributable bridges@comma{} but Emacsvox never
@@ -1690,7 +1690,7 @@ Supply those only when you have the appropriate distribution and licence.
 
 For a terminal-only installation@comma{} run
 @samp{./bin/emacsvox-omnivox-components --list} and then@comma{} for example@comma{}
-@samp{./bin/emacsvox-omnivox-components --install flite}.  Multiple module names may
+@samp{./bin/emacsvox-omnivox-components --install flite}.  Multiple engine names may
 follow @samp{--install} or @samp{--uninstall}.  For example@comma{} use
 @samp{./bin/emacsvox-omnivox-components --uninstall flite} to remove the managed
 Flite directory while retaining its cached archive.  Restart Omnivox after a
@@ -4059,7 +4059,7 @@ playback remain distinct. Inventory predictions do not prove that audio played.
 Saving engine policy is separate from saving a named voice or a Presentation
 Profile. If an apply fails or is unconfirmed@comma{} see
 @ref{Recovering Aural Changes,Recovering Unfinished Changes,,emacsvox,}. Installation and optional engine modules are
-covered in @ref{Optional Omnivox Engine Modules,Optional Omnivox Engine Modules,,emacsvox,}.
+covered in @ref{Optional Omnivox Engine Modules,Optional Omnivox Engines,,emacsvox,}.
 
 @node Sounds And Space
 @section Sounds@comma{} Tones@comma{} And Spatial Cues

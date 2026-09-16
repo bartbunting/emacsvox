@@ -4766,14 +4766,14 @@ supplied.
 
  -- Command: emacsvox-omnivox-components-install
 
-     Download, verify, and install the selected optional engine module.
+     Download, verify, and install the selected optional engine.
 
 2.187.1.4 emacsvox-omnivox-components-mode
 ..........................................
 
  -- Command: emacsvox-omnivox-components-mode
 
-     Spoken engine status, details and verified module management.
+     Spoken engine status, details and verified engine installation.
 
      In addition to any hooks its parent mode
      ‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
@@ -4794,7 +4794,7 @@ supplied.
 
  -- Command: emacsvox-omnivox-components-refresh (&optional id)
 
-     Refresh Omnivox module status, preserving row ID and current column.
+     Refresh Omnivox engine status, preserving row ID and current column.
 
      (fn &optional ID)
 
@@ -4817,7 +4817,7 @@ supplied.
 
  -- Command: emacsvox-omnivox-components-uninstall
 
-     Confirm and uninstall the selected manager-installed engine module.
+     Confirm and uninstall the selected manager-installed engine.
 
 2.187.1.9 emacsvox-omnivox-engine-details-mode
 ..............................................
@@ -4845,13 +4845,13 @@ supplied.
 
  -- Command: emacsvox-omnivox-manage-components
 
-     Open Browse Voices for engine status, details and optional modules.
+     Open Browse Voices for engine status, details and optional engines.
 
 2.187.2 emacsvox-omnivox-components Options
 -------------------------------------------
 
  -- Variable: User Option emacsvox-omnivox-component-installer
-     Program that lists, installs, uninstalls, and tests Omnivox modules.
+     Program that lists, installs, uninstalls, and tests Omnivox engines.
 
      Default Value:
 
@@ -4860,7 +4860,7 @@ supplied.
 
  -- Variable: User Option
           emacsvox-omnivox-restart-after-component-install
-     Whether to restart running Omnivox after a managed module change.
+     Whether to restart running Omnivox after a managed engine change.
 
      Default Value:
 
