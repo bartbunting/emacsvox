@@ -1555,6 +1555,16 @@ verifies both before committing. If a replacement fails@comma{} it restores both
 previous configurations. Disabling keeps the files and saved palette
 references. Changing @emph{Enabled} leaves @emph{Active} unchanged until Apply.
 @item
+@emph{Voice variants} in eSpeak details discovers the bundled choices on your
+selected local speech host. Choose a base voice with @kbd{b}@comma{}
+then toggle a variant with @kbd{RET}. @kbd{s} saves
+your choices; @kbd{a} explicitly restarts both speech lanes.
+After restart@comma{} @kbd{p} auditions that exact combination and
+@kbd{v} opens the voice browser for the usual palette editor.
+Disabled choices and saved palette references are retained. This requires a
+development Omnivox build with variant discovery and the bundled local
+launcher. It uses bundled variants and does not download files.
+@item
 @emph{Get more voices} in Piper or Flite details opens the reviewed download
 catalogue. The initial choices are Flite AWB and RMS@comma{} and Piper Kristin
 medium. Press @kbd{RET} for the voice description@comma{} download

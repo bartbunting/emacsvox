@@ -753,6 +753,18 @@ delivered UI action must have a usable supported path.
    available and select it. The upstream
    [[https://github.com/espeak-ng/espeak-ng/blob/master/src/espeak-ng.1.ronn][eSpeak command reference]] describes variant listing and =voice+variant=
    selection; confirm the equivalent path in the pinned native library.
+
+   The first implementation now discovers bundled variants with the native
+   =--list-espeak-variants= diagnostic and exposes only explicitly enabled
+   combinations. The local picker keeps one base voice visible at a time and
+   stores desired =(ENABLE BASE-ID VARIANT-ID)= startup settings. Saving and
+   restarting both lanes are separate explicit actions. Existing exact preview
+   and palette selection use the resulting physical IDs. Disabled entries remain
+   saved but are omitted from new workers' inventory; base voices are unchanged.
+   This bounded local slice does not add variant packages to the Piper/Flite
+   installed index or implement external variant-file acquisition. The native
+   adapter checks returned identity so missing variants cannot silently audition
+   as their base. Remote and native-direct management remain separate providers.
 7. *MBROLA feasibility, then companion.* Separate the native prototype and
    recorded evidence from production integration. Prove text → frontend →
    database → PCM through one isolated helper, then cancel/replacement, both

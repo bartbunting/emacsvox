@@ -84,6 +84,7 @@
   (require 'emacsvox-remote-install-tests)
   (require 'emacsvox-native-bytecode-tests)
   (require 'emacsvox-omnivox-components-tests)
+  (require 'omnivox-espeak-variants-tests)
   (require 'emacsvox-keymap-tests)
   (require 'emacsvox-startup-tests)
   (require 'emacsvox-converter-tests)

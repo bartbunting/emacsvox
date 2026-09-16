@@ -40,6 +40,7 @@
         (require 'emacsvox-omnivox-components-tests)
         (require 'emacsvox-aural-voice-workbench-tests)
         (require 'omnivox-engine-settings-tests)
+        (require 'omnivox-espeak-variants-tests)
         (require 'omnivox-catalogue-tests)
         ;; Loading minibuffer speech advice must not send ERT's own reports
         ;; to an audio device after a test's delivery stubs have unwound.
@@ -55,6 +56,7 @@
             (message "%s: %s" function file)))
         (let ((stats (ert-run-tests-batch
                       '(member
+                        omnivox-espeak-variants-graphical-refresh-keeps-focus-and-parent
                         omnivox-catalogue-graphical-navigation-and-background-refresh
                         omnivox-engine-settings-graphical-customize-returns-to-details
                         emacsvox-aural-voice-workbench-graphical-engine-browser-return

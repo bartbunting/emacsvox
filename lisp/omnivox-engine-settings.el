@@ -33,6 +33,7 @@
 
 (require 'cl-lib)
 (require 'subr-x)
+(require 'json)
 (defvar emacsvox-servers-directory)
 (defvar tts-program)
 (declare-function omnivox-remote-enabled-p "omnivox-remote" ())
@@ -77,6 +78,37 @@ Native discovery must validate compatibility; saving is not a load check."
   :type '(repeat (list (boolean :tag "Load file") (file :tag "Voice file")))
   :group 'omnivox-engine-settings)
 
+(defcustom omnivox-espeak-variants nil
+  "Bundled eSpeak combinations offered by newly started speech workers.
+Each entry is (ENABLE BASE-ID VARIANT-ID).  Use the eSpeak variants picker
+to discover IDs on the actual speech host.  Disabled entries and palette
+references are retained.  Save explicitly and restart both lanes to apply.
+OMNIVOX_ESPEAK_VARIANTS overrides this option.  No files are downloaded."
+  :type '(repeat (list (boolean :tag "Enabled")
+                       (string :tag "Base voice ID") (string :tag "Variant ID")))
+  :group 'omnivox-engine-settings)
+
+(defun omnivox-engine-settings--variants-json (entries)
+  "Validate ENTRIES and encode bounded native eSpeak startup JSON."
+  (unless (and (proper-list-p entries) (<= (length entries) 64))
+    (user-error "Use at most 64 eSpeak variant combinations"))
+  (let (seen rows)
+    (dolist (entry entries)
+      (unless (and (proper-list-p entry) (= (length entry) 3)
+                   (memq (car entry) '(nil t))
+                   (stringp (nth 1 entry)) (stringp (nth 2 entry))
+                   (string-match-p "\\`espeak:[A-Za-z0-9_-]+\\(?:[/\\\\][A-Za-z0-9_-]+\\)*\\'" (nth 1 entry))
+                   (string-match-p "\\`[A-Za-z_-][A-Za-z0-9_-]*\\'" (nth 2 entry))
+                   (<= (+ (- (string-bytes (nth 1 entry)) 7) 1 (string-bytes (nth 2 entry))) 39))
+        (user-error "Choose a valid eSpeak base and variant from the speech host"))
+      (when (member (cdr entry) seen) (user-error "Repeated eSpeak combination"))
+      (push (cdr entry) seen)
+      (push (list :base_voice_id (nth 1 entry) :variant_id (nth 2 entry)
+                  :enabled (if (car entry) t :false)) rows))
+    (let ((json (json-serialize (vconcat (nreverse rows)))))
+      (when (> (string-bytes json) (* 16 1024)) (user-error "eSpeak settings exceed 16 KiB"))
+      json)))
+
 (defconst omnivox-engine-settings--providers
   '(("piper" omnivox-piper-model-file "OMNIVOX_PIPER_MODEL" "EMACSVOX_LOCAL_PIPER_MODEL" ".onnx")
     ("eloquence" omnivox-eloquence-runtime-file "OMNIVOX_ECI_DLL" "EMACSVOX_LOCAL_ECI_DLL" ".dll")
@@ -116,6 +148,10 @@ Keep process-wide environment and explicit native overrides unchanged."
   (if (not (equal program (expand-file-name "omnivox" emacsvox-servers-directory)))
       process-environment
     (let ((process-environment (copy-sequence process-environment)))
+      (setenv "EMACSVOX_LOCAL_ESPEAK_VARIANTS" nil)
+      (when (string-empty-p (or (getenv "OMNIVOX_ESPEAK_VARIANTS") ""))
+        (setenv "EMACSVOX_LOCAL_ESPEAK_VARIANTS"
+                (omnivox-engine-settings--variants-json omnivox-espeak-variants)))
       (dolist (provider omnivox-engine-settings--providers)
         (pcase-let ((`(,id ,option ,_override ,input ,suffix) provider))
           (setenv input nil)

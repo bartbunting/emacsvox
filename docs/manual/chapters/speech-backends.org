@@ -436,6 +436,15 @@ before retrying.
   verifies both before committing. If a replacement fails, it restores both
   previous configurations. Disabling keeps the files and saved palette
   references. Changing /Enabled/ leaves /Active/ unchanged until Apply.
+- /Voice variants/ in eSpeak details discovers the bundled choices on your
+  selected local speech host. Choose a base voice with @@texinfo:@kbd{b}@@,
+  then toggle a variant with @@texinfo:@kbd{RET}@@. @@texinfo:@kbd{s}@@ saves
+  your choices; @@texinfo:@kbd{a}@@ explicitly restarts both speech lanes.
+  After restart, @@texinfo:@kbd{p}@@ auditions that exact combination and
+  @@texinfo:@kbd{v}@@ opens the voice browser for the usual palette editor.
+  Disabled choices and saved palette references are retained. This requires a
+  development Omnivox build with variant discovery and the bundled local
+  launcher. It uses bundled variants and does not download files.
 - /Get more voices/ in Piper or Flite details opens the reviewed download
   catalogue. The initial choices are Flite AWB and RMS, and Piper Kristin
   medium. Press @@texinfo:@kbd{RET}@@ for the voice description, download

@@ -8,6 +8,13 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox Unreleased --- Current User-Visible Changes
 
+** Bundled eSpeak variants
+
+eSpeak engine details now offer a base-voice and variant picker with retained
+enablement, explicit saving and speech restart, exact samples, and a return to
+the ordinary voice browser and palette editor. It requires a development
+Omnivox build with variant discovery and the bundled local launcher.
+
 ** Speech engine details
 
 Aural Home's /Speech engines/ shows discovered availability and voice counts.
