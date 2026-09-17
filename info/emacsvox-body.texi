@@ -3964,21 +3964,26 @@ limit: switching to the logical@comma{} styles@comma{} or engine view removes it
 Pressing @kbd{v} from a voice list also removes that temporary
 limit. Your explicit filters still apply; @kbd{C} clears all
 filters to show voices across engines.
-Press @kbd{q} in an engine's voice list to return to that engine's
-row and column.  Press @kbd{q} again from the engine list to leave
-the workbench.  The direct view shortcuts remain available.
+Press @kbd{q} in a dedicated engine voice list to return to its
+details. Press @kbd{q} there to return to the selected engine row
+and column@comma{} and again from the engine list to leave the workbench. The direct
+view shortcuts remain available.
 
-Physical voices appear under expandable language headings. Each heading reports
+Languages containing just one voice show that voice directly. Languages with
+several voices appear under expandable headings. Each heading reports
 its voice count and whether it is expanded or collapsed; press
 @key{RET} to toggle it. Languages and voices start in alphabetical
-order@comma{} ignoring capitalization. Regional languages remain separate@comma{} such as
-@emph{English@comma{} United States} and @emph{English@comma{} United Kingdom}. Unrecognized language
-codes remain visible@comma{} and voices without a language use @emph{Unknown language}.
+order@comma{} ignoring capitalization. Related regions form a tree: expand @emph{English}@comma{}
+then @emph{United Kingdom} to browse voices such as @emph{English (West Midlands)}.
+Redundant single-child levels are omitted@comma{} and private language-tag codes do
+not become extra headings. Unrecognized language codes remain visible@comma{} and
+voices without a language are sorted under @emph{Unknown language}.
 A list containing one language starts expanded. Expansion choices are remembered
 for each engine scope. Refreshes preserve the selected voice and column@comma{} including
 when new library information arrives. Column sorting keeps headings together
-with their voices. @kbd{A} samples usable voices in expanded groups
-in displayed order; expand a language first if all groups are collapsed.
+with their voices. @kbd{A} samples usable visible voices@comma{} including
+single-voice languages@comma{} in displayed order. Expand a heading to include its
+hidden voices.
 
 Press @kbd{/} to find a voice by name using completion. Search
 includes collapsed languages and disabled downloads within the current engine

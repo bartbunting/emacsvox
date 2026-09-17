@@ -3968,23 +3968,27 @@ column survive navigation through Home.  The engine selected for
 browsing is a temporary limit: switching to the logical, styles, or
 engine view removes it.  Pressing ‘v’ from a voice list also removes
 that temporary limit.  Your explicit filters still apply; ‘C’ clears all
-filters to show voices across engines.  Press ‘q’ in an engine's voice
-list to return to that engine's row and column.  Press ‘q’ again from
-the engine list to leave the workbench.  The direct view shortcuts
-remain available.
+filters to show voices across engines.  Press ‘q’ in a dedicated engine
+voice list to return to its details.  Press ‘q’ there to return to the
+selected engine row and column, and again from the engine list to leave
+the workbench.  The direct view shortcuts remain available.
 
-   Physical voices appear under expandable language headings.  Each
+   Languages containing just one voice show that voice directly.
+Languages with several voices appear under expandable headings.  Each
 heading reports its voice count and whether it is expanded or collapsed;
 press <RET> to toggle it.  Languages and voices start in alphabetical
-order, ignoring capitalization.  Regional languages remain separate,
-such as _English, United States_ and _English, United Kingdom_.
-Unrecognized language codes remain visible, and voices without a
-language use _Unknown language_.  A list containing one language starts
-expanded.  Expansion choices are remembered for each engine scope.
-Refreshes preserve the selected voice and column, including when new
-library information arrives.  Column sorting keeps headings together
-with their voices.  ‘A’ samples usable voices in expanded groups in
-displayed order; expand a language first if all groups are collapsed.
+order, ignoring capitalization.  Related regions form a tree: expand
+_English_, then _United Kingdom_ to browse voices such as _English (West
+Midlands)_.  Redundant single-child levels are omitted, and private
+language-tag codes do not become extra headings.  Unrecognized language
+codes remain visible, and voices without a language are sorted under
+_Unknown language_.  A list containing one language starts expanded.
+Expansion choices are remembered for each engine scope.  Refreshes
+preserve the selected voice and column, including when new library
+information arrives.  Column sorting keeps headings together with their
+voices.  ‘A’ samples usable visible voices, including single-voice
+languages, in displayed order.  Expand a heading to include its hidden
+voices.
 
    Press ‘/’ to find a voice by name using completion.  Search includes
 collapsed languages and disabled downloads within the current engine and

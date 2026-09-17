@@ -18,6 +18,10 @@ C-c U resumes incomplete cleanup. Requires an updated development Omnivox build.
 
 ** Faster navigation in Browse voices
 
+Single-voice languages appear directly. Regional voices form a tree, such as
+English, United Kingdom, then West Midlands. Quitting a dedicated voice list
+now unwinds its window so repeated q returns out of the browser without a loop.
+
 Omnivox voice lists offer 1 All voices, 2 Downloaded, 3 Enabled, and 4 Needs
 Apply. Q lists their counts, including voices in collapsed languages.
 Slash finds a voice by name and opens its language group, switching to All
