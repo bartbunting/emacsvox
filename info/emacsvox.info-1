@@ -1504,9 +1504,9 @@ installation controls are still reachable.  Press ‘v’ to browse an
 engine's voices directly, or ‘RET’ for engine details.  Details start
 with a short status summary and the voice actions, with _Browse voices_
 selected.  Matching main and notification status is combined.  Problems
-remain visible near the top.  _Startup settings_, _Engine installation_,
-and _Diagnostics_ start collapsed; press ‘RET’ on a section to expand or
-collapse it.  Each engine remembers its expanded sections and selection.
+remain visible near the top.  _Startup settings_ and _Diagnostics_ start
+collapsed; press ‘RET’ on a section to expand or collapse it.  Each
+engine remembers its expanded sections and selection.
 
    _Available_ describes discovery from the current running worker.  An
 older check does not by itself make the engine unavailable.  _Previously
@@ -1520,16 +1520,25 @@ its runtime is usable.  _Not checked_ is not a claim that the runtime is
 missing.  _Diagnostics_ contains each stream's status, worker paths,
 inventory time, runtime discovery, and health.
 
-   Expand _Engine installation_ for the configured WSL per-user release.
-It can differ from the active development runtime or remote speech
-workstation.  Its _runtime not checked here_ or _model not checked here_
-text describes the limits of that file check; use speech discovery in
-_Diagnostics_ for the active server.  Installing or uninstalling a
-engine changes the managed release only; another runtime may still
-provide the engine.  A failed removal leaves its live availability
-separate from the operation result.  If a helper is still in use, the
-screen and spoken result say that removal failed.  Stop speech sessions
-using that engine before retrying.
+   _Required runtime_ appears near the top for engines that need native
+libraries.  For example, successful DECtalk discovery reports that its
+DLL and dictionary loaded.  Matching main and notification evidence is
+combined; differences are shown separately.  Missing files and load
+failures retain the worker's reason.  A disabled engine does not imply
+missing files, and evidence from a replaced worker does not establish
+the new worker's runtime status.  Opening or refreshing engine details
+uses speech-worker discovery without invoking the release installer.
+
+   On WSL, _Manage installed release_ explicitly opens the separate
+release installer.  _Installation being managed_ and _Location_ identify
+the versioned release affected by its actions.  This may differ from a
+development build or remote speech server.  _Installed engine files_
+reports file presence; _Check release engine_ tests runtime
+initialization and voice discovery for that release.  Installation and
+removal keep current speech running and do not select a different speech
+server.  If a helper is still in use, removal fails visibly; stop the
+sessions using that release before retrying.  Press ‘q’ to return to the
+current engine with its selection retained.
 
    • _Browse voices_ combines that engine's reported voices with its
      installed library, including disabled downloads.  This separate
@@ -1672,19 +1681,20 @@ using that engine before retrying.
      Direct native executable launches do not consume the bundled
      launcher's file options.
    • To refresh discovery, press ‘g’ or use _Refresh status_ in details.
-     Both worker inventories are requested asynchronously.  The managed
-     installation check also runs asynchronously and reports a timeout
-     if needed.
-   • To install a engine shown as _Not installed; downloadable_ in
-     details, activate _Install engine_ with ‘RET’, then confirm.  The
-     manager verifies the version-matched download.  The table shows
-     _installing_ while that operation runs.
-   • To check the managed engine, expand _Engine installation_ and
-     activate _Check managed engine_.  This lists voices in the managed
-     installation; it does not play a sample or prove that the active
-     speech server uses that copy.  Completion produces a short notice
-     without selecting another buffer.  The last result remains in
-     engine details; _Read last result_ opens its complete output.
+     Both worker inventories are requested asynchronously.
+   • To install an engine, choose _Manage installed release_ and check
+     the displayed installation and location.  If its files are
+     available to download, activate _Install engine_ with ‘RET’, then
+     confirm.  The manager verifies the version-matched download.  The
+     table shows its operation in progress while the current engine's
+     status stays separate.
+   • In the installed-release view, _Refresh release files_ runs a
+     bounded background file check.  _Check release engine_ lists voices
+     in that release without playing a sample.  A changed installation
+     target requires refreshing before retrying.  Completion produces a
+     short notice without selecting another buffer.  The last result
+     remains in the release view; _Read last result_ opens its complete
+     output.
    • In details, ‘TAB’ moves to the next action or section; ‘S-TAB’
      moves to the previous one.  ‘RET’ activates an action or toggles a
      section.  Arrow keys read visible fields and values.  ‘q’ returns

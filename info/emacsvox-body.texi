@@ -1494,8 +1494,8 @@ controls are still reachable. Press @kbd{v} to browse an engine's
 voices directly@comma{} or @kbd{RET} for engine details.
 Details start with a short status summary and the voice actions@comma{} with @emph{Browse
 voices} selected. Matching main and notification status is combined. Problems
-remain visible near the top. @emph{Startup settings}@comma{} @emph{Engine installation}@comma{} and
-@emph{Diagnostics} start collapsed; press @kbd{RET} on a section to
+remain visible near the top. @emph{Startup settings} and @emph{Diagnostics} start
+collapsed; press @kbd{RET} on a section to
 expand or collapse it. Each engine remembers its expanded sections and selection.
 
 @emph{Available} describes discovery from the current running worker. An older check
@@ -1509,15 +1509,23 @@ is usable. @emph{Not checked} is not a claim that the runtime is missing.
 @emph{Diagnostics} contains each stream's status@comma{} worker paths@comma{} inventory time@comma{}
 runtime discovery@comma{} and health.
 
-Expand @emph{Engine installation} for the configured WSL per-user release.
-It can differ from the active development runtime or remote speech workstation.
-Its @emph{runtime not checked here} or @emph{model not checked here} text describes the
-limits of that file check; use speech discovery in @emph{Diagnostics} for the active server.
-Installing or uninstalling a engine changes the managed release only; another
-runtime may still provide the engine. A failed removal leaves its live availability
-separate from the operation result. If a helper is still in use@comma{} the screen and
-spoken result say that removal failed. Stop speech sessions using that engine
-before retrying.
+@emph{Required runtime} appears near the top for engines that need native libraries.
+For example@comma{} successful DECtalk discovery reports that its DLL and dictionary
+loaded. Matching main and notification evidence is combined; differences are
+shown separately. Missing files and load failures retain the worker's reason.
+A disabled engine does not imply missing files@comma{} and evidence from a replaced
+worker does not establish the new worker's runtime status. Opening or refreshing
+engine details uses speech-worker discovery without invoking the release installer.
+
+On WSL@comma{} @emph{Manage installed release} explicitly opens the separate release
+installer. @emph{Installation being managed} and @emph{Location} identify the versioned
+release affected by its actions. This may differ from a development build or
+remote speech server. @emph{Installed engine files} reports file presence;
+@emph{Check release engine} tests runtime initialization and voice discovery for
+that release. Installation and removal keep current speech running and do not
+select a different speech server. If a helper is still in use@comma{} removal fails
+visibly; stop the sessions using that release before retrying. Press
+@kbd{q} to return to the current engine with its selection retained.
 
 @itemize
 @item
@@ -1661,19 +1669,19 @@ defaults. Direct native executable launches do not consume the bundled
 launcher's file options.
 @item
 To refresh discovery@comma{} press @kbd{g} or use @emph{Refresh status} in
-details. Both worker inventories are requested asynchronously. The managed
-installation check also runs asynchronously and reports a timeout if needed.
+details. Both worker inventories are requested asynchronously.
 @item
-To install a engine shown as @emph{Not installed; downloadable} in details@comma{} activate
+To install an engine@comma{} choose @emph{Manage installed release} and check the displayed
+installation and location. If its files are available to download@comma{} activate
 @emph{Install engine} with @kbd{RET}@comma{}
 then confirm. The manager verifies the version-matched download. The table
-shows @emph{installing} while that operation runs.
+shows its operation in progress while the current engine's status stays separate.
 @item
-To check the managed engine@comma{} expand @emph{Engine installation} and activate @emph{Check managed engine}.
-This lists voices in the managed installation;
-it does not play a sample or prove that the active speech server uses that copy.
+In the installed-release view@comma{} @emph{Refresh release files} runs a bounded background
+file check. @emph{Check release engine} lists voices in that release without playing
+a sample. A changed installation target requires refreshing before retrying.
 Completion produces a short notice without selecting another buffer. The last
-result remains in engine details; @emph{Read last result} opens its complete output.
+result remains in the release view; @emph{Read last result} opens its complete output.
 @item
 In details@comma{} @kbd{TAB} moves to the next action or section;
 @kbd{S-TAB} moves to the previous one.
