@@ -415,7 +415,11 @@ visibly; stop the sessions using that release before retrying. Press
 
 - /Browse voices/ combines that engine's reported voices with its installed
   library, including disabled downloads. This separate browser keeps the general Voice Workbench's filters and
-  staged edits intact. @@texinfo:@kbd{P}@@ explicitly speaks an exact sample;
+  staged edits intact. Languages form expandable headings with voice counts;
+  @@texinfo:@kbd{RET}@@ expands or collapses a heading. A single-language list
+  starts expanded, and the browser remembers groups and the selected voice.
+  On a voice, @@texinfo:@kbd{RET}@@ or @@texinfo:@kbd{P}@@ speaks an exact sample;
+  @@texinfo:@kbd{x}@@ shows details;
   @@texinfo:@kbd{t}@@ opens the existing voice editor for an unsaved experiment.
   Saving there asks for a palette destination. Browsing and auditioning do not
   change a palette. @@texinfo:@kbd{q}@@ returns to the selected engine detail.
@@ -447,9 +451,11 @@ visibly; stop the sessions using that release before retrying. Press
 - /Voice variants/ in eSpeak details lists the bundled variants reported by
   the running speech worker. Choose a base voice with @@texinfo:@kbd{b}@@,
   then use the arrow keys or @@texinfo:@kbd{C-n}@@/@@texinfo:@kbd{C-p}@@ to
-  browse variants. Press @@texinfo:@kbd{p}@@ or @@texinfo:@kbd{RET}@@ to hear
+  browse variants. The whole list is alphabetical by displayed name, ignoring
+  capitalization. Press @@texinfo:@kbd{P}@@ or @@texinfo:@kbd{RET}@@ to hear
   the selected combination immediately. Variants need no enabling, settings
-  save, download or speech restart.
+  save, download or speech restart. The existing @@texinfo:@kbd{p}@@ preview
+  shortcut also remains available.
   Press @@texinfo:@kbd{u}@@ for /Use in palette/, then choose a palette and
   named voice. The voice editor adds the variant as its preferred choice,
   retaining existing fallbacks and tuning. Press @@texinfo:@kbd{P}@@ to hear

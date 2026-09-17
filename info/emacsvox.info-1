@@ -1543,14 +1543,18 @@ current engine with its selection retained.
    • _Browse voices_ combines that engine's reported voices with its
      installed library, including disabled downloads.  This separate
      browser keeps the general Voice Workbench's filters and staged
-     edits intact.  ‘P’ explicitly speaks an exact sample; ‘t’ opens the
-     existing voice editor for an unsaved experiment.  Saving there asks
-     for a palette destination.  Browsing and auditioning do not change
-     a palette.  ‘q’ returns to the selected engine detail.  Library
-     information loads in the background; the browser refreshes quietly.
-     _Installed_ distinguishes library entries from engine-supplied
-     voices.  _Enabled_ is the desired selection for the next Apply.
-     _Active_ reports current eligibility on both streams, main only,
+     edits intact.  Languages form expandable headings with voice
+     counts; ‘RET’ expands or collapses a heading.  A single-language
+     list starts expanded, and the browser remembers groups and the
+     selected voice.  On a voice, ‘RET’ or ‘P’ speaks an exact sample;
+     ‘x’ shows details; ‘t’ opens the existing voice editor for an
+     unsaved experiment.  Saving there asks for a palette destination.
+     Browsing and auditioning do not change a palette.  ‘q’ returns to
+     the selected engine detail.  Library information loads in the
+     background; the browser refreshes quietly.  _Installed_
+     distinguishes library entries from engine-supplied voices.
+     _Enabled_ is the desired selection for the next Apply.  _Active_
+     reports current eligibility on both streams, main only,
      notification only, or neither.  _Unknown_ means current worker
      evidence is missing or inconsistent; press ‘R’ to refresh.  Active
      does not mean a model is resident in memory, and is not a listening
@@ -1579,20 +1583,22 @@ current engine with its selection retained.
    • _Voice variants_ in eSpeak details lists the bundled variants
      reported by the running speech worker.  Choose a base voice with
      ‘b’, then use the arrow keys or ‘C-n’/‘C-p’ to browse variants.
-     Press ‘p’ or ‘RET’ to hear the selected combination immediately.
-     Variants need no enabling, settings save, download or speech
-     restart.  Press ‘u’ for _Use in palette_, then choose a palette and
-     named voice.  The voice editor adds the variant as its preferred
-     choice, retaining existing fallbacks and tuning.  Press ‘P’ to hear
-     it with the palette's settings, then ‘w’ to _Save and apply_, or
-     choose _Save to collection without selecting_ to keep it for later.
-     Editing a built-in palette creates a personal copy.  _Use at
-     Startup_ in Voice Palettes controls which palette is selected next
-     time.  ‘q’ returns to the variants list with its selection
-     retained; ‘v’ opens the base-voice browser.  Existing saved variant
-     references remain valid.  An older Omnivox worker must be updated
-     once to provide on-demand variants; the screen reports missing
-     support explicitly.
+     The whole list is alphabetical by displayed name, ignoring
+     capitalization.  Press ‘P’ or ‘RET’ to hear the selected
+     combination immediately.  Variants need no enabling, settings save,
+     download or speech restart.  The existing ‘p’ preview shortcut also
+     remains available.  Press ‘u’ for _Use in palette_, then choose a
+     palette and named voice.  The voice editor adds the variant as its
+     preferred choice, retaining existing fallbacks and tuning.  Press
+     ‘P’ to hear it with the palette's settings, then ‘w’ to _Save and
+     apply_, or choose _Save to collection without selecting_ to keep it
+     for later.  Editing a built-in palette creates a personal copy.
+     _Use at Startup_ in Voice Palettes controls which palette is
+     selected next time.  ‘q’ returns to the variants list with its
+     selection retained; ‘v’ opens the base-voice browser.  Existing
+     saved variant references remain valid.  An older Omnivox worker
+     must be updated once to provide on-demand variants; the screen
+     reports missing support explicitly.
    • _Get more voices_ in Piper, Flite or MBROLA details opens the
      reviewed download catalogue.  Piper is grouped by language, voice
      name and quality; Flite offers AWB and RMS.  Voices with one
@@ -3955,16 +3961,30 @@ engines.  Open it from Aural Home with ‘W’.  Its main views are:
    For physical voices, choose _Browse voices_ in Home, then press ‘v’
 on an engine to browse its voices.  On an Omnivox engine, <RET> opens
 its status, downloads, and settings; ‘q’ returns to the selected engine.
-Other speech adapters use <RET> to browse voices directly.  <RET> on a
-voice shows details; ‘P’ plays a named sample.  Filters set with ‘F’ and
-each view's selected row and column survive navigation through Home.
-The engine selected for browsing is a temporary limit: switching to the
-logical, styles, or engine view removes it.  Pressing ‘v’ from a voice
-list also removes that temporary limit.  Your explicit filters still
-apply; ‘C’ clears all filters to show voices across engines.  Press ‘q’
-in an engine's voice list to return to that engine's row and column.
-Press ‘q’ again from the engine list to leave the workbench.  The direct
-view shortcuts remain available.
+Other speech adapters use <RET> to browse voices directly.  <RET> or ‘P’
+on a voice plays a named sample; ‘x’ shows details and ‘t’ opens the
+voice editor.  Filters set with ‘F’ and each view's selected row and
+column survive navigation through Home.  The engine selected for
+browsing is a temporary limit: switching to the logical, styles, or
+engine view removes it.  Pressing ‘v’ from a voice list also removes
+that temporary limit.  Your explicit filters still apply; ‘C’ clears all
+filters to show voices across engines.  Press ‘q’ in an engine's voice
+list to return to that engine's row and column.  Press ‘q’ again from
+the engine list to leave the workbench.  The direct view shortcuts
+remain available.
+
+   Physical voices appear under expandable language headings.  Each
+heading reports its voice count and whether it is expanded or collapsed;
+press <RET> to toggle it.  Languages and voices start in alphabetical
+order, ignoring capitalization.  Regional languages remain separate,
+such as _English, United States_ and _English, United Kingdom_.
+Unrecognized language codes remain visible, and voices without a
+language use _Unknown language_.  A list containing one language starts
+expanded.  Expansion choices are remembered for each engine scope.
+Refreshes preserve the selected voice and column, including when new
+library information arrives.  Column sorting keeps headings together
+with their voices.  ‘A’ samples usable voices in expanded groups in
+displayed order; expand a language first if all groups are collapsed.
 
    Omnivox's physical list combines browsing and installed-voice
 management.  _Installed_ shows library membership or an engine-supplied

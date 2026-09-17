@@ -1531,7 +1531,11 @@ visibly; stop the sessions using that release before retrying. Press
 @item
 @emph{Browse voices} combines that engine's reported voices with its installed
 library@comma{} including disabled downloads. This separate browser keeps the general Voice Workbench's filters and
-staged edits intact. @kbd{P} explicitly speaks an exact sample;
+staged edits intact. Languages form expandable headings with voice counts;
+@kbd{RET} expands or collapses a heading. A single-language list
+starts expanded@comma{} and the browser remembers groups and the selected voice.
+On a voice@comma{} @kbd{RET} or @kbd{P} speaks an exact sample;
+@kbd{x} shows details;
 @kbd{t} opens the existing voice editor for an unsaved experiment.
 Saving there asks for a palette destination. Browsing and auditioning do not
 change a palette. @kbd{q} returns to the selected engine detail.
@@ -1566,9 +1570,11 @@ references. Changing @emph{Enabled} leaves @emph{Active} unchanged until Apply.
 @emph{Voice variants} in eSpeak details lists the bundled variants reported by
 the running speech worker. Choose a base voice with @kbd{b}@comma{}
 then use the arrow keys or @kbd{C-n}/@kbd{C-p} to
-browse variants. Press @kbd{p} or @kbd{RET} to hear
+browse variants. The whole list is alphabetical by displayed name@comma{} ignoring
+capitalization. Press @kbd{P} or @kbd{RET} to hear
 the selected combination immediately. Variants need no enabling@comma{} settings
-save@comma{} download or speech restart.
+save@comma{} download or speech restart. The existing @kbd{p} preview
+shortcut also remains available.
 Press @kbd{u} for @emph{Use in palette}@comma{} then choose a palette and
 named voice. The voice editor adds the variant as its preferred choice@comma{}
 retaining existing fallbacks and tuning. Press @kbd{P} to hear
@@ -3949,8 +3955,9 @@ For physical voices@comma{} choose @emph{Browse voices} in Home@comma{} then pre
 @kbd{v} on an engine to browse its voices. On an Omnivox engine@comma{}
 @key{RET} opens its status@comma{} downloads@comma{} and settings;
 @kbd{q} returns to the selected engine.
-Other speech adapters use @key{RET} to browse voices directly. @key{RET}
-on a voice shows details; @kbd{P} plays a named sample.  Filters
+Other speech adapters use @key{RET} to browse voices directly.
+@key{RET} or @kbd{P} on a voice plays a named sample;
+@kbd{x} shows details and @kbd{t} opens the voice editor. Filters
 set with @kbd{F} and each view's selected row and column survive
 navigation through Home. The engine selected for browsing is a temporary
 limit: switching to the logical@comma{} styles@comma{} or engine view removes it.
@@ -3960,6 +3967,18 @@ filters to show voices across engines.
 Press @kbd{q} in an engine's voice list to return to that engine's
 row and column.  Press @kbd{q} again from the engine list to leave
 the workbench.  The direct view shortcuts remain available.
+
+Physical voices appear under expandable language headings. Each heading reports
+its voice count and whether it is expanded or collapsed; press
+@key{RET} to toggle it. Languages and voices start in alphabetical
+order@comma{} ignoring capitalization. Regional languages remain separate@comma{} such as
+@emph{English@comma{} United States} and @emph{English@comma{} United Kingdom}. Unrecognized language
+codes remain visible@comma{} and voices without a language use @emph{Unknown language}.
+A list containing one language starts expanded. Expansion choices are remembered
+for each engine scope. Refreshes preserve the selected voice and column@comma{} including
+when new library information arrives. Column sorting keeps headings together
+with their voices. @kbd{A} samples usable voices in expanded groups
+in displayed order; expand a language first if all groups are collapsed.
 
 Omnivox's physical list combines browsing and installed-voice management.
 @emph{Installed} shows library membership or an engine-supplied voice; @emph{Enabled}

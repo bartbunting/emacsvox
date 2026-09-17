@@ -1297,8 +1297,9 @@ For physical voices, choose /Browse voices/ in Home, then press
 @@texinfo:@kbd{v}@@ on an engine to browse its voices. On an Omnivox engine,
 @@texinfo:@key{RET}@@ opens its status, downloads, and settings;
 @@texinfo:@kbd{q}@@ returns to the selected engine.
-Other speech adapters use @@texinfo:@key{RET}@@ to browse voices directly. @@texinfo:@key{RET}@@
-on a voice shows details; @@texinfo:@kbd{P}@@ plays a named sample.  Filters
+Other speech adapters use @@texinfo:@key{RET}@@ to browse voices directly.
+@@texinfo:@key{RET}@@ or @@texinfo:@kbd{P}@@ on a voice plays a named sample;
+@@texinfo:@kbd{x}@@ shows details and @@texinfo:@kbd{t}@@ opens the voice editor. Filters
 set with @@texinfo:@kbd{F}@@ and each view's selected row and column survive
 navigation through Home. The engine selected for browsing is a temporary
 limit: switching to the logical, styles, or engine view removes it.
@@ -1308,6 +1309,18 @@ filters to show voices across engines.
 Press @@texinfo:@kbd{q}@@ in an engine's voice list to return to that engine's
 row and column.  Press @@texinfo:@kbd{q}@@ again from the engine list to leave
 the workbench.  The direct view shortcuts remain available.
+
+Physical voices appear under expandable language headings. Each heading reports
+its voice count and whether it is expanded or collapsed; press
+@@texinfo:@key{RET}@@ to toggle it. Languages and voices start in alphabetical
+order, ignoring capitalization. Regional languages remain separate, such as
+/English, United States/ and /English, United Kingdom/. Unrecognized language
+codes remain visible, and voices without a language use /Unknown language/.
+A list containing one language starts expanded. Expansion choices are remembered
+for each engine scope. Refreshes preserve the selected voice and column, including
+when new library information arrives. Column sorting keeps headings together
+with their voices. @@texinfo:@kbd{A}@@ samples usable voices in expanded groups
+in displayed order; expand a language first if all groups are collapsed.
 
 Omnivox's physical list combines browsing and installed-voice management.
 /Installed/ shows library membership or an engine-supplied voice; /Enabled/
