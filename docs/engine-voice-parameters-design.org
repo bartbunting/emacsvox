@@ -710,3 +710,40 @@ DECtalk. Helper 6 catalogues and application receipts, public transport, and the
 Emacs editor remain pending. No new wire capability is advertised. These tests
 capture PCM silently; they do not establish acoustic quality or support for
 other native runtimes or platforms.
+
+* Implementation progress: helper wire compatibility boundary
+
+Omnivox commit =f8dda09= contains this slice and its retained runtime evidence.
+
+Before enabling helper 6, the legacy helper readers now reject data they cannot
+represent. Rust previously ignored unknown envelope fields, allowing a future
+native block to be silently discarded. The Windows host rejected unknown fields
+but its dictionary parser overwrote duplicate keys before validation.
+
+Both wire boundaries now reject duplicate decoded names, including escaped
+names. Rust also rejects unknown request/settings/anchor members and unknown
+response envelope/audio/marker members. Earlier versions reject newer fields
+even when null. The Windows reader checks bounded JSON syntax before creating
+dictionaries or trusting a request ID. Valid legacy speech, escaped text and
+unowned errors without a request ID retain their existing meanings.
+
+The Rust codec and host tests verify that native fields cannot silently reach
+ordinary synthesis. Locked workspace tests and Clippy passed with Rust 1.97.1.
+The actual Windows host passed 37 cancellation cases and 110 malformed-input
+and recovery cases across versions 1--5. The same new test fails against the
+previous Windows host on its first duplicate-key request.
+
+The previously staged Flite helper reproduced the silent loss of native fields:
+it synthesized a request containing =voice_parameters:null=. The rebuilt helper
+rejects that request before producing audio. Eloquence and DECtalk each passed
+50 ordinary progressive requests and 50 cancellation/recovery probes. The rebuilt
+main server also captured ordinary speech from both engines successfully.
+
+Full Windows development staging and companion checks passed for build
+=1a7bd0803c404f6c= in a separate runtime root. Both Windows helper hashes match
+the tested binaries. Both documentation gates passed. The desktop launcher
+remains on its original runtime, and no live Emacs session was restarted.
+
+This is a compatibility prerequisite, not helper 6 activation. Catalogue and
+explanation operations, native application receipts, public transport and the
+Emacs editor remain pending. Negotiation still advertises versions 1--5.
