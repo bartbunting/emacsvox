@@ -82,7 +82,7 @@
             (plist-get (or (cl-find "en-us" bases :key (lambda (voice) (plist-get voice :language)) :test #'equal)
                            (car bases)) :voice-id)))
     (setq header-line-format
-          (format "%s | %s | p preview, u use in palette, b base, v voices, g refresh, q back"
+          (format "%s | %s | RET/P preview, u use in palette, b base, v voices, g refresh, q back"
                   (or omnivox-espeak-variants--base "eSpeak variants")
                   (or omnivox-espeak-variants--status
                       (if variants "Bundled variants; no restart needed"
@@ -194,6 +194,7 @@ Save to collection.  Opening it changes no saved data or startup settings."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map emacsvox-aural-tabulated-mode-map)
     (dolist (binding '(("RET" . omnivox-espeak-variants-preview)
+                       ("P" . omnivox-espeak-variants-preview)
                        ("p" . omnivox-espeak-variants-preview)
                        ("u" . omnivox-espeak-variants-use)
                        ("b" . omnivox-espeak-variants-base)
@@ -214,7 +215,12 @@ Choose a base with b.  No variant enablement, setting save or restart is needed.
               '(("Preview variant" . omnivox-espeak-variants-preview)
                 ("Use in palette" . omnivox-espeak-variants-use)
                 ("Choose base voice" . omnivox-espeak-variants-base)))
-  (setq tabulated-list-format [("Variant" 28 t) ("Preview" 23 t) ("ID" 20 t)])
+  (setq tabulated-list-format
+        `[("Variant" 28 ,(lambda (a b)
+                           (string-lessp (downcase (aref (cadr a) 0))
+                                         (downcase (aref (cadr b) 0)))))
+          ("Preview" 23 t) ("ID" 20 t)]
+        tabulated-list-sort-key '("Variant" . nil))
   (tabulated-list-init-header))
 
 ;;;###autoload
