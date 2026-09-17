@@ -1,0 +1,524 @@
+#+title: Engine-Described Voice Parameters: Design Contract
+#+date: 2026-09-17
+#+startup: content
+
+* Status and intended result
+
+Proposed contract for [[file:adr/0022-engine-described-voice-parameters.org][ADR 0022]], following the maintainer's request for an XHI
+design. No implementation or live configuration change accompanies it.
+The [[file:engine-voice-parameter-inventory.org][initial inventory]] records current code, SDK evidence and qualification gaps.
+
+The common editor remains the first screen. A user editing a DECtalk fallback
+can additionally set its smoothness, keep its other common mappings, preview
+the result, and save that adjustment with that palette choice. An Eloquence
+fallback offers its own controls. New engines supply descriptors to the same
+editor; users need not learn vendor command syntax.
+
+This proposal refines the native-parameter deferral in the earlier
+[[file:voice-editor-fallback-tuning-contract.org][choice-tuning contract]]. It preserves ADR 0017's shared -> choice -> context
+precedence and ADR 0018's palette ownership. It does not flatten native values
+into common ACSS, change engine rate calibration, or change voice installation
+and enablement under ADRs 0019 and 0020.
+
+* Ownership
+
+| Concern | Owner |
+|---------+-------|
+| Supported parameters, semantics, native units and ranges | Omnivox engine adapter, qualified for its runtime |
+| Default/reset behavior and native application ordering | Omnivox engine adapter/helper |
+| Common-to-native mappings and their dependencies | Omnivox; preserve current calibrated mappings |
+| Actual-choice resolution, immutable request layers, fallback | Omnivox server |
+| Accessible forms, drafts, undo, explanations, palette persistence | Emacsvox |
+| Downloaded voice files, enablement, residency and activation | Existing Omnivox voice management path |
+| Stream/cue volume and spatial placement | Existing output/presentation controls |
+
+For a helper engine, the adapter includes the code inside its isolated helper.
+Native mapping need not move into the server to satisfy this ownership split.
+Emacsvox receives data and never evaluates code, loads a vendor library, or
+constructs vendor annotations. Built-in engines implement the same semantic
+adapter interface in process.
+
+* Discovery and descriptor contract
+
+** Catalogue and runtime identity
+
+Use separate identities for separate changes:
+
+- =schema_id=: stable parameter meanings and units, for example
+  =eloquence.eci-units.v1=. Save this with adjustments. Never reuse a parameter
+  ID with a different type or unit under that schema.
+- =profile_id=: the qualified adapter/runtime profile, including applicable
+  limits and reset support. A platform or runtime can expose fewer controls
+  under the same semantic schema.
+- =catalogue_revision=: a digest of the returned descriptor content; labels,
+  limits and documentation can change without redefining a parameter ID.
+- =runtime_generation=: evidence for the actual worker/helper instance.
+  Reconnection, replacement or a changed active voice inventory invalidates
+  applicability/default evidence as appropriate.
+
+Cache by actual speech target, lane connection, engine, profile and catalogue
+revision. Cache voice-specific evidence by physical voice identity and runtime
+generation as well. Identical IDs on another workstation are not proof of
+identical installed runtimes. Persist semantic IDs and values, not runtime
+handles, process IDs, executable paths or catalogue cache objects.
+
+Engine inventory carries only a small catalogue summary and availability state.
+Fetch the full catalogue lazily for the selected engine. Resolve applicability
+and defaults for the selected physical voice separately. Voice-default or
+property selectors require a resolved-voice label; a prediction can change
+when ordinary speech actually chooses a voice.
+
+** Parameter records
+
+Each record contains a stable string ID, label, short help, display group/order,
+type, unit, application scope, availability, and whether it is adjustable.
+Optional documentation links are inert links. Four value types suffice initially:
+
+| Type | Required constraints |
+|------+----------------------|
+| Integer | Inclusive minimum/maximum; positive integer UI step |
+| Number | Finite minimum/maximum; positive finite UI step |
+| Boolean | Two states; false is a value |
+| Enum | Bounded list of stable string values with display labels |
+
+The UI step is a nudge increment, not an implicit restriction to a numeric grid.
+An adapter needing discrete values uses an enum. No arbitrary strings, file
+paths, native byte arrays, expressions or recursively executable dependencies.
+Validate engine and parameter IDs as bounded strings without interning
+untrusted names into Emacs symbols. The first implementation uses native units;
+UI display formatting never changes the stored unit.
+
+Availability distinguishes supported, unavailable for this voice, unsupported
+by this runtime, and not checked. Do not render a disabled slider with a guessed
+range for an unqualified control. A known candidate may appear in collapsed
+details with its reason. An unknown descriptor type remains visible as
+unsupported by this client and cannot become an editable value.
+
+Application scope is =voice=, =engine=, or =startup=. Only qualified =voice=
+parameters enter palette adjustments in version 1. Engine/startup items link
+to engine settings and explain their effect there; this schema does not provide
+a generic engine-global setter. Read-only evidence is labelled as information.
+
+Default evidence is one of runtime readback, qualified profile value, or unknown,
+with an optional typed value and its voice/runtime identity. Separately report
+whether Engine voice default can be faithfully executed. A reset can be known
+to work even when its numeric value cannot be read; display /Engine default;
+numeric value unavailable/. Unknown reset behavior disables that action.
+
+** Relationships and common mapping
+
+The adapter publishes mapping summaries: common inputs read, native outputs
+written, and native parameters reset or indirectly modified by each operation.
+An input may write several outputs; an output may depend on several inputs.
+The application dependency graph must be acyclic or have an explicit adapter
+plan that resolves the cycle. The generic client only displays these relations.
+
+Mapping formulas remain executable adapter code. A separate pure planning
+operation returns effective values and provenance for a specific voice/style.
+Descriptors do not contain a formula language, and Emacsvox never reconstructs
+an inverse mapping. Native and common values may be nonlinearly related.
+
+** Responsive discovery
+
+Opening the editor renders its current draft immediately. Metadata requests
+run asynchronously, at most one active request per selected engine/lane;
+coalesce requests and discard replies for an obsolete buffer/draft generation.
+Use the existing bounded control timeout, capped at five seconds for catalogue
+and explanation requests. Show /Checking controls/ and then a concise failure
+with Retry; an open screen must not wait in =accept-process-output= for a helper.
+
+Static metadata requires no synthesis and no model load. Runtime readback is
+served from cached evidence or scheduled on the helper's owner thread when
+safe. Busy helpers may return pending/busy; never stop current speech to query
+defaults. Opening a screen never launches the managed-release checker, loads
+every Piper voice, or downloads anything. Closing a buffer detaches its waiter;
+late replies neither move point nor speak a long notification.
+
+* Composition: retain the common model, override particular native outputs
+
+** Sparse native operations
+
+A choice record gains a sibling =native= member, separate from the existing
+common =adjustments= patch. A conceptual JSON example is:
+
+#+begin_example
+{
+  "engine_id": "dectalk",
+  "schema_id": "dectalk.design-voice.v1",
+  "parameters": {
+    "sm": {"op": "set", "value": 55},
+    "br": {"op": "default"}
+  }
+}
+#+end_example
+
+This is a proposed payload, not an existing accepted request. A nonempty native
+record requires an explicitly engine-constrained selector for the same engine.
+An exact voice, engine default or engine-constrained property selector is valid.
+An unconstrained automatic selector must first become an explicit engine choice
+through the existing choice editor; never silently freeze a predicted engine.
+
+Omission means /Follow common settings/: map the common value when present,
+otherwise use the selected voice's baseline. =set= pins this parameter's native
+value. =default= selects the pristine engine voice default for this parameter,
+even if a common base control would normally map to it. Zero and false remain
+real values. Delete the operation to return to Follow common settings.
+
+** Algorithm for each actual synthesis attempt
+
+1. Freeze the existing named definition, choice chain, common style, contextual
+   operations, rate base, policy and output settings at admission. Resolve the
+   actual eligible physical choice under existing fallback rules.
+2. Compose shared common style, that choice's common adjustments, and the
+   contextual patch exactly as today. Retain which contextual operations were
+   explicit, including a value equal to the base and explicit default operations.
+   Existing contextual nil projection remains unchanged.
+3. Using the actual voice's clean baseline, run its existing common mapping
+   once to produce a typed native plan. This step must reproduce current
+   behavior when the native record is absent.
+4. Determine the native outputs written by the explicit contextual operations.
+   Overlay the selected choice's native operations on other native parameters.
+   If a contextual operation writes a parameter, its mapping wins over that
+   choice's native =set= or =default= for that parameter.
+5. Resolve native application dependencies, validate the complete plan against
+   the actual runtime/voice, reset the synthesis state and apply it in the
+   adapter's required order. Apply existing host DSP/output settings under their
+   existing owners. Do not execute the common mapping again after the native
+   overlay, which would overwrite the user's adjustment.
+
+The write set uses explicit semantic operations, not a comparison of before
+and after numeric values. In particular, explicit contextual richness may mask
+native smoothness even when its normalized value equals the shared richness.
+Contextual ACSS nil that projects to omission does not create a new write.
+Contextual rate/effect defaults retain their existing meaning. A winning
+contextual preset selects its own complete base/choices rather than grafting
+the previous voice's native adjustments onto it.
+
+For an output depending on several common inputs, compute its value from the
+final common inputs once. A contextual change to any declared input masks a
+native override of that output. Example: the Windows Eloquence native-volume
+mapping reads volume and richness; contextual richness takes precedence for
+that output too. A native breathiness change alone does not reverse-map a new
+richness or recompute its volume compensation. Explain this dependency in the UI.
+
+Output effects such as gain never enter the native write set merely because
+they also affect perceived loudness. A native speed override is fixed in native
+units: normal base-rate changes do not change it, while an explicit contextual
+rate operation still wins. Label this consequence beside that control. Channel
+speech volume, tone/earcon levels and cancellation keep working independently.
+
+** Defaults, state isolation and dependencies
+
+An engine voice default means the selected physical voice's pristine baseline
+under the current qualified engine configuration, before palette/common/native
+voice adjustments. It does not mean zero, the last utterance's value, a manual
+table copied without qualification, or the common slider's midpoint.
+
+The adapter needs a reliable reset-and-apply plan for every adjustable control,
+even when the user only uses =set=. Otherwise an omitted setting could inherit
+the preceding preview. Prefer resetting/copying a pristine voice and applying
+the final typed plan on the existing helper instance; do not restart Omnivox
+or create an engine instance per keystroke.
+
+If setting A resets or changes B, order A before B and reassert B's intended
+effective state as necessary. Values selected by contextual mappings retain
+their higher priority after all such side effects. The profile must declare
+coupled parameters where independent control cannot be honored; reject an
+unrepresentable combination with a useful reason rather than pretending both
+values took effect. Never discover a reset sequence by probing active speech.
+
+Reset the state for each independently styled synthesis unit, including a new
+timeline span on the same physical voice. Cancellation, pre-PCM native failure,
+and preview completion must leave the next request clean. Readback failures
+or an unusable reset disable that parameter capability; they need not disable
+the runtime's established common speech path.
+
+On fallback, compose again for the new actual choice from immutable request
+layers. Never carry a DECtalk native plan into Eloquence, or a failed choice's
+values into another record selecting the same engine/voice. Global policy
+fallback has no choice-native adjustments. Preserve the existing attempt cap,
+health policy, marker/cancellation behavior and progressive PCM boundary:
+fallback only before the first accepted PCM; no replay after audio commitment.
+
+* Emacs interaction
+
+** Screen and editing
+
+Enter Engine controls from the selected choice in the existing voice editor.
+Keep the palette, named voice and selected fallback visible. Actions come first:
+
+#+begin_example
+Heading voice: DECtalk Paul, choice 2
+Preview  Compare with saved  Save  Back
+Common settings
+Engine controls: DECtalk
+  Pitch and intonation       Collapsed
+  Voice character            Expanded
+    Smoothness               55; adjusted here
+    Richness                 Follows common richness
+    Breathiness              Engine voice default
+  Advanced acoustic controls Collapsed
+Changed controls             2
+Effective settings           Collapsed
+Diagnostics                  Collapsed
+#+end_example
+
+The example is a proposed layout; only qualified descriptors generate rows.
+Use the existing accessible workbench row/action conventions. Each parameter
+row speaks its label, value/unit and origin in one short phrase. RET edits a
+parameter or invokes the labelled action; Preview is a consistent visible
+action with the existing preview binding. Groups toggle with the established
+expand/collapse binding. Do not introduce conflicting global keys in this plan.
+
+Provide integer/number entry with completion for Follow common settings and
+Engine voice default, enum completion, boolean toggles, and optional bounded
+increment/decrement. Keep point and open groups after refresh. Offer Show changed
+controls and search across labels/IDs/help, independent of group expansion.
+Reset this control removes its override; Reset engine controls clears this
+choice's native record in the draft, retaining its common adjustments.
+
+Draft edits support undo, make no persistent write and do not alter registered
+live voices. Preview is explicit initially; a future optional automatic preview
+would need debouncing and cancellation. Do not send a sample on every arrow key.
+Defaults/status arrivals update the row without replacing a value being edited.
+
+** Explanation and preview evidence
+
+Effective settings shows requested value, effective value if known, origin,
+common mapping dependencies, and a contextual mask reason when relevant.
+An unsaved planning result is labelled /Expected for this voice/; it is not
+proof of playback. Optional comparison can supply the existing contextual
+preview inputs to hear why a heading rule masks a native adjustment.
+
+Use the existing private complete-chain preview path. It may resolve another
+fallback, whose settings must be composed afresh. The selected-choice audition
+remains strict to that selector and reports its resolved physical voice.
+Preview does not register temporary logical voices or require voice-library
+Apply. Normal speech and previews share native preparation code.
+
+Playback evidence identifies actual choice, physical voice, runtime/profile,
+plan identity and any degradation. Distinguish planned, adapter-applied and
+read-back values; do not claim readback when an SDK only acknowledges a setter.
+Keep full per-parameter detail in an explicitly requested bounded result, not
+in every marker or spoken notification. Preserve normal completion/cancellation
+and PCM evidence, which still do not prove what the listener heard.
+
+** Save and capability differences
+
+Save follows the existing immutable proposal and palette coordinator. Dynamic
+voice controls need no worker restart and no downloaded-voice activation step.
+Display one concise result for persistence plus main/notification application;
+a save with one lane lacking support must not say /Saved and applied/.
+
+The selected lane determines the preview target. Display differences on the
+other lane near Save when material; do not hide a supported control simply
+because another lane is old. Preserve saved values while a runtime is absent
+or a catalogue refresh is pending. Engine-level and startup-only settings
+remain outside this per-choice save operation.
+
+* Storage, portability and migration
+
+Allocate palette schema 4, routing-file schema 4, immutable choice-set schema 4,
+and user-data envelope 10 for this proposal. Routing-profile schema remains 2.
+Those allocations are unused at the inspected baseline; check again before
+implementation. Native records are optional on version-4 choice records;
+the existing common patch keys and units remain strict and unchanged.
+
+Represent parameters in Lisp with string IDs and explicit typed operations.
+The generic reader validates structure and scalar bounds without requiring
+an installed engine. Runtime validation is separate. Unknown semantic schemas
+or parameter IDs can survive save/copy/export as bounded inert data; they are
+not executable or silently discarded. Unknown outer storage versions still
+follow explicit unsupported-version handling.
+
+Read every currently supported older format. Opening, browsing, previewing or
+saving unrelated data must not rewrite old records merely to upgrade them.
+On the first save requiring native data, promote the affected palette and
+publish a new immutable snapshot for an edited local chain. Never mutate an
+old snapshot. All relevant readers/writers, copy/rename/inheritance paths and
+exports must preserve native records before enabling the new writer.
+
+Ownership remains palette, named voice, stable choice ID. Reorder preserves
+the adjustment. Replacing a selector uses the existing keep/reset decision and
+validates native schema compatibility; a different engine cannot silently
+inherit the old native record. Whole-entry inheritance remains unchanged.
+Temporary legacy routes do not acquire palette-native adjustments implicitly.
+
+Portability follows the selector, as with common choice adjustments. A portable
+engine-constrained selector may retain native adjustments using stable semantic
+IDs and native units. An exact local voice and its adjustments remain local.
+Portable export omits local choices/references with the existing omission report;
+never infer a portable engine choice from an exact ID. Profile/runtime evidence
+and resolved numeric defaults do not become portable requirements.
+
+When local data exists, its portable projection must match the palette's
+portable records including common and native adjustments. Missing local data
+retains the existing portable fallback and explicit warning; malformed or
+wrong-owner data is an error. Persist snapshot first, palette reference second,
+then live configuration. Preserve retry IDs and before-value conflict detection.
+An incomplete multi-file save must keep the old coherent palette usable.
+
+* Protocol evolution and compatibility
+
+** Proposed negotiated surface
+
+Do not add silently ignored native fields to existing strict operations.
+Reserve these new forms, checking allocations again before the codec slice:
+
+| Surface | Proposed form |
+|---------+---------------|
+| Read-only catalogue capability | =engine_parameter_catalogue_v1= |
+| Complete native tuning capability | =engine_voice_parameters_v1= |
+| Catalogue/voice evidence | =get_engine_parameters_v1= / =engine_parameters_v1= |
+| Pure effective-plan query | =explain_voice_parameters_v1= / =voice_parameters_explained_v1= |
+| Registry replacement | =register_logical_voices_v3= / =logical_voices_registered_v3= |
+| Private preview | =preview_voice_v3= / =preview_voice_completed_v3= |
+| Native-aware ordinary presentation | Timeline 5 and =presentation_timeline_v5= |
+| Native application receipt | Marker events 4 and =playback_marker_events_v4= |
+| Server/helper contract | Negotiated helper protocol 6 |
+
+Keep control envelope 1, remote envelope 1 and previous operations unchanged.
+Catalogue support alone does not promise adjustable speech. Advertise the
+complete bundle only with registration, all ordinary named-voice paths,
+private previews, actual-attempt execution and application evidence working.
+Require the catalogue capability, timeline 5 and marker events 4 with that
+bundle. Qualify each helper separately: a capable server may have an old helper.
+
+Registration v3 adds an explicitly discriminated native-aware layered definition,
+with the same shared/context semantics and extended choice records. Retain
+legacy and existing layered definitions in the one registry generation domain.
+Timeline 5 adds a native-aware reference form bound to that admitted registry;
+ordinary layered references and legacy literal styles retain their contracts.
+Preview v3 carries a private extended definition. Do not make old timeline
+forms ambiguously refer to a new definition kind.
+
+Helper 6 carries the composed common inputs, explicit contextual dimensions,
+the actual choice's native operations and schema/profile evidence. The adapter
+builds the typed plan, validates and applies it. Its read-only describe/explain
+operations use the same planner. Helpers 1–5 keep their old request shapes and
+speech behavior. Native capture/control changes require the full Windows
+development bundle, not the main-only rebuild shortcut.
+
+The implementation's wire specification must freeze exact discriminators,
+required fields, nullable fields and terminal error shapes in independent
+fixtures before writing the codecs. The names and semantics here reserve the
+design boundary; they are not an assertion that those wire fixtures exist yet.
+Mirror the approved contract into Omnivox's ADR/protocol documentation in that
+slice before changing its public API.
+
+** Validation, limits and request lifecycle
+
+Retain 32 choices, 16 KiB preview text, 256 KiB decoded control data, existing
+remote framing limits, multipart bounds, admission/cancellation identities and
+the one registry generation domain. Count native data in all queue/transport
+budgets. Add at most 64 native operations per choice and 512 descriptors per
+engine, paged at 64 records and within the control byte limit. Reject an
+oversized record or incomplete generation; do not silently truncate a catalogue.
+Use immutable-generation cursors; mixing pages from different revisions fails.
+
+Bound IDs to 128 ASCII identifier characters, labels to 128 UTF-8 bytes, help
+to 1 KiB, enum options to 64, and parameter values to finite JSON scalars.
+Validate all cross-references, duplicate JSON keys/IDs, enum values and parameter
+types before mutation. No raw native handles or text command escape is allowed.
+Per-parameter details use explicit requests within the same bounds; compact
+playback receipts identify the plan and status rather than repeating catalogues.
+
+Validate at edit, save/registration, admission and native execution boundaries.
+A changed profile/runtime makes old applicability evidence stale; revalidate
+against the new profile before any native call. Preserve the frozen request's
+values and schema, rather than substituting a newly edited palette. Expired
+explanation/receipt queries return unavailable rather than causing synthesis.
+
+Malformed values, duplicate IDs and invalid operations reject a proposal before
+registration mutation. Well-formed stored values for an absent/changed runtime
+remain saved but inapplicable. Registration reports per-choice and per-lane
+native applicability; the ordinary-speech policy permits common-only execution
+of that choice's native block when unavailable, with explicit degradation.
+Do not apply a subset of a coupled native block without saying so: version 1
+withholds the entire block when its schema/values cannot be honored.
+
+Strict private previews reject an inapplicable native block before audio.
+An automatic preview may use the existing fallback policy for a synthesis
+failure, reporting the actual choice; it cannot demonstrate a native block by
+silently dropping it. Once a valid native attempt fails in synthesis, existing
+pre-PCM fallback/health rules apply. Parameter validation errors are not engine
+crashes and must not poison engine health.
+
+** Older targets and heterogeneous lanes
+
+Negotiate each main/notification connection independently and again after
+reconnect. With an old target, project the best supported existing common
+choice tuning; with a still older target use the existing shared-only fallback.
+Preserve native data and mark it not applied. Never flatten a predicted native
+setting into a common slider to pretend the target supports it.
+
+Customized previews require native support. Offer an explicitly labelled
+common-only audition as a separate operation where faithfully representable.
+Preflight both halves of a comparison. Save may persist unsupported settings,
+but reports affected lanes and controls once, not on every utterance. Keep
+state visible in the editor and diagnose actual degradation without flooding
+the notification speech stream. Registration acknowledgements must belong to
+the current proposal and current connections before claiming full application.
+
+Remote requests stay on the authenticated, bounded speech connection and apply
+only to its owned worker. No installation, file lookup supplied by the client,
+arbitrary library loading or cross-session setting is added to that protocol.
+macOS uses the same descriptor/editor contract for engines actually supported
+there; this does not assert DECtalk or Eloquence availability on macOS.
+
+* Acceptance examples and implementation slices
+
+These are independent behavioral expectations, to become fixtures and tests:
+
+| Case | Expected result |
+|------+-----------------|
+| No native record | Existing common mapping and PCM behavior remain unchanged |
+| DECtalk smoothness set to 55 | Only that native output overrides the base richness mapping |
+| Common richness later changes | Smoothness stays 55; the other mapped output follows richness |
+| Context explicitly sets richness, even equal to base | Context's mapped smoothness wins temporarily; removing context restores 55 |
+| Native Engine voice default | Pristine voice baseline wins over base mapping; contextual mapping can still win |
+| Native zero/false | Preserved as a real value through save, wire and execution |
+| Eloquence native breathiness changes | No inferred common richness or extra volume compensation |
+| A native operation changes another parameter | Final dependency plan restores the intended winning value or rejects the combination |
+| Two choices select the same engine/voice | Stable choice IDs keep their different native adjustments separate |
+| First choice fails before PCM | Next actual choice gets its own fresh common/native plan |
+| Failure after PCM commitment | No cross-engine retry or audio splice |
+| Preview, cancellation, then ordinary speech | No native state leaks into the following request |
+| Different style on next span, same physical voice | The next span's clean plan takes effect |
+| Old helper or one old lane | Ordinary speech continues; native tuning visibly not applied there |
+| Stale metadata, busy helper or closed buffer | UI remains responsive; no stale draft overwrite or speech interruption |
+| Portable export or missing local snapshot | Existing selector-based projection preserves native ownership correctly |
+| SDK accepts text but ignores a control | Qualification fails; no writable descriptor claimed |
+
+Implement in reviewable, tested commit slices:
+
+1. *Contract fixtures and runtime qualification.* Freeze wire/storage examples;
+   mirror the approved architecture into Omnivox. Audit optional Eloquence
+   voice APIs, DECtalk options, platform volume ownership and clean resets.
+   Record supported profiles/ranges/default evidence and unavailable candidates.
+2. *Omnivox typed metadata and planning.* Implement descriptors, validation,
+   mapping provenance and dependency-aware pure plans. Golden cases must prove
+   identical common behavior when no native record is present. Keep feature
+   advertisement off until the complete execution path exists.
+3. *DECtalk and Eloquence native execution.* Add helper 6 negotiation, optional
+   bindings, clean baseline application, cancellation and default evidence.
+   Keep progressive audio/markers and older helper operation. Exercise both
+   engines to catch false assumptions in the generic parameter model.
+4. *Complete transport and compatibility.* Add new registration, ordinary
+   timelines, private preview/explanation and compact receipts; test actual
+   fallback, admission freezing, remote validation and two-lane reconnect.
+5. *Emacs persistence and generic editor.* Upgrade readers/writers before
+   enabling new saves. Add controls, grouping/search, drafts, explicit previews,
+   provenance, save acknowledgements and graceful older-target behavior.
+6. *Acceptance and user documentation.* Use fresh compiled Emacs, real graphical
+   keyboard/speech checks, and native synthesis on each claimed platform.
+   Test Windows DECtalk/Eloquence together, available Linux profiles, and the
+   macOS generic editor/adapter path when its environment is available. Record
+   unavailable native environments separately from passing mock tests. Stage
+   the full development runtime for helper/protocol changes; no release follows
+   automatically. Update the maintained manual only for delivered behavior.
+
+The architecture is sufficiently bounded for High during ordinary implementation
+after review. Return to XHI if runtime evidence leaves a consequential question
+about reset semantics, mapping precedence or concurrent application unresolved.
+Completing the design does not resolve the runtime qualification work by itself.

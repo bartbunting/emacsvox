@@ -1,0 +1,70 @@
+#+title: ADR 0022: Engine-Described Voice Parameters
+#+date: 2026-09-17
+#+startup: content
+
+* Status
+
+Proposed. The maintainer requested the complete engine-specific voice controls
+alongside the existing common controls, and selected XHI for the design.
+The detailed contract below awaits review; no new storage format, protocol or
+runtime behavior is implemented by this record.
+
+* Context
+
+The current common controls are useful for expressing a voice across engines.
+They cannot describe every engine's controls or the relationships between them.
+For example, the DECtalk adapter maps richness to two native controls, while
+the Eloquence adapter has a different mapping. A single common slider cannot
+independently adjust either pair.
+
+Omnivox's native extension descriptor currently contains an ID and description.
+It does not yet provide types, limits, defaults or an execution contract.
+The earlier [[file:../voice-editor-fallback-tuning-contract.org][choice-tuning contract]] explicitly deferred arbitrary native knobs.
+
+* Proposed decision
+
+Keep the common editor and its calibrated mappings. Add a typed parameter
+catalogue supplied by each Omnivox adapter, qualified against its actual runtime
+and selected voice. Emacsvox renders the catalogue, edits sparse native
+adjustments and saves them with the stable palette choice that owns them.
+Emacsvox does not encode vendor commands or duplicate native mapping formulas.
+
+Apply ADR 0017's shared, choice, context precedence at native-parameter
+granularity. A native choice adjustment replaces the common mapping for that
+parameter. An explicit contextual control takes precedence for the native
+parameters its adapter mapping writes. Preserve the existing common behavior
+when no native adjustments exist; do not invert mappings to move common sliders.
+
+Distinguish Follow common settings, Set value and Engine voice default.
+Derive defaults from the selected voice and qualified runtime. Never present
+an adapter constant as a measured default. Reset native state between synthesis
+units so previews, cancellation and fallback cannot leak voice adjustments.
+
+Discovery and effective-setting explanations are asynchronous and bounded.
+Opening a screen uses current-worker metadata and never enumerates/downloads
+models, checks the separately installed release or restarts speech. Voice
+adjustments use private previews and normal palette saving. Engine-wide or
+restart-only configuration belongs in engine settings, with its scope visible.
+
+Version the storage and every changed wire form. Preserve existing readers,
+portable projection, immutable snapshots, admission freezing and independent
+main/notification acknowledgement. Older workers continue ordinary speech with
+the best supported common/choice tuning and an explicit degradation notice;
+they must not claim to preview native adjustments they cannot execute.
+
+The [[file:../engine-voice-parameters-design.org][design contract]] specifies composition, discovery, storage, UI, compatibility
+and acceptance. The [[file:../engine-voice-parameter-inventory.org][inventory]] separates current mappings, documented SDK controls
+and runtime qualification still needed. Qualify DECtalk and Eloquence together
+before treating the generic UI as complete.
+
+* Consequences
+
+An engine can add qualified voice controls without another engine-specific
+Emacs form. Controls remain different where engines differ. Common settings
+remain useful across fallback choices, and contextual emphasis remains reliable.
+
+The cost is typed adapter plans, dependency and default evidence, a helper
+protocol extension, versioned choice data and coverage through ordinary speech
+as well as previews. No dependency change, download ownership change, engine
+installation, release publication or live-session mutation follows from this
+design. Accepted ADRs 0007, 0009, 0010 and 0015 through 0021 retain their scope.

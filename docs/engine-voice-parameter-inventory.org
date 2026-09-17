@@ -1,0 +1,138 @@
+#+title: Engine Voice Parameters: Initial Inventory
+#+date: 2026-09-17
+#+startup: content
+
+* Scope and evidence
+
+Research for proposed [[file:adr/0022-engine-described-voice-parameters.org][ADR 0022]] and its [[file:engine-voice-parameters-design.org][design contract]]. This is an implementation
+inventory, not a claim that these controls are already editable in Emacsvox.
+
+Inspected Emacsvox =77baf2bb5= and Omnivox =f10962b= on 2026-09-17. Concurrent
+voice-browser work is outside this design. Source references below are relative
+to the Omnivox repository, not to an installed runtime.
+
+- =omnivox-tts/src/contracts.rs=: common ACSS capability flags and the current
+  ID/description-only =NativeExtensionDescriptor=.
+- =windows-helpers/dectalk/OmnivoxDectalkHelper.cs= and its Capture companion.
+- =windows-helpers/eloquence/OmnivoxEloquenceHelper.cs= and its Capture companion.
+- =linux-helpers/src/dectalk.rs= and =linux-helpers/src/eloquence.rs=.
+- =omnivox-tts/src/voice_choices.rs=: strict common choice patches; no native
+  parameter payload yet.
+
+Three evidence classes matter: /mapped now/ means code already emits that
+setting; /SDK candidate/ means a vendor reference describes it; /qualified/
+requires successful validation, reset and synthesis checks against the actual
+runtime/platform. This documentation pass did no runtime qualification.
+
+* Common controls: keep these mappings
+
+This table describes the inspected adapters, not universal engine semantics.
+Extended mappings use lookup tables, some nonmonotonic. Their sampled endpoints
+are neither an SDK range specification nor an invertible conversion.
+
+| Common input | DECtalk native outputs | Eloquence native outputs |
+|--------------+------------------------+--------------------------|
+| Rate | Calibrated native speaking rate | Calibrated ECI speed |
+| Average pitch | =ap=, relative to the selected voice baseline | Pitch baseline, relative to selected voice baseline |
+| Pitch range | =pr= and =as= | Pitch fluctuation |
+| Stress | =hr=, =sr=, =qu= and =bf= | Roughness |
+| Richness | =ri= and =sm= | Breathiness and a native volume compensation |
+
+The Windows Eloquence path combines requested volume with its richness
+compensation. The Linux helper emits the richness compensation in the native
+volume annotation; requested-volume handling also involves the surrounding
+audio path. Audit the complete path per platform before describing an effective
+native volume or changing that stage. Preserve today's output when no native
+adjustment is present. Common DSP gain, stream volume and cue volume remain
+separate controls with their existing owners.
+
+* Eloquence: eight initial voice controls
+
+IBM's API Reference 6.4.0 documents eight voice parameters. In ECI units,
+head size, pitch baseline, pitch fluctuation, roughness, breathiness and volume
+use 0–100; speed uses 0–250. Gender uses 0 for male and 1 for female. The units
+mode changes pitch, speed and volume units. Preset defaults can differ by
+language. The API provides =eciGetVoiceParam=, =eciSetVoiceParam= and
+=eciCopyVoice=; modifications target the active or user-defined voice rather
+than a preset. Source: [[https://raw.githubusercontent.com/pumper42nickel/eloquence_threshold/master/tts.txt][IBM API Reference, archived text copy]], Voice Parameters
+and the function reference. These documented facts require runtime qualification.
+
+| Proposed parameter ID | Display label | Current adapter path | Required new work |
+|-----------------------+---------------+----------------------+-------------------|
+| =gender= | Vocal tract type | Not independently set | Typed enum and qualified application |
+| =head_size= | Head size | Not independently set | Native setter and reset coverage |
+| =pitch_baseline= | Pitch baseline | Common average pitch | Independent override and default evidence |
+| =pitch_fluctuation= | Pitch fluctuation | Common pitch range | Independent override and default evidence |
+| =roughness= | Roughness | Common stress | Independent override and default evidence |
+| =breathiness= | Breathiness | Common richness | Override independently of volume compensation |
+| =speed= | Native speed | Common calibrated rate | Explicit fixed-speed behavior and unit identity |
+| =volume= | Native voice volume | Richness/output interaction above | Verified ownership; avoid double volume application |
+
+Use an ECI-units semantic schema for the first profile. A change of units is
+not a display-only toggle. The engine adapter must establish and verify its
+mode without altering the old common mapping. Preserve vendor units in saved
+native values; do not convert them to the editor's common 0–9 scale.
+
+Both inspected native wrappers currently bind =eciSetParam= for engine state,
+but not the three voice functions above. Add those bindings as an optional
+parameter-capability group: an older runtime must retain its established speech
+path when that group is unavailable. Exercise all supported preset/dialect
+combinations; do not copy the existing pitch-baseline constants into a claimed
+runtime-default catalogue. Keep calls on the native instance's owner thread.
+
+* DECtalk: complete documented design-voice surface
+
+The upstream-hosted [[https://dectalk.github.io/dectalk/idh_sdk_3_design_voice_dv.htm][DECtalk Design Voice reference]] lists 28 option IDs. The groups
+below account for all 28. They are SDK candidates, not a promise that every
+DECtalk build accepts every option.
+
+| Group | IDs | Current mapping coverage |
+|-------+-----+--------------------------|
+| Pitch | =ap=, =pr= | Average pitch; pitch range |
+| Intonation | =as=, =bf=, =hr=, =qu=, =sr= | Pitch range and stress |
+| Voice source | =br=, =la=, =lx=, =nf=, =ri=, =sm= | Richness reaches =ri= and =sm= only |
+| Vocal tract | =hs=, =sx= | No independent common control |
+| Upper resonances | =f4=, =f5=, =b4=, =b5= | No independent common control |
+| Resonator levels | =g1=, =g2=, =g3=, =g4=, =g5= | No independent common control |
+| Source levels | =gf=, =gh=, =gn=, =gv= | No independent common control |
+
+Relevant vendor detail for adapter qualification:
+
+- [[https://dectalk.github.io/dectalk/idh_sdk_3_average_pitch_ap_and_pitch_range_pr.htm][Pitch]]: =ap= is in Hz; =pr= scales the pitch contour. The documented 50–500 Hz
+  contour clamp must not be mistaken for the legal range of every pitch option.
+- [[https://dectalk.github.io/dectalk/idh_sdk_3_smoothness_sm.htm][Smoothness]]: =sm= has a documented 0–100 range. This supports a concrete first
+  independent-control case beside the existing common richness mapping.
+- [[https://dectalk.github.io/dectalk/idh_sdk_3_head_size_hs.htm][Head size]] and [[https://dectalk.github.io/dectalk/idh_sdk_3_sex_sx.htm][vocal tract selection]] affect related acoustic behavior. An adapter
+  must account for such relationships when restoring and applying a voice.
+- [[https://dectalk.github.io/dectalk/idh_sdk_3_cascade_vocal_tract_gains_g1_g2_g3_and_g4.htm][Resonator gains]] and [[https://dectalk.github.io/dectalk/idh_sdk_3_sound_source_gains_gv_gh_gf_and_gn.htm][source gains]] need an explicit runtime support profile and
+  conservative qualified limits, independent of the old common volume path.
+
+Obtain each runtime's SDK limits, option support and baseline/reset behavior
+before advertising writable descriptors. Record omitted candidates and reasons
+in qualification notes. An inline parser accepting a string does not establish
+that it applied an option. The existing Windows and Linux wrappers select a
+speaker and emit mapped controls, with different reset sequences; neither code
+inspection proves that newly added parameters reset after cancellation.
+
+Native speaking rate is an additional candidate outside the 28 design-voice
+options. Engine configuration, punctuation treatment, dictionaries, output
+format and text/phoneme commands are different scopes, not extra voice sliders.
+The generic catalogue can describe their availability, but this first delivery
+only executes qualified per-voice controls. Never accept raw DECtalk commands
+from a palette or descriptor.
+
+* Other engines and expansion
+
+Use the same catalogue contract for eSpeak, Piper, Flite, MBROLA, RHVoice,
+WinRT, macOS and later helpers. This pass does not establish their full native
+parameter lists. Each adapter must audit its actual API before publishing one.
+
+For every candidate record its type, native unit, range or enum, applicable
+voices, common mapping dependencies, reset evidence, apply scope and platform
+support. A built-in voice, downloadable model, speaker identity or eSpeak
+variant remains a voice selection under the existing catalogue/library rules.
+Do not turn it into a parameter that silently changes physical voice identity.
+
+A zero-length adjustable catalogue is valid. Report either no adjustable native
+controls or controls not yet described, according to evidence. An unavailable
+runtime cannot truthfully supply a live checked catalogue.
