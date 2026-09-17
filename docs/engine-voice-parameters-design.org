@@ -595,6 +595,36 @@ binaries. The desktop launcher still selects its original runtime.
 The existing cancellation stress test found a separate Windows host race:
 the worker can emit =synthesis_cancelled= before =cancel_accepted=. This also
 reproduced with the previously staged Eloquence helper, before these changes.
-The next step is to fix that ordering and test cancellation recovery, then
-connect qualified native profiles and helper 6. The binding tests do not prove
-native-parameter reset after cancellation. No live session was restarted.
+The cancellation follow-up below fixes that ordering and tests recovery.
+Connecting qualified native profiles and helper 6 remains next. The binding
+tests do not prove native-parameter reset after cancellation. No live session
+was restarted.
+
+* Implementation progress: Windows cancellation ordering
+
+Omnivox commit =4eab1dd= contains this slice and its retained runtime evidence.
+
+The common Windows helper host now orders cancellation acknowledgement with
+audio, marker and terminal output. Once cancellation is accepted, no more PCM
+or markers can pass, and the worker ends with =synthesis_cancelled=. A terminal
+response also retires its request atomically, so a cancellation arriving after
+completion is rejected. Native stop runs outside the output guard to allow
+callbacks to finish; a stop failure cannot add a second cancel response.
+
+The actual host passes 37 deterministic regression cases, covering protocols
+1--5, buffered and progressive output, blocked acknowledgement, native failure,
+late callbacks, shutdown and subsequent speech. The same test fails on the
+unfixed host. Both installed native engines also passed 50 cancellation and
+recovery cycles each, with ordinary streaming speech, markers, common controls
+and health checks. These checks capture PCM silently.
+
+Full Windows development staging, checksum verification and live inventory
+checks passed for build =0912514c66489200= in a separate runtime root. Its
+helpers match the tested pinned-compiler binaries byte for byte. Both projects'
+documentation gates passed. The desktop launcher remains on its original
+runtime, and no live Emacs session was restarted.
+
+This closes the existing host-ordering issue. It does not yet prove reset of
+the new native parameter values after cancellation: helper 6 execution and
+those acceptance tests remain pending, followed by public transport and the
+Emacs editor.
