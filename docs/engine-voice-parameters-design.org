@@ -666,3 +666,47 @@ This internal path is not yet exposed through helper 6 or the Emacs UI. Next
 implement DECtalk native execution, then helper 6 catalogues/receipts and the
 public transport and editor. The native tests capture PCM silently and do not
 establish acoustic quality or qualify other ECI builds or dialects.
+
+* Implementation progress: DECtalk native execution
+
+Omnivox commit =80dfa68= contains this slice and its retained runtime evidence.
+
+The Windows DECtalk adapter now has an internal execution path for all 28
+qualified design voice parameters. It freezes and validates sparse edits,
+preserves omission, explicit zero and engine defaults, and applies contextual
+masking to every output of the corresponding common mapping.
+
+Command-only batches select the pristine preset, apply the existing common
+settings and then apply native edits. Synchronized readback verifies all fields
+before the application callback or any speech. Existing common mappings retain
+their original commands, including clamping performed inside DECtalk itself.
+The initial native profile requires the exact qualified DECtalk 4.99 DLL and
+matching runtime limits; ordinary speech remains available without the optional
+parameter API.
+
+A reset gate coordinates cancellation with preparation and restoration without
+holding the callback state lock during native reset. Cleanup drains pending
+native work, restores the preset and checks its fields. Ordinary successful
+speech does not gain an additional cleanup reset.
+
+The pinned helper passed 504 endpoint cases across nine voices, combined edits,
+defaults, seven independent composition fixtures and legacy common clamps.
+Its 1,135 successful captures include 585 ordinary-speech reset checks.
+Acceptance also passed 45 cancellations, 18 delivery failures, 27 progressive
+cases and nine deliberately held native resets overlapping cleanup. Removing
+Stop's reset gate in a disposable helper made the extracted concurrency test
+fail; the pinned helper passed the same test across all nine voices. Ordinary
+protocol-5 streaming also passed 50 requests and 50 cancellation/recovery probes.
+
+Full Windows development staging, checksum verification, live inventory and
+companion synthesis checks passed for build =c5fc6d3ff8960930= in a separate
+runtime root. Its DECtalk helper matches the audited pinned-compiler binary;
+Eloquence retains its previously qualified helper. Both documentation gates
+passed. The desktop launcher remains on its original runtime, and no live
+Emacs session was restarted.
+
+This completes the initial internal Windows execution paths for Eloquence and
+DECtalk. Helper 6 catalogues and application receipts, public transport, and the
+Emacs editor remain pending. No new wire capability is advertised. These tests
+capture PCM silently; they do not establish acoustic quality or support for
+other native runtimes or platforms.
