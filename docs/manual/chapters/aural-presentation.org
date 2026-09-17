@@ -1322,6 +1322,31 @@ when new library information arrives. Column sorting keeps headings together
 with their voices. @@texinfo:@kbd{A}@@ samples usable voices in expanded groups
 in displayed order; expand a language first if all groups are collapsed.
 
+Press @@texinfo:@kbd{/}@@ to find a voice by name using completion. Search
+includes collapsed languages and disabled downloads within the current engine
+and explicit filters. Choosing a voice expands its language and moves to it.
+If a quick filter hides it, search switches to /All voices/. Search does not
+play a sample or change enablement.
+
+Omnivox offers four quick filters. Press @@texinfo:@kbd{Q}@@ to choose from
+their voice counts, or use these shortcuts:
+
+- 1 :: All voices: reported engine voices and installed library voices.
+- 2 :: Downloaded: catalogue downloads, including disabled voices. Imported
+  files and built-in voices remain in /All voices/.
+- 3 :: Enabled: library voices selected for the next Apply.
+- 4 :: Needs Apply: library voices whose desired selection differs from
+  current worker eligibility on either stream. Both enabling and disabling
+  can require Apply. Unchecked voices are counted separately; missing or
+  outdated worker information cannot establish a pending change.
+
+Counts include collapsed languages and respect the current engine and explicit
+filters. Each quick filter remembers its row and column. After Apply clears
+/Needs Apply/, press @@texinfo:@kbd{2}@@ to return to the downloaded voice for
+previewing or palette editing. Engine overrides can prevent confirmation;
+/Active/ and engine details still report usability and runtime health.
+@@texinfo:@kbd{C}@@ also clears the quick filter.
+
 Omnivox's physical list combines browsing and installed-voice management.
 /Installed/ shows library membership or an engine-supplied voice; /Enabled/
 is the desired selection for the next Apply. /Active/ shows current usability

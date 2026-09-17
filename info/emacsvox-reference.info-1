@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1548 commands and 216 options.
+   This chapter documents a total of 1550 commands and 216 options.
 
 * Menu:
 
@@ -5796,28 +5796,37 @@ palettes or routing profiles.
 
      Export the staged routing profile without activating it.
 
-2.62.1.11 emacsvox-aural-voice-workbench-help
+2.62.1.11 emacsvox-aural-voice-workbench-find-voice
+...................................................
+
+ -- Command: emacsvox-aural-voice-workbench-find-voice
+
+     Find a voice by name and reveal it across collapsed language groups.
+     Search respects engine and explicit filters.  If the quick filter hides the
+     chosen voice, switch to All voices.  Nothing is enabled or played.
+
+2.62.1.12 emacsvox-aural-voice-workbench-help
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-help
 
      Display and speak Voice Workbench navigation help.
 
-2.62.1.12 emacsvox-aural-voice-workbench-import-profile
+2.62.1.13 emacsvox-aural-voice-workbench-import-profile
 .......................................................
 
  -- Command: emacsvox-aural-voice-workbench-import-profile
 
      Read one data-only routing profile into the staged workbench copy.
 
-2.62.1.13 emacsvox-aural-voice-workbench-logical-view
+2.62.1.14 emacsvox-aural-voice-workbench-logical-view
 .....................................................
 
  -- Command: emacsvox-aural-voice-workbench-logical-view
 
      Show logical voices.
 
-2.62.1.14 emacsvox-aural-voice-workbench-mode
+2.62.1.15 emacsvox-aural-voice-workbench-mode
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-mode
@@ -5833,6 +5842,8 @@ palettes or routing profiles.
      -----------------------------------------------------
      RET		emacsvox-aural-voice-workbench-open-row
      +		emacsvox-aural-voice-workbench-library-toggle
+     /		emacsvox-aural-voice-workbench-find-voice
+     1 .. 4		emacsvox-aural-voice-workbench-quick-filter
      ?		emacsvox-aural-voice-workbench-help
      A		emacsvox-aural-voice-workbench-preview-all
      B		emacsvox-aural-voice-workbench-compare
@@ -5844,6 +5855,7 @@ palettes or routing profiles.
      K		emacsvox-aural-voice-workbench-request-recovery-probe
      O		emacsvox-aural-voice-workbench-toggle-preferred-engine
      P		emacsvox-aural-voice-workbench-preview
+     Q		emacsvox-aural-voice-workbench-quick-filter
      R		emacsvox-aural-voice-workbench-refresh-inventory
      S		emacsvox-aural-voice-workbench-stop-preview
      T		emacsvox-aural-voice-workbench-edit-preview-text
@@ -5875,42 +5887,42 @@ palettes or routing profiles.
      C-c r		omnivox-library-show-result
      C-c u		omnivox-library-uninstall
 
-2.62.1.15 emacsvox-aural-voice-workbench-move-fallback-engine-down
+2.62.1.16 emacsvox-aural-voice-workbench-move-fallback-engine-down
 ..................................................................
 
  -- Command: emacsvox-aural-voice-workbench-move-fallback-engine-down
 
      Move the current engine later in global fallback order.
 
-2.62.1.16 emacsvox-aural-voice-workbench-move-fallback-engine-up
+2.62.1.17 emacsvox-aural-voice-workbench-move-fallback-engine-up
 ................................................................
 
  -- Command: emacsvox-aural-voice-workbench-move-fallback-engine-up
 
      Move the current engine earlier in global fallback order.
 
-2.62.1.17 emacsvox-aural-voice-workbench-move-preferred-engine-down
+2.62.1.18 emacsvox-aural-voice-workbench-move-preferred-engine-down
 ...................................................................
 
  -- Command: emacsvox-aural-voice-workbench-move-preferred-engine-down
 
      Move the selected engine later in preferred engine order.
 
-2.62.1.18 emacsvox-aural-voice-workbench-move-preferred-engine-up
+2.62.1.19 emacsvox-aural-voice-workbench-move-preferred-engine-up
 .................................................................
 
  -- Command: emacsvox-aural-voice-workbench-move-preferred-engine-up
 
      Move the selected engine earlier in preferred engine order.
 
-2.62.1.19 emacsvox-aural-voice-workbench-open-row
+2.62.1.20 emacsvox-aural-voice-workbench-open-row
 .................................................
 
  -- Command: emacsvox-aural-voice-workbench-open-row
 
      Open engine details, toggle a language, or preview the selected voice.
 
-2.62.1.20 emacsvox-aural-voice-workbench-physical-view
+2.62.1.21 emacsvox-aural-voice-workbench-physical-view
 ......................................................
 
  -- Command: emacsvox-aural-voice-workbench-physical-view
@@ -5918,21 +5930,33 @@ palettes or routing profiles.
      Browse the selected engine’s voices, or show the physical voice inventory.
      Outside the engine view, leave any temporary engine browsing scope.
 
-2.62.1.21 emacsvox-aural-voice-workbench-preview
+2.62.1.22 emacsvox-aural-voice-workbench-preview
 ................................................
 
  -- Command: emacsvox-aural-voice-workbench-preview
 
      Preview the selected voice, identifying physical samples by name.
 
-2.62.1.22 emacsvox-aural-voice-workbench-preview-all
+2.62.1.23 emacsvox-aural-voice-workbench-preview-all
 ....................................................
 
  -- Command: emacsvox-aural-voice-workbench-preview-all
 
      Preview usable matching voices in displayed order, identifying each sample.
 
-2.62.1.23 emacsvox-aural-voice-workbench-quit
+2.62.1.24 emacsvox-aural-voice-workbench-quick-filter
+.....................................................
+
+ -- Command: emacsvox-aural-voice-workbench-quick-filter (&optional
+          filter)
+
+     Choose a quick FILTER with voice counts, or use shortcuts 1 through 4.
+     Counts respect engine and explicit filters, including collapsed languages.
+     Downloaded means catalogue packages; Enabled means desired library selection.
+
+     (fn &optional FILTER)
+
+2.62.1.25 emacsvox-aural-voice-workbench-quit
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-quit
@@ -5944,7 +5968,7 @@ palettes or routing profiles.
      hide the workbench, retaining staged edits and warning
      when they remain unsaved.
 
-2.62.1.24 emacsvox-aural-voice-workbench-refresh
+2.62.1.26 emacsvox-aural-voice-workbench-refresh
 ................................................
 
  -- Command: emacsvox-aural-voice-workbench-refresh (&optional id)
@@ -5953,98 +5977,98 @@ palettes or routing profiles.
 
      (fn &optional ID)
 
-2.62.1.25 emacsvox-aural-voice-workbench-refresh-inventory
+2.62.1.27 emacsvox-aural-voice-workbench-refresh-inventory
 ..........................................................
 
  -- Command: emacsvox-aural-voice-workbench-refresh-inventory
 
      Request fresh adapter inventory and quietly rebuild the current view.
 
-2.62.1.26 emacsvox-aural-voice-workbench-request-recovery-probe
+2.62.1.28 emacsvox-aural-voice-workbench-request-recovery-probe
 ...............................................................
 
  -- Command: emacsvox-aural-voice-workbench-request-recovery-probe
 
      Request a live recovery probe for the current failed engine.
 
-2.62.1.27 emacsvox-aural-voice-workbench-retry-apply
+2.62.1.29 emacsvox-aural-voice-workbench-retry-apply
 ....................................................
 
  -- Command: emacsvox-aural-voice-workbench-retry-apply
 
      Idempotently retry the committed profile on all live speech streams.
 
-2.62.1.28 emacsvox-aural-voice-workbench-save-and-apply
+2.62.1.30 emacsvox-aural-voice-workbench-save-and-apply
 .......................................................
 
  -- Command: emacsvox-aural-voice-workbench-save-and-apply
 
      Atomically save the staged profile and apply it to every speech stream.
 
-2.62.1.29 emacsvox-aural-voice-workbench-set-filter
+2.62.1.31 emacsvox-aural-voice-workbench-set-filter
 ...................................................
 
  -- Command: emacsvox-aural-voice-workbench-set-filter
 
      Set or clear one physical-voice inventory filter.
 
-2.62.1.30 emacsvox-aural-voice-workbench-speak-current
+2.62.1.32 emacsvox-aural-voice-workbench-speak-current
 ......................................................
 
  -- Command: emacsvox-aural-voice-workbench-speak-current
 
      Speak the complete current Workbench row with titled values.
 
-2.62.1.31 emacsvox-aural-voice-workbench-stop-preview
+2.62.1.33 emacsvox-aural-voice-workbench-stop-preview
 .....................................................
 
  -- Command: emacsvox-aural-voice-workbench-stop-preview
 
      Stop the active preview immediately.
 
-2.62.1.32 emacsvox-aural-voice-workbench-style-view
+2.62.1.34 emacsvox-aural-voice-workbench-style-view
 ...................................................
 
  -- Command: emacsvox-aural-voice-workbench-style-view
 
      Show portable styles, routes, and advertised effects.
 
-2.62.1.33 emacsvox-aural-voice-workbench-toggle-disabled-engine
+2.62.1.35 emacsvox-aural-voice-workbench-toggle-disabled-engine
 ...............................................................
 
  -- Command: emacsvox-aural-voice-workbench-toggle-disabled-engine
 
      Disable or restore the current engine in the staged policy.
 
-2.62.1.34 emacsvox-aural-voice-workbench-toggle-fallback-engine
+2.62.1.36 emacsvox-aural-voice-workbench-toggle-fallback-engine
 ...............................................................
 
  -- Command: emacsvox-aural-voice-workbench-toggle-fallback-engine
 
      Add or remove the current engine from global fallback order.
 
-2.62.1.35 emacsvox-aural-voice-workbench-toggle-preferred-engine
+2.62.1.37 emacsvox-aural-voice-workbench-toggle-preferred-engine
 ................................................................
 
  -- Command: emacsvox-aural-voice-workbench-toggle-preferred-engine
 
      Add or remove the current engine from global preferred order.
 
-2.62.1.36 emacsvox-aural-voice-workbench-tune
+2.62.1.38 emacsvox-aural-voice-workbench-tune
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-tune
 
      Open the common editor for a named voice or physical experiment.
 
-2.62.1.37 emacsvox-aural-voice-workbench-undo
+2.62.1.39 emacsvox-aural-voice-workbench-undo
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-undo
 
      Undo the most recent staged routing edit without changing saved state.
 
-2.62.1.38 emacsvox-aural-voice-workbench-undo-applied
+2.62.1.40 emacsvox-aural-voice-workbench-undo-applied
 .....................................................
 
  -- Command: emacsvox-aural-voice-workbench-undo-applied

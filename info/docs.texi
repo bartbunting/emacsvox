@@ -68,7 +68,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1548 commands and 216 options.
+This chapter documents a total of 1550 commands and 216 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -6369,6 +6369,17 @@ Export the staged routing profile without activating it.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-voice-workbench-find-voice
+@deffn {Command} emacsvox-aural-voice-workbench-find-voice
+@findex emacsvox-aural-voice-workbench-find-voice
+
+@format
+Find a voice by name and reveal it across collapsed language groups.
+Search respects engine and explicit filters.  If the quick filter hides the
+chosen voice, switch to All voices.  Nothing is enabled or played.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-voice-workbench-help
 @deffn {Command} emacsvox-aural-voice-workbench-help
 @findex emacsvox-aural-voice-workbench-help
@@ -6412,6 +6423,8 @@ Key             Binding
 -------------------------------------------------------------------------------
 RET		emacsvox-aural-voice-workbench-open-row
 +		emacsvox-aural-voice-workbench--library-toggle
+/		emacsvox-aural-voice-workbench-find-voice
+1 .. 4		emacsvox-aural-voice-workbench-quick-filter
 ?		emacsvox-aural-voice-workbench-help
 A		emacsvox-aural-voice-workbench-preview-all
 B		emacsvox-aural-voice-workbench-compare
@@ -6423,6 +6436,7 @@ I		emacsvox-aural-voice-workbench-import-profile
 K		emacsvox-aural-voice-workbench-request-recovery-probe
 O		emacsvox-aural-voice-workbench-toggle-preferred-engine
 P		emacsvox-aural-voice-workbench-preview
+Q		emacsvox-aural-voice-workbench-quick-filter
 R		emacsvox-aural-voice-workbench-refresh-inventory
 S		emacsvox-aural-voice-workbench-stop-preview
 T		emacsvox-aural-voice-workbench-edit-preview-text
@@ -6527,6 +6541,19 @@ Preview the selected voice, identifying physical samples by name.
 
 @format
 Preview usable matching voices in displayed order, identifying each sample.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-quick-filter
+@deffn {Command} emacsvox-aural-voice-workbench-quick-filter  (&optional filter)
+@findex emacsvox-aural-voice-workbench-quick-filter
+
+@format
+Choose a quick FILTER with voice counts, or use shortcuts 1 through 4.
+Counts respect engine and explicit filters, including collapsed languages.
+Downloaded means catalogue packages; Enabled means desired library selection.
+
+(fn &optional FILTER)
 @end format
 @end deffn
 

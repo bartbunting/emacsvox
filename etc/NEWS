@@ -16,6 +16,15 @@ speakers, known palette references and files retained for other speech sessions.
 Built-in voices, imported files, engine runtimes and saved choices are preserved.
 C-c U resumes incomplete cleanup. Requires an updated development Omnivox build.
 
+** Faster navigation in Browse voices
+
+Omnivox voice lists offer 1 All voices, 2 Downloaded, 3 Enabled, and 4 Needs
+Apply. Q lists their counts, including voices in collapsed languages.
+Slash finds a voice by name and opens its language group, switching to All
+voices when the quick filter hides the result. Each filter remembers its
+selected row and column. Unchecked worker status remains separate from
+confirmed selection changes needing Apply.
+
 ** Expanded Piper voice catalogue
 
 Piper downloads are grouped by language, voice and quality. Slash searches

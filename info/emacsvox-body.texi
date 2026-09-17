@@ -3980,6 +3980,37 @@ when new library information arrives. Column sorting keeps headings together
 with their voices. @kbd{A} samples usable voices in expanded groups
 in displayed order; expand a language first if all groups are collapsed.
 
+Press @kbd{/} to find a voice by name using completion. Search
+includes collapsed languages and disabled downloads within the current engine
+and explicit filters. Choosing a voice expands its language and moves to it.
+If a quick filter hides it@comma{} search switches to @emph{All voices}. Search does not
+play a sample or change enablement.
+
+Omnivox offers four quick filters. Press @kbd{Q} to choose from
+their voice counts@comma{} or use these shortcuts:
+
+@table @asis
+@item 1
+All voices: reported engine voices and installed library voices.
+@item 2
+Downloaded: catalogue downloads@comma{} including disabled voices. Imported
+files and built-in voices remain in @emph{All voices}.
+@item 3
+Enabled: library voices selected for the next Apply.
+@item 4
+Needs Apply: library voices whose desired selection differs from
+current worker eligibility on either stream. Both enabling and disabling
+can require Apply. Unchecked voices are counted separately; missing or
+outdated worker information cannot establish a pending change.
+@end table
+
+Counts include collapsed languages and respect the current engine and explicit
+filters. Each quick filter remembers its row and column. After Apply clears
+@emph{Needs Apply}@comma{} press @kbd{2} to return to the downloaded voice for
+previewing or palette editing. Engine overrides can prevent confirmation;
+@emph{Active} and engine details still report usability and runtime health.
+@kbd{C} also clears the quick filter.
+
 Omnivox's physical list combines browsing and installed-voice management.
 @emph{Installed} shows library membership or an engine-supplied voice; @emph{Enabled}
 is the desired selection for the next Apply. @emph{Active} shows current usability
