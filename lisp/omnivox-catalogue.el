@@ -87,7 +87,7 @@
                              (equal (cadr omnivox-catalogue--scope) (omnivox-catalogue--name entry)))))))
            omnivox-catalogue--entries))
          (grouping (and omnivox-catalogue--metadata (not searching)
-                        (not (member omnivox-catalogue--engine '("flite" "mbrola")))
+                        (not (member omnivox-catalogue--engine '("flite" "mbrola" "rhvoice")))
                         (< (length omnivox-catalogue--scope) 2))))
     (if grouping
         (let ((groups (make-hash-table :test #'equal)) rows)
@@ -484,10 +484,15 @@
 
 (defun omnivox-catalogue--optional-files (host engine)
   "Return additional catalogues supported by HOST, checking requested ENGINE."
-  (if (member "mbrola" (append (plist-get host :catalogue_providers) nil))
-      (list (expand-file-name "omnivox-mbrola-catalogue.json" emacsvox-etc-directory))
-    (when (equal engine "mbrola")
-      (user-error "MBROLA downloads need an updated Omnivox runtime and MBROLA companion"))))
+  (let ((providers (append (plist-get host :catalogue_providers) nil)) files)
+    (dolist (provider '("mbrola" "rhvoice"))
+      (if (member provider providers)
+          (push (expand-file-name (format "omnivox-%s-catalogue.json" provider)
+                                  emacsvox-etc-directory) files)
+        (when (equal engine provider)
+          (user-error "%s downloads need an updated Omnivox runtime and compatible engine"
+                      (if (equal provider "rhvoice") "RHVoice" "MBROLA")))))
+    (nreverse files)))
 
 ;;;###autoload
 (defun omnivox-catalogue (&optional engine)

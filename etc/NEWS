@@ -8,6 +8,14 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox Unreleased --- Current User-Visible Changes
 
+** Additional RHVoice voices
+
+Get more voices now offers Alan, BDL, CLB and Ksp for RHVoice with a compatible
+updated Omnivox build and separately installed RHVoice runtime. Downloads include
+the required English data, start disabled and use the existing Enable and Apply
+workflow. Existing external voices, including SLT, are preserved. Downloaded
+RHVoice packages can be uninstalled with C-c u after disabling and applying.
+
 ** Managed voice uninstallation
 
 The Omnivox voice browser offers C-c u to review removal of downloaded Piper,

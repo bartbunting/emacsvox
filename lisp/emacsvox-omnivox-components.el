@@ -995,7 +995,7 @@ OUTPUT to the generic process sentinel EVENT."
      (when (emacsvox-omnivox-components--release-supported-p)
        (list (list 'release-manager (vector "Manage installed release"
                                             "Open the release installer and its target location"))))
-     (when (member id '("piper" "flite" "mbrola"))
+     (when (member id '("piper" "flite" "mbrola" "rhvoice"))
        (list
         (list 'download-voices (vector "Get more voices" "Download voices, then enable and Apply"))))
      (when (equal id "espeak")

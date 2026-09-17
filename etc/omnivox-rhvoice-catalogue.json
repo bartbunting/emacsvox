@@ -1,0 +1,1346 @@
+{
+  "schema_version": 3,
+  "revision": "rhvoice-english-2026-09-17",
+  "entries": [
+    {
+      "id": "rhvoice-alan-eng",
+      "provider": "rhvoice",
+      "name": "Alan",
+      "language": "en-GB",
+      "description": "Scottish English. Includes private English language data. Requires a separately installed compatible RHVoice C API runtime; starts disabled.",
+      "source": "https://github.com/RHVoice/alan-eng",
+      "source_revision": "bb3fdb15b9c64109f396f56f6155965bfcf89977 English 8a2ea34df72a190dae245460aeb20a867d64775c",
+      "licence": "RHVoice upstream licence and voice terms; see retained notices",
+      "licence_url": "https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/LICENSE.md",
+      "files": [
+        {
+          "role": "licence",
+          "url": "https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/LICENSE.md",
+          "bytes": 18092,
+          "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+        },
+        {
+          "role": "readme",
+          "url": "https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/doc/en/License.md",
+          "bytes": 2665,
+          "sha256": "adb78d0ae36c0edfc2844cc3e8b43bc46b810e9079e2fa5b6bd7344ac8e563f0"
+        },
+        {
+          "role": "rhvoice/language/accents.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/accents.dt",
+          "bytes": 1908,
+          "sha256": "c619f21f52e659c509c8a6876079d581be796786c6d6e17232e9b3514864080d"
+        },
+        {
+          "role": "rhvoice/language/cmulex.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/cmulex.fst",
+          "bytes": 1636279,
+          "sha256": "b2076458b426a57c0a9ac047095787cb1957dd3650816424b5e92fb5a322aa34"
+        },
+        {
+          "role": "rhvoice/language/cmulex.lts",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/cmulex.lts",
+          "bytes": 356961,
+          "sha256": "38d36fa953d15d2264d56bed5f49d2fa08948778795048e5160841b7db4f87a7"
+        },
+        {
+          "role": "rhvoice/language/downcase.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/downcase.fst",
+          "bytes": 561,
+          "sha256": "f3b132c60238744af39535ed5fa0002af7c05c85f2a583d3b71fd4bf1846cd4f"
+        },
+        {
+          "role": "rhvoice/language/emoji.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/emoji.fst",
+          "bytes": 80119,
+          "sha256": "cdf4fe938dcc4b857f82e363bd6725141503a18cde8f10a2e477e3602ef41f43"
+        },
+        {
+          "role": "rhvoice/language/gpos.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/gpos.fst",
+          "bytes": 1155,
+          "sha256": "bb73942b136399fc06ad35c2bf83125f20f7451d709744a3384624c646e0171c"
+        },
+        {
+          "role": "rhvoice/language/key.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/key.fst",
+          "bytes": 2624,
+          "sha256": "01aec64d28ec8fb4330d6ee286a8c2c15e114eefa465bbd5bab72f521ca1a250"
+        },
+        {
+          "role": "rhvoice/language/labelling.xml",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/labelling.xml",
+          "bytes": 2439,
+          "sha256": "cdbaffbf154235a876c71a4faf308352936fe012fe873a9f3bf535af9b8bcc35"
+        },
+        {
+          "role": "rhvoice/language/language.info",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/language.info",
+          "bytes": 88,
+          "sha256": "e7e1e9241c89ddf8ccfbcce78698767b9612a65866953d9da7df2001c1cf2efb"
+        },
+        {
+          "role": "rhvoice/language/lseq.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/lseq.fst",
+          "bytes": 1296,
+          "sha256": "565346b74ae47a39a954a758c471dc9cb8aa2329c7d79744dcf36fd51b7755ae"
+        },
+        {
+          "role": "rhvoice/language/msg.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/msg.fst",
+          "bytes": 82,
+          "sha256": "0bd56859492a23e41f841bce01760f8ab1d050e3eea5a107bf1d43ef4c4ec34f"
+        },
+        {
+          "role": "rhvoice/language/numbers.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/numbers.fst",
+          "bytes": 5878,
+          "sha256": "367632662256b3c9cf340f91f9da46bd11af292052ec19cc7e59fbbf53709677"
+        },
+        {
+          "role": "rhvoice/language/phonemes.xml",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/phonemes.xml",
+          "bytes": 3250,
+          "sha256": "d6d07e869169ab4b179e2dddfee89b6bec5c603617d798188865587f6cedd9df"
+        },
+        {
+          "role": "rhvoice/language/phrasing.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/phrasing.dt",
+          "bytes": 203,
+          "sha256": "4ed79f2178d31fe520c87f8bc8f5a1a9cb41dd7e0bdd537ec5341006178fe4c2"
+        },
+        {
+          "role": "rhvoice/language/spell.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/spell.fst",
+          "bytes": 1480,
+          "sha256": "f024a05a3263056bb45788d6327a617158293f6dbcb12be147d110121b868cef"
+        },
+        {
+          "role": "rhvoice/language/syl.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/syl.fst",
+          "bytes": 10219,
+          "sha256": "731e7450ab5f83a16eb7585538a3c191eda7dce2862feb8e1e0fefef572f453f"
+        },
+        {
+          "role": "rhvoice/language/tok.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/tok.fst",
+          "bytes": 160718,
+          "sha256": "7f6e200a32f1eabecb6205b441d724de431e2fdba4297e70494c00f05976c3d7"
+        },
+        {
+          "role": "rhvoice/language/tones.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/tones.dt",
+          "bytes": 1604,
+          "sha256": "7078d871851380549a4cbd8fde0f688225cc7510dd67684badf6242fce3e5d94"
+        },
+        {
+          "role": "rhvoice/language/vocab.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/vocab.fst",
+          "bytes": 353107,
+          "sha256": "b5d363701b9486b92ce1b1889826775cbec19d6552de8a02399ae3b8351a2499"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/bap.pdf",
+          "bytes": 359552,
+          "sha256": "361ef1ff384a9bf0ba2db8a70c5b6428e585673bae871e5fc485b72a578c4542"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/bap.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/bap.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/bap.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/16000/bpf.txt",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/bpf.txt",
+          "bytes": 6594,
+          "sha256": "a0c5042e5317e59a70d6359957341999bf1f440fc072482ac77511900c2d88d3"
+        },
+        {
+          "role": "rhvoice/voice/16000/dur.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/dur.pdf",
+          "bytes": 22136,
+          "sha256": "46f42d35949367d47fdd0500f15aae69f73535b09168de05d22c8f2c4050cd32"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/lf0.pdf",
+          "bytes": 176672,
+          "sha256": "82e40f3b8f1c439b2d75b927c972c099c8da49f16a6e7f2efb312a27f605491a"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/lf0.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/lf0.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/lf0.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/mgc.pdf",
+          "bytes": 754832,
+          "sha256": "77eed76dc7df3b52d2fd3876ee0cd00b0668f31c646454dc4d87937150e6925f"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/mgc.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/mgc.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/mgc.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-bap.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/tree-bap.inf",
+          "bytes": 306683,
+          "sha256": "cf85e7b07f4d7e46594a254503c341c829af7c0ad1877b445ac293b9ae0de048"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-dur.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/tree-dur.inf",
+          "bytes": 64762,
+          "sha256": "ba3924fb604e6b2d86d552fdc99be18a782e5c1f3ab6be1bcd0c38e1c5441d80"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-lf0.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/tree-lf0.inf",
+          "bytes": 367842,
+          "sha256": "088b6477848c97ec2b980deecaef7392607860a15ff1678b10be5704c0a9a63c"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-mgc.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/tree-mgc.inf",
+          "bytes": 123228,
+          "sha256": "9abb4e024658b8e98ba98f84388d13654d3b9488e83a4926aa362b4a055d71a3"
+        },
+        {
+          "role": "rhvoice/voice/16000/voice.data",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/16000/voice.data",
+          "bytes": 2103072,
+          "sha256": "28a444c3f98f8db73e1d2d0c59d54bafac8d032fc4604f56e3cdf421845eef0b"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/bap.pdf",
+          "bytes": 515624,
+          "sha256": "58074e9003113f084bbd7f026bd93d69e1ca576f7c81588ef6b171227ed0608e"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/bap.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/bap.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/bap.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/24000/bpf.txt",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/bpf.txt",
+          "bytes": 13589,
+          "sha256": "1a5c6cc05b917ca9ec4b71dfca88eb9dcde1641c1de83192145803766d2662a7"
+        },
+        {
+          "role": "rhvoice/voice/24000/dur.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/dur.pdf",
+          "bytes": 17096,
+          "sha256": "1e2794192baefe7441385509e4a0d4a328cd8a06c59c90bc18f8709d701df59a"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/lf0.pdf",
+          "bytes": 184688,
+          "sha256": "2303d8315b4f6812d7a6b7b09d3575bbadc5f379b31b46875f00091c6ceb1ef3"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/lf0.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/lf0.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/lf0.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/mgc.pdf",
+          "bytes": 728408,
+          "sha256": "54b931bb7f55c0e55a9b8e28f4a8ee453be4150fe51a9791fb698db3caab1c1d"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/mgc.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/mgc.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/mgc.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-bap.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/tree-bap.inf",
+          "bytes": 316785,
+          "sha256": "ec83786cdf90021d9b33b44634683d86b7e903aa9cae614af07f093b5012056b"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-dur.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/tree-dur.inf",
+          "bytes": 50695,
+          "sha256": "3a0493cca61c34d062221d3c9540a86c76f5b2fbb4eb58241c4a46fe957ca6c1"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-lf0.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/tree-lf0.inf",
+          "bytes": 381996,
+          "sha256": "41252d5062a04a2e481f574c6d69744fab426a9f419c9249eb64653a4a2246b1"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-mgc.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/tree-mgc.inf",
+          "bytes": 98776,
+          "sha256": "1ec501bab7e5a5e3aa0871b71f152206ebd6827b3198376687d30f1b1645155e"
+        },
+        {
+          "role": "rhvoice/voice/24000/voice.data",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/24000/voice.data",
+          "bytes": 2218095,
+          "sha256": "02989c10bddf75cc3398e10b83bd09a1f2d0824689d639e1a56553a7df24538f"
+        },
+        {
+          "role": "rhvoice/voice/voice.info",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/voice.info",
+          "bytes": 167,
+          "sha256": "8ff3e019b1689ddfca1d6d0abf523e764540fa47972bf88b74aad3b9a706eed7"
+        },
+        {
+          "role": "rhvoice/voice/voice.params",
+          "url": "https://raw.githubusercontent.com/RHVoice/alan-eng/bb3fdb15b9c64109f396f56f6155965bfcf89977/voice.params",
+          "bytes": 18,
+          "sha256": "f8c6c579d73c0d953386226e0beb159199c331854e9f8443d90c5d7fdaab02d4"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "rhvoice:Alan",
+          "name": "Alan",
+          "speaker_index": null
+        }
+      ]
+    },
+    {
+      "id": "rhvoice-bdl-eng",
+      "provider": "rhvoice",
+      "name": "Bdl",
+      "language": "en-US",
+      "description": "American English. Includes private English language data. Requires a separately installed compatible RHVoice C API runtime; starts disabled.",
+      "source": "https://github.com/RHVoice/bdl-eng",
+      "source_revision": "ea6b944550af6f9b33f2cc5e20f38d3b19087068 English 8a2ea34df72a190dae245460aeb20a867d64775c",
+      "licence": "RHVoice upstream licence and voice terms; see retained notices",
+      "licence_url": "https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/LICENSE.md",
+      "files": [
+        {
+          "role": "licence",
+          "url": "https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/LICENSE.md",
+          "bytes": 18092,
+          "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+        },
+        {
+          "role": "readme",
+          "url": "https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/doc/en/License.md",
+          "bytes": 2665,
+          "sha256": "adb78d0ae36c0edfc2844cc3e8b43bc46b810e9079e2fa5b6bd7344ac8e563f0"
+        },
+        {
+          "role": "rhvoice/language/accents.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/accents.dt",
+          "bytes": 1908,
+          "sha256": "c619f21f52e659c509c8a6876079d581be796786c6d6e17232e9b3514864080d"
+        },
+        {
+          "role": "rhvoice/language/cmulex.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/cmulex.fst",
+          "bytes": 1636279,
+          "sha256": "b2076458b426a57c0a9ac047095787cb1957dd3650816424b5e92fb5a322aa34"
+        },
+        {
+          "role": "rhvoice/language/cmulex.lts",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/cmulex.lts",
+          "bytes": 356961,
+          "sha256": "38d36fa953d15d2264d56bed5f49d2fa08948778795048e5160841b7db4f87a7"
+        },
+        {
+          "role": "rhvoice/language/downcase.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/downcase.fst",
+          "bytes": 561,
+          "sha256": "f3b132c60238744af39535ed5fa0002af7c05c85f2a583d3b71fd4bf1846cd4f"
+        },
+        {
+          "role": "rhvoice/language/emoji.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/emoji.fst",
+          "bytes": 80119,
+          "sha256": "cdf4fe938dcc4b857f82e363bd6725141503a18cde8f10a2e477e3602ef41f43"
+        },
+        {
+          "role": "rhvoice/language/gpos.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/gpos.fst",
+          "bytes": 1155,
+          "sha256": "bb73942b136399fc06ad35c2bf83125f20f7451d709744a3384624c646e0171c"
+        },
+        {
+          "role": "rhvoice/language/key.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/key.fst",
+          "bytes": 2624,
+          "sha256": "01aec64d28ec8fb4330d6ee286a8c2c15e114eefa465bbd5bab72f521ca1a250"
+        },
+        {
+          "role": "rhvoice/language/labelling.xml",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/labelling.xml",
+          "bytes": 2439,
+          "sha256": "cdbaffbf154235a876c71a4faf308352936fe012fe873a9f3bf535af9b8bcc35"
+        },
+        {
+          "role": "rhvoice/language/language.info",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/language.info",
+          "bytes": 88,
+          "sha256": "e7e1e9241c89ddf8ccfbcce78698767b9612a65866953d9da7df2001c1cf2efb"
+        },
+        {
+          "role": "rhvoice/language/lseq.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/lseq.fst",
+          "bytes": 1296,
+          "sha256": "565346b74ae47a39a954a758c471dc9cb8aa2329c7d79744dcf36fd51b7755ae"
+        },
+        {
+          "role": "rhvoice/language/msg.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/msg.fst",
+          "bytes": 82,
+          "sha256": "0bd56859492a23e41f841bce01760f8ab1d050e3eea5a107bf1d43ef4c4ec34f"
+        },
+        {
+          "role": "rhvoice/language/numbers.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/numbers.fst",
+          "bytes": 5878,
+          "sha256": "367632662256b3c9cf340f91f9da46bd11af292052ec19cc7e59fbbf53709677"
+        },
+        {
+          "role": "rhvoice/language/phonemes.xml",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/phonemes.xml",
+          "bytes": 3250,
+          "sha256": "d6d07e869169ab4b179e2dddfee89b6bec5c603617d798188865587f6cedd9df"
+        },
+        {
+          "role": "rhvoice/language/phrasing.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/phrasing.dt",
+          "bytes": 203,
+          "sha256": "4ed79f2178d31fe520c87f8bc8f5a1a9cb41dd7e0bdd537ec5341006178fe4c2"
+        },
+        {
+          "role": "rhvoice/language/spell.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/spell.fst",
+          "bytes": 1480,
+          "sha256": "f024a05a3263056bb45788d6327a617158293f6dbcb12be147d110121b868cef"
+        },
+        {
+          "role": "rhvoice/language/syl.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/syl.fst",
+          "bytes": 10219,
+          "sha256": "731e7450ab5f83a16eb7585538a3c191eda7dce2862feb8e1e0fefef572f453f"
+        },
+        {
+          "role": "rhvoice/language/tok.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/tok.fst",
+          "bytes": 160718,
+          "sha256": "7f6e200a32f1eabecb6205b441d724de431e2fdba4297e70494c00f05976c3d7"
+        },
+        {
+          "role": "rhvoice/language/tones.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/tones.dt",
+          "bytes": 1604,
+          "sha256": "7078d871851380549a4cbd8fde0f688225cc7510dd67684badf6242fce3e5d94"
+        },
+        {
+          "role": "rhvoice/language/vocab.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/vocab.fst",
+          "bytes": 353107,
+          "sha256": "b5d363701b9486b92ce1b1889826775cbec19d6552de8a02399ae3b8351a2499"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/bap.pdf",
+          "bytes": 297752,
+          "sha256": "fc45cf65e26e473bedc9932c4d888e39966b9170ad505c096d616c0f94fea612"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/bap.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/bap.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/bap.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/16000/bpf.txt",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/bpf.txt",
+          "bytes": 6594,
+          "sha256": "a0c5042e5317e59a70d6359957341999bf1f440fc072482ac77511900c2d88d3"
+        },
+        {
+          "role": "rhvoice/voice/16000/dur.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/dur.pdf",
+          "bytes": 21216,
+          "sha256": "211c0d9e5ae49f850653803a1d1b8cce357744ebddb68cbac6d949833b4ebb67"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/lf0.pdf",
+          "bytes": 183488,
+          "sha256": "a62859cfe12c0cceabe4a9e5bcf7b33935be94038f097948870bc34069943fe2"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/lf0.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/lf0.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/lf0.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/mgc.pdf",
+          "bytes": 864632,
+          "sha256": "473a01eb13071ff52c20726677e60034b61271255e5921edf6bcd8e02c320a5d"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/mgc.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/mgc.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/mgc.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-bap.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/tree-bap.inf",
+          "bytes": 263643,
+          "sha256": "5454e745e1fe60e169c17fd873ee3055f77c3b95f41ccd060ab97682779f7e01"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-dur.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/tree-dur.inf",
+          "bytes": 61501,
+          "sha256": "b6c94de8f3975609887dbdf61e686122b04a3622f210bfb26a308d0efb207928"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-lf0.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/tree-lf0.inf",
+          "bytes": 382343,
+          "sha256": "b8f7fb22819035e14b6a0418a54f22884263c01e7d9d1cfc36293c4b2f7bca2c"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-mgc.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/tree-mgc.inf",
+          "bytes": 140397,
+          "sha256": "f1fa560f83194bd8163f17852d69ea3a489d66446db4722d08475e3e5399c8bd"
+        },
+        {
+          "role": "rhvoice/voice/16000/voice.data",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/16000/voice.data",
+          "bytes": 2139499,
+          "sha256": "a1e91a50d7da3436b95d84ae4f5869d6acdbc8e9319b14f373c76bda556dcaf4"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/bap.pdf",
+          "bytes": 358712,
+          "sha256": "4e5964ddfcdbdbacc81700f87035caf0daf864095027bd3ae9e33c18fa491467"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/bap.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/bap.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/bap.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/24000/bpf.txt",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/bpf.txt",
+          "bytes": 13589,
+          "sha256": "1a5c6cc05b917ca9ec4b71dfca88eb9dcde1641c1de83192145803766d2662a7"
+        },
+        {
+          "role": "rhvoice/voice/24000/dur.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/dur.pdf",
+          "bytes": 22456,
+          "sha256": "faf3cf3c12a141ce3b9861563f5f539009e8639bd9a4439388676a9fd3c01953"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/lf0.pdf",
+          "bytes": 188288,
+          "sha256": "36e7450d4949b7c4d7bf497f96d343d53cfddd59c80432a3a442a11e8ffc9bc4"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/lf0.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/lf0.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/lf0.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/mgc.pdf",
+          "bytes": 942680,
+          "sha256": "8fdb06a8eaf08ba24247e7cd6a116abb221b91b7130c92f9c7375a6f0a65c710"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/mgc.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/mgc.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/mgc.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-bap.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/tree-bap.inf",
+          "bytes": 232272,
+          "sha256": "b54121cf12fb35ffc81d02ec21fe65198636871ddefdfff5487afe5dcac4badb"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-dur.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/tree-dur.inf",
+          "bytes": 65019,
+          "sha256": "dbc2be49ca5d61cc44fecb9b75fd805ecebd3ec0136333ce3ed38584db03d6d8"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-lf0.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/tree-lf0.inf",
+          "bytes": 390853,
+          "sha256": "52314bb10eb2f12a31c570ab9ba8ed271c7ea2204dfb4c75376639296bd7dd04"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-mgc.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/tree-mgc.inf",
+          "bytes": 122970,
+          "sha256": "a2e8cd366560a6b5bfae365a52f073b45c59c7f8bc1a9cf4d270004ca169214d"
+        },
+        {
+          "role": "rhvoice/voice/24000/voice.data",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/24000/voice.data",
+          "bytes": 2245781,
+          "sha256": "eca698643327c233df843ed53ac537a4824454dfadb780613706a8929f796482"
+        },
+        {
+          "role": "rhvoice/voice/voice.info",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/voice.info",
+          "bytes": 166,
+          "sha256": "c19e0ce1b7ed08473a24a07225dda85df5179380432550d3af9fcd512c3f2235"
+        },
+        {
+          "role": "rhvoice/voice/voice.params",
+          "url": "https://raw.githubusercontent.com/RHVoice/bdl-eng/ea6b944550af6f9b33f2cc5e20f38d3b19087068/voice.params",
+          "bytes": 18,
+          "sha256": "f8c6c579d73c0d953386226e0beb159199c331854e9f8443d90c5d7fdaab02d4"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "rhvoice:Bdl",
+          "name": "Bdl",
+          "speaker_index": null
+        }
+      ]
+    },
+    {
+      "id": "rhvoice-clb-eng",
+      "provider": "rhvoice",
+      "name": "Clb",
+      "language": "en-US",
+      "description": "American English. Includes private English language data. Requires a separately installed compatible RHVoice C API runtime; starts disabled.",
+      "source": "https://github.com/RHVoice/clb-eng",
+      "source_revision": "e0aa06cf50334f10844d1a28a72b3fdcf3cdd150 English 8a2ea34df72a190dae245460aeb20a867d64775c",
+      "licence": "RHVoice upstream licence and voice terms; see retained notices",
+      "licence_url": "https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/LICENSE.md",
+      "files": [
+        {
+          "role": "licence",
+          "url": "https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/LICENSE.md",
+          "bytes": 18092,
+          "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+        },
+        {
+          "role": "readme",
+          "url": "https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/doc/en/License.md",
+          "bytes": 2665,
+          "sha256": "adb78d0ae36c0edfc2844cc3e8b43bc46b810e9079e2fa5b6bd7344ac8e563f0"
+        },
+        {
+          "role": "rhvoice/language/accents.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/accents.dt",
+          "bytes": 1908,
+          "sha256": "c619f21f52e659c509c8a6876079d581be796786c6d6e17232e9b3514864080d"
+        },
+        {
+          "role": "rhvoice/language/cmulex.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/cmulex.fst",
+          "bytes": 1636279,
+          "sha256": "b2076458b426a57c0a9ac047095787cb1957dd3650816424b5e92fb5a322aa34"
+        },
+        {
+          "role": "rhvoice/language/cmulex.lts",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/cmulex.lts",
+          "bytes": 356961,
+          "sha256": "38d36fa953d15d2264d56bed5f49d2fa08948778795048e5160841b7db4f87a7"
+        },
+        {
+          "role": "rhvoice/language/downcase.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/downcase.fst",
+          "bytes": 561,
+          "sha256": "f3b132c60238744af39535ed5fa0002af7c05c85f2a583d3b71fd4bf1846cd4f"
+        },
+        {
+          "role": "rhvoice/language/emoji.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/emoji.fst",
+          "bytes": 80119,
+          "sha256": "cdf4fe938dcc4b857f82e363bd6725141503a18cde8f10a2e477e3602ef41f43"
+        },
+        {
+          "role": "rhvoice/language/gpos.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/gpos.fst",
+          "bytes": 1155,
+          "sha256": "bb73942b136399fc06ad35c2bf83125f20f7451d709744a3384624c646e0171c"
+        },
+        {
+          "role": "rhvoice/language/key.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/key.fst",
+          "bytes": 2624,
+          "sha256": "01aec64d28ec8fb4330d6ee286a8c2c15e114eefa465bbd5bab72f521ca1a250"
+        },
+        {
+          "role": "rhvoice/language/labelling.xml",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/labelling.xml",
+          "bytes": 2439,
+          "sha256": "cdbaffbf154235a876c71a4faf308352936fe012fe873a9f3bf535af9b8bcc35"
+        },
+        {
+          "role": "rhvoice/language/language.info",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/language.info",
+          "bytes": 88,
+          "sha256": "e7e1e9241c89ddf8ccfbcce78698767b9612a65866953d9da7df2001c1cf2efb"
+        },
+        {
+          "role": "rhvoice/language/lseq.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/lseq.fst",
+          "bytes": 1296,
+          "sha256": "565346b74ae47a39a954a758c471dc9cb8aa2329c7d79744dcf36fd51b7755ae"
+        },
+        {
+          "role": "rhvoice/language/msg.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/msg.fst",
+          "bytes": 82,
+          "sha256": "0bd56859492a23e41f841bce01760f8ab1d050e3eea5a107bf1d43ef4c4ec34f"
+        },
+        {
+          "role": "rhvoice/language/numbers.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/numbers.fst",
+          "bytes": 5878,
+          "sha256": "367632662256b3c9cf340f91f9da46bd11af292052ec19cc7e59fbbf53709677"
+        },
+        {
+          "role": "rhvoice/language/phonemes.xml",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/phonemes.xml",
+          "bytes": 3250,
+          "sha256": "d6d07e869169ab4b179e2dddfee89b6bec5c603617d798188865587f6cedd9df"
+        },
+        {
+          "role": "rhvoice/language/phrasing.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/phrasing.dt",
+          "bytes": 203,
+          "sha256": "4ed79f2178d31fe520c87f8bc8f5a1a9cb41dd7e0bdd537ec5341006178fe4c2"
+        },
+        {
+          "role": "rhvoice/language/spell.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/spell.fst",
+          "bytes": 1480,
+          "sha256": "f024a05a3263056bb45788d6327a617158293f6dbcb12be147d110121b868cef"
+        },
+        {
+          "role": "rhvoice/language/syl.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/syl.fst",
+          "bytes": 10219,
+          "sha256": "731e7450ab5f83a16eb7585538a3c191eda7dce2862feb8e1e0fefef572f453f"
+        },
+        {
+          "role": "rhvoice/language/tok.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/tok.fst",
+          "bytes": 160718,
+          "sha256": "7f6e200a32f1eabecb6205b441d724de431e2fdba4297e70494c00f05976c3d7"
+        },
+        {
+          "role": "rhvoice/language/tones.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/tones.dt",
+          "bytes": 1604,
+          "sha256": "7078d871851380549a4cbd8fde0f688225cc7510dd67684badf6242fce3e5d94"
+        },
+        {
+          "role": "rhvoice/language/vocab.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/vocab.fst",
+          "bytes": 353107,
+          "sha256": "b5d363701b9486b92ce1b1889826775cbec19d6552de8a02399ae3b8351a2499"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/bap.pdf",
+          "bytes": 346712,
+          "sha256": "5638c4ac0de7a5bb2876ba9021f115e756fa7119f65c0945194f3642a21f7288"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/bap.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/bap.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/16000/bap.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/bap.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/16000/bpf.txt",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/bpf.txt",
+          "bytes": 6594,
+          "sha256": "a0c5042e5317e59a70d6359957341999bf1f440fc072482ac77511900c2d88d3"
+        },
+        {
+          "role": "rhvoice/voice/16000/dur.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/dur.pdf",
+          "bytes": 21816,
+          "sha256": "4ea8de4d9c3a89e8b1eba38e760fb38d48c8d4a4e1e2414c6c2ef7121896c3e4"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/lf0.pdf",
+          "bytes": 159392,
+          "sha256": "96e4bc5c4073a60f04a086d3543ba64b3764ed74389fd0aca93607a30415766d"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/lf0.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/lf0.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/16000/lf0.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/lf0.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/mgc.pdf",
+          "bytes": 1025432,
+          "sha256": "f7bf8a4f0673a7351626eeef0fce4bb156c3011d323c76633c5ddbbfe683ef18"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/mgc.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/mgc.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/16000/mgc.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/mgc.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-bap.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/tree-bap.inf",
+          "bytes": 300610,
+          "sha256": "deec867569420693a21d09dcb36ef590c63838996a76b76a2a6fbf03eda4b4d7"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-dur.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/tree-dur.inf",
+          "bytes": 64455,
+          "sha256": "f2e88063274d9a94e6e2cbfa92460b5fb7189d391a6f4ce7a6a808143b533e38"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-lf0.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/tree-lf0.inf",
+          "bytes": 337516,
+          "sha256": "e52923278802c55a65e13edd906252be7ecd71ad9663ec8ecc1f39c1875422d6"
+        },
+        {
+          "role": "rhvoice/voice/16000/tree-mgc.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/tree-mgc.inf",
+          "bytes": 165635,
+          "sha256": "d7daf01038a6ae79ce678dc98ea1055d4c4a8ef909a6dc036f4cf3351b2aa7f0"
+        },
+        {
+          "role": "rhvoice/voice/16000/voice.data",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/16000/voice.data",
+          "bytes": 2356137,
+          "sha256": "28f2a4fef5d4f381a81e735040f212dbaec55b9dc8645089ada9365a77003459"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/bap.pdf",
+          "bytes": 471776,
+          "sha256": "5304de89778fe2a97c33c1cfce9a21316ed4f6cb44fc0e728c5132ca2241d4ef"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/bap.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/bap.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/24000/bap.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/bap.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/24000/bpf.txt",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/bpf.txt",
+          "bytes": 13589,
+          "sha256": "1a5c6cc05b917ca9ec4b71dfca88eb9dcde1641c1de83192145803766d2662a7"
+        },
+        {
+          "role": "rhvoice/voice/24000/dur.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/dur.pdf",
+          "bytes": 20896,
+          "sha256": "87635435c85ad86cb9404551e444a017f91283a28b9d2c88be9132afac41051d"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/lf0.pdf",
+          "bytes": 172016,
+          "sha256": "1d7801381290654d879a0bdecfc6ac586d31ada19d32ff9502c4b240b97de882"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/lf0.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/lf0.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/24000/lf0.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/lf0.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.pdf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/mgc.pdf",
+          "bytes": 1162160,
+          "sha256": "e6abeb184070aabe9b8d44e4971289be23615e2143b0d5c906906d94b1e585a4"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.win1",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/mgc.win1",
+          "bytes": 6,
+          "sha256": "5e38c96c4a61b86140015bd588335e5fa9b43d4251d5c4952c1e24f5b93a595c"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.win2",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/mgc.win2",
+          "bytes": 15,
+          "sha256": "7039c18e59fbe87557401ec8d8a35fb28b2f0df6b50bd3801ba931e01fee18f8"
+        },
+        {
+          "role": "rhvoice/voice/24000/mgc.win3",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/mgc.win3",
+          "bytes": 15,
+          "sha256": "21ce34352520110c1823a98fb7b2c8a195ce88f07e5cc54f8cf6906868a90192"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-bap.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/tree-bap.inf",
+          "bytes": 293516,
+          "sha256": "f94e736018eb4b4820919882531943a0344539fd8b8346c2840ae0ae75bc48e5"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-dur.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/tree-dur.inf",
+          "bytes": 61716,
+          "sha256": "e602fe8b8d3343257a2a1a10807fcec8f68966442078426f2ca2baef04d3b144"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-lf0.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/tree-lf0.inf",
+          "bytes": 360901,
+          "sha256": "74b0b9283ef343e58fa7e892c88cf0c54171175bcc79fc92f804729c28f54449"
+        },
+        {
+          "role": "rhvoice/voice/24000/tree-mgc.inf",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/tree-mgc.inf",
+          "bytes": 152233,
+          "sha256": "9c768441b757b32d5d9f77e779444174f7e58c436d43ad6c05bf603a8bd40d2f"
+        },
+        {
+          "role": "rhvoice/voice/24000/voice.data",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/24000/voice.data",
+          "bytes": 2624525,
+          "sha256": "5fd4301843b7c067a06c9e055e802ff0263bb114bfedb7bca848ec43172e79b2"
+        },
+        {
+          "role": "rhvoice/voice/voice.info",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/voice.info",
+          "bytes": 168,
+          "sha256": "160ed42089c915ad8f277ade9ea2963ad4649436f22150ab52ec59189e444416"
+        },
+        {
+          "role": "rhvoice/voice/voice.params",
+          "url": "https://raw.githubusercontent.com/RHVoice/clb-eng/e0aa06cf50334f10844d1a28a72b3fdcf3cdd150/voice.params",
+          "bytes": 18,
+          "sha256": "f8c6c579d73c0d953386226e0beb159199c331854e9f8443d90c5d7fdaab02d4"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "rhvoice:Clb",
+          "name": "Clb",
+          "speaker_index": null
+        }
+      ]
+    },
+    {
+      "id": "rhvoice-ksp-eng",
+      "provider": "rhvoice",
+      "name": "Ksp",
+      "language": "en-IN",
+      "description": "Indian English. Includes private English language data. Requires a separately installed compatible RHVoice C API runtime; starts disabled.",
+      "source": "https://github.com/RHVoice/ksp-eng",
+      "source_revision": "858023095833e574f6f90a99b1669c58ad5de02b English 8a2ea34df72a190dae245460aeb20a867d64775c",
+      "licence": "CMU permissive voice terms; RHVoice language-data terms",
+      "licence_url": "https://raw.githubusercontent.com/RHVoice/ksp-eng/858023095833e574f6f90a99b1669c58ad5de02b/license",
+      "files": [
+        {
+          "role": "licence",
+          "url": "https://raw.githubusercontent.com/RHVoice/ksp-eng/858023095833e574f6f90a99b1669c58ad5de02b/license",
+          "bytes": 2285,
+          "sha256": "469adc0262e10d84fb9658fa6181c883586415b5692f6bfbc2fde65dfc63f5c5"
+        },
+        {
+          "role": "readme",
+          "url": "https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/doc/en/License.md",
+          "bytes": 2665,
+          "sha256": "adb78d0ae36c0edfc2844cc3e8b43bc46b810e9079e2fa5b6bd7344ac8e563f0"
+        },
+        {
+          "role": "rhvoice/language/accents.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/accents.dt",
+          "bytes": 1908,
+          "sha256": "c619f21f52e659c509c8a6876079d581be796786c6d6e17232e9b3514864080d"
+        },
+        {
+          "role": "rhvoice/language/cmulex.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/cmulex.fst",
+          "bytes": 1636279,
+          "sha256": "b2076458b426a57c0a9ac047095787cb1957dd3650816424b5e92fb5a322aa34"
+        },
+        {
+          "role": "rhvoice/language/cmulex.lts",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/cmulex.lts",
+          "bytes": 356961,
+          "sha256": "38d36fa953d15d2264d56bed5f49d2fa08948778795048e5160841b7db4f87a7"
+        },
+        {
+          "role": "rhvoice/language/downcase.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/downcase.fst",
+          "bytes": 561,
+          "sha256": "f3b132c60238744af39535ed5fa0002af7c05c85f2a583d3b71fd4bf1846cd4f"
+        },
+        {
+          "role": "rhvoice/language/emoji.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/emoji.fst",
+          "bytes": 80119,
+          "sha256": "cdf4fe938dcc4b857f82e363bd6725141503a18cde8f10a2e477e3602ef41f43"
+        },
+        {
+          "role": "rhvoice/language/gpos.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/gpos.fst",
+          "bytes": 1155,
+          "sha256": "bb73942b136399fc06ad35c2bf83125f20f7451d709744a3384624c646e0171c"
+        },
+        {
+          "role": "rhvoice/language/key.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/key.fst",
+          "bytes": 2624,
+          "sha256": "01aec64d28ec8fb4330d6ee286a8c2c15e114eefa465bbd5bab72f521ca1a250"
+        },
+        {
+          "role": "rhvoice/language/labelling.xml",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/labelling.xml",
+          "bytes": 2439,
+          "sha256": "cdbaffbf154235a876c71a4faf308352936fe012fe873a9f3bf535af9b8bcc35"
+        },
+        {
+          "role": "rhvoice/language/language.info",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/language.info",
+          "bytes": 88,
+          "sha256": "e7e1e9241c89ddf8ccfbcce78698767b9612a65866953d9da7df2001c1cf2efb"
+        },
+        {
+          "role": "rhvoice/language/lseq.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/lseq.fst",
+          "bytes": 1296,
+          "sha256": "565346b74ae47a39a954a758c471dc9cb8aa2329c7d79744dcf36fd51b7755ae"
+        },
+        {
+          "role": "rhvoice/language/msg.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/msg.fst",
+          "bytes": 82,
+          "sha256": "0bd56859492a23e41f841bce01760f8ab1d050e3eea5a107bf1d43ef4c4ec34f"
+        },
+        {
+          "role": "rhvoice/language/numbers.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/numbers.fst",
+          "bytes": 5878,
+          "sha256": "367632662256b3c9cf340f91f9da46bd11af292052ec19cc7e59fbbf53709677"
+        },
+        {
+          "role": "rhvoice/language/phonemes.xml",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/phonemes.xml",
+          "bytes": 3250,
+          "sha256": "d6d07e869169ab4b179e2dddfee89b6bec5c603617d798188865587f6cedd9df"
+        },
+        {
+          "role": "rhvoice/language/phrasing.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/phrasing.dt",
+          "bytes": 203,
+          "sha256": "4ed79f2178d31fe520c87f8bc8f5a1a9cb41dd7e0bdd537ec5341006178fe4c2"
+        },
+        {
+          "role": "rhvoice/language/spell.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/spell.fst",
+          "bytes": 1480,
+          "sha256": "f024a05a3263056bb45788d6327a617158293f6dbcb12be147d110121b868cef"
+        },
+        {
+          "role": "rhvoice/language/syl.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/syl.fst",
+          "bytes": 10219,
+          "sha256": "731e7450ab5f83a16eb7585538a3c191eda7dce2862feb8e1e0fefef572f453f"
+        },
+        {
+          "role": "rhvoice/language/tok.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/tok.fst",
+          "bytes": 160718,
+          "sha256": "7f6e200a32f1eabecb6205b441d724de431e2fdba4297e70494c00f05976c3d7"
+        },
+        {
+          "role": "rhvoice/language/tones.dt",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/tones.dt",
+          "bytes": 1604,
+          "sha256": "7078d871851380549a4cbd8fde0f688225cc7510dd67684badf6242fce3e5d94"
+        },
+        {
+          "role": "rhvoice/language/vocab.fst",
+          "url": "https://raw.githubusercontent.com/RHVoice/English/8a2ea34df72a190dae245460aeb20a867d64775c/vocab.fst",
+          "bytes": 353107,
+          "sha256": "b5d363701b9486b92ce1b1889826775cbec19d6552de8a02399ae3b8351a2499"
+        },
+        {
+          "role": "rhvoice/voice/16000/bpf.txt",
+          "url": "https://raw.githubusercontent.com/RHVoice/ksp-eng/858023095833e574f6f90a99b1669c58ad5de02b/16000/bpf.txt",
+          "bytes": 6594,
+          "sha256": "a0c5042e5317e59a70d6359957341999bf1f440fc072482ac77511900c2d88d3"
+        },
+        {
+          "role": "rhvoice/voice/16000/voice.data",
+          "url": "https://raw.githubusercontent.com/RHVoice/ksp-eng/858023095833e574f6f90a99b1669c58ad5de02b/16000/voice.data",
+          "bytes": 1937111,
+          "sha256": "2ae027d7dfdc0dd8b1262106d95e8a492b5528a9ab106601c65accdecf390e58"
+        },
+        {
+          "role": "rhvoice/voice/24000/bpf.txt",
+          "url": "https://raw.githubusercontent.com/RHVoice/ksp-eng/858023095833e574f6f90a99b1669c58ad5de02b/24000/bpf.txt",
+          "bytes": 13589,
+          "sha256": "1a5c6cc05b917ca9ec4b71dfca88eb9dcde1641c1de83192145803766d2662a7"
+        },
+        {
+          "role": "rhvoice/voice/24000/voice.data",
+          "url": "https://raw.githubusercontent.com/RHVoice/ksp-eng/858023095833e574f6f90a99b1669c58ad5de02b/24000/voice.data",
+          "bytes": 2055337,
+          "sha256": "3d03edb6736a1a1a80085ac8fdf8c5de3dc26159249c452e6cc941cf5ef3b010"
+        },
+        {
+          "role": "rhvoice/voice/voice.info",
+          "url": "https://raw.githubusercontent.com/RHVoice/ksp-eng/858023095833e574f6f90a99b1669c58ad5de02b/voice.info",
+          "bytes": 166,
+          "sha256": "4cddc60cc14cc6025ff36f9d8b16d91dc8d3d7abf1bebccce6afb15f92011f63"
+        },
+        {
+          "role": "rhvoice/voice/voice.params",
+          "url": "https://raw.githubusercontent.com/RHVoice/ksp-eng/858023095833e574f6f90a99b1669c58ad5de02b/voice.params",
+          "bytes": 26,
+          "sha256": "dd69bbf4d09546d7560b4397ef2c47437a89f9dbb903c0172ae717f9daf9fb18"
+        }
+      ],
+      "voices": [
+        {
+          "physical_id": "rhvoice:Ksp",
+          "name": "Ksp",
+          "speaker_index": null
+        }
+      ]
+    }
+  ]
+}

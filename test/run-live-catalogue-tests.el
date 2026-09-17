@@ -5,7 +5,7 @@
 ;; Opt-in network test in a fresh Emacs using current byte-code and a complete
 ;; native runtime. EMACSVOX_LIBRARY_TEST_SERVER selects the executable.
 ;; Windows tests also supply an empty native EMACSVOX_LIBRARY_TEST_ROOT.
-;; EMACSVOX_LIBRARY_TEST_ENGINE optionally selects piper instead of flite.
+;; EMACSVOX_LIBRARY_TEST_ENGINE optionally selects piper or rhvoice instead of flite.
 ;; Covers filters, exact preview, palette saving and return navigation as well.
 ;; Speech output is muted. No user profile or existing Emacs is modified.
 ;;; Code:
@@ -59,10 +59,12 @@
 (defconst omnivox-catalogue-test--entry
   (pcase omnivox-catalogue-test--engine
     ("flite" "flite-cmu-us-awb") ("piper" "piper-en-us-kristin-medium")
-    (_ (error "Test engine must be flite or piper"))))
+    ("rhvoice" "rhvoice-alan-eng")
+    (_ (error "Test engine must be flite, piper or rhvoice"))))
 (defconst omnivox-catalogue-test--voice
-  (if (equal "flite" omnivox-catalogue-test--engine) "flitevox:cmu_us_awb"
-    "piper:v1/c/piper-en-us-kristin-medium/0"))
+  (pcase omnivox-catalogue-test--engine
+    ("flite" "flitevox:cmu_us_awb") ("rhvoice" "rhvoice:Alan")
+    (_ "piper:v1/c/piper-en-us-kristin-medium/0")))
 (princ (format "Private voice root: %s\n" (getenv "OMNIVOX_VOICE_ROOT")))
 
 (defun omnivox-catalogue-test--inspect ()
@@ -134,7 +136,7 @@
         (omnivox-catalogue-test--check-choice process))
       (let ((before (list tts-speaker-process tts-notify-process)))
         (omnivox-catalogue omnivox-catalogue-test--engine)
-        (omnivox-catalogue-search (if (equal omnivox-catalogue-test--engine "flite") "AWB" "Kristin"))
+        (omnivox-catalogue-search (pcase omnivox-catalogue-test--engine ("flite" "AWB") ("rhvoice" "Alan") (_ "Kristin")))
         (emacsvox-aural-ui-goto-row omnivox-catalogue-test--entry)
         (unless (equal (tabulated-list-get-id) omnivox-catalogue-test--entry) (error "Missing catalogue row"))
         (cl-letf (((symbol-function 'omnivox-library--confirm) (lambda (&rest _) t)))
@@ -190,6 +192,12 @@
           (unless (seq-find (lambda (voice) (equal omnivox-catalogue-test--voice (plist-get voice :voice_id)))
                             (plist-get status :eligible_voices))
             (error "Downloaded voice absent from replacement worker"))))
+      (when (equal omnivox-catalogue-test--engine "rhvoice")
+        (dolist (process (list tts-speaker-process tts-notify-process))
+          (unless (seq-some (lambda (voice) (equal (plist-get voice :voice_id) "rhvoice:Slt"))
+                            (plist-get (plist-get (omnivox-library--proof process 'speaker) :status)
+                                       :eligible_voices))
+            (error "RHVoice Apply lost the externally installed SLT voice"))))
       (princ "PASS: explicit enable and reviewed Apply made voice eligible on both replacement workers and refreshed views\n")
       (omnivox-catalogue-test--browser-ready)
       (emacsvox-aural-voice-workbench-refresh)

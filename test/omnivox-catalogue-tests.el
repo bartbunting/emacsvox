@@ -292,5 +292,27 @@
     (goto-char (point-min))
     (should (equal (plist-get (omnivox-catalogue--selected) :id) "mbrola-us1"))))
 
+(ert-deftest omnivox-catalogue-rhvoice-requires-provider-support ()
+  (should-error (omnivox-catalogue--optional-files
+                 '(:catalogue_providers ["piper" "flite" "mbrola"]) "rhvoice")
+                :type 'user-error)
+  (should (= 2 (length (omnivox-catalogue--optional-files
+                       '(:catalogue_providers ["piper" "flite" "mbrola" "rhvoice"])
+                       "rhvoice")))))
+
+(ert-deftest omnivox-catalogue-rhvoice-has-direct-voice-rows ()
+  (with-temp-buffer
+    (omnivox-catalogue-mode)
+    (setq omnivox-catalogue--engine "rhvoice"
+          omnivox-catalogue--metadata '(:unrelated t)
+          omnivox-catalogue--entries
+          (plist-get (with-temp-buffer
+                       (insert-file-contents (expand-file-name "omnivox-rhvoice-catalogue.json"
+                                                              emacsvox-etc-directory))
+                       (json-parse-buffer :object-type 'plist :array-type 'array)) :entries))
+    (omnivox-catalogue--render)
+    (should (equal (mapcar #'car tabulated-list-entries)
+                   '("rhvoice-alan-eng" "rhvoice-bdl-eng" "rhvoice-clb-eng" "rhvoice-ksp-eng")))))
+
 (provide 'omnivox-catalogue-tests)
 ;;; omnivox-catalogue-tests.el ends here

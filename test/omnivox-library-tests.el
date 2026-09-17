@@ -359,5 +359,17 @@
                   "both" '(:voices [(:engine_id "mbrola" :enabled :false)]))))
   (should (equal '("mbrola") (omnivox-library--managed-providers "mbrola" nil))))
 
+(ert-deftest omnivox-library-rhvoice-apply-preserves-external-voices ()
+  (let* ((slt '(:engine_id "rhvoice" :voice_id "rhvoice:Slt"))
+         (alan '(:engine_id "rhvoice" :voice_id "rhvoice:Alan"))
+         (bdl '(:engine_id "rhvoice" :voice_id "rhvoice:Bdl"))
+         (index '(:voices [(:engine_id "rhvoice" :physical_id "rhvoice:Alan" :enabled t)
+                           (:engine_id "rhvoice" :physical_id "rhvoice:Bdl" :enabled :false)]
+                  :disabled_physical_ids [(:engine_id "rhvoice" :voice_id "rhvoice:Bdl")])))
+    (should (equal '("piper" "flite" "rhvoice")
+                   (omnivox-library--managed-providers "both" index)))
+    (should (equal (vector alan slt)
+                   (omnivox-library--eligible index (list slt alan bdl) '("rhvoice") nil)))))
+
 (provide 'omnivox-library-tests)
 ;;; omnivox-library-tests.el ends here

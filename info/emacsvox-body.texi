@@ -1587,7 +1587,7 @@ Voice Palettes controls which palette is selected next time.
 references remain valid. An older Omnivox worker must be updated once to
 provide on-demand variants; the screen reports missing support explicitly.
 @item
-@emph{Get more voices} in Piper@comma{} Flite or MBROLA details opens the reviewed download
+@emph{Get more voices} in Piper@comma{} Flite@comma{} MBROLA or RHVoice details opens the reviewed download
 catalogue. Piper is grouped by language@comma{} voice name and quality; Flite
 offers AWB and RMS@. Voices with one quality appear directly in their
 language group; only voices with several qualities need another group.
@@ -1623,6 +1623,16 @@ voice@comma{} unless it was explicitly disabled. Enable several MBROLA voices to
 assign them to different palette choices or speech streams. Each request
 opens its selected database; enabled databases do not all remain loaded.
 @item
+RHVoice offers Alan (Scottish English)@comma{} BDL and CLB (American English)@comma{} and
+Ksp (Indian English). These downloads require an updated Omnivox build and
+a separately installed compatible RHVoice runtime@comma{} selected in engine
+settings. Each voice includes its own English language data and upstream
+notices. Review its terms before installing. Enable and Apply adds the
+downloaded voice alongside your externally installed voices@comma{} including SLT@.
+A conflicting external installation of the same voice is reported rather
+than replaced. Uninstallation removes only the managed package; it preserves
+your external voices and RHVoice runtime.
+@item
 After installation@comma{} press @kbd{l} to browse voices@comma{}
 @kbd{+} to enable the voice@comma{} and @kbd{a} to review
 Apply. Review covers the managed engines and both speech streams.
@@ -1631,7 +1641,7 @@ Downloaded files belong to you and stay in Omnivox's per-user voice storage
 across executable upgrades. Failed and interrupted operations retain files
 for inspection; automatic resume and package updates are not provided yet.
 @item
-To uninstall a downloaded Piper@comma{} Flite or MBROLA package@comma{} disable all its
+To uninstall a downloaded Piper@comma{} Flite@comma{} MBROLA or RHVoice package@comma{} disable all its
 speakers and Apply@comma{} then press @kbd{C-c u} in the voice browser.
 Review its affected voices@comma{} size and retained palette references before
 confirming. Files still needed by other sessions are retained. Built-in SLT

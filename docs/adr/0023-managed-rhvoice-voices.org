@@ -1,0 +1,30 @@
+#+title: ADR 0023: Managed RHVoice Voices
+#+date: 2026-09-17
+
+* Status
+
+Accepted direction under the maintainer's request to add RHVoice downloads and
+uninstallation. Paired with Omnivox ADR 0016.
+
+* Decision
+
+Extend ADR 0019's existing catalogue and Apply workflow to Alan, BDL, CLB and Ksp.
+Offer these only when the actual local management service advertises RHVoice.
+Older servers retain their existing catalogues and report the missing support.
+
+Omnivox downloads pinned upstream voice and language files, verifies them and
+checks native synthesis before adding each voice disabled. It manages ownership,
+activation and removal; Emacsvox presents source, size and upstream terms. Each
+package retains its own English data so removing one cannot break another.
+The separately installed RHVoice runtime and external voices remain user-owned.
+This refines ADR 0008's separately installed data boundary without adding runtime
+acquisition, release assets or redistribution of voice data.
+
+Apply combines enabled managed RHVoice voices with the existing external voice
+inventory, preserving SLT and applying physical exclusions. Require the existing
+preflight, two-lane acknowledgement and rollback evidence. Downloading alone
+does not restart speech or change palette choices. Uninstall uses the established
+review and resumable cleanup commands, preserving files retained by other sessions.
+
+No new remote management transport, helper process boundary or dependency is
+introduced. Existing platform limits, documentation and release rules remain.

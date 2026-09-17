@@ -436,7 +436,15 @@ OWNER sends the private prefix through the speech queue."
   "Project INDEX and unmanaged PREVIOUS eligibility for PROVIDERS and POLICY."
   (let ((disabled (append (plist-get index :disabled_physical_ids) nil))
         (engines (append (plist-get policy :disabled_engine_ids) nil))
-        (voices (seq-remove (lambda (id) (member (plist-get id :engine_id) providers)) previous)))
+        (voices (seq-remove
+                 (lambda (id)
+                   (and (member (plist-get id :engine_id) providers)
+                        (or (not (equal (plist-get id :engine_id) "rhvoice"))
+                            (seq-some (lambda (row)
+                                        (and (equal (plist-get row :engine_id) "rhvoice")
+                                             (equal (plist-get row :physical_id) (plist-get id :voice_id))))
+                                      (plist-get index :voices)))))
+                 previous)))
     (seq-doseq (row (plist-get index :voices))
       (when (and (member (plist-get row :engine_id) providers)
                  (eq (plist-get row :enabled) t))
@@ -590,9 +598,11 @@ All attempted replacement processes remain owned until retirement is confirmed."
   "Resolve PROVIDERS against the installed voices in INDEX."
   (if (equal providers "both")
       (append '("piper" "flite")
-              (when (seq-some (lambda (voice) (equal "mbrola" (plist-get voice :engine_id)))
-                              (plist-get index :voices))
-                '("mbrola")))
+              (seq-filter
+               (lambda (provider)
+                 (seq-some (lambda (voice) (equal provider (plist-get voice :engine_id)))
+                           (plist-get index :voices)))
+               '("mbrola" "rhvoice")))
     (list providers)))
 
 ;;;###autoload
@@ -618,7 +628,8 @@ All attempted replacement processes remain owned until retirement is confirmed."
                                                       :expected_sha256 (plist-get library :sha256)
                                                       :piper (if (member "piper" managed) t :false)
                                                       :flite (if (member "flite" managed) t :false))
-                                                        (when (member "mbrola" managed) '(:mbrola t)))))
+                                                        (when (member "mbrola" managed) '(:mbrola t))
+                                                        (when (member "rhvoice" managed) '(:rhvoice t)))))
                (candidate (plist-get staged :candidate))
                (startups
                 (vector (omnivox-library--candidate-startup generation 'speaker (aref old-pair 0))
