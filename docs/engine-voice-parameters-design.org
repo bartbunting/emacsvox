@@ -826,3 +826,43 @@ Next connect DECtalk's helper-6 handler and the Rust parent dispatcher, then
 public transport and the Emacs editor. End-to-end fallback, multiple spans and
 both speech streams remain later acceptance work. The desktop runtime has not
 been changed by this slice.
+
+* Implementation progress: DECtalk helper 6 handlers
+
+Omnivox commit =33009ec= connects the DECtalk helper boundary.
+
+DECtalk now implements the same helper-6 boundary as Eloquence: an engine-owned
+catalogue, planned explanations, native set/default operations, application
+receipts before audio, and retained explanations with actual readback. All 28
+qualified design-voice controls are described. Missing-runtime hosts and the
+Rust parent still use helper 5; public native controls and the Emacs editor are
+not yet connected.
+
+Catalogue browsing uses immutable metadata and unknown preset defaults with
+verified reset support. It neither selects a voice nor waits for active speech.
+Background qualification checks the known runtime. Execution retains native
+limit checks, complete readback and pristine restoration. Planned common values
+account for DECtalk's qualified pitch and stress clamps while ordinary synthesis
+keeps its existing command values and calibration. Rate and PCM volume do not
+mask unrelated design-voice controls.
+
+The direct helper-6 suite passed 121 cases, including both limits of all 28
+controls, all nine voices, full defaults, contextual masking, malformed data,
+stale identity, history eviction, requested markers, catalogue access during
+speech, cancellation and clean follow-up synthesis. Ten captured C# exchanges
+pass Rust decoding and catalogue assembly. The locked workspace passed 902
+tests, with the existing long-session eSpeak stress test ignored; Clippy and
+formatting passed.
+
+Both Windows native handlers are connected. Next comes the Rust parent
+integration: helper-6 negotiation and stream handling, query scheduling,
+parameter forwarding and per-request evidence. Public speech/preview operations,
+actual fallback, multiple spans, both speech streams and the Emacs editor follow.
+
+Full Windows development staging passed as =7e111b38b3f5c8a3= in a separate
+runtime root, including checksums and live companion synthesis. The packaged
+DECtalk helper passed all 121 direct cases and matches the locally qualified
+binary. Eloquence's helper hash remains unchanged. Ordinary DECtalk helper-5
+speech also passed 20 syntheses and four cancellation/recovery probes. The
+Emacsvox documentation gate passed. These tests captured audio silently; they
+do not establish listening quality. The desktop remains on =e1ecdb481ee08fd0=.
