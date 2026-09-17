@@ -866,3 +866,44 @@ binary. Eloquence's helper hash remains unchanged. Ordinary DECtalk helper-5
 speech also passed 20 syntheses and four cancellation/recovery probes. The
 Emacsvox documentation gate passed. These tests captured audio silently; they
 do not establish listening quality. The desktop remains on =e1ecdb481ee08fd0=.
+
+* Implementation progress: Rust parent helper 6 integration
+
+Omnivox commit =9ea1212= connects the parent protocol and native request APIs.
+
+The parent now offers helper 6 and preserves negotiation and speech for older
+helpers. Its separate session decoder requires native application evidence on
+version-6 starts while keeping the earlier codecs strict. Ordinary speech sends
+an explicit null native block. Explicit native methods forward the complete
+block, context and expected runtime identity, and validate receipts before
+delivering start metadata or PCM. These are adapter acknowledgements; routed
+callers must still distinguish committed audio from actual playback.
+
+Catalogue and explanation queries try the existing lifecycle lock and return
+busy during speech, startup or recovery. They neither start deferred helpers nor
+restart disconnected workers. Admitted writes and replies share a 200 ms
+transaction deadline; a joined watchdog covers blocked writes without retaining
+idle timer threads. The existing cleanup deadline remains separate. Invalid or
+late replies retire the connection before it can serve another utterance.
+Up to 64 compact applied
+plan references retain their exact runtime and voice; replacement expires them.
+
+The real Rust-parent probe passed for the qualified Windows Eloquence and
+DECtalk helpers, including buffered and progressive native speech, explanations,
+busy queries, cancellation recovery and stale-identity rejection. Long-utterance
+cancellation at first PCM retired both helpers when launched by the Linux debug
+parent, for ordinary and native speech alike. Recovery required fresh runtime
+identity. This does not establish acoustic stop latency or listening quality.
+
+The locked workspace passed 913 tests, with one existing long-session stress
+test ignored; Clippy and formatting passed. The final native Windows-parent
+probe passed for both engines. DECtalk recovered from ordinary and native
+first-PCM cancellation in the same helper; Eloquence used watchdog retirement
+and fresh identity for both. The documentation gate passed.
+
+Full Windows development staging passed as =c9ff5b92bc933fe1=, including package
+checksums and live companion synthesis. Both packaged helper hashes match those
+tested by the native probes. The packaged Omnivox executable also produced
+valid ordinary speech WAV output through both engines. The desktop launcher
+remains on =e1ecdb481ee08fd0=. Public native speech, preview operations, routed
+receipts and the Emacs editor remain the next work.
