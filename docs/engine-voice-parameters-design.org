@@ -747,3 +747,38 @@ remains on its original runtime, and no live Emacs session was restarted.
 This is a compatibility prerequisite, not helper 6 activation. Catalogue and
 explanation operations, native application receipts, public transport and the
 Emacs editor remain pending. Negotiation still advertises versions 1--5.
+
+* Implementation progress: helper 6 parameter codecs
+
+Omnivox commit =ed4db43= contains this slice and its retained verification report.
+
+The reserved Rust helper-6 codec now represents catalogue queries, native
+synthesis settings, planned and applied explanations, and compact native
+application confirmations. It retains explicit zero, false, default and
+omission; helper-6 nullable fields are required. Legacy readers and live
+negotiation remain on versions 1--5.
+
+Correlated validation checks request, engine, voice and applied runtime identity.
+Strict native requests cannot accept common-only confirmation. Planned evidence
+cannot claim native readback. Catalogue assembly checks each page against one
+voice, runtime, revision and mapping set; stale or invalid pages leave accepted
+state untouched. Pages contain at most 64 descriptors and the completed catalogue
+at most 512, with cross-page references checked at completion.
+
+The independent fixtures and 12 focused codec tests cover strict decoding,
+compatibility, evidence, pagination and size bounds. The locked Rust workspace
+passed 900 tests, with the existing long-session eSpeak stress test ignored.
+Workspace Clippy and formatting passed.
+
+Full Windows development staging passed for the final source as build
+=b1b6060ef0dec0ab= in a separate runtime root. Live inventory and companion
+synthesis checks passed. Flite, Eloquence and DECtalk each passed three protocol
+compatibility probes: selecting version 5, rejecting a version-6-only greeting,
+and rejecting reserved operations without producing audio. The Windows helper
+hashes match the previously stress-tested binaries. Both documentation gates
+passed. The desktop runtime remains unchanged; no live Emacs was restarted.
+
+This is the message layer, not live native execution. Engine catalogue handlers,
+owner-thread query scheduling, retained application plans and receipt-before-PCM
+ordering remain to be connected before enabling helper 6. Public transport and
+the Emacs editor follow that integration.
