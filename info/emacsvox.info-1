@@ -1600,11 +1600,13 @@ using that engine before retrying.
      streams.  For a shared model, ‘e’ asks which speaker to change.
      Enabling alone does not restart speech.  These actions also appear
      near the top of model details, alongside the installed and enabled
-     status.  Press ‘c’ to request cancellation and wait for cleanup.
-     The shipped collection contains reviewed, pinned models that passed
-     native validation.  Models with unresolved terms or unsupported
-     configurations are withheld; the catalogue is not a live listing of
-     every upstream download.
+     status.  Installation and Apply confirmations offer ‘yes’ and ‘no’
+     through completion.  Type ‘y TAB RET’ to confirm; an empty ‘RET’
+     declines, and ‘C-g’ cancels.  Press ‘c’ to request cancellation and
+     wait for cleanup.  The shipped collection contains reviewed, pinned
+     models that passed native validation.  Models with unresolved terms
+     or unsupported configurations are withheld; the catalogue is not a
+     live listing of every upstream download.
    • MBROLA offers US1, US2 and US3; British English en1 is already
      included.  These downloads require the updated, separately
      configured development companion on Linux or Windows.  Older

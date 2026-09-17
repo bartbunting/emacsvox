@@ -379,7 +379,7 @@
                                              (plist-get entry :id))) omnivox-catalogue--installed)
       (user-error "Voice already installed; press e to enable it"))
     (unless omnivox-catalogue--entry (omnivox-catalogue-details))
-    (when (yes-or-no-p (format "Download %s (%s), validate and install disabled? "
+    (when (omnivox-library--confirm (format "Download %s (%s), validate and install disabled? "
                                (plist-get entry :name) (omnivox-catalogue--size entry)))
       (let* ((program (tts--resolve-program tts-program))
              (process-environment (omnivox-engine-settings--environment program))

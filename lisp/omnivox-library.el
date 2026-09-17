@@ -78,6 +78,11 @@
 (defconst omnivox-library--prefix "OMNIVOX-LOCAL ")
 (defconst omnivox-library--timeout 45)
 
+(defun omnivox-library--confirm (prompt)
+  "Ask PROMPT with yes/no completion, defaulting to no."
+  (let ((completion-ignore-case t))
+    (equal "yes" (downcase (completing-read prompt '("no" "yes") nil t nil nil "no")))))
+
 (defun omnivox-library--source-key ()
   "Identify the selected launcher and native library location."
   (let ((program (tts--resolve-program tts-program)))
@@ -634,7 +639,7 @@ All attempted replacement processes remain owned until retirement is confirmed."
               (insert "\nIf either replacement fails, both previous configurations will be restored.\n")
               (special-mode)))
           (display-buffer "*Omnivox Apply review*")
-          (when (yes-or-no-p (format "%s. Apply and restart both speech streams? " summary))
+          (when (omnivox-library--confirm (format "%s. Apply and restart both speech streams? " summary))
             (let ((result (omnivox-library--execute service plan old-pair)))
               (message "Voice library: %s%s" (plist-get result :status)
                        (if-let* ((failures (plist-get result :failures)))

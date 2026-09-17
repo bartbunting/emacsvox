@@ -49,7 +49,7 @@
       (delete-process service))))
 
 (defun omnivox-library-test--apply (expected &optional providers)
-  (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+  (cl-letf (((symbol-function 'omnivox-library--confirm) (lambda (&rest _) t)))
     (let ((result (omnivox-library-apply (or providers "flite"))))
       (princ (format "Apply: %S\n" result))
       (unless (eq (plist-get result :status) expected)

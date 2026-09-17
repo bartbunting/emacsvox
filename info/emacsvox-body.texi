@@ -1590,6 +1590,9 @@ the installed voice@comma{} then @kbd{a} to review and Apply to both
 speech streams. For a shared model@comma{} @kbd{e} asks which speaker
 to change. Enabling alone does not restart speech. These actions also appear
 near the top of model details@comma{} alongside the installed and enabled status.
+Installation and Apply confirmations offer @samp{yes} and @samp{no} through completion.
+Type @kbd{y TAB RET} to confirm; an empty @kbd{RET}
+declines@comma{} and @kbd{C-g} cancels.
 Press @kbd{c} to request cancellation and wait for cleanup.
 The shipped collection contains reviewed@comma{} pinned models that passed native
 validation. Models with unresolved terms or unsupported configurations are

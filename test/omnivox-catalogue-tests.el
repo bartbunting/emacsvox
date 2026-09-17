@@ -4,6 +4,29 @@
 (require 'ert)
 (require 'omnivox-catalogue)
 
+(ert-deftest omnivox-catalogue-declined-installation-starts-no-download ()
+  "No and C-g leave the selected voice uninstalled without starting a job."
+  (dolist (answer '("no" quit))
+    (with-temp-buffer
+      (omnivox-catalogue-mode)
+      (setq omnivox-catalogue--entry '(:id "test-voice" :name "Test voice" :files []))
+      (let ((omnivox-catalogue--operations (make-hash-table :test #'equal)) prompt)
+        (cl-letf (((symbol-function 'omnivox-catalogue-refresh) #'ignore)
+                  ((symbol-function 'completing-read)
+                   (lambda (text &rest _)
+                     (setq prompt text)
+                     (if (eq answer 'quit) (signal 'quit nil) answer)))
+                  ((symbol-function 'make-process)
+                   (lambda (&rest _) (ert-fail "Declining must not start a download"))))
+          (if (eq answer 'quit)
+              (should (eq 'cancelled
+                          (condition-case nil
+                              (progn (omnivox-catalogue-install) 'returned)
+                            (quit 'cancelled))))
+            (should-not (omnivox-catalogue-install)))
+          (should (string-match-p "Download Test voice" prompt))
+          (should (zerop (hash-table-count omnivox-catalogue--operations))))))))
+
 (defun omnivox-catalogue-tests--entries ()
   (plist-get (json-parse-string
               (with-temp-buffer

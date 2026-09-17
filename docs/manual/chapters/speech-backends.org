@@ -470,6 +470,9 @@ before retrying.
   speech streams. For a shared model, @@texinfo:@kbd{e}@@ asks which speaker
   to change. Enabling alone does not restart speech. These actions also appear
   near the top of model details, alongside the installed and enabled status.
+  Installation and Apply confirmations offer =yes= and =no= through completion.
+  Type @@texinfo:@kbd{y TAB RET}@@ to confirm; an empty @@texinfo:@kbd{RET}@@
+  declines, and @@texinfo:@kbd{C-g}@@ cancels.
   Press @@texinfo:@kbd{c}@@ to request cancellation and wait for cleanup.
   The shipped collection contains reviewed, pinned models that passed native
   validation. Models with unresolved terms or unsupported configurations are

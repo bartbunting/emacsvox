@@ -41,7 +41,7 @@
          (call "enable" :engine "mbrola" :voice "mbrola:v1/mb-us1/us1" :enabled enabled
                :expected_sha256 (plist-get (call "inspect") :sha256)))
        (apply-library (expected)
-         (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+         (cl-letf (((symbol-function 'omnivox-library--confirm) (lambda (&rest _) t)))
            (let ((result (omnivox-library-apply "both")))
              (unless (eq (plist-get result :status) expected)
                (error "Apply expected %s: %S" expected result))

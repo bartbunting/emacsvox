@@ -88,7 +88,7 @@
         (omnivox-catalogue omnivox-catalogue-test--engine)
         (goto-char (point-min))
         (unless (equal (tabulated-list-get-id) omnivox-catalogue-test--entry) (error "Missing catalogue row"))
-        (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+        (cl-letf (((symbol-function 'omnivox-library--confirm) (lambda (&rest _) t)))
           (omnivox-catalogue-install))
         (let* ((key (omnivox-catalogue--key omnivox-catalogue--host omnivox-catalogue--entry))
                (process (plist-get (gethash key omnivox-catalogue--operations) :process))
@@ -115,7 +115,7 @@
       (let* (observed-pair
              (tts-voice-inventory-changed-hook
               (list (lambda () (setq observed-pair (list tts-speaker-process tts-notify-process))))))
-        (cl-letf (((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+        (cl-letf (((symbol-function 'omnivox-library--confirm) (lambda (&rest _) t)))
           (call-interactively #'omnivox-library-apply))
         (unless (equal observed-pair (list tts-speaker-process tts-notify-process))
           (error "Views did not receive the final published speech pair")))

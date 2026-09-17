@@ -7,6 +7,33 @@
 (require 'omnivox-library)
 (require 'omnivox-voices)
 
+(ert-deftest omnivox-library-confirmation-completes-and-cancels ()
+  "Real minibuffer input completes both choices and keeps refusal explicit."
+  (dolist (case '(("y TAB RET" . t) ("n TAB RET" . nil)
+                  ("YES RET" . t) ("RET" . nil) ("C-g" . cancelled)))
+    (let* ((global-map (copy-keymap global-map))
+           (completing-read-function #'completing-read-default)
+           (completion-styles '(basic))
+           (minibuffer-exit-hook nil)
+           (outcome 'unanswered) candidates
+           (minibuffer-setup-hook
+            (list (lambda ()
+                    (setq candidates (all-completions "" minibuffer-completion-table))))))
+      (cl-letf (((symbol-function 'omnivox-library-tests--confirm-command)
+                 (lambda () (interactive)
+                   (condition-case nil
+                       (setq outcome (omnivox-library--confirm "Install this voice? "))
+                     (quit (setq outcome 'cancelled)))))
+                ((symbol-function 'tts-speak) #'ignore)
+                ((symbol-function 'tts-notify) #'ignore)
+                ((symbol-function 'tts-stop) #'ignore)
+                ((symbol-function 'emacsvox-icon) #'ignore))
+        (define-key global-map (kbd "C-c t") #'omnivox-library-tests--confirm-command)
+        (save-window-excursion
+          (execute-kbd-macro (vconcat (kbd "C-c t") (kbd (car case))))))
+      (should (equal candidates '("no" "yes")))
+      (should (eq outcome (cdr case))))))
+
 (ert-deftest omnivox-library-async-inspection-probes-capabilities-without-waiting ()
   (let ((program (make-temp-file "omnivox-library-probe-"))
         (omnivox-library--support-cache nil)
