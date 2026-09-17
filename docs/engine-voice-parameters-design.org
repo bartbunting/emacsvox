@@ -782,3 +782,47 @@ This is the message layer, not live native execution. Engine catalogue handlers,
 owner-thread query scheduling, retained application plans and receipt-before-PCM
 ordering remain to be connected before enabling helper 6. Public transport and
 the Emacs editor follow that integration.
+
+* Implementation progress: Eloquence helper 6 handlers
+
+Omnivox commit =8181237= contains this slice and its verification report.
+
+The Eloquence Windows helper now accepts explicit helper-6 negotiation and
+implements its eight-control catalogue, planned explanations, native synthesis
+and retained applied explanations. DECtalk and missing-runtime hosts retain
+versions 1--5. The Rust parent still negotiates version 5, so these controls are
+not yet available through public speech operations or the Emacs editor.
+
+Catalogue browsing uses immutable metadata and unknown preset defaults with
+verified reset support. It does not select voices or wait for active synthesis.
+DLL qualification runs once in the background; queries return busy while it runs.
+Actual execution retains the qualified ECI units/runtime guard, owner-thread
+application, complete readback and pristine restoration.
+
+The shared host publishes native application evidence before PCM and coordinates
+it with cancellation. Applied plans are bounded to 64 entries and 256 KiB per
+helper process. New helpers have new runtime identities; stale strict requests
+fail, while explicitly permitted common-only requests report their degradation.
+Malformed native data cannot silently fall back.
+
+The direct Windows helper suite passed 57 cases, including all eight presets,
+set/default operations, contextual masking, planned versus applied evidence,
+stale identity, history eviction, requested markers, streaming cancellation and
+clean follow-up speech. The deterministic host tests passed six receipt-ordering,
+39 cancellation and 110 legacy malformed-wire/recovery cases. Nine captured C#
+exchanges also pass Rust codec validation and catalogue assembly. The locked
+workspace passed 901 tests, with the existing long-session eSpeak stress test
+ignored; Clippy and formatting passed.
+
+Full Windows development staging passed as =1092ac6518d5e78d= in a separate
+runtime root, including checksums and live companion synthesis. The packaged
+Eloquence helper passed all 57 direct native cases, and both helper hashes match
+the binaries qualified locally. Eloquence and DECtalk each also passed 20
+ordinary helper-5 syntheses and four cancellations. The Emacsvox documentation
+gate passed after concurrent manual edits were completed in their separate
+commit; this slice did not modify those edits.
+
+Next connect DECtalk's helper-6 handler and the Rust parent dispatcher, then
+public transport and the Emacs editor. End-to-end fallback, multiple spans and
+both speech streams remain later acceptance work. The desktop runtime has not
+been changed by this slice.
