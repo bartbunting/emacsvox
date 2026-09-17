@@ -201,7 +201,9 @@ installations.  Emacsvox talks to Omnivox while Omnivox uses the normal engine
 for the platform: eSpeak NG on Linux, AVSpeechSynthesizer on macOS, and WinRT
 on Windows.  Emacsvox requires Omnivox 1.10.0 or newer for individual fallback
 tuning and complete voice previews; the guided installers pin the 1.10.0
-release.  The
+release. Preparation for the next Emacsvox release targets Omnivox 1.12;
+the installer pins and verified binary examples will be updated together
+when its release artifacts are available. The
 [[file:docs/manual/chapters/speech-backends.org][Speech Backends guide]] owns the
 current support matrix, prerequisites, source installation, selection, and
 audible smoke test.
@@ -270,83 +272,48 @@ normally the staged runtime and each engine's standard runtime location need
 no manual configuration.  Restart the speech processes after restaging, then
 use =C-e d e= to choose from the engines reported by the new live process.
 
-Portable preferences do not copy a machine's discovered voice list into user
-configuration.  Instead, each logical voice has ordered exact, engine-default,
-or property selectors that are resolved against the inventory of the machine
-where Omnivox is running.
+A voice palette owns each named voice's shared adjustments, ordered physical
+choices, and individual fallback tuning. Exact native voice IDs belong to a
+machine; engine-default and property selectors can resolve against the voices
+available on another machine. Inheritance takes a complete entry from the
+nearest parent, ending at the read-only =acss-default= palette.
+
+Use =C-e H V= for Voice Palettes. Create a personal palette or edit a built-in
+voice in a personal child, then use the common voice editor to preview and
+save changes. Copy Palette makes an independent copy of effective entries.
+Reset restores an inherited voice; Delete removes a direct custom voice with
+no inherited replacement. Activation applies to this session. Use at Startup
+selects the palette in a saved Presentation Profile for the next session.
+The [[file:docs/manual/chapters/aural-presentation.org][Aural Presentation guide]] includes a personal-palette walkthrough.
+
+Before upgrading an older personal setup, back up its palette and routing
+data. This version accepts palette schema 3 only; opening a palette does not
+convert older schemas. Existing palettes and physical choices need reviewed
+conversion. The former shared per-voice route editor, migration and preset
+screens have been removed. Named-voice choices now belong in the palette's
+common editor.
 
 Use =M-x emacsvox-aural-voice-workbench=, or press =W= in Aural Home, to
-configure these preferences without editing Lisp.  Its logical, physical,
-engine, and style views use =l=, =v=, =e=, and =s=.  Use =F= to filter voice
-traits or engine health, =C= to clear filters, and =R= to refresh inventory.
-=P= previews one row, =A= previews all visible voices, =B= compares selected
-voices, =T= changes the common sample text, =S= stops preview, and =t= opens
-the route-aware tuner.  None of these saves configuration.  When the active
-voice palette is built in, =t= offers to create and activate an editable
-personal copy before tuning.  Use =a= to assign an installed voice and =j= to
-review a portable route suggestion.  Exact native IDs are machine-local;
-language, gender, and engine default selectors re-resolve on each machine.
-The tuner's Relative Rate is a signed direct-point offset from the current
-global zero-to-100 rate: at 75, =-1= speaks at 74 and =+4= at 79.  Zero or an
-unset value means unchanged.  Omnivox applies it after route selection, so the
-same effective normalized rate reaches WinRT, Eloquence, DECtalk, or eSpeak.
-An older server or an engine without rate support keeps the palette setting
-but reports it as omitted.  Legacy palette =:rate 0= is safely neutral;
-nonzero legacy absolute values are ignored and identified for retuning.
-Use =m= to stage migration from existing Omnivox settings or the current
-palette, =N= for routing presets, and =E= or =I= to exchange one data-only
-profile.  No inferred route is saved without review.
+browse installed voices and shared engine preferences. Its named-voice,
+physical-voice, engine and style views use =l=, =v=, =e= and =s=. Use =F= to
+filter, =C= to clear filters, and =R= to refresh inventory. =P= previews one
+voice, =A= previews visible usable voices, =B= compares voices, =T= changes
+the sample text, and =S= stops preview. =t= opens the voice editor; a physical
+voice experiment remains unsaved until you choose a palette destination and
+save it. Browsing and previewing do not change saved choices.
 
-For a quick global engine change, press =C-e d e= and choose an available
-nonfailed engine.  This moves it to the front of the global preferred order
-for the current Emacs session without stopping speech already playing.  It
-does not change fallback policy or explicit logical-voice routes; an explicit
-route still wins.  The relative order of every other engine is retained.  Use
-=C-u C-e d e= to save the new order atomically in the active machine routing
-profile, or =M-x emacsvox-aural-restore-saved-engine-order= to discard a
-temporary preference and reapply the saved order.
+The editor's Relative Rate is a signed offset from the current global
+zero-to-100 rate: at 75, =-1= speaks at 74 and =+4= at 79. Zero or an unset
+value leaves the rate unchanged. Shared adjustments, individual fallback
+settings, and contextual overrides are explained with the confirmed sample.
 
-Use =w= or =C-c C-c= to atomically write and apply the complete profile to every
-live speech stream.  The voice tuner uses the same keys to write one edited
-style and return.  A partial apply remains visible and can be retried with =r=;
-=U= restores the previous saved revision.  Rows distinguish predicted,
-registered, and last actually played routes and report fallback or omitted
-dimensions.  Standalone Eloquence/Outloud and DECtalk adapters consume the
-same profile through their static voice-family descriptions.
-
-The following variables remain an advanced compatibility and migration input.
-For example:
-
-#+BEGIN_SRC elisp
-(setq omnivox-logical-voice-preferences
-      '((voice-annotate
-         (exact "dectalk" "paul")
-         (exact "eloquence" "v1")
-         (engine-default "winrt"))
-        (voice-monotone
-         (properties :language "en-US" :gender male))))
-
-(setq omnivox-fallback-engine-ids '("espeak"))
-#+END_SRC
-
-An exact selector always keeps the engine ID and native voice ID separate.
-Missing engines and voices fall through the configured alternatives; property
-selectors late-bind without requiring identical voice catalogues on every
-computer.  Valid definitions that cannot currently resolve remain registered
-with diagnostic attempts instead of being discarded.
-
-Preference keys may be either generated ACSS voice IDs or semantic Emacs voice
-symbols such as =voice-bolden=.  Emacsvox follows the semantic symbol's current
-single-step voice binding when it builds the Omnivox registry, so a preference
-for =voice-bolden= applies to the generated voice that actually appears in
-speech output.
-
-After changing these variables directly, open the Voice Workbench and use =m=
-to import, review, and then =w= to save and apply them.  The low-level
-=M-x omnivox-register-logical-voices= command remains available for diagnostic
-experiments.  The latest structured results are in
-=omnivox-control-capabilities=, =omnivox-engine-inventory=,
-=omnivox-logical-voice-registration=, and =omnivox-control-last-error=.
+For a global engine change, press =C-e d e= and choose an available engine.
+This moves it to the front of the preferred order for this session without
+stopping speech already playing. Explicit palette choices still take
+precedence. Use =C-u C-e d e= to save the new order in the machine routing
+profile, or =M-x emacsvox-aural-restore-saved-engine-order= to restore the
+saved order. Workbench =w= or =C-c C-c= saves and applies shared engine
+settings; these settings do not replace the palette's named-voice choices.
 
 Each Omnivox voice code now includes its stable logical voice ID.  Servers that
 advertise =logical_voice_routing= use the registered binding to select the

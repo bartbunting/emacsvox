@@ -8,6 +8,34 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox Unreleased --- Current User-Visible Changes
 
+** Release target: Omnivox 1.12
+
+This development series targets Omnivox 1.12 for the next Emacsvox release.
+The current guided installers still pin 1.10.0; the newer voice-management
+features below need a compatible development build until the release pins
+are updated. Upgrade an existing Omnivox installation separately: updating
+Emacsvox does not replace your selected server or install optional engines.
+
+** Unified voice palettes and upgrade notes
+
+A named voice now keeps its adjustments, ordered physical choices and
+individual fallback tuning together in its palette. Inheritance takes the
+nearest complete entry, with the read-only acss-default palette as the root.
+Copy Palette makes an independent copy; Reset restores an inherited voice,
+while Delete removes a custom voice with no inherited replacement. Source
+and Where Used help identify affected voices and known references.
+
+Use the common voice editor to change named voices. The former shared
+per-voice routing, migration and preset screens have been removed. Activation
+selects a palette for this session; Use at Startup saves its selection in a
+Presentation Profile.
+
+Older personal palettes need attention before upgrading. Only palette schema
+3 is supported, and opening an older palette does not convert it. Keep a
+backup and arrange a reviewed conversion of existing palettes and their
+physical choices before using this version. See /Choose And Manage Voice
+Palettes/ in the manual for the current model.
+
 ** Additional RHVoice voices
 
 Get more voices now offers Alan, BDL, CLB and Ksp for RHVoice with a compatible
@@ -22,7 +50,7 @@ The Omnivox voice browser offers C-c u to review removal of downloaded Piper,
 Flite and MBROLA packages. Disable and Apply first. Reviews include all shared
 speakers, known palette references and files retained for other speech sessions.
 Built-in voices, imported files, engine runtimes and saved choices are preserved.
-C-c U resumes incomplete cleanup. Requires an updated development Omnivox build.
+C-c U resumes incomplete cleanup.
 
 ** Faster navigation in Browse voices
 
@@ -45,26 +73,35 @@ show the speakers sharing one download, with separate enablement after
 installation. Single-quality voices appear directly in their language group.
 The catalogue now supports e to enable or disable an installed speaker and
 a to review Apply, with actions near the top of model details.
-Catalogue generation pins upstream files, records model-card
-review, verifies checksums and requires native validation before export.
-Pending and unsupported models remain in a maintainer review report.
+Downloads are checked and validated before they are added to the voice library.
 
 ** Bundled eSpeak variants
 
-eSpeak engine details now offer a base-voice and variant picker with retained
-enablement, explicit saving and speech restart, exact samples, and a return to
-the ordinary voice browser and palette editor. It requires a development
-Omnivox build with variant discovery and the bundled local launcher.
+eSpeak engine details offer the variants reported by the running speech worker,
+sorted alphabetically. Choose a base voice with b, then press P or RET to hear
+the selected combination. Variants need no enabling, settings save, download
+or speech restart.
+
+Press u for /Use in palette/ to add the combination as a named voice's preferred
+choice, retaining its fallbacks and tuning. The voice editor previews and saves
+the change; editing a built-in palette creates a personal copy. Older workers
+report missing on-demand variant support explicitly.
 
 ** Speech engine details
 
 Aural Home's /Speech engines/ shows discovered availability and voice counts.
-RET opens main and notification discovery, timestamps, runtime diagnostics,
-and the separate managed installation. Old inventory is labelled as previous
-evidence. Managed checks run asynchronously and retain their results in details;
-completion no longer opens an output buffer or speaks its full diagnostic.
+RET opens current main and notification discovery, timestamps and runtime
+diagnostics. Old inventory is labelled as previous evidence. Opening or
+refreshing these details does not run the release installer.
 
-/Browse main voices/ opens an engine-specific voice browser without disturbing
+On WSL, /Manage installed release/ opens a separate view identifying the release
+and location affected by installation, removal and /Check release engine/.
+That release may differ from the active development build or remote server.
+Managed checks run asynchronously and retain their diagnostics without opening
+an output buffer or speaking the full result. Release management keeps current
+speech running and does not select a different server.
+
+/Browse voices/ opens an engine-specific voice browser without disturbing
 the general Voice Workbench. P speaks an exact sample; t opens the existing
 voice editor, where an experiment can be saved to an explicit palette
 destination. q returns to engine details. Inventory updates preserve focus and
@@ -76,8 +113,12 @@ switches; disabled files remain on disk and are omitted after speech restarts.
 Existing environment overrides retain precedence. A bounded, silent configured
 check retains the target and diagnostics without replacing live speech;
 incomplete Flite discovery is reported even when built-in SLT still works.
-Restarting local speech is an explicit action. Remote and direct native
-launches retain their own configuration paths.
+Restarting local speech is an explicit action. Downloaded voice enablement uses
+Apply to check and replace both speech streams, restoring the previous
+configuration if a replacement fails. Downloads start disabled, and changing
+Enabled does not change the active voices until Apply. Managed voice-library
+operations currently use the bundled WSL-to-Windows launcher; remote and
+direct native launches retain their own configuration paths.
 
 ** Independent output volumes
 
@@ -140,8 +181,6 @@ Details explains the shared, actual-fallback and contextual sources of the last
 confirmed sample's settings.
 
 
-Released notes are preserved in [[file:NEWS-2026.9.4][NEWS for Emacsvox 2026.9.4]].
-
 ** Tracked speech handles early playback replies
 
 Tracked reading now retains playback completion received while a speech request
@@ -172,16 +211,6 @@ from spoken comparison labels and audio that was accepted but never started.
 Text changes, undo, save and context recapture retire stale previews. Earlier
 playback evidence cannot replace a newer view's result.
 
-** Omnivox 1.10.0 minimum for fallback tuning
-
-Omnivox 1.10.0 or newer is now the supported speech-server baseline for individual
-fallback tuning in speech and complete voice previews. The guided Windows and
-WSL installers pin 1.10.0, together with matching optional engine modules, and
-Debian packages recommend that minimum.
-
-Upgrade an existing Omnivox installation separately. Updating Emacsvox does
-not replace your selected server or install optional engine modules.
-
 ** Voice palette selections apply consistently
 
 Search and incremental-search hits now use the active palette's bolden voice.
@@ -206,3 +235,15 @@ avoiding long pauses scanning directories such as System32. Windows programs
 still run by name, and explicit Windows filename completion remains available.
 Enable =emacsvox-shell-complete-windows-commands= to restore those command-name
 candidates. Native Windows and remote Shell buffers are unchanged.
+
+** Reading and navigation fixes
+
+EPUB filenames, downloaded paths and web URLs are passed literally to external
+tools, including names containing spaces or shell punctuation. Scanner image
+processing preserves the originals if processing fails.
+
+Password prompts retain their speech during minibuffer setup. Incremental
+search restores the previous message-speech preference when it ends, and Magit
+filenames retain their voices across selection highlights.
+
+Released notes are preserved in [[file:NEWS-2026.9.4][NEWS for Emacsvox 2026.9.4]].

@@ -1,0 +1,161 @@
+#+title: Emacsvox Release Preparation — 18 September 2026
+
+* Scope and release identity
+
+Preparation began at =65142b7f5=, with =VERSION= still =2026.9.4= and
+=etc/NEWS= headed /Unreleased/. The next release targets *Omnivox 1.12*.
+This report is preparation evidence, not release approval or a completed gate.
+
+Choose the Emacsvox version when the release date and scope are settled.
+The accumulated palette and voice-management features are more than a
+corrective patch. Follow [[file:adr/0002-calendar-versioning.org][ADR 0002]]; do not automatically call this
+=2026.9.5=. Preserve the archived =NEWS-2026.9.4=.
+
+* Documentation prepared
+
+- NEWS now explains unified palettes, schema 3 upgrade requirements, on-demand
+  eSpeak variants, separate current-engine and installed-release views,
+  coordinated voice-library Apply, and reading/navigation corrections.
+- README now describes the common voice editor and palette ownership. Removed
+  instructions for the retired shared per-voice route editor, migration and
+  preset screens, including old key bindings that now do something else.
+- The manual and README identify Omnivox 1.12 as the upcoming release target
+  while retaining executable installation examples for the currently pinned
+  1.10.0 archives.
+- The spelling workflow now names the actual =README.org= rather than the
+  nonexistent =Readme.org= and =README= paths.
+
+* Outstanding release work
+
+** Pin and verify Omnivox 1.12
+
+Publish and verify the Omnivox release first, then update the matching release
+archives and checksums together. Do not substitute a version into URLs while
+retaining 1.10.0 checksums. The affected maintained inputs include:
+
+- =etc/wsl-install.conf= (also consumed by native Windows installation).
+- =etc/omnivox-components.conf= and any matching companion staging pins.
+- =utils/emacsvox-package-deb.py= and =test/test_package_deb.py= for the
+  supported Omnivox minimum.
+- README, installation and speech-backend chapters: requirements, supported
+  platform evidence, download URLs, archive names, shell/PowerShell examples,
+  optional engine versions and installed-server paths.
+- NEWS: replace the temporary target/pins explanation with the verified
+  requirement and final feature availability.
+
+Re-run the x64 and ARM64 installer fixtures and check the actual pinned
+archives, including optional engines with the matching release version and
+architecture. Confirm current runtime and voice-library capability reports
+against the released binaries. Keep audible checks for each supported host;
+an archive check does not demonstrate playback on that host.
+
+** Confirm upgrade and feature scope
+
+Palette readers accept schema 3 only. The previous shared per-voice routing
+and migration screens are gone. Confirm that the published upgrade guidance
+is sufficient for existing personal setups, with originals retained and
+palette identity, choices and profile references preserved. Do not imply
+that opening a palette converts older data automatically. See
+[[file:adr/0018-unified-voice-palette-model.org][ADR 0018]].
+
+Engine-described native parameters are still being implemented separately.
+Do not advertise a finished native-control editor based only on helper codec
+or runtime qualification work. Reconcile release scope with
+[[file:engine-voice-parameters-design.org][the implementation record]] and update NEWS when its public behavior is
+implemented and verified.
+
+Voice-library management currently uses the bundled WSL-to-Windows launcher.
+Do not imply equivalent management on remote or direct native launches.
+
+** Finish release validation and publication preparation
+
+Resolve any failing tests below, and repeat the final gates on the selected
+release commit with supported Emacs releases. Local preparation currently
+uses Emacs =31.0.90= and Texinfo =7.2=; it does not replace the CI matrix for
+Emacs =30.2= and =31.1=.
+
+When ready, select the canonical version, synchronize derived metadata,
+finalize NEWS, and commit the source and generated documentation together.
+In a clean release worktree, run =make bytecode-rebuild= and
+=make release-artifact=. That guarded target owns the release tests, source
+archive, checksum and source-commit evidence. See
+[[file:developer/integration-maintenance.org][Integration Maintenance]].
+
+Tagging and publishing remain separate actions requiring explicit permission
+naming the release under [[file:adr/0006-annotated-unsigned-release-tags.org][ADR 0006]]. Prepare browser documentation from the same
+committed source via the documented Pages worktree procedure.
+
+* Validation results
+
+Checks used local Emacs =31.0.90= and Texinfo =7.2=. No production speech
+processes, personal voice data, installer pins or release versions were changed.
+A concurrent edit to =docs/engine-voice-parameters-design.org= was left intact.
+
+| Check | Result |
+|-------+--------|
+| =check-emacs=, =version-check=, =headers-check=, =bytecode-check= | Passed. |
+| =docs-org-preview=, =docs-update= | Passed; tracked Texinfo and Info regenerated. |
+| =docs-release-check= | Passed; references, local links and node topology validated. |
+| Documentation utility ERT tests | 28 passed. |
+| Codespell on edited NEWS, README and manual sources | Passed. |
+| =source-archive-test= | 4 passed. |
+| =windows-staging-test= | 13 passed. |
+| =piper-catalogue-test= | 13 passed. |
+| =make test= | Failed in =unit-test=: 3,628 expected, 18 unexpected, 23 skipped, 3,669 selected. |
+| =integration-test= with current locked dependencies | 583 passed, no skips. |
+| =graphical-integration-test= with current locked dependencies | 3 passed. |
+| =graphical-voice-test= | 24 passed. |
+| =compiled-notmuch-test= | 124 passed. |
+| =compiled-aural-test=, =build-aural-test= | Passed independently after the full-suite failure. |
+| =trace-test= | All 27 semantic traces matched. |
+| =deb-test= | 6 passed, including reproducibility and offline startup fixtures. |
+| Codespell with the workflow's maintained-source paths | Two existing findings; see below. |
+
+Codespell reports the Telugu identifier in the language-name table at
+=lisp/emacsvox-aural-voice-workbench.el:161= and a misspelling in a test
+docstring at =test/emacsvox-aural-voice-workbench-tests.el:1578=.
+The first is a language identifier that needs a scoped exception; the second
+should be spelled =browsable=. Neither source file was changed in this pass.
+
+The existing =.test-deps= directory failed lock verification. Prepared the
+current six-package lock in =/tmp/emacsvox-release-prep-deps-20260918=;
+no dependency pins or personal packages were changed. Both pinned integration
+gates above use that directory.
+
+The full suite's Agent Shell face-inventory failure does not reproduce in the
+pinned integration suite. Four full-suite transport/style failures also pass
+among seven focused tests in a fresh Emacs with =emacsvox-preamble= loaded.
+This suggests dependency differences or suite state may contribute; it does
+not establish that the full-suite failures are harmless. Investigate isolation
+and the package set before changing runtime behavior or weakening assertions.
+
+The full-suite failures are:
+
+- =emacsvox-agent-shell-markdown-face-inventory-is-current=
+- =emacsvox-aural-action-submission-merges-compatibility-cue=
+- =emacsvox-aural-action-submission-presents-enabled-cue=
+- =emacsvox-aural-action-submission-queues-one-native-transaction=
+- =emacsvox-aural-native-saved-style-matches-voice-previews=
+- =emacsvox-aural-preview-plan-has-one-ordered-lifecycle=
+- =emacsvox-aural-preview-runs-retain-one-transaction=
+- =emacsvox-aural-voice-context-playback-ownership-and-unsupported-evidence=
+- =emacsvox-aural-voice-context-preview-freezes-input-and-rejects-changed-source=
+- =emacsvox-aural-voice-editor-adjustment-sample-starts-with-displayed-value=
+- =emacsvox-aural-voice-editor-comparison-and-save-retain-newer-changes=
+- =emacsvox-aural-voice-editor-default-key-clears-zero-and-can-be-undone=
+- =emacsvox-aural-voice-editor-picker-auditions-without-editing=
+- =emacsvox-corfu-separator-presents-one-native-transaction=
+- =emacsvox-omnivox-components-listing-success-is-asynchronous=
+- =emacsvox-omnivox-components-restores-omnivox-after-failure=
+- =emacsvox-omnivox-components-show-operation-until-completion=
+- =emacsvox-setup-tracks-maintained-runtime-inventory=
+
+Most batch skips require a graphical display; the separate graphical gates
+cover their selected cases. Mu4e remains skipped because it is unavailable.
+No actual Omnivox 1.12 archive, native-host audible test, Docker installation
+smoke test, complete supported-Emacs matrix, release artifact or published
+manual was verified in this preparation pass. These results describe the
+working tree before the release-preparation commit; no release was published.
+
+Detailed local logs are under =/tmp/emacsvox-release-prep-*-20260918.log=.
+The full-suite log is =/tmp/emacsvox-release-prep-test-20260918.log=.

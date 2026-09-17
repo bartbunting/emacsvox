@@ -1105,6 +1105,11 @@ compatible release may be used@comma{} but the binary examples and guided instal
 pin the 1.10.0 artifacts exactly. Upgrade an existing Omnivox installation
 separately; updating Emacsvox does not replace the selected speech server.
 
+The next Emacsvox release is being prepared for Omnivox 1.12. Until its release
+artifacts are pinned and verified@comma{} the installation examples below continue to
+use 1.10.0. Newer voice-library management and on-demand eSpeak variants require
+a compatible newer build; their screens report missing capabilities.
+
 For a first installation@comma{} follow the linear procedure in
 @ref{Installation}.  Return here when you need platform-specific build
 details@comma{} compatibility servers@comma{} or deeper diagnostics.  Omnivox build
@@ -3367,6 +3372,15 @@ use @kbd{P} to audition the palette sequence before editing@comma{}
 and use @kbd{a} in the palette manager to
 activate a selected palette.  Built-in palettes remain intact; editing can
 open an unsaved personal child in the common editor.
+
+@strong{Upgrading personal palettes.} This version accepts palette schema 3 only.
+Before upgrading a setup with older personal palettes@comma{} back up the palette and
+routing data and arrange a reviewed conversion of their entries and physical
+choices. Opening or previewing a palette does not convert it. Preserve palette
+names and saved profile references@comma{} and give each personal palette a parent
+chain ending at @code{acss-default}. Shared per-voice routing@comma{} migration and preset
+screens have been removed; use the common voice editor for named-voice choices
+and adjustments. Shared engine preference remains a separate workstation setting.
 
 Opening the manager announces its selected palette.  Entering a palette
 announces its name@comma{} voice count@comma{} selected voice and main keys.

@@ -16,6 +16,11 @@ compatible release may be used, but the binary examples and guided installers
 pin the 1.10.0 artifacts exactly. Upgrade an existing Omnivox installation
 separately; updating Emacsvox does not replace the selected speech server.
 
+The next Emacsvox release is being prepared for Omnivox 1.12. Until its release
+artifacts are pinned and verified, the installation examples below continue to
+use 1.10.0. Newer voice-library management and on-demand eSpeak variants require
+a compatible newer build; their screens report missing capabilities.
+
 For a first installation, follow the linear procedure in
 @@texinfo:@ref{Installation}@@.  Return here when you need platform-specific build
 details, compatibility servers, or deeper diagnostics.  Omnivox build
