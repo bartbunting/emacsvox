@@ -3283,6 +3283,30 @@ Call CALLBACK with the adapter result when it completes."
         (string-equal (downcase (format "%s" wanted))
                       (downcase (format "%s" actual))))))
 
+(defun tts--inventory-exact-voice (engine voice-id)
+  "Find VOICE-ID in ENGINE, resolving bundled eSpeak variants on demand."
+  (or (cl-find voice-id (plist-get engine :voices)
+               :key (lambda (voice) (plist-get voice :voice-id)) :test #'equal)
+      (when (and (equal (plist-get engine :engine-id) "espeak")
+                 (stringp voice-id)
+                 (string-match
+                  "\\`\\(espeak:[A-Za-z0-9_-]+\\(?:[/\\\\][A-Za-z0-9_-]+\\)*\\)[+]\\([A-Za-z_-][A-Za-z0-9_-]*\\)\\'"
+                  voice-id)
+                 (<= (- (string-bytes voice-id) 7) 39))
+        (let* ((base-id (match-string 1 voice-id))
+               (variant-id (match-string 2 voice-id))
+               (base (cl-find base-id (plist-get engine :voices)
+                              :key (lambda (voice) (plist-get voice :voice-id)) :test #'equal))
+               (variant (cl-find variant-id (plist-get engine :espeak-variants)
+                                 :key (lambda (entry) (plist-get entry :id)) :test #'equal)))
+          (when (and base variant)
+            (let ((voice (copy-tree base)))
+              (setq voice (plist-put voice :voice-id voice-id)
+                    voice (plist-put voice :gender nil))
+              (plist-put voice :display-name
+                         (format "%s + %s" (plist-get base :display-name)
+                                 (plist-get variant :display-name)))))))))
+
 (defun tts--resolve-voice-preview-selector (selector &optional inventory)
   "Resolve normalized preview SELECTOR against INVENTORY.
 Return a plist with separate `:engine-id' and `:voice-id' fields."
@@ -3295,10 +3319,7 @@ Return a plist with separate `:engine-id' and `:voice-id' fields."
       ('exact
        (let* ((voice-id (plist-get selector :voice-id))
               (engine (tts--voice-preview-engine engine-id inventory))
-              (voice
-               (cl-find voice-id (plist-get engine :voices)
-                        :key (lambda (entry) (plist-get entry :voice-id))
-                        :test #'equal)))
+              (voice (tts--inventory-exact-voice engine voice-id)))
          (unless (and voice
                       (tts--voice-preview-available-p
                        (plist-get voice :availability)))

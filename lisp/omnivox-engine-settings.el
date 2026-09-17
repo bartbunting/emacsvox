@@ -79,14 +79,16 @@ Native discovery must validate compatibility; saving is not a load check."
   :group 'omnivox-engine-settings)
 
 (defcustom omnivox-espeak-variants nil
-  "Bundled eSpeak combinations offered by newly started speech workers.
-Each entry is (ENABLE BASE-ID VARIANT-ID).  Use the eSpeak variants picker
-to discover IDs on the actual speech host.  Disabled entries and palette
-references are retained.  Save explicitly and restart both lanes to apply.
-OMNIVOX_ESPEAK_VARIANTS overrides this option.  No files are downloaded."
+  "Retained legacy eSpeak combination settings, no longer used by Emacsvox.
+Variants are available on demand; choose them directly in the variants picker.
+Existing palette references do not need conversion."
   :type '(repeat (list (boolean :tag "Enabled")
                        (string :tag "Base voice ID") (string :tag "Variant ID")))
   :group 'omnivox-engine-settings)
+
+(make-obsolete-variable 'omnivox-espeak-variants
+                        "Choose variants directly with M-x omnivox-espeak-variants."
+                        "2026.9")
 
 (defun omnivox-engine-settings--variants-json (entries)
   "Validate ENTRIES and encode bounded native eSpeak startup JSON."
@@ -149,9 +151,6 @@ Keep process-wide environment and explicit native overrides unchanged."
       process-environment
     (let ((process-environment (copy-sequence process-environment)))
       (setenv "EMACSVOX_LOCAL_ESPEAK_VARIANTS" nil)
-      (when (string-empty-p (or (getenv "OMNIVOX_ESPEAK_VARIANTS") ""))
-        (setenv "EMACSVOX_LOCAL_ESPEAK_VARIANTS"
-                (omnivox-engine-settings--variants-json omnivox-espeak-variants)))
       (dolist (provider omnivox-engine-settings--providers)
         (pcase-let ((`(,id ,option ,_override ,input ,suffix) provider))
           (setenv input nil)

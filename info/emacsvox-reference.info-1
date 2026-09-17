@@ -5092,9 +5092,14 @@ defaults.
 2.59.1.9 emacsvox-aural-voice-editor-keep-experiment
 ....................................................
 
- -- Command: emacsvox-aural-voice-editor-keep-experiment
+ -- Command: emacsvox-aural-voice-editor-keep-experiment (&optional part
+          placement source)
 
-     Choose the experiment’s destination row and scope, retaining other draft edits.
+     Choose the experiment’s destination, retaining other draft edits.
+     PART and PLACEMENT optionally supply the keep scope and choice position.
+     SOURCE optionally supplies the return buffer for the destination editor.
+
+     (fn &optional PART PLACEMENT SOURCE)
 
 2.59.1.10 emacsvox-aural-voice-editor-leave
 ...........................................

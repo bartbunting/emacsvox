@@ -1645,11 +1645,8 @@ command does not stop speech already playing."
             (when (and engine
                        (eq (plist-get selector :kind) 'exact)
                        (not
-                        (cl-find
-                         (plist-get selector :voice-id)
-                         (plist-get engine :voices)
-                         :key (lambda (voice) (plist-get voice :voice-id))
-                         :test #'equal)))
+                        (tts--inventory-exact-voice
+                         engine (plist-get selector :voice-id))))
               (push
                (list
                 :kind 'voice-missing :logical-voice logical

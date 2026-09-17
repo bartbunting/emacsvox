@@ -436,22 +436,23 @@ before retrying.
   verifies both before committing. If a replacement fails, it restores both
   previous configurations. Disabling keeps the files and saved palette
   references. Changing /Enabled/ leaves /Active/ unchanged until Apply.
-- /Voice variants/ in eSpeak details discovers the bundled choices on your
-  selected local speech host. Choose a base voice with @@texinfo:@kbd{b}@@,
-  then toggle a variant with @@texinfo:@kbd{RET}@@. @@texinfo:@kbd{s}@@ saves
-  your choices for future Emacs sessions; @@texinfo:@kbd{a}@@ explicitly
-  restarts both speech lanes with the current choices. Arrow keys and
-  @@texinfo:@kbd{C-n}@@/@@texinfo:@kbd{C-p}@@ navigate spoken rows without
-  changing columns. /Desired availability/ records your selection;
-  /Live preview/ says /Restart required/ until the enabled combination is
-  available for preview. When it says /Ready/, @@texinfo:@kbd{p}@@ auditions
-  that exact combination and
-  @@texinfo:@kbd{v}@@ opens the voice browser for the usual palette editor.
-  Enabling a variant does not change your normal speaking voice; select it
-  in a palette to use it for ordinary reading.
-  Disabled choices and saved palette references are retained. This requires a
-  development Omnivox build with variant discovery and the bundled local
-  launcher. It uses bundled variants and does not download files.
+- /Voice variants/ in eSpeak details lists the bundled variants reported by
+  the running speech worker. Choose a base voice with @@texinfo:@kbd{b}@@,
+  then use the arrow keys or @@texinfo:@kbd{C-n}@@/@@texinfo:@kbd{C-p}@@ to
+  browse variants. Press @@texinfo:@kbd{p}@@ or @@texinfo:@kbd{RET}@@ to hear
+  the selected combination immediately. Variants need no enabling, settings
+  save, download or speech restart.
+  Press @@texinfo:@kbd{u}@@ for /Use in palette/, then choose a palette and
+  named voice. The voice editor adds the variant as its preferred choice,
+  retaining existing fallbacks and tuning. Press @@texinfo:@kbd{P}@@ to hear
+  it with the palette's settings, then @@texinfo:@kbd{w}@@ to /Save and apply/,
+  or choose /Save to collection without selecting/ to keep it for later.
+  Editing a built-in palette creates a personal copy. /Use at Startup/ in
+  Voice Palettes controls which palette is selected next time.
+  @@texinfo:@kbd{q}@@ returns to the variants list with its selection retained;
+  @@texinfo:@kbd{v}@@ opens the base-voice browser. Existing saved variant
+  references remain valid. An older Omnivox worker must be updated once to
+  provide on-demand variants; the screen reports missing support explicitly.
 - /Get more voices/ in Piper, Flite or MBROLA details opens the reviewed download
   catalogue. Piper is grouped by language, voice name and quality; Flite
   offers AWB and RMS. Voices with one quality appear directly in their

@@ -1,0 +1,38 @@
+#+title: ADR 0020: On-demand Bundled eSpeak Variants
+#+date: 2026-09-17
+#+startup: content
+
+* Status
+
+Accepted by the maintainer on 2026-09-17, paired with Omnivox ADR 0014.
+
+* Decision
+
+Bundled eSpeak variants are available on demand. They do not require the
+model enablement and coordinated restart workflow of ADR 0019. Omnivox reports
+base voices and a bounded variant catalogue from the running speech worker.
+Exact selection validates a requested combination for normal speech and
+previews without enumerating every possible combination in Browse Voices.
+Engine disablement, explicit physical exclusions, native identity verification,
+existing cancellation and failure/fallback rules remain authoritative.
+
+Emacsvox's variants browser uses that live inventory. Offer immediate Preview
+and Use in palette, with a base-voice chooser. Use in palette adds the exact
+combination as preferred, retains existing fallbacks and tuning, and opens
+the common editor for preview, Save and apply or Save to collection. Opening
+and previewing write nothing. Built-in palette protection, per-choice tuning,
+acknowledged application to both lanes and explicit startup selection retain
+the contracts of ADRs 0015–0018.
+
+Preserve existing physical IDs and palette references. Retain the old Lisp
+setting as obsolete data, without publishing it to new workers. The native
+startup reader remains compatible, but its list no longer limits valid
+combinations. Older workers lack the negotiated capability and are identified
+explicitly. No new dependency, helper process or download service is added.
+
+* Consequences
+
+A user can choose a base, compare variants and assign one directly to a palette.
+Neither preview nor assignment restarts speech. The initial software upgrade
+still requires new workers and a fresh Emacs profile. Downloaded voices retain
+ADR 0019's separate enablement and Apply workflow.

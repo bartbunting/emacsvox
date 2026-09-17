@@ -838,7 +838,7 @@ OUTPUT to the generic process sentinel EVENT."
        (list
         (list 'download-voices (vector "Get more voices" "Download voices, then enable and Apply"))))
      (when (equal id "espeak")
-       (list (list 'espeak-variants (vector "Voice variants" "Choose bundled variants for a base voice; save and restart explicitly"))))
+       (list (list 'espeak-variants (vector "Voice variants" "Preview bundled variants and use them in a palette"))))
      (when-let* ((description (omnivox-engine-settings--description id)))
        (append
         (list (list 'settings-state (vector "Manual file settings" description)))

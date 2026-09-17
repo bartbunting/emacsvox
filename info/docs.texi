@@ -5517,11 +5517,15 @@ Increase a numeric adjustment, or move to the next field.
 @end deffn
 
 @subsubsection emacsvox-aural-voice-editor-keep-experiment
-@deffn {Command} emacsvox-aural-voice-editor-keep-experiment
+@deffn {Command} emacsvox-aural-voice-editor-keep-experiment  (&optional part placement source)
 @findex emacsvox-aural-voice-editor-keep-experiment
 
 @format
-Choose the experiment’s destination row and scope, retaining other draft edits.
+Choose the experiment’s destination, retaining other draft edits.
+PART and PLACEMENT optionally supply the keep scope and choice position.
+SOURCE optionally supplies the return buffer for the destination editor.
+
+(fn &optional PART PLACEMENT SOURCE)
 @end format
 @end deffn
 
@@ -24484,9 +24488,8 @@ restart occurs when settings are edited.
 @node omnivox-espeak-variants
 @section omnivox-espeak-variants
 
-Discover bundled variants on the selected local speech host, retain explicit
-combinations, and reuse ordinary exact previews and the palette editor.
-Discovery is asynchronous and never restarts or speaks through live workers.
+Browse the running speech worker's bundled variants and resolve combinations
+on demand for exact preview and palette editing.  No enablement or restart.
 
 @node omnivox-library
 @section omnivox-library

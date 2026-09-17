@@ -1555,22 +1555,23 @@ verifies both before committing. If a replacement fails@comma{} it restores both
 previous configurations. Disabling keeps the files and saved palette
 references. Changing @emph{Enabled} leaves @emph{Active} unchanged until Apply.
 @item
-@emph{Voice variants} in eSpeak details discovers the bundled choices on your
-selected local speech host. Choose a base voice with @kbd{b}@comma{}
-then toggle a variant with @kbd{RET}. @kbd{s} saves
-your choices for future Emacs sessions; @kbd{a} explicitly
-restarts both speech lanes with the current choices. Arrow keys and
-@kbd{C-n}/@kbd{C-p} navigate spoken rows without
-changing columns. @emph{Desired availability} records your selection;
-@emph{Live preview} says @emph{Restart required} until the enabled combination is
-available for preview. When it says @emph{Ready}@comma{} @kbd{p} auditions
-that exact combination and
-@kbd{v} opens the voice browser for the usual palette editor.
-Enabling a variant does not change your normal speaking voice; select it
-in a palette to use it for ordinary reading.
-Disabled choices and saved palette references are retained. This requires a
-development Omnivox build with variant discovery and the bundled local
-launcher. It uses bundled variants and does not download files.
+@emph{Voice variants} in eSpeak details lists the bundled variants reported by
+the running speech worker. Choose a base voice with @kbd{b}@comma{}
+then use the arrow keys or @kbd{C-n}/@kbd{C-p} to
+browse variants. Press @kbd{p} or @kbd{RET} to hear
+the selected combination immediately. Variants need no enabling@comma{} settings
+save@comma{} download or speech restart.
+Press @kbd{u} for @emph{Use in palette}@comma{} then choose a palette and
+named voice. The voice editor adds the variant as its preferred choice@comma{}
+retaining existing fallbacks and tuning. Press @kbd{P} to hear
+it with the palette's settings@comma{} then @kbd{w} to @emph{Save and apply}@comma{}
+or choose @emph{Save to collection without selecting} to keep it for later.
+Editing a built-in palette creates a personal copy. @emph{Use at Startup} in
+Voice Palettes controls which palette is selected next time.
+@kbd{q} returns to the variants list with its selection retained;
+@kbd{v} opens the base-voice browser. Existing saved variant
+references remain valid. An older Omnivox worker must be updated once to
+provide on-demand variants; the screen reports missing support explicitly.
 @item
 @emph{Get more voices} in Piper@comma{} Flite or MBROLA details opens the reviewed download
 catalogue. Piper is grouped by language@comma{} voice name and quality; Flite

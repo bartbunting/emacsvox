@@ -852,8 +852,10 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
     (cdr (assoc (completing-read prompt choices nil t nil nil
                                  (or (car (rassoc preferred choices)) (caar choices))) choices))))
 
-(defun emacsvox-aural-voice-editor-keep-experiment ()
-  "Choose the experiment's destination row and scope, retaining other draft edits."
+(defun emacsvox-aural-voice-editor-keep-experiment (&optional part placement source)
+  "Choose the experiment's destination, retaining other draft edits.
+PART and PLACEMENT optionally supply the keep scope and choice position.
+SOURCE optionally supplies the return buffer for the destination editor."
   (interactive)
   (let* ((experiment (emacsvox-aural-voice-editor--working))
          (origin emacsvox-aural-voice-editor--context)
@@ -873,12 +875,12 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
                     ("Adjustments only — selected choice" . adjustments)
                     ("Shared adjustments only — all inheriting choices" . shared)
                     ("Physical voice and shared adjustments — all inheriting choices" . shared-both)))
-         (part (cdr (assoc (completing-read "Keep from experiment: " options nil t nil nil (caar options)) options)))
-         (placement (if (memq part '(adjustments shared)) 'replace
+         (part (or part (cdr (assoc (completing-read "Keep from experiment: " options nil t nil nil (caar options)) options))))
+         (placement (or placement (if (memq part '(adjustments shared)) 'replace
                       (cdr (assoc (completing-read "Place physical voice: "
                                                    '("Replace selected choice" "Add as preferred" "Add as fallback") nil t nil nil
                                                    (if (plist-get destination :selectors) "Replace selected choice" "Add as preferred"))
-                                  '(("Replace selected choice" . replace) ("Add as preferred" . preferred) ("Add as fallback" . fallback))))))
+                                  '(("Replace selected choice" . replace) ("Add as preferred" . preferred) ("Add as fallback" . fallback)))))))
          (id (when (and (not (eq part 'shared)) (eq placement 'replace))
                (emacsvox-aural-voice-editor--read-choice destination "Destination fallback: " (plist-get context :tuning-choice))))
          (rows (emacsvox-aural-voice-editing--rows destination))
@@ -906,7 +908,7 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
     (emacsvox-aural-voice-drafts--edit draft proposed)
     (emacsvox-aural-voice-editor--context-put context :experiment origin)
     (emacsvox-aural-voice-editor--context-put context :tuning-choice nil)
-    (emacsvox-aural-voice-editor--show context origin-buffer)
+    (emacsvox-aural-voice-editor--show context (or source origin-buffer))
     (emacsvox-aural-ui-speak
      (concat "Destination draft ready. "
              (pcase part

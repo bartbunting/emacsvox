@@ -761,7 +761,7 @@ delivered UI action must have a usable supported path.
    inventory and eligibility rules. Start with bundled variants; distinguish
    making an existing choice available from downloading or importing a file.
    Emacsvox should offer a base voice/language and variant picker, exact preview,
-   saved palette choices and enable/disable controls without listing every
+   saved palette choices without listing every
    possible combination at once. Omnivox owns validated combination identities,
    synthesis and actual-voice reporting; preserve existing base-voice IDs.
    Verify variant switching, interaction with pitch/rate settings, cache refresh,
@@ -771,17 +771,16 @@ delivered UI action must have a usable supported path.
    [[https://github.com/espeak-ng/espeak-ng/blob/master/src/espeak-ng.1.ronn][eSpeak command reference]] describes variant listing and =voice+variant=
    selection; confirm the equivalent path in the pinned native library.
 
-   The first implementation now discovers bundled variants with the native
-   =--list-espeak-variants= diagnostic and exposes only explicitly enabled
-   combinations. The local picker keeps one base voice visible at a time and
-   stores desired =(ENABLE BASE-ID VARIANT-ID)= startup settings. Saving and
-   restarting both lanes are separate explicit actions. Existing exact preview
-   and palette selection use the resulting physical IDs. Disabled entries remain
-   saved but are omitted from new workers' inventory; base voices are unchanged.
-   This bounded local slice does not add variant packages to the Piper/Flite
-   installed index or implement external variant-file acquisition. The native
-   adapter checks returned identity so missing variants cannot silently audition
-   as their base. Remote and native-direct management remain separate providers.
+   The implementation now follows [[file:adr/0020-on-demand-espeak-variants.org][ADR 0020]]: bundled variants are available
+   on demand from the live worker's compact base and suffix catalogues. The
+   picker keeps one base visible at a time, previews directly and offers Use in
+   palette through the common editor. No variant enablement, startup-setting
+   save or restart is needed. Existing exact IDs and saved palettes remain
+   compatible; the old enable setting is retained as obsolete data. Engine and
+   explicit physical exclusions still apply. This does not add variant packages
+   to the installed index or implement external variant-file acquisition. The
+   native adapter checks returned identity so missing variants cannot silently
+   audition as their base.
 7. *MBROLA feasibility, then companion.* Separate the native prototype and
    recorded evidence from production integration. Prove text → frontend →
    database → PCM through one isolated helper, then cancel/replacement, both

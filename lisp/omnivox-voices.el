@@ -2578,6 +2578,12 @@ Return the number of distinct processes that received the command."
          "runtime"
        "unsupported")
      :capabilities (copy-tree capabilities)
+     :espeak-variants
+     (when (omnivox--control-feature-p "espeak_variants_v1")
+       (mapcar (lambda (variant)
+                 (list :id (plist-get variant :id)
+                       :display-name (plist-get variant :display_name)))
+               (append (plist-get engine :espeak_variants) nil)))
      :voices
      (mapcar
       (lambda (voice) (omnivox--inventory-voice engine-id voice))
