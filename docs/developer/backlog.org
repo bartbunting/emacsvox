@@ -6,6 +6,38 @@ source, and remove them when completed or deliberately declined.
 
 * User experience
 
+** TODO Verify streaming macOS system voices with Emacsvox
+
+Near-term priority requested on 2026-09-17 alongside WSL speech responsiveness,
+ahead of adding another engine. Omnivox owns the AVSpeechSynthesizer streaming
+implementation under its roadmap and ADR 0006. The development adapter now
+streams bounded native PCM. Intel and Apple Silicon adapter and full-server
+checks pass in [[https://github.com/bartbunting/omnivox/actions/runs/35167821767][the streaming acceptance run]], including two simultaneous speech
+processes with null output. Emacsvox listening acceptance remains open.
+
+Verify the resulting Emacsvox experience on real Intel and Apple Silicon Macs:
+short navigation, long reading, Stop and rapid replacement, both speech lanes,
+effects, fallback and truthful completion. Include listening acceptance and
+command-to-sound/stop-to-silence measurements; callback or mixer timing alone
+does not establish audible latency. Document requests that still need complete
+waveform buffering, and keep marker support a separately verified capability.
+
+** TODO Add voice uninstallation and disk-space recovery
+
+Near-term voice-management priority requested on 2026-09-17. Add an explicit
+uninstall action for downloaded Piper and Flite voice packages, following
+[[file:../adr/0019-voice-library-and-activation.org][ADR 0019]] and the shared voice-library contract. The current
+[[file:../voice-catalogue-review.org][catalogue installation flow]] supports disable and Apply but retains the files.
+
+Preview the affected voices, shared model files and saved palette references
+before confirmation. Coordinate removal with both speech lanes; reclaim only
+managed files whose ownership is established and which are no longer needed
+by shared speakers or active, rollback or live-session generations. Preserve
+user-owned imported files and saved palette references. Report retained files,
+blocked or partial cleanup, and actual disk space reclaimed accurately.
+Verify shared Piper models, Flite packages, other live sessions, interrupted
+removal and subsequent reinstallation before calling the feature complete.
+
 ** TODO Refine punctuation speech behavior
 
 Collect representative prose, code, shell, and structured-text examples before
