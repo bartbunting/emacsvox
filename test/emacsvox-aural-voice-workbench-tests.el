@@ -508,6 +508,58 @@
     (let ((entry (cadr (assoc '("eloquence" "eci:Reed") (emacsvox-aural-voice-workbench--detail-entries)))))
       (should (string-match-p "\\bbolden\\b" (aref entry 7))))))
 
+(ert-deftest emacsvox-aural-workbench-large-inventory-resolves-each-choice-once ()
+  "A large voice list shares resolution within a redraw, then sees later edits."
+  (emacsvox-test--with-voice-workbench
+    (setq emacsvox-aural-voice-workbench-view 'physical
+          emacsvox-aural-voice-workbench-inventory
+          (copy-tree emacsvox-test--workbench-inventory)
+          emacsvox-aural-routing--choice-sets
+          (copy-tree emacsvox-aural-routing--choice-sets))
+    (let* ((engine (car (plist-get emacsvox-aural-voice-workbench-inventory :engines)))
+           (logical-count (length (emacsvox-aural-voice-workbench--logical-voices)))
+           (resolve (symbol-function 'emacsvox-aural-voice-workbench--resolved-voice))
+           (calls 0))
+      (setf (plist-get engine :voices)
+            (append (plist-get engine :voices)
+                    (cl-loop for i below 100 collect
+                             (list :voice-id (format "extra-%d" i)
+                                   :display-name (format "Extra %d" i)
+                                   :availability "available"))))
+      (cl-letf (((symbol-function 'emacsvox-aural-voice-workbench--resolved-voice)
+                 (lambda (voice) (cl-incf calls) (funcall resolve voice))))
+        (let ((rows (emacsvox-aural-voice-workbench--detail-entries)))
+          (should (= 102 (length rows)))
+          (should (= logical-count calls))
+          (should (string-match-p "\\bbolden\\b"
+                                  (aref (cadr (assoc '("eloquence" "eci:Reed") rows)) 7))))
+        (setf (plist-get (plist-get (car (plist-get (car emacsvox-aural-routing--choice-sets)
+                                                   :choices)) :selector) :voice-id)
+              "extra-99")
+        (setq calls 0)
+        (let ((rows (emacsvox-aural-voice-workbench--detail-entries)))
+          (should (= logical-count calls))
+          (should-not (string-match-p "\\bbolden\\b"
+                                      (aref (cadr (assoc '("eloquence" "eci:Reed") rows)) 7)))
+          (should (string-match-p "\\bbolden\\b"
+                                  (aref (cadr (assoc '("eloquence" "extra-99") rows)) 7))))))))
+
+(ert-deftest emacsvox-aural-workbench-playback-refreshes-only-last-played-views ()
+  "Playback leaves physical rows alone; real inventory changes still update them."
+  (emacsvox-test--with-voice-workbench
+    (let ((buffer (current-buffer)) refreshed)
+      (cl-letf (((symbol-function 'buffer-list) (lambda (&rest _) (list buffer)))
+                ((symbol-function 'emacsvox-aural-voice-workbench-refresh)
+                 (lambda (&rest _) (push emacsvox-aural-voice-workbench-view refreshed)))
+                ((symbol-function 'emacsvox-aural-voice-workbench--library-check-lanes) #'ignore))
+        (dolist (view '(physical engines logical styles))
+          (setq emacsvox-aural-voice-workbench-view view)
+          (run-hook-with-args 'tts-realized-voice-changed-hook '(:logical-voice "bolden")))
+        (should (equal refreshed '(styles logical)))
+        (setq refreshed nil emacsvox-aural-voice-workbench-view 'physical)
+        (run-hooks 'tts-voice-inventory-changed-hook)
+        (should (equal refreshed '(physical)))))))
+
 (ert-deftest emacsvox-aural-voice-workbench-shows-portable-and-realized-identity ()
   "Named voice rows lead with the name and distinguish predicted and played voices."
   (emacsvox-test--with-voice-workbench

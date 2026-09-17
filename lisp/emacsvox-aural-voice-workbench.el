@@ -848,17 +848,23 @@ or persisting a routing choice."
         ('failed "apply failed")
         (_ "not registered")))))
 
-(defun emacsvox-aural-voice-workbench--voice-users (engine voice)
-  "Return logical voices whose staged selectors can match ENGINE and VOICE."
+(defun emacsvox-aural-voice-workbench--row-selectors ()
+  "Resolve each logical voice once for a physical inventory redraw."
+  (mapcar (lambda (logical)
+            (cons logical (emacsvox-aural-voice-workbench--selectors logical)))
+          (emacsvox-aural-voice-workbench--logical-voices)))
+
+(defun emacsvox-aural-voice-workbench--voice-users (engine voice &optional selectors)
+  "Return logical voices matching ENGINE and VOICE using resolved SELECTORS."
   (let (users)
-    (dolist (logical (emacsvox-aural-voice-workbench--logical-voices))
+    (dolist (entry (or selectors (emacsvox-aural-voice-workbench--row-selectors)))
       (when
           (cl-some
            (lambda (selector)
              (emacsvox-aural-voice-workbench--selector-matches-p
               selector engine voice))
-           (emacsvox-aural-voice-workbench--selectors logical))
-        (push logical users)))
+           (cdr entry))
+        (push (car entry) users)))
     (sort users #'string-lessp)))
 
 (defun emacsvox-aural-voice-workbench--filter-match-p (key actual)
@@ -883,11 +889,11 @@ or persisting a routing choice."
    (emacsvox-aural-voice-workbench--filter-match-p
     :availability (plist-get voice :availability))))
 
-(defun emacsvox-aural-voice-workbench--physical-row (pair)
-  "Return one physical voice row from engine/voice PAIR."
+(defun emacsvox-aural-voice-workbench--physical-row (pair &optional selectors)
+  "Return a row from engine/voice PAIR, reusing resolved SELECTORS when given."
   (let* ((engine (car pair))
          (voice (cadr pair))
-         (users (emacsvox-aural-voice-workbench--voice-users engine voice))
+         (users (emacsvox-aural-voice-workbench--voice-users engine voice selectors))
          (states (emacsvox-aural-voice-workbench--library-states
                   (list (plist-get engine :engine-id) (plist-get voice :voice-id)))))
     (list
@@ -1044,13 +1050,15 @@ or persisting a routing choice."
      (mapcar #'emacsvox-aural-voice-workbench--logical-row
              (emacsvox-aural-voice-workbench--logical-voices)))
     ('physical
-     (mapcar
-      #'emacsvox-aural-voice-workbench--physical-row
-      (cl-remove-if-not
-       (lambda (pair)
-         (emacsvox-aural-voice-workbench--physical-visible-p
-          (car pair) (cadr pair)))
-       (emacsvox-aural-voice-workbench--browse-pairs))))
+     (let* ((pairs (cl-remove-if-not
+                    (lambda (pair)
+                      (emacsvox-aural-voice-workbench--physical-visible-p
+                       (car pair) (cadr pair)))
+                    (emacsvox-aural-voice-workbench--browse-pairs)))
+            (selectors (and pairs (emacsvox-aural-voice-workbench--row-selectors))))
+       (mapcar (lambda (pair)
+                 (emacsvox-aural-voice-workbench--physical-row pair selectors))
+               pairs)))
     ('engines
      (mapcar
       #'emacsvox-aural-voice-workbench--engine-row
@@ -2537,6 +2545,14 @@ Keep the general workbench's filters, selection and staged edits intact."
         (emacsvox-aural-voice-workbench-refresh)
         (emacsvox-aural-voice-workbench--library-check-lanes)))))
 
+(defun emacsvox-aural-voice-workbench--realized-voice-changed (&rest _ignored)
+  "Refresh Last played in the views that display it."
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (and (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+                 (memq emacsvox-aural-voice-workbench-view '(logical styles)))
+        (emacsvox-aural-voice-workbench-refresh)))))
+
 (add-hook 'emacsvox-aural-routing-profile-changed-hook
           #'emacsvox-aural-voice-workbench-refresh-if-live)
 (add-hook 'emacsvox-aural-voice-palette-changed-hook
@@ -2547,8 +2563,11 @@ Keep the general workbench's filters, selection and staged edits intact."
           #'emacsvox-aural-voice-workbench--library-changed)
 (add-hook 'tts-voice-inventory-changed-hook
           #'emacsvox-aural-voice-workbench-refresh-if-live)
+;; Remove the former broad redraw hook when loading into an existing session.
+(remove-hook 'tts-realized-voice-changed-hook
+             #'emacsvox-aural-voice-workbench-refresh-if-live)
 (add-hook 'tts-realized-voice-changed-hook
-          #'emacsvox-aural-voice-workbench-refresh-if-live)
+          #'emacsvox-aural-voice-workbench--realized-voice-changed)
 
 (provide 'emacsvox-aural-voice-workbench)
 
