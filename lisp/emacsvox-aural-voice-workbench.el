@@ -116,6 +116,20 @@
 (defvar-local emacsvox-aural-voice-workbench-filter nil
   "Physical-voice filter plist for this workbench.")
 
+(defconst emacsvox-aural-voice-workbench--quick-filters
+  '((all . "All voices") (downloaded . "Downloaded")
+    (enabled . "Enabled") (needs-apply . "Needs Apply"))
+  "Quick filters in shortcut order, from 1 to 4.")
+
+(defvar-local emacsvox-aural-voice-workbench--quick-filter 'all
+  "Current quick filter for physical voices.")
+
+(defvar-local emacsvox-aural-voice-workbench--filter-counts nil
+  "Counts from the latest redraw, before applying the quick filter.")
+
+(defvar-local emacsvox-aural-voice-workbench--filter-positions nil
+  "Rows and columns remembered for each engine scope and quick filter.")
+
 (defvar-local emacsvox-aural-voice-workbench--language-expansion nil
   "Expansion choices indexed by engine scope and normalized language tag.")
 
@@ -297,7 +311,8 @@
 (defun emacsvox-aural-voice-workbench--header ()
   "Return the non-speaking status header for the current workbench."
   (if (emacsvox-aural-voice-workbench--library-p)
-      (format " RET expand/sample; P sample; x details; t tune; + enable/disable; a Apply; d download; R refresh; q back | %s"
+      (format " RET expand/sample; P sample; x details; t tune; + enable/disable; a Apply; d download; Q filters (1–4); / find; R refresh; q back | %s | %s"
+              (emacsvox-aural-voice-workbench--quick-description emacsvox-aural-voice-workbench--quick-filter)
               (cond (emacsvox-aural-voice-workbench--library-ticket "Loading library")
                     (emacsvox-aural-voice-workbench--library-error emacsvox-aural-voice-workbench--library-error)
                     (t "Enabled is desired; Active is usable on a stream, not memory residency")))
@@ -491,12 +506,17 @@
   (and (eq emacsvox-aural-voice-workbench-view 'physical)
        (equal "omnivox" (plist-get emacsvox-aural-voice-workbench-inventory :adapter))))
 
+(defvar emacsvox-aural-voice-workbench--index-snapshot 'uncaptured
+  "Library metadata captured for one synchronous redraw or filter operation.")
+
 (defun emacsvox-aural-voice-workbench--library-index ()
   "Return installed metadata only while its native target is selected."
-  (when (and emacsvox-aural-voice-workbench--library-source
-             (equal emacsvox-aural-voice-workbench--library-source
-                    (omnivox-library--source-key)))
-    (plist-get emacsvox-aural-voice-workbench--library-reply :index)))
+  (if (not (eq emacsvox-aural-voice-workbench--index-snapshot 'uncaptured))
+      emacsvox-aural-voice-workbench--index-snapshot
+    (when (and emacsvox-aural-voice-workbench--library-source
+               (equal emacsvox-aural-voice-workbench--library-source
+                      (omnivox-library--source-key)))
+      (plist-get emacsvox-aural-voice-workbench--library-reply :index))))
 
 (defun emacsvox-aural-voice-workbench--library-row (id)
   "Find installed metadata for physical ID, an engine and voice list."
@@ -600,15 +620,15 @@
                      (emacsvox-aural-voice-workbench-refresh)))))))
       (emacsvox-aural-voice-workbench--library-check-lanes))))
 
-(defun emacsvox-aural-voice-workbench--library-active (id role)
-  "Return yes, no or unknown eligibility for physical ID on ROLE."
+(defun emacsvox-aural-voice-workbench--library-status (id role)
+  "Return current worker status for ID on ROLE, or nil if unconfirmed."
   (let* ((record (alist-get role emacsvox-aural-voice-workbench--library-lanes))
          (process (if (eq role 'main) tts-speaker-process tts-notify-process))
          (status (plist-get record :status))
          (configuration (plist-get status :configuration))
          (index (emacsvox-aural-voice-workbench--library-index))
          (raw (and process (process-get process omnivox--control-inventory-property))))
-    (if (not (and process (process-live-p process)
+    (when (and process (process-live-p process)
                   (eq process (plist-get record :process)) status
                   (plist-member status :eligible_voices)
                   (plist-member status :configuration)
@@ -616,8 +636,16 @@
                   (or (not (emacsvox-aural-voice-workbench--library-row id))
                       (eq configuration :null)
                       (and (equal (plist-get index :target_id) (plist-get configuration :target_id))
-                           (equal (plist-get index :profile_id) (plist-get configuration :profile_id))))))
-        'unknown
+                           (equal (plist-get index :profile_id) (plist-get configuration :profile_id)))))
+      status)))
+
+(defun emacsvox-aural-voice-workbench--library-active (id role)
+  "Return yes, no or unknown eligibility for physical ID on ROLE."
+  (let* ((status (emacsvox-aural-voice-workbench--library-status id role))
+         (record (alist-get role emacsvox-aural-voice-workbench--library-lanes))
+         (process (plist-get record :process))
+         (raw (and process (process-get process omnivox--control-inventory-property))))
+    (if (not status) 'unknown
       (if (not (seq-some (lambda (voice)
                            (equal id (list (plist-get voice :engine_id) (plist-get voice :voice_id))))
                          (plist-get status :eligible_voices)))
@@ -637,6 +665,87 @@
                 (equal (plist-get engine :health) "failed")
                 (member (plist-get engine :circuit) '("open" "cooldown"))) 'no)
            (t 'yes)))))))
+
+(defun emacsvox-aural-voice-workbench--needs-apply (row)
+  "Return yes, no or unknown for a managed ROW's desired selection.
+Compare administrative eligibility, independently of runtime health.  A
+known difference on either stream is sufficient; absent or superseded
+worker evidence cannot establish a difference."
+  (if (or (not (emacsvox-aural-voice-workbench--library-index))
+          emacsvox-aural-voice-workbench--library-ticket
+          emacsvox-aural-voice-workbench--library-error)
+      'unknown
+    (let* ((id (list (plist-get row :engine_id) (plist-get row :physical_id)))
+           (excluded (seq-some
+                      (lambda (entry) (equal id (list (plist-get entry :engine_id) (plist-get entry :voice_id))))
+                      (plist-get (emacsvox-aural-voice-workbench--library-index) :disabled_physical_ids)))
+           results)
+      (dolist (role '(main notification))
+        (let* ((status (emacsvox-aural-voice-workbench--library-status id role))
+               (process (plist-get (alist-get role emacsvox-aural-voice-workbench--library-lanes) :process))
+               (raw (and process (process-get process omnivox--control-inventory-property)))
+               (policy (plist-get (plist-get raw :routing_policy) :policy))
+               (desired (and (eq t (plist-get row :enabled)) (not excluded)
+                             (not (seq-contains-p (plist-get policy :disabled_engine_ids) (car id)))))
+               (eligible (seq-some
+                          (lambda (entry) (equal id (list (plist-get entry :engine_id) (plist-get entry :voice_id))))
+                          (plist-get status :eligible_voices))))
+          (push (cond ((or (not status) (not (plist-member policy :disabled_engine_ids))
+                           (seq-contains-p (plist-get status :overridden_engines) (car id))) 'unknown)
+                      ((eq (not desired) (not eligible)) 'no)
+                      (t 'yes)) results)))
+      (cond ((memq 'yes results) 'yes) ((memq 'unknown results) 'unknown) (t 'no)))))
+
+(defun emacsvox-aural-voice-workbench--quick-memberships (pair)
+  "Return quick-filter memberships for PAIR from cached library evidence."
+  (let* ((id (list (plist-get (car pair) :engine-id) (plist-get (cadr pair) :voice-id)))
+         (row (emacsvox-aural-voice-workbench--library-row id))
+         (package (and row (seq-find
+                            (lambda (item)
+                              (and (equal (plist-get item :package_id) (plist-get row :package_id))
+                                   (equal (plist-get item :revision_id) (plist-get row :revision_id))))
+                            (plist-get (emacsvox-aural-voice-workbench--library-index) :packages))))
+         (members '(all)))
+    (when (and (equal (plist-get package :ownership) "managed")
+               (consp (plist-get package :catalogue)))
+      (push 'downloaded members))
+    (when (eq (plist-get row :enabled) t) (push 'enabled members))
+    (when row
+      (pcase (emacsvox-aural-voice-workbench--needs-apply row)
+        ('yes (push 'needs-apply members))
+        ('unknown (push 'unknown members))))
+    members))
+
+(defun emacsvox-aural-voice-workbench--filtered-pairs (&optional all)
+  "Return physical pairs matching explicit filters and, unless ALL, quick filters.
+Count voices before folding languages.  This uses cached evidence only."
+  (setq emacsvox-aural-voice-workbench--filter-counts nil)
+  (let ((emacsvox-aural-voice-workbench--index-snapshot
+         (emacsvox-aural-voice-workbench--library-index)) visible)
+    (dolist (pair (emacsvox-aural-voice-workbench--browse-pairs))
+      (when (emacsvox-aural-voice-workbench--physical-visible-p (car pair) (cadr pair))
+        (let ((members (if (emacsvox-aural-voice-workbench--library-p)
+                           (emacsvox-aural-voice-workbench--quick-memberships pair) '(all))))
+          (dolist (member members)
+            (cl-incf (alist-get member emacsvox-aural-voice-workbench--filter-counts 0)))
+          (when (or all (not (emacsvox-aural-voice-workbench--library-p))
+                    (memq emacsvox-aural-voice-workbench--quick-filter members))
+            (push pair visible)))))
+    (nreverse visible)))
+
+(defun emacsvox-aural-voice-workbench--quick-description (filter)
+  "Describe FILTER's last count, including incomplete library or worker checks."
+  (format "%s: %d%s" (alist-get filter emacsvox-aural-voice-workbench--quick-filters)
+          (alist-get filter emacsvox-aural-voice-workbench--filter-counts 0)
+          (cond
+           ((and (not (eq filter 'all))
+                 (or emacsvox-aural-voice-workbench--library-ticket
+                     emacsvox-aural-voice-workbench--library-error
+                     (not (emacsvox-aural-voice-workbench--library-index)))) "; library unconfirmed")
+           ((and (eq filter 'needs-apply)
+                 (> (alist-get 'unknown emacsvox-aural-voice-workbench--filter-counts 0) 0))
+            (format "; %d unchecked" (alist-get 'unknown emacsvox-aural-voice-workbench--filter-counts)))
+           (t ""))))
 
 (defun emacsvox-aural-voice-workbench--library-states (id)
   "Return Installed, Enabled and Active descriptions for ID."
@@ -1094,11 +1203,9 @@ or persisting a routing choice."
      (mapcar #'emacsvox-aural-voice-workbench--logical-row
              (emacsvox-aural-voice-workbench--logical-voices)))
     ('physical
-     (let* ((pairs (cl-remove-if-not
-                    (lambda (pair)
-                      (emacsvox-aural-voice-workbench--physical-visible-p
-                       (car pair) (cadr pair)))
-                    (emacsvox-aural-voice-workbench--browse-pairs)))
+     (let* ((emacsvox-aural-voice-workbench--index-snapshot
+             (emacsvox-aural-voice-workbench--library-index))
+            (pairs (emacsvox-aural-voice-workbench--filtered-pairs))
             (selectors (and pairs (emacsvox-aural-voice-workbench--row-selectors))))
        (mapcar (lambda (pair)
                  (emacsvox-aural-voice-workbench--physical-row pair selectors))
@@ -2376,10 +2483,73 @@ Outside the engine view, leave any temporary engine browsing scope."
       (if (fboundp 'tts-speak) (tts-speak text) (message "%s" text))
       text)))
 
+(defun emacsvox-aural-voice-workbench-quick-filter (&optional filter)
+  "Choose a quick FILTER with voice counts, or use shortcuts 1 through 4.
+Counts respect engine and explicit filters, including collapsed languages.
+Downloaded means catalogue packages; Enabled means desired library selection."
+  (interactive)
+  (unless (emacsvox-aural-voice-workbench--library-p)
+    (user-error "Open Omnivox physical voices first"))
+  (emacsvox-aural-voice-workbench--filtered-pairs t)
+  (let* ((key last-command-event)
+         (choices (mapcar (lambda (entry)
+                           (cons (emacsvox-aural-voice-workbench--quick-description (car entry)) (car entry)))
+                         emacsvox-aural-voice-workbench--quick-filters))
+         (filter (or filter (and (integerp key) (<= ?1 key ?4)
+                                 (car (nth (- key ?1) emacsvox-aural-voice-workbench--quick-filters)))
+                     (cdr (assoc (completing-read "Show voices: " choices nil t) choices))))
+         (scope (copy-tree (emacsvox-aural-voice-workbench--physical-filter))))
+    (unless (assq filter emacsvox-aural-voice-workbench--quick-filters)
+      (user-error "Unknown voice filter"))
+    (unless emacsvox-aural-voice-workbench--filter-positions
+      (setq emacsvox-aural-voice-workbench--filter-positions (make-hash-table :test #'equal)))
+    (when-let* ((id (tabulated-list-get-id)))
+      (puthash (list scope emacsvox-aural-voice-workbench--quick-filter)
+               (list id (emacsvox-aural-ui-tabulated-column-index))
+               emacsvox-aural-voice-workbench--filter-positions))
+    (setq emacsvox-aural-voice-workbench--quick-filter filter)
+    (let ((position (gethash (list scope filter) emacsvox-aural-voice-workbench--filter-positions)))
+      (emacsvox-aural-voice-workbench-refresh (car position))
+      (when position (emacsvox-aural-ui-goto-tabulated-column (cadr position)))))
+  (emacsvox-aural-ui-speak
+   (concat (emacsvox-aural-voice-workbench--quick-description emacsvox-aural-voice-workbench--quick-filter)
+           (unless tabulated-list-entries ". No matching voices; 1 shows all voices"))))
+
+(defun emacsvox-aural-voice-workbench-find-voice ()
+  "Find a voice by name and reveal it across collapsed language groups.
+Search respects engine and explicit filters.  If the quick filter hides the
+chosen voice, switch to All voices.  Nothing is enabled or played."
+  (interactive)
+  (unless (eq emacsvox-aural-voice-workbench-view 'physical)
+    (user-error "Open physical voices first"))
+  (let* ((pairs (emacsvox-aural-voice-workbench--filtered-pairs t))
+         (choices (mapcar
+                   (lambda (pair)
+                     (let ((engine (plist-get (car pair) :engine-id))
+                           (voice (cadr pair)))
+                       (cons (format "%s — %s; %s; %s"
+                                     (or (plist-get voice :display-name) (plist-get voice :voice-id))
+                                     engine (or (plist-get voice :language) "Unknown language")
+                                     (plist-get voice :voice-id))
+                             (list engine (plist-get voice :voice-id))))) pairs))
+         (completion-ignore-case t)
+         (completion-styles '(substring basic)))
+    (unless choices (user-error "No voices in this scope; R refreshes, C clears filters"))
+    (let* ((id (cdr (assoc (completing-read "Find voice: " choices nil t) choices)))
+           (pair (emacsvox-aural-voice-workbench--physical-pair id)))
+      (unless (or (not (emacsvox-aural-voice-workbench--library-p))
+                  (memq emacsvox-aural-voice-workbench--quick-filter
+                        (emacsvox-aural-voice-workbench--quick-memberships pair)))
+        (emacsvox-aural-voice-workbench-quick-filter 'all))
+      (emacsvox-aural-voice-workbench-refresh id)
+      (emacsvox-aural-ui-goto-tabulated-column 0)
+      (emacsvox-aural-voice-workbench-speak-current))))
+
 (defun emacsvox-aural-voice-workbench-clear-filters ()
   "Clear all physical-voice filters and refresh."
   (interactive)
   (setq emacsvox-aural-voice-workbench-filter nil
+        emacsvox-aural-voice-workbench--quick-filter 'all
         emacsvox-aural-voice-workbench--voice-list-parent nil)
   (emacsvox-aural-voice-workbench-refresh)
   (if (fboundp 'tts-speak)
@@ -2490,6 +2660,11 @@ when they remain unsaved."
       "C-c u reviews package uninstallation; C-c U resumes incomplete cleanup.\n"
       "Installed records library membership; Enabled is desired; Active is stream eligibility.\n"
       "Active does not mean a model is resident in memory. Unknown needs a fresh status check.\n"
+      "1 All voices; 2 Downloaded; 3 Enabled; 4 Needs Apply; Q chooses with counts.\n"
+      "Downloaded excludes imports and built-ins. Enabled is the desired library selection.\n"
+      "Needs Apply compares selection with both workers; unchecked voices are reported separately.\n"
+      "A selection change does not establish runtime health or remove engine overrides.\n"
+      "/ finds a voice across collapsed groups, revealing it in All if needed.\n"
       "F filters voices; C clears filters; R refreshes the inventory.\n"
       "t opens the complete editor for a named voice or physical experiment.\n"
       "Physical experiments stay unsaved until kept in a named voice draft.\n"
@@ -2523,6 +2698,9 @@ when they remain unsaved."
        (and row (not (emacsvox-aural-voice-workbench--language-row-p row))
             (or (not (eq command 'emacsvox-aural-voice-workbench--library-toggle))
                 (emacsvox-aural-voice-workbench--library-p))))
+      ('emacsvox-aural-voice-workbench-find-voice (eq view 'physical))
+      ('emacsvox-aural-voice-workbench-quick-filter
+       (emacsvox-aural-voice-workbench--library-p))
       ('emacsvox-aural-voice-workbench-compare
        (and row (eq view 'physical) (not (emacsvox-aural-voice-workbench--language-row-p row))))
       ((or 'emacsvox-aural-voice-workbench--library-apply
@@ -2616,6 +2794,12 @@ when they remain unsaved."
        ("e" . emacsvox-aural-voice-workbench-engine-view)
        ("s" . emacsvox-aural-voice-workbench-style-view)
        ("F" . emacsvox-aural-voice-workbench-set-filter)
+       ("Q" . emacsvox-aural-voice-workbench-quick-filter)
+       ("1" . emacsvox-aural-voice-workbench-quick-filter)
+       ("2" . emacsvox-aural-voice-workbench-quick-filter)
+       ("3" . emacsvox-aural-voice-workbench-quick-filter)
+       ("4" . emacsvox-aural-voice-workbench-quick-filter)
+       ("/" . emacsvox-aural-voice-workbench-find-voice)
        ("C" . emacsvox-aural-voice-workbench-clear-filters)
        ("R" . emacsvox-aural-voice-workbench-refresh-inventory)
        ("+" . emacsvox-aural-voice-workbench--library-toggle)
@@ -2705,7 +2889,7 @@ Keep the general workbench's filters, selection and staged edits intact."
      buffer
      (lambda ()
        (tts-speak
-        (format "%s voices. Return expands a language or plays a sample; plus enables or disables; a reviews Apply; d downloads; q returns.%s"
+        (format "%s voices. Return expands a language or plays a sample; Q filters with counts; slash finds a voice; plus enables or disables; a reviews Apply; q returns.%s"
                 engine (if (tabulated-list-get-id) "" " Loading library information.")))))
     (with-current-buffer buffer (emacsvox-aural-voice-workbench--library-start))
     buffer))

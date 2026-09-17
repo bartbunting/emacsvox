@@ -1523,5 +1523,175 @@
               (should (= 1 (length previews)))))
         (kill-buffer draft)))))
 
+(defun emacsvox-test--browser-library ()
+  "Return downloaded, imported and bundled voices for browser checks."
+  '(:target_id "target" :profile_id "profile" :disabled_physical_ids []
+    :packages [(:package_id "download" :revision_id "r" :ownership "managed"
+                            :catalogue (:entry_id "fixture" :revision "1"))
+               (:package_id "import" :revision_id "r" :ownership "imported" :catalogue :null)]
+    :voices [(:engine_id "eloquence" :physical_id "a" :display_name "alice" :language "en-US"
+                        :enabled t :package_id "download" :revision_id "r")
+             (:engine_id "eloquence" :physical_id "fr" :display_name "Brigitte" :language "fr-FR"
+                         :enabled :false :package_id "download" :revision_id "r")
+             (:engine_id "eloquence" :physical_id "unknown" :display_name "No language" :language :null
+                         :enabled t :package_id "import" :revision_id "r")
+             (:engine_id "eloquence" :physical_id "z" :display_name "Zoe" :language "en-US"
+                         :enabled t :package_id :null :revision_id :null)]))
+
+(ert-deftest emacsvox-aural-workbench-quick-filter-counts-and-search ()
+  "Filters count hidden voices, retain selection, and find excluded downloads."
+  (emacsvox-test--with-voice-workbench
+    (let* ((inventory (emacsvox-test--language-inventory))
+           (tts-voice-inventory-function (lambda () inventory))
+           (index (emacsvox-test--browser-library)) spoken)
+      (cl-letf (((symbol-function 'emacsvox-aural-voice-workbench--library-index) (lambda () index))
+                ((symbol-function 'emacsvox-aural-ui-speak) (lambda (text) (push text spoken))))
+        (setq emacsvox-aural-voice-workbench-view 'physical)
+        (emacsvox-aural-voice-workbench-refresh)
+        (should (= 4 (length tabulated-list-entries))) ; all groups collapsed
+        (should (= 5 (alist-get 'all emacsvox-aural-voice-workbench--filter-counts)))
+        (should (= 2 (alist-get 'downloaded emacsvox-aural-voice-workbench--filter-counts)))
+        (should (= 3 (alist-get 'enabled emacsvox-aural-voice-workbench--filter-counts)))
+        (should (equal "Needs Apply: 0; 4 unchecked" (emacsvox-aural-voice-workbench--quick-description 'needs-apply)))
+        (emacsvox-aural-voice-workbench-refresh '("eloquence" "z"))
+        (emacsvox-aural-ui-goto-tabulated-column 2)
+        (let ((last-command-event ?2))
+          (call-interactively (key-binding (kbd "2"))))
+        (should (equal 'downloaded emacsvox-aural-voice-workbench--quick-filter))
+        (should (= 2 (length (emacsvox-aural-voice-workbench--detail-entries))))
+        (emacsvox-aural-voice-workbench-refresh '("eloquence" "fr"))
+        (emacsvox-aural-ui-goto-tabulated-column 1)
+        (emacsvox-aural-voice-workbench-quick-filter 'all)
+        (should (equal '("eloquence" "z") (tabulated-list-get-id)))
+        (should (= 2 (emacsvox-aural-ui-tabulated-column-index)))
+        (emacsvox-aural-voice-workbench-quick-filter 'downloaded)
+        (should (equal '("eloquence" "fr") (tabulated-list-get-id)))
+        (should (= 1 (emacsvox-aural-ui-tabulated-column-index)))
+        (emacsvox-aural-voice-workbench-quick-filter 'enabled)
+        (cl-letf (((symbol-function 'completing-read)
+                   (lambda (_prompt choices &rest _)
+                     (should (= 5 (length choices)))
+                     (car (seq-find (lambda (entry) (equal (cdr entry) '("eloquence" "fr"))) choices)))))
+          (call-interactively (key-binding (kbd "/"))))
+        (should (eq 'all emacsvox-aural-voice-workbench--quick-filter))
+        (should (equal '("eloquence" "fr") (tabulated-list-get-id)))
+        (should (equal "No" (aref (tabulated-list-get-entry) 4)))
+        (should (string-suffix-p "expanded" (aref (cadr (assoc '(:language "fr-fr") tabulated-list-entries)) 1)))
+        (setq emacsvox-aural-voice-workbench-filter '(:language "fr-FR"))
+        (emacsvox-aural-voice-workbench-refresh)
+        (should (= 1 (alist-get 'all emacsvox-aural-voice-workbench--filter-counts)))
+        (let ((last-command-event ?Q))
+          (cl-letf (((symbol-function 'completing-read)
+                     (lambda (_prompt choices &rest _)
+                       (should (equal (mapcar #'car choices)
+                                      '("All voices: 1" "Downloaded: 1" "Enabled: 0" "Needs Apply: 0; 1 unchecked")))
+                       (caar choices))))
+            (call-interactively (key-binding (kbd "Q")))))
+        (emacsvox-aural-voice-workbench-quick-filter 'enabled)
+        (should-not tabulated-list-entries)
+        (should (string-search "No matching voices" (car spoken)))
+        (emacsvox-aural-voice-workbench-clear-filters)
+        (should (= 5 (alist-get 'all emacsvox-aural-voice-workbench--filter-counts)))))))
+
+(ert-deftest emacsvox-aural-workbench-filters-check-target-once-per-redraw ()
+  "Counts and row status must not multiply filesystem checks per voice."
+  (emacsvox-test--with-voice-workbench
+    (let* ((inventory (emacsvox-test--language-inventory))
+           (tts-voice-inventory-function (lambda () inventory))
+           (checks 0))
+      (setq emacsvox-aural-voice-workbench-view 'physical
+            emacsvox-aural-voice-workbench--library-source '(fixture)
+            emacsvox-aural-voice-workbench--library-reply
+            (list :index (emacsvox-test--browser-library)))
+      (cl-letf (((symbol-function 'omnivox-library--source-key)
+                 (lambda () (cl-incf checks) '(fixture))))
+        (emacsvox-aural-voice-workbench-refresh)
+        (should (= 1 checks))
+        (should (= 5 (alist-get 'all emacsvox-aural-voice-workbench--filter-counts)))))))
+
+(ert-deftest emacsvox-aural-workbench-needs-apply-uses-current-administrative-state ()
+  "Check desired changes, worker replacement, policy, health and target identity."
+  (emacsvox-test--with-voice-workbench
+    (let* ((index (copy-tree (emacsvox-test--browser-library) t))
+           (row (aref (plist-get index :voices) 0))
+           (main (make-pipe-process :name "quick filter main" :noquery t))
+           (notify (make-pipe-process :name "quick filter notify" :noquery t))
+           (tts-speaker-process main) (tts-notify-process notify)
+           (raw '(:inventory_generation 12 :routing_policy (:policy (:disabled_engine_ids []))))
+           (status '(:configuration (:target_id "target" :profile_id "profile")
+                     :overridden_engines [] :eligible_voices [(:engine_id "eloquence" :voice_id "a")])))
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-aural-voice-workbench--library-index) (lambda () index)))
+            (dolist (entry (list (cons 'main main) (cons 'notification notify)))
+              (process-put (cdr entry) omnivox--control-inventory-property (copy-tree raw t))
+              (setf (alist-get (car entry) emacsvox-aural-voice-workbench--library-lanes)
+                    (list :process (cdr entry) :generation 12 :status (copy-tree status t))))
+            (should (eq 'no (emacsvox-aural-voice-workbench--needs-apply row)))
+            ;; Health failures must not manufacture a pending selection change.
+            (process-put main omnivox--control-inventory-property
+                         (append '(:engines [(:id "eloquence" :health (:status "failed"))]) raw))
+            (should (eq 'no (emacsvox-aural-voice-workbench--needs-apply row)))
+            (let ((other (plist-get (alist-get 'notification emacsvox-aural-voice-workbench--library-lanes) :status)))
+              (setf (plist-get other :eligible_voices) [])
+              (should (eq 'yes (emacsvox-aural-voice-workbench--needs-apply row)))
+              ;; A disabled engine's missing eligibility is not a pending enable.
+              (process-put notify omnivox--control-inventory-property
+                           '(:inventory_generation 12 :routing_policy (:policy (:disabled_engine_ids ["eloquence"]))))
+              (should (eq 'no (emacsvox-aural-voice-workbench--needs-apply row)))
+              (process-put notify omnivox--control-inventory-property raw)
+              (setf (plist-get other :overridden_engines) ["eloquence"])
+              (should (eq 'unknown (emacsvox-aural-voice-workbench--needs-apply row)))
+              (setf (plist-get other :overridden_engines) []
+                    (plist-get other :configuration) '(:target_id "different" :profile_id "profile"))
+              (should (eq 'unknown (emacsvox-aural-voice-workbench--needs-apply row)))
+              (setf (plist-get other :configuration) :null)
+              (should (eq 'yes (emacsvox-aural-voice-workbench--needs-apply row))))
+            ;; Disabling a currently eligible voice also needs Apply.
+            (setf (plist-get row :enabled) :false)
+            (should (eq 'yes (emacsvox-aural-voice-workbench--needs-apply row)))
+            (process-put main omnivox--control-inventory-property '(:inventory_generation 13))
+            (should (eq 'unknown (emacsvox-aural-voice-workbench--needs-apply row)))
+            (let ((tts-speaker-process notify))
+              (should (eq 'unknown (emacsvox-aural-voice-workbench--needs-apply row))))
+            (setq emacsvox-aural-voice-workbench--library-ticket '(pending))
+            (should (eq 'unknown (emacsvox-aural-voice-workbench--needs-apply row))))
+        (delete-process main) (delete-process notify)))))
+
+(ert-deftest emacsvox-aural-workbench-graphical-filter-search-and-editor-return ()
+  "Searching a folded language and returning from the editor retains GUI focus."
+  (skip-unless (display-graphic-p))
+  (emacsvox-test--with-voice-workbench
+    (let* ((inventory (emacsvox-test--language-inventory))
+           (tts-voice-inventory-function (lambda () inventory))
+           (browser (current-buffer))
+           (emacsvox-aural-voice-editor--contexts (make-hash-table :test #'equal))
+           (emacsvox-aural-voice-drafts--registry (make-hash-table :test #'equal))
+           editor)
+      (unwind-protect
+          (save-window-excursion
+            (switch-to-buffer browser)
+            (emacsvox-aural-voice-workbench--switch 'physical)
+            (cl-letf (((symbol-function 'completing-read)
+                       (lambda (_prompt choices &rest _)
+                         (car (seq-find (lambda (entry) (equal (cdr entry) '("eloquence" "fr"))) choices))))
+                      ((symbol-function 'tts-preview-voices) (lambda (&rest _))))
+              (execute-kbd-macro (kbd "/"))
+              (should (equal '("eloquence" "fr") (tabulated-list-get-id)))
+              (should (pos-visible-in-window-p (point)))
+              (execute-kbd-macro (kbd "<right> t"))
+              (setq editor (current-buffer))
+              (should (derived-mode-p 'emacsvox-aural-voice-editor-mode))
+              (with-current-buffer browser (emacsvox-aural-voice-workbench-refresh))
+              (should (eq (window-buffer (selected-window)) editor))
+              (execute-kbd-macro (kbd "q"))
+              (redisplay t)
+              (should (eq (current-buffer) browser))
+              (should (eq (window-buffer (selected-window)) browser))
+              (should (equal '("eloquence" "fr") (tabulated-list-get-id)))
+              (should (= 1 (emacsvox-aural-ui-tabulated-column-index)))
+              (should (= (point) (window-point)))
+              (should (pos-visible-in-window-p (point)))))
+        (when (buffer-live-p editor) (kill-buffer editor))))))
+
 (provide 'emacsvox-aural-voice-workbench-tests)
 ;;; emacsvox-aural-voice-workbench-tests.el ends here
