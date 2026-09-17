@@ -5,8 +5,8 @@
 * Status and intended result
 
 Accepted contract for [[file:adr/0022-engine-described-voice-parameters.org][ADR 0022]], following the maintainer's approval to continue
-at High. The initial audit/fixture slice is recorded below; no live configuration
-change or native-control UI accompanies it.
+at High. The audit, fixtures and typed planning implementation are recorded
+below; no live configuration change or native-control UI accompanies them.
 The [[file:engine-voice-parameter-inventory.org][initial inventory]] records current code, SDK evidence and qualification gaps.
 
 The common editor remains the first screen. A user editing a DECtalk fallback
@@ -543,5 +543,32 @@ No common calibration or live worker changed.
 The wire examples cover discovery, busy/stale responses, registration, previews,
 timeline/marker/helper forms, planned/applied explanation, explicit context,
 defaults, zero/false, same-voice choices, unsupported blocks and older targets.
-Next implement typed descriptors and pure native planning in Omnivox; turn these
-independent expectations into codec/composition tests before advertising support.
+The typed planning slice now consumes the independent parameter and composition
+examples. The paired wire fixtures include the adapter-mapped common inputs as
+well as the expected results.
+
+* Implementation progress: typed metadata and pure planning
+
+Omnivox commit =2770531= implements this slice. All 19 parameter tests and the
+locked workspace suite pass, along with workspace Clippy, formatting and both
+repositories' documentation gates.
+
+Omnivox now has bounded typed parameter catalogues, sparse native operations,
+runtime and physical-voice identity checks, and a pure composition planner.
+Validation rejects unknown fields, duplicate keys, invalid ranges and scopes,
+and an invalid native block even when context would mask its bad value.
+The planner tracks value origin and masked native choices, and orders controls
+to restore values after declared side effects. It rejects dependency cycles or
+side effects that require restoring an unknown value.
+
+Tests cover the independent DECtalk/Eloquence composition examples, equal-value
+context including zero rate offset, explicit defaults, unknown numeric defaults,
+zero/false, unavailable controls, stale evidence and separate native choices for
+the same physical voice. Adapters continue to own existing common calibration;
+the tests pass in their mapped values. These are planning tests, not proof of
+native resets, cancellation or actual synthesis fallback.
+
+No speech path, saved palette, advertised capability or live worker changed.
+Next implement qualified DECtalk/Eloquence helper execution and native profiles,
+then the public transport and Emacs editor. Preserve existing common clamps
+when integrating; a qualified native edit range does not change common tuning.

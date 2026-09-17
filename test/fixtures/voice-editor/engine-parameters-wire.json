@@ -835,7 +835,11 @@
         "ri": 63,
         "sm": 12
       },
-      "expected_masked": []
+      "expected_masked": [],
+      "mapped_common": {
+        "ri": 63,
+        "sm": 12
+      }
     },
     {
       "name": "native_smoothness",
@@ -860,7 +864,11 @@
         "ri": 63,
         "sm": 55
       },
-      "expected_masked": []
+      "expected_masked": [],
+      "mapped_common": {
+        "ri": 63,
+        "sm": 12
+      }
     },
     {
       "name": "common_changes_keep_native",
@@ -885,7 +893,11 @@
         "ri": 100,
         "sm": 55
       },
-      "expected_masked": []
+      "expected_masked": [],
+      "mapped_common": {
+        "ri": 100,
+        "sm": 0
+      }
     },
     {
       "name": "explicit_equal_context_wins",
@@ -917,7 +929,11 @@
       },
       "expected_masked": [
         "sm"
-      ]
+      ],
+      "mapped_common": {
+        "ri": 100,
+        "sm": 0
+      }
     },
     {
       "name": "engine_default_over_base",
@@ -941,7 +957,11 @@
         "ri": 100,
         "sm": 3
       },
-      "expected_masked": []
+      "expected_masked": [],
+      "mapped_common": {
+        "ri": 100,
+        "sm": 0
+      }
     },
     {
       "name": "context_masks_default",
@@ -972,7 +992,11 @@
       },
       "expected_masked": [
         "sm"
-      ]
+      ],
+      "mapped_common": {
+        "ri": 100,
+        "sm": 0
+      }
     },
     {
       "name": "zero_is_value",
@@ -997,7 +1021,11 @@
         "ri": 63,
         "sm": 0
       },
-      "expected_masked": []
+      "expected_masked": [],
+      "mapped_common": {
+        "ri": 63,
+        "sm": 12
+      }
     },
     {
       "name": "breathiness_does_not_remap_volume",
@@ -1019,7 +1047,11 @@
         "breathiness": 42,
         "volume": 90
       },
-      "expected_masked": []
+      "expected_masked": [],
+      "mapped_common": {
+        "breathiness": 18,
+        "volume": 90
+      }
     },
     {
       "name": "context_richness_masks_both_outputs",
@@ -1053,7 +1085,11 @@
       "expected_masked": [
         "breathiness",
         "volume"
-      ]
+      ],
+      "mapped_common": {
+        "breathiness": 36,
+        "volume": 100
+      }
     }
   ],
   "storage_cases": [
