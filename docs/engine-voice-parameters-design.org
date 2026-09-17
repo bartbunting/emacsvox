@@ -572,3 +572,29 @@ No speech path, saved palette, advertised capability or live worker changed.
 Next implement qualified DECtalk/Eloquence helper execution and native profiles,
 then the public transport and Emacs editor. Preserve existing common clamps
 when integrating; a qualified native edit range does not change common tuning.
+
+* Implementation progress: Windows native bindings
+
+Omnivox commit =4625ff2= contains this slice and its retained runtime evidence.
+
+The Windows helpers now have optional ECI voice read/write/copy APIs and
+DECtalk readback of its 28 documented fields. Missing optional bindings leave
+ordinary speech available. ECI validates active-voice parameter IDs and values,
+permits only preset-to-active copies, and rejects native access in the wrong
+unit mode. These bindings are not exposed through the speech protocol yet.
+
+The installed Windows runtimes passed 948 representative-value and endpoint
+checks across all 17 voices, with 1,954 silent PCM captures. Ordinary requests
+restored the tested fields. The audit also checks missing-binding handling,
+invalid ECI values and indices, and real-world-unit rejection. The exact helper,
+runtime and probe hashes are retained in Omnivox's native binding benchmark.
+Full Windows development staging and live inventory checks passed for build
+=1ce20ab373624c79= in a separate runtime root. Its helpers match the audited
+binaries. The desktop launcher still selects its original runtime.
+
+The existing cancellation stress test found a separate Windows host race:
+the worker can emit =synthesis_cancelled= before =cancel_accepted=. This also
+reproduced with the previously staged Eloquence helper, before these changes.
+The next step is to fix that ordering and test cancellation recovery, then
+connect qualified native profiles and helper 6. The binding tests do not prove
+native-parameter reset after cancellation. No live session was restarted.

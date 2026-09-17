@@ -42,6 +42,17 @@ unqualified. In particular, DECtalk reports an =ap= maximum of 350 Hz on this
 build; the existing common clamp of 500 is not a native-editor range contract.
 The audit does not make new controls available in the current Emacs UI.
 
+** Windows binding follow-up
+
+Windows ECI now has optional getter/setter/preset-copy bindings and unit-mode
+checks; DECtalk has optional readback of the 28 documented fields. The expanded
+audit passed representative values and both endpoints across all 17 voices,
+using 1,954 silent captures. Omnivox records this evidence in
+=docs/benchmarks/2026-09-17-native-parameter-bindings.md=.
+Helper 6, native cancellation/failure resets and Linux qualification remain
+pending. The existing Windows cancellation stress test also exposed an older
+acknowledgement-order race; the design's progress section records that follow-up.
+
 * Common controls: keep these mappings
 
 This table describes the inspected adapters, not universal engine semantics.
@@ -91,10 +102,11 @@ not a display-only toggle. The engine adapter must establish and verify its
 mode without altering the old common mapping. Preserve vendor units in saved
 native values; do not convert them to the editor's common 0–9 scale.
 
-Both inspected native wrappers currently bind =eciSetParam= for engine state,
-but not the three voice functions above. Add those bindings as an optional
-parameter-capability group: an older runtime must retain its established speech
-path when that group is unavailable. Exercise all supported preset/dialect
+At the initial inspection, both native wrappers bound =eciSetParam= for engine
+state but not the three voice functions above. The Windows optional binding
+group is now implemented; the Linux binding work remains. An older runtime must
+retain its established speech path when that group is unavailable. Exercise all
+supported preset/dialect
 combinations; do not copy the existing pitch-baseline constants into a claimed
 runtime-default catalogue. Keep calls on the native instance's owner thread.
 
