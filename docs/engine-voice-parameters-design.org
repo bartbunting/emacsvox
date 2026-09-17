@@ -628,3 +628,41 @@ This closes the existing host-ordering issue. It does not yet prove reset of
 the new native parameter values after cancellation: helper 6 execution and
 those acceptance tests remain pending, followed by public transport and the
 Emacs editor.
+
+* Implementation progress: Eloquence native execution
+
+Omnivox commit =08dad3f= contains this slice and its retained runtime evidence.
+
+The Windows Eloquence adapter now has an internal execution path for all eight
+ECI voice parameters. It freezes and validates edits, preserves explicit zero
+and engine-default operations, applies existing common mappings, and honours
+explicit contextual overrides. Richness context masks both breathiness and
+volume; native breathiness does not recompute the common volume compensation.
+
+Execution copies the selected pristine preset, applies the complete native
+state on the engine's owner thread, and verifies readback before any PCM. It
+restores and checks the preset after success, cancellation and delivery failure.
+The owner thread now explicitly selects its documented STA apartment. Ordinary
+speech retains its existing annotation path and optional APIs remain optional.
+The initial native profile is limited to the exact ECI 6.1 American English DLL
+qualified by the retained audit; other builds retain ordinary speech.
+
+The pinned helper passed 128 endpoint cases across all eight voices, combined
+edits, all-default requests, 40 cancellation cases, eight failed application
+callbacks and eight failed PCM callbacks. Its 360 successful captures include
+200 subsequent ordinary-speech reset checks. Progressive PCM/markers, both
+independent composition fixtures, immutable inputs, invalid masked edits and
+actual STA owner-thread execution also passed. A separate protocol-5 check
+passed 50 ordinary requests and 50 cancellation/recovery probes.
+
+Full Windows development staging, checksum verification and live inventory
+checks passed for build =d4fd04189a38e08a= in a separate runtime root. Its
+Eloquence helper matches the audited pinned-compiler binary byte for byte;
+DECtalk retains its previously qualified helper. Both projects' documentation
+gates passed. The desktop launcher remains on its original runtime, and no live
+Emacs session was restarted.
+
+This internal path is not yet exposed through helper 6 or the Emacs UI. Next
+implement DECtalk native execution, then helper 6 catalogues/receipts and the
+public transport and editor. The native tests capture PCM silently and do not
+establish acoustic quality or qualify other ECI builds or dialects.
