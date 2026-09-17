@@ -16394,8 +16394,8 @@ Default Value:
 @node emacsvox-omnivox-components
 @section emacsvox-omnivox-components
 
-Spoken engine discovery and details, with separate evidence from the
-pinned WSL2 component manager.  Runtimes and voice models remain user supplied.
+Live engine discovery and required-runtime status.  The pinned WSL2 release
+installer is an explicit separate view and keeps current speech running.
 
 @subsection Emacsvox-Omnivox-Components Commands
 
@@ -16422,7 +16422,7 @@ Display and speak engine details and navigation help.
 @findex emacsvox-omnivox-components-install
 
 @format
-Download, verify, and install the selected optional engine.
+Select the installed release, then download and install an optional engine.
 @end format
 @end deffn
 
@@ -16475,7 +16475,7 @@ Speak engine status and discovered voice count at point.
 @findex emacsvox-omnivox-components-test
 
 @format
-Ask Omnivox to list voices through the selected engine.
+Select the installed release, then check its engine’s runtime and voices.
 @end format
 @end deffn
 
@@ -16484,7 +16484,7 @@ Ask Omnivox to list voices through the selected engine.
 @findex emacsvox-omnivox-components-uninstall
 
 @format
-Confirm and uninstall the selected manager-installed engine.
+Select the installed release, then confirm removal of an optional engine.
 @end format
 @end deffn
 
@@ -16539,7 +16539,9 @@ Default Value:
 
 @defvar {User Option} emacsvox-omnivox-restart-after-component-install
 @verbatim
-Whether to restart running Omnivox after a managed engine change.
+Legacy restart preference for direct component operations.
+The installed-release view keeps current speech running.  Restart explicitly
+when you intend to use changed engine files in this session.
 @end verbatim
 
 Default Value:

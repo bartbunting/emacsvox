@@ -10,6 +10,7 @@ set -eu
 program_name=emacsvox-omnivox-components
 mode=list
 machine=false
+report_target=false
 requested_components=
 
 usage()
@@ -24,6 +25,7 @@ every download is pinned by the Emacsvox release manifest.
 Options:
   --list                 list built-in, bridge, and downloadable engines
   --machine              emit tab-separated --list output for Emacs
+  --machine-target       include the installation identity before engine records
   --install COMPONENT... install flite, rutts, piper, or tgspeechbox
   --uninstall COMPONENT... remove installed optional components
   --test COMPONENT       list voices through the selected engine
@@ -49,6 +51,12 @@ case ${1-} in
     --machine)
         mode=list
         machine=true
+        shift
+        ;;
+    --machine-target)
+        mode=list
+        machine=true
+        report_target=true
         shift
         ;;
     --install)
@@ -192,6 +200,10 @@ windows_local_app_data_wsl=$(wslpath -u "$windows_local_app_data") ||
     fail "could not translate Windows LocalAppData for WSL"
 omnivox_install_directory=$windows_local_app_data_wsl/Emacsvox/Omnivox/releases/$EMACSVOX_WSL_OMNIVOX_VERSION-$omnivox_platform
 omnivox_program=$omnivox_install_directory/omnivox.exe
+if [ -n "${EMACSVOX_COMPONENT_EXPECTED_TARGET-}" ] &&
+   [ "$EMACSVOX_COMPONENT_EXPECTED_TARGET" != "$omnivox_program" ]; then
+    fail "The installation target changed; refresh the installed release before retrying"
+fi
 cache_home=${XDG_CACHE_HOME:-"$HOME/.cache"}
 download_directory=$cache_home/emacsvox/downloads
 
@@ -292,6 +304,11 @@ emit_status()
 
 list_status()
 {
+    if $report_target; then
+        emit_status installation-target \
+            "Omnivox $EMACSVOX_WSL_OMNIVOX_VERSION ($omnivox_platform)" \
+            configured 0 "$omnivox_program"
+    fi
     if ! $machine; then
         printf 'Omnivox %s components for %s\n\n' \
             "$EMACSVOX_WSL_OMNIVOX_VERSION" "$omnivox_platform"

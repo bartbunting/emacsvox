@@ -1,0 +1,39 @@
+#+title: ADR 0021: Current Engine Details and Explicit Release Management
+#+date: 2026-09-17
+
+* Status
+
+Accepted by the maintainer on 2026-09-17.
+
+* Decision
+
+Engine details describe the current main and notification speech workers.
+Required native runtime evidence is visible near the summary. Match evidence
+to its worker, combine agreeing streams, preserve reported failure reasons,
+and distinguish unchecked or disabled engines from missing runtime files.
+The existing Omnivox inventory supplies this evidence; no new speech protocol
+or runtime acquisition policy is introduced.
+
+The WSL installer of [[file:0008-modular-omnivox-engine-installation.org][ADR 0008]] targets its pinned release independently of the
+running speech server. Enter that installer explicitly through Manage installed
+release. Show its version and actual executable location before offering file
+changes or runtime checks. Its extended machine listing includes a reserved
+installation-target record; legacy machine output remains unchanged. Requests
+from the view pass that reported executable as EMACSVOX_COMPONENT_EXPECTED_TARGET;
+the installer rejects a different derived target before performing operations.
+
+Opening and refreshing current engine details invokes no local release checker.
+Explicit release operations do not suspend or restart the current speech workers,
+or overwrite their displayed availability. A locked helper still causes removal
+to fail visibly. The legacy direct-operation restart preference remains readable.
+Release file checks, operation results and navigation remain in the release view.
+
+* Consequences
+
+The screen explains the engine currently used for speech without mixing in
+prerequisites from another installation. Development runtimes, native-direct
+servers and remote speech keep their existing boundaries under ADRs 0011 and
+0014. This does not make the WSL installer a provider for those other targets.
+Downloaded voices and explicit two-stream activation still follow ADR 0019;
+bundled eSpeak variants still follow ADR 0020. Release pins and artifacts are
+unchanged.
