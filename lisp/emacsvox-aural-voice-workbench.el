@@ -116,6 +116,46 @@
 (defvar-local emacsvox-aural-voice-workbench-filter nil
   "Physical-voice filter plist for this workbench.")
 
+(defvar-local emacsvox-aural-voice-workbench--language-expansion nil
+  "Expansion choices indexed by engine scope and normalized language tag.")
+
+(defvar-local emacsvox-aural-voice-workbench--voice-languages nil
+  "Language tags indexed by the physical voice IDs in the latest redraw.")
+
+(defconst emacsvox-aural-voice-workbench--language-names
+  '(("af" . "Afrikaans") ("ar" . "Arabic") ("bg" . "Bulgarian")
+    ("bn" . "Bengali") ("ca" . "Catalan") ("cs" . "Czech")
+    ("cy" . "Welsh") ("da" . "Danish") ("de" . "German")
+    ("el" . "Greek") ("en" . "English") ("eo" . "Esperanto")
+    ("es" . "Spanish") ("et" . "Estonian") ("eu" . "Basque")
+    ("fa" . "Persian") ("fi" . "Finnish") ("fr" . "French")
+    ("ga" . "Irish") ("gl" . "Galician") ("gu" . "Gujarati")
+    ("he" . "Hebrew") ("hi" . "Hindi") ("hr" . "Croatian")
+    ("hu" . "Hungarian") ("hy" . "Armenian") ("id" . "Indonesian")
+    ("is" . "Icelandic") ("it" . "Italian") ("ja" . "Japanese")
+    ("ka" . "Georgian") ("kn" . "Kannada") ("ko" . "Korean")
+    ("la" . "Latin") ("lt" . "Lithuanian") ("lv" . "Latvian")
+    ("ml" . "Malayalam") ("ms" . "Malay") ("mt" . "Maltese")
+    ("nb" . "Norwegian Bokmål") ("ne" . "Nepali") ("nl" . "Dutch")
+    ("nn" . "Norwegian Nynorsk") ("no" . "Norwegian") ("pl" . "Polish")
+    ("pt" . "Portuguese") ("ro" . "Romanian") ("ru" . "Russian")
+    ("sk" . "Slovak") ("sl" . "Slovenian") ("sq" . "Albanian")
+    ("sr" . "Serbian") ("sv" . "Swedish") ("sw" . "Swahili")
+    ("ta" . "Tamil") ("te" . "Telugu") ("th" . "Thai")
+    ("tr" . "Turkish") ("uk" . "Ukrainian") ("ur" . "Urdu")
+    ("vi" . "Vietnamese") ("yue" . "Cantonese") ("zh" . "Chinese"))
+  "Readable language labels; unrecognized tags remain visible verbatim.")
+
+(defconst emacsvox-aural-voice-workbench--region-names
+  '(("au" . "Australia") ("be" . "Belgium") ("br" . "Brazil")
+    ("ca" . "Canada") ("ch" . "Switzerland") ("cn" . "China")
+    ("de" . "Germany") ("es" . "Spain") ("fr" . "France")
+    ("gb" . "United Kingdom") ("hk" . "Hong Kong") ("ie" . "Ireland")
+    ("in" . "India") ("mx" . "Mexico") ("nz" . "New Zealand")
+    ("pt" . "Portugal") ("tw" . "Taiwan") ("us" . "United States")
+    ("za" . "South Africa"))
+  "Readable region labels; other subtags retain their original identity.")
+
 (defvar-local emacsvox-aural-voice-workbench-last-preview nil
   "Most recent normalized preview result in this workbench.")
 
@@ -257,7 +297,7 @@
 (defun emacsvox-aural-voice-workbench--header ()
   "Return the non-speaking status header for the current workbench."
   (if (emacsvox-aural-voice-workbench--library-p)
-      (format " P sample; t tune; + enable/disable; a Apply; d download; b include SLT; R refresh; q back | %s"
+      (format " RET expand/sample; P sample; x details; t tune; + enable/disable; a Apply; d download; R refresh; q back | %s"
               (cond (emacsvox-aural-voice-workbench--library-ticket "Loading library")
                     (emacsvox-aural-voice-workbench--library-error emacsvox-aural-voice-workbench--library-error)
                     (t "Enabled is desired; Active is usable on a stream, not memory residency")))
@@ -621,11 +661,15 @@
   (unless (emacsvox-aural-voice-workbench--library-p)
     (user-error "Open Omnivox physical voices first"))
   (let* ((id (tabulated-list-get-id))
-         (engine (or (car-safe id) emacsvox-aural-voice-workbench--voice-list-parent))
+         (engine (or (and (not (emacsvox-aural-voice-workbench--language-row-p id)) (car-safe id))
+                     emacsvox-aural-voice-workbench--voice-list-parent
+                     (plist-get emacsvox-aural-voice-workbench-filter :engine)))
          (index (emacsvox-aural-voice-workbench--library-index))
          (source emacsvox-aural-voice-workbench--library-source)
          (sha (plist-get emacsvox-aural-voice-workbench--library-reply :sha256))
          (row (emacsvox-aural-voice-workbench--library-row id)))
+    (when (and (eq action 'toggle) (emacsvox-aural-voice-workbench--language-row-p id))
+      (user-error "Expand the language and choose a voice to enable or disable"))
     (pcase action
       ('download (require 'omnivox-catalogue) (omnivox-catalogue engine))
       ('apply (call-interactively #'omnivox-library-apply))
@@ -1096,18 +1140,109 @@ or persisting a routing choice."
 
 (defun emacsvox-aural-voice-workbench--format ()
   "Return the concise table format for the current view."
-  (emacsvox-aural-voice-workbench--visible-values
-   (emacsvox-aural-voice-workbench--detail-format)))
+  (let ((columns (emacsvox-aural-voice-workbench--visible-values
+                  (emacsvox-aural-voice-workbench--detail-format))))
+    (when (eq emacsvox-aural-voice-workbench-view 'physical)
+      (dotimes (i (length columns))
+        (let ((column i))
+          (aset columns i
+                (list (car (aref columns i)) (cadr (aref columns i))
+                      (lambda (a b)
+                        (emacsvox-aural-voice-workbench--sort-language-rows a b column)))))))
+    columns))
 
-(defun emacsvox-aural-voice-workbench--entries ()
-  "Return concise rows, retaining stable identities for actions and return."
-  (mapcar (lambda (row)
-            (list (car row)
-                  (emacsvox-aural-voice-workbench--visible-values (cadr row))))
-          (emacsvox-aural-voice-workbench--detail-entries)))
+(defun emacsvox-aural-voice-workbench--language-row-p (id)
+  "Whether ID identifies a language heading rather than a physical voice."
+  (eq (car-safe id) :language))
+
+(defun emacsvox-aural-voice-workbench--language-label (tag)
+  "Describe normalized language TAG, retaining unknown codes and subtags."
+  (if (string-empty-p tag) "Unknown language"
+    (let* ((parts (split-string tag "-" t))
+           (name (cdr (assoc (car parts) emacsvox-aural-voice-workbench--language-names))))
+      (if (not name) tag
+        (string-join
+         (cons name (mapcar (lambda (part)
+                             (or (cdr (assoc part emacsvox-aural-voice-workbench--region-names))
+                                 (upcase part)))
+                           (cdr parts))) ", ")))))
+
+(defun emacsvox-aural-voice-workbench--language-key (tag)
+  "Return the expansion key for language TAG in the current engine scope."
+  (list (plist-get (emacsvox-aural-voice-workbench--physical-filter) :engine) tag))
+
+(defun emacsvox-aural-voice-workbench--sort-language-rows (a b column)
+  "Sort voice rows A and B by COLUMN while retaining their language headings."
+  (let* ((a-id (car a)) (b-id (car b))
+         (a-group (emacsvox-aural-voice-workbench--language-row-p a-id))
+         (b-group (emacsvox-aural-voice-workbench--language-row-p b-id))
+         (a-language (if a-group (cadr a-id) (gethash a-id emacsvox-aural-voice-workbench--voice-languages)))
+         (b-language (if b-group (cadr b-id) (gethash b-id emacsvox-aural-voice-workbench--voice-languages)))
+         (reverse (cdr tabulated-list-sort-key)))
+    (cond
+     ((not (equal a-language b-language))
+      ;; tabulated-list reverses our arguments for descending columns.  Keep
+      ;; languages alphabetical and headings before their children either way.
+      (string-lessp
+       (downcase (emacsvox-aural-voice-workbench--language-label (if reverse b-language a-language)))
+       (downcase (emacsvox-aural-voice-workbench--language-label (if reverse a-language b-language)))))
+     ((and a-group b-group) nil)
+     (a-group (not reverse))
+     (b-group reverse)
+     (t (let ((a-value (downcase (aref (cadr a) column)))
+              (b-value (downcase (aref (cadr b) column))))
+          (if (equal a-value b-value)
+              (string-lessp (format "%s" a-id) (format "%s" b-id))
+            (string-lessp a-value b-value)))))))
+
+(defun emacsvox-aural-voice-workbench--group-languages (rows selected)
+  "Group full physical ROWS, keeping SELECTED visible when it is a voice."
+  (unless emacsvox-aural-voice-workbench--language-expansion
+    (setq emacsvox-aural-voice-workbench--language-expansion (make-hash-table :test #'equal)))
+  (setq emacsvox-aural-voice-workbench--voice-languages (make-hash-table :test #'equal))
+  (let ((groups (make-hash-table :test #'equal)) tags result)
+    (dolist (row rows)
+      (let* ((tag (downcase (string-replace "_" "-" (aref (cadr row) 2))))
+             (visible (list (car row) (emacsvox-aural-voice-workbench--visible-values (cadr row)))))
+        (puthash (car row) tag emacsvox-aural-voice-workbench--voice-languages)
+        (puthash tag (cons visible (gethash tag groups)) groups)))
+    (maphash (lambda (tag _) (push tag tags)) groups)
+    (setq tags (sort tags (lambda (a b)
+                            (string-lessp (downcase (emacsvox-aural-voice-workbench--language-label a))
+                                          (downcase (emacsvox-aural-voice-workbench--language-label b))))))
+    (dolist (tag tags)
+      (let* ((key (emacsvox-aural-voice-workbench--language-key tag))
+             (state (gethash key emacsvox-aural-voice-workbench--language-expansion 'unset))
+             (members (gethash tag groups))
+             (label (emacsvox-aural-voice-workbench--language-label tag))
+             (values (make-vector (length tabulated-list-format) "")))
+        (when (eq state 'unset) (setq state (if (= 1 (length tags)) 'expanded 'collapsed)))
+        (when (and selected (equal tag (gethash selected emacsvox-aural-voice-workbench--voice-languages)))
+          (setq state 'expanded))
+        (puthash key state emacsvox-aural-voice-workbench--language-expansion)
+        (aset values 0 (emacsvox-aural-ui--expansion-text label (eq state 'expanded)))
+        (aset values 1 (format "%d voice%s; %s" (length members)
+                               (if (= 1 (length members)) "" "s") state))
+        (push (list (list :language tag) values) result)
+        (when (eq state 'expanded)
+          (dolist (row (sort members (lambda (a b)
+                                       (string-lessp (downcase (aref (cadr a) 0))
+                                                     (downcase (aref (cadr b) 0))))))
+            (push row result)))))
+    (nreverse result)))
+
+(defun emacsvox-aural-voice-workbench--entries (&optional selected)
+  "Return concise rows, grouping physical voices and retaining SELECTED."
+  (let ((rows (emacsvox-aural-voice-workbench--detail-entries)))
+    (if (eq emacsvox-aural-voice-workbench-view 'physical)
+        (emacsvox-aural-voice-workbench--group-languages rows selected)
+      (mapcar (lambda (row)
+                (list (car row) (emacsvox-aural-voice-workbench--visible-values (cadr row)))) rows))))
 
 (defun emacsvox-aural-voice-workbench--physical-pair (id)
   "Return the physical engine/voice pair identified by ID."
+  (when (emacsvox-aural-voice-workbench--language-row-p id)
+    (user-error "Expand the language and choose a voice first"))
   (cl-find-if
    (lambda (pair)
      (equal id
@@ -1858,6 +1993,7 @@ command does not stop speech already playing."
         (let (pairs)
           (while (< (point) (point-max))
             (when-let* ((id (tabulated-list-get-id))
+                        (_ (not (emacsvox-aural-voice-workbench--language-row-p id)))
                         (pair (emacsvox-aural-voice-workbench--physical-pair id)))
               (push pair pairs))
             (forward-line 1))
@@ -2003,8 +2139,12 @@ command does not stop speech already playing."
 (defun emacsvox-aural-voice-workbench-preview-all ()
   "Preview usable matching voices in displayed order, identifying each sample."
   (interactive)
-  (let (entries skipped (index 0))
-    (dolist (pair (emacsvox-aural-voice-workbench--visible-physical-pairs))
+  (let ((pairs (emacsvox-aural-voice-workbench--visible-physical-pairs))
+        entries skipped (index 0))
+    (when (and (not pairs) (eq emacsvox-aural-voice-workbench-view 'physical)
+               tabulated-list-entries)
+      (user-error "Expand a language to preview its voices"))
+    (dolist (pair pairs)
       (if (emacsvox-aural-voice-workbench--unavailable-reason pair)
           (push (emacsvox-aural-voice-workbench--pair-name pair) skipped)
         (setq entries
@@ -2093,9 +2233,15 @@ command does not stop speech already playing."
              (not (assoc (car tabulated-list-sort-key) (append tabulated-list-format nil))))
     (setq tabulated-list-sort-key nil))
   (tabulated-list-init-header)
-  (emacsvox-aural-ui-refresh-tabulated
-   (lambda () (setq tabulated-list-entries (emacsvox-aural-voice-workbench--entries)))
-   (or id (gethash emacsvox-aural-voice-workbench-view emacsvox-aural-voice-workbench-selections)))
+  (let* ((selected (or id (gethash emacsvox-aural-voice-workbench-view
+                                 emacsvox-aural-voice-workbench-selections)))
+         (entries (emacsvox-aural-voice-workbench--entries selected))
+         (single (and (eq emacsvox-aural-voice-workbench-view 'physical)
+                      (= 1 (cl-count-if (lambda (row) (emacsvox-aural-voice-workbench--language-row-p (car row))) entries))
+                      (cl-find-if-not (lambda (row) (emacsvox-aural-voice-workbench--language-row-p (car row))) entries))))
+    (emacsvox-aural-ui-refresh-tabulated
+     (lambda () (setq tabulated-list-entries entries))
+     (if (assoc selected entries) selected (car single))))
   (emacsvox-aural-ui-goto-tabulated-column
    (gethash emacsvox-aural-voice-workbench-view emacsvox-aural-voice-workbench-columns 0))
   (setq emacsvox-aural-voice-workbench-rendered-view emacsvox-aural-voice-workbench-view))
@@ -2107,16 +2253,24 @@ command does not stop speech already playing."
           (or (tabulated-list-get-entry)
               (user-error "Move to a Voice Workbench row first")))
          parts)
-    (dotimes (index (length entry))
-      (let ((value (aref entry index)))
-        (push
-         (format "%s, %s"
-                 (car (aref tabulated-list-format index))
-                 (if (string-empty-p (format "%s" value)) "blank" value))
-         parts)))
+    (if (emacsvox-aural-voice-workbench--language-row-p (tabulated-list-get-id))
+        (setq parts (list (aref entry 1) (aref entry 0)))
+      (dotimes (index (length entry))
+        (let ((value (aref entry index)))
+          (push
+           (format "%s, %s"
+                   (car (aref tabulated-list-format index))
+                   (if (string-empty-p (format "%s" value)) "blank" value))
+           parts))))
     (let ((text (mapconcat #'identity (nreverse parts) ". ")))
       (if (fboundp 'tts-speak) (tts-speak text) (message "%s" text))
       text)))
+
+(defun emacsvox-aural-voice-workbench--speak-row-name ()
+  "Speak a language heading with its count, or the destination voice cell."
+  (if (emacsvox-aural-voice-workbench--language-row-p (tabulated-list-get-id))
+      (emacsvox-aural-voice-workbench-speak-current)
+    (emacsvox-aural-ui-speak-current-cell t)))
 
 (defun emacsvox-aural-voice-workbench--switch (view)
   "Switch to Workbench VIEW and announce its selected row."
@@ -2233,16 +2387,25 @@ Outside the engine view, leave any temporary engine browsing scope."
     (message "Physical voice filters cleared")))
 
 (defun emacsvox-aural-voice-workbench-open-row ()
-  "Open selected engine details, or describe the selected voice or style."
+  "Open engine details, toggle a language, or preview the selected voice."
   (interactive)
-  (if (eq emacsvox-aural-voice-workbench-view 'engines)
-      (if (equal "omnivox" (plist-get emacsvox-aural-voice-workbench-inventory :adapter))
-          (progn
-            (require 'emacsvox-omnivox-components)
-            (emacsvox-omnivox-components--open-engine
-             (or (tabulated-list-get-id) (user-error "Select an engine first")) (current-buffer)))
-        (emacsvox-aural-voice-workbench-physical-view))
-    (emacsvox-aural-voice-workbench-describe)))
+  (cond
+   ((emacsvox-aural-voice-workbench--language-row-p (tabulated-list-get-id))
+    (let* ((id (tabulated-list-get-id))
+           (key (emacsvox-aural-voice-workbench--language-key (cadr id)))
+           (expanded (not (eq 'expanded (gethash key emacsvox-aural-voice-workbench--language-expansion)))))
+      (puthash key (if expanded 'expanded 'collapsed) emacsvox-aural-voice-workbench--language-expansion)
+      (emacsvox-aural-voice-workbench-refresh id)
+      (emacsvox-aural-ui--announce-expansion expanded
+                                             (emacsvox-aural-voice-workbench--language-label (cadr id)))))
+   ((eq emacsvox-aural-voice-workbench-view 'engines)
+    (if (equal "omnivox" (plist-get emacsvox-aural-voice-workbench-inventory :adapter))
+        (progn
+          (require 'emacsvox-omnivox-components)
+          (emacsvox-omnivox-components--open-engine
+           (or (tabulated-list-get-id) (user-error "Select an engine first")) (current-buffer)))
+      (emacsvox-aural-voice-workbench-physical-view)))
+   (t (emacsvox-aural-voice-workbench-preview))))
 
 (defun emacsvox-aural-voice-workbench-quit ()
   "Return from an engine's voice list, or dismiss the workbench.
@@ -2267,6 +2430,8 @@ when they remain unsaved."
 (defun emacsvox-aural-voice-workbench-describe ()
   "Display and speak exact Workbench row and configuration details."
   (interactive)
+  (when (emacsvox-aural-voice-workbench--language-row-p (tabulated-list-get-id))
+    (user-error "Expand the language and choose a voice for details"))
   (let* ((summary (emacsvox-aural-voice-workbench-speak-current))
          (details (cadr (assoc (tabulated-list-get-id)
                               (emacsvox-aural-voice-workbench--detail-entries))))
@@ -2312,10 +2477,14 @@ when they remain unsaved."
       "e engines; v physical voices; l named voices; s styles and effects.\n"
       "On an Omnivox engine, RET opens status, downloads, and settings.\n"
       "v browses its voices directly; q returns to the engine.\n"
+      "Physical voices are grouped by language; RET expands or collapses a heading.\n"
+      "On a voice, RET plays a sample. P also previews; x shows details; t edits.\n"
+      "Single-language lists start expanded. Groups and selected voices survive refresh.\n"
+      "Column sorting keeps languages together and sorts the voices within them.\n"
       "n/p or up/down moves rows; left/right moves columns.\n"
       ". speaks the cell; SPC speaks the whole row; x shows details.\n\n"
       "P previews; S stops; T changes the comparison text.\n"
-      "In physical voices, A plays all visible voices and B compares two.\n"
+      "In physical voices, A plays voices in expanded groups and B compares two.\n"
       "Omnivox voices: + enables/disables; a reviews Apply; d downloads; b includes SLT.\n"
       "i imports a validated operation; C-c r shows the last library Apply result.\n"
       "C-c u reviews package uninstallation; C-c U resumes incomplete cleanup.\n"
@@ -2348,8 +2517,15 @@ when they remain unsaved."
   (let ((row (tabulated-list-get-id))
         (view emacsvox-aural-voice-workbench-view))
     (pcase command
-      ((or 'emacsvox-aural-voice-workbench--library-toggle
-           'emacsvox-aural-voice-workbench--library-apply
+      ((or 'emacsvox-aural-voice-workbench-preview
+           'emacsvox-aural-voice-workbench-describe
+           'emacsvox-aural-voice-workbench--library-toggle)
+       (and row (not (emacsvox-aural-voice-workbench--language-row-p row))
+            (or (not (eq command 'emacsvox-aural-voice-workbench--library-toggle))
+                (emacsvox-aural-voice-workbench--library-p))))
+      ('emacsvox-aural-voice-workbench-compare
+       (and row (eq view 'physical) (not (emacsvox-aural-voice-workbench--language-row-p row))))
+      ((or 'emacsvox-aural-voice-workbench--library-apply
            'emacsvox-aural-voice-workbench--library-download
            'emacsvox-aural-voice-workbench--library-slt
            'emacsvox-aural-voice-workbench--library-import
@@ -2374,8 +2550,7 @@ when they remain unsaved."
       ((or 'emacsvox-aural-voice-workbench-undo
            'emacsvox-aural-voice-workbench-cancel-staged)
        (emacsvox-aural-voice-workbench--dirty-p))
-      ((or 'emacsvox-aural-voice-workbench-preview-all
-           'emacsvox-aural-voice-workbench-compare)
+      ('emacsvox-aural-voice-workbench-preview-all
        (and row (eq view 'physical)))
       ((or 'emacsvox-aural-voice-workbench-move-preferred-engine-up
            'emacsvox-aural-voice-workbench-move-preferred-engine-down
@@ -2387,7 +2562,8 @@ when they remain unsaved."
            'emacsvox-aural-voice-workbench-request-recovery-probe)
        (and row (eq view 'engines)))
       ('emacsvox-aural-voice-workbench-tune
-       (and row (memq view '(physical logical styles))))
+       (and row (not (emacsvox-aural-voice-workbench--language-row-p row))
+            (memq view '(physical logical styles))))
       (_ row))))
 
 (define-derived-mode
@@ -2421,7 +2597,8 @@ when they remain unsaved."
   (emacsvox-aural-ui-configure-tabulated
    "voice workbench"
    #'emacsvox-aural-voice-workbench-speak-current
-   #'emacsvox-aural-voice-workbench-refresh)
+   #'emacsvox-aural-voice-workbench-refresh
+   #'emacsvox-aural-voice-workbench--speak-row-name)
   (setq tabulated-list-format (emacsvox-aural-voice-workbench--format)
         tabulated-list-padding 2
         header-line-format '(:eval (emacsvox-aural-voice-workbench--header)))
@@ -2528,7 +2705,7 @@ Keep the general workbench's filters, selection and staged edits intact."
      buffer
      (lambda ()
        (tts-speak
-        (format "%s voices. P speaks a sample; plus enables or disables; a reviews Apply; d downloads; q returns.%s"
+        (format "%s voices. Return expands a language or plays a sample; plus enables or disables; a reviews Apply; d downloads; q returns.%s"
                 engine (if (tabulated-list-get-id) "" " Loading library information.")))))
     (with-current-buffer buffer (emacsvox-aural-voice-workbench--library-start))
     buffer))

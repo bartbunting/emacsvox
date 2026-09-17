@@ -6498,7 +6498,7 @@ Move the selected engine earlier in preferred engine order.
 @findex emacsvox-aural-voice-workbench-open-row
 
 @format
-Open selected engine details, or describe the selected voice or style.
+Open engine details, toggle a language, or preview the selected voice.
 @end format
 @end deffn
 

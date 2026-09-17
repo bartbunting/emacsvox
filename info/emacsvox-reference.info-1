@@ -5908,7 +5908,7 @@ palettes or routing profiles.
 
  -- Command: emacsvox-aural-voice-workbench-open-row
 
-     Open selected engine details, or describe the selected voice or style.
+     Open engine details, toggle a language, or preview the selected voice.
 
 2.62.1.20 emacsvox-aural-voice-workbench-physical-view
 ......................................................
