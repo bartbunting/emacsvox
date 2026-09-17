@@ -1,0 +1,1310 @@
+{
+  "fixture_version": 1,
+  "status": "accepted-contract-examples; codecs and native feature not yet implemented",
+  "source_design": "emacsvox e0e83d71d",
+  "required_features": [
+    "engine_parameter_catalogue_v1",
+    "engine_voice_parameters_v1",
+    "presentation_timeline_v5",
+    "playback_marker_events_v4"
+  ],
+  "messages": {
+    "catalogue_request": {
+      "protocol_version": 1,
+      "request_id": 803,
+      "type": "get_engine_parameters_v1",
+      "engine_id": "dectalk",
+      "voice_id": "paul",
+      "cursor": null,
+      "expected_catalogue_revision": null
+    },
+    "catalogue_response": {
+      "protocol_version": 1,
+      "request_id": 803,
+      "type": "engine_parameters_v1",
+      "engine_id": "dectalk",
+      "result": {
+        "status": "ready",
+        "identity": {
+          "schema_id": "dectalk.design-voice.v1",
+          "profile_id": "dectalk.windows.4_99.v1",
+          "catalogue_revision": "1111111111111111111111111111111111111111111111111111111111111111",
+          "runtime_generation": 7
+        },
+        "voice_id": "paul",
+        "parameters": [
+          {
+            "id": "ri",
+            "label": "Richness",
+            "help": "Native voice character control.",
+            "group": "voice_character",
+            "order": 0,
+            "unit": "percent",
+            "value_type": {
+              "kind": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "step": 1
+            },
+            "scope": "voice",
+            "adjustable": true,
+            "availability": {
+              "status": "supported",
+              "reason": null
+            },
+            "default": {
+              "source": "runtime_readback",
+              "value": 70,
+              "reset_supported": true
+            },
+            "side_effects": []
+          },
+          {
+            "id": "sm",
+            "label": "Smoothness",
+            "help": "Native voice character control.",
+            "group": "voice_character",
+            "order": 1,
+            "unit": "percent",
+            "value_type": {
+              "kind": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "step": 1
+            },
+            "scope": "voice",
+            "adjustable": true,
+            "availability": {
+              "status": "supported",
+              "reason": null
+            },
+            "default": {
+              "source": "runtime_readback",
+              "value": 3,
+              "reset_supported": true
+            },
+            "side_effects": []
+          }
+        ],
+        "mappings": [
+          {
+            "common_inputs": [
+              "richness"
+            ],
+            "native_outputs": [
+              "ri",
+              "sm"
+            ]
+          }
+        ],
+        "next_cursor": null
+      }
+    },
+    "registration": {
+      "protocol_version": 1,
+      "request_id": 801,
+      "type": "register_logical_voices_v3",
+      "registry_generation": 41,
+      "definitions": [
+        {
+          "mode": "engine_layered",
+          "definition": {
+            "id": "bolden",
+            "language": "en-US",
+            "shared": {
+              "acss": {
+                "rate": null,
+                "average_pitch": null,
+                "pitch_range": null,
+                "stress": null,
+                "richness": 0.5,
+                "volume": null
+              },
+              "rate_offset": null,
+              "effects": {
+                "gain": null,
+                "low_pass": null,
+                "high_pass": null,
+                "pan": null,
+                "reverb": null,
+                "echo": null,
+                "chorus": null
+              }
+            },
+            "choices": [
+              {
+                "id": "paul-main",
+                "selector": {
+                  "kind": "exact",
+                  "engine_id": "dectalk",
+                  "voice_id": "paul"
+                },
+                "adjustments": {},
+                "native": {
+                  "engine_id": "dectalk",
+                  "schema_id": "dectalk.design-voice.v1",
+                  "parameters": {
+                    "sm": {
+                      "op": "set",
+                      "value": 55
+                    }
+                  }
+                }
+              },
+              {
+                "id": "paul-soft",
+                "selector": {
+                  "kind": "exact",
+                  "engine_id": "dectalk",
+                  "voice_id": "paul"
+                },
+                "adjustments": {},
+                "native": {
+                  "engine_id": "dectalk",
+                  "schema_id": "dectalk.design-voice.v1",
+                  "parameters": {
+                    "sm": {
+                      "op": "set",
+                      "value": 80
+                    }
+                  }
+                }
+              },
+              {
+                "id": "eci-default",
+                "selector": {
+                  "kind": "engine_default",
+                  "engine_id": "eloquence"
+                },
+                "adjustments": {},
+                "native": {
+                  "engine_id": "eloquence",
+                  "schema_id": "eloquence.eci-units.v1",
+                  "parameters": {
+                    "breathiness": {
+                      "op": "set",
+                      "value": 42
+                    }
+                  }
+                }
+              },
+              {
+                "id": "espeak-default",
+                "selector": {
+                  "kind": "engine_default",
+                  "engine_id": "espeak"
+                },
+                "adjustments": {},
+                "native": null
+              }
+            ]
+          }
+        }
+      ],
+      "fallback_policy": {
+        "preferred_engines": [],
+        "allow_same_language_on_requested_engine": true,
+        "global_default": null,
+        "fallback_engines": [
+          "espeak"
+        ]
+      }
+    },
+    "registration_ack": {
+      "protocol_version": 1,
+      "request_id": 801,
+      "type": "logical_voices_registered_v3",
+      "registry_generation": 41,
+      "inventory_generation": 12,
+      "definition_count": 1,
+      "unresolved_logical_voice_ids": [],
+      "native_status": [
+        {
+          "logical_voice_id": "bolden",
+          "choice_id": "paul-main",
+          "status": "supported",
+          "reason": null
+        },
+        {
+          "logical_voice_id": "bolden",
+          "choice_id": "paul-soft",
+          "status": "supported",
+          "reason": null
+        },
+        {
+          "logical_voice_id": "bolden",
+          "choice_id": "eci-default",
+          "status": "supported",
+          "reason": null
+        }
+      ]
+    },
+    "timeline": {
+      "protocol_version": 5,
+      "generation": 8,
+      "dispatch_id": 91,
+      "registry_generation": 41,
+      "delivery_policy": "ordered",
+      "spans": [
+        {
+          "mode": "engine_layered",
+          "span": {
+            "id": 1,
+            "text": "A heading",
+            "logical_voice_id": "bolden",
+            "context": {
+              "richness": {
+                "op": "set",
+                "value": 0.5
+              },
+              "rate_offset": {
+                "op": "set",
+                "value": 0
+              }
+            },
+            "placement": {
+              "pan": null
+            }
+          }
+        },
+        {
+          "mode": "engine_layered",
+          "span": {
+            "id": 3,
+            "text": "Plain again",
+            "logical_voice_id": "bolden",
+            "context": {},
+            "placement": {
+              "pan": null
+            }
+          }
+        }
+      ],
+      "actions": []
+    },
+    "preview": {
+      "protocol_version": 1,
+      "request_id": 802,
+      "type": "preview_voice_v3",
+      "text": "A heading.",
+      "voice": {
+        "language": "en-US",
+        "shared": {
+          "acss": {
+            "rate": null,
+            "average_pitch": null,
+            "pitch_range": null,
+            "stress": null,
+            "richness": 0.5,
+            "volume": null
+          },
+          "rate_offset": null,
+          "effects": {
+            "gain": null,
+            "low_pass": null,
+            "high_pass": null,
+            "pan": null,
+            "reverb": null,
+            "echo": null,
+            "chorus": null
+          }
+        },
+        "choices": [
+          {
+            "id": "paul-main",
+            "selector": {
+              "kind": "exact",
+              "engine_id": "dectalk",
+              "voice_id": "paul"
+            },
+            "adjustments": {},
+            "native": {
+              "engine_id": "dectalk",
+              "schema_id": "dectalk.design-voice.v1",
+              "parameters": {
+                "sm": {
+                  "op": "set",
+                  "value": 55
+                }
+              }
+            }
+          },
+          {
+            "id": "paul-soft",
+            "selector": {
+              "kind": "exact",
+              "engine_id": "dectalk",
+              "voice_id": "paul"
+            },
+            "adjustments": {},
+            "native": {
+              "engine_id": "dectalk",
+              "schema_id": "dectalk.design-voice.v1",
+              "parameters": {
+                "sm": {
+                  "op": "set",
+                  "value": 80
+                }
+              }
+            }
+          },
+          {
+            "id": "eci-default",
+            "selector": {
+              "kind": "engine_default",
+              "engine_id": "eloquence"
+            },
+            "adjustments": {},
+            "native": {
+              "engine_id": "eloquence",
+              "schema_id": "eloquence.eci-units.v1",
+              "parameters": {
+                "breathiness": {
+                  "op": "set",
+                  "value": 42
+                }
+              }
+            }
+          },
+          {
+            "id": "espeak-default",
+            "selector": {
+              "kind": "engine_default",
+              "engine_id": "espeak"
+            },
+            "adjustments": {},
+            "native": null
+          }
+        ]
+      },
+      "context": {},
+      "placement": {
+        "pan": null
+      },
+      "selection": {
+        "mode": "choice",
+        "choice_id": "paul-main"
+      },
+      "fallback_policy": {
+        "preferred_engines": [],
+        "allow_same_language_on_requested_engine": true,
+        "global_default": null,
+        "fallback_engines": [
+          "espeak"
+        ]
+      },
+      "disabled_engine_ids": [],
+      "expected_base_rate": 0.65
+    },
+    "preview_completed": {
+      "protocol_version": 1,
+      "request_id": 802,
+      "type": "preview_voice_completed_v3",
+      "status": "completed",
+      "accepted_audio": [
+        {
+          "choice_id": "paul-main",
+          "reason": {
+            "reason": "preferred"
+          },
+          "realized": {
+            "engine_id": "dectalk",
+            "voice_id": "paul"
+          },
+          "degraded_acss": [],
+          "degraded_effects": [],
+          "playback_started": true,
+          "native_application": {
+            "status": "applied",
+            "plan_id": "plan-23",
+            "identity": {
+              "schema_id": "dectalk.design-voice.v1",
+              "profile_id": "dectalk.windows.4_99.v1",
+              "catalogue_revision": "1111111111111111111111111111111111111111111111111111111111111111",
+              "runtime_generation": 7
+            },
+            "masked_parameters": [],
+            "reason": null
+          }
+        }
+      ],
+      "accepted_audio_truncated": false,
+      "last_started": {
+        "choice_id": "paul-main",
+        "reason": {
+          "reason": "preferred"
+        },
+        "realized": {
+          "engine_id": "dectalk",
+          "voice_id": "paul"
+        },
+        "degraded_acss": [],
+        "degraded_effects": [],
+        "native_application": {
+          "status": "applied",
+          "plan_id": "plan-23",
+          "identity": {
+            "schema_id": "dectalk.design-voice.v1",
+            "profile_id": "dectalk.windows.4_99.v1",
+            "catalogue_revision": "1111111111111111111111111111111111111111111111111111111111111111",
+            "runtime_generation": 7
+          },
+          "masked_parameters": [],
+          "reason": null
+        }
+      },
+      "message": null,
+      "base_rate": 0.65,
+      "effective_disabled_engine_ids": []
+    },
+    "playback_receipt": {
+      "protocol_version": 4,
+      "dispatch_id": 91,
+      "sequence": 2,
+      "type": "voice_choice_applied",
+      "utterance_id": 1,
+      "span_id": 1,
+      "registry_generation": 41,
+      "logical_voice_id": "bolden",
+      "choice": {
+        "choice_id": "paul-main",
+        "reason": {
+          "reason": "preferred"
+        },
+        "realized": {
+          "engine_id": "dectalk",
+          "voice_id": "paul"
+        },
+        "degraded_acss": [],
+        "degraded_effects": []
+      },
+      "native_application": {
+        "status": "applied",
+        "plan_id": "plan-24",
+        "identity": {
+          "schema_id": "dectalk.design-voice.v1",
+          "profile_id": "dectalk.windows.4_99.v1",
+          "catalogue_revision": "1111111111111111111111111111111111111111111111111111111111111111",
+          "runtime_generation": 7
+        },
+        "masked_parameters": [
+          "sm"
+        ],
+        "reason": null
+      }
+    },
+    "explain_request": {
+      "protocol_version": 1,
+      "request_id": 804,
+      "type": "explain_voice_parameters_v1",
+      "source": {
+        "voice": {
+          "language": "en-US",
+          "shared": {
+            "acss": {
+              "rate": null,
+              "average_pitch": null,
+              "pitch_range": null,
+              "stress": null,
+              "richness": 0.5,
+              "volume": null
+            },
+            "rate_offset": null,
+            "effects": {
+              "gain": null,
+              "low_pass": null,
+              "high_pass": null,
+              "pan": null,
+              "reverb": null,
+              "echo": null,
+              "chorus": null
+            }
+          },
+          "choices": [
+            {
+              "id": "paul-main",
+              "selector": {
+                "kind": "exact",
+                "engine_id": "dectalk",
+                "voice_id": "paul"
+              },
+              "adjustments": {},
+              "native": {
+                "engine_id": "dectalk",
+                "schema_id": "dectalk.design-voice.v1",
+                "parameters": {
+                  "sm": {
+                    "op": "set",
+                    "value": 55
+                  }
+                }
+              }
+            },
+            {
+              "id": "paul-soft",
+              "selector": {
+                "kind": "exact",
+                "engine_id": "dectalk",
+                "voice_id": "paul"
+              },
+              "adjustments": {},
+              "native": {
+                "engine_id": "dectalk",
+                "schema_id": "dectalk.design-voice.v1",
+                "parameters": {
+                  "sm": {
+                    "op": "set",
+                    "value": 80
+                  }
+                }
+              }
+            },
+            {
+              "id": "eci-default",
+              "selector": {
+                "kind": "engine_default",
+                "engine_id": "eloquence"
+              },
+              "adjustments": {},
+              "native": {
+                "engine_id": "eloquence",
+                "schema_id": "eloquence.eci-units.v1",
+                "parameters": {
+                  "breathiness": {
+                    "op": "set",
+                    "value": 42
+                  }
+                }
+              }
+            },
+            {
+              "id": "espeak-default",
+              "selector": {
+                "kind": "engine_default",
+                "engine_id": "espeak"
+              },
+              "adjustments": {},
+              "native": null
+            }
+          ]
+        },
+        "context": {},
+        "placement": {
+          "pan": null
+        },
+        "selection": {
+          "mode": "choice",
+          "choice_id": "paul-main"
+        },
+        "fallback_policy": {
+          "preferred_engines": [],
+          "allow_same_language_on_requested_engine": true,
+          "global_default": null,
+          "fallback_engines": [
+            "espeak"
+          ]
+        },
+        "disabled_engine_ids": [],
+        "expected_base_rate": 0.65,
+        "mode": "draft"
+      }
+    },
+    "explain_response": {
+      "protocol_version": 1,
+      "request_id": 804,
+      "type": "voice_parameters_explained_v1",
+      "result": {
+        "status": "ready",
+        "evidence": "planned",
+        "plan_id": null,
+        "choice_id": "paul-main",
+        "realized": {
+          "engine_id": "dectalk",
+          "voice_id": "paul"
+        },
+        "identity": {
+          "schema_id": "dectalk.design-voice.v1",
+          "profile_id": "dectalk.windows.4_99.v1",
+          "catalogue_revision": "1111111111111111111111111111111111111111111111111111111111111111",
+          "runtime_generation": 7
+        },
+        "parameters": [
+          {
+            "id": "ri",
+            "value": 63,
+            "origin": "common_mapping",
+            "masked_native": false,
+            "read_back": false
+          },
+          {
+            "id": "sm",
+            "value": 55,
+            "origin": "native_set",
+            "masked_native": false,
+            "read_back": false
+          }
+        ]
+      }
+    },
+    "applied_query": {
+      "protocol_version": 1,
+      "request_id": 805,
+      "type": "explain_voice_parameters_v1",
+      "source": {
+        "mode": "applied",
+        "plan_id": "plan-23"
+      }
+    },
+    "busy_response": {
+      "protocol_version": 1,
+      "request_id": 803,
+      "type": "engine_parameters_v1",
+      "engine_id": "dectalk",
+      "result": {
+        "status": "busy",
+        "retry_after_ms": 250
+      }
+    },
+    "helper_synthesis": {
+      "protocol_version": 6,
+      "request_id": 3,
+      "type": "synthesize",
+      "text": "A heading.",
+      "settings": {
+        "voice_id": "dectalk:paul",
+        "rate": 0.6,
+        "pitch": 1.1,
+        "volume": 0.8,
+        "pitch_range": null,
+        "stress": null,
+        "richness": 0.5
+      },
+      "anchors": [],
+      "voice_parameters": {
+        "native": {
+          "engine_id": "dectalk",
+          "schema_id": "dectalk.design-voice.v1",
+          "parameters": {
+            "sm": {
+              "op": "set",
+              "value": 55
+            }
+          }
+        },
+        "context_dimensions": [],
+        "expected_identity": {
+          "schema_id": "dectalk.design-voice.v1",
+          "profile_id": "dectalk.windows.4_99.v1",
+          "catalogue_revision": "1111111111111111111111111111111111111111111111111111111111111111",
+          "runtime_generation": 7
+        },
+        "unavailable_policy": "require"
+      }
+    },
+    "helper_explain_request": {
+      "protocol_version": 6,
+      "request_id": 4,
+      "type": "explain_voice_parameters_v1",
+      "source": {
+        "mode": "draft",
+        "settings": {
+          "voice_id": "dectalk:paul",
+          "rate": 0.6,
+          "pitch": 1.1,
+          "volume": 0.8,
+          "pitch_range": null,
+          "stress": null,
+          "richness": 0.5
+        },
+        "voice_parameters": {
+          "native": {
+            "engine_id": "dectalk",
+            "schema_id": "dectalk.design-voice.v1",
+            "parameters": {
+              "sm": {
+                "op": "set",
+                "value": 55
+              }
+            }
+          },
+          "context_dimensions": [],
+          "expected_identity": {
+            "schema_id": "dectalk.design-voice.v1",
+            "profile_id": "dectalk.windows.4_99.v1",
+            "catalogue_revision": "1111111111111111111111111111111111111111111111111111111111111111",
+            "runtime_generation": 7
+          },
+          "unavailable_policy": "require"
+        }
+      }
+    },
+    "helper_synthesis_started": {
+      "protocol_version": 6,
+      "request_id": 3,
+      "type": "synthesis_started",
+      "format": {
+        "sample_rate": 11025,
+        "channels": 1,
+        "sample_format": "pcm_s16_le"
+      },
+      "actual_voice_id": "dectalk:paul",
+      "native_application": {
+        "status": "applied",
+        "plan_id": "plan-23",
+        "identity": {
+          "schema_id": "dectalk.design-voice.v1",
+          "profile_id": "dectalk.windows.4_99.v1",
+          "catalogue_revision": "1111111111111111111111111111111111111111111111111111111111111111",
+          "runtime_generation": 7
+        },
+        "masked_parameters": [],
+        "reason": null
+      }
+    },
+    "stale_query_error": {
+      "protocol_version": 1,
+      "request_id": 806,
+      "type": "error",
+      "code": "stale_generation",
+      "message": "Catalogue revision changed; request the first page again."
+    },
+    "applied_explanation": {
+      "protocol_version": 1,
+      "request_id": 805,
+      "type": "voice_parameters_explained_v1",
+      "result": {
+        "status": "ready",
+        "evidence": "adapter_applied",
+        "plan_id": "plan-23",
+        "choice_id": "paul-main",
+        "realized": {
+          "engine_id": "dectalk",
+          "voice_id": "paul"
+        },
+        "identity": {
+          "schema_id": "dectalk.design-voice.v1",
+          "profile_id": "dectalk.windows.4_99.v1",
+          "catalogue_revision": "1111111111111111111111111111111111111111111111111111111111111111",
+          "runtime_generation": 7
+        },
+        "parameters": [
+          {
+            "id": "ri",
+            "value": 63,
+            "origin": "common_mapping",
+            "masked_native": false,
+            "read_back": true
+          },
+          {
+            "id": "sm",
+            "value": 55,
+            "origin": "native_set",
+            "masked_native": false,
+            "read_back": true
+          }
+        ]
+      }
+    },
+    "expired_explanation": {
+      "protocol_version": 1,
+      "request_id": 805,
+      "type": "voice_parameters_explained_v1",
+      "result": {
+        "status": "unavailable",
+        "reason": "plan_expired",
+        "message": "This plan is no longer retained."
+      }
+    }
+  },
+  "composition_cases": [
+    {
+      "name": "common_only",
+      "engine_id": "dectalk",
+      "voice_id": "paul",
+      "shared_common": {
+        "richness": 0.5
+      },
+      "choice_common": {},
+      "native_parameters": {},
+      "context": {},
+      "pristine_native": {
+        "ri": 70,
+        "sm": 3
+      },
+      "expected_native_subset": {
+        "ri": 63,
+        "sm": 12
+      },
+      "expected_masked": []
+    },
+    {
+      "name": "native_smoothness",
+      "engine_id": "dectalk",
+      "voice_id": "paul",
+      "shared_common": {
+        "richness": 0.5
+      },
+      "choice_common": {},
+      "native_parameters": {
+        "sm": {
+          "op": "set",
+          "value": 55
+        }
+      },
+      "context": {},
+      "pristine_native": {
+        "ri": 70,
+        "sm": 3
+      },
+      "expected_native_subset": {
+        "ri": 63,
+        "sm": 55
+      },
+      "expected_masked": []
+    },
+    {
+      "name": "common_changes_keep_native",
+      "engine_id": "dectalk",
+      "voice_id": "paul",
+      "shared_common": {
+        "richness": 1.0
+      },
+      "choice_common": {},
+      "native_parameters": {
+        "sm": {
+          "op": "set",
+          "value": 55
+        }
+      },
+      "context": {},
+      "pristine_native": {
+        "ri": 70,
+        "sm": 3
+      },
+      "expected_native_subset": {
+        "ri": 100,
+        "sm": 55
+      },
+      "expected_masked": []
+    },
+    {
+      "name": "explicit_equal_context_wins",
+      "engine_id": "dectalk",
+      "voice_id": "paul",
+      "shared_common": {
+        "richness": 1.0
+      },
+      "choice_common": {},
+      "native_parameters": {
+        "sm": {
+          "op": "set",
+          "value": 55
+        }
+      },
+      "context": {
+        "richness": {
+          "op": "set",
+          "value": 1.0
+        }
+      },
+      "pristine_native": {
+        "ri": 70,
+        "sm": 3
+      },
+      "expected_native_subset": {
+        "ri": 100,
+        "sm": 0
+      },
+      "expected_masked": [
+        "sm"
+      ]
+    },
+    {
+      "name": "engine_default_over_base",
+      "engine_id": "dectalk",
+      "voice_id": "paul",
+      "shared_common": {
+        "richness": 1.0
+      },
+      "choice_common": {},
+      "native_parameters": {
+        "sm": {
+          "op": "default"
+        }
+      },
+      "context": {},
+      "pristine_native": {
+        "ri": 70,
+        "sm": 3
+      },
+      "expected_native_subset": {
+        "ri": 100,
+        "sm": 3
+      },
+      "expected_masked": []
+    },
+    {
+      "name": "context_masks_default",
+      "engine_id": "dectalk",
+      "voice_id": "paul",
+      "shared_common": {
+        "richness": 1.0
+      },
+      "choice_common": {},
+      "native_parameters": {
+        "sm": {
+          "op": "default"
+        }
+      },
+      "context": {
+        "richness": {
+          "op": "set",
+          "value": 1.0
+        }
+      },
+      "pristine_native": {
+        "ri": 70,
+        "sm": 3
+      },
+      "expected_native_subset": {
+        "ri": 100,
+        "sm": 0
+      },
+      "expected_masked": [
+        "sm"
+      ]
+    },
+    {
+      "name": "zero_is_value",
+      "engine_id": "dectalk",
+      "voice_id": "paul",
+      "shared_common": {
+        "richness": 0.5
+      },
+      "choice_common": {},
+      "native_parameters": {
+        "sm": {
+          "op": "set",
+          "value": 0
+        }
+      },
+      "context": {},
+      "pristine_native": {
+        "ri": 70,
+        "sm": 3
+      },
+      "expected_native_subset": {
+        "ri": 63,
+        "sm": 0
+      },
+      "expected_masked": []
+    },
+    {
+      "name": "breathiness_does_not_remap_volume",
+      "engine_id": "eloquence",
+      "voice_id": "v1",
+      "shared_common": {
+        "richness": 0.5,
+        "volume": 1.0
+      },
+      "choice_common": {},
+      "native_parameters": {
+        "breathiness": {
+          "op": "set",
+          "value": 42
+        }
+      },
+      "context": {},
+      "expected_native_subset": {
+        "breathiness": 42,
+        "volume": 90
+      },
+      "expected_masked": []
+    },
+    {
+      "name": "context_richness_masks_both_outputs",
+      "engine_id": "eloquence",
+      "voice_id": "v1",
+      "shared_common": {
+        "richness": 0.5,
+        "volume": 1.0
+      },
+      "choice_common": {},
+      "native_parameters": {
+        "breathiness": {
+          "op": "set",
+          "value": 42
+        },
+        "volume": {
+          "op": "set",
+          "value": 25
+        }
+      },
+      "context": {
+        "richness": {
+          "op": "set",
+          "value": 1.0
+        }
+      },
+      "expected_native_subset": {
+        "breathiness": 36,
+        "volume": 100
+      },
+      "expected_masked": [
+        "breathiness",
+        "volume"
+      ]
+    }
+  ],
+  "storage_cases": [
+    {
+      "name": "portable_engine_choice_keeps_native",
+      "local_choices": [
+        {
+          "id": "paul-main",
+          "selector": {
+            "kind": "exact",
+            "engine_id": "dectalk",
+            "voice_id": "paul"
+          },
+          "adjustments": {},
+          "native": {
+            "engine_id": "dectalk",
+            "schema_id": "dectalk.design-voice.v1",
+            "parameters": {
+              "sm": {
+                "op": "set",
+                "value": 55
+              }
+            }
+          }
+        },
+        {
+          "id": "paul-soft",
+          "selector": {
+            "kind": "exact",
+            "engine_id": "dectalk",
+            "voice_id": "paul"
+          },
+          "adjustments": {},
+          "native": {
+            "engine_id": "dectalk",
+            "schema_id": "dectalk.design-voice.v1",
+            "parameters": {
+              "sm": {
+                "op": "set",
+                "value": 80
+              }
+            }
+          }
+        },
+        {
+          "id": "eci-default",
+          "selector": {
+            "kind": "engine_default",
+            "engine_id": "eloquence"
+          },
+          "adjustments": {},
+          "native": {
+            "engine_id": "eloquence",
+            "schema_id": "eloquence.eci-units.v1",
+            "parameters": {
+              "breathiness": {
+                "op": "set",
+                "value": 42
+              }
+            }
+          }
+        },
+        {
+          "id": "espeak-default",
+          "selector": {
+            "kind": "engine_default",
+            "engine_id": "espeak"
+          },
+          "adjustments": {},
+          "native": null
+        }
+      ],
+      "expected_portable_choices": [
+        {
+          "id": "eci-default",
+          "selector": {
+            "kind": "engine_default",
+            "engine_id": "eloquence"
+          },
+          "adjustments": {},
+          "native": {
+            "engine_id": "eloquence",
+            "schema_id": "eloquence.eci-units.v1",
+            "parameters": {
+              "breathiness": {
+                "op": "set",
+                "value": 42
+              }
+            }
+          }
+        },
+        {
+          "id": "espeak-default",
+          "selector": {
+            "kind": "engine_default",
+            "engine_id": "espeak"
+          },
+          "adjustments": {},
+          "native": null
+        }
+      ],
+      "omitted_choice_ids": [
+        "paul-main",
+        "paul-soft"
+      ]
+    },
+    {
+      "name": "same_physical_voice_distinct_tuning",
+      "choice_ids": [
+        "paul-main",
+        "paul-soft"
+      ],
+      "expected_sm": [
+        55,
+        80
+      ]
+    }
+  ],
+  "invalid_cases": [
+    {
+      "name": "default_with_value",
+      "parameters": {
+        "sm": {
+          "op": "default",
+          "value": 0
+        }
+      },
+      "error": "invalid_configuration"
+    },
+    {
+      "name": "boolean_is_not_integer",
+      "parameters": {
+        "sm": {
+          "op": "set",
+          "value": false
+        }
+      },
+      "error": "invalid_configuration"
+    },
+    {
+      "name": "outside_qualified_range",
+      "parameters": {
+        "sm": {
+          "op": "set",
+          "value": 101
+        }
+      },
+      "error": "invalid_configuration"
+    },
+    {
+      "name": "raw_vendor_command",
+      "parameters": {
+        "sm": {
+          "op": "set",
+          "value": "[:dv sm 55]"
+        }
+      },
+      "error": "invalid_configuration"
+    },
+    {
+      "name": "duplicate_parameter_key",
+      "raw_parameters": "{\"sm\":{\"op\":\"set\",\"value\":0},\"sm\":{\"op\":\"set\",\"value\":55}}",
+      "error": "malformed_request"
+    }
+  ],
+  "generic_value_cases": [
+    {
+      "name": "false_is_a_real_boolean_value",
+      "type": {
+        "kind": "boolean"
+      },
+      "operation": {
+        "op": "set",
+        "value": false
+      },
+      "valid": true
+    },
+    {
+      "name": "enum_uses_identifier",
+      "type": {
+        "kind": "enum",
+        "choices": [
+          {
+            "value": "male",
+            "label": "Male"
+          },
+          {
+            "value": "female",
+            "label": "Female"
+          }
+        ]
+      },
+      "operation": {
+        "op": "set",
+        "value": "female"
+      },
+      "valid": true
+    }
+  ],
+  "execution_cases": [
+    {
+      "name": "first_choice_native_failure_before_pcm",
+      "attempt_ids": [
+        "paul-main",
+        "paul-soft"
+      ],
+      "expected_sm": [
+        55,
+        80
+      ],
+      "retry_allowed": true
+    },
+    {
+      "name": "failure_after_pcm",
+      "retry_allowed": false
+    },
+    {
+      "name": "strict_preview_unsupported_block",
+      "accepted_audio": [],
+      "native_dropped": false
+    },
+    {
+      "name": "ordinary_unsupported_block",
+      "native_application": {
+        "status": "common_only",
+        "plan_id": null,
+        "identity": null,
+        "masked_parameters": [],
+        "reason": "unsupported_helper"
+      }
+    }
+  ],
+  "compatibility_cases": [
+    {
+      "target": "choice_tuning_only",
+      "operation": "register_logical_voices_v2",
+      "preserve_common_choice_adjustments": true,
+      "send_native": false,
+      "save_status": "saved_native_not_applied"
+    },
+    {
+      "target": "legacy",
+      "operation": "register_logical_voices",
+      "send_native": false,
+      "save_status": "saved_choice_and_native_not_applied"
+    },
+    {
+      "target": "mixed_lanes",
+      "main": "applied",
+      "notification": "native_unavailable",
+      "fully_applied": false
+    }
+  ]
+}

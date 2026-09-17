@@ -4,8 +4,9 @@
 
 * Status and intended result
 
-Proposed contract for [[file:adr/0022-engine-described-voice-parameters.org][ADR 0022]], following the maintainer's request for an XHI
-design. No implementation or live configuration change accompanies it.
+Accepted contract for [[file:adr/0022-engine-described-voice-parameters.org][ADR 0022]], following the maintainer's approval to continue
+at High. The initial audit/fixture slice is recorded below; no live configuration
+change or native-control UI accompanies it.
 The [[file:engine-voice-parameter-inventory.org][initial inventory]] records current code, SDK evidence and qualification gaps.
 
 The common editor remains the first screen. A user editing a DECtalk fallback
@@ -152,7 +153,7 @@ common =adjustments= patch. A conceptual JSON example is:
 }
 #+end_example
 
-This is a proposed payload, not an existing accepted request. A nonempty native
+This is a new payload, not an implemented request. A nonempty native
 record requires an explicitly engine-constrained selector for the same engine.
 An exact voice, engine default or engine-constrained property selector is valid.
 An unconstrained automatic selector must first become an explicit engine choice
@@ -360,12 +361,12 @@ An incomplete multi-file save must keep the old coherent palette usable.
 
 * Protocol evolution and compatibility
 
-** Proposed negotiated surface
+** Negotiated surface
 
 Do not add silently ignored native fields to existing strict operations.
 Reserve these new forms, checking allocations again before the codec slice:
 
-| Surface | Proposed form |
+| Surface | Versioned form |
 |---------+---------------|
 | Read-only catalogue capability | =engine_parameter_catalogue_v1= |
 | Complete native tuning capability | =engine_voice_parameters_v1= |
@@ -399,12 +400,12 @@ operations use the same planner. Helpers 1–5 keep their old request shapes and
 speech behavior. Native capture/control changes require the full Windows
 development bundle, not the main-only rebuild shortcut.
 
-The implementation's wire specification must freeze exact discriminators,
-required fields, nullable fields and terminal error shapes in independent
-fixtures before writing the codecs. The names and semantics here reserve the
-design boundary; they are not an assertion that those wire fixtures exist yet.
-Mirror the approved contract into Omnivox's ADR/protocol documentation in that
-slice before changing its public API.
+Omnivox commit =f741dfa=, =docs/engine-voice-parameters.md=, fixes the discriminators,
+required fields, nullable fields and terminal error shapes, with independent
+=docs/protocol-fixtures/engine-voice-parameters.json= examples. Its ADR 0015
+mirrors this decision. These define future codecs, not an implemented wire API.
+The [[file:../test/fixtures/voice-editor/engine-parameters-wire.json][client wire fixtures]] are an identical copy for standalone Emacs tests.
+The [[file:../test/fixtures/voice-editor/engine-parameters-storage.el][storage fixture]] fixes local/portable projection and explicit native operations.
 
 ** Validation, limits and request lifecycle
 
@@ -522,3 +523,25 @@ The architecture is sufficiently bounded for High during ordinary implementation
 after review. Return to XHI if runtime evidence leaves a consequential question
 about reset semantics, mapping precedence or concurrent application unresolved.
 Completing the design does not resolve the runtime qualification work by itself.
+
+* Implementation progress: initial audit and contract fixtures
+
+On 2026-09-17 the installed Windows runtimes passed 316 individual control cases
+over all 17 voices, using 649 silent captured syntheses. Eloquence's eight voice
+APIs/annotations and DECtalk's 28 documented design-voice options accepted the
+tested interior values. All audited fields returned to their baseline after
+the next plain voice request. Eloquence's optional setter/getter/copy functions
+also passed direct checks. Omnivox commit =338356a= contains the repeatable
+audit tools and full input-hashed evidence.
+
+This verifies interior values and ordinary resets on those builds. Boundary
+validation, cancellation/failure, native dependency application, helper 6 and
+Linux acceptance remain required. The audited DECtalk =ap= limits are 50–350 Hz;
+do not infer editable limits from the existing common adapter's 50–500 clamp.
+No common calibration or live worker changed.
+
+The wire examples cover discovery, busy/stale responses, registration, previews,
+timeline/marker/helper forms, planned/applied explanation, explicit context,
+defaults, zero/false, same-voice choices, unsupported blocks and older targets.
+Next implement typed descriptors and pure native planning in Omnivox; turn these
+independent expectations into codec/composition tests before advertising support.

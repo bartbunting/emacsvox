@@ -4,10 +4,10 @@
 
 * Status
 
-Proposed. The maintainer requested the complete engine-specific voice controls
-alongside the existing common controls, and selected XHI for the design.
-The detailed contract below awaits review; no new storage format, protocol or
-runtime behavior is implemented by this record.
+Accepted for implementation on 2026-09-17. The maintainer approved continuing
+after the design summary and switched to High. The initial native
+audit and contract fixtures are recorded in the implementation progress section
+of the design; storage readers, codecs and the native-control UI remain pending.
 
 * Context
 
@@ -21,7 +21,7 @@ Omnivox's native extension descriptor currently contains an ID and description.
 It does not yet provide types, limits, defaults or an execution contract.
 The earlier [[file:../voice-editor-fallback-tuning-contract.org][choice-tuning contract]] explicitly deferred arbitrary native knobs.
 
-* Proposed decision
+* Decision
 
 Keep the common editor and its calibrated mappings. Add a typed parameter
 catalogue supplied by each Omnivox adapter, qualified against its actual runtime

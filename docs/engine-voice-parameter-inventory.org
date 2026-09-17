@@ -4,7 +4,7 @@
 
 * Scope and evidence
 
-Research for proposed [[file:adr/0022-engine-described-voice-parameters.org][ADR 0022]] and its [[file:engine-voice-parameters-design.org][design contract]]. This is an implementation
+Research for [[file:adr/0022-engine-described-voice-parameters.org][ADR 0022]] and its [[file:engine-voice-parameters-design.org][design contract]]. This is an implementation
 inventory, not a claim that these controls are already editable in Emacsvox.
 
 Inspected Emacsvox =77baf2bb5= and Omnivox =f10962b= on 2026-09-17. Concurrent
@@ -22,7 +22,25 @@ to the Omnivox repository, not to an installed runtime.
 Three evidence classes matter: /mapped now/ means code already emits that
 setting; /SDK candidate/ means a vendor reference describes it; /qualified/
 requires successful validation, reset and synthesis checks against the actual
-runtime/platform. This documentation pass did no runtime qualification.
+runtime/platform. The initial documentation pass did no runtime qualification;
+the subsequent Windows audit below adds explicitly scoped evidence.
+
+** Installed Windows audit
+
+Omnivox commit =338356a= records 649 silent PCM captures: 64 parameter cases
+across Eloquence's eight voices and 252 across DECtalk's nine voices. Every
+tested interior value read back correctly; every following plain utterance
+restored all audited fields. ECI direct setter/readback/preset-copy checks also
+passed. DECtalk supplied runtime limits/defaults for the 28 initialized fields.
+No live speech worker or user settings changed.
+
+These results apply to ECI =6.1.0.0= and DECtalk =v4.99 Github NORMAL ACCESS32=,
+with DLL/helper hashes in Omnivox's
+=docs/benchmarks/2026-09-17-native-voice-parameters.md= and adjacent JSON data.
+Range boundaries, cancellation and complete helper/native integration remain
+unqualified. In particular, DECtalk reports an =ap= maximum of 350 Hz on this
+build; the existing common clamp of 500 is not a native-editor range contract.
+The audit does not make new controls available in the current Emacs UI.
 
 * Common controls: keep these mappings
 
