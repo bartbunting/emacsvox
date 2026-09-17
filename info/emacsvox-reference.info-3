@@ -4508,101 +4508,101 @@ Function Index
 * emacsvox-aural-voice-workbench-mode <1>: emacsvox-aural-voice-workbench.
                                                              (line  121)
 * emacsvox-aural-voice-workbench-move-fallback-engine-down: emacsvox-aural-voice-workbench.
-                                                             (line  176)
+                                                             (line  178)
 * emacsvox-aural-voice-workbench-move-fallback-engine-down <1>: emacsvox-aural-voice-workbench.
-                                                             (line  177)
+                                                             (line  179)
 * emacsvox-aural-voice-workbench-move-fallback-engine-up: emacsvox-aural-voice-workbench.
-                                                             (line  183)
+                                                             (line  185)
 * emacsvox-aural-voice-workbench-move-fallback-engine-up <1>: emacsvox-aural-voice-workbench.
-                                                             (line  184)
+                                                             (line  186)
 * emacsvox-aural-voice-workbench-move-preferred-engine-down: emacsvox-aural-voice-workbench.
-                                                             (line  190)
+                                                             (line  192)
 * emacsvox-aural-voice-workbench-move-preferred-engine-down <1>: emacsvox-aural-voice-workbench.
-                                                             (line  191)
+                                                             (line  193)
 * emacsvox-aural-voice-workbench-move-preferred-engine-up: emacsvox-aural-voice-workbench.
-                                                             (line  197)
+                                                             (line  199)
 * emacsvox-aural-voice-workbench-move-preferred-engine-up <1>: emacsvox-aural-voice-workbench.
-                                                             (line  198)
+                                                             (line  200)
 * emacsvox-aural-voice-workbench-open-row: emacsvox-aural-voice-workbench.
-                                                             (line  204)
+                                                             (line  206)
 * emacsvox-aural-voice-workbench-open-row <1>: emacsvox-aural-voice-workbench.
-                                                             (line  205)
+                                                             (line  207)
 * emacsvox-aural-voice-workbench-physical-view: emacsvox-aural-voice-workbench.
-                                                             (line  211)
+                                                             (line  213)
 * emacsvox-aural-voice-workbench-physical-view <1>: emacsvox-aural-voice-workbench.
-                                                             (line  212)
+                                                             (line  214)
 * emacsvox-aural-voice-workbench-preview: emacsvox-aural-voice-workbench.
-                                                             (line  219)
+                                                             (line  221)
 * emacsvox-aural-voice-workbench-preview <1>: emacsvox-aural-voice-workbench.
-                                                             (line  220)
+                                                             (line  222)
 * emacsvox-aural-voice-workbench-preview-all: emacsvox-aural-voice-workbench.
-                                                             (line  226)
+                                                             (line  228)
 * emacsvox-aural-voice-workbench-preview-all <1>: emacsvox-aural-voice-workbench.
-                                                             (line  227)
+                                                             (line  229)
 * emacsvox-aural-voice-workbench-quit:   emacsvox-aural-voice-workbench.
-                                                             (line  233)
+                                                             (line  235)
 * emacsvox-aural-voice-workbench-quit <1>: emacsvox-aural-voice-workbench.
-                                                             (line  234)
+                                                             (line  236)
 * emacsvox-aural-voice-workbench-refresh: emacsvox-aural-voice-workbench.
-                                                             (line  245)
+                                                             (line  247)
 * emacsvox-aural-voice-workbench-refresh <1>: emacsvox-aural-voice-workbench.
-                                                             (line  246)
+                                                             (line  248)
 * emacsvox-aural-voice-workbench-refresh-inventory: emacsvox-aural-voice-workbench.
-                                                             (line  254)
+                                                             (line  256)
 * emacsvox-aural-voice-workbench-refresh-inventory <1>: emacsvox-aural-voice-workbench.
-                                                             (line  255)
+                                                             (line  257)
 * emacsvox-aural-voice-workbench-request-recovery-probe: emacsvox-aural-voice-workbench.
-                                                             (line  261)
+                                                             (line  263)
 * emacsvox-aural-voice-workbench-request-recovery-probe <1>: emacsvox-aural-voice-workbench.
-                                                             (line  262)
+                                                             (line  264)
 * emacsvox-aural-voice-workbench-retry-apply: emacsvox-aural-voice-workbench.
-                                                             (line  268)
+                                                             (line  270)
 * emacsvox-aural-voice-workbench-retry-apply <1>: emacsvox-aural-voice-workbench.
-                                                             (line  269)
+                                                             (line  271)
 * emacsvox-aural-voice-workbench-save-and-apply: emacsvox-aural-voice-workbench.
-                                                             (line  275)
+                                                             (line  277)
 * emacsvox-aural-voice-workbench-save-and-apply <1>: emacsvox-aural-voice-workbench.
-                                                             (line  276)
+                                                             (line  278)
 * emacsvox-aural-voice-workbench-set-filter: emacsvox-aural-voice-workbench.
-                                                             (line  282)
+                                                             (line  284)
 * emacsvox-aural-voice-workbench-set-filter <1>: emacsvox-aural-voice-workbench.
-                                                             (line  283)
+                                                             (line  285)
 * emacsvox-aural-voice-workbench-speak-current: emacsvox-aural-voice-workbench.
-                                                             (line  289)
+                                                             (line  291)
 * emacsvox-aural-voice-workbench-speak-current <1>: emacsvox-aural-voice-workbench.
-                                                             (line  290)
+                                                             (line  292)
 * emacsvox-aural-voice-workbench-stop-preview: emacsvox-aural-voice-workbench.
-                                                             (line  296)
+                                                             (line  298)
 * emacsvox-aural-voice-workbench-stop-preview <1>: emacsvox-aural-voice-workbench.
-                                                             (line  297)
+                                                             (line  299)
 * emacsvox-aural-voice-workbench-style-view: emacsvox-aural-voice-workbench.
-                                                             (line  303)
+                                                             (line  305)
 * emacsvox-aural-voice-workbench-style-view <1>: emacsvox-aural-voice-workbench.
-                                                             (line  304)
+                                                             (line  306)
 * emacsvox-aural-voice-workbench-toggle-disabled-engine: emacsvox-aural-voice-workbench.
-                                                             (line  310)
+                                                             (line  312)
 * emacsvox-aural-voice-workbench-toggle-disabled-engine <1>: emacsvox-aural-voice-workbench.
-                                                             (line  311)
+                                                             (line  313)
 * emacsvox-aural-voice-workbench-toggle-fallback-engine: emacsvox-aural-voice-workbench.
-                                                             (line  317)
+                                                             (line  319)
 * emacsvox-aural-voice-workbench-toggle-fallback-engine <1>: emacsvox-aural-voice-workbench.
-                                                             (line  318)
+                                                             (line  320)
 * emacsvox-aural-voice-workbench-toggle-preferred-engine: emacsvox-aural-voice-workbench.
-                                                             (line  324)
+                                                             (line  326)
 * emacsvox-aural-voice-workbench-toggle-preferred-engine <1>: emacsvox-aural-voice-workbench.
-                                                             (line  325)
+                                                             (line  327)
 * emacsvox-aural-voice-workbench-tune:   emacsvox-aural-voice-workbench.
-                                                             (line  331)
+                                                             (line  333)
 * emacsvox-aural-voice-workbench-tune <1>: emacsvox-aural-voice-workbench.
-                                                             (line  332)
+                                                             (line  334)
 * emacsvox-aural-voice-workbench-undo:   emacsvox-aural-voice-workbench.
-                                                             (line  338)
+                                                             (line  340)
 * emacsvox-aural-voice-workbench-undo <1>: emacsvox-aural-voice-workbench.
-                                                             (line  339)
+                                                             (line  341)
 * emacsvox-aural-voice-workbench-undo-applied: emacsvox-aural-voice-workbench.
-                                                             (line  345)
+                                                             (line  347)
 * emacsvox-aural-voice-workbench-undo-applied <1>: emacsvox-aural-voice-workbench.
-                                                             (line  346)
+                                                             (line  348)
 * emacsvox-beginning-or-end:             emacsvox-speak.     (line   16)
 * emacsvox-beginning-or-end <1>:         emacsvox-speak.     (line   17)
 * emacsvox-bookshare:                    emacsvox-bookshare. (line   51)

@@ -1616,6 +1616,13 @@ Downloaded files belong to you and stay in Omnivox's per-user voice storage
 across executable upgrades. Failed and interrupted operations retain files
 for inspection; automatic resume and package updates are not provided yet.
 @item
+To uninstall a downloaded Piper@comma{} Flite or MBROLA package@comma{} disable all its
+speakers and Apply@comma{} then press @kbd{C-c u} in the voice browser.
+Review its affected voices@comma{} size and retained palette references before
+confirming. Files still needed by other sessions are retained. Built-in SLT
+and MBROLA en1@comma{} imported files and engine runtimes cannot be removed here.
+@kbd{C-c U} reviews incomplete cleanup for resumption.
+@item
 In the voice browser@comma{} @kbd{d} opens the download catalogue and
 @kbd{b} includes built-in Flite SLT explicitly.
 @kbd{i} installs a completed native validation operation by its
@@ -3955,6 +3962,22 @@ enable or disable a managed voice@comma{} @kbd{a} to review Apply@comma{}
 and @kbd{d} for downloads. Downloads start disabled; enable and
 Apply before previewing them. Engine-managed voices retain their engine's own
 selection mechanism. Other adapters retain the existing physical inventory view.
+
+To remove a downloaded Piper@comma{} Flite or MBROLA package@comma{} disable its voices with
+@kbd{+} and use @kbd{a} to Apply. Then select one of
+its voices and press @kbd{C-c u}. The review lists every speaker
+sharing the package@comma{} its size@comma{} known palette references and any reason files
+must be retained. Confirming removes only the reviewed managed files. Built-in
+voices@comma{} imported files and engine runtimes stay installed; saved palette choices
+remain available if you download the voice again.
+
+Another speech session may still need the package. Uninstall retains those
+files until retirement is confirmed; older session records may require
+inspection. The result distinguishes removed bytes@comma{} remaining files and any
+unconfirmed deletion amount. After interrupted cleanup@comma{} press
+@kbd{C-c U} or run @code{omnivox-library-resume-uninstall} to review and
+resume the retained operation. This needs an Omnivox build supporting voice
+uninstallation.
 
 The engine list reports @emph{Availability} before routing preferences.  An engine
 with a missing runtime stays visible as @emph{unavailable}@comma{} with its reason under

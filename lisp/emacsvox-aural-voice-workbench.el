@@ -2321,6 +2321,7 @@ when they remain unsaved."
       "In physical voices, A plays all visible voices and B compares two.\n"
       "Omnivox voices: + enables/disables; a reviews Apply; d downloads; b includes SLT.\n"
       "i imports a validated operation; C-c r shows the last library Apply result.\n"
+      "C-c u reviews package uninstallation; C-c U resumes incomplete cleanup.\n"
       "Installed records library membership; Enabled is desired; Active is stream eligibility.\n"
       "Active does not mean a model is resident in memory. Unknown needs a fresh status check.\n"
       "F filters voices; C clears filters; R refreshes the inventory.\n"
@@ -2355,6 +2356,8 @@ when they remain unsaved."
            'emacsvox-aural-voice-workbench--library-download
            'emacsvox-aural-voice-workbench--library-slt
            'emacsvox-aural-voice-workbench--library-import
+           'omnivox-library-uninstall
+           'omnivox-library-resume-uninstall
            'omnivox-library-show-result)
        (emacsvox-aural-voice-workbench--library-p))
       ((or 'emacsvox-aural-voice-workbench-logical-view
@@ -2447,6 +2450,8 @@ when they remain unsaved."
        ("b" . emacsvox-aural-voice-workbench--library-slt)
        ("i" . emacsvox-aural-voice-workbench--library-import)
        ("C-c r" . omnivox-library-show-result)
+       ("C-c u" . omnivox-library-uninstall)
+       ("C-c U" . omnivox-library-resume-uninstall)
        ("P" . emacsvox-aural-voice-workbench-preview)
        ("A" . emacsvox-aural-voice-workbench-preview-all)
        ("B" . emacsvox-aural-voice-workbench-compare)

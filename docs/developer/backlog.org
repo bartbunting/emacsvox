@@ -22,21 +22,20 @@ command-to-sound/stop-to-silence measurements; callback or mixer timing alone
 does not establish audible latency. Document requests that still need complete
 waveform buffering, and keep marker support a separately verified capability.
 
-** TODO Add voice uninstallation and disk-space recovery
+** TODO Complete spoken acceptance of voice uninstallation
 
-Near-term voice-management priority requested on 2026-09-17. Add an explicit
-uninstall action for downloaded Piper and Flite voice packages, following
-[[file:../adr/0019-voice-library-and-activation.org][ADR 0019]] and the shared voice-library contract. The current
-[[file:../voice-catalogue-review.org][catalogue installation flow]] supports disable and Apply but retains the files.
+The development implementation now offers explicit removal of managed Piper,
+Flite and MBROLA downloads, following [[file:../adr/0019-voice-library-and-activation.org][ADR 0019]] and the shared contract.
+Disable every speaker in the package and Apply first; then use =C-c u= in the
+Voice Workbench. =C-c U= resumes incomplete cleanup. Review includes shared
+speakers and known palette references; references and imported files remain.
+Native ownership checks retain active, rollback and live-session files, and
+results distinguish confirmed removed file bytes from uncertain deletions.
+Older startup records without retirement evidence remain conservative blockers.
 
-Preview the affected voices, shared model files and saved palette references
-before confirmation. Coordinate removal with both speech lanes; reclaim only
-managed files whose ownership is established and which are no longer needed
-by shared speakers or active, rollback or live-session generations. Preserve
-user-owned imported files and saved palette references. Report retained files,
-blocked or partial cleanup, and actual disk space reclaimed accurately.
-Verify shared Piper models, Flite packages, other live sessions, interrupted
-removal and subsequent reinstallation before calling the feature complete.
+Complete spoken acceptance of the review, cancellation, blocked result and
+resumption flows with the maintainer. Automated storage/lifecycle and graphical
+checks do not establish that the full interaction is clearly spoken.
 
 ** TODO Refine punctuation speech behavior
 

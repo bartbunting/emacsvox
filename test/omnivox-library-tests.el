@@ -7,6 +7,137 @@
 (require 'omnivox-library)
 (require 'omnivox-voices)
 
+(defun omnivox-library-tests--removal-review ()
+  "Return a frozen package review fixture."
+  '(:operation_id "removal-one" :plan_sha256 "reviewed-hash" :name "Shared model"
+    :package_bytes 100 :voices [(:engine_id "piper" :physical_id "speaker-zero" :display_name "Zero")
+                               (:engine_id "piper" :physical_id "speaker-one" :display_name "One")]
+    :blockers []))
+
+(ert-deftest omnivox-library-removal-refusal-and-blockers-never-submit-deletion ()
+  (dolist (blocked '(nil t))
+    (let ((review (copy-tree (omnivox-library-tests--removal-review) t)) asked sent)
+      (when blocked (setq review (plist-put review :blockers ["Another session still uses this package"])))
+      (cl-letf (((symbol-function 'omnivox-library--removal-references) (lambda (_) '("personal / bolden")))
+                ((symbol-function 'omnivox-library--removal-review) #'ignore)
+                ((symbol-function 'omnivox-library--confirm) (lambda (_) (setq asked t) nil))
+                ((symbol-function 'omnivox-library--request) (lambda (&rest _) (setq sent t))))
+        (if blocked (should-error (omnivox-library--removal-execute 'service review 'source) :type 'user-error)
+          (should-not (omnivox-library--removal-execute 'service review 'source)))
+        (should (eq (and asked t) (not blocked)))
+        (should-not sent)))))
+
+(ert-deftest omnivox-library-removal-rechecks-target-after-confirmation ()
+  (let ((source '(old)) sent)
+    (cl-letf (((symbol-function 'omnivox-library--removal-references) (lambda (_) nil))
+              ((symbol-function 'omnivox-library--removal-review) #'ignore)
+              ((symbol-function 'omnivox-library--source-key) (lambda () source))
+              ((symbol-function 'omnivox-library--confirm) (lambda (_) (setq source '(new)) t))
+              ((symbol-function 'omnivox-library--request) (lambda (&rest _) (setq sent t))))
+      (should-error (omnivox-library--removal-execute 'service (omnivox-library-tests--removal-review) '(old)) :type 'user-error)
+      (should-not sent))))
+
+(ert-deftest omnivox-library-removal-refuses-a-row-from-a-previous-target ()
+  (let ((emacsvox-aural-voice-workbench--library-source '(old)) started)
+    (cl-letf (((symbol-function 'derived-mode-p) (lambda (&rest _) t))
+              ((symbol-function 'tabulated-list-get-id) (lambda () '("mbrola" "mbrola:v1/mb-us3/us3")))
+              ((symbol-function 'omnivox-library--source-key) (lambda () '(new)))
+              ((symbol-function 'omnivox-library--service) (lambda (&rest _) (setq started t))))
+      (should-error (omnivox-library-uninstall) :type 'user-error)
+      (should-not started))))
+
+(ert-deftest omnivox-library-removal-keeps-correlated-partial-results-and-uncertainty ()
+  (dolist (lost '(nil t))
+    (let ((omnivox-library-last-removal nil)
+          (omnivox-library--changed-hook nil) submitted)
+      (cl-letf (((symbol-function 'omnivox-library--removal-references) (lambda (_) nil))
+                ((symbol-function 'omnivox-library--removal-review) #'ignore)
+                ((symbol-function 'omnivox-library--source-key) (lambda () '(source)))
+                ((symbol-function 'omnivox-library--confirm) (lambda (_) t))
+                ((symbol-function 'display-buffer) #'ignore)
+                ((symbol-function 'omnivox-library--request)
+                 (lambda (_service request)
+                   (setq submitted request)
+                   (if lost (error "Lost connection")
+                     '(:type "removal" :result (:operation_id "removal-one" :status "partial" :removed_bytes 40
+                                                            :remaining_bytes 50 :unconfirmed_bytes 10 :detail "File locked"))))))
+        (if lost
+            (should-error (omnivox-library--removal-execute 'service (omnivox-library-tests--removal-review) '(source)))
+          (omnivox-library--removal-execute 'service (omnivox-library-tests--removal-review) '(source)))
+        (should (equal (plist-get submitted :expected_sha256) "reviewed-hash"))
+        (should (equal (plist-get omnivox-library-last-removal :status) (if lost "unconfirmed" "partial")))
+        (unless lost
+          (with-current-buffer "*Omnivox uninstall result*"
+            (should (string-search "40 bytes confirmed removed" (buffer-string)))
+            (should (string-search "10 missing bytes" (buffer-string)))))))))
+
+(ert-deftest omnivox-library-removal-capability-is-explicit-on-older-servers ()
+  (cl-letf (((symbol-function 'omnivox-library--request)
+             (lambda (_service command)
+               (should (equal command '(:command "host")))
+               '(:type "host" :catalogue_providers ["piper" "flite"])) ))
+    (should-error (omnivox-library--removal-supported 'service) :type 'user-error)))
+
+(ert-deftest omnivox-library-removal-finds-inactive-mbrola-choices-without-editing ()
+  (require 'emacsvox-aural-voice-runtime)
+  (let* ((emacsvox-aural-voice-palette-registry
+          (copy-hash-table emacsvox-aural-voice-palette-registry))
+         (emacsvox-aural-voice-palette-override 'acss-default)
+         (emacsvox-aural-voice-palette-changed-hook nil)
+         (emacsvox-aural-routing--choice-sets
+          '((:schema-version 3 :id "removal-mbrola" :palette removal-test :voice bolden
+             :choices ((:id "us3" :selector (:kind exact :scope local :engine-id "mbrola"
+                                                  :voice-id "mbrola:v1/mb-us3/us3") :adjustments nil)))))
+         (saved-sets (copy-tree emacsvox-aural-routing--choice-sets)))
+    (emacsvox-aural-register-voice-palette-data
+     '(:schema-version 3 :id removal-test :summary "Inactive MBROLA choice" :parent acss-default
+       :routing owned :entries ((bolden :personality voice-bolden :choices nil
+                                        :language "en-US" :local-choices "removal-mbrola"))))
+    (let* ((record (gethash 'removal-test emacsvox-aural-voice-palette-registry))
+           (saved (copy-tree (emacsvox-aural-voice-palette-data-form record))))
+      (should (member "removal-test / bolden"
+                      (omnivox-library--removal-references
+                       [(:engine_id "mbrola" :physical_id "mbrola:v1/mb-us3/us3")])) )
+      (should-not (omnivox-library--removal-references
+                   [(:engine_id "piper" :physical_id "mbrola:v1/mb-us3/us3")]))
+      (should (equal saved (emacsvox-aural-voice-palette-data-form record)))
+      (should (equal saved-sets emacsvox-aural-routing--choice-sets)))))
+
+(ert-deftest omnivox-library-removal-review-includes-shared-speakers-and-kept-references ()
+  (cl-letf (((symbol-function 'display-buffer) #'ignore))
+    (omnivox-library--removal-review (omnivox-library-tests--removal-review) '("personal / bolden"))
+    (with-current-buffer "*Omnivox uninstall review*"
+      (should (string-search "piper: Zero" (buffer-string)))
+      (should (string-search "piper: One" (buffer-string)))
+      (should (string-search "personal / bolden" (buffer-string)))
+      (should buffer-read-only))))
+
+(ert-deftest omnivox-library-removal-graphical-review-preserves-origin-and-return ()
+  (skip-unless (display-graphic-p))
+  (let ((origin (generate-new-buffer " *uninstall origin*")))
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer origin)
+          (insert "Chosen voice\nRetained editor draft\n")
+          (goto-char 8)
+          (let ((window (selected-window)) (position (point)))
+            (omnivox-library--removal-review (omnivox-library-tests--removal-review) '("personal / bolden"))
+            (redisplay t)
+            (should (eq window (selected-window)))
+            (should (= position (point)))
+            (let ((review (get-buffer-window "*Omnivox uninstall review*")))
+              (should (window-live-p review))
+              (select-window review)
+              (goto-char (point-min))
+              (redisplay t)
+              (should (pos-visible-in-window-p (point-min) review))
+              (quit-window))
+            (select-window window)
+            (should (eq (current-buffer) origin))
+            (should (= position (point)))
+            (should (equal (buffer-string) "Chosen voice\nRetained editor draft\n"))))
+      (kill-buffer origin))))
+
 (ert-deftest omnivox-library-confirmation-completes-and-cancels ()
   "Real minibuffer input completes both choices and keeps refusal explicit."
   (dolist (case '(("y TAB RET" . t) ("n TAB RET" . nil)

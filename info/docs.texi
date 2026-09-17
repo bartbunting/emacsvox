@@ -6446,7 +6446,9 @@ x		emacsvox-aural-voice-workbench-describe
 
 C-c C-c		emacsvox-aural-voice-workbench-save-and-apply
 C-c C-k		emacsvox-aural-voice-workbench-cancel-staged
+C-c U		omnivox-library-resume-uninstall
 C-c r		omnivox-library-show-result
+C-c u		omnivox-library-uninstall
 
 @end format
 @end deffn

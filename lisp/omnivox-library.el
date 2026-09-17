@@ -43,6 +43,7 @@
 (declare-function emacsvox-aural-voice-workbench--open-engine "emacsvox-aural-voice-workbench" (engine parent))
 (declare-function emacsvox-aural-voice-workbench--library-action "emacsvox-aural-voice-workbench" (action &optional operation))
 (declare-function emacsvox-aural-voice-workbench--library-start "emacsvox-aural-voice-workbench" ())
+(declare-function emacsvox-aural-voice-runtime--resolve "emacsvox-aural-voice-runtime" (voice &optional palette profile))
 (defvar tts-program)
 (defvar tts-speaker-process)
 (defvar tts-notify-process)
@@ -53,6 +54,7 @@
 (defvar omnivox--logical-registry-generation)
 (defvar omnivox--control-registration-property)
 (defvar omnivox-engine-inventory)
+(defvar emacsvox-aural-voice-workbench--library-source)
 (declare-function omnivox--send-control-request "omnivox-voices" (process request callback))
 (declare-function omnivox--pending-requests "omnivox-voices" (process))
 (declare-function omnivox--install-control-filter "omnivox-voices" (process))
@@ -72,6 +74,7 @@
 (defvar omnivox-library--busy nil)
 (defvar omnivox-library--changed-hook nil "Hook after installed voice selections change.")
 (defvar omnivox-library-last-result nil "Most recent local Apply result.")
+(defvar omnivox-library-last-removal nil "Most recent package removal result.")
 (defvar-local omnivox-library--engine nil)
 (defvar-local omnivox-library--index nil)
 (defvar-local omnivox-library--index-sha nil)
@@ -753,6 +756,150 @@ Press q to return to engine details.
     (run-hooks 'omnivox-library--changed-hook)
     (message "Built-in Flite SLT included and enabled for the next Apply")))
 
+(defun omnivox-library--removal-references (voices)
+  "List known palette choices referring to package VOICES, without editing them."
+  (require 'emacsvox-aural-voice-runtime)
+  (let (references)
+    (dolist (name (emacsvox-aural-voice-palette-candidates))
+      (let ((palette (intern name)))
+        (dolist (entry (emacsvox-aural-effective-voice-entries palette))
+          (let ((selectors (plist-get
+                            (emacsvox-aural-voice-runtime--resolve (car entry) palette)
+                            :selectors)))
+            (when (seq-some
+                   (lambda (selector)
+                     (and (eq (plist-get selector :kind) 'exact)
+                          (seq-some (lambda (voice)
+                                      (and (equal (plist-get selector :engine-id) (plist-get voice :engine_id))
+                                           (equal (plist-get selector :voice-id) (plist-get voice :physical_id))))
+                                    voices)))
+                   selectors)
+              (push (format "%s / %s" name (car entry)) references))))))
+    (sort (delete-dups references) #'string-lessp)))
+
+(defun omnivox-library--removal-review (review references)
+  "Display immutable package REVIEW and known palette REFERENCES."
+  (with-current-buffer (get-buffer-create "*Omnivox uninstall review*")
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (insert (format "Uninstall %s\n\n%d bytes of managed package files.\n\nAffected voices sharing this package:\n"
+                      (plist-get review :name) (plist-get review :package_bytes)))
+      (seq-doseq (voice (plist-get review :voices))
+        (insert (format "%s: %s\n" (plist-get voice :engine_id) (plist-get voice :display_name))))
+      (insert "\nKnown palette references (kept for later reinstallation):\n")
+      (insert (if references (mapconcat #'identity references "\n") "None found in loaded palettes"))
+      (insert "\n\nBuilt-in voices, imported files and engine runtimes are retained.\n")
+      (insert "Both speech streams keep running. Uninstall requires voices to be disabled and applied first.\n")
+      (when (> (length (plist-get review :blockers)) 0)
+        (insert "\nFiles retained because:\n")
+        (seq-doseq (reason (plist-get review :blockers)) (insert (concat reason "\n"))))
+      (special-mode)
+      (goto-char (point-min))))
+  (display-buffer "*Omnivox uninstall review*"))
+
+(defun omnivox-library--removal-execute (service review source)
+  "Review then submit removal on SERVICE, checking the captured SOURCE."
+  (unless (and (stringp (plist-get review :operation_id))
+               (stringp (plist-get review :plan_sha256))
+               (integerp (plist-get review :package_bytes)))
+    (error "Incomplete uninstall review from Omnivox"))
+  (let ((references (omnivox-library--removal-references (plist-get review :voices))))
+    (omnivox-library--removal-review review references)
+    (when (> (length (plist-get review :blockers)) 0)
+      (user-error "Uninstall blocked: %s; see the uninstall review"
+                  (elt (plist-get review :blockers) 0)))
+    (when (omnivox-library--confirm
+           (format "Uninstall %s and all %d listed voices, retaining palette choices? "
+                   (plist-get review :name) (length (plist-get review :voices))))
+      (unless (and (equal source (omnivox-library--source-key))
+                   (equal references (omnivox-library--removal-references (plist-get review :voices))))
+        (user-error "Target or palette references changed; review uninstallation again"))
+      ;; On a lost reply, preserve uncertainty and expose durable native recovery.
+      (setq omnivox-library-last-removal
+            (list :operation_id (plist-get review :operation_id) :status "unconfirmed"
+                  :detail "Reply not confirmed; use Resume incomplete uninstallation"))
+      (let* ((reply (omnivox-library--request
+                     service (list :command "uninstall" :operation (plist-get review :operation_id)
+                                   :expected_sha256 (plist-get review :plan_sha256))))
+             (result (plist-get reply :result)))
+        (unless (and (equal (plist-get reply :type) "removal")
+                     (equal (plist-get result :operation_id) (plist-get review :operation_id)))
+          (error "Uninstall result was not correlated with its reviewed operation"))
+        (setq omnivox-library-last-removal result)
+        (with-current-buffer (get-buffer-create "*Omnivox uninstall result*")
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (insert (format "%s: %s\n\n%d bytes confirmed removed.\n%d bytes remain.\n%d missing bytes have no confirmed deletion receipt.\n\nCounts describe package files; filesystem free-space changes can differ.\nSaved palette choices remain available for reinstallation.\n"
+                            (plist-get review :name) (plist-get result :status)
+                            (plist-get result :removed_bytes) (plist-get result :remaining_bytes)
+                            (plist-get result :unconfirmed_bytes)))
+            (insert (concat (plist-get result :detail) "\n"))
+            (special-mode)))
+        (display-buffer "*Omnivox uninstall result*")
+        (run-hooks 'omnivox-library--changed-hook)
+        (message "Uninstall %s: %d bytes removed; %d remain%s"
+                 (plist-get result :status) (plist-get result :removed_bytes)
+                 (plist-get result :remaining_bytes)
+                 (if (> (plist-get result :unconfirmed_bytes) 0) "; some deletion amounts unconfirmed" ""))
+        result))))
+
+(defun omnivox-library--removal-supported (service)
+  "Require explicit uninstall capability from SERVICE before sending mutations."
+  (unless (eql (plist-get (omnivox-library--request service '(:command "host")) :removal_version) 1)
+    (user-error "This Omnivox version does not support voice uninstallation")))
+
+;;;###autoload
+(defun omnivox-library-uninstall ()
+  "Review and uninstall the selected managed Piper, Flite or MBROLA package.
+All its speakers must be disabled and applied first.  Keep palette choices,
+imported files, built-in voices and files still needed by speech sessions."
+  (interactive)
+  (when (or omnivox-library--busy (process-live-p omnivox-library--retained-service))
+    (user-error "An Apply is active or needs inspection"))
+  (let* ((combined (derived-mode-p 'emacsvox-aural-voice-workbench-mode))
+         (id (or (tabulated-list-get-id) (user-error "Choose an installed voice first")))
+         (engine (car-safe id))
+         (voice (and (consp id) (if combined (cadr id) (cdr id))))
+         (source (omnivox-library--source-key))
+         service
+         (omnivox-library--busy t)
+         (omnivox-library--timeout 300))
+    (unless (and (stringp engine) (stringp voice)) (user-error "Choose an installed physical voice"))
+    (when (and combined (not (equal source emacsvox-aural-voice-workbench--library-source)))
+      (user-error "Speech target changed; refresh the Voice Workbench before uninstalling"))
+    (setq service (omnivox-library--service))
+    (unwind-protect
+        (progn
+          (omnivox-library--removal-supported service)
+          (let* ((library (omnivox-library--request service '(:command "inspect")))
+                 (reply (omnivox-library--request
+                         service (list :command "uninstall-preview" :engine engine :voice voice
+                                       :expected_sha256 (plist-get library :sha256)))))
+            (omnivox-library--removal-execute service (plist-get reply :review) source)))
+      (when (process-live-p service) (delete-process service)))))
+
+;;;###autoload
+(defun omnivox-library-resume-uninstall ()
+  "Review and resume an incomplete native package uninstallation."
+  (interactive)
+  (when (or omnivox-library--busy (process-live-p omnivox-library--retained-service))
+    (user-error "An Apply is active or needs inspection"))
+  (let ((source (omnivox-library--source-key))
+        (service (omnivox-library--service))
+        (omnivox-library--busy t)
+        (omnivox-library--timeout 300))
+    (unwind-protect
+        (progn
+          (omnivox-library--removal-supported service)
+          (let* ((reply (omnivox-library--request service '(:command "uninstall-pending")))
+                 (choices (seq-map (lambda (review)
+                                     (cons (format "%s (%s)" (plist-get review :name) (plist-get review :operation_id)) review))
+                                   (plist-get reply :reviews))))
+            (unless choices (user-error "No incomplete package uninstallations"))
+            (omnivox-library--removal-execute
+             service (cdr (assoc (completing-read "Resume package cleanup: " choices nil t) choices)) source)))
+      (when (process-live-p service) (delete-process service)))))
+
 (defun omnivox-library-show-result ()
   "Show the last Apply outcome and any retained native process attempts."
   (interactive)
@@ -781,6 +928,7 @@ Press q to return to engine details.
   :doc "Installed-voice actions."
   "d" #'omnivox-library-download "g" #'omnivox-library-refresh "e" #'omnivox-library-toggle
   "a" #'omnivox-library-apply "i" #'omnivox-library-import-validated
+  "u" #'omnivox-library-uninstall "C-c u" #'omnivox-library-resume-uninstall
   "b" #'omnivox-library-include-flite-slt "r" #'omnivox-library-show-result)
 
 (defun omnivox-library--speak-row (&optional actions)
@@ -804,7 +952,7 @@ Press q to return to engine details.
    #'omnivox-library--speak-row #'omnivox-library-refresh
    #'omnivox-library--speak-row)
   (setq tabulated-list-format [("Engine" 10 t) ("Voice" 28 t) ("Desired state" 14 t) ("Physical ID" 0 nil)])
-  (setq header-line-format "d download; e enable/disable; a Apply both engines; b include SLT; i validated import; r result; g refresh; q back")
+  (setq header-line-format "d download; e enable/disable; a Apply; u uninstall; C-c u resume cleanup; b include SLT; i import; r result; g refresh; q back")
   (tabulated-list-init-header))
 
 ;;;###autoload

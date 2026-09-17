@@ -1320,6 +1320,22 @@ and @@texinfo:@kbd{d}@@ for downloads. Downloads start disabled; enable and
 Apply before previewing them. Engine-managed voices retain their engine's own
 selection mechanism. Other adapters retain the existing physical inventory view.
 
+To remove a downloaded Piper, Flite or MBROLA package, disable its voices with
+@@texinfo:@kbd{+}@@ and use @@texinfo:@kbd{a}@@ to Apply. Then select one of
+its voices and press @@texinfo:@kbd{C-c u}@@. The review lists every speaker
+sharing the package, its size, known palette references and any reason files
+must be retained. Confirming removes only the reviewed managed files. Built-in
+voices, imported files and engine runtimes stay installed; saved palette choices
+remain available if you download the voice again.
+
+Another speech session may still need the package. Uninstall retains those
+files until retirement is confirmed; older session records may require
+inspection. The result distinguishes removed bytes, remaining files and any
+unconfirmed deletion amount. After interrupted cleanup, press
+@@texinfo:@kbd{C-c U}@@ or run ~omnivox-library-resume-uninstall~ to review and
+resume the retained operation. This needs an Omnivox build supporting voice
+uninstallation.
+
 The engine list reports /Availability/ before routing preferences.  An engine
 with a missing runtime stays visible as /unavailable/, with its reason under
 /Last failure/.  /Routing policy: allowed/ means the policy permits using that

@@ -42,6 +42,7 @@
         (require 'omnivox-engine-settings-tests)
         (require 'omnivox-espeak-variants-tests)
         (require 'omnivox-catalogue-tests)
+        (require 'omnivox-library-tests)
         ;; Loading minibuffer speech advice must not send ERT's own reports
         ;; to an audio device after a test's delivery stubs have unwound.
         (setq-default emacsvox-speak-messages nil)
@@ -56,6 +57,7 @@
             (message "%s: %s" function file)))
         (let ((stats (ert-run-tests-batch
                       '(member
+                        omnivox-library-removal-graphical-review-preserves-origin-and-return
                         omnivox-espeak-variants-graphical-refresh-keeps-focus-and-parent
                         omnivox-espeak-variants-graphical-navigation-speaks-every-row
                         omnivox-catalogue-graphical-navigation-and-background-refresh
@@ -74,8 +76,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 18)
-                                (= (ert-stats-completed stats) 18)
+          (setq status (if (and (= (ert-stats-total stats) 19)
+                                (= (ert-stats-completed stats) 19)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

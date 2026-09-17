@@ -8,6 +8,14 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox Unreleased --- Current User-Visible Changes
 
+** Managed voice uninstallation
+
+The Omnivox voice browser offers C-c u to review removal of downloaded Piper,
+Flite and MBROLA packages. Disable and Apply first. Reviews include all shared
+speakers, known palette references and files retained for other speech sessions.
+Built-in voices, imported files, engine runtimes and saved choices are preserved.
+C-c U resumes incomplete cleanup. Requires an updated development Omnivox build.
+
 ** Expanded Piper voice catalogue
 
 Piper downloads are grouped by language, voice and quality. Slash searches
