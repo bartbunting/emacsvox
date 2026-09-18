@@ -154,8 +154,11 @@ from a palette or descriptor.
 * Other engines and expansion
 
 Use the same catalogue contract for eSpeak, Piper, Flite, MBROLA, RHVoice,
-WinRT, macOS and later helpers. This pass does not establish their full native
-parameter lists. Each adapter must audit its actual API before publishing one.
+WinRT, macOS and later helpers. The [[file:engine-native-controls-research.org][follow-up native-controls research]] covers
+these engines plus TGSpeechBox and RuTTS, with source references, existing
+mappings and candidates to consider after Eloquence and DECtalk. It is a source
+audit, not runtime qualification. Each adapter must qualify its actual API
+before publishing writable controls.
 
 For every candidate record its type, native unit, range or enum, applicable
 voices, common mapping dependencies, reset evidence, apply scope and platform

@@ -1,0 +1,384 @@
+#+title: Native Speech Controls Beyond Eloquence and DECtalk
+#+date: 2026-09-18
+#+startup: content
+
+* Purpose and evidence
+
+This research identifies useful later additions to the
+[[file:engine-voice-parameter-inventory.org][initial parameter inventory]], after Eloquence and DECtalk. It follows
+[[file:adr/0022-engine-described-voice-parameters.org][ADR 0022]] and the [[file:engine-voice-parameters-design.org][existing design]]; it proposes no new protocol or implementation.
+
+This is a documentation-only source audit. No new control was exercised,
+listening-tested, enabled or advertised. /Mapped/ below means the inspected
+adapter already applies a setting. /Candidate/ means an upstream API or source
+describes it, not that Omnivox has qualified it on an installed runtime.
+Recommended priorities are engineering judgments, pending listening tests.
+
+Inspected Emacsvox =7fbf94d376a374d8514eb8593849cdb3635255d0= and Omnivox
+=bb025cf47317dae2034dfb11989c7eb837f125e7=. Concurrent native-parameter routing
+work is outside this audit. Source paths below are relative to Omnivox.
+Pinned upstream sources are used where available; platform documentation and
+eSpeak NG's online voice-file documentation were consulted on 2026-09-18.
+
+* Findings and recommended order
+
+There is useful work beyond the first two engines, but it is unevenly
+distributed. TGSpeechBox offers the broadest additional voice-quality surface.
+eSpeak NG and WinRT offer smaller, practical first investigations. Several
+engines already expose their principal controls through Omnivox's common
+settings, so an empty additional voice-control list can be the correct result.
+
+| Engine | Existing common mapping | Most useful additional candidates | Assessment |
+|--------+-------------------------+-----------------------------------+------------|
+| eSpeak NG | Rate, pitch, volume | Pitch range, word gap | Good first qualification target |
+| WinRT | Rate, pitch, volume | Minimum punctuation and appended silence | Good first timing target on Windows |
+| TGSpeechBox | Rate, pitch, inflection, PCM volume | Breathiness, creakiness, spectral tilt, glottal pulse shape | Richest timbre candidate; experimental runtime |
+| RuTTS | Rate, pitch, intonation, PCM volume | Punctuation-specific pause factors | Useful for Russian reading; rate coupling needs care |
+| Flite | Duration stretch, F0 shift, PCM volume | F0 contour spread for supported synthesis paths | Useful if the selected voice actually consumes it |
+| Piper | Duration scale | Acoustic and phoneme-duration variability | Model-dependent benefit; no generic native pitch slider |
+| MBROLA | eSpeak frontend rate/pitch, MBROLA amplitude | Vocal-tract rescaling | Worth auditioning after prototype qualification |
+| RHVoice | Absolute rate, pitch, volume | Relative multipliers; separate reading/quality policies | Little distinct per-voice value established yet |
+| macOS AVSpeechSynthesizer | Rate, pitch, volume | Before/after utterance delays | Little distinct timbre value in the current API |
+
+After Eloquence and DECtalk acceptance, qualify eSpeak pitch range/word gap and
+WinRT silence enums first. Then try a small TGSpeechBox voice-quality subset,
+rather than exposing its entire DSP surface at once. RuTTS pauses and Flite F0
+spread are focused follow-ups if those engines are being used. Piper variability
+and MBROLA tract scaling need comparative listening before prioritizing UI work.
+RHVoice configuration and macOS delays should wait for a concrete unmet need.
+
+The sections below separate speech timing and text-reading policy from timbre.
+Whether those controls belong in the same editor remains a later product
+decision; their existence does not make them all per-voice palette parameters.
+
+* eSpeak NG
+
+Adapter: =omnivox-tts/src/espeak.rs=. The inspected binding is
+=espeak-rs-sys 0.1.9=, whose bundled source identifies itself as =1.52.0.1=.
+The adapter sets native rate, pitch and volume for each request under the global
+eSpeak lock. It does not currently set pitch range or word gap.
+
+The public [[https://github.com/espeak-ng/espeak-ng/blob/master/src/include/espeak-ng/speak_lib.h][C parameter API]] includes these additional candidates:
+
+| Native parameter | Type and documented semantics | Recommendation |
+|------------------+-------------------------------+----------------|
+| =espeakRANGE= | Integer, nominal 0–100; 50 normal, 0 monotone | First candidate for independent expressiveness |
+| =espeakWORDGAP= | Integer, units of 10 ms at default speed | First candidate for word separation |
+| =espeakPUNCTUATION= | None, all or selected punctuation; separate character list | Reading policy; coordinate with Emacs preprocessing |
+| =espeakCAPITALS= | 0 off, 1 sound, 2 spoken indication, 3 or greater pitch increase in Hz | Reading policy, not a continuous timbre control |
+| =espeakINTONATION= | Packed integer selecting intonation group and tone flags | No portable editor enum established by this audit |
+| =espeakSSML_BREAK_MUL= | Integer percentage scaling SSML breaks | Low priority for the present text path |
+
+Do not publish the header's pitch/range endpoint as a qualified limit. In the
+bundled =src/libespeak-ng/setlengths.c=, synthesis clamps their upper value to
+99, while parameter storage/readback can retain the requested value. A successful
+getter does not prove an audible distinction at 100. The header documents common
+rate in words per minute and pitch/volume in engine units; retain the existing
+common conversions rather than treating native units as normalized ACSS values.
+
+The [[https://github.com/espeak-ng/espeak-ng/blob/master/docs/voices.md][voice-file format]] additionally supports formant adjustment, breath,
+roughness, flutter, voicing, consonant strength, tone and echo. These belong to
+voice/variant definitions, not the ordinary scalar =espeak_SetParameter= API.
+Existing variants remain voice selections. Custom voice-file authoring would be
+a separate feature, with separate persistence and asset-management requirements.
+
+Qualification must establish voice/language defaults and reset all added global
+settings under the existing lock, including after cancellation and switching
+between two choices using the same physical voice. Word-gap timing varies with
+rate. Test punctuation and capitalization against the text Omnivox actually
+receives, not text that Emacs has already transformed differently.
+
+* Windows WinRT
+
+Adapter: =omnivox-tts/src/windows.rs=. The current backend uses
+=Windows.Media.SpeechSynthesis= and =SynthesizeTextToStreamAsync=. Azure Speech
+styles and emotion controls are a different API and are not candidates supplied
+by this backend.
+
+The [[https://learn.microsoft.com/en-us/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions?view=winrt-26100][WinRT options API]] already supplies the mapped common controls:
+[[https://learn.microsoft.com/en-us/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions.speakingrate?view=winrt-26100][speaking rate]] is a multiplier with API range 0.5–6 and default 1;
+[[https://learn.microsoft.com/en-us/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions.audiopitch?view=winrt-26100][pitch]] has API range 0–2 and default 1; [[https://learn.microsoft.com/en-us/uwp/api/windows.media.speechsynthesis.speechsynthesizeroptions.audiovolume?view=winrt-26100][volume]] is 0–1 with default 1.
+These API bounds do not establish every voice's effective bounds. Omnivox's
+common pitch path currently uses 0.5–2, so the API's lower interval would need
+separate qualification if exposed in native units.
+
+Two genuinely additional options deserve investigation:
+
+- [[https://learn.microsoft.com/en-us/uwp/api/windows.media.speechsynthesis.speechpunctuationsilence?view=winrt-26100][Punctuation silence]]: =Default= or =Min=.
+- [[https://learn.microsoft.com/en-us/uwp/api/windows.media.speechsynthesis.speechappendedsilence?view=winrt-26100][Appended silence]]: =Default= or =Min=.
+
+Both appeared in Windows 10 version 1803, build 17134. =Min= asks the voice for
+its minimum silence; it does not promise zero silence or a fixed millisecond
+duration. These could improve short screen-reader utterances and dense prose.
+Treat that benefit as a hypothesis until measured and heard on selected voices.
+
+Use explicit defaults for every request. Check synthesized duration, boundary
+timings, streaming and cancellation on Windows. Word/sentence-boundary metadata
+flags are observation settings, not speech controls. The inspected API supplies
+no additional general breathiness or formant parameters.
+
+* TGSpeechBox
+
+Bridge: =omnivox-tgspeechbox-sys/native/omnivox_tgspeechbox.cpp=.
+The source manifest pins =v-310@f5ec247= to
+=f5ec247bca50507ab1e2ed661136395538dc3e97=. This is an experimental engine.
+Common rate already uses frontend speed plus a time-stretch stage; common pitch
+sets base pitch in Hz, inflection controls the contour, and volume scales PCM.
+Keep these mappings intact.
+
+The [[https://raw.githubusercontent.com/tgeczy/TGSpeechBox/f5ec247bca50507ab1e2ed661136395538dc3e97/src/frontend/nvspFrontend.h][frontend API]] exposes =nvspFrontend_setFrameExDefaults= and its getter:
+
+| Field | Native type/unit and semantics |
+|-------+--------------------------------|
+| =creakiness=, =breathiness= | Floating amounts, 0–1, added to phoneme values |
+| =jitter=, =shimmer= | Floating amounts, 0–1, adding pitch/amplitude irregularity |
+| =sharpness= | Floating multiplier; typical values 0.5–2 |
+
+The first four combine with phoneme values and clamp to 0–1. Thus a zero override
+does not necessarily remove breathiness or creakiness already in a phoneme. The
+current bridge initializes these additions to zero and sharpness to one.
+
+The [[https://raw.githubusercontent.com/tgeczy/TGSpeechBox/f5ec247bca50507ab1e2ed661136395538dc3e97/src/voicingTone.h][versioned voice-tone structure]] contains 19 floating fields. This is the
+candidate inventory, not a proposed 19-slider editor. Parenthesized values are
+header ranges or typical values, not qualified limits for every profile.
+
+| Group | Native fields and units |
+|-------+-------------------------|
+| Pulse shape | =voicingPeakPos= (0–1), =speedQuotient= (0.5–4 ratio) |
+| Pre-emphasis | =voicedPreEmphA= (0–about 0.97), =voicedPreEmphMix= (0–1) |
+| High shelf | =highShelfGainDb= (dB), =highShelfFcHz= (Hz), =highShelfQ= (typically 0.5–2) |
+| Spectral tilt | =voicedTiltDbPerOct=, =aspirationTiltDbPerOct= (dB/octave) |
+| Glottal modulation | =noiseGlottalModDepth= (0–1), =pitchSyncF1DeltaHz= (typically 0–100 Hz), =pitchSyncB1DeltaHz= (typically 0–80 Hz) |
+| Resonances | =cascadeBwScale= (0.3–2), =nasalBwScale= (0.5–2), =f4FreqScale= (0.7–1.5), =nasalGainScale= (0.5–1.5) |
+| Modulation effects | =tremorDepth= (0–0.5), =chorusDepth= (0–1), =chorusDetuneHz= (0.5–5 Hz) |
+
+=speedQuotient= concerns the glottal pulse, not reading speed. Voiced tilt uses
+negative values for a brighter sound; aspiration tilt has the opposite sign
+convention. Some frontend comments give narrower ranges than the DSP header.
+The pinned tone struct is version 5 and DSP version 8; qualify this concrete
+version rather than relying on stale slider-count comments or future fields.
+
+The [[https://raw.githubusercontent.com/tgeczy/TGSpeechBox/f5ec247bca50507ab1e2ed661136395538dc3e97/src/speechPlayer.h][player API]] has tone setters/getters and a null-pointer reset to generic
+engine defaults. Omnivox already loads tone values from the selected YAML
+profile. A generic reset would therefore lose that profile's baseline. Restore
+the profile first, then apply sparse overrides. The bridge also caches profile
+configuration: two consecutive choices sharing a profile must still restore
+different overrides correctly.
+
+Start with breathiness, creakiness, voiced tilt and pulse shape if listening
+shows useful, intelligible distinctions. Leave output gain/time stretching in
+the existing output/rate paths. Raw frame data, formant trajectories and YAML
+voice creation are separate interfaces, not extra scalar palette parameters.
+
+* RuTTS
+
+Bridge: =omnivox-rutts-sys/native/omnivox_rutts.c=. The source manifest pins
+=6.3.3= to =2848d2892097320ed37fc963b439b15803f47f0c=.
+The bridge initializes a configuration for each request and maps common rate,
+pitch and pitch range to =speech_rate=, =voice_pitch= and =intonation=.
+The helper applies volume to PCM.
+
+The [[https://raw.githubusercontent.com/poretsky/ru_tts/2848d2892097320ed37fc963b439b15803f47f0c/src/ru_tts.h][native configuration]] uses integer engine units. Its suggested ranges are
+20–500 for rate, 50–300 for pitch and 0–140 for intonation. These are not stated
+as words per minute or Hz. All three initialize to 100.
+
+Eight additional integer fields adjust pauses. The seven punctuation/intonation
+factors are percentages of their base gaps:
+
+| Field | Header's suggested interval |
+|-------+-----------------------------|
+| =general_gap_factor= | Upper bound depends on speaking rate |
+| =comma_gap_factor= | 0–750 |
+| =dot_gap_factor= | 0–500 |
+| =semicolon_gap_factor=, =colon_gap_factor= | 0–600 |
+| =question_gap_factor= | 0–375 |
+| =exclamation_gap_factor= | 0–300 |
+| =intonational_gap_factor= | 0–1000 |
+
+The [[https://raw.githubusercontent.com/poretsky/ru_tts/2848d2892097320ed37fc963b439b15803f47f0c/src/text2speech.c][initializer and synthesis code]] set all eight to 100. The general factor
+needs extra investigation: its header mentions a fractional upper bound despite
+the integer field, and [[https://raw.githubusercontent.com/poretsky/ru_tts/2848d2892097320ed37fc963b439b15803f47f0c/src/speechrate_control.c][timing setup]] packs a scaled value into an 8-bit quantity.
+Do not turn the suggested intervals into advertised validated bounds without
+checking the rate-dependent arithmetic.
+
+Punctuation pause compression is the main additional value for Russian reading.
+Fresh per-request initialization gives a useful reset foundation, but test rate
+interaction and the request following cancellation. Decimal-separator flags
+are reading policy. The alternate-voice flag is already voice selection; the
+legacy-rate-algorithm flag would change calibration, not add a timbre control.
+
+* Flite
+
+Bridge: =omnivox-flite-sys/native/omnivox_flite.c=; common conversion and PCM
+gain: =omnivox-flite-helper/src/lib.rs=. The =2.2= source manifest pins
+=e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88=.
+The bridge already sets floating =duration_stretch= for rate and =f0_shift=
+for pitch, in both buffered and streaming paths.
+
+For Clustergen voices, [[https://raw.githubusercontent.com/festvox/flite/e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88/src/cg/cst_cg.c][F0 smoothing]] consumes:
+
+- =int_f0_target_mean=: target F0 mean in Hz, defaulting to the voice model's
+  mean, then multiplied by =f0_shift=.
+- =int_f0_target_stddev=: target F0 standard deviation in Hz, defaulting to
+  the voice model's spread. This is the useful additional contour control.
+
+The generated F0 clamp of 50–700 Hz is not a documented input range for either
+feature. Other [[https://raw.githubusercontent.com/festvox/flite/e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88/src/synth/cst_synth.c][synthesis paths]] use =target_f0_mean= and =target_f0_stddev=
+instead. A feature dictionary accepting a key does not prove that a particular
+voice reads it. Model internals such as MLSA coefficients are not established
+portable voice controls just because their names appear in the source.
+
+Qualify each supported voice/algorithm, derive defaults from its model, and
+restore or remove feature overrides between choices. Mean interacts directly
+with the existing pitch multiplier; avoid applying pitch twice. F0 spread is a
+better first addition than a second generic pitch slider.
+
+* Piper
+
+Adapter: =omnivox-tts/src/piper.rs=. The vendored =libpiper= is =1.7.0=,
+pinned to =7b8e8f7197a480047677715f00d3d78903b55a2a= in
+=third-party/piper1-gpl/UPSTREAM.md=.
+
+The [[https://raw.githubusercontent.com/OHF-Voice/piper1-gpl/7b8e8f7197a480047677715f00d3d78903b55a2a/libpiper/include/piper.h][C synthesis options]] provide three floating controls:
+
+| Field | Meaning | Current treatment |
+|-------+---------+-------------------|
+| =length_scale= | Duration multiplier; 0.5 is faster, 2 is slower | Already mapped from common rate |
+| =noise_scale= | Acoustic sampling variability | Model default |
+| =noise_w_scale= | Phoneme-duration variability | Model default |
+
+=speaker_id= is physical voice selection. The inspected C request API does not
+provide generic pitch, volume, emotion/style or random-seed controls. Options
+found in another Piper frontend must not be assumed to exist in this C API.
+Execution provider, GPU device and thread counts are initialization/performance
+settings, not per-voice acoustic controls.
+
+Use =piper_default_synthesize_options= for the selected model. The
+[[https://raw.githubusercontent.com/OHF-Voice/piper1-gpl/7b8e8f7197a480047677715f00d3d78903b55a2a/libpiper/src/piper.cpp][implementation]] reads inference defaults from its JSON configuration, including
+=noise_w= for the duration-noise value. Suggested values in the header are not
+universal defaults or safe limits. Omnivox currently preserves these noise
+defaults while replacing speaker and calibrated duration scale.
+
+The two noise controls are plausible later additions if repeated listening
+finds useful prosody differences across installed models. They should retain
+their actual meanings rather than being relabeled as generic richness. Check
+multiple runs, rate interaction and intelligibility; exact PCM equality is not
+a sufficient oracle for stochastic synthesis.
+
+* MBROLA
+
+The experimental path is =omnivox-mbrola-helper/src/engine.rs=, built by
+=tools/build_mbrola_prototype.py= with MBROLA pinned to
+=274dead162f2826dc38c208fba92efeddb724c33=. It combines an eSpeak text frontend
+with MBROLA diphone synthesis. These are two distinct control stages.
+
+The [[https://raw.githubusercontent.com/numediart/MBROLA/274dead162f2826dc38c208fba92efeddb724c33/README.md][MBROLA command-line API]] supplies:
+
+| Option | Native meaning | Candidate use |
+|--------+----------------+---------------|
+| =-f= | Floating multiplier of supplied pitch points | Backend pitch, distinct from frontend prosody |
+| =-t= | Floating multiplier of supplied phoneme durations | Backend duration, distinct from frontend rate |
+| =-v= | Floating sample-amplitude multiplier | Already used for common volume |
+| =-l= | Target voice frequency in Hz, rescaling vocal-tract character | Most interesting additional timbre candidate |
+
+Current common rate and pitch are sent to eSpeak when producing the phoneme
+stream. Adding =-f= or =-t= would introduce a second adjustment stage; it must
+not silently double the common mapping. For zero volume the helper uses valid
+native amplitude and then mutes PCM, because the executable rejects zero.
+
+=-l= is not an F0-in-Hz pitch knob. Its reference is the voice database's
+sampling frequency. Before exposing it, verify changes to timbre, F0, duration
+and actual PCM sample rate: the helper currently labels output with the database
+rate. No portable safe interval across databases was established here.
+
+One subprocess per request provides isolation, but each database still needs a
+qualified baseline and intelligibility checks. Keep database identity, phoneme
+renaming/cloning, raw input commands and missing-diphone error policy outside
+the voice-control editor. Tract scaling is worth a later prototype audition,
+with explicit provenance for frontend versus backend parameters.
+
+* RHVoice
+
+Adapter: =omnivox-rhvoice-helper/src/lib.rs=. The inspected native ABI uses the
+[[https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/src/include/RHVoice.h][RHVoice 1.14.0 C interface]]; newer accepted 1.x runtimes still require their
+own qualification. The request structure contains:
+
+- Absolute rate, pitch and volume: floating normalized values from -1 to 1.
+  Their physical meaning depends on language/voice configuration.
+- Relative rate, pitch and volume: floating multipliers, neutral at 1.
+- Punctuation mode and optional punctuation list; capitalization mode; flags.
+
+Omnivox already maps common controls to the absolute fields and leaves relative
+multipliers at 1. Its common volume mapping uses the attenuation interval -1–0.
+Native relative multipliers could offer independent composition, but they do
+not establish a new kind of voice quality beyond existing rate/pitch/volume.
+
+The [[https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/src/include/RHVoice_common.h][shared enums]] distinguish default/none/all/selected punctuation and
+default/off/word/pitch/sound capitalization. The C header limits capitalization
+mode to character reading. A flag requests unclipped rate; effective bounds and
+interaction with existing rate calibration need investigation before considering
+a dedicated boolean. Do not expose an untyped native flags integer.
+
+The [[https://raw.githubusercontent.com/RHVoice/RHVoice/1.14.0/doc/en/Configuration-file.md][configuration file]] additionally defines rate/pitch/volume bounds and
+defaults, quality levels, spelling and language policy. These are loaded at
+startup. Quality is a separate engine configuration decision, with latency and
+voice compatibility to evaluate. Sonic-related rate settings apply only to
+builds that include Sonic. A voice profile chooses voices/language routing,
+not an independent timbre parameter.
+
+No generic breathiness, formant or contour-range request control was established
+by this audit. Prefer a concrete reading-policy or quality requirement before
+adding RHVoice-specific UI. Preserve voice-configured baselines and explicitly
+reset request fields if relative or policy controls are eventually implemented.
+
+* macOS AVSpeechSynthesizer
+
+Bridge: =omnivox-tts/src/macos_bridge.m=; native request path:
+=omnivox-tts/src/macos/native.rs=. The bridge constructs an =AVSpeechUtterance=
+and uses the buffer-writing synthesis API. It already applies voice, rate,
+pitch multiplier and volume before synthesis.
+
+Apple's [[https://developer.apple.com/documentation/avfaudio/avspeechutterance][utterance API]] supplies rate using its minimum/maximum/default constants,
+[[https://developer.apple.com/documentation/avfaudio/avspeechutterance/pitchmultiplier][pitch multiplier]] from 0.5 to 2, and volume from 0 to 1. Additional scalar
+properties are =preUtteranceDelay= and =postUtteranceDelay=, floating intervals
+in seconds. These concern utterance timing, with no additional general timbre
+surface established in the inspected API.
+
+Delay controls have limited apparent value beside Omnivox's presentation timing.
+Before proposing them, verify whether and how they affect buffer-writing output;
+queue delays in live =speak= playback must not be assumed to become PCM silence.
+
+The [[https://developer.apple.com/documentation/avfaudio/avspeechutterance/prefersassistivetechnologysettings][assistive-technology preference]] allows running assistive technology's
+speech settings to take precedence. That is a settings-ownership decision,
+not a new voice-quality knob. IPA attributed text and SSML initialization are
+content/pronunciation interfaces that would need text-pipeline work, not raw
+parameter strings passed through a palette.
+
+Older macOS speech APIs are not this backend. Do not promise their controls on
+=AVSpeechSynthesizer=. Any future addition needs actual macOS voice, streaming,
+timing and cancellation checks; this research performed none.
+
+* Qualification required before later implementation
+
+Keep the existing catalogue's distinctions between a common mapping, an explicit
+native override, and restoration of the selected voice's native baseline.
+The following evidence is still required for every proposed addition:
+
+1. Identify the runtime/version, platform, voice/model and synthesis path that
+   consumes the setting. Record native type, units, effective limits, default
+   source and unsupported cases. Setter acceptance alone is insufficient.
+2. Demonstrate a useful audible effect and preserved intelligibility, including
+   interaction with common rate/pitch and contextual overrides. A common value
+   must not apply twice through frontend/backend or baseline/multiplier stages.
+3. Prove restoration between voices and between choices sharing one voice,
+   including the request after cancellation or failure. Distinguish generic
+   engine defaults from selected-profile defaults and inherited feature values.
+4. Exercise buffered/streaming paths, marker timing where applicable, and
+   latency. Use repeated comparisons for stochastic engines. Validate finite
+   values and bounds before passing them to native libraries.
+5. Publish only qualified descriptors, using already available metadata without
+   loading every model for discovery. Preserve speech fallback when an engine
+   or a saved native setting is unavailable.
+
+This report allocates no parameter IDs, promises no release date, and adds no
+implementation tasks ahead of Eloquence and DECtalk acceptance.
