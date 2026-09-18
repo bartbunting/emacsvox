@@ -939,3 +939,29 @@ runtime without a matching Piper build. The restored selection was preserved;
 this catalogue package is staged separately. No live Emacs was changed.
 Next connect native choice registration and routed speech/preview evidence,
 then the Emacs parameter editor.
+
+* Implementation progress: shared native synthesis execution
+
+Omnivox commit =fbddf32= connects native synthesis to the shared engine interface
+and its cancellation isolation and voice eligibility wrappers. Buffered and
+progressive calls preserve the complete native block, including explicit zero
+and default operations, common context dimensions and expected runtime identity.
+Disabled voices remain blocked. Unsupported engines reject strict native use;
+explicit common-only use retains ordinary streaming and reports degradation.
+
+Application evidence precedes stream start and PCM on the bounded relay.
+Cancellation suppresses late evidence and results, using the existing engine
+and process admission limits. These receipts describe tentative adapter
+application; routed PCM commitment and playback evidence remain separate work.
+
+The isolated source passed 927 distinct workspace tests, plus a child-process
+rerun, with one existing long stress test ignored. Clippy and formatting passed.
+Silent Linux-parent checks through the shared interface and eligibility wrapper
+passed against the qualified Windows Eloquence and DECtalk helpers. Both
+produced native PCM and recovered with fresh identities after cancellation.
+These checks establish neither listening quality nor acoustic stop latency.
+
+Concurrent unrelated work was preserved. Native registration, routed speech,
+strict previews, public application evidence and the Emacs editor remain to be
+connected. The complete native capability stays unadvertised until those paths
+are ready.
