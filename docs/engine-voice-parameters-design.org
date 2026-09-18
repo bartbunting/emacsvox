@@ -1029,3 +1029,31 @@ playback evidence, preview/explanation operations and the Emacs parameter editor
 remain to be connected. This internal slice enables no public capability and
 changes no desktop launcher or live session. Full Windows staging remains part
 of public transport integration.
+
+* Implementation progress: connection-owned parameter catalogue cache
+
+Omnivox commit =20c0f3c= retains complete validated catalogues from existing
+public queries. Internal native admission can use these immutable snapshots
+without another engine call. Cached controls remain usable during ordinary
+speech; helper replacement and pending recovery exclude old metadata. Native
+execution still validates the actual runtime identity before applying settings.
+
+Each connection retains at most 32 catalogues within a 1 MiB encoded-content
+budget, plus one partial assembly capped at 256 KiB. These are encoded-content
+bounds, not measured process memory limits. Partial, inconsistent, timed-out and
+late results never become usable metadata. Cache contention does not delay
+speech or public replies, and cached entries do not keep engines resident.
+
+The workspace passed 969 distinct tests plus one child-process rerun. Clippy,
+formatting and backend documentation links passed. The qualified-runtime probe
+also passed separately: it cached eight Eloquence and 28 DECtalk controls,
+used them for routed fallback and exact private selection with native readback,
+then excluded each catalogue after helper recovery. These silent checks opened
+no audio device and do not establish listening quality or actual playback.
+
+Public native registration and requests, playback evidence, strict previews,
+explanations and the Emacs parameter editor remain next. This cache accessor is
+tested with internal admission and routing but is not yet consumed by production
+native admission. The native capability bundle remains unadvertised. No Windows
+package, desktop launcher or live Emacs session changed; full development staging
+remains required for public transport integration.
