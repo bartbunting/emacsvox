@@ -1092,3 +1092,37 @@ Emacs session changed.
 Next connect timeline 5 and marker 4, including accepted and actually consumed
 audio evidence, then strict native previews, explanations and the Emacs editor.
 Registration alone does not make these controls usable from Emacs.
+
+* Implementation progress: native timelines and playback evidence
+
+Omnivox commit =9281f3d= accepts timeline 5 for ordinary engine-layered speech.
+Admission freezes the connection's cached catalogues with the logical voice registry;
+execution uses those snapshots without querying helpers. Buffered and streaming
+fallback prepare the actual selected choice independently for each span.
+
+Marker 4 reports that choice and its native result when the first audio frame
+is consumed. Native results distinguish applied controls, explicit common-only
+degradation and no native block. Failed pre-audio attempts, empty audio and
+cancellation before consumption cannot publish application evidence. Applied
+plan references belong to the connection and expire on eviction or runtime
+replacement; capturing runtime identity before synthesis prevents rebinding an
+old receipt to a restarted helper.
+
+The locked workspace passed 988 distinct tests plus one child-process rerun,
+with two expected skips. Clippy, formatting and backend documentation checks
+passed. These tests use null output, not listening acceptance.
+
+Full Windows development staging passed as =bc33370ac992544e=. The packaged
+server passed native timeline checks for DECtalk and Eloquence, including
+explicit equal-context masking, multipart delivery, distinct plan references,
+old-format rejection and cancellation followed by ordinary speech. A choice
+without native edits returned null; an independent connection without cached
+metadata reported common-only application. The separate test payload is under
+=servers/omnivox-bin/native-timeline-check=; it omits Piper and was not selected
+for the active voice-library profile. No desktop launcher or live Emacs session
+changed. The Emacsvox documentation release check passed.
+
+Next connect strict native previews and draft/applied explanations, then the
+Emacs parameter editor, persistence and main/notification acceptance. The native
+capability remains unadvertised until its public execution bundle is complete;
+these controls are not yet available through the Emacs workbench.
