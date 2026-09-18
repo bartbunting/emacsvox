@@ -965,3 +965,34 @@ Concurrent unrelated work was preserved. Native registration, routed speech,
 strict previews, public application evidence and the Emacs editor remain to be
 connected. The complete native capability stays unadvertised until those paths
 are ready.
+
+* Implementation progress: native choice admission and preparation
+
+Omnivox commit =bb025cf= stores engine-layered choices in the existing logical
+voice registry.
+Internal registration validates a whole replacement against immutable current
+metadata before publishing it. Known-invalid values reject the replacement;
+missing engines and unknown schemas retain their saved settings as unavailable.
+Registration performs no engine queries, loads or reconnects.
+
+Preparation uses the actual selected choice, original common style and context.
+Separate choices for the same physical voice keep separate native settings;
+policy fallback carries no choice-native block. Explicit zero/default operations
+and contextual masking survive. Prepared blocks freeze current runtime identity,
+while saved definitions retain no runtime handles. Older speech paths reject
+these definitions instead of silently discarding their native settings.
+
+The locked workspace passed 945 distinct tests plus one child-process rerun,
+with one existing stress test ignored. Clippy and formatting passed. Silent
+Linux-parent probes registered and prepared choices for the qualified Windows
+Eloquence and DECtalk helpers, then produced buffered and progressive PCM with
+the requested native readback. First-PCM cancellation retired both helpers, as
+in the preceding probe; fresh-identity recovery succeeded. No audio device was
+opened, so these results establish neither listening quality nor acoustic stop
+latency.
+
+This is an internal integration slice. Public registration, native timelines,
+routed application/playback evidence, strict private previews and the Emacs
+parameter editor remain to be connected. The native bundle stays unadvertised.
+No Windows package, desktop launcher or live Emacs session was changed. Full
+development staging remains required when public transport is connected.
