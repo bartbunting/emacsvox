@@ -1126,3 +1126,39 @@ Next connect strict native previews and draft/applied explanations, then the
 Emacs parameter editor, persistence and main/notification acceptance. The native
 capability remains unadvertised until its public execution bundle is complete;
 these controls are not yet available through the Emacs workbench.
+
+* Implementation progress: strict native previews
+
+Omnivox commit =5270daa= connects =preview_voice_v3= to the private preview
+queue and playback tracker. Admission freezes the draft, context, rate, placement,
+disabled-engine union and cached catalogues without replacing the saved voice
+registry. Selected choices retain their identity, including differently tuned
+choices for the same physical voice. Automatic fallback prepares the actual
+selected choice independently.
+
+Native previews require the requested controls: missing metadata, unsupported
+controls or invalid application evidence cannot silently produce common-only
+speech. Deliberately removing the native block remains valid. Terminal replies
+separate accepted audio from audio whose first frame was consumed, retain
+connection-owned applied-plan references, and bound the observation list while
+preserving the independent last-started identity. Cancellation waits for playback
+tickets to settle; failed output is not replayed through another engine after
+audio commitment.
+
+The locked workspace passed 1000 distinct tests plus one child-process rerun,
+with two expected skips. Workspace Clippy, formatting and backend documentation
+checks passed. Full Windows development staging passed as =25169b2408d02bce=.
+The packaged DECtalk and Eloquence probe passed strict metadata rejection,
+distinct tuning for duplicate voices, context masking, private policy, named
+registry preservation, rate mismatch, no-native requests and cancellation
+followed by successful ordinary and native previews.
+
+These are null-output checks, not listening acceptance. The separate payload is
+under =servers/omnivox-bin/native-preview-check= and omits Piper. It was not
+selected for the active voice-library profile; no desktop launcher or live Emacs
+session changed.
+
+Next connect draft and applied explanations, followed by the Emacs parameter
+editor, persistence, comparison preflight and main/notification acceptance.
+The native capability bundle remains unadvertised, and these controls are not
+yet exposed in the Emacs workbench.
