@@ -1057,3 +1057,38 @@ tested with internal admission and routing but is not yet consumed by production
 native admission. The native capability bundle remains unadvertised. No Windows
 package, desktop launcher or live Emacs session changed; full development staging
 remains required for public transport integration.
+
+* Implementation progress: public native registration
+
+Omnivox commit =30f994e= accepts =register_logical_voices_v3= using the
+connection's cached parameter catalogues. It acknowledges supported, deferred or
+unavailable native settings for each choice. Registration performs no engine query, voice loading
+or speech restart; identical-generation retries can refresh status while
+preserving the saved definitions.
+
+The complete acknowledgement must fit the public control limit before the
+candidate registry replaces the live one. Invalid values, stale or conflicting
+generations, malformed messages and oversized replies leave the existing
+registry intact. Current administrative policy governs availability and fallback.
+Independent connections retain independent metadata and registry state.
+
+The locked workspace passed 977 distinct tests plus one child-process rerun.
+Clippy and formatting passed. The retained silent Eloquence/DECtalk probe now
+registers settings through the public operation before using them for internal
+routed fallback and exact private selection, with native parameter readback.
+Older speech formats still reject native definitions instead of dropping their
+settings. The native capability remains unadvertised.
+
+Full Windows development staging passed as =79005b934881d167=. The packaged
+server passed silent checks for deferred-to-supported status, independent
+connections, policy disablement and atomic invalid/oversized rejection.
+Registration completed in about 3.1 ms during ordinary speech in this run;
+the live catalogue query was busy while cached metadata remained usable.
+Cancellation and an ordinary follow-up preview succeeded. These are null-output
+checks, not listening acceptance. The separate test payload omits Piper and was
+not selected for the active voice-library profile. No desktop launcher or live
+Emacs session changed.
+
+Next connect timeline 5 and marker 4, including accepted and actually consumed
+audio evidence, then strict native previews, explanations and the Emacs editor.
+Registration alone does not make these controls usable from Emacs.
