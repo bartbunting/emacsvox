@@ -907,3 +907,35 @@ tested by the native probes. The packaged Omnivox executable also produced
 valid ordinary speech WAV output through both engines. The desktop launcher
 remains on =e1ecdb481ee08fd0=. Public native speech, preview operations, routed
 receipts and the Emacs editor remain the next work.
+
+* Implementation progress: public parameter catalogues
+
+Omnivox commit =c7aff38= exposes read-only current-worker discovery through
+=engine_parameter_catalogue_v1=. Native registration, speech, previews,
+explanations and application evidence remain separate work; the native execution
+bundle is not advertised yet.
+
+Catalogue queries run outside the speech command thread, with one admitted
+query per connection and a one-second response deadline. Concurrent requests
+return busy. A timed-out adapter keeps its slot until it exits, preventing
+retries from accumulating work. Late replies are discarded. Queries do not
+initialize deferred engines, load voices, recover workers or check installations.
+Engine isolation and voice-library eligibility remain authoritative.
+
+The locked workspace passed 922 tests, with one existing long-session stress
+test ignored; workspace Clippy, formatting and documentation links passed.
+Full Windows development staging passed as =2043239474542241=. The packaged
+server returned eight controls for all eight Eloquence voices and 28 controls
+for all nine DECtalk voices. Stale revision/cursor guards preserved the current
+helper, and subsequent ordinary previews produced PCM successfully. Twelve
+queries during speech returned busy promptly; cancellation and ordinary
+follow-up speech passed. These were silent checks, not listening acceptance.
+
+Final inspection found the development desktop launcher had been restored
+outside this slice to =e1ecdb481ee08fd0=. Its new comment records that the active
+voice library requires Piper. The parent and catalogue test packages omit Piper
+under the development staging policy, so they cannot replace that profile's
+runtime without a matching Piper build. The restored selection was preserved;
+this catalogue package is staged separately. No live Emacs was changed.
+Next connect native choice registration and routed speech/preview evidence,
+then the Emacs parameter editor.
