@@ -996,3 +996,36 @@ routed application/playback evidence, strict private previews and the Emacs
 parameter editor remain to be connected. The native bundle stays unadvertised.
 No Windows package, desktop launcher or live Emacs session was changed. Full
 development staging remains required when public transport is connected.
+
+* Implementation progress: routed native execution
+
+Omnivox commit =0ee0014= executes the prepared native settings for each
+actual voice choice through buffered or progressive synthesis. A runtime fallback
+recomposes from the original common style and the new choice. Policy fallback
+has no choice-native block. Strict requests cannot silently lose native settings;
+explicit common-only requests retain a degradation receipt.
+
+Native receipts remain tentative through the transactional audio handoff.
+Missing, duplicate, late or mismatched receipts cannot contaminate a fallback.
+Cancellation and generation supersession suppress pending evidence; failures
+after output commitment cannot replay through another engine. Empty streams
+produce no native audio handoff. Native definitions count toward queue byte
+limits, and older output consumers reject evidence they cannot represent.
+
+Private exact selection preserves the original choice ID even when two choices
+name the same physical voice. Silent Linux-parent tests exercised real Eloquence
+and DECtalk helpers through routing, eligibility and cancellation isolation.
+Both returned progressive PCM and the requested native readback after a simulated
+primary-engine failure and during exact private selection. These checks did not
+open an audio device or establish listening quality or actual playback.
+
+The workspace passed 958 distinct tests plus one child-process rerun. Its two
+ordinary skips are the existing long stress test and the qualified-runtime test;
+the latter passed when explicitly run. Clippy, formatting and documentation
+checks passed.
+
+The connection-owned metadata cache, public registration and native requests,
+playback evidence, preview/explanation operations and the Emacs parameter editor
+remain to be connected. This internal slice enables no public capability and
+changes no desktop launcher or live session. Full Windows staging remains part
+of public transport integration.
