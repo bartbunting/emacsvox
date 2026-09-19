@@ -124,7 +124,8 @@
 
 (defun omnivox-parameters--stopped (process)
   "Retire PROCESS queries on exit; ordinary navigation Stop leaves them alone."
-  (when (or (not (process-live-p process)) (process-get process 'tts--speech-process-retiring))
+  (when (and (processp process)
+             (or (not (process-live-p process)) (process-get process 'tts--speech-process-retiring)))
     (dolist (query (copy-sequence (process-get process 'omnivox-parameters--queries)))
       (omnivox-parameters--finish query '(:status stale :message "Speech connection closed")))
     (process-put process 'omnivox-parameters--cache nil)))

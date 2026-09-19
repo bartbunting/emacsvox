@@ -307,6 +307,11 @@
    (should (eq (plist-get (car results) :status) 'stale))
    (should (zerop (hash-table-count (omnivox--pending-requests speaker))))))
 
+(ert-deftest omnivox-parameters-stop-without-a-speech-worker-is-harmless ()
+  (let ((tts-stopped-hook '(omnivox-parameters--stopped))
+        (tts-speaker-process nil) (tts-notify-process nil))
+    (tts--interrupt-process nil)))
+
 (ert-deftest omnivox-parameters-unsupported-and-send-failures-are-deferred ()
   (omnivox-parameters-test--with-lanes
    (process-put speaker omnivox--control-capabilities-property '(:features nil))
