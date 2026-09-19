@@ -1467,3 +1467,40 @@ suite. The fresh process verified the compiled editor and engine-controls paths.
 A full byte-code rebuild, final incremental compilation, header checks, manual
 and reference generation, and the documentation release check passed. No live
 listening or native-engine integration acceptance was claimed.
+
+* Implementation progress: development capability activation
+
+Omnivox now advertises the complete native parameter bundle after the public
+registration, ordinary speech, preview, explanation and editor paths have been
+connected. Engine-specific catalogue qualification still determines editable
+controls; capability support alone does not make every engine adjustable.
+
+The opt-in =test/verify-omnivox-native-runtime.el= runs in a fresh batch Emacs
+with compiled production libraries, temporary palette stores and two private
+speech workers. Set =EMACSVOX_NATIVE_TEST_SERVER= to the launcher and select a
+fully staged native runtime through =OMNIVOX_PROGRAM= and =ESPEAK_NG_DATA=.
+DECtalk and Eloquence must be installed. The check uses null audio and never
+edits personal voices or restarts a live session.
+
+Windows development package =6e55a493cb9d2562= passed the full staging and
+companion checks. The real Emacs check passed catalogue discovery, grouped
+editor changes, original/edited comparisons with native readback, palette
+save/reload, acknowledged registration, ordinary native speech on both lanes
+and fresh-worker re-registration. DECtalk smoothness and Eloquence breathiness
+were independently verified from the engines' applied-setting explanations.
+The harness retries only explicit startup-busy catalogue replies with a bounded
+deadline; the interactive editor retains explicit Refresh.
+
+Omnivox's locked workspace passed 1012 distinct tests plus one child-process
+rerun, with two expected skips. Formatting, workspace Clippy and documentation
+checks passed. The Emacs byte-code preflight and documentation gate passed.
+These checks establish actual engine execution and source consumption, not
+acoustic quality; listening through the development profile remains a user
+acceptance check. This package retains the previous development runtime's
+absence of Piper and preserves the separately configured MBROLA companion.
+
+The development launcher now selects that package. A fresh development Emacs
+loaded the compiled editor and received =logical_voices_registered_v3=
+acknowledgements with native support on both Speaker and Notify. The previous
+launcher is backed up; existing sessions were left open with their original
+workers. Future launches through the development shortcut use the new build.
