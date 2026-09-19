@@ -447,6 +447,7 @@ Return non-nil when LINE is a control event, including a malformed one."
                     (equal (plist-get response :type) "engine_parameters_v1")
                     (omnivox-parameters--pending-p process (plist-get response :request_id))
                     (equal (plist-get response :type) "preview_voice_completed_v2")
+                    (equal (plist-get response :type) "preview_voice_completed_v3")
                     (and operation
                          (eql (plist-get response :request_id) (omnivox--preview-pending operation))
                          (plist-member (caar (omnivox--preview-items operation)) :voice)))
@@ -1543,6 +1544,13 @@ RUNTIME-ROUTING-POLICY keeps global order out of logical definitions."
        (cl-every (lambda (feature) (omnivox--process-supports-p process feature))
                  '("voice_choice_tuning_v1" "presentation_timeline_v4"
                    "playback_marker_events_v3"))))
+
+(defun omnivox--native-tuning-supported-p (process)
+  "Return non-nil when PROCESS advertises the complete native tuning bundle."
+  (and (processp process)
+       (cl-every (lambda (feature) (omnivox--process-supports-p process feature))
+                 '("engine_parameter_catalogue_v1" "engine_voice_parameters_v1"
+                   "presentation_timeline_v5" "playback_marker_events_v4"))))
 
 (defun omnivox--choice-definition-projection (definition)
   "Return wire wrapper, provenance and unapplied flag for DEFINITION.

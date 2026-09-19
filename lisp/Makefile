@@ -65,6 +65,7 @@ swiftmac-voices.elc \
 omnivox-choice-codec.elc \
 omnivox-parameters-codec.elc \
 omnivox-parameters.elc \
+omnivox-native-codec.elc \
 omnivox-library-apply.elc \
 omnivox-library.elc \
 omnivox-catalogue.elc \
@@ -402,7 +403,8 @@ emacsvox-aural-voice-context.elc: emacsvox-aural-voice-editor.elc emacsvox-aural
 omnivox-choice-codec.elc: emacsvox-aural-rules.elc emacsvox-aural-routing-profiles.elc
 omnivox-parameters-codec.elc: omnivox-choice-codec.elc
 omnivox-parameters.elc: omnivox-parameters-codec.elc tts-queue-state.elc
-omnivox-preview.elc: tts-queue-state.elc omnivox-choice-codec.elc
+omnivox-native-codec.elc: omnivox-parameters-codec.elc
+omnivox-preview.elc: tts-queue-state.elc omnivox-choice-codec.elc omnivox-native-codec.elc
 omnivox-voices.elc: voice-defs.elc emacsvox-aural-voice-runtime.elc omnivox-choice-codec.elc omnivox-preview.elc omnivox-parameters.elc
 emacsvox-aural-profile-service.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc

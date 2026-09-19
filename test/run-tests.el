@@ -59,6 +59,7 @@
   (require 'tts-queue-handoff-tests)
   (require 'tts-queue-state-tests)
   (require 'omnivox-preview-tests)
+  (require 'omnivox-native-preview-tests)
   (require 'omnivox-library-apply-tests)
   (require 'omnivox-library-tests)
   (require 'omnivox-catalogue-tests)

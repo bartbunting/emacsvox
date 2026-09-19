@@ -1291,3 +1291,47 @@ workbench screen; no live profile or audio acceptance was attempted. Next add
 native registration and strict preview/explanation transport, then connect the
 engine-control editor and test main and notification speech independently.
 The full native capability remains unadvertised pending that acceptance.
+
+* Implementation progress: Emacs native private previews
+
+Native-aware choice encoding preserves the stored engine/schema and sparse
+operations, including explicit default, Boolean false and numeric zero. Parameter
+map keys remain strings rather than interned symbols. Each version-3 choice
+contains its required nullable native member; the older choice codec continues
+to reject native fields.
+
+The editor's private preview submission now requires the complete native
+capability bundle for entries containing native settings. It preflights every
+entry's shape, capabilities and encoded bounds before taking speech ownership.
+Common entries retain preview version 2; native entries use version 3. Comparisons
+freeze the complete original/edited records, retain the existing rate and policy
+checks and stop after an unconfirmed or failed half. Native qualification and
+execution remain the worker's responsibility for the actual attempted voice.
+
+Strict terminal decoding retains application plan ID, schema/profile/catalogue
+revision/runtime generation, contextual masks and separate accepted/started
+facts. Evidence must match the captured choice, engine, physical selector and
+native schema. A native choice requires applied native settings; common-only
+execution cannot confirm its preview. Choices and policy substitutes without
+native settings require null application evidence. Masked parameter IDs must
+belong to that choice's saved operations. Distinct plans on the same physical
+voice remain distinct, and last-started evidence must match a retained started
+record unless the bounded acceptance list was explicitly truncated.
+
+These previews keep ordinary routing evidence and notification registration
+private. The new tests cover the independent wire fixture, old-worker refusal,
+duplicate physical voices, mixed common/native comparisons, fallback, false and
+null, stale or mismatched evidence, and frozen editor inputs. A broader context
+test also exposed a discovery Stop-hook error when no speech worker exists;
+that prerequisite fix was committed separately with regression coverage.
+
+Fresh Emacs loaded the compiled native codec, preview coordinator, editor,
+adapter and discovery hook. The affected suites passed 409 tests; two graphical
+layout tests were skipped in batch. Header, byte-code and documentation checks
+passed. No live profile was reloaded and no listening acceptance was performed.
+
+Next connect registry version 3, timeline 5 and marker events 4 together for
+ordinary speech, retaining per-lane degradation on older workers. Asynchronous
+effective-setting explanations, the descriptor-driven editor and independent
+main/notification acceptance follow. Omnivox's full native capability remains
+unadvertised pending final integration acceptance.

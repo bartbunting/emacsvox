@@ -38,6 +38,7 @@
 (declare-function emacsvox-aural-voice-context-stop "emacsvox-aural-voice-context" ())
 (declare-function omnivox-preview-voice-sequence "omnivox-voices" (entries callback))
 (declare-function omnivox--choice-tuning-supported-p "omnivox-voices" (process))
+(declare-function omnivox--native-tuning-supported-p "omnivox-voices" (process))
 (declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
 (declare-function omnivox--preview-layered-sequence "omnivox-preview" (entries callback &optional current))
 (declare-function omnivox--preview-sequence "omnivox-preview" (entries callback individual &optional current))
@@ -60,12 +61,14 @@ Select a faithful wire form before any entry interrupts foreground speech."
          (adapter tts-voice-preview-function)
          (omnivox (and (eq adapter #'omnivox-preview-voice-sequence)
                        (processp process) (process-live-p process)))
+         (native
+          (cl-some (lambda (entry)
+                     (= (emacsvox-aural-routing--choices-schema
+                         (plist-get (plist-get entry :voice) :choices)) 4)) entries))
          (_native-check
-          (when (cl-some (lambda (entry)
-                           (= (emacsvox-aural-routing--choices-schema
-                               (plist-get (plist-get entry :voice) :choices)) 4)) entries)
-            (user-error "Native parameter preview is not connected yet; saved settings are retained")))
-         (layered (and omnivox (omnivox--choice-tuning-supported-p process)))
+          (when (and native (not (and omnivox (omnivox--native-tuning-supported-p process))))
+            (user-error "Native preview needs an Omnivox worker with the complete native parameter bundle; saved settings are retained")))
+         (layered (and omnivox (or native (omnivox--choice-tuning-supported-p process))))
          (individual (eq (plist-get (plist-get (car entries) :selection) :mode) 'choice))
          (prepared (unless layered (mapcar #'emacsvox-aural-voice-editing--legacy-preview entries)))
          (kind (if layered 'layered (if individual 'individual-audition 'shared-chain)))
