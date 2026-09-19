@@ -1162,3 +1162,39 @@ Next connect draft and applied explanations, followed by the Emacs parameter
 editor, persistence, comparison preflight and main/notification acceptance.
 The native capability bundle remains unadvertised, and these controls are not
 yet exposed in the Emacs workbench.
+
+* Implementation progress: planned and applied explanations
+
+Omnivox commit =1ffca5a= connects =explain_voice_parameters_v1= to the running
+engine adapters. A draft explanation resolves one selected choice and composes
+its settings without speech or registry changes. It reports planned values and
+their origins, including contextual masking, without claiming native readback.
+
+Applied explanations use the retained plan from a native preview or ordinary
+timeline receipt. They preserve the original choice, physical voice, catalogue
+identity and worker epoch, so later palette edits cannot rewrite the evidence.
+Unknown, evicted or replaced-worker plans report expiry without synthesizing to
+reconstruct them. Queries share the catalogue service's one active slot and
+one-second deadline. Timed-out work retains admission until it exits; late replies
+are suppressed after connection closure. The production isolation wrapper forwards
+idle queries and returns busy during speech or pending recovery.
+
+The locked workspace passed 1012 distinct tests plus one child-process rerun,
+with two expected skips. Workspace Clippy, formatting and backend documentation
+checks passed. Full Windows development staging passed as =460c4fbb8b1d85da=.
+The packaged DECtalk and Eloquence probe matched planned values to applied native
+readback, distinguished tuning for the same voice, preserved historical values,
+checked context masking and resolved both preview and timeline plan references.
+An explanation returned busy during native speech in about 2.8 ms in this run;
+cancellation and later ordinary speech and explanations succeeded.
+
+These are null-output checks, not listening acceptance. The separate package is
+under =servers/omnivox-bin/native-explanation-check= and omits Piper. It was not
+selected for the active voice-library profile. No desktop launcher or live Emacs
+session changed.
+
+Next implement the Emacs parameter editor and sparse persistence, connect native
+registration and preview/explanation results, and complete comparison preflight
+and independent main/notification acceptance. The native capability bundle remains
+unadvertised pending final integration acceptance; these controls are not yet
+available in the workbench.
