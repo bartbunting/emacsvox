@@ -876,14 +876,72 @@ the previous known-good profile."
              (emacsvox-aural-routing--error "Invalid choice adjustment %S: %S" key value)))
   (copy-tree adjustments))
 
-(defun emacsvox-aural-routing--validate-choices (choices &optional portable)
-  "Validate ordered choice records in CHOICES; require PORTABLE scope if non-nil."
+(defun emacsvox-aural-routing--native-id-p (value)
+  "Return non-nil for a bounded native identifier VALUE, without interning it."
+  (and (stringp value)
+       (let ((case-fold-search nil))
+         (string-match-p "\\`[A-Za-z0-9_.-]\\{1,128\\}\\'" value))))
+
+(defun emacsvox-aural-routing--validate-native (native selector)
+  "Validate inert NATIVE operations belonging to SELECTOR and return a copy.
+Unknown schemas and parameter IDs are retained.  Runtime catalogue validation
+is separate; this function neither discovers engines nor evaluates values."
+  (emacsvox-aural-routing--strict-properties
+   native '(:engine-id :schema-id :parameters) '(:engine-id :schema-id :parameters))
+  (emacsvox-aural-routing--strict-properties
+   selector '(:kind :scope :engine-id :voice-id :language :gender) '(:kind))
+  (emacsvox-aural-validate-routing-selector selector t)
+  (dolist (key '(:engine-id :schema-id))
+    (unless (emacsvox-aural-routing--native-id-p (plist-get native key))
+      (emacsvox-aural-routing--error "Invalid native %S" key)))
+  (unless (equal (plist-get native :engine-id) (plist-get selector :engine-id))
+    (emacsvox-aural-routing--error "Native settings require a matching engine selector"))
+  (let ((parameters (plist-get native :parameters)) ids result)
+    (unless (and (proper-list-p parameters) (<= (length parameters) 64))
+      (emacsvox-aural-routing--error "Native parameters require at most 64 operations"))
+    (dolist (parameter parameters)
+      (unless (and (consp parameter)
+                   (emacsvox-aural-routing--native-id-p (car parameter)))
+        (emacsvox-aural-routing--error "Invalid native parameter ID"))
+      (when (member (car parameter) ids)
+        (emacsvox-aural-routing--error "Duplicate native parameter: %s" (car parameter)))
+      (push (car parameter) ids)
+      (emacsvox-aural-routing--strict-properties (cdr parameter) '(:op :value) '(:op))
+      (let* ((operation (cdr parameter))
+             (kind (plist-get operation :op))
+             (fields (if (eq kind 'set) '(:op :value) '(:op))))
+        (emacsvox-aural-routing--strict-properties operation fields fields)
+        (unless (memq kind '(set default))
+          (emacsvox-aural-routing--error "Unknown native operation: %S" kind))
+        (when (eq kind 'set)
+          (let ((value (plist-get operation :value)))
+            (unless (cond
+                     ((memq value '(nil t)) t)
+                     ((integerp value) (<= (- (expt 2 63)) value (1- (expt 2 63))))
+                     ((floatp value) (< (- 1.0e+INF) value 1.0e+INF))
+                     ((stringp value) (emacsvox-aural-routing--native-id-p value)))
+              (emacsvox-aural-routing--error "Invalid native scalar for %s" (car parameter)))))
+        (push (cons (copy-sequence (car parameter))
+                    (if (eq kind 'default) (list :op 'default)
+                      (let ((value (plist-get operation :value)))
+                        (list :op 'set :value (if (stringp value) (copy-sequence value) value)))))
+              result)))
+    (list :engine-id (copy-sequence (plist-get native :engine-id))
+          :schema-id (copy-sequence (plist-get native :schema-id))
+          :parameters (nreverse result))))
+
+(defun emacsvox-aural-routing--validate-choices (choices &optional portable native)
+  "Validate ordered CHOICES; require PORTABLE scope when non-nil.
+NATIVE explicitly permits engine parameter records in private drafts.  Existing
+storage and wire readers leave it nil until their versioned support is ready."
   (unless (and (proper-list-p choices) (<= (length choices) 32))
     (emacsvox-aural-routing--error "Choices must be a proper list of at most 32 records"))
-  (let (ids)
+  (let (ids result)
     (dolist (choice choices)
       (emacsvox-aural-routing--strict-properties
-       choice '(:id :selector :adjustments) '(:id :selector :adjustments))
+       choice (if native '(:id :selector :adjustments :native)
+                '(:id :selector :adjustments))
+       '(:id :selector :adjustments))
       (let ((id (plist-get choice :id))
             (selector (plist-get choice :selector)))
         (unless (and (stringp id)
@@ -896,8 +954,14 @@ the previous known-good profile."
         (emacsvox-aural-validate-routing-selector selector t)
         (when (and portable (not (eq (plist-get selector :scope) 'portable)))
           (emacsvox-aural-routing--error "Palette choices must be portable")))
-      (emacsvox-aural-routing--validate-choice-adjustments (plist-get choice :adjustments))))
-  (copy-tree choices))
+      (emacsvox-aural-routing--validate-choice-adjustments (plist-get choice :adjustments))
+      (let* ((parameters (when (plist-member choice :native)
+                           (emacsvox-aural-routing--validate-native
+                            (plist-get choice :native) (plist-get choice :selector))))
+             (copy (copy-tree choice)))
+        (when parameters (setf (plist-get copy :native) parameters))
+        (push copy result)))
+    (nreverse result)))
 
 (defun emacsvox-aural-routing--merge-choice-sets (existing proposed)
   "Merge immutable EXISTING and PROPOSED snapshots, permitting identical retries."

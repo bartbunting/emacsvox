@@ -1198,3 +1198,26 @@ registration and preview/explanation results, and complete comparison preflight
 and independent main/notification acceptance. The native capability bundle remains
 unadvertised pending final integration acceptance; these controls are not yet
 available in the workbench.
+
+* Implementation progress: Emacs native choice drafts
+
+The first Emacs slice adds opt-in, data-only validation and sparse editing of
+native choice records. It preserves string identifiers without interning them,
+unknown semantic schemas, explicit defaults, Boolean false and numeric zero.
+Scalar checks match the server's signed 64-bit integers, finite numbers and
+bounded enum identifiers. Duplicate fields/parameter IDs, oversized operation
+lists, unsupported values and mismatched selector engines are rejected.
+
+Pure edits retain stable choice ownership and other rows. Common edits and
+reordering preserve native records; explicit reset removes them. Keeping native
+settings while replacing a selector cannot transfer them to another engine.
+Same-engine voice/runtime qualification remains the later catalogue's job.
+Removing the last native operation returns the choice to common settings.
+Returned native records own their strings and operation lists.
+
+This slice does not enable a storage writer or workbench control. Existing
+palette, routing and wire readers still reject native records rather than
+silently dropping them. Next add versioned persistence and preservation across
+copy/rename/inheritance/export, then catalogue discovery, native transport and
+the editor. The full native capability remains unadvertised pending integration
+and independent main/notification acceptance.

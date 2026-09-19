@@ -145,7 +145,7 @@ SNAPSHOT-ID identifies a fresh immutable local set. Publish through the save ser
 (defun emacsvox-aural-voice-data--adjust-choice (choices id dimension operation &optional value)
   "Return CHOICES with ID's DIMENSION changed by OPERATION and VALUE.
 OPERATION is inherit, default or set.  Every other field and row is preserved."
-  (let* ((result (emacsvox-aural-routing--validate-choices choices))
+  (let* ((result (emacsvox-aural-routing--validate-choices choices nil t))
          (row (cl-find id result :test #'equal :key (lambda (item) (plist-get item :id))))
          (patch (plist-get row :adjustments)))
     (unless row (emacsvox-aural--resource-error "Unknown choice: %S" id))
@@ -161,22 +161,71 @@ OPERATION is inherit, default or set.  Every other field and row is preserved."
     (setf (plist-get row :adjustments) (emacsvox-aural-routing--validate-choice-adjustments patch))
     result))
 
+(defun emacsvox-aural-voice-data--adjust-native
+    (choices id engine schema parameter operation &optional value)
+  "Return CHOICES with ID's native PARAMETER edited for ENGINE and SCHEMA.
+OPERATION is set, default or inherit.  VALUE uses native units; nil is Boolean
+false for set.  Removing the last operation removes the native record.  This
+pure draft operation does not establish runtime support or enable persistence."
+  (let* ((result (emacsvox-aural-routing--validate-choices choices nil t))
+         (row (cl-find id result :test #'equal :key (lambda (item) (plist-get item :id))))
+         (native (plist-get row :native)))
+    (unless row (emacsvox-aural--resource-error "Unknown choice: %S" id))
+    (unless (emacsvox-aural-routing--native-id-p parameter)
+      (emacsvox-aural--resource-error "Invalid native parameter ID"))
+    (unless (memq operation '(set default inherit))
+      (emacsvox-aural--resource-error "Unknown native edit operation"))
+    (when (and native
+               (not (and (equal engine (plist-get native :engine-id))
+                         (equal schema (plist-get native :schema-id)))))
+      (emacsvox-aural--resource-error "Native settings belong to a different engine or schema"))
+    (unless native
+      (setq native (emacsvox-aural-routing--validate-native
+                    (list :engine-id engine :schema-id schema :parameters nil)
+                    (plist-get row :selector))))
+    (let* ((cell (memq row result))
+           (parameters (plist-get native :parameters))
+           (existing (assoc parameter parameters))
+           (edit (pcase operation
+                   ('set (list :op 'set :value value))
+                   ('default (list :op 'default)))))
+      (cond
+       ((eq operation 'inherit) (setq parameters (delete existing parameters)))
+       (existing (setcdr existing edit))
+       (t (setq parameters (append parameters (list (cons parameter edit))))))
+      (setf (plist-get native :parameters) parameters)
+      (if parameters
+          (let ((validated (emacsvox-aural-routing--validate-native
+                            native (plist-get row :selector))))
+            (if (plist-member row :native)
+                (setf (plist-get row :native) validated)
+              (setq row (append row (list :native validated)))))
+        (cl-remf row :native))
+      (setcar cell row))
+    result))
+
 (defun emacsvox-aural-voice-data--replace-choice (choices id selector adjustments)
   "Replace ID's SELECTOR in CHOICES, explicitly keeping or resetting ADJUSTMENTS.
-ADJUSTMENTS must be keep or reset; no implicit tuning transfer is permitted."
-  (let* ((result (emacsvox-aural-routing--validate-choices choices))
+ADJUSTMENTS must be keep or reset; no implicit tuning transfer is permitted.
+Reset also removes native settings.  Keep cannot transfer them across engines;
+same-engine runtime compatibility remains a separate catalogue check."
+  (let* ((result (emacsvox-aural-routing--validate-choices choices nil t))
          (row (cl-find id result :test #'equal :key (lambda (item) (plist-get item :id)))))
     (unless row (emacsvox-aural--resource-error "Unknown choice: %S" id))
     (unless (memq adjustments '(keep reset))
       (emacsvox-aural--resource-error "Choose whether to keep or reset custom settings"))
     (emacsvox-aural-validate-routing-selector selector t)
     (setf (plist-get row :selector) (copy-tree selector))
-    (when (eq adjustments 'reset) (setf (plist-get row :adjustments) nil))
-    result))
+    (when (eq adjustments 'reset)
+      (setf (plist-get row :adjustments) nil)
+      (let ((cell (memq row result)))
+        (cl-remf row :native)
+        (setcar cell row)))
+    (emacsvox-aural-routing--validate-choices result nil t)))
 
 (defun emacsvox-aural-voice-data--move-choice (choices id index)
   "Move choice ID in CHOICES to zero-based INDEX, preserving its whole record."
-  (let* ((result (emacsvox-aural-routing--validate-choices choices))
+  (let* ((result (emacsvox-aural-routing--validate-choices choices nil t))
          (row (cl-find id result :test #'equal :key (lambda (item) (plist-get item :id)))))
     (unless (and row (integerp index) (<= 0 index) (< index (length result)))
       (emacsvox-aural--resource-error "Invalid choice or destination"))

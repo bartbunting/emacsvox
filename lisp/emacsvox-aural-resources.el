@@ -44,7 +44,7 @@
 (declare-function emacsvox-aural-validate-routing-selector
                   "emacsvox-aural-routing-profiles" (selector &optional persisted))
 (declare-function emacsvox-aural-routing--validate-choices
-                  "emacsvox-aural-routing-profiles" (choices &optional portable))
+                  "emacsvox-aural-routing-profiles" (choices &optional portable native))
 
 (defvar read-eval)
 (defvar voice-setup-defined-voices)

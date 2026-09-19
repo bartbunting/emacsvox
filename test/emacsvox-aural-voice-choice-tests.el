@@ -283,5 +283,203 @@
        (should (equal proposed (emacsvox-aural-voice-drafts--palette-data 'reading-owned)))
        (should (equal stored (plist-get (emacsvox-aural-read-routing-profiles) :choice-sets)))))))
 
+(defconst emacsvox-test--native-choice-fixture
+  (emacsvox-aural-routing--read-one-form
+   (expand-file-name "fixtures/voice-editor/engine-parameters-storage.el"
+                     (file-name-directory (or load-file-name buffer-file-name)))
+   "native voice fixture"))
+
+(defun emacsvox-test--native-choices ()
+  "Return the independent contract's complete native choice chain."
+  (copy-tree
+   (plist-get
+    (cadr (plist-get (plist-get emacsvox-test--native-choice-fixture :expected-routing)
+                     :choice-sets))
+    :choices)))
+
+(ert-deftest emacsvox-aural-native-choice-draft-matches-contract ()
+  "Editing duplicate physical voices retains stable ownership and native units."
+  (let* ((original (plist-get
+                    (car (plist-get
+                          (plist-get emacsvox-test--native-choice-fixture :source-routing)
+                          :choice-sets)) :choices))
+         (before (copy-tree original))
+         (rows (emacsvox-aural-voice-data--adjust-native
+                original "paul-main" "dectalk" "dectalk.design-voice.v1" "sm" 'set 55)))
+    (setq rows (emacsvox-aural-voice-data--adjust-native
+                rows "paul-main" "dectalk" "dectalk.design-voice.v1" "br" 'default))
+    (setq rows (emacsvox-aural-voice-data--adjust-native
+                rows "paul-soft" "dectalk" "dectalk.design-voice.v1" "sm" 'set 80))
+    (setq rows (emacsvox-aural-voice-data--adjust-native
+                rows "eci-default" "eloquence" "eloquence.eci-units.v1" "breathiness" 'set 42))
+    (should (equal rows (emacsvox-test--native-choices)))
+    (should (equal original before))
+    (should (equal (emacsvox-aural-routing--validate-choices rows nil t) rows))))
+
+(ert-deftest emacsvox-aural-native-choice-inherit-default-and-false ()
+  "Set zero, set false, engine default and absence remain distinct."
+  (dolist (case (plist-get emacsvox-test--native-choice-fixture :native-value-cases))
+    (let* ((operation (plist-get case :operation))
+           (rows (emacsvox-aural-voice-data--adjust-native
+                  (emacsvox-test--native-choices) "paul-soft" "dectalk"
+                  "dectalk.design-voice.v1" "sm" (plist-get operation :op)
+                  (plist-get operation :value))))
+      (should (equal (cdr (assoc "sm" (plist-get (plist-get (cadr rows) :native) :parameters)))
+                     operation))))
+  (let* ((before (emacsvox-test--native-choices))
+         (rows (emacsvox-aural-voice-data--adjust-native
+                before "paul-soft" "dectalk" "dectalk.design-voice.v1" "sm" 'inherit)))
+    (should-not (plist-member (cadr rows) :native))
+    (should (equal (car rows) (car before)))
+    (should (equal (cddr rows) (cddr before)))
+    (should (plist-member (cadr before) :native))
+    (should (equal rows (emacsvox-aural-voice-data--adjust-native
+                        rows "paul-soft" "dectalk" "dectalk.design-voice.v1" "sm" 'inherit)))))
+
+(ert-deftest emacsvox-aural-native-choice-reorder-and-common-edits-preserve-native ()
+  "Reordering and common tuning leave native records attached to their choices."
+  (let* ((before (emacsvox-test--native-choices))
+         (rows (emacsvox-aural-voice-data--move-choice before "paul-main" 2))
+         (edited (emacsvox-aural-voice-data--adjust-choice rows "paul-main" :richness 'set 0)))
+    (should (equal rows (list (cadr before) (caddr before) (car before))))
+    (should (equal (plist-get (caddr edited) :native) (plist-get (car before) :native)))
+    (should (equal (plist-get (caddr edited) :adjustments) '(:richness 0)))
+    (should-not (plist-get (car before) :adjustments))
+    (should (equal (emacsvox-aural-voice-data--portable-choices edited)
+                   (list (caddr before))))))
+
+(ert-deftest emacsvox-aural-native-choice-replacement-keeps-or-resets-explicitly ()
+  "Engine changes cannot silently inherit another engine's native settings."
+  (let* ((rows (emacsvox-test--native-choices))
+         (same '(:kind exact :scope local :engine-id "dectalk" :voice-id "harry"))
+         (other '(:kind engine-default :scope portable :engine-id "eloquence")))
+    (should (equal (plist-get (car (emacsvox-aural-voice-data--replace-choice
+                                    rows "paul-main" same 'keep)) :native)
+                   (plist-get (car rows) :native)))
+    (should-error (emacsvox-aural-voice-data--replace-choice rows "paul-main" other 'keep))
+    (let ((reset (emacsvox-aural-voice-data--replace-choice rows "paul-main" other 'reset)))
+      (should (equal (plist-get (car reset) :selector) other))
+      (should-not (plist-member (car reset) :native))
+      (should (equal (cdr reset) (cdr rows))))
+    (should-error (emacsvox-aural-voice-data--adjust-native
+                   rows "paul-main" "dectalk" "dectalk.other.v1" "sm" 'set 20))
+    (should-error (emacsvox-aural-voice-data--adjust-native
+                   rows "absent" "dectalk" "dectalk.design-voice.v1" "sm" 'set 20))))
+
+(ert-deftest emacsvox-aural-native-choice-removal-is-independent-of-key-order ()
+  "Native removal also works when the optional field is first in the plist."
+  (let* ((row (copy-tree (cadr (emacsvox-test--native-choices))))
+         (native (plist-get row :native)))
+    (cl-remf row :native)
+    (setq row (append (list :native native) row))
+    (should-not (plist-member
+                 (car (emacsvox-aural-voice-data--adjust-native
+                       (list row) "paul-soft" "dectalk" "dectalk.design-voice.v1" "sm" 'inherit))
+                 :native))
+    (should-not (plist-member
+                 (car (emacsvox-aural-voice-data--replace-choice
+                       (list row) "paul-soft" (plist-get row :selector) 'reset)) :native))))
+
+(ert-deftest emacsvox-aural-native-choice-preserves-unknown-inert-identities ()
+  "Unknown semantic IDs survive validation without engine discovery or interning."
+  (let* ((engine "uninstalled-test-engine-790d")
+         (parameter "unadvertised-test-control-790d")
+         (native (list :engine-id engine :schema-id "future.schema.v73"
+                       :parameters (list (list parameter :op 'set :value "future-enum"))))
+         (selector (list :kind 'properties :scope 'portable :engine-id engine :language "en")))
+    (should-not (intern-soft parameter))
+    (should (equal native (emacsvox-aural-routing--validate-native native selector)))
+    (should-not (intern-soft parameter))
+    (should-error (emacsvox-aural-routing--validate-native
+                   native '(:kind properties :scope portable :language "en")))))
+
+(ert-deftest emacsvox-aural-native-choice-validates-finite-typed-scalars ()
+  "Accept bounded native scalars and reject executable or lossy representations."
+  (let* ((row (car (emacsvox-test--native-choices)))
+         (native (plist-get row :native))
+         (selector (plist-get row :selector)))
+    (dolist (value (list nil t 0 -1 (- (expt 2 63)) (1- (expt 2 63))
+                         0.0 1.5 -4.3 "enum-value_1"))
+      (setf (plist-get native :parameters) (list (list "sm" :op 'set :value value)))
+      (should (equal native (emacsvox-aural-routing--validate-native native selector))))
+    (dolist (value (list (expt 2 63) (1- (- (expt 2 63)))
+                         1.0e+INF -1.0e+INF 0.0e+NaN
+                         "" "two words" "é" (make-string 129 ?a)
+                         :false 'false '(eval anything) [1 2] (current-buffer)))
+      (setf (plist-get native :parameters) (list (list "sm" :op 'set :value value)))
+      (should-error (emacsvox-aural-routing--validate-native native selector)))))
+
+(ert-deftest emacsvox-aural-native-choice-rejects-malformed-records ()
+  "Reject duplicate IDs, fields, operations and oversized or cyclic containers."
+  (let* ((row (car (emacsvox-test--native-choices)))
+         (native (plist-get row :native))
+         (selector (plist-get row :selector)))
+    (dolist (operation '((:op set) (:op default :value nil) (:op inherit)
+                         (:op set :value 1 :value 2) (:op default :extra nil)
+                         (:op default :op set) (:value 1) (:op . set)))
+      (should-error (emacsvox-aural-routing--validate-native
+                     (plist-put (copy-tree native) :parameters (list (cons "sm" operation))) selector)))
+    (dolist (parameters (list '(("sm" :op default) ("sm" :op set :value 2))
+                              '(("sm" :op default) . tail) '(bad) '((nil :op default))
+                              (cl-loop for i below 65 collect (list (format "p%d" i) :op 'default))))
+      (should-error (emacsvox-aural-routing--validate-native
+                     (plist-put (copy-tree native) :parameters parameters) selector)))
+    (let ((cycle (list '("sm" :op default))))
+      (setcdr cycle cycle)
+      (should-error (emacsvox-aural-routing--validate-native
+                     (plist-put (copy-tree native) :parameters cycle) selector)))
+    (dolist (key '(:engine-id :schema-id))
+      (dolist (value (list "" "bad id" "é" (make-string 129 ?a) 'symbol nil))
+        (should-error (emacsvox-aural-routing--validate-native
+                       (plist-put (copy-tree native) key value) selector))))
+    (should-error (emacsvox-aural-routing--validate-native
+                   (append native '(:schema-id "duplicate")) selector))
+    (should-error (emacsvox-aural-routing--validate-native
+                   (append native '(:profile-id "runtime-only")) selector))
+    (should-error (emacsvox-aural-routing--validate-native
+                   native (append selector '(:engine-id "eloquence"))))
+    (should-error (emacsvox-aural-routing--validate-native nil selector))))
+
+(ert-deftest emacsvox-aural-native-choice-operation-limit-is-atomic ()
+  "Replacing one of 64 controls is valid; adding another leaves input intact."
+  (let* ((rows (emacsvox-test--native-choices))
+         (native (plist-get (car rows) :native)))
+    (setf (plist-get native :parameters)
+          (cl-loop for i below 64 collect (list (format "p%d" i) :op 'default)))
+    (let ((before (emacsvox-aural-routing--validate-choices rows nil t)))
+      (should (emacsvox-aural-voice-data--adjust-native
+               rows "paul-main" "dectalk" "dectalk.design-voice.v1" "p63" 'set 0))
+      (should-error (emacsvox-aural-voice-data--adjust-native
+                     rows "paul-main" "dectalk" "dectalk.design-voice.v1" "p64" 'set 0))
+      (should (equal rows before)))))
+
+(ert-deftest emacsvox-aural-native-choice-copies-native-strings-and-operations ()
+  "A returned draft cannot mutate a saved native record, including its strings."
+  (let* ((rows (emacsvox-aural-voice-data--adjust-native
+                (emacsvox-test--native-choices) "paul-main" "dectalk"
+                "dectalk.design-voice.v1" "enum" 'set (copy-sequence "choice")))
+         (before (emacsvox-aural-routing--validate-choices rows nil t))
+         (copy (emacsvox-aural-routing--validate-choices rows nil t))
+         (native (plist-get (car copy) :native))
+         (parameters (plist-get native :parameters)))
+    (aset (plist-get native :engine-id) 0 ?x)
+    (aset (plist-get native :schema-id) 0 ?x)
+    (aset (caar parameters) 0 ?x)
+    (aset (plist-get (cdr (assoc "enum" parameters)) :value) 0 ?x)
+    (setf (plist-get (cdr (assoc "br" parameters)) :op) 'set)
+    (should (equal rows before))))
+
+(ert-deftest emacsvox-aural-native-choice-remains-opt-in-until-storage-is-ready ()
+  "Existing storage readers keep rejecting native records and schema four."
+  (let ((rows (emacsvox-test--native-choices)))
+    (should-error (emacsvox-aural-routing--validate-choices rows))
+    (should-error (emacsvox-aural-voice-data--put-choices
+                   (plist-get emacsvox-test--native-choice-fixture :source-palette)
+                   'bolden rows "must-not-persist"))
+    (should-error (emacsvox-aural-compile-voice-palette-data
+                   (plist-get emacsvox-test--native-choice-fixture :expected-palette)))
+    (should-error (emacsvox-aural-validate-routing-user-data
+                   (plist-get emacsvox-test--native-choice-fixture :expected-routing)))))
+
 (provide 'emacsvox-aural-voice-choice-tests)
 ;;; emacsvox-aural-voice-choice-tests.el ends here
