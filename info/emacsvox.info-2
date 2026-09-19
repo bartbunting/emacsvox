@@ -1715,10 +1715,132 @@ Row action predicates should hide operations that cannot apply to that
 row; this includes editing built-in options and reordering items outside
 the active-order view.
 
+16.3.16 Repeatable voice performance measurements
+-------------------------------------------------
+
+Use ‘utils/voice_benchmark.py’ to retain comparable measurements of
+ordinary speech, native voice settings and the voice editor.  It starts
+private speech workers and fresh Emacs processes; it does not connect to
+a running Emacs or save editor drafts.  The default null audio output
+avoids speaking the workload.  Reports remain below the ignored
+‘.benchmarks/’ directory.
+
+   The runner requires Python 3, the selected Emacs toolchain, and an
+Omnivox checkout containing ‘tools/benchmark_server.py’ and
+‘tools/process_metrics.py’.  It reuses that checkout's lifecycle
+workloads.  On Linux, ‘xvfb-run’ provides a private graphical display
+when installed.  The plan can explicitly select ‘native’ for a visible
+graphical Emacs or ‘batch’ for a nongraphical run.  Batch measurements
+do not establish graphical responsiveness.  Build current byte-code
+before running; the runner refuses stale byte-code.
+
+   Create a local plan once, using the same runtime overrides as the
+development speech launcher.  List the runtime libraries, dictionaries
+and voice data that affect the selected engines.  For example:
+
+     python3 utils/voice_benchmark.py init .benchmarks/voices.json \
+       --program /path/to/omnivox \
+       --emacs /path/to/emacs-31/bin/emacs \
+       --omnivox-root /path/to/omnivox-checkout \
+       --runtime-input voices=/path/to/voice-data
+
+   Initialization captures supported runtime overrides from the
+environment, including ‘OMNIVOX_DECTALK_DLL’, ‘OMNIVOX_ECI_DLL’ and
+‘ESPEAK_NG_DATA’.  Inspect the resulting JSON plan.  Its initial routes
+are Eloquence ‘v1’, DECtalk ‘paul’ and eSpeak's British English voice
+(‘espeak:gmw/en’, with a backslash on Windows); remove unavailable
+engines or change exact voice IDs.  Native routes also specify one
+parameter and test value.  A missing voice, fallback voice, unsupported
+parameter or failed native readback fails the workload.  It must not
+become a fast but invalid result.
+
+   If a separately retained failure prevents one case from producing
+timings, a route may declare ‘exclude_cases’ as an object mapping case
+names to reasons.  Exclusions appear at the top of the report and must
+match on both sides of a comparison.  An excluded case supplies no
+evidence about its performance or correctness; do not treat a completed
+timing run as clearing that failure.
+
+   The plan pins the executable path.  When staging a new development
+build, update ‘targets[].program’ before measuring it.  Retain the
+earlier executable and complete helper payload if an old-build
+comparison is wanted.  ‘--baseline-program’ at initialization adds a
+second target for ordinary speech, with native controls and editor tests
+disabled for that older worker.  An editor comparison against older Lisp
+needs a target with its own ‘emacsvox_root’ and current byte-code for
+that checkout.  Keep runtime inputs, rate, display mode, machine and
+benchmark driver identical between runs.
+
+   Run a short setup check, then collect the repeatable baseline:
+
+     make voice-benchmark BENCHMARK_PRESET=quick
+     make voice-benchmark BENCHMARK_OUTPUT=.benchmarks/before
+
+   The full preset runs three shuffled blocks, discards warm-up samples,
+and collects 90 observations per warm speech case and 60 per repeated
+editor operation.  Cold speech and first editor openings have fewer
+observations and are reported separately.  Allow several minutes for a
+full run; engine startup and timeout costs vary.  Keep unrelated
+workload low.  Output directories must be new; existing evidence is
+never overwritten.  An interrupted or failed run retains its partial
+report and logs but cannot be compared as successful.
+
+   The speech cases cover a character, word, line, dense text, multipart
+delivery, rapid replacement, and simultaneous main and notification
+workers.  For engines with native controls, the runner distinguishes
+ordinary timeline delivery, layered delivery with no native overrides,
+and an explicit native override.  The editor workload measures opening,
+navigation, control readiness, common preview completion and automatic
+previews after native adjustments.  It keeps synchronous command time
+separate from waiting for asynchronous replies.
+
+   Compare a subsequent full run against the baseline:
+
+     make voice-benchmark BENCHMARK_OUTPUT=.benchmarks/after
+     python3 utils/voice_benchmark.py compare \
+       .benchmarks/before .benchmarks/after --output .benchmarks/comparison.md
+
+   Use ‘--flavour legacy --mode warm’ to examine ordinary speech, or
+‘--flavour editor --mode ui’ for the editor.  A plan containing both
+builds can be compared against itself with ‘--before-target baseline
+--after-target current’.  Every report contains medians, 95th
+percentiles, maxima and raw observations.  The default comparison flags
+a series only when its 95th percentile rises by more than both 5
+milliseconds and 15 percent, with at least 20 observations on each side.
+Short setup checks and low-count cold openings are explicitly
+inconclusive.  Repeat flagged runs before attributing a change to code.
+With ‘--fail-on-regression’, exit status is 1 for a flagged slowdown, 3
+for insufficient evidence, and 2 for an invalid run or comparison.
+
+   The index records executable and helper hashes, runtime input hashes,
+driver hashes, source commit and dirty-tree identity, toolchain and host
+information.  Comparison validates the retained raw-report hashes and
+recomputes summaries.  Changed runtime data or incompatible test
+settings are rejected.  Retain the whole run directory, not just
+‘report.md’.  The source identity may differ between runs: that is the
+change under investigation.
+
+   Add ‘BENCHMARK_RESOURCES=1’ for a separate process-tree CPU and
+memory phase.  Sampling runs after the latency jobs so process
+enumeration does not distort those timings.  Resource reports identify
+their observation provider and its limitations; unavailable memory
+evidence is not zero memory use.  Editor reports also retain Emacs CPU,
+resident memory and garbage-collection counters.  Check retained
+processes and memory across repeated work before calling an increase a
+leak.
+
+   These measurements observe software source consumption and
+completion, not sound reaching the listener.  Editor previews currently
+expose completion but no onset event.  Null audio bypasses the physical
+device, so device latency or audible clipping needs a separate listening
+or loopback measurement.  Results from null and real audio are not
+comparable.  Run ‘make voice-benchmark-test’ to check evidence integrity
+and comparison logic.
+
 
 File: emacsvox.info,  Node: Authoring Sound Packs,  Up: Integration Maintenance
 
-16.3.16 Authoring Sound Packs
+16.3.17 Authoring Sound Packs
 -----------------------------
 
 Ordinary selection, preview, and cue remapping are covered in *note
