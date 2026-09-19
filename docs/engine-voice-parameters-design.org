@@ -1256,3 +1256,38 @@ The affected storage, editor, palette, profile, routing, registration and timeli
 suites passed 544 tests; two graphical layout tests were skipped in batch.
 Byte-code and the generated reference are current. No listening acceptance or
 live-session reload was performed for this data and compatibility slice.
+
+* Implementation progress: asynchronous Emacs catalogue discovery
+
+Emacs now queries =engine_parameter_catalogue_v1= through the existing neutral
+control path on each actual speech connection. Matching engine/voice requests
+share one operation with detachable observers; different voices on the same
+busy engine receive a busy result. Delivery and page validation run outside the
+process filter. Requests neither wait for output nor stop speech, and busy
+responses do not start an automatic retry loop. The total deadline, including
+all pages, uses the configured control timeout capped at five seconds.
+
+Strict decoding preserves arrays, false and null. Validation checks descriptor
+types, defaults, availability, scope, mapping and side-effect references, and
+the complete engine/voice/schema/profile/revision/runtime identity. Each page
+has at most 64 descriptors; a complete catalogue has at most 512 descriptors
+and two MiB of encoded parameter/mapping content. Changed identities, duplicate
+parameters, repeated cursors and invalid continuations publish no partial
+catalogue. Unknown value types remain inert and read-only.
+
+Each connection retains at most eight completed catalogues, with check time
+and inventory generation, as last-checked display evidence. A request always
+queries the worker again: helper recovery need not change Emacs's inventory.
+Retirement or changed inventory makes results stale, including responses whose
+observer callback was already scheduled. Ordinary navigation Stop does not
+cancel metadata discovery. Obsolete buffer/draft predicates suppress delivery;
+observer failures and mutations cannot affect other observers or cached data.
+The most recent 32 retired request IDs suppress late error notifications.
+
+Fresh-Emacs verification loaded the compiled discovery, codec and control
+dispatcher. All 317 affected discovery, speech, preview, registration, choice
+and build-inventory tests passed. This service is not yet connected to a
+workbench screen; no live profile or audio acceptance was attempted. Next add
+native registration and strict preview/explanation transport, then connect the
+engine-control editor and test main and notification speech independently.
+The full native capability remains unadvertised pending that acceptance.

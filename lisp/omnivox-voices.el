@@ -39,6 +39,7 @@
 (require 'emacsvox-aural-voice-runtime)
 (require 'omnivox-choice-codec)
 (require 'omnivox-preview)
+(require 'omnivox-parameters)
 
 (declare-function emacsvox-aural-enable-framed-delivery
                   "emacsvox-aural-transport" (process))
@@ -419,6 +420,7 @@ CALLBACK receives PROCESS and the decoded response plist."
       (remhash identifier pending))
     (cond
      (callback (funcall callback process response))
+     ((omnivox-parameters--discard-retired-reply-p process identifier) nil)
      ((equal (plist-get response :type) "error")
       (omnivox--record-control-error process response)))))
 
@@ -442,6 +444,8 @@ Return non-nil when LINE is a control event, including a malformed one."
                (operation (process-get process 'omnivox--preview-operation)))
           (omnivox--control-response-identity response)
           (when (or (equal (plist-get response :type) "voice_library_status_v1")
+                    (equal (plist-get response :type) "engine_parameters_v1")
+                    (omnivox-parameters--pending-p process (plist-get response :request_id))
                     (equal (plist-get response :type) "preview_voice_completed_v2")
                     (and operation
                          (eql (plist-get response :request_id) (omnivox--preview-pending operation))

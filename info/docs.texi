@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 295 loaded; 0 intentionally omitted.
+@c Modules: 297 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -57,10 +57,11 @@
 @c Loaded: emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc
 @c Loaded: g-utils.elc gm-nnir.elc gmaps.elc gweb.elc ladspa.elc
 @c Loaded: light.elc mac-voices.elc omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc
-@c Loaded: omnivox-engine-settings.elc omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc omnivox-preview.elc
-@c Loaded: omnivox-remote.elc omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc
-@c Loaded: soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc
-@c Loaded: tts-queue-state.elc tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
+@c Loaded: omnivox-engine-settings.elc omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc omnivox-parameters-codec.elc
+@c Loaded: omnivox-parameters.elc omnivox-preview.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc
+@c Loaded: pip.elc plain-voices.elc soundscape.elc sox-gen.elc sox.elc
+@c Loaded: swiftmac-voices.elc tetris.elc tts-queue-state.elc tts-speak.elc voice-defs.elc
+@c Loaded: voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -350,6 +351,8 @@ This chapter documents a total of 1550 commands and 216 options.
 * omnivox-espeak-variants:: Bundled eSpeak variant selection.
 * omnivox-library:: Local installed voices and Apply.
 * omnivox-library-apply:: Coordinate voice-library activation.
+* omnivox-parameters:: Asynchronous engine controls.
+* omnivox-parameters-codec:: Engine parameter metadata.
 * omnivox-preview:: Owned Omnivox preview sequences.
 * omnivox-remote:: Workstation speech transport.
 * omnivox-voices:: Omnivox voice adapter.
@@ -24536,6 +24539,19 @@ retirement, replacement, commit and paired rollback may follow.  It performs
 no process or file operations itself.  There is deliberately no interactive
 entry point until a native provider supplies ownership and durable receipts.
 See docs/voice-library-apply-controller.org for the provider boundary.
+
+@node omnivox-parameters
+@section omnivox-parameters
+
+Read-only discovery on the actual speech connection.  No waits, synthesis,
+automatic busy retries, worker starts or registry changes.  Views retain a
+detachable waiter and a current-buffer/draft predicate; callbacks run later.
+
+@node omnivox-parameters-codec
+@section omnivox-parameters-codec
+
+Validate inert current-worker catalogues.  IDs remain strings, JSON false
+remains :false and unknown value types remain readable but not editable.
 
 @node omnivox-preview
 @section omnivox-preview
