@@ -44,6 +44,9 @@
 (declare-function omnivox--preview-sequence "omnivox-preview" (entries callback individual &optional current))
 (declare-function omnivox--preview-cancel "omnivox-preview" (operation))
 (declare-function omnivox--preview-token-operation "omnivox-preview" (token))
+(declare-function omnivox-parameters--explain-draft "omnivox-parameters" (process entry callback &optional current))
+(declare-function omnivox-parameters--explain-applied "omnivox-parameters" (process connection identity callback &optional current))
+(declare-function omnivox-parameters--cancel "omnivox-parameters" (waiter))
 (autoload 'emacsvox-aural-voice-context-open "emacsvox-aural-voice-context"
   "Inspect this voice draft in a captured source context." t)
 
@@ -52,12 +55,15 @@
 (defvar emacsvox-aural-voice-editor--preview-owner nil
   "Context owning the current editor sample.")
 (defvar-local emacsvox-aural-voice-editor--context nil)
+(defvar-local emacsvox-aural-voice-editor--explanation-waiter nil)
 
 (defun emacsvox-aural-voice-editor--submit-preview (entries callback current)
   "Submit private ENTRIES with CALLBACK while CURRENT still owns the view.
 Select a faithful wire form before any entry interrupts foreground speech."
   (let* ((entries (tts--emoji-preview-entries (tts--dispatch-copy-data entries)))
          (process tts-speaker-process)
+         (connection (when (processp process)
+                       (list (process-name process) (process-get process 'tts--speech-process-generation))))
          (adapter tts-voice-preview-function)
          (omnivox (and (eq adapter #'omnivox-preview-voice-sequence)
                        (processp process) (process-live-p process)))
@@ -74,7 +80,7 @@ Select a faithful wire form before any entry interrupts foreground speech."
          (kind (if layered 'layered (if individual 'individual-audition 'shared-chain)))
          (receive
           (lambda (result)
-            (setq result (copy-tree result))
+            (setq result (plist-put (copy-tree result) :speech-connection connection))
             (cl-loop for item in (plist-get result :results) for entry in entries do
                      (plist-put item :request-snapshot (copy-tree entry)))
             (funcall callback (plist-put result :preview-kind kind)))))
@@ -931,11 +937,118 @@ SOURCE optionally supplies the return buffer for the destination editor."
   (let ((context emacsvox-aural-voice-editor--context))
     (with-help-window "*Voice editor details*"
       (princ (emacsvox-aural-voice-editor--explain-playback (plist-get context :preview-result)))
+      (when (and (processp tts-speaker-process) (omnivox--native-tuning-supported-p tts-speaker-process))
+        (with-current-buffer standard-output
+          (insert "\nEngine settings\n")
+          (insert-text-button "Explain planned settings for a choice"
+                              'follow-link t 'action (lambda (_) (emacsvox-aural-voice-editor--explain context nil)))
+          (insert "\n")
+          (insert-text-button "Explain applied settings from the last sample"
+                              'follow-link t 'action (lambda (_) (emacsvox-aural-voice-editor--explain context t)))
+          (insert "\n")))
       (princ "\nStored definitions and diagnostic data\n")
       (princ (format "Base voice in %s; definition owner %s.\nShared settings are the base; each row can override individual fields.\nSelection after Save and apply lasts for this session. Use a Presentation Profile to retain it after restart.\n\nWorking voice: %S\n\nWorkstation policy: %S\n\nLast playback evidence: %S\n"
                      (plist-get context :palette) (plist-get context :owner)
                      (emacsvox-aural-voice-draft-working (plist-get context :draft))
                      (plist-get context :policy) (plist-get context :preview-result))))))
+
+(defun emacsvox-aural-voice-editor--cancel-explanation ()
+  "Detach the current explanation observer without stopping speech."
+  (when emacsvox-aural-voice-editor--explanation-waiter
+    (omnivox-parameters--cancel emacsvox-aural-voice-editor--explanation-waiter)
+    (setq emacsvox-aural-voice-editor--explanation-waiter nil)))
+
+(defun emacsvox-aural-voice-editor--explanation-text (response)
+  "Describe qualified RESPONSE without treating planned values as readback."
+  (if (not (eq (plist-get response :status) 'ready))
+      (concat (or (plist-get response :message)
+                  (pcase (plist-get response :status)
+                    ('busy "Engine is busy. Try again after speech finishes.")
+                    (_ "Engine settings are unavailable."))) "\n")
+    (let* ((result (plist-get response :explanation))
+           (applied (equal (plist-get result :evidence) "adapter_applied"))
+           (physical (plist-get result :realized))
+           (native (plist-get (plist-get response :expected) :native)))
+      (concat
+       (if applied "Applied settings from the captured playback\n" "Planned settings for the captured draft; no speech was played\n")
+       (format "%s, voice %s; choice %s.\n"
+               (plist-get physical :engine_id) (plist-get physical :voice_id) (plist-get result :choice_id))
+       (if applied "Engine readback is identified separately for each value.\n"
+         "These are the adapter's planned values, not engine readback.\n")
+       (mapconcat
+        (lambda (parameter)
+          (let* ((id (plist-get parameter :id)) (value (plist-get parameter :value))
+                 (operation (cdr (assoc id (plist-get native :parameters)))))
+            (format "%s: %s; %s%s%s%s."
+                    id (cond ((eq value :null) "value unknown") ((eq value :false) "false")
+                             ((eq value t) "true") (t (format "%s" value)))
+                    (pcase (plist-get parameter :origin)
+                      ("engine_default" "engine voice default") ("common_mapping" "from common settings")
+                      ("context_mapping" "from contextual settings") ("native_set" "explicit engine setting")
+                      ("native_default" "explicit engine voice default"))
+                    (if (eq (plist-get parameter :masked_native) t) "; context overrides the engine setting" "")
+                    (if (eq (plist-get parameter :read_back) t) "; read back from the engine"
+                      (if applied "; no engine readback" ""))
+                    (if operation
+                        (format "; requested %s" (if (eq (plist-get operation :op) 'default) "engine voice default"
+                                                    (let ((v (plist-get operation :value))) (if (null v) "false" v)))) ""))))
+        (plist-get result :parameters) "\n") "\n"))))
+
+(defun emacsvox-aural-voice-editor--explain (context applied)
+  "Show asynchronous settings for CONTEXT, using historical playback if APPLIED."
+  (require 'omnivox-parameters)
+  (let* ((draft (plist-get context :draft))
+         (revision (emacsvox-aural-voice-draft-revision draft))
+         (snapshot (tts--dispatch-copy-data (emacsvox-aural-voice-draft-working draft)))
+         (process tts-speaker-process)
+         (preview (tts--dispatch-copy-data (plist-get context :preview-result)))
+         (sample (when applied
+                   (cl-find-if (lambda (item)
+                                 (and (eq (plist-get (plist-get item :request-snapshot) :role) 'sample)
+                                      (plist-get item :last-started)))
+                               (reverse (plist-get preview :results)))))
+         (id (unless applied
+               (or (plist-get context :tuning-choice)
+                   (and (= 1 (length (plist-get snapshot :choices))) (plist-get (car (plist-get snapshot :choices)) :id))
+                   (emacsvox-aural-voice-editor--read-choice snapshot "Explain choice: "))))
+         (entry (unless applied (emacsvox-aural-voice-editing--cascade
+                                 snapshot (plist-get context :palette) (plist-get context :policy) "Explain settings" nil id)))
+         (buffer (get-buffer-create "*Voice engine settings*"))
+         (token (list 'explanation))
+         (current (lambda () (and (buffer-live-p buffer)
+                                  (eq token (buffer-local-value 'emacsvox-aural-voice-editor--context buffer)))))
+         (receive (lambda (result)
+                    (when (funcall current)
+                      (when (and (eq (plist-get result :status) 'ready) (not (eq process tts-speaker-process)))
+                        (setq result '(:status stale :message "Selected speech connection changed. Request engine settings again.")))
+                      (when (and applied (eq (plist-get result :status) 'ready))
+                        (let* ((audio (plist-get sample :last-started))
+                               (row (cl-find (plist-get audio :choice_id)
+                                             (plist-get (plist-get (plist-get sample :request-snapshot) :voice) :choices)
+                                             :test #'equal :key (lambda (choice) (plist-get choice :id)))))
+                          (setf (plist-get (plist-get result :expected) :native) (plist-get row :native))))
+                      (when (and (not applied) (/= revision (emacsvox-aural-voice-draft-revision draft)))
+                        (setq result '(:status stale :message "The draft changed. Request its planned settings again.")))
+                      (with-current-buffer buffer
+                        (let ((inhibit-read-only t) (position (point)))
+                          (erase-buffer)
+                          (insert (emacsvox-aural-voice-editor--explanation-text result))
+                          (goto-char (min position (point-max)))))))))
+    (when (and applied (not sample)) (user-error "No confirmed sample is available to explain"))
+    (with-current-buffer buffer
+      (emacsvox-aural-voice-editor--cancel-explanation)
+      (help-mode)
+      (setq emacsvox-aural-voice-editor--context token)
+      (add-hook 'kill-buffer-hook #'emacsvox-aural-voice-editor--cancel-explanation nil t)
+      (let ((inhibit-read-only t)) (erase-buffer) (insert "Checking engine settings…\n"))
+      (condition-case err
+          (setq emacsvox-aural-voice-editor--explanation-waiter
+                (if applied
+                    (omnivox-parameters--explain-applied process (plist-get preview :speech-connection)
+                                                         (plist-get sample :last-started) receive current)
+                  (omnivox-parameters--explain-draft process entry receive current)))
+        (error (funcall receive (list :status 'failed :message (error-message-string err))))))
+    (display-buffer buffer)))
 
 (defun emacsvox-aural-voice-editor--field-value (dimension value)
   "Describe requested DIMENSION VALUE in displayed units, retaining zero."

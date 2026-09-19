@@ -89,10 +89,11 @@
           (omnivox--encode-control-request
            (append (list :protocol_version 1 :request_id identifier) request))))
 
-(defun omnivox--preview-layered-request (entry process)
-  "Preflight raw private ENTRY for PROCESS without flattening its cascade."
-  (let ((native (cl-some (lambda (row) (plist-member row :native))
-                         (plist-get (plist-get entry :voice) :choices))))
+(defun omnivox--preview-layered-request (entry process &optional native)
+  "Preflight raw private ENTRY for PROCESS without flattening its cascade.
+NATIVE requires the native wire form even when no row has native overrides."
+  (let ((native (or native (cl-some (lambda (row) (plist-member row :native))
+                                    (plist-get (plist-get entry :voice) :choices)))))
     (unless (and (process-live-p process)
                  (if native (omnivox--native-tuning-supported-p process)
                    (omnivox--choice-tuning-supported-p process)))

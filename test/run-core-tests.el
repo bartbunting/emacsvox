@@ -29,6 +29,7 @@
                     tts-dispatch-handoff-tests
                     omnivox-remote-tests
                     omnivox-parameters-tests
+                    omnivox-explanation-tests
                     omnivox-native-preview-tests
                     omnivox-native-runtime-tests
                     omnivox-library-apply-tests

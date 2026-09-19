@@ -1384,3 +1384,45 @@ preview, editor, storage and build-inventory suites passed 644 tests; two
 graphical layout tests were skipped in batch. A full byte-code rebuild and the
 generated-reference update completed. Runtime listening and helper recovery
 acceptance remain part of the gated integration work.
+
+* Implementation progress: Emacs planned and applied explanations
+
+The Emacs client now requests =explain_voice_parameters_v1= asynchronously on
+the actual speech connection. A selected-choice draft uses the native private
+voice form, including explicit null native records for common-only rows. The
+query contains no synthesis text and does not register voices or start playback.
+Applied queries retain the original sample's process name, connection generation
+and qualified plan reference; selecting another worker cannot reinterpret an old
+plan ID. The complete native capability bundle is required.
+
+Explanations share catalogue request ownership, engine admission, bounded
+deadlines, retirement and detachable observers. Different streams remain
+independent. Busy and expired plans are visible outcomes; there are no automatic
+retries. An explanation never becomes a cached catalogue. Strict decoding keeps
+false, zero and unknown distinct, rejects duplicate fields and parameter IDs,
+and correlates choice, physical voice, schema/profile/revision/runtime and
+historical masking with the captured request or application receipt. Planned
+responses cannot claim engine readback.
+
+The existing editor details view offers planned settings for a chosen fallback
+and applied settings from the last confirmed sample when the worker supports
+the native bundle. Results distinguish planned values, adapter application and
+per-parameter readback. They show the original native request, value origin and
+contextual masking without reimplementing engine mappings. Draft changes make a
+pending planned result stale; historical explanations retain their original
+request. Closing or replacing the view detaches its observer without stopping
+speech. Background results update the details buffer without notification speech.
+
+The descriptor-driven editing controls and contextual/ordinary-speech explanation
+entry points remain to be connected. Parameter labels, units and mapping-help
+presentation belong with that editor integration. The native bundle remains
+unadvertised pending end-to-end acceptance; this slice does not change a live
+Emacs session, install an engine or select a different Omnivox build.
+
+Verification passed 659 tests in a fresh batch Emacs, with two layout tests
+skipped there and subsequently passed in the 28-test private-display graphical
+suite. The latter includes the explanation links, asynchronous display, stale
+draft/selected-worker handling and observer detachment. A full byte-code rebuild
+and generated-reference update completed; the fresh batch process verified the
+compiled codec, query, private-voice encoder and details implementation paths.
+No live listening or native-engine integration acceptance was claimed.

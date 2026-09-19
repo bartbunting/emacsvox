@@ -34,6 +34,7 @@
         (add-to-list 'load-path (expand-file-name "test/" root))
         (require 'emacsvox-preamble)
         (require 'emacsvox-aural-voice-editor-tests)
+        (require 'omnivox-explanation-tests)
         (require 'emacsvox-aural-feedback-details)
         (require 'emacsvox-aural-feedback-details-tests)
         (require 'emacsvox-emoji-integration-tests)
@@ -57,6 +58,10 @@
             (message "%s: %s" function file)))
         (let ((stats (ert-run-tests-batch
                       '(member
+                        omnivox-explanation-details-link-opens-the-selected-choice
+                        omnivox-explanation-view-displays-result-and-rejects-changed-draft
+                        omnivox-explanation-view-preserves-applied-request-across-edits-and-detaches-on-kill
+                        omnivox-explanation-view-rejects-a-replaced-selected-worker
                         omnivox-library-removal-graphical-review-preserves-origin-and-return
                         omnivox-espeak-variants-graphical-refresh-keeps-focus-and-parent
                         omnivox-espeak-variants-graphical-navigation-speaks-every-row
@@ -81,8 +86,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 24)
-                                (= (ert-stats-completed stats) 24)
+          (setq status (if (and (= (ert-stats-total stats) 28)
+                                (= (ert-stats-completed stats) 28)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

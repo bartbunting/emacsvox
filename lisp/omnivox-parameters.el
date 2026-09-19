@@ -29,11 +29,14 @@
 
 ;;; Code:
 (require 'omnivox-parameters-codec)
+(require 'omnivox-native-codec)
 (require 'tts-queue-state)
 
 (declare-function omnivox--send-control-request "omnivox-voices" (process request callback))
 (declare-function omnivox--pending-requests "omnivox-voices" (process))
 (declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
+(declare-function omnivox--native-tuning-supported-p "omnivox-voices" (process))
+(declare-function omnivox--preview-layered-request "omnivox-preview" (entry process &optional native))
 (declare-function tts--dispatch-copy-data "tts-speak" (value))
 (defvar omnivox-voice-configuration-timeout)
 (defvar omnivox--control-inventory-property)
@@ -45,7 +48,7 @@
   callback current process epoch operation timer cancelled)
 (cl-defstruct (omnivox-parameters--query (:constructor omnivox-parameters--make-query))
   process epoch engine voice waiters pending timer step identity mappings
-  parameters cursors finished)
+  parameters cursors finished explanation)
 
 (defun omnivox-parameters--epoch (process)
   "Capture PROCESS's connection and inventory generation."
@@ -189,7 +192,9 @@ the worker, whose helper may have restarted since the last inventory."
   (unless (omnivox-parameters--query-finished query)
     (if (not (omnivox-parameters--current-p query))
         (omnivox-parameters--finish query '(:status stale :message "Speech connection or inventory changed"))
-      (condition-case err
+      (if (omnivox-parameters--query-explanation query)
+          (omnivox-parameters--receive-explanation query response)
+        (condition-case err
           (let* ((result (omnivox-parameters--page response (omnivox-parameters--query-engine query)
                                                   (omnivox-parameters--query-voice query)))
                  (identity (plist-get result :identity)))
@@ -223,27 +228,49 @@ the worker, whose helper may have restarted since the last inventory."
                    (omnivox-parameters--send query cursor))))))
         (error
          (setq omnivox-parameters--last-error err)
-         (omnivox-parameters--finish query '(:status failed :message "Invalid or rejected engine controls reply")))))))
+         (omnivox-parameters--finish query '(:status failed :message "Invalid or rejected engine controls reply"))))))))
+
+(defun omnivox-parameters--receive-explanation (query response)
+  "Complete QUERY with a strictly correlated explanation RESPONSE."
+  (condition-case err
+      (let* ((frozen (omnivox-parameters--query-explanation query))
+             (result (omnivox--native-explanation response (plist-get frozen :expected))))
+        (omnivox-parameters--require
+         (eql (plist-get response :request_id) (omnivox-parameters--query-pending query)) "explanation request")
+        (setf (omnivox-parameters--query-pending query) nil)
+        (omnivox-parameters--finish
+         query (pcase (plist-get result :status)
+                 ("ready" (list :status 'ready :explanation result :request (plist-get frozen :source)
+                                :expected (plist-get frozen :expected) :epoch (omnivox-parameters--query-epoch query)))
+                 ("busy" (list :status 'busy :retry-after-ms (plist-get result :retry_after_ms)))
+                 (_ (list :status 'unavailable :reason (plist-get result :reason) :message (plist-get result :message))))))
+    (error
+     (setq omnivox-parameters--last-error err)
+     (omnivox-parameters--finish query '(:status failed :message "Invalid or rejected engine explanation reply")))))
 
 (defun omnivox-parameters--send (query &optional cursor)
   "Submit QUERY's next page using CURSOR without interrupting speech."
   (setf (omnivox-parameters--query-pending query)
         (omnivox--send-control-request
          (omnivox-parameters--query-process query)
-         (list :type "get_engine_parameters_v1" :engine_id (omnivox-parameters--query-engine query)
+         (if (omnivox-parameters--query-explanation query)
+             (list :type "explain_voice_parameters_v1"
+                   :source (plist-get (omnivox-parameters--query-explanation query) :source))
+           (list :type "get_engine_parameters_v1" :engine_id (omnivox-parameters--query-engine query)
                :voice_id (omnivox-parameters--query-voice query) :cursor (or cursor :null)
-               :expected_catalogue_revision (or (plist-get (omnivox-parameters--query-identity query) :catalogue_revision) :null))
+               :expected_catalogue_revision (or (plist-get (omnivox-parameters--query-identity query) :catalogue_revision) :null)))
          (lambda (_process response)
            (unless (omnivox-parameters--query-finished query)
              (setf (omnivox-parameters--query-step query)
                    (run-at-time 0 nil #'omnivox-parameters--receive query
                                 (tts--dispatch-copy-data response))))))))
 
-(defun omnivox-parameters--request (process engine voice callback &optional current)
+(defun omnivox-parameters--request (process engine voice callback &optional current explanation)
   "Query ENGINE and optional physical VOICE on PROCESS without waiting.
 Return a cancellable waiter.  CALLBACK receives a copied status/catalogue later,
 only while CURRENT (a buffer/draft predicate) still holds.  Coalesce matching
-requests; different voices on a busy engine report busy without queueing."
+requests; different voices on a busy engine report busy without queueing.
+EXPLANATION is an internally prepared source and correlation snapshot."
   (omnivox-parameters--id engine)
   (when voice (omnivox-parameters--text voice 4096))
   (unless (and (functionp callback) (or (null current) (functionp current))) (error "Invalid catalogue observer"))
@@ -254,7 +281,8 @@ requests; different voices on a busy engine report busy without queueing."
      ((not (and (processp process) (process-live-p process)
                 (not (process-get process 'tts--speech-process-retiring))))
       (omnivox-parameters--notify waiter '(:status stale :message "Speech connection unavailable")))
-     ((not (omnivox--process-supports-p process "engine_parameter_catalogue_v1"))
+     ((not (if explanation (omnivox--native-tuning-supported-p process)
+             (omnivox--process-supports-p process "engine_parameter_catalogue_v1")))
       (omnivox-parameters--notify waiter '(:status unsupported :message "This speech worker cannot describe engine controls")))
      (t
       (let ((query (cl-find engine (process-get process 'omnivox-parameters--queries)
@@ -263,7 +291,8 @@ requests; different voices on a busy engine report busy without queueing."
           (omnivox-parameters--finish query '(:status stale :message "Speech inventory changed"))
           (setq query nil))
         (cond
-         ((and query (equal (or voice :null) (omnivox-parameters--query-voice query))
+         ((and query (not explanation) (not (omnivox-parameters--query-explanation query))
+               (equal (or voice :null) (omnivox-parameters--query-voice query))
                (< (length (omnivox-parameters--query-waiters query)) 32))
           (push waiter (omnivox-parameters--query-waiters query))
           (setf (omnivox-parameters--waiter-operation waiter) query))
@@ -272,7 +301,8 @@ requests; different voices on a busy engine report busy without queueing."
          (t
           (setq query (omnivox-parameters--make-query
                        :process process :epoch (omnivox-parameters--epoch process)
-                       :engine (copy-sequence engine) :voice (if voice (copy-sequence voice) :null) :waiters (list waiter)))
+                       :engine (copy-sequence engine) :voice (if voice (copy-sequence voice) :null) :waiters (list waiter)
+                       :explanation (tts--dispatch-copy-data explanation)))
           (setf (omnivox-parameters--waiter-operation waiter) query)
           (process-put process 'omnivox-parameters--queries (cons query (process-get process 'omnivox-parameters--queries)))
           (condition-case err
@@ -287,6 +317,49 @@ requests; different voices on a busy engine report busy without queueing."
              (setq omnivox-parameters--last-error err)
              (omnivox-parameters--finish query '(:status failed :message "Could not request engine controls")))))))))
     waiter))
+
+(defun omnivox-parameters--explain-draft (process entry callback &optional current)
+  "Explain one selected choice in frozen ENTRY on PROCESS without speech.
+Deliver the result through CALLBACK while CURRENT still owns its view."
+  (unless (eq (plist-get (plist-get entry :selection) :mode) 'choice)
+    (user-error "Choose one fallback row to explain"))
+  (let* ((entry (tts--dispatch-copy-data entry))
+         (id (plist-get (plist-get entry :selection) :choice-id))
+         (row (cl-find id (plist-get (plist-get entry :voice) :choices)
+                       :test #'equal :key (lambda (choice) (plist-get choice :id))))
+         (selector (plist-get row :selector))
+         (engine (plist-get selector :engine-id)))
+    (unless engine (user-error "Choose a row with a specific engine to explain"))
+    (if (not (and (processp process) (process-live-p process) (omnivox--native-tuning-supported-p process)))
+        (omnivox-parameters--request process engine nil callback current '(:unsupported t))
+      (setf (plist-get entry :text) "Explain settings")
+      (let ((source (omnivox--preview-layered-request entry process t)))
+        (cl-remf source :type)
+        (cl-remf source :text)
+        (setq source (plist-put source :mode "draft")
+              source (plist-put source :expected_base_rate (or (plist-get source :expected_base_rate) :null)))
+        (omnivox-parameters--request
+         process engine (plist-get selector :voice-id) callback current
+         (list :source source :expected (list :choice-id id :selector selector :native (plist-get row :native))))))))
+
+(defun omnivox-parameters--explain-applied (process connection identity callback &optional current)
+  "Explain captured audio IDENTITY on its original PROCESS and CONNECTION.
+CONNECTION contains process name and speech generation, never a live handle.
+Deliver through CALLBACK while CURRENT still owns its view."
+  (let* ((application (plist-get identity :native_application))
+         (realized (plist-get identity :realized)))
+    (unless (and (listp application) (equal (plist-get application :status) "applied"))
+      (user-error "This playback has no applied native plan to explain"))
+    (omnivox--native-application application)
+    (if (not (and (processp process) (equal connection (list (process-name process)
+                                                           (process-get process 'tts--speech-process-generation)))))
+        (let ((waiter (omnivox-parameters--make-waiter :callback callback :current current)))
+          (omnivox-parameters--notify waiter '(:status stale :message "The original speech connection is no longer selected"))
+          waiter)
+      (omnivox-parameters--request
+       process (plist-get realized :engine_id) (plist-get realized :voice_id) callback current
+       (list :source (list :mode "applied" :plan_id (plist-get application :plan_id))
+             :expected (list :choice-id (plist-get identity :choice_id) :realized realized :application application))))))
 
 (provide 'omnivox-parameters)
 ;;; omnivox-parameters.el ends here

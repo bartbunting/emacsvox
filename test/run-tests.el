@@ -60,6 +60,7 @@
   (require 'tts-queue-state-tests)
   (require 'omnivox-preview-tests)
   (require 'omnivox-native-preview-tests)
+  (require 'omnivox-explanation-tests)
   (require 'omnivox-native-runtime-tests)
   (require 'omnivox-library-apply-tests)
   (require 'omnivox-library-tests)
