@@ -1335,3 +1335,52 @@ ordinary speech, retaining per-lane degradation on older workers. Asynchronous
 effective-setting explanations, the descriptor-driven editor and independent
 main/notification acceptance follow. Omnivox's full native capability remains
 unadvertised pending final integration acceptance.
+
+* Implementation progress: Emacs registration and ordinary native speech
+
+Each speech connection now selects registry version 3 only with the complete
+native capability bundle. Inspectable owned voices use =engine_layered=
+definitions containing the original native operations; older connections retain
+the previous common/choice projection and explicit unapplied-tuning result.
+Uninspectable legacy definitions retain their compatibility path and cannot
+claim native application.
+
+Version-3 acknowledgements must match the frozen generation, definition count,
+connection and complete set of native choice owners. Missing, duplicate, foreign
+or malformed support states cannot enable timeline 5. Supported, deferred and
+unavailable results remain attached to the independently acknowledged streams.
+Deferred/unavailable native support prevents Save from claiming full application,
+even when the registry replacement itself succeeded. No catalogue query or
+helper startup occurs as a side effect of registration.
+Reapplying unchanged settings refreshes support status without mutating earlier
+dispatch snapshots; an older acknowledgement cannot replace that newer evidence.
+
+Acknowledged native registries select timeline 5 for concrete speech, speech
+actions and ordinary named-voice queue promotion. Main and notification speech
+preserve the same explicit sparse context and placement model. Multipart framing
+keeps the negotiated version and registry generation. A dispatch retains its
+immutable registry snapshot; admission still rejects replacement while preparing
+the write, while already submitted speech retains its original evidence owner.
+
+Strict marker version 4 adds a required nullable native application beside the
+choice receipt. Receipt validation checks the owned start/span/generation,
+selected physical voice, native schema and masked parameter membership before
+advancing marker state. Version-3 events cannot update a version-5 dispatch.
+Ordinary speech may report applied native settings or explicit common-only
+fallback, with its reason retained. Policy fallback has no owning native choice
+and requires null application evidence. These facts are recorded silently in
+the historical route and bounded observations; they do not generate a spoken
+notification on every utterance. Dispatch admission reserves the larger receipt
+budget and releases it through the existing lifecycle owner.
+
+The complete capability remains unadvertised in Omnivox pending integration
+acceptance. No live worker or Emacs profile was changed for this slice. Next add
+asynchronous expected/applied-setting explanations, connect the parameter editor,
+and perform independent main/notification acceptance with qualified engines.
+
+Fresh-Emacs verification loaded the compiled registration, native codecs,
+timeline builder and marker handler. The affected speech, queue, transport,
+preview, editor, storage and build-inventory suites passed 644 tests; two
+graphical layout tests were skipped in batch. A full byte-code rebuild and the
+generated-reference update completed. Runtime listening and helper recovery
+acceptance remain part of the gated integration work.

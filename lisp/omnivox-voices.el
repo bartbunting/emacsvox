@@ -444,6 +444,7 @@ Return non-nil when LINE is a control event, including a malformed one."
                (operation (process-get process 'omnivox--preview-operation)))
           (omnivox--control-response-identity response)
           (when (or (equal (plist-get response :type) "voice_library_status_v1")
+                    (equal (plist-get response :type) "logical_voices_registered_v3")
                     (equal (plist-get response :type) "engine_parameters_v1")
                     (omnivox-parameters--pending-p process (plist-get response :request_id))
                     (equal (plist-get response :type) "preview_voice_completed_v2")
@@ -551,10 +552,17 @@ Return non-nil when LINE is a control event, including a malformed one."
 (defconst omnivox--realized-route-byte-limit (* 4 1024 1024))
 (defconst omnivox--realized-route-limit 512)
 
+(defun omnivox--choice-registration-version (snapshot)
+  "Return the timeline version belonging to acknowledged SNAPSHOT."
+  (if (equal (plist-get (plist-get snapshot :content) :type) "register_logical_voices_v3") 5 4))
+
 (defun omnivox--choice-current-registration (process)
   "Return PROCESS's acknowledged snapshot or fail before preparing speech."
   (let ((snapshot (process-get process omnivox--choice-registration-property)))
-    (unless (and (process-live-p process) (omnivox--choice-tuning-supported-p process)
+    (unless (and (process-live-p process)
+                 (if (= (omnivox--choice-registration-version snapshot) 5)
+                     (omnivox--native-tuning-supported-p process)
+                   (omnivox--choice-tuning-supported-p process))
                  snapshot
                  (equal (plist-get snapshot :process-generation)
                         (process-get process 'tts--speech-process-generation)))
@@ -595,13 +603,15 @@ Return non-nil when LINE is a control event, including a malformed one."
   ;; Copy and size before touching shared state. Re-read reservations afterward:
   ;; a nested operation may have retained or released this same snapshot.
   (let* ((process (tts--dispatch-owner-process owner))
-         (context (list :protocol-version 4 :registration snapshot
+         (version (omnivox--choice-registration-version snapshot))
+         (context (list :protocol-version version :registration snapshot
                         :lane (if (eq process tts-notify-process) 'notification 'main)
                         :spans (tts--dispatch-copy-data spans)
                         :last-started nil :observations nil :truncated nil))
          (print-circle t) (print-length nil) (print-level nil)
          (span-bytes (+ (string-bytes (prin1-to-string (plist-get context :spans)))
-                        (* (1+ omnivox--choice-observation-limit) omnivox--choice-observation-bytes)))
+                        (* (1+ omnivox--choice-observation-limit)
+                           (if (= version 5) omnivox--choice-receipt-limit omnivox--choice-observation-bytes))))
          (snapshot-bytes
           (or (when-let* ((references (process-get process 'omnivox--choice-snapshot-references))
                           (entry (gethash snapshot references)))
@@ -665,7 +675,7 @@ Return non-nil when LINE is a control event, including a malformed one."
          (index (cl-position id rows :test #'equal :key (lambda (row) (plist-get row :id))))
          (reason (plist-get choice :reason))
          (entry (gethash (tts--dispatch-owner-id owner) tts--marker-dispatches)))
-    (unless (and start (eq (plist-get span :mode) 'layered)
+    (unless (and start (memq (plist-get span :mode) '(layered engine-layered))
                  (equal logical (plist-get span :logical-id))
                  (equal logical (plist-get start :logical_voice_id))
                  (eql (plist-get event :registry_generation) (plist-get snapshot :registry-generation))
@@ -690,6 +700,10 @@ Return non-nil when LINE is a control event, including a malformed one."
         (when (and (eq (plist-get selector :kind) 'exact)
                    (not (equal (plist-get selector :voice-id) (plist-get physical :voice_id))))
           (error "Individual voice receipt disagrees with the requested voice"))))
+    (when (eql (plist-get event :protocol_version) 4)
+      (omnivox--native-receipt-correlate
+       (and (eq (plist-get span :mode) 'engine-layered) index (nth index rows))
+       (plist-get event :native_application) physical))
     (list :span span :provenance provenance :row (and index (nth index rows)))))
 
 (defun omnivox--store-realized-route (route &optional names)
@@ -765,7 +779,9 @@ Return non-nil when LINE is a control event, including a malformed one."
       (let* ((choice (plist-get event :choice))
              (span (plist-get receipt :span))
              (provenance (plist-get receipt :provenance))
-             (observation (list :span-id (plist-get event :span_id) :choice (tts--dispatch-copy-data choice)))
+             (native (when (eql (plist-get event :protocol_version) 4)
+                       (list :native-application (tts--dispatch-copy-data (plist-get event :native_application)))))
+             (observation (append (list :span-id (plist-get event :span_id) :choice (tts--dispatch-copy-data choice)) native))
              (route (append (list :choice-id (plist-get choice :choice_id)
                                   :span-id (plist-get event :span_id) :reason (plist-get choice :reason)
                                   :shared (plist-get provenance :shared)
@@ -774,6 +790,7 @@ Return non-nil when LINE is a control event, including a malformed one."
                                   :voice-provenance (plist-get span :voice-provenance)
                                   :degraded-acss (append (plist-get choice :degraded_acss) nil)
                                   :degraded-effects (append (plist-get choice :degraded_effects) nil))
+                            native
                             (plist-put (omnivox--choice-base-route owner (plist-get context :last-started))
                                        :choice-status 'verified))))
         (unless (member observation (plist-get context :observations))
@@ -799,10 +816,11 @@ Return non-nil when LINE is a control event, including a malformed one."
         (omnivox--queue-realized-route owner route))))))
 
 (defun omnivox--handle-choice-marker (process event)
-  "Correlate strict version-3 EVENT before mutating any playback state."
+  "Correlate versioned choice EVENT before mutating any playback state."
   (when-let* ((owner (tts--dispatch-owner-for process (plist-get event :dispatch_id)))
               ((tts--dispatch-observing-p owner))
-              ((eql (plist-get (tts--dispatch-owner-context owner) :protocol-version) 4)))
+              ((eql (plist-get (tts--dispatch-owner-context owner) :protocol-version)
+                    (1+ (plist-get event :protocol_version)))))
     (let ((receipt (when (equal (plist-get event :type) "voice_choice_applied")
                      (omnivox--choice-receipt-context owner event))))
       (tts--dispatch-playback-marker-event
@@ -829,9 +847,10 @@ Return non-nil for every marker-prefixed line, including malformed records."
                (identifier (plist-get event :dispatch_id))
                (sequence (plist-get event :sequence))
                (type (plist-get event :type)))
-          (if (eql version 3)
+          (if (memq version '(3 4))
               (omnivox--handle-choice-marker
-               process (omnivox--choice-decode-marker (substring line (length omnivox-marker-event-prefix))))
+               process (funcall (if (= version 4) #'omnivox--native-decode-marker #'omnivox--choice-decode-marker)
+                                (substring line (length omnivox-marker-event-prefix))))
             (unless
                 (and
                  (memq version omnivox-marker-event-protocol-versions)
@@ -1552,9 +1571,9 @@ RUNTIME-ROUTING-POLICY keeps global order out of logical definitions."
                  '("engine_parameter_catalogue_v1" "engine_voice_parameters_v1"
                    "presentation_timeline_v5" "playback_marker_events_v4"))))
 
-(defun omnivox--choice-definition-projection (definition)
+(defun omnivox--choice-definition-projection (definition &optional native)
   "Return wire wrapper, provenance and unapplied flag for DEFINITION.
-Read raw ownership once so the wire values and their sources cannot diverge."
+NATIVE selects the native-aware wire form.  Read raw ownership only once."
   (let* ((id (plist-get definition :id))
          (owned (tts--dispatch-copy-data (emacsvox-aural-voice-runtime--owned id)))
          (style (when owned
@@ -1573,17 +1592,18 @@ Read raw ownership once so the wire values and their sources cannot diverge."
     (list
      (if (not style)
          (list :mode "legacy" :definition definition)
-       (list :mode "layered"
+       (list :mode (if native "engine_layered" "layered")
              :definition
              (list :id id :language (or (plist-get owned :language) :null)
                    :shared (omnivox--choice-style-json style)
-                   :choices (omnivox--choice-records-json
-                             (mapcar (lambda (row)
-                                       (let ((copy (copy-tree row)))
-                                         (cl-remf copy :native)
-                                         copy)) choices)))))
+                   :choices (if native (omnivox--native-choice-records-json choices)
+                              (omnivox--choice-records-json
+                               (mapcar (lambda (row)
+                                         (let ((copy (copy-tree row)))
+                                           (cl-remf copy :native)
+                                           copy)) choices))))))
      provenance
-     (or (cl-some (lambda (row) (plist-member row :native)) choices)
+     (or (and (or (not native) (not style)) (cl-some (lambda (row) (plist-member row :native)) choices))
          (and (not style) (cl-some (lambda (row) (plist-get row :adjustments)) choices))))))
 
 (defun omnivox--choice-definition-json (definition)
@@ -1608,9 +1628,15 @@ Read raw ownership once so the wire values and their sources cannot diverge."
                       (plist-get (emacsvox-aural-voice-runtime--owned id) :choices)))
            (omnivox--logical-voice-ids)))
 
-(defun omnivox--choice-warn-unapplied (process content)
+(defun omnivox--registration-unapplied-p (content response)
+  "Return whether frozen CONTENT or acknowledged RESPONSE reports unapplied tuning."
+  (or (plist-get content :choice-tuning-unapplied)
+      (cl-some (lambda (status) (not (equal (plist-get status :status) "supported")))
+               (plist-get response :native_status))))
+
+(defun omnivox--choice-warn-unapplied (process content &optional response)
   "Explain CONTENT's retained tuning limitation once for PROCESS."
-  (when (and (plist-get content :choice-tuning-unapplied)
+  (when (and (omnivox--registration-unapplied-p content response)
              (not (process-get process 'omnivox--choice-warning-issued)))
     (process-put process 'omnivox--choice-warning-issued t)
     (message "Some voice settings are not applied on %s; supported settings remain active"
@@ -1635,29 +1661,52 @@ Read raw ownership once so the wire values and their sources cannot diverge."
                    unresolved)
          (= (length unresolved) (length (delete-dups (append unresolved nil)))))))
 
+(defun omnivox--native-registration-content-equal-p (left right)
+  "Compare frozen native registry LEFT and RIGHT, including private provenance.
+JSON map hash tables are copied independently and cannot be compared by `equal'."
+  (and (equal (plist-get left :type) (plist-get right :type))
+       (cl-every (lambda (key) (equal (plist-get left key) (plist-get right key)))
+                 '(:choice-process-generation :choice-tuning-unapplied :choice-provenance))
+       (equal (json-serialize (omnivox--registration-request 1 left))
+              (json-serialize (omnivox--registration-request 1 right)))))
+
 (defun omnivox--accept-registration-response (process response generation content)
   "Accept PROCESS's RESPONSE only for its frozen GENERATION and CONTENT."
-  (if (equal (plist-get content :type) "register_logical_voices_v2")
+  (if (member (plist-get content :type) '("register_logical_voices_v2" "register_logical_voices_v3"))
       (when (and (process-live-p process)
                  (not (process-get process 'tts--speech-process-retiring))
                  (equal (plist-get content :choice-process-generation)
                         (process-get process 'tts--speech-process-generation))
-                 (omnivox--choice-registration-valid-p response generation content))
+                 (if (equal (plist-get content :type) "register_logical_voices_v3")
+                     (and (omnivox--native-tuning-supported-p process)
+                          (omnivox--native-registration-valid-p response generation content)
+                          (let* ((old (process-get process omnivox--choice-registration-property))
+                                 (previous (or (plist-get old :registry-generation) 0)))
+                            (or (> generation previous)
+                                (and (= generation previous)
+                                     (omnivox--native-registration-content-equal-p content (plist-get old :content))
+                                     (>= (plist-get response :request_id)
+                                         (or (plist-get (plist-get old :response) :request_id) 0))))))
+                   (omnivox--choice-registration-valid-p response generation content)))
         (let ((old (process-get process omnivox--choice-registration-property)))
           (when (>= generation (or (plist-get old :registry-generation) 0))
             (unless (and (eql generation (plist-get old :registry-generation))
-                         (equal content (plist-get old :content)))
+                         (equal content (plist-get old :content))
+                         (or (not (equal (plist-get content :type) "register_logical_voices_v3"))
+                             (equal response (plist-get old :response))))
               (process-put process omnivox--choice-registration-property
                            (list :registry-generation generation
                                  :process-generation (plist-get content :choice-process-generation)
                                  :content (tts--dispatch-copy-data content)
                                  :response (tts--dispatch-copy-data response))))
-            (when (omnivox--choice-tuning-supported-p process)
-              (emacsvox-aural-enable-structured-timeline process 4))
+            (if (equal (plist-get content :type) "register_logical_voices_v3")
+                (emacsvox-aural-enable-structured-timeline process 5)
+              (when (omnivox--choice-tuning-supported-p process)
+                (emacsvox-aural-enable-structured-timeline process 4)))
             (process-put process 'omnivox-library-accepted-registration
                          (tts--dispatch-copy-data content))
             (omnivox--handle-registration-response process response)))
-        (omnivox--choice-warn-unapplied process content)
+        (omnivox--choice-warn-unapplied process content response)
         t)
     (when (equal (plist-get response :type) "logical_voices_registered")
       (when (>= generation (or (plist-get (process-get process omnivox--choice-registration-property)
@@ -1665,7 +1714,7 @@ Read raw ownership once so the wire values and their sources cannot diverge."
         (process-put process omnivox--choice-registration-property nil)
         (process-put process 'omnivox-library-accepted-registration
                      (tts--dispatch-copy-data content))
-        (when (eql (process-get process emacsvox-aural--structured-timeline-process-property) 4)
+        (when (memq (process-get process emacsvox-aural--structured-timeline-process-property) '(4 5))
           (emacsvox-aural-enable-structured-timeline process 3))
         (omnivox--handle-registration-response process response))
       (omnivox--choice-warn-unapplied process content)
@@ -1832,7 +1881,7 @@ Return the number of processes sent a generation-safe policy replacement."
 (defun omnivox--handle-registration-response (process response)
   "Store logical voice registration RESPONSE received from PROCESS."
   (if (member (plist-get response :type)
-              '("logical_voices_registered" "logical_voices_registered_v2"))
+              '("logical_voices_registered" "logical_voices_registered_v2" "logical_voices_registered_v3"))
       (progn
         (process-put process omnivox--control-registration-property response)
         (when (eq process tts-speaker-process)
@@ -1875,16 +1924,17 @@ Return the number of processes sent a generation-safe policy replacement."
                  (stringp preferred-engine-id)
                  (not (string-empty-p preferred-engine-id)) preferred-engine-id)
             runtime-routing-policy)))
-      (if (not (omnivox--choice-tuning-supported-p process))
+      (if (not (or (omnivox--choice-tuning-supported-p process) (omnivox--native-tuning-supported-p process)))
           (if (omnivox--choice-tuned-configuration-p)
               (append content '(:choice-tuning-unapplied t)) content)
-        (let* ((projections (mapcar #'omnivox--choice-definition-projection
+        (let* ((native (omnivox--native-tuning-supported-p process))
+               (projections (mapcar (lambda (definition) (omnivox--choice-definition-projection definition native))
                                     (plist-get content :definitions)))
                (definitions (vconcat (mapcar #'car projections)))
                (provenance (vconcat (delq nil (mapcar #'cadr projections))))
                (unapplied (cl-some #'caddr projections))
                (snapshot
-                (append (list :type "register_logical_voices_v2" :definitions definitions
+                (append (list :type (if native "register_logical_voices_v3" "register_logical_voices_v2") :definitions definitions
                               :choice-provenance provenance
                               :choice-process-generation (process-get process 'tts--speech-process-generation)
                               :fallback_policy
@@ -2070,12 +2120,12 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                      (omnivox--voice-configuration-result
                       process 'applied
                       :choice-tuning-unapplied
-                      (plist-get (cdr (assq process registrations)) :choice-tuning-unapplied)
+                      (omnivox--registration-unapplied-p (cdr (assq process registrations)) response)
                       :routing-policy
                       (copy-tree
                        (omnivox--process-routing-registration process))
                       :registration
-                      (copy-tree (if (equal (plist-get response :type) "logical_voices_registered_v2")
+                      (copy-tree (if (member (plist-get response :type) '("logical_voices_registered_v2" "logical_voices_registered_v3"))
                                      response (plist-get response :registration))))))
                 (omnivox--record-control-error process response)
                 (finish
@@ -2269,7 +2319,8 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                (plist-get response :features))
        (member "playback_marker_events_v2"
                (plist-get response :features))
-       (omnivox--choice-tuning-supported-p process))
+       (omnivox--choice-tuning-supported-p process)
+       (omnivox--native-tuning-supported-p process))
       t))
     (process-put
      process tts--capitalization-presentation-property

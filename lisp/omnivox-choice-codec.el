@@ -140,7 +140,7 @@ effective values."
   (let* ((content (plist-get registration :content))
          (definition (cl-find logical (plist-get content :definitions) :test #'equal
                               :key (lambda (entry) (plist-get (plist-get entry :definition) :id)))))
-    (when (and (equal (plist-get definition :mode) "layered")
+    (when (and (member (plist-get definition :mode) '("layered" "engine_layered"))
                (or (null request) (symbolp request) (stringp request)
                    (and (emacsvox-aural-voice-style-p request)
                         (or (null (plist-get request :preset))
@@ -155,7 +155,8 @@ effective values."
                                         (/ (1+ (float (max -1.0 (min 1.0 balance)))) 2.0)
                                       :null))))
           (list (list :logical_voice_id logical :context patch :placement placement)
-                (list :mode 'layered :logical-id logical :raw-context raw
+                (list :mode (if (equal (plist-get definition :mode) "engine_layered") 'engine-layered 'layered)
+                      :logical-id logical :raw-context raw
                       :wire-context patch :placement placement)))))))
 
 (defconst omnivox--choice-u64-max (1- (expt 2 64)))

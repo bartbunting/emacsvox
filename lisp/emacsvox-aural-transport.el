@@ -83,6 +83,8 @@
 (declare-function omnivox--choice-tuning-supported-p "omnivox-voices" (process))
 (declare-function omnivox--prepare-choice-dispatch "omnivox-voices" (owner snapshot spans))
 (declare-function omnivox--choice-span-projection "omnivox-choice-codec" (registration logical request balance))
+(declare-function omnivox--choice-registration-version "omnivox-voices" (snapshot))
+(declare-function omnivox--native-tuning-supported-p "omnivox-voices" (process))
 (declare-function omnivox--choice-validate-wire-patch "omnivox-choice-codec" (patch))
 (declare-function omnivox--choice-object-keys "omnivox-choice-codec" (object keys))
 (declare-function omnivox--choice-string "omnivox-choice-codec" (value maximum &optional nullable empty))
@@ -285,7 +287,7 @@ VERSION defaults to 3 for direct callers.  Older versions are recorded only
 so an installation mismatch can be reported before Aural semantics are
 lowered."
   (setq version (or version 3))
-  (unless (memq version '(1 2 3 4))
+  (unless (memq version '(1 2 3 4 5))
     (error "Unsupported structured timeline version: %S" version))
   (process-put
    process emacsvox-aural--structured-timeline-process-property version)
@@ -769,7 +771,7 @@ Return non-nil when every entry was sent to a live process."
   "Return non-nil when OWNER natively replaces structured ENTRIES."
   (and
    (processp owner)
-   (memq (process-get owner emacsvox-aural--structured-timeline-process-property) '(3 4))
+   (memq (process-get owner emacsvox-aural--structured-timeline-process-property) '(3 4 5))
    (cl-some
     (lambda (entry)
       (eq 'structured (emacsvox-aural--delivery-entry-kind entry)))
@@ -948,7 +950,7 @@ OWNER so a logical transaction cannot be partially delivered across streams."
    (emacsvox-aural-structured-timeline-available-p)))
 
 (defun emacsvox-aural-structured-timeline-available-p ()
-  "Return non-nil when the speaker accepts version 3 or 4 timelines.
+  "Return non-nil when the speaker accepts version 3, 4 or 5 timelines.
 
 Signal a clear installation error when negotiation found an older version."
   (when (processp tts-speaker-process)
@@ -957,7 +959,7 @@ Signal a clear installation error when negotiation found an older version."
             tts-speaker-process
             emacsvox-aural--structured-timeline-process-property)))
       (cond
-       ((memq version '(3 4)) t)
+       ((memq version '(3 4 5)) t)
        ((memq version '(1 2))
         (error
          "Omnivox timeline V3 is required; rebuild and restart the speech server"))
@@ -1383,7 +1385,7 @@ construction can retain that plan's trailing actions and context."
 (defun emacsvox-aural--build-structured-timeline
     (generation dispatch-id runs &optional registration)
   "Build a timeline for GENERATION, DISPATCH-ID, and RUNS.
-REGISTRATION selects version 4 using its frozen acknowledged definitions.
+REGISTRATION selects version 4 or 5 using its frozen acknowledged definitions.
 Return envelope, opaque semantic bindings and a compact span index, or nil
 when the recorded plans have no speech span and require legacy lowering."
   (let ((span-sequence 0)
@@ -1501,7 +1503,8 @@ when the recorded plans have no speech span and require legacy lowering."
              (if layered
                  (progn
                    (setq active-effects nil)
-                   (push (list :mode "layered" :span (append (list :id span-id :text text) (car layered))) spans)
+                   (push (list :mode (if (eq (plist-get (cadr layered) :mode) 'engine-layered) "engine_layered" "layered")
+                               :span (append (list :id span-id :text text) (car layered))) spans)
                    (puthash span-id (append (cadr layered) (list :voice-provenance (copy-tree provenance))) span-contexts))
                (let ((span (append
                             (list :id span-id :text text :logical_voice_id (or logical :null)
@@ -1613,7 +1616,8 @@ when the recorded plans have no speech span and require legacy lowering."
       (list
        (append
         (list
-         :protocol_version (if registration 4 emacsvox-aural--structured-timeline-version)
+         :protocol_version (if registration (omnivox--choice-registration-version registration)
+                             emacsvox-aural--structured-timeline-version)
          :generation generation
          :dispatch_id dispatch-id)
         (when registration
@@ -1740,25 +1744,25 @@ the authoritative check after punctuation and split-cap preprocessing."
                emacsvox-aural--timeline-max-actions-per-speech-window))))))))
 
 (defun emacsvox-aural--validate-structured-timeline (envelope)
-  "Validate version-3 or version-4 ENVELOPE before any transport write."
-  (unless (memq (plist-get envelope :protocol_version) '(3 4))
+  "Validate a version-3, version-4 or version-5 ENVELOPE before transport."
+  (unless (memq (plist-get envelope :protocol_version) '(3 4 5))
     (emacsvox-aural--transport-error
-     "Structured delivery requires timeline protocol version 3 or 4"))
-  (when (eql (plist-get envelope :protocol_version) 4)
+     "Structured delivery requires timeline protocol version 3, 4 or 5"))
+  (when (memq (plist-get envelope :protocol_version) '(4 5))
     (omnivox--choice-object-keys
      envelope (append '(:protocol_version :generation :dispatch_id :registry_generation :delivery_policy :spans :actions)
                       (when (equal (plist-get envelope :delivery_policy) "replaceable") '(:replacement_key))))
     (unless (member (plist-get envelope :delivery_policy) '("ordered" "urgent" "replaceable"))
-      (emacsvox-aural--transport-error "Invalid version-4 delivery policy"))
+      (emacsvox-aural--transport-error "Invalid layered delivery policy"))
     (when (equal (plist-get envelope :delivery_policy) "replaceable")
       (omnivox--choice-string (plist-get envelope :replacement_key)
                               emacsvox-aural--timeline-replacement-key-max-bytes)))
   (dolist (field (append '(:generation :dispatch_id)
-                         (when (eql (plist-get envelope :protocol_version) 4) '(:registry_generation))))
+                         (when (memq (plist-get envelope :protocol_version) '(4 5)) '(:registry_generation))))
     (unless
         (let ((value (plist-get envelope field)))
           (and (integerp value) (> value 0)
-               (or (not (eql (plist-get envelope :protocol_version) 4))
+               (or (not (memq (plist-get envelope :protocol_version) '(4 5)))
                    (<= value (1- (expt 2 64))))))
       (emacsvox-aural--transport-error
        "Structured timeline %S must be a positive integer" field)))
@@ -1781,13 +1785,15 @@ the authoritative check after punctuation and split-cap preprocessing."
        "Structured timeline exceeds %d actions"
        emacsvox-aural--timeline-max-actions))
     (dolist (wrapper spans)
-      (let* ((v4 (eql (plist-get envelope :protocol_version) 4))
+      (let* ((v4 (memq (plist-get envelope :protocol_version) '(4 5)))
              (span (if v4 (plist-get wrapper :span) wrapper)))
         (when v4
           (omnivox--choice-object-keys wrapper '(:mode :span))
-          (unless (member (plist-get wrapper :mode) '("legacy" "layered"))
-            (emacsvox-aural--transport-error "Unknown version-4 span mode"))
-          (when (equal (plist-get wrapper :mode) "layered")
+          (unless (member (plist-get wrapper :mode)
+                          (if (eql (plist-get envelope :protocol_version) 5)
+                              '("legacy" "layered" "engine_layered") '("legacy" "layered")))
+            (emacsvox-aural--transport-error "Unknown layered span mode"))
+          (when (member (plist-get wrapper :mode) '("layered" "engine_layered"))
             (omnivox--choice-object-keys span '(:id :text :logical_voice_id :context :placement))
             (omnivox--choice-string (plist-get span :logical_voice_id) 128)
             (omnivox--choice-validate-wire-patch (plist-get span :context))
@@ -1915,8 +1921,9 @@ the authoritative check after punctuation and split-cap preprocessing."
   "Return OWNER's compatibility reason, or nil when queue proof holds."
   (let ((state (tts-queue--state owner)))
     (cond
-     ((not (and (eql (process-get owner emacsvox-aural--structured-timeline-process-property) 4)
-                (omnivox--choice-tuning-supported-p owner))) 'old-server)
+     ((not (pcase (process-get owner emacsvox-aural--structured-timeline-process-property)
+             (4 (omnivox--choice-tuning-supported-p owner))
+             (5 (omnivox--native-tuning-supported-p owner)))) 'old-server)
      ((tts-queue--known-empty-p owner) nil)
      ((and state (tts-queue--state-remote state) (tts-queue--state-unusable state))
       'remote-proof-unusable)
@@ -2002,7 +2009,7 @@ the authoritative check after punctuation and split-cap preprocessing."
         (cl-some #'emacsvox-aural--timeline-run-has-speech-p runs)
         (emacsvox-aural--capture-single-timeline-p entries)))
       (emacsvox-aural--finalize-legacy-delivery entries effects)
-    (let* ((snapshot (when (eql (process-get owner emacsvox-aural--structured-timeline-process-property) 4)
+    (let* ((snapshot (when (memq (process-get owner emacsvox-aural--structured-timeline-process-property) '(4 5))
                        (omnivox--choice-current-registration owner)))
            (built (emacsvox-aural--build-structured-timeline generation 1 runs snapshot)))
       (if (not built)
