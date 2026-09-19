@@ -1565,9 +1565,14 @@ Read raw ownership once so the wire values and their sources cannot diverge."
              :definition
              (list :id id :language (or (plist-get owned :language) :null)
                    :shared (omnivox--choice-style-json style)
-                   :choices (omnivox--choice-records-json choices))))
+                   :choices (omnivox--choice-records-json
+                             (mapcar (lambda (row)
+                                       (let ((copy (copy-tree row)))
+                                         (cl-remf copy :native)
+                                         copy)) choices)))))
      provenance
-     (and (not style) (cl-some (lambda (row) (plist-get row :adjustments)) choices)))))
+     (or (cl-some (lambda (row) (plist-member row :native)) choices)
+         (and (not style) (cl-some (lambda (row) (plist-get row :adjustments)) choices))))))
 
 (defun omnivox--choice-definition-json (definition)
   "Wrap legacy wire DEFINITION or project its inspectable owned base and rows."
@@ -1587,7 +1592,7 @@ Read raw ownership once so the wire values and their sources cannot diverge."
 (defun omnivox--choice-tuned-configuration-p ()
   "Return non-nil when current owned voices retain individual adjustments."
   (cl-some (lambda (id)
-             (cl-some (lambda (row) (plist-get row :adjustments))
+             (cl-some (lambda (row) (or (plist-get row :adjustments) (plist-member row :native)))
                       (plist-get (emacsvox-aural-voice-runtime--owned id) :choices)))
            (omnivox--logical-voice-ids)))
 
@@ -1596,7 +1601,7 @@ Read raw ownership once so the wire values and their sources cannot diverge."
   (when (and (plist-get content :choice-tuning-unapplied)
              (not (process-get process 'omnivox--choice-warning-issued)))
     (process-put process 'omnivox--choice-warning-issued t)
-    (message "Individual tuning is not applied on %s; shared settings remain active"
+    (message "Some voice settings are not applied on %s; supported settings remain active"
              (omnivox--voice-configuration-process-role process))))
 
 (defun omnivox--choice-registration-valid-p (response generation content)

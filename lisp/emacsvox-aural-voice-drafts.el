@@ -169,7 +169,8 @@ AURAL-FILE and ROUTING-FILE identify the two existing stores."
     (puthash id record registry)
     (dolist (item (emacsvox-aural-voice-data--entries id registry))
       (emacsvox-aural-voice-data--choices
-       (plist-get item :palette) (car (plist-get item :entry)) (cdr (plist-get item :entry)) sets))
+       (plist-get item :palette) (car (plist-get item :entry)) (cdr (plist-get item :entry))
+       sets (plist-get item :schema-version)))
     (let ((emacsvox-aural-voice-palette-registry registry)
           (emacsvox-aural-routing--choice-sets sets))
       (emacsvox-aural-voice-runtime--validate id))
@@ -183,7 +184,9 @@ AURAL-FILE and ROUTING-FILE identify the two existing stores."
       (setq aural (plist-put aural :user-rules
                              (funcall user-rules-transform
                                       (copy-tree (plist-get aural :user-rules))))))
-    (setq routing (plist-put routing :choice-sets sets))
+    (when (eq (plist-get palette :schema-version) 4)
+      (setq aural (plist-put aural :schema-version 10)))
+    (setq routing (emacsvox-aural-routing--with-choice-sets routing sets))
     (let ((proposal
            (emacsvox-aural-voice-drafts--make-save
             :id (cl-incf emacsvox-aural-voice-drafts--serial) :draft draft

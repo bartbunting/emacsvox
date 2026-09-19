@@ -71,7 +71,7 @@
 (defconst emacsvox-aural-routing-profile-schema-version 2
   "Current data schema for one routing profile.")
 
-(defconst emacsvox-aural-routing-user-data-schema-version 3
+(defconst emacsvox-aural-routing-user-data-schema-version 4
   "Current data schema for the machine-local routing file.")
 
 (defconst emacsvox-aural-routing-static-engine-aliases
@@ -839,9 +839,10 @@ the previous known-good profile."
             (emacsvox-aural-routing--strict-properties
              record '(:schema-version :id :palette :voice :choices)
              '(:schema-version :id :palette :voice :choices))
-            (unless (eq (plist-get record :schema-version) 3)
+            (unless (memq (plist-get record :schema-version) '(3 4))
               (emacsvox-aural-routing--error "Unsupported choice-set schema"))
-            (emacsvox-aural-routing--validate-choices (plist-get record :choices)))
+            (emacsvox-aural-routing--validate-choices
+             (plist-get record :choices) nil (eq (plist-get record :schema-version) 4)))
         (emacsvox-aural-routing--strict-properties
          record '(:id :palette :voice :selectors) '(:id :palette :voice :selectors)))
       (let ((id (plist-get record :id)))
@@ -932,8 +933,8 @@ is separate; this function neither discovers engines nor evaluates values."
 
 (defun emacsvox-aural-routing--validate-choices (choices &optional portable native)
   "Validate ordered CHOICES; require PORTABLE scope when non-nil.
-NATIVE explicitly permits engine parameter records in private drafts.  Existing
-storage and wire readers leave it nil until their versioned support is ready."
+NATIVE permits engine parameter records in drafts and version 4 storage.
+Older storage and wire readers leave it nil."
   (unless (and (proper-list-p choices) (<= (length choices) 32))
     (emacsvox-aural-routing--error "Choices must be a proper list of at most 32 records"))
   (let (ids result)
@@ -962,6 +963,22 @@ storage and wire readers leave it nil until their versioned support is ready."
         (when parameters (setf (plist-get copy :native) parameters))
         (push copy result)))
     (nreverse result)))
+
+(defun emacsvox-aural-routing--choices-schema (choices)
+  "Return the minimum storage schema for complete CHOICES."
+  (if (cl-some (lambda (row) (plist-member row :native)) choices) 4 3))
+
+(defun emacsvox-aural-routing--with-choice-sets (data sets)
+  "Copy routing DATA with SETS, promoting its envelope only when necessary."
+  (unless (memq (plist-get data :schema-version) '(3 4))
+    (emacsvox-aural-routing--error "Unsupported routing envelope: %S" (plist-get data :schema-version)))
+  (let ((copy (copy-tree data)))
+    (setf (plist-get copy :choice-sets) (emacsvox-aural-routing--validate-choice-sets sets)
+          (plist-get copy :schema-version)
+          (if (or (eq (plist-get data :schema-version) 4)
+                  (cl-some (lambda (set) (eq (plist-get set :schema-version) 4)) sets))
+              4 3))
+    copy))
 
 (defun emacsvox-aural-routing--merge-choice-sets (existing proposed)
   "Merge immutable EXISTING and PROPOSED snapshots, permitting identical retries."
@@ -992,11 +1009,12 @@ storage and wire readers leave it nil until their versioned support is ready."
              (string-lessp
               (symbol-name (plist-get left :id))
               (symbol-name (plist-get right :id))))))
-    (list
-     :schema-version emacsvox-aural-routing-user-data-schema-version
-     :active-profile emacsvox-aural-active-routing-profile
-     :profiles profiles
-     :choice-sets (copy-tree emacsvox-aural-routing--choice-sets))))
+    (emacsvox-aural-routing--with-choice-sets
+     (list :schema-version 3
+           :active-profile emacsvox-aural-active-routing-profile
+           :profiles profiles
+           :choice-sets nil)
+     emacsvox-aural-routing--choice-sets)))
 
 (defun emacsvox-aural-validate-routing-user-data (data)
   "Validate and return machine-local routing user DATA."
@@ -1006,18 +1024,22 @@ storage and wire readers leave it nil until their versioned support is ready."
             '(:schema-version :active-profile :profiles)
           '(:schema-version :active-profile :profiles :choice-sets))
    "Routing user data")
-  (unless (memq (plist-get data :schema-version) '(1 2 3))
+  (unless (memq (plist-get data :schema-version) '(1 2 3 4))
     (emacsvox-aural-routing--error
      "Unsupported routing user data version: %S"
      (plist-get data :schema-version)))
-  (when (memq (plist-get data :schema-version) '(2 3))
+  (when (memq (plist-get data :schema-version) '(2 3 4))
     (emacsvox-aural-routing--strict-properties
      data '(:schema-version :active-profile :profiles :choice-sets)
      '(:schema-version :active-profile :profiles :choice-sets)))
-  (unless (eq (plist-get data :schema-version) 3)
+  (unless (memq (plist-get data :schema-version) '(3 4))
     (when (cl-some (lambda (record) (plist-member record :schema-version))
                    (plist-get data :choice-sets))
       (emacsvox-aural-routing--error "Versioned choice sets require routing schema 3")))
+  (when (and (not (eq (plist-get data :schema-version) 4))
+             (cl-some (lambda (record) (eq (plist-get record :schema-version) 4))
+                      (plist-get data :choice-sets)))
+    (emacsvox-aural-routing--error "Native choice sets require routing schema 4"))
   (let ((active (plist-get data :active-profile))
         (profiles (plist-get data :profiles))
         ids normalized)
@@ -1039,7 +1061,7 @@ storage and wire readers leave it nil until their versioned support is ready."
       (emacsvox-aural-routing--error
        "Active routing profile is not saved: %S" active))
     (list
-     :schema-version emacsvox-aural-routing-user-data-schema-version
+     :schema-version (if (eq (plist-get data :schema-version) 4) 4 3)
      :active-profile active :profiles (nreverse normalized)
      :choice-sets (emacsvox-aural-routing--validate-choice-sets
                    (plist-get data :choice-sets)))))
@@ -1087,7 +1109,7 @@ When APPLY-ACTIVE is non-nil, also apply the saved active profile."
          (data (emacsvox-aural-validate-routing-user-data data))
          temporary)
     (setq data
-          (plist-put data :choice-sets
+          (emacsvox-aural-routing--with-choice-sets data
                      (emacsvox-aural-routing--merge-choice-sets
                       (plist-get (emacsvox-aural-read-routing-profiles file)
                                  :choice-sets)

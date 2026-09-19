@@ -481,7 +481,7 @@
              (eq
               (plist-get
                (emacsvox-aural-read-user-data) :schema-version)
-              emacsvox-aural-user-data-schema-version))
+              9))
             (should
              (eq
               (plist-get

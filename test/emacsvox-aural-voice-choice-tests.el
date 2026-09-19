@@ -81,7 +81,7 @@
     (should-error (emacsvox-aural-routing--validate-choice-sets
                    (list (append (cadr sets) '(:selectors nil)))))
     (should-error (emacsvox-aural-routing--validate-choice-sets
-                   (list (plist-put (copy-tree (cadr sets)) :schema-version 4)))))
+                   (list (plist-put (copy-tree (cadr sets)) :schema-version 5)))))
   (let ((data (emacsvox-test--choice-fixture :expected-palette)))
     (should-error (emacsvox-aural-compile-voice-palette-data (plist-put data :schema-version 2)))))
 
@@ -469,17 +469,205 @@
     (setf (plist-get (cdr (assoc "br" parameters)) :op) 'set)
     (should (equal rows before))))
 
-(ert-deftest emacsvox-aural-native-choice-remains-opt-in-until-storage-is-ready ()
-  "Existing storage readers keep rejecting native records and schema four."
+(ert-deftest emacsvox-aural-native-choice-requires-versioned-storage ()
+  "Old storage and wire readers cannot accept native data under their old schema."
   (let ((rows (emacsvox-test--native-choices)))
     (should-error (emacsvox-aural-routing--validate-choices rows))
-    (should-error (emacsvox-aural-voice-data--put-choices
-                   (plist-get emacsvox-test--native-choice-fixture :source-palette)
-                   'bolden rows "must-not-persist"))
     (should-error (emacsvox-aural-compile-voice-palette-data
-                   (plist-get emacsvox-test--native-choice-fixture :expected-palette)))
+                   (plist-put (copy-tree (plist-get emacsvox-test--native-choice-fixture :expected-palette))
+                              :schema-version 3)))
     (should-error (emacsvox-aural-validate-routing-user-data
-                   (plist-get emacsvox-test--native-choice-fixture :expected-routing)))))
+                   (plist-put (copy-tree (plist-get emacsvox-test--native-choice-fixture :expected-routing))
+                              :schema-version 3)))))
+
+(defun emacsvox-test--native-fixture (key)
+  "Return an independent native storage fixture under KEY."
+  (copy-tree (plist-get emacsvox-test--native-choice-fixture key)))
+
+(defmacro emacsvox-test--with-native-storage (&rest body)
+  "Run BODY with the native contract's palette and immutable snapshots."
+  (declare (indent 0) (debug t))
+  `(let ((emacsvox-aural-voice-palette-registry
+          (emacsvox-test--voice-data-registry (list (emacsvox-test--native-fixture :expected-palette))))
+         (emacsvox-aural-routing--choice-sets
+          (plist-get (emacsvox-test--native-fixture :expected-routing) :choice-sets)))
+     ,@body))
+
+(ert-deftest emacsvox-aural-native-storage-promotion-matches-contract ()
+  "First native save promotes the edited owner and publishes a new snapshot."
+  (let* ((source (emacsvox-test--native-fixture :source-palette))
+         (before (copy-tree source))
+         (proposal (emacsvox-aural-voice-data--put-choices
+                    source 'bolden (emacsvox-test--native-choices) "reading-bolden-after"))
+         (routing (emacsvox-test--native-fixture :source-routing)))
+    (should (equal (plist-get proposal :palette) (emacsvox-test--native-fixture :expected-palette)))
+    (should (equal (emacsvox-aural-routing--with-choice-sets
+                    routing (emacsvox-aural-routing--merge-choice-sets
+                             (plist-get routing :choice-sets) (plist-get proposal :choice-sets)))
+                   (emacsvox-test--native-fixture :expected-routing)))
+    (should (equal source before))
+    (should (equal (plist-get (emacsvox-aural-voice-data--portable-export
+                              (plist-get proposal :palette)) :palette)
+                   (emacsvox-test--native-fixture :expected-portable-palette)))))
+
+(ert-deftest emacsvox-aural-native-storage-removal-preserves-existing-schema ()
+  "Removing native edits never rewrites a retained snapshot or downgrades its owner."
+  (let* ((palette (emacsvox-test--native-fixture :expected-palette))
+         (routing (emacsvox-test--native-fixture :expected-routing))
+         (rows (mapcar (lambda (row) (cl-remf row :native) row) (emacsvox-test--native-choices)))
+         (proposal (emacsvox-aural-voice-data--put-choices palette 'bolden rows "common-again"))
+         (sets (emacsvox-aural-routing--merge-choice-sets
+                (plist-get routing :choice-sets) (plist-get proposal :choice-sets))))
+    (should (= (plist-get (plist-get proposal :palette) :schema-version) 4))
+    (should (= (plist-get (car (plist-get proposal :choice-sets)) :schema-version) 3))
+    (should (= (plist-get (emacsvox-aural-routing--with-choice-sets routing sets) :schema-version) 4))
+    (should (equal (cl-subseq sets 0 2) (plist-get routing :choice-sets)))
+    (should-error (emacsvox-aural-voice-data--put-choices
+                   (plist-put (copy-tree palette) :schema-version 99)
+                   'bolden (emacsvox-test--native-choices) "invalid-version"))
+    (should-error (emacsvox-aural-routing--with-choice-sets
+                   (plist-put (copy-tree routing) :schema-version 99) sets))))
+
+(ert-deftest emacsvox-aural-native-storage-local-only-still-promotes-owner ()
+  "A local native choice requires schema four even with no portable controls."
+  (let* ((proposal (emacsvox-aural-voice-data--put-choices
+                    (emacsvox-test--native-fixture :source-palette) 'bolden
+                    (list (car (emacsvox-test--native-choices))) "local-only"))
+         (data (plist-get proposal :palette))
+         (sets (plist-get proposal :choice-sets)))
+    (should (= (plist-get data :schema-version) 4))
+    (should-not (plist-get (cdr (assq 'bolden (plist-get data :entries))) :choices))
+    (should-error (emacsvox-aural-voice-data--choices
+                   'reading 'bolden (cdr (assq 'bolden (plist-get data :entries))) sets 3))
+    (should-error (emacsvox-aural-routing--validate-choice-sets
+                   (list (plist-put (copy-tree (car sets)) :schema-version 3))))))
+
+(ert-deftest emacsvox-aural-native-storage-inheritance-copy-and-exchange ()
+  "Copy and both exchange formats retain native settings under the right owner."
+  (emacsvox-test--with-native-storage
+    (puthash 'child (emacsvox-aural-compile-voice-palette-data
+                    '(:schema-version 3 :id child :summary "Child" :parent reading
+                      :routing owned :entries nil)) emacsvox-aural-voice-palette-registry)
+    (let* ((resolved (emacsvox-aural-voice-data--resolve
+                      'voice-bolden 'child emacsvox-aural-voice-palette-registry
+                      emacsvox-aural-routing--choice-sets nil))
+           (copy (emacsvox-aural-voice-data--copy-owned
+                  emacsvox-aural-voice-palette-registry 'child 'copy "Copy"
+                  emacsvox-aural-routing--choice-sets '((bolden . "copy-local"))))
+           (backup (emacsvox-aural-voice-data--backup
+                    emacsvox-aural-voice-palette-registry 'child emacsvox-aural-routing--choice-sets))
+           (export (plist-get (emacsvox-aural-voice-data--export-effective
+                              emacsvox-aural-voice-palette-registry 'child) :palette))
+           (root (gethash 'acss-default emacsvox-aural-voice-palette-registry)))
+      (should (eq (plist-get resolved :palette) 'reading))
+      (should (equal (plist-get resolved :choices) (emacsvox-test--native-choices)))
+      (should (= (plist-get (plist-get copy :palette) :schema-version) 4))
+      (should (eq (plist-get (car (plist-get copy :choice-sets)) :palette) 'copy))
+      (should (equal (plist-get (car (plist-get copy :choice-sets)) :choices) (plist-get resolved :choices)))
+      (let* ((inputs (emacsvox-aural-voice-data--read-exchange backup root))
+             (again (emacsvox-aural-voice-data--resolve
+                     'bolden 'child (plist-get inputs :registry) (plist-get inputs :choice-sets) nil)))
+        (should (equal again (emacsvox-aural-voice-data--resolve
+                             'bolden 'child emacsvox-aural-voice-palette-registry
+                             emacsvox-aural-routing--choice-sets nil))))
+      (let* ((inputs (emacsvox-aural-voice-data--read-exchange export root))
+             (again (emacsvox-aural-voice-data--resolve
+                     'bolden 'child (plist-get inputs :registry) nil nil)))
+        (should (equal (plist-get again :choices)
+                       (emacsvox-aural-voice-data--portable-choices (emacsvox-test--native-choices)))))
+      (should (= (plist-get (emacsvox-aural-voice-palette-data-form
+                            (gethash 'child emacsvox-aural-voice-palette-registry)) :schema-version) 3)))))
+
+(ert-deftest emacsvox-aural-native-storage-projection-and-owner-disagreement ()
+  "Native operations participate in cross-store equality and owner checks."
+  (let* ((palette (emacsvox-test--native-fixture :expected-palette))
+         (properties (cdr (assq 'bolden (plist-get palette :entries))))
+         (sets (plist-get (emacsvox-test--native-fixture :expected-routing) :choice-sets)))
+    (let ((row (car (plist-get properties :choices))))
+      (setf (plist-get row :native)
+            '(:engine-id "eloquence" :schema-id "eloquence.eci-units.v1"
+              :parameters (("breathiness" :op set :value 41)))))
+    (should-error (emacsvox-aural-voice-data--choices 'reading 'bolden properties sets 4))
+    (should-error (emacsvox-aural-voice-data--choices 'other 'bolden properties sets 4))
+    (let ((missing (emacsvox-aural-voice-data--choices 'reading 'bolden properties nil 4)))
+      (should (equal (plist-get missing :diagnostics) '(missing-local-choices)))
+      (should (equal (plist-get missing :choices) (plist-get properties :choices))))))
+
+(ert-deftest emacsvox-aural-native-storage-read-write-and-unloaded-writer ()
+  "Data-only round trips retain native snapshots even in a client that has not loaded them."
+  (let* ((directory (make-temp-file "native-storage-" t))
+         (aural-file (expand-file-name "aural.el" directory))
+         (routing-file (expand-file-name "routing.el" directory))
+         (aural (list :schema-version 10 :voice-palettes (list (emacsvox-test--native-fixture :expected-palette))))
+         (routing (emacsvox-test--native-fixture :expected-routing))
+         (emacsvox-aural-routing--choice-sets nil)
+         (emacsvox-aural-routing-profile-registry (make-hash-table :test #'eq))
+         (emacsvox-aural-active-routing-profile nil))
+    (unwind-protect
+        (progn
+          (should-error (emacsvox-aural--validate-user-data
+                         (plist-put (copy-tree aural) :schema-version 9)))
+          (should-error (emacsvox-aural--validate-user-data
+                         (append aural '(:schema-version 10))))
+          (emacsvox-aural--write-user-data aural aural-file)
+          (emacsvox-aural-routing--write-user-data routing routing-file)
+          (let ((before (emacsvox-aural-voice-drafts--file-id aural-file)))
+            (should (equal aural (emacsvox-aural-read-user-data aural-file)))
+            (should (equal before (emacsvox-aural-voice-drafts--file-id aural-file))))
+          (emacsvox-aural-save-routing-profiles routing-file)
+          (should (equal routing (emacsvox-aural-read-routing-profiles routing-file)))
+          (should-not emacsvox-aural-routing--choice-sets)
+          (should (= (plist-get (emacsvox-aural-routing-user-data) :schema-version) 3)))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-aural-native-storage-shared-edit-and-inherited-edit ()
+  "Shared edits retain local references; editing an inherited entry creates a new owner."
+  (emacsvox-test--with-native-storage
+    (let* ((snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading 'bolden) :snapshot))
+           (changed (emacsvox-aural-voice-editing--adjust snapshot 'reading 'average-pitch 3))
+           (proposal (emacsvox-aural-voice-editing--proposal 'reading 'bolden changed 'reading "Reading")))
+      (should-not (plist-get proposal :choice-sets))
+      (should (equal (plist-get (cdr (assq 'bolden (plist-get (plist-get proposal :palette) :entries)))
+                               :local-choices) "reading-bolden-after"))
+      (puthash 'child (emacsvox-aural-compile-voice-palette-data
+                      '(:schema-version 3 :id child :summary "Child" :parent reading
+                        :routing owned :entries nil)) emacsvox-aural-voice-palette-registry)
+      (let* ((inherited (emacsvox-aural-voice-editing--proposal 'child 'bolden changed 'child "Child"))
+             (set (car (plist-get inherited :choice-sets))))
+        (should (= (plist-get (plist-get inherited :palette) :schema-version) 4))
+        (should (eq (plist-get set :palette) 'child))
+        (should (equal (plist-get set :choices) (emacsvox-test--native-choices)))))))
+
+(ert-deftest emacsvox-aural-native-storage-partial-save-and-undo ()
+  "A failed palette write keeps the old chain; retry reuses the frozen native snapshot."
+  (emacsvox-test--with-voice-save
+    (let* ((old (emacsvox-aural-voice-drafts--palette-data 'reading-owned))
+           (changed (emacsvox-aural-voice-data--put-choices
+                     old 'bolden (emacsvox-test--native-choices) "native-after"))
+           (proposal (emacsvox-aural-voice-drafts--prepare
+                      draft (plist-get changed :palette) (plist-get changed :choice-sets)))
+           (original-write (symbol-function 'emacsvox-aural--write-user-data)))
+      (cl-letf (((symbol-function 'emacsvox-aural--write-user-data)
+                 (lambda (&rest _) (error "Injected native palette failure"))))
+        (emacsvox-aural-voice-drafts--save proposal))
+      (should (eq (emacsvox-aural-voice-save-state proposal) 'partial))
+      (should (equal old (emacsvox-aural-voice-drafts--palette-data 'reading-owned)))
+      (should (= (plist-get (emacsvox-aural-read-routing-profiles) :schema-version) 4))
+      (should (= (plist-get (emacsvox-aural-read-user-data) :schema-version) 9))
+      (let ((stored (emacsvox-aural-read-routing-profiles)))
+        (cl-letf (((symbol-function 'emacsvox-aural--write-user-data) original-write))
+          (emacsvox-aural-voice-drafts--save proposal))
+        (should (eq (emacsvox-aural-voice-save-state proposal) 'saved))
+        (should (= (plist-get (emacsvox-aural-read-user-data) :schema-version) 10))
+        (should (equal stored (emacsvox-aural-read-routing-profiles))))
+      (let* ((rows (emacsvox-test--native-choices))
+             (draft (emacsvox-aural-voice-drafts--make :baseline (list :choices rows) :working (list :choices rows))))
+        (emacsvox-aural-voice-drafts--edit
+         draft (list :choices (emacsvox-aural-voice-data--adjust-native
+                               rows "paul-main" "dectalk" "dectalk.design-voice.v1" "sm" 'set 66)))
+        (should (equal (emacsvox-aural-voice-drafts--dirty-fields draft) '(:choices)))
+        (emacsvox-aural-voice-drafts--undo draft)
+        (should-not (emacsvox-aural-voice-drafts--dirty-fields draft))))))
 
 (provide 'emacsvox-aural-voice-choice-tests)
 ;;; emacsvox-aural-voice-choice-tests.el ends here

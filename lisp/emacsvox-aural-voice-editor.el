@@ -60,6 +60,11 @@ Select a faithful wire form before any entry interrupts foreground speech."
          (adapter tts-voice-preview-function)
          (omnivox (and (eq adapter #'omnivox-preview-voice-sequence)
                        (processp process) (process-live-p process)))
+         (_native-check
+          (when (cl-some (lambda (entry)
+                           (= (emacsvox-aural-routing--choices-schema
+                               (plist-get (plist-get entry :voice) :choices)) 4)) entries)
+            (user-error "Native parameter preview is not connected yet; saved settings are retained")))
          (layered (and omnivox (omnivox--choice-tuning-supported-p process)))
          (individual (eq (plist-get (plist-get (car entries) :selection) :mode) 'choice))
          (prepared (unless layered (mapcar #'emacsvox-aural-voice-editing--legacy-preview entries)))
@@ -709,7 +714,7 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
 
 (defun emacsvox-aural-voice-editor--replacement (row)
   "Choose explicitly whether replacement ROW should retain its custom settings."
-  (if (not (plist-get row :adjustments)) 'keep
+  (if (not (or (plist-get row :adjustments) (plist-member row :native))) 'keep
     (if (equal (completing-read "New physical voice may need different tuning: "
                                 '("Use shared settings" "Keep this row's custom settings") nil t)
                "Use shared settings") 'reset 'keep)))

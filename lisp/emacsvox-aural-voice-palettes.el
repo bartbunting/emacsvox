@@ -261,6 +261,8 @@ writing. Publish the registry only after the atomic write succeeds."
             (setq palettes (cl-remove id palettes :key (lambda (data) (plist-get data :id))))
             (when new-data (push new-data palettes)))))
       (setq saved (plist-put (copy-tree saved) :voice-palettes palettes))
+      (when (cl-some (lambda (palette) (eq (plist-get palette :schema-version) 4)) palettes)
+        (setq saved (plist-put saved :schema-version 10)))
       (emacsvox-aural--validate-user-data saved)
       (unless (equal fingerprint (emacsvox-aural-voice-drafts--file-id file))
         (user-error "Saved presentation settings changed while preparing; retry"))
@@ -448,7 +450,7 @@ writing. Publish the registry only after the atomic write succeeds."
          (parent (emacsvox-aural-voice-palettes--read-parent))
          (data
           (list
-           :schema-version emacsvox-aural-voice-palette-schema-version
+           :schema-version 3
            :routing 'owned
            :id id
            :summary summary
@@ -832,7 +834,8 @@ ACTION describes the operation and defaults to renaming."
                    (equal routing-before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-routing-profiles-file)))
         (user-error "Saved voice data changed while preparing the rename; try again"))
       (when additions
-        (emacsvox-aural-routing--write-user-data (plist-put routing :choice-sets sets)))
+        (emacsvox-aural-routing--write-user-data
+         (emacsvox-aural-routing--with-choice-sets routing sets)))
       (condition-case error-data
           (progn
             (unless (equal aural-before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file))
@@ -1323,7 +1326,7 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
          (properties (copy-tree (cdr (plist-get item :entry))))
          (choices (and item (emacsvox-aural-voice-data--choices
                              (plist-get item :palette) source properties
-                             emacsvox-aural-routing--choice-sets)))
+                             emacsvox-aural-routing--choice-sets (plist-get item :schema-version))))
          (rows (plist-get choices :choices))
          sets)
     (when (emacsvox-aural-voice-palette-built-in record)
@@ -1337,7 +1340,9 @@ When RENAME is non-nil, remove the direct SOURCE entry in the same save."
     (when (plist-get properties :local-choices)
       (let ((id (emacsvox-aural-voice-editing--new-id)))
         (setq properties (plist-put properties :local-choices id)
-              sets (list (list :schema-version 3 :id id :palette palette :voice name :choices rows)))))
+              sets (list (list :schema-version (emacsvox-aural-routing--choices-schema rows)
+                               :id id :palette palette :voice name :choices rows)))))
+    (setq data (emacsvox-aural-voice-data--promote-palette data rows))
     (when rename
       (setq data (emacsvox-aural-voice-palettes--replace-entries
                   data (cl-remove source (plist-get data :entries) :key #'car))))
@@ -1975,7 +1980,8 @@ When SPEAK is non-nil, include the selected row's full description."
   (let ((emacsvox-aural-voice-workbench-inventory (tts-voice-inventory)) gaps)
     (dolist (entry (plist-get data :entries))
       (dolist (selector (plist-get (emacsvox-aural-voice-data--choices
-                                   (plist-get data :id) (car entry) (cdr entry) sets) :selectors))
+                                   (plist-get data :id) (car entry) (cdr entry) sets
+                                   (plist-get data :schema-version)) :selectors))
         (unless (emacsvox-aural-voice-workbench--selector-realization selector)
           (push (format "%s: %s" (car entry) (emacsvox-aural-voice-workbench--selector-description selector)) gaps))))
     (nreverse gaps)))

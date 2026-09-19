@@ -135,7 +135,7 @@ configuration; callers can then report it as diverged.")
   :type 'file
   :group 'emacsvox-aural)
 
-(defconst emacsvox-aural-user-data-schema-version 9
+(defconst emacsvox-aural-user-data-schema-version 10
   "Current schema version for the personal presentation data file.")
 
 (defun emacsvox-aural--migrate-user-data-v1-to-v2 (data)
@@ -1364,7 +1364,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
   palette)
 
 (defun emacsvox-aural--validate-user-data (data)
-  "Validate and return current-schema user DATA."
+  "Validate user DATA without promoting supported envelope versions 9 or 10."
   (emacsvox-aural--require-plist data "Aural user data")
   (let ((version (plist-get data :schema-version))
         (fragments (plist-get data :feature-fragments))
@@ -1384,9 +1384,16 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
              :enabled-feature-fragments :feature-fragment-order :voice-palettes
              :profiles :active-profile :user-rules))
           collect key)))
-    (unless (eq version emacsvox-aural-user-data-schema-version)
+    (unless (memq version '(9 10))
       (emacsvox-aural--scheme-error
        "Unsupported user data version: %S" version))
+    (when (eq version 10)
+      (let ((keys (cl-loop for (key _) on data by #'cddr collect key)))
+        (unless (= (length keys) (length (delete-dups keys)))
+          (emacsvox-aural--scheme-error "Duplicate native user data keys"))))
+    (when (and (eq version 9)
+               (cl-some (lambda (palette) (eq (plist-get palette :schema-version) 4)) palettes))
+      (emacsvox-aural--scheme-error "Native palettes require user data schema 10"))
     (when unknown
       (emacsvox-aural--scheme-error
        "Unknown user data keys: %S" unknown))
@@ -1465,14 +1472,12 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
     data))
 
 (defun emacsvox-aural-migrate-user-data (data)
-  "Apply registered migrations to user DATA and return current-schema data."
+  "Apply registered migrations to user DATA, preserving supported envelopes.
+Versions 9 and 10 remain unchanged; earlier versions migrate to version 9.
+Only saving a native palette requires version 10."
   (let ((current (copy-tree data))
         (seen nil))
-    (while
-        (not
-         (eq
-          (plist-get current :schema-version)
-          emacsvox-aural-user-data-schema-version))
+    (while (not (memq (plist-get current :schema-version) '(9 10)))
       (let ((version (plist-get current :schema-version)))
         (when (memq version seen)
           (emacsvox-aural--scheme-error
@@ -1696,7 +1701,8 @@ The file is read as data and is never evaluated."
          (symbol-name (plist-get left :id))
          (symbol-name (plist-get right :id))))))
     (list
-     :schema-version emacsvox-aural-user-data-schema-version
+     :schema-version (if (cl-some (lambda (palette) (eq (plist-get palette :schema-version) 4))
+                                  palettes) 10 9)
      :feature-fragments fragments
      :enabled-feature-fragments
      (copy-sequence emacsvox-aural-enabled-feature-fragments)

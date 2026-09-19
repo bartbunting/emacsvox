@@ -223,8 +223,9 @@ standard personal discovery root.  The directory need not exist."
   (make-hash-table :test #'eq)
   "Map voice-palette identifiers to palette records.")
 
-(defconst emacsvox-aural-voice-palette-schema-version 3
-  "Current complete voice-palette schema, including individual choice settings.")
+(defconst emacsvox-aural-voice-palette-schema-version 4
+  "Latest voice-palette schema; native settings require version 4.
+Palettes without native settings are created in version 3.")
 
 (defconst emacsvox-aural-resource-pack-manifest
   "emacsvox-sound-pack.el"
@@ -848,7 +849,7 @@ except for the standard root itself."
 (defun emacsvox-aural--voice-palette-definition-data (id summary parent entries)
   "Project definition-only ENTRIES into complete palette ID with SUMMARY.
 PARENT defaults to the standard root.  Raw definitions remain unchanged."
-  (list :schema-version emacsvox-aural-voice-palette-schema-version
+  (list :schema-version 3
         :id id :summary summary
         :parent (or parent (unless (eq id 'acss-default) 'acss-default))
         :routing 'owned
@@ -868,7 +869,7 @@ generated ACSS variables and arbitrary interned symbols are never enumerated."
   (let* ((root (emacsvox-aural-voice-palette 'acss-default))
          (name (emacsvox-aural--canonical-voice-name personality))
          (data (and root (emacsvox-aural-voice-palette-data-form root))))
-    (when (and (eq (plist-get data :schema-version) 3)
+    (when (and (memq (plist-get data :schema-version) '(3 4))
                (not (assq name (plist-get data :entries))))
       (setf (plist-get data :entries)
             (append (plist-get data :entries)
@@ -879,8 +880,9 @@ generated ACSS variables and arbitrary interned symbols are never enumerated."
                emacsvox-aural-voice-palette-registry)
       (run-hooks 'emacsvox-aural-configuration-changed-hook))))
 
-(defun emacsvox-aural--compile-voice-palette-entry (data palette-id)
-  "Compile a complete safe voice entry DATA for PALETTE-ID."
+(defun emacsvox-aural--compile-voice-palette-entry (data palette-id &optional native)
+  "Compile a complete safe voice entry DATA for PALETTE-ID.
+NATIVE permits the native parameter records of palette schema 4."
   (unless (and (consp data) (car data) (symbolp (car data))
                (not (keywordp (car data))))
     (emacsvox-aural--resource-error
@@ -912,7 +914,7 @@ generated ACSS variables and arbitrary interned symbols are never enumerated."
        name (emacsvox-aural--canonical-voice-name name)))
     (require 'emacsvox-aural-routing-profiles)
     (emacsvox-aural-routing--strict-properties properties allowed '(:choices))
-    (emacsvox-aural-routing--validate-choices (plist-get properties :choices) t)
+    (emacsvox-aural-routing--validate-choices (plist-get properties :choices) t native)
     (dolist (key '(:language :local-choices))
       (when-let* ((value (plist-get properties key)))
         (unless (and (stringp value) (not (string-empty-p value)))
@@ -953,7 +955,7 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
     (when unknown
       (emacsvox-aural--resource-error
        "Unknown voice palette properties: %S" unknown))
-    (unless (eq version 3)
+    (unless (memq version '(3 4))
       (emacsvox-aural--resource-error
        "Unsupported voice palette schema version: %S" version))
     (require 'emacsvox-aural-routing-profiles)
@@ -975,7 +977,7 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
     (let ((entries
            (mapcar
             (lambda (entry)
-              (emacsvox-aural--compile-voice-palette-entry entry id))
+              (emacsvox-aural--compile-voice-palette-entry entry id (eq version 4)))
             raw-entries)))
       (let ((names (mapcar #'car entries)))
         (unless

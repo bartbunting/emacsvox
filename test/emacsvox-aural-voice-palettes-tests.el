@@ -1419,5 +1419,30 @@
         (should (eq (plist-get (emacsvox-aural-profile-entry-data
                                (emacsvox-aural-profile-entry 'startup)) :voice-palette) 'reading-owned))))))
 
+(ert-deftest emacsvox-aural-native-storage-manager-copy-and-rename ()
+  "Manager operations persist native records under new voice and palette owners."
+  (emacsvox-test--with-palette-rename
+    (emacsvox-test--with-native-storage
+      (setq emacsvox-aural-schemes-file (concat emacsvox-aural-schemes-file ".native")
+            emacsvox-aural-routing-profiles-file (concat emacsvox-aural-routing-profiles-file ".native"))
+      (emacsvox-aural-save-user-data)
+      (emacsvox-aural-save-routing-profiles)
+      (let ((before (emacsvox-test--native-choices)))
+        (emacsvox-aural-voice-palettes--copy-owned-voice 'reading 'bolden 'native-copy)
+        (emacsvox-aural-voice-palettes--copy-owned-voice 'reading 'native-copy 'native-renamed t)
+        (should-not (assq 'native-copy (emacsvox-aural-effective-voice-entries 'reading)))
+        (should (equal (plist-get (emacsvox-aural-voice-runtime--resolve 'native-renamed 'reading) :choices)
+                       before))
+        (should (eq (emacsvox-aural-voice-palettes-rename) 'renamed))
+        (should (equal (plist-get (emacsvox-aural-voice-runtime--resolve 'native-renamed 'renamed) :choices)
+                       before))
+        (let* ((data (cl-find 'renamed (plist-get (emacsvox-aural-read-user-data) :voice-palettes)
+                              :key (lambda (p) (plist-get p :id))))
+               (properties (cdr (assq 'native-renamed (plist-get data :entries))))
+               (sets (plist-get (emacsvox-aural-read-routing-profiles) :choice-sets)))
+          (should (= (plist-get data :schema-version) 4))
+          (should (equal (plist-get (emacsvox-aural-voice-data--choices
+                                    'renamed 'native-renamed properties sets 4) :choices) before)))))))
+
 (provide 'emacsvox-aural-voice-palettes-tests)
 ;;; emacsvox-aural-voice-palettes-tests.el ends here

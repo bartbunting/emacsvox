@@ -1221,3 +1221,38 @@ silently dropping them. Next add versioned persistence and preservation across
 copy/rename/inheritance/export, then catalogue discovery, native transport and
 the editor. The full native capability remains unadvertised pending integration
 and independent main/notification acceptance.
+
+* Implementation progress: versioned native persistence
+
+Emacs now reads native palette and immutable choice-set schema 4, routing-file
+schema 4 and user-data envelope 10. Existing schema 3 palettes/snapshots and
+envelope 9 remain supported without promotion on read or unrelated saves.
+Saving a native edit promotes the affected palette and creates a new local
+snapshot when needed, including choices whose native settings are entirely local.
+Older snapshots remain immutable. Removing native edits does not downgrade an
+existing palette or rewrite its retained snapshots.
+
+Whole-entry inheritance, shared edits, independent copies, voice/palette rename,
+portable export, full backup and import preserve native records. Portable
+projection checks include native operations; mismatched owners or native values
+are rejected. Missing local data retains the portable fallback and warning.
+The existing save coordinator writes snapshots before the palette reference and
+reuses the frozen proposal after partial failure. An independent routing writer
+retains native snapshots already on disk even when it has not loaded them.
+
+Native transport remains pending. Ordinary Omnivox registration explicitly
+projects supported common/choice settings while retaining complete native
+provenance and reporting unapplied tuning on each lane. The save result cannot
+claim full application. Native comparisons are refused before either half starts;
+the older strict wire codecs still reject native records. This slice does not
+expose native controls or change a live profile.
+
+Next connect asynchronous catalogue discovery, native registration and strict
+preview/explanation codecs, followed by the engine-control editor and independent
+main/notification acceptance. The full native capability remains unadvertised.
+
+Fresh-Emacs verification loaded the compiled storage and registration files.
+The affected storage, editor, palette, profile, routing, registration and timeline
+suites passed 544 tests; two graphical layout tests were skipped in batch.
+Byte-code and the generated reference are current. No listening acceptance or
+live-session reload was performed for this data and compatibility slice.

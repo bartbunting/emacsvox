@@ -1,5 +1,5 @@
 (:fixture-version 1
- :status contract-only-readers-not-yet-implemented
+ :status storage-readers-implemented
  :expected-user-data-envelope-version 10
  :source-palette
  (:schema-version 3 :id reading :summary "Reading" :parent acss-default

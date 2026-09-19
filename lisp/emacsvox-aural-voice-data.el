@@ -79,19 +79,24 @@ or allocated in a persistent store by this adapter."
               (lambda (row) (eq (plist-get (plist-get row :selector) :scope) 'portable))
               choices)))
 
-(defun emacsvox-aural-voice-data--choices (owner name properties local-sets)
-  "Resolve complete choices for OWNER and NAME from PROPERTIES and LOCAL-SETS."
+(defun emacsvox-aural-voice-data--choices (owner name properties local-sets &optional version)
+  "Resolve OWNER's NAME from PROPERTIES and LOCAL-SETS under palette VERSION.
+VERSION defaults to 4 for independent data operations."
+  (unless (memq version '(nil 3 4))
+    (emacsvox-aural--resource-error "Unsupported palette schema: %S" version))
   (let* ((sets (emacsvox-aural-routing--validate-choice-sets local-sets))
          (id (plist-get properties :local-choices))
          (local (and id (cl-find id sets :test #'equal :key (lambda (item) (plist-get item :id)))))
          (portable (plist-get properties :choices))
          (records (if local (plist-get local :choices) portable)))
-    (emacsvox-aural-routing--validate-choices portable t)
+    (emacsvox-aural-routing--validate-choices portable t (not (eq version 3)))
     (when local
       (unless (and (eq owner (plist-get local :palette)) (eq name (plist-get local :voice)))
         (emacsvox-aural--resource-error "Wrong owner for local choices: %S" id))
-      (unless (eq (plist-get local :schema-version) 3)
+      (unless (memq (plist-get local :schema-version) '(3 4))
         (emacsvox-aural--resource-error "Local snapshot %S uses retired choice data" id))
+      (when (and (eq version 3) (eq (plist-get local :schema-version) 4))
+        (emacsvox-aural--resource-error "Local snapshot %S requires palette schema 4" id))
       (unless (equal portable (emacsvox-aural-voice-data--portable-choices records))
         (emacsvox-aural--resource-error "Portable and local choices disagree: %S" id)))
     (list :selectors (emacsvox-aural-voice-data--selectors records)
@@ -110,7 +115,8 @@ ALIASES declares stable logical identities; physical choices belong to entries."
          (item (cl-find canonical entries :key (lambda (entry) (car (plist-get entry :entry)))))
          (owner (plist-get item :palette))
          (properties (cdr (plist-get item :entry)))
-         (choices (and item (emacsvox-aural-voice-data--choices owner canonical properties local-sets))))
+         (choices (and item (emacsvox-aural-voice-data--choices
+                            owner canonical properties local-sets (plist-get item :schema-version)))))
     (append
      (list :requested requested :name (and item canonical) :palette owner
            :definition (copy-tree (if (plist-member properties :personality)
@@ -121,12 +127,26 @@ ALIASES declares stable logical identities; physical choices belong to entries."
            :entry (copy-tree (plist-get item :entry)) :policy (copy-tree policy))
      choices)))
 
+(defun emacsvox-aural-voice-data--promote-palette (data &optional choices)
+  "Copy DATA, promoting its schema for native portable or complete CHOICES.
+Existing schema 4 palettes remain version 4 after native operations are removed."
+  (unless (memq (plist-get data :schema-version) '(3 4))
+    (emacsvox-aural--resource-error "Unsupported palette schema: %S" (plist-get data :schema-version)))
+  (let ((copy (copy-tree data)))
+    (when (or (= (emacsvox-aural-routing--choices-schema choices) 4)
+              (cl-some (lambda (entry)
+                         (= (emacsvox-aural-routing--choices-schema
+                             (plist-get (cdr entry) :choices)) 4))
+                       (plist-get data :entries)))
+      (setf (plist-get copy :schema-version) 4))
+    copy))
+
 (defun emacsvox-aural-voice-data--put-choices (data name choices snapshot-id)
   "Propose complete CHOICES for direct NAME in DATA.
 SNAPSHOT-ID identifies a fresh immutable local set. Publish through the save service."
   (let* ((data (copy-tree data))
          (entry (assq name (plist-get data :entries)))
-         (choices (emacsvox-aural-routing--validate-choices choices))
+         (choices (emacsvox-aural-routing--validate-choices choices nil t))
          (portable (emacsvox-aural-voice-data--portable-choices choices))
          sets)
     (unless entry (emacsvox-aural--resource-error "No direct owned entry: %S" name))
@@ -136,9 +156,11 @@ SNAPSHOT-ID identifies a fresh immutable local set. Publish through the save ser
       (unless (equal choices portable)
         (emacsvox-aural-routing--require-id snapshot-id "New local snapshot ID")
         (setq properties (plist-put properties :local-choices snapshot-id))
-        (setq sets (list (list :schema-version 3 :id snapshot-id
+        (setq sets (list (list :schema-version (emacsvox-aural-routing--choices-schema choices)
+                              :id snapshot-id
                               :palette (plist-get data :id) :voice name :choices choices))))
       (setcdr entry properties))
+    (setq data (emacsvox-aural-voice-data--promote-palette data choices))
     (emacsvox-aural-compile-voice-palette-data data)
     (list :palette data :choice-sets (emacsvox-aural-routing--validate-choice-sets sets))))
 
@@ -246,21 +268,25 @@ Missing local data requires an explicit portable export instead of a local copy.
   "Propose complete independent DESTINATION from SOURCE in REGISTRY.
 SUMMARY and LOCAL-IDS belong to the new owner; LOCAL-SETS supplies full rows.
 The caller validates destination conflicts in the publication registry."
-  (let ((effective (emacsvox-aural-voice-data--entries source registry)) entries sets)
+  (let ((effective (emacsvox-aural-voice-data--entries source registry)) entries sets
+        (version 3))
     (dolist (item effective)
       (let* ((entry (copy-tree (plist-get item :entry)))
              (name (car entry)) (properties (cdr entry))
-             (choices (emacsvox-aural-voice-data--choices (plist-get item :palette) name properties local-sets))
+             (choices (emacsvox-aural-voice-data--choices
+                       (plist-get item :palette) name properties local-sets (plist-get item :schema-version)))
              (rows (plist-get choices :choices)))
+        (setq version (max version (plist-get item :schema-version)))
         (when (plist-get choices :diagnostics)
           (emacsvox-aural--resource-error "Cannot copy missing local choices for %S" name))
         (when (plist-get properties :local-choices)
           (let ((id (alist-get name local-ids)))
             (emacsvox-aural-routing--require-id id "New owner's local choice ID")
             (setq properties (plist-put properties :local-choices id))
-            (push (list :schema-version 3 :id id :palette destination :voice name :choices rows) sets)))
+            (push (list :schema-version (emacsvox-aural-routing--choices-schema rows)
+                        :id id :palette destination :voice name :choices rows) sets)))
         (push (cons name properties) entries)))
-    (let ((palette (list :schema-version 3 :id destination :summary summary
+    (let ((palette (list :schema-version version :id destination :summary summary
                          :parent 'acss-default :routing 'owned :entries (nreverse entries))))
       (emacsvox-aural-compile-voice-palette-data palette)
       (emacsvox-aural-routing--merge-choice-sets local-sets sets)
@@ -287,7 +313,8 @@ Omission diagnostics name every voice whose local snapshot is excluded."
                     :parent 'acss-default :routing 'owned
                     :entries (mapcar (lambda (item) (copy-tree (plist-get item :entry)))
                                      (emacsvox-aural-voice-data--entries source registry)))))
-    (emacsvox-aural-voice-data--portable-export data)))
+    (emacsvox-aural-voice-data--portable-export
+     (emacsvox-aural-voice-data--promote-palette data))))
 
 (defun emacsvox-aural-voice-data--backup (registry source local-sets)
   "Return SOURCE's complete ancestry and referenced LOCAL-SETS from REGISTRY."
@@ -299,7 +326,8 @@ Omission diagnostics name every voice whose local snapshot is excluded."
              (data (emacsvox-aural-voice-palette-data-form record)))
         (push data palettes)
         (dolist (entry (plist-get data :entries))
-          (let ((choices (emacsvox-aural-voice-data--choices id (car entry) (cdr entry) local-sets)))
+          (let ((choices (emacsvox-aural-voice-data--choices
+                          id (car entry) (cdr entry) local-sets (plist-get data :schema-version))))
             (when (plist-get choices :diagnostics)
               (emacsvox-aural--resource-error "Cannot back up missing local choices for %s in %s" (car entry) id)))
           (when-let* ((local (plist-get (cdr entry) :local-choices))) (push local ids)))

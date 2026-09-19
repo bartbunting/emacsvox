@@ -235,5 +235,53 @@
                      "original")))
     (should (= 0 (hash-table-count (plist-get (aref (plist-get copy :definitions) 0) :patch))))))
 
+(ert-deftest omnivox-native-storage-registers-supported-settings-with-degradation ()
+  "Saved native data survives while each lane reports the unimplemented transport."
+  (omnivox-test--with-choice-registration
+    (emacsvox-test--with-native-storage
+      (setf (plist-get (car (plist-get (cadr emacsvox-aural-routing--choice-sets) :choices)) :adjustments)
+            '(:richness 0))
+      (process-put notification omnivox--control-capabilities-property
+                   '(:features ("logical_voice_registration")))
+      (let* ((before (copy-tree emacsvox-aural-routing--choice-sets))
+             (projection (omnivox--choice-definition-projection '(:id "bolden")))
+             (definition (plist-get (car projection) :definition))
+             (rows (plist-get definition :choices)))
+        (should (caddr projection))
+        (should (plist-get (car (plist-get (cadr projection) :choices)) :native))
+        (should-not (plist-member (aref rows 0) :native))
+        (should (equal (plist-get (plist-get (aref rows 0) :adjustments) :richness)
+                       '(:op "set" :value 0.0)))
+        (omnivox-apply-voice-configuration (lambda (result) (push result terminal)))
+        (should (= (length requests) 2))
+        (dolist (write requests)
+          (omnivox--dispatch-control-response (car write) (omnivox-test--choice-registration-ack write)))
+        (should (plist-get (car terminal) :choice-tuning-unapplied))
+        (dolist (lane (plist-get (car terminal) :processes))
+          (should (plist-get lane :choice-tuning-unapplied)))
+        (let* ((draft (emacsvox-aural-voice-drafts--make))
+               (save (emacsvox-aural-voice-drafts--make-save :state 'applied :result (car terminal))))
+          (setf (emacsvox-aural-voice-draft-proposal draft) save)
+          (should-not (string-match-p "Saved and applied"
+                                     (plist-get (emacsvox-aural-voice-drafts--status draft) :label))))
+        (should (equal before emacsvox-aural-routing--choice-sets))))))
+
+(ert-deftest omnivox-native-storage-preview-refuses-before-either-comparison-half ()
+  "A comparison cannot speak its common half before discovering unsupported native data."
+  (require 'emacsvox-aural-voice-editor)
+  (omnivox-test--with-choice-registration
+    (emacsvox-test--with-native-storage
+      (let* ((tts-voice-preview-function #'omnivox-preview-voice-sequence)
+             (snapshot (plist-get (emacsvox-aural-voice-editing--snapshot 'reading 'bolden) :snapshot))
+             (entry (emacsvox-aural-voice-editing--cascade snapshot 'reading nil "Native preview"))
+             (common (copy-tree entry)))
+        (setf (plist-get (plist-get common :voice) :choices) nil)
+        (cl-letf (((symbol-function 'omnivox--preview-layered-sequence)
+                   (lambda (&rest _) (ert-fail "Submitted part of an unsupported comparison"))))
+          (should-error (emacsvox-aural-voice-editor--submit-preview
+                         (list common entry) #'ignore (lambda () t)) :type 'user-error))
+        (should-error (emacsvox-aural-voice-editing--legacy-preview entry) :type 'user-error)
+        (should-not requests)))))
+
 (provide 'omnivox-choice-registration-tests)
 ;;; omnivox-choice-registration-tests.el ends here

@@ -113,7 +113,8 @@ REPLACEMENT explicitly keeps or resets a replaced row's custom settings."
                (row (and (eq placement 'replace) (nth (or index 0) rows))))
           (if row
               (progn
-                (when (and (plist-get row :adjustments) (not (memq replacement '(keep reset))))
+                (when (and (or (plist-get row :adjustments) (plist-member row :native))
+                           (not (memq replacement '(keep reset))))
                   (user-error "Choose whether to keep or reset this row's custom settings"))
                 (setq rows (emacsvox-aural-voice-data--replace-choice
                             rows (plist-get row :id) selector (or replacement 'keep))))
@@ -187,7 +188,8 @@ NEW explicitly requests creation of a voice that must not already exist."
     (setq properties (copy-tree (cdr (plist-get item :entry))))
     (setq old-choices (and item (emacsvox-aural-voice-data--choices
                        (plist-get item :palette) voice properties
-                       (emacsvox-aural-routing--merge-choice-sets emacsvox-aural-routing--choice-sets sets))))
+                       (emacsvox-aural-routing--merge-choice-sets emacsvox-aural-routing--choice-sets sets)
+                       (plist-get item :schema-version))))
     (let* ((selectors (copy-tree (plist-get snapshot :selectors)))
            (portable (cl-remove-if-not (lambda (s) (eq (plist-get s :scope) 'portable)) selectors))
            (reference (and (not (plist-get snapshot :reset-choices))
@@ -205,7 +207,7 @@ NEW explicitly requests creation of a voice that must not already exist."
                      (if (plist-member old-choices :choices) (plist-get old-choices :choices)
                        (emacsvox-aural-voice-data--wrap-selectors selectors)))
                     (t (user-error "Edit complete choice records to preserve individual settings")))))
-      (emacsvox-aural-routing--validate-choices rows)
+      (emacsvox-aural-routing--validate-choices rows nil t)
         (unless (equal selectors (emacsvox-aural-voice-data--selectors rows))
           (user-error "Physical choices and individual settings disagree"))
       (setq portable (emacsvox-aural-voice-data--portable-choices rows))
@@ -218,14 +220,16 @@ NEW explicitly requests creation of a voice that must not already exist."
         (user-error "Reset missing local choices explicitly before changing the chain"))
       (when (and (not reference) (not (equal rows portable)))
         (setq reference (emacsvox-aural-voice-editing--new-id))
-        (push (list :schema-version 3 :id reference :palette destination :voice voice :choices rows) sets))
+        (push (list :schema-version (emacsvox-aural-routing--choices-schema rows)
+                    :id reference :palette destination :voice voice :choices rows) sets))
       (setq properties (append (list (if (symbolp definition) :personality :style) (copy-tree definition)
                                      :choices portable)
                                (when reference (list :local-choices reference))
                                (when (plist-get snapshot :language) (list :language (plist-get snapshot :language)))))
       (setq data (plist-put data :entries
                             (cons (cons voice properties)
-                                  (cl-remove voice (plist-get data :entries) :key #'car)))))
+                                  (cl-remove voice (plist-get data :entries) :key #'car))))
+      (setq data (emacsvox-aural-voice-data--promote-palette data rows)))
     (emacsvox-aural-compile-voice-palette-data data)
     (list :palette data :choice-sets sets)))
 
@@ -254,7 +258,7 @@ NEW explicitly requests creation of a voice that must not already exist."
   "Return complete SNAPSHOT rows, refusing a conflicting selector projection."
   (let ((rows (if (plist-member snapshot :choices) (copy-tree (plist-get snapshot :choices))
                 (emacsvox-aural-voice-data--wrap-selectors (plist-get snapshot :selectors)))))
-    (emacsvox-aural-routing--validate-choices rows)
+    (emacsvox-aural-routing--validate-choices rows nil t)
     (unless (equal (plist-get snapshot :selectors) (emacsvox-aural-voice-data--selectors rows))
       (user-error "Physical choices and individual settings disagree"))
     rows))
@@ -346,6 +350,8 @@ Adapter feature support is checked by the caller before starting any entry."
          (id (plist-get (plist-get entry :selection) :choice-id))
          (composed (emacsvox-aural-voice-editing--compose-preview entry))
          (policy (plist-get entry :fallback-policy)))
+    (when (= (emacsvox-aural-routing--choices-schema rows) 4)
+      (user-error "Native parameter preview is not connected yet; saved settings are retained"))
     (when (and (not id) (cl-some (lambda (row) (plist-get row :adjustments)) rows))
       (user-error "Customized full voice preview needs an updated Omnivox server; saving remains available"))
     (when (and id (plist-get composed :defaults))
