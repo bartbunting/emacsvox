@@ -47,8 +47,12 @@
 (declare-function omnivox-parameters--explain-draft "omnivox-parameters" (process entry callback &optional current))
 (declare-function omnivox-parameters--explain-applied "omnivox-parameters" (process connection identity callback &optional current))
 (declare-function omnivox-parameters--cancel "omnivox-parameters" (waiter))
+(declare-function omnivox-parameters--cached "omnivox-parameters" (process engine voice))
 (autoload 'emacsvox-aural-voice-context-open "emacsvox-aural-voice-context"
   "Inspect this voice draft in a captured source context." t)
+(autoload 'emacsvox-aural-voice-engine-controls-open "emacsvox-aural-voice-engine-controls"
+  "Edit engine controls for one physical choice." t)
+(declare-function emacsvox-aural-voice-engine-controls--render "emacsvox-aural-voice-engine-controls" ())
 
 (defvar emacsvox-aural-voice-editor--contexts (make-hash-table :test #'equal)
   "Retained editor context for each authoritative draft.")
@@ -412,7 +416,9 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
 (defun emacsvox-aural-voice-editor-refresh ()
   "Refresh the common editor, preserving the current field and point's column."
   (interactive)
-  (let* ((field (get-text-property (point) 'voice-field)) (column (current-column))
+  (if (emacsvox-aural-voice-editor--get :engine-controls)
+      (emacsvox-aural-voice-engine-controls--render)
+    (let* ((field (get-text-property (point) 'voice-field)) (column (current-column))
          (draft (emacsvox-aural-voice-editor--draft))
          (snapshot (emacsvox-aural-voice-editor--working))
          (palette (emacsvox-aural-voice-editor--get :palette))
@@ -458,6 +464,9 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
                         (plist-get (emacsvox-aural-voice-editor--get :policy) :engine-order)
                         (plist-get (plist-get (emacsvox-aural-voice-editor--get :policy) :fallback) :engines))))
       )
+    (when chain
+      (emacsvox-aural-voice-editor--button 'engine-controls "Engine controls for a physical choice"
+                                            #'emacsvox-aural-voice-engine-controls-open))
     (insert (if tuning "\nIndividual fallback adjustments\n" "\nShared adjustments\n"))
     (when tuning
       (emacsvox-aural-voice-editor--button
@@ -537,7 +546,7 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
     (setq header-line-format (format "%s | %s" (or voice "Experiment")
                                      (plist-get (emacsvox-aural-voice-drafts--status draft) :label)))
     (emacsvox-aural-voice-editor--locate field)
-    (when field (move-to-column column))))
+    (when field (move-to-column column)))))
 
 (defun emacsvox-aural-voice-editor-stop ()
   "Stop this editor's sample without stopping another editor's newer preview."
@@ -968,6 +977,15 @@ SOURCE optionally supplies the return buffer for the destination editor."
     (let* ((result (plist-get response :explanation))
            (applied (equal (plist-get result :evidence) "adapter_applied"))
            (physical (plist-get result :realized))
+           (catalogue (plist-get response :catalogue))
+           (descriptors
+            (when (and (equal (plist-get catalogue :engine-id) (plist-get physical :engine_id))
+                       (or (eq (plist-get catalogue :voice-id) :null)
+                           (equal (plist-get catalogue :voice-id) (plist-get physical :voice_id)))
+                       (cl-every (lambda (key) (equal (plist-get (plist-get catalogue :identity) key)
+                                                      (plist-get (plist-get result :identity) key)))
+                                 '(:schema_id :profile_id :catalogue_revision :runtime_generation)))
+              (plist-get catalogue :parameters)))
            (native (plist-get (plist-get response :expected) :native)))
       (concat
        (if applied "Applied settings from the captured playback\n" "Planned settings for the captured draft; no speech was played\n")
@@ -978,10 +996,14 @@ SOURCE optionally supplies the return buffer for the destination editor."
        (mapconcat
         (lambda (parameter)
           (let* ((id (plist-get parameter :id)) (value (plist-get parameter :value))
+                 (descriptor (cl-find id descriptors :test #'equal :key (lambda (d) (plist-get d :id))))
+                 (unit (plist-get descriptor :unit))
                  (operation (cdr (assoc id (plist-get native :parameters)))))
-            (format "%s: %s; %s%s%s%s."
-                    id (cond ((eq value :null) "value unknown") ((eq value :false) "false")
+            (format "%s: %s%s; %s%s%s%s."
+                    (or (plist-get descriptor :label) id)
+                    (cond ((eq value :null) "value unknown") ((eq value :false) "false")
                              ((eq value t) "true") (t (format "%s" value)))
+                    (if (and (stringp unit) (not (eq value :null))) (concat " " unit) "")
                     (pcase (plist-get parameter :origin)
                       ("engine_default" "engine voice default") ("common_mapping" "from common settings")
                       ("context_mapping" "from contextual settings") ("native_set" "explicit engine setting")
@@ -1021,6 +1043,11 @@ SOURCE optionally supplies the return buffer for the destination editor."
                     (when (funcall current)
                       (when (and (eq (plist-get result :status) 'ready) (not (eq process tts-speaker-process)))
                         (setq result '(:status stale :message "Selected speech connection changed. Request engine settings again.")))
+                      (when (eq (plist-get result :status) 'ready)
+                        (let* ((physical (plist-get (plist-get result :explanation) :realized))
+                               (cached (or (omnivox-parameters--cached process (plist-get physical :engine_id) (plist-get physical :voice_id))
+                                           (omnivox-parameters--cached process (plist-get physical :engine_id) nil))))
+                          (setq result (plist-put result :catalogue (plist-get cached :catalogue)))))
                       (when (and applied (eq (plist-get result :status) 'ready))
                         (let* ((audio (plist-get sample :last-started))
                                (row (cl-find (plist-get audio :choice_id)

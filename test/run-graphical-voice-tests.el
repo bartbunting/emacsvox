@@ -34,6 +34,7 @@
         (add-to-list 'load-path (expand-file-name "test/" root))
         (require 'emacsvox-preamble)
         (require 'emacsvox-aural-voice-editor-tests)
+        (require 'emacsvox-aural-voice-engine-controls-tests)
         (require 'omnivox-explanation-tests)
         (require 'emacsvox-aural-feedback-details)
         (require 'emacsvox-aural-feedback-details-tests)
@@ -50,6 +51,7 @@
         (dolist (function '(emacsvox-aural-capture-context
                             emacsvox-aural-feedback-details--insert-voice-links
                             emacsvox-aural-voice-editor-refresh
+                            emacsvox-aural-voice-engine-controls--render
                             emacsvox-omnivox-components--render-details
                             emacsvox-aural-voice-workbench--open-engine))
           (let ((file (symbol-file function)))
@@ -58,6 +60,9 @@
             (message "%s: %s" function file)))
         (let ((stats (ert-run-tests-batch
                       '(member
+                        emacsvox-engine-controls-graphical-groups-search-and-focus
+                        emacsvox-engine-controls-back-detaches-query-and-restores-common-navigation
+                        emacsvox-engine-controls-close-retains-draft-without-stale-view-state
                         omnivox-explanation-details-link-opens-the-selected-choice
                         omnivox-explanation-view-displays-result-and-rejects-changed-draft
                         omnivox-explanation-view-preserves-applied-request-across-edits-and-detaches-on-kill
@@ -86,8 +91,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 28)
-                                (= (ert-stats-completed stats) 28)
+          (setq status (if (and (= (ert-stats-total stats) 31)
+                                (= (ert-stats-completed stats) 31)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

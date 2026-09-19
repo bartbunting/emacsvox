@@ -16,7 +16,7 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 Indirect:
 emacsvox.info-1: 384
-emacsvox.info-2: 307344
+emacsvox.info-2: 309196
 
 Tag Table:
 (Indirect)
@@ -76,66 +76,66 @@ Node: Renaming Voices And Palettes172986
 Node: Editing Named Voices174691
 Node: Voice Adjustments180299
 Node: Voice Fallbacks184916
-Node: Voices In Context188633
-Node: Emoji Speech Names191744
-Node: Installed Voices And Engines196413
-Node: Physical Voice Experiments204315
-Node: Keeping A Voice Experiment207332
-Node: Speech Engine Preferences209914
-Node: Sounds And Space211698
-Node: Sound Pack Walkthrough213953
-Node: Changing One Sound215604
-Node: Changing Tones217170
-Node: Spatial Presentation Controls218980
-Node: Personal Sound Packs220531
-Node: Aural Speech Output221784
-Node: Presentation Profiles225312
-Node: Presentation Profile Walkthrough227738
-Node: Saving And Startup230229
-Node: Sharing Voice Palettes231461
-Node: Presentation Troubleshooting233069
-Node: Recovering Aural Changes236515
-Node: Voice Lock238126
-Node: Using Online Help241672
-Node: Emacs Packages245734
-Node: Document Authoring247108
-Node: Structured Editing247662
-Node: Browsing Structure248645
-Node: Web Browsing249243
-Node: Messaging250078
-Node: Editing Code250576
-Node: Development Environment251095
-Node: Desktop Management252631
-Node: Personal Information Management253133
-Node: Desktop Applications253665
-Node: Notmuch Mail261807
-Ref: Notmuch fields and privacy271522
-Node: Agent Shell277230
-Node: EAT Terminal Access289701
-Node: Running Terminal Based Applications307344
-Node: Starting Term308299
-Node: Term Input Modes309138
-Node: Term Speech Feedback310298
-Node: Reviewing The Term Screen311492
-Node: Term Help And Recovery313393
-Node: Emacsvox Keyboard Commands314292
-Node: Copyright316537
-Node: Acknowledgments317124
-Node: Developer Guide318150
-Node: Documentation Maintenance319314
-Node: Speech Server Protocols324114
-Ref: Testing A Direct Legacy Server330021
-Ref: Commands That Queue Output330580
-Ref: Commands That Set State333614
-Node: Integration Maintenance336208
-Ref: Background startup ownership and failure recovery339050
-Ref: Supported Emacs versions342203
-Ref: Native Windows builds344882
-Ref: Remote preview validation346942
-Ref: Internal ownership and renderer tests367172
-Ref: Upstream contract layers370752
-Node: Authoring Sound Packs391749
-Node: Concept Index395014
+Node: Voices In Context190485
+Node: Emoji Speech Names193596
+Node: Installed Voices And Engines198265
+Node: Physical Voice Experiments206167
+Node: Keeping A Voice Experiment209184
+Node: Speech Engine Preferences211766
+Node: Sounds And Space213550
+Node: Sound Pack Walkthrough215805
+Node: Changing One Sound217456
+Node: Changing Tones219022
+Node: Spatial Presentation Controls220832
+Node: Personal Sound Packs222383
+Node: Aural Speech Output223636
+Node: Presentation Profiles227164
+Node: Presentation Profile Walkthrough229590
+Node: Saving And Startup232081
+Node: Sharing Voice Palettes233313
+Node: Presentation Troubleshooting234921
+Node: Recovering Aural Changes238367
+Node: Voice Lock239978
+Node: Using Online Help243524
+Node: Emacs Packages247586
+Node: Document Authoring248960
+Node: Structured Editing249514
+Node: Browsing Structure250497
+Node: Web Browsing251095
+Node: Messaging251930
+Node: Editing Code252428
+Node: Development Environment252947
+Node: Desktop Management254483
+Node: Personal Information Management254985
+Node: Desktop Applications255517
+Node: Notmuch Mail263659
+Ref: Notmuch fields and privacy273374
+Node: Agent Shell279082
+Node: EAT Terminal Access291553
+Node: Running Terminal Based Applications309196
+Node: Starting Term310151
+Node: Term Input Modes310990
+Node: Term Speech Feedback312150
+Node: Reviewing The Term Screen313344
+Node: Term Help And Recovery315245
+Node: Emacsvox Keyboard Commands316144
+Node: Copyright318389
+Node: Acknowledgments318976
+Node: Developer Guide320002
+Node: Documentation Maintenance321166
+Node: Speech Server Protocols325966
+Ref: Testing A Direct Legacy Server331873
+Ref: Commands That Queue Output332432
+Ref: Commands That Set State335466
+Node: Integration Maintenance338060
+Ref: Background startup ownership and failure recovery340902
+Ref: Supported Emacs versions344055
+Ref: Native Windows builds346734
+Ref: Remote preview validation348794
+Ref: Internal ownership and renderer tests369024
+Ref: Upstream contract layers372604
+Node: Authoring Sound Packs393601
+Node: Concept Index396866
 
 End Tag Table
 

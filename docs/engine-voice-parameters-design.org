@@ -1426,3 +1426,44 @@ draft/selected-worker handling and observer detachment. A full byte-code rebuild
 and generated-reference update completed; the fresh batch process verified the
 compiled codec, query, private-voice encoder and details implementation paths.
 No live listening or native-engine integration acceptance was claimed.
+
+* Implementation progress: descriptor-driven engine controls
+
+The common voice editor now opens Engine controls for one stable physical-choice
+ID within the same editor buffer and authoritative draft. Actions precede the
+parameter groups: preview, compare, stop, save, undo, common settings and refresh.
+Catalogue discovery is asynchronous on the selected speech worker; it never
+registers a voice, starts synthesis or restarts speech. Returning to common
+settings or killing the editor detaches its observer. Reopening a retained draft
+does not resurrect an orphaned engine-controls view.
+
+Qualified descriptors supply labels, groups, units, limits, enum choices,
+Boolean values, help, default evidence, mapping inputs and side effects.
+Per-voice controls support Set value, Follow common settings and Engine voice
+default. Scope, runtime availability, known value types, reset support and the
+complete native bundle determine editability. An older worker can display
+metadata without pretending it can apply native changes. Stored overrides from
+unknown parameters or a different schema remain visible and preserved; removal
+and whole-choice reset are explicit, undoable draft operations.
+
+Edits use the existing sparse native-choice helper, preserve shared adjustments
+and other fallback rows, and never trigger automatic samples. Preview and
+comparison reuse the selected-choice coordinator; saving reuses the palette and
+local-choice stores and their existing activation acknowledgements. Search spans
+collapsed groups, and an adjusted-controls filter exposes explicit overrides.
+Catalogue refresh preserves field focus and group state. A catalogue, draft or
+worker change during value entry rejects the stale edit instead of overwriting
+newer work. Explanation labels and units are taken only from metadata with the
+same qualified catalogue identity as the explanation.
+
+Real DECtalk/Eloquence listening, helper recovery, comparison acceptance and
+independent main/notification engine integration remain before advertising the
+native capability bundle. This editor slice changes no live Emacs profile or
+Omnivox installation.
+
+Verification passed 674 tests in a fresh batch Emacs, with two layout tests
+skipped there and subsequently passed in the 31-test private-display graphical
+suite. The fresh process verified the compiled editor and engine-controls paths.
+A full byte-code rebuild, final incremental compilation, header checks, manual
+and reference generation, and the documentation release check passed. No live
+listening or native-engine integration acceptance was claimed.

@@ -30,6 +30,7 @@
                     omnivox-remote-tests
                     omnivox-parameters-tests
                     omnivox-explanation-tests
+                    emacsvox-aural-voice-engine-controls-tests
                     omnivox-native-preview-tests
                     omnivox-native-runtime-tests
                     omnivox-library-apply-tests

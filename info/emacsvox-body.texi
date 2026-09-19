@@ -3821,6 +3821,34 @@ require per-choice support; an individual audition is available only when its
 settings can be represented faithfully@comma{} including adapter defaults. Saving
 remains available when that preview is unavailable.
 
+@emph{Engine controls for a physical choice} opens the selected engine's own
+parameters in the same voice draft. The available fields depend on what that
+speech worker can describe and apply. A worker that only describes controls
+shows them read-only. Engine-wide and startup settings are also read-only here;
+their help identifies their scope.
+
+Actions come first@comma{} followed by expandable groups. @samp{RET} on a control offers
+@emph{Set value}@comma{} @emph{Follow common settings}@comma{} @emph{Engine voice default}@comma{} and @emph{Parameter
+help}. Values use the engine's units and limits. Help explains the default's
+source@comma{} common controls that affect the parameter@comma{} and reported side effects.
+@samp{i} removes an override; @samp{d} requests the engine voice default. @emph{Reset this
+choice's engine controls} removes its native overrides while preserving common
+adjustments and other choices. @samp{u} undoes these edits.
+
+Engine-control edits never play an automatic sample. Use @samp{P} to preview the
+selected choice@comma{} @samp{B} to compare@comma{} and the usual Save action to keep the draft.
+@samp{q} returns to common settings. @emph{Search controls} searches names@comma{} identifiers
+and help across collapsed groups; an empty search clears the filter. @emph{Adjusted
+controls only} shows explicit overrides. @samp{g} refreshes the catalogue without
+restarting speech; if the engine is busy@comma{} refresh again after speech finishes.
+Unrecognized saved settings remain visible and can be removed explicitly.
+
+@emph{Explain planned settings} describes the captured draft without playing speech.
+On a worker that supports native settings@comma{} @emph{Details and last playback evidence}
+also offers an explanation of the last sample's applied settings. Planned
+values@comma{} applied values@comma{} and values read back from the engine are labelled
+separately. An expired sample plan cannot be reconstructed by these queries.
+
 @node Voices In Context
 @subsection Inspect Or Adjust A Voice In Context
 
