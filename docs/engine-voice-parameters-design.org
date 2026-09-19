@@ -1504,3 +1504,23 @@ loaded the compiled editor and received =logical_voices_registered_v3=
 acknowledgements with native support on both Speaker and Notify. The previous
 launcher is backed up; existing sessions were left open with their original
 workers. Future launches through the development shortcut use the new build.
+
+** Deployment correction: qualified DECtalk runtime
+
+The first live Perfect Paul editor reported an unqualified runtime. The isolated
+acceptance invocation explicitly selected the audited DECtalk DLL, whereas the
+desktop launcher discovered the different DLL bundled with the staged package.
+Both report the same version label; only the audited file passed the native
+profile's checksum qualification. Checking the capability bundle and registration
+alone did not establish that the live editor could obtain qualified controls.
+
+The development launcher now explicitly selects the already installed audited
+DLL at =C:/Users/bart/AppData/Local/Omnivox/runtimes/dectalk/x86/DECtalk.dll=.
+Restarting only the affected session's speech workers and refreshing its existing
+editor produced 28 editable controls; the draft was unchanged. The development
+launcher's =--check-native-controls= option runs the private acceptance check
+with the same runtime environment as a normal desktop launch. The check records
+its server and DLL selections, and deployment verification must also inspect the
+live engine catalogue. No runtime checksum guard was relaxed.
+The launcher-based check passed DECtalk and Eloquence comparisons, native
+readback, save/reload, both speech lanes and reconnect with this selection.

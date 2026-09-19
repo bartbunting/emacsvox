@@ -6,9 +6,15 @@
 ;; DECtalk/Eloquence runtimes. Set OMNIVOX_PROGRAM and ESPEAK_NG_DATA for that
 ;; package, and EMACSVOX_NATIVE_TEST_SERVER to the launcher. Uses null audio,
 ;; private processes and temporary palette stores; no personal settings change.
+;; Inherit the deployment launcher's runtime selection unchanged: substituting
+;; a different DLL only for this check does not verify the deployed controls.
 ;;; Code:
 (unless noninteractive (error "Run in a fresh batch Emacs"))
 (setq load-prefer-newer t)
+(princ (format "Native acceptance selection: server=%s DECtalk=%s Eloquence=%s\n"
+               (getenv "OMNIVOX_PROGRAM")
+               (or (getenv "OMNIVOX_DECTALK_DLL") "automatic discovery")
+               (or (getenv "OMNIVOX_ECI_DLL") "automatic discovery")))
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-aural-voice-engine-controls-tests)
