@@ -168,6 +168,11 @@ selected."
 
 (defun emacsvox--advice-vertico-insert-around (orig-fun &rest args)
   "Call ORIG-FUN once and present the updated completion input."
+  ;; Character navigation can read the prompt.  When input is empty,
+  ;; `delete-minibuffer-contents' leaves point there; Vertico's insertion would
+  ;; then target read-only prompt text instead of the editable input.
+  (when (and (minibufferp) (< (point) (minibuffer-prompt-end)))
+    (goto-char (minibuffer-prompt-end)))
   (let ((interactive-p (ems-interactive-p 'vertico-insert))
         (orig-point (point))
         result)

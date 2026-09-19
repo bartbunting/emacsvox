@@ -63,6 +63,7 @@
                         emacsvox-engine-controls-graphical-groups-search-and-focus
                         emacsvox-engine-controls-help-is-spoken-and-returns-to-parameter
                         emacsvox-engine-controls-table-columns-and-keyboard-adjustment
+                        emacsvox-engine-controls-graphical-edit-after-reading-prompt
                         emacsvox-engine-controls-back-detaches-query-and-restores-common-navigation
                         emacsvox-engine-controls-close-retains-draft-without-stale-view-state
                         omnivox-explanation-details-link-opens-the-selected-choice
@@ -93,8 +94,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 33)
-                                (= (ert-stats-completed stats) 33)
+          (setq status (if (and (= (ert-stats-total stats) 34)
+                                (= (ert-stats-completed stats) 34)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

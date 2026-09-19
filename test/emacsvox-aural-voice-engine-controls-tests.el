@@ -39,6 +39,73 @@
   (cl-find id (plist-get (plist-get (emacsvox-aural-voice-engine-controls--state) :catalogue) :parameters)
            :test #'equal :key (lambda (d) (plist-get d :id))))
 
+(defun emacsvox-engine-controls-test--busy ()
+  "Deliver a busy engine reply to the latest controls request."
+  (let ((response (omnivox-parameters-test--response (cdar omnivox-parameters-test--writes))))
+    (setf (plist-get response :result) '(:status "busy" :retry_after_ms 50))
+    (omnivox-parameters-test--reply tts-speaker-process response)
+    (omnivox-parameters-test--drain)))
+
+(ert-deftest emacsvox-engine-controls-busy-recovers-without-refresh-or-speech ()
+  (emacsvox-test--with-engine-controls
+   (let ((before (emacsvox-aural-voice-editor--working)) (heard speech))
+     (emacsvox-aural-voice-editor--locate 'status)
+     (emacsvox-engine-controls-test--busy)
+     (should (string-match-p "retrying automatically" (buffer-string)))
+     (let ((retry (plist-get (emacsvox-aural-voice-engine-controls--state) :retry)))
+       (should (timerp retry))
+       (should (>= (aref retry 1) 0.2))
+       (omnivox-parameters-test--tick retry))
+     (should (= 2 (length omnivox-parameters-test--writes)))
+     (emacsvox-engine-controls-test--ready)
+     (should (emacsvox-aural-voice-engine-controls--fresh-p))
+     (should-not (plist-get (emacsvox-aural-voice-engine-controls--state) :retry))
+     (should (eq (get-text-property (point) 'voice-field) 'status))
+     (should (equal before (emacsvox-aural-voice-editor--working)))
+     (should (equal heard speech))
+     (should-not requests))))
+
+(ert-deftest emacsvox-engine-controls-busy-retries-have-a-deadline ()
+  (let ((now 1000.0))
+    (cl-letf (((symbol-function 'float-time) (lambda (&rest _) now)))
+      (emacsvox-test--with-engine-controls
+       (emacsvox-engine-controls-test--busy)
+       (setq now 1005.0)
+       (omnivox-parameters-test--tick (plist-get (emacsvox-aural-voice-engine-controls--state) :retry))
+       (should (= 1 (length omnivox-parameters-test--writes)))
+       (should-not (plist-get (emacsvox-aural-voice-engine-controls--state) :retry))
+       (should (string-match-p "press g to try again" (buffer-string)))
+       (emacsvox-aural-voice-engine-controls-refresh)
+       (should (= 2 (length omnivox-parameters-test--writes)))
+       (emacsvox-engine-controls-test--ready)
+       (should (emacsvox-aural-voice-engine-controls--fresh-p))))))
+
+(ert-deftest emacsvox-engine-controls-busy-retries-detach-on-back-refresh-and-close ()
+  (dolist (action '(back refresh close))
+    (emacsvox-test--with-engine-controls
+     (emacsvox-engine-controls-test--busy)
+     (let ((retry (plist-get (emacsvox-aural-voice-engine-controls--state) :retry)))
+       (pcase action
+         ('back (emacsvox-aural-voice-engine-controls-back))
+         ('refresh (emacsvox-aural-voice-engine-controls-refresh))
+         ('close (kill-buffer (current-buffer))))
+       (should-not (aref retry 4))
+       ;; Even a callback already selected by the event loop must be inert.
+       (apply (aref retry 2) (aref retry 3))
+       (should (= (if (eq action 'refresh) 2 1) (length omnivox-parameters-test--writes)))))))
+
+(ert-deftest emacsvox-engine-controls-busy-retry-rejects-changed-worker-or-voice ()
+  (dolist (change '(worker inventory voice))
+    (emacsvox-test--with-engine-controls
+     (emacsvox-engine-controls-test--busy)
+     (pcase change
+       ('worker (setq tts-speaker-process notification))
+       ('inventory (process-put speaker omnivox--control-inventory-property '(:inventory_generation 2)))
+       ('voice (setf (plist-get (plist-get (emacsvox-aural-voice-engine-controls--row) :selector) :voice-id) "harry")))
+     (omnivox-parameters-test--tick (plist-get (emacsvox-aural-voice-engine-controls--state) :retry))
+     (should (= 1 (length omnivox-parameters-test--writes)))
+     (should (eq (plist-get (plist-get (emacsvox-aural-voice-engine-controls--state) :result) :status) 'stale)))))
+
 (ert-deftest emacsvox-engine-controls-open-is-async-and-does-not-sample ()
   (emacsvox-test--with-engine-controls
    (should (string-match-p "Checking engine controls" (buffer-string)))
@@ -162,6 +229,45 @@
        (emacsvox-aural-voice-engine-controls--edit descriptor)))
    (should (equal (emacsvox-aural-voice-engine-controls--operation "ri") '(:op set :value 83)))
    (should-not requests)))
+
+(ert-deftest emacsvox-engine-controls-graphical-edit-after-reading-prompt ()
+  "Reading the prompt with arrows must not prevent accepting a value."
+  (skip-unless (display-graphic-p))
+  (require 'package)
+  (package-initialize)
+  (require 'vertico)
+  (require 'emacsvox-vertico)
+  (require 'emacsvox-advice)
+  (let ((original-vertico-mode vertico-mode)
+        (real-run-at-time (symbol-function 'run-at-time))
+        (real-timerp (symbol-function 'timerp))
+        (real-accept-process-output (symbol-function 'accept-process-output))
+        (real-cancel-timer (symbol-function 'cancel-timer)))
+    (unwind-protect
+        (progn
+          (vertico-mode 1)
+          (emacsvox-test--with-engine-controls
+           (emacsvox-engine-controls-test--ready)
+           (emacsvox-aural-voice-editor--locate '(parameter "ri"))
+           (let* ((prompts 0)
+                  (vertico-sort-function nil)
+                  (minibuffer-setup-hook
+                   (cons (lambda ()
+                           (cl-incf prompts)
+                           (setq unread-command-events
+                                 (listify-key-sequence
+                                  (kbd (if (= prompts 1) "<left> <left> RET C-g" "8 3 RET")))))
+                         minibuffer-setup-hook)))
+             (cl-letf (((symbol-function 'run-at-time) real-run-at-time)
+                       ((symbol-function 'timerp) real-timerp)
+                       ((symbol-function 'accept-process-output) real-accept-process-output)
+                       ((symbol-function 'process-send-string) #'ignore)
+                       ((symbol-function 'cancel-timer) real-cancel-timer))
+               (call-interactively (key-binding (kbd "<right>"))))
+             (should (= prompts 2))
+             (should (equal (emacsvox-aural-voice-engine-controls--operation "ri") '(:op set :value 83)))
+             (should (equal (get-text-property (point) 'voice-field) '(parameter "ri"))))))
+      (vertico-mode (if original-vertico-mode 1 -1)))))
 
 (ert-deftest emacsvox-engine-controls-help-is-spoken-and-returns-to-parameter ()
   (emacsvox-test--with-engine-controls

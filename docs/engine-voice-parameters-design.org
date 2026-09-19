@@ -1558,3 +1558,37 @@ The existing unsaved experiment, including its baseline, edits and undo history,
 was copied unchanged into that window; the original session remains open.
 Automatic samples were enabled. This UI change reuses the verified development
 runtime without replacing any server binaries.
+
+* Implementation progress: controls while the interface is speaking
+
+Live Eloquence navigation exposed a missing recovery step: the first catalogue
+request could encounter the same engine reading interface feedback. The view
+retained that busy result until an explicit refresh, although a later refresh
+successfully exposed all eight Eloquence controls. The earlier real-runtime
+acceptance check warmed catalogues while engines were idle and missed this
+interaction.
+
+The editor now retries only busy catalogue results, with a minimum 200 ms delay
+and a five-second retry window. Retries are silent and belong to the particular
+view, voice, worker and inventory generation. Back, close and explicit refresh
+cancel the old retry; worker or voice changes reject it. The underlying
+discovery client remains a single-request API without automatic retry policy.
+The view shows when it is waiting and gives an explicit refresh action if the
+engine stays busy.
+
+The same session also exposed a completion failure: reading left into an empty
+minibuffer prompt left point inside read-only text. Vertico then tried to insert
+the selected operation there. Emacsvox's insertion advice now returns point to
+the editable input boundary before inserting. A real graphical parameter edit
+reproduced the error and now accepts the operation and numeric value, returning
+to the same parameter row.
+
+Verification passed byte-code compilation, 703 batch tests and all 34 graphical
+tests. Three graphical tests skipped in batch passed in the graphical suite.
+The Vertico batch invocation required its Flyspell integration to be loaded for
+the existing suggestion-count fixture; the complete rerun passed with that
+fixture initialized. Real DECtalk and Eloquence acceptance passed with null
+audio, and generated documentation passed the release check. The two compatible
+compiled modules were reloaded in the affected development session; its drafts
+and undo histories were unchanged. Its Eloquence editor then reported all eight
+controls ready and editable, with automatic samples enabled.

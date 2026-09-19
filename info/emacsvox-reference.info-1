@@ -5324,7 +5324,8 @@ owners.
 
  -- Command: emacsvox-aural-voice-engine-controls-refresh
 
-     Check the selected voice’s controls asynchronously, without playing speech.
+     Check controls asynchronously, retrying busy replies for up to five seconds.
+     Do not stop speech or play a sample.  Leaving this view cancels retries.
 
 2.60.1.10 emacsvox-aural-voice-engine-controls-reset-all
 ........................................................

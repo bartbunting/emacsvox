@@ -3847,9 +3847,10 @@ Save action to keep the draft.  ‘q’ returns to common settings.  _Search
 controls_ searches names, identifiers and help across collapsed groups;
 an empty search clears the filter.  _Adjusted controls only_ shows
 explicit overrides.  ‘g’ refreshes the catalogue without restarting
-speech; if the engine is busy, refresh again after speech finishes.
-Unrecognized saved settings remain visible and can be removed
-explicitly.
+speech.  If the engine is busy, the screen retries quietly for up to
+five seconds.  Leaving the screen cancels retries.  If it remains busy,
+wait for speech to finish and press ‘g’ to try again.  Unrecognized
+saved settings remain visible and can be removed explicitly.
 
    _Explain planned settings_ describes the captured draft without
 playing speech.  On a worker that supports native settings, _Details and

@@ -4323,13 +4323,13 @@ Function Index
 * emacsvox-aural-voice-engine-controls-refresh <1>: emacsvox-aural-voice-engine-controls.
                                                              (line   90)
 * emacsvox-aural-voice-engine-controls-reset-all: emacsvox-aural-voice-engine-controls.
-                                                             (line   96)
-* emacsvox-aural-voice-engine-controls-reset-all <1>: emacsvox-aural-voice-engine-controls.
                                                              (line   97)
+* emacsvox-aural-voice-engine-controls-reset-all <1>: emacsvox-aural-voice-engine-controls.
+                                                             (line   98)
 * emacsvox-aural-voice-engine-controls-search: emacsvox-aural-voice-engine-controls.
-                                                             (line  103)
-* emacsvox-aural-voice-engine-controls-search <1>: emacsvox-aural-voice-engine-controls.
                                                              (line  104)
+* emacsvox-aural-voice-engine-controls-search <1>: emacsvox-aural-voice-engine-controls.
+                                                             (line  105)
 * emacsvox-aural-voice-palette-previews-copy: emacsvox-aural-voice-palettes.
                                                              (line   23)
 * emacsvox-aural-voice-palette-previews-copy <1>: emacsvox-aural-voice-palettes.

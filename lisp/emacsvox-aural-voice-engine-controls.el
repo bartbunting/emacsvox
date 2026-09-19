@@ -70,6 +70,8 @@
   "Detach this view's query without stopping speech or other observers."
   (when-let* ((state (emacsvox-aural-voice-editor--get :engine-controls)))
     (when (plist-get state :waiter) (omnivox-parameters--cancel (plist-get state :waiter)))
+    (when (timerp (plist-get state :retry)) (cancel-timer (plist-get state :retry)))
+    (emacsvox-aural-voice-engine-controls--put :retry nil)
     (emacsvox-aural-voice-engine-controls--put :waiter nil)
     (emacsvox-aural-voice-engine-controls--put :token nil)))
 
@@ -79,8 +81,56 @@
   (when emacsvox-aural-voice-editor--context
     (emacsvox-aural-voice-editor--put :engine-controls nil)))
 
+(defun emacsvox-aural-voice-engine-controls--request (buffer state token process selector epoch deadline)
+  "Request controls for the retained view, retrying busy replies until DEADLINE."
+  (when (and (buffer-live-p buffer)
+             (with-current-buffer buffer
+               (and (eq state (emacsvox-aural-voice-editor--get :engine-controls))
+                    (eq token (plist-get state :token)))))
+    (with-current-buffer buffer
+      (emacsvox-aural-voice-engine-controls--put :retry nil)
+      (cond
+       ((not (and (eq process tts-speaker-process)
+                  (or (not (processp process)) (equal epoch (omnivox-parameters--epoch process)))
+                  (equal selector (plist-get (emacsvox-aural-voice-engine-controls--row) :selector))))
+        (emacsvox-aural-voice-engine-controls--put :result '(:status stale :message "Voice or speech connection changed; refresh controls"))
+        (emacsvox-aural-voice-engine-controls--render))
+       ((>= (float-time) deadline)
+        (emacsvox-aural-voice-engine-controls--render))
+       (t
+        (emacsvox-aural-voice-engine-controls--put
+         :waiter
+         (omnivox-parameters--request
+          process (plist-get selector :engine-id) (plist-get selector :voice-id)
+          (lambda (result)
+            (with-current-buffer buffer
+              (unless (and (eq process tts-speaker-process)
+                           (or (not (processp process)) (equal epoch (omnivox-parameters--epoch process)))
+                           (equal selector (plist-get (emacsvox-aural-voice-engine-controls--row) :selector)))
+                (setq result '(:status stale :message "Voice or speech connection changed; refresh controls")))
+              (emacsvox-aural-voice-engine-controls--put :result result)
+              (when (eq (plist-get result :status) 'ready)
+                (emacsvox-aural-voice-engine-controls--put :catalogue (plist-get result :catalogue))
+                (unless (plist-member state :expanded)
+                  (emacsvox-aural-voice-engine-controls--put
+                   :expanded (when-let* ((first (seq-first (plist-get (plist-get result :catalogue) :parameters))))
+                               (list (plist-get first :group))))))
+              (when (and (eq (plist-get result :status) 'busy) (< (float-time) deadline))
+                (emacsvox-aural-voice-engine-controls--put
+                 :retry (run-at-time
+                         (min (- deadline (float-time))
+                              (max 0.2 (/ (or (plist-get result :retry-after-ms) 200) 1000.0)))
+                         nil #'emacsvox-aural-voice-engine-controls--request
+                         buffer state token process selector epoch deadline)))
+              (emacsvox-aural-voice-engine-controls--render)))
+          (lambda () (and (buffer-live-p buffer)
+                         (with-current-buffer buffer
+                           (and (eq state (emacsvox-aural-voice-editor--get :engine-controls))
+                                (eq token (plist-get state :token)))))))))))))
+
 (defun emacsvox-aural-voice-engine-controls-refresh ()
-  "Check the selected voice's controls asynchronously, without playing speech."
+  "Check controls asynchronously, retrying busy replies for up to five seconds.
+Do not stop speech or play a sample.  Leaving this view cancels retries."
   (interactive)
   (emacsvox-aural-voice-engine-controls--cancel)
   (let* ((state (emacsvox-aural-voice-engine-controls--state))
@@ -93,27 +143,9 @@
     (emacsvox-aural-voice-engine-controls--put :selector selector)
     (emacsvox-aural-voice-engine-controls--put :result '(:status checking))
     (emacsvox-aural-voice-engine-controls--render)
-    (emacsvox-aural-voice-engine-controls--put
-     :waiter
-     (omnivox-parameters--request
-      process engine (plist-get selector :voice-id)
-      (lambda (result)
-        (with-current-buffer buffer
-          (unless (and (eq process tts-speaker-process)
-                       (equal selector (plist-get (emacsvox-aural-voice-engine-controls--row) :selector)))
-            (setq result '(:status stale :message "Voice or speech connection changed; refresh controls")))
-          (emacsvox-aural-voice-engine-controls--put :result result)
-          (when (eq (plist-get result :status) 'ready)
-            (emacsvox-aural-voice-engine-controls--put :catalogue (plist-get result :catalogue))
-            (unless (plist-member state :expanded)
-              (emacsvox-aural-voice-engine-controls--put
-               :expanded (when-let* ((first (seq-first (plist-get (plist-get result :catalogue) :parameters))))
-                           (list (plist-get first :group))))))
-          (emacsvox-aural-voice-engine-controls--render)))
-      (lambda () (and (buffer-live-p buffer)
-                     (with-current-buffer buffer
-                       (and (eq state (emacsvox-aural-voice-editor--get :engine-controls))
-                            (eq token (plist-get state :token))))))))))
+    (emacsvox-aural-voice-engine-controls--request
+     buffer state token process selector
+     (and (processp process) (omnivox-parameters--epoch process)) (+ (float-time) 5))))
 
 (defun emacsvox-aural-voice-engine-controls--value (value)
   "Describe a wire scalar VALUE without confusing false, zero and unknown."
@@ -190,7 +222,9 @@
      ((not (emacsvox-aural-voice-engine-controls--fresh-p))
       (or (plist-get result :message)
           (pcase (plist-get result :status)
-            ('checking "Checking engine controls…") ('busy "Engine busy; refresh after speech finishes")
+            ('checking "Checking engine controls…")
+            ('busy (if (plist-get state :retry) "Waiting for the engine; retrying automatically"
+                     "Engine still busy; press g to try again after speech finishes"))
             (_ "Controls are not current; refresh to edit"))))
      ((and native (not (equal (plist-get native :schema-id) (plist-get (plist-get catalogue :identity) :schema_id))))
       "Saved settings use a different schema; reset or remove them before editing")

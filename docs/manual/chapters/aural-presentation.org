@@ -1168,7 +1168,9 @@ voice, =B= to compare, and the usual Save action to keep the draft.
 =q= returns to common settings. /Search controls/ searches names, identifiers
 and help across collapsed groups; an empty search clears the filter. /Adjusted
 controls only/ shows explicit overrides. =g= refreshes the catalogue without
-restarting speech; if the engine is busy, refresh again after speech finishes.
+restarting speech. If the engine is busy, the screen retries quietly for up to
+five seconds. Leaving the screen cancels retries. If it remains busy, wait for
+speech to finish and press =g= to try again.
 Unrecognized saved settings remain visible and can be removed explicitly.
 
 /Explain planned settings/ describes the captured draft without playing speech.
