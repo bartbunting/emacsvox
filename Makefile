@@ -320,6 +320,16 @@ compiled-aural-test:
 graphical-voice-test: check-emacs bytecode-check
 	sh test/run-graphical-voice-tests.sh "$(EMACS)"
 
+BENCHMARK_PLAN ?= .benchmarks/voices.json
+BENCHMARK_PRESET ?= full
+
+.PHONY: voice-benchmark voice-benchmark-test
+voice-benchmark: check-emacs bytecode-check
+	python3 utils/voice_benchmark.py run "$(BENCHMARK_PLAN)" $(if $(BENCHMARK_OUTPUT),"$(BENCHMARK_OUTPUT)") --preset "$(BENCHMARK_PRESET)" $(if $(BENCHMARK_RESOURCES),--resources)
+
+voice-benchmark-test:
+	python3 -W error::ResourceWarning -m unittest discover -s test -p 'test_voice_benchmark.py'
+
 build-aural-test:
 	$(MAKE) -C lisp EMACS="$(EMACS)" aural
 	$(EMACS) -Q --batch -l test/verify-build-tree-aural.el

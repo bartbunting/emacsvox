@@ -49,3 +49,6 @@ sounds/pan-chimes
 
 # Maintainer voice catalogue downloads and native validation scratch.
 /.voice-catalogue-work/
+
+# Local benchmark plans, private logs and repeatable raw measurements.
+/.benchmarks/
