@@ -465,7 +465,7 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
                         (plist-get (plist-get (emacsvox-aural-voice-editor--get :policy) :fallback) :engines))))
       )
     (when chain
-      (emacsvox-aural-voice-editor--button 'engine-controls "Engine controls for a physical choice"
+      (emacsvox-aural-voice-editor--button 'engine-controls "Engine-specific settings"
                                             #'emacsvox-aural-voice-engine-controls-open))
     (insert (if tuning "\nIndividual fallback adjustments\n" "\nShared adjustments\n"))
     (when tuning

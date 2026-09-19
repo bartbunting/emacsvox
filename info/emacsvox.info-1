@@ -3818,29 +3818,38 @@ available only when its settings can be represented faithfully,
 including adapter defaults.  Saving remains available when that preview
 is unavailable.
 
-   _Engine controls for a physical choice_ opens the selected engine's
-own parameters in the same voice draft.  The available fields depend on
-what that speech worker can describe and apply.  A worker that only
-describes controls shows them read-only.  Engine-wide and startup
-settings are also read-only here; their help identifies their scope.
+   _Engine-specific settings_ opens the selected engine's own parameters
+in the same voice draft.  The available fields depend on what that
+speech worker can describe and apply.  A worker that only describes
+controls shows them read-only.  Engine-wide and startup settings are
+also read-only here; their help identifies their scope.
 
-   Actions come first, followed by expandable groups.  ‘RET’ on a
-control offers _Set value_, _Follow common settings_, _Engine voice
-default_, and _Parameter help_.  Values use the engine's units and
-limits.  Help explains the default's source, common controls that affect
-the parameter, and reported side effects.  ‘i’ removes an override; ‘d’
-requests the engine voice default.  _Reset this choice's engine
-controls_ removes its native overrides while preserving common
-adjustments and other choices.  ‘u’ undoes these edits.
+   Actions come first, followed by expandable groups with columns for
+parameter, value, source, and range.  ‘RET’ on a control offers _Set
+value_, _Follow common settings_, _Engine voice default_, and _Parameter
+help_.  Values use the engine's units and limits.  Help explains the
+default's source, common controls that affect the parameter, and
+reported side effects.  Press ‘?’ on a parameter to open and hear its
+help; ‘q’ returns to that row.  Left/right changes a set numeric value
+by the engine's step, within its limits.  For an inherited value or an
+unknown default, first choose a value with ‘RET’; the editor does not
+guess the engine's current setting.  ‘i’ removes an override; ‘d’
+requests the engine voice default.  _Reset engine-specific settings_
+removes its native overrides while preserving common adjustments and
+other choices.  ‘u’ undoes these edits.
 
-   Engine-control edits never play an automatic sample.  Use ‘P’ to
-preview the selected choice, ‘B’ to compare, and the usual Save action
-to keep the draft.  ‘q’ returns to common settings.  _Search controls_
-searches names, identifiers and help across collapsed groups; an empty
-search clears the filter.  _Adjusted controls only_ shows explicit
-overrides.  ‘g’ refreshes the catalogue without restarting speech; if
-the engine is busy, refresh again after speech finishes.  Unrecognized
-saved settings remain visible and can be removed explicitly.
+   An automatic sample follows adjustments, with the parameter and value
+spoken before the sample.  _Automatic sample after adjustment_ controls
+this behavior and shares its setting with the common editor.  Opening,
+searching, refreshing, and asking for help do not play a voice sample.
+Use ‘P’ to preview the selected voice, ‘B’ to compare, and the usual
+Save action to keep the draft.  ‘q’ returns to common settings.  _Search
+controls_ searches names, identifiers and help across collapsed groups;
+an empty search clears the filter.  _Adjusted controls only_ shows
+explicit overrides.  ‘g’ refreshes the catalogue without restarting
+speech; if the engine is busy, refresh again after speech finishes.
+Unrecognized saved settings remain visible and can be removed
+explicitly.
 
    _Explain planned settings_ describes the captured draft without
 playing speech.  On a worker that supports native settings, _Details and

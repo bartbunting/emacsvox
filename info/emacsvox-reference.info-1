@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1558 commands and 217 options.
+   This chapter documents a total of 1561 commands and 217 options.
 
 * Menu:
 
@@ -5253,21 +5253,42 @@ owners.
 
      Return to common settings, keeping the same draft and selected choice.
 
-2.60.1.2 emacsvox-aural-voice-engine-controls-default
+2.60.1.2 emacsvox-aural-voice-engine-controls-decrease
+......................................................
+
+ -- Command: emacsvox-aural-voice-engine-controls-decrease
+
+     Decrease the selected native parameter by one engine step.
+
+2.60.1.3 emacsvox-aural-voice-engine-controls-default
 .....................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-default
 
      Request this control’s engine voice default without copying a measured value.
 
-2.60.1.3 emacsvox-aural-voice-engine-controls-inherit
+2.60.1.4 emacsvox-aural-voice-engine-controls-help
+..................................................
+
+ -- Command: emacsvox-aural-voice-engine-controls-help
+
+     Display and speak the current parameter’s help; q returns to its row.
+
+2.60.1.5 emacsvox-aural-voice-engine-controls-increase
+......................................................
+
+ -- Command: emacsvox-aural-voice-engine-controls-increase
+
+     Increase the selected native parameter by one engine step.
+
+2.60.1.6 emacsvox-aural-voice-engine-controls-inherit
 .....................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-inherit
 
      Remove this control’s override, following common settings.
 
-2.60.1.4 emacsvox-aural-voice-engine-controls-mode
+2.60.1.7 emacsvox-aural-voice-engine-controls-mode
 ..................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-mode (&optional arg)
@@ -5291,29 +5312,29 @@ owners.
 
      (fn &optional ARG)
 
-2.60.1.5 emacsvox-aural-voice-engine-controls-open
+2.60.1.8 emacsvox-aural-voice-engine-controls-open
 ..................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-open
 
      Open described engine controls for a selected physical choice in this draft.
 
-2.60.1.6 emacsvox-aural-voice-engine-controls-refresh
+2.60.1.9 emacsvox-aural-voice-engine-controls-refresh
 .....................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-refresh
 
      Check the selected voice’s controls asynchronously, without playing speech.
 
-2.60.1.7 emacsvox-aural-voice-engine-controls-reset-all
-.......................................................
+2.60.1.10 emacsvox-aural-voice-engine-controls-reset-all
+........................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-reset-all
 
      Remove only this choice’s native settings, retaining an undo step.
 
-2.60.1.8 emacsvox-aural-voice-engine-controls-search
-....................................................
+2.60.1.11 emacsvox-aural-voice-engine-controls-search
+.....................................................
 
  -- Command: emacsvox-aural-voice-engine-controls-search
 

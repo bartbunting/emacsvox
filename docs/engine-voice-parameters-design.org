@@ -1524,3 +1524,37 @@ its server and DLL selections, and deployment verification must also inspect the
 live engine catalogue. No runtime checksum guard was relaxed.
 The launcher-based check passed DECtalk and Eloquence comparisons, native
 readback, save/reload, both speech lanes and reconnect with this selection.
+
+* Implementation progress: consistent parameter editing
+
+The entry is now labelled Engine-specific settings. Parameter groups contain
+aligned parameter, value, source and range columns. Question mark opens and
+speaks parameter help through the aural Help interface; quitting Help returns
+to the same field. Help includes units and bounds as well as the adapter's
+explanation, default evidence and common mapping inputs.
+
+Native edits now honor the common editor's Automatic sample after adjustment
+setting, with the parameter and value prefixed to the sample. The shared preview
+coordinator retains cancellation and draft ownership. Following inheritance,
+requesting a default and resetting overrides use the same preview behavior.
+Opening, discovering, filtering and reading help never start a voice sample.
+Left/right adjusts an explicitly set numeric value by the descriptor's step
+within its bounds. For an inherited or otherwise unknown value, it opens the
+value prompt rather than guessing a native starting point or duplicating the
+engine's common mapping. Sparse persistence and independent voice ownership
+are unchanged.
+
+Verification passed a full byte-code rebuild, 678 batch tests and all 33
+graphical tests. Two layout tests skipped in batch passed in the graphical
+suite. The development launcher's real Windows runtime check passed automatic
+samples and native readback for DECtalk and Eloquence, original/edited
+comparison, save/reload, both speech streams and reconnect. This check uses
+null audio and does not establish what a listener hears. Generated reference
+and manual artifacts are current; the documentation release check passed.
+
+A fresh development Emacs loaded the compiled editor and showed all 28 DECtalk
+parameters as editable. Both workers acknowledged native voice registration.
+The existing unsaved experiment, including its baseline, edits and undo history,
+was copied unchanged into that window; the original session remains open.
+Automatic samples were enabled. This UI change reuses the verified development
+runtime without replacing any server binaries.

@@ -69,7 +69,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1558 commands and 217 options.
+This chapter documents a total of 1561 commands and 217 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -5704,12 +5704,39 @@ Return to common settings, keeping the same draft and selected choice.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-voice-engine-controls-decrease
+@deffn {Command} emacsvox-aural-voice-engine-controls-decrease
+@findex emacsvox-aural-voice-engine-controls-decrease
+
+@format
+Decrease the selected native parameter by one engine step.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-voice-engine-controls-default
 @deffn {Command} emacsvox-aural-voice-engine-controls-default
 @findex emacsvox-aural-voice-engine-controls-default
 
 @format
 Request this control’s engine voice default without copying a measured value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-engine-controls-help
+@deffn {Command} emacsvox-aural-voice-engine-controls-help
+@findex emacsvox-aural-voice-engine-controls-help
+
+@format
+Display and speak the current parameter’s help; q returns to its row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-engine-controls-increase
+@deffn {Command} emacsvox-aural-voice-engine-controls-increase
+@findex emacsvox-aural-voice-engine-controls-increase
+
+@format
+Increase the selected native parameter by one engine step.
 @end format
 @end deffn
 

@@ -3821,22 +3821,30 @@ require per-choice support; an individual audition is available only when its
 settings can be represented faithfully@comma{} including adapter defaults. Saving
 remains available when that preview is unavailable.
 
-@emph{Engine controls for a physical choice} opens the selected engine's own
+@emph{Engine-specific settings} opens the selected engine's own
 parameters in the same voice draft. The available fields depend on what that
 speech worker can describe and apply. A worker that only describes controls
 shows them read-only. Engine-wide and startup settings are also read-only here;
 their help identifies their scope.
 
-Actions come first@comma{} followed by expandable groups. @samp{RET} on a control offers
+Actions come first@comma{} followed by expandable groups with columns for parameter@comma{}
+value@comma{} source@comma{} and range. @samp{RET} on a control offers
 @emph{Set value}@comma{} @emph{Follow common settings}@comma{} @emph{Engine voice default}@comma{} and @emph{Parameter
 help}. Values use the engine's units and limits. Help explains the default's
 source@comma{} common controls that affect the parameter@comma{} and reported side effects.
-@samp{i} removes an override; @samp{d} requests the engine voice default. @emph{Reset this
-choice's engine controls} removes its native overrides while preserving common
+Press @samp{?} on a parameter to open and hear its help; @samp{q} returns to that row.
+Left/right changes a set numeric value by the engine's step@comma{} within its limits.
+For an inherited value or an unknown default@comma{} first choose a value with @samp{RET};
+the editor does not guess the engine's current setting.
+@samp{i} removes an override; @samp{d} requests the engine voice default. @emph{Reset
+engine-specific settings} removes its native overrides while preserving common
 adjustments and other choices. @samp{u} undoes these edits.
 
-Engine-control edits never play an automatic sample. Use @samp{P} to preview the
-selected choice@comma{} @samp{B} to compare@comma{} and the usual Save action to keep the draft.
+An automatic sample follows adjustments@comma{} with the parameter and value spoken
+before the sample. @emph{Automatic sample after adjustment} controls this behavior
+and shares its setting with the common editor. Opening@comma{} searching@comma{} refreshing@comma{}
+and asking for help do not play a voice sample. Use @samp{P} to preview the selected
+voice@comma{} @samp{B} to compare@comma{} and the usual Save action to keep the draft.
 @samp{q} returns to common settings. @emph{Search controls} searches names@comma{} identifiers
 and help across collapsed groups; an empty search clears the filter. @emph{Adjusted
 controls only} shows explicit overrides. @samp{g} refreshes the catalogue without

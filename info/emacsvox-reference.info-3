@@ -4290,34 +4290,46 @@ Function Index
                                                              (line   16)
 * emacsvox-aural-voice-engine-controls-back <1>: emacsvox-aural-voice-engine-controls.
                                                              (line   17)
-* emacsvox-aural-voice-engine-controls-default: emacsvox-aural-voice-engine-controls.
+* emacsvox-aural-voice-engine-controls-decrease: emacsvox-aural-voice-engine-controls.
                                                              (line   23)
-* emacsvox-aural-voice-engine-controls-default <1>: emacsvox-aural-voice-engine-controls.
+* emacsvox-aural-voice-engine-controls-decrease <1>: emacsvox-aural-voice-engine-controls.
                                                              (line   24)
-* emacsvox-aural-voice-engine-controls-inherit: emacsvox-aural-voice-engine-controls.
+* emacsvox-aural-voice-engine-controls-default: emacsvox-aural-voice-engine-controls.
                                                              (line   30)
-* emacsvox-aural-voice-engine-controls-inherit <1>: emacsvox-aural-voice-engine-controls.
+* emacsvox-aural-voice-engine-controls-default <1>: emacsvox-aural-voice-engine-controls.
                                                              (line   31)
-* emacsvox-aural-voice-engine-controls-mode: emacsvox-aural-voice-engine-controls.
+* emacsvox-aural-voice-engine-controls-help: emacsvox-aural-voice-engine-controls.
                                                              (line   37)
-* emacsvox-aural-voice-engine-controls-mode <1>: emacsvox-aural-voice-engine-controls.
+* emacsvox-aural-voice-engine-controls-help <1>: emacsvox-aural-voice-engine-controls.
                                                              (line   38)
+* emacsvox-aural-voice-engine-controls-increase: emacsvox-aural-voice-engine-controls.
+                                                             (line   44)
+* emacsvox-aural-voice-engine-controls-increase <1>: emacsvox-aural-voice-engine-controls.
+                                                             (line   45)
+* emacsvox-aural-voice-engine-controls-inherit: emacsvox-aural-voice-engine-controls.
+                                                             (line   51)
+* emacsvox-aural-voice-engine-controls-inherit <1>: emacsvox-aural-voice-engine-controls.
+                                                             (line   52)
+* emacsvox-aural-voice-engine-controls-mode: emacsvox-aural-voice-engine-controls.
+                                                             (line   58)
+* emacsvox-aural-voice-engine-controls-mode <1>: emacsvox-aural-voice-engine-controls.
+                                                             (line   59)
 * emacsvox-aural-voice-engine-controls-open: emacsvox-aural-voice-engine-controls.
-                                                             (line   61)
-* emacsvox-aural-voice-engine-controls-open <1>: emacsvox-aural-voice-engine-controls.
-                                                             (line   62)
-* emacsvox-aural-voice-engine-controls-refresh: emacsvox-aural-voice-engine-controls.
-                                                             (line   68)
-* emacsvox-aural-voice-engine-controls-refresh <1>: emacsvox-aural-voice-engine-controls.
-                                                             (line   69)
-* emacsvox-aural-voice-engine-controls-reset-all: emacsvox-aural-voice-engine-controls.
-                                                             (line   75)
-* emacsvox-aural-voice-engine-controls-reset-all <1>: emacsvox-aural-voice-engine-controls.
-                                                             (line   76)
-* emacsvox-aural-voice-engine-controls-search: emacsvox-aural-voice-engine-controls.
                                                              (line   82)
-* emacsvox-aural-voice-engine-controls-search <1>: emacsvox-aural-voice-engine-controls.
+* emacsvox-aural-voice-engine-controls-open <1>: emacsvox-aural-voice-engine-controls.
                                                              (line   83)
+* emacsvox-aural-voice-engine-controls-refresh: emacsvox-aural-voice-engine-controls.
+                                                             (line   89)
+* emacsvox-aural-voice-engine-controls-refresh <1>: emacsvox-aural-voice-engine-controls.
+                                                             (line   90)
+* emacsvox-aural-voice-engine-controls-reset-all: emacsvox-aural-voice-engine-controls.
+                                                             (line   96)
+* emacsvox-aural-voice-engine-controls-reset-all <1>: emacsvox-aural-voice-engine-controls.
+                                                             (line   97)
+* emacsvox-aural-voice-engine-controls-search: emacsvox-aural-voice-engine-controls.
+                                                             (line  103)
+* emacsvox-aural-voice-engine-controls-search <1>: emacsvox-aural-voice-engine-controls.
+                                                             (line  104)
 * emacsvox-aural-voice-palette-previews-copy: emacsvox-aural-voice-palettes.
                                                              (line   23)
 * emacsvox-aural-voice-palette-previews-copy <1>: emacsvox-aural-voice-palettes.

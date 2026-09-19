@@ -139,6 +139,32 @@
               (format "; read only%s" (if (equal (plist-get descriptor :scope) "voice") ""
                                         (concat "; " (plist-get descriptor :scope) " setting")))))))
 
+(defun emacsvox-aural-voice-engine-controls--range (descriptor)
+  "Return the described value range for DESCRIPTOR."
+  (let ((type (plist-get descriptor :value_type)))
+    (pcase (plist-get type :kind)
+      ((or "integer" "number") (format "%s to %s" (plist-get type :minimum) (plist-get type :maximum)))
+      ("boolean" "true / false")
+      ("enum" (format "%d choices" (length (plist-get type :choices))))
+      (_ "Not reported"))))
+
+(defun emacsvox-aural-voice-engine-controls--table-row (descriptor)
+  "Format DESCRIPTOR as parameter, value, source and range columns."
+  (let* ((operation (emacsvox-aural-voice-engine-controls--operation (plist-get descriptor :id)))
+         (unit (plist-get descriptor :unit))
+         (value (if (eq (plist-get operation :op) 'set)
+                    (concat (emacsvox-aural-voice-engine-controls--value
+                             (if (null (plist-get operation :value)) :false (plist-get operation :value)))
+                            (if (eq unit :null) "" (concat " " unit)))
+                  "—"))
+         (source (pcase (plist-get operation :op)
+                   ('set "Adjusted here") ('default "Voice default") (_ "Common settings"))))
+    (format "%-26s %-18s %-22s %s%s"
+            (plist-get descriptor :label) value source
+            (emacsvox-aural-voice-engine-controls--range descriptor)
+            (if (emacsvox-aural-voice-engine-controls--editable-p descriptor) ""
+              (concat "; read only; " (plist-get descriptor :scope))))))
+
 (defun emacsvox-aural-voice-engine-controls--toggle (key &optional group)
   "Toggle view KEY, optionally the expanded GROUP."
   (let ((old (plist-get (emacsvox-aural-voice-engine-controls--state) key)))
@@ -185,11 +211,10 @@
          (groups (delete-dups (mapcar (lambda (d) (plist-get d :group)) descriptors)))
          (inhibit-read-only t))
     (erase-buffer)
-    (insert (format "%s — %s\nEngine controls: %s; choice %s\n%s\n\n"
+    (insert (format "%s — %s\nEngine-specific settings: %s\n%s\n\n"
                     (or (emacsvox-aural-voice-editor--get :voice) "Voice experiment")
                     (emacsvox-aural-voice-editor--get :palette)
                     (if row (emacsvox-aural-voice-workbench--selector-description (plist-get row :selector)) "Choice removed")
-                    (plist-get state :choice)
                     (plist-get (emacsvox-aural-voice-drafts--status (emacsvox-aural-voice-editor--draft)) :label)))
     (dolist (action '((play "Preview this choice" emacsvox-aural-voice-editor-play)
                       (compare "Compare original and edited choice" emacsvox-aural-voice-editor-compare)
@@ -203,7 +228,10 @@
     (emacsvox-aural-voice-editor--button 'changed
       (format "Adjusted controls only: %s" (if changed "on" "off"))
       (lambda () (emacsvox-aural-voice-engine-controls--toggle :changed)))
-    (emacsvox-aural-voice-editor--button 'reset "Reset this choice's engine controls" #'emacsvox-aural-voice-engine-controls-reset-all)
+    (emacsvox-aural-voice-editor--button 'auto-sample
+      (format "Automatic sample after adjustment: %s" (if (emacsvox-aural-voice-editor--get :automatic-sample) "on" "off"))
+      (lambda () (emacsvox-aural-voice-editor--toggle :automatic-sample 'auto-sample)))
+    (emacsvox-aural-voice-editor--button 'reset "Reset engine-specific settings" #'emacsvox-aural-voice-engine-controls-reset-all)
     (emacsvox-aural-voice-editor--button 'effective "Explain planned settings"
       (lambda () (emacsvox-aural-voice-editor--explain emacsvox-aural-voice-editor--context nil)))
     (emacsvox-aural-voice-editor--button 'status
@@ -212,7 +240,7 @@
       (emacsvox-aural-voice-editor--button 'preview-status
         (emacsvox-aural-voice-editor--preview-status (emacsvox-aural-voice-editor--get :preview-result))
         #'emacsvox-aural-voice-editor-speak))
-    (insert "\nRET edits or describes a control. i follows common settings; d requests the engine voice default.\nEdits affect the draft. P previews explicitly; u undoes.\n")
+    (insert "\nRET edits; left/right adjusts a set numeric value; ? reads parameter help.\ni follows common settings; d requests the voice default; u undoes. P plays a sample.\n")
     (unless (string-empty-p filter) (insert (format "Search: %s\n" filter)))
     (dolist (group groups)
       (let* ((members (cl-remove-if-not
@@ -230,9 +258,10 @@
                       (if expanded "Expanded" "Collapsed") (length members))
               (lambda () (emacsvox-aural-voice-engine-controls--toggle :expanded group))))
           (when expanded
+            (insert (format "  %-26s %-18s %-22s %s\n" "Parameter" "Value" "Source" "Range"))
             (dolist (descriptor members)
               (emacsvox-aural-voice-editor--button (list 'parameter (plist-get descriptor :id))
-                (emacsvox-aural-voice-engine-controls--summary descriptor)
+                (emacsvox-aural-voice-engine-controls--table-row descriptor)
                 (lambda () (emacsvox-aural-voice-engine-controls--edit descriptor))))))))
     (dolist (operation (plist-get native :parameters))
       (when (and (not (cl-find (car operation) descriptors :test #'equal :key (lambda (d) (plist-get d :id))))
@@ -242,7 +271,7 @@
             (format "%s: saved adjustment; not described here; RET removes it" id)
             (lambda () (emacsvox-aural-voice-engine-controls--apply id 'inherit))))))
     (unless descriptors (insert "No described controls available.\n"))
-    (setq header-line-format "Engine controls | P preview | w save | u undo | q common settings")
+    (setq header-line-format "Engine-specific settings | ? help | P preview | w save | q common settings")
     (emacsvox-aural-voice-editor--locate field)
     (when window (set-window-start window (min (or start 1) (point-max))))))
 
@@ -253,19 +282,36 @@
          (inputs (delete-dups (cl-loop for mapping across (plist-get catalogue :mappings)
                                       when (member (plist-get descriptor :id) (append (plist-get mapping :native_outputs) nil))
                                       append (append (plist-get mapping :common_inputs) nil)))))
-    (with-help-window "*Engine control help*"
-      (princ (format "%s\n%s\n\nScope: %s.\nDefault: %s; source: %s.\nCommon inputs: %s.\nSide effects: %s.\nAvailability: %s%s.\n"
-                     (plist-get descriptor :label) (plist-get descriptor :help) (plist-get descriptor :scope)
+    (emacsvox-aural-voice-editor-stop)
+    (let ((help-window-select t))
+      (emacsvox-aural-ui-with-help-window
+       (princ (format "%s\n%s\n\nRange: %s%s.\nScope: %s.\nDefault: %s; source: %s.\nCommon inputs: %s.\nSide effects: %s.\nAvailability: %s%s.\n"
+                     (plist-get descriptor :label) (plist-get descriptor :help)
+                     (emacsvox-aural-voice-engine-controls--range descriptor)
+                     (if (eq (plist-get descriptor :unit) :null) "" (concat " " (plist-get descriptor :unit)))
+                     (plist-get descriptor :scope)
                      (emacsvox-aural-voice-engine-controls--value (plist-get default :value))
                      (replace-regexp-in-string "_" " " (plist-get default :source))
                      (if inputs (string-join inputs ", ") "none reported")
                      (if (> (length (plist-get descriptor :side_effects)) 0) (string-join (append (plist-get descriptor :side_effects) nil) ", ") "none reported")
                      (plist-get (plist-get descriptor :availability) :status)
                      (let ((reason (plist-get (plist-get descriptor :availability) :reason)))
-                       (if (eq reason :null) "" (concat "; " reason))))))))
+                       (if (eq reason :null) "" (concat "; " reason)))))))
+    (with-current-buffer (help-buffer)
+      (emacsvox-aural-ui-speak (buffer-substring-no-properties (point-min) (point-max))))))
+
+(defun emacsvox-aural-voice-engine-controls-help ()
+  "Display and speak the current parameter's help; q returns to its row."
+  (interactive)
+  (let* ((field (get-text-property (point) 'voice-field))
+         (descriptor (and (eq (car-safe field) 'parameter)
+                          (cl-find (cadr field) (plist-get (plist-get (emacsvox-aural-voice-engine-controls--state) :catalogue) :parameters)
+                                   :test #'equal :key (lambda (d) (plist-get d :id))))))
+    (if descriptor (emacsvox-aural-voice-engine-controls--describe descriptor)
+      (user-error "Choose a parameter row for help"))))
 
 (defun emacsvox-aural-voice-engine-controls--apply (id operation &optional value)
-  "Apply OPERATION and VALUE to ID in the shared draft, with no automatic sample."
+  "Apply OPERATION and VALUE to ID, honoring the editor's automatic sample option."
   (let* ((state (emacsvox-aural-voice-engine-controls--state))
          (catalogue (plist-get state :catalogue)) (snapshot (emacsvox-aural-voice-editor--working))
          (row (emacsvox-aural-voice-engine-controls--row)) (native (plist-get row :native))
@@ -285,9 +331,11 @@
                         (or (plist-get native :engine-id) (plist-get catalogue :engine-id))
                         (or (plist-get native :schema-id) (plist-get (plist-get catalogue :identity) :schema_id))
                         id operation value)))
-      (emacsvox-aural-voice-editor-stop)
-      (emacsvox-aural-voice-drafts--edit (emacsvox-aural-voice-editor--draft) snapshot))
-    (emacsvox-aural-voice-engine-controls--render)))
+      (unless (equal snapshot (emacsvox-aural-voice-editor--working))
+        (emacsvox-aural-voice-editor--changed
+         snapshot (format "%s, %s" (or (plist-get descriptor :label) id)
+                          (pcase operation ('inherit "common settings") ('default "voice default")
+                                 (_ (emacsvox-aural-voice-engine-controls--value (if (null value) :false value))))))))))
 
 (defun emacsvox-aural-voice-engine-controls--edit (descriptor)
   "Read DESCRIPTOR's operation with completion and stale-input checks."
@@ -318,24 +366,55 @@
       (if (equal operation "Parameter help") (emacsvox-aural-voice-engine-controls--describe descriptor)
         (emacsvox-aural-voice-engine-controls--apply id
           (pcase operation ("Set value" 'set) ("Engine voice default" 'default)
-                 ("Follow common settings" 'inherit) (_ (user-error "Choose an editing operation"))) value)
-        (emacsvox-aural-voice-editor-speak)))))
+                 ("Follow common settings" 'inherit) (_ (user-error "Choose an editing operation"))) value)))))
 
 (defun emacsvox-aural-voice-engine-controls-inherit ()
   "Remove this control's override, following common settings."
   (interactive)
   (let ((field (get-text-property (point) 'voice-field)))
     (unless (eq (car-safe field) 'parameter) (user-error "Choose an engine control"))
-    (emacsvox-aural-voice-engine-controls--apply (cadr field) 'inherit)
-    (emacsvox-aural-voice-editor-speak)))
+    (emacsvox-aural-voice-engine-controls--apply (cadr field) 'inherit)))
 
 (defun emacsvox-aural-voice-engine-controls-default ()
   "Request this control's engine voice default without copying a measured value."
   (interactive)
   (let ((field (get-text-property (point) 'voice-field)))
     (unless (eq (car-safe field) 'parameter) (user-error "Choose an engine control"))
-    (emacsvox-aural-voice-engine-controls--apply (cadr field) 'default)
-    (emacsvox-aural-voice-editor-speak)))
+    (emacsvox-aural-voice-engine-controls--apply (cadr field) 'default)))
+
+(defun emacsvox-aural-voice-engine-controls--adjust (delta)
+  "Adjust the current numeric parameter by DELTA engine steps."
+  (let* ((field (get-text-property (point) 'voice-field))
+         (descriptor (and (eq (car-safe field) 'parameter)
+                          (cl-find (cadr field) (plist-get (plist-get (emacsvox-aural-voice-engine-controls--state) :catalogue) :parameters)
+                                   :test #'equal :key (lambda (d) (plist-get d :id)))))
+         (operation (and descriptor (emacsvox-aural-voice-engine-controls--operation (cadr field))))
+         (type (plist-get descriptor :value_type)))
+    (cond
+     ((not descriptor) (emacsvox-aural-voice-editor--move-field delta))
+     ((not (emacsvox-aural-voice-engine-controls--editable-p descriptor))
+      (user-error "This parameter is read only; press ? for help"))
+     ((not (and (member (plist-get type :kind) '("integer" "number"))
+                (eq (plist-get operation :op) 'set)))
+      ;; An inherited or unknown default value must not be guessed from a bound.
+      (emacsvox-aural-voice-engine-controls--edit descriptor))
+     (t
+      (let* ((current (plist-get operation :value))
+             (step (plist-get type :step))
+             (next (max (plist-get type :minimum)
+                        (min (plist-get type :maximum) (+ current (* delta (if (numberp step) step 1)))))))
+        (if (= current next)
+            (progn (emacsvox-aural-voice-editor-stop)
+                   (emacsvox-aural-ui-speak (format "%s %s" (if (> delta 0) "Maximum" "Minimum") next)))
+          (emacsvox-aural-voice-engine-controls--apply (cadr field) 'set next)))))))
+
+(defun emacsvox-aural-voice-engine-controls-increase ()
+  "Increase the selected native parameter by one engine step."
+  (interactive) (emacsvox-aural-voice-engine-controls--adjust 1))
+
+(defun emacsvox-aural-voice-engine-controls-decrease ()
+  "Decrease the selected native parameter by one engine step."
+  (interactive) (emacsvox-aural-voice-engine-controls--adjust -1))
 
 (defun emacsvox-aural-voice-engine-controls-reset-all ()
   "Remove only this choice's native settings, retaining an undo step."
@@ -348,9 +427,8 @@
           (mapcar (lambda (choice)
                     (when (equal id (plist-get choice :id)) (cl-remf choice :native)) choice)
                   (plist-get snapshot :choices)))
-    (emacsvox-aural-voice-editor-stop)
-    (emacsvox-aural-voice-drafts--edit (emacsvox-aural-voice-editor--draft) snapshot)
-    (emacsvox-aural-voice-engine-controls--render)))
+    (unless (equal snapshot (emacsvox-aural-voice-editor--working))
+      (emacsvox-aural-voice-editor--changed snapshot "Engine-specific settings reset"))))
 
 (defun emacsvox-aural-voice-engine-controls-back ()
   "Return to common settings, keeping the same draft and selected choice."
@@ -369,6 +447,9 @@
             (dolist (pair '(("q" . emacsvox-aural-voice-engine-controls-back)
                             ("g" . emacsvox-aural-voice-engine-controls-refresh)
                             ("/" . emacsvox-aural-voice-engine-controls-search)
+                            ("?" . emacsvox-aural-voice-engine-controls-help)
+                            ("<right>" . emacsvox-aural-voice-engine-controls-increase)
+                            ("<left>" . emacsvox-aural-voice-engine-controls-decrease)
                             ("i" . emacsvox-aural-voice-engine-controls-inherit)
                             ("d" . emacsvox-aural-voice-engine-controls-default)))
               (define-key map (kbd (car pair)) (cdr pair))) map))
@@ -380,7 +461,7 @@
          (rows (emacsvox-aural-voice-editing--rows snapshot))
          (id (or (emacsvox-aural-voice-editor--get :tuning-choice)
                  (and (= (length rows) 1) (plist-get (car rows) :id))
-                 (emacsvox-aural-voice-editor--read-choice snapshot "Engine controls for choice: ")))
+                 (emacsvox-aural-voice-editor--read-choice snapshot "Voice for engine-specific settings: ")))
          (row (cl-find id rows :test #'equal :key (lambda (r) (plist-get r :id)))))
     (unless (plist-get (plist-get row :selector) :engine-id) (user-error "Choose a physical voice with a specific engine first"))
     (emacsvox-aural-voice-engine-controls--cancel)
