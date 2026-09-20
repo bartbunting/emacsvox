@@ -932,6 +932,7 @@
           (((symbol-function 'emacsvox-aural-capture-context) #'ignore)
            ((symbol-function 'quit-window)
             (lambda (&optional _kill _window) (setq dismissed t)))
+           ((symbol-function 'tts-speak) #'ignore)
            ((symbol-function 'emacsvox-icon) #'ignore)
            ((symbol-function 'emacsvox-speak-mode-line) #'ignore))
         (emacsvox-aural-quit))

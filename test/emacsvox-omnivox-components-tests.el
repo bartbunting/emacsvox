@@ -503,7 +503,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                           (let ((deadline (+ (float-time) 5)))
                             (while (and emacsvox-omnivox-components--process
                                         (< (float-time) deadline))
-                              (accept-process-output process 0.05)))
+                              (accept-process-output nil 0.05)))
                           (should-not emacsvox-omnivox-components--process)
                           (should (equal (aref (tabulated-list-get-entry) 1)
                                          "Not checked"))
@@ -640,9 +640,13 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                    (emacsvox-omnivox-components--start
                     '(:id "flite" :name "Flite")
                     'uninstallation '("--uninstall" "flite"))))
-              (while (process-live-p process)
-                (accept-process-output process 0.1))
-              (accept-process-output process 0.1)
+              (let ((deadline (+ (float-time) 3)))
+                ;; Service stderr as well as stdout before expecting the
+                ;; completion sentinel to restore the stopped speech stream.
+                (while (and emacsvox-omnivox-components--process
+                            (< (float-time) deadline))
+                  (accept-process-output nil 0.05)))
+              (should-not emacsvox-omnivox-components--process)
               (should restarted))))
       (when (buffer-live-p output)
         (kill-buffer output)))))
@@ -1029,11 +1033,10 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
             (let ((emacsvox-omnivox-component-installer program))
               (emacsvox-omnivox-components-refresh)
               (emacsvox-omnivox-components--request-records)
-              (let ((process emacsvox-omnivox-components--listing-process)
-                    (deadline (+ (float-time) 3)))
+              (let ((deadline (+ (float-time) 3)))
                 (while (and emacsvox-omnivox-components--listing-process
                             (< (float-time) deadline))
-                  (accept-process-output process 0.05)))
+                  (accept-process-output nil 0.05)))
               (should-not emacsvox-omnivox-components--listing-process)
               (should (string-search "unsupported-platform" emacsvox-omnivox-components--listing-error))
               (should (equal (aref (tabulated-list-get-entry) 1) "Available"))))
@@ -1089,11 +1092,10 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
               (emacsvox-omnivox-components-refresh)
               (emacsvox-omnivox-components--request-records)
               (should (processp emacsvox-omnivox-components--listing-process))
-              (let ((process emacsvox-omnivox-components--listing-process)
-                    (deadline (+ (float-time) 3)))
+              (let ((deadline (+ (float-time) 3)))
                 (while (and emacsvox-omnivox-components--listing-process
                             (< (float-time) deadline))
-                  (accept-process-output process 0.05)))
+                  (accept-process-output nil 0.05)))
               (should-not emacsvox-omnivox-components--listing-process)
               (should-not emacsvox-omnivox-components--listing-error)
               ;; The explanatory prototype row survives the background listing.

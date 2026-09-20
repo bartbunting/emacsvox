@@ -51,7 +51,8 @@
     (with-temp-buffer
       (setq buffer-file-name
             (expand-file-name "emacsvox-test-outside.el"
-                              temporary-file-directory))
+                              (file-name-directory
+                               (directory-file-name emacsvox-directory))))
       (emacs-lisp-mode)
       (should-not outline-minor-mode))))
 
