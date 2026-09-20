@@ -1,0 +1,119 @@
+#+title: Preferred-engine preparation: snapshot reuse
+#+date: 2026-09-20
+
+* Result
+
+With a copy of the maintainer's saved palette, the preferred-engine command's
+median return time fell from 328 ms to 17 ms. Confirmation from both speech
+workers fell from 369 ms to 69 ms. These are matched fresh-Emacs measurements,
+not a claim that the previously observed 2.8-second live pause was remeasured
+in that same running session.
+
+| Final comparison, milliseconds | Before median | After median | Before p95 | After p95 |
+|--------------------------------+---------------+--------------+------------+-----------|
+| Preferred-engine command return |       327.844 |       17.364 |    349.730 |    40.945 |
+| Both streams acknowledged       |       368.551 |       69.047 |    409.840 |    76.691 |
+| Editor navigation command       |         2.024 |        2.104 |      3.706 |     3.302 |
+| Common preview command          |         0.618 |        0.588 |      0.927 |     0.865 |
+
+Each final condition contains 24 measured iterations after three warm-ups.
+There were 81 logical voice definitions per stream. The maximum engine-command
+time was 355.640 ms before and 42.619 ms after; maximum acknowledgement time was
+429.482 ms before and 87.682 ms after.
+
+Across the whole repeated workload, including warm-ups, editor operations and
+previews, Emacs CPU time fell from 10.19 to 1.84 seconds. Garbage collections
+fell from 90 to 20 and their elapsed time from 2.10 to 0.41 seconds. These
+figures describe temporary allocation and work, not reduced resident engine
+memory. One editor-navigation observation after the change took 18.732 ms;
+there is no claimed editor-navigation or ordinary-speech speedup in this slice.
+
+* Cause and implementation
+
+Registration repeatedly resolved palette inheritance and compiled the complete
+palette while obtaining each logical voice's definition, aliases and physical
+choices. It then repeated the work for the other stream. Profiling the older
+live session found 520 palette compilations in one stream's registration
+preparation, accounting for approximately 1.23 of its 1.27 seconds.
+
+Commit =cd2c66215= adds a private snapshot of validated effective entries, local
+choice sets, aliases and workstation policy. Synchronous preparation shares
+that snapshot across both registrations. Pre-apply validation also uses one
+snapshot for its traversal. Each returned definition remains independent.
+
+The snapshot binding ends before any request write can dispatch a callback.
+Nested operations capture fresh state; explicit queries for another palette
+or a staged profile retain their own inputs. Ownership, portable-choice
+agreement, schema compatibility and native-parameter checks remain active.
+Library recovery can reuse its complete frozen registrations without reading
+current palette data. Empty process lists retain their existing failure path.
+
+Both workers still receive complete registrations in their negotiated formats
+and acknowledge them through the existing apply coordinator. Skipping unchanged
+registrations is deferred: the measured preparation improvement is substantial
+without changing acknowledgement, reconnection or partial-failure semantics.
+
+The improvement applies to preferred-engine changes, palette application and
+the registration work used during startup or reconnection. The snapshot is
+not retained between operations and is not yet extended to ordinary speech
+submission or standalone editor resolution.
+
+* Measurement method and evidence
+
+The final comparison used Emacs 31.0.90 with native JIT disabled, byte-code on
+both sides, the same Windows Omnivox development runtime =577414114415d7b0=,
+rate 225, batch Emacs and null audio. Requests exercised the actual command,
+wire protocol and both worker acknowledgements. Spoken confirmation alone was
+suppressed. The measurements do not establish acoustic onset or graphical
+minibuffer responsiveness.
+
+The baseline loaded the three changed libraries' retained byte-code from
+commit =55a310472= explicitly, while sharing the other dependencies with the
+candidate. Each worker report records the actual loaded paths and the final
+reports also record whether the measured Lisp functions were native compiled.
+They were not. Early attempts that selected the wrong libraries through
+load-path precedence were rejected and are excluded from this evidence.
+
+Four exploratory blocks used the order before, after, after, before, with
+12 measured iterations each. Their command medians were 1656.442, 88.146,
+71.318 and 375.355 ms. These overlapped other checkout work and show substantial
+timing variation. The final 24-iteration before/after pair was collected after
+those jobs finished; normal desktop activity remained possible. Every block is
+retained rather than presenting the largest initial difference as a stable
+expectation.
+
+[[file:data/2026-09-20-voice-preparation/summary.json][Summary statistics]],
+[[file:data/2026-09-20-voice-preparation/provenance.json][source and fixture provenance]], and
+[[file:data/2026-09-20-voice-preparation/SHA256SUMS][raw-report checksums]] accompany the six raw JSON reports in that directory.
+The settings-only fixture stays in the maintainer's ignored benchmark directory;
+its hash and local location are recorded, but personal settings are not published.
+
+The repeatable driver now includes =preferred_engine_apply= in
+=utils/voice-benchmark.el=. It alternates available preferred engines and
+reports command time, acknowledgement time and logical voice count. The normal
+=utils/voice_benchmark.py= runner includes this in editor/UI jobs and records
+workload version 2. Use the same driver for both comparison targets. Existing
+benchmark plan and comparison commands are documented in
+[[file:../developer/integration-maintenance.org][the integration maintenance guide]].
+
+* Verification and remaining limits
+
+- The 53 focused data, runtime, choice-registration and native-runtime tests
+  passed. Seven snapshot-specific tests also passed after final test refinements.
+- Fresh compiled aural parity checks passed, including the new snapshot tests,
+  ordinary speech consumers, mixed lane capabilities and frozen operations.
+- Fresh Emacs acceptance against the development Omnivox runtime passed native
+  previews, palette save/reload, both ordinary speech streams and reconnection.
+  Audio was null; this was not a listening test.
+- Byte-code preflight, documentation release checks and all 11 benchmark-runner
+  tests passed.
+- The broader core run reported 891 passes, one pre-existing failure and ten
+  graphical skips. The failing test is
+  =emacsvox-setup-tracks-maintained-runtime-inventory=: the unchanged startup
+  source guard omits =omnivox-espeak-variants.el=. Its source files were checked
+  against HEAD before this change. This release-gate issue remains outstanding.
+
+The development launcher already loads this checkout. Start a fresh development
+Emacs to use the compiled change; existing user sessions were not reloaded or
+restarted. No Omnivox binary, downloaded voice or saved personal setting was
+changed by this implementation.

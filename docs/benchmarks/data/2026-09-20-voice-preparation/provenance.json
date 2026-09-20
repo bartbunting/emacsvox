@@ -1,0 +1,47 @@
+{
+  "recorded_utc": "2026-09-20T01:10:27.279982+00:00",
+  "before_commit": "55a31047285cd183a3ee34f368007466d0341e15",
+  "implementation_commit": "cd2c66215232d25adce140bec8de3655256adf96",
+  "fixture_sha256": "2266f70d2b4df8e7b2c27b70d350710eff87f6014a956778d34a00147888c66a",
+  "fixture_scope": "Private settings-only capture of saved palettes and local choices; not distributed. 81 logical voice definitions in each benchmark lane.",
+  "fixture_retained_at": "/home/bart/src/emacsvox/.benchmarks/preferred-engine-2026-09-20/palette-fixture.el",
+  "before_files": {
+    "emacsvox-aural-voice-data.el": "7e7284c69df311ded33ed33d1179e28cc99966746d1db9ce81057ec7ed03b1ee",
+    "emacsvox-aural-voice-data.elc": "9c43883bddd6a573febe02458bbfb7e4fce249fa3920533e462af75bb472cb02",
+    "emacsvox-aural-voice-runtime.el": "60868c5459744f2c4bcc5577b531582dc6814cccb3f2da0929f55207982201c1",
+    "emacsvox-aural-voice-runtime.elc": "782e93c2484bd764b0bc32edae0da100a58d872be1b674cfb5407fa581f092bc",
+    "omnivox-voices.el": "c1a4f69a0b678ba59b10081e1a681419a231ef66557626894ca650367df48a0d",
+    "omnivox-voices.elc": "7315897c4e0d89ee17ea1b8eff313f511ea620a47757c05f8923d038273f7ab4"
+  },
+  "after_files": {
+    "emacsvox-aural-voice-data.el": "c78fc86a26427df80611a8a59a850d79e685ef4091005073c5eb8ec4ab679974",
+    "emacsvox-aural-voice-data.elc": "4dd94ac8fb5bf3f53edcbc4d7123d2afebcc5e021d1eef449c8c37bcfc91fee1",
+    "emacsvox-aural-voice-runtime.el": "53db5e52a55d715adf6363ea4ec76afe5c0aff6c5ab3959c4932ca27c1e8c727",
+    "emacsvox-aural-voice-runtime.elc": "f438c874f5d6a4a2cfe7dc93059126f9ebf0097edeb9e2ed30533abc347d8366",
+    "omnivox-voices.el": "994f1cc8032b9155462968a6e8c51ade18ff69a1ad020fd83f87d7d107e693f6",
+    "omnivox-voices.elc": "bd4bfb13dd801c1d32703415e48743a1113a790842e29802f18a055ab5a20bd5"
+  },
+  "drivers": {
+    "voice-benchmark.el": "5eadad78940c2e5d971202fc26440171a217672f0460ee2af2a20c18ac4ae776",
+    "voice_benchmark.py": "d184637b30f69b413094c0bf66d1b3dacea239a6295540bab70b8a69d5f7934c"
+  },
+  "program": "577414114415d7b0/omnivox.exe",
+  "program_sha256": "13e56b66355b8abcf9ce673424c198e844b490ee2700321d5f419d3f29b41476",
+  "emacs": "31.0.90",
+  "audio": "null",
+  "display": "batch",
+  "warmups_per_block": 3,
+  "final_iterations_per_condition": 24,
+  "exploratory_iterations_per_block": 12,
+  "final_order": [
+    "final-before",
+    "final-after"
+  ],
+  "controls": "Same saved palette fixture, server build, rate 225 and benchmark driver. Explicit old byte-code loading and raw loaded-file checks; native JIT disabled.",
+  "limits": [
+    "Exploratory blocks overlapped other checkout work and show large timing variation.",
+    "Final pair ran after those jobs finished; normal desktop activity remained possible.",
+    "Results measure command return and server acknowledgement, not acoustic onset or interactive minibuffer rendering."
+  ],
+  "excluded_probes": "Initial before/ and before-1/ probes loaded current Lisp despite load-path intent; rejected by loaded-file audit and excluded from retained comparison data."
+}

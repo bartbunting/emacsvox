@@ -22,7 +22,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = 1
-WORKLOAD = "voice-benchmark-1"
+WORKLOAD = "voice-benchmark-2"
 ENVIRONMENT = (
     "OMNIVOX_PROGRAM", "OMNIVOX_DECTALK_DLL", "OMNIVOX_DECTALK_DICTIONARY",
     "OMNIVOX_ECI_DLL", "ESPEAK_NG_DATA", "OMNIVOX_AUDIO_BACKEND",

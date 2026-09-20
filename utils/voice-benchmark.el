@@ -107,6 +107,30 @@
           :cpu_seconds (if cpu (float-time cpu) :null)
           :gc_count gcs-done :gc_seconds gc-elapsed)))
 
+(defun voice-benchmark--prefer-engine (iteration warmup)
+  "Time the preferred-engine command through both acknowledgements.
+Suppress only its spoken confirmation; keep real preparation and transport."
+  (let* ((engine (plist-get (plist-get voice-benchmark--job :route) :engine))
+         (other (cl-find-if
+                 (lambda (entry) (not (equal engine (cdr entry))))
+                 (emacsvox-aural-voice-workbench--engine-candidates)))
+         (target (if (and other (cl-oddp iteration)) (cdr other) engine))
+         (start (current-time)))
+    (cl-letf (((symbol-function 'emacsvox-aural-voice-workbench--preference-callback)
+               (lambda (&rest _) #'ignore)))
+      (emacsvox-aural-prefer-engine target))
+    (let ((command-ms (voice-benchmark--elapsed start)))
+      (voice-benchmark--wait
+       (lambda () (not (eq 'applying (plist-get emacsvox-aural-routing-apply-status :status)))))
+      (unless (and (eq 'applied (plist-get emacsvox-aural-routing-apply-status :status))
+                   (= 2 (length (plist-get emacsvox-aural-routing-apply-status :processes))))
+        (error "Preferred engine did not apply to both streams: %S" emacsvox-aural-routing-apply-status))
+      (unless warmup
+        (push (list :case "preferred_engine_apply" :iteration iteration :engine target
+                    :logical_voice_count (length (omnivox--logical-voice-ids))
+                    :command_ms command-ms :ready_ms (voice-benchmark--elapsed start))
+              voice-benchmark--samples)))))
+
 (defun voice-benchmark--run ()
   (setq voice-benchmark--job (voice-benchmark--read-json (getenv "EMACSVOX_BENCHMARK_JOB")))
   (setq user-emacs-directory (file-name-as-directory (plist-get voice-benchmark--job :state_directory)))
@@ -152,6 +176,8 @@
           (count (plist-get voice-benchmark--job :iterations)))
       (dotimes (i (+ warmups count))
         (let* ((warmup (< i warmups)) (iteration (- i warmups)) (start (current-time)))
+          (voice-benchmark--prefer-engine iteration warmup)
+          (setq start (current-time))
           (emacsvox-aural-voice-editor-refresh)
           (emacsvox-aural-voice-editor-next)
           (when (display-graphic-p) (redisplay t))
@@ -177,6 +203,13 @@
             (emacsvox-aural-voice-editor--put :automatic-sample t)
             (emacsvox-aural-voice-engine-controls-back)))))
     (list :emacs_version emacs-version :graphical (if (display-graphic-p) t :false)
+          :preparation_lisp
+          (vconcat (mapcar (lambda (function)
+                            (list :function (symbol-name function) :file (symbol-file function)
+                                  :native_compiled (if (subrp (symbol-function function)) t :false)))
+                          '(emacsvox-aural-voice-data--resolve
+                            emacsvox-aural-voice-runtime--resolve omnivox-apply-voice-configuration
+                            emacsvox-aural-compile-voice-palette-data)))
           :clock "Emacs current-time; negative intervals rejected"
           :measurement "Editor command return and preview completion; preview onset unavailable"
           :resources_before resources-before :resources_after (voice-benchmark--resources)
