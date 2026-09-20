@@ -305,11 +305,33 @@ whether acceptance passed and which optional checks were requested.
 
 CI does not run audio or interactive screen-reader acceptance. It does not
 yet exercise a successful second-build upgrade; use =-Upgrade= locally for
-that check. CI builds the executable for testing but does not upload it or
-the offline bundle until corresponding-source publication is prepared.
+that check.
 
-The setup executable is also a development artifact, not a distributable
-release. Corresponding-source publication and remaining release work are recorded in
+Successful runs offer two separate downloads in the job summary:
+=emacsvox-windows-installer= contains the tested setup executable, its checksums,
+provenance and launch instructions. =emacsvox-windows-sources= contains its
+matching source archive. Sources are optional and are not installed on users'
+machines. CI uploads them first and retains them for 90 days, compared with
+14 days for the installer. Keep paired sources available if redistributing
+an installer, and remove binaries before their sources when deleting artifacts.
+
+=etc/windows-sources.json= binds the reviewed Emacs/Omnivox runtime archives
+to source archives and licence notices. It records exact DLL package matches,
+additional MSYS2 sources absent from the GNU dependency ZIP, and locked Rust
+dependencies. =etc/windows-sources.txt= explains the archive contents and build
+recipes. The application includes =etc/WINDOWS-THIRD-PARTY-NOTICES.txt=;
+Emacs and Omnivox also retain their own notices. Runtime updates require a
+source and notice review; mutable upstream links alone are insufficient.
+
+The packaging gate requires a clean committed checkout matching the staged
+installer, intact payloads and compiler provenance, and every checksum-pinned
+source archive. It checks both downloads before making either available.
+Only the main tested executable is uploaded. The failed-upgrade fixture and
+offline bundle remain build inputs. Run =make windows-sources-test= for the
+isolated source/publication boundary checks.
+
+The setup executable remains a development artifact. Tagged release
+integration and remaining acceptance work are recorded in
 [[file:../adr/0024-native-windows-installer.org][ADR 0024]].
 
 *** Remote preview validation

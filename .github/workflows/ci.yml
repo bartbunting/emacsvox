@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check staging, provenance, and failure boundaries
-        run: make windows-staging-test windows-bundle-test windows-setup-test
+        run: make windows-staging-test windows-bundle-test windows-setup-test windows-sources-test
 
   windows-installer:
     name: Windows x64 installer and lifecycle
@@ -48,6 +48,10 @@ jobs:
         with:
           path: ${{ runner.temp }}/evox-downloads
           key: windows-setup-downloads-${{ hashFiles('etc/wsl-install.conf', 'etc/windows-install.conf') }}
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/evox-sources
+          key: windows-setup-sources-${{ hashFiles('etc/windows-sources.json') }}
       - name: Prepare verified offline installer payloads
         run: |
           python utils/emacsvox-windows-bundle.py --cache-directory "$env:SETUP_DOWNLOADS" --output-directory "$env:SETUP_WORK/bundles"
@@ -68,6 +72,44 @@ jobs:
           $rollback = @(Get-ChildItem "$env:SETUP_WORK/rollback/output" -Filter '*-setup.exe' -File)
           if ($setup.Count -ne 1 -or $rollback.Count -ne 1) { throw 'Expected one installer per stage' }
           .\test\emacsvox-windows-setup-tests.ps1 -Setup $setup[0].FullName -FailedUpgrade $rollback[0].FullName -LogDirectory "$PWD/dist/windows-ci/lifecycle"
+      - name: Prepare matching source and installer downloads
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python utils/emacsvox-windows-sources.py --staging-directory "$env:SETUP_WORK/setup" --cache-directory "$env:RUNNER_TEMP/evox-sources" --output-directory "$env:SETUP_WORK/downloads" --run-url "$env:RUN_URL"
+          if ($LASTEXITCODE -ne 0) { throw 'Matching source preparation failed; installer will not be published' }
+      # Publish the optional sources first and retain them longer than the binary.
+      # A failed source upload prevents the installer upload below.
+      - uses: actions/upload-artifact@v4
+        id: windows-sources
+        with:
+          name: emacsvox-windows-sources
+          path: ${{ env.SETUP_WORK }}/downloads/sources/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        id: windows-installer
+        with:
+          name: emacsvox-windows-installer
+          path: ${{ env.SETUP_WORK }}/downloads/installer/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Link the paired downloads
+        env:
+          INSTALLER_URL: ${{ steps.windows-installer.outputs.artifact-url }}
+          SOURCES_URL: ${{ steps.windows-sources.outputs.artifact-url }}
+        run: |
+          @"
+          ## Emacsvox Windows development download
+
+          [Download the installer]($env:INSTALLER_URL). It installs Emacs, Omnivox and Emacsvox for your account.
+
+          [Download matching sources]($env:SOURCES_URL) (optional; not needed to install or run).
+
+          The installer README and downloads.json identify its exact source archive and checksum.
+          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
       - name: Collect build evidence
         if: always()
         run: |
@@ -82,7 +124,6 @@ jobs:
               Get-ChildItem "$stage/output" -File | Where-Object { $_.Name -match '\.(sha256|provenance\.json)$' } | Copy-Item -Destination $evidence.FullName
             }
           }
-      # ADR 0024: publish matching bundled sources before distributing binaries.
       # Audio and screen-reader acceptance still require an interactive machine.
       - uses: actions/upload-artifact@v4
         if: always()
