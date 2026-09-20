@@ -150,6 +150,8 @@ upload the deliberate rollback-failure fixture.
 
 CI development downloads are not a release gate or permission to tag, publish
 or sign a release. Offline bundles remain local build inputs.
+[[file:0025-windows-preview-publication.org][ADR 0025]] adds an explicitly approved public preview-promotion path for
+tested CI downloads; stable release integration remains separate.
 
 * Remaining release work
 

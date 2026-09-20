@@ -1,0 +1,69 @@
+#+TITLE: ADR 0025: Publish tested Windows installer previews
+#+AUTHOR: Emacsvox contributors
+#+DATE: 2026-09-20
+
+* Status
+
+Accepted following the maintainer's choice to offer one public Windows
+installer preview before the next stable Emacsvox release.
+
+* Context
+
+The native installer in ADR 0024 is built and tested in CI. Actions downloads
+require sign-in and expire under their configured retention periods. Testers
+need a public download link that remains available with its matching sources.
+Interactive screen-reader acceptance, successful second-build upgrade and
+full optional-cleanup lifecycle testing remain before stable installer release.
+
+* Decision
+
+Add a narrow preview-promotion path, separate from the stable release targets.
+Use an annotated, unsigned =windows-preview-YYYY-MM-DD= tag and a GitHub
+prerelease explicitly excluded from Latest. Allow one preview per date; never
+move a published tag or replace published assets. This extends ADR 0002 with
+a Windows preview tag convention without changing =VERSION=, package metadata,
+the =Unreleased= NEWS heading, or stable release identifiers and gates.
+
+Promote the unchanged installer and source ZIP from a successful complete
+=CI= run on =master= in the publication repository. Accept push and manual
+runs, not pull-request or fork builds. Resolve the repository explicitly from
+the push URL of =RELEASE_REMOTE=. Require the native lifecycle evidence,
+matching checksums, compiler provenance, setup manifest, source inventory and
+reviewed upstream source index. Check each archived source against Git,
+including symlink contents and modes. Never upload a rollback-failure fixture.
+
+Run promotion tooling from a clean committed checkout. The preview tag points
+to the installer source commit, which may precede the publication tooling's
+commit; require it to be an ancestor and record both identities. This allows
+publication tooling to improve without rebuilding an already tested installer.
+Preparation and check are read-only outside their local output directory.
+
+Keep preparation, local tagging and publication separate. The maintainer must
+explicitly approve the named preview before tagging or publication, as required
+by the repository workflow. Repeat validation before those operations. Create
+a private draft, upload matching sources before the installer, verify every
+remote asset's SHA256, then publish as a prerelease. A failed upload leaves an
+unpublished draft. Resume only an exact matching draft and intact asset subset;
+refuse unknown, changed or already published releases. Do not force tag pushes
+or overwrite assets. Retain the explicit unsigned tag policy of ADR 0006.
+
+Attach short install, Start menu launch, uninstall and testing instructions,
+with permanent links to our matching sources and upstream source index. Keep
+the upstream source-hosting decision in ADR 0024. Explain the development
+build identity and any differences from the version shown by the wizard.
+Record which checks passed and which acceptance work remains. CI provenance
+links remain useful history; they are not the source download location for
+the public preview. GitHub's automatically generated source snapshots do not
+replace the paired Windows source ZIP and dependency index.
+
+* Consequences
+
+Testers can use public downloads without an Actions account or artifact expiry.
+The stable 2026.9.6 release remains a separate decision. The existing Debian
+release workflow skips prereleases. Stable installer release integration,
+remaining acceptance and Windows executable signing remain under ADR 0024.
+
+The preview publication gate trusts the repository's CI and GitHub asset
+checksums. It does not claim independent cryptographic maintainer identity or
+screen-reader acceptance. Source availability remains a distribution obligation:
+maintain the links or withdraw the affected installer, as in ADR 0024.

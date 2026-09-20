@@ -85,8 +85,12 @@ TEST_DEPS_CACHE ?= $(CURDIR)/.test-deps-cache
 .PHONY: windows-staging-test
 .PHONY: windows-bundle-dev windows-bundle-test
 .PHONY: windows-setup-stage windows-setup-test windows-sources-test
+.PHONY: windows-preview-test windows-preview-prepare windows-preview-check windows-preview-tag windows-preview-publish
 WINDOWS_BUNDLE ?=
 WINDOWS_SETUP_STAGE ?= $(DIST_DIR)/windows-setup
+WINDOWS_PREVIEW_DIR ?= $(DIST_DIR)/windows-preview
+WINDOWS_PREVIEW_RUN ?=
+WINDOWS_PREVIEW_TAG ?=
 
 version:
 	@cat "$(VERSION_FILE)"
@@ -108,7 +112,7 @@ deb-test: check-emacs
 release-deb: check-emacs
 	python3 utils/emacsvox-package-deb.py --release --emacs "$(EMACS)" --output-dir "$(DIST_DIR)"
 
-test: version-check headers-check source-archive-test windows-staging-test windows-bundle-test windows-setup-test windows-sources-test piper-catalogue-test unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
+test: version-check headers-check source-archive-test windows-staging-test windows-bundle-test windows-setup-test windows-sources-test windows-preview-test piper-catalogue-test unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
 
 .PHONY: piper-catalogue-test
 piper-catalogue-test:
@@ -133,6 +137,24 @@ windows-setup-test:
 
 windows-sources-test:
 	python3 -m unittest discover -s test -p 'test_windows_sources.py' -v
+
+windows-preview-test:
+	python3 -m unittest discover -s test -p 'test_windows_preview.py' -v
+
+# Preview promotion keeps the tested CI bytes. Tagging and publication are
+# explicit separate operations, each requiring approval for the named preview.
+windows-preview-prepare:
+	python3 utils/emacsvox-windows-preview.py prepare --remote "$(RELEASE_REMOTE)" \
+		--run-id "$(WINDOWS_PREVIEW_RUN)" --tag "$(WINDOWS_PREVIEW_TAG)" --directory "$(WINDOWS_PREVIEW_DIR)"
+
+windows-preview-check:
+	python3 utils/emacsvox-windows-preview.py check --remote "$(RELEASE_REMOTE)" --directory "$(WINDOWS_PREVIEW_DIR)"
+
+windows-preview-tag:
+	python3 utils/emacsvox-windows-preview.py tag --remote "$(RELEASE_REMOTE)" --directory "$(WINDOWS_PREVIEW_DIR)"
+
+windows-preview-publish:
+	python3 utils/emacsvox-windows-preview.py publish --remote "$(RELEASE_REMOTE)" --directory "$(WINDOWS_PREVIEW_DIR)"
 
 compat-test: check-emacs config
 	$(EMACS) -Q --batch -l test/run-compat-tests.el

@@ -336,9 +336,64 @@ Only the main tested executable is uploaded. The failed-upgrade fixture and
 offline bundle remain build inputs. Run =make windows-sources-test= for the
 isolated source/publication boundary checks.
 
-The setup executable remains a development artifact. Tagged release
+The setup executable remains a development artifact. Stable release
 integration and remaining acceptance work are recorded in
-[[file:../adr/0024-native-windows-installer.org][ADR 0024]].
+[[file:../adr/0024-native-windows-installer.org][ADR 0024]]. Public preview promotion is described below and in
+[[file:../adr/0025-windows-preview-publication.org][ADR 0025]].
+
+*** Public Windows installer previews
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Use a Windows preview when testers need public downloads without Actions
+sign-in or artifact expiry. Keep =VERSION= and the =Unreleased= NEWS heading
+unchanged. Do not use the stable release targets or a stable version tag for
+this operation. The tag identifies the installer source commit; the clean
+publication tooling checkout may be newer and records its own commit.
+
+Start with a successful complete =CI= run from =master= in the repository
+selected by =RELEASE_REMOTE= (default =origin=). The installer, matching sources
+and evidence artifacts must still be available for preparation. For example:
+
+#+begin_src sh
+make windows-preview-test
+make windows-preview-prepare WINDOWS_PREVIEW_RUN=RUN_ID \
+  WINDOWS_PREVIEW_TAG=windows-preview-2026-09-20 \
+  WINDOWS_PREVIEW_DIR=/path/to/new-preview-directory
+make windows-preview-check WINDOWS_PREVIEW_DIR=/path/to/new-preview-directory
+#+end_src
+
+Preparation downloads and verifies the exact CI assets. It checks all archived
+Emacsvox source files against Git, the installer and setup provenance, source
+pairing, upstream source index, and native lifecycle result. It writes the
+publishable files under =assets/= and a local =preview.json= receipt. It creates
+no tag or GitHub release and refuses to overwrite an existing output directory.
+Review =assets/README-preview.md=, the executable, sources and checksums.
+These instructions include permanent source links; the old CI-only README is
+not published. Upstream sources remain upstream links, not mirrored archives.
+
+Only after explicit maintainer approval naming the preview, run:
+
+#+begin_src sh
+make windows-preview-tag WINDOWS_PREVIEW_DIR=/path/to/new-preview-directory
+make windows-preview-publish WINDOWS_PREVIEW_DIR=/path/to/new-preview-directory
+#+end_src
+
+Both commands repeat validation. The first creates only a local annotated,
+unsigned tag at the tested source commit. The second pushes that exact tag,
+creates a private GitHub draft, attaches sources and installer, verifies all
+remote SHA256 values, then publishes as a prerelease with Latest disabled.
+It always selects the repository explicitly from =RELEASE_REMOTE='s push URL.
+It does not edit the installer or source ZIP. If uploading fails, rerun the
+publish target against the same prepared directory; it resumes only a matching
+draft with intact assets. A mismatched draft, conflicting tag or published
+release is an error, never an invitation to force-push or overwrite it.
+
+Changing the publication tooling commit or prepared files requires preparing
+a new directory. Keep the original evidence for review. The preview is for
+native Windows x64, remains unsigned, and does not establish stable installer
+readiness. Its notes identify the remaining interactive and lifecycle checks.
 
 *** Remote preview validation
 :PROPERTIES:
