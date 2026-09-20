@@ -78,7 +78,7 @@ jobs:
         run: |
           python utils/emacsvox-windows-sources.py --staging-directory "$env:SETUP_WORK/setup" --cache-directory "$env:RUNNER_TEMP/evox-sources" --output-directory "$env:SETUP_WORK/downloads" --run-url "$env:RUN_URL"
           if ($LASTEXITCODE -ne 0) { throw 'Matching source preparation failed; installer will not be published' }
-      # Publish the optional sources first and retain them longer than the binary.
+      # Publish our sources and exact upstream links before the binary.
       # A failed source upload prevents the installer upload below.
       - uses: actions/upload-artifact@v4
         id: windows-sources
@@ -106,9 +106,10 @@ jobs:
 
           [Download the installer]($env:INSTALLER_URL). It installs Emacs, Omnivox and Emacsvox for your account.
 
-          [Download matching sources]($env:SOURCES_URL) (optional; not needed to install or run).
+          [Emacsvox sources and upstream source links]($env:SOURCES_URL) (optional; not needed to install or run).
 
-          The installer README and downloads.json identify its exact source archive and checksum.
+          SOURCE-DOWNLOADS.md beside the installer links directly to matching Emacs, library and Omnivox sources.
+          The installer README and downloads.json identify our exact source archive and checksum.
           "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
       - name: Collect build evidence
         if: always()

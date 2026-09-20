@@ -7600,11 +7600,15 @@ that check.
 
 Successful runs offer two separate downloads in the job summary:
 @samp{emacsvox-windows-installer} contains the tested setup executable@comma{} its checksums@comma{}
-provenance and launch instructions. @samp{emacsvox-windows-sources} contains its
-matching source archive. Sources are optional and are not installed on users'
+provenance@comma{} launch instructions and @samp{SOURCE-DOWNLOADS.md}@comma{} linking directly to
+matching third-party sources on their upstream hosts. @samp{emacsvox-windows-sources}
+contains our exact Emacsvox checkout and the same source index. It does not
+mirror the large upstream archives. Sources are optional and are not installed on users'
 machines. CI uploads them first and retains them for 90 days@comma{} compared with
 14 days for the installer. Keep paired sources available if redistributing
 an installer@comma{} and remove binaries before their sources when deleting artifacts.
+Keep the upstream locations accessible; repair broken source links or withdraw
+the affected installer.
 
 @samp{etc/windows-sources.json} binds the reviewed Emacs/Omnivox runtime archives
 to source archives and licence notices. It records exact DLL package matches@comma{}
@@ -7612,11 +7616,12 @@ additional MSYS2 sources absent from the GNU dependency ZIP@comma{} and locked R
 dependencies. @samp{etc/windows-sources.txt} explains the archive contents and build
 recipes. The application includes @samp{etc/WINDOWS-THIRD-PARTY-NOTICES.txt};
 Emacs and Omnivox also retain their own notices. Runtime updates require a
-source and notice review; mutable upstream links alone are insufficient.
+source and notice review; link the exact versions with their checksums.
 
 The packaging gate requires a clean committed checkout matching the staged
-installer@comma{} intact payloads and compiler provenance@comma{} and every checksum-pinned
-source archive. It checks both downloads before making either available.
+installer@comma{} intact payloads and compiler provenance. It verifies the pinned
+upstream archives in a private build cache and publishes their links beside
+the installer. It checks both downloads before making either available.
 Only the main tested executable is uploaded. The failed-upgrade fixture and
 offline bundle remain build inputs. Run @samp{make windows-sources-test} for the
 isolated source/publication boundary checks.

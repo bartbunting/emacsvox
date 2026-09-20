@@ -122,22 +122,29 @@ cleanup rules. Keep compiler provenance, manifests, checksums and test logs
 as CI evidence, including for failed runs. Audio, interactive screen-reader
 acceptance and successful second-build upgrades remain separate checks.
 
-Publish the tested development installer and its matching sources as separate
-downloads from the same CI run. Sources are optional for users and are not
-installed. Preserve the applicable notices in the installed payload. Upload
-sources first; a failed source check or upload prevents binary publication.
-Retain sources for 90 days and installer/evidence downloads for 14 days. When
-removing artifacts manually, remove the installer before its paired sources.
+Publish the tested development installer and our exact Emacsvox sources as
+separate downloads from the same CI run. Following the maintainer's refinement,
+provide direct links to matching third-party sources on their upstream hosts.
+Do not mirror the large combined collection of Emacs, libraries and Omnivox.
+Put a source index with exact URLs and checksums beside the binary as well as
+in our source download. Sources are optional for users and are not installed.
+Preserve the applicable notices in the installed payload. Upload our sources
+and index first; a failed source check or upload prevents binary publication.
+Retain our sources/index for 90 days and installer/evidence for 14 days. When
+removing artifacts manually, remove the installer before its paired sources/index.
 
-The source download includes the exact committed Emacsvox checkout, Emacs,
-the GNU dependency source archive, additional matching MSYS2 source packages,
-locked Rust dependencies, and Omnivox's published corresponding-source archive.
+The source download includes the exact committed Emacsvox checkout. Its index
+links to Emacs, the GNU dependency source archive, additional matching MSYS2
+source packages, locked Rust dependencies, and Omnivox's published source archive.
 Record runtime/source hashes and the matched Emacs DLL inventory in
 =etc/windows-sources.json=. Changing a runtime pin requires a new review of
 sources and notices. Refuse a dirty or different source checkout, altered
 staged payload, mismatched compiler provenance or corrupt source archive.
-Pair the downloads by installer and source SHA256 values and the setup
-manifest identity. Do not upload the deliberate rollback-failure fixture.
+Verify the upstream archives in CI's private cache; publish their links, not
+copies. Pair the downloads by installer and source SHA256 values and the setup
+manifest identity. Maintain source availability while distributing binaries;
+repair broken upstream locations or withdraw the affected installer. Do not
+upload the deliberate rollback-failure fixture.
 
 CI development downloads are not a release gate or permission to tag, publish
 or sign a release. Offline bundles remain local build inputs.

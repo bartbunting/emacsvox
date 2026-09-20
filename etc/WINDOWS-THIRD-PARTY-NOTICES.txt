@@ -8,8 +8,8 @@ notices are included for completeness. They retain their original terms;
 the Emacsvox licence does not replace them.
 
 Emacs itself supplies COPYING. Omnivox supplies third-party-licenses/.
-Matching sources and build recipes are available in the separate source
-download from the same CI run as the installer. See windows-sources.txt
+Matching source locations and build recipes are in the separate Emacsvox
+source download from the same CI run as the installer. See windows-sources.txt
 and windows-sources.json for versions, archive checksums and provenance.
 
 

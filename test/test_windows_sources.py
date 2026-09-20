@@ -84,8 +84,13 @@ class WindowsSourcesTests(unittest.TestCase):
         self.assertEqual(list(binary.glob('*sources.zip')), [])
         self.assertEqual(list(sources.glob('*.exe')), [])
         with zipfile.ZipFile(archive) as z:
-            self.assertEqual(z.read('archives/' + self.source.name), self.source.read_bytes())
+            self.assertFalse(any(name.startswith('archives/') for name in z.namelist()))
             manifest = json.loads(z.read('source-manifest.json'))
+            self.assertEqual(manifest['UpstreamSources'], self.lock['Archives'])
+            index = (binary / 'SOURCE-DOWNLOADS.md').read_text()
+            self.assertIn(self.lock['Archives'][0]['URL'], index)
+            self.assertIn(self.lock['Archives'][0]['SHA256'], index)
+            self.assertEqual(z.read('SOURCE-DOWNLOADS.md').decode(), index)
             for item in manifest['Files']:
                 self.assertEqual(BUNDLE.hashlib.sha256(z.read(item['Path'])).hexdigest(), item['SHA256'])
             self.assertEqual(z.read('emacsvox/utils/emacsvox-windows-setup.py'),

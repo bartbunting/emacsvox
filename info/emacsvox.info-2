@@ -1033,14 +1033,18 @@ checker runs.
 
           Successful runs offer two separate downloads in the job
           summary: ‘emacsvox-windows-installer’ contains the tested
-          setup executable, its checksums, provenance and launch
-          instructions.  ‘emacsvox-windows-sources’ contains its
-          matching source archive.  Sources are optional and are not
+          setup executable, its checksums, provenance, launch
+          instructions and ‘SOURCE-DOWNLOADS.md’, linking directly to
+          matching third-party sources on their upstream hosts.
+          ‘emacsvox-windows-sources’ contains our exact Emacsvox
+          checkout and the same source index.  It does not mirror the
+          large upstream archives.  Sources are optional and are not
           installed on users' machines.  CI uploads them first and
           retains them for 90 days, compared with 14 days for the
           installer.  Keep paired sources available if redistributing an
           installer, and remove binaries before their sources when
-          deleting artifacts.
+          deleting artifacts.  Keep the upstream locations accessible;
+          repair broken source links or withdraw the affected installer.
 
           ‘etc/windows-sources.json’ binds the reviewed Emacs/Omnivox
           runtime archives to source archives and licence notices.  It
@@ -1050,17 +1054,18 @@ checker runs.
           contents and build recipes.  The application includes
           ‘etc/WINDOWS-THIRD-PARTY-NOTICES.txt’; Emacs and Omnivox also
           retain their own notices.  Runtime updates require a source
-          and notice review; mutable upstream links alone are
-          insufficient.
+          and notice review; link the exact versions with their
+          checksums.
 
           The packaging gate requires a clean committed checkout
           matching the staged installer, intact payloads and compiler
-          provenance, and every checksum-pinned source archive.  It
-          checks both downloads before making either available.  Only
-          the main tested executable is uploaded.  The failed-upgrade
-          fixture and offline bundle remain build inputs.  Run ‘make
-          windows-sources-test’ for the isolated source/publication
-          boundary checks.
+          provenance.  It verifies the pinned upstream archives in a
+          private build cache and publishes their links beside the
+          installer.  It checks both downloads before making either
+          available.  Only the main tested executable is uploaded.  The
+          failed-upgrade fixture and offline bundle remain build inputs.
+          Run ‘make windows-sources-test’ for the isolated
+          source/publication boundary checks.
 
           The setup executable remains a development artifact.  Tagged
           release integration and remaining acceptance work are recorded

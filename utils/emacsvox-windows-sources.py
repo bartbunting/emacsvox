@@ -139,8 +139,31 @@ def add_file(archive, name, path, mode=0o100644):
         shutil.copyfileobj(source, target)
 
 
+def source_index(lock):
+    """Put exact upstream source locations beside the downloadable binary."""
+    lines = [
+        '# Windows installer source downloads', '',
+        'Third-party sources are hosted by their upstream projects. They are optional',
+        'and are not needed to install or run Emacsvox. Download the components you need.',
+        'The separate Emacsvox source ZIP includes our exact source checkout and this index.', '',
+        'The filenames, versions and SHA256 values below identify the matching sources.',
+        'Build instructions are in README.txt in the source ZIP and',
+        'emacsvox/etc/windows-sources.txt. No third-party source archives are mirrored here.', '',
+        '## Main source packages', '',
+    ]
+    for heading, prefix in [(None, ''), ('Rust dependencies', 'crates/'),
+                            ('Optional Wasmtime test sources', 'wasmtime-tests/')]:
+        if heading:
+            lines += ['## ' + heading, '']
+        for item in lock['Archives']:
+            if (not prefix and '/' in item['Path']) or (prefix and not item['Path'].startswith(prefix)):
+                continue
+            lines += [f'- [{item["Path"]}]({item["URL"]})', f'  SHA256: `{item["SHA256"]}`', '']
+    return '\n'.join(lines)
+
+
 def prepare(root, stage, cache, destination, run_url, offline=False):
-    """Generate separate source and installer directories; publish sources first."""
+    """Publish our source with upstream links; verify external archives privately."""
     if destination.exists():
         raise ValueError(f'Download directory already exists: {destination}')
     if not re.fullmatch(r'https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/\d+', run_url):
@@ -162,20 +185,22 @@ def prepare(root, stage, cache, destination, run_url, offline=False):
         source_name = f'emacsvox-{manifest["Build"]}-windows-x64-sources.zip'
         source_archive = sources / source_name
         files = [(f'emacsvox/{name}', root / name, mode) for name, mode in names.items()]
-        files += [(f'archives/{item["Path"]}', cache / item['Path'], 0o100644) for item in lock['Archives']]
         inventory = {'Schema': 1, 'Build': manifest['Build'], 'SourceCommit': commit,
                      'RunURL': run_url, 'Installer': installer.name, 'InstallerSHA256': installer_hash,
                      'SetupManifestSHA256': BUNDLE.sha256(stage / 'setup-manifest.json'),
                      'SourceLockSHA256': BUNDLE.sha256(root / LOCK),
                      'RuntimeSHA256': lock['RuntimeSHA256'],
+                     'UpstreamSources': lock['Archives'],
                      'Files': [{'Path': name, 'SHA256': source_hash(path), 'Mode': oct(mode)}
                                for name, path, mode in files]}
         write_json(work / 'source-manifest.json', inventory)
+        (work / 'SOURCE-DOWNLOADS.md').write_text(source_index(lock), encoding='utf-8')
         with zipfile.ZipFile(source_archive, 'w') as archive:
             for name, path, mode in files:
                 add_file(archive, name, path, mode)
             add_file(archive, 'source-manifest.json', work / 'source-manifest.json')
             add_file(archive, 'README.txt', root / 'etc/windows-sources.txt')
+            add_file(archive, 'SOURCE-DOWNLOADS.md', work / 'SOURCE-DOWNLOADS.md')
         archive_hash = BUNDLE.sha256(source_archive)
         (sources / (source_name + '.sha256')).write_text(f'{archive_hash}  {source_name}\n', encoding='utf-8')
         for suffix in ['', '.sha256', '.provenance.json']:
@@ -188,14 +213,18 @@ def prepare(root, stage, cache, destination, run_url, offline=False):
                    'SourcesArtifact': 'emacsvox-windows-sources', 'RunURL': run_url}
         for directory in [binary, sources]:
             write_json(directory / 'downloads.json', pairing)
+            shutil.copyfile(work / 'SOURCE-DOWNLOADS.md', directory / 'SOURCE-DOWNLOADS.md')
         (binary / 'README.txt').write_text(
             'Emacsvox Windows development installer\n\n'
             f'Run {installer.name} to install Emacsvox, Emacs and Omnivox for your account.\n'
             'No administrator privileges are needed. Start it later from Start > Emacsvox Windows.\n\n'
-            'Matching sources are a separate, optional download; they are not needed to install or run.\n'
+            'Sources are optional; they are not needed to install or run.\n'
+            'For Emacs, its libraries and Omnivox, open SOURCE-DOWNLOADS.md for exact upstream links\n'
+            'and checksums. Those source archives are hosted by their upstream projects.\n'
             f'Open {run_url} and download the emacsvox-windows-sources artifact from this same run.\n'
-            f'It contains {source_name}. Its SHA256 is {archive_hash}.\n'
-            'Keep the paired sources available if you redistribute this installer.\n'
+            f'It contains our Emacsvox sources and the source index in {source_name}.\n'
+            f'Its SHA256 is {archive_hash}.\n'
+            'Keep matching sources and their locations available if you redistribute this installer.\n'
             'The installed application contains the applicable licence notices.\n\n'
             'CI checks installation, repair, rollback and uninstall. Interactive speech and screen-reader\n'
             'acceptance are separate checks. This development download is not a tagged release.\n', encoding='utf-8')
