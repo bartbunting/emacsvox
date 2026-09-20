@@ -39,6 +39,12 @@ character-pronunciation work by Lukas Loehrer.
 Other directories
 -----------------
 
+etc/WINDOWS-THIRD-PARTY-NOTICES.txt preserves upstream licence and attribution
+texts for the bundled Windows runtime libraries, their source dependencies,
+and Inno Setup.  Those texts retain their original terms; the Emacsvox
+licence does not replace them.  Source identities and the reviewed binary
+library inventory are recorded in etc/windows-sources.json.
+
 Subdirectories may carry their own licence files, including
 servers/mac-swiftmac/LICENSE.  This initial inventory covers the top-level
 Lisp header migration; it is not a complete audit of every bundled asset or

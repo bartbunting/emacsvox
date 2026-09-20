@@ -1,0 +1,113 @@
+Matching sources for the Emacsvox Windows development installer
+==============================================================
+
+Sources are an optional, separate download. They are not needed to install or
+run Emacsvox. Licence notices remain in the installed application and runtimes.
+The installer download's README and downloads.json identify this source ZIP by
+name and SHA256. Both downloads belong to the same GitHub Actions run. This is
+a development build, not a tagged release.
+
+Contents
+--------
+
+emacsvox/ is the complete tracked checkout used to build the installer,
+including its build scripts, workflow, manuals and licence notices. It contains
+no private local.mk, local byte-code, user profile, voice downloads or Git state.
+source-manifest.json records the source commit, installer checksum, setup
+manifest checksum and every included source file/archive checksum.
+emacsvox/etc/windows-sources.json records the reviewed upstream archive URLs,
+SHA256 values, runtime identities and matched Emacs DLL packages. All listed
+archives are included under archives/; upstream availability is not required
+to obtain these copies of the sources.
+
+Emacs 31.1
+----------
+
+archives/emacs-31.1.tar.xz contains Emacs itself, including INSTALL,
+INSTALL.W64 and admin/nt/dist-build/. archives/README is the GNU Windows
+maintainer's build and dependency guidance for this release. The selected
+emacs-31.1_1.zip is the -O2 build without native compilation. Its configure
+arguments report:
+
+  --without-native-compilation --disable-acl --with-modules --without-dbus
+  --without-compress-install --with-tree-sitter CFLAGS=-O2
+
+Use a suitable MSYS2 MINGW64 build environment and the included upstream
+instructions. The historical build prefix is not a required installation path.
+
+archives/emacs-31-deps-mingw-w64-src.zip contains MSYS2 source packages:
+upstream sources, PKGBUILD recipes and patches. The corresponding GNU binary
+dependency archive was checked against all 62 DLLs in the selected Emacs ZIP.
+Each DLL was also matched to its exact MSYS2 binary package; see EmacsPackages
+in windows-sources.json. The following additional source packages are supplied
+because they are absent from the GNU dependency source ZIP:
+
+  MPC 1.4.1-1; MPFR 4.2.2-3; ISL 0.27-1; GCC 16.1.0-5;
+  Wasmtime 45.0.1-1.
+
+Extract MSYS2 .src.tar.zst packages with a Zstandard-capable tar, then use their
+PKGBUILD instructions. Some sources, including Wasmtime and winpthreads, are
+stored as bare Git repositories inside the source package. Clone those local
+repositories and check out the tag or commit specified by the PKGBUILD.
+The source packages include their build patches; do not substitute newer
+upstream releases. Toolchains and ordinary system build tools must be supplied
+by the developer. These archives provide sources, not a complete VM image.
+
+Rust dependencies for librsvg and Wasmtime
+-----------------------------------------
+
+archives/crates/ includes every registry crate from librsvg 2.62.3 and Wasmtime
+45.0.1's upstream Cargo.lock files, including Windows targets and optional/test
+dependencies. Checksums come from those locks. This also covers the librsvg
+PKGBUILD's windows-sys 0.60.2 substitution. The Wasmtime source package contains
+the patched zstd-sys source and recipe. Do not omit these native-package patches.
+Wasmtime test submodule archives are under archives/wasmtime-tests/; the lock
+records their original CheckoutPath and Commit. Restore them at those paths
+when running its tests. The DLL build does not require the test suites.
+
+To restore an offline Cargo source directory after extracting this download:
+
+  python emacsvox/utils/emacsvox-restore-cargo-vendor.py \
+    --archives archives/crates --lock emacsvox/etc/windows-sources.json \
+    --destination cargo-offline
+
+Set CARGO_HOME to the absolute path of cargo-offline while following the
+upstream package recipes. The generated config.toml replaces crates.io with
+the verified local vendor directory. This helper needs Python 3.11 or newer.
+The package manager and other build dependencies remain separate prerequisites.
+
+Omnivox 1.12.0
+--------------
+
+archives/omnivox-1.12.0-piper-source.tar.gz is the published corresponding-source
+archive for commit 0ce15b81235263ff19f9d73b73589dfe289b1b8c. Despite its name,
+it includes the complete Omnivox source, locked vendored Cargo dependencies,
+eSpeak NG and Sonic sources, and the native helper sources/build instructions.
+It also includes additional optional Piper/ONNX build inputs; those engines
+and voice models are not thereby installed by the Emacsvox setup program.
+Its Cargo.lock matches the Windows runtime's lock after CRLF normalization.
+Follow that archive's README and SOURCE-MANIFEST.json, and its pinned Rust
+and Windows build-tool instructions. Omnivox supplies its own notices in the
+installed runtime's third-party-licenses directory.
+
+Emacsvox and the installer
+-------------------------
+
+Use emacsvox/docs/developer/integration-maintenance.org for the native Windows
+bundle and Inno Setup build commands. The exact CI recipe is included at
+emacsvox/.github/workflows/ci.yml. Runtime pins are in etc/wsl-install.conf and
+etc/windows-install.conf; compiler pins are in etc/windows-setup.conf. Sources
+are compiled to Emacs byte-code by the installer using its bundled Emacs.
+No local .elc files are shipped as application inputs.
+
+Source download maintenance
+---------------------------
+
+Do not replace these archives with links to a latest version. Preserve the
+paired source archive when redistributing the installer. CI uploads sources
+first and gives them at least as long a retention period as the binary. If
+removing artifacts manually, remove the installer before its paired sources.
+A new runtime requires a new source/notice review, checksum pins and DLL audit.
+Verify GNU signatures against the GNU keyring and Omnivox's published hashes;
+review the MSYS2 PKGBUILDs and any external language dependency locks. Inspect
+and retain required licence notices as well as the corresponding source files.
