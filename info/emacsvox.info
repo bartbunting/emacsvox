@@ -132,11 +132,11 @@ Ref: Background startup ownership and failure recovery346109
 Ref: Supported Emacs versions349262
 Ref: Native Windows builds351941
 Ref: Offline Windows development bundle354214
-Ref: Remote preview validation359374
-Ref: Internal ownership and renderer tests379604
-Ref: Upstream contract layers383184
-Node: Authoring Sound Packs410933
-Node: Concept Index414198
+Ref: Remote preview validation361019
+Ref: Internal ownership and renderer tests381249
+Ref: Upstream contract layers384829
+Node: Authoring Sound Packs412578
+Node: Concept Index415843
 
 End Tag Table
 

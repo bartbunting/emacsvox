@@ -1006,6 +1006,33 @@ checker runs.
           and launcher still work.  Keep the failure fixture separate
           from user-facing artifacts.
 
+          The main GitHub Actions CI workflow builds the installer on
+          Windows x64 for pushes and pull requests to ‘master’, and can
+          also be started manually.  Its Linux packaging fixtures run
+          first.  The Windows job checks native ownership and cleanup
+          helpers, verifies the cached Emacs and Omnivox downloads, and
+          uses the pinned Inno compiler.  It tests installation,
+          shortcut launch, running-process refusal, repair, rollback of
+          a deliberately failed upgrade, and uninstall with profile and
+          voice fixtures preserved.  Destination checks run with only
+          Windows tools on PATH.  The core speech CI job also exercises
+          startup and welcome-screen preferences on each supported Emacs
+          version without needing an audio device.
+
+          The ‘emacsvox-windows-installer-evidence’ artifact retains
+          build manifests, checksums, compiler provenance and lifecycle
+          logs for 14 days, including failed runs.  To export lifecycle
+          logs locally, add ‘-LogDirectory’ with a new directory to
+          ‘emacsvox-windows-setup-tests.ps1’.  Its ‘result.json’ records
+          whether acceptance passed and which optional checks were
+          requested.
+
+          CI does not run audio or interactive screen-reader acceptance.
+          It does not yet exercise a successful second-build upgrade;
+          use ‘-Upgrade’ locally for that check.  CI builds the
+          executable for testing but does not upload it or the offline
+          bundle until corresponding-source publication is prepared.
+
           The setup executable is also a development artifact, not a
           distributable release.  Corresponding-source publication and
           remaining release work are recorded in ADR 0024

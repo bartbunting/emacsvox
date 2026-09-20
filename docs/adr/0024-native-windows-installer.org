@@ -112,6 +112,20 @@ independent of application versions. Reopen it through Help or a command.
 Use existing speech, voices, output settings, tutorial and manual commands;
 announce a short introduction rather than reading the whole screen.
 
+** Continuous integration
+
+Build and test the development installer in the main CI workflow on a native
+Windows x64 runner, after isolated packaging fixtures pass on Linux. Cover
+installation, shortcuts, running-process refusal, repair, failed-upgrade
+rollback and uninstall preservation. Native helper tests cover the optional
+cleanup rules. Keep compiler provenance, manifests, checksums and test logs
+as CI evidence, including for failed runs. Audio, interactive screen-reader
+acceptance and successful second-build upgrades remain separate checks.
+
+Do not upload installer executables or offline bundles until the matching
+source-publication work below is complete. CI build evidence is not a release
+gate or permission to tag, publish or sign a release.
+
 * Remaining release work
 
 Complete screen-reader acceptance of the wizard and broaden upgrade/failure
