@@ -1,0 +1,277 @@
+#    -*- mode: org -*-
+Programming is the art of telling another human being what one wants
+the computer to do.   [[https://www.azquotes.com/quote/964459][(DEK)]]
+
+Emacsvox News -- History Of User-Visible Changes
+
+Maintained by Emacsvox Contributors.
+
+* Emacsvox 2026.9.5 --- Current User-Visible Changes
+
+** Omnivox 1.12.0 required
+
+This release requires Omnivox 1.12.0 or newer. The guided installers pin
+1.12.0 for the core and matching optional engines; the Debian package recommends
+Omnivox 1.12.0 or newer. Upgrade an existing Omnivox installation separately: updating
+Emacsvox does not replace your selected server or install optional engines.
+
+** Engine-specific voice controls
+
+The common voice editor now offers /Engine-specific settings/ for a selected choice.
+DECtalk and Eloquence report the controls supported by the installed runtime,
+including their ranges, defaults and help. Adjustments can follow the common
+settings, use an explicit value or request the engine voice default. Automatic
+samples speak each change; Preview and Compare remain available before saving.
+
+These controls belong to the palette's selected choice, including its individual
+fallbacks. Ordinary speech and previews use the same settings. Unsupported or
+unqualified runtimes report the limitation and preserve saved adjustments.
+
+** More responsive voice changes
+
+Applying a preferred engine or voice palette avoids repeated preparation of
+unchanged voice choices. Both speech streams still acknowledge application.
+Omnivox 1.12.0 also improves DECtalk character navigation and custom-parameter
+speech. Maintainers can repeat the voice and editor performance benchmarks to
+compare future changes.
+
+** Unified voice palettes and upgrade notes
+
+A named voice now keeps its adjustments, ordered physical choices and
+individual fallback tuning together in its palette. Inheritance takes the
+nearest complete entry, with the read-only acss-default palette as the root.
+Copy Palette makes an independent copy; Reset restores an inherited voice,
+while Delete removes a custom voice with no inherited replacement. Source
+and Where Used help identify affected voices and known references.
+
+Use the common voice editor to change named voices. The former shared
+per-voice routing, migration and preset screens have been removed. Activation
+selects a palette for this session; Use at Startup saves its selection in a
+Presentation Profile.
+
+Older personal palettes need attention before upgrading. Only palette schema
+3 is supported, and opening an older palette does not convert it. Keep a
+backup and arrange a reviewed conversion of existing palettes and their
+physical choices before using this version. See /Choose And Manage Voice
+Palettes/ in the manual for the current model.
+
+** Delayed phonetic character descriptions
+
+Character navigation now speaks a letter normally, then its phonetic name
+after a pause. The names match C-e c.
+Customize emacsvox-delayed-phonetic-delay to change the default
+one-second pause. Toggle emacsvox-delayed-phonetic-mode to turn this feature
+off or on; it starts enabled. Further input or speech cancels the pending
+description. Typing and deletion do not trigger descriptions.
+
+** Additional RHVoice voices
+
+Get more voices now offers Alan, BDL, CLB and Ksp for RHVoice with a compatible
+updated Omnivox build and separately installed RHVoice runtime. Downloads include
+the required English data, start disabled and use the existing Enable and Apply
+workflow. Existing external voices, including SLT, are preserved. Downloaded
+RHVoice packages can be uninstalled with C-c u after disabling and applying.
+
+** Managed voice uninstallation
+
+The Omnivox voice browser offers C-c u to review removal of downloaded Piper,
+Flite and MBROLA packages. Disable and Apply first. Reviews include all shared
+speakers, known palette references and files retained for other speech sessions.
+Built-in voices, imported files, engine runtimes and saved choices are preserved.
+C-c U resumes incomplete cleanup.
+
+** Faster navigation in Browse voices
+
+Single-voice languages appear directly. Regional voices form a tree, such as
+English, United Kingdom, then West Midlands. Quitting a dedicated voice list
+now unwinds its window so repeated q returns out of the browser without a loop.
+
+Omnivox voice lists offer 1 All voices, 2 Downloaded, 3 Enabled, and 4 Needs
+Apply. Q lists their counts, including voices in collapsed languages.
+Slash finds a voice by name and opens its language group, switching to All
+voices when the quick filter hides the result. Each filter remembers its
+selected row and column. Unchecked worker status remains separate from
+confirmed selection changes needing Apply.
+
+** Expanded Piper voice catalogue
+
+Piper downloads are grouped by language, voice and quality. Slash searches
+across the collection; q returns to the preceding group. Model details can
+show the speakers sharing one download, with separate enablement after
+installation. Single-quality voices appear directly in their language group.
+The catalogue now supports e to enable or disable an installed speaker and
+a to review Apply, with actions near the top of model details.
+Downloads are checked and validated before they are added to the voice library.
+
+** Bundled eSpeak variants
+
+eSpeak engine details offer the variants reported by the running speech worker,
+sorted alphabetically. Choose a base voice with b, then press P or RET to hear
+the selected combination. Variants need no enabling, settings save, download
+or speech restart.
+
+Press u for /Use in palette/ to add the combination as a named voice's preferred
+choice, retaining its fallbacks and tuning. The voice editor previews and saves
+the change; editing a built-in palette creates a personal copy. Older workers
+report missing on-demand variant support explicitly.
+
+** Speech engine details
+
+Aural Home's /Speech engines/ shows discovered availability and voice counts.
+RET opens current main and notification discovery, timestamps and runtime
+diagnostics. Old inventory is labelled as previous evidence. Opening or
+refreshing these details does not run the release installer.
+
+On WSL, /Manage installed release/ opens a separate view identifying the release
+and location affected by installation, removal and /Check release engine/.
+That release may differ from the active development build or remote server.
+Managed checks run asynchronously and retain their diagnostics without opening
+an output buffer or speaking the full result. Release management keeps current
+speech running and does not select a different server.
+
+/Browse voices/ opens an engine-specific voice browser without disturbing
+the general Voice Workbench. P speaks an exact sample; t opens the existing
+voice editor, where an experiment can be saved to an explicit palette
+destination. q returns to engine details. Inventory updates preserve focus and
+selection, and browsing never starts a sample automatically.
+
+The bundled local launcher's engine details now provide file settings for
+Piper, Flite, Eloquence and DECtalk. Flite files have individual /Load file/
+switches; disabled files remain on disk and are omitted after speech restarts.
+Existing environment overrides retain precedence. A bounded, silent configured
+check retains the target and diagnostics without replacing live speech;
+incomplete Flite discovery is reported even when built-in SLT still works.
+Restarting local speech is an explicit action. Downloaded voice enablement uses
+Apply to check and replace both speech streams, restoring the previous
+configuration if a replacement fails. Downloads start disabled, and changing
+Enabled does not change the active voices until Apply. Managed voice-library
+operations currently use the bundled WSL-to-Windows launcher; remote and
+direct native launches retain their own configuration paths.
+
+** Independent output volumes
+
+Aural Home's /Audio output/ combines notification device selection with five
+Omnivox volume controls in Customize:
+notification speech, tones and earcons, plus main-stream tones and earcons.
+Set each from 0 to 100 percent; 100 preserves its normal level and 0 silences
+that component. Changes affect subsequent audio, and saved settings survive
+restarts. Independent notification levels require a separate notification
+process; notifications using main output share that process's levels.
+
+** Agent Shell response navigation
+
+Upward movement now reaches indented response text that could previously be
+skipped with only a blank-line earcon. First response rows are spoken in both
+directions, including wrapped text, without leaking hidden prompt markers.
+
+** Simpler feedback controls
+
+Aural Home's /Understand and change feedback/ group now has three entries:
+/Feedback for this item/, /Recent feedback/, and /Return to source item/.
+Feedback Details combines explanation, playback, and access to changes.
+Existing direct shortcuts and searchable action names remain available.
+Semantic vocabulary is available through Help, search, and matching criteria.
+
+Feedback Details offers a compact voice choice for the selected field and
+access to exact sound overrides, including restoration. Individual voice spans
+expand separately, simple field headings are shorter, and unsaved field changes
+are marked in the report. Original and simulated playback remain clearly
+labelled; previews and retained drafts do not change the captured presentation.
+
+** Names for occasional emoji enabled by default
+
+Occasional emoji are named before engine selection by default.
+For example, =Forecast 🔮= becomes =Forecast crystal ball=
+for speech, which can avoid an unnecessary engine fallback. The source text
+stays unchanged. Naming defaults to at most 64 eligible occurrences per item
+and supports buffer-local settings and custom names. Set
+=emacsvox-emoji-naming-enabled= to nil to disable it globally or in a buffer.
+The higher limit handles decorated mail subjects, including a thinking face
+followed by three pizza symbols, without skipping all naming at the third emoji.
+
+Names come from Emacs's full bundled emoji table, including =🌱= (seedling),
+flags and keycaps. Arrow and harpoon symbols use bundled emoji names or their
+Unicode names, covering all directions, diagonal, double and curved arrows,
+including text and emoji presentation selectors.
+No per-emoji approval is needed; an explicit restriction
+list remains optional. Unknown sequences and other languages
+keep their existing fallback behaviour. Speech and voice previews share the
+policy, and Feedback Details records substitutions. Original replay preserves
+the prepared text after settings change. See /Emoji Speech Names/ in the manual.
+
+** Optional fallback tuning
+Choose Customize this voice from an editor fallback row to set individual
+adjustments, use the shared value, or restore the adapter default. Automatic
+samples audition that row; the same voice draft and Save action own all changes.
+Experiment keeps default to the chosen row's voice and adjustments. Shared
+changes remain explicit; unrelated draft edits and save recovery are preserved.
+Details explains the shared, actual-fallback and contextual sources of the last
+confirmed sample's settings.
+
+
+** Tracked speech handles early playback replies
+
+Tracked reading now retains playback completion received while a speech request
+is still being written. Stopping speech cancels pending callbacks, and failed
+submissions cannot restore cancelled tracking or replay the request. Speech
+started by playback callbacks gets its own submission.
+
+Stop also cancels speech still being prepared, including a request interrupted
+during its automatic stop of older speech. A newer urgent announcement can
+supersede that request. Interrupted preparation releases its tracking slots.
+
+** Voice editor gives spoken adjustment feedback
+
+Automatic samples now start with the new adjustment value. Numeric controls
+stop at their limits and announce minimum or maximum, and the automatic-sample
+toggle announces on or off. Arrow and Tab navigation stop at the first and
+last fields without wrapping around the editor.
+
+Complete voice comparisons and individual auditions now share cancellation
+handling. Stop and newer previews retire the previous sample's pending work;
+late replies cannot start another comparison entry. Individual auditions also
+have a playback timeout. A failed or interrupted write is never replayed.
+
+With Omnivox per-choice tuning support, editor previews now preserve individual
+fallback settings and contextual overrides. A row can be auditioned or compared
+with its original after reordering. Playback feedback distinguishes the sample
+from spoken comparison labels and audio that was accepted but never started.
+Text changes, undo, save and context recapture retire stale previews. Earlier
+playback evidence cannot replace a newer view's result.
+
+** Voice palette selections apply consistently
+
+Search and incremental-search hits now use the active palette's bolden voice.
+Nonincremental searches, including regexp and history-repeat commands, speak
+the destination line and cue a successful hit once.
+
+Completion, status speech, spelling feedback, widgets, and other integrations
+now retain named voices instead of freezing legacy ACSS presets. Calendar
+marked dates and CPerl/table indentation use the normal speech path, and the
+named-voice sampler follows the active palette. Voice Lock and explicit aural
+rules retain their existing control over formatting voices.
+
+Restart Emacs after updating to pick up the new voice defaults. Explicit
+personal voice assignments are preserved; use names such as ='voice-bolden=
+when those assignments should follow the palette. Legacy =voice-*-settings=
+remain the fallback for voices without custom palette definitions.
+
+** Responsive shell completion under WSL
+
+Shell command-name completion now skips Windows drive directories by default,
+avoiding long pauses scanning directories such as System32. Windows programs
+still run by name, and explicit Windows filename completion remains available.
+Enable =emacsvox-shell-complete-windows-commands= to restore those command-name
+candidates. Native Windows and remote Shell buffers are unchanged.
+
+** Reading and navigation fixes
+
+EPUB filenames, downloaded paths and web URLs are passed literally to external
+tools, including names containing spaces or shell punctuation. Scanner image
+processing preserves the originals if processing fails.
+
+Password prompts retain their speech during minibuffer setup. Incremental
+search restores the previous message-speech preference when it ends, and Magit
+filenames retain their voices across selection highlights.
+
+Released notes are preserved in [[file:NEWS-2026.9.4][NEWS for Emacsvox 2026.9.4]].
