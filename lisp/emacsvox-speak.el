@@ -1516,11 +1516,112 @@ the normal semantic capitalization presentation handles its cue."
 
 ;;;  Speak Chars:
 
+(defvar emacsvox--delayed-phonetic-timer nil
+  "Timer for the pending phonetic character announcement.")
+
+(defvar emacsvox--delayed-phonetic-request nil
+  "Identity and source snapshot of the pending phonetic announcement.")
+
+(defun emacsvox--delayed-phonetic-cancel (&rest _)
+  "Discard the pending phonetic announcement, if any."
+  (when (timerp emacsvox--delayed-phonetic-timer)
+    (cancel-timer emacsvox--delayed-phonetic-timer))
+  (setq emacsvox--delayed-phonetic-timer nil
+        emacsvox--delayed-phonetic-request nil))
+
+(defcustom emacsvox-delayed-phonetic-delay 1.0
+  "Seconds of idle time before describing a letter phonetically.
+Must be a positive, finite number.  Used by
+`emacsvox-delayed-phonetic-mode'; changing it cancels a pending announcement."
+  :type 'number
+  :group 'emacsvox
+  :set (lambda (symbol value)
+         (unless (and (numberp value) (> value 0) (= (- value value) 0))
+           (error "Phonetic delay must be a positive, finite number"))
+         (emacsvox--delayed-phonetic-cancel)
+         (set-default symbol value)))
+
+(define-minor-mode emacsvox-delayed-phonetic-mode
+  "Describe letters phonetically after pausing during character navigation.
+Speak the letter normally, then use the same phonetic name as
+`emacsvox-speak-char' after `emacsvox-delayed-phonetic-delay' seconds idle.
+Further input, speech, stopping speech or disabling this global mode cancels
+the pending description.  Typing, deletion and explicit phonetic reading do
+not schedule descriptions.  This mode is enabled by default."
+  :global t
+  :init-value t
+  :group 'emacsvox
+  (emacsvox--delayed-phonetic-cancel)
+  (if emacsvox-delayed-phonetic-mode
+      (add-hook 'pre-command-hook #'emacsvox--delayed-phonetic-cancel)
+    (remove-hook 'pre-command-hook #'emacsvox--delayed-phonetic-cancel))
+  (dolist (function '(tts-speak tts-letter tts-dispatch tts-stop))
+    (if emacsvox-delayed-phonetic-mode
+        (advice-add function :before #'emacsvox--delayed-phonetic-cancel)
+      (advice-remove function #'emacsvox--delayed-phonetic-cancel))))
+
+;; `:init-value' initializes the option but does not run the mode body.
+;; Respect a previously customized value when installing the cancellation hooks.
+(emacsvox-delayed-phonetic-mode (if emacsvox-delayed-phonetic-mode 1 -1))
+
+(defun emacsvox--delayed-phonetic-announce (request)
+  "Describe the saved character if REQUEST is still current and unchanged."
+  (when (eq request emacsvox--delayed-phonetic-request)
+    (emacsvox--delayed-phonetic-cancel)
+    (pcase-let
+        ((`(,buffer ,window ,position ,tick ,events ,keys ,submission
+                    ,process ,char ,context)
+          request))
+      (when (and emacsvox-delayed-phonetic-mode
+                 (not (input-pending-p))
+                 ;; Unlike `pre-command-hook', this also notices a prefix key
+                 ;; while Emacs is waiting for the rest of its key sequence.
+                 (= events num-nonmacro-input-events)
+                 (= keys num-input-keys)
+                 (= submission emacsvox-aural--submission-sequence)
+                 (eq window (selected-window))
+                 (buffer-live-p buffer)
+                 (eq buffer (window-buffer window)))
+        (with-current-buffer buffer
+          (when (and (not tts-quiet)
+                     (eq process tts-speaker-process)
+                     (= position (point))
+                     (= tick (buffer-chars-modified-tick))
+                     (not (stringp (get-char-property position 'display))))
+            (let ((emacsvox-aural-submission-context context)
+                  (emacsvox-aural-submission-occasion 'navigation))
+              (tts-speak (emacsvox-get-phonetic-string char)))))))))
+
+(defun emacsvox--delayed-phonetic-schedule (char)
+  "Remember navigated CHAR for one optional delayed phonetic announcement."
+  (when (and emacsvox-delayed-phonetic-mode
+             (not tts-quiet)
+             (eq emacsvox-aural-submission-occasion 'navigation)
+             (eq char (char-after))
+             (<= ?a (downcase char) ?z)
+             (numberp emacsvox-delayed-phonetic-delay)
+             (> emacsvox-delayed-phonetic-delay 0)
+             (= (- emacsvox-delayed-phonetic-delay
+                   emacsvox-delayed-phonetic-delay) 0))
+    (emacsvox--delayed-phonetic-cancel)
+    (setq emacsvox--delayed-phonetic-request
+          (list (current-buffer) (selected-window) (point)
+                (buffer-chars-modified-tick) num-nonmacro-input-events num-input-keys
+                emacsvox-aural--submission-sequence tts-speaker-process char
+                (emacsvox-aural-capture-context nil 'navigation)))
+    (setq emacsvox--delayed-phonetic-timer
+          (run-with-idle-timer
+           emacsvox-delayed-phonetic-delay nil
+           #'emacsvox--delayed-phonetic-announce
+           emacsvox--delayed-phonetic-request))))
+
 (defun emacsvox-speak-this-char (char)
   "Speak this CHAR."
   (when char
     (cond
-     ((emacsvox-is-alpha-p char) (tts-letter (char-to-string char)))
+     ((emacsvox-is-alpha-p char)
+      (tts-letter (char-to-string char))
+      (emacsvox--delayed-phonetic-schedule char))
      ((and tts-handle-unicode (> char 128)) (emacsvox-speak-char-name char))
      (t (tts-dispatch (tts-char-to-speech char))))))
 

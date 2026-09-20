@@ -869,7 +869,7 @@ are in the *note (emacsvox-reference)Emacsvox Keymaps::.
 
 ‘C-e c’
 
-     ‘emacsvox-speak-char’ speaks the character at point.
+     ‘emacsvox-speak-char’ speaks the character at point phonetically.
 ‘C-e w’
 
      ‘emacsvox-speak-word’ speaks the current word.  Repeating it at the
@@ -906,6 +906,23 @@ are in the *note (emacsvox-reference)Emacsvox Keymaps::.
 the text before or after point.  Use ‘C-h k’ on a command before relying
 on those variants, because their exact argument behavior is documented
 with the command.
+
+   Use ‘M-x emacsvox-delayed-phonetic-mode’ to toggle delayed phonetic
+descriptions.  When enabled, moving by character speaks the letter
+normally; pausing then speaks its phonetic name, such as "alpha" for
+"a".  These are the same English letter names used by ‘C-e c’.
+
+   The mode starts enabled.  Customize ‘emacsvox-delayed-phonetic-delay’
+to change the default one-second delay to another positive number of
+seconds.  You can save the mode's enabled or disabled setting through
+Customize as well.
+
+   Further input, including the first key of a prefix sequence, cancels
+the pending description.  New speech, stopping speech, changing the
+source text or leaving its buffer or window also prevents a stale
+description.  Each pause produces at most one description.  Typing,
+deletion, punctuation and explicit phonetic reading do not trigger
+delayed descriptions.
 
 
 File: emacsvox.info,  Node: Speech System,  Next: Voice-lock,  Prev: Reading,  Up: Basic Usage

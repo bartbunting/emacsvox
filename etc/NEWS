@@ -36,6 +36,15 @@ backup and arrange a reviewed conversion of existing palettes and their
 physical choices before using this version. See /Choose And Manage Voice
 Palettes/ in the manual for the current model.
 
+** Delayed phonetic character descriptions
+
+Character navigation now speaks a letter normally, then its phonetic name
+after a pause. The names match C-e c.
+Customize emacsvox-delayed-phonetic-delay to change the default
+one-second pause. Toggle emacsvox-delayed-phonetic-mode to turn this feature
+off or on; it starts enabled. Further input or speech cancels the pending
+description. Typing and deletion do not trigger descriptions.
+
 ** Additional RHVoice voices
 
 Get more voices now offers Alan, BDL, CLB and Ksp for RHVoice with a compatible

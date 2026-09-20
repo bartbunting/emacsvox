@@ -807,7 +807,7 @@ and check your customizations.  The complete generated defaults are in the
 @kindex C-e c
 
 @code{emacsvox-speak-char}
-speaks the character at point.
+speaks the character at point phonetically.
 @item C-e w
 @findex emacsvox-speak-word
 
@@ -878,6 +878,24 @@ Many speaking commands accept a prefix argument to limit speech to the
 text before or after point.  Use @kbd{C-h k} on a command before relying
 on those variants@comma{} because their exact argument behavior is documented
 with the command.
+
+@findex emacsvox-delayed-phonetic-mode
+@vindex emacsvox-delayed-phonetic-delay
+
+Use @kbd{M-x emacsvox-delayed-phonetic-mode} to toggle delayed
+phonetic descriptions. When enabled@comma{} moving by character speaks the letter
+normally; pausing then speaks its phonetic name@comma{} such as "alpha" for "a".
+These are the same English letter names used by @kbd{C-e c}.
+
+The mode starts enabled. Customize @code{emacsvox-delayed-phonetic-delay} to change
+the default one-second delay to another positive number of seconds. You can
+save the mode's enabled or disabled setting through Customize as well.
+
+Further input@comma{} including the first key of a prefix sequence@comma{} cancels the pending
+description. New speech@comma{} stopping speech@comma{} changing the source text or leaving
+its buffer or window also prevents a stale description. Each pause produces at
+most one description. Typing@comma{} deletion@comma{} punctuation and explicit phonetic
+reading do not trigger delayed descriptions.
 
 @node Speech System
 @section Adjust Speech While You Work

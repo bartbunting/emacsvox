@@ -69,7 +69,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1561 commands and 217 options.
+This chapter documents a total of 1562 commands and 220 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -17979,6 +17979,38 @@ Cycles to previous buffer having same mode.
 @end format
 @end deffn
 
+@subsubsection emacsvox-delayed-phonetic-mode
+@deffn {Command} emacsvox-delayed-phonetic-mode  (&optional arg)
+@findex emacsvox-delayed-phonetic-mode
+
+@format
+Describe letters phonetically after pausing during character navigation.
+
+Speak the letter normally, then use the same phonetic name as
+‘emacsvox-speak-char’ after ‘emacsvox-delayed-phonetic-delay’ seconds idle.
+Further input, speech, stopping speech or disabling this global mode cancels
+the pending description.  Typing, deletion and explicit phonetic reading do
+not schedule descriptions.  This mode is enabled by default.
+
+This is a global minor mode.  If called interactively, toggle the
+‘Emacsvox-Delayed-Phonetic mode’ mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
+
+If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate ‘(default-value 'emacsvox-delayed-phonetic-mode)’.
+
+The mode’s hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)
+@end format
+@end deffn
+
 @subsubsection emacsvox-describe-tapestry
 @deffn {Command} emacsvox-describe-tapestry  (&optional details)
 @table @kbd
@@ -19470,6 +19502,57 @@ Default Value:
 @verbatim
 
 ""
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-delayed-phonetic-delay
+@verbatim
+Seconds of idle time before describing a letter phonetically.
+Must be a positive, finite number.  Used by
+‘emacsvox-delayed-phonetic-mode’; changing it cancels a pending announcement.
+@end verbatim
+
+Default Value:
+@verbatim
+
+1.0
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-delayed-phonetic-mode
+@verbatim
+Non-nil if Emacsvox-Delayed-Phonetic mode is enabled.
+See the ‘emacsvox-delayed-phonetic-mode’ command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node ‘Easy Customization’)
+or call the function ‘emacsvox-delayed-phonetic-mode’.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-delayed-phonetic-mode-hook
+@verbatim
+Hook run after entering or leaving ‘emacsvox-delayed-phonetic-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
 
 @end verbatim
 
@@ -25882,6 +25965,8 @@ Speak version.
 Stop speech.
 Optional argument ALL or an interactive call also stops a distinct
 notification process.
+
+This function has :before advice: ‘emacsvox--delayed-phonetic-cancel’.
 
 (fn &optional ALL)
 @end format

@@ -150,7 +150,8 @@
 (defun emacsvox--advice-evil-backward-char-after (&rest _)
   "Speak the character selected by backward Evil motion."
   (when (ems-interactive-p 'evil-backward-char)
-    (emacsvox-speak-this-char (following-char))))
+    (let ((emacsvox-aural-submission-occasion 'navigation))
+      (emacsvox-speak-this-char (following-char)))))
 
 (push '(evil-backward-char :after
         emacsvox--advice-evil-backward-char-after)
@@ -159,7 +160,8 @@
 (defun emacsvox--advice-evil-forward-char-after (&rest _)
   "Speak the character selected by forward Evil motion."
   (when (ems-interactive-p 'evil-forward-char)
-    (emacsvox-speak-this-char (following-char))))
+    (let ((emacsvox-aural-submission-occasion 'navigation))
+      (emacsvox-speak-this-char (following-char)))))
 
 (push '(evil-forward-char :after
         emacsvox--advice-evil-forward-char-after)

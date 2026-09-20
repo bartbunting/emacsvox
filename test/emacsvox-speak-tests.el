@@ -347,6 +347,189 @@
       (plist-get facts :capitalization-presentation)
       'spoken-tone))))
 
+(defmacro emacsvox-speak-tests--with-delayed-phonetics (&rest body)
+  "Run BODY with captured speech and manually expirable idle timers."
+  (declare (indent 0) (debug t))
+  `(let ((was-enabled emacsvox-delayed-phonetic-mode))
+     (unwind-protect
+         (progn
+           (emacsvox-delayed-phonetic-mode -1)
+           (let ((emacsvox-delayed-phonetic-mode nil)
+                 (emacsvox-delayed-phonetic-delay 0.75)
+                 (emacsvox--delayed-phonetic-timer nil)
+                 (emacsvox--delayed-phonetic-request nil)
+                 (emacsvox-aural-submission-occasion nil)
+                 (tts-quiet nil)
+                 (tts-speaker-process nil)
+                 spoken scheduled)
+             (save-window-excursion
+               (with-temp-buffer
+                 (switch-to-buffer (current-buffer))
+                 (insert " abA.1")
+                 (goto-char 2)
+                 (cl-letf
+                     (((symbol-function 'tts-letter)
+                       (lambda (text) (push (list 'letter text) spoken)))
+                      ((symbol-function 'tts-speak)
+                       (lambda (text) (push (list 'phonetic text) spoken)))
+                      ((symbol-function 'tts-dispatch) #'ignore)
+                      ((symbol-function 'tts-stop) #'ignore)
+                      ((symbol-function 'emacsvox-icon) #'ignore)
+                      ((symbol-function 'input-pending-p) (lambda (&rest _) nil))
+                      ((symbol-function 'run-with-idle-timer)
+                       (lambda (delay repeat function &rest arguments)
+                         (let ((timer (timer-create)))
+                           (timer-set-function timer function arguments)
+                           (push (list delay repeat timer) scheduled)
+                           timer))))
+                   (unwind-protect
+                       (progn (emacsvox-delayed-phonetic-mode 1) ,@body)
+                     (emacsvox-delayed-phonetic-mode -1)))))))
+       (emacsvox-delayed-phonetic-mode (if was-enabled 1 -1)))))
+
+(defun emacsvox-speak-tests--expire-phonetics (timer)
+  "Invoke captured TIMER, even if cancellation has already made it stale."
+  (apply (timer--function timer) (timer--args timer)))
+
+(ert-deftest emacsvox-delayed-phonetics-navigation-is-once-and-configurable ()
+  "Navigation speaks normally, then the existing phonetic name once."
+  (emacsvox-speak-tests--with-delayed-phonetics
+    (let ((emacsvox-aural-submission-occasion 'navigation))
+      (emacsvox-speak-char t))
+    (should (equal spoken '((letter "a"))))
+    (should (equal (seq-take (car scheduled) 2) '(0.75 nil)))
+    (let ((timer (nth 2 (car scheduled))))
+      (emacsvox-speak-tests--expire-phonetics timer)
+      (emacsvox-speak-tests--expire-phonetics timer))
+    (should (equal (reverse spoken) '((letter "a") (phonetic "alpha"))))))
+
+(ert-deftest emacsvox-delayed-phonetics-follows-interactive-character-motion ()
+  "Actual character motion arms descriptions; deletion does not."
+  (require 'emacsvox-advice)
+  (emacsvox-speak-tests--with-delayed-phonetics
+    (goto-char 1)
+    (call-interactively #'forward-char)
+    (should (equal spoken '((letter "a"))))
+    (emacsvox-speak-tests--expire-phonetics (nth 2 (car scheduled)))
+    (should (equal (car spoken) '(phonetic "alpha")))
+    (setq scheduled nil)
+    (cl-letf (((symbol-function 'emacsvox-speak-edit-operation) #'ignore))
+      (call-interactively #'delete-char))
+    (should-not scheduled)))
+
+(ert-deftest emacsvox-delayed-phonetics-rapid-navigation-keeps-last-letter ()
+  "A stale callback cannot describe the previous character or cancel the new one."
+  (emacsvox-speak-tests--with-delayed-phonetics
+    (let ((emacsvox-aural-submission-occasion 'navigation))
+      (emacsvox-speak-char t)
+      (goto-char 4)
+      (emacsvox-speak-char t))
+    (emacsvox-speak-tests--expire-phonetics (nth 2 (cadr scheduled)))
+    (should (equal (reverse spoken) '((letter "a") (letter "A"))))
+    (emacsvox-speak-tests--expire-phonetics (nth 2 (car scheduled)))
+    (should (equal (car spoken) '(phonetic "Alpha")))))
+
+(ert-deftest emacsvox-delayed-phonetics-cancels-on-input-including-prefix ()
+  "Input cancels even before a complete command invokes its pre-command hook."
+  (dolist (kind '(command prefix queued))
+    (emacsvox-speak-tests--with-delayed-phonetics
+      (let ((emacsvox-aural-submission-occasion 'navigation))
+        (emacsvox-speak-char t))
+      (let ((timer (nth 2 (car scheduled))))
+        (pcase kind
+          ('command
+           (run-hooks 'pre-command-hook)
+           (emacsvox-speak-tests--expire-phonetics timer))
+          ('prefix
+           (let ((num-nonmacro-input-events (1+ num-nonmacro-input-events)))
+             (emacsvox-speak-tests--expire-phonetics timer)))
+          ('queued
+           (cl-letf (((symbol-function 'input-pending-p) (lambda (&rest _) t)))
+             (emacsvox-speak-tests--expire-phonetics timer)))))
+      (should (equal spoken '((letter "a")))))))
+
+(ert-deftest emacsvox-delayed-phonetics-cancels-on-new-speech-stop-and-disable ()
+  "Speech replacement, stop and disable all invalidate the pending callback."
+  (dolist (action (list (lambda () (tts-speak "new speech"))
+                       (lambda () (tts-letter "b"))
+                       (lambda () (tts-dispatch "other text"))
+                       #'tts-stop
+                       (lambda () (emacsvox-delayed-phonetic-mode -1))))
+    (emacsvox-speak-tests--with-delayed-phonetics
+      (let ((emacsvox-aural-submission-occasion 'navigation))
+        (emacsvox-speak-char t))
+      (funcall action)
+      (let ((before (copy-tree spoken)))
+        (emacsvox-speak-tests--expire-phonetics (nth 2 (car scheduled)))
+        (should (equal spoken before)))
+      (should-not emacsvox--delayed-phonetic-request))))
+
+(ert-deftest emacsvox-delayed-phonetics-allows-background-fontification ()
+  "Changes to highlighting alone do not invalidate the navigated letter."
+  (emacsvox-speak-tests--with-delayed-phonetics
+    (let ((emacsvox-aural-submission-occasion 'navigation))
+      (emacsvox-speak-char t))
+    (put-text-property 2 3 'face 'font-lock-keyword-face)
+    (emacsvox-speak-tests--expire-phonetics (nth 2 (car scheduled)))
+    (should (equal (reverse spoken) '((letter "a") (phonetic "alpha"))))))
+
+(ert-deftest emacsvox-delayed-phonetics-rejects-changed-source-and-context ()
+  "Point, text, source window, speech generation and mute changes suppress speech."
+  (dolist (kind '(point text display buffer window submission quiet process killed))
+    (emacsvox-speak-tests--with-delayed-phonetics
+      (let ((emacsvox-aural-submission-occasion 'navigation))
+        (emacsvox-speak-char t))
+      (let ((source (current-buffer)))
+        (pcase kind
+          ('point (goto-char 3))
+          ('text (save-excursion (insert "z")))
+          ('display (put-text-property 2 3 'display "replacement"))
+          ('buffer (switch-to-buffer (get-buffer-create " *phonetics-other*")))
+          ('window (select-window (split-window)))
+          ('submission (cl-incf emacsvox-aural--submission-sequence))
+          ('quiet (setq tts-quiet t))
+          ('process (setq tts-speaker-process 'different-process))
+          ('killed (kill-buffer source)))
+        (emacsvox-speak-tests--expire-phonetics (nth 2 (car scheduled)))
+        (when (get-buffer " *phonetics-other*")
+          (kill-buffer " *phonetics-other*")))
+      (should (equal spoken '((letter "a")))))))
+
+(ert-deftest emacsvox-delayed-phonetics-excludes-other-character-speech ()
+  "Off, typing/edit feedback, explicit phonetics and nonletters do not arm timers."
+  (emacsvox-speak-tests--with-delayed-phonetics
+    (emacsvox-speak-this-char ?a)
+    (let ((emacsvox-aural-submission-occasion 'edit))
+      (emacsvox-speak-char t))
+    (emacsvox-speak-char)
+    (should (equal (car spoken) '(phonetic "alpha")))
+    (let ((emacsvox-aural-submission-occasion 'navigation))
+      (dolist (position '(1 5 6 7))
+        (goto-char position)
+        (emacsvox-speak-char t))
+      (goto-char 2)
+      (put-text-property 2 3 'display "replacement")
+      (emacsvox-speak-char t)
+      (remove-text-properties 2 3 '(display nil))
+      (emacsvox-delayed-phonetic-mode -1)
+      (emacsvox-speak-char t))
+    (should-not scheduled)))
+
+(ert-deftest emacsvox-delayed-phonetics-validates-delay-and-cleans-up ()
+  "Customize rejects invalid delays; changing delay and disabling release work."
+  (emacsvox-speak-tests--with-delayed-phonetics
+    (let ((emacsvox-aural-submission-occasion 'navigation))
+      (emacsvox-speak-char t))
+    (dolist (value '(0 -1 "one" 1.0e+INF 0.0e+NaN))
+      (should-error (customize-set-variable 'emacsvox-delayed-phonetic-delay value)))
+    (customize-set-variable 'emacsvox-delayed-phonetic-delay 2.0)
+    (emacsvox-speak-tests--expire-phonetics (nth 2 (car scheduled)))
+    (should (equal spoken '((letter "a"))))
+    (emacsvox-delayed-phonetic-mode -1)
+    (should-not (memq #'emacsvox--delayed-phonetic-cancel pre-command-hook))
+    (dolist (function '(tts-speak tts-letter tts-dispatch tts-stop))
+      (should-not (advice-member-p #'emacsvox--delayed-phonetic-cancel function)))))
+
 (ert-deftest emacsvox-speak-rest-of-buffer-advances-after-playback ()
   "Tracked reading advances point and source only after each completion."
   (let ((tts-speaker-process 'speaker)

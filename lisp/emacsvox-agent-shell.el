@@ -3015,7 +3015,8 @@ chat source is crossed as one unit before core character speech runs."
       (ems-interactive-p target)
       (goto-char chat-destination)
       (and tts-stop-immediately (tts-stop))
-      (emacsvox-speak-char t)
+      (let ((emacsvox-aural-submission-occasion 'navigation))
+        (emacsvox-speak-char t))
       nil)
      (t
       (apply original-function arguments)))))

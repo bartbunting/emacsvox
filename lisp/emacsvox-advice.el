@@ -3535,7 +3535,8 @@ played afterward according to the result."
     (rectangle-backward-char rectangle-forward-char
                              rectangle-right-char rectangle-left-char)
     "Speak the character after moving horizontally in a rectangle."
-  (emacsvox-speak-char t))
+  (let ((emacsvox-aural-submission-occasion 'navigation))
+    (emacsvox-speak-char t)))
 ;;; Compose Mail:
 
 (emacsvox-advice--define-interactive-after-advice
