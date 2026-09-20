@@ -9,3 +9,9 @@ Maintained by Emacsvox Contributors.
 * Emacsvox Unreleased --- Current User-Visible Changes
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
+
+** Native Windows installation
+
+The native Windows x64 installer can download a verified complete GNU Emacs
+with =-DownloadEmacs=. Use =-Offline= with a prepared archive cache to install
+without network access. Existing explicit Emacs selections are preserved.

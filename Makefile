@@ -83,6 +83,7 @@ TEST_DEPS_CACHE ?= $(CURDIR)/.test-deps-cache
 .PHONY: release-tag release-publish
 .PHONY: deb deb-test release-deb
 .PHONY: windows-staging-test
+.PHONY: windows-bundle-dev windows-bundle-test
 
 version:
 	@cat "$(VERSION_FILE)"
@@ -104,7 +105,7 @@ deb-test: check-emacs
 release-deb: check-emacs
 	python3 utils/emacsvox-package-deb.py --release --emacs "$(EMACS)" --output-dir "$(DIST_DIR)"
 
-test: version-check headers-check source-archive-test windows-staging-test piper-catalogue-test unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
+test: version-check headers-check source-archive-test windows-staging-test windows-bundle-test piper-catalogue-test unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
 
 .PHONY: piper-catalogue-test
 piper-catalogue-test:
@@ -112,6 +113,13 @@ piper-catalogue-test:
 
 windows-staging-test:
 	python3 -m unittest discover -s test -p 'test_windows_staging.py' -v
+
+# Local development payload only; this target does not publish a release.
+windows-bundle-dev:
+	python3 utils/emacsvox-windows-bundle.py --output-directory "$(DIST_DIR)"
+
+windows-bundle-test:
+	python3 -m unittest discover -s test -p 'test_windows_bundle.py' -v
 
 compat-test: check-emacs config
 	$(EMACS) -Q --batch -l test/run-compat-tests.el

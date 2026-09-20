@@ -360,7 +360,8 @@ server is ready.  If either is missing, use
 before continuing.  @@texinfo:@xref{Speech Backends}@@ contains the complete platform
 matrix, build details, and compatibility alternatives.  Native Windows Emacs
 on x64 is supported with Emacs 30.2 or newer. Its PowerShell installer reuses
-a prebuilt Emacs or offers an explicit source build, and installs Omnivox
+a prebuilt Emacs, can download a verified Emacs with =-DownloadEmacs=, or
+offers an explicit source build, and installs Omnivox
 without WSL. Follow
 @@texinfo:@ref{Trying Native Windows Emacsvox,Installing Native Windows Emacsvox}@@.
 

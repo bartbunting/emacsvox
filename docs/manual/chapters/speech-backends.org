@@ -667,21 +667,29 @@ Skip cloning if you already have a Windows checkout and change into it instead.
 The check reports the selected Emacs and planned paths without downloading,
 writing configuration, or playing audio.
 
-The installer reuses native Emacs 30.2 or newer. If none is selected, it offers
-a [[https://www.gnu.org/software/emacs/download.html][prebuilt Windows Emacs]] first. Install a release at least 30.2 and select its
-~bin/emacs.exe~ with ~-Emacs~. Alternatively, choose ~-BuildEmacs~ to build
-GNU Emacs 31.1 using a private MSYS2 UCRT64 toolchain. No source build starts
-without that option. It then installs the pinned Omnivox core and prepares Emacsvox.  Allow several gigabytes of disk space and
-time for the initial downloads and source build.  Later runs reuse the
-installed Emacs and cached archives.  An existing native Emacs does not need
-MSYS2 to prepare Emacsvox.
+The installer reuses native Emacs 30.2 or newer. To have it download and
+install the verified complete GNU Emacs 31.1 Windows release for you, use:
+
+#+begin_src powershell
+.\bin\emacsvox-install.ps1 -DownloadEmacs -Check
+.\bin\emacsvox-install.ps1 -DownloadEmacs
+#+end_src
+
+This choice includes Emacs's runtime libraries and needs no compiler or
+MSYS2. You can also install a [[https://www.gnu.org/software/emacs/download.html][prebuilt Windows Emacs]] yourself and select its
+~bin/emacs.exe~ with ~-Emacs~. Alternatively, ~-BuildEmacs~ builds GNU Emacs
+31.1 using a private MSYS2 UCRT64 toolchain. No source build starts without
+that option; allow several gigabytes and time for its downloads and build.
+The installer then installs the pinned Omnivox core and prepares Emacsvox.
+Later runs reuse installed components and verified cached archives.
 
 To select an existing Emacs explicitly, add
 =-Emacs "C:\path\to\Emacs\bin\emacs.exe"=.  Explicit =-Emacs=, =EMACS= environment,
 and =local.mk= selections must agree and require native Emacs 30.2 or newer.
-=-BuildEmacs= selects the managed source build instead of a saved or PATH
-selection; it reuses a complete managed build when one exists.  It cannot
-replace an explicit selection.
+=-DownloadEmacs= and =-BuildEmacs= select their respective managed Emacs
+instead of a saved or PATH selection. They reuse a complete matching
+installation when one exists and cannot replace an explicit selection.
+Choose only one of these options.
 
 Installation is per-user.  The defaults are:
 
@@ -696,6 +704,13 @@ Windows directories.  The MSYS2 build-tool path must not contain spaces;
 choose =-ToolchainRoot= if the default does.  Checkout and installed Emacs
 paths may contain spaces.  The installer leaves personal Emacs initialization,
 system PATH, Windows services, and JAWS settings alone.
+
+For installation from an already prepared archive cache, add =-Offline= and
+=-CacheDirectory "C:\path\to\archives"=. This disables downloads and
+checks every required archive before changing the installation. Missing or
+damaged archives stop installation. Offline mode supports prebuilt or
+existing Emacs; it does not support =-BuildEmacs=. The read-only =-Check=
+command reports the plan without checking cached archives or playing audio.
 
 The source archives are checksum-pinned.  MSYS2 compiler packages come from
 its signed rolling repositories; their installed versions are recorded with

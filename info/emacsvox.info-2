@@ -892,27 +892,73 @@ checker runs.
           .\bin\emacsvox.ps1 -Check
 
      The PowerShell tests use temporary fixtures and an existing native
-     Emacs.  They check doctor behavior, explicit selections, incomplete
-     installations, platform rejection, checksums, archive paths,
-     argument handling, and atomic configuration replacement.
+     Emacs.  They check doctor behavior, explicit selections,
+     prebuilt/offline preflight, incomplete installations, platform
+     rejection, checksums, archive paths, argument handling, and atomic
+     configuration replacement.
      ‘test/emacsvox-native-bytecode-tests.el’ compares the native
      inventory with GNU Make and checks dependency order and byte-code
      preflight failures.  Keep the WSL x64/ARM64 and remote installer
      tests passing.
 
-     Actual acquisition acceptance must start with a private toolchain
-     and the pinned archives, not a reused developer runtime.  Keep
-     MSYS2 package versions, compiler/configure/build/install logs, and
-     ‘emacsvox-build.json’ with the installed Emacs.  The installation
-     logs also include ‘native-install-provenance.json’ with Lisp source
-     hashes and selected pins.  MSYS2 packages are signed rolling
-     inputs; these records do not claim a frozen or bit-identical
-     compiler environment.  Verify fresh graphical startup, acknowledged
-     routing, and tracked completion on both speech lanes with a PATH
-     that contains neither WSL nor MSYS2 tools.  Human listening remains
-     a separate acceptance step.  Native Windows x64 is supported;
-     remote workstation speech remains preview, as recorded in ADR 0014
+     Actual acquisition acceptance must start with the pinned archives
+     in an empty installation root, not a reused developer runtime.  For
+     ‘-DownloadEmacs’, verify the complete upstream Windows ZIP and its
+     bundled runtime features.  For source builds, start with a private
+     toolchain.  Keep MSYS2 package versions,
+     compiler/configure/build/install logs, and ‘emacsvox-build.json’
+     with the installed Emacs.  The installation logs also include
+     ‘native-install-provenance.json’ with Lisp source hashes and
+     selected pins.  MSYS2 packages are signed rolling inputs; these
+     records do not claim a frozen or bit-identical compiler
+     environment.  Verify fresh graphical startup, acknowledged routing,
+     and tracked completion on both speech lanes with a PATH that
+     contains neither WSL nor MSYS2 tools.  Human listening remains a
+     separate acceptance step.  Native Windows x64 is supported; remote
+     workstation speech remains preview, as recorded in ADR 0014
      (../adr/0014-native-windows-support.org).
+
+       1. Offline Windows development bundle
+
+          ‘make windows-bundle-dev’ downloads checksum-pinned Emacs and
+          Omnivox archives and creates a development ZIP below ‘dist/’.
+          Packaging needs Python 3.11 or newer and Git on the build
+          machine.  To use a prepared cache without network:
+
+               python3 utils/emacsvox-windows-bundle.py --offline \
+                 --cache-directory /path/to/archives --output-directory dist/windows-installer
+               make windows-bundle-test
+
+          Extract the ZIP on a local Windows drive and run
+          ‘Install.cmd’, or run ‘Install.ps1 -InstallRoot "C:\path with
+          spaces\Emacsvox"’ from PowerShell.  The destination needs
+          neither Git nor build tools.  ‘-Check’ verifies the bundle
+          without writing installation state; ‘-NoAudioCheck’ prepares
+          an unattended installation.  Run the printed launch command
+          with ‘-Check’ to perform the graphical speech check afterward.
+
+          From a Windows checkout, repeat acquisition and installation
+          acceptance with:
+
+               .\test\emacsvox-windows-bundle-tests.ps1 -BundleArchive "C:\path\to\bundle.zip" -AudioCheck
+
+          This tests a fresh install, a repeated install, damaged
+          inputs, long paths, profile preservation and protection of
+          edited sources.  It limits PATH to Windows tools.  Add
+          ‘-KeepInstallation’ to retain the successful test directory;
+          failed test directories are retained with their logs
+          automatically.
+
+          Each bundle records its source commit and hashes the exact
+          payload, including uncommitted changes.  It copies only source
+          files, compiles in a versioned Windows application directory,
+          and refuses modified installed sources.  Repeated installation
+          reuses the verified runtimes and preserves the profile.  The
+          first slice has no wizard, shortcuts or uninstaller; it is a
+          local development artifact, not a distributable release.  The
+          remaining Inno Setup and corresponding-source publication work
+          is recorded in ADR 0024
+          (../adr/0024-native-windows-installer.org).
 
   4. Remote preview validation
 

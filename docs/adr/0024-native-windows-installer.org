@@ -1,0 +1,55 @@
+#+TITLE: ADR 0024: Per-user native Windows installer
+#+AUTHOR: Emacsvox contributors
+#+DATE: 2026-09-20
+
+* Status
+
+Accepted direction following the maintainer's request for an installer that
+includes Emacs and Omnivox without requiring administrator privileges.
+The first implementation slice is an offline development bundle. The Inno
+Setup wizard and installation lifecycle are subsequent slices.
+
+* Decision
+
+Use Inno Setup for the eventual Windows setup executable, configured for
+per-user installation without elevation. Target native Windows x64 first.
+WSL installation remains an independent route under ADR 0005; native
+support and the Emacs minimum remain as specified by ADRs 0012 and 0014.
+
+Reuse the native PowerShell installer for acquisition, byte-code preparation
+and fresh graphical speech checks. Add an explicit =-DownloadEmacs= choice
+for the checksum-pinned complete GNU Windows ZIP. Preserve existing explicit
+Emacs selections and the opt-in source build. Runtime versions and Omnivox
+archive identities remain canonical in =etc/wsl-install.conf=; only the
+Windows Emacs artifact identity is added to =etc/windows-install.conf=.
+
+Prepare offline payloads on the build machine. =-Offline= refuses network
+acquisition and verifies the required cached archives before installation.
+Install Emacs with its bundled libraries and notices, verify its version and
+required features, and record the archive identity. No compiler, Git or WSL
+is required on the destination machine for the bundled route.
+
+Keep application sources, Emacs and Omnivox in separate versioned directories
+under the user's installation root. Keep the profile and logs outside those
+directories; downloaded voices remain Omnivox-owned under ADR 0019. Copy
+source-only Emacsvox payloads and compile with the selected Windows Emacs.
+Never reuse Linux or stale checkout byte-code. Refuse unknown or modified
+application trees instead of overwriting them.
+
+The initial development ZIP includes verified archives, source hashes,
+the originating commit, an offline PowerShell entry point and a command-file
+entry point. Its identity includes uncommitted payload changes. It is explicitly
+labelled development and does not invoke or replace the release gates.
+
+* Remaining release work
+
+Add the accessible Inno Setup wizard, shortcuts, upgrade/repair behavior and
+uninstall registration. Uninstall must retain user profiles and downloaded
+voices unless the user explicitly chooses their removal. Test those paths
+with a standard Windows user and screen readers before claiming acceptance.
+
+Before redistributing bundled binaries, assemble and publish the corresponding
+Emacs and dependency sources and required notices, alongside Omnivox's source
+and notices. Add the installer to the existing clean-source release gates;
+the local development bundle does not establish release readiness. Decide
+Windows executable signing separately from the Git tag policy in ADR 0006.
