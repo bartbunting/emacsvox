@@ -152,8 +152,8 @@
  do
  (emacsvox-keymap-update help-map binding))
 
-(easy-menu-add-item nil '("help")
-                    ["Emacsvox welcome" emacsvox-welcome t])
+(define-key-after global-map [menu-bar help-menu emacsvox-welcome]
+  '(menu-item "Emacsvox welcome" emacsvox-welcome))
 
 ;; emacsvox-keymap bindings:
 (cl-loop

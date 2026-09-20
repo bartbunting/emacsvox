@@ -32,6 +32,12 @@
   (cl-letf (((symbol-function 'display-warning) #'ignore))
     (load setup nil nil)))
 
+(ert-deftest emacsvox-startup-welcome-help-entry ()
+  "Welcome is reachable from both the Help prefix and the actual menu bar."
+  (should (eq (lookup-key help-map "W") 'emacsvox-welcome))
+  (should (eq (lookup-key global-map [menu-bar help-menu emacsvox-welcome])
+              'emacsvox-welcome)))
+
 (ert-deftest emacsvox-setup-detects-newer-startup-source ()
   "The setup entry point identifies byte-code that can shadow new source."
   (let* ((directory (make-temp-file "emacsvox-setup-stale-" t))
