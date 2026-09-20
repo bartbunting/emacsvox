@@ -18,6 +18,17 @@ PREVIEW = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PREVIEW)
 
 
+class GitHubAPITests(unittest.TestCase):
+    def test_release_lookup_paginates_without_recent_gh_flags(self):
+        first = [{'tag_name': f'old-{n}'} for n in range(100)]
+        wanted = {'tag_name': 'windows-preview-2026-09-20', 'draft': True}
+        with mock.patch.object(PREVIEW, 'run', side_effect=[json.dumps(first), json.dumps([wanted])]) as command:
+            self.assertEqual(PREVIEW.existing_release('example/project', wanted['tag_name']), wanted)
+            self.assertEqual(command.call_args_list, [
+                mock.call('gh', 'api', 'repos/example/project/releases?per_page=100&page=1'),
+                mock.call('gh', 'api', 'repos/example/project/releases?per_page=100&page=2')])
+
+
 class WindowsPreviewTests(unittest.TestCase):
     def setUp(self):
         fixture = fixture_module.WindowsSourcesTests()

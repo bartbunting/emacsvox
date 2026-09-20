@@ -32,11 +32,20 @@ def run(*args, root=ROOT):
 
 
 def api(repository, path, pages=False):
-    args = ['gh', 'api', f'repos/{repository}/{path}']
-    if pages:
-        args += ['--paginate', '--slurp']
-    result = json.loads(run(*args))
-    return [item for page in result for item in page] if pages else result
+    endpoint = f'repos/{repository}/{path}'
+    if not pages:
+        return json.loads(run('gh', 'api', endpoint))
+    # This also works with gh versions that predate `api --slurp`. Callers
+    # request lists with per_page=100; fetch each JSON array separately.
+    result = []
+    page = 1
+    while True:
+        batch = json.loads(run('gh', 'api', f'{endpoint}&page={page}'))
+        require(isinstance(batch, list), 'Expected a GitHub list response')
+        result.extend(batch)
+        if len(batch) < 100:
+            return result
+        page += 1
 
 
 def require(condition, message):
