@@ -7,15 +7,26 @@ param(
     [string]$FailedUpgrade,
     # Continue failure/recovery checks in this script's retained test fixture.
     [string]$ResumeAfterRepair,
-    [switch]$AudioCheck
+    [switch]$AudioCheck,
+    [switch]$IsolatedIdentity
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..\utils\emacsvox-windows-common.ps1')
 Assert-NativeWindows
 $registration = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{B2C8A798-1699-456B-8A64-A6D02C347972}_is1'
+if ($IsolatedIdentity) {
+    foreach ($candidate in @($Setup,$Upgrade,$FailedUpgrade) | Where-Object { $_ }) {
+        if ((Split-Path $candidate -Leaf) -notlike 'emacsvox-fixture-*-setup.exe') { throw 'Use a separately compiled fixture installer with IsolatedIdentity.' }
+    }
+    $registration = $registration.Replace('B2C8A798-1699-456B-8A64-A6D02C347972','D78E9D1F-D616-4B21-9B4D-5D97CD825101')
+}
 if (-not $ResumeAfterRepair -and (Test-Path $registration)) { throw 'A development Setup installation is already registered; preserve it and test in another Windows account.' }
-$desktop = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Emacsvox Windows Development.lnk'
-$menu = Join-Path ([Environment]::GetFolderPath('Programs')) 'Emacsvox Windows Development'
+$desktop = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Emacsvox Windows.lnk'
+$menu = Join-Path ([Environment]::GetFolderPath('Programs')) 'Emacsvox Windows'
+if ($IsolatedIdentity) {
+    $desktop = $desktop.Replace('Emacsvox Windows','Emacsvox UI Fixture')
+    $menu = $menu.Replace('Emacsvox Windows','Emacsvox UI Fixture')
+}
 if (-not $ResumeAfterRepair -and ((Test-Path $desktop) -or (Test-Path $menu))) { throw 'Existing development shortcuts would be changed; use another test account.' }
 $work = if ($ResumeAfterRepair) { [IO.Path]::GetFullPath($ResumeAfterRepair).TrimEnd('\') }
         else { Join-Path $env:TEMP ('evox setup test ' + [guid]::NewGuid().ToString('N').Substring(0,12)) }

@@ -18,7 +18,8 @@ function Invoke-Preflight([string]$Expected = '') {
         if ($Expected) { throw "Expected failure: $Expected" }
     }
     catch {
-        if (-not $Expected -or $_.Exception.Message -notlike "*$Expected*" -or
+        $message = $_.Exception.Message -replace '\s+', ' '
+        if (-not $Expected -or $message -notlike "*$Expected*" -or
             $_.Exception.Message -like 'Expected failure:*') { throw }
     }
 }
@@ -54,6 +55,20 @@ try {
     $manifest.Files[0].Path = '../outside'
     Write-EmacsvoxJson $manifestPath $manifest
     Invoke-Preflight 'Invalid setup file manifest'
+    # Exercise actual command dispatch, not only the dot-sourced functions.
+    $report = Join-Path $testRoot 'cleanup-report.txt'
+    $logDirectory = Join-Path $installation 'logs'
+    New-Item -ItemType Directory $logDirectory | Out-Null
+    [IO.File]::WriteAllText((Join-Path $logDirectory 'fixture.log'), 'owned log')
+    foreach ($action in @('UninstallCheck','CleanupReview','Cleanup')) {
+        $arguments = @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',$helper,
+            '-Action',$action,'-InstallRoot',$installation,'-ResultFile',$report)
+        Invoke-EmacsvoxNative $powershell $arguments @{OMNIVOX_VOICE_ROOT=(Join-Path $testRoot 'absent voices')} | Out-Null
+        if (-not (Test-Path (Join-Path $logDirectory 'fixture.log'))) { throw 'Default helper cleanup deleted data' }
+        if ($action -ne 'UninstallCheck' -and -not (Test-Path $report)) { throw "Missing $action report" }
+    }
+    Invoke-EmacsvoxNative $powershell ($arguments + '-RemoveLogs') | Out-Null
+    if (Test-Path $logDirectory) { throw 'Helper did not dispatch selected cleanup' }
     Write-Host 'PASS: setup preflight, ownership, upgrade, missing-file repair and edited-source protection.'
 }
 finally { Remove-Item -LiteralPath $testRoot -Recurse -Force }

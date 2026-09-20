@@ -18,7 +18,7 @@ SPEC = importlib.util.spec_from_file_location('bundle', ROOT / 'utils/emacsvox-w
 BUNDLE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BUNDLE)
 PRODUCT = 'Emacsvox.Native.Development.1'
-INPUTS = ('utils/emacsvox-windows-setup.iss', 'utils/emacsvox-windows-setup-helper.ps1',
+INPUTS = ('utils/emacsvox-windows-setup-cleanup.ps1', 'utils/emacsvox-windows-setup.iss', 'utils/emacsvox-windows-setup-helper.ps1',
           'utils/emacsvox-windows-setup-launch.ps1', 'utils/emacsvox-windows-common.ps1',
           'utils/emacsvox-windows-setup.py', 'utils/emacsvox-windows-setup-build.ps1',
           'etc/windows-setup.conf')
@@ -116,6 +116,7 @@ def prepare(bundle, destination, root=ROOT):
             for original, relative in [
                 ('utils/emacsvox-windows-setup-helper.ps1', 'Setup/emacsvox-windows-setup-helper.ps1'),
                 ('utils/emacsvox-windows-common.ps1', 'Setup/emacsvox-windows-common.ps1'),
+                ('utils/emacsvox-windows-setup-cleanup.ps1', 'Setup/emacsvox-windows-setup-cleanup.ps1'),
                 ('utils/emacsvox-windows-setup-launch.ps1', 'Launcher/Start.ps1'),
             ]:
                 target = destination / 'payload' / relative
@@ -131,6 +132,8 @@ def prepare(bundle, destination, root=ROOT):
             shutil.copyfile(root / 'utils/emacsvox-windows-setup.iss', destination / 'setup.iss')
             (destination / 'setup-inputs.iss').write_text(
                 f'#define AppVersion "{version}"\n#define Build "{build}"\n'
+                f'#define EmacsVersion "{common["EMACSVOX_WSL_EMACS_VERSION"]}"\n'
+                f'#define OmnivoxVersion "{common["EMACSVOX_WSL_OMNIVOX_VERSION"]}"\n'
                 f'#define EmacsDirectory "{emacs_dir.replace("/", chr(92))}"\n', encoding='utf-8')
             # Only generated application files are explicitly deleted. No root,
             # profile, voice, runtime or application-directory wildcard removal.
@@ -150,15 +153,16 @@ def prepare(bundle, destination, root=ROOT):
             uninstall += 'Type: dirifempty; Name: "{app}\\Cache"\n'
             (destination / 'setup-generated-uninstall.iss').write_text(uninstall, encoding='utf-8')
             (destination / 'setup-readme.txt').write_text(
-                'Emacsvox Windows Development for Windows x64\n\n'
-                'Setup installs Emacs, Emacsvox and Omnivox for your Windows account.\n'
+                f'Emacsvox {version} for Windows x64\n\n'
+                f'Setup installs Emacs {common["EMACSVOX_WSL_EMACS_VERSION"]}, Omnivox '
+                f'{common["EMACSVOX_WSL_OMNIVOX_VERSION"]} and Emacsvox {version} for your Windows account.\n'
                 'No administrator privileges or internet connection are needed.\n\n'
                 'After installation you can test speech and start Emacsvox.\n'
-                'Use Start menu > Emacsvox Windows Development to start it later.\n\n'
+                'Use Start menu > Emacsvox Windows to start it later.\n\n'
                 'Run Setup again to repair missing application files or install a newer build.\n'
                 'Close this installation of Emacsvox first. Setup preserves your profile.\n'
-                'Uninstall removes application files and shortcuts; your profile, logs\n'
-                'and downloaded voices are kept.\n\n'
+                'Uninstall from Windows Settings > Apps > Installed apps > Emacsvox Windows,\n'
+                'or the Start menu group. Personal data is kept unless you select cleanup.\n\n'
                 'This is a local development build for testing.\n', encoding='utf-8')
             shutil.rmtree(destination / 'Archives')
             return destination / 'setup.iss'

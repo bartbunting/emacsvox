@@ -2,10 +2,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory=$true)][ValidateSet('Preflight','Configure','Activate','UninstallCheck')][string]$Action,
+    [Parameter(Mandatory=$true)][ValidateSet('Preflight','Configure','Activate','UninstallCheck','CleanupReview','Cleanup')][string]$Action,
     [Parameter(Mandatory=$true)][string]$InstallRoot,
     [string]$Manifest,
-    [string]$ErrorFile
+    [string]$ErrorFile,
+    [string]$ResultFile,
+    [switch]$RemoveLogs,
+    [switch]$RemoveProfile,
+    [switch]$RemoveVoices
 )
 . (Join-Path $PSScriptRoot 'emacsvox-windows-common.ps1')
 $product = 'Emacsvox.Native.Development.1'
@@ -23,6 +27,27 @@ function Read-SetupManifest([string]$Path) {
         $seen[$file.Path] = $true
     }
     return $data
+}
+function Remove-PreviousSetupShortcuts {
+    $shell = New-Object -ComObject WScript.Shell
+    $oldGroup = Join-Path ([Environment]::GetFolderPath('Programs')) 'Emacsvox Windows Development'
+    $links = @((Join-Path ([Environment]::GetFolderPath('Desktop')) 'Emacsvox Windows Development.lnk'))
+    foreach ($name in @('Emacsvox Windows Development','Check speech','Uninstall Emacsvox Windows Development')) {
+        $links += Join-Path $oldGroup "$name.lnk"
+    }
+    foreach ($path in $links) {
+        if (-not (Test-Path -LiteralPath $path)) { continue }
+        $link = $shell.CreateShortcut($path)
+        $launcher = Join-Path $InstallRoot 'Launcher\Start.ps1'
+        $launchOwned = $link.TargetPath -eq (Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe') -and
+            $link.Arguments.IndexOf(('"' + $launcher + '"'), [StringComparison]::OrdinalIgnoreCase) -ge 0
+        $uninstallOwned = (Split-Path $link.TargetPath -Parent) -eq $InstallRoot -and
+            (Split-Path $link.TargetPath -Leaf) -match '^unins\d+[.]exe$'
+        if ($launchOwned -or $uninstallOwned) { Remove-Item -LiteralPath $path -Force }
+    }
+    if ((Test-Path -LiteralPath $oldGroup) -and -not @(Get-ChildItem -LiteralPath $oldGroup -Force).Count) {
+        [IO.Directory]::Delete($oldGroup, $false)
+    }
 }
 function Assert-NotRunning {
     $prefix = $InstallRoot.TrimEnd('\') + '\'
@@ -48,6 +73,11 @@ try {
     }
     Assert-NotRunning
     if ($Action -eq 'UninstallCheck') { exit 0 }
+    if ($Action -in @('CleanupReview','Cleanup')) {
+        . (Join-Path $PSScriptRoot 'emacsvox-windows-setup-cleanup.ps1')
+        Invoke-SetupCleanup
+        exit 0
+    }
     if ($env:EMACS) { throw 'EMACS selects another Emacs. Unset it before installing the bundled desktop.' }
     $data = Read-SetupManifest $Manifest
     $application = Join-Path $InstallRoot "Applications\$($data.Build)"
@@ -96,6 +126,8 @@ try {
         throw 'The new application has not completed configuration.'
     }
     Write-EmacsvoxJson (Join-Path $InstallRoot 'current.json') @{ Schema=1; Product=$product; Build=$data.Build }
+    try { Remove-PreviousSetupShortcuts }
+    catch { Write-Warning "Emacsvox is active; an old shortcut could not be removed: $($_.Exception.Message)" }
 }
 catch {
     $message = $_.Exception.Message
