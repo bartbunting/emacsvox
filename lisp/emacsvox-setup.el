@@ -53,6 +53,7 @@
     "emacsvox-preamble.el"
     "emacsvox-loaddefs.el"
     "emacsvox-keymap.el"
+    "emacsvox-welcome.el"
     "tts-speak.el"
     "tts-queue-state.el"
     "emacsvox-emoji.el"

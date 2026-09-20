@@ -145,6 +145,7 @@ emacsvox-pronounce.elc \
 emacsvox-speak.elc  \
 emacsvox-advice.elc\
 emacsvox-keymap.elc\
+emacsvox-welcome.elc\
 $(AURAL_OBJECTS) \
 emacsvox.elc \
 emacsvox-setup.elc

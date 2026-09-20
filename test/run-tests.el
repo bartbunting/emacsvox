@@ -92,6 +92,7 @@
   (require 'omnivox-espeak-variants-tests)
   (require 'emacsvox-keymap-tests)
   (require 'emacsvox-startup-tests)
+  (require 'emacsvox-welcome-tests)
   (require 'emacsvox-converter-tests)
   (require 'emacsvox-autoload-tests)
   (require 'emacsvox-dired-tests)

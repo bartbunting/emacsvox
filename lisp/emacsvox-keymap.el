@@ -142,6 +142,7 @@
    ("M-m" describe-minor-mode-from-indicator)
    ("M-v" find-variable)
    ("N" emacsvox-view-notifications)
+   ("W" emacsvox-welcome)
    ("SPC" customize-group)
    ("TAB" emacsvox-info-wizard)
    ("V" customize-variable)
@@ -150,6 +151,9 @@
    ("p" list-packages))
  do
  (emacsvox-keymap-update help-map binding))
+
+(easy-menu-add-item nil '("help")
+                    ["Emacsvox welcome" emacsvox-welcome t])
 
 ;; emacsvox-keymap bindings:
 (cl-loop

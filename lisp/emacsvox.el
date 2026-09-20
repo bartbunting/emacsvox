@@ -610,6 +610,8 @@ and verify in a fresh Emacs session."
       (tts-speak summary))
     summary))
 
+(declare-function emacsvox-welcome--initialize "emacsvox-welcome" ())
+
 (defun emacsvox()
   "Start the Emacsvox Audio Desktop.
 Use Emacs as you normally would, emacsvox provides spoken feedback.
@@ -664,6 +666,8 @@ commands and options."
   (add-hook 'omnivox-ready-hook #'emacsvox--omnivox-protocol-ready)
   (add-hook
    'omnivox-initial-routing-ready-hook #'emacsvox--omnivox-routing-ready)
+  (require 'emacsvox-welcome)
+  (emacsvox-welcome--initialize)
   (tts-initialize)
   (emacsvox-aural-load-user-data)
   (emacsvox-aural-load-routing-profiles nil t)
