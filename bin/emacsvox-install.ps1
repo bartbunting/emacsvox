@@ -6,6 +6,8 @@ param(
     [switch]$Check,
     [string]$Emacs,
     [switch]$BuildEmacs,
+    [switch]$DownloadEmacs,
+    [switch]$Offline,
     [string]$InstallRoot = "$env:LOCALAPPDATA\Emacsvox\Native",
     [string]$ToolchainRoot = "$env:LOCALAPPDATA\Emacsvox\Toolchains\msys2-20260611",
     [string]$CacheDirectory = "$env:LOCALAPPDATA\Emacsvox\Downloads",
@@ -21,6 +23,8 @@ $windowsPins = Read-EmacsvoxPins (Join-Path $root 'etc\windows-install.conf')
 if ($pins.EMACSVOX_WSL_INSTALL_SCHEMA -ne '1' -or $windowsPins.EMACSVOX_WINDOWS_INSTALL_SCHEMA -ne '1') {
     throw 'Unsupported installation manifest schema.'
 }
+if ($BuildEmacs -and $DownloadEmacs) { throw 'Choose either -DownloadEmacs or -BuildEmacs.' }
+if ($Offline -and $BuildEmacs) { throw '-Offline cannot build Emacs; use -DownloadEmacs or select an existing Emacs.' }
 $configFile = Join-Path $root 'native-install.json'
 $saved = if (Test-Path $configFile) { [IO.File]::ReadAllText($configFile) | ConvertFrom-Json } else { $null }
 if ($saved -and ($saved.Schema -ne 1 -or $saved.Role -ne 'Desktop')) {
@@ -57,18 +61,28 @@ if ($null -ne $localEmacs) {
 }
 if (@($explicit | Select-Object -Unique).Count -gt 1) { throw 'Align the explicit -Emacs, EMACS and local.mk selections.' }
 if ($BuildEmacs -and $explicit.Count) { throw '-BuildEmacs cannot replace an explicit Emacs selection; unset or align it first.' }
+if ($DownloadEmacs -and $explicit.Count) { throw '-DownloadEmacs cannot replace an explicit Emacs selection; unset or align it first.' }
 $prefix = Join-Path $InstallRoot "Emacs\$($pins.EMACSVOX_WSL_EMACS_VERSION)-ucrt64"
+if ($DownloadEmacs) {
+    $prefix = Join-Path $InstallRoot "Emacs\$($pins.EMACSVOX_WSL_EMACS_VERSION)-windows-x64-$($windowsPins.EMACSVOX_WINDOWS_EMACS_SHA256.Substring(0,12))"
+}
 $selected = $null
 if ($explicit.Count) { $selected = Get-EmacsvoxNativeEmacs $explicit[0] }
-elseif (-not $BuildEmacs -and $saved) { $selected = Get-EmacsvoxNativeEmacs $saved.Emacs }
+elseif (-not $BuildEmacs -and -not $DownloadEmacs -and $saved) { $selected = Get-EmacsvoxNativeEmacs $saved.Emacs }
 elseif (Test-Path $prefix) {
     if (-not (Test-Path (Join-Path $prefix 'emacsvox-build.json'))) {
         throw "Incomplete managed Emacs installation: $prefix"
     }
     $selected = Get-EmacsvoxNativeEmacs (Join-Path $prefix 'bin\emacs.exe')
     if ($selected.Version -ne $pins.EMACSVOX_WSL_EMACS_VERSION) { throw "Unexpected Emacs in $prefix" }
+    if ($DownloadEmacs) {
+        $receipt = [IO.File]::ReadAllText((Join-Path $prefix 'emacsvox-build.json')) | ConvertFrom-Json
+        if ($receipt.Kind -ne 'verified-prebuilt' -or $receipt.ArchiveSHA256 -ne $windowsPins.EMACSVOX_WINDOWS_EMACS_SHA256) {
+            throw "Prebuilt Emacs identity mismatch: $prefix"
+        }
+    }
 }
-elseif (-not $BuildEmacs) {
+elseif (-not $BuildEmacs -and -not $DownloadEmacs) {
     $candidate = Get-Command emacs.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($candidate) {
         try { $selected = Get-EmacsvoxNativeEmacs $candidate.Source }
@@ -81,16 +95,17 @@ $logs = Join-Path $InstallRoot 'logs'
 $profile = Join-Path $InstallRoot 'profile'
 $msys = Join-Path $ToolchainRoot 'msys64'
 $bash = Join-Path $msys 'usr\bin\bash.exe'
-if (-not $selected -and -not $BuildEmacs) {
+if (-not $selected -and -not $BuildEmacs -and -not $DownloadEmacs) {
     Write-Host 'Emacs 30.2 or newer is required. Choose a prebuilt release or a source build:'
     Write-Host '  Recommended: install a prebuilt Windows Emacs 30.2 or newer from'
     Write-Host '  https://www.gnu.org/software/emacs/download.html'
     Write-Host '  Then rerun this installer with -Emacs C:\path\to\Emacs\bin\emacs.exe'
+    Write-Host '  Or use -DownloadEmacs to install the verified prebuilt Emacs automatically.'
     Write-Host "  Alternatively, rerun with -BuildEmacs to build pinned GNU Emacs $($pins.EMACSVOX_WSL_EMACS_VERSION)."
     if ($Check) { Write-Host 'No files changed.'; return }
-    throw 'Select a prebuilt Emacs with -Emacs, or choose -BuildEmacs. No files changed.'
+    throw 'Select a prebuilt Emacs with -Emacs, or choose -DownloadEmacs or -BuildEmacs. No files changed.'
 }
-if (-not $selected) {
+if (-not $selected -and $BuildEmacs) {
     if ($ToolchainRoot -match '\s') { throw 'MSYS2 build tools need a path without spaces; select -ToolchainRoot accordingly.' }
     if ((Test-Path $ToolchainRoot) -and -not (Test-Path (Join-Path $ToolchainRoot 'emacsvox-toolchain.json'))) {
         throw "Unmanaged or incomplete toolchain: $ToolchainRoot. Choose a new -ToolchainRoot."
@@ -108,14 +123,39 @@ if (Test-Path $omnivoxRoot) {
 }
 Write-Host "Native Windows x64; role: $Role"
 if ($selected) { Write-Host "Emacs: $($selected.Program) ($($selected.Version))" }
+elseif ($DownloadEmacs) { Write-Host "Emacs: verified prebuilt GNU Emacs $($pins.EMACSVOX_WSL_EMACS_VERSION) at $prefix" }
 else { Write-Host "Emacs: build GNU $($pins.EMACSVOX_WSL_EMACS_VERSION) using private MSYS2 UCRT64 at $ToolchainRoot" }
+if ($Offline) { Write-Host "Downloads: disabled; verified archives must be in $CacheDirectory" }
 Write-Host "Omnivox: pinned $($pins.EMACSVOX_WSL_OMNIVOX_VERSION) at $omnivoxRoot"
 Write-Host "Checkout: $root"
 Write-Host "Configuration: $configFile"
 Write-Host "Profile: $profile"
 if ($Check) { Write-Host 'No files changed. Speech and downloads were not tested.'; return }
+# Resolve all offline inputs before creating installation directories. A missing
+# second archive must not leave the first component partly installed.
+if ($Offline) {
+    if (-not $selected) {
+        Get-EmacsvoxArchive $windowsPins.EMACSVOX_WINDOWS_EMACS_URL `
+            (Join-Path $CacheDirectory $windowsPins.EMACSVOX_WINDOWS_EMACS_ARCHIVE) `
+            $windowsPins.EMACSVOX_WINDOWS_EMACS_SHA256 -Offline | Out-Null
+    }
+    if (-not (Test-Path -LiteralPath $omnivoxRoot)) {
+        Get-EmacsvoxArchive "$($pins.EMACSVOX_WSL_OMNIVOX_RELEASE_URL)/$($pins.EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_ARCHIVE)" `
+            (Join-Path $CacheDirectory $pins.EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_ARCHIVE) `
+            $pins.EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_SHA256 -Offline | Out-Null
+    }
+}
 New-Item -ItemType Directory -Force $InstallRoot, $logs, $CacheDirectory, $profile | Out-Null
 
+if (-not $selected -and $DownloadEmacs) {
+    $archive = Get-EmacsvoxArchive $windowsPins.EMACSVOX_WINDOWS_EMACS_URL `
+        (Join-Path $CacheDirectory $windowsPins.EMACSVOX_WINDOWS_EMACS_ARCHIVE) `
+        $windowsPins.EMACSVOX_WINDOWS_EMACS_SHA256 -Offline:$Offline
+    Write-Host 'Installing verified prebuilt Emacs and its runtime libraries.'
+    $selected = Install-EmacsvoxPrebuiltEmacs $archive $prefix `
+        $pins.EMACSVOX_WSL_EMACS_VERSION `
+        $windowsPins.EMACSVOX_WINDOWS_EMACS_SHA256
+}
 if (-not $selected) {
     if (-not (Test-Path $ToolchainRoot)) {
         $bootstrap = Get-EmacsvoxArchive $windowsPins.EMACSVOX_WINDOWS_MSYS2_URL `
@@ -166,7 +206,7 @@ if (-not $selected) {
 if (-not (Test-Path $omnivoxRoot)) {
     $name = $pins.EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_ARCHIVE
     $archive = Get-EmacsvoxArchive "$($pins.EMACSVOX_WSL_OMNIVOX_RELEASE_URL)/$name" `
-        (Join-Path $CacheDirectory $name) $pins.EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_SHA256
+        (Join-Path $CacheDirectory $name) $pins.EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_SHA256 -Offline:$Offline
     $stage = "$omnivoxRoot.stage-$([guid]::NewGuid().ToString('N'))"
     New-Item -ItemType Directory -Force (Split-Path $omnivoxRoot -Parent) | Out-Null
     try {

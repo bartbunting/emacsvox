@@ -89,7 +89,7 @@ function Get-EmacsvoxNativeEmacs([string]$Program) {
     return @{ Program = $path; Version = $output }
 }
 
-function Get-EmacsvoxArchive([string]$Url, [string]$Path, [string]$Hash) {
+function Get-EmacsvoxArchive([string]$Url, [string]$Path, [string]$Hash, [switch]$Offline) {
     if ($Hash -notmatch '^[a-f0-9]{64}$' -or $Url -notmatch '^https://') { throw 'Invalid archive pin.' }
     if (Test-Path -LiteralPath $Path) {
         if ((Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash -ine $Hash) {
@@ -97,6 +97,7 @@ function Get-EmacsvoxArchive([string]$Url, [string]$Path, [string]$Hash) {
         }
         return $Path
     }
+    if ($Offline) { throw "Offline archive missing: $Path. Prepare the complete offline bundle first." }
     New-Item -ItemType Directory -Force (Split-Path $Path -Parent) | Out-Null
     $temporary = "$Path.part-$([guid]::NewGuid().ToString('N'))"
     try {
@@ -109,6 +110,40 @@ function Get-EmacsvoxArchive([string]$Url, [string]$Path, [string]$Hash) {
     return $Path
 }
 
+function Install-EmacsvoxPrebuiltEmacs {
+    param([string]$Archive, [string]$Destination, [string]$Version, [string]$ArchiveHash)
+    Assert-WindowsLocalPath $Destination
+    if (Test-Path -LiteralPath $Destination) { throw "Emacs destination already exists: $Destination" }
+    $stage = Join-Path (Split-Path $Destination -Parent) ('.stage-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Force (Split-Path $Destination -Parent) | Out-Null
+    try {
+        Expand-EmacsvoxZip $Archive $stage
+        foreach ($file in @('bin\emacs.exe', 'bin\runemacs.exe', "share\emacs\$Version\etc\COPYING")) {
+            if (-not (Test-Path -LiteralPath (Join-Path $stage $file) -PathType Leaf)) {
+                throw "Prebuilt Emacs archive lacks $file"
+            }
+        }
+        # Move before executing: Windows can retain an executable lock briefly
+        # after a probe exits. The receipt is written only after validation.
+        [IO.Directory]::Move($stage, $Destination)
+        try {
+            $selected = Get-EmacsvoxNativeEmacs (Join-Path $Destination 'bin\emacs.exe')
+            if ($selected.Version -ne $Version) { throw "Prebuilt Emacs reports $($selected.Version), expected $Version" }
+            Invoke-EmacsvoxNative $selected.Program @('-Q', '--batch', '--eval',
+                '(unless (and (gnutls-available-p) (sqlite-available-p) (treesit-available-p) (fboundp (quote libxml-parse-xml-region))) (error "Required native Emacs features missing"))') | Out-Null
+            Write-EmacsvoxJson (Join-Path $Destination 'emacsvox-build.json') @{
+                Schema = 1; Kind = 'verified-prebuilt'; Emacs = $Version; ArchiveSHA256 = $ArchiveHash
+            }
+        }
+        catch {
+            Remove-Item -Recurse -Force -LiteralPath $Destination
+            throw
+        }
+    }
+    finally { if (Test-Path -LiteralPath $stage) { Remove-Item -Recurse -Force -LiteralPath $stage } }
+    return Get-EmacsvoxNativeEmacs (Join-Path $Destination 'bin\emacs.exe')
+}
+
 function Expand-EmacsvoxZip([string]$Archive, [string]$Destination) {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $zip = [IO.Compression.ZipFile]::OpenRead($Archive)
@@ -116,6 +151,9 @@ function Expand-EmacsvoxZip([string]$Archive, [string]$Destination) {
         foreach ($entry in $zip.Entries) {
             if ($entry.FullName -match '(^[\\/]|:|(^|[\\/])\.\.([\\/]|$))') {
                 throw "Unsafe archive entry: $($entry.FullName)"
+            }
+            if ([IO.Path]::GetFullPath((Join-Path $Destination $entry.FullName)).Length -ge 248) {
+                throw 'Archive paths are too long for Windows PowerShell 5.1. Choose a shorter extraction or installation directory.'
             }
         }
     }

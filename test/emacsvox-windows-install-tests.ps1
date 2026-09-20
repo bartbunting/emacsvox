@@ -42,6 +42,31 @@ try {
         throw 'Saved-selection doctor changed installation state'
     }
     Remove-Item $settings
+    & $installer -DownloadEmacs -Offline -Check -InstallRoot $install -CacheDirectory $cache
+    Assert-Rejected { & $installer -DownloadEmacs -Offline -InstallRoot $install -CacheDirectory $cache } 'Offline archive missing'
+    Assert-Rejected { & $installer -Emacs $native.Program -Offline -InstallRoot $install -CacheDirectory $cache } 'Offline archive missing'
+    if ((Test-Path $install) -or (Test-Path $cache)) { throw 'Offline preflight changed installation state' }
+    Assert-Rejected { & $installer -DownloadEmacs -BuildEmacs -Check } 'Choose either'
+    Assert-Rejected { & $installer -BuildEmacs -Offline -Check } 'cannot build Emacs'
+    Assert-Rejected { & $installer -Emacs $native.Program -DownloadEmacs -Check } 'cannot replace an explicit'
+
+    # The Emacs archive is verified before acquiring or installing anything.
+    $windowsPins = Read-EmacsvoxPins (Join-Path $testRoot 'etc\windows-install.conf')
+    New-Item -ItemType Directory $cache | Out-Null
+    $emacsArchive = Join-Path $cache $windowsPins.EMACSVOX_WINDOWS_EMACS_ARCHIVE
+    [IO.File]::WriteAllText($emacsArchive, 'damaged download')
+    Assert-Rejected { & $installer -DownloadEmacs -Offline -InstallRoot $install -CacheDirectory $cache } 'Checksum mismatch'
+    if (Test-Path $install) { throw 'Corrupt archive changed installation state' }
+    # A valid first archive and missing second archive must also fail before
+    # extraction. This fixture pin intentionally describes the inert test file.
+    $testPins = Join-Path $testRoot 'etc\windows-install.conf'
+    $originalPins = [IO.File]::ReadAllText($testPins)
+    $fixtureHash = (Get-FileHash $emacsArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+    [IO.File]::WriteAllText($testPins, $originalPins.Replace($windowsPins.EMACSVOX_WINDOWS_EMACS_SHA256, $fixtureHash))
+    Assert-Rejected { & $installer -DownloadEmacs -Offline -InstallRoot $install -CacheDirectory $cache } 'Offline archive missing'
+    if (Test-Path $install) { throw 'Missing second archive left a partial installation' }
+    [IO.File]::WriteAllText($testPins, $originalPins)
+    Remove-Item $cache -Recurse -Force
     # A missing Emacs offers choices before any download or toolchain probing.
     $oldPath = $env:PATH
     try {
@@ -76,6 +101,11 @@ try {
     $badArchive = Join-Path $testRoot 'bad.zip'
     [IO.File]::WriteAllText($badArchive, 'not a release archive')
     Assert-Rejected { Get-EmacsvoxArchive 'https://example.invalid/never-download' $badArchive ('0' * 64) } 'Checksum mismatch'
+    Assert-Rejected { Get-EmacsvoxArchive 'https://example.invalid/never-download' $badArchive ('0' * 64) -Offline } 'Checksum mismatch'
+    $cachedHash = (Get-FileHash $badArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ((Get-EmacsvoxArchive 'https://example.invalid/never-download' $badArchive $cachedHash -Offline) -ne $badArchive) {
+        throw 'Offline mode failed to reuse a verified cached archive'
+    }
     $manifest = Join-Path $testRoot 'bad.conf'
     [IO.File]::WriteAllText($manifest, 'PIN=$(not-executed)')
     Assert-Rejected { Read-EmacsvoxPins $manifest } 'Invalid installation manifest'
@@ -90,6 +120,16 @@ try {
     $archive.Dispose()
     Assert-Rejected { Expand-EmacsvoxZip $zip (Join-Path $testRoot 'extracted') } 'Unsafe archive entry'
     if (Test-Path (Join-Path $testRoot 'escaped.txt')) { throw 'Archive escaped staging' }
+    $incompleteZip = Join-Path $testRoot 'incomplete-emacs.zip'
+    $archive = [IO.Compression.ZipFile]::Open($incompleteZip, 'Create')
+    $archive.CreateEntry('bin/irrelevant.txt') | Out-Null
+    $archive.Dispose()
+    Assert-Rejected { Expand-EmacsvoxZip $incompleteZip (Join-Path $testRoot ('long path ' * 25)) } 'paths are too long'
+    $emacsDestination = Join-Path $testRoot 'Emacs\incomplete'
+    Assert-Rejected { Install-EmacsvoxPrebuiltEmacs $incompleteZip $emacsDestination '31.1' ('0' * 64) } 'archive lacks'
+    if ((Test-Path $emacsDestination) -or @(Get-ChildItem (Split-Path $emacsDestination) -Force).Count) {
+        throw 'Failed extraction left a managed Emacs or staging directory'
+    }
 
     # Prove exact Windows argument handling with real native Emacs, including
     # quotes, shell metacharacters, Unicode and a trailing backslash.
@@ -108,7 +148,7 @@ try {
     Write-EmacsvoxJson $json @{ Value = 'first' }
     Write-EmacsvoxJson $json @{ Value = $value }
     if (([IO.File]::ReadAllText($json) | ConvertFrom-Json).Value -cne $value) { throw 'Configuration data changed' }
-    Write-Host 'PASS: native doctor, explicit selection, incomplete install, checksum, archive layout, argument quoting and atomic configuration.'
+    Write-Host 'PASS: native doctor, explicit selection, prebuilt/offline preflight, incomplete install, checksum, archive layout, argument quoting and atomic configuration.'
 }
 finally {
     if ($null -eq $oldEmacs) { Remove-Item Env:EMACS -ErrorAction SilentlyContinue }
