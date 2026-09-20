@@ -1036,15 +1036,17 @@ checker runs.
           setup executable, its checksums, provenance, launch
           instructions and ‘SOURCE-DOWNLOADS.md’, linking directly to
           matching third-party sources on their upstream hosts.
-          ‘emacsvox-windows-sources’ contains our exact Emacsvox
-          checkout and the same source index.  It does not mirror the
-          large upstream archives.  Sources are optional and are not
-          installed on users' machines.  CI uploads them first and
-          retains them for 90 days, compared with 14 days for the
-          installer.  Keep paired sources available if redistributing an
-          installer, and remove binaries before their sources when
-          deleting artifacts.  Keep the upstream locations accessible;
-          repair broken source links or withdraw the affected installer.
+          ‘emacsvox-windows-sources’ contains our exact Emacsvox code,
+          build scripts, runtime assets and the same source index.
+          Unshipped historical soundscapes and talk recordings are
+          omitted.  It does not mirror the large upstream archives.
+          Sources are optional and are not installed on users' machines.
+          CI uploads them first and retains them for 90 days, compared
+          with 14 days for the installer.  Keep paired sources available
+          if redistributing an installer, and remove binaries before
+          their sources when deleting artifacts.  Keep the upstream
+          locations accessible; repair broken source links or withdraw
+          the affected installer.
 
           ‘etc/windows-sources.json’ binds the reviewed Emacs/Omnivox
           runtime archives to source archives and licence notices.  It

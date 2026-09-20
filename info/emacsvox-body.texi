@@ -7602,7 +7602,8 @@ Successful runs offer two separate downloads in the job summary:
 @samp{emacsvox-windows-installer} contains the tested setup executable@comma{} its checksums@comma{}
 provenance@comma{} launch instructions and @samp{SOURCE-DOWNLOADS.md}@comma{} linking directly to
 matching third-party sources on their upstream hosts. @samp{emacsvox-windows-sources}
-contains our exact Emacsvox checkout and the same source index. It does not
+contains our exact Emacsvox code@comma{} build scripts@comma{} runtime assets and the same
+source index. Unshipped historical soundscapes and talk recordings are omitted. It does not
 mirror the large upstream archives. Sources are optional and are not installed on users'
 machines. CI uploads them first and retains them for 90 days@comma{} compared with
 14 days for the installer. Keep paired sources available if redistributing

@@ -21,6 +21,9 @@ SPEC = importlib.util.spec_from_file_location('bundle', ROOT / 'utils/emacsvox-w
 BUNDLE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BUNDLE)
 LOCK = 'etc/windows-sources.json'
+# Historical recordings are not installed by the Windows bundle. The source
+# download still contains all code, build recipes, notices and runtime assets.
+UNSHIPPED_RECORDINGS = ('scapes/', 'media/talks/')
 
 
 def read_json(path):
@@ -129,7 +132,7 @@ def source_hash(path):
 
 def add_file(archive, name, path, mode=0o100644):
     entry = zipfile.ZipInfo(name)
-    entry.compress_type = zipfile.ZIP_STORED if name.startswith('archives/') else zipfile.ZIP_DEFLATED
+    entry.compress_type = zipfile.ZIP_DEFLATED
     entry.create_system = 3
     entry.external_attr = mode << 16
     if path.is_symlink():
@@ -145,7 +148,7 @@ def source_index(lock):
         '# Windows installer source downloads', '',
         'Third-party sources are hosted by their upstream projects. They are optional',
         'and are not needed to install or run Emacsvox. Download the components you need.',
-        'The separate Emacsvox source ZIP includes our exact source checkout and this index.', '',
+        'The separate Emacsvox source ZIP includes our exact code, build inputs and this index.', '',
         'The filenames, versions and SHA256 values below identify the matching sources.',
         'Build instructions are in README.txt in the source ZIP and',
         'emacsvox/etc/windows-sources.txt. No third-party source archives are mirrored here.', '',
@@ -184,13 +187,15 @@ def prepare(root, stage, cache, destination, run_url, offline=False):
         binary.mkdir()
         source_name = f'emacsvox-{manifest["Build"]}-windows-x64-sources.zip'
         source_archive = sources / source_name
-        files = [(f'emacsvox/{name}', root / name, mode) for name, mode in names.items()]
+        files = [(f'emacsvox/{name}', root / name, mode) for name, mode in names.items()
+                 if not name.startswith(UNSHIPPED_RECORDINGS)]
         inventory = {'Schema': 1, 'Build': manifest['Build'], 'SourceCommit': commit,
                      'RunURL': run_url, 'Installer': installer.name, 'InstallerSHA256': installer_hash,
                      'SetupManifestSHA256': BUNDLE.sha256(stage / 'setup-manifest.json'),
                      'SourceLockSHA256': BUNDLE.sha256(root / LOCK),
                      'RuntimeSHA256': lock['RuntimeSHA256'],
                      'UpstreamSources': lock['Archives'],
+                     'OmittedUnshippedRecordings': list(UNSHIPPED_RECORDINGS),
                      'Files': [{'Path': name, 'SHA256': source_hash(path), 'Mode': oct(mode)}
                                for name, path, mode in files]}
         write_json(work / 'source-manifest.json', inventory)

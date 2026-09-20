@@ -133,7 +133,9 @@ and index first; a failed source check or upload prevents binary publication.
 Retain our sources/index for 90 days and installer/evidence for 14 days. When
 removing artifacts manually, remove the installer before its paired sources/index.
 
-The source download includes the exact committed Emacsvox checkout. Its index
+The source download includes the exact committed Emacsvox code, build scripts
+and runtime assets. Omit unshipped historical soundscapes and talk recordings.
+Its index
 links to Emacs, the GNU dependency source archive, additional matching MSYS2
 source packages, locked Rust dependencies, and Omnivox's published source archive.
 Record runtime/source hashes and the matched Emacs DLL inventory in

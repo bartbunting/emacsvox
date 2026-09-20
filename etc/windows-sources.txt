@@ -10,8 +10,11 @@ a development build, not a tagged release.
 Contents
 --------
 
-emacsvox/ is the complete tracked checkout used to build the installer,
-including its build scripts, workflow, manuals and licence notices. It contains
+emacsvox/ contains the committed Emacsvox code used to build the installer,
+including its build scripts, workflow, manuals, runtime assets and notices.
+Historical soundscapes and talk recordings, which are not installed by the
+Windows bundle, are omitted. Their source paths are recorded in the manifest.
+It contains
 no private local.mk, local byte-code, user profile, voice downloads or Git state.
 source-manifest.json records the source commit, installer checksum, setup
 manifest checksum and every included Emacsvox source file checksum.

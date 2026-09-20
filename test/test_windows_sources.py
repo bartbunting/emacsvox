@@ -39,6 +39,10 @@ class WindowsSourcesTests(unittest.TestCase):
         notice = self.root / 'etc/windows-notices.txt'
         notice.write_text('original notices\n')
         (self.root / 'etc/windows-sources.txt').write_text('Build instructions\n')
+        for name in ['scapes/birds.aiff', 'media/talks/recording.ogg']:
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b'historical recording, not shipped in Windows')
         if os.name != 'nt':
             (self.root / 'source-link').symlink_to('../not-a-build-input')
         self.lock = {'Schema': 1, 'RuntimeSHA256': {
@@ -85,6 +89,9 @@ class WindowsSourcesTests(unittest.TestCase):
         self.assertEqual(list(sources.glob('*.exe')), [])
         with zipfile.ZipFile(archive) as z:
             self.assertFalse(any(name.startswith('archives/') for name in z.namelist()))
+            self.assertNotIn('emacsvox/scapes/birds.aiff', z.namelist())
+            self.assertNotIn('emacsvox/media/talks/recording.ogg', z.namelist())
+            self.assertIn('emacsvox/sounds/packs/chimes/open-object.ogg', z.namelist())
             manifest = json.loads(z.read('source-manifest.json'))
             self.assertEqual(manifest['UpstreamSources'], self.lock['Archives'])
             index = (binary / 'SOURCE-DOWNLOADS.md').read_text()
