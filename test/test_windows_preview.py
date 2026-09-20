@@ -56,7 +56,10 @@ class WindowsPreviewTests(unittest.TestCase):
         self.addCleanup(mock.patch.stopall)
         mock.patch.object(PREVIEW, 'run', side_effect=command).start()
         mock.patch.object(PREVIEW, 'api', return_value=self.ci).start()
-        self.fixture.fixture.fixture.git('remote', 'add', 'origin', 'https://github.com/example/project.git')
+        git = self.fixture.fixture.fixture.git
+        git('config', 'user.name', 'Preview fixture')
+        git('config', 'user.email', 'preview@example.invalid')
+        git('remote', 'add', 'origin', 'https://github.com/example/project.git')
 
     def prepare(self):
         return PREVIEW.prepare(self.root, 'origin', 1, self.tag, self.destination)
@@ -220,10 +223,58 @@ class WindowsPreviewTests(unittest.TestCase):
         release = {'draft': True, 'prerelease': True, 'tag_name': self.tag,
                    'target_commitish': self.ci['head_sha'], 'body': 'reviewed notes', 'assets': []}
         for change in [{'draft': False}, {'prerelease': False}, {'body': 'foreign notes'},
-                       {'target_commitish': 'master'},
                        {'assets': [{'name': self.pair['Installer'], 'state': 'uploaded', 'digest': 'sha256:wrong'}]}]:
             with self.subTest(change=change), self.assertRaises(ValueError):
                 PREVIEW.checked_draft(release | change, receipt, 'reviewed notes')
+
+    def test_new_draft_uploads_sources_before_binary_and_publishes_last(self):
+        receipt = self.prepare()
+        with mock.patch.object(PREVIEW, 'remote_tag', return_value=None), \
+                mock.patch.object(PREVIEW, 'existing_release', return_value=None):
+            PREVIEW.create_tag(self.root, 'origin', receipt)
+        tag_object = PREVIEW.run('git', 'rev-parse', 'refs/tags/' + self.tag, root=self.root)
+        release = None
+        mutations = []
+        original_run = PREVIEW.run
+
+        def command(*args, **kwargs):
+            nonlocal release
+            if args[:2] == ('git', 'push'):
+                mutations.append('push')
+                return ''
+            if args[:2] == ('gh', 'release'):
+                mutations.append(args[2])
+                self.assertIn('example/project', args)
+                if args[2] == 'create':
+                    self.assertIn('--verify-tag', args)
+                    self.assertIn('--draft', args)
+                    self.assertIn('--prerelease', args)
+                    self.assertIn('--latest=false', args)
+                    release = {'draft': True, 'prerelease': True, 'tag_name': self.tag,
+                               'target_commitish': 'master', 'assets': [],
+                               'body': (self.destination / 'assets/README-preview.md').read_text(),
+                               'html_url': 'https://github.com/example/project/releases/tag/' + self.tag}
+                elif args[2] == 'upload':
+                    for name in args[6:]:
+                        filename = PREVIEW.Path(name).name
+                        if filename.endswith('.exe'):
+                            self.assertIn(self.pair['SourceArchive'], [a['name'] for a in release['assets']])
+                        release['assets'].append({'name': filename, 'state': 'uploaded',
+                                                  'digest': 'sha256:' + receipt['Files'][filename]})
+                elif args[2] == 'edit':
+                    self.assertEqual(len(release['assets']), len(receipt['Files']))
+                    self.assertIn('--draft=false', args)
+                    self.assertIn('--prerelease', args)
+                    self.assertIn('--latest=false', args)
+                    release['draft'] = False
+                return ''
+            return original_run(*args, **kwargs)
+
+        with mock.patch.object(PREVIEW, 'run', side_effect=command), \
+                mock.patch.object(PREVIEW, 'remote_tag', return_value=tag_object), \
+                mock.patch.object(PREVIEW, 'existing_release', side_effect=lambda *args: release):
+            PREVIEW.publish(self.root, 'origin', self.destination, receipt)
+        self.assertEqual(mutations, ['push', 'create', 'upload', 'upload', 'edit'])
 
 
 if __name__ == '__main__':

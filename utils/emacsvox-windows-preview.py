@@ -311,8 +311,10 @@ def create_tag(root, remote, receipt):
 
 
 def checked_draft(release, receipt, body):
+    # GitHub ignores target_commitish when a tag already exists. The caller
+    # verifies the annotated local and remote tag objects instead.
     require(release['draft'] and release['prerelease'] and release['tag_name'] == receipt['Tag'] and
-            release['target_commitish'] == receipt['SourceCommit'] and release['body'] == body,
+            release['body'] == body,
             'Existing release is not the matching unpublished preview; nothing was replaced')
     present = set()
     for asset in release['assets']:
@@ -346,10 +348,12 @@ def publish(root, remote, directory, receipt):
     present = checked_draft(release, receipt, body)
     # Upload sources before the executable. Keep everything private in the draft
     # until the complete remote asset set has the prepared SHA256 values.
-    missing = sorted(set(receipt['Files']) - present, key=lambda name: name.endswith('.exe'))
-    if missing:
-        run('gh', 'release', 'upload', tag, '--repo', repository,
-            *(str(directory / 'assets' / name) for name in missing))
+    missing = sorted(set(receipt['Files']) - present)
+    for binary in [False, True]:
+        batch = [name for name in missing if name.endswith('.exe') == binary]
+        if batch:
+            run('gh', 'release', 'upload', tag, '--repo', repository,
+                *(str(directory / 'assets' / name) for name in batch))
     require(checked_draft(existing_release(repository, tag), receipt, body) == set(receipt['Files']),
             'Draft is incomplete; it remains unpublished')
     check(root, remote, directory)
