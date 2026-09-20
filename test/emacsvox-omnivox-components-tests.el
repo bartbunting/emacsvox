@@ -452,7 +452,9 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
                   (uninstallation "uninstalling" "installed" "available")
                   (test "testing" "installed" "installed")))
     (dolist (exit-code '(0 1))
-      (let ((output (generate-new-buffer " *component status output*")))
+      (let ((output (generate-new-buffer " *component status output*"))
+            (tts-speaker-process nil)
+            (tts-notify-process nil))
         (unwind-protect
             (with-temp-buffer
               (emacsvox-omnivox-components-mode)
@@ -1083,7 +1085,9 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
   "A successful managed listing refreshes the existing row without native checks."
   (with-temp-buffer
     (emacsvox-omnivox-components-mode)
-    (let ((program (make-temp-file "engine-listing-" nil ".sh"
+    (let ((tts-speaker-process nil)
+          (tts-notify-process nil)
+          (program (make-temp-file "engine-listing-" nil ".sh"
                                    "#!/bin/sh\nprintf 'installation-target\\tOmnivox fixture\\tconfigured\\t0\\t/tmp/release/omnivox.exe\\nflite\\tFlite\\tavailable\\t12\\tFixture\\n'\n")))
       (unwind-protect
           (progn
