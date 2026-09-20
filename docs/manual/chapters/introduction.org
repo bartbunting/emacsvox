@@ -39,6 +39,24 @@ mark events without interrupting you with unnecessary words.
   commands, while @@texinfo:@kbd{C-h k}@@ followed by a key explains that key.  See
   @@texinfo:@ref{Using Online Help}@@ when you want to explore further.
 
+** The Welcome Screen
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+At an idle startup, after speech is ready, Emacsvox offers a short welcome
+screen. It has actions to test speech, adjust rate and output volumes, choose
+voices and engines, open the tutorial or manual, and start normal use.
+Use @@texinfo:@kbd{TAB}@@ and @@texinfo:@kbd{S-TAB}@@ to choose actions,
+@@texinfo:@kbd{RET}@@ to activate one, and @@texinfo:@kbd{q}@@ to return.
+Arrow keys read the instructions normally.
+
+Toggle Show this welcome screen at startup to stop showing it automatically.
+The choice is saved in this Emacs profile and survives application upgrades.
+Open it again through Help's Emacsvox welcome entry, @@texinfo:@kbd{C-h W}@@,
+or @@texinfo:@code{M-x emacsvox-welcome}@@. Startup leaves explicitly opened
+files and sessions already in use alone.
+
 ** What You Will Hear
 :PROPERTIES:
 :TEXINFO_NODE: no

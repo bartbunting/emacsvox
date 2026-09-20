@@ -45,7 +45,8 @@ labelled development and does not invoke or replace the release gates.
 ** Setup ownership and activation
 
 The development executable has a distinct application identity and installs
-as =Emacsvox Windows Development=. Its default directory is
+with the display name =Emacsvox Windows= and a versioned wizard title.
+Its development AppId remains stable for upgrades. Its default directory is
 =LocalAppData/Emacsvox/Desktop Dev=. It uses Inno Setup's standard wizard
 controls, a Start menu group and an optional desktop shortcut. The finish
 page offers a speech test and an optional application launch.
@@ -74,16 +75,48 @@ reports failure in the wizard and process exit code, and allows a later repair.
 
 Uninstall removes only recorded files and explicitly named generated files.
 Remove generated directories only when empty. Never recursively delete the
-installation root, profile or voice directories. Retain profile, logs,
-user-added files and a small ownership marker so reinstallation can recognize
-its destination. Runtime folders added by other installation routes are not
+installation root or shared voice directories. By default, retain profile,
+logs, user-added files and a small ownership marker so reinstallation can
+recognize its destination. Runtime folders added by other installation routes are not
 adopted by this installer.
+
+** Personal data and first use
+
+The maintainer approved optional personal-data cleanup and a welcome screen.
+Uninstall offers separate, initially unchecked choices for this installation's
+Emacs profile (including the welcome preference), its logs and archive cache, and
+unused downloads in the shared Omnivox voice library. Silent uninstall keeps
+all personal data. Shared Emacsvox settings outside this profile remain
+user-owned and are retained. Review sizes before selection, recheck running processes
+before removal, refuse linked directories, and report retained data.
+
+Only Omnivox's existing reviewed removal service can delete managed voice
+packages. Active generations, other profiles and live sessions remain
+protected; imported originals and system voices are never candidates. This
+is not a promise to purge all shared voices. Disable and Apply before uninstall
+when active downloads are to be removed. No native service/protocol or release
+pin changes are needed. Installation-owned logs/cache and profile cleanup use
+bounded traversal of those exact directories, never the whole installation.
+
+The setup welcome names the pinned Emacs, Omnivox and Emacsvox versions.
+Completion explicitly says installation succeeded, explains Start menu launch
+without a desktop shortcut, and describes uninstall. Keep speech testing and
+launch as separate finish choices. A focusable summary makes the instructions
+available to screen readers. Only this installation needs closing for repair.
+
+Emacsvox also provides a keyboard-accessible welcome buffer on desktop
+platforms. Offer it after startup and speech readiness, only before user input
+and when no file or other working buffer is open. Automated checks skip it.
+Store the show/hide choice as inert data under the current Emacs profile,
+independent of application versions. Reopen it through Help or a command.
+Use existing speech, voices, output settings, tutorial and manual commands;
+announce a short introduction rather than reading the whole screen.
 
 * Remaining release work
 
 Complete screen-reader acceptance of the wizard and broaden upgrade/failure
-testing across clean Windows machines. Uninstall retains user profiles and
-downloaded voices; removal of that user data is outside this first setup UI.
+testing across clean Windows machines. Default-preservation and optional cleanup need lifecycle coverage alongside
+installation and repair.
 
 Before redistributing bundled binaries, assemble and publish the corresponding
 Emacs and dependency sources and required notices, alongside Omnivox's source

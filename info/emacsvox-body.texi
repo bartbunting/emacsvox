@@ -39,6 +39,21 @@ commands@comma{} while @kbd{C-h k} followed by a key explains that key.  See
 @ref{Using Online Help} when you want to explore further.
 @end itemize
 
+@section The Welcome Screen
+
+At an idle startup@comma{} after speech is ready@comma{} Emacsvox offers a short welcome
+screen. It has actions to test speech@comma{} adjust rate and output volumes@comma{} choose
+voices and engines@comma{} open the tutorial or manual@comma{} and start normal use.
+Use @kbd{TAB} and @kbd{S-TAB} to choose actions@comma{}
+@kbd{RET} to activate one@comma{} and @kbd{q} to return.
+Arrow keys read the instructions normally.
+
+Toggle Show this welcome screen at startup to stop showing it automatically.
+The choice is saved in this Emacs profile and survives application upgrades.
+Open it again through Help's Emacsvox welcome entry@comma{} @kbd{C-h W}@comma{}
+or @code{M-x emacsvox-welcome}. Startup leaves explicitly opened
+files and sessions already in use alone.
+
 @section What You Will Hear
 
 Emacsvox combines several kinds of feedback:
@@ -1807,20 +1822,35 @@ Docker@comma{} Rust@comma{} and a system MSYS2 installation are not required.
 @subsection Using a Windows Setup Build
 
 If you have a development Setup executable@comma{} run it to install
-@samp{Emacsvox Windows Development} for your Windows account. It includes Emacs
-and Omnivox and needs no administrator privileges or internet connection.
+@samp{Emacsvox Windows} for your Windows account. The wizard shows the Emacsvox
+version and the included Emacs and Omnivox versions. No administrator
+privileges or internet connection are needed.
 The wizard offers an optional desktop shortcut; it always creates a Start
 menu group unless shortcuts were disabled for an unattended installation.
-On the final page@comma{} choose the speech test to hear two short announcements.
+The final page confirms installation and explains how to start and uninstall.
+Choose Test speech for two short announcements@comma{} and Start Emacsvox if wanted.
+Finish runs your chosen actions and closes Setup.
 
 The default directory is @samp{%LOCALAPPDATA%\Emacsvox\Desktop Dev}. Use the
-Start menu shortcut to launch Emacsvox afterward. Run Setup again to repair
+Start menu shortcut@comma{} or search Start for Emacsvox Windows@comma{} to launch afterward.
+A desktop shortcut is not required. Run Setup again to repair
 missing application files or install a newer development build. Close the
 Emacsvox using this installation first; Setup does not close it for you.
 Locally edited application files stop replacement so you can preserve them.
 
 Use Windows Settings or the Start menu's uninstall entry to remove the
-application. Uninstall retains your profile@comma{} logs and downloaded voices.
+application. Uninstall keeps personal data by default. Its optional cleanup
+screen shows data sizes and separate choices for this installation's logs and
+cached downloads@comma{} its Emacs profile (including the welcome preference)@comma{} and unused
+downloaded voices in the shared Omnivox library. Leave them unchecked to keep
+your setup for reinstallation. Shared Emacsvox palettes and settings outside
+this profile are kept. Unattended uninstall always preserves personal data.
+
+Shared voices that are active@comma{} referenced by another profile or retained by a
+speech session are kept@comma{} with a reason in the cleanup results. To remove active
+downloads@comma{} first disable them and Apply in Browse voices@comma{} then close the speech
+sessions using them. Voice cleanup never deletes imported original files or system voices.
+Directory links are not followed during personal-data cleanup.
 Development Setup builds are local test artifacts; the public release
 installer is still being prepared.
 
@@ -7523,6 +7553,7 @@ Run setup-helper checks and real lifecycle acceptance on Windows:
 
 @example
 .\test\emacsvox-windows-setup-helper-tests.ps1
+.\test\emacsvox-windows-setup-cleanup-tests.ps1
 .\test\emacsvox-windows-setup-tests.ps1 -Setup "C:\path\to\first-setup.exe" -Upgrade "C:\path\to\next-setup.exe" -AudioCheck
 .\test\emacsvox-windows-setup-wizard-tests.ps1 -Setup "C:\path\to\setup.exe"
 @end example

@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1562 commands and 220 options.
+   This chapter documents a total of 1570 commands and 221 options.
 
 * Menu:
 
@@ -676,6 +676,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-we:: Transform WebUsing XSLT.
 * emacsvox-websearch:: search utilities.
 * emacsvox-webspace:: Webspaces.
+* emacsvox-welcome:: Getting started with the audio desktop.
 * emacsvox-which-key:: Speech-enable Which-Key.
 * emacsvox-widget:: Speech enable widgets.
 * emacsvox-windmove:: windmove.

@@ -9020,7 +9020,7 @@ This module provides utility functions for searching the WWW
      (fn QUERY)
 
 
-File: emacsvox-reference.info,  Node: emacsvox-webspace,  Next: emacsvox-which-key,  Prev: emacsvox-websearch,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-webspace,  Next: emacsvox-welcome,  Prev: emacsvox-websearch,  Up: Emacsvox Commands And Options
 
 2.254 emacsvox-webspace
 =======================
@@ -9127,9 +9127,121 @@ WEBSPACE == Smart Web Gadgets For The Emacsvox Desktop
 
 
 
-File: emacsvox-reference.info,  Node: emacsvox-which-key,  Next: emacsvox-widget,  Prev: emacsvox-webspace,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-welcome,  Next: emacsvox-which-key,  Prev: emacsvox-webspace,  Up: Emacsvox Commands And Options
 
-2.255 emacsvox-which-key
+2.255 emacsvox-welcome
+======================
+
+A short, keyboard-accessible introduction.  The startup preference
+belongs to the Emacs profile, independently of the application
+installation.
+
+2.255.1 Emacsvox-Welcome Commands
+---------------------------------
+
+2.255.1.1 emacsvox-welcome
+..........................
+
+ -- Command: emacsvox-welcome
+     ‘C-h W’
+     ‘<f1> W’
+     ‘<help> W’
+     ‘<menu-bar> <help-menu> <emacsvox-welcome>’
+
+     Open the Emacsvox getting-started screen and speak a short introduction.
+
+2.255.1.2 emacsvox-welcome-mode
+...............................
+
+ -- Command: emacsvox-welcome-mode
+
+     Getting started.  TAB and Shift-TAB choose actions; RET activates; q returns.
+
+     In addition to any hooks its parent mode ‘special-mode’ might have
+     run, this mode runs the hook ‘emacsvox-welcome-mode-hook’, as the
+     final or penultimate step during initialization.
+
+     Key             Binding
+     -----------------------------------------------------
+     TAB		emacsvox-welcome-next
+     RET		push-button
+     SPC		push-button
+     -		negative-argument
+     0 .. 9		digit-argument
+     <		beginning-of-buffer
+     >		end-of-buffer
+     ?		describe-mode
+     g		revert-buffer
+     h		describe-mode
+     n		emacsvox-welcome-next
+     p		emacsvox-welcome-previous
+     q		quit-window
+     DEL		scroll-down-command
+     S-SPC		scroll-down-command
+     <backtab>	emacsvox-welcome-previous
+
+2.255.1.3 emacsvox-welcome-next
+...............................
+
+ -- Command: emacsvox-welcome-next (&optional backward)
+
+     Move to and speak the next action, or the previous with BACKWARD.
+
+     (fn &optional BACKWARD)
+
+2.255.1.4 emacsvox-welcome-output
+.................................
+
+ -- Command: emacsvox-welcome-output
+
+     Open the speech, tones, earcons and notification output settings.
+
+2.255.1.5 emacsvox-welcome-previous
+...................................
+
+ -- Command: emacsvox-welcome-previous
+
+     Move to and speak the previous action.
+
+2.255.1.6 emacsvox-welcome-test-speech
+......................................
+
+ -- Command: emacsvox-welcome-test-speech
+
+     Play a short sample using the current speech settings.
+
+2.255.1.7 emacsvox-welcome-toggle-startup
+.........................................
+
+ -- Command: emacsvox-welcome-toggle-startup
+
+     Toggle and persist the startup welcome choice in this Emacs profile.
+
+2.255.1.8 emacsvox-welcome-voices
+.................................
+
+ -- Command: emacsvox-welcome-voices
+
+     Open voice and engine browsing.
+
+2.255.2 emacsvox-welcome Options
+--------------------------------
+
+ -- Variable: User Option emacsvox-welcome-show-at-startup
+     Whether to offer the welcome screen at startup.
+     The screen’s toggle remembers an explicit choice in this Emacs profile.
+     A saved choice takes precedence over this default.  Explicitly opened files,
+     automated speech checks, and sessions already in use keep their current buffer.
+
+     Default Value:
+
+     t
+
+
+
+File: emacsvox-reference.info,  Node: emacsvox-which-key,  Next: emacsvox-widget,  Prev: emacsvox-welcome,  Up: Emacsvox Commands And Options
+
+2.256 emacsvox-which-key
 ========================
 
 Which-Key displays available keybindings in a popup after pressing a
@@ -9137,17 +9249,17 @@ prefix key.  This module speech-enables Which-Key to provide auditory
 feedback for available bindings, supporting navigation through pages and
 speaking the current binding options.
 
-2.255.1 Emacsvox-Which-Key Commands
+2.256.1 Emacsvox-Which-Key Commands
 -----------------------------------
 
-2.255.1.1 emacsvox-which-key-speak
+2.256.1.1 emacsvox-which-key-speak
 ..................................
 
  -- Command: emacsvox-which-key-speak
 
      Speak the current or last which-key popup content.
 
-2.255.1.2 emacsvox-which-key-toggle-auto-speak
+2.256.1.2 emacsvox-which-key-toggle-auto-speak
 ..............................................
 
  -- Command: emacsvox-which-key-toggle-auto-speak
@@ -9157,7 +9269,7 @@ speaking the current binding options.
 
 File: emacsvox-reference.info,  Node: emacsvox-widget,  Next: emacsvox-windmove,  Prev: emacsvox-which-key,  Up: Emacsvox Commands And Options
 
-2.256 emacsvox-widget
+2.257 emacsvox-widget
 =====================
 
 This module implements the necessary extensions to provide talking
@@ -9165,31 +9277,31 @@ widgets.
 
    required modules
 
-2.256.1 Emacsvox-Widget Commands
+2.257.1 Emacsvox-Widget Commands
 --------------------------------
 
-2.256.1.1 emacsvox-widget-browse-widget-interactively
+2.257.1.1 emacsvox-widget-browse-widget-interactively
 .....................................................
 
  -- Command: emacsvox-widget-browse-widget-interactively
 
      Allows you to browse a widget
 
-2.256.1.2 emacsvox-widget-help
+2.257.1.2 emacsvox-widget-help
 ..............................
 
  -- Command: emacsvox-widget-help
 
      Speak help for widget under point.
 
-2.256.1.3 emacsvox-widget-summarize-parent
+2.257.1.3 emacsvox-widget-summarize-parent
 ..........................................
 
  -- Command: emacsvox-widget-summarize-parent
 
      Summarize parent of widget at point.
 
-2.256.1.4 emacsvox-widget-summarize-widget-under-point
+2.257.1.4 emacsvox-widget-summarize-widget-under-point
 ......................................................
 
  -- Command: emacsvox-widget-summarize-widget-under-point (&optional
@@ -9201,7 +9313,7 @@ widgets.
 
      (fn &optional LEVEL)
 
-2.256.1.5 emacsvox-widget-update-from-minibuffer
+2.257.1.5 emacsvox-widget-update-from-minibuffer
 ................................................
 
  -- Command: emacsvox-widget-update-from-minibuffer (pos)
@@ -9213,7 +9325,7 @@ widgets.
 
 File: emacsvox-reference.info,  Node: emacsvox-windmove,  Next: emacsvox-windows-speech,  Prev: emacsvox-widget,  Up: Emacsvox Commands And Options
 
-2.257 emacsvox-windmove
+2.258 emacsvox-windmove
 =======================
 
 Package windmove (bundled with Emacs 21) provides commands for
@@ -9224,7 +9336,7 @@ navigating to windows based on relative position.
 
 File: emacsvox-reference.info,  Node: emacsvox-windows-speech,  Next: emacsvox-wizards,  Prev: emacsvox-windmove,  Up: Emacsvox Commands And Options
 
-2.258 emacsvox-windows-speech
+2.259 emacsvox-windows-speech
 =============================
 
 Register the native Windows speech servers bundled with Emacsvox.
@@ -9233,10 +9345,10 @@ below the configured server directory.  This module also configures
 native auditory icons, notification streams, stereo positioning, and
 dependency diagnosis.
 
-2.258.1 Emacsvox-Windows-Speech Commands
+2.259.1 Emacsvox-Windows-Speech Commands
 ----------------------------------------
 
-2.258.1.1 emacsvox-windows-speech-configure-audio
+2.259.1.1 emacsvox-windows-speech-configure-audio
 .................................................
 
  -- Command: emacsvox-windows-speech-configure-audio (&optional restart)
@@ -9246,28 +9358,28 @@ dependency diagnosis.
 
      (fn &optional RESTART)
 
-2.258.1.2 emacsvox-windows-speech-diagnose
+2.259.1.2 emacsvox-windows-speech-diagnose
 ..........................................
 
  -- Command: emacsvox-windows-speech-diagnose
 
      Display native Windows speech dependency and build status.
 
-2.258.1.3 emacsvox-windows-speech-disable
+2.259.1.3 emacsvox-windows-speech-disable
 .........................................
 
  -- Command: emacsvox-windows-speech-disable
 
      Disable friendly selection of native Windows speech servers.
 
-2.258.1.4 emacsvox-windows-speech-enable
+2.259.1.4 emacsvox-windows-speech-enable
 ........................................
 
  -- Command: emacsvox-windows-speech-enable
 
      Enable friendly selection of native Windows speech servers.
 
-2.258.1.5 emacsvox-windows-speech-restore-audio
+2.259.1.5 emacsvox-windows-speech-restore-audio
 ...............................................
 
  -- Command: emacsvox-windows-speech-restore-audio (&optional restart)
@@ -9277,21 +9389,21 @@ dependency diagnosis.
 
      (fn &optional RESTART)
 
-2.258.1.6 emacsvox-windows-speech-select-dectalk
+2.259.1.6 emacsvox-windows-speech-select-dectalk
 ................................................
 
  -- Command: emacsvox-windows-speech-select-dectalk
 
      Select the native Windows DECtalk server.
 
-2.258.1.7 emacsvox-windows-speech-select-eloquence
+2.259.1.7 emacsvox-windows-speech-select-eloquence
 ..................................................
 
  -- Command: emacsvox-windows-speech-select-eloquence
 
      Select the native Windows Eloquence server.
 
-2.258.1.8 emacsvox-windows-speech-select-server
+2.259.1.8 emacsvox-windows-speech-select-server
 ...............................................
 
  -- Command: emacsvox-windows-speech-select-server (server)
@@ -9300,7 +9412,7 @@ dependency diagnosis.
 
      (fn SERVER)
 
-2.258.2 emacsvox-windows-speech Options
+2.259.2 emacsvox-windows-speech Options
 ---------------------------------------
 
  -- Variable: User Option
@@ -9351,29 +9463,29 @@ dependency diagnosis.
 
 File: emacsvox-reference.info,  Node: emacsvox-wizards,  Next: emacsvox-woman,  Prev: emacsvox-windows-speech,  Up: Emacsvox Commands And Options
 
-2.259 emacsvox-wizards
+2.260 emacsvox-wizards
 ======================
 
 Contains various wizards for the Emacsvox desktop.
 
-2.259.1 Emacsvox-Wizards Commands
+2.260.1 Emacsvox-Wizards Commands
 ---------------------------------
 
-2.259.1.1 emacsvox-brightness-alert-toggle
+2.260.1.1 emacsvox-brightness-alert-toggle
 ..........................................
 
  -- Command: emacsvox-brightness-alert-toggle
 
      Toggle brightness alert.
 
-2.259.1.2 emacsvox-brightness-autoblack-toggle
+2.260.1.2 emacsvox-brightness-autoblack-toggle
 ..............................................
 
  -- Command: emacsvox-brightness-autoblack-toggle
 
      Toggle brightness autoblack.
 
-2.259.1.3 emacsvox-copy-current-file
+2.260.1.3 emacsvox-copy-current-file
 ....................................
 
  -- Command: emacsvox-copy-current-file
@@ -9387,7 +9499,7 @@ Contains various wizards for the Emacsvox desktop.
        used.  Asks for confirmation if the copy will result in an
        existing file being overwritten.
 
-2.259.1.4 emacsvox-customize
+2.260.1.4 emacsvox-customize
 ............................
 
  -- Command: emacsvox-customize
@@ -9395,7 +9507,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Customize Emacsvox.
 
-2.259.1.5 emacsvox-describe-emacsvox
+2.260.1.5 emacsvox-describe-emacsvox
 ....................................
 
  -- Command: emacsvox-describe-emacsvox
@@ -9405,7 +9517,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Give a brief overview of emacsvox.
 
-2.259.1.6 emacsvox-kill-buffer-quietly
+2.260.1.6 emacsvox-kill-buffer-quietly
 ......................................
 
  -- Command: emacsvox-kill-buffer-quietly
@@ -9413,7 +9525,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Kill current buffer without  confirmation.
 
-2.259.1.7 emacsvox-learn-emacs
+2.260.1.7 emacsvox-learn-emacs
 ..............................
 
  -- Command: emacsvox-learn-emacs
@@ -9425,7 +9537,7 @@ Contains various wizards for the Emacsvox desktop.
      Helps you learn the keys.  You can press keys and hear what they do.
      To leave, press C-g.
 
-2.259.1.8 emacsvox-link-current-file
+2.260.1.8 emacsvox-link-current-file
 ....................................
 
  -- Command: emacsvox-link-current-file
@@ -9437,7 +9549,7 @@ Contains various wizards for the Emacsvox desktop.
        a file in an existing directory, the specified name is
        used.  Signals an error if target already exists.
 
-2.259.1.9 emacsvox-next-frame-or-buffer
+2.260.1.9 emacsvox-next-frame-or-buffer
 .......................................
 
  -- Command: emacsvox-next-frame-or-buffer (&optional frame)
@@ -9447,7 +9559,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional FRAME)
 
-2.259.1.10 emacsvox-previous-frame-or-buffer
+2.260.1.10 emacsvox-previous-frame-or-buffer
 ............................................
 
  -- Command: emacsvox-previous-frame-or-buffer (&optional frame)
@@ -9457,7 +9569,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional FRAME)
 
-2.259.1.11 emacsvox-select-this-buffer-next-display
+2.260.1.11 emacsvox-select-this-buffer-next-display
 ...................................................
 
  -- Command: emacsvox-select-this-buffer-next-display
@@ -9468,7 +9580,7 @@ Contains various wizards for the Emacsvox desktop.
      ‘emacsvox-select-this-buffer-other-window-display’ for the
      meaning of ‘next’.
 
-2.259.1.12 emacsvox-select-this-buffer-other-window-display
+2.260.1.12 emacsvox-select-this-buffer-other-window-display
 ...........................................................
 
  -- Command: emacsvox-select-this-buffer-other-window-display (&optional
@@ -9482,7 +9594,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional ARG)
 
-2.259.1.13 emacsvox-select-this-buffer-previous-display
+2.260.1.13 emacsvox-select-this-buffer-previous-display
 .......................................................
 
  -- Command: emacsvox-select-this-buffer-previous-display
@@ -9493,7 +9605,7 @@ Contains various wizards for the Emacsvox desktop.
      ‘emacsvox-select-this-buffer-other-window-display’ for the
      meaning of ‘previous’.
 
-2.259.1.14 emacsvox-show-property-at-point
+2.260.1.14 emacsvox-show-property-at-point
 ..........................................
 
  -- Command: emacsvox-show-property-at-point (&optional property)
@@ -9504,7 +9616,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional PROPERTY)
 
-2.259.1.15 emacsvox-show-style-at-point
+2.260.1.15 emacsvox-show-style-at-point
 .......................................
 
  -- Command: emacsvox-show-style-at-point
@@ -9512,7 +9624,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Show value of property personality (and possibly face) at point.
 
-2.259.1.16 emacsvox-skip-blank-lines-backward
+2.260.1.16 emacsvox-skip-blank-lines-backward
 .............................................
 
  -- Command: emacsvox-skip-blank-lines-backward
@@ -9520,7 +9632,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Move backward  across blank lines, then speak line.
 
-2.259.1.17 emacsvox-skip-blank-lines-forward
+2.260.1.17 emacsvox-skip-blank-lines-forward
 ............................................
 
  -- Command: emacsvox-skip-blank-lines-forward
@@ -9528,7 +9640,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Move forward across blank lines, then speak line.
 
-2.259.1.18 emacsvox-skip-space-backward
+2.260.1.18 emacsvox-skip-space-backward
 .......................................
 
  -- Command: emacsvox-skip-space-backward
@@ -9536,7 +9648,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Skip back across blanks.
 
-2.259.1.19 emacsvox-skip-space-forwar
+2.260.1.19 emacsvox-skip-space-forwar
 .....................................
 
  -- Command: emacsvox-skip-space-forwar
@@ -9544,7 +9656,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Skip forward across blanks.
 
-2.259.1.20 emacsvox-speak-hostname
+2.260.1.20 emacsvox-speak-hostname
 ..................................
 
  -- Command: emacsvox-speak-hostname
@@ -9552,7 +9664,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Speak host name.
 
-2.259.1.21 emacsvox-speak-popup-messages
+2.260.1.21 emacsvox-speak-popup-messages
 ........................................
 
  -- Command: emacsvox-speak-popup-messages
@@ -9562,7 +9674,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Pop up Messages  and switch to it.
 
-2.259.1.22 emacsvox-speak-telephone-directory
+2.260.1.22 emacsvox-speak-telephone-directory
 .............................................
 
  -- Command: emacsvox-speak-telephone-directory (&optional edit)
@@ -9573,7 +9685,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional EDIT)
 
-2.259.1.23 emacsvox-speak-this-buffer-next-display
+2.260.1.23 emacsvox-speak-this-buffer-next-display
 ..................................................
 
  -- Command: emacsvox-speak-this-buffer-next-display
@@ -9584,7 +9696,7 @@ Contains various wizards for the Emacsvox desktop.
      ‘emacsvox-speak-this-buffer-other-window-display’ for the
      meaning of ‘next’.
 
-2.259.1.24 emacsvox-speak-this-buffer-other-window-display
+2.260.1.24 emacsvox-speak-this-buffer-other-window-display
 ..........................................................
 
  -- Command: emacsvox-speak-this-buffer-other-window-display (window)
@@ -9599,7 +9711,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn WINDOW)
 
-2.259.1.25 emacsvox-speak-this-buffer-previous-display
+2.260.1.25 emacsvox-speak-this-buffer-previous-display
 ......................................................
 
  -- Command: emacsvox-speak-this-buffer-previous-display
@@ -9610,7 +9722,7 @@ Contains various wizards for the Emacsvox desktop.
      ‘emacsvox-speak-this-buffer-other-window-display’ for the
      meaning of ‘previous’.
 
-2.259.1.26 emacsvox-symlink-current-file
+2.260.1.26 emacsvox-symlink-current-file
 ........................................
 
  -- Command: emacsvox-symlink-current-file
@@ -9623,7 +9735,7 @@ Contains various wizards for the Emacsvox desktop.
        a file in an existing directory, the specified name is
        used.  Signals an error if target already exists.
 
-2.259.1.27 emacsvox-view-emacsvox-news
+2.260.1.27 emacsvox-view-emacsvox-news
 ......................................
 
  -- Command: emacsvox-view-emacsvox-news
@@ -9631,7 +9743,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Display emacsvox News for a given version.
 
-2.259.1.28 emacsvox-view-emacsvox-tips
+2.260.1.28 emacsvox-view-emacsvox-tips
 ......................................
 
  -- Command: emacsvox-view-emacsvox-tips
@@ -9639,7 +9751,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Browse  Emacsvox productivity tips.
 
-2.259.1.29 emacsvox-wizards-bbc-iplayer
+2.260.1.29 emacsvox-wizards-bbc-iplayer
 .......................................
 
  -- Command: emacsvox-wizards-bbc-iplayer
@@ -9647,14 +9759,14 @@ Contains various wizards for the Emacsvox desktop.
      Browse BBC Schedule from get_iplayer radio cache.
      Bug: First run fails to bind keys.   Works on subsequent runs.
 
-2.259.1.30 emacsvox-wizards-cleanup-shell-path
+2.260.1.30 emacsvox-wizards-cleanup-shell-path
 ..............................................
 
  -- Command: emacsvox-wizards-cleanup-shell-path
 
      Cleans up duplicates in shell path env variable.
 
-2.259.1.31 emacsvox-wizards-color-at-point
+2.260.1.31 emacsvox-wizards-color-at-point
 ..........................................
 
  -- Command: emacsvox-wizards-color-at-point
@@ -9664,7 +9776,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Echo foreground/background color at point.
 
-2.259.1.32 emacsvox-wizards-color-diff-at-point
+2.260.1.32 emacsvox-wizards-color-diff-at-point
 ...............................................
 
  -- Command: emacsvox-wizards-color-diff-at-point (&optional set)
@@ -9677,7 +9789,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional SET)
 
-2.259.1.33 emacsvox-wizards-color-wheel
+2.260.1.33 emacsvox-wizards-color-wheel
 .......................................
 
  -- Command: emacsvox-wizards-color-wheel (start)
@@ -9699,7 +9811,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn START)
 
-2.259.1.34 emacsvox-wizards-colors
+2.260.1.34 emacsvox-wizards-colors
 ..................................
 
  -- Command: emacsvox-wizards-colors
@@ -9708,14 +9820,14 @@ Contains various wizards for the Emacsvox desktop.
      Display list of colors and setup a callback to activate color
      under point as either the foreground or background color.
 
-2.259.1.35 emacsvox-wizards-comma-at-end-of-word
+2.260.1.35 emacsvox-wizards-comma-at-end-of-word
 ................................................
 
  -- Command: emacsvox-wizards-comma-at-end-of-word
 
      Move to the end of current word and add a comma.
 
-2.259.1.36 emacsvox-wizards-count-slides-in-region
+2.260.1.36 emacsvox-wizards-count-slides-in-region
 ..................................................
 
  -- Command: emacsvox-wizards-count-slides-in-region (start end)
@@ -9724,7 +9836,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn START END)
 
-2.259.1.37 emacsvox-wizards-customize-saved
+2.260.1.37 emacsvox-wizards-customize-saved
 ...........................................
 
  -- Command: emacsvox-wizards-customize-saved (pattern)
@@ -9737,7 +9849,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn PATTERN)
 
-2.259.1.38 emacsvox-wizards-describe-voice
+2.260.1.38 emacsvox-wizards-describe-voice
 ..........................................
 
  -- Command: emacsvox-wizards-describe-voice (personality)
@@ -9751,7 +9863,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn PERSONALITY)
 
-2.259.1.39 emacsvox-wizards-end-of-word
+2.260.1.39 emacsvox-wizards-end-of-word
 .......................................
 
  -- Command: emacsvox-wizards-end-of-word (arg)
@@ -9760,7 +9872,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn ARG)
 
-2.259.1.40 emacsvox-wizards-enumerate-matching-commands
+2.260.1.40 emacsvox-wizards-enumerate-matching-commands
 .......................................................
 
  -- Command: emacsvox-wizards-enumerate-matching-commands (pattern)
@@ -9769,7 +9881,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn PATTERN)
 
-2.259.1.41 emacsvox-wizards-enumerate-matching-faces
+2.260.1.41 emacsvox-wizards-enumerate-matching-faces
 ....................................................
 
  -- Command: emacsvox-wizards-enumerate-matching-faces (pattern)
@@ -9778,7 +9890,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn PATTERN)
 
-2.259.1.42 emacsvox-wizards-enumerate-uncovered-commands
+2.260.1.42 emacsvox-wizards-enumerate-uncovered-commands
 ........................................................
 
  -- Command: emacsvox-wizards-enumerate-uncovered-commands (pattern
@@ -9790,7 +9902,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn PATTERN &optional BOUND)
 
-2.259.1.43 emacsvox-wizards-enumerate-undefined-faces
+2.260.1.43 emacsvox-wizards-enumerate-undefined-faces
 .....................................................
 
  -- Command: emacsvox-wizards-enumerate-undefined-faces
@@ -9798,7 +9910,7 @@ Contains various wizards for the Emacsvox desktop.
      utility function to enumerate possibly old, obsolete maps that we have still
      mapped to voices.
 
-2.259.1.44 emacsvox-wizards-enumerate-unmapped-faces
+2.260.1.44 emacsvox-wizards-enumerate-unmapped-faces
 ....................................................
 
  -- Command: emacsvox-wizards-enumerate-unmapped-faces (&optional
@@ -9808,14 +9920,14 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional PATTERN)
 
-2.259.1.45 emacsvox-wizards-espeak-line
+2.260.1.45 emacsvox-wizards-espeak-line
 .......................................
 
  -- Command: emacsvox-wizards-espeak-line
 
      Speak line using espeak polyglot wizard.
 
-2.259.1.46 emacsvox-wizards-espeak-region
+2.260.1.46 emacsvox-wizards-espeak-region
 .........................................
 
  -- Command: emacsvox-wizards-espeak-region (start end)
@@ -9824,7 +9936,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn START END)
 
-2.259.1.47 emacsvox-wizards-espeak-string
+2.260.1.47 emacsvox-wizards-espeak-string
 .........................................
 
  -- Command: emacsvox-wizards-espeak-string (string)
@@ -9835,7 +9947,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn STRING)
 
-2.259.1.48 emacsvox-wizards-eww-buffer-list
+2.260.1.48 emacsvox-wizards-eww-buffer-list
 ...........................................
 
  -- Command: emacsvox-wizards-eww-buffer-list
@@ -9844,14 +9956,14 @@ Contains various wizards for the Emacsvox desktop.
 
      Display list of  EWW buffers.
 
-2.259.1.49 emacsvox-wizards-exec-path-from-shell
+2.260.1.49 emacsvox-wizards-exec-path-from-shell
 ................................................
 
  -- Command: emacsvox-wizards-exec-path-from-shell
 
      Update exec-path from shell path.
 
-2.259.1.50 emacsvox-wizards-execute-asynchronously
+2.260.1.50 emacsvox-wizards-execute-asynchronously
 ..................................................
 
  -- Command: emacsvox-wizards-execute-asynchronously (key)
@@ -9860,7 +9972,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn KEY)
 
-2.259.1.51 emacsvox-wizards-find-file-as-root
+2.260.1.51 emacsvox-wizards-find-file-as-root
 .............................................
 
  -- Command: emacsvox-wizards-find-file-as-root (file)
@@ -9872,7 +9984,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn FILE)
 
-2.259.1.52 emacsvox-wizards-find-longest-line-in-region
+2.260.1.52 emacsvox-wizards-find-longest-line-in-region
 .......................................................
 
  -- Command: emacsvox-wizards-find-longest-line-in-region (start end)
@@ -9882,7 +9994,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn START END)
 
-2.259.1.53 emacsvox-wizards-find-longest-paragraph-in-region
+2.260.1.53 emacsvox-wizards-find-longest-paragraph-in-region
 ............................................................
 
  -- Command: emacsvox-wizards-find-longest-paragraph-in-region (start
@@ -9893,7 +10005,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn START END)
 
-2.259.1.54 emacsvox-wizards-find-longest-sentence-in-region
+2.260.1.54 emacsvox-wizards-find-longest-sentence-in-region
 ...........................................................
 
  -- Command: emacsvox-wizards-find-longest-sentence-in-region (start
@@ -9904,7 +10016,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn START END)
 
-2.259.1.55 emacsvox-wizards-find-shortest-line-in-region
+2.260.1.55 emacsvox-wizards-find-shortest-line-in-region
 ........................................................
 
  -- Command: emacsvox-wizards-find-shortest-line-in-region (start end)
@@ -9914,14 +10026,14 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn START END)
 
-2.259.1.56 emacsvox-wizards-frame-colors
+2.260.1.56 emacsvox-wizards-frame-colors
 ........................................
 
  -- Command: emacsvox-wizards-frame-colors
 
      Display frame’s foreground/background color setting.
 
-2.259.1.57 emacsvox-wizards-free-geo-ip
+2.260.1.57 emacsvox-wizards-free-geo-ip
 .......................................
 
  -- Command: emacsvox-wizards-free-geo-ip (&optional reverse-geocode)
@@ -9931,7 +10043,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional REVERSE-GEOCODE)
 
-2.259.1.58 emacsvox-wizards-gen-fn-decl
+2.260.1.58 emacsvox-wizards-gen-fn-decl
 .......................................
 
  -- Command: emacsvox-wizards-gen-fn-decl (f &optional ext)
@@ -9942,7 +10054,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn F &optional EXT)
 
-2.259.1.59 emacsvox-wizards-google-news
+2.260.1.59 emacsvox-wizards-google-news
 .......................................
 
  -- Command: emacsvox-wizards-google-news
@@ -9951,7 +10063,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Clean up news.google.com.
 
-2.259.1.60 emacsvox-wizards-how-many-matches
+2.260.1.60 emacsvox-wizards-how-many-matches
 ............................................
 
  -- Command: emacsvox-wizards-how-many-matches (start end &optional
@@ -9966,14 +10078,14 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn START END &optional PREFIX)
 
-2.259.1.61 emacsvox-wizards-lacheck-buffer-file
+2.260.1.61 emacsvox-wizards-lacheck-buffer-file
 ...............................................
 
  -- Command: emacsvox-wizards-lacheck-buffer-file
 
      Run Lacheck on current buffer.
 
-2.259.1.62 emacsvox-wizards-locate-content
+2.260.1.62 emacsvox-wizards-locate-content
 ..........................................
 
  -- Command: emacsvox-wizards-locate-content (pattern)
@@ -9985,7 +10097,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn PATTERN)
 
-2.259.1.63 emacsvox-wizards-mlb-standings
+2.260.1.63 emacsvox-wizards-mlb-standings
 .........................................
 
  -- Command: emacsvox-wizards-mlb-standings (&optional raw)
@@ -9995,7 +10107,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional RAW)
 
-2.259.1.64 emacsvox-wizards-module-enumerate-uncovered-commands
+2.260.1.64 emacsvox-wizards-module-enumerate-uncovered-commands
 ...............................................................
 
  -- Command: emacsvox-wizards-module-enumerate-uncovered-commands (m)
@@ -10004,7 +10116,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn M)
 
-2.259.1.65 emacsvox-wizards-move-and-speak
+2.260.1.65 emacsvox-wizards-move-and-speak
 ..........................................
 
  -- Command: emacsvox-wizards-move-and-speak (command count)
@@ -10018,7 +10130,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn COMMAND COUNT)
 
-2.259.1.66 emacsvox-wizards-nba-standings
+2.260.1.66 emacsvox-wizards-nba-standings
 .........................................
 
  -- Command: emacsvox-wizards-nba-standings (&optional raw)
@@ -10028,21 +10140,21 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional RAW)
 
-2.259.1.67 emacsvox-wizards-next-bullet
+2.260.1.67 emacsvox-wizards-next-bullet
 .......................................
 
  -- Command: emacsvox-wizards-next-bullet
 
      Navigate to and speak next ‘bullet’.
 
-2.259.1.68 emacsvox-wizards-next-interactive-defun
+2.260.1.68 emacsvox-wizards-next-interactive-defun
 ..................................................
 
  -- Command: emacsvox-wizards-next-interactive-defun
 
      Move point to the next interactive defun
 
-2.259.1.69 emacsvox-wizards-noaa-weather
+2.260.1.69 emacsvox-wizards-noaa-weather
 ........................................
 
  -- Command: emacsvox-wizards-noaa-weather (&optional ask)
@@ -10060,7 +10172,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional ASK)
 
-2.259.1.70 emacsvox-wizards-occur-header-lines
+2.260.1.70 emacsvox-wizards-occur-header-lines
 ..............................................
 
  -- Command: emacsvox-wizards-occur-header-lines (&optional prefix)
@@ -10074,7 +10186,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional PREFIX)
 
-2.259.1.71 emacsvox-wizards-pdf-open
+2.260.1.71 emacsvox-wizards-pdf-open
 ....................................
 
  -- Command: emacsvox-wizards-pdf-open (filename &optional ask-pwd)
@@ -10086,7 +10198,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn FILENAME &optional ASK-PWD)
 
-2.259.1.72 emacsvox-wizards-portfolio
+2.260.1.72 emacsvox-wizards-portfolio
 .....................................
 
  -- Command: emacsvox-wizards-portfolio
@@ -10094,14 +10206,14 @@ Contains various wizards for the Emacsvox desktop.
 
      View stock quotes
 
-2.259.1.73 emacsvox-wizards-previous-bullet
+2.260.1.73 emacsvox-wizards-previous-bullet
 ...........................................
 
  -- Command: emacsvox-wizards-previous-bullet
 
      Navigate to and speak previous ‘bullet’.
 
-2.259.1.74 emacsvox-wizards-remote-frame
+2.260.1.74 emacsvox-wizards-remote-frame
 ........................................
 
  -- Command: emacsvox-wizards-remote-frame
@@ -10112,14 +10224,14 @@ Contains various wizards for the Emacsvox desktop.
      Works best when you already are ssh-impel-ed in and have a talking
        remote Emacs in   a local XTerm.
 
-2.259.1.75 emacsvox-wizards-set-colors
+2.260.1.75 emacsvox-wizards-set-colors
 ......................................
 
  -- Command: emacsvox-wizards-set-colors
 
      Prompt for foreground and background colors.
 
-2.259.1.76 emacsvox-wizards-shell
+2.260.1.76 emacsvox-wizards-shell
 .................................
 
  -- Command: emacsvox-wizards-shell (&optional prefix)
@@ -10133,7 +10245,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional PREFIX)
 
-2.259.1.77 emacsvox-wizards-shell-by-key
+2.260.1.77 emacsvox-wizards-shell-by-key
 ........................................
 
  -- Command: emacsvox-wizards-shell-by-key (&optional prefix)
@@ -10156,7 +10268,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional PREFIX)
 
-2.259.1.78 emacsvox-wizards-shell-command-on-current-file
+2.260.1.78 emacsvox-wizards-shell-command-on-current-file
 .........................................................
 
  -- Command: emacsvox-wizards-shell-command-on-current-file (command)
@@ -10167,7 +10279,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn COMMAND)
 
-2.259.1.79 emacsvox-wizards-shell-directory-reset
+2.260.1.79 emacsvox-wizards-shell-directory-reset
 .................................................
 
  -- Command: emacsvox-wizards-shell-directory-reset (&optional prefix)
@@ -10182,7 +10294,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional PREFIX)
 
-2.259.1.80 emacsvox-wizards-shell-directory-set
+2.260.1.80 emacsvox-wizards-shell-directory-set
 ...............................................
 
  -- Command: emacsvox-wizards-shell-directory-set
@@ -10190,7 +10302,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Define current directory as this shell’s project directory.
 
-2.259.1.81 emacsvox-wizards-shell-toggle
+2.260.1.81 emacsvox-wizards-shell-toggle
 ........................................
 
  -- Command: emacsvox-wizards-shell-toggle
@@ -10199,7 +10311,7 @@ Contains various wizards for the Emacsvox desktop.
      Switch to  shell  and cd to
        directory of the previously current buffer.
 
-2.259.1.82 emacsvox-wizards-show-eval-result
+2.260.1.82 emacsvox-wizards-show-eval-result
 ............................................
 
  -- Command: emacsvox-wizards-show-eval-result (form)
@@ -10209,7 +10321,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn FORM)
 
-2.259.1.83 emacsvox-wizards-show-face
+2.260.1.83 emacsvox-wizards-show-face
 .....................................
 
  -- Command: emacsvox-wizards-show-face (face)
@@ -10218,14 +10330,14 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn FACE)
 
-2.259.1.84 emacsvox-wizards-show-memory-used
+2.260.1.84 emacsvox-wizards-show-memory-used
 ............................................
 
  -- Command: emacsvox-wizards-show-memory-used
 
      Convenience command to view state of memory used in this session so far.
 
-2.259.1.85 emacsvox-wizards-show-theme
+2.260.1.85 emacsvox-wizards-show-theme
 ......................................
 
  -- Command: emacsvox-wizards-show-theme (palette)
@@ -10237,7 +10349,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn PALETTE)
 
-2.259.1.86 emacsvox-wizards-snarf-sexp
+2.260.1.86 emacsvox-wizards-snarf-sexp
 ......................................
 
  -- Command: emacsvox-wizards-snarf-sexp (&optional delete)
@@ -10249,7 +10361,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional DELETE)
 
-2.259.1.87 emacsvox-wizards-speak-iso-datetime
+2.260.1.87 emacsvox-wizards-speak-iso-datetime
 ..............................................
 
  -- Command: emacsvox-wizards-speak-iso-datetime (iso)
@@ -10258,7 +10370,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn ISO)
 
-2.259.1.88 emacsvox-wizards-squeeze-blanks
+2.260.1.88 emacsvox-wizards-squeeze-blanks
 ..........................................
 
  -- Command: emacsvox-wizards-squeeze-blanks (start end)
@@ -10268,7 +10380,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn START END)
 
-2.259.1.89 emacsvox-wizards-swap-fg-and-bg
+2.260.1.89 emacsvox-wizards-swap-fg-and-bg
 ..........................................
 
  -- Command: emacsvox-wizards-swap-fg-and-bg
@@ -10278,7 +10390,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Swap foreground and background.
 
-2.259.1.90 emacsvox-wizards-tex-tie-current-word
+2.260.1.90 emacsvox-wizards-tex-tie-current-word
 ................................................
 
  -- Command: emacsvox-wizards-tex-tie-current-word (n)
@@ -10287,28 +10399,28 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn N)
 
-2.259.1.91 emacsvox-wizards-toggle-mm-dd-yyyy-date-pronouncer
+2.260.1.91 emacsvox-wizards-toggle-mm-dd-yyyy-date-pronouncer
 .............................................................
 
  -- Command: emacsvox-wizards-toggle-mm-dd-yyyy-date-pronouncer
 
      Toggle pronunciation of mm-dd-yyyy dates.
 
-2.259.1.92 emacsvox-wizards-toggle-yyyy-mm-dd-date-pronouncer
+2.260.1.92 emacsvox-wizards-toggle-yyyy-mm-dd-date-pronouncer
 .............................................................
 
  -- Command: emacsvox-wizards-toggle-yyyy-mm-dd-date-pronouncer
 
      Toggle pronunciation of yyyy-mm-dd dates.
 
-2.259.1.93 emacsvox-wizards-toggle-yyyymmdd-date-pronouncer
+2.260.1.93 emacsvox-wizards-toggle-yyyymmdd-date-pronouncer
 ...........................................................
 
  -- Command: emacsvox-wizards-toggle-yyyymmdd-date-pronouncer
 
      Toggle pronunciation of yyyymmdd  dates.
 
-2.259.1.94 emacsvox-wizards-tramp-open-location
+2.260.1.94 emacsvox-wizards-tramp-open-location
 ...............................................
 
  -- Command: emacsvox-wizards-tramp-open-location (name)
@@ -10320,7 +10432,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn NAME)
 
-2.259.1.95 emacsvox-wizards-tune-in-radio-browse
+2.260.1.95 emacsvox-wizards-tune-in-radio-browse
 ................................................
 
  -- Command: emacsvox-wizards-tune-in-radio-browse (&optional category)
@@ -10332,7 +10444,7 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn &optional CATEGORY)
 
-2.259.1.96 emacsvox-wizards-tune-in-radio-search
+2.260.1.96 emacsvox-wizards-tune-in-radio-search
 ................................................
 
  -- Command: emacsvox-wizards-tune-in-radio-search
@@ -10341,7 +10453,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Search Tune-In Radio.
 
-2.259.1.97 emacsvox-wizards-units
+2.260.1.97 emacsvox-wizards-units
 .................................
 
  -- Command: emacsvox-wizards-units
@@ -10349,14 +10461,14 @@ Contains various wizards for the Emacsvox desktop.
 
      Run units.
 
-2.259.1.98 emacsvox-wizards-vc-n
+2.260.1.98 emacsvox-wizards-vc-n
 ................................
 
  -- Command: emacsvox-wizards-vc-n
 
      Accelerator for VC viewer.
 
-2.259.1.99 emacsvox-wizards-vc-view-mode
+2.260.1.99 emacsvox-wizards-vc-view-mode
 ........................................
 
  -- Command: emacsvox-wizards-vc-view-mode
@@ -10371,7 +10483,7 @@ Contains various wizards for the Emacsvox desktop.
      run, this mode runs the hook ‘emacsvox-wizards-vc-view-mode-hook’, as
      the final or penultimate step during initialization.
 
-2.259.1.100 emacsvox-wizards-vc-viewer
+2.260.1.100 emacsvox-wizards-vc-viewer
 ......................................
 
  -- Command: emacsvox-wizards-vc-viewer (console)
@@ -10381,21 +10493,21 @@ Contains various wizards for the Emacsvox desktop.
 
      (fn CONSOLE)
 
-2.259.1.101 emacsvox-wizards-vc-viewer-refresh
+2.260.1.101 emacsvox-wizards-vc-viewer-refresh
 ..............................................
 
  -- Command: emacsvox-wizards-vc-viewer-refresh
 
      Refresh view of VC we’re viewing.
 
-2.259.1.102 emacsvox-wizards-view-buffers-filtered-by-m-player-mode
+2.260.1.102 emacsvox-wizards-view-buffers-filtered-by-m-player-mode
 ...................................................................
 
  -- Command: emacsvox-wizards-view-buffers-filtered-by-m-player-mode
 
      Buffer menu filtered by  m-player mode.
 
-2.259.1.103 emacsvox-wizards-view-buffers-filtered-by-this-mode
+2.260.1.103 emacsvox-wizards-view-buffers-filtered-by-this-mode
 ...............................................................
 
  -- Command: emacsvox-wizards-view-buffers-filtered-by-this-mode
@@ -10406,7 +10518,7 @@ Contains various wizards for the Emacsvox desktop.
 
      Buffer menu filtered by  mode of current-buffer.
 
-2.259.2 emacsvox-wizards Options
+2.260.2 emacsvox-wizards Options
 --------------------------------
 
  -- Variable: User Option emacsvox-brightness-autoblack

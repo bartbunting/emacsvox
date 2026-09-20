@@ -653,20 +653,35 @@ Docker, Rust, and a system MSYS2 installation are not required.
 :END:
 
 If you have a development Setup executable, run it to install
-=Emacsvox Windows Development= for your Windows account. It includes Emacs
-and Omnivox and needs no administrator privileges or internet connection.
+=Emacsvox Windows= for your Windows account. The wizard shows the Emacsvox
+version and the included Emacs and Omnivox versions. No administrator
+privileges or internet connection are needed.
 The wizard offers an optional desktop shortcut; it always creates a Start
 menu group unless shortcuts were disabled for an unattended installation.
-On the final page, choose the speech test to hear two short announcements.
+The final page confirms installation and explains how to start and uninstall.
+Choose Test speech for two short announcements, and Start Emacsvox if wanted.
+Finish runs your chosen actions and closes Setup.
 
 The default directory is =%LOCALAPPDATA%\Emacsvox\Desktop Dev=. Use the
-Start menu shortcut to launch Emacsvox afterward. Run Setup again to repair
+Start menu shortcut, or search Start for Emacsvox Windows, to launch afterward.
+A desktop shortcut is not required. Run Setup again to repair
 missing application files or install a newer development build. Close the
 Emacsvox using this installation first; Setup does not close it for you.
 Locally edited application files stop replacement so you can preserve them.
 
 Use Windows Settings or the Start menu's uninstall entry to remove the
-application. Uninstall retains your profile, logs and downloaded voices.
+application. Uninstall keeps personal data by default. Its optional cleanup
+screen shows data sizes and separate choices for this installation's logs and
+cached downloads, its Emacs profile (including the welcome preference), and unused
+downloaded voices in the shared Omnivox library. Leave them unchecked to keep
+your setup for reinstallation. Shared Emacsvox palettes and settings outside
+this profile are kept. Unattended uninstall always preserves personal data.
+
+Shared voices that are active, referenced by another profile or retained by a
+speech session are kept, with a reason in the cleanup results. To remove active
+downloads, first disable them and Apply in Browse voices, then close the speech
+sessions using them. Voice cleanup never deletes imported original files or system voices.
+Directory links are not followed during personal-data cleanup.
 Development Setup builds are local test artifacts; the public release
 installer is still being prepared.
 

@@ -18,4 +18,13 @@ without network access. Existing explicit Emacs selections are preserved.
 
 Development Windows Setup builds add a per-user wizard, Start menu and
 optional desktop shortcuts, repair and uninstall. Uninstall preserves the
-user's profile, logs and downloaded voices.
+user's profile, logs and downloaded voices by default, with separate optional
+cleanup choices and an explanation of any retained shared voices. The wizard
+names the bundled versions, uses Emacsvox Windows for shortcuts, and explains
+launch and uninstall when installation finishes.
+
+** Welcome screen
+
+An idle first startup offers speech testing, rate and output settings, voices,
+the tutorial and manual. The startup toggle is saved per Emacs profile.
+Reopen the screen with C-h W or M-x emacsvox-welcome.

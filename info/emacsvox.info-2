@@ -979,6 +979,7 @@ checker runs.
           Windows:
 
                .\test\emacsvox-windows-setup-helper-tests.ps1
+               .\test\emacsvox-windows-setup-cleanup-tests.ps1
                .\test\emacsvox-windows-setup-tests.ps1 -Setup "C:\path\to\first-setup.exe" -Upgrade "C:\path\to\next-setup.exe" -AudioCheck
                .\test\emacsvox-windows-setup-wizard-tests.ps1 -Setup "C:\path\to\setup.exe"
 
