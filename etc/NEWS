@@ -6,15 +6,34 @@ Emacsvox News -- History Of User-Visible Changes
 
 Maintained by Emacsvox Contributors.
 
-* Emacsvox Unreleased --- Current User-Visible Changes
+* Emacsvox 2026.9.5 --- Current User-Visible Changes
 
-** Release target: Omnivox 1.12
+** Omnivox 1.12.0 required
 
-This development series targets Omnivox 1.12 for the next Emacsvox release.
-The current guided installers still pin 1.10.0; the newer voice-management
-features below need a compatible development build until the release pins
-are updated. Upgrade an existing Omnivox installation separately: updating
+This release requires Omnivox 1.12.0 or newer. The guided installers pin
+1.12.0 for the core and matching optional engines; the Debian package recommends
+Omnivox 1.12.0 or newer. Upgrade an existing Omnivox installation separately: updating
 Emacsvox does not replace your selected server or install optional engines.
+
+** Engine-specific voice controls
+
+The common voice editor now offers /Engine-specific settings/ for a selected choice.
+DECtalk and Eloquence report the controls supported by the installed runtime,
+including their ranges, defaults and help. Adjustments can follow the common
+settings, use an explicit value or request the engine voice default. Automatic
+samples speak each change; Preview and Compare remain available before saving.
+
+These controls belong to the palette's selected choice, including its individual
+fallbacks. Ordinary speech and previews use the same settings. Unsupported or
+unqualified runtimes report the limitation and preserve saved adjustments.
+
+** More responsive voice changes
+
+Applying a preferred engine or voice palette avoids repeated preparation of
+unchanged voice choices. Both speech streams still acknowledge application.
+Omnivox 1.12.0 also improves DECtalk character navigation and custom-parameter
+speech. Maintainers can repeat the voice and editor performance benchmarks to
+compare future changes.
 
 ** Unified voice palettes and upgrade notes
 

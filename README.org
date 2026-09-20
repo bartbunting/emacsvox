@@ -21,7 +21,7 @@ Debian packaging route described in the
 
 Remote Emacs with speech on a workstation remains a preview. Its setup is in
 the same installation chapter and the Speech Backends guide. It requires
-Omnivox 1.10.0 or newer, which includes the =--serve= option.
+Omnivox 1.12.0 or newer, which includes the =--serve= option.
 
 * Start Here: First Speech
 
@@ -199,11 +199,12 @@ upstream project, historical material, or the pinned comparison test checkout.
 Omnivox is Emacsvox's recommended multi-engine speech host for new
 installations.  Emacsvox talks to Omnivox while Omnivox uses the normal engine
 for the platform: eSpeak NG on Linux, AVSpeechSynthesizer on macOS, and WinRT
-on Windows.  Emacsvox requires Omnivox 1.10.0 or newer for individual fallback
-tuning and complete voice previews; the guided installers pin the 1.10.0
-release. Preparation for the next Emacsvox release targets Omnivox 1.12;
-the installer pins and verified binary examples will be updated together
-when its release artifacts are available. The
+on Windows. Emacsvox requires Omnivox 1.12.0 or newer for voice-library
+management, on-demand eSpeak variants and engine-specific voice controls,
+alongside individual fallback tuning and complete voice previews. The guided
+installers pin the 1.12.0 core and matching optional engines. Upgrade an existing
+Omnivox installation separately; updating Emacsvox does not replace your selected
+speech server. The
 [[file:docs/manual/chapters/speech-backends.org][Speech Backends guide]] owns the
 current support matrix, prerequisites, source installation, selection, and
 audible smoke test.

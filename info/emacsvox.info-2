@@ -1566,7 +1566,7 @@ Download the ‘omnivox-piper-windows-x64’ artifact, which contains the
 companion archive and ‘piper-sha256sums.txt’, then stage it with a
 reviewed model:
 
-     OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.10.0-piper-windows-x64.zip \
+     OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.12.0-piper-windows-x64.zip \
        OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256=64-character-sha256 \
        OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx \
        make windows-omnivox-piper-dev
