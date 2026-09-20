@@ -92,6 +92,62 @@
           (plist-get (cdr (plist-get result :entry)) :choices) nil)
     (should (equal expected (emacsvox-test--resolve-owned inputs 'bolden 'reading-owned)))))
 
+(ert-deftest emacsvox-aural-voice-data-prepared-resolution-preserves-results ()
+  "Prepared lookup preserves aliases, inheritance, Automatic and missing choices."
+  (dolist (missing '(nil t))
+    (let* ((inputs (emacsvox-test--voice-resolution-inputs))
+           (sets (unless missing (plist-get inputs :sets))))
+      (dolist (palette '(reading-owned alternative-owned source-child))
+        (let ((snapshot (emacsvox-aural-voice-data--prepare-resolution
+                         palette (plist-get inputs :registry) sets (plist-get inputs :policy))))
+          (dolist (voice '(bolden "bolden" voice-bolden annotate voice-annotate unknown))
+            (should
+             (equal (emacsvox-aural-voice-data--resolve-prepared voice snapshot)
+                    (emacsvox-aural-voice-data--resolve
+                     voice palette (plist-get inputs :registry) sets (plist-get inputs :policy))))))))))
+
+(ert-deftest emacsvox-aural-voice-data-prepared-resolution-owns-inputs-and-results ()
+  "Input and result edits cannot alter a captured operation; a new one sees edits."
+  (let* ((inputs (emacsvox-test--voice-resolution-inputs))
+         (registry (plist-get inputs :registry))
+         (sets (plist-get inputs :sets)) (policy (plist-get inputs :policy))
+         (snapshot (emacsvox-aural-voice-data--prepare-resolution
+                    'reading-owned registry sets policy))
+         (expected (emacsvox-aural-voice-data--resolve-prepared 'bolden snapshot))
+         (result (emacsvox-aural-voice-data--resolve-prepared 'bolden snapshot))
+         (record (gethash 'reading-owned registry)))
+    (setf (plist-get (plist-get result :definition) :average-pitch) 9
+          (plist-get (car (plist-get result :selectors)) :voice-id) "result edit"
+          (plist-get (plist-get result :policy) :disabled-engines) nil
+          (plist-get (cdr (plist-get result :entry)) :choices) nil)
+    (setf (plist-get (plist-get (car (plist-get (car sets) :choices)) :selector) :voice-id) "source edit"
+          (plist-get policy :disabled-engines) nil
+          (plist-get (plist-get (cdr (assq 'bolden
+                                         (plist-get (emacsvox-aural-voice-palette-data record) :entries)))
+                               :style) :average-pitch) 9)
+    (should (equal expected (emacsvox-aural-voice-data--resolve-prepared 'bolden snapshot)))
+    (let ((next (emacsvox-aural-voice-data--resolve-prepared
+                 'bolden (emacsvox-aural-voice-data--prepare-resolution
+                          'reading-owned registry sets policy))))
+      (should (= 9 (plist-get (plist-get next :definition) :average-pitch)))
+      (should (equal "source edit" (plist-get (car (plist-get next :selectors)) :voice-id)))
+      (should-not (plist-get (plist-get next :policy) :disabled-engines)))))
+
+(ert-deftest emacsvox-aural-voice-data-prepared-resolution-keeps-validation ()
+  "Captured lookup rejects malformed sets and wrong ownership or schema."
+  (let* ((inputs (emacsvox-test--voice-resolution-inputs))
+         (registry (plist-get inputs :registry))
+         (sets (plist-get inputs :sets)))
+    (should-error (emacsvox-aural-voice-data--prepare-resolution
+                   'reading-owned registry (cons (car sets) sets) nil))
+    (dolist (edit '(owner schema))
+      (let ((bad (copy-tree sets)))
+        (setf (plist-get (car bad) (if (eq edit 'owner) :voice :schema-version))
+              (if (eq edit 'owner) 'annotate 4))
+        (let ((snapshot (emacsvox-aural-voice-data--prepare-resolution
+                         'reading-owned registry bad nil)))
+          (should-error (emacsvox-aural-voice-data--resolve-prepared 'bolden snapshot)))))))
+
 (ert-deftest emacsvox-aural-voice-data-validates-owned-metadata ()
   "Reject malformed, nonportable, ambiguous and unknown owned data."
   (let ((base (plist-get (emacsvox-test--voice-data-conversion) :expected-palette)))

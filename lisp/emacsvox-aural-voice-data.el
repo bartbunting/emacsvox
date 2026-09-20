@@ -84,8 +84,16 @@ or allocated in a persistent store by this adapter."
 VERSION defaults to 4 for independent data operations."
   (unless (memq version '(nil 3 4))
     (emacsvox-aural--resource-error "Unsupported palette schema: %S" version))
-  (let* ((sets (emacsvox-aural-routing--validate-choice-sets local-sets))
-         (id (plist-get properties :local-choices))
+  (emacsvox-aural-voice-data--choices-from-validated-sets
+   owner name properties
+   (emacsvox-aural-routing--validate-choice-sets local-sets) version))
+
+(defun emacsvox-aural-voice-data--choices-from-validated-sets
+    (owner name properties sets version)
+  "Resolve OWNER's NAME from PROPERTIES and validated SETS under VERSION.
+Palette validation and local-set validation belong to the caller.  Ownership,
+portable agreement and schema compatibility are still checked for each entry."
+  (let* ((id (plist-get properties :local-choices))
          (local (and id (cl-find id sets :test #'equal :key (lambda (item) (plist-get item :id)))))
          (portable (plist-get properties :choices))
          (records (if local (plist-get local :choices) portable)))
@@ -108,14 +116,37 @@ VERSION defaults to 4 for independent data operations."
     (requested palette registry local-sets policy &optional (aliases emacsvox-aural-default-voice-entries))
   "Resolve REQUESTED in PALETTE from immutable REGISTRY, LOCAL-SETS and POLICY.
 ALIASES declares stable logical identities; physical choices belong to entries."
+  (emacsvox-aural-voice-data--resolve-entries
+   requested (emacsvox-aural-voice-data--entries palette registry)
+   local-sets policy aliases #'emacsvox-aural-voice-data--choices))
+
+(cl-defun emacsvox-aural-voice-data--prepare-resolution
+    (palette registry local-sets policy &optional (aliases emacsvox-aural-default-voice-entries))
+  "Capture validated inputs for synchronous resolution of several voices.
+The returned private snapshot owns its entries, local sets, POLICY and ALIASES.
+It is discarded after the operation; subsequent edits require a new snapshot."
+  (list :entries (emacsvox-aural-voice-data--entries palette registry)
+        :sets (emacsvox-aural-routing--validate-choice-sets local-sets)
+        :policy (copy-tree policy) :aliases (copy-tree aliases)))
+
+(defun emacsvox-aural-voice-data--resolve-prepared (requested snapshot)
+  "Resolve REQUESTED from a prepared SNAPSHOT, returning independent data."
+  (emacsvox-aural-voice-data--resolve-entries
+   requested (plist-get snapshot :entries) (plist-get snapshot :sets)
+   (plist-get snapshot :policy) (plist-get snapshot :aliases)
+   #'emacsvox-aural-voice-data--choices-from-validated-sets))
+
+(defun emacsvox-aural-voice-data--resolve-entries
+    (requested entries local-sets policy aliases resolve-choices)
+  "Resolve REQUESTED using ENTRIES, LOCAL-SETS, POLICY and ALIASES.
+RESOLVE-CHOICES selects validation of raw sets or use of already validated sets."
   (let* ((name (if (symbolp requested) requested
                  (intern-soft (emacsvox-aural-routing--logical-name requested))))
          (canonical (or (car (rassq name aliases)) name))
-         (entries (emacsvox-aural-voice-data--entries palette registry))
          (item (cl-find canonical entries :key (lambda (entry) (car (plist-get entry :entry)))))
          (owner (plist-get item :palette))
          (properties (cdr (plist-get item :entry)))
-         (choices (and item (emacsvox-aural-voice-data--choices
+         (choices (and item (funcall resolve-choices
                             owner canonical properties local-sets (plist-get item :schema-version)))))
     (append
      (list :requested requested :name (and item canonical) :palette owner

@@ -47,16 +47,58 @@
 (defvar emacsvox-aural-voice-runtime--last-snapshot nil
   "Owned palette state last observed by the configuration bridge.")
 
+(defvar emacsvox-aural-voice-runtime--resolution-snapshot nil
+  "Private palette and prepared data bound only during synchronous preparation.
+Never retain this binding across request writes, callbacks or user input.")
+
+(defun emacsvox-aural-voice-runtime--call-with-resolution-snapshot (function)
+  "Call FUNCTION with a fresh snapshot of the active owned palette.
+Explicit queries for another palette or staged profile keep their own inputs.
+Every invocation, including a nested operation, captures fresh settings."
+  (let* ((emacsvox-aural-voice-runtime--resolution-snapshot nil)
+         (palette (emacsvox-aural-voice-runtime--palette)))
+    (if (not (emacsvox-aural-voice-runtime--owned-p palette))
+        (funcall function)
+      (let* ((profile (emacsvox-aural-voice-runtime--profile))
+             (emacsvox-aural-voice-runtime--resolution-snapshot
+              (cons palette
+                    (emacsvox-aural-voice-data--prepare-resolution
+                     palette emacsvox-aural-voice-palette-registry
+                     emacsvox-aural-routing--choice-sets
+                     (emacsvox-aural-voice-runtime--policy profile)))))
+        (funcall function)))))
+
 (defun emacsvox-aural-voice-runtime--palette (&optional palette)
   "Return explicit PALETTE or the currently effective selection."
   (or palette emacsvox-aural-voice-runtime--palette
+      (car emacsvox-aural-voice-runtime--resolution-snapshot)
       (emacsvox-aural-effective-voice-palette)))
+
+(defun emacsvox-aural-voice-runtime--entries ()
+  "Return independent active definitions, reusing this operation's snapshot."
+  (if (and emacsvox-aural-voice-runtime--resolution-snapshot
+           (eq (emacsvox-aural-voice-runtime--palette)
+               (car emacsvox-aural-voice-runtime--resolution-snapshot)))
+      (mapcar
+       (lambda (item)
+         (let* ((entry (plist-get item :entry)) (properties (cdr entry)))
+           (cons (car entry)
+                 (copy-tree (if (plist-member properties :personality)
+                                (plist-get properties :personality)
+                              (plist-get properties :style))))))
+       (plist-get (cdr emacsvox-aural-voice-runtime--resolution-snapshot) :entries))
+    (emacsvox-aural-effective-voice-entries
+     (emacsvox-aural-voice-runtime--palette))))
 
 (defun emacsvox-aural-voice-runtime--owned-p (&optional palette)
   "Return non-nil when PALETTE owns physical choices."
-  (when-let* ((record (gethash (emacsvox-aural-voice-runtime--palette palette)
+  (if (and emacsvox-aural-voice-runtime--resolution-snapshot
+           (eq (emacsvox-aural-voice-runtime--palette palette)
+               (car emacsvox-aural-voice-runtime--resolution-snapshot)))
+      t
+    (when-let* ((record (gethash (emacsvox-aural-voice-runtime--palette palette)
                                emacsvox-aural-voice-palette-registry)))
-    (eq (plist-get (emacsvox-aural-voice-palette-data-form record) :routing) 'owned)))
+      (eq (plist-get (emacsvox-aural-voice-palette-data-form record) :routing) 'owned))))
 
 (defun emacsvox-aural-voice-runtime--profile (&optional profile)
   "Return explicit staged PROFILE or a snapshot of current workstation policy."
@@ -67,13 +109,22 @@
 (defun emacsvox-aural-voice-runtime--resolve (voice &optional palette profile)
   "Resolve VOICE in PALETTE using explicit snapshots of local and session state.
 PROFILE optionally supplies staged workstation policy for inspection."
-  (let ((profile (emacsvox-aural-voice-runtime--profile profile)))
-    (emacsvox-aural-voice-data--resolve
-     voice (emacsvox-aural-voice-runtime--palette palette)
-     emacsvox-aural-voice-palette-registry emacsvox-aural-routing--choice-sets
-     (list :engine-order (copy-sequence (plist-get profile :engine-order))
-           :disabled-engines (copy-sequence (plist-get profile :disabled-engines))
-           :fallback (copy-tree (plist-get profile :fallback))))))
+  (let ((palette (emacsvox-aural-voice-runtime--palette palette)))
+    (if (and (null profile) emacsvox-aural-voice-runtime--resolution-snapshot
+             (eq palette (car emacsvox-aural-voice-runtime--resolution-snapshot)))
+        (emacsvox-aural-voice-data--resolve-prepared
+         voice (cdr emacsvox-aural-voice-runtime--resolution-snapshot))
+      (emacsvox-aural-voice-data--resolve
+       voice palette emacsvox-aural-voice-palette-registry
+       emacsvox-aural-routing--choice-sets
+       (emacsvox-aural-voice-runtime--policy
+        (emacsvox-aural-voice-runtime--profile profile))))))
+
+(defun emacsvox-aural-voice-runtime--policy (profile)
+  "Extract independent workstation policy from effective PROFILE."
+  (list :engine-order (copy-sequence (plist-get profile :engine-order))
+        :disabled-engines (copy-sequence (plist-get profile :disabled-engines))
+        :fallback (copy-tree (plist-get profile :fallback))))
 
 (defun emacsvox-aural-voice-runtime--owned (voice &optional palette profile)
   "Return complete VOICE resolution, or nil when the name is absent.
@@ -85,9 +136,12 @@ PALETTE and PROFILE optionally select inactive data for inspection."
 (defun emacsvox-aural-voice-runtime--validate (&optional palette)
   "Validate complete metadata in PALETTE before applying."
   (when (emacsvox-aural-voice-runtime--owned-p palette)
-    (dolist (entry (emacsvox-aural-effective-voice-entries
-                    (emacsvox-aural-voice-runtime--palette palette)))
-      (emacsvox-aural-voice-runtime--owned (car entry) palette))))
+    (let ((emacsvox-aural-voice-runtime--palette
+           (emacsvox-aural-voice-runtime--palette palette)))
+      (emacsvox-aural-voice-runtime--call-with-resolution-snapshot
+       (lambda ()
+         (dolist (entry (emacsvox-aural-voice-runtime--entries))
+           (emacsvox-aural-voice-runtime--owned (car entry))))))))
 
 (defun emacsvox-aural-voice-runtime--validate-selection (&optional palette)
   "Reject known unresolved definitions and rule references before selecting PALETTE."

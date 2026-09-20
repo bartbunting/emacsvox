@@ -61,6 +61,52 @@
               (list :type "logical_voices_registered"
                     :registration (list :registry_generation generation :bindings []))))))
 
+(ert-deftest omnivox-choice-registration-preparation-validates-ancestry-once ()
+  "Both lanes reuse one validation, retaining identical independent payloads."
+  (omnivox-test--with-choice-registration
+   (let* ((processes (list speaker notification))
+          (expected (mapcar (lambda (p) (cons p (omnivox--process-logical-registry-content p))) processes))
+          (compile (symbol-function 'emacsvox-aural-compile-voice-palette-data))
+          checked result)
+     (cl-letf (((symbol-function 'emacsvox-aural-compile-voice-palette-data)
+                (lambda (data &rest args)
+                  (push (plist-get data :id) checked)
+                  (apply compile data args))))
+       (setq result (omnivox--prepare-voice-registrations processes)))
+     (should (equal expected result))
+     (should checked)
+     (should (= (length checked) (length (delete-dups (copy-sequence checked)))))
+     (let* ((wrapper (aref (plist-get (cdar result) :definitions) 0))
+            (definition (plist-get wrapper :definition)))
+       (setf (plist-get (plist-get definition :shared) :richness) 0.99))
+     (should (equal (cdr (cadr result)) (cdr (cadr expected)))))))
+
+(ert-deftest omnivox-choice-registration-preparation-does-not-escape-to-callbacks ()
+  "Request writes see no preparation snapshot, including synchronous callbacks."
+  (omnivox-test--with-choice-registration
+   (let ((send (symbol-function 'process-send-string)))
+     (cl-letf (((symbol-function 'process-send-string)
+                (lambda (process command)
+                  (should-not emacsvox-aural-voice-runtime--resolution-snapshot)
+                  (funcall send process command)
+                  (omnivox--dispatch-control-response
+                   process (omnivox-test--choice-registration-ack (car requests))))))
+       (omnivox-apply-voice-configuration (lambda (result) (push result terminal))))
+     (should (eq 'applied (plist-get (car terminal) :status)))
+     (should (= 2 (length (plist-get (car terminal) :processes)))))))
+
+(ert-deftest omnivox-choice-registration-frozen-preparation-needs-no-live-palette ()
+  "Recovery uses its saved registrations even if current palette data is invalid."
+  (omnivox-test--with-choice-registration
+   (dolist (process (list speaker notification))
+     (process-put process 'omnivox-library-frozen-registration
+                  (omnivox--process-logical-registry-content process)))
+   (let ((emacsvox-aural-routing--choice-sets '(invalid)))
+     (should (= 2 (length (omnivox--prepare-voice-registrations (list speaker notification)))))
+     (should-not (omnivox--prepare-voice-registrations nil))
+     (process-put notification 'omnivox-library-frozen-registration nil)
+     (should-error (omnivox--prepare-voice-registrations (list speaker notification))))))
+
 (ert-deftest omnivox-choice-registration-negotiates-the-whole-bundle-per-lane ()
   (omnivox-test--with-choice-registration
    (dolist (missing '("voice_choice_tuning_v1" "presentation_timeline_v4" "playback_marker_events_v3"))

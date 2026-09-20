@@ -948,11 +948,9 @@ one must not silently migrate to the other."
 
 (defun omnivox--active-palette-entries ()
   "Return active portable voice entries when Aural resources are loaded."
-  (when (and (fboundp 'emacsvox-aural-effective-voice-palette)
-             (fboundp 'emacsvox-aural-effective-voice-entries))
+  (when (fboundp 'emacsvox-aural-voice-runtime--entries)
     (condition-case nil
-        (emacsvox-aural-effective-voice-entries
-         (emacsvox-aural-effective-voice-palette))
+        (emacsvox-aural-voice-runtime--entries)
       (error nil))))
 
 (defun omnivox--portable-style-acss (style)
@@ -1945,17 +1943,30 @@ Return the number of processes sent a generation-safe policy replacement."
             (error "Individual voice registration metadata is too large"))
           (tts--dispatch-copy-data snapshot)))))))
 
+(defun omnivox--prepare-voice-registrations (processes)
+  "Prepare independent registrations for PROCESSES from one owned snapshot.
+The snapshot ends before any request can dispatch callbacks.  Library activation
+may supply complete frozen registrations, which need no current palette data."
+  (let ((prepare
+         (lambda ()
+           (mapcar
+            (lambda (process)
+              (cons process
+                    (tts--dispatch-copy-data
+                     (omnivox--process-logical-registry-content process))))
+            processes))))
+    (if (cl-some (lambda (process)
+                   (not (process-get process 'omnivox-library-frozen-registration)))
+                 processes)
+        (emacsvox-aural-voice-runtime--call-with-resolution-snapshot prepare)
+      (funcall prepare))))
+
 (defun omnivox-register-logical-voices ()
   "Register all Emacsvox logical voices with live Omnivox processes.
 Return the number of processes sent the atomic registry replacement."
   (interactive)
   (let* ((processes (omnivox--registration-processes))
-         (registrations
-          (mapcar
-           (lambda (process)
-             (cons process
-                   (omnivox--process-logical-registry-content process)))
-           processes)))
+         (registrations (omnivox--prepare-voice-registrations processes)))
     (omnivox--update-logical-registry-generation
      (mapcar #'cdr registrations))
     (dolist (registration registrations)
@@ -2024,12 +2035,7 @@ Timeout closes the apply and discards its pending callbacks.  Late replies
 cannot advance it or confirm its outcome; changes already sent may still have
 taken effect on the server.  Reapply to confirm the desired configuration."
   (let* ((processes (omnivox--voice-configuration-processes))
-         (registrations
-          (mapcar
-           (lambda (process)
-             (cons process
-                   (tts--dispatch-copy-data (omnivox--process-logical-registry-content process))))
-           processes))
+         (registrations (omnivox--prepare-voice-registrations processes))
          ;; Definitions and generation belong to this apply, including callbacks
          ;; that run after another apply has advanced the desired configuration.
          (generation

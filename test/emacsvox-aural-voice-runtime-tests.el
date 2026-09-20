@@ -82,6 +82,36 @@
      (should (equal (plist-get (omnivox--logical-definition-json "annotate" "startup" nil) :preferences)
                     [(:kind "engine_default" :engine_id "startup")])))))
 
+(ert-deftest emacsvox-aural-voice-runtime-snapshot-scopes-edits-and-nested-operations ()
+  "Each operation is stable; nested and subsequent operations see new settings."
+  (emacsvox-test--with-owned-runtime
+   (let ((expected (emacsvox-aural-voice-runtime--owned 'bolden))
+         (other (emacsvox-aural-voice-runtime--owned 'bolden 'alternative-owned)))
+     (emacsvox-aural-voice-runtime--call-with-resolution-snapshot
+      (lambda ()
+        (setq emacsvox-aural-voice-palette-override 'alternative-owned)
+        (should (equal expected (emacsvox-aural-voice-runtime--owned 'bolden)))
+        (should (equal other (emacsvox-aural-voice-runtime--owned 'bolden 'alternative-owned)))
+        (let ((emacsvox-aural-voice-runtime--palette 'alternative-owned))
+          (should (equal (emacsvox-aural-voice-runtime--entries)
+                         (emacsvox-aural-effective-voice-entries 'alternative-owned))))
+        (should-error
+         (emacsvox-aural-voice-runtime--call-with-resolution-snapshot
+          (lambda ()
+            (should (equal other (emacsvox-aural-voice-runtime--owned 'bolden)))
+            (error "Nested operation failed"))))
+        (should (equal expected (emacsvox-aural-voice-runtime--owned 'bolden)))
+        (let ((profile (emacsvox-aural-routing-profile-from-omnivox 'staged "Staged")))
+          (setf (plist-get profile :engine-order) '("espeak"))
+          (should (equal '("espeak")
+                         (plist-get (plist-get (emacsvox-aural-voice-runtime--owned
+                                              'bolden 'reading-owned profile) :policy) :engine-order))))))
+     (should-not emacsvox-aural-voice-runtime--resolution-snapshot)
+     (should (equal other (emacsvox-aural-voice-runtime--owned 'bolden)))
+     (setq emacsvox-aural-voice-palette-override 'reading-owned)
+     (emacsvox-aural-voice-runtime--call-with-resolution-snapshot
+      (lambda () (should (equal expected (emacsvox-aural-voice-runtime--owned 'bolden))))))))
+
 (ert-deftest emacsvox-aural-voice-runtime-selection-guards-stale-callbacks ()
   "A-B-A applies distinct snapshots and an old completion cannot replace status."
   (emacsvox-test--with-owned-runtime
