@@ -49,6 +49,12 @@
        (kill-emacs 1)))))
 
 (when (getenv "EMACSVOX_NATIVE_RESULT")
+  ;; This dedicated check owns both spoken samples.  A routing-ready timer or
+  ;; background startup message can otherwise interrupt a sample immediately
+  ;; after the check observes registration during `accept-process-output'.
+  (setq emacsvox-speak-ready-message nil
+        emacsvox-speak-messages nil
+        emacsvox-play-startup-icon nil)
   (add-hook 'emacs-startup-hook (lambda () (run-at-time 2 nil #'emacsvox-windows-check))))
 (condition-case problem
     (load (expand-file-name "lisp/emacsvox-setup.el" (getenv "EMACSVOX_DIR")) nil t)
