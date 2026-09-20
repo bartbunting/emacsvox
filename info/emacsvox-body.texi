@@ -1804,6 +1804,26 @@ Native Windows x64 is a supported desktop installation with Emacs 30.2 or
 newer. The guided PowerShell installer runs entirely on Windows. WSL@comma{}
 Docker@comma{} Rust@comma{} and a system MSYS2 installation are not required.
 
+@subsection Using a Windows Setup Build
+
+If you have a development Setup executable@comma{} run it to install
+@samp{Emacsvox Windows Development} for your Windows account. It includes Emacs
+and Omnivox and needs no administrator privileges or internet connection.
+The wizard offers an optional desktop shortcut; it always creates a Start
+menu group unless shortcuts were disabled for an unattended installation.
+On the final page@comma{} choose the speech test to hear two short announcements.
+
+The default directory is @samp{%LOCALAPPDATA%\Emacsvox\Desktop Dev}. Use the
+Start menu shortcut to launch Emacsvox afterward. Run Setup again to repair
+missing application files or install a newer development build. Close the
+Emacsvox using this installation first; Setup does not close it for you.
+Locally edited application files stop replacement so you can preserve them.
+
+Use Windows Settings or the Start menu's uninstall entry to remove the
+application. Uninstall retains your profile@comma{} logs and downloaded voices.
+Development Setup builds are local test artifacts; the public release
+installer is still being prepared.
+
 @subsection Guided Windows x64 Installation
 
 You need Windows PowerShell 5.1 or newer@comma{} Git for cloning@comma{} network access@comma{} and
@@ -7476,9 +7496,58 @@ Each bundle records its source commit and hashes the exact payload@comma{} inclu
 uncommitted changes. It copies only source files@comma{} compiles in a versioned
 Windows application directory@comma{} and refuses modified installed sources.
 Repeated installation reuses the verified runtimes and preserves the profile.
-The first slice has no wizard@comma{} shortcuts or uninstaller; it is a local
-development artifact@comma{} not a distributable release. The remaining Inno Setup
-and corresponding-source publication work is recorded in
+The ZIP is a local development artifact. To add the Windows setup wizard@comma{}
+stage its contents for Inno Setup:
+
+@example
+make windows-setup-stage WINDOWS_BUNDLE=/path/to/development-bundle.zip \
+  WINDOWS_SETUP_STAGE=/path/to/new/setup-stage
+make windows-setup-test
+@end example
+
+Put the complete staging directory on a Windows drive. From a native Windows
+checkout@comma{} build the executable with:
+
+@example
+.\utils\emacsvox-windows-setup-build.ps1 -StagingDirectory "C:\path\to\setup-stage" -InstallCompiler
+@end example
+
+@samp{-InstallCompiler} acquires the checksum-pinned Inno Setup compiler and
+verifies its publisher signature before installing it per-user on the build
+machine. @samp{etc/windows-setup.conf} owns these build-tool pins. An existing
+pinned compiler may be selected with @samp{-Compiler}. The output directory
+contains the setup executable@comma{} checksum and compiler/payload provenance.
+No compiler is needed on the destination machine.
+
+Run setup-helper checks and real lifecycle acceptance on Windows:
+
+@example
+.\test\emacsvox-windows-setup-helper-tests.ps1
+.\test\emacsvox-windows-setup-tests.ps1 -Setup "C:\path\to\first-setup.exe" -Upgrade "C:\path\to\next-setup.exe" -AudioCheck
+.\test\emacsvox-windows-setup-wizard-tests.ps1 -Setup "C:\path\to\setup.exe"
+@end example
+
+The lifecycle test refuses to replace an existing development Setup
+registration or matching shortcuts. It tests an isolated installation@comma{}
+shortcut launch@comma{} running-process refusal@comma{} repair@comma{} an optional second-build
+upgrade@comma{} and uninstall while retaining profile and voice fixtures. It keeps
+logs for diagnosis. Use a separate test account when a development Setup
+installation is already registered. Test interactive wizard navigation with
+screen readers separately; silent acceptance does not establish that UI@.
+The wizard test inspects native accessibility controls@comma{} reaches the review
+page and cancels without installing. It does not replace listening with a
+screen reader or keyboard-only navigation.
+
+For rollback acceptance@comma{} stage an intentionally failing fixture with
+@code{python3 test/prepare_windows_setup_failure.py --bundle /path/to/bundle.zip
+--staging-directory /path/to/failure-stage} and compile it using the same
+build command. Pass its executable as @code{-FailedUpgrade} to the lifecycle test.
+This fixture fails during configuration@comma{} before activation; the test checks
+that the previous selection and launcher still work. Keep the failure
+fixture separate from user-facing artifacts.
+
+The setup executable is also a development artifact@comma{} not a distributable
+release. Corresponding-source publication and remaining release work are recorded in
 @uref{../adr/0024-native-windows-installer.org, ADR 0024}.
 @end enumerate
 

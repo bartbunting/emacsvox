@@ -6,8 +6,9 @@
 
 Accepted direction following the maintainer's request for an installer that
 includes Emacs and Omnivox without requiring administrator privileges.
-The first implementation slice is an offline development bundle. The Inno
-Setup wizard and installation lifecycle are subsequent slices.
+The offline development bundle is implemented, including a fresh native GUI
+check and the maintainer's confirmation of both spoken announcements on
+2026-09-20. The second slice adds the Inno Setup development executable.
 
 * Decision
 
@@ -41,12 +42,40 @@ the originating commit, an offline PowerShell entry point and a command-file
 entry point. Its identity includes uncommitted payload changes. It is explicitly
 labelled development and does not invoke or replace the release gates.
 
+** Setup ownership and activation
+
+The development executable has a distinct application identity and installs
+as =Emacsvox Windows Development=. Its default directory is
+=LocalAppData/Emacsvox/Desktop Dev=. It uses Inno Setup's standard wizard
+controls, a Start menu group and an optional desktop shortcut. The finish
+page offers a speech test and an optional application launch.
+
+The build machine verifies and expands the offline bundle's pinned runtime
+archives. Inno records the resulting explicit file payload for uninstall;
+this avoids untracked runtime extraction on the destination machine. The
+native installer still validates both runtimes and compiles Emacsvox locally.
+The pinned Inno compiler is a build-machine tool, not a user dependency.
+
+Store versioned payload manifests and use them to reject unknown or edited
+files before replacement. Repair may restore missing owned files. A stable
+launcher reads an atomically replaced active-build record; switch it only
+after configuration and byte-code checks complete. Existing versions remain
+recorded in Inno's accumulated uninstall log. Do not automatically terminate
+Emacs or its speech workers: reject installation or removal while this
+installation has running processes.
+
+Uninstall removes only recorded files and explicitly named generated files.
+Remove generated directories only when empty. Never recursively delete the
+installation root, profile or voice directories. Retain profile, logs,
+user-added files and a small ownership marker so reinstallation can recognize
+its destination. Runtime folders added by other installation routes are not
+adopted by this installer.
+
 * Remaining release work
 
-Add the accessible Inno Setup wizard, shortcuts, upgrade/repair behavior and
-uninstall registration. Uninstall must retain user profiles and downloaded
-voices unless the user explicitly chooses their removal. Test those paths
-with a standard Windows user and screen readers before claiming acceptance.
+Complete screen-reader acceptance of the wizard and broaden upgrade/failure
+testing across clean Windows machines. Uninstall retains user profiles and
+downloaded voices; removal of that user data is outside this first setup UI.
 
 Before redistributing bundled binaries, assemble and publish the corresponding
 Emacs and dependency sources and required notices, alongside Omnivox's source

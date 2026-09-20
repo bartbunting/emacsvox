@@ -647,6 +647,29 @@ Native Windows x64 is a supported desktop installation with Emacs 30.2 or
 newer. The guided PowerShell installer runs entirely on Windows. WSL,
 Docker, Rust, and a system MSYS2 installation are not required.
 
+*** Using a Windows Setup Build
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+If you have a development Setup executable, run it to install
+=Emacsvox Windows Development= for your Windows account. It includes Emacs
+and Omnivox and needs no administrator privileges or internet connection.
+The wizard offers an optional desktop shortcut; it always creates a Start
+menu group unless shortcuts were disabled for an unattended installation.
+On the final page, choose the speech test to hear two short announcements.
+
+The default directory is =%LOCALAPPDATA%\Emacsvox\Desktop Dev=. Use the
+Start menu shortcut to launch Emacsvox afterward. Run Setup again to repair
+missing application files or install a newer development build. Close the
+Emacsvox using this installation first; Setup does not close it for you.
+Locally edited application files stop replacement so you can preserve them.
+
+Use Windows Settings or the Start menu's uninstall entry to remove the
+application. Uninstall retains your profile, logs and downloaded voices.
+Development Setup builds are local test artifacts; the public release
+installer is still being prepared.
+
 *** Guided Windows x64 Installation
 :PROPERTIES:
 :TEXINFO_NODE: no

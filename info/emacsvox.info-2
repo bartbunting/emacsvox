@@ -954,10 +954,60 @@ checker runs.
           files, compiles in a versioned Windows application directory,
           and refuses modified installed sources.  Repeated installation
           reuses the verified runtimes and preserves the profile.  The
-          first slice has no wizard, shortcuts or uninstaller; it is a
-          local development artifact, not a distributable release.  The
-          remaining Inno Setup and corresponding-source publication work
-          is recorded in ADR 0024
+          ZIP is a local development artifact.  To add the Windows setup
+          wizard, stage its contents for Inno Setup:
+
+               make windows-setup-stage WINDOWS_BUNDLE=/path/to/development-bundle.zip \
+                 WINDOWS_SETUP_STAGE=/path/to/new/setup-stage
+               make windows-setup-test
+
+          Put the complete staging directory on a Windows drive.  From a
+          native Windows checkout, build the executable with:
+
+               .\utils\emacsvox-windows-setup-build.ps1 -StagingDirectory "C:\path\to\setup-stage" -InstallCompiler
+
+          ‘-InstallCompiler’ acquires the checksum-pinned Inno Setup
+          compiler and verifies its publisher signature before
+          installing it per-user on the build machine.
+          ‘etc/windows-setup.conf’ owns these build-tool pins.  An
+          existing pinned compiler may be selected with ‘-Compiler’.
+          The output directory contains the setup executable, checksum
+          and compiler/payload provenance.  No compiler is needed on the
+          destination machine.
+
+          Run setup-helper checks and real lifecycle acceptance on
+          Windows:
+
+               .\test\emacsvox-windows-setup-helper-tests.ps1
+               .\test\emacsvox-windows-setup-tests.ps1 -Setup "C:\path\to\first-setup.exe" -Upgrade "C:\path\to\next-setup.exe" -AudioCheck
+               .\test\emacsvox-windows-setup-wizard-tests.ps1 -Setup "C:\path\to\setup.exe"
+
+          The lifecycle test refuses to replace an existing development
+          Setup registration or matching shortcuts.  It tests an
+          isolated installation, shortcut launch, running-process
+          refusal, repair, an optional second-build upgrade, and
+          uninstall while retaining profile and voice fixtures.  It
+          keeps logs for diagnosis.  Use a separate test account when a
+          development Setup installation is already registered.  Test
+          interactive wizard navigation with screen readers separately;
+          silent acceptance does not establish that UI.  The wizard test
+          inspects native accessibility controls, reaches the review
+          page and cancels without installing.  It does not replace
+          listening with a screen reader or keyboard-only navigation.
+
+          For rollback acceptance, stage an intentionally failing
+          fixture with ‘python3 test/prepare_windows_setup_failure.py
+          --bundle /path/to/bundle.zip --staging-directory
+          /path/to/failure-stage’ and compile it using the same build
+          command.  Pass its executable as ‘-FailedUpgrade’ to the
+          lifecycle test.  This fixture fails during configuration,
+          before activation; the test checks that the previous selection
+          and launcher still work.  Keep the failure fixture separate
+          from user-facing artifacts.
+
+          The setup executable is also a development artifact, not a
+          distributable release.  Corresponding-source publication and
+          remaining release work are recorded in ADR 0024
           (../adr/0024-native-windows-installer.org).
 
   4. Remote preview validation

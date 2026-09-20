@@ -1816,7 +1816,30 @@ Native Windows x64 is a supported desktop installation with Emacs 30.2
 or newer.  The guided PowerShell installer runs entirely on Windows.
 WSL, Docker, Rust, and a system MSYS2 installation are not required.
 
-4.4.1 Guided Windows x64 Installation
+4.4.1 Using a Windows Setup Build
+---------------------------------
+
+If you have a development Setup executable, run it to install ‘Emacsvox
+Windows Development’ for your Windows account.  It includes Emacs and
+Omnivox and needs no administrator privileges or internet connection.
+The wizard offers an optional desktop shortcut; it always creates a
+Start menu group unless shortcuts were disabled for an unattended
+installation.  On the final page, choose the speech test to hear two
+short announcements.
+
+   The default directory is ‘%LOCALAPPDATA%\Emacsvox\Desktop Dev’.  Use
+the Start menu shortcut to launch Emacsvox afterward.  Run Setup again
+to repair missing application files or install a newer development
+build.  Close the Emacsvox using this installation first; Setup does not
+close it for you.  Locally edited application files stop replacement so
+you can preserve them.
+
+   Use Windows Settings or the Start menu's uninstall entry to remove
+the application.  Uninstall retains your profile, logs and downloaded
+voices.  Development Setup builds are local test artifacts; the public
+release installer is still being prepared.
+
+4.4.2 Guided Windows x64 Installation
 -------------------------------------
 
 You need Windows PowerShell 5.1 or newer, Git for cloning, network
@@ -1917,7 +1940,7 @@ or ‘M->’ is intercepted, test with ‘JAWSKey+3’ before the shortcut.
 Bart's ‘workstation-config’ repository supplies the separately
 installed, Emacs-specific JAWS override used on the test workstation.
 
-4.4.2 Manual Native Installation
+4.4.3 Manual Native Installation
 --------------------------------
 
 The following manual procedure remains available for an already
@@ -1925,7 +1948,7 @@ installed native Windows Emacs 30.2 or newer.  It does not acquire Emacs
 or replace the guided x64 checks above.  Set ‘$Emacsvox’ to the
 checkout's absolute Windows path and continue in one PowerShell window.
 
-4.4.3 Download And Verify Omnivox
+4.4.4 Download And Verify Omnivox
 ---------------------------------
 
 Set ‘$Platform’ for the computer.  The example below uses the usual
@@ -1958,7 +1981,7 @@ Intel or AMD Windows x64 archive:
 security or local policy refuses it, stop rather than weakening that
 policy.
 
-4.4.4 Install And Check The Native Server
+4.4.5 Install And Check The Native Server
 -----------------------------------------
 
 Continue in the same PowerShell window.  Extract the complete release
@@ -1993,7 +2016,7 @@ and spoken confirmation.  Keep ‘omnivox.exe’, ‘espeak-ng-data’, and
 ‘omnivox-voices.el’: it is the adapter for upstream Emacspeak, while
 Emacsvox supplies its own adapter.
 
-4.4.5 Start Native Emacsvox
+4.4.6 Start Native Emacsvox
 ---------------------------
 
 Keep the same PowerShell window so ‘$Omnivox’ still identifies the
@@ -2017,7 +2040,7 @@ is intentional: the repository's ‘bin/emacsvox’ launcher is a POSIX
 shell script.  The guided native entry point is ‘bin/emacsvox.ps1’; this
 subsection describes the manual alternative.
 
-4.4.6 Verify Speech And Report Problems
+4.4.7 Verify Speech And Report Problems
 ---------------------------------------
 
 Verify the installation with these checks:
