@@ -8,7 +8,6 @@ import concurrent.futures
 import hashlib
 import importlib.util
 import json
-import os
 from pathlib import Path, PurePosixPath
 import re
 import shutil
@@ -123,20 +122,19 @@ def checked_installer(stage):
     return manifest, installer, digest
 
 
-def source_hash(path):
-    # Archive the link itself, never a file outside the checkout. Windows Git
-    # may check symlinks out as ordinary files containing the same link text.
-    return (hashlib.sha256(os.readlink(path).encode()).hexdigest()
-            if path.is_symlink() else BUNDLE.sha256(path))
+def source_hash(path, link_bytes=None):
+    if link_bytes is not None:
+        return hashlib.sha256(link_bytes).hexdigest()
+    return BUNDLE.sha256(path)
 
 
-def add_file(archive, name, path, mode=0o100644):
+def add_file(archive, name, path, mode=0o100644, link_bytes=None):
     entry = zipfile.ZipInfo(name)
     entry.compress_type = zipfile.ZIP_DEFLATED
     entry.create_system = 3
     entry.external_attr = mode << 16
-    if path.is_symlink():
-        archive.writestr(entry, os.readlink(path).encode())
+    if link_bytes is not None:
+        archive.writestr(entry, link_bytes)
         return
     with path.open('rb') as source, archive.open(entry, 'w', force_zip64=True) as target:
         shutil.copyfileobj(source, target)
@@ -189,6 +187,12 @@ def prepare(root, stage, cache, destination, run_url, offline=False):
         source_archive = sources / source_name
         files = [(f'emacsvox/{name}', root / name, mode) for name, mode in names.items()
                  if not name.startswith(UNSHIPPED_RECORDINGS)]
+        # Windows can expose real symlinks with backslashes, or ordinary files
+        # when core.symlinks is false. Preserve Git's exact portable link text.
+        # The clean-checkout guards before and after packaging check local edits.
+        links = {name: subprocess.check_output(
+            ['git', 'cat-file', 'blob', f'{commit}:{name.removeprefix("emacsvox/")}'], cwd=root)
+            for name, _, mode in files if mode == 0o120000}
         inventory = {'Schema': 1, 'Build': manifest['Build'], 'SourceCommit': commit,
                      'RunURL': run_url, 'Installer': installer.name, 'InstallerSHA256': installer_hash,
                      'SetupManifestSHA256': BUNDLE.sha256(stage / 'setup-manifest.json'),
@@ -196,13 +200,13 @@ def prepare(root, stage, cache, destination, run_url, offline=False):
                      'RuntimeSHA256': lock['RuntimeSHA256'],
                      'UpstreamSources': lock['Archives'],
                      'OmittedUnshippedRecordings': list(UNSHIPPED_RECORDINGS),
-                     'Files': [{'Path': name, 'SHA256': source_hash(path), 'Mode': oct(mode)}
+                     'Files': [{'Path': name, 'SHA256': source_hash(path, links.get(name)), 'Mode': oct(mode)}
                                for name, path, mode in files]}
         write_json(work / 'source-manifest.json', inventory)
         (work / 'SOURCE-DOWNLOADS.md').write_text(source_index(lock), encoding='utf-8')
         with zipfile.ZipFile(source_archive, 'w') as archive:
             for name, path, mode in files:
-                add_file(archive, name, path, mode)
+                add_file(archive, name, path, mode, links.get(name))
             add_file(archive, 'source-manifest.json', work / 'source-manifest.json')
             add_file(archive, 'README.txt', root / 'etc/windows-sources.txt')
             add_file(archive, 'SOURCE-DOWNLOADS.md', work / 'SOURCE-DOWNLOADS.md')
@@ -235,8 +239,8 @@ def prepare(root, stage, cache, destination, run_url, offline=False):
             'acceptance are separate checks. This development download is not a tagged release.\n', encoding='utf-8')
         # Recheck the checkout and source inventory before making either download visible.
         checked_checkout(root, manifest)
-        for item, (_, path, _) in zip(inventory['Files'], files):
-            if source_hash(path) != item['SHA256']:
+        for item, (name, path, _) in zip(inventory['Files'], files):
+            if source_hash(path, links.get(name)) != item['SHA256']:
                 raise ValueError(f'Source changed during packaging: {item["Path"]}')
         work.rename(destination)
     return destination

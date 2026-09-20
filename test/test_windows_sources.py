@@ -113,6 +113,20 @@ class WindowsSourcesTests(unittest.TestCase):
             self.prepare()
         self.assertFalse(self.destination.exists())
 
+    @unittest.skipIf(os.name == 'nt', 'Fixture uses a POSIX symlink to emulate Windows readlink')
+    def test_windows_link_spelling_cannot_change_archived_git_source(self):
+        original = os.readlink
+
+        def windows_link(path, *args, **kwargs):
+            value = original(path, *args, **kwargs)
+            return value.replace('/', '\\') if isinstance(value, str) else value
+
+        with mock.patch.object(os, 'readlink', side_effect=windows_link):
+            self.prepare()
+        pairing = SOURCES.read_json(self.destination / 'sources/downloads.json')
+        with zipfile.ZipFile(self.destination / 'sources' / pairing['SourceArchive']) as archive:
+            self.assertEqual(archive.read('emacsvox/source-link'), b'../not-a-build-input')
+
     def test_dirty_work_preserved_and_not_published(self):
         path = self.root / 'lisp/emacsvox-setup.el'
         path.write_text('unsaved release work\n')
