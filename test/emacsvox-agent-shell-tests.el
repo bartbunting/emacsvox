@@ -8812,7 +8812,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            (face-list))
           (lambda (a b) (string< (symbol-name a) (symbol-name b))))))
     (should (equal configured current))
-    (should (= 19 (length configured)))
+    (should (= (if (facep 'agent-shell-markdown-table) 20 19)
+               (length configured)))
     (dolist (face configured)
       (should (facep face)))))
 
@@ -9394,6 +9395,12 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                   ((symbol-function 'agent-shell-interrupt) (lambda (&rest _) (setq interrupted t)))
                   ((symbol-function 'agent-shell--insert-to-shell-buffer)
                    (lambda (&rest _) (setq-local shell-maker--busy t)))
+                  ;; Upstream rendering can emit action-only feedback through
+                  ;; the core advice loaded by the complete unit suite.
+                  ((symbol-function 'emacsvox-aural-submit-actions) #'ignore)
+                  ((symbol-function 'tts-speak) #'ignore)
+                  ((symbol-function 'tts-notify) #'ignore)
+                  ((symbol-function 'emacsvox-icon) #'ignore)
                   ((symbol-function 'emacsvox-aural-submit)
                    (lambda (text &rest args) (push (cons text args) submissions))))
           (agent-shell-experimental--send-steering :state agent-shell--state :prompt "Change course")

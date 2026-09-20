@@ -464,9 +464,11 @@ The neutral viewport view face carries no state beyond its spoken text.")
   "Voice personalities for current agent-shell Markdown faces.")
 
 (defconst emacsvox-agent-shell--markdown-unvoiced-faces
-  '(agent-shell-markdown-table-zebra)
+  (append '(agent-shell-markdown-table-zebra)
+          (when (facep 'agent-shell-markdown-table)
+            '(agent-shell-markdown-table)))
   "Agent-shell Markdown faces intentionally left without a voice.
-Zebra striping is purely visual and should not alter table data speech.")
+Zebra striping and the optional base table face are purely visual.")
 
 (defconst emacsvox-agent-shell--chat-face-voice-map
   '((agent-shell-chat-me-label voice-bolden)
