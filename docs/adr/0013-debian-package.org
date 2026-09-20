@@ -11,7 +11,7 @@ and an apt repository are separate work.
 
 Provide an architecture-independent =emacsvox= deb for Debian and Ubuntu. It
 depends on a packaged GNU Emacs 30.2 or newer, accepting the graphical and
-terminal variants, and recommends =omnivox (>= 1.10.0)=. Remote Emacs and WSL
+terminal variants, and recommends =omnivox (>= 1.12.0)=. Remote Emacs and WSL
 with an existing Windows server can omit that recommendation, preserving the
 role separation in ADR 0011. Optional integrations remain optional.
 
@@ -19,6 +19,11 @@ The Omnivox recommendation advanced from 1.7.0 to 1.9.0 for complete voice
 previews under ADR 0016. It advances to 1.10.0 for individual fallback tuning
 under ADR 0017; dependency ownership and remote role separation remain as
 decided here.
+
+The maintainer's 2026.9.5 release instruction advances the recommendation to
+1.12.0 for managed voice libraries, on-demand eSpeak variants and engine-described
+voice parameters. The separately released Omnivox and optional-engine pins
+advance together; dependency ownership and remote role separation are unchanged.
 
 Install the self-contained runtime under =/usr/share/emacsvox= and a public
 =/usr/bin/emacsvox= wrapper around the existing isolated launcher. Preserve
