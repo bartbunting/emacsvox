@@ -84,6 +84,9 @@ TEST_DEPS_CACHE ?= $(CURDIR)/.test-deps-cache
 .PHONY: deb deb-test release-deb
 .PHONY: windows-staging-test
 .PHONY: windows-bundle-dev windows-bundle-test
+.PHONY: windows-setup-stage windows-setup-test
+WINDOWS_BUNDLE ?=
+WINDOWS_SETUP_STAGE ?= $(DIST_DIR)/windows-setup
 
 version:
 	@cat "$(VERSION_FILE)"
@@ -105,7 +108,7 @@ deb-test: check-emacs
 release-deb: check-emacs
 	python3 utils/emacsvox-package-deb.py --release --emacs "$(EMACS)" --output-dir "$(DIST_DIR)"
 
-test: version-check headers-check source-archive-test windows-staging-test windows-bundle-test piper-catalogue-test unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
+test: version-check headers-check source-archive-test windows-staging-test windows-bundle-test windows-setup-test piper-catalogue-test unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
 
 .PHONY: piper-catalogue-test
 piper-catalogue-test:
@@ -120,6 +123,13 @@ windows-bundle-dev:
 
 windows-bundle-test:
 	python3 -m unittest discover -s test -p 'test_windows_bundle.py' -v
+
+windows-setup-stage:
+	@test -n "$(WINDOWS_BUNDLE)" || { echo 'Set WINDOWS_BUNDLE to a prepared development bundle ZIP.' >&2; exit 1; }
+	python3 utils/emacsvox-windows-setup.py --bundle "$(WINDOWS_BUNDLE)" --staging-directory "$(WINDOWS_SETUP_STAGE)"
+
+windows-setup-test:
+	python3 -m unittest discover -s test -p 'test_windows_setup.py' -v
 
 compat-test: check-emacs config
 	$(EMACS) -Q --batch -l test/run-compat-tests.el
