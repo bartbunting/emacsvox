@@ -7,12 +7,18 @@ param(
     [string]$FailedUpgrade,
     # Continue failure/recovery checks in this script's retained test fixture.
     [string]$ResumeAfterRepair,
+    # Export only this test's logs for CI, including on acceptance failure.
+    [string]$LogDirectory,
     [switch]$AudioCheck,
     [switch]$IsolatedIdentity
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..\utils\emacsvox-windows-common.ps1')
 Assert-NativeWindows
+if ($LogDirectory) {
+    $LogDirectory = [IO.Path]::GetFullPath($LogDirectory)
+    New-Item -ItemType Directory -Path $LogDirectory -ErrorAction Stop | Out-Null
+}
 $registration = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{B2C8A798-1699-456B-8A64-A6D02C347972}_is1'
 if ($IsolatedIdentity) {
     foreach ($candidate in @($Setup,$Upgrade,$FailedUpgrade) | Where-Object { $_ }) {
@@ -186,6 +192,7 @@ try {
     if ($Upgrade) { Write-Host 'PASS: failed activation preserved the selection; repair activated a different build with the same profile.' }
     else { Write-Host 'Upgrade acceptance was skipped; pass a second build with -Upgrade.' }
     if ($FailedUpgrade) { Write-Host 'PASS: failed upgrade preserved the previous working selection and launcher.' }
+    if (-not $AudioCheck) { Write-Host 'Graphical/audio acceptance was skipped.' }
 }
 finally {
     if ($running) { if (-not $running.HasExited) { $running.Kill(); $running.WaitForExit() }; $running.Dispose() }
@@ -193,4 +200,15 @@ finally {
     if ($null -eq $oldEmacs) { Remove-Item Env:EMACS -ErrorAction SilentlyContinue } else { $env:EMACS = $oldEmacs }
     Write-Host "Retained setup acceptance logs: $work"
     if (-not $passed) { Write-Host 'The isolated test installation was retained for diagnosis.' }
+    if ($LogDirectory) {
+        Get-ChildItem -LiteralPath $work -Filter '*.log' -File | Copy-Item -Destination $LogDirectory
+        $installLogs = Join-Path $installation 'logs'
+        if (Test-Path -LiteralPath $installLogs) {
+            Copy-Item -LiteralPath $installLogs -Destination (Join-Path $LogDirectory 'installation') -Recurse
+        }
+        Write-EmacsvoxJson (Join-Path $LogDirectory 'result.json') @{
+            Schema=1; Passed=$passed; AudioCheck=[bool]$AudioCheck;
+            UpgradeRequested=[bool]$Upgrade; RollbackRequested=[bool]$FailedUpgrade
+        }
+    }
 }

@@ -5,16 +5,92 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
 
 jobs:
   windows-staging:
-    name: Isolated Windows staging fixtures
+    name: Isolated Windows packaging fixtures
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: Check staging, provenance, and failure boundaries
-        run: make windows-staging-test
+        run: make windows-staging-test windows-bundle-test windows-setup-test
+
+  windows-installer:
+    name: Windows x64 installer and lifecycle
+    needs: windows-staging
+    runs-on: windows-2025
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      # Hash the same source bytes as Linux, including generated Info files.
+      - name: Preserve source line endings
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare build paths and evidence directory
+        run: |
+          "SETUP_WORK=$env:RUNNER_TEMP/evox-setup" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "SETUP_DOWNLOADS=$env:RUNNER_TEMP/evox-downloads" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          New-Item -ItemType Directory dist/windows-ci | Out-Null
+      - name: Check native ownership and optional cleanup
+        run: |
+          .\test\emacsvox-windows-setup-helper-tests.ps1
+          .\test\emacsvox-windows-setup-cleanup-tests.ps1
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/evox-downloads
+          key: windows-setup-downloads-${{ hashFiles('etc/wsl-install.conf', 'etc/windows-install.conf') }}
+      - name: Prepare verified offline installer payloads
+        run: |
+          python utils/emacsvox-windows-bundle.py --cache-directory "$env:SETUP_DOWNLOADS" --output-directory "$env:SETUP_WORK/bundles"
+          if ($LASTEXITCODE -ne 0) { throw 'Offline bundle preparation failed' }
+          $bundles = @(Get-ChildItem "$env:SETUP_WORK/bundles" -Filter '*.zip' -File)
+          if ($bundles.Count -ne 1) { throw 'Expected exactly one offline bundle' }
+          python utils/emacsvox-windows-setup.py --bundle $bundles[0].FullName --staging-directory "$env:SETUP_WORK/setup"
+          if ($LASTEXITCODE -ne 0) { throw 'Installer staging failed' }
+          python test/prepare_windows_setup_failure.py --bundle $bundles[0].FullName --staging-directory "$env:SETUP_WORK/rollback"
+          if ($LASTEXITCODE -ne 0) { throw 'Rollback fixture staging failed' }
+      - name: Compile with the verified pinned Inno Setup compiler
+        run: |
+          .\utils\emacsvox-windows-setup-build.ps1 -StagingDirectory "$env:SETUP_WORK/setup" -InstallCompiler
+          .\utils\emacsvox-windows-setup-build.ps1 -StagingDirectory "$env:SETUP_WORK/rollback"
+      - name: Install, repair, roll back a failed upgrade, and uninstall
+        run: |
+          $setup = @(Get-ChildItem "$env:SETUP_WORK/setup/output" -Filter '*-setup.exe' -File)
+          $rollback = @(Get-ChildItem "$env:SETUP_WORK/rollback/output" -Filter '*-setup.exe' -File)
+          if ($setup.Count -ne 1 -or $rollback.Count -ne 1) { throw 'Expected one installer per stage' }
+          .\test\emacsvox-windows-setup-tests.ps1 -Setup $setup[0].FullName -FailedUpgrade $rollback[0].FullName -LogDirectory "$PWD/dist/windows-ci/lifecycle"
+      - name: Collect build evidence
+        if: always()
+        run: |
+          foreach ($name in @('setup', 'rollback')) {
+            $stage = Join-Path $env:SETUP_WORK $name
+            $evidence = New-Item -ItemType Directory -Force "dist/windows-ci/$name"
+            foreach ($file in @('compile.log', 'setup-manifest.json')) {
+              $path = Join-Path $stage $file
+              if (Test-Path -LiteralPath $path) { Copy-Item -LiteralPath $path -Destination $evidence.FullName }
+            }
+            if (Test-Path "$stage/output") {
+              Get-ChildItem "$stage/output" -File | Where-Object { $_.Name -match '\.(sha256|provenance\.json)$' } | Copy-Item -Destination $evidence.FullName
+            }
+          }
+      # ADR 0024: publish matching bundled sources before distributing binaries.
+      # Audio and screen-reader acceptance still require an interactive machine.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emacsvox-windows-installer-evidence
+          path: dist/windows-ci/
+          if-no-files-found: warn
+          retention-days: 14
 
   debian-package:
     name: Debian package and Ubuntu installation

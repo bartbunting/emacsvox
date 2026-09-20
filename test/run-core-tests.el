@@ -40,6 +40,7 @@
                     emacsvox-aural-transport-tests
                     emacsvox-aural-voice-workbench-tests
                     emacsvox-startup-tests
+                    emacsvox-welcome-tests
                     emacsvox-agent-shell-render-tests))
     (require module)))
 
