@@ -64,6 +64,14 @@ recorded in Inno's accumulated uninstall log. Do not automatically terminate
 Emacs or its speech workers: reject installation or removal while this
 installation has running processes.
 
+Configuration completes before replacing the shared launcher and helpers.
+The final manifest is an external-file entry whose source callback rejects
+configuration errors; Inno catches ordinary =BeforeInstall=/=AfterInstall=
+exceptions and would otherwise continue. Exercise actual rollback in native
+acceptance tests. Activation runs after installation has committed, so an
+activation failure retains the installed files and previous selection,
+reports failure in the wizard and process exit code, and allows a later repair.
+
 Uninstall removes only recorded files and explicitly named generated files.
 Remove generated directories only when empty. Never recursively delete the
 installation root, profile or voice directories. Retain profile, logs,

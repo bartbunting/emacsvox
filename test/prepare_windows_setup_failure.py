@@ -28,11 +28,11 @@ def main():
             shutil.copyfile(ROOT / name, target)
         template = root / 'utils/emacsvox-windows-setup.iss'
         original = template.read_text()
-        trigger = "  Error := RunHelper('Configure',"
+        trigger = "    ConfigurationError := RunHelper('Configure',"
         if original.count(trigger) != 1:
             raise ValueError('Setup configuration hook changed; update the failure fixture')
         template.write_text(original.replace(trigger,
-            "  RaiseException('Intentional configuration failure for rollback acceptance');\n" + trigger))
+            "    RaiseException('Intentional configuration failure for rollback acceptance');\n" + trigger))
         print(SETUP.prepare(arguments.bundle.resolve(), arguments.staging_directory.resolve(), root=root))
 
 

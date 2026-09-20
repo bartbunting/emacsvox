@@ -41,9 +41,14 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription
 Source: "payload\Setup\emacsvox-windows-common.ps1"; Flags: dontcopy
 Source: "payload\Setup\emacsvox-windows-setup-helper.ps1"; Flags: dontcopy
 Source: "setup-manifest.json"; Flags: dontcopy
-Source: "payload\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "payload\*"; DestDir: "{app}"; Excludes: "Launcher\*,Setup\*"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "setup-owner.json"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: "setup-manifest.json"; DestDir: "{app}\Manifests"; DestName: "{#Build}.json"; Flags: ignoreversion; AfterInstall: ConfigureApplication
+; External source expansion propagates errors to Inno's installation rollback.
+; BeforeInstall/AfterInstall exceptions alone are caught and ignored by Inno.
+Source: "{code:ConfiguredManifest}"; DestDir: "{app}\Manifests"; DestName: "{#Build}.json"; Flags: external ignoreversion; ExternalSize: 0; BeforeInstall: ConfigureApplication
+; Preserve the working launcher and helpers until configuration has succeeded.
+Source: "payload\Launcher\*"; DestDir: "{app}\Launcher"; Flags: ignoreversion
+Source: "payload\Setup\*"; DestDir: "{app}\Setup"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Emacsvox Windows Development"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\Launcher\Start.ps1"""; IconFilename: "{app}\{#EmacsDirectory}\bin\emacs.exe"; WorkingDir: "{app}"
@@ -52,12 +57,16 @@ Name: "{group}\Uninstall Emacsvox Windows Development"; Filename: "{uninstallexe
 Name: "{autodesktop}\Emacsvox Windows Development"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\Launcher\Start.ps1"""; IconFilename: "{app}\{#EmacsDirectory}\bin\emacs.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Launcher\Start.ps1"" -Check -ShowErrors"; Description: "Test &speech (two short announcements)"; Flags: postinstall skipifsilent
-Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\Launcher\Start.ps1"""; Description: "&Start Emacsvox"; Flags: postinstall unchecked skipifsilent nowait
+Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Launcher\Start.ps1"" -Check -ShowErrors"; Description: "Test &speech (two short announcements)"; Flags: postinstall skipifsilent; Check: InstallationActivated
+Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\Launcher\Start.ps1"""; Description: "&Start Emacsvox"; Flags: postinstall unchecked skipifsilent nowait; Check: InstallationActivated
 
 #include "setup-generated-uninstall.iss"
 
 [Code]
+var
+  ConfigurationAttempted, Activated: Boolean;
+  ConfigurationError, ActivationError: String;
+
 function RunHelper(Action, Helper, Manifest: String): String;
 var
   ExitCode: Integer;
@@ -89,21 +98,56 @@ begin
 end;
 
 procedure ConfigureApplication;
-var Error: String;
 begin
+  ConfigurationAttempted := True;
+  ConfigurationError := 'Emacsvox configuration did not complete.';
   WizardForm.StatusLabel.Caption := 'Preparing Emacsvox for your Emacs. This can take a few minutes...';
-  Error := RunHelper('Configure', ExpandConstant('{app}\Setup\emacsvox-windows-setup-helper.ps1'),
-    ExpandConstant('{app}\Manifests\{#Build}.json'));
-  if Error <> '' then RaiseException(Error);
+  try
+    ConfigurationError := RunHelper('Configure', ExpandConstant('{tmp}\emacsvox-windows-setup-helper.ps1'),
+      ExpandConstant('{tmp}\setup-manifest.json'));
+  except
+    ConfigurationError := GetExceptionMessage;
+  end;
+end;
+
+function ConfiguredManifest(Param: String): String;
+begin
+  { Inno also expands this source while planning, before BeforeInstall runs. }
+  if ConfigurationAttempted and (ConfigurationError <> '') then RaiseException(ConfigurationError);
+  Result := ExpandConstant('{tmp}\setup-manifest.json');
+end;
+
+function InstallationActivated: Boolean;
+begin
+  Result := Activated;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
-var Error: String;
 begin
   if CurStep = ssPostInstall then begin
-    Error := RunHelper('Activate', ExpandConstant('{app}\Setup\emacsvox-windows-setup-helper.ps1'),
-      ExpandConstant('{app}\Manifests\{#Build}.json'));
-    if Error <> '' then RaiseException(Error);
+    try
+      ActivationError := RunHelper('Activate', ExpandConstant('{app}\Setup\emacsvox-windows-setup-helper.ps1'),
+        ExpandConstant('{app}\Manifests\{#Build}.json'));
+    except
+      ActivationError := GetExceptionMessage;
+    end;
+    Activated := ActivationError = '';
+    if not Activated then SuppressibleMsgBox(ActivationError, mbError, MB_OK, IDOK);
+  end;
+end;
+
+function GetCustomSetupExitCode: Integer;
+begin
+  Result := 0;
+  if ActivationError <> '' then Result := 1;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if (CurPageID = wpFinished) and (ActivationError <> '') then begin
+    WizardForm.FinishedHeadingLabel.Caption := 'Emacsvox could not be activated';
+    WizardForm.FinishedLabel.Caption := ActivationError + #13#10#13#10 +
+      'Your previous selection is unchanged. Fix the reported problem and run Setup again.';
   end;
 end;
 
