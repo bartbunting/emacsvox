@@ -76,6 +76,7 @@
 (declare-function agent-shell-shell-buffer "agent-shell" t)
 (declare-function agent-shell-session-id "agent-shell" t)
 (declare-function agent-shell-status "agent-shell" t)
+(declare-function agent-shell-steering-supported-p "agent-shell" t)
 (declare-function agent-shell-subscribe-to "agent-shell" t)
 (declare-function agent-shell-unsubscribe "agent-shell" t)
 (declare-function agent-shell-viewport--shell-buffer
@@ -103,6 +104,7 @@
 (defvar ems--speak-max-length)
 (defvar tts-speaker-process)
 (defvar agent-shell-ui--fold-toggle-state)
+(defvar agent-shell-busy-submit-default-function)
 
 ;;;  Customization
 
@@ -683,11 +685,38 @@ before the first response character, including when approaching from below."
                          (< (overlay-end overlay) end))
                return (cons (overlay-end overlay) end)))))
 
+(defun emacsvox-agent-shell--live-prompt-state-speech ()
+  "Describe a non-idle prompt and its normal submit route, or return nil.
+Read the current state without invoking a submit function.  Custom routes
+are left unspecified; steering without provider support falls back to queueing."
+  (let ((status (condition-case nil
+                    (agent-shell-status :shell-buffer (current-buffer))
+                  (error 'unknown))))
+    (pcase status
+      ('ready nil)
+      ((or 'busy 'blocked)
+       (concat
+        (if (eq status 'blocked) "Waiting for permission. " "Agent working. ")
+        (pcase (if (boundp 'agent-shell-busy-submit-default-function)
+                   agent-shell-busy-submit-default-function
+                 'agent-shell-busy-submit-queue)
+          ('agent-shell-busy-submit-queue "Input will queue.")
+          ('agent-shell-busy-submit-steer
+           (if (and (fboundp 'agent-shell-steering-supported-p)
+                    (ignore-errors (agent-shell-steering-supported-p)))
+               "Input will steer."
+             "Input will queue."))
+          (_ "Input uses a custom submit action."))))
+      (_ "Input state unavailable."))))
+
 (defun emacsvox-agent-shell--add-chat-label-for-speech (text)
   "Return TEXT prefixed by the visible chat label captured for speech."
   (if-let* ((context emacsvox-agent-shell--chat-label-context)
             (label (plist-get context :text)))
       (let* ((category (plist-get context :category))
+             (prompt-state
+              (when (plist-get context :editable)
+                (emacsvox-agent-shell--live-prompt-state-speech)))
              (content
               (if (eq category 'agent-shell-chat-me)
                   (emacsvox-agent-shell--without-leading-chat-prompt text)
@@ -714,9 +743,10 @@ before the first response character, including when approaching from below."
         (setq content (string-trim-left content))
         (if (string-empty-p (string-trim (substring-no-properties content)))
             (if (plist-get context :editable)
-                (concat label ". Ready for input.")
+                (concat label ". " (or prompt-state "Ready for input."))
               label)
-          (concat label ". " content)))
+          (concat label ". "
+                  (when prompt-state (concat prompt-state " ")) content)))
     text))
 
 (defun emacsvox-agent-shell--replace-status-icons-for-speech (text)

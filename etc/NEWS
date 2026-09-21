@@ -35,3 +35,5 @@ Agent Shell 0.78.1 support keeps brackets editable at the persistent prompt
 while the agent works. Viewport submission feedback distinguishes queueing
 from steering, including the override command and unsupported-steering
 fallback. Full header speech includes the optional cumulative cost indicator.
+Reading a busy live prompt identifies queue or steering input, or a pending
+permission, instead of saying the agent is ready for input.

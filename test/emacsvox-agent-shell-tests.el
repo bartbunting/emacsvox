@@ -518,6 +518,8 @@
 (defun emacsvox-agent-shell-test--insert-live-chat-input (draft)
   "Insert a labeled live prompt containing DRAFT and return its bounds."
   (setq major-mode 'agent-shell-mode)
+  (setq-local shell-maker--config
+              (agent-shell--make-shell-maker-config :prompt "Codex> "))
   (set-syntax-table (copy-syntax-table (syntax-table)))
   (modify-syntax-entry ?\n ">" (syntax-table))
   (setq-local
@@ -7586,6 +7588,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                   ("draft" "Me. draft")))
     (with-temp-buffer
       (setq major-mode 'agent-shell-mode)
+      (setq-local shell-maker--config
+                  (agent-shell--make-shell-maker-config :prompt "Claude> "))
       ;; Agent Shell gives newline comment-end syntax; preserve that detail so
       ;; label parsing cannot accidentally depend on the default syntax table.
       (set-syntax-table (copy-syntax-table (syntax-table)))
@@ -7637,6 +7641,57 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not (string-match-p "❯" spoken))
           (should (eq (get-text-property 0 'face spoken)
                       'agent-shell-chat-me-label)))))))
+
+(ert-deftest emacsvox-agent-shell-live-prompt-speech-identifies-busy-route ()
+  "Reading a live prompt tracks busy routes without altering input or history."
+  (dolist (draft '("" "draft"))
+    (with-temp-buffer
+      (emacsvox-agent-shell-test--insert-live-chat-input draft)
+      (let ((source (buffer-string))
+            (origin (point)))
+        ;; Reuse the prompt through transitions so no stale ready cue survives.
+        (dolist (case '((ready agent-shell-busy-submit-queue t nil)
+                        (busy agent-shell-busy-submit-queue t
+                              "Agent working. Input will queue.")
+                        (busy agent-shell-busy-submit-steer t
+                              "Agent working. Input will steer.")
+                        (busy agent-shell-busy-submit-steer nil
+                              "Agent working. Input will queue.")
+                        (blocked agent-shell-busy-submit-queue t
+                                 "Waiting for permission. Input will queue.")
+                        (busy ignore t "Agent working. Input uses a custom submit action.")
+                        (unknown ignore t "Input state unavailable.")
+                        (ready agent-shell-busy-submit-steer t nil)))
+          (let ((agent-shell-busy-submit-default-function (nth 1 case))
+                (emacsvox-agent-shell--chat-label-context
+                 (emacsvox-agent-shell--chat-label-context-at-point)))
+            (setf (alist-get :supports-steering agent-shell--state) (nth 2 case))
+            (cl-letf (((symbol-function 'shell-maker-busy)
+                       (lambda () (memq (car case) '(busy blocked))))
+                      ((symbol-function 'agent-shell--permission-pending-p)
+                       (lambda () (eq (car case) 'blocked))))
+              (let ((status-function (symbol-function 'agent-shell-status)))
+                (cl-letf (((symbol-function 'agent-shell-status)
+                           (lambda (&rest args)
+                             (if (eq (car case) 'unknown) (error "No status")
+                               (apply status-function args)))))
+                  (should
+                   (equal
+                    (substring-no-properties
+                     (emacsvox-agent-shell--prepare-speech-text
+                      (buffer-substring (line-beginning-position) (line-end-position))))
+                    (concat "Me. "
+                            (if (string-empty-p draft)
+                                (or (nth 3 case) "Ready for input.")
+                              (concat (when (nth 3 case) (concat (nth 3 case) " "))
+                                      draft)))))
+                  (let ((emacsvox-agent-shell--chat-label-context
+                         '(:category agent-shell-chat-me :text "Me")))
+                    (should (equal (emacsvox-agent-shell--add-chat-label-for-speech
+                                    "Previous instruction")
+                                   "Me. Previous instruction")))))))
+          (should (= origin (point)))
+          (should (equal-including-properties source (buffer-string))))))))
 
 (ert-deftest emacsvox-agent-shell-live-prompt-line-speech-crosses-field-boundary ()
   "Physical and visual speech agree at live input without changing fields."
@@ -7722,7 +7777,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should (equal-including-properties source (buffer-string))))))))
 
 (ert-deftest emacsvox-agent-shell-live-input-graphical-visual-speech ()
-  "Real prompt overlays must speak without depending on mocked row bounds."
+  "Real prompt overlays speak current busy state without mocked row bounds."
   (skip-unless (display-graphic-p))
   (skip-unless (require 'agent-shell-chat-mode nil t))
   (dolist (draft '("" "draft" "first\nsecond"))
@@ -7733,21 +7788,34 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 #'emacsvox-agent-shell--prepare-speech-text))
           (set-window-buffer (selected-window) (current-buffer))
           (redisplay t)
-          (dolist (position (list (1+ (marker-position (car comint-last-prompt)))
-                                 (car input)))
-            (goto-char position)
-            (let (spoken)
-              (cl-letf (((symbol-function 'tts-speak)
-                         (lambda (text)
-                           (push (substring-no-properties text) spoken))))
-                (emacsvox-agent-shell--speak-visual-line-around
-                 #'emacsvox-speak-visual-line))
-              (should
-               (equal spoken
-                      (list (if (string-empty-p draft)
-                                "Me. Ready for input."
-                              (concat "Me. " (car (split-string draft "\n")))))))
-              (should (= position (point))))))))))
+          (dolist (case '((ready agent-shell-busy-submit-queue nil)
+                          (busy agent-shell-busy-submit-queue
+                                "Agent working. Input will queue.")
+                          (busy agent-shell-busy-submit-steer
+                                "Agent working. Input will steer.")))
+            (let ((agent-shell-busy-submit-default-function (nth 1 case)))
+              (setf (alist-get :supports-steering agent-shell--state) t)
+              (dolist (position (list (1+ (marker-position (car comint-last-prompt)))
+                                     (car input)))
+                (goto-char position)
+                (let (spoken)
+                  (cl-letf (((symbol-function 'shell-maker-busy)
+                             (lambda () (eq (car case) 'busy)))
+                            ((symbol-function 'agent-shell--permission-pending-p) #'ignore)
+                            ((symbol-function 'tts-speak)
+                             (lambda (text)
+                               (push (substring-no-properties text) spoken))))
+                    (emacsvox-agent-shell--speak-visual-line-around
+                     #'emacsvox-speak-visual-line))
+                  (should
+                   (equal spoken
+                          (list (concat "Me. "
+                                        (if (string-empty-p draft)
+                                            (or (nth 2 case) "Ready for input.")
+                                          (concat (when (nth 2 case)
+                                                    (concat (nth 2 case) " "))
+                                                  (car (split-string draft "\n"))))))))
+                  (should (= position (point))))))))))))
 
 (ert-deftest emacsvox-agent-shell-live-input-graphical-wrapped-speech ()
   "Streaming above a wrapped draft preserves point, input and visual speech."
@@ -7756,6 +7824,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   (save-window-excursion
     (with-temp-buffer
       (let* ((draft (concat (apply #'concat (make-list 100 "word ")) "LAST"))
+             (agent-shell-busy-submit-default-function #'agent-shell-busy-submit-queue)
              (input (emacsvox-agent-shell-test--insert-live-chat-input draft))
              (emacsvox-aural-source-transform-function
               #'emacsvox-agent-shell--prepare-speech-text)
@@ -7780,11 +7849,14 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (setq input (cons (marker-position (cdr comint-last-prompt)) (point-max)))
         (goto-char (car input))
         (redisplay t)
-        (cl-letf (((symbol-function 'tts-speak)
+        (cl-letf (((symbol-function 'shell-maker-busy) (lambda () t))
+                  ((symbol-function 'agent-shell--permission-pending-p) #'ignore)
+                  ((symbol-function 'tts-speak)
                    (lambda (text) (push (substring-no-properties text) spoken))))
           (emacsvox-agent-shell--speak-visual-line-around
            #'emacsvox-speak-visual-line)
-          (should (string-prefix-p "Me. word" (car spoken)))
+          (should (string-prefix-p "Me. Agent working. Input will queue. word"
+                                  (car spoken)))
           (should-not (string-match-p "LAST" (car spoken)))
           (goto-char (point-max))
           (emacsvox-agent-shell--speak-visual-line-around
