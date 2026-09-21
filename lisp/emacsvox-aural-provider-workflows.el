@@ -910,10 +910,10 @@
      :allowed-values (view edit))
     (agent-prompt-disposition
      :kind attribute
-     :summary "Whether an Agent Shell prompt was submitted, queued, or sent"
+     :summary "Whether an Agent Shell prompt was submitted, queued, steered, or sent"
      :owner agent-shell
      :value-type symbol
-     :allowed-values (submitted queued sent))
+     :allowed-values (submitted queued steered sent))
     (agent-permission-result
      :kind attribute
      :summary "The result of an Agent Shell permission decision"
@@ -1051,7 +1051,7 @@
      :phases (before content after))
     (agent-prompt-submitted
      :kind event
-     :summary "A composed Agent Shell prompt was submitted or queued"
+     :summary "A composed Agent Shell prompt was submitted, queued, or sent for steering"
      :owner agent-shell
      :occasions (state-change notification)
      :phases (before content after))

@@ -86,6 +86,8 @@
                   "agent-shell-ui" ())
 (declare-function shell-maker-busy "shell-maker" ())
 (declare-function shell-maker-point-at-last-prompt-p "shell-maker" ())
+(declare-function agent-shell--point-in-live-input-p "agent-shell-prompt" ())
+(declare-function agent-shell--cost-indicator "agent-shell-usage" ())
 (declare-function emacsvox-speak--present-physical-line
                   "emacsvox-speak" (&optional arg compatibility-actions))
 (declare-function emacsvox-speak-region
@@ -1627,6 +1629,9 @@ accessors where agent-shell provides them."
                    (ignore-errors (agent-shell-get-mode-name state))))
              :context-percentage
              (emacsvox-agent-shell--context-percentage state)
+             :cost
+             (and (fboundp 'agent-shell--cost-indicator)
+                  (ignore-errors (agent-shell--cost-indicator)))
              :session-id
              (when (bound-and-true-p agent-shell-show-session-id)
                (emacsvox-agent-shell--nonempty-text
@@ -1705,6 +1710,9 @@ indicator; retain current agent-shell thresholds as a compatibility fallback."
               (format "Context %d percent" percentage)
               'face
               (emacsvox-agent-shell--header-context-face percentage)))
+           (when-let* ((cost (plist-get state :cost)))
+             (propertize (format "Cost %s" cost)
+                         'face 'agent-shell-secondary))
            (when-let* ((session-id (plist-get state :session-id)))
              (propertize (format "Session ID %s" session-id)
                          'face 'agent-shell-session-id))))))
@@ -4789,8 +4797,10 @@ When INTERACTIVE-P is non-nil, announce a resulting visibility change."
        (eq (key-binding (this-command-keys-vector)) this-command)
        (or (derived-mode-p 'agent-shell-viewport-edit-mode)
            (and (derived-mode-p 'agent-shell-mode)
-                (not (shell-maker-busy))
-                (shell-maker-point-at-last-prompt-p)))))
+                (if (fboundp 'agent-shell--point-in-live-input-p)
+                    (agent-shell--point-in-live-input-p)
+                  (and (not (shell-maker-busy))
+                       (shell-maker-point-at-last-prompt-p)))))))
 
 (defun emacsvox-agent-shell--navigate-block-at-point (direction)
   "Navigate in DIRECTION using the semantic block containing point."
@@ -6360,7 +6370,10 @@ direct submission immediately changes it to busy."
   (condition-case nil
       (when-let* ((shell-buffer (emacsvox-agent-shell--session-buffer)))
         (pcase (agent-shell-status :shell-buffer shell-buffer)
-          ((or 'busy 'blocked) 'queued)
+          ((or 'busy 'blocked)
+           ;; Newer releases allow custom busy routes, including steering.
+           ;; Observe the actual route during submission instead of guessing.
+           (unless (fboundp 'agent-shell--busy-submit) 'queued))
           ('ready 'submitted)))
     (error nil)))
 
@@ -6372,6 +6385,7 @@ DISMISS means the compose window is dismissed."
   (concat
    (pcase disposition
      ('queued "Prompt queued.")
+     ('steered "Steering sent.")
      ('submitted "Prompt submitted.")
      (_ "Prompt sent."))
    (cond
@@ -6379,11 +6393,28 @@ DISMISS means the compose window is dismissed."
     (dismiss " Compose window dismissed.")
     (t ""))))
 
+(defvar emacsvox-agent-shell--viewport-submission nil
+  "Dynamically bound disposition cell for the owning viewport send command.
+Nested send helpers share this cell and must not announce independently.")
+
+(defun emacsvox-agent-shell--prompt-enqueued-after (&rest _)
+  "Record actual queueing during an interactive viewport submission."
+  (when emacsvox-agent-shell--viewport-submission
+    (setcar emacsvox-agent-shell--viewport-submission 'queued)))
+
+(defun emacsvox-agent-shell--steering-sent-after (&rest _)
+  "Record steering dispatch without claiming that the agent accepted it."
+  (when emacsvox-agent-shell--viewport-submission
+    (setcar emacsvox-agent-shell--viewport-submission 'steered)))
+
 (defun emacsvox-agent-shell--viewport-compose-send-around
     (original-function &rest arguments)
-  "Announce whether a prompt was submitted or queued and where focus remains."
+  "Announce a prompt's actual submission route and where focus remains."
   (let* ((interactive-p
-          (ems-interactive-p 'agent-shell-viewport-compose-send))
+          (and (not emacsvox-agent-shell--viewport-submission)
+               (or (ems-interactive-p 'agent-shell-viewport-compose-send)
+                   (ems-interactive-p
+                    'agent-shell-viewport-compose-send-override))))
          (keep-composing
           (and interactive-p (car arguments)))
          (dismiss
@@ -6391,18 +6422,21 @@ DISMISS means the compose window is dismissed."
                (not keep-composing)
                (boundp 'agent-shell-viewport-dismiss-on-send)
                agent-shell-viewport-dismiss-on-send))
-         (disposition
-          (and interactive-p
-               (emacsvox-agent-shell--viewport-submit-disposition))))
+         (emacsvox-agent-shell--viewport-submission
+          (if interactive-p
+              (list (emacsvox-agent-shell--viewport-submit-disposition))
+            emacsvox-agent-shell--viewport-submission)))
     (prog1
         (apply original-function arguments)
       (when interactive-p
         (emacsvox-agent-shell--submit-text-feedback
          (emacsvox-agent-shell--viewport-submit-announcement
-          disposition keep-composing dismiss)
+          (car emacsvox-agent-shell--viewport-submission)
+          keep-composing dismiss)
          (emacsvox-agent-shell--presentation-facts
           'agent-prompt-editor 'agent-prompt-submitted nil
-          (list :agent-prompt-disposition (or disposition 'sent)))
+          (list :agent-prompt-disposition
+                (or (car emacsvox-agent-shell--viewport-submission) 'sent)))
          'state-change
          (if keep-composing 'task-done 'close-object))))))
 
@@ -6764,6 +6798,10 @@ fragment.  Fragment names alone never manufacture a tool event."
      emacsvox-agent-shell--queue-process-around)
     (agent-shell--prompt-queue-display :after
      emacsvox-agent-shell--queue-display-after)
+    (agent-shell--prompt-queue-enqueue :after
+     emacsvox-agent-shell--prompt-enqueued-after)
+    (agent-shell-experimental--send-steering :after
+     emacsvox-agent-shell--steering-sent-after)
     (agent-shell-list-edit-newline :around
      emacsvox-agent-shell--list-newline-around)
     (agent-shell-list-edit-indent-line :around
@@ -6838,6 +6876,8 @@ fragment.  Fragment names alone never manufacture a tool event."
     (agent-shell-viewport-refresh :after
      emacsvox-agent-shell--viewport-refresh-after)
     (agent-shell-viewport-compose-send :around
+     emacsvox-agent-shell--viewport-compose-send-around)
+    (agent-shell-viewport-compose-send-override :around
      emacsvox-agent-shell--viewport-compose-send-around)
     (agent-shell-viewport-compose-cancel :around
      emacsvox-agent-shell--viewport-compose-cancel-around)

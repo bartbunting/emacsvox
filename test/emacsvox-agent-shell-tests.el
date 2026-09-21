@@ -1877,7 +1877,34 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             :thought-level "xhigh"
             :mode "Agent (full access)"
             :context-percentage 73
+            :cost nil
             :session-id "session-123")))))))
+
+(ert-deftest emacsvox-agent-shell-header-cost-follows-upstream-option ()
+  "Full header speech should match optional upstream cost and rounding."
+  (skip-unless (fboundp 'agent-shell--cost-indicator))
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (dolist (case '((nil 0.4237 "USD" nil)
+                    (t nil "USD" nil)
+                    (t 0 "USD" nil)
+                    (t 0.4237 "USD" "$0.43")
+                    (t 0.000597 nil "$0.01")
+                    (t 0.07 "CHF" "CHF 0.07")))
+      (let ((agent-shell-show-cost-indicator (nth 0 case)))
+        (setq-local agent-shell--state
+                    `((:agent-config . ((:buffer-name . "Codex")))
+                      (:usage . ((:cost-amount . ,(nth 1 case))
+                                 (:cost-currency . ,(nth 2 case))))))
+        (let* ((state (emacsvox-agent-shell--header-state))
+               (speech (emacsvox-agent-shell--format-full-header state)))
+          (should (equal (plist-get state :cost) (nth 3 case)))
+          (if (nth 3 case)
+              (should (string-match-p
+                       (regexp-quote (concat "Cost " (nth 3 case))) speech))
+            (should-not (string-match-p "Cost" speech)))
+          (should-not (string-match-p
+                       "Cost" (emacsvox-agent-shell--format-brief-header state))))))))
 
 (ert-deftest emacsvox-agent-shell-graphical-header-gets-brief-fallback ()
   "A visually rendered whitespace header should receive semantic speech."
@@ -6302,12 +6329,21 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (switch-to-buffer buffer)
             (setq major-mode (nth 0 case))
             (use-local-map (nth 1 case))
+            (when (derived-mode-p 'agent-shell-mode)
+              (insert "Test> ")
+              (setq-local comint-last-prompt
+                          (cons (copy-marker (point-min))
+                                (copy-marker (point)))))
             (setq emacsvox-agent-shell--speech-control-active t)
             (cl-letf (((symbol-function 'shell-maker-busy) (lambda () nil))
                       ((symbol-function 'shell-maker-point-at-last-prompt-p)
                        (lambda () t)))
               (execute-kbd-macro (kbd (nth 2 case))))
-            (should (equal (buffer-string) (nth 2 case))))
+            (should (equal (buffer-substring
+                            (if comint-last-prompt (cdr comint-last-prompt)
+                              (point-min))
+                            (point-max))
+                           (nth 2 case))))
         (when (buffer-live-p buffer)
           (kill-buffer buffer))))))
 
@@ -6568,6 +6604,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (setq major-mode 'agent-shell-mode)
             (use-local-map agent-shell-mode-map)
             (goto-char (point-max))
+            (setq-local comint-last-prompt
+                        (cons (copy-marker (- (point) 7))
+                              (copy-marker (point))))
             (let ((origin (point))
                   events)
               (cl-letf
@@ -7145,7 +7184,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                     emacsvox-agent-shell--advice-list)))
 
 (ert-deftest emacsvox-agent-shell-viewport-submit-uses-public-status ()
-  "Pre-send public status should determine queued and submitted feedback."
+  "Pre-send status predicts submission, but newer busy routes need observation."
   (let (status)
     (cl-letf (((symbol-function 'emacsvox-agent-shell--session-buffer)
                (lambda (&optional _) (current-buffer)))
@@ -7154,9 +7193,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                  (should (eq (plist-get arguments :shell-buffer)
                              (current-buffer)))
                  status)))
-      (dolist (case '((ready submitted)
-                      (busy queued)
-                      (blocked queued)
+      (dolist (case `((ready submitted)
+                      (busy ,(unless (fboundp 'agent-shell--busy-submit) 'queued))
+                      (blocked ,(unless (fboundp 'agent-shell--busy-submit) 'queued))
                       (unknown nil)))
         (setq status (car case))
         (should
@@ -7711,7 +7750,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
               (should (= position (point))))))))))
 
 (ert-deftest emacsvox-agent-shell-live-input-graphical-wrapped-speech ()
-  "Recover only the first wrapped draft row, preserving later row speech."
+  "Streaming above a wrapped draft preserves point, input and visual speech."
   (skip-unless (display-graphic-p))
   (skip-unless (require 'agent-shell-chat-mode nil t))
   (save-window-excursion
@@ -7722,6 +7761,23 @@ Return speech events plus the target character.  DIRECTION is `forward' or
               #'emacsvox-agent-shell--prepare-speech-text)
              spoken)
         (set-window-buffer (selected-window) (current-buffer))
+        (setq-local agent-shell--state
+                    (agent-shell--make-state
+                     :buffer (current-buffer)
+                     :agent-config '((:mode-line-name . "Codex"))))
+        ;; Use the real renderer and prompt markers, with point inside input.
+        (setq-local comint-last-output-start (copy-marker (point-min)))
+        (goto-char (+ (car input) 10))
+        (agent-shell--update-fragment
+         :state agent-shell--state :block-id "streaming-response"
+         :body "Output arriving while the draft is being edited."
+         :create-new t :above-last-prompt t)
+        (should (= (point) (+ (marker-position (cdr comint-last-prompt)) 10)))
+        (should (equal (buffer-substring-no-properties
+                        (cdr comint-last-prompt) (point-max)) draft))
+        (let ((agent-shell-prompt-bar-mode nil))
+          (agent-shell-chat--relabel))
+        (setq input (cons (marker-position (cdr comint-last-prompt)) (point-max)))
         (goto-char (car input))
         (redisplay t)
         (cl-letf (((symbol-function 'tts-speak)
@@ -9292,6 +9348,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
      (setq-local comint-last-output-start (copy-marker (point)))
      (setq-local shell-maker--config
                  (agent-shell--make-shell-maker-config :prompt "Test> "))
+     (let ((start (point)))
+       (insert (propertize "Test> " 'field 'prompt))
+       (setq-local comint-last-prompt
+                   (cons (copy-marker start) (copy-marker (point)))))
      (setq-local emacsvox-comint-autospeak t)
      (setq-local emacsvox-agent-shell-speech-level 'full)
      (setq-local agent-shell-section-functions
@@ -9320,6 +9380,87 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            '[nil ((type . "image"))
              ((type . "content") (content . ((type . "text") (text . "Tests passed"))))])
           "Tests passed")))
+
+(ert-deftest emacsvox-agent-shell-persistent-prompt-keeps-navigation-keys-editable ()
+  "Busy live prompts insert brackets and table keys; transcript keys navigate."
+  (skip-unless (fboundp 'agent-shell--point-in-live-input-p))
+  (dolist (busy '(nil t))
+    (dolist (key '("[" "]" "n" "p"))
+      (save-window-excursion
+        (emacsvox-agent-shell-test--with-current-session
+          (switch-to-buffer (current-buffer))
+          (use-local-map agent-shell-mode-map)
+          (emacsvox-agent-shell--table-navigation-setup)
+          (let (selected)
+            (cl-letf (((symbol-function 'shell-maker-busy) (lambda () busy))
+                      ((symbol-function 'emacsvox-agent-shell--select-and-jump-block)
+                       (lambda (&rest _) (setq selected t))))
+              (emacsvox-agent-shell-test--capture-events
+                (execute-kbd-macro (kbd key)))
+              (should (equal (buffer-string) (concat "Test> " key)))
+              (should (= (point) (point-max)))
+              (should-not selected)
+              (goto-char (point-min))
+              (emacsvox-agent-shell-test--capture-events
+                (execute-kbd-macro (kbd "]")))
+              (should selected))))))))
+
+(ert-deftest emacsvox-agent-shell-viewport-submit-reports-actual-busy-route ()
+  "Normal, override and custom busy routes report queueing or steering once."
+  (skip-unless (fboundp 'agent-shell--busy-submit))
+  (dolist (keep-composing '(nil t))
+    (dolist (case '((agent-shell-busy-submit-queue t nil queued)
+                    (agent-shell-busy-submit-steer t nil steered)
+                    (agent-shell-busy-submit-steer nil nil queued)
+                    (agent-shell-busy-submit-queue t t steered)
+                    (agent-shell-busy-submit-queue nil t queued)
+                    (ignore t nil sent)))
+      (emacsvox-agent-shell-test--with-current-session
+        (let ((shell (current-buffer))
+              (agent-shell-session-strategy 'new-deferred)
+              (agent-shell-viewport-dismiss-on-send t)
+              (agent-shell-busy-submit-default-function (nth 0 case))
+              (agent-shell-busy-submit-override-function #'agent-shell-busy-submit-steer)
+              (current-prefix-arg keep-composing)
+              request presentations)
+          (with-temp-buffer
+            (setq major-mode 'agent-shell-viewport-edit-mode)
+            (insert "Change course")
+            (cl-letf (((symbol-function 'agent-shell-viewport--shell-buffer)
+                       (lambda (&rest _) shell))
+                      ((symbol-function 'emacsvox-agent-shell--session-buffer)
+                       (lambda (&rest _) shell))
+                      ((symbol-function 'agent-shell-status) (lambda (&rest _) 'busy))
+                      ((symbol-function 'agent-shell-viewport--busy-p) (lambda () t))
+                      ((symbol-function 'agent-shell-steering-supported-p)
+                       (lambda () (nth 1 case)))
+                      ((symbol-function 'agent-shell--send-request)
+                       (lambda (&rest args) (setq request (plist-get args :request))))
+                      ((symbol-function 'agent-shell--prompt-queue-echo) #'ignore)
+                      ((symbol-function 'agent-shell-viewport--initialize) #'erase-buffer)
+                      ((symbol-function 'agent-shell-viewport--dismiss) #'ignore)
+                      ((symbol-function 'emacsvox-agent-shell--submit-text-feedback)
+                       (lambda (text facts &rest _) (push (list text facts) presentations))))
+              (call-interactively
+               (if (nth 2 case) #'agent-shell-viewport-compose-send-override
+                 #'agent-shell-viewport-compose-send)))
+            (should (string-empty-p (buffer-string))))
+          (should (= 1 (length presentations)))
+          (should (eq (plist-get (cadar presentations) :agent-prompt-disposition)
+                      (nth 3 case)))
+          (should (emacsvox-aural-canonical-facts (cadar presentations)))
+          (should (equal (caar presentations)
+                         (concat
+                          (pcase (nth 3 case)
+                            ('queued "Prompt queued.")
+                            ('steered "Steering sent.")
+                            (_ "Prompt sent."))
+                          (if keep-composing " Continue composing."
+                            " Compose window dismissed."))))
+          (should (equal (map-elt agent-shell--state :pending-prompts)
+                         (and (eq (nth 3 case) 'queued) '("Change course"))))
+          (should (equal (map-elt request :method)
+                         (and (eq (nth 3 case) 'steered) "_session/steering"))))))))
 
 (ert-deftest emacsvox-agent-shell-current-codex-output-reaches-full-speech ()
   "Real upstream tool dispatch must preserve rawOutput and changed output."

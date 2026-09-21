@@ -28,3 +28,10 @@ launch and uninstall when installation finishes.
 An idle first startup offers speech testing, rate and output settings, voices,
 the tutorial and manual. The startup toggle is saved per Emacs profile.
 Reopen the screen with C-h W or M-x emacsvox-welcome.
+
+** Agent Shell
+
+Agent Shell 0.78.1 support keeps brackets editable at the persistent prompt
+while the agent works. Viewport submission feedback distinguishes queueing
+from steering, including the override command and unsupported-steering
+fallback. Full header speech includes the optional cumulative cost indicator.

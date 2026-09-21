@@ -16,7 +16,7 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 Indirect:
 emacsvox.info-1: 384
-emacsvox.info-2: 314403
+emacsvox.info-2: 315273
 
 Tag Table:
 (Indirect)
@@ -111,33 +111,33 @@ Node: Desktop Applications260724
 Node: Notmuch Mail268866
 Ref: Notmuch fields and privacy278581
 Node: Agent Shell284289
-Node: EAT Terminal Access296760
-Node: Running Terminal Based Applications314403
-Node: Starting Term315358
-Node: Term Input Modes316197
-Node: Term Speech Feedback317357
-Node: Reviewing The Term Screen318551
-Node: Term Help And Recovery320452
-Node: Emacsvox Keyboard Commands321351
-Node: Copyright323596
-Node: Acknowledgments324183
-Node: Developer Guide325209
-Node: Documentation Maintenance326373
-Node: Speech Server Protocols331173
-Ref: Testing A Direct Legacy Server337080
-Ref: Commands That Queue Output337639
-Ref: Commands That Set State340673
-Node: Integration Maintenance343267
-Ref: Background startup ownership and failure recovery346109
-Ref: Supported Emacs versions349262
-Ref: Native Windows builds351941
-Ref: Offline Windows development bundle354214
-Ref: Public Windows installer previews363267
-Ref: Remote preview validation366331
-Ref: Internal ownership and renderer tests386561
-Ref: Upstream contract layers390141
-Node: Authoring Sound Packs417890
-Node: Concept Index421155
+Node: EAT Terminal Access297630
+Node: Running Terminal Based Applications315273
+Node: Starting Term316228
+Node: Term Input Modes317067
+Node: Term Speech Feedback318227
+Node: Reviewing The Term Screen319421
+Node: Term Help And Recovery321322
+Node: Emacsvox Keyboard Commands322221
+Node: Copyright324466
+Node: Acknowledgments325053
+Node: Developer Guide326079
+Node: Documentation Maintenance327243
+Node: Speech Server Protocols332043
+Ref: Testing A Direct Legacy Server337950
+Ref: Commands That Queue Output338509
+Ref: Commands That Set State341543
+Node: Integration Maintenance344137
+Ref: Background startup ownership and failure recovery346979
+Ref: Supported Emacs versions350132
+Ref: Native Windows builds352811
+Ref: Offline Windows development bundle355084
+Ref: Public Windows installer previews364137
+Ref: Remote preview validation367201
+Ref: Internal ownership and renderer tests387431
+Ref: Upstream contract layers391011
+Node: Authoring Sound Packs418760
+Node: Concept Index422025
 
 End Tag Table
 

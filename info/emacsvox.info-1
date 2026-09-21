@@ -5786,6 +5786,15 @@ existing feedback.  Submitted transcript text is history rather than
 editable prompt input.  Press ‘C-c C-c’ to ask Agent Shell to interrupt
 an active request; its normal confirmation setting still applies.
 
+   With Agent Shell's persistent prompt enabled, you can keep typing
+while the agent works.  Brackets and table navigation letters remain
+ordinary input at that prompt.  In the viewport editor, Emacsvox
+announces whether a prompt was submitted, queued, or sent for steering,
+and whether the editor stays open.  The normal and override send
+commands follow Agent Shell's configured busy routes, including queueing
+when the provider does not support steering.  “Steering sent” confirms
+dispatch; the agent's acceptance or refusal follows separately.
+
    Emacsvox speaks routine content only at complete turn boundaries.  A
 network pause does not make a partial answer sound complete.  A
 cancelled, refused, or failed turn reports its outcome without replacing
@@ -5811,6 +5820,12 @@ identify the session.  In the viewport prompt editor, continuing a list
 announces its bullet or next number and indentation.  Indenting and
 dedenting announce the new indentation; leaving an empty list item
 announces that the list ended.
+
+   Use ‘M-x emacsvox-agent-shell-speak-header’ to hear the full session
+header.  When ‘agent-shell-show-cost-indicator’ is enabled and the
+provider reports a positive cost, this includes the cumulative cost with
+Agent Shell's currency and rounding.  Brief announcements when entering
+a session stay concise.
 
 10.2 Choose automatic speech and privacy
 ========================================
