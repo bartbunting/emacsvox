@@ -2992,12 +2992,12 @@ is the same as for the Emacs builtin `other-window'."
 (defun emacsvox-ask-how-to-speak (unit-name prompt)
   "Argument UNIT-NAME specifies kind of unit that is being spoken.
 Argument PROMPT specifies the prompt to display."
-  (if prompt
-      (message
-       (format "Press s to speak start of %s, r for rest of  %s. \
- Any  key for entire %s "
-               unit-name unit-name unit-name)))
-  (let ((char (read-char)))
+  (let ((char
+         (read-char
+          (when prompt
+            (format
+             "Press s to speak start of %s, r for rest of %s. Any key for entire %s "
+             unit-name unit-name unit-name)))))
     (cond
      ((= char ?s) -1)
      ((= char ?r) 1)

@@ -45,14 +45,67 @@
       (should (fboundp function))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-input-prompts-never-use-notification-speech ()
+  "Event, key, and multiple-choice prompts all use main speech."
+  (let ((emacsvox-speak-messages t)
+        (emacsvox-last-message nil)
+        (emacsvox-read-char-prompt-cache nil)
+        speech)
+    (cl-letf (((symbol-function 'tts-notify)
+               (lambda (&rest _) (ert-fail "Prompt used notification speech")))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push text speech)))
+              ((symbol-function 'emacsvox-icon) #'ignore)
+              ((symbol-function 'ems--log-message) #'ignore)
+              ((symbol-function 'sox-tones) #'ignore)
+              ((symbol-function 'tts-speak-list) #'ignore))
+      (dolist (target (cons 'read-event emacsvox-test--input-before-targets))
+        (funcall (intern (format "emacsvox--advice-%s-before" target))
+                 "Continue?"))
+      (emacsvox--advice-read-multiple-choice-before
+       "Continue?" '((?y "yes") (?n "no"))))
+    (should (equal speech (make-list 7 "Continue?")))))
+
+(ert-deftest emacsvox-reading-unit-prompt-is-spoken-once-on-main ()
+  "Reading choices keep their full instructions and return the chosen extent."
+  (dolist (unit '("buffer" "line" "paragraph" "page" "word" "sexp"))
+    (dolist (choice '((?s . -1) (?r . 1) (?x . nil)))
+      (let ((unread-command-events (list (car choice)))
+            (emacsvox-speak-messages t)
+            (emacsvox-last-message nil)
+            (emacsvox-read-char-prompt-cache nil)
+            speech notifications)
+        (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                  ((symbol-function 'tts-speak)
+                   (lambda (text) (push text speech)))
+                  ((symbol-function 'tts-notify)
+                   (lambda (text &rest _) (push text notifications))))
+          (should (equal (emacsvox-ask-how-to-speak unit t) (cdr choice))))
+        (should-not notifications)
+        (should
+         (equal speech
+                (list (format
+                       "Press s to speak start of %s, r for rest of %s. Any key for entire %s "
+                       unit unit unit))))
+        (should (equal emacsvox-read-char-prompt-cache (car speech)))))))
+
+(ert-deftest emacsvox-reading-unit-quick-choice-preserves-selection ()
+  "A quick choice still reads its key without the full instructions."
+  (let ((unread-command-events (list ?r))
+        (emacsvox-speak-messages nil)
+        (emacsvox-last-message nil)
+        (emacsvox-read-char-prompt-cache nil))
+    (should (= 1 (emacsvox-ask-how-to-speak "paragraph" nil)))
+    (should-not emacsvox-read-char-prompt-cache)))
+
 (ert-deftest emacsvox-read-event-advice-uses-explicit-prompt ()
   "Event-reading feedback uses its prompt argument directly."
-  (let (notifications)
-    (cl-letf (((symbol-function 'tts-notify)
-               (lambda (text) (push text notifications))))
+  (let (speech)
+    (cl-letf (((symbol-function 'tts-speak)
+               (lambda (text) (push text speech))))
       (emacsvox--advice-read-event-before "Press a key")
       (emacsvox--advice-read-event-before nil))
-    (should (equal notifications '("Press a key")))))
+    (should (equal speech '("Press a key")))))
 
 (ert-deftest emacsvox-read-multiple-choice-preserves-feedback ()
   "Multiple-choice feedback formats short and detailed choices."
@@ -61,8 +114,8 @@
                (lambda (icon) (push (list 'icon icon) events)))
               ((symbol-function 'ems--log-message)
                (lambda (text) (push (list 'log text) events)))
-              ((symbol-function 'tts-notify)
-               (lambda (text) (push (list 'notify text) events)))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push (list 'speak text) events)))
               ((symbol-function 'sox-tones)
                (lambda (&rest arguments)
                  (push (list 'tones arguments) events)))
@@ -76,7 +129,7 @@
       (nreverse events)
       '((icon open-object)
         (log "Continue? y: yes: accept\n n: no: decline")
-        (notify "Continue? ")
+        (speak "Continue? ")
         (tones (2 2))
         (speak-list ("y: yes" "n: no")))))))
 
@@ -88,15 +141,15 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-notify)
-               (lambda (text) (push (list 'notify text) events))))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-read-key-before "Continue?"))
     (should (equal emacsvox-last-message "Continue?"))
     (should (equal emacsvox-read-char-prompt-cache "Continue?"))
     (should
      (equal
       (nreverse events)
-      '((icon char) (notify "Continue?"))))))
+      '((icon char) (speak "Continue?"))))))
 
 (ert-deftest emacsvox-read-key-advice-respects-silenced-messages ()
   "A caller can suppress key-reader speech without losing prompt state."
@@ -106,8 +159,8 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-notify)
-               (lambda (text) (push (list 'notify text) events))))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-read-key-before "Continue?"))
     (should (equal emacsvox-last-message "Continue?"))
     (should (equal emacsvox-read-char-prompt-cache "Continue?"))
@@ -156,14 +209,13 @@ Return the reader's result and the speech and stop events in order."
     (should
      (equal (seq-take events 4)
             '((stop all) (icon open-object) (icon pwd)
-              (notify "Password for /sudo:root@localhost: "))))
+              (speak "Password for /sudo:root@localhost: "))))
     ;; Ordinary navigation may read the prompt again, but masking must not
     ;; replace it with a dot or stop it after setup.
     (should
      (equal (seq-filter (lambda (event) (memq (car event) '(stop notify)))
                         events)
-            '((stop all)
-              (notify "Password for /sudo:root@localhost: "))))))
+            '((stop all))))))
 
 (ert-deftest emacsvox-read-passwd-edit-feedback-does-not-repeat-on-navigation ()
   "Typing and deletion produce masked feedback; intervening motion does not."
@@ -172,8 +224,7 @@ Return the reader's result and the speech and stop events in order."
     (should (equal result ""))
     (should
      (equal (seq-filter (lambda (event) (eq (car event) 'notify)) events)
-            '((notify "Password for /sudo:root@localhost: ")
-              (notify "dot") (notify "dot"))))))
+            '((notify "dot") (notify "dot"))))))
 
 (ert-deftest emacsvox-read-passwd-default-is-not-spoken ()
   "A default password is returned without being included in prompt speech."
@@ -183,7 +234,7 @@ Return the reader's result and the speech and stop events in order."
     (should
      (equal (seq-filter (lambda (event) (memq (car event) '(speak notify)))
                         events)
-            '((notify "Password for /sudo:root@localhost: "))))))
+            '((speak "Password for /sudo:root@localhost: "))))))
 
 (ert-deftest emacsvox-read-passwd-confirmation-announces-each-prompt ()
   "Confirmation uses its own prompt and resets password edit tracking."
@@ -191,9 +242,9 @@ Return the reader's result and the speech and stop events in order."
                (emacsvox-test--read-password "x RET x RET" t)))
     (should (equal result "x"))
     (should
-     (equal (seq-filter (lambda (event) (eq (car event) 'notify)) events)
-            '((notify "Password for /sudo:root@localhost: ")
-              (notify "dot") (notify "Confirm password: ")
+     (equal (seq-filter (lambda (event) (memq (car event) '(speak notify))) events)
+            '((speak "Password for /sudo:root@localhost: ")
+              (notify "dot") (speak "Confirm password: ")
               (notify "dot"))))))
 
 (ert-deftest emacsvox-read-passwd-character-feedback-respects-visibility ()

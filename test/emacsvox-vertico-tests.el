@@ -427,7 +427,7 @@
             (lambda (scope) (push (list 'stop scope) events)))
            ((symbol-function 'emacsvox-icon)
             (lambda (icon) (push (list 'icon icon) events)))
-           ((symbol-function 'tts-notify)
+           ((symbol-function 'tts-speak)
             (lambda (&rest _)
               (ert-fail "Generic minibuffer setup duplicated Vertico speech")))
            ((symbol-function 'minibuffer-prompt)
@@ -474,7 +474,7 @@
       (cl-letf
           (((symbol-function 'tts-stop) #'ignore)
            ((symbol-function 'emacsvox-icon) #'ignore)
-           ((symbol-function 'tts-notify)
+           ((symbol-function 'tts-speak)
             (lambda (content &rest _) (setq spoken content))))
         (emacsvox-minibuffer-setup-hook))
       (should

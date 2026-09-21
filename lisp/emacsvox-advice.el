@@ -787,7 +787,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 (defun emacsvox--advice-read-event-before (&optional prompt &rest _)
   "Speak PROMPT before reading an event."
-  (when prompt (tts-notify prompt)))
+  (when prompt (tts-speak prompt)))
 
 (advice-add
  'read-event :before #'emacsvox--advice-read-event-before
@@ -811,7 +811,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     (emacsvox-icon 'open-object)
     (ems--log-message
      (concat prompt (mapconcat #'identity details "\n ")))
-    (tts-notify prompt)
+    (tts-speak prompt)
     (sox-tones 2 2)
     (tts-speak-list spoken-choices)))
 
@@ -1179,7 +1179,7 @@ Treat unknown state as hidden."
                  (when emacsvox-speak-messages
                    (emacsvox-icon 'char)
                    (tts-with-punctuations
-                    'all (tts-notify (or prompt "key")))))
+                    'all (tts-speak (or prompt "key")))))
                (advice-add
                 ',target :before #',function '((name . emacsvox))))))
         targets)))
@@ -2725,11 +2725,11 @@ Keep the owner because multi-buffer searches can end in a different buffer.")
      ((bound-and-true-p read-passwd-mode)
       ;; Announce after the setup stop, and never include a default secret.
       (emacsvox-icon 'pwd)
-      (tts-notify (minibuffer-prompt)))
+      (tts-speak (minibuffer-prompt)))
      ((not vertico-owns-content-p)
       (tts-with-punctuations
        'all
-       (tts-notify
+       (tts-speak
         (concat
          (buffer-string)
          (if (stringp minibuffer-default) minibuffer-default ""))))))))
