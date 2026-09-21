@@ -160,13 +160,15 @@
 
 (defun emacsvox-markdown--submit-text (text facts occasion)
   "Submit Markdown TEXT under FACTS and OCCASION."
-  (emacsvox-aural-submit
-   text :facts facts :module 'markdown :occasion occasion))
+  (let ((emacsvox-aural-submission-facts facts))
+    (emacsvox-aural-submit
+     text :facts facts :module 'markdown :occasion occasion)))
 
 (defun emacsvox-markdown--submit-actions (facts occasion)
   "Submit action-only Markdown FACTS under OCCASION."
-  (emacsvox-aural-submit-actions
-   :facts facts :module 'markdown :occasion occasion))
+  (let ((emacsvox-aural-submission-facts facts))
+    (emacsvox-aural-submit-actions
+     :facts facts :module 'markdown :occasion occasion)))
 
 (defun emacsvox-markdown--submit-message (text facts occasion)
   "Display and natively present Markdown TEXT under FACTS and OCCASION."
@@ -256,23 +258,26 @@ as the optional argument to `emacsvox-speak-line'."
                      source-start source-end))))
         (setq line-facts (list :line-condition condition))))
     (setq facts (emacsvox-markdown--merge-facts facts line-facts))
-    (if content
-        (emacsvox-aural-submit
-         (emacsvox-markdown--remove-captured-source-icon
-          content source-icon source-offset source-length)
+    ;; Navigation binds generic facts.  Keep the completed Markdown facts
+    ;; authoritative when the submission inherits its dynamic context.
+    (let ((emacsvox-aural-submission-facts facts))
+      (if content
+          (emacsvox-aural-submit
+           (emacsvox-markdown--remove-captured-source-icon
+            content source-icon source-offset source-length)
+           :facts facts
+           :context context
+           :module 'markdown
+           :occasion occasion
+           :compatibility-actions
+           (mapcar #'emacsvox-aural-compatibility-icon icons))
+        (emacsvox-aural-submit-actions
          :facts facts
          :context context
          :module 'markdown
          :occasion occasion
          :compatibility-actions
-         (mapcar #'emacsvox-aural-compatibility-icon icons))
-      (emacsvox-aural-submit-actions
-       :facts facts
-       :context context
-       :module 'markdown
-       :occasion occasion
-       :compatibility-actions
-       (mapcar #'emacsvox-aural-compatibility-icon icons)))))
+         (mapcar #'emacsvox-aural-compatibility-icon icons))))))
 
 (defun emacsvox-markdown-speak-heading ()
   "Speak the current heading with level information."

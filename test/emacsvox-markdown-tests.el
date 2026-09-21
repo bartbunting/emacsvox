@@ -169,7 +169,8 @@
     (insert "## Shared heading\n")
     (setq major-mode 'markdown-mode)
     (goto-char (point-min))
-    (let (line-presentation command-presentation)
+    (let ((emacsvox-aural-submission-facts '(:events (focus-entered)))
+          line-presentation command-presentation)
       (cl-letf
           (((symbol-function 'tts-speak)
             (lambda (_)
@@ -309,6 +310,49 @@
           :markdown-navigation-kind line :line-condition empty)))
       (should (eq (plist-get submission :module) 'markdown))
       (should (eq (plist-get submission :occasion) 'navigation)))))
+
+(ert-deftest emacsvox-markdown-navigation-preserves-blank-line-tones ()
+  "Navigation's generic facts must not hide Markdown's blank-line tones."
+  (require 'emacsvox-advice)
+  (dolist (reading-mode '(nil t))
+    (dolist (line '("" " \t"))
+      (with-temp-buffer
+        (insert "before\n" line "\nafter\n")
+        (markdown-mode)
+        (goto-char (point-min))
+        (let ((emacsvox-markdown-reading-mode reading-mode)
+              (line-move-visual nil)
+              (visual-line-mode nil)
+              (tts-quiet nil)
+              (tts-speaker-process 'speaker)
+              (emacsvox-aural-presentation-history nil)
+              events)
+          (cl-letf
+              (((symbol-function 'process-live-p)
+                (lambda (process) (eq process 'speaker)))
+               ((symbol-function 'tts-initialize)
+                (lambda () (ert-fail "Reinitialized a live speaker")))
+               ((symbol-function 'tts-speak)
+                (lambda (&rest _) (ert-fail "Spoke a blank line")))
+               ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
+                (lambda (pitch duration mode)
+                  (push (list 'tone pitch duration mode) events)))
+               ((symbol-function 'tts--protocol-dispatch)
+                (lambda () (push 'dispatch events))))
+            (dolist (command '(next-line previous-line))
+              (setq events nil)
+              (goto-char (point-min))
+              (when (eq command 'previous-line) (forward-line 2))
+              (call-interactively command)
+              (should (= (line-number-at-pos) 2))
+              (should
+               (equal
+                (nreverse events)
+                (list
+                 (list 'tone (if (or reading-mode (string-empty-p line))
+                                 130.8 261.6)
+                       150 'overlay)
+                 'dispatch))))))))))
 
 (ert-deftest emacsvox-markdown-structural-lines-submit-action-feedback ()
   "Table separators and reference definitions cannot leave stale speech."
