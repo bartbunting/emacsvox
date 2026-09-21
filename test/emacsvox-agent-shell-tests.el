@@ -8875,6 +8875,36 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (equal (string-trim (substring-no-properties spoken))
                      "elisp")))))
 
+(ert-deftest emacsvox-agent-shell-response-navigation-omits-table-borders ()
+  "Real response navigation and continuous speech omit rendered table chrome."
+  (dolist (unicode '(nil t))
+    (with-temp-buffer
+      (setq major-mode 'agent-shell-mode)
+      (setq-local agent-shell-section-functions nil)
+      (let ((agent-shell-markdown-table-use-unicode-borders unicode))
+        (insert "Transcript\n")
+        (emacsvox-agent-shell-test--render-response-section
+         :namespace-id "table-test" :block-id "1-agent_message_chunk"
+         :body "Before\n\n| Available data | Adds |\n|---|---|\n| Applications | Dates |\n\nAfter"))
+      (let ((source (buffer-string))
+            (emacsvox-agent-shell--block-navigation-type 'agent-response))
+        (should (string-match-p (if unicode "│" "|") source))
+        (goto-char (point-min))
+        (let* ((events (emacsvox-agent-shell-test--capture-events
+                        (cl-letf (((symbol-function 'set-transient-map) #'ignore))
+                          (emacsvox-agent-shell-repeat-next-block))))
+               (speech (cadr (seq-find (lambda (event) (eq (car event) 'speak)) events)))
+               (continuous (emacsvox-agent-shell--prepare-speech-text source)))
+          (dolist (text (list speech continuous))
+            (should (stringp text))
+            (should-not (string-match-p "[│─├┼┤|]" text))
+            (dolist (cell '("Before" "Available data" "Adds" "Applications" "Dates" "After"))
+              (should (string-match-p cell text)))))
+        (should (equal-including-properties source (buffer-string)))
+        (goto-char (point-min))
+        (search-forward (if unicode "│" "|"))
+        (should (eq (char-before) (if unicode ?│ ?|)))))))
+
 (ert-deftest emacsvox-agent-shell-visual-chrome-filter-is-property-scoped ()
   "Ordinary matching Unicode characters should remain available to speech."
   (with-temp-buffer
@@ -9014,9 +9044,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should
          (eq (emacsvox-agent-shell-test--face-at-text spoken "Heading")
              'agent-shell-markdown-header-1))
+        (should-not (string-match-p "│" spoken))
         (should
-         (eq (emacsvox-agent-shell-test--face-at-text spoken "│")
-             'agent-shell-markdown-table-border))
+         (eq (emacsvox-agent-shell-test--face-at-text spoken "Name")
+             'agent-shell-markdown-table-header))
         ;; Exercise the same copy primitive used by `tts-speak'.
         (with-temp-buffer
           (let ((yank-excluded-properties tts-yank-excluded-properties))

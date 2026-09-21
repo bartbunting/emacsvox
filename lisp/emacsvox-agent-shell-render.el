@@ -284,6 +284,35 @@ to a semantic thought fragment so ordinary faced text is never suppressed."
                 end))))
         (and (< position end) position)))))
 
+(defun emacsvox-agent-shell--without-table-borders-for-speech (text)
+  "Return TEXT with rendered table borders replaced by spacing.
+Require table provenance and the border face, preserving literal characters
+in cells, prose and source blocks.  Keep the source and cell properties intact."
+  (let ((position 0)
+        (end (length text))
+        (table-present
+         (text-property-not-all
+          0 (length text) 'agent-shell-markdown-table-source nil text))
+        changed parts)
+    (while (and table-present (< position end))
+      (let* ((next (next-property-change position text end))
+             (border
+              (and (get-text-property position 'agent-shell-markdown-table-source text)
+                   (not (get-text-property
+                         position 'agent-shell-markdown-source-block-body text))
+                   (or (emacsvox-agent-shell--face-spec-includes-p
+                        (get-text-property position 'face text)
+                        'agent-shell-markdown-table-border)
+                       (emacsvox-agent-shell--face-spec-includes-p
+                        (get-text-property position 'font-lock-face text)
+                        'agent-shell-markdown-table-border)))))
+        (push (if border
+                  (progn (setq changed t) " ")
+                (substring text position next))
+              parts)
+        (setq position next)))
+    (if changed (apply #'concat (nreverse parts)) text)))
+
 (defun emacsvox-agent-shell--remove-visual-chrome-for-speech (text)
   "Return TEXT without Agent Shell's decorative fragment prefixes.
 Remove property-scoped fold indicators from every fragment.  For semantic
@@ -292,6 +321,7 @@ Rendered source-block copy controls are likewise omitted from continuous
 speech; item navigation announces their action semantically.
 Only the returned speech copy changes; pointwise character review still names
 the original characters in the buffer."
+  (setq text (emacsvox-agent-shell--without-table-borders-for-speech text))
   (let ((position 0)
         (length (length text))
         removals)

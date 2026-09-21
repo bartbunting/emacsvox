@@ -1274,6 +1274,10 @@ diagonals, double arrows and curved arrows. For example, =← ↑ → ↓= becom
 /left arrow up arrow right arrow down arrow/. Symbols outside the emoji table,
 such as =⇒= and =⟶=, use their Unicode names. Text and emoji presentation
 selectors are supported; unknown joined or accented sequences remain intact.
+Box-drawing characters also receive their Unicode names: for example, =│=
+becomes /box drawings light vertical/. This includes light, heavy, double,
+rounded and dashed borders and junctions. The same naming settings and limits
+apply; custom names can shorten names you use frequently.
 Foreign-language letters and unrelated symbols retain the existing fallback
 behaviour. Exact character inspection also retains its existing behaviour.
 

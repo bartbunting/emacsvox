@@ -3761,7 +3761,12 @@ PREDICATE receives TEXT and the start position of each property run."
                  position 'invisible nil end)
                 end)))
           (unless (invisible-p position)
-            (push (buffer-substring-no-properties position next) parts))
+            ;; Keep renderer provenance until decorative table borders have
+            ;; been removed; plain copies cannot distinguish them from data.
+            (push (substring-no-properties
+                   (emacsvox-agent-shell--without-table-borders-for-speech
+                    (buffer-substring position next)))
+                  parts))
           (setq position next)))
       (let ((text (string-trim (string-join (nreverse parts)))))
         (unless (string-empty-p text) text)))))

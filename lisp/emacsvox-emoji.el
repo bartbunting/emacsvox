@@ -54,6 +54,16 @@ selector.  Joined sequences and other combining characters stay intact."
             (list :name (downcase name) :source 'unicode-arrow
                   :unicode-name name :emacs-version emacs-version)))))))
 
+(defun emacsvox-emoji--box-drawing-data (sequence)
+  "Return the Unicode name of a complete box-drawing SEQUENCE.
+Only a single character in the Box Drawing block qualifies.  Joined or
+accented sequences retain their original text."
+  (when (and (stringp sequence) (= (length sequence) 1)
+             (<= #x2500 (aref sequence 0) #x257F))
+    (when-let* ((name (get-char-code-property (aref sequence 0) 'name)))
+      (list :name (downcase name) :source 'unicode-box-drawing
+            :unicode-name name :emacs-version emacs-version))))
+
 (defun emacsvox-emoji--lookup (sequence)
   "Return a bundled name and data evidence for SEQUENCE, or a diagnostic.
 Arrows prefer emoji names, then use their exact Unicode symbol names.
@@ -79,7 +89,8 @@ Failures are data, never speech errors.  No network or display is involved."
                       :name-sequence lookup-sequence
                       :emacs-version emacs-version
                       :data-file (symbol-file 'emoji--names 'defvar))
-              (or arrow (list :diagnostic 'missing-name))))
+              (or arrow (emacsvox-emoji--box-drawing-data sequence)
+                  (list :diagnostic 'missing-name))))
         (list :diagnostic 'unavailable-data))
     (error (list :diagnostic 'unavailable-data))))
 
@@ -95,8 +106,8 @@ mode hook.  Source buffers keep their original text."
 
 (defcustom emacsvox-emoji-approved-sequences t
   "Complete sequences eligible for automatic speech naming.
-The default t uses Emacs's emoji table, Unicode arrow and harpoon names,
-and custom names.  A list of strings restricts naming to those complete
+The default t uses Emacs's emoji table, Unicode arrow, harpoon and box-drawing
+names, and custom names.  A list of strings restricts naming to those complete
 sequences; inclusion does not imply that this Emacs version supplies a name."
   :type '(choice (const :tag "All named emoji" t)
                  (repeat :tag "Only these sequences" string))
@@ -106,7 +117,7 @@ sequences; inclusion does not imply that this Emacs version supplies a name."
   "Maximum eligible occurrences per speech object or preview sample.
 Accepts zero through 64; repetitions count separately.  The default 64 allows
 ordinary decorated messages to retain their preferred speech engine.
-Above this limit, the entire item retains its emoji and arrows."
+Above this limit, the entire item retains its emoji, arrows and box drawings."
   :type 'natnum :group 'emacsvox-emoji)
 
 (defcustom emacsvox-emoji-custom-names nil
@@ -198,8 +209,8 @@ Keep unknown joined sequences intact without depending on font composition."
 
 (defun emacsvox-emoji--eligible-p (sequence policy)
   "Whether complete SEQUENCE is eligible for naming under POLICY.
-The full-table policy requires an emoji, Unicode arrow or custom name,
-never a name for part of a sequence or an unrelated Unicode character."
+The full-table policy requires an emoji, Unicode arrow, box-drawing or custom
+name, never a name for part of a sequence or an unrelated Unicode character."
   (if (eq (plist-get policy :approved) t)
       (or (assoc sequence (plist-get policy :names))
           (plist-get (emacsvox-emoji--lookup sequence) :name))

@@ -19,6 +19,30 @@
   (should (eq (plist-get (emacsvox-emoji--lookup "🔮‍🚀") :diagnostic)
               'missing-name)))
 
+(ert-deftest emacsvox-emoji-box-drawings-have-complete-unicode-names ()
+  "Every box-drawing character has bounded naming and source evidence."
+  (cl-loop for character from #x2500 to #x257F do
+           (let ((data (emacsvox-emoji--lookup (char-to-string character))))
+             (should (eq (plist-get data :source) 'unicode-box-drawing))
+             (should (emacsvox-emoji--valid-name-p (plist-get data :name)))
+             (should (equal (plist-get data :name)
+                            (downcase (get-char-code-property character 'name))))))
+  (dolist (sequence '("│́" "│‍🚀" "│️" "■"))
+    (should-not (emacsvox-emoji--box-drawing-data sequence))))
+
+(ert-deftest emacsvox-emoji-box-drawings-respect-naming-policy ()
+  "Box drawing names retain limits, opt-outs, custom names and sequence bounds."
+  (dolist (text '("│ │ │" "│́" "│‍🚀"))
+    (should (equal (plist-get (emacsvox-emoji--prepare text (emacsvox-emoji-test--policy)) :text)
+                   text)))
+  (should (equal (plist-get (emacsvox-emoji--prepare
+                            "│" (emacsvox-emoji-test--policy :enabled nil)) :text) "│"))
+  (should (equal (plist-get (emacsvox-emoji--prepare
+                            "│" (emacsvox-emoji-test--policy :approved '("🔮"))) :text) "│"))
+  (should (equal (plist-get (emacsvox-emoji--prepare
+                            "│" (emacsvox-emoji-test--policy :names '(("│" . "vertical line")))) :text)
+                 "vertical line")))
+
 (ert-deftest emacsvox-emoji-text-right-arrow-uses-bundled-name ()
   "Ordinary menu-path arrows are named without changing the source text."
   (let* ((text "Aural Home → Sounds and output → Output volumes")

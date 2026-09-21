@@ -25,7 +25,9 @@
   "Repeated emoji and arrow families keep style through both speech paths."
   (dolist (entry '(("🤔Dinner? 🍕🍕🍕" . "thinking face Dinner? pizza pizza pizza")
                    ("← ↑ → ↓ ⇒ ⟶"
-                    . "left arrow up arrow right arrow down arrow rightwards double arrow long rightwards arrow")))
+                    . "left arrow up arrow right arrow down arrow rightwards double arrow long rightwards arrow")
+                   ("│ ─ ├ ┼ ┤"
+                    . "box drawings light vertical box drawings light horizontal box drawings light vertical and right box drawings light vertical and horizontal box drawings light vertical and left")))
     (let* ((text (concat "Read " (propertize (car entry) 'face 'bold)))
            (expected (concat "Read " (cdr entry)))
            (prepared (emacsvox-aural--prepare-emoji-text

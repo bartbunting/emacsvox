@@ -261,6 +261,11 @@ Moving into a rendered Markdown table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
 the ordinary Agent Shell keys.
 
+Continuous speech and response-block reading omit rendered table borders and
+keep the cell text. Decorative borders therefore do not force a switch to a
+different speech engine. Literal box-drawing characters in prose or code remain
+available to symbol naming and exact character inspection.
+
 #+attr_texinfo: :indic kbd :compact t
 - <right> ::
 

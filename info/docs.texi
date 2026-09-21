@@ -9143,8 +9143,8 @@ helper, which can fall back to naming the first character of a sequence.
 @defvar {User Option} emacsvox-emoji-approved-sequences
 @verbatim
 Complete sequences eligible for automatic speech naming.
-The default t uses Emacs’s emoji table, Unicode arrow and harpoon names,
-and custom names.  A list of strings restricts naming to those complete
+The default t uses Emacs’s emoji table, Unicode arrow, harpoon and box-drawing
+names, and custom names.  A list of strings restricts naming to those complete
 sequences; inclusion does not imply that this Emacs version supplies a name.
 @end verbatim
 
@@ -9178,7 +9178,7 @@ nil
 Maximum eligible occurrences per speech object or preview sample.
 Accepts zero through 64; repetitions count separately.  The default 64 allows
 ordinary decorated messages to retain their preferred speech engine.
-Above this limit, the entire item retains its emoji and arrows.
+Above this limit, the entire item retains its emoji, arrows and box drawings.
 @end verbatim
 
 Default Value:

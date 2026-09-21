@@ -147,6 +147,27 @@
   (let ((text "▶ ✶ Thinking ⧉"))
     (should (eq (emacsvox-agent-shell--remove-visual-chrome-for-speech text) text))))
 
+(ert-deftest emacsvox-agent-shell-render-table-borders-preserve-data ()
+  "Remove only authenticated borders, retaining cell voices and literal glyphs."
+  (dolist (property '(face font-lock-face))
+    (let* ((border (propertize "│" property '(bold agent-shell-markdown-table-border)
+                               'agent-shell-markdown-table-source t))
+           (cell (propertize "A│B" 'face 'agent-shell-markdown-table-header
+                             'agent-shell-markdown-table-source t))
+           (literal (propertize "│" property 'agent-shell-markdown-table-border))
+           (code (propertize "│" property 'agent-shell-markdown-table-border
+                             'agent-shell-markdown-table-source t
+                             'agent-shell-markdown-source-block-body t))
+           (text (concat border cell border "\n" literal code))
+           (before (copy-sequence text))
+           (spoken (emacsvox-agent-shell--remove-visual-chrome-for-speech text)))
+      (should (equal (substring-no-properties spoken) " A│B \n││"))
+      (should (eq (get-text-property 1 'face spoken)
+                  'agent-shell-markdown-table-header))
+      (should (equal-including-properties text before))))
+  (let ((text "Literal │ ├──┼──┤ in prose"))
+    (should (eq text (emacsvox-agent-shell--remove-visual-chrome-for-speech text)))))
+
 (ert-deftest emacsvox-agent-shell-render-group-provenance-beats-tool-id ()
   "A thought-shaped tool ID needs renderer styling, in strings and buffers."
   (let* ((id "turn-agent_thought_chunk")

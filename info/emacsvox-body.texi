@@ -4028,6 +4028,10 @@ diagonals@comma{} double arrows and curved arrows. For example@comma{} @samp{←
 @emph{left arrow up arrow right arrow down arrow}. Symbols outside the emoji table@comma{}
 such as @samp{⇒} and @samp{⟶}@comma{} use their Unicode names. Text and emoji presentation
 selectors are supported; unknown joined or accented sequences remain intact.
+Box-drawing characters also receive their Unicode names: for example@comma{} @samp{│}
+becomes @emph{box drawings light vertical}. This includes light@comma{} heavy@comma{} double@comma{}
+rounded and dashed borders and junctions. The same naming settings and limits
+apply; custom names can shorten names you use frequently.
 Foreign-language letters and unrelated symbols retain the existing fallback
 behaviour. Exact character inspection also retains its existing behaviour.
 
@@ -6027,6 +6031,11 @@ list editing@comma{} setting changes@comma{} updated tool output@comma{} and cha
 Moving into a rendered Markdown table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
 the ordinary Agent Shell keys.
+
+Continuous speech and response-block reading omit rendered table borders and
+keep the cell text. Decorative borders therefore do not force a switch to a
+different speech engine. Literal box-drawing characters in prose or code remain
+available to symbol naming and exact character inspection.
 
 @table @kbd
 @item <right>

@@ -4042,9 +4042,13 @@ and curved arrows.  For example, ‘← ↑ → ↓’ becomes _left arrow up ar
 right arrow down arrow_.  Symbols outside the emoji table, such as ‘⇒’
 and ‘⟶’, use their Unicode names.  Text and emoji presentation selectors
 are supported; unknown joined or accented sequences remain intact.
-Foreign-language letters and unrelated symbols retain the existing
-fallback behaviour.  Exact character inspection also retains its
-existing behaviour.
+Box-drawing characters also receive their Unicode names: for example,
+‘│’ becomes _box drawings light vertical_.  This includes light, heavy,
+double, rounded and dashed borders and junctions.  The same naming
+settings and limits apply; custom names can shorten names you use
+frequently.  Foreign-language letters and unrelated symbols retain the
+existing fallback behaviour.  Exact character inspection also retains
+its existing behaviour.
 
    ‘emacsvox-emoji-maximum-count’ defaults to 64 occurrences, counting
 repetitions separately.  A subject such as ‘🤔Dinner? 🍕🍕🍕’ is spoken
@@ -5996,6 +6000,12 @@ change-review entry.
 Moving into a rendered Markdown table activates a contextual table map.
 It announces the table dimensions and current cell.  Leaving the table
 restores the ordinary Agent Shell keys.
+
+   Continuous speech and response-block reading omit rendered table
+borders and keep the cell text.  Decorative borders therefore do not
+force a switch to a different speech engine.  Literal box-drawing
+characters in prose or code remain available to symbol naming and exact
+character inspection.
 
 ‘<right>’
      Run ‘emacsvox-agent-shell-table-next-column’.
