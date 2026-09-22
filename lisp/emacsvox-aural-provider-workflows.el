@@ -874,7 +874,7 @@
      :value-type symbol
      :allowed-values
      (agent-response user-prompt thought tool-call activity-group plan
-                     permission error table source-block other))
+                     permission error table source-block heading link other))
     (agent-tool-status
      :kind attribute
      :summary "The current lifecycle status of an Agent Shell tool call"

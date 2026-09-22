@@ -6322,9 +6322,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
 
 (ert-deftest emacsvox-agent-shell-context-navigation-preserves-input ()
   "Contextual navigation keys should self-insert in both prompt editors."
-  (dolist (case `((agent-shell-mode ,agent-shell-mode-map "[]tT")
+  (dolist (case `((agent-shell-mode ,agent-shell-mode-map "[]tThHkKuUlLeEjJ")
                   (agent-shell-viewport-edit-mode
-                   ,agent-shell-viewport-edit-mode-map "[]tT")))
+                   ,agent-shell-viewport-edit-mode-map "[]tThHkKuUlLeEjJ")))
     (let ((buffer (generate-new-buffer " *agent-shell-bracket-input-test*")))
       (unwind-protect
           (save-window-excursion
@@ -6502,6 +6502,195 @@ Return speech events plus the target character.  DIRECTION is `forward' or
               (should (= (point) origin))))
           (should (equal-including-properties source (buffer-string))))
         (emacsvox-agent-shell--table-navigation-cleanup)))))
+
+(ert-deftest emacsvox-agent-shell-letter-navigation-finds-agent-responses ()
+  "Response keys skip other block types and announce the destination body."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (save-window-excursion
+      (emacsvox-agent-shell-test--with-semantic-blocks
+        (switch-to-buffer (current-buffer))
+        (setq major-mode mode)
+        (use-local-map (if (eq mode 'agent-shell-mode) agent-shell-mode-map
+                         agent-shell-viewport-view-mode-map))
+        (setq emacsvox-agent-shell--speech-control-active t)
+        (goto-char (point-min))
+        (let ((source (buffer-string)))
+          (cl-letf (((symbol-function 'set-transient-map) #'ignore))
+            (dolist (case '(("j" "First answer with a second line")
+                            ("j" "Second answer")
+                            ("j" "No later agent response block.")
+                            ("J" "First answer with a second line")
+                            ("J" "No earlier agent response block.")))
+              (let* ((origin (point))
+                     (events (emacsvox-agent-shell-test--capture-events
+                               (execute-kbd-macro (kbd (car case)))))
+                     (speech (seq-filter (lambda (event) (eq (car event) 'speak))
+                                         events)))
+                (should (equal speech (list (list 'speak (cadr case)))))
+                (if (string-prefix-p "No " (cadr case))
+                    (should (= origin (point)))
+                  (should (eq (plist-get
+                               (emacsvox-agent-shell--block-location-at-point)
+                               :type) 'agent-response))))))
+          (should (equal-including-properties source (buffer-string))))))))
+
+(ert-deftest emacsvox-agent-shell-letter-response-navigation-skips-enclosing-answer ()
+  "Backward response navigation skips the answer containing code or a table."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (save-window-excursion
+      (with-temp-buffer
+        (switch-to-buffer (current-buffer))
+        (insert "start\n")
+        (emacsvox-agent-shell-test--render-response-section
+         :namespace-id "turn" :block-id "1-agent_message_chunk" :body "First answer")
+        (emacsvox-agent-shell-test--render-response-section
+         :namespace-id "turn" :block-id "2-agent_message_chunk"
+         :body "Second answer\n| A | B |\n|---|---|\n| cell | data |\n\n```elisp\n(+ 1 2)\n```\n")
+        (setq major-mode mode)
+        (use-local-map (if (eq mode 'agent-shell-mode) agent-shell-mode-map
+                         agent-shell-viewport-view-mode-map))
+        (setq emacsvox-agent-shell--speech-control-active t)
+        (cl-letf (((symbol-function 'set-transient-map) #'ignore))
+          (dolist (text '("cell" "(+ 1 2)"))
+            (goto-char (point-min))
+            (search-forward text)
+            (backward-char 1)
+            (emacsvox-agent-shell-test--capture-events
+              (execute-kbd-macro (kbd "J")))
+            (should (string-match-p
+                     "First answer"
+                     (plist-get (emacsvox-agent-shell--fragment-location-at-position
+                                 (point)) :body)))))))))
+
+(ert-deftest emacsvox-agent-shell-letter-navigation-finds-rendered-content ()
+  "Letters skip whole headings, links, and source blocks in either view."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (save-window-excursion
+      (emacsvox-agent-shell-test--with-rendered-table
+          (concat "before\n# First **bold** heading\n"
+                  "See [first link](https://example.org/one).\n"
+                  "```elisp\n(+ 1 2)\n```\n"
+                  "## Second heading\n"
+                  "See [second link](https://example.org/two).\n"
+                  "```python\nprint(1)\n```\nafter\n")
+        (switch-to-buffer (current-buffer))
+        (setq major-mode mode)
+        (use-local-map (if (eq mode 'agent-shell-mode) agent-shell-mode-map
+                         agent-shell-viewport-view-mode-map))
+        (setq emacsvox-agent-shell--speech-control-active t)
+        (goto-char (point-min))
+        (let ((source (buffer-string)))
+          (cl-letf (((symbol-function 'set-transient-map) #'ignore))
+            (dolist (case '(("h" "First bold heading" "First bold heading")
+                            ("h" "Second heading" "Second heading")
+                            ("H" "First bold heading" "First bold heading")
+                            ("l" "first link" "first link")
+                            ("l" "second link" "second link")
+                            ("L" "first link" "first link")
+                            ("k" "(+ 1 2)" "elisp source block, 1 line.")
+                            ("k" "print(1)" "python source block, 1 line.")
+                            ("K" "(+ 1 2)" "elisp source block, 1 line.")))
+              (let* ((events (emacsvox-agent-shell-test--capture-events
+                               (execute-kbd-macro (kbd (car case)))))
+                     (speech (seq-filter (lambda (event) (eq (car event) 'speak))
+                                         events)))
+                (should (looking-at (regexp-quote (nth 1 case))))
+                (should (equal speech (list (list 'speak (nth 2 case)))))))
+          (should (equal-including-properties source (buffer-string)))))))))
+
+(ert-deftest emacsvox-agent-shell-letter-navigation-skips-current-and-hidden ()
+  "Inline styling and hidden content must not create extra destinations."
+  (emacsvox-agent-shell-test--with-rendered-table
+      (concat "before\n# First **bold** heading\n"
+              "[first](https://example.org/1)\n"
+              "# Hidden heading\n[hidden](https://example.org/2)\n"
+              "# Last heading\n[last](https://example.org/3)\nafter\n")
+    (setq major-mode 'agent-shell-mode)
+    (setq-local case-fold-search nil)
+    (goto-char (point-min))
+    (search-forward "Hidden heading")
+    (let ((start (match-beginning 0)))
+      (search-forward "hidden")
+      (put-text-property start (point) 'invisible t))
+    (cl-letf (((symbol-function 'set-transient-map) #'ignore))
+      (dolist (case '((heading "First bold heading" "Last heading")
+                      (link "first" "last")))
+        (goto-char (point-min))
+        (search-forward (nth 1 case))
+        (backward-char 2)
+        (emacsvox-agent-shell-test--capture-events
+          (emacsvox-agent-shell--navigate-block-at-point 'forward (car case)))
+        (should (looking-at (nth 2 case)))
+        (let ((origin (point)))
+          (emacsvox-agent-shell-test--capture-events
+            (should-not (emacsvox-agent-shell--jump-block-of-type
+                         (car case) 'forward)))
+          (should (= origin (point))))
+        (forward-char 1)
+        (emacsvox-agent-shell-test--capture-events
+          (emacsvox-agent-shell--navigate-block-at-point 'backward (car case)))
+        (should (looking-at (nth 1 case)))))))
+
+(ert-deftest emacsvox-agent-shell-letter-navigation-finds-submitted-prompts ()
+  "User-message navigation excludes the live editor and preserves its draft."
+  (save-window-excursion
+    (with-temp-buffer
+      (switch-to-buffer (current-buffer))
+      (setq major-mode 'agent-shell-mode)
+      (use-local-map agent-shell-mode-map)
+      (setq emacsvox-agent-shell--speech-control-active t)
+      (insert "start\n")
+      (dolist (text '("first" "second"))
+        (insert (propertize "Agent> " 'font-lock-face 'agent-shell-prompt)
+                text (propertize "\n" 'shell-maker--marker t)))
+      (let ((start (point)))
+        (insert (propertize "Agent> " 'font-lock-face 'comint-highlight-prompt))
+        (setq-local comint-last-prompt
+                    (cons (copy-marker start) (copy-marker (point))))
+        (insert "draft"))
+      (let ((source (buffer-string)))
+        (goto-char (point-min))
+        (cl-letf (((symbol-function 'set-transient-map) #'ignore))
+          (dolist (case '(("u" "Agent> first") ("u" "Agent> second")
+                          ("u" "Agent> second") ("U" "Agent> first")))
+            (emacsvox-agent-shell-test--capture-events
+              (execute-kbd-macro (kbd (car case))))
+            (should (looking-at (cadr case)))))
+        (should (equal-including-properties source (buffer-string)))))))
+
+(ert-deftest emacsvox-agent-shell-letter-navigation-finds-failed-tools ()
+  "Error keys include failed tools without matching failure words in output."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (save-window-excursion
+      (with-temp-buffer
+        (switch-to-buffer (current-buffer))
+        (insert "start\n")
+        (dolist (case '(("good" "completed") ("bad" "failed")))
+          (agent-shell-ui-update-fragment
+           (agent-shell-ui-make-fragment-model
+            :namespace-id "turn" :block-id (car case)
+            :label-left (agent-shell--make-status-kind-label :status (cadr case))
+            :label-right (car case) :body "Error: failed is just output text"
+            :group-id "activity" :group-label "Activity")
+           :navigation 'never :expanded nil))
+        (agent-shell-ui-update-fragment
+         (agent-shell-ui-make-fragment-model
+          :namespace-id "turn" :block-id "failed-request-1" :body "Request failed")
+         :navigation 'never :expanded t)
+        (setq major-mode mode)
+        (use-local-map (if (eq mode 'agent-shell-mode) agent-shell-mode-map
+                         agent-shell-viewport-view-mode-map))
+        (setq emacsvox-agent-shell--speech-control-active t)
+        (goto-char (point-min))
+        (cl-letf (((symbol-function 'set-transient-map) #'ignore))
+          (dolist (case '(("e" "turn-bad") ("e" "turn-failed-request-1")
+                          ("E" "turn-bad")))
+            (emacsvox-agent-shell-test--capture-events
+              (execute-kbd-macro (kbd (car case))))
+            (should (equal (map-elt (get-text-property (point) 'agent-shell-ui-state)
+                                   :qualified-id)
+                           (cadr case)))
+            (should-not (invisible-p (point)))))))))
 
 (ert-deftest emacsvox-agent-shell-table-cell-feedback-is-customizable ()
   "Table feedback should support every title set and both orderings."
@@ -7136,7 +7325,15 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (emacsvox-agent-shell-test--capture-events
             (execute-kbd-macro (kbd "C-M-<left>")))
           (should (= (point) origin))
-          (should (looking-at "Alice")))
+          (should (looking-at "Alice"))
+          (dolist (case '(("C-M-<right>" "Engineer")
+                          ("C-M-<up>" "Role")
+                          ("C-M-<down>" "Engineer")
+                          ("C-M-<down>" "after")))
+            (emacsvox-agent-shell-test--capture-events
+              (execute-kbd-macro (kbd (car case))))
+            (should (looking-at (cadr case))))
+          (should-not emacsvox-agent-shell--table-navigation-active))
         (emacsvox-agent-shell--table-navigation-cleanup)))))
 
 (ert-deftest emacsvox-agent-shell-table-feedback-handles-title-cells-and-blanks ()
@@ -9576,10 +9773,11 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           "Tests passed")))
 
 (ert-deftest emacsvox-agent-shell-persistent-prompt-keeps-navigation-keys-editable ()
-  "Busy live prompts insert brackets and table keys; transcript keys navigate."
+  "Busy live prompts insert navigation letters; transcript keys navigate."
   (skip-unless (fboundp 'agent-shell--point-in-live-input-p))
   (dolist (busy '(nil t))
-    (dolist (key '("[" "]" "t" "T" "n" "p"))
+    (dolist (key '("[" "]" "t" "T" "h" "H" "k" "K"
+                   "u" "U" "l" "L" "e" "E" "j" "J" "n" "p"))
       (save-window-excursion
         (emacsvox-agent-shell-test--with-current-session
           (switch-to-buffer (current-buffer))

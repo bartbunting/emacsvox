@@ -5835,7 +5835,7 @@ text is history rather than editable prompt input.  Press @kbd{C-c C-c} to ask A
 an active request; its normal confirmation setting still applies.
 
 With Agent Shell's persistent prompt enabled@comma{} you can keep typing while the
-agent works.  Brackets and table navigation letters remain ordinary input at
+agent works.  Brackets and navigation letters remain ordinary input at
 that prompt.  Reading the live prompt says “Agent working” and whether normal
 submission will queue or steer the input.  A pending permission is announced
 as “Waiting for permission.”  These cues also precede the first line of a draft;
@@ -5983,6 +5983,38 @@ tool@comma{} plan@comma{} permission@comma{} error@comma{} source-block@comma{} 
 navigation reports the block type@comma{} visibility@comma{} and a bounded body preview.
 
 @table @kbd
+@item h / H
+Use @kbd{h} (@code{emacsvox-agent-shell-next-heading}) or
+@kbd{H} (@code{emacsvox-agent-shell-previous-heading}).
+Move to the next or previous visible Markdown heading and speak its text.
+@item k / K
+Use @kbd{k} (@code{emacsvox-agent-shell-next-source-block}) or
+@kbd{K} (@code{emacsvox-agent-shell-previous-source-block}).
+Move to the next or previous source block and announce its language and
+line count. Inside a table@comma{} lowercase @kbd{k} remains the table
+copy prefix; use @code{M-x emacsvox-agent-shell-next-source-block} to jump forward
+to code from there.
+@item u / U
+Use @kbd{u} (@code{emacsvox-agent-shell-next-user-prompt}) or
+@kbd{U} (@code{emacsvox-agent-shell-previous-user-prompt}).
+Move to the next or previous submitted user prompt@comma{} skipping the live editor.
+@item j / J
+Use @kbd{j} (@code{emacsvox-agent-shell-next-response}) or
+@kbd{J} (@code{emacsvox-agent-shell-previous-response}).
+Move to the next or previous agent response and speak its bounded body
+preview. These keys skip intervening thoughts@comma{} tools@comma{} and other block types.
+From code or a table inside an answer@comma{} they skip that enclosing answer.
+@item l / L
+Use @kbd{l} (@code{emacsvox-agent-shell-next-link}) or
+@kbd{L} (@code{emacsvox-agent-shell-previous-link}).
+Move to the next or previous visible rendered link and speak its label.
+Press @kbd{RET} to follow the link.
+@item e / E
+Use @kbd{e} (@code{emacsvox-agent-shell-next-error}) or
+@kbd{E} (@code{emacsvox-agent-shell-previous-error}).
+Move to the next or previous error or failed tool call. Failed tools are
+identified by Agent Shell's error styling in their status label@comma{} rather than
+by words in their output.
 @item ]
 Run @code{emacsvox-agent-shell-next-block-at-point} to find the next block of
 the current semantic type.
@@ -5998,12 +6030,13 @@ to its preceding occurrence.
 @end table
 
 After a successful typed jump@comma{} @kbd{]} and @kbd{[} repeat in that direction.
-At an editable live prompt@comma{} bare brackets insert themselves instead of taking
-over prompt editing.
+At an editable live prompt or viewport editor@comma{} bare brackets and navigation
+letters insert themselves instead of taking over prompt editing.
 
 @section Read and copy source blocks
 
-Use typed block navigation to reach a source block@comma{} then:
+Use @kbd{k} or @kbd{K}@comma{} or typed block navigation@comma{} to
+reach a source block@comma{} then:
 
 @table @kbd
 @item C-c C-b
@@ -6032,7 +6065,8 @@ Moving into a rendered Markdown table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
 the ordinary Agent Shell keys.
 Plain Left and Right move by character within the table. Use Control-Meta-Left
-and Control-Meta-Right to move between columns.
+and Control-Meta-Right to move between columns. Control-Meta-Up and
+Control-Meta-Down move between logical rows@comma{} retaining the current column.
 
 Outside editable input@comma{} press @kbd{t} for the next table or
 @kbd{T} for the previous table. These keys skip the current table
@@ -6055,9 +6089,11 @@ Run @code{emacsvox-agent-shell-table-next-column}.
 @item C-M-<left>
 Run @code{emacsvox-agent-shell-table-previous-column}.
 @item <down>
-Run @code{emacsvox-agent-shell-table-next-row}.
+Run @code{emacsvox-agent-shell-table-next-row}. Also bound to
+@kbd{C-M-<down>}.
 @item <up>
-Run @code{emacsvox-agent-shell-table-previous-row}.
+Run @code{emacsvox-agent-shell-table-previous-row}. Also bound to
+@kbd{C-M-<up>}.
 @item M-<down>
 Run @code{emacsvox-agent-shell-table-exit-forward}.
 @item M-<up>

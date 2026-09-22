@@ -37,7 +37,7 @@ text is history rather than editable prompt input.  Press @@texinfo:@kbd{C-c C-c
 an active request; its normal confirmation setting still applies.
 
 With Agent Shell's persistent prompt enabled, you can keep typing while the
-agent works.  Brackets and table navigation letters remain ordinary input at
+agent works.  Brackets and navigation letters remain ordinary input at
 that prompt.  Reading the live prompt says “Agent working” and whether normal
 submission will queue or steer the input.  A pending permission is announced
 as “Waiting for permission.”  These cues also precede the first line of a draft;
@@ -202,6 +202,44 @@ tool, plan, permission, error, source-block, and table locations.  Emacsvox
 navigation reports the block type, visibility, and a bounded body preview.
 
 #+attr_texinfo: :indic kbd :compact t
+- h / H ::
+
+  Use @@texinfo:@kbd{h}@@ (~emacsvox-agent-shell-next-heading~) or
+  @@texinfo:@kbd{H}@@ (~emacsvox-agent-shell-previous-heading~).
+  Move to the next or previous visible Markdown heading and speak its text.
+- k / K ::
+
+  Use @@texinfo:@kbd{k}@@ (~emacsvox-agent-shell-next-source-block~) or
+  @@texinfo:@kbd{K}@@ (~emacsvox-agent-shell-previous-source-block~).
+  Move to the next or previous source block and announce its language and
+  line count. Inside a table, lowercase @@texinfo:@kbd{k}@@ remains the table
+  copy prefix; use ~M-x emacsvox-agent-shell-next-source-block~ to jump forward
+  to code from there.
+- u / U ::
+
+  Use @@texinfo:@kbd{u}@@ (~emacsvox-agent-shell-next-user-prompt~) or
+  @@texinfo:@kbd{U}@@ (~emacsvox-agent-shell-previous-user-prompt~).
+  Move to the next or previous submitted user prompt, skipping the live editor.
+- j / J ::
+
+  Use @@texinfo:@kbd{j}@@ (~emacsvox-agent-shell-next-response~) or
+  @@texinfo:@kbd{J}@@ (~emacsvox-agent-shell-previous-response~).
+  Move to the next or previous agent response and speak its bounded body
+  preview. These keys skip intervening thoughts, tools, and other block types.
+  From code or a table inside an answer, they skip that enclosing answer.
+- l / L ::
+
+  Use @@texinfo:@kbd{l}@@ (~emacsvox-agent-shell-next-link~) or
+  @@texinfo:@kbd{L}@@ (~emacsvox-agent-shell-previous-link~).
+  Move to the next or previous visible rendered link and speak its label.
+  Press @@texinfo:@kbd{RET}@@ to follow the link.
+- e / E ::
+
+  Use @@texinfo:@kbd{e}@@ (~emacsvox-agent-shell-next-error~) or
+  @@texinfo:@kbd{E}@@ (~emacsvox-agent-shell-previous-error~).
+  Move to the next or previous error or failed tool call. Failed tools are
+  identified by Agent Shell's error styling in their status label, rather than
+  by words in their output.
 - ] ::
 
   Run ~emacsvox-agent-shell-next-block-at-point~ to find the next block of
@@ -220,15 +258,16 @@ navigation reports the block type, visibility, and a bounded body preview.
   to its preceding occurrence.
 
 After a successful typed jump, @@texinfo:@kbd{]}@@ and @@texinfo:@kbd{[}@@ repeat in that direction.
-At an editable live prompt, bare brackets insert themselves instead of taking
-over prompt editing.
+At an editable live prompt or viewport editor, bare brackets and navigation
+letters insert themselves instead of taking over prompt editing.
 
 ** Read and copy source blocks
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Use typed block navigation to reach a source block, then:
+Use @@texinfo:@kbd{k}@@ or @@texinfo:@kbd{K}@@, or typed block navigation, to
+reach a source block, then:
 
 #+attr_texinfo: :indic kbd :compact t
 - C-c C-b ::
@@ -261,7 +300,8 @@ Moving into a rendered Markdown table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
 the ordinary Agent Shell keys.
 Plain Left and Right move by character within the table. Use Control-Meta-Left
-and Control-Meta-Right to move between columns.
+and Control-Meta-Right to move between columns. Control-Meta-Up and
+Control-Meta-Down move between logical rows, retaining the current column.
 
 Outside editable input, press @@texinfo:@kbd{t}@@ for the next table or
 @@texinfo:@kbd{T}@@ for the previous table. These keys skip the current table
@@ -289,10 +329,12 @@ available to symbol naming and exact character inspection.
   Run ~emacsvox-agent-shell-table-previous-column~.
 - <down> ::
 
-  Run ~emacsvox-agent-shell-table-next-row~.
+  Run ~emacsvox-agent-shell-table-next-row~. Also bound to
+  @@texinfo:@kbd{C-M-<down>}@@.
 - <up> ::
 
-  Run ~emacsvox-agent-shell-table-previous-row~.
+  Run ~emacsvox-agent-shell-table-previous-row~. Also bound to
+  @@texinfo:@kbd{C-M-<up>}@@.
 - M-<down> ::
 
   Run ~emacsvox-agent-shell-table-exit-forward~.

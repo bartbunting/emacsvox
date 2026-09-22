@@ -69,7 +69,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1572 commands and 221 options.
+This chapter documents a total of 1584 commands and 221 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -918,12 +918,72 @@ Select a semantic block type and move to its next occurrence.
 @end format
 @end deffn
 
+@subsubsection emacsvox-agent-shell-next-error
+@deffn {Command} emacsvox-agent-shell-next-error
+@findex emacsvox-agent-shell-next-error
+
+@format
+Move to the next error or failed tool call.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-heading
+@deffn {Command} emacsvox-agent-shell-next-heading
+@findex emacsvox-agent-shell-next-heading
+
+@format
+Move to the next visible Markdown heading.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-link
+@deffn {Command} emacsvox-agent-shell-next-link
+@findex emacsvox-agent-shell-next-link
+
+@format
+Move to the next visible rendered link.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-response
+@deffn {Command} emacsvox-agent-shell-next-response
+@findex emacsvox-agent-shell-next-response
+
+@format
+Move to the next agent response and announce its body.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-source-block
+@deffn {Command} emacsvox-agent-shell-next-source-block
+@findex emacsvox-agent-shell-next-source-block
+
+@format
+Move to the next source block and announce its language and line count.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
 @subsubsection emacsvox-agent-shell-next-table
 @deffn {Command} emacsvox-agent-shell-next-table
 @findex emacsvox-agent-shell-next-table
 
 @format
 Move to the next rendered Markdown table and announce it.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-user-prompt
+@deffn {Command} emacsvox-agent-shell-next-user-prompt
+@findex emacsvox-agent-shell-next-user-prompt
+
+@format
+Move to the next submitted user prompt.
 At an editable prompt, a directly bound character key inserts itself instead.
 @end format
 @end deffn
@@ -947,12 +1007,72 @@ Select a semantic block type and move to its previous occurrence.
 @end format
 @end deffn
 
+@subsubsection emacsvox-agent-shell-previous-error
+@deffn {Command} emacsvox-agent-shell-previous-error
+@findex emacsvox-agent-shell-previous-error
+
+@format
+Move to the previous error or failed tool call.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-heading
+@deffn {Command} emacsvox-agent-shell-previous-heading
+@findex emacsvox-agent-shell-previous-heading
+
+@format
+Move to the previous visible Markdown heading.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-link
+@deffn {Command} emacsvox-agent-shell-previous-link
+@findex emacsvox-agent-shell-previous-link
+
+@format
+Move to the previous visible rendered link.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-response
+@deffn {Command} emacsvox-agent-shell-previous-response
+@findex emacsvox-agent-shell-previous-response
+
+@format
+Move to the previous agent response and announce its body.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-source-block
+@deffn {Command} emacsvox-agent-shell-previous-source-block
+@findex emacsvox-agent-shell-previous-source-block
+
+@format
+Move to the previous source block and announce its language and line count.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
 @subsubsection emacsvox-agent-shell-previous-table
 @deffn {Command} emacsvox-agent-shell-previous-table
 @findex emacsvox-agent-shell-previous-table
 
 @format
 Move to the previous rendered Markdown table and announce it.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-user-prompt
+@deffn {Command} emacsvox-agent-shell-previous-user-prompt
+@findex emacsvox-agent-shell-previous-user-prompt
+
+@format
+Move to the previous submitted user prompt.
 At an editable prompt, a directly bound character key inserts itself instead.
 @end format
 @end deffn

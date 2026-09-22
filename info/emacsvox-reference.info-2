@@ -12,6 +12,426 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: emacsvox-reference.info,  Node: emacsvox-eshell,  Next: emacsvox-ess,  Prev: emacsvox-erc,  Up: Emacsvox Commands And Options
+
+2.122 emacsvox-eshell
+=====================
+
+EShell is a shell implemented entirely in Emacs Lisp.  It is part of
+emacs 21 -and can also be used under Emacs 20.  This module
+speech-enables EShell
+
+
+File: emacsvox-reference.info,  Node: emacsvox-ess,  Next: emacsvox-etable,  Prev: emacsvox-eshell,  Up: Emacsvox Commands And Options
+
+2.123 emacsvox-ess
+==================
+
+ESS == Emacs Speaks Statistics This module makes ESS speak.
+
+
+File: emacsvox-reference.info,  Node: emacsvox-etable,  Next: emacsvox-eterm,  Prev: emacsvox-ess,  Up: Emacsvox Commands And Options
+
+2.124 emacsvox-etable
+=====================
+
+table.el provides rich table editing for emacs.  this module
+speech-enables table.el
+
+2.124.1 Emacsvox-Etable Commands
+--------------------------------
+
+2.124.1.1 emacsvox-etable-speak-cell
+....................................
+
+ -- Command: emacsvox-etable-speak-cell
+
+     Speak current cell.
+
+
+File: emacsvox-reference.info,  Node: emacsvox-eterm,  Next: emacsvox-eudc,  Prev: emacsvox-etable,  Up: Emacsvox Commands And Options
+
+2.125 emacsvox-eterm
+====================
+
+This module makes eterm talk.  Eterm is the new terminal emulator for
+Emacs.  Use of emacsvox with eterm really needs an info page.  At
+present, the only documentation is the source level documentation.  This
+module uses Control-t as an additional prefix key to allow the user To
+move around the terminal and have different parts spoken.
+
+2.125.1 Emacsvox-Eterm Commands
+-------------------------------
+
+2.125.1.1 emacsvox-eterm-copy-region-to-register
+................................................
+
+ -- Command: emacsvox-eterm-copy-region-to-register (register)
+
+     Copy text from terminal to an Emacs REGISTER.
+     This copies  region delimited by the emacsvox eterm marker
+     set by command M-x emacsvox-eterm-set-marker and the
+     emacsvox eterm pointer to a register.
+
+     (fn REGISTER)
+
+2.125.1.2 emacsvox-eterm-define-window
+......................................
+
+ -- Command: emacsvox-eterm-define-window (id)
+
+     Prompt for a window ID.
+     The window is then define to be
+     the rectangle delimited by point and eterm mark.  This is to
+     be used when emacsvox is set to review mode inside an
+     eterm.
+
+     (fn ID)
+
+2.125.1.3 emacsvox-eterm-describe-window
+........................................
+
+ -- Command: emacsvox-eterm-describe-window (id)
+
+     Describe an eterm  window.
+     Description indicates eterm window coordinates and whether it is stretchable
+
+     (fn ID)
+
+2.125.1.4 emacsvox-eterm-goto-line
+..................................
+
+ -- Command: emacsvox-eterm-goto-line (line)
+
+     Move emacsvox eterm pointer to a specified LINE.
+
+     (fn LINE)
+
+2.125.1.5 emacsvox-eterm-kill-ring-save-region
+..............................................
+
+ -- Command: emacsvox-eterm-kill-ring-save-region
+
+     Copy text from terminal to kill ring.
+     This copies  region delimited by the emacsvox eterm marker
+     set by command M-x emacsvox-eterm-set-marker and the
+     emacsvox eterm pointer.
+
+2.125.1.6 emacsvox-eterm-maybe-send-raw
+.......................................
+
+ -- Command: emacsvox-eterm-maybe-send-raw
+
+     Send a raw character through if in the terminal buffer.
+     Execute end of line if
+     in a non eterm buffer if executed via C-e C-e
+
+2.125.1.7 emacsvox-eterm-paste-register
+.......................................
+
+ -- Command: emacsvox-eterm-paste-register (register)
+
+     Paste contents of REGISTER at current location.
+     If the specified register contains text, then that text is
+     sent to the terminal as if it were typed by the user.
+
+     (fn REGISTER)
+
+2.125.1.8 emacsvox-eterm-pointer-backward-word
+..............................................
+
+ -- Command: emacsvox-eterm-pointer-backward-word (count)
+
+     Move the pointer backward  by words.
+     Interactive numeric prefix arg specifies number of words to move.
+     Argument COUNT specifies number of words by which to move.
+
+     (fn COUNT)
+
+2.125.1.9 emacsvox-eterm-pointer-down
+.....................................
+
+ -- Command: emacsvox-eterm-pointer-down (count)
+
+     Move the pointer down a line.
+     Argument COUNT specifies number of lines by which to move.
+
+     (fn COUNT)
+
+2.125.1.10 emacsvox-eterm-pointer-forward-word
+..............................................
+
+ -- Command: emacsvox-eterm-pointer-forward-word (count)
+
+     Move the pointer forward by words.
+     Interactive numeric prefix arg specifies number of words to move.
+     Argument COUNT specifies number of words by which to move.
+
+     (fn COUNT)
+
+2.125.1.11 emacsvox-eterm-pointer-left
+......................................
+
+ -- Command: emacsvox-eterm-pointer-left (count)
+
+     Move the pointer left.
+     Argument COUNT specifies number of columns by which to move.
+
+     (fn COUNT)
+
+2.125.1.12 emacsvox-eterm-pointer-right
+.......................................
+
+ -- Command: emacsvox-eterm-pointer-right (count)
+
+     Move the pointer right.
+     Argument COUNT specifies number of columns by which to move.
+
+     (fn COUNT)
+
+2.125.1.13 emacsvox-eterm-pointer-to-bottom
+...........................................
+
+ -- Command: emacsvox-eterm-pointer-to-bottom
+
+     Move the pointer to the bottom  of the screen.
+
+2.125.1.14 emacsvox-eterm-pointer-to-cursor
+...........................................
+
+ -- Command: emacsvox-eterm-pointer-to-cursor
+
+     Move the pointer to the cursor.
+
+2.125.1.15 emacsvox-eterm-pointer-to-left-edge
+..............................................
+
+ -- Command: emacsvox-eterm-pointer-to-left-edge
+
+     Move the pointer to the right edge.
+
+2.125.1.16 emacsvox-eterm-pointer-to-next-color-change
+......................................................
+
+ -- Command: emacsvox-eterm-pointer-to-next-color-change (&optional
+          count)
+
+     Move the eterm pointer to the next color change.
+     This allows you to move between highlighted regions of the screen.
+     Optional argument COUNT specifies how many changes to skip.
+
+     (fn &optional COUNT)
+
+2.125.1.17 emacsvox-eterm-pointer-to-previous-color-change
+..........................................................
+
+ -- Command: emacsvox-eterm-pointer-to-previous-color-change (&optional
+          count)
+
+     Move the eterm pointer to the next color change.
+     This allows you to move between highlighted regions of the screen.
+     Optional argument COUNT specifies how many changes to skip.
+
+     (fn &optional COUNT)
+
+2.125.1.18 emacsvox-eterm-pointer-to-right-edge
+...............................................
+
+ -- Command: emacsvox-eterm-pointer-to-right-edge
+
+     Move the pointer to the right edge.
+
+2.125.1.19 emacsvox-eterm-pointer-to-top
+........................................
+
+ -- Command: emacsvox-eterm-pointer-to-top
+
+     Move the pointer to the top of the screen.
+
+2.125.1.20 emacsvox-eterm-pointer-up
+....................................
+
+ -- Command: emacsvox-eterm-pointer-up (count)
+
+     Move the pointer up a line.
+     Argument COUNT .specifies number of lines by which to move.
+
+     (fn COUNT)
+
+2.125.1.21 emacsvox-eterm-search-backward
+.........................................
+
+ -- Command: emacsvox-eterm-search-backward
+
+     Search backward on the terminal.
+
+2.125.1.22 emacsvox-eterm-search-forward
+........................................
+
+ -- Command: emacsvox-eterm-search-forward
+
+     Search forward on the terminal.
+
+2.125.1.23 emacsvox-eterm-set-filter-window
+...........................................
+
+ -- Command: emacsvox-eterm-set-filter-window (flag)
+
+     Prompt for the id of a predefined window,
+     and set the ‘filter’ window to it.
+     Non-nil interactive prefix arg ‘unsets’ the filter window;
+     this is equivalent to having the entire terminal as the filter window (this is
+     what eterm starts up with).
+     Setting the filter window results in emacsvox  only monitoring screen
+     activity within the filter window.
+
+     (fn FLAG)
+
+2.125.1.24 emacsvox-eterm-set-focus-window
+..........................................
+
+ -- Command: emacsvox-eterm-set-focus-window (flag)
+
+     Prompt for the id of a predefined window,
+     and set the ‘focus’ window to it.
+     Non-nil interactive prefix arg ‘unsets’ the focus window;
+     this is equivalent to having the entire terminal as the focus window (this is
+     what eterm starts up with).
+     Setting the focus window results in emacsvox  monitoring screen
+     and speaking that window upon seeing screen activity.
+
+     (fn FLAG)
+
+2.125.1.25 emacsvox-eterm-set-marker
+....................................
+
+ -- Command: emacsvox-eterm-set-marker
+
+     Set Emacsvox eterm marker.
+     This sets  the emacsvox eterm marker to the position pointed
+     to by the emacsvox eterm pointer.
+
+2.125.1.26 emacsvox-eterm-speak-cursor
+......................................
+
+ -- Command: emacsvox-eterm-speak-cursor
+
+     Speak cursor position.
+
+2.125.1.27 emacsvox-eterm-speak-pointer
+.......................................
+
+ -- Command: emacsvox-eterm-speak-pointer
+
+     Speak current pointer position.
+
+2.125.1.28 emacsvox-eterm-speak-pointer-char
+............................................
+
+ -- Command: emacsvox-eterm-speak-pointer-char (&optional prefix)
+
+     Speak char under eterm pointer.
+     Pronounces character phonetically unless  called with a PREFIX arg.
+
+     (fn &optional PREFIX)
+
+2.125.1.29 emacsvox-eterm-speak-pointer-line
+............................................
+
+ -- Command: emacsvox-eterm-speak-pointer-line
+
+     Speak the line the pointer is on.
+
+2.125.1.30 emacsvox-eterm-speak-pointer-word
+............................................
+
+ -- Command: emacsvox-eterm-speak-pointer-word
+
+     Speak the word  the pointer is on.
+
+2.125.1.31 emacsvox-eterm-speak-predefined-window
+.................................................
+
+ -- Command: emacsvox-eterm-speak-predefined-window
+
+     Speak a predefined eterm window between 1 and 10.
+
+2.125.1.32 emacsvox-eterm-speak-screen
+......................................
+
+ -- Command: emacsvox-eterm-speak-screen (&optional flag)
+
+     Speak the screen.  Default is to speak from the emacsvox pointer  to point.
+     Optional prefix arg FLAG causes region above
+     the Emacsvox pointer to be spoken.
+
+     (fn &optional FLAG)
+
+2.125.1.33 emacsvox-eterm-speak-window
+......................................
+
+ -- Command: emacsvox-eterm-speak-window (id)
+
+     Speak an eterm window.
+     Argument ID specifies the window.
+
+     (fn ID)
+
+2.125.1.34 emacsvox-eterm-toggle-filter-window
+..............................................
+
+ -- Command: emacsvox-eterm-toggle-filter-window
+
+     Toggle active state of filter window.
+
+2.125.1.35 emacsvox-eterm-toggle-focus-window
+.............................................
+
+ -- Command: emacsvox-eterm-toggle-focus-window
+
+     Toggle active state of focus window.
+
+2.125.1.36 emacsvox-eterm-toggle-pointer-mode
+.............................................
+
+ -- Command: emacsvox-eterm-toggle-pointer-mode (&optional prefix)
+
+     Toggle emacsvox eterm pointer mode.
+     With optional interactive prefix  arg, turn it on.
+     When emacsvox eterm is in pointer mode, the eterm read pointer
+     stays where it is rather than automatically moving to the terminal cursor when
+     there is terminal activity.
+
+2.125.1.37 emacsvox-eterm-toggle-review
+.......................................
+
+ -- Command: emacsvox-eterm-toggle-review
+
+     Toggle state of eterm review.
+     In review mode, you can move around the terminal and listen to the contents
+     without sending input to the terminal itself.
+
+2.125.1.38 emacsvox-eterm-yank-window
+.....................................
+
+ -- Command: emacsvox-eterm-yank-window (id)
+
+     Yank contents of  an eterm window at point.
+
+     (fn ID)
+
+2.125.1.39 emacsvox-toggle-eterm-autospeak
+..........................................
+
+ -- Command: emacsvox-toggle-eterm-autospeak (&optional prefix)
+
+     Toggle state of eterm autospeak.
+     When eterm autospeak is turned on and the terminal is in line
+     mode, all output to the terminal is automatically spoken.
+     Interactive prefix arg means toggle the global default value, and
+     then set the current local value to the result.
+
+
 File: emacsvox-reference.info,  Node: emacsvox-eudc,  Next: emacsvox-evil,  Prev: emacsvox-eterm,  Up: Emacsvox Commands And Options
 
 2.126 emacsvox-eudc

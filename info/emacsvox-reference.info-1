@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1572 commands and 221 options.
+   This chapter documents a total of 1584 commands and 221 options.
 
 * Menu:
 
@@ -1172,30 +1172,118 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      Select a semantic block type and move to its next occurrence.
 
-2.10.1.7 emacsvox-agent-shell-next-table
+2.10.1.7 emacsvox-agent-shell-next-error
 ........................................
+
+ -- Command: emacsvox-agent-shell-next-error
+
+     Move to the next error or failed tool call.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.8 emacsvox-agent-shell-next-heading
+..........................................
+
+ -- Command: emacsvox-agent-shell-next-heading
+
+     Move to the next visible Markdown heading.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.9 emacsvox-agent-shell-next-link
+.......................................
+
+ -- Command: emacsvox-agent-shell-next-link
+
+     Move to the next visible rendered link.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.10 emacsvox-agent-shell-next-response
+............................................
+
+ -- Command: emacsvox-agent-shell-next-response
+
+     Move to the next agent response and announce its body.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.11 emacsvox-agent-shell-next-source-block
+................................................
+
+ -- Command: emacsvox-agent-shell-next-source-block
+
+     Move to the next source block and announce its language and line count.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.12 emacsvox-agent-shell-next-table
+.........................................
 
  -- Command: emacsvox-agent-shell-next-table
 
      Move to the next rendered Markdown table and announce it.
      At an editable prompt, a directly bound character key inserts itself instead.
 
-2.10.1.8 emacsvox-agent-shell-previous-block-at-point
-.....................................................
+2.10.1.13 emacsvox-agent-shell-next-user-prompt
+...............................................
+
+ -- Command: emacsvox-agent-shell-next-user-prompt
+
+     Move to the next submitted user prompt.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.14 emacsvox-agent-shell-previous-block-at-point
+......................................................
 
  -- Command: emacsvox-agent-shell-previous-block-at-point
 
      Move to the previous block matching the semantic block at point.
      When invoked by ‘[’ at an editable prompt, insert that character instead.
 
-2.10.1.9 emacsvox-agent-shell-previous-block-of-type
-....................................................
+2.10.1.15 emacsvox-agent-shell-previous-block-of-type
+.....................................................
 
  -- Command: emacsvox-agent-shell-previous-block-of-type
 
      Select a semantic block type and move to its previous occurrence.
 
-2.10.1.10 emacsvox-agent-shell-previous-table
+2.10.1.16 emacsvox-agent-shell-previous-error
+.............................................
+
+ -- Command: emacsvox-agent-shell-previous-error
+
+     Move to the previous error or failed tool call.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.17 emacsvox-agent-shell-previous-heading
+...............................................
+
+ -- Command: emacsvox-agent-shell-previous-heading
+
+     Move to the previous visible Markdown heading.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.18 emacsvox-agent-shell-previous-link
+............................................
+
+ -- Command: emacsvox-agent-shell-previous-link
+
+     Move to the previous visible rendered link.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.19 emacsvox-agent-shell-previous-response
+................................................
+
+ -- Command: emacsvox-agent-shell-previous-response
+
+     Move to the previous agent response and announce its body.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.20 emacsvox-agent-shell-previous-source-block
+....................................................
+
+ -- Command: emacsvox-agent-shell-previous-source-block
+
+     Move to the previous source block and announce its language and line count.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.21 emacsvox-agent-shell-previous-table
 .............................................
 
  -- Command: emacsvox-agent-shell-previous-table
@@ -1203,63 +1291,71 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      Move to the previous rendered Markdown table and announce it.
      At an editable prompt, a directly bound character key inserts itself instead.
 
-2.10.1.11 emacsvox-agent-shell-repeat-next-block
+2.10.1.22 emacsvox-agent-shell-previous-user-prompt
+...................................................
+
+ -- Command: emacsvox-agent-shell-previous-user-prompt
+
+     Move to the previous submitted user prompt.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.23 emacsvox-agent-shell-repeat-next-block
 ................................................
 
  -- Command: emacsvox-agent-shell-repeat-next-block
 
      Move to the next occurrence of the selected semantic block type.
 
-2.10.1.12 emacsvox-agent-shell-repeat-previous-block
+2.10.1.24 emacsvox-agent-shell-repeat-previous-block
 ....................................................
 
  -- Command: emacsvox-agent-shell-repeat-previous-block
 
      Move to the previous occurrence of the selected semantic block type.
 
-2.10.1.13 emacsvox-agent-shell-select-background-speech-level
+2.10.1.25 emacsvox-agent-shell-select-background-speech-level
 .............................................................
 
  -- Command: emacsvox-agent-shell-select-background-speech-level
 
      Select the automatic speech level shared by background sessions.
 
-2.10.1.14 emacsvox-agent-shell-select-speech-level
+2.10.1.26 emacsvox-agent-shell-select-speech-level
 ..................................................
 
  -- Command: emacsvox-agent-shell-select-speech-level
 
      Select the automatic speech level for the current agent-shell session.
 
-2.10.1.15 emacsvox-agent-shell-speak-header
+2.10.1.27 emacsvox-agent-shell-speak-header
 ...........................................
 
  -- Command: emacsvox-agent-shell-speak-header
 
      Speak the full semantic header for the current agent-shell session.
 
-2.10.1.16 emacsvox-agent-shell-speak-last-response
+2.10.1.28 emacsvox-agent-shell-speak-last-response
 ..................................................
 
  -- Command: emacsvox-agent-shell-speak-last-response
 
      Speak the latest completed agent answer in full without moving point.
 
-2.10.1.17 emacsvox-agent-shell-speak-response-overview
+2.10.1.29 emacsvox-agent-shell-speak-response-overview
 ......................................................
 
  -- Command: emacsvox-agent-shell-speak-response-overview
 
      Speak a concise overview of the latest completed agent answer.
 
-2.10.1.18 emacsvox-agent-shell-speak-source-block
+2.10.1.30 emacsvox-agent-shell-speak-source-block
 .................................................
 
  -- Command: emacsvox-agent-shell-speak-source-block
 
      Read the complete rendered Markdown source block at point.
 
-2.10.1.19 emacsvox-agent-shell-table-copy-cell
+2.10.1.31 emacsvox-agent-shell-table-copy-cell
 ..............................................
 
  -- Command: emacsvox-agent-shell-table-copy-cell
@@ -1268,7 +1364,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      Remove renderer padding, borders, and text properties.  Preserve the complete
      logical value of a wrapped cell.
 
-2.10.1.20 emacsvox-agent-shell-table-copy-column
+2.10.1.32 emacsvox-agent-shell-table-copy-column
 ................................................
 
  -- Command: emacsvox-agent-shell-table-copy-column
@@ -1276,7 +1372,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      Copy the logical Markdown table column at point to the kill ring.
      Separate cells with newlines and omit Markdown separator syntax.
 
-2.10.1.21 emacsvox-agent-shell-table-copy-row
+2.10.1.33 emacsvox-agent-shell-table-copy-row
 .............................................
 
  -- Command: emacsvox-agent-shell-table-copy-row
@@ -1284,21 +1380,21 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      Copy the logical Markdown table row at point to the kill ring.
      Separate cells with tabs and omit Markdown separator syntax.
 
-2.10.1.22 emacsvox-agent-shell-table-exit-backward
+2.10.1.34 emacsvox-agent-shell-table-exit-backward
 ..................................................
 
  -- Command: emacsvox-agent-shell-table-exit-backward
 
      Leave the current Markdown table and move to preceding content.
 
-2.10.1.23 emacsvox-agent-shell-table-exit-forward
+2.10.1.35 emacsvox-agent-shell-table-exit-forward
 .................................................
 
  -- Command: emacsvox-agent-shell-table-exit-forward
 
      Leave the current Markdown table and move to following content.
 
-2.10.1.24 emacsvox-agent-shell-table-next-column
+2.10.1.36 emacsvox-agent-shell-table-next-column
 ................................................
 
  -- Command: emacsvox-agent-shell-table-next-column (&optional count)
@@ -1307,7 +1403,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      (fn &optional COUNT)
 
-2.10.1.25 emacsvox-agent-shell-table-next-row
+2.10.1.37 emacsvox-agent-shell-table-next-row
 .............................................
 
  -- Command: emacsvox-agent-shell-table-next-row (&optional count)
@@ -1316,7 +1412,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      (fn &optional COUNT)
 
-2.10.1.26 emacsvox-agent-shell-table-previous-column
+2.10.1.38 emacsvox-agent-shell-table-previous-column
 ....................................................
 
  -- Command: emacsvox-agent-shell-table-previous-column (&optional
@@ -1326,7 +1422,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      (fn &optional COUNT)
 
-2.10.1.27 emacsvox-agent-shell-table-previous-row
+2.10.1.39 emacsvox-agent-shell-table-previous-row
 .................................................
 
  -- Command: emacsvox-agent-shell-table-previous-row (&optional count)
@@ -1335,7 +1431,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      (fn &optional COUNT)
 
-2.10.1.28 emacsvox-agent-shell-table-select-speaking-method
+2.10.1.40 emacsvox-agent-shell-table-select-speaking-method
 ...........................................................
 
  -- Command: emacsvox-agent-shell-table-select-speaking-method
@@ -1345,35 +1441,35 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      switch between data-first and title-first ordering.  Speak the complete
      resulting configuration after the change.
 
-2.10.1.29 emacsvox-agent-shell-table-speak-cell
+2.10.1.41 emacsvox-agent-shell-table-speak-cell
 ...............................................
 
  -- Command: emacsvox-agent-shell-table-speak-cell
 
      Speak the logical Markdown table cell at point.
 
-2.10.1.30 emacsvox-agent-shell-table-speak-column
+2.10.1.42 emacsvox-agent-shell-table-speak-column
 .................................................
 
  -- Command: emacsvox-agent-shell-table-speak-column
 
      Speak the logical Markdown table column at point.
 
-2.10.1.31 emacsvox-agent-shell-table-speak-context
+2.10.1.43 emacsvox-agent-shell-table-speak-context
 ..................................................
 
  -- Command: emacsvox-agent-shell-table-speak-context
 
      Speak current Markdown table position and dimensions.
 
-2.10.1.32 emacsvox-agent-shell-table-speak-dimensions
+2.10.1.44 emacsvox-agent-shell-table-speak-dimensions
 .....................................................
 
  -- Command: emacsvox-agent-shell-table-speak-dimensions
 
      Speak the dimensions of the Markdown table at point.
 
-2.10.1.33 emacsvox-agent-shell-table-speak-row
+2.10.1.45 emacsvox-agent-shell-table-speak-row
 ..............................................
 
  -- Command: emacsvox-agent-shell-table-speak-row
@@ -9254,424 +9350,3 @@ http://www.cs.cmu.edu/~berez/irc/erc.el
      Default Value:
 
      nil
-
-
-
-File: emacsvox-reference.info,  Node: emacsvox-eshell,  Next: emacsvox-ess,  Prev: emacsvox-erc,  Up: Emacsvox Commands And Options
-
-2.122 emacsvox-eshell
-=====================
-
-EShell is a shell implemented entirely in Emacs Lisp.  It is part of
-emacs 21 -and can also be used under Emacs 20.  This module
-speech-enables EShell
-
-
-File: emacsvox-reference.info,  Node: emacsvox-ess,  Next: emacsvox-etable,  Prev: emacsvox-eshell,  Up: Emacsvox Commands And Options
-
-2.123 emacsvox-ess
-==================
-
-ESS == Emacs Speaks Statistics This module makes ESS speak.
-
-
-File: emacsvox-reference.info,  Node: emacsvox-etable,  Next: emacsvox-eterm,  Prev: emacsvox-ess,  Up: Emacsvox Commands And Options
-
-2.124 emacsvox-etable
-=====================
-
-table.el provides rich table editing for emacs.  this module
-speech-enables table.el
-
-2.124.1 Emacsvox-Etable Commands
---------------------------------
-
-2.124.1.1 emacsvox-etable-speak-cell
-....................................
-
- -- Command: emacsvox-etable-speak-cell
-
-     Speak current cell.
-
-
-File: emacsvox-reference.info,  Node: emacsvox-eterm,  Next: emacsvox-eudc,  Prev: emacsvox-etable,  Up: Emacsvox Commands And Options
-
-2.125 emacsvox-eterm
-====================
-
-This module makes eterm talk.  Eterm is the new terminal emulator for
-Emacs.  Use of emacsvox with eterm really needs an info page.  At
-present, the only documentation is the source level documentation.  This
-module uses Control-t as an additional prefix key to allow the user To
-move around the terminal and have different parts spoken.
-
-2.125.1 Emacsvox-Eterm Commands
--------------------------------
-
-2.125.1.1 emacsvox-eterm-copy-region-to-register
-................................................
-
- -- Command: emacsvox-eterm-copy-region-to-register (register)
-
-     Copy text from terminal to an Emacs REGISTER.
-     This copies  region delimited by the emacsvox eterm marker
-     set by command M-x emacsvox-eterm-set-marker and the
-     emacsvox eterm pointer to a register.
-
-     (fn REGISTER)
-
-2.125.1.2 emacsvox-eterm-define-window
-......................................
-
- -- Command: emacsvox-eterm-define-window (id)
-
-     Prompt for a window ID.
-     The window is then define to be
-     the rectangle delimited by point and eterm mark.  This is to
-     be used when emacsvox is set to review mode inside an
-     eterm.
-
-     (fn ID)
-
-2.125.1.3 emacsvox-eterm-describe-window
-........................................
-
- -- Command: emacsvox-eterm-describe-window (id)
-
-     Describe an eterm  window.
-     Description indicates eterm window coordinates and whether it is stretchable
-
-     (fn ID)
-
-2.125.1.4 emacsvox-eterm-goto-line
-..................................
-
- -- Command: emacsvox-eterm-goto-line (line)
-
-     Move emacsvox eterm pointer to a specified LINE.
-
-     (fn LINE)
-
-2.125.1.5 emacsvox-eterm-kill-ring-save-region
-..............................................
-
- -- Command: emacsvox-eterm-kill-ring-save-region
-
-     Copy text from terminal to kill ring.
-     This copies  region delimited by the emacsvox eterm marker
-     set by command M-x emacsvox-eterm-set-marker and the
-     emacsvox eterm pointer.
-
-2.125.1.6 emacsvox-eterm-maybe-send-raw
-.......................................
-
- -- Command: emacsvox-eterm-maybe-send-raw
-
-     Send a raw character through if in the terminal buffer.
-     Execute end of line if
-     in a non eterm buffer if executed via C-e C-e
-
-2.125.1.7 emacsvox-eterm-paste-register
-.......................................
-
- -- Command: emacsvox-eterm-paste-register (register)
-
-     Paste contents of REGISTER at current location.
-     If the specified register contains text, then that text is
-     sent to the terminal as if it were typed by the user.
-
-     (fn REGISTER)
-
-2.125.1.8 emacsvox-eterm-pointer-backward-word
-..............................................
-
- -- Command: emacsvox-eterm-pointer-backward-word (count)
-
-     Move the pointer backward  by words.
-     Interactive numeric prefix arg specifies number of words to move.
-     Argument COUNT specifies number of words by which to move.
-
-     (fn COUNT)
-
-2.125.1.9 emacsvox-eterm-pointer-down
-.....................................
-
- -- Command: emacsvox-eterm-pointer-down (count)
-
-     Move the pointer down a line.
-     Argument COUNT specifies number of lines by which to move.
-
-     (fn COUNT)
-
-2.125.1.10 emacsvox-eterm-pointer-forward-word
-..............................................
-
- -- Command: emacsvox-eterm-pointer-forward-word (count)
-
-     Move the pointer forward by words.
-     Interactive numeric prefix arg specifies number of words to move.
-     Argument COUNT specifies number of words by which to move.
-
-     (fn COUNT)
-
-2.125.1.11 emacsvox-eterm-pointer-left
-......................................
-
- -- Command: emacsvox-eterm-pointer-left (count)
-
-     Move the pointer left.
-     Argument COUNT specifies number of columns by which to move.
-
-     (fn COUNT)
-
-2.125.1.12 emacsvox-eterm-pointer-right
-.......................................
-
- -- Command: emacsvox-eterm-pointer-right (count)
-
-     Move the pointer right.
-     Argument COUNT specifies number of columns by which to move.
-
-     (fn COUNT)
-
-2.125.1.13 emacsvox-eterm-pointer-to-bottom
-...........................................
-
- -- Command: emacsvox-eterm-pointer-to-bottom
-
-     Move the pointer to the bottom  of the screen.
-
-2.125.1.14 emacsvox-eterm-pointer-to-cursor
-...........................................
-
- -- Command: emacsvox-eterm-pointer-to-cursor
-
-     Move the pointer to the cursor.
-
-2.125.1.15 emacsvox-eterm-pointer-to-left-edge
-..............................................
-
- -- Command: emacsvox-eterm-pointer-to-left-edge
-
-     Move the pointer to the right edge.
-
-2.125.1.16 emacsvox-eterm-pointer-to-next-color-change
-......................................................
-
- -- Command: emacsvox-eterm-pointer-to-next-color-change (&optional
-          count)
-
-     Move the eterm pointer to the next color change.
-     This allows you to move between highlighted regions of the screen.
-     Optional argument COUNT specifies how many changes to skip.
-
-     (fn &optional COUNT)
-
-2.125.1.17 emacsvox-eterm-pointer-to-previous-color-change
-..........................................................
-
- -- Command: emacsvox-eterm-pointer-to-previous-color-change (&optional
-          count)
-
-     Move the eterm pointer to the next color change.
-     This allows you to move between highlighted regions of the screen.
-     Optional argument COUNT specifies how many changes to skip.
-
-     (fn &optional COUNT)
-
-2.125.1.18 emacsvox-eterm-pointer-to-right-edge
-...............................................
-
- -- Command: emacsvox-eterm-pointer-to-right-edge
-
-     Move the pointer to the right edge.
-
-2.125.1.19 emacsvox-eterm-pointer-to-top
-........................................
-
- -- Command: emacsvox-eterm-pointer-to-top
-
-     Move the pointer to the top of the screen.
-
-2.125.1.20 emacsvox-eterm-pointer-up
-....................................
-
- -- Command: emacsvox-eterm-pointer-up (count)
-
-     Move the pointer up a line.
-     Argument COUNT .specifies number of lines by which to move.
-
-     (fn COUNT)
-
-2.125.1.21 emacsvox-eterm-search-backward
-.........................................
-
- -- Command: emacsvox-eterm-search-backward
-
-     Search backward on the terminal.
-
-2.125.1.22 emacsvox-eterm-search-forward
-........................................
-
- -- Command: emacsvox-eterm-search-forward
-
-     Search forward on the terminal.
-
-2.125.1.23 emacsvox-eterm-set-filter-window
-...........................................
-
- -- Command: emacsvox-eterm-set-filter-window (flag)
-
-     Prompt for the id of a predefined window,
-     and set the ‘filter’ window to it.
-     Non-nil interactive prefix arg ‘unsets’ the filter window;
-     this is equivalent to having the entire terminal as the filter window (this is
-     what eterm starts up with).
-     Setting the filter window results in emacsvox  only monitoring screen
-     activity within the filter window.
-
-     (fn FLAG)
-
-2.125.1.24 emacsvox-eterm-set-focus-window
-..........................................
-
- -- Command: emacsvox-eterm-set-focus-window (flag)
-
-     Prompt for the id of a predefined window,
-     and set the ‘focus’ window to it.
-     Non-nil interactive prefix arg ‘unsets’ the focus window;
-     this is equivalent to having the entire terminal as the focus window (this is
-     what eterm starts up with).
-     Setting the focus window results in emacsvox  monitoring screen
-     and speaking that window upon seeing screen activity.
-
-     (fn FLAG)
-
-2.125.1.25 emacsvox-eterm-set-marker
-....................................
-
- -- Command: emacsvox-eterm-set-marker
-
-     Set Emacsvox eterm marker.
-     This sets  the emacsvox eterm marker to the position pointed
-     to by the emacsvox eterm pointer.
-
-2.125.1.26 emacsvox-eterm-speak-cursor
-......................................
-
- -- Command: emacsvox-eterm-speak-cursor
-
-     Speak cursor position.
-
-2.125.1.27 emacsvox-eterm-speak-pointer
-.......................................
-
- -- Command: emacsvox-eterm-speak-pointer
-
-     Speak current pointer position.
-
-2.125.1.28 emacsvox-eterm-speak-pointer-char
-............................................
-
- -- Command: emacsvox-eterm-speak-pointer-char (&optional prefix)
-
-     Speak char under eterm pointer.
-     Pronounces character phonetically unless  called with a PREFIX arg.
-
-     (fn &optional PREFIX)
-
-2.125.1.29 emacsvox-eterm-speak-pointer-line
-............................................
-
- -- Command: emacsvox-eterm-speak-pointer-line
-
-     Speak the line the pointer is on.
-
-2.125.1.30 emacsvox-eterm-speak-pointer-word
-............................................
-
- -- Command: emacsvox-eterm-speak-pointer-word
-
-     Speak the word  the pointer is on.
-
-2.125.1.31 emacsvox-eterm-speak-predefined-window
-.................................................
-
- -- Command: emacsvox-eterm-speak-predefined-window
-
-     Speak a predefined eterm window between 1 and 10.
-
-2.125.1.32 emacsvox-eterm-speak-screen
-......................................
-
- -- Command: emacsvox-eterm-speak-screen (&optional flag)
-
-     Speak the screen.  Default is to speak from the emacsvox pointer  to point.
-     Optional prefix arg FLAG causes region above
-     the Emacsvox pointer to be spoken.
-
-     (fn &optional FLAG)
-
-2.125.1.33 emacsvox-eterm-speak-window
-......................................
-
- -- Command: emacsvox-eterm-speak-window (id)
-
-     Speak an eterm window.
-     Argument ID specifies the window.
-
-     (fn ID)
-
-2.125.1.34 emacsvox-eterm-toggle-filter-window
-..............................................
-
- -- Command: emacsvox-eterm-toggle-filter-window
-
-     Toggle active state of filter window.
-
-2.125.1.35 emacsvox-eterm-toggle-focus-window
-.............................................
-
- -- Command: emacsvox-eterm-toggle-focus-window
-
-     Toggle active state of focus window.
-
-2.125.1.36 emacsvox-eterm-toggle-pointer-mode
-.............................................
-
- -- Command: emacsvox-eterm-toggle-pointer-mode (&optional prefix)
-
-     Toggle emacsvox eterm pointer mode.
-     With optional interactive prefix  arg, turn it on.
-     When emacsvox eterm is in pointer mode, the eterm read pointer
-     stays where it is rather than automatically moving to the terminal cursor when
-     there is terminal activity.
-
-2.125.1.37 emacsvox-eterm-toggle-review
-.......................................
-
- -- Command: emacsvox-eterm-toggle-review
-
-     Toggle state of eterm review.
-     In review mode, you can move around the terminal and listen to the contents
-     without sending input to the terminal itself.
-
-2.125.1.38 emacsvox-eterm-yank-window
-.....................................
-
- -- Command: emacsvox-eterm-yank-window (id)
-
-     Yank contents of  an eterm window at point.
-
-     (fn ID)
-
-2.125.1.39 emacsvox-toggle-eterm-autospeak
-..........................................
-
- -- Command: emacsvox-toggle-eterm-autospeak (&optional prefix)
-
-     Toggle state of eterm autospeak.
-     When eterm autospeak is turned on and the terminal is in line
-     mode, all output to the terminal is automatically spoken.
-     Interactive prefix arg means toggle the global default value, and
-     then set the current local value to the result.

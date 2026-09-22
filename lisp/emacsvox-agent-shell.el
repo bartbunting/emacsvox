@@ -1921,7 +1921,21 @@ selects the configured foreground or background level."
   (define-key emacsvox-agent-shell--speech-control-map (kbd "t")
               #'emacsvox-agent-shell-next-table)
   (define-key emacsvox-agent-shell--speech-control-map (kbd "T")
-              #'emacsvox-agent-shell-previous-table))
+              #'emacsvox-agent-shell-previous-table)
+  (dolist (binding '(("h" . emacsvox-agent-shell-next-heading)
+                     ("H" . emacsvox-agent-shell-previous-heading)
+                     ("k" . emacsvox-agent-shell-next-source-block)
+                     ("K" . emacsvox-agent-shell-previous-source-block)
+                     ("u" . emacsvox-agent-shell-next-user-prompt)
+                     ("U" . emacsvox-agent-shell-previous-user-prompt)
+                     ("j" . emacsvox-agent-shell-next-response)
+                     ("J" . emacsvox-agent-shell-previous-response)
+                     ("l" . emacsvox-agent-shell-next-link)
+                     ("L" . emacsvox-agent-shell-previous-link)
+                     ("e" . emacsvox-agent-shell-next-error)
+                     ("E" . emacsvox-agent-shell-previous-error)))
+    (define-key emacsvox-agent-shell--speech-control-map
+                (kbd (car binding)) (cdr binding))))
 
 (emacsvox-agent-shell--install-speech-control-bindings)
 
@@ -3389,6 +3403,8 @@ Provide an auditory icon if possible."
     ("Error" . error)
     ("Table" . table)
     ("Source block" . source-block)
+    ("Heading" . heading)
+    ("Link" . link)
     ("Other" . other))
   "Completion candidates for semantic agent-shell block navigation.")
 
@@ -4183,17 +4199,76 @@ When METADATA-ONLY is non-nil, do not copy its labels or body."
                       'agent-shell-ui-state nil
                       (lambda (_value state) state)))
                (not
-                (eq
-                 (emacsvox-agent-shell--semantic-block-type
-                  (map-elt (prop-match-value match) :qualified-id)
-                  (prop-match-value match)
-                  (prop-match-beginning match))
-                 type))))
+                (emacsvox-agent-shell--fragment-matches-type-p
+                 type (prop-match-beginning match) (prop-match-end match)
+                 (prop-match-value match)))))
           (when match
             (emacsvox-agent-shell--fragment-location
              (prop-match-beginning match)
              (prop-match-end match)
              (prop-match-value match))))))))
+
+(defun emacsvox-agent-shell--fragment-matches-type-p (type start end state)
+  "Return non-nil when fragment STATE from START to END matches TYPE.
+Error navigation also includes tools with renderer-styled failure labels."
+  (let ((kind (emacsvox-agent-shell--semantic-block-type
+               (map-elt state :qualified-id) state start)))
+    (or (eq kind type)
+        (and (eq type 'error)
+             (memq kind '(tool-call other))
+             (when-let* ((range (emacsvox-agent-shell--block-section-range
+                                start end 'label-left)))
+               (let ((position (car range)) found)
+                 (while (and (< position (cdr range)) (not found))
+                   (setq found
+                         (or (emacsvox-agent-shell--face-includes-p
+                              (get-text-property position 'face)
+                              'agent-shell-error)
+                             (emacsvox-agent-shell--face-includes-p
+                              (get-text-property position 'font-lock-face)
+                              'agent-shell-error))
+                         position
+                         (next-property-change position nil (cdr range))))
+                 found))))))
+
+(defun emacsvox-agent-shell--heading-position-p (position)
+  "Return non-nil when POSITION has a rendered Markdown heading face."
+  (seq-some
+   (lambda (face)
+     (or (emacsvox-agent-shell--face-includes-p
+          (get-text-property position 'face) face)
+         (emacsvox-agent-shell--face-includes-p
+          (get-text-property position 'font-lock-face) face)))
+   emacsvox-agent-shell--markdown-heading-faces))
+
+(defun emacsvox-agent-shell--heading-location-at-position (position)
+  "Return the visible rendered heading containing POSITION, if any.
+Inline emphasis or links within a heading do not split its destination."
+  (when (and (< position (point-max))
+             (not (invisible-p position))
+             (emacsvox-agent-shell--heading-position-p position))
+    (save-excursion
+      (goto-char position)
+      (let ((start position) (end (1+ position))
+            (line-start (line-beginning-position))
+            (line-end (line-end-position)))
+        (while (and (> start line-start)
+                    (emacsvox-agent-shell--heading-position-p (1- start)))
+          (setq start (1- start)))
+        (while (and (< end line-end)
+                    (emacsvox-agent-shell--heading-position-p end))
+          (setq end (1+ end)))
+        (list :position start :end end :type 'heading
+              :body (emacsvox-agent-shell--visible-block-text start end))))))
+
+(defun emacsvox-agent-shell--link-location-at-position (position)
+  "Return the visible rendered link containing POSITION, if any."
+  (when (not (invisible-p position))
+    (when-let* ((range (emacsvox-agent-shell--property-range-at-position
+                       'agent-shell-markdown-url position)))
+      (list :position (car range) :end (cdr range) :type 'link
+            :body (emacsvox-agent-shell--visible-block-text
+                   (car range) (cdr range))))))
 
 (defun emacsvox-agent-shell--property-location-in-direction
     (property location-function direction origin &optional end-boundary)
@@ -4272,6 +4347,13 @@ END-BOUNDARY is non-nil."
                 property match)))
           (when
               (and candidate
+                   ;; The last Comint prompt is an editor, not a submitted
+                   ;; message.  Viewport prompts are transcript content.
+                   (not (and (derived-mode-p 'agent-shell-mode)
+                             (markerp (car-safe comint-last-prompt))
+                             (marker-position (car comint-last-prompt))
+                             (>= (plist-get candidate :position)
+                                 (car comint-last-prompt))))
                    (if (eq direction 'forward)
                        (> (plist-get candidate :position) origin)
                      (< (plist-get candidate :position) origin)))
@@ -4350,6 +4432,19 @@ END-BOUNDARY is non-nil."
   "Return the nearest semantic TYPE from ORIGIN in DIRECTION."
   (setq type (emacsvox-agent-shell--normalize-block-type type))
   (pcase type
+    ('heading
+     (emacsvox-agent-shell--nearest-location
+      (mapcar
+       (lambda (property)
+         (emacsvox-agent-shell--property-location-in-direction
+          property #'emacsvox-agent-shell--heading-location-at-position
+          direction origin t))
+       '(face font-lock-face))
+      direction))
+    ('link
+     (emacsvox-agent-shell--property-location-in-direction
+      'agent-shell-markdown-url
+      #'emacsvox-agent-shell--link-location-at-position direction origin t))
     ('table
      (emacsvox-agent-shell--property-location-in-direction
       'agent-shell-markdown-table-source
@@ -4621,7 +4716,7 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
        (format "No %s %s%s."
                (if (eq direction 'forward) "later" "earlier")
                (downcase (emacsvox-agent-shell--block-type-label type))
-               (if (eq type 'source-block) "" " block"))
+               (if (memq type '(source-block heading link)) "" " block"))
        (emacsvox-agent-shell--block-facts type 'operation-failed)
        'navigation 'warn-user)
       nil)))
@@ -4847,9 +4942,25 @@ Use semantic TYPE when supplied, otherwise infer it from the block at point."
   (if (emacsvox-agent-shell--literal-character-input-p)
       (self-insert-command 1)
     (let* ((location
-            (if (eq type 'table)
-                (emacsvox-agent-shell--table-location-at-position (point))
-              (emacsvox-agent-shell--block-location-at-point)))
+            (pcase type
+              ('agent-response
+               ;; Code and tables are nested destinations; response movement
+               ;; must skip their enclosing answer as a whole.
+               (let ((response
+                      (or (emacsvox-agent-shell--fragment-location-at-position
+                           (point) t)
+                          (emacsvox-agent-shell--viewport-response-location))))
+                 (when (and response
+                            (<= (plist-get response :position) (point))
+                            (< (point) (plist-get response :end)))
+                   response)))
+              ('table
+               (emacsvox-agent-shell--table-location-at-position (point)))
+              ('heading
+               (emacsvox-agent-shell--heading-location-at-position (point)))
+              ('link
+               (emacsvox-agent-shell--link-location-at-position (point)))
+              (_ (emacsvox-agent-shell--block-location-at-point))))
            (type (or type (plist-get location :type))))
       (if type
           (progn
@@ -4921,6 +5032,78 @@ At an editable prompt, a directly bound character key inserts itself instead."
 At an editable prompt, a directly bound character key inserts itself instead."
   (interactive)
   (emacsvox-agent-shell--navigate-block-at-point 'backward 'table))
+
+(defun emacsvox-agent-shell-next-response ()
+  "Move to the next agent response and announce its body.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'forward 'agent-response))
+
+(defun emacsvox-agent-shell-previous-response ()
+  "Move to the previous agent response and announce its body.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'backward 'agent-response))
+
+(defun emacsvox-agent-shell-next-heading ()
+  "Move to the next visible Markdown heading.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'forward 'heading))
+
+(defun emacsvox-agent-shell-previous-heading ()
+  "Move to the previous visible Markdown heading.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'backward 'heading))
+
+(defun emacsvox-agent-shell-next-source-block ()
+  "Move to the next source block and announce its language and line count.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'forward 'source-block))
+
+(defun emacsvox-agent-shell-previous-source-block ()
+  "Move to the previous source block and announce its language and line count.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'backward 'source-block))
+
+(defun emacsvox-agent-shell-next-user-prompt ()
+  "Move to the next submitted user prompt.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'forward 'user-prompt))
+
+(defun emacsvox-agent-shell-previous-user-prompt ()
+  "Move to the previous submitted user prompt.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'backward 'user-prompt))
+
+(defun emacsvox-agent-shell-next-link ()
+  "Move to the next visible rendered link.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'forward 'link))
+
+(defun emacsvox-agent-shell-previous-link ()
+  "Move to the previous visible rendered link.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'backward 'link))
+
+(defun emacsvox-agent-shell-next-error ()
+  "Move to the next error or failed tool call.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'forward 'error))
+
+(defun emacsvox-agent-shell-previous-error ()
+  "Move to the previous error or failed tool call.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'backward 'error))
 
 (defun emacsvox-agent-shell-repeat-next-block ()
   "Move to the next occurrence of the selected semantic block type."
@@ -5478,8 +5661,10 @@ Return nil when that logical cell does not exist."
   "Contextual keymap active while point is in a rendered Markdown table.")
 
 (defun emacsvox-agent-shell--install-table-column-bindings ()
-  "Keep character arrows and modified column keys current across reloads."
-  (dolist (binding '(("<left>" . left-char)
+  "Keep character arrows and modified table keys current across reloads."
+  (dolist (binding '(("C-M-<up>" . emacsvox-agent-shell-table-previous-row)
+                     ("C-M-<down>" . emacsvox-agent-shell-table-next-row)
+                     ("<left>" . left-char)
                      ("<right>" . right-char)
                      ("C-M-<left>" . emacsvox-agent-shell-table-previous-column)
                      ("C-M-<right>" . emacsvox-agent-shell-table-next-column)))
