@@ -7193,7 +7193,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          (equal
           (emacsvox-agent-shell-test--capture-events
             (call-interactively #'emacsvox-agent-shell-table-next-row))
-          '((icon item) (speak "Checks, Bob, Notes."))))
+          '((icon item) (speak "Bob. Reviewer, Role. Checks, Notes."))))
         (should
          (equal
           (emacsvox-agent-shell-test--capture-events
@@ -7204,7 +7204,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          (equal
           (emacsvox-agent-shell-test--capture-events
             (call-interactively #'emacsvox-agent-shell-table-previous-row))
-          '((icon item) (speak "Engineer, Alice, Role."))))))))
+          '((icon item)
+            (speak "Alice. Engineer, Role. owns a long wrapped description, Notes."))))))))
 
 (ert-deftest emacsvox-agent-shell-table-grid-navigation-accepts-leading-border ()
   "Grid movement should accept ordinary line entry on the leading border."
@@ -7224,7 +7225,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        (equal
         (emacsvox-agent-shell-test--capture-events
           (call-interactively #'emacsvox-agent-shell-table-next-row))
-        '((icon item) (speak "1, A.")))))))
+        '((icon item) (speak "1, A. 2, B.")))))))
 
 (ert-deftest emacsvox-agent-shell-table-grid-navigation-accepts-bottom-entry ()
   "Grid movement should accept upward entry on the final row's border."
@@ -7247,7 +7248,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        (equal
         (emacsvox-agent-shell-test--capture-events
           (call-interactively #'emacsvox-agent-shell-table-previous-row))
-        '((icon item) (speak "A.")))))))
+        '((icon item) (speak "Header row. A. B.")))))))
 
 (ert-deftest emacsvox-agent-shell-table-grid-navigation-handles-edges ()
   "Horizontal edges should warn; vertical edges should leave the table."
@@ -7399,6 +7400,42 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (should (looking-at (cadr case))))
           (should-not emacsvox-agent-shell--table-navigation-active))
         (emacsvox-agent-shell--table-navigation-cleanup)))))
+
+(ert-deftest emacsvox-agent-shell-table-arrows-speak-whole-rows ()
+  "Vertical arrows read complete rows once, retaining the selected column."
+  (let ((emacsvox-agent-shell-table-titles '(column row))
+        (emacsvox-agent-shell-table-data-position 'first)
+        (agent-shell-markdown-table-max-width-fraction 0.4)
+        (notes (string-join (make-list 12 "long note") " ")))
+    (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+      (save-window-excursion
+        (emacsvox-agent-shell-test--with-rendered-table
+            (concat "before\n| Name | Role | Notes |\n|---|---|---|\n"
+                    "| Alice | Engineer | " notes " |\n"
+                    "| Bob | Reviewer |  |\nafter\n")
+          (switch-to-buffer (current-buffer))
+          (setq major-mode mode)
+          (use-local-map (if (eq mode 'agent-shell-mode) agent-shell-mode-map
+                           agent-shell-viewport-view-mode-map))
+          (emacsvox-agent-shell--table-navigation-setup)
+          (goto-char (point-min))
+          (search-forward "Engineer")
+          (backward-char (length "Engineer"))
+          (emacsvox-agent-shell-test--capture-events
+            (emacsvox-agent-shell--table-navigation-post-command))
+          (dolist (case `(("<down>" "Reviewer" "Bob. Reviewer, Role. blank, Notes.")
+                          ("<up>" "Engineer" ,(concat "Alice. Engineer, Role. " notes ", Notes."))
+                          ("C-M-<up>" "Role" "Header row. Name. Role. Notes.")
+                          ("C-M-<down>" "Engineer" ,(concat "Alice. Engineer, Role. " notes ", Notes."))))
+            (let ((events (emacsvox-agent-shell-test--capture-events
+                            (execute-kbd-macro (kbd (car case))))))
+              (should (looking-at (nth 1 case)))
+              (should (= 1 (plist-get
+                            (emacsvox-agent-shell--markdown-table-cell-at-point)
+                            :column-index)))
+              (should (equal (seq-filter (lambda (event) (eq (car event) 'speak)) events)
+                             (list (list 'speak (nth 2 case)))))))
+          (emacsvox-agent-shell--table-navigation-cleanup))))))
 
 (ert-deftest emacsvox-agent-shell-table-feedback-handles-title-cells-and-blanks ()
   "Table feedback should avoid duplicate titles and name blank data."

@@ -5294,11 +5294,14 @@ Markdown renderer."
     :agent-table-row (plist-get cell :row-index)
     :agent-table-column (plist-get cell :column-index))))
 
-(defun emacsvox-agent-shell--table-cell-feedback ()
-  "Speak the rendered Markdown table cell at point semantically."
+(defun emacsvox-agent-shell--table-cell-feedback (&optional whole-row)
+  "Speak the rendered Markdown table cell at point semantically.
+When WHOLE-ROW is non-nil, speak its entire logical row."
   (when-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
     (emacsvox-agent-shell--submit-text-feedback
-     (emacsvox-agent-shell--table-cell-speech cell)
+     (if whole-row
+         (emacsvox-agent-shell--table-row-speech cell)
+       (emacsvox-agent-shell--table-cell-speech cell))
      (emacsvox-agent-shell--table-cell-facts cell 'focus-entered)
      'navigation 'item)
     t))
@@ -5618,7 +5621,8 @@ Return nil when that logical cell does not exist."
                      cell target-row target-column)))
               (progn
                 (goto-char target)
-                (emacsvox-agent-shell--table-cell-feedback))
+                (emacsvox-agent-shell--table-cell-feedback
+                 (not (zerop row-delta))))
             (emacsvox-agent-shell--table-boundary-feedback
              "No rendered cell at that position.")))))
     (user-error "Not in a rendered Markdown table")))
