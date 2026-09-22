@@ -6031,6 +6031,14 @@ list editing@comma{} setting changes@comma{} updated tool output@comma{} and cha
 Moving into a rendered Markdown table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
 the ordinary Agent Shell keys.
+Plain Left and Right move by character within the table. Use Control-Meta-Left
+and Control-Meta-Right to move between columns.
+
+Outside editable input@comma{} press @kbd{t} for the next table or
+@kbd{T} for the previous table. These keys skip the current table
+and announce the destination table and cell. Like the bracket navigation keys@comma{}
+they insert themselves in a live prompt or viewport editor@comma{} including while
+the agent is working.
 
 Continuous speech and response-block reading omit rendered table borders and
 keep the cell text. Decorative borders therefore do not force a switch to a
@@ -6038,9 +6046,13 @@ different speech engine. Literal box-drawing characters in prose or code remain
 available to symbol naming and exact character inspection.
 
 @table @kbd
-@item <right>
+@item t
+Run @code{emacsvox-agent-shell-next-table} outside editable input.
+@item T
+Run @code{emacsvox-agent-shell-previous-table} outside editable input.
+@item C-M-<right>
 Run @code{emacsvox-agent-shell-table-next-column}.
-@item <left>
+@item C-M-<left>
 Run @code{emacsvox-agent-shell-table-previous-column}.
 @item <down>
 Run @code{emacsvox-agent-shell-table-next-row}.

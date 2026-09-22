@@ -6321,10 +6321,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should-not (invisible-p position)))))
 
 (ert-deftest emacsvox-agent-shell-context-navigation-preserves-input ()
-  "Contextual bracket keys should self-insert in both prompt editors."
-  (dolist (case `((agent-shell-mode ,agent-shell-mode-map "]")
+  "Contextual navigation keys should self-insert in both prompt editors."
+  (dolist (case `((agent-shell-mode ,agent-shell-mode-map "[]tT")
                   (agent-shell-viewport-edit-mode
-                   ,agent-shell-viewport-edit-mode-map "[")))
+                   ,agent-shell-viewport-edit-mode-map "[]tT")))
     (let ((buffer (generate-new-buffer " *agent-shell-bracket-input-test*")))
       (unwind-protect
           (save-window-excursion
@@ -6450,6 +6450,58 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         '((stop nil)
           (icon open-object)
           (speak "Table, 1 data row, 2 columns. 2, B.")))))))
+
+(ert-deftest emacsvox-agent-shell-table-letter-keys-navigate-transcripts ()
+  "Table keys skip the current table, announce entry, and respect boundaries."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (save-window-excursion
+      (emacsvox-agent-shell-test--with-rendered-table
+          (concat "before\n"
+                  "| A | B |\n|---|---|\n| 1 | 2 |\n"
+                  "between\n"
+                  "| C | D |\n|---|---|\n| 3 | 4 |\n"
+                  "after\n")
+        (switch-to-buffer (current-buffer))
+        (setq major-mode mode)
+        (use-local-map (if (eq mode 'agent-shell-mode) agent-shell-mode-map
+                         agent-shell-viewport-view-mode-map))
+        (emacsvox-agent-shell--table-navigation-setup)
+        (goto-char (point-min))
+        (let ((source (buffer-string)))
+          (cl-letf (((symbol-function 'set-transient-map) #'ignore))
+            (dolist (step '(("t" "A") ("t" "C") ("T" "2")
+                            ("t" "C")))
+              (let* ((events (emacsvox-agent-shell-test--capture-events
+                               (execute-kbd-macro (kbd (car step)))))
+                     (speech (seq-filter (lambda (event) (eq (car event) 'speak))
+                                         events)))
+                (should (looking-at (cadr step)))
+                (should (= (length speech) 1))
+                (should (string-prefix-p "Table," (cadar speech)))
+                (should emacsvox-agent-shell--table-navigation-active)))
+            ;; From inside the last table, report the boundary without moving.
+            (forward-char 1)
+            (let ((origin (point)))
+              (should
+               (equal (seq-remove
+                       (lambda (event) (eq (car event) 'message))
+                       (emacsvox-agent-shell-test--capture-events
+                         (execute-kbd-macro (kbd "t"))))
+                      '((icon warn-user) (speak "No later table block."))))
+              (should (= (point) origin)))
+            ;; From inside the first table, backward skips the whole table.
+            (emacsvox-agent-shell-test--capture-events
+              (execute-kbd-macro (kbd "T")))
+            (let ((origin (point)))
+              (should
+               (equal (seq-remove
+                       (lambda (event) (eq (car event) 'message))
+                       (emacsvox-agent-shell-test--capture-events
+                         (execute-kbd-macro (kbd "T"))))
+                      '((icon warn-user) (speak "No earlier table block."))))
+              (should (= (point) origin))))
+          (should (equal-including-properties source (buffer-string))))
+        (emacsvox-agent-shell--table-navigation-cleanup)))))
 
 (ert-deftest emacsvox-agent-shell-table-cell-feedback-is-customizable ()
   "Table feedback should support every title set and both orderings."
@@ -7019,11 +7071,14 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            "Table, 1 data row, 2 columns. Engineer, Alice, Role."))))
       (should emacsvox-agent-shell--table-navigation-active)
       (should
-       (eq (key-binding (kbd "<right>"))
+       (eq (key-binding (kbd "C-M-<right>"))
            #'emacsvox-agent-shell-table-next-column))
       (dolist
           (binding
-           `(("r" . ,#'emacsvox-agent-shell-table-speak-row)
+           `(("<left>" . left-char)
+             ("<right>" . right-char)
+             ("C-M-<left>" . ,#'emacsvox-agent-shell-table-previous-column)
+             ("r" . ,#'emacsvox-agent-shell-table-speak-row)
              ("c" . ,#'emacsvox-agent-shell-table-speak-column)
              ("SPC" . ,#'emacsvox-agent-shell-table-speak-cell)
              ("." . ,#'emacsvox-agent-shell-table-speak-context)
@@ -7047,6 +7102,42 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should-not
        (memq #'emacsvox-agent-shell--table-navigation-post-command
              post-command-hook)))))
+
+(ert-deftest emacsvox-agent-shell-table-arrows-separate-characters-and-columns ()
+  "Arrow keystrokes read characters; Control-Meta arrows traverse table cells."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (save-window-excursion
+      (emacsvox-agent-shell-test--with-rendered-table
+          "before\n| Name | Role |\n|---|---|\n| Alice | Engineer |\nafter\n"
+        (switch-to-buffer (current-buffer))
+        (setq major-mode mode)
+        (use-local-map (if (eq mode 'agent-shell-mode) agent-shell-mode-map
+                         agent-shell-viewport-view-mode-map))
+        (emacsvox-agent-shell--table-navigation-setup)
+        (goto-char (point-min))
+        (search-forward "Alice")
+        (backward-char (length "Alice"))
+        (emacsvox-agent-shell-test--capture-events
+          (emacsvox-agent-shell--table-navigation-post-command))
+        (let ((origin (point)))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd "<right>")))
+          (should (= (point) (1+ origin)))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd "<left>")))
+          (should (= (point) origin))
+          (let ((events (emacsvox-agent-shell-test--capture-events
+                          (execute-kbd-macro (kbd "C-M-<right>")))))
+            (should (looking-at "Engineer"))
+            (should (seq-some (lambda (event)
+                                (and (eq (car event) 'speak)
+                                     (string-match-p "Engineer" (cadr event))))
+                              events)))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd "C-M-<left>")))
+          (should (= (point) origin))
+          (should (looking-at "Alice")))
+        (emacsvox-agent-shell--table-navigation-cleanup)))))
 
 (ert-deftest emacsvox-agent-shell-table-feedback-handles-title-cells-and-blanks ()
   "Table feedback should avoid duplicate titles and name blank data."
@@ -9488,7 +9579,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   "Busy live prompts insert brackets and table keys; transcript keys navigate."
   (skip-unless (fboundp 'agent-shell--point-in-live-input-p))
   (dolist (busy '(nil t))
-    (dolist (key '("[" "]" "n" "p"))
+    (dolist (key '("[" "]" "t" "T" "n" "p"))
       (save-window-excursion
         (emacsvox-agent-shell-test--with-current-session
           (switch-to-buffer (current-buffer))

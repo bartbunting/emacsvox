@@ -42,3 +42,7 @@ Rendered table borders are omitted from response and line speech, preventing
 decorative box-drawing characters from forcing an Eloquence-to-eSpeak switch.
 Literal box-drawing characters now receive Unicode names through the existing
 emoji and symbol naming settings.
+Control-Meta-Left and Control-Meta-Right move between table columns; plain Left
+and Right retain character navigation.
+Outside editable input, t and T jump to the next and previous rendered table.
+Both keys insert normally in live prompts and the viewport editor.

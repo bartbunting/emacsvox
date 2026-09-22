@@ -69,7 +69,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1570 commands and 221 options.
+This chapter documents a total of 1572 commands and 221 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -918,6 +918,16 @@ Select a semantic block type and move to its next occurrence.
 @end format
 @end deffn
 
+@subsubsection emacsvox-agent-shell-next-table
+@deffn {Command} emacsvox-agent-shell-next-table
+@findex emacsvox-agent-shell-next-table
+
+@format
+Move to the next rendered Markdown table and announce it.
+At an editable prompt, a directly bound character key inserts itself instead.
+@end format
+@end deffn
+
 @subsubsection emacsvox-agent-shell-previous-block-at-point
 @deffn {Command} emacsvox-agent-shell-previous-block-at-point
 @findex emacsvox-agent-shell-previous-block-at-point
@@ -934,6 +944,16 @@ When invoked by ‘[’ at an editable prompt, insert that character instead.
 
 @format
 Select a semantic block type and move to its previous occurrence.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-table
+@deffn {Command} emacsvox-agent-shell-previous-table
+@findex emacsvox-agent-shell-previous-table
+
+@format
+Move to the previous rendered Markdown table and announce it.
+At an editable prompt, a directly bound character key inserts itself instead.
 @end format
 @end deffn
 

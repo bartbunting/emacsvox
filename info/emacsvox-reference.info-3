@@ -3079,106 +3079,114 @@ Function Index
                                                              (line   73)
 * emacsvox-agent-shell-next-block-of-type <1>: emacsvox-agent-shell.
                                                              (line   74)
-* emacsvox-agent-shell-previous-block-at-point: emacsvox-agent-shell.
+* emacsvox-agent-shell-next-table:       emacsvox-agent-shell.
                                                              (line   80)
-* emacsvox-agent-shell-previous-block-at-point <1>: emacsvox-agent-shell.
+* emacsvox-agent-shell-next-table <1>:   emacsvox-agent-shell.
                                                              (line   81)
-* emacsvox-agent-shell-previous-block-of-type: emacsvox-agent-shell.
+* emacsvox-agent-shell-previous-block-at-point: emacsvox-agent-shell.
                                                              (line   88)
-* emacsvox-agent-shell-previous-block-of-type <1>: emacsvox-agent-shell.
+* emacsvox-agent-shell-previous-block-at-point <1>: emacsvox-agent-shell.
                                                              (line   89)
-* emacsvox-agent-shell-repeat-next-block: emacsvox-agent-shell.
-                                                             (line   95)
-* emacsvox-agent-shell-repeat-next-block <1>: emacsvox-agent-shell.
+* emacsvox-agent-shell-previous-block-of-type: emacsvox-agent-shell.
                                                              (line   96)
-* emacsvox-agent-shell-repeat-previous-block: emacsvox-agent-shell.
-                                                             (line  102)
-* emacsvox-agent-shell-repeat-previous-block <1>: emacsvox-agent-shell.
+* emacsvox-agent-shell-previous-block-of-type <1>: emacsvox-agent-shell.
+                                                             (line   97)
+* emacsvox-agent-shell-previous-table:   emacsvox-agent-shell.
                                                              (line  103)
+* emacsvox-agent-shell-previous-table <1>: emacsvox-agent-shell.
+                                                             (line  104)
+* emacsvox-agent-shell-repeat-next-block: emacsvox-agent-shell.
+                                                             (line  111)
+* emacsvox-agent-shell-repeat-next-block <1>: emacsvox-agent-shell.
+                                                             (line  112)
+* emacsvox-agent-shell-repeat-previous-block: emacsvox-agent-shell.
+                                                             (line  118)
+* emacsvox-agent-shell-repeat-previous-block <1>: emacsvox-agent-shell.
+                                                             (line  119)
 * emacsvox-agent-shell-select-background-speech-level: emacsvox-agent-shell.
-                                                             (line  109)
+                                                             (line  125)
 * emacsvox-agent-shell-select-background-speech-level <1>: emacsvox-agent-shell.
-                                                             (line  110)
+                                                             (line  126)
 * emacsvox-agent-shell-select-speech-level: emacsvox-agent-shell.
-                                                             (line  116)
+                                                             (line  132)
 * emacsvox-agent-shell-select-speech-level <1>: emacsvox-agent-shell.
-                                                             (line  117)
+                                                             (line  133)
 * emacsvox-agent-shell-speak-header:     emacsvox-agent-shell.
-                                                             (line  123)
+                                                             (line  139)
 * emacsvox-agent-shell-speak-header <1>: emacsvox-agent-shell.
-                                                             (line  124)
+                                                             (line  140)
 * emacsvox-agent-shell-speak-last-response: emacsvox-agent-shell.
-                                                             (line  130)
+                                                             (line  146)
 * emacsvox-agent-shell-speak-last-response <1>: emacsvox-agent-shell.
-                                                             (line  131)
+                                                             (line  147)
 * emacsvox-agent-shell-speak-response-overview: emacsvox-agent-shell.
-                                                             (line  137)
+                                                             (line  153)
 * emacsvox-agent-shell-speak-response-overview <1>: emacsvox-agent-shell.
-                                                             (line  138)
+                                                             (line  154)
 * emacsvox-agent-shell-speak-source-block: emacsvox-agent-shell.
-                                                             (line  144)
-* emacsvox-agent-shell-speak-source-block <1>: emacsvox-agent-shell.
-                                                             (line  145)
-* emacsvox-agent-shell-table-copy-cell:  emacsvox-agent-shell.
-                                                             (line  151)
-* emacsvox-agent-shell-table-copy-cell <1>: emacsvox-agent-shell.
-                                                             (line  152)
-* emacsvox-agent-shell-table-copy-column: emacsvox-agent-shell.
                                                              (line  160)
-* emacsvox-agent-shell-table-copy-column <1>: emacsvox-agent-shell.
+* emacsvox-agent-shell-speak-source-block <1>: emacsvox-agent-shell.
                                                              (line  161)
-* emacsvox-agent-shell-table-copy-row:   emacsvox-agent-shell.
+* emacsvox-agent-shell-table-copy-cell:  emacsvox-agent-shell.
+                                                             (line  167)
+* emacsvox-agent-shell-table-copy-cell <1>: emacsvox-agent-shell.
                                                              (line  168)
-* emacsvox-agent-shell-table-copy-row <1>: emacsvox-agent-shell.
-                                                             (line  169)
-* emacsvox-agent-shell-table-exit-backward: emacsvox-agent-shell.
+* emacsvox-agent-shell-table-copy-column: emacsvox-agent-shell.
                                                              (line  176)
-* emacsvox-agent-shell-table-exit-backward <1>: emacsvox-agent-shell.
+* emacsvox-agent-shell-table-copy-column <1>: emacsvox-agent-shell.
                                                              (line  177)
-* emacsvox-agent-shell-table-exit-forward: emacsvox-agent-shell.
-                                                             (line  183)
-* emacsvox-agent-shell-table-exit-forward <1>: emacsvox-agent-shell.
+* emacsvox-agent-shell-table-copy-row:   emacsvox-agent-shell.
                                                              (line  184)
-* emacsvox-agent-shell-table-next-column: emacsvox-agent-shell.
-                                                             (line  190)
-* emacsvox-agent-shell-table-next-column <1>: emacsvox-agent-shell.
-                                                             (line  191)
-* emacsvox-agent-shell-table-next-row:   emacsvox-agent-shell.
+* emacsvox-agent-shell-table-copy-row <1>: emacsvox-agent-shell.
+                                                             (line  185)
+* emacsvox-agent-shell-table-exit-backward: emacsvox-agent-shell.
+                                                             (line  192)
+* emacsvox-agent-shell-table-exit-backward <1>: emacsvox-agent-shell.
+                                                             (line  193)
+* emacsvox-agent-shell-table-exit-forward: emacsvox-agent-shell.
                                                              (line  199)
-* emacsvox-agent-shell-table-next-row <1>: emacsvox-agent-shell.
+* emacsvox-agent-shell-table-exit-forward <1>: emacsvox-agent-shell.
                                                              (line  200)
+* emacsvox-agent-shell-table-next-column: emacsvox-agent-shell.
+                                                             (line  206)
+* emacsvox-agent-shell-table-next-column <1>: emacsvox-agent-shell.
+                                                             (line  207)
+* emacsvox-agent-shell-table-next-row:   emacsvox-agent-shell.
+                                                             (line  215)
+* emacsvox-agent-shell-table-next-row <1>: emacsvox-agent-shell.
+                                                             (line  216)
 * emacsvox-agent-shell-table-previous-column: emacsvox-agent-shell.
-                                                             (line  208)
+                                                             (line  224)
 * emacsvox-agent-shell-table-previous-column <1>: emacsvox-agent-shell.
-                                                             (line  210)
+                                                             (line  226)
 * emacsvox-agent-shell-table-previous-row: emacsvox-agent-shell.
-                                                             (line  218)
+                                                             (line  234)
 * emacsvox-agent-shell-table-previous-row <1>: emacsvox-agent-shell.
-                                                             (line  219)
+                                                             (line  235)
 * emacsvox-agent-shell-table-select-speaking-method: emacsvox-agent-shell.
-                                                             (line  227)
+                                                             (line  243)
 * emacsvox-agent-shell-table-select-speaking-method <1>: emacsvox-agent-shell.
-                                                             (line  228)
-* emacsvox-agent-shell-table-speak-cell: emacsvox-agent-shell.
-                                                             (line  237)
-* emacsvox-agent-shell-table-speak-cell <1>: emacsvox-agent-shell.
-                                                             (line  238)
-* emacsvox-agent-shell-table-speak-column: emacsvox-agent-shell.
                                                              (line  244)
+* emacsvox-agent-shell-table-speak-cell: emacsvox-agent-shell.
+                                                             (line  253)
+* emacsvox-agent-shell-table-speak-cell <1>: emacsvox-agent-shell.
+                                                             (line  254)
+* emacsvox-agent-shell-table-speak-column: emacsvox-agent-shell.
+                                                             (line  260)
 * emacsvox-agent-shell-table-speak-column <1>: emacsvox-agent-shell.
-                                                             (line  245)
+                                                             (line  261)
 * emacsvox-agent-shell-table-speak-context: emacsvox-agent-shell.
-                                                             (line  251)
+                                                             (line  267)
 * emacsvox-agent-shell-table-speak-context <1>: emacsvox-agent-shell.
-                                                             (line  252)
+                                                             (line  268)
 * emacsvox-agent-shell-table-speak-dimensions: emacsvox-agent-shell.
-                                                             (line  258)
+                                                             (line  274)
 * emacsvox-agent-shell-table-speak-dimensions <1>: emacsvox-agent-shell.
-                                                             (line  259)
+                                                             (line  275)
 * emacsvox-agent-shell-table-speak-row:  emacsvox-agent-shell.
-                                                             (line  265)
+                                                             (line  281)
 * emacsvox-agent-shell-table-speak-row <1>: emacsvox-agent-shell.
-                                                             (line  266)
+                                                             (line  282)
 * emacsvox-amark-add:                    emacsvox-amark.     (line   23)
 * emacsvox-amark-add <1>:                emacsvox-amark.     (line   24)
 * emacsvox-amark-bookshelf:              emacsvox-amark.     (line   34)

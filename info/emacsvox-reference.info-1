@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1570 commands and 221 options.
+   This chapter documents a total of 1572 commands and 221 options.
 
 * Menu:
 
@@ -1172,7 +1172,15 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      Select a semantic block type and move to its next occurrence.
 
-2.10.1.7 emacsvox-agent-shell-previous-block-at-point
+2.10.1.7 emacsvox-agent-shell-next-table
+........................................
+
+ -- Command: emacsvox-agent-shell-next-table
+
+     Move to the next rendered Markdown table and announce it.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.8 emacsvox-agent-shell-previous-block-at-point
 .....................................................
 
  -- Command: emacsvox-agent-shell-previous-block-at-point
@@ -1180,70 +1188,78 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      Move to the previous block matching the semantic block at point.
      When invoked by ‘[’ at an editable prompt, insert that character instead.
 
-2.10.1.8 emacsvox-agent-shell-previous-block-of-type
+2.10.1.9 emacsvox-agent-shell-previous-block-of-type
 ....................................................
 
  -- Command: emacsvox-agent-shell-previous-block-of-type
 
      Select a semantic block type and move to its previous occurrence.
 
-2.10.1.9 emacsvox-agent-shell-repeat-next-block
-...............................................
+2.10.1.10 emacsvox-agent-shell-previous-table
+.............................................
+
+ -- Command: emacsvox-agent-shell-previous-table
+
+     Move to the previous rendered Markdown table and announce it.
+     At an editable prompt, a directly bound character key inserts itself instead.
+
+2.10.1.11 emacsvox-agent-shell-repeat-next-block
+................................................
 
  -- Command: emacsvox-agent-shell-repeat-next-block
 
      Move to the next occurrence of the selected semantic block type.
 
-2.10.1.10 emacsvox-agent-shell-repeat-previous-block
+2.10.1.12 emacsvox-agent-shell-repeat-previous-block
 ....................................................
 
  -- Command: emacsvox-agent-shell-repeat-previous-block
 
      Move to the previous occurrence of the selected semantic block type.
 
-2.10.1.11 emacsvox-agent-shell-select-background-speech-level
+2.10.1.13 emacsvox-agent-shell-select-background-speech-level
 .............................................................
 
  -- Command: emacsvox-agent-shell-select-background-speech-level
 
      Select the automatic speech level shared by background sessions.
 
-2.10.1.12 emacsvox-agent-shell-select-speech-level
+2.10.1.14 emacsvox-agent-shell-select-speech-level
 ..................................................
 
  -- Command: emacsvox-agent-shell-select-speech-level
 
      Select the automatic speech level for the current agent-shell session.
 
-2.10.1.13 emacsvox-agent-shell-speak-header
+2.10.1.15 emacsvox-agent-shell-speak-header
 ...........................................
 
  -- Command: emacsvox-agent-shell-speak-header
 
      Speak the full semantic header for the current agent-shell session.
 
-2.10.1.14 emacsvox-agent-shell-speak-last-response
+2.10.1.16 emacsvox-agent-shell-speak-last-response
 ..................................................
 
  -- Command: emacsvox-agent-shell-speak-last-response
 
      Speak the latest completed agent answer in full without moving point.
 
-2.10.1.15 emacsvox-agent-shell-speak-response-overview
+2.10.1.17 emacsvox-agent-shell-speak-response-overview
 ......................................................
 
  -- Command: emacsvox-agent-shell-speak-response-overview
 
      Speak a concise overview of the latest completed agent answer.
 
-2.10.1.16 emacsvox-agent-shell-speak-source-block
+2.10.1.18 emacsvox-agent-shell-speak-source-block
 .................................................
 
  -- Command: emacsvox-agent-shell-speak-source-block
 
      Read the complete rendered Markdown source block at point.
 
-2.10.1.17 emacsvox-agent-shell-table-copy-cell
+2.10.1.19 emacsvox-agent-shell-table-copy-cell
 ..............................................
 
  -- Command: emacsvox-agent-shell-table-copy-cell
@@ -1252,7 +1268,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      Remove renderer padding, borders, and text properties.  Preserve the complete
      logical value of a wrapped cell.
 
-2.10.1.18 emacsvox-agent-shell-table-copy-column
+2.10.1.20 emacsvox-agent-shell-table-copy-column
 ................................................
 
  -- Command: emacsvox-agent-shell-table-copy-column
@@ -1260,7 +1276,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      Copy the logical Markdown table column at point to the kill ring.
      Separate cells with newlines and omit Markdown separator syntax.
 
-2.10.1.19 emacsvox-agent-shell-table-copy-row
+2.10.1.21 emacsvox-agent-shell-table-copy-row
 .............................................
 
  -- Command: emacsvox-agent-shell-table-copy-row
@@ -1268,21 +1284,21 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      Copy the logical Markdown table row at point to the kill ring.
      Separate cells with tabs and omit Markdown separator syntax.
 
-2.10.1.20 emacsvox-agent-shell-table-exit-backward
+2.10.1.22 emacsvox-agent-shell-table-exit-backward
 ..................................................
 
  -- Command: emacsvox-agent-shell-table-exit-backward
 
      Leave the current Markdown table and move to preceding content.
 
-2.10.1.21 emacsvox-agent-shell-table-exit-forward
+2.10.1.23 emacsvox-agent-shell-table-exit-forward
 .................................................
 
  -- Command: emacsvox-agent-shell-table-exit-forward
 
      Leave the current Markdown table and move to following content.
 
-2.10.1.22 emacsvox-agent-shell-table-next-column
+2.10.1.24 emacsvox-agent-shell-table-next-column
 ................................................
 
  -- Command: emacsvox-agent-shell-table-next-column (&optional count)
@@ -1291,7 +1307,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      (fn &optional COUNT)
 
-2.10.1.23 emacsvox-agent-shell-table-next-row
+2.10.1.25 emacsvox-agent-shell-table-next-row
 .............................................
 
  -- Command: emacsvox-agent-shell-table-next-row (&optional count)
@@ -1300,7 +1316,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      (fn &optional COUNT)
 
-2.10.1.24 emacsvox-agent-shell-table-previous-column
+2.10.1.26 emacsvox-agent-shell-table-previous-column
 ....................................................
 
  -- Command: emacsvox-agent-shell-table-previous-column (&optional
@@ -1310,7 +1326,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      (fn &optional COUNT)
 
-2.10.1.25 emacsvox-agent-shell-table-previous-row
+2.10.1.27 emacsvox-agent-shell-table-previous-row
 .................................................
 
  -- Command: emacsvox-agent-shell-table-previous-row (&optional count)
@@ -1319,7 +1335,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      (fn &optional COUNT)
 
-2.10.1.26 emacsvox-agent-shell-table-select-speaking-method
+2.10.1.28 emacsvox-agent-shell-table-select-speaking-method
 ...........................................................
 
  -- Command: emacsvox-agent-shell-table-select-speaking-method
@@ -1329,35 +1345,35 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      switch between data-first and title-first ordering.  Speak the complete
      resulting configuration after the change.
 
-2.10.1.27 emacsvox-agent-shell-table-speak-cell
+2.10.1.29 emacsvox-agent-shell-table-speak-cell
 ...............................................
 
  -- Command: emacsvox-agent-shell-table-speak-cell
 
      Speak the logical Markdown table cell at point.
 
-2.10.1.28 emacsvox-agent-shell-table-speak-column
+2.10.1.30 emacsvox-agent-shell-table-speak-column
 .................................................
 
  -- Command: emacsvox-agent-shell-table-speak-column
 
      Speak the logical Markdown table column at point.
 
-2.10.1.29 emacsvox-agent-shell-table-speak-context
+2.10.1.31 emacsvox-agent-shell-table-speak-context
 ..................................................
 
  -- Command: emacsvox-agent-shell-table-speak-context
 
      Speak current Markdown table position and dimensions.
 
-2.10.1.30 emacsvox-agent-shell-table-speak-dimensions
+2.10.1.32 emacsvox-agent-shell-table-speak-dimensions
 .....................................................
 
  -- Command: emacsvox-agent-shell-table-speak-dimensions
 
      Speak the dimensions of the Markdown table at point.
 
-2.10.1.31 emacsvox-agent-shell-table-speak-row
+2.10.1.33 emacsvox-agent-shell-table-speak-row
 ..............................................
 
  -- Command: emacsvox-agent-shell-table-speak-row

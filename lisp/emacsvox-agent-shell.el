@@ -1917,7 +1917,11 @@ selects the configured foreground or background level."
   (define-key emacsvox-agent-shell--speech-control-map (kbd "]")
               #'emacsvox-agent-shell-next-block-at-point)
   (define-key emacsvox-agent-shell--speech-control-map (kbd "[")
-              #'emacsvox-agent-shell-previous-block-at-point))
+              #'emacsvox-agent-shell-previous-block-at-point)
+  (define-key emacsvox-agent-shell--speech-control-map (kbd "t")
+              #'emacsvox-agent-shell-next-table)
+  (define-key emacsvox-agent-shell--speech-control-map (kbd "T")
+              #'emacsvox-agent-shell-previous-table))
 
 (emacsvox-agent-shell--install-speech-control-bindings)
 
@@ -4837,22 +4841,27 @@ When INTERACTIVE-P is non-nil, announce a resulting visibility change."
                   (and (not (shell-maker-busy))
                        (shell-maker-point-at-last-prompt-p)))))))
 
-(defun emacsvox-agent-shell--navigate-block-at-point (direction)
-  "Navigate in DIRECTION using the semantic block containing point."
+(defun emacsvox-agent-shell--navigate-block-at-point (direction &optional type)
+  "Navigate in DIRECTION, preserving literal input at an editable prompt.
+Use semantic TYPE when supplied, otherwise infer it from the block at point."
   (if (emacsvox-agent-shell--literal-character-input-p)
       (self-insert-command 1)
-    (if-let* ((location (emacsvox-agent-shell--block-location-at-point))
-              (type (plist-get location :type)))
-        (progn
-          (setq emacsvox-agent-shell--block-navigation-type type)
-          (when (emacsvox-agent-shell--jump-block-of-type
-                 type direction (plist-get location :position))
-            (emacsvox-agent-shell--activate-block-repeat-map)))
-      (emacsvox-agent-shell--select-and-jump-block
-       direction
-       (pcase (cons direction last-command-event)
-         (`(forward . ,?\]) "]")
-         (`(backward . ,?\[) "["))))))
+    (let* ((location
+            (if (eq type 'table)
+                (emacsvox-agent-shell--table-location-at-position (point))
+              (emacsvox-agent-shell--block-location-at-point)))
+           (type (or type (plist-get location :type))))
+      (if type
+          (progn
+            (setq emacsvox-agent-shell--block-navigation-type type)
+            (when (emacsvox-agent-shell--jump-block-of-type
+                   type direction (plist-get location :position))
+              (emacsvox-agent-shell--activate-block-repeat-map)))
+        (emacsvox-agent-shell--select-and-jump-block
+         direction
+         (pcase (cons direction last-command-event)
+           (`(forward . ,?\]) "]")
+           (`(backward . ,?\[) "[")))))))
 
 (defvar emacsvox-agent-shell--block-repeat-map
   (make-sparse-keymap)
@@ -4900,6 +4909,18 @@ When invoked by `]' at an editable prompt, insert that character instead."
 When invoked by `[' at an editable prompt, insert that character instead."
   (interactive)
   (emacsvox-agent-shell--navigate-block-at-point 'backward))
+
+(defun emacsvox-agent-shell-next-table ()
+  "Move to the next rendered Markdown table and announce it.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'forward 'table))
+
+(defun emacsvox-agent-shell-previous-table ()
+  "Move to the previous rendered Markdown table and announce it.
+At an editable prompt, a directly bound character key inserts itself instead."
+  (interactive)
+  (emacsvox-agent-shell--navigate-block-at-point 'backward 'table))
 
 (defun emacsvox-agent-shell-repeat-next-block ()
   "Move to the next occurrence of the selected semantic block type."
@@ -5439,10 +5460,6 @@ Return nil when that logical cell does not exist."
 
 (defvar emacsvox-agent-shell--table-navigation-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "<right>")
-                #'emacsvox-agent-shell-table-next-column)
-    (define-key map (kbd "<left>")
-                #'emacsvox-agent-shell-table-previous-column)
     (define-key map (kbd "<down>") #'emacsvox-agent-shell-table-next-row)
     (define-key map (kbd "<up>") #'emacsvox-agent-shell-table-previous-row)
     (define-key map (kbd "M-<up>")
@@ -5459,6 +5476,17 @@ Return nil when that logical cell does not exist."
                 #'emacsvox-agent-shell-table-select-speaking-method)
     map)
   "Contextual keymap active while point is in a rendered Markdown table.")
+
+(defun emacsvox-agent-shell--install-table-column-bindings ()
+  "Keep character arrows and modified column keys current across reloads."
+  (dolist (binding '(("<left>" . left-char)
+                     ("<right>" . right-char)
+                     ("C-M-<left>" . emacsvox-agent-shell-table-previous-column)
+                     ("C-M-<right>" . emacsvox-agent-shell-table-next-column)))
+    (define-key emacsvox-agent-shell--table-navigation-map
+                (kbd (car binding)) (cdr binding))))
+
+(emacsvox-agent-shell--install-table-column-bindings)
 
 (defun emacsvox-agent-shell--install-table-copy-bindings ()
   "Install reload-safe table copying keys in the contextual table map."
