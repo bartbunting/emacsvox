@@ -15,6 +15,12 @@ streams bounded native PCM. Intel and Apple Silicon adapter and full-server
 checks pass in [[https://github.com/bartbunting/omnivox/actions/runs/35167821767][the streaming acceptance run]], including two simultaneous speech
 processes with null output. Emacsvox listening acceptance remains open.
 
+The [[https://github.com/bartbunting/homebrew-omnivox][Omnivox Homebrew tap]] now supplies the Mac core, initially 1.12.0. Native
+Apple Silicon and Intel tap checks pass installation, WAV synthesis, reinstall,
+a packaging-revision upgrade, and removal. Use the [[file:../manual/chapters/speech-backends.org][maintained Mac installation instructions]]
+for the stable executable selection. Verify the actual installed version when
+testing streaming; tap packaging checks do not close this listening task.
+
 Verify the resulting Emacsvox experience on real Intel and Apple Silicon Macs:
 short navigation, long reading, Stop and rapid replacement, both speech lanes,
 effects, fallback and truthful completion. Include listening acceptance and

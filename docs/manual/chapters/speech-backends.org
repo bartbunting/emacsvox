@@ -13,8 +13,9 @@ SpeechSynthesizer on Windows.
 Omnivox 1.12.0 is the minimum supported release. It supplies managed voice
 libraries, on-demand eSpeak variants and engine-specific voice controls, as well
 as individual fallback tuning and complete voice previews. A newer compatible
-release may be used, but the binary examples and guided installers pin the
-1.12.0 core and matching optional engines exactly. Upgrade an existing Omnivox
+release may be used. The manual archive examples and guided installers pin the
+1.12.0 core and matching optional engines exactly; the macOS Homebrew tap follows
+its maintained stable formula, initially 1.12.0. Upgrade an existing Omnivox
 installation separately; updating Emacsvox does not replace the selected speech
 server. Voice-library management currently uses the bundled WSL-to-Windows
 launcher; remote and direct native launches retain their existing limits.
@@ -43,16 +44,17 @@ test.
 |---+---+---|
 | GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime | Omnivox 1.12.0 release archive using eSpeak NG | The published archive is built and verified on Ubuntu 24.04. Compatible glibc, libstdc++, libgcc, and ALSA runtime libraries are required; the audible host check remains required. |
 | Other GNU/Linux systems | Source-built Omnivox using eSpeak NG | Use the source route for Linux ARM64, an older distribution ABI, or a host that cannot run the published x86-64 archive. |
-| macOS on Apple silicon | Omnivox 1.12.0 release archive using AVSpeechSynthesizer | The published ARM64 archive is built and verified on a native macOS runner; the audible host check remains required. |
-| macOS on Intel | Omnivox 1.12.0 release archive using AVSpeechSynthesizer | The published x64 archive is built and verified on a native macOS runner; the audible host check remains required. |
+| macOS on Apple silicon | Omnivox through the official Homebrew tap, using AVSpeechSynthesizer | Native ARM64 tap checks cover installation, synthesis, reinstall, a packaging-revision upgrade, and removal; audible Emacs acceptance remains required. |
+| macOS on Intel | Omnivox through the official Homebrew tap, using AVSpeechSynthesizer | Native Intel tap checks cover installation, synthesis, reinstall, a packaging-revision upgrade, and removal; audible Emacs acceptance remains required. |
 | Emacs in WSL2 on x86-64 Windows | Omnivox 1.12.0 Windows x64 release archive using WinRT | The published archive is checksum-protected and release CI verifies its architecture, adjacent data, WinRT and eSpeak synthesis.  The audible host check remains required. |
 | Emacs in WSL2 on Windows on ARM | Omnivox 1.12.0 Windows ARM64 release archive using WinRT | Release CI verifies the ARM64 archive, adjacent data, WinRT and eSpeak synthesis, and the guided installer selects it automatically.  A complete WSL2 host and audible check remains required. |
 | Native Windows x64 Emacs 30.2 or newer | Guided PowerShell installation with Omnivox 1.12.0 using WinRT | Supported. Native installer, complete byte-code compilation, fresh-process verification, and two-lane speech checks cover this route. Confirm audible speech on the installed host. Native Windows ARM64 is not yet supported. |
 
-The release-archive routes below are the shortest installation on matching
-GNU/Linux, macOS, and WSL2 hosts.  A bare executable, a repository tag, or an
-unpackaged CI artifact is not a complete installation: keep the release's
-runtime data and notices beside the executable.
+Use Homebrew on macOS, the guided installer under WSL2, or the matching release
+archive on GNU/Linux.  Manual Mac archive installation remains available.
+A bare executable, a repository tag, or an unpackaged CI artifact is not a
+complete installation: keep the release's runtime data and notices beside the
+executable.  Homebrew preserves that layout for you.
 
 Do not set ~OMNIVOX_ENGINE~ during initial setup.  Its empty value selects
 the normal platform engine above.  Engine routing and optional Piper,
@@ -156,7 +158,88 @@ permissions are too broad; a busy service still belongs to another connection.
 ** Install Omnivox From A Release Binary
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Installing An Omnivox Release Binary
-:DESCRIPTION: Install the verified Omnivox 1.12.0 archive.
+:DESCRIPTION: Install Omnivox through Homebrew or a verified release archive.
+:END:
+
+*** macOS with Homebrew
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+On macOS (formerly OS X), install [[https://brew.sh][Homebrew]] and follow its shell setup
+instructions.  Then install Omnivox from the
+[[https://github.com/bartbunting/homebrew-omnivox][official Homebrew tap]]:
+
+#+begin_example
+brew install bartbunting/omnivox/omnivox
+omnivox_program="$(brew --prefix omnivox)/bin/omnivox"
+"$omnivox_program" --version
+"$omnivox_program" --check
+"$omnivox_program" --list-voices
+#+end_example
+
+Homebrew selects the Apple Silicon or Intel archive and verifies its checksum.
+The version must be 1.12.0 or newer, and the check must produce both a tone and
+spoken confirmation.  Apple system speech and eSpeak are included.  You do not
+need a Rust build or an Omnivox source checkout.  Install Emacs 30.2 or newer
+separately; this tap does not install Emacs or Emacsvox.
+
+To select this Homebrew installation persistently for Emacsvox, record the
+stable executable path:
+
+#+begin_example
+omnivox_config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+omnivox_config_file="${EMACSVOX_OMNIVOX_CONFIG_FILE:-$omnivox_config_home/emacsvox/omnivox-program}"
+mkdir -p "$(dirname "$omnivox_config_file")"
+printf '%s\n' "$omnivox_program" > "$omnivox_config_file"
+#+end_example
+
+This replaces any previous executable selection in that file.  The path uses
+Homebrew's current-version link, so it continues to work after upgrades.  Do
+not substitute a versioned ~Cellar/omnivox/...~ path.  The bundled launcher reads
+this file even when Emacs does not inherit the shell's Homebrew ~PATH~, as can
+happen when starting Emacs from Finder.  An explicit ~OMNIVOX_PROGRAM~ override
+still takes precedence; remove or update an old override if it selects another
+installation.  If you use ~EMACSVOX_OMNIVOX_CONFIG_FILE~ or ~XDG_CONFIG_HOME~,
+make sure the launching Emacs session sees the same configuration location.
+
+Emacsvox uses its own bundled Lisp adapter.  Do not load the Homebrew package's
+~libexec/omnivox-voices.el~, which is intended for upstream Emacspeak.  Continue
+with @@texinfo:@ref{Quick Installation}@@ to compile Emacsvox, run
+~./bin/emacsvox --diagnose~ and ~./bin/emacsvox --check~, and start an isolated
+speaking session.  Confirm the selected server and audible output on your Mac.
+
+To upgrade Omnivox later:
+
+#+begin_example
+brew update
+brew upgrade omnivox
+"$(brew --prefix omnivox)/bin/omnivox" --version
+"$(brew --prefix omnivox)/bin/omnivox" --check
+#+end_example
+
+Restart your Emacsvox session after upgrading so both speech processes use the
+new executable.  Updating Emacsvox alone does not upgrade the Homebrew package.
+~brew uninstall omnivox~ removes it; select another server before restarting
+Emacsvox, since the saved executable path remains in your configuration.
+
+Optional Piper, Flite, and RuTTS companions and voice models are separate.
+The bundled RHVoice bridge still requires a compatible user-installed runtime
+and data; its presence does not establish macOS runtime support.  Keep optional
+companions, downloaded voices, and configuration outside Homebrew's Cellar,
+and use their explicit paths as described in the
+[[https://github.com/bartbunting/omnivox/blob/main/docs/README.md][Omnivox engine guides]].  Companions must match the core release and architecture.
+The WSL optional-engine installer is not a Homebrew package manager.
+
+The tap installs the published binaries without adding Apple Developer ID
+signing or notarization.  If local security policy refuses the verified binary,
+use @@texinfo:@ref{Installing Omnivox From Source}@@.  Native tap checks cover
+WAV synthesis and package operations; they do not replace listening acceptance
+inside Emacs or prove an upgrade between different upstream versions.
+
+*** Manual archive installation
+:PROPERTIES:
+:TEXINFO_NODE: no
 :END:
 
 Use this route for GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime,

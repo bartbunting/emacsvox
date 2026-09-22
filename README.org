@@ -68,11 +68,23 @@ checked-in Info files provide the same manual inside Emacs.
    experimental TGSpeechBox modules per user.  Proprietary Eloquence, DECtalk,
    and RHVoice runtimes and Piper voice models remain user supplied.
 
-   On GNU/Linux or macOS, install Emacs 30.2 or newer and follow the
+   On macOS, install Emacs 30.2 or newer separately and use the
+   [[https://github.com/bartbunting/homebrew-omnivox][official Homebrew tap]] for Omnivox:
+   #+BEGIN_SRC sh
+   brew install bartbunting/omnivox/omnivox
+   "$(brew --prefix omnivox)/bin/omnivox" --check
+   #+END_SRC
+   The [[file:docs/manual/chapters/speech-backends.org][Speech Backends source guide]] explains how to record its stable path for
+   Emacsvox, including Emacs launched without the shell's Homebrew PATH.
+   The tap installs the speech server; continue below to build Emacsvox.
+   Later, use =brew update= and =brew upgrade omnivox=, then restart your
+   Emacsvox session so both speech processes use the new version.
+
+   On GNU/Linux, or for manual Mac archive installation, follow the
    [[https://bartbunting.github.io/emacsvox/Speech-Backends.html][Speech Backends guide]]
    ([[file:docs/manual/chapters/speech-backends.org][source]]) for the matching Omnivox
-   release.  If a supported Emacs is not the system =emacs=, set =EMACS= in the ignored
-   =local.mk=.  Then run:
+   release.  All these routes require Emacs 30.2 or newer.  If a supported Emacs
+   is not the system =emacs=, set =EMACS= in the ignored =local.mk=.  Then run:
    #+BEGIN_SRC sh
    make check-emacs
    make bytecode

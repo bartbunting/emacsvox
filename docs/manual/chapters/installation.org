@@ -73,10 +73,13 @@ package before beginning.  The guided installer below uses an existing
 supported Emacs, suggests a suitable package, or offers an explicit source build.
 
 On GNU/Linux and macOS, install Emacs 30.2 or newer and ~make~.  Omnivox 1.12.0
-or newer is the supported speech-server baseline.  Installing its release
-archive also requires ~curl~ and either ~sha256sum~ on GNU/Linux or ~shasum~
-on macOS, plus ~tar~.  GNU Texinfo is needed only when building or editing the
-documentation, not for an ordinary installation.
+or newer is the supported speech-server baseline.  On macOS, use
+[[https://brew.sh][Homebrew]] to install Omnivox as described in
+@@texinfo:@ref{Installing An Omnivox Release Binary}@@; Emacs and Emacsvox
+are installed separately.  Manual release-archive installation requires ~curl~,
+~tar~, and either ~sha256sum~ on GNU/Linux or ~shasum~ on macOS.  GNU Texinfo
+is needed only when building or editing the documentation, not for an ordinary
+installation.
 
 Ubuntu 26.04 provides Emacs 30.2 as a distribution package, which satisfies
 this requirement. The same minimum applies to native Windows.
@@ -107,9 +110,9 @@ requirements for the recommended WSL2 binary route.  Docker and Windows .NET
 Framework are needed only for the advanced reproducible source-build route in
 @@texinfo:@ref{Building Omnivox For WSL2}@@.
 
-Run the clone from a Linux or WSL terminal and keep the checkout on the Linux
-filesystem.  The following concrete location works for an ordinary per-user
-installation:
+Run the clone from a terminal on GNU/Linux, macOS, or WSL.  Under WSL, keep the
+checkout on the Linux filesystem.  The following concrete location works for
+an ordinary per-user installation:
 
 #+begin_example
 mkdir -p ~/src
@@ -336,10 +339,17 @@ the diagnostic and audible check above.
 If you used the guided WSL2 installer above, Omnivox is already installed and
 checked.  Continue to @@texinfo:@ref{Quick Installation}@@.
 
-On a matching GNU/Linux x86-64 or macOS host, follow
-@@texinfo:@ref{Installing An Omnivox Release Binary}@@.  That procedure downloads and
-verifies the published 1.12.0 archive, keeps its runtime data beside the
-executable, and adds its versioned installation directory to ~PATH~.  Then run:
+On macOS, follow the Homebrew instructions in
+@@texinfo:@ref{Installing An Omnivox Release Binary}@@.  They install the
+matching Mac binary and record its stable executable path for Emacsvox,
+including Emacs sessions that do not inherit the shell's ~PATH~.  Homebrew
+installs Omnivox only; continue below to build and start Emacsvox with your
+selected Emacs 30.2 or newer.
+
+On a matching GNU/Linux x86-64 host, or for a manual Mac installation, use the
+archive instructions in that same section.  They verify the published 1.12.0
+archive, keep its runtime data beside the executable, and add its versioned
+installation directory to ~PATH~.  Then run:
 
 #+begin_example
 omnivox --check
