@@ -5975,8 +5975,9 @@ a bounded body preview.
 ‘l / L’
      Use ‘l’ (‘emacsvox-agent-shell-next-link’) or ‘L’
      (‘emacsvox-agent-shell-previous-link’).  Move to the next or
-     previous visible rendered link and speak its label.  Press ‘RET’ to
-     follow the link.
+     previous visible rendered link and speak its label and Return
+     action together.  The cursor hint remains visible without a second
+     voice repeating it.  Press ‘RET’ to follow the link.
 ‘e / E’
      Use ‘e’ (‘emacsvox-agent-shell-next-error’) or ‘E’
      (‘emacsvox-agent-shell-previous-error’).  Move to the next or
@@ -6035,9 +6036,10 @@ Moving into a rendered Markdown table activates a contextual table map.
 It announces the table dimensions and current cell.  Leaving the table
 restores the ordinary Agent Shell keys.  Plain Left and Right move by
 character within the table.  Use Control-Meta-Left and
-Control-Meta-Right to move between columns.  Control-Meta-Up and
-Control-Meta-Down move between logical rows, retaining the current
-column.
+Control-Meta-Right to move between columns.  Up and Down, also available
+as Control-Meta-Up and Control-Meta-Down, move between logical rows and
+read the entire destination row, retaining the current column.  Wrapped
+cells are read in full, using your table title settings.
 
    Outside editable input, press ‘t’ for the next table or ‘T’ for the
 previous table.  These keys skip the current table and announce the

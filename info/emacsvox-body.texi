@@ -6007,7 +6007,9 @@ From code or a table inside an answer@comma{} they skip that enclosing answer.
 @item l / L
 Use @kbd{l} (@code{emacsvox-agent-shell-next-link}) or
 @kbd{L} (@code{emacsvox-agent-shell-previous-link}).
-Move to the next or previous visible rendered link and speak its label.
+Move to the next or previous visible rendered link and speak its label and
+Return action together. The cursor hint remains visible without a second
+voice repeating it.
 Press @kbd{RET} to follow the link.
 @item e / E
 Use @kbd{e} (@code{emacsvox-agent-shell-next-error}) or
@@ -6065,8 +6067,10 @@ Moving into a rendered Markdown table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
 the ordinary Agent Shell keys.
 Plain Left and Right move by character within the table. Use Control-Meta-Left
-and Control-Meta-Right to move between columns. Control-Meta-Up and
-Control-Meta-Down move between logical rows@comma{} retaining the current column.
+and Control-Meta-Right to move between columns. Up and Down@comma{} also available as
+Control-Meta-Up and Control-Meta-Down@comma{} move between logical rows and read the
+entire destination row@comma{} retaining the current column. Wrapped cells are read
+in full@comma{} using your table title settings.
 
 Outside editable input@comma{} press @kbd{t} for the next table or
 @kbd{T} for the previous table. These keys skip the current table
