@@ -106,6 +106,31 @@
 - Reports, internal notes, and `AGENTS.md` edits alone do not call for Lisp
   compilation or new tests. The documentation review gate below still applies.
 
+## Agent Shell binding compatibility
+
+- Before adding or changing Agent Shell navigation bindings, and whenever
+  upgrading Agent Shell or refreshing its pinned test dependency, compare
+  upstream bindings with Emacsvox's Agent Shell navigation, speech-control,
+  table, and repeat maps. Recheck the complete overlap on upgrades; a key that
+  was free in an earlier release is not permanently reserved for Emacsvox.
+- Inspect the actual package paths and versions used by the target session
+  and tests, including the proposed upgrade. Check shell and viewport view
+  and edit maps, inherited Shell Maker bindings, and contextual permission,
+  inline-action, and transient maps. Do not infer compatibility from a sibling
+  checkout or version string alone.
+- Verify effective bindings in representative buffers as well as source map
+  definitions, accounting for keymap precedence and prefix-key conflicts.
+  Cover transcript navigation, table entry and exit, viewport viewing, and
+  editable input while idle and busy. Navigation letters must remain literal
+  input in prompt editors; contextual table prefixes must remain usable.
+- Record intentional overrides with their scope, rationale, and an accessible
+  way to invoke the displaced upstream action. Report newly introduced
+  conflicts and resolve them explicitly; do not silently reassign established
+  keys or accept changed bindings merely by updating test expectations.
+  Keep behavioral regression coverage for the affected keys in
+  `test/emacsvox-agent-shell-tests.el`, run the affected integration checks,
+  and update the maintained Agent Shell guide when user-facing bindings change.
+
 ## Live Emacs and speech diagnosis
 
 - Identify the affected Emacs PID, server socket, buffer, and its main and
