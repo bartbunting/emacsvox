@@ -6584,9 +6584,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (dolist (case '(("h" "First bold heading" "First bold heading")
                             ("h" "Second heading" "Second heading")
                             ("H" "First bold heading" "First bold heading")
-                            ("l" "first link" "first link")
-                            ("l" "second link" "second link")
-                            ("L" "first link" "first link")
+                            ("l" "first link" "first link, link. Press Return to open in browser.")
+                            ("l" "second link" "second link, link. Press Return to open in browser.")
+                            ("L" "first link" "first link, link. Press Return to open in browser.")
                             ("k" "(+ 1 2)" "elisp source block, 1 line.")
                             ("k" "print(1)" "python source block, 1 line.")
                             ("K" "(+ 1 2)" "elisp source block, 1 line.")))
@@ -6597,6 +6597,70 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 (should (looking-at (regexp-quote (nth 1 case))))
                 (should (equal speech (list (list 'speak (nth 2 case)))))))
           (should (equal-including-properties source (buffer-string)))))))))
+
+(ert-deftest emacsvox-agent-shell-letter-links-silence-duplicate-sensor-hints ()
+  "Link keys speak one action, keeping sensor hints visible and alerts audible."
+  (require 'emacsvox-advice)
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (dolist (case '(("l" "https://example.com" "open in browser")
+                    ("L" "https://example.com" "open in browser")
+                    ("l" nil "open file")
+                    ("L" nil "open file")))
+      (save-window-excursion
+        (with-temp-buffer
+          (switch-to-buffer (current-buffer))
+          (insert (format "before\n[docs](%s)\nafter\n"
+                          (or (nth 1 case)
+                              (expand-file-name
+                               "VERSION" emacsvox-agent-shell-test--repository-directory))))
+          (agent-shell-markdown-replace-markup)
+          (setq major-mode mode)
+          (use-local-map (if (eq mode 'agent-shell-mode) agent-shell-mode-map
+                           agent-shell-viewport-view-mode-map))
+          (setq emacsvox-agent-shell--speech-control-active t)
+          (cursor-sensor-mode 1)
+          (emacsvox-agent-shell--vertical-toggle-hint-setup)
+          (setq-local ems--message-filter "Decrypting")
+          (goto-char (if (equal (car case) "l") (point-min) (point-max)))
+          (cursor-sensor--detect)
+          (let ((emacsvox-speak-messages t)
+                (emacsvox-last-message "")
+                (inhibit-message nil)
+                (real-message (symbol-function 'message))
+                (real-current-message (symbol-function 'current-message))
+                echoed events)
+            (setq events
+                  (emacsvox-agent-shell-test--capture-events
+                    ;; Batch has no echo area: supply its contents while using
+                    ;; the real speech policy.  Graphical runs use both unchanged.
+                    (cl-letf (((symbol-function 'current-message)
+                               (lambda () (if (display-graphic-p)
+                                              (funcall real-current-message)
+                                            echoed)))
+                              ((symbol-function 'message)
+                               (lambda (&rest arguments)
+                                 (if (display-graphic-p)
+                                     ;; Macro playback suppresses the echo area;
+                                     ;; display messages as a real keypress does.
+                                     (let ((executing-kbd-macro nil))
+                                       (apply real-message arguments)
+                                       (setq echoed (funcall real-current-message)))
+                                   (emacsvox--message-around
+                                    (lambda (format-string &rest args)
+                                      (setq echoed
+                                            (apply #'format-message format-string args)))
+                                    arguments))))
+                              ((symbol-function 'set-transient-map) #'ignore))
+                      (execute-kbd-macro (kbd (car case)))
+                      (should (equal echoed
+                                     (concat "Press RET to " (nth 2 case))))
+                      (should (equal ems--message-filter "Decrypting"))
+                      (message "Agent needs approval"))))
+            (should (equal (seq-filter (lambda (event) (eq (car event) 'notify)) events)
+                           '((notify "Agent needs approval"))))
+            (should (equal (seq-filter (lambda (event) (eq (car event) 'speak)) events)
+                           (list (list 'speak (format "docs, link. Press Return to %s."
+                                                      (nth 2 case))))))))))))
 
 (ert-deftest emacsvox-agent-shell-letter-navigation-skips-current-and-hidden ()
   "Inline styling and hidden content must not create extra destinations."

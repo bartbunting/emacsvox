@@ -4699,6 +4699,8 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
           (pcase type
             ('table
              (emacsvox-agent-shell--table-entry-feedback direction))
+            ('link
+             (emacsvox-agent-shell--semantic-item-feedback))
             ('source-block
              (emacsvox-agent-shell--submit-text-feedback
               (emacsvox-agent-shell--source-block-summary target)
