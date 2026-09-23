@@ -5597,18 +5597,24 @@ row could be announced early@comma{} completion reports the count followed by th
 result at point@comma{} or an explicit zero-thread summary.
 
 @item
-If you navigate@comma{} invoke another command@comma{} leave the buffer@comma{} or refresh an
-existing search before it completes@comma{} the eventual completion is a generic
+If you navigate@comma{} invoke another command@comma{} or leave a new search buffer before
+it completes@comma{} the eventual completion is a generic
 count on the notification stream.  It does not reread the row you reached and
 does not disclose the query@comma{} sender@comma{} recipients@comma{} subject@comma{} tags@comma{} or attachment
 metadata.  Killing the owning search buffer cancels this delivery silently.
 @end itemize
 
-The @code{summary} policy plays a generic count and its completion cue on the
-notification stream; @code{cue} plays only that cue@comma{} and @code{silent} suppresses
-successful completion.  Failures remain audible and generic for every policy.
-A normal refresh is always treated as background-style completion@comma{} while the
-deliberate global refresh-all command remains silent.  See
+Refreshing the selected search buffer queues only the generic count on the
+primary speech stream@comma{} without interrupting the row already being spoken.
+Navigation interrupts that announcement.  A refresh that finishes in another
+buffer uses the notification stream.  Neither case rereads the selected row.
+
+The @code{summary} policy plays only a generic count and its completion cue;
+@code{cue} plays only that cue@comma{} and @code{silent} suppresses successful completion.
+These policies use the same stream selection for refreshes.  Other search
+summaries use the notification stream.  Failures remain audible and generic
+for every policy@comma{} with focused refresh failures using the primary stream too.
+The deliberate global refresh-all command remains silent.  See
 @ref{Aural Presentation} for the streams' general behavior and
 configuration.
 
@@ -5651,8 +5657,8 @@ Run @code{notmuch-search-tag-all} for the selected results.
 @item a
 Run @code{notmuch-search-archive-thread}.
 @item g
-Run @code{notmuch-refresh-this-buffer}; completion is delivered through the
-generic notification policy described above.
+Run @code{notmuch-refresh-this-buffer}; completion follows the interruptible
+refresh policy described above.
 @end table
 
 The default Search fields are authors@comma{} subject@comma{} relative date@comma{} matched and
@@ -5831,8 +5837,8 @@ source names@comma{} and positions@comma{} but never retain source buffers.  Run
 set @code{emacsvox-aural-presentation-history-limit} to zero to disable that
 history.
 
-Generic asynchronous completion uses the notification stream and contains no
-query or message metadata@comma{} but notification text may be retained by the
+Generic asynchronous completion contains no query or message metadata.
+Completions sent to the notification stream may be retained by the
 notification subsystem.  Choose @code{cue} or @code{silent} when even a generic
 thread count is unwanted@comma{} and review the global notification-device and log
 settings separately.
@@ -6347,6 +6353,10 @@ after Up or Down@comma{} it speaks the resulting input or history row without th
 observed shell prompt.  @kbd{M-b}@comma{} @kbd{M-f}@comma{} and modified Left or Right word
 movement speak the exact rendered text crossed.  A boundary key that produces
 no movement stays silent.
+
+In line mode@comma{} history navigation speaks the recalled command once.  EAT's
+history-item counter and input-restored message remain visible in the echo
+area@comma{} but are not spoken over the command on the notification stream.
 
 An echoed Space is named without reading the prompt or the rest of the line.
 For @key{BACKSPACE}@comma{} @key{DELETE}@comma{} @kbd{M-d}@comma{} and @kbd{C-k}@comma{} Emacsvox compares

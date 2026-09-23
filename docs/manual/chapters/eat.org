@@ -125,6 +125,10 @@ observed shell prompt.  @@texinfo:@kbd{M-b}@@, @@texinfo:@kbd{M-f}@@, and modifi
 movement speak the exact rendered text crossed.  A boundary key that produces
 no movement stays silent.
 
+In line mode, history navigation speaks the recalled command once.  EAT's
+history-item counter and input-restored message remain visible in the echo
+area, but are not spoken over the command on the notification stream.
+
 An echoed Space is named without reading the prompt or the rest of the line.
 For @@texinfo:@key{BACKSPACE}@@, @@texinfo:@key{DELETE}@@, @@texinfo:@kbd{M-d}@@, and @@texinfo:@kbd{C-k}@@, Emacsvox compares
 bounded public screen snapshots before and after the key.  When one same-row

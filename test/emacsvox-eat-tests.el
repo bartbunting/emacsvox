@@ -322,6 +322,59 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
         (emacsvox--advice-eat-line-previous-input-after)
         (should (= (length submissions) 1))))))
 
+(ert-deftest emacsvox-eat-history-counter-does-not-compete-with-input ()
+  "Real history commands speak recalled input without a counter notification."
+  (require 'emacsvox-advice)
+  (with-temp-buffer
+    (insert "prompt> ")
+    (let ((input-start (point))
+          (eat-terminal 'terminal)
+          (eat--line-input-ring (make-ring 3))
+          (eat--line-input-ring-index nil)
+          (eat--line-stored-incomplete-input nil)
+          (emacsvox-speak-messages t)
+          (emacsvox-last-message nil)
+          (ems--message-filter "\\`unrelated filtered message\\'")
+          (inhibit-message nil)
+          (last-command nil)
+          message-text spoken notifications)
+      (insert "unfinished command")
+      (ring-insert eat--line-input-ring "older command")
+      (ring-insert eat--line-input-ring "newer command")
+      (cl-letf (((symbol-function 'eat-term-end)
+                 (lambda (_terminal) input-start))
+                ((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'current-message)
+                 (lambda () message-text))
+                ((symbol-function 'message)
+                 (lambda (format-string &rest arguments)
+                   (emacsvox--message-around
+                    (lambda ()
+                      (setq message-text
+                            (apply #'format-message format-string arguments)))
+                    nil)))
+                ((symbol-function 'emacsvox-icon) #'ignore)
+                ((symbol-function 'tts-notify)
+                 (lambda (text &rest _) (push text notifications)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest _) (push content spoken))))
+        (dolist (command '(eat-line-previous-input eat-line-previous-input
+                           eat-line-next-input eat-line-next-input))
+          (let ((ems--interactive-fn-name command))
+            (funcall command 1)))
+        (should (equal (nreverse spoken)
+                       '("newer command" "older command" "newer command"
+                         "unfinished command")))
+        (should-not notifications)
+        ;; The counter remains visible, and ordinary messages are still spoken.
+        (should (equal message-text "Input restored"))
+        (message "Unrelated message")
+        (should (equal notifications '("Unrelated message")))
+        (setq eat--line-input-ring (make-ring 1))
+        (should-error (eat-line-previous-matching-input "." 1)
+                      :type 'user-error)))))
+
 (ert-deftest emacsvox-eat-history-isearch-presents-only-when-it-ends ()
   "EAT input-history Isearch defers feedback until its public end hook."
   (with-temp-buffer

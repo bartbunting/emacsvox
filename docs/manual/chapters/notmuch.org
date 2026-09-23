@@ -110,17 +110,23 @@ The default ~adaptive~ completion policy distinguishes two interactions:
    row could be announced early, completion reports the count followed by the
    result at point, or an explicit zero-thread summary.
 
-- If you navigate, invoke another command, leave the buffer, or refresh an
-   existing search before it completes, the eventual completion is a generic
+- If you navigate, invoke another command, or leave a new search buffer before
+   it completes, the eventual completion is a generic
    count on the notification stream.  It does not reread the row you reached and
    does not disclose the query, sender, recipients, subject, tags, or attachment
    metadata.  Killing the owning search buffer cancels this delivery silently.
 
-The ~summary~ policy plays a generic count and its completion cue on the
-notification stream; ~cue~ plays only that cue, and ~silent~ suppresses
-successful completion.  Failures remain audible and generic for every policy.
-A normal refresh is always treated as background-style completion, while the
-deliberate global refresh-all command remains silent.  See
+Refreshing the selected search buffer queues only the generic count on the
+primary speech stream, without interrupting the row already being spoken.
+Navigation interrupts that announcement.  A refresh that finishes in another
+buffer uses the notification stream.  Neither case rereads the selected row.
+
+The ~summary~ policy plays only a generic count and its completion cue;
+~cue~ plays only that cue, and ~silent~ suppresses successful completion.
+These policies use the same stream selection for refreshes.  Other search
+summaries use the notification stream.  Failures remain audible and generic
+for every policy, with focused refresh failures using the primary stream too.
+The deliberate global refresh-all command remains silent.  See
 @@texinfo:@ref{Aural Presentation}@@ for the streams' general behavior and
 configuration.
 
@@ -178,8 +184,8 @@ standard next and previous thread commands.
   Run ~notmuch-search-archive-thread~.
 - g ::
 
-  Run ~notmuch-refresh-this-buffer~; completion is delivered through the
-  generic notification policy described above.
+  Run ~notmuch-refresh-this-buffer~; completion follows the interruptible
+  refresh policy described above.
 
 The default Search fields are authors, subject, relative date, matched and
 total message counts, and ordinary tags.  Status tags configured as auditory
@@ -394,8 +400,8 @@ source names, and positions, but never retain source buffers.  Run
 set ~emacsvox-aural-presentation-history-limit~ to zero to disable that
 history.
 
-Generic asynchronous completion uses the notification stream and contains no
-query or message metadata, but notification text may be retained by the
+Generic asynchronous completion contains no query or message metadata.
+Completions sent to the notification stream may be retained by the
 notification subsystem.  Choose ~cue~ or ~silent~ when even a generic
 thread count is unwanted, and review the global notification-device and log
 settings separately.

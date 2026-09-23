@@ -3918,7 +3918,50 @@ Return the beginning of the inserted row."
       events
       '((icon task-done) (notify "Search complete, 1 thread"))))))
 
-(ert-deftest emacsvox-notmuch-refresh-announces-on-notification-stream ()
+(ert-deftest emacsvox-notmuch-focused-refresh-uses-interruptible-main-speech ()
+  "Refresh counts share navigation's lane without cutting off the current row."
+  (dolist (style '(adaptive summary cue silent))
+    (dolist (interacted '(nil t))
+      (save-window-excursion
+        (with-temp-buffer
+          (set-window-buffer (selected-window) (current-buffer))
+          (setq major-mode 'notmuch-search-mode)
+          (emacsvox-notmuch-test--insert-search-result
+           "First result" '(:thread "one"))
+          (emacsvox-notmuch-test--insert-search-result
+           "Second result" '(:thread "two"))
+          (let ((emacsvox-notmuch-search-completion-style style)
+                (original-point (point))
+                submissions)
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-submit)
+                  (lambda (text &rest arguments)
+                    (push (cons text arguments) submissions)))
+                 ((symbol-function 'emacsvox-aural-submit-actions)
+                  (lambda (&rest arguments)
+                    (push (cons nil arguments) submissions)))
+                 ((symbol-function 'emacsvox-aural-submit-notification)
+                  (lambda (&rest _)
+                    (ert-fail "Focused refresh used the notification stream"))))
+              (emacsvox-notmuch--announce-search-complete
+               (list :kind 'refresh :interacted interacted) (current-buffer)))
+            (should (= (point) original-point))
+            (if (eq style 'silent)
+                (should-not submissions)
+              (should (= (length submissions) 1))
+              (should (equal (caar submissions)
+                             (unless (eq style 'cue)
+                               "Search refreshed, 2 threads")))
+              (let ((arguments (cdar submissions)))
+                (should (eq (plist-get arguments :occasion) 'state-change))
+                (should (eq (plist-get arguments :delivery-policy) 'ordered))
+                (should (eq (plist-get arguments :interruption-policy) 'none))
+                (should (equal (plist-get arguments :facts)
+                               '(:role mail-view :mail-view-kind search
+                                 :mail-action-kind refresh
+                                 :events (refresh-completed))))))))))))
+
+(ert-deftest emacsvox-notmuch-background-refresh-announces-on-notification-stream ()
   "An explicit refresh reports its final count without replaying a row."
   (let ((buffer (generate-new-buffer " *emacsvox-notmuch-refresh-test*"))
         (properties

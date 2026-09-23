@@ -121,11 +121,13 @@ speaks the result at point as soon as it is available, while results are
 still arriving.  Completion then sends only the final count to the notification
 stream.  If no row was announced early, an untouched focused search speaks
 its count and selected result together at completion.
-After the user issues another command, leaves the search buffer, or refreshes
-an existing search, completion contains only a generic result count and uses
-the notification stream.  `summary' always sends the generic count to the
-notification stream, `cue' sends only a task-completion cue there, and
-`silent' suppresses successful completion feedback.
+After the user issues another command or leaves the search buffer, search
+completion contains only a generic result count on the notification stream.
+A refresh of the selected buffer queues its generic count on the primary
+stream, where navigation can interrupt it without competing speech.  Refreshes
+in other buffers use the notification stream.  `summary' sends only the generic
+count, `cue' sends only a task-completion cue, and `silent' suppresses successful
+completion feedback.  These styles use the same refresh stream selection.
 
 Failures remain audible for every style.  Notification feedback contains no
 query or message metadata and may be retained in the notifications log.  A
@@ -2629,6 +2631,18 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
    (emacsvox-notmuch-view-facts 'search 'search nil)
    'state-change 'progress nil))
 
+(defun emacsvox-notmuch--search-completion-feedback
+    (buffer kind facts icon &optional text)
+  "Present search KIND's completion in BUFFER using FACTS, ICON and TEXT.
+A focused refresh joins primary speech without interrupting the current row;
+subsequent navigation can cancel it.  Other completions use notifications."
+  (if (and (eq kind 'refresh)
+           (emacsvox-notmuch--search-buffer-focused-p buffer))
+      (with-current-buffer buffer
+        (emacsvox-notmuch--submit-text-feedback
+         facts 'state-change icon text 'ordered 'none))
+    (emacsvox-notmuch--notify-search-feedback facts icon text)))
+
 (defun emacsvox-notmuch--maybe-speak-initial-search-result (process)
   "Speak PROCESS's selected result once, as soon as a complete row exists."
   (when-let* ((state (process-get
@@ -2720,10 +2734,11 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
     (pcase emacsvox-notmuch-search-completion-style
       ('silent nil)
       ('cue
-       (emacsvox-notmuch--notify-search-feedback facts 'task-done))
+       (emacsvox-notmuch--search-completion-feedback
+        buffer kind facts 'task-done))
       ('summary
-       (emacsvox-notmuch--notify-search-feedback
-        facts 'task-done summary))
+       (emacsvox-notmuch--search-completion-feedback
+        buffer kind facts 'task-done summary))
       ('adaptive
        (if (and
             (eq kind 'search)
@@ -2733,11 +2748,11 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
             (not (input-pending-p)))
            (emacsvox-notmuch--announce-foreground-search-complete
             buffer count)
-         (emacsvox-notmuch--notify-search-feedback
-          facts 'task-done summary)))
+         (emacsvox-notmuch--search-completion-feedback
+          buffer kind facts 'task-done summary)))
       (_
-       (emacsvox-notmuch--notify-search-feedback
-        facts 'task-done summary)))))
+       (emacsvox-notmuch--search-completion-feedback
+        buffer kind facts 'task-done summary)))))
 
 (defun emacsvox-notmuch--note-search-interaction ()
   "Record a command issued while this Notmuch search is still running."
@@ -2775,7 +2790,8 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
          (zerop (process-exit-status process)))
         (emacsvox-notmuch--announce-search-complete state buffer))
        (t
-        (emacsvox-notmuch--notify-search-feedback
+        (emacsvox-notmuch--search-completion-feedback
+         buffer (plist-get state :kind)
          (emacsvox-notmuch--search-completion-facts
           (plist-get state :kind) 'refresh-failed)
          'warn-user

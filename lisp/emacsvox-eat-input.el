@@ -103,6 +103,16 @@
      'navigation 'item 'replaceable
      (emacsvox-eat--terminal-delivery-key 'prompt-navigation))))
 
+(defun emacsvox-eat--history-navigation-around (original &rest arguments)
+  "Call history command ORIGINAL with ARGUMENTS without redundant messages.
+Keep EAT's counter and input-restored messages visible, but leave speech to
+the recalled input's navigation presentation.  Other messages remain audible."
+  (let ((ems--message-filter
+         (concat "\\`\\(?:History item: [0-9]+\\|Input restored\\)\\'"
+                 (when ems--message-filter
+                   (concat "\\|" ems--message-filter)))))
+    (apply original arguments)))
+
 (cl-loop
  for target in emacsvox-eat--history-navigation-targets
  for advice-function =
@@ -339,8 +349,13 @@ reaches this advice."
   "EAT targets and native before-advice used for state invalidation.")
 
 (defconst emacsvox-eat--around-advice
-  '((eat-send-password . emacsvox--advice-eat-send-password-around)
-    (eat-self-input . emacsvox--advice-eat-self-input-around))
+  (append
+   '((eat-send-password . emacsvox--advice-eat-send-password-around)
+     (eat-self-input . emacsvox--advice-eat-self-input-around))
+   (mapcar
+    (lambda (target)
+      (cons target #'emacsvox-eat--history-navigation-around))
+    emacsvox-eat--history-navigation-targets))
   "EAT targets and native around-advice used for bounded input state.")
 
 (defun emacsvox-eat--install-advice ()

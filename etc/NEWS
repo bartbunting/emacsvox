@@ -10,6 +10,17 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Interruptible Notmuch refresh and EAT history feedback
+
+Refreshing the selected Notmuch search buffer queues its completion count on
+the primary speech stream. Navigation interrupts it, and it no longer speaks
+over the selected message through the notification stream. Refreshes that
+finish in another buffer retain generic notification feedback.
+
+EAT line-mode history navigation speaks the recalled command without also
+announcing the history-item counter or input-restored message. Those messages
+remain visible in the echo area; unrelated messages and errors are preserved.
+
 ** Native Windows installation
 
 The native Windows x64 installer can download a verified complete GNU Emacs
