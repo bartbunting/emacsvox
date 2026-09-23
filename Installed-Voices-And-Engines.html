@@ -17,7 +17,7 @@
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
 <link href="Sounds-And-Space.html" rel="next" title="Sounds And Space">
-<link href="Editing-Named-Voices.html" rel="prev" title="Editing Named Voices">
+<link href="Emoji-Speech-Names.html" rel="prev" title="Emoji Speech Names">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -35,10 +35,10 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Installed-Voices-And-Engines">
 <div class="nav-panel">
 <p>
-Next: <a href="Sounds-And-Space.html" accesskey="n" rel="next">Sounds, Tones, And Spatial Cues</a>, Previous: <a href="Editing-Named-Voices.html" accesskey="p" rel="prev">Edit A Named Voice</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Sounds-And-Space.html" accesskey="n" rel="next">Sounds, Tones, And Spatial Cues</a>, Previous: <a href="Emoji-Speech-Names.html" accesskey="p" rel="prev">Name Occasional Emoji In Speech</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Browse-Installed-Voices-And-Choose-Engines"><span>6.7 Browse Installed Voices And Choose Engines<a class="copiable-link" href="#Browse-Installed-Voices-And-Choose-Engines"> &para;</a></span></h3>
+<h3 class="section" id="Browse-Installed-Voices-And-Choose-Engines"><span>6.8 Browse Installed Voices And Choose Engines<a class="copiable-link" href="#Browse-Installed-Voices-And-Choose-Engines"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Voice-Workbench"></a>
 <a class="index-entry-id" id="index-physical-voices"></a>
@@ -52,7 +52,7 @@ Next: <a href="Sounds-And-Space.html" accesskey="n" rel="next">Sounds, Tones, An
 particular synthesizer or inspect its availability.
 </p></dd>
 <dt><kbd class="kbd">v</kbd></dt>
-<dd><p>Physical voices: the actual installed voices you can hear. Use this
+<dd><p>Physical voices: engine voices and, for Omnivox, installed downloads. Use this
 list to listen, compare, and experiment with their parameters. On an engine
 row, this key opens just that engine&rsquo;s voices.
 </p></dd>
@@ -66,18 +66,101 @@ their parameters and what their current engines support.
 </p></dd>
 </dl>
 
-<p>For physical voices, choose <em class="emph">Browse installed voices</em> in Home, then press
-<kbd class="key">RET</kbd> or <kbd class="kbd">v</kbd> on an engine to browse its voices.  <kbd class="key">RET</kbd>
-on a voice shows details; <kbd class="kbd">P</kbd> plays a named sample.  Filters
+<p>For physical voices, choose <em class="emph">Browse voices</em> in Home, then press
+<kbd class="kbd">v</kbd> on an engine to browse its voices. On an Omnivox engine,
+<kbd class="key">RET</kbd> opens its status, downloads, and settings;
+<kbd class="kbd">q</kbd> returns to the selected engine.
+Other speech adapters use <kbd class="key">RET</kbd> to browse voices directly.
+<kbd class="key">RET</kbd> or <kbd class="kbd">P</kbd> on a voice plays a named sample;
+<kbd class="kbd">x</kbd> shows details and <kbd class="kbd">t</kbd> opens the voice editor. Filters
 set with <kbd class="kbd">F</kbd> and each view&rsquo;s selected row and column survive
 navigation through Home. The engine selected for browsing is a temporary
 limit: switching to the logical, styles, or engine view removes it.
 Pressing <kbd class="kbd">v</kbd> from a voice list also removes that temporary
 limit. Your explicit filters still apply; <kbd class="kbd">C</kbd> clears all
 filters to show voices across engines.
-Press <kbd class="kbd">q</kbd> in an engine&rsquo;s voice list to return to that engine&rsquo;s
-row and column.  Press <kbd class="kbd">q</kbd> again from the engine list to leave
-the workbench.  The direct view shortcuts remain available.
+Press <kbd class="kbd">q</kbd> in a dedicated engine voice list to return to its
+details. Press <kbd class="kbd">q</kbd> there to return to the selected engine row
+and column, and again from the engine list to leave the workbench. The direct
+view shortcuts remain available.
+</p>
+<p>Languages containing just one voice show that voice directly. Languages with
+several voices appear under expandable headings. Each heading reports
+its voice count and whether it is expanded or collapsed; press
+<kbd class="key">RET</kbd> to toggle it. Languages and voices start in alphabetical
+order, ignoring capitalization. Related regions form a tree: expand <em class="emph">English</em>,
+then <em class="emph">United Kingdom</em> to browse voices such as <em class="emph">English (West Midlands)</em>.
+Redundant single-child levels are omitted, and private language-tag codes do
+not become extra headings. Unrecognized language codes remain visible, and
+voices without a language are sorted under <em class="emph">Unknown language</em>.
+A list containing one language starts expanded. Expansion choices are remembered
+for each engine scope. Refreshes preserve the selected voice and column, including
+when new library information arrives. Column sorting keeps headings together
+with their voices. <kbd class="kbd">A</kbd> samples usable visible voices, including
+single-voice languages, in displayed order. Expand a heading to include its
+hidden voices.
+</p>
+<p>Press <kbd class="kbd">/</kbd> to find a voice by name using completion. Search
+includes collapsed languages and disabled downloads within the current engine
+and explicit filters. Choosing a voice expands its language and moves to it.
+If a quick filter hides it, search switches to <em class="emph">All voices</em>. Search does not
+play a sample or change enablement.
+</p>
+<p>Omnivox offers four quick filters. Press <kbd class="kbd">Q</kbd> to choose from
+their voice counts, or use these shortcuts:
+</p>
+<dl class="table">
+<dt>1</dt>
+<dd><p>All voices: reported engine voices and installed library voices.
+</p></dd>
+<dt>2</dt>
+<dd><p>Downloaded: catalogue downloads, including disabled voices. Imported
+files and built-in voices remain in <em class="emph">All voices</em>.
+</p></dd>
+<dt>3</dt>
+<dd><p>Enabled: library voices selected for the next Apply.
+</p></dd>
+<dt>4</dt>
+<dd><p>Needs Apply: library voices whose desired selection differs from
+current worker eligibility on either stream. Both enabling and disabling
+can require Apply. Unchecked voices are counted separately; missing or
+outdated worker information cannot establish a pending change.
+</p></dd>
+</dl>
+
+<p>Counts include collapsed languages and respect the current engine and explicit
+filters. Each quick filter remembers its row and column. After Apply clears
+<em class="emph">Needs Apply</em>, press <kbd class="kbd">2</kbd> to return to the downloaded voice for
+previewing or palette editing. Engine overrides can prevent confirmation;
+<em class="emph">Active</em> and engine details still report usability and runtime health.
+<kbd class="kbd">C</kbd> also clears the quick filter.
+</p>
+<p>Omnivox&rsquo;s physical list combines browsing and installed-voice management.
+<em class="emph">Installed</em> shows library membership or an engine-supplied voice; <em class="emph">Enabled</em>
+is the desired selection for the next Apply. <em class="emph">Active</em> shows current usability
+on main speech, notification speech, or both. It does not describe model memory
+residency. Missing or inconsistent worker evidence appears as <em class="emph">Unknown</em>.
+Library information loads in the background. Press <kbd class="kbd">+</kbd> to
+enable or disable a managed voice, <kbd class="kbd">a</kbd> to review Apply,
+and <kbd class="kbd">d</kbd> for downloads. Downloads start disabled; enable and
+Apply before previewing them. Engine-managed voices retain their engine&rsquo;s own
+selection mechanism. Other adapters retain the existing physical inventory view.
+</p>
+<p>To remove a downloaded Piper, Flite or MBROLA package, disable its voices with
+<kbd class="kbd">+</kbd> and use <kbd class="kbd">a</kbd> to Apply. Then select one of
+its voices and press <kbd class="kbd">C-c u</kbd>. The review lists every speaker
+sharing the package, its size, known palette references and any reason files
+must be retained. Confirming removes only the reviewed managed files. Built-in
+voices, imported files and engine runtimes stay installed; saved palette choices
+remain available if you download the voice again.
+</p>
+<p>Another speech session may still need the package. Uninstall retains those
+files until retirement is confirmed; older session records may require
+inspection. The result distinguishes removed bytes, remaining files and any
+unconfirmed deletion amount. After interrupted cleanup, press
+<kbd class="kbd">C-c U</kbd> or run <code class="code">omnivox-library-resume-uninstall</code> to review and
+resume the retained operation. This needs an Omnivox build supporting voice
+uninstallation.
 </p>
 <p>The engine list reports <em class="emph">Availability</em> before routing preferences.  An engine
 with a missing runtime stays visible as <em class="emph">unavailable</em>, with its reason under
@@ -110,7 +193,7 @@ adapter advertises; they are not a listening test of every parameter.
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Sounds-And-Space.html">Sounds, Tones, And Spatial Cues</a>, Previous: <a href="Editing-Named-Voices.html">Edit A Named Voice</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Sounds-And-Space.html">Sounds, Tones, And Spatial Cues</a>, Previous: <a href="Emoji-Speech-Names.html">Name Occasional Emoji In Speech</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

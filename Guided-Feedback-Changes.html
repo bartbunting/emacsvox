@@ -77,14 +77,28 @@ your draft to live feedback.
 
 </li><li> Press <kbd class="kbd">m</kbd> or <kbd class="kbd">RET</kbd> on <em class="emph">What should match</em>
 to expand the matching criteria.  Each fact, state, event, and occasion
-shows whether it is included.  Press <kbd class="kbd">RET</kbd> on a criterion
+shows <em class="emph">Included</em> or <em class="emph">Excluded</em>.  All included conditions must match;
+excluded conditions are ignored, not forbidden.
+The <em class="emph">Captured example</em> (or <em class="emph">Simulated example</em>) row describes the original
+feedback.  Its facts are not editable, but they are available as matching
+conditions.  Opening the conditions preserves your current selections;
+additional facts appear as <em class="emph">Excluded</em> until you include them.  For example,
+a mail action of <em class="emph">select</em> describes the operation that produced the
+feedback, not whether a row is selected in this editor.  Include that
+action or an event such as <em class="emph">operation failed</em> to limit the rule to it.
+Press <kbd class="kbd">RET</kbd> on a criterion
 to exclude or include it; excluded criteria stay available to restore.
-For example, exclude <em class="emph">state unread</em> while keeping <em class="emph">role field</em>,
-<em class="emph">field kind authors</em>, and <em class="emph">module notmuch</em> to match authors in both read
-and unread messages.  Keep at least one criterion.  The parent row shows
+For example, exclude <em class="emph">with state unread</em> while keeping <em class="emph">with role field</em>,
+<em class="emph">with field kind authors</em>, and <em class="emph">from the notmuch integration</em> to match
+authors in both read and unread messages.  Keep at least one criterion.  The parent row shows
 the resulting match; <kbd class="kbd">m</kbd> collapses the criteria again.
 These are rules for every matching item, not an edit to one object.
 
+<p>The summary describes those conditions together.  For example, shell
+prompt feedback may match &quot;Items from the shell integration, in shell
+mode, during navigation, and with text style comint highlight prompt.&quot;
+The text style names the Emacs face used to display that text.
+</p>
 </li><li> Press <kbd class="kbd">l</kbd> for <em class="emph">How long</em>: the source buffer&rsquo;s lifetime,
 this Emacs session, or a saved personal rule.  A buffer rule affects every
 matching item in that buffer.  Review the spoken summary of target,

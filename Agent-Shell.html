@@ -79,6 +79,23 @@ Image attachment keeps Agent Shell&rsquo;s existing feedback. Submitted transcri
 text is history rather than editable prompt input.  Press <kbd class="kbd">C-c C-c</kbd> to ask Agent Shell to interrupt
 an active request; its normal confirmation setting still applies.
 </p>
+<p>With Agent Shell&rsquo;s persistent prompt enabled, you can keep typing while the
+agent works.  Brackets and navigation letters remain ordinary input at
+that prompt.  Reading the live prompt says “Agent working” and whether normal
+submission will queue or steer the input.  A pending permission is announced
+as “Waiting for permission.”  These cues also precede the first line of a draft;
+later lines keep ordinary reading feedback.  “Ready for input” is reserved for
+an empty prompt when the agent is idle.  The route follows your normal submit
+setting and accounts for providers that cannot steer; custom submit functions
+are identified without guessing what they will do.
+</p>
+<p>In the viewport editor, Emacsvox announces whether a prompt was
+submitted, queued, or sent for steering, and whether the editor stays open.
+The normal and override send commands follow Agent Shell&rsquo;s configured busy
+routes, including queueing when the provider does not support steering.
+“Steering sent” confirms dispatch; the agent&rsquo;s acceptance or refusal follows
+separately.
+</p>
 <p>Emacsvox speaks routine content only at complete turn boundaries.  A network
 pause does not make a partial answer sound complete.  A cancelled, refused, or
 failed turn reports its outcome without replacing the last successfully
@@ -101,6 +118,11 @@ confirmed values.  Background setting announcements identify the session.
 In the viewport prompt editor, continuing a list announces its bullet or next
 number and indentation.  Indenting and dedenting announce the new indentation;
 leaving an empty list item announces that the list ended.
+</p>
+<p>Use <code class="code">M-x emacsvox-agent-shell-speak-header</code> to hear the full session header.
+When <code class="code">agent-shell-show-cost-indicator</code> is enabled and the provider reports a
+positive cost, this includes the cumulative cost with Agent Shell&rsquo;s currency
+and rounding.  Brief announcements when entering a session stay concise.
 </p>
 </div>
 <div class="section-level-extent" id="Choose-automatic-speech-and-privacy">
@@ -221,6 +243,46 @@ tool, plan, permission, error, source-block, and table locations.  Emacsvox
 navigation reports the block type, visibility, and a bounded body preview.
 </p>
 <dl class="table">
+<dt><kbd class="kbd">h / H</kbd></dt>
+<dd><p>Use <kbd class="kbd">h</kbd> (<code class="code">emacsvox-agent-shell-next-heading</code>) or
+<kbd class="kbd">H</kbd> (<code class="code">emacsvox-agent-shell-previous-heading</code>).
+Move to the next or previous visible Markdown heading and speak its text.
+</p></dd>
+<dt><kbd class="kbd">k / K</kbd></dt>
+<dd><p>Use <kbd class="kbd">k</kbd> (<code class="code">emacsvox-agent-shell-next-source-block</code>) or
+<kbd class="kbd">K</kbd> (<code class="code">emacsvox-agent-shell-previous-source-block</code>).
+Move to the next or previous source block and announce its language and
+line count. Inside a table, lowercase <kbd class="kbd">k</kbd> remains the table
+copy prefix; use <code class="code">M-x emacsvox-agent-shell-next-source-block</code> to jump forward
+to code from there.
+</p></dd>
+<dt><kbd class="kbd">u / U</kbd></dt>
+<dd><p>Use <kbd class="kbd">u</kbd> (<code class="code">emacsvox-agent-shell-next-user-prompt</code>) or
+<kbd class="kbd">U</kbd> (<code class="code">emacsvox-agent-shell-previous-user-prompt</code>).
+Move to the next or previous submitted user prompt, skipping the live editor.
+</p></dd>
+<dt><kbd class="kbd">j / J</kbd></dt>
+<dd><p>Use <kbd class="kbd">j</kbd> (<code class="code">emacsvox-agent-shell-next-response</code>) or
+<kbd class="kbd">J</kbd> (<code class="code">emacsvox-agent-shell-previous-response</code>).
+Move to the next or previous agent response and speak its bounded body
+preview. These keys skip intervening thoughts, tools, and other block types.
+From code or a table inside an answer, they skip that enclosing answer.
+</p></dd>
+<dt><kbd class="kbd">l / L</kbd></dt>
+<dd><p>Use <kbd class="kbd">l</kbd> (<code class="code">emacsvox-agent-shell-next-link</code>) or
+<kbd class="kbd">L</kbd> (<code class="code">emacsvox-agent-shell-previous-link</code>).
+Move to the next or previous visible rendered link and speak its label and
+Return action together. The cursor hint remains visible without a second
+voice repeating it.
+Press <kbd class="kbd">RET</kbd> to follow the link.
+</p></dd>
+<dt><kbd class="kbd">e / E</kbd></dt>
+<dd><p>Use <kbd class="kbd">e</kbd> (<code class="code">emacsvox-agent-shell-next-error</code>) or
+<kbd class="kbd">E</kbd> (<code class="code">emacsvox-agent-shell-previous-error</code>).
+Move to the next or previous error or failed tool call. Failed tools are
+identified by Agent Shell&rsquo;s error styling in their status label, rather than
+by words in their output.
+</p></dd>
 <dt><kbd class="kbd">]</kbd></dt>
 <dd><p>Run <code class="code">emacsvox-agent-shell-next-block-at-point</code> to find the next block of
 the current semantic type.
@@ -240,14 +302,15 @@ to its preceding occurrence.
 </dl>
 
 <p>After a successful typed jump, <kbd class="kbd">]</kbd> and <kbd class="kbd">[</kbd> repeat in that direction.
-At an editable live prompt, bare brackets insert themselves instead of taking
-over prompt editing.
+At an editable live prompt or viewport editor, bare brackets and navigation
+letters insert themselves instead of taking over prompt editing.
 </p>
 </div>
 <div class="section-level-extent" id="Read-and-copy-source-blocks">
 <h3 class="section"><span>10.6 Read and copy source blocks<a class="copiable-link" href="#Read-and-copy-source-blocks"> &para;</a></span></h3>
 
-<p>Use typed block navigation to reach a source block, then:
+<p>Use <kbd class="kbd">k</kbd> or <kbd class="kbd">K</kbd>, or typed block navigation, to
+reach a source block, then:
 </p>
 <dl class="table">
 <dt><kbd class="kbd">C-c C-b</kbd></dt>
@@ -279,19 +342,43 @@ list editing, setting changes, updated tool output, and change-review entry.
 <p>Moving into a rendered Markdown table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
 the ordinary Agent Shell keys.
+Plain Left and Right move by character within the table. Use Control-Meta-Left
+and Control-Meta-Right to move between columns. Up and Down, also available as
+Control-Meta-Up and Control-Meta-Down, move between logical rows and read the
+entire destination row, retaining the current column. Wrapped cells are read
+in full, using your table title settings.
+</p>
+<p>Outside editable input, press <kbd class="kbd">t</kbd> for the next table or
+<kbd class="kbd">T</kbd> for the previous table. These keys skip the current table
+and announce the destination table and cell. Like the bracket navigation keys,
+they insert themselves in a live prompt or viewport editor, including while
+the agent is working.
+</p>
+<p>Continuous speech and response-block reading omit rendered table borders and
+keep the cell text. Decorative borders therefore do not force a switch to a
+different speech engine. Literal box-drawing characters in prose or code remain
+available to symbol naming and exact character inspection.
 </p>
 <dl class="table">
-<dt><kbd class="kbd">&lt;right&gt;</kbd></dt>
+<dt><kbd class="kbd">t</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-next-table</code> outside editable input.
+</p></dd>
+<dt><kbd class="kbd">T</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-previous-table</code> outside editable input.
+</p></dd>
+<dt><kbd class="kbd">C-M-&lt;right&gt;</kbd></dt>
 <dd><p>Run <code class="code">emacsvox-agent-shell-table-next-column</code>.
 </p></dd>
-<dt><kbd class="kbd">&lt;left&gt;</kbd></dt>
+<dt><kbd class="kbd">C-M-&lt;left&gt;</kbd></dt>
 <dd><p>Run <code class="code">emacsvox-agent-shell-table-previous-column</code>.
 </p></dd>
 <dt><kbd class="kbd">&lt;down&gt;</kbd></dt>
-<dd><p>Run <code class="code">emacsvox-agent-shell-table-next-row</code>.
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-next-row</code>. Also bound to
+<kbd class="kbd">C-M-&lt;down&gt;</kbd>.
 </p></dd>
 <dt><kbd class="kbd">&lt;up&gt;</kbd></dt>
-<dd><p>Run <code class="code">emacsvox-agent-shell-table-previous-row</code>.
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-previous-row</code>. Also bound to
+<kbd class="kbd">C-M-&lt;up&gt;</kbd>.
 </p></dd>
 <dt><kbd class="kbd">M-&lt;down&gt;</kbd></dt>
 <dd><p>Run <code class="code">emacsvox-agent-shell-table-exit-forward</code>.

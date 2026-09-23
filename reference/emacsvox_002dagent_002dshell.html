@@ -74,9 +74,23 @@ See https://github.com/xenodium/agent-shell for agent-shell itself.
 <li><a href="#emacsvox_002dagent_002dshell_002denable" accesskey="4">emacsvox-agent-shell-enable</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002dnext_002dblock_002dat_002dpoint" accesskey="5">emacsvox-agent-shell-next-block-at-point</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002dnext_002dblock_002dof_002dtype" accesskey="6">emacsvox-agent-shell-next-block-of-type</a></li>
-<li><a href="#emacsvox_002dagent_002dshell_002dprevious_002dblock_002dat_002dpoint" accesskey="7">emacsvox-agent-shell-previous-block-at-point</a></li>
-<li><a href="#emacsvox_002dagent_002dshell_002dprevious_002dblock_002dof_002dtype" accesskey="8">emacsvox-agent-shell-previous-block-of-type</a></li>
-<li><a href="#emacsvox_002dagent_002dshell_002drepeat_002dnext_002dblock" accesskey="9">emacsvox-agent-shell-repeat-next-block</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dnext_002derror" accesskey="7">emacsvox-agent-shell-next-error</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dnext_002dheading" accesskey="8">emacsvox-agent-shell-next-heading</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dnext_002dlink" accesskey="9">emacsvox-agent-shell-next-link</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dnext_002dresponse">emacsvox-agent-shell-next-response</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dnext_002dsource_002dblock">emacsvox-agent-shell-next-source-block</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dnext_002dtable">emacsvox-agent-shell-next-table</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dnext_002duser_002dprompt">emacsvox-agent-shell-next-user-prompt</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dprevious_002dblock_002dat_002dpoint">emacsvox-agent-shell-previous-block-at-point</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dprevious_002dblock_002dof_002dtype">emacsvox-agent-shell-previous-block-of-type</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dprevious_002derror">emacsvox-agent-shell-previous-error</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dprevious_002dheading">emacsvox-agent-shell-previous-heading</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dprevious_002dlink">emacsvox-agent-shell-previous-link</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dprevious_002dresponse">emacsvox-agent-shell-previous-response</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dprevious_002dsource_002dblock">emacsvox-agent-shell-previous-source-block</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dprevious_002dtable">emacsvox-agent-shell-previous-table</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002dprevious_002duser_002dprompt">emacsvox-agent-shell-previous-user-prompt</a></li>
+<li><a href="#emacsvox_002dagent_002dshell_002drepeat_002dnext_002dblock">emacsvox-agent-shell-repeat-next-block</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002drepeat_002dprevious_002dblock">emacsvox-agent-shell-repeat-previous-block</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel">emacsvox-agent-shell-select-background-speech-level</a></li>
 <li><a href="#emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel">emacsvox-agent-shell-select-speech-level</a></li>
@@ -178,8 +192,99 @@ When invoked by ‘]’ at an editable prompt, insert that character instead.
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dnext_002derror">
+<h4 class="subsubsection"><span>2.10.1.7 emacsvox-agent-shell-next-error<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dnext_002derror"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dnext_002derror"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-next-error</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dnext_002derror"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dnext_002derror-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next error or failed tool call.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dnext_002dheading">
+<h4 class="subsubsection"><span>2.10.1.8 emacsvox-agent-shell-next-heading<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dnext_002dheading"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dnext_002dheading"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-next-heading</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dnext_002dheading"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dnext_002dheading-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next visible Markdown heading.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dnext_002dlink">
+<h4 class="subsubsection"><span>2.10.1.9 emacsvox-agent-shell-next-link<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dnext_002dlink"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dnext_002dlink"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-next-link</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dnext_002dlink"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dnext_002dlink-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next visible rendered link.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dnext_002dresponse">
+<h4 class="subsubsection"><span>2.10.1.10 emacsvox-agent-shell-next-response<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dnext_002dresponse"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dnext_002dresponse"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-next-response</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dnext_002dresponse"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dnext_002dresponse-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next agent response and announce its body.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dnext_002dsource_002dblock">
+<h4 class="subsubsection"><span>2.10.1.11 emacsvox-agent-shell-next-source-block<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dnext_002dsource_002dblock"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dnext_002dsource_002dblock"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-next-source-block</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dnext_002dsource_002dblock"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dnext_002dsource_002dblock-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next source block and announce its language and line count.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dnext_002dtable">
+<h4 class="subsubsection"><span>2.10.1.12 emacsvox-agent-shell-next-table<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dnext_002dtable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dnext_002dtable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-next-table</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dnext_002dtable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dnext_002dtable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next rendered Markdown table and announce it.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dnext_002duser_002dprompt">
+<h4 class="subsubsection"><span>2.10.1.13 emacsvox-agent-shell-next-user-prompt<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dnext_002duser_002dprompt"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dnext_002duser_002dprompt"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-next-user-prompt</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dnext_002duser_002dprompt"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dnext_002duser_002dprompt-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next submitted user prompt.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dprevious_002dblock_002dat_002dpoint">
-<h4 class="subsubsection"><span>2.10.1.7 emacsvox-agent-shell-previous-block-at-point<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dprevious_002dblock_002dat_002dpoint"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.14 emacsvox-agent-shell-previous-block-at-point<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dprevious_002dblock_002dat_002dpoint"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dprevious_002dblock_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-previous-block-at-point</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dprevious_002dblock_002dat_002dpoint"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dprevious_002dblock_002dat_002dpoint-1"></a>
@@ -192,7 +297,7 @@ When invoked by ‘[’ at an editable prompt, insert that character instead.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dprevious_002dblock_002dof_002dtype">
-<h4 class="subsubsection"><span>2.10.1.8 emacsvox-agent-shell-previous-block-of-type<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dprevious_002dblock_002dof_002dtype"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.15 emacsvox-agent-shell-previous-block-of-type<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dprevious_002dblock_002dof_002dtype"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dprevious_002dblock_002dof_002dtype"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-previous-block-of-type</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dprevious_002dblock_002dof_002dtype"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dprevious_002dblock_002dof_002dtype-1"></a>
@@ -203,8 +308,99 @@ When invoked by ‘[’ at an editable prompt, insert that character instead.
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dprevious_002derror">
+<h4 class="subsubsection"><span>2.10.1.16 emacsvox-agent-shell-previous-error<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dprevious_002derror"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dprevious_002derror"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-previous-error</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dprevious_002derror"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dprevious_002derror-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the previous error or failed tool call.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dprevious_002dheading">
+<h4 class="subsubsection"><span>2.10.1.17 emacsvox-agent-shell-previous-heading<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dprevious_002dheading"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dprevious_002dheading"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-previous-heading</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dprevious_002dheading"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dprevious_002dheading-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the previous visible Markdown heading.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dprevious_002dlink">
+<h4 class="subsubsection"><span>2.10.1.18 emacsvox-agent-shell-previous-link<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dprevious_002dlink"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dprevious_002dlink"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-previous-link</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dprevious_002dlink"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dprevious_002dlink-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the previous visible rendered link.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dprevious_002dresponse">
+<h4 class="subsubsection"><span>2.10.1.19 emacsvox-agent-shell-previous-response<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dprevious_002dresponse"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dprevious_002dresponse"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-previous-response</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dprevious_002dresponse"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dprevious_002dresponse-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the previous agent response and announce its body.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dprevious_002dsource_002dblock">
+<h4 class="subsubsection"><span>2.10.1.20 emacsvox-agent-shell-previous-source-block<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dprevious_002dsource_002dblock"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dprevious_002dsource_002dblock"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-previous-source-block</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dprevious_002dsource_002dblock"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dprevious_002dsource_002dblock-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the previous source block and announce its language and line count.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dprevious_002dtable">
+<h4 class="subsubsection"><span>2.10.1.21 emacsvox-agent-shell-previous-table<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dprevious_002dtable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dprevious_002dtable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-previous-table</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dprevious_002dtable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dprevious_002dtable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the previous rendered Markdown table and announce it.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dprevious_002duser_002dprompt">
+<h4 class="subsubsection"><span>2.10.1.22 emacsvox-agent-shell-previous-user-prompt<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dprevious_002duser_002dprompt"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dprevious_002duser_002dprompt"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-previous-user-prompt</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dprevious_002duser_002dprompt"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dprevious_002duser_002dprompt-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the previous submitted user prompt.
+At an editable prompt, a directly bound character key inserts itself instead.
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002drepeat_002dnext_002dblock">
-<h4 class="subsubsection"><span>2.10.1.9 emacsvox-agent-shell-repeat-next-block<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002drepeat_002dnext_002dblock"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.23 emacsvox-agent-shell-repeat-next-block<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002drepeat_002dnext_002dblock"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002drepeat_002dnext_002dblock"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-repeat-next-block</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002drepeat_002dnext_002dblock"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002drepeat_002dnext_002dblock-1"></a>
@@ -216,7 +412,7 @@ When invoked by ‘[’ at an editable prompt, insert that character instead.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002drepeat_002dprevious_002dblock">
-<h4 class="subsubsection"><span>2.10.1.10 emacsvox-agent-shell-repeat-previous-block<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002drepeat_002dprevious_002dblock"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.24 emacsvox-agent-shell-repeat-previous-block<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002drepeat_002dprevious_002dblock"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002drepeat_002dprevious_002dblock"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-repeat-previous-block</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002drepeat_002dprevious_002dblock"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002drepeat_002dprevious_002dblock-1"></a>
@@ -228,7 +424,7 @@ When invoked by ‘[’ at an editable prompt, insert that character instead.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel">
-<h4 class="subsubsection"><span>2.10.1.11 emacsvox-agent-shell-select-background-speech-level<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.25 emacsvox-agent-shell-select-background-speech-level<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-select-background-speech-level</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dselect_002dbackground_002dspeech_002dlevel-1"></a>
@@ -240,7 +436,7 @@ When invoked by ‘[’ at an editable prompt, insert that character instead.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel">
-<h4 class="subsubsection"><span>2.10.1.12 emacsvox-agent-shell-select-speech-level<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.26 emacsvox-agent-shell-select-speech-level<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-select-speech-level</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dselect_002dspeech_002dlevel-1"></a>
@@ -252,7 +448,7 @@ When invoked by ‘[’ at an editable prompt, insert that character instead.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dspeak_002dheader">
-<h4 class="subsubsection"><span>2.10.1.13 emacsvox-agent-shell-speak-header<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dspeak_002dheader"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.27 emacsvox-agent-shell-speak-header<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dspeak_002dheader"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dspeak_002dheader"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-speak-header</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dspeak_002dheader"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dspeak_002dheader-1"></a>
@@ -264,7 +460,7 @@ When invoked by ‘[’ at an editable prompt, insert that character instead.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dspeak_002dlast_002dresponse">
-<h4 class="subsubsection"><span>2.10.1.14 emacsvox-agent-shell-speak-last-response<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dspeak_002dlast_002dresponse"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.28 emacsvox-agent-shell-speak-last-response<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dspeak_002dlast_002dresponse"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dspeak_002dlast_002dresponse"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-speak-last-response</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dspeak_002dlast_002dresponse"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dspeak_002dlast_002dresponse-1"></a>
@@ -276,7 +472,7 @@ When invoked by ‘[’ at an editable prompt, insert that character instead.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dspeak_002dresponse_002doverview">
-<h4 class="subsubsection"><span>2.10.1.15 emacsvox-agent-shell-speak-response-overview<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dspeak_002dresponse_002doverview"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.29 emacsvox-agent-shell-speak-response-overview<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dspeak_002dresponse_002doverview"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dspeak_002dresponse_002doverview"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-speak-response-overview</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dspeak_002dresponse_002doverview"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dspeak_002dresponse_002doverview-1"></a>
@@ -288,7 +484,7 @@ When invoked by ‘[’ at an editable prompt, insert that character instead.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dspeak_002dsource_002dblock">
-<h4 class="subsubsection"><span>2.10.1.16 emacsvox-agent-shell-speak-source-block<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dspeak_002dsource_002dblock"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.30 emacsvox-agent-shell-speak-source-block<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dspeak_002dsource_002dblock"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dspeak_002dsource_002dblock"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-speak-source-block</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dspeak_002dsource_002dblock"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dspeak_002dsource_002dblock-1"></a>
@@ -300,7 +496,7 @@ When invoked by ‘[’ at an editable prompt, insert that character instead.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell">
-<h4 class="subsubsection"><span>2.10.1.17 emacsvox-agent-shell-table-copy-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.31 emacsvox-agent-shell-table-copy-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-copy-cell</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcell-1"></a>
@@ -314,7 +510,7 @@ logical value of a wrapped cell.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn">
-<h4 class="subsubsection"><span>2.10.1.18 emacsvox-agent-shell-table-copy-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.32 emacsvox-agent-shell-table-copy-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-copy-column</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002dcolumn-1"></a>
@@ -327,7 +523,7 @@ Separate cells with newlines and omit Markdown separator syntax.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow">
-<h4 class="subsubsection"><span>2.10.1.19 emacsvox-agent-shell-table-copy-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.33 emacsvox-agent-shell-table-copy-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-copy-row</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dcopy_002drow-1"></a>
@@ -340,7 +536,7 @@ Separate cells with tabs and omit Markdown separator syntax.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward">
-<h4 class="subsubsection"><span>2.10.1.20 emacsvox-agent-shell-table-exit-backward<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.34 emacsvox-agent-shell-table-exit-backward<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-exit-backward</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dbackward-1"></a>
@@ -352,7 +548,7 @@ Separate cells with tabs and omit Markdown separator syntax.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward">
-<h4 class="subsubsection"><span>2.10.1.21 emacsvox-agent-shell-table-exit-forward<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.35 emacsvox-agent-shell-table-exit-forward<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-exit-forward</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dexit_002dforward-1"></a>
@@ -364,7 +560,7 @@ Separate cells with tabs and omit Markdown separator syntax.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn">
-<h4 class="subsubsection"><span>2.10.1.22 emacsvox-agent-shell-table-next-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.36 emacsvox-agent-shell-table-next-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-next-column</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002dcolumn-1"></a>
@@ -378,7 +574,7 @@ Separate cells with tabs and omit Markdown separator syntax.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dnext_002drow">
-<h4 class="subsubsection"><span>2.10.1.23 emacsvox-agent-shell-table-next-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002drow"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.37 emacsvox-agent-shell-table-next-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dnext_002drow"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-next-row</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dnext_002drow-1"></a>
@@ -392,7 +588,7 @@ Separate cells with tabs and omit Markdown separator syntax.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn">
-<h4 class="subsubsection"><span>2.10.1.24 emacsvox-agent-shell-table-previous-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.38 emacsvox-agent-shell-table-previous-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-previous-column</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002dcolumn-1"></a>
@@ -406,7 +602,7 @@ Separate cells with tabs and omit Markdown separator syntax.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow">
-<h4 class="subsubsection"><span>2.10.1.25 emacsvox-agent-shell-table-previous-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.39 emacsvox-agent-shell-table-previous-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-previous-row</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dprevious_002drow-1"></a>
@@ -420,7 +616,7 @@ Separate cells with tabs and omit Markdown separator syntax.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod">
-<h4 class="subsubsection"><span>2.10.1.26 emacsvox-agent-shell-table-select-speaking-method<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.40 emacsvox-agent-shell-table-select-speaking-method<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-select-speaking-method</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dselect_002dspeaking_002dmethod-1"></a>
@@ -435,7 +631,7 @@ resulting configuration after the change.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell">
-<h4 class="subsubsection"><span>2.10.1.27 emacsvox-agent-shell-table-speak-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.41 emacsvox-agent-shell-table-speak-cell<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-cell</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcell-1"></a>
@@ -447,7 +643,7 @@ resulting configuration after the change.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn">
-<h4 class="subsubsection"><span>2.10.1.28 emacsvox-agent-shell-table-speak-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.42 emacsvox-agent-shell-table-speak-column<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-column</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcolumn-1"></a>
@@ -459,7 +655,7 @@ resulting configuration after the change.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext">
-<h4 class="subsubsection"><span>2.10.1.29 emacsvox-agent-shell-table-speak-context<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.43 emacsvox-agent-shell-table-speak-context<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-context</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002dcontext-1"></a>
@@ -471,7 +667,7 @@ resulting configuration after the change.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions">
-<h4 class="subsubsection"><span>2.10.1.30 emacsvox-agent-shell-table-speak-dimensions<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.44 emacsvox-agent-shell-table-speak-dimensions<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-dimensions</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002ddimensions-1"></a>
@@ -483,7 +679,7 @@ resulting configuration after the change.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow">
-<h4 class="subsubsection"><span>2.10.1.31 emacsvox-agent-shell-table-speak-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.10.1.45 emacsvox-agent-shell-table-speak-row<a class="copiable-link" href="#emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-agent-shell-table-speak-row</strong><a class="copiable-link" href="#index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002dagent_002dshell_002dtable_002dspeak_002drow-1"></a>

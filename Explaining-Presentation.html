@@ -44,7 +44,9 @@ Next: <a href="Adjusting-Presentation.html" accesskey="n" rel="next">Change Feed
 <p>Use this workflow when feedback is surprising, unclear, or especially useful:
 </p>
 <ol class="enumerate">
-<li> Leave point on the object and press <kbd class="kbd">C-e E</kbd>.
+<li> Leave point on the object and press <kbd class="kbd">C-e E</kbd>, or choose
+<em class="emph">Feedback for this item</em> in Aural Home. Both open <em class="emph">Feedback Details</em> with a brief
+announcement rather than speaking the complete explanation.
 
 </li><li> Read the explanation as a report of the object and occasion, matching
 presentation rules, selected actions, concrete voices and sounds, and any
@@ -60,10 +62,23 @@ unchanged source text, the explanation
 describes the exact output that was queued, including its source location and
 resolved resources.  It does not reinterpret that old output using your latest
 settings.  Without an exact record, Emacsvox labels the explanation as a
-simulation of what the current rules would produce at point.
+simulation of what the current rules would produce at point. The simulation
+uses captured source text and context; <em class="emph">Play simulation</em> plays that baseline,
+not a recording of something you previously heard. It supports the same field
+review and draft previews as recorded feedback, and is never added to Recent
+Feedback. Use a prefix argument with <kbd class="kbd">C-e E</kbd> to choose a
+simulated occasion explicitly. Press <kbd class="kbd">q</kbd> to return to the
+source position or Home row from which you opened the report.
 </p>
-<p>To inspect something heard earlier, open Aural Home and choose <em class="emph">Recent Aural
-Feedback</em>, or press <kbd class="kbd">H</kbd> there.  Each row preserves a recorded presentation; the history has a size limit.
+<p>Expand a field and choose <em class="emph">Edit named voice bolden</em> (or the voice name shown)
+beside its voice explanation to open the existing voice editor. A field with
+several named voices offers a link for each. This edits the named voice in the
+reported palette, affecting every use there. <em class="emph">Change field</em> instead changes
+the feedback rule for that field. Leaving the voice editor returns to the
+same report link; opening it does not save or apply anything.
+</p>
+<p>To inspect something heard earlier, open Aural Home and choose <em class="emph">Recent
+feedback</em>, or press <kbd class="kbd">H</kbd> there.  Each row preserves a recorded presentation; the history has a size limit.
 Moving through the Content column speaks the preview using its recorded voices,
 including voice changes within an entry.  Column titles and the other fields use
 the normal interface voice.
@@ -71,7 +86,7 @@ Useful commands in the feedback browser include:
 </p>
 <dl class="table">
 <dt><kbd class="kbd">RET or e</kbd></dt>
-<dd><p>Explain the selected retained presentation.
+<dd><p>Open a readable Feedback Details buffer for the selected presentation.
 </p></dd>
 <dt><kbd class="kbd">P</kbd></dt>
 <dd><p>Replay its complete ordered presentation without adding a history entry.
@@ -88,8 +103,129 @@ Useful commands in the feedback browser include:
 <dt><kbd class="kbd">L</kbd></dt>
 <dd><p>Change the bounded history limit for the current session.
 </p></dd>
+<dt><kbd class="kbd">i</kbd></dt>
+<dd><p>Include or exclude feedback from the Aural interfaces themselves.
+</p></dd>
 </dl>
 
+<p>Aural interface feedback is excluded by default so it does not displace the
+feedback you are investigating.  This includes prompts opened from an Aural
+screen, their completion choices, and their opening and closing sounds.
+Ordinary completion outside these screens remains eligible for history.
+The setting controls new recordings; it does not remove entries already retained.
+</p>
+<p><em class="emph">Feedback Details</em> selects a separate, read-only buffer and announces only a
+brief introduction. Its report stays attached to that recorded presentation
+while new feedback arrives. Ordinary Help commands do not replace the report.
+Press <kbd class="kbd">q</kbd> to return to the same row and column in Recent Feedback.
+</p>
+<p>The report groups consecutive voice spans into semantic fields where the
+integration supplies them. In a Notmuch search result, for example, you can
+visit <em class="emph">Authors</em>, <em class="emph">Subject</em>, <em class="emph">Date</em>, <em class="emph">Message count</em>, and <em class="emph">Tags</em>. Headings identify
+the recorded voices. Collapsed fields show only their headings. Visibility is
+conveyed through the selected aural presentation, using earcons or optional
+spoken labels; the words <em class="emph">expanded</em> and <em class="emph">collapsed</em> are not inserted into the
+heading text. Press
+<kbd class="kbd">RET</kbd> on a heading to reveal its text, playback and change
+controls, voice source, sounds, and any backend limitations. Field content is
+read in its recorded voices. Only fields with multiple spans show separate
+span sections, behind <em class="emph">Individual voice spans</em>. Expand that section only when
+you want to inspect or change an individual span. Its heading announces the
+section without repeating the field&rsquo;s content. A single-span field shows its
+text and controls once, and its heading omits the span count. Press
+<kbd class="kbd">RET</kbd> on the field heading again to collapse it.
+</p>
+<p>Fields with unapplied drafts announce <em class="emph">unsaved change</em> after their names. The
+report also shows how many fields have unsaved changes. These labels update as
+you edit or apply a change, preserving the report&rsquo;s buttons and your return
+position. <kbd class="kbd">g</kbd> updates draft status, for example after killing a
+draft buffer. The original or simulated presentation remains the same.
+</p>
+<dl class="table">
+<dt><kbd class="kbd">n or p</kbd></dt>
+<dd><p>Move between headings. Collapsed fields speak only their heading; expanded fields also speak their content in the recorded voices.
+</p></dd>
+<dt><kbd class="kbd">Up or Down</kbd></dt>
+<dd><p>Review individual lines without speaking the complete report.
+</p></dd>
+<dt><kbd class="kbd">TAB or Shift-TAB</kbd></dt>
+<dd><p>Move between action buttons; RET activates an action or expands a field.
+</p></dd>
+<dt><kbd class="kbd">O</kbd></dt>
+<dd><p>Play the original field or span at point, or its labelled simulated baseline.
+</p></dd>
+<dt><kbd class="kbd">P</kbd></dt>
+<dd><p>Play the complete original presentation, or the labelled simulation.
+</p></dd>
+<dt><kbd class="kbd">C</kbd></dt>
+<dd><p>Open or resume a change to the selected field or distinguishable span.
+</p></dd>
+<dt><kbd class="kbd">r</kbd></dt>
+<dd><p>Choose another named voice for matching items in the compact editor.
+</p></dd>
+<dt><kbd class="kbd">R</kbd></dt>
+<dd><p>Replace, suppress, or restore an exact sound in the selected field or span.
+</p></dd>
+<dt><kbd class="kbd">V</kbd></dt>
+<dd><p>Preview the complete presentation with all linked draft changes.
+</p></dd>
+<dt><kbd class="kbd">S</kbd></dt>
+<dd><p>Stop playback.
+</p></dd>
+<dt><kbd class="kbd">g</kbd></dt>
+<dd><p>Update the report&rsquo;s draft status.
+</p></dd>
+</dl>
+
+<p>For example, select <em class="emph">Subject</em>, press <kbd class="kbd">C</kbd>, and choose another
+content voice. In that editor, <kbd class="kbd">O</kbd> plays the original field
+and <kbd class="kbd">P</kbd> previews the changed field. For a complete comparison,
+choose <em class="emph">Play whole original</em> or press <kbd class="kbd">B</kbd>, then use
+<kbd class="kbd">V</kbd> to preview the whole presentation with all linked drafts.
+Both actions keep you in the change buffer. The original stays frozen even
+after you change a draft; it can be played before choosing a change or lifetime.
+For simulated feedback, <em class="emph">Play whole simulation</em> plays the frozen simulated
+baseline instead. Return to the report and select <em class="emph">Message count</em> to add a
+sound <em class="emph">After content</em>. The sound is placed
+once after the complete count, even when that field contains several voices.
+The subject and count editors retain their drafts separately. Their matching
+criteria identify the field, integration, mode, and occasion; inspect those
+criteria before choosing a buffer, session, or saved personal lifetime.
+Changing a field&rsquo;s voice mapping does not retune the shared named voice.
+</p>
+<p><em class="emph">Choose another voice for matching items</em> opens the compact voice editor for
+that field. Its <em class="emph">Applies to</em> row identifies the matching items; choose <em class="emph">How
+long</em> before saving. <em class="emph">Change field</em> opens the full component editor and resumes
+the same draft. If the draft already changes a sound or another component, the
+full editor stays visible so that change is not hidden.
+</p>
+<p><em class="emph">Sound overrides: replace, suppress, or restore</em> uses the existing exact-sound
+workflow, limited to the selected field. It opens a separate rule draft for
+review and saving; that draft is not included in the report&rsquo;s linked-field
+preview. <em class="emph">Restore inherited behavior</em> removes an override made by this sound
+workflow in the selected scope. Press <kbd class="kbd">q</kbd> to return to the report.
+</p>
+<p>Original playback uses retained output; a simulated report labels its baseline
+playback as simulated throughout the report and linked change editor.
+Proposed playback uses current rules,
+captured buffer context, and the linked drafts without applying them. A span
+can be targeted separately only when its semantic field, a distinct named
+face, or an explicit voice annotation identifies it. Truncated history cannot provide complete playback or a
+comparable change preview. Older records missing preview inputs remain
+readable and replayable when complete; navigate over the source again to
+capture a new example before previewing changes.
+</p>
+<p>Each expanded field explains where its voice and sounds came from, such as
+a visual face or your personal override. These explanations use the captured
+sources that actually contributed to that field. Limitations, such as an
+unsupported voice family, appear beside the affected field.
+</p>
+<p><em class="emph">Debug details</em> opens the raw snapshot in a separate read-only buffer for
+troubleshooting. It contains all recorded facts, rule identifiers, resolved
+voice properties, and backend diagnostics. Opening it speaks only a brief
+announcement. Press <kbd class="kbd">q</kbd> to return to the same place in Feedback
+Details; the report keeps its expanded fields and linked drafts.
+</p>
 <p><em class="emph">Explain feedback as you navigate</em>, available from Aural Home, speaks concise semantic explanations
 after normal presentations.  It can help while learning the vocabulary used by
 an integration, but is intentionally more verbose than ordinary operation;

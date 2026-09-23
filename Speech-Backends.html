@@ -44,11 +44,15 @@ that produces speech underneath it is platform-specific.  The normal engine
 is eSpeak NG on GNU/Linux, AVSpeechSynthesizer on macOS, and WinRT
 SpeechSynthesizer on Windows.
 </p>
-<p>Omnivox 1.10.0 is the minimum supported release. It supplies individual fallback
-tuning in speech and complete voice previews for the voice editor. A newer
-compatible release may be used, but the binary examples and guided installers
-pin the 1.10.0 artifacts exactly. Upgrade an existing Omnivox installation
-separately; updating Emacsvox does not replace the selected speech server.
+<p>Omnivox 1.12.0 is the minimum supported release. It supplies managed voice
+libraries, on-demand eSpeak variants and engine-specific voice controls, as well
+as individual fallback tuning and complete voice previews. A newer compatible
+release may be used. The manual archive examples and guided installers pin the
+1.12.0 core and matching optional engines exactly; the macOS Homebrew tap follows
+its maintained stable formula, initially 1.12.0. Upgrade an existing Omnivox
+installation separately; updating Emacsvox does not replace the selected speech
+server. Voice-library management currently uses the bundled WSL-to-Windows
+launcher; remote and direct native launches retain their existing limits.
 </p>
 <p>For a first installation, follow the linear procedure in
 <a class="ref" href="Installation.html">Getting Started: Installation and First Speech</a>.  Return here when you need platform-specific build

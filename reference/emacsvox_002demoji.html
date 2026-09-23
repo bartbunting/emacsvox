@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-emoji (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-emoji (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-emoji (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dempv.html" rel="next" title="emacsvox-empv">
+<link href="emacsvox_002demms.html" rel="prev" title="emacsvox-emms">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002demoji">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dempv.html" accesskey="n" rel="next">emacsvox-empv</a>, Previous: <a href="emacsvox_002demms.html" accesskey="p" rel="prev">emacsvox-emms</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002demoji-1"><span>2.114 emacsvox-emoji<a class="copiable-link" href="#emacsvox_002demoji-1"> &para;</a></span></h3>
+
+<p>Optional speech naming uses exact entries from Emacs&rsquo;s bundled emoji data.
+Keep the private upstream table behind this adapter; never use the picker
+helper, which can fall back to naming the first character of a sequence.
+</p>
+<ul class="mini-toc">
+<li><a href="#emacsvox_002demoji-Options" accesskey="1">emacsvox-emoji Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="emacsvox_002demoji-Options">
+<h4 class="subsection"><span>2.114.1 emacsvox-emoji Options<a class="copiable-link" href="#emacsvox_002demoji-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-56"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-approved-sequences</var><a class="copiable-link" href="#index-User-Option-56"> &para;</a></span></dt>
+<dd><pre class="verbatim">Complete sequences eligible for automatic speech naming.
+The default t uses Emacs’s emoji table, Unicode arrow, harpoon and box-drawing
+names, and custom names.  A list of strings restricts naming to those complete
+sequences; inclusion does not imply that this Emacs version supplies a name.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+t
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-57"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-custom-names</var><a class="copiable-link" href="#index-User-Option-57"> &para;</a></span></dt>
+<dd><pre class="verbatim">Spoken names overriding Emacs data for eligible complete sequences.
+Names must contain 1 to 80 characters with no control characters.  Empty
+names are invalid; use an explicit pronunciation to omit a symbol.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-58"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-maximum-count</var><a class="copiable-link" href="#index-User-Option-58"> &para;</a></span></dt>
+<dd><pre class="verbatim">Maximum eligible occurrences per speech object or preview sample.
+Accepts zero through 64; repetitions count separately.  The default 64 allows
+ordinary decorated messages to retain their preferred speech engine.
+Above this limit, the entire item retains its emoji, arrows and box drawings.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+64
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-59"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-emoji-naming-enabled</var><a class="copiable-link" href="#index-User-Option-59"> &para;</a></span></dt>
+<dd><pre class="verbatim">Whether speech names occasional emoji, regardless of engine.
+This option and the other emoji options can be set buffer-locally or in a
+mode hook.  Source buffers keep their original text.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+t
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dempv.html">emacsvox-empv</a>, Previous: <a href="emacsvox_002demms.html">emacsvox-emms</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

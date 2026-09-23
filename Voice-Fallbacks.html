@@ -93,6 +93,44 @@ require per-choice support; an individual audition is available only when its
 settings can be represented faithfully, including adapter defaults. Saving
 remains available when that preview is unavailable.
 </p>
+<p><em class="emph">Engine-specific settings</em> opens the selected engine&rsquo;s own
+parameters in the same voice draft. The available fields depend on what that
+speech worker can describe and apply. A worker that only describes controls
+shows them read-only. Engine-wide and startup settings are also read-only here;
+their help identifies their scope.
+</p>
+<p>Actions come first, followed by expandable groups with columns for parameter,
+value, source, and range. &lsquo;<samp class="samp">RET</samp>&rsquo; on a control offers
+<em class="emph">Set value</em>, <em class="emph">Follow common settings</em>, <em class="emph">Engine voice default</em>, and <em class="emph">Parameter
+help</em>. Values use the engine&rsquo;s units and limits. Help explains the default&rsquo;s
+source, common controls that affect the parameter, and reported side effects.
+Press &lsquo;<samp class="samp">?</samp>&rsquo; on a parameter to open and hear its help; &lsquo;<samp class="samp">q</samp>&rsquo; returns to that row.
+Left/right changes a set numeric value by the engine&rsquo;s step, within its limits.
+For an inherited value or an unknown default, first choose a value with &lsquo;<samp class="samp">RET</samp>&rsquo;;
+the editor does not guess the engine&rsquo;s current setting.
+&lsquo;<samp class="samp">i</samp>&rsquo; removes an override; &lsquo;<samp class="samp">d</samp>&rsquo; requests the engine voice default. <em class="emph">Reset
+engine-specific settings</em> removes its native overrides while preserving common
+adjustments and other choices. &lsquo;<samp class="samp">u</samp>&rsquo; undoes these edits.
+</p>
+<p>An automatic sample follows adjustments, with the parameter and value spoken
+before the sample. <em class="emph">Automatic sample after adjustment</em> controls this behavior
+and shares its setting with the common editor. Opening, searching, refreshing,
+and asking for help do not play a voice sample. Use &lsquo;<samp class="samp">P</samp>&rsquo; to preview the selected
+voice, &lsquo;<samp class="samp">B</samp>&rsquo; to compare, and the usual Save action to keep the draft.
+&lsquo;<samp class="samp">q</samp>&rsquo; returns to common settings. <em class="emph">Search controls</em> searches names, identifiers
+and help across collapsed groups; an empty search clears the filter. <em class="emph">Adjusted
+controls only</em> shows explicit overrides. &lsquo;<samp class="samp">g</samp>&rsquo; refreshes the catalogue without
+restarting speech. If the engine is busy, the screen retries quietly for up to
+five seconds. Leaving the screen cancels retries. If it remains busy, wait for
+speech to finish and press &lsquo;<samp class="samp">g</samp>&rsquo; to try again.
+Unrecognized saved settings remain visible and can be removed explicitly.
+</p>
+<p><em class="emph">Explain planned settings</em> describes the captured draft without playing speech.
+On a worker that supports native settings, <em class="emph">Details and last playback evidence</em>
+also offers an explanation of the last sample&rsquo;s applied settings. Planned
+values, applied values, and values read back from the engine are labelled
+separately. An expired sample plan cannot be reconstructed by these queries.
+</p>
 </div>
 <hr>
 <div class="nav-panel">

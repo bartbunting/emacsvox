@@ -55,7 +55,7 @@ and check your customizations.  The complete generated defaults are in the
 <a class="index-entry-id" id="index-C_002de-c"></a>
 
 <p><code class="code">emacsvox-speak-char</code>
-speaks the character at point.
+speaks the character at point phonetically.
 </p></dd>
 <dt><a id="index-emacsvox_002dspeak_002dword"></a><span><kbd class="kbd">C-e w</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dword"> &para;</a></span></dt>
 <dd>
@@ -127,6 +127,24 @@ toggles the aural indication of point within spoken text.
 text before or after point.  Use <kbd class="kbd">C-h k</kbd> on a command before relying
 on those variants, because their exact argument behavior is documented
 with the command.
+</p>
+<a class="index-entry-id" id="index-emacsvox_002ddelayed_002dphonetic_002dmode"></a>
+<a class="index-entry-id" id="index-emacsvox_002ddelayed_002dphonetic_002ddelay"></a>
+
+<p>Use <kbd class="kbd">M-x emacsvox-delayed-phonetic-mode</kbd> to toggle delayed
+phonetic descriptions. When enabled, moving by character speaks the letter
+normally; pausing then speaks its phonetic name, such as &quot;alpha&quot; for &quot;a&quot;.
+These are the same English letter names used by <kbd class="kbd">C-e c</kbd>.
+</p>
+<p>The mode starts enabled. Customize <code class="code">emacsvox-delayed-phonetic-delay</code> to change
+the default one-second delay to another positive number of seconds. You can
+save the mode&rsquo;s enabled or disabled setting through Customize as well.
+</p>
+<p>Further input, including the first key of a prefix sequence, cancels the pending
+description. New speech, stopping speech, changing the source text or leaving
+its buffer or window also prevents a stale description. Each pause produces at
+most one description. Typing, deletion, punctuation and explicit phonetic
+reading do not trigger delayed descriptions.
 </p>
 </div>
 <hr>

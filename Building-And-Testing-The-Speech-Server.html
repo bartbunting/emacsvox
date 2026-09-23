@@ -42,10 +42,17 @@ Next: <a href="Quick-Installation.html" accesskey="n" rel="next">Build And Start
 <p>If you used the guided WSL2 installer above, Omnivox is already installed and
 checked.  Continue to <a class="ref" href="Quick-Installation.html">Build And Start Emacsvox</a>.
 </p>
-<p>On a matching GNU/Linux x86-64 or macOS host, follow
-<a class="ref" href="Installing-An-Omnivox-Release-Binary.html">Install Omnivox From A Release Binary</a>.  That procedure downloads and
-verifies the published 1.10.0 archive, keeps its runtime data beside the
-executable, and adds its versioned installation directory to <code class="code">PATH</code>.  Then run:
+<p>On macOS, follow the Homebrew instructions in
+<a class="ref" href="Installing-An-Omnivox-Release-Binary.html">Install Omnivox From A Release Binary</a>.  They install the
+matching Mac binary and record its stable executable path for Emacsvox,
+including Emacs sessions that do not inherit the shell&rsquo;s <code class="code">PATH</code>.  Homebrew
+installs Omnivox only; continue below to build and start Emacsvox with your
+selected Emacs 30.2 or newer.
+</p>
+<p>On a matching GNU/Linux x86-64 host, or for a manual Mac installation, use the
+archive instructions in that same section.  They verify the published 1.12.0
+archive, keep its runtime data beside the executable, and add its versioned
+installation directory to <code class="code">PATH</code>.  Then run:
 </p>
 <div class="example">
 <pre class="example-preformatted">omnivox --check
@@ -66,10 +73,16 @@ server is ready.  If either is missing, use
 before continuing.  See <a class="xref" href="Speech-Backends.html">Speech Backends</a> contains the complete platform
 matrix, build details, and compatibility alternatives.  Native Windows Emacs
 on x64 is supported with Emacs 30.2 or newer. Its PowerShell installer reuses
-a prebuilt Emacs or offers an explicit source build, and installs Omnivox
+a prebuilt Emacs, can download a verified Emacs with &lsquo;<samp class="samp">-DownloadEmacs</samp>&rsquo;, or
+offers an explicit source build, and installs Omnivox
 without WSL. Follow
 <a class="ref" href="Trying-Native-Windows-Emacsvox.html">Installing Native Windows Emacsvox</a>.
 </p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Quick-Installation.html">Build And Start Emacsvox</a>, Previous: <a href="Updating-Emacsvox-Under-WSL2.html">Updating An Existing WSL2 Installation</a>, Up: <a href="Installation.html">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

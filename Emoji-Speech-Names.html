@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Emoji Speech Names (Emacsvox User Manual)</title>
+
+<meta name="description" content="Emoji Speech Names (Emacsvox User Manual)">
+<meta name="keywords" content="Emoji Speech Names (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
+<link href="Installed-Voices-And-Engines.html" rel="next" title="Installed Voices And Engines">
+<link href="Editing-Named-Voices.html" rel="prev" title="Editing Named Voices">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Emoji-Speech-Names">
+<div class="nav-panel">
+<p>
+Next: <a href="Installed-Voices-And-Engines.html" accesskey="n" rel="next">Browse Installed Voices And Choose Engines</a>, Previous: <a href="Editing-Named-Voices.html" accesskey="p" rel="prev">Edit A Named Voice</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Name-Occasional-Emoji-In-Speech"><span>6.7 Name Occasional Emoji In Speech<a class="copiable-link" href="#Name-Occasional-Emoji-In-Speech"> &para;</a></span></h3>
+
+<p>A voice such as Eloquence may need a fallback engine for an emoji in otherwise
+compatible text. Emoji naming changes the speech text before engine
+selection: &lsquo;<samp class="samp">Forecast 🔮</samp>&rsquo; becomes &lsquo;<samp class="samp">Forecast crystal ball</samp>&rsquo;. The source buffer
+keeps its original text. This can keep the preferred voice speaking when the
+rest of the text is compatible; the normal repertoire checks still decide
+which engine can handle it.
+</p>
+<p>The feature is enabled by default. Use <kbd class="kbd">M-x customize-group RET emacsvox-emoji RET</kbd>
+to review its options. Set <code class="code">emacsvox-emoji-naming-enabled</code> to nil to disable it
+globally, or disable it only in the current source buffer with:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(setq-local emacsvox-emoji-naming-enabled nil)
+</pre></div>
+
+<p>To disable it for Org buffers through your configuration:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(add-hook 'org-mode-hook
+          (lambda () (setq-local emacsvox-emoji-naming-enabled nil)))
+</pre></div>
+
+<p>All four options support buffer-local settings. Set
+<code class="code">emacsvox-emoji-naming-enabled</code> to nil locally to override an enabled global
+default. Voice previews opened from an aural screen use the remembered source
+buffer&rsquo;s settings; contextual previews use their captured source policy.
+Changing a setting during playback does not change the submitted sample.
+</p>
+<p>Enabled naming uses every exact name in Emacs&rsquo;s emoji table, including &lsquo;<samp class="samp">🌱</samp>&rsquo;
+(seedling), flags, keycaps and joined emoji. There is no need to approve each
+new emoji. <code class="code">emacsvox-emoji-approved-sequences</code> defaults to <code class="code">t</code> for this full
+table; optionally set it to a list of complete sequences to restrict naming.
+An unknown joined emoji stays intact, even when a component has a name.
+Arrow and harpoon symbols also receive names, including all directions,
+diagonals, double arrows and curved arrows. For example, &lsquo;<samp class="samp">← ↑ → ↓</samp>&rsquo; becomes
+<em class="emph">left arrow up arrow right arrow down arrow</em>. Symbols outside the emoji table,
+such as &lsquo;<samp class="samp">⇒</samp>&rsquo; and &lsquo;<samp class="samp">⟶</samp>&rsquo;, use their Unicode names. Text and emoji presentation
+selectors are supported; unknown joined or accented sequences remain intact.
+Box-drawing characters also receive their Unicode names: for example, &lsquo;<samp class="samp">│</samp>&rsquo;
+becomes <em class="emph">box drawings light vertical</em>. This includes light, heavy, double,
+rounded and dashed borders and junctions. The same naming settings and limits
+apply; custom names can shorten names you use frequently.
+Foreign-language letters and unrelated symbols retain the existing fallback
+behaviour. Exact character inspection also retains its existing behaviour.
+</p>
+<p><code class="code">emacsvox-emoji-maximum-count</code> defaults to 64 occurrences, counting repetitions
+separately. A subject such as &lsquo;<samp class="samp">🤔Dinner? 🍕🍕🍕</samp>&rsquo; is spoken as <em class="emph">thinking face
+Dinner? pizza pizza pizza</em>, avoiding fallback caused by its four emoji.
+Above the configured limit, automatic naming is skipped for the whole item.
+One captured presentation object can
+contain several voice runs; a standalone preview sample is one item. Transport
+chunk sizes do not affect this limit. A sequence crossing a style or positioned
+cue boundary is conservatively left unchanged.
+</p>
+<p>Names come from the emoji table and Unicode character data bundled with Emacs.
+Arrows prefer the emoji names when available; the four plain directional arrows
+share the names of their emoji equivalents. Coverage may vary between Emacs
+versions. Missing data or an absent exact name leaves the original
+sequence available to normal fallback; nothing is downloaded. The names are
+English, and enabled naming also applies to engines that could speak the
+original emoji.
+</p>
+<p>Explicit pronunciation entries take precedence. For eligible sequences, set
+<code class="code">emacsvox-emoji-custom-names</code> to override a bundled name, for example:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(setq-local emacsvox-emoji-custom-names '((&quot;🔮&quot; . &quot;prediction&quot;)))
+</pre></div>
+
+<p>Custom names must contain 1 to 80 characters and no control characters.
+Empty names are invalid; use an explicit pronunciation when you want to omit
+something. Explicit restriction and custom-name lists are limited to 64 entries,
+with sequences of up to 32 characters; the full-table setting has no entry limit.
+The occurrence limit accepts the range 0 through 64. Invalid
+settings skip automatic naming with an explanation rather than stopping speech.
+</p>
+<p>In <em class="emph">Feedback Details</em> (<kbd class="kbd">C-e E</kbd>), expand the relevant field to
+see the original sequence and its speech name, or why naming was skipped.
+The voice editor&rsquo;s <em class="emph">Details and last playback evidence</em> also reports sample
+substitutions. These describe prepared text, not confirmation of what you heard.
+<em class="emph">Play original</em> keeps the retained speech text after settings change. Rule
+proposals retain that captured text while changing its presentation; open a
+fresh source presentation to try a different naming policy.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Installed-Voices-And-Engines.html">Browse Installed Voices And Choose Engines</a>, Previous: <a href="Editing-Named-Voices.html">Edit A Named Voice</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

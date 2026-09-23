@@ -37,7 +37,7 @@ ul.mark-bullet {list-style-type: disc}
 Up: <a href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html" accesskey="u" rel="up">Install An Omnivox Windows Release Under WSL2</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Optional-Omnivox-Engine-Modules-1"><span>4.3.2 Optional Omnivox Engine Modules<a class="copiable-link" href="#Optional-Omnivox-Engine-Modules-1"> &para;</a></span></h4>
+<h4 class="subsection" id="Optional-Omnivox-Engines"><span>4.3.2 Optional Omnivox Engines<a class="copiable-link" href="#Optional-Omnivox-Engines"> &para;</a></span></h4>
 
 <p>The ordinary WSL2 archive is the Omnivox core, not a claim that every supported
 engine is installed.  It keeps first speech small while matching companion
@@ -51,46 +51,231 @@ or incomplete without separately chosen data.
 </pre></div>
 
 <p>You can also press <kbd class="kbd">C-e H</kbd> for Aural Home and then
-<kbd class="kbd">I</kbd> on <em class="emph">Omnivox engine modules</em>.  The spoken table reports each
-engine as installed, downloadable, unavailable on this architecture, needing a
-core update, or needing a separately supplied runtime or model.  <em class="emph">Release
-state</em> describes the managed release installation.  <em class="emph">Browse and try voices</em>
-reports the active speech server, which can use a different installation, such
-as a development runtime or a remote workstation.  Installing a module here
-changes the managed release only.  Move to an engine row, then choose the task
-you want:
+<kbd class="kbd">I</kbd>, or choose <em class="emph">Browse voices</em>. These routes open the same
+engine list. Opening speaks the selected engine using the current speech
+inventory, without waiting for file checks or fresh discovery. Optional engines
+absent from that inventory remain visible as <em class="emph">not reported</em>, so their installation
+controls are still reachable. Press <kbd class="kbd">v</kbd> to browse an engine&rsquo;s
+voices directly, or <kbd class="kbd">RET</kbd> for engine details.
+Details start with a short status summary and the voice actions, with <em class="emph">Browse
+voices</em> selected. Matching main and notification status is combined. Problems
+remain visible near the top. <em class="emph">Startup settings</em> and <em class="emph">Diagnostics</em> start
+collapsed; press <kbd class="kbd">RET</kbd> on a section to
+expand or collapse it. Each engine remembers its expanded sections and selection.
+</p>
+<p><em class="emph">Available</em> describes discovery from the current running worker. An older check
+does not by itself make the engine unavailable. <em class="emph">Previously available</em> means the
+evidence belongs to a stopped or replaced worker. Details announce the engine
+before requesting newer inventory in the background when its check is over five
+minutes old, or belongs to another worker. File checks also run in the background.
+<em class="emph">Streams differ</em> means the workers report different availability, policy, health
+or voice identities. A bridge&rsquo;s presence alone never establishes that its runtime
+is usable. <em class="emph">Not checked</em> is not a claim that the runtime is missing.
+<em class="emph">Diagnostics</em> contains each stream&rsquo;s status, worker paths, inventory time,
+runtime discovery, and health.
+</p>
+<p><em class="emph">Required runtime</em> appears near the top for engines that need native libraries.
+For example, successful DECtalk discovery reports that its DLL and dictionary
+loaded. Matching main and notification evidence is combined; differences are
+shown separately. Missing files and load failures retain the worker&rsquo;s reason.
+A disabled engine does not imply missing files, and evidence from a replaced
+worker does not establish the new worker&rsquo;s runtime status. Opening or refreshing
+engine details uses speech-worker discovery without invoking the release installer.
+</p>
+<p>On WSL, <em class="emph">Manage installed release</em> explicitly opens the separate release
+installer. <em class="emph">Installation being managed</em> and <em class="emph">Location</em> identify the versioned
+release affected by its actions. This may differ from a development build or
+remote speech server. <em class="emph">Installed engine files</em> reports file presence;
+<em class="emph">Check release engine</em> tests runtime initialization and voice discovery for
+that release. Installation and removal keep current speech running and do not
+select a different speech server. If a helper is still in use, removal fails
+visibly; stop the sessions using that release before retrying. Press
+<kbd class="kbd">q</kbd> to return to the current engine with its selection retained.
 </p>
 <ul class="itemize mark-bullet">
-<li>To install a <em class="emph">not installed</em> module, press <kbd class="kbd">i</kbd> and confirm.  The
-manager downloads the version matched to your Omnivox core, verifies it, and
-announces when installation is complete.  Its state changes to <em class="emph">installing</em>
-immediately and stays that way if you refresh or reopen the manager.
-</li><li>To check any engine, press <kbd class="kbd">t</kbd>.  Emacsvox announces how many
-voices Omnivox found and selects an accessible buffer containing the complete
-list.  If the check fails, it announces and displays the actual diagnostic
-instead of only an exit code.  Press <kbd class="kbd">q</kbd> to return to the
-manager or <kbd class="kbd">h</kbd> for Aural Home.
-</li><li>To remove an <em class="emph">installed</em> module, press <kbd class="kbd">u</kbd> and confirm.  This
-is available only for Flite, RuTTS, Piper, and TGSpeechBox modules installed
+<li><em class="emph">Browse voices</em> combines that engine&rsquo;s reported voices with its installed
+library, including disabled downloads. This separate browser keeps the general Voice Workbench&rsquo;s filters and
+staged edits intact. Languages form expandable headings with voice counts;
+<kbd class="kbd">RET</kbd> expands or collapses a heading. A single-language list
+starts expanded, and the browser remembers groups and the selected voice.
+On a voice, <kbd class="kbd">RET</kbd> or <kbd class="kbd">P</kbd> speaks an exact sample;
+<kbd class="kbd">x</kbd> shows details;
+<kbd class="kbd">t</kbd> opens the existing voice editor for an unsaved experiment.
+Saving there asks for a palette destination. Browsing and auditioning do not
+change a palette. <kbd class="kbd">q</kbd> returns to the selected engine detail.
+Library information loads in the background; the browser refreshes quietly.
+<em class="emph">Installed</em> distinguishes library entries from engine-supplied voices.
+<em class="emph">Enabled</em> is the desired selection for the next Apply. <em class="emph">Active</em> reports
+current eligibility on both streams, main only, notification only, or neither.
+<em class="emph">Unknown</em> means current worker evidence is missing or inconsistent; press
+<kbd class="kbd">R</kbd> to refresh. Active does not mean a model is resident in
+memory, and is not a listening test. Samples use main speech; an inactive
+downloaded voice must be enabled and applied before sampling.
+</li><li>Under <em class="emph">Startup settings</em>, <em class="emph">Edit file settings</em> for the bundled local Omnivox launcher opens the
+selected engine&rsquo;s file option in Customize. Piper accepts one local ONNX
+model with its matching JSON file. Eloquence and DECtalk accept their runtime
+DLL paths. Flite accepts external &lsquo;<samp class="samp">.flitevox</samp>&rsquo; files, each with a <em class="emph">Load file</em>
+switch. Use absolute paths as seen by Emacs; WSL converts them for the chosen
+Windows executable. Keep required companion files beside their runtime or
+model. Remote speech settings must be changed on the speech host.
+These are manual overrides. Having no manual files selected does not mean
+there are no downloaded voices: the installed voice library or launcher
+defaults apply. A manual Flite file list overrides its installed library.
+</li><li>In <em class="emph">Browse voices</em>, manage installed Piper and Flite voices on the
+local speech host. Press <kbd class="kbd">+</kbd> to enable or disable a voice in
+the desired configuration, then <kbd class="kbd">a</kbd> to review and Apply.
+Apply checks both replacements, restarts main and notification speech, and
+verifies both before committing. If a replacement fails, it restores both
+previous configurations. Disabling keeps the files and saved palette
+references. Changing <em class="emph">Enabled</em> leaves <em class="emph">Active</em> unchanged until Apply.
+</li><li><em class="emph">Voice variants</em> in eSpeak details lists the bundled variants reported by
+the running speech worker. Choose a base voice with <kbd class="kbd">b</kbd>,
+then use the arrow keys or <kbd class="kbd">C-n</kbd>/<kbd class="kbd">C-p</kbd> to
+browse variants. The whole list is alphabetical by displayed name, ignoring
+capitalization. Press <kbd class="kbd">P</kbd> or <kbd class="kbd">RET</kbd> to hear
+the selected combination immediately. Variants need no enabling, settings
+save, download or speech restart. The existing <kbd class="kbd">p</kbd> preview
+shortcut also remains available.
+Press <kbd class="kbd">u</kbd> for <em class="emph">Use in palette</em>, then choose a palette and
+named voice. The voice editor adds the variant as its preferred choice,
+retaining existing fallbacks and tuning. Press <kbd class="kbd">P</kbd> to hear
+it with the palette&rsquo;s settings, then <kbd class="kbd">w</kbd> to <em class="emph">Save and apply</em>,
+or choose <em class="emph">Save to collection without selecting</em> to keep it for later.
+Editing a built-in palette creates a personal copy. <em class="emph">Use at Startup</em> in
+Voice Palettes controls which palette is selected next time.
+<kbd class="kbd">q</kbd> returns to the variants list with its selection retained;
+<kbd class="kbd">v</kbd> opens the base-voice browser. Existing saved variant
+references remain valid. An older Omnivox worker must be updated once to
+provide on-demand variants; the screen reports missing support explicitly.
+</li><li><em class="emph">Get more voices</em> in Piper, Flite, MBROLA or RHVoice details opens the reviewed download
+catalogue. Piper is grouped by language, voice name and quality; Flite
+offers AWB and RMS. Voices with one quality appear directly in their
+language group; only voices with several qualities need another group.
+Press <kbd class="kbd">RET</kbd> to open a group or model,
+and <kbd class="kbd">q</kbd> to return. <kbd class="kbd">/</kbd> searches all models
+by name or language, including outside the current group. Model details
+show download size, source, licence information and storage location.
+<kbd class="kbd">s</kbd> shows or hides the speakers sharing that model.
+A model with several speakers downloads once; each speaker can be enabled
+separately after installation. Press <kbd class="kbd">i</kbd> to install.
+The download runs in the background without speaking each progress update.
+Omnivox checks each file and validates the voice before adding it disabled.
+Stay in the catalogue and press <kbd class="kbd">e</kbd> to enable or disable
+the installed voice, then <kbd class="kbd">a</kbd> to review and Apply to both
+speech streams. For a shared model, <kbd class="kbd">e</kbd> asks which speaker
+to change. Enabling alone does not restart speech. These actions also appear
+near the top of model details, alongside the installed and enabled status.
+Installation and Apply confirmations offer &lsquo;<samp class="samp">yes</samp>&rsquo; and &lsquo;<samp class="samp">no</samp>&rsquo; through completion.
+Type <kbd class="kbd">y TAB RET</kbd> to confirm; an empty <kbd class="kbd">RET</kbd>
+declines, and <kbd class="kbd">C-g</kbd> cancels.
+Press <kbd class="kbd">c</kbd> to request cancellation and wait for cleanup.
+The shipped collection contains reviewed, pinned models that passed native
+validation. Models with unresolved terms or unsupported configurations are
+withheld; the catalogue is not a live listing of every upstream download.
+</li><li>MBROLA offers US1, US2 and US3; British English en1 is already included.
+These downloads require the updated, separately configured development
+companion on Linux or Windows. Older runtimes keep their Piper and Flite
+catalogues and report that MBROLA downloads need an update. The individual
+database licence and README accompany each download; review the terms in
+its details. The first installation retains en1 as an enabled included
+voice, unless it was explicitly disabled. Enable several MBROLA voices to
+assign them to different palette choices or speech streams. Each request
+opens its selected database; enabled databases do not all remain loaded.
+</li><li>RHVoice offers Alan (Scottish English), BDL and CLB (American English), and
+Ksp (Indian English). These downloads require an updated Omnivox build and
+a separately installed compatible RHVoice runtime, selected in engine
+settings. Each voice includes its own English language data and upstream
+notices. Review its terms before installing. Enable and Apply adds the
+downloaded voice alongside your externally installed voices, including SLT.
+A conflicting external installation of the same voice is reported rather
+than replaced. Uninstallation removes only the managed package; it preserves
+your external voices and RHVoice runtime.
+</li><li>After installation, press <kbd class="kbd">l</kbd> to browse voices,
+<kbd class="kbd">+</kbd> to enable the voice, and <kbd class="kbd">a</kbd> to review
+Apply. Review covers the managed engines and both speech streams.
+Installation alone does not load the voice or change speech.
+Downloaded files belong to you and stay in Omnivox&rsquo;s per-user voice storage
+across executable upgrades. Failed and interrupted operations retain files
+for inspection; automatic resume and package updates are not provided yet.
+</li><li>To uninstall a downloaded Piper, Flite, MBROLA or RHVoice package, disable all its
+speakers and Apply, then press <kbd class="kbd">C-c u</kbd> in the voice browser.
+Review its affected voices, size and retained palette references before
+confirming. Files still needed by other sessions are retained. Built-in SLT
+and MBROLA en1, imported files and engine runtimes cannot be removed here.
+<kbd class="kbd">C-c U</kbd> reviews incomplete cleanup for resumption.
+</li><li>In the voice browser, <kbd class="kbd">d</kbd> opens the download catalogue and
+<kbd class="kbd">b</kbd> includes built-in Flite SLT explicitly.
+<kbd class="kbd">i</kbd> installs a completed native validation operation by its
+identifier; imported voices initially remain disabled. Their files stay at
+the validated paths and must remain there. This advanced import action is
+separate from catalogue installation; a file-selection wizard is not yet
+provided. <kbd class="kbd">C-c r</kbd> shows the last Apply result,
+<kbd class="kbd">R</kbd> refreshes, and <kbd class="kbd">q</kbd> returns to details.
+Apply requires separate main and notification streams started with the
+updated local Omnivox build. Explicit Piper or Flite file overrides must be
+cleared before applying that engine&rsquo;s installed voices. An uncertain native
+cleanup or commit blocks further Apply and remains visible in the result.
+</li><li><em class="emph">Check configured engine</em> runs separate voice discovery using the local
+launcher&rsquo;s current configuration, with a 30 second limit. It retains the
+executable target, voice list and diagnostic output. It neither speaks a
+sample nor replaces live workers. A failed Flite file can leave built-in SLT
+usable; the check reports incomplete discovery when fewer than the selected
+files plus SLT are found. Duplicate external voice names are not supported.
+</li><li>File settings take effect in newly started workers. Save through Customize
+to retain them, then explicitly choose <em class="emph">Restart local speech</em> when ready;
+this interrupts this session&rsquo;s main and notification speech. Refresh live
+voices afterward to inspect both workers. Turning off a Flite file keeps its
+data and palette references, but new helpers omit it. Existing helpers keep
+it loaded until restarted. Built-in SLT remains loaded, and each speech
+worker loads its own copy of enabled external voices. These file switches
+do not provide a general per-voice policy or a memory measurement.
+</li><li>Explicit &lsquo;<samp class="samp">OMNIVOX_PIPER_MODEL</samp>&rsquo;, &lsquo;<samp class="samp">OMNIVOX_FLITE_VOICES</samp>&rsquo; and runtime environment
+settings override these options; details identify such overrides. The
+legacy &lsquo;<samp class="samp">EMACSVOX_ECI_DLL</samp>&rsquo; and &lsquo;<samp class="samp">EMACSVOX_DECTALK_DLL</samp>&rsquo; overrides also remain
+effective. Clearing an option returns to existing discovery or launcher
+defaults. Direct native executable launches do not consume the bundled
+launcher&rsquo;s file options.
+</li><li>To refresh discovery, press <kbd class="kbd">g</kbd> or use <em class="emph">Refresh status</em> in
+details. Both worker inventories are requested asynchronously.
+</li><li>To install an engine, choose <em class="emph">Manage installed release</em> and check the displayed
+installation and location. If its files are available to download, activate
+<em class="emph">Install engine</em> with <kbd class="kbd">RET</kbd>,
+then confirm. The manager verifies the version-matched download. The table
+shows its operation in progress while the current engine&rsquo;s status stays separate.
+</li><li>In the installed-release view, <em class="emph">Refresh release files</em> runs a bounded background
+file check. <em class="emph">Check release engine</em> lists voices in that release without playing
+a sample. A changed installation target requires refreshing before retrying.
+Completion produces a short notice without selecting another buffer. The last
+result remains in the release view; <em class="emph">Read last result</em> opens its complete output.
+</li><li>In details, <kbd class="kbd">TAB</kbd> moves to the next action or section;
+<kbd class="kbd">S-TAB</kbd> moves to the previous one.
+<kbd class="kbd">RET</kbd> activates an action or toggles a section.
+Arrow keys read visible fields and values.
+<kbd class="kbd">q</kbd> returns to the selected engine row and
+<kbd class="kbd">h</kbd> opens Aural Home, and <kbd class="kbd">?</kbd> opens help.
+Background refresh preserves selection and expanded sections.
+</li><li>To remove an <em class="emph">installed</em> engine, expand <em class="emph">Engine installation</em>, activate <em class="emph">Uninstall engine</em>, and confirm. This
+is available only for Flite, RuTTS, Piper, and TGSpeechBox engines installed
 by this manager.  It cannot remove the Omnivox core, built-in engines, or
 runtime bridges.
 </li></ul>
 
 <p>Removal keeps the verified download in the local cache.  If you change your
-mind, select the module again&mdash;its state will now be <em class="emph">not installed</em>&mdash;and press
-<kbd class="kbd">i</kbd> to reinstall it.  A valid cached download is reused.
+mind, open its details again and choose <em class="emph">Install engine</em> to reinstall it.
+A valid cached download is reused.
 </p>
-<p>The module&rsquo;s whole managed directory is removed.  Move anything you placed
+<p>The engine&rsquo;s whole managed directory is removed.  Move anything you placed
 inside that directory somewhere else before confirming.  User-supplied
 runtimes and models stored outside it are not touched; remove those separately
 using their supplier&rsquo;s instructions.  Before removal, the manager announces
 the operation and briefly stops its active Omnivox speech streams so Windows
-can release the module helper.  It restores speech when removal finishes,
+can release the engine helper.  It restores speech when removal finishes,
 including after an error.  After a successful installation, it also refreshes
 the table and restarts a running Omnivox server.  Operations run asynchronously
 so Emacs remains responsive.  The table shows <em class="emph">uninstalling</em> during removal and
-<em class="emph">testing</em> during a voice check.  Completion or failure refreshes the state;
-if that refresh fails, the last known state remains with a spoken error.
+<em class="emph">testing</em> during a voice check.  Completion or failure refreshes the view. If the managed listing fails,
+its last known records remain with the error in details; live discovery remains
+available independently.
 </p>
 <p>If a removal reports that its helper is still in use, close any other Emacsvox
 or Omnivox session using that release and press <kbd class="kbd">u</kbd> again.  The
@@ -102,7 +287,7 @@ files.
 and SHA-256 hash is pinned to the same Omnivox version as the installed core.
 The WSL2 installer rejects a mismatched core, an unsafe archive layout, missing
 source provenance, or a helper that cannot pass its staged voice-discovery
-check.  It then installs the module below the same versioned Windows
+check.  It then installs the engine below the same versioned Windows
 &lsquo;<samp class="samp">LocalAppData</samp>&rsquo; release directory.  It does not invoke &lsquo;<samp class="samp">sudo</samp>&rsquo; or edit shell
 startup files.
 </p>
@@ -114,7 +299,7 @@ startup files.
 </li><li>Piper installs native engine support, but appears only after you separately
 review and configure an ONNX voice model and its model card.
 </li><li>TGSpeechBox is an explicitly experimental multilingual formant engine.  The
-1.10.0 module calibrates rate control to the Eloquence scale and supplies exact
+1.12.0 engine calibrates rate control to the Eloquence scale and supplies exact
 requested text anchors for capitalization and timed presentation.
 </li><li>RHVoice, Eloquence, and DECtalk use distributable bridges, but Emacsvox never
 downloads their external runtimes, voices, dictionaries, or licence material.
@@ -123,7 +308,7 @@ Supply those only when you have the appropriate distribution and licence.
 
 <p>For a terminal-only installation, run
 &lsquo;<samp class="samp">./bin/emacsvox-omnivox-components --list</samp>&rsquo; and then, for example,
-&lsquo;<samp class="samp">./bin/emacsvox-omnivox-components --install flite</samp>&rsquo;.  Multiple module names may
+&lsquo;<samp class="samp">./bin/emacsvox-omnivox-components --install flite</samp>&rsquo;.  Multiple engine names may
 follow &lsquo;<samp class="samp">--install</samp>&rsquo; or &lsquo;<samp class="samp">--uninstall</samp>&rsquo;.  For example, use
 &lsquo;<samp class="samp">./bin/emacsvox-omnivox-components --uninstall flite</samp>&rsquo; to remove the managed
 Flite directory while retaining its cached archive.  Restart Omnivox after a

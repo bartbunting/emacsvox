@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-voice-engine-controls (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-aural-voice-engine-controls (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-aural-voice-engine-controls (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dvoice_002dpalettes.html" rel="next" title="emacsvox-aural-voice-palettes">
+<link href="emacsvox_002daural_002dvoice_002deditor.html" rel="prev" title="emacsvox-aural-voice-editor">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dvoice_002dpalettes.html" accesskey="n" rel="next">emacsvox-aural-voice-palettes</a>, Previous: <a href="emacsvox_002daural_002dvoice_002deditor.html" accesskey="p" rel="prev">emacsvox-aural-voice-editor</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols-1"><span>2.60 emacsvox-aural-voice-engine-controls<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols-1"> &para;</a></span></h3>
+
+<p>A descriptor-driven view of the existing voice draft.  Discovery never
+samples, edits are sparse and previews and saving retain their usual owners.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural_002dVoice_002dEngine_002dControls-Commands" accesskey="1">Emacsvox-Aural-Voice-Engine-Controls Commands</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols-Options" accesskey="2">emacsvox-aural-voice-engine-controls Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dVoice_002dEngine_002dControls-Commands">
+<h4 class="subsection"><span>2.60.1 Emacsvox-Aural-Voice-Engine-Controls Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dVoice_002dEngine_002dControls-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dback" accesskey="1">emacsvox-aural-voice-engine-controls-back</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddecrease" accesskey="2">emacsvox-aural-voice-engine-controls-decrease</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddefault" accesskey="3">emacsvox-aural-voice-engine-controls-default</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dhelp" accesskey="4">emacsvox-aural-voice-engine-controls-help</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dincrease" accesskey="5">emacsvox-aural-voice-engine-controls-increase</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dinherit" accesskey="6">emacsvox-aural-voice-engine-controls-inherit</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dmode" accesskey="7">emacsvox-aural-voice-engine-controls-mode</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dopen" accesskey="8">emacsvox-aural-voice-engine-controls-open</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002drefresh" accesskey="9">emacsvox-aural-voice-engine-controls-refresh</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dreset_002dall">emacsvox-aural-voice-engine-controls-reset-all</a></li>
+<li><a href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dsearch">emacsvox-aural-voice-engine-controls-search</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dback">
+<h4 class="subsubsection"><span>2.60.1.1 emacsvox-aural-voice-engine-controls-back<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dback"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dback"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-engine-controls-back</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dback"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dback-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Return to common settings, keeping the same draft and selected choice.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddecrease">
+<h4 class="subsubsection"><span>2.60.1.2 emacsvox-aural-voice-engine-controls-decrease<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddecrease"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddecrease"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-engine-controls-decrease</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddecrease"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddecrease-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Decrease the selected native parameter by one engine step.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddefault">
+<h4 class="subsubsection"><span>2.60.1.3 emacsvox-aural-voice-engine-controls-default<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddefault"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddefault"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-engine-controls-default</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddefault"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002ddefault-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Request this control’s engine voice default without copying a measured value.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dhelp">
+<h4 class="subsubsection"><span>2.60.1.4 emacsvox-aural-voice-engine-controls-help<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dhelp"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-engine-controls-help</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dhelp"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dhelp-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display and speak the current parameter’s help; q returns to its row.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dincrease">
+<h4 class="subsubsection"><span>2.60.1.5 emacsvox-aural-voice-engine-controls-increase<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dincrease"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dincrease"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-engine-controls-increase</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dincrease"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dincrease-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Increase the selected native parameter by one engine step.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dinherit">
+<h4 class="subsubsection"><span>2.60.1.6 emacsvox-aural-voice-engine-controls-inherit<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dinherit"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dinherit"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-engine-controls-inherit</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dinherit"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dinherit-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Remove this control’s override, following common settings.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dmode">
+<h4 class="subsubsection"><span>2.60.1.7 emacsvox-aural-voice-engine-controls-mode<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-engine-controls-mode</strong> <var class="def-var-arguments">(&amp;optional arg)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Edit descriptor-based engine controls within the current voice draft.
+
+This is a minor mode.  If called interactively, toggle the
+‘Emacsvox-Aural-Voice-Engine-Controls mode’ mode.  If the prefix
+argument is positive, enable the mode, and if it is zero or negative,
+disable the mode.
+
+If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable ‘emacsvox-aural-voice-engine-controls-mode’.
+
+The mode’s hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &amp;optional ARG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dopen">
+<h4 class="subsubsection"><span>2.60.1.8 emacsvox-aural-voice-engine-controls-open<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dopen"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dopen"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-engine-controls-open</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dopen"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dopen-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open described engine controls for a selected physical choice in this draft.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols_002drefresh">
+<h4 class="subsubsection"><span>2.60.1.9 emacsvox-aural-voice-engine-controls-refresh<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002drefresh"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-engine-controls-refresh</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002drefresh"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002drefresh-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Check controls asynchronously, retrying busy replies for up to five seconds.
+Do not stop speech or play a sample.  Leaving this view cancels retries.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dreset_002dall">
+<h4 class="subsubsection"><span>2.60.1.10 emacsvox-aural-voice-engine-controls-reset-all<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dreset_002dall"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dreset_002dall"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-engine-controls-reset-all</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dreset_002dall"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dreset_002dall-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Remove only this choice’s native settings, retaining an undo step.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dsearch">
+<h4 class="subsubsection"><span>2.60.1.11 emacsvox-aural-voice-engine-controls-search<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-voice-engine-controls-search</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dsearch"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dvoice_002dengine_002dcontrols_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Filter controls by label, identifier or help, across collapsed groups.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002daural_002dvoice_002dengine_002dcontrols-Options">
+<h4 class="subsection"><span>2.60.2 emacsvox-aural-voice-engine-controls Options<a class="copiable-link" href="#emacsvox_002daural_002dvoice_002dengine_002dcontrols-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-47"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-voice-engine-controls-mode-hook</var><a class="copiable-link" href="#index-User-Option-47"> &para;</a></span></dt>
+<dd><pre class="verbatim">Hook run after entering or leaving ‘emacsvox-aural-voice-engine-controls-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dvoice_002dpalettes.html">emacsvox-aural-voice-palettes</a>, Previous: <a href="emacsvox_002daural_002dvoice_002deditor.html">emacsvox-aural-voice-editor</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

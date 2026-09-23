@@ -157,18 +157,24 @@ stream, without repeating that message.  If the search finishes before a
 row could be announced early, completion reports the count followed by the
 result at point, or an explicit zero-thread summary.
 
-</li><li>If you navigate, invoke another command, leave the buffer, or refresh an
-existing search before it completes, the eventual completion is a generic
+</li><li>If you navigate, invoke another command, or leave a new search buffer before
+it completes, the eventual completion is a generic
 count on the notification stream.  It does not reread the row you reached and
 does not disclose the query, sender, recipients, subject, tags, or attachment
 metadata.  Killing the owning search buffer cancels this delivery silently.
 </li></ul>
 
-<p>The <code class="code">summary</code> policy plays a generic count and its completion cue on the
-notification stream; <code class="code">cue</code> plays only that cue, and <code class="code">silent</code> suppresses
-successful completion.  Failures remain audible and generic for every policy.
-A normal refresh is always treated as background-style completion, while the
-deliberate global refresh-all command remains silent.  See
+<p>Refreshing the selected search buffer queues only the generic count on the
+primary speech stream, without interrupting the row already being spoken.
+Navigation interrupts that announcement.  A refresh that finishes in another
+buffer uses the notification stream.  Neither case rereads the selected row.
+</p>
+<p>The <code class="code">summary</code> policy plays only a generic count and its completion cue;
+<code class="code">cue</code> plays only that cue, and <code class="code">silent</code> suppresses successful completion.
+These policies use the same stream selection for refreshes.  Other search
+summaries use the notification stream.  Failures remain audible and generic
+for every policy, with focused refresh failures using the primary stream too.
+The deliberate global refresh-all command remains silent.  See
 <a class="ref" href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> for the streams&rsquo; general behavior and
 configuration.
 </p>
@@ -225,8 +231,8 @@ limits.
 <dd><p>Run <code class="code">notmuch-search-archive-thread</code>.
 </p></dd>
 <dt><kbd class="kbd">g</kbd></dt>
-<dd><p>Run <code class="code">notmuch-refresh-this-buffer</code>; completion is delivered through the
-generic notification policy described above.
+<dd><p>Run <code class="code">notmuch-refresh-this-buffer</code>; completion follows the interruptible
+refresh policy described above.
 </p></dd>
 </dl>
 
@@ -444,8 +450,8 @@ source names, and positions, but never retain source buffers.  Run
 set <code class="code">emacsvox-aural-presentation-history-limit</code> to zero to disable that
 history.
 </p>
-<p>Generic asynchronous completion uses the notification stream and contains no
-query or message metadata, but notification text may be retained by the
+<p>Generic asynchronous completion contains no query or message metadata.
+Completions sent to the notification stream may be retained by the
 notification subsystem.  Choose <code class="code">cue</code> or <code class="code">silent</code> when even a generic
 thread count is unwanted, and review the global notification-device and log
 settings separately.

@@ -39,16 +39,98 @@ Next: <a href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html" accesskey=
 <hr>
 <h3 class="section" id="Install-Omnivox-From-A-Release-Binary"><span>4.2 Install Omnivox From A Release Binary<a class="copiable-link" href="#Install-Omnivox-From-A-Release-Binary"> &para;</a></span></h3>
 
+<ul class="mini-toc">
+<li><a href="#macOS-with-Homebrew" accesskey="1">macOS with Homebrew</a></li>
+<li><a href="#Manual-archive-installation" accesskey="2">Manual archive installation</a></li>
+</ul>
+<div class="subsection-level-extent" id="macOS-with-Homebrew">
+<h4 class="subsection"><span>4.2.1 macOS with Homebrew<a class="copiable-link" href="#macOS-with-Homebrew"> &para;</a></span></h4>
+
+<p>On macOS (formerly OS X), install <a class="uref" href="https://brew.sh">Homebrew</a> and follow its shell setup
+instructions.  Then install Omnivox from the
+<a class="uref" href="https://github.com/bartbunting/homebrew-omnivox">official Homebrew tap</a>:
+</p>
+<div class="example">
+<pre class="example-preformatted">brew install bartbunting/omnivox/omnivox
+omnivox_program=&quot;$(brew --prefix omnivox)/bin/omnivox&quot;
+&quot;$omnivox_program&quot; --version
+&quot;$omnivox_program&quot; --check
+&quot;$omnivox_program&quot; --list-voices
+</pre></div>
+
+<p>Homebrew selects the Apple Silicon or Intel archive and verifies its checksum.
+The version must be 1.12.0 or newer, and the check must produce both a tone and
+spoken confirmation.  Apple system speech and eSpeak are included.  You do not
+need a Rust build or an Omnivox source checkout.  Install Emacs 30.2 or newer
+separately; this tap does not install Emacs or Emacsvox.
+</p>
+<p>To select this Homebrew installation persistently for Emacsvox, record the
+stable executable path:
+</p>
+<div class="example">
+<pre class="example-preformatted">omnivox_config_home=&quot;${XDG_CONFIG_HOME:-$HOME/.config}&quot;
+omnivox_config_file=&quot;${EMACSVOX_OMNIVOX_CONFIG_FILE:-$omnivox_config_home/emacsvox/omnivox-program}&quot;
+mkdir -p &quot;$(dirname &quot;$omnivox_config_file&quot;)&quot;
+printf '%s\n' &quot;$omnivox_program&quot; &gt; &quot;$omnivox_config_file&quot;
+</pre></div>
+
+<p>This replaces any previous executable selection in that file.  The path uses
+Homebrew&rsquo;s current-version link, so it continues to work after upgrades.  Do
+not substitute a versioned <code class="code">Cellar/omnivox/...</code> path.  The bundled launcher reads
+this file even when Emacs does not inherit the shell&rsquo;s Homebrew <code class="code">PATH</code>, as can
+happen when starting Emacs from Finder.  An explicit <code class="code">OMNIVOX_PROGRAM</code> override
+still takes precedence; remove or update an old override if it selects another
+installation.  If you use <code class="code">EMACSVOX_OMNIVOX_CONFIG_FILE</code> or <code class="code">XDG_CONFIG_HOME</code>,
+make sure the launching Emacs session sees the same configuration location.
+</p>
+<p>Emacsvox uses its own bundled Lisp adapter.  Do not load the Homebrew package&rsquo;s
+<code class="code">libexec/omnivox-voices.el</code>, which is intended for upstream Emacspeak.  Continue
+with <a class="ref" href="Quick-Installation.html">Build And Start Emacsvox</a> to compile Emacsvox, run
+<code class="code">./bin/emacsvox --diagnose</code> and <code class="code">./bin/emacsvox --check</code>, and start an isolated
+speaking session.  Confirm the selected server and audible output on your Mac.
+</p>
+<p>To upgrade Omnivox later:
+</p>
+<div class="example">
+<pre class="example-preformatted">brew update
+brew upgrade omnivox
+&quot;$(brew --prefix omnivox)/bin/omnivox&quot; --version
+&quot;$(brew --prefix omnivox)/bin/omnivox&quot; --check
+</pre></div>
+
+<p>Restart your Emacsvox session after upgrading so both speech processes use the
+new executable.  Updating Emacsvox alone does not upgrade the Homebrew package.
+<code class="code">brew uninstall omnivox</code> removes it; select another server before restarting
+Emacsvox, since the saved executable path remains in your configuration.
+</p>
+<p>Optional Piper, Flite, and RuTTS companions and voice models are separate.
+The bundled RHVoice bridge still requires a compatible user-installed runtime
+and data; its presence does not establish macOS runtime support.  Keep optional
+companions, downloaded voices, and configuration outside Homebrew&rsquo;s Cellar,
+and use their explicit paths as described in the
+<a class="uref" href="https://github.com/bartbunting/omnivox/blob/main/docs/README.md">Omnivox engine guides</a>.  Companions must match the core release and architecture.
+The WSL optional-engine installer is not a Homebrew package manager.
+</p>
+<p>The tap installs the published binaries without adding Apple Developer ID
+signing or notarization.  If local security policy refuses the verified binary,
+use <a class="ref" href="Installing-Omnivox-From-Source.html">Installing Omnivox From Source</a>.  Native tap checks cover
+WAV synthesis and package operations; they do not replace listening acceptance
+inside Emacs or prove an upgrade between different upstream versions.
+</p>
+</div>
+<div class="subsection-level-extent" id="Manual-archive-installation">
+<h4 class="subsection"><span>4.2.2 Manual archive installation<a class="copiable-link" href="#Manual-archive-installation"> &para;</a></span></h4>
+
 <p>Use this route for GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime,
 macOS on Apple silicon, or macOS on Intel.  The
-<a class="uref" href="https://github.com/bartbunting/omnivox/releases/tag/v1.10.0">Omnivox 1.10.0 release</a>
+<a class="uref" href="https://github.com/bartbunting/omnivox/releases/tag/v1.12.0">Omnivox 1.12.0 release</a>
 provides these archive names:
 </p>
 <table class="multitable">
 <thead><tr><th width="28%">Host</th><th width="27%">Set <code class="code">platform</code> to</th><th width="45%">Archive</th></tr></thead>
-<tbody><tr><td width="28%">GNU/Linux x86-64</td><td width="27%"><code class="code">linux-x64</code></td><td width="45%"><code class="code">omnivox-1.10.0-linux-x64.tar.gz</code></td></tr>
-<tr><td width="28%">macOS Apple silicon</td><td width="27%"><code class="code">macos-arm64</code></td><td width="45%"><code class="code">omnivox-1.10.0-macos-arm64.tar.gz</code></td></tr>
-<tr><td width="28%">macOS Intel</td><td width="27%"><code class="code">macos-x64</code></td><td width="45%"><code class="code">omnivox-1.10.0-macos-x64.tar.gz</code></td></tr>
+<tbody><tr><td width="28%">GNU/Linux x86-64</td><td width="27%"><code class="code">linux-x64</code></td><td width="45%"><code class="code">omnivox-1.12.0-linux-x64.tar.gz</code></td></tr>
+<tr><td width="28%">macOS Apple silicon</td><td width="27%"><code class="code">macos-arm64</code></td><td width="45%"><code class="code">omnivox-1.12.0-macos-arm64.tar.gz</code></td></tr>
+<tr><td width="28%">macOS Intel</td><td width="27%"><code class="code">macos-x64</code></td><td width="45%"><code class="code">omnivox-1.12.0-macos-x64.tar.gz</code></td></tr>
 </tbody>
 </table>
 
@@ -58,9 +140,9 @@ matching platform value, and fetch both the archive and published checksum
 file:
 </p>
 <div class="example">
-<pre class="example-preformatted">mkdir -p &quot;$HOME/Downloads/omnivox-1.10.0&quot;
-cd &quot;$HOME/Downloads/omnivox-1.10.0&quot;
-omnivox_version=1.10.0
+<pre class="example-preformatted">mkdir -p &quot;$HOME/Downloads/omnivox-1.12.0&quot;
+cd &quot;$HOME/Downloads/omnivox-1.12.0&quot;
+omnivox_version=1.12.0
 platform=linux-x64
 archive=&quot;omnivox-${omnivox_version}-${platform}.tar.gz&quot;
 release_url=&quot;https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}&quot;
@@ -107,7 +189,7 @@ omnivox --check
 omnivox --list-voices
 </pre></div>
 
-<p>The version must report 1.10.0 or newer, and the check must produce both its
+<p>The version must report 1.12.0 or newer, and the check must produce both its
 tone and spoken confirmation.  The macOS archives are not code-signed or notarized; if
 local security policy refuses the verified binary, use the source route below
 rather than weakening that policy.  On GNU/Linux, a missing runtime library or
@@ -117,6 +199,7 @@ incompatible glibc also means that the source route is the appropriate path.
 <a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>.  That route
 uses the verified Windows archive without requiring a compiler or Docker.
 </p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">
