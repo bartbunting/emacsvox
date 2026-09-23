@@ -2501,7 +2501,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Agent Shell:                           Agent Shell.         (line   6)
 * alternate screen, EAT:                 EAT Terminal Access. (line 336)
 * applications:                          Emacs Packages.      (line   6)
-* archiving, Notmuch:                    Notmuch Mail.        (line 214)
+* archiving, Notmuch:                    Notmuch Mail.        (line 219)
 * artificial intelligence agents:        Agent Shell.         (line   6)
 * asynchronous search, Notmuch:          Notmuch Mail.        (line   6)
 * attachments, Notmuch:                  Notmuch Mail.        (line 152)
@@ -2510,16 +2510,16 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line  14)
 * Aural Doctor:                          Presentation Troubleshooting.
                                                               (line   6)
-* Aural history, mail privacy:           Notmuch Mail.        (line 296)
+* Aural history, mail privacy:           Notmuch Mail.        (line 301)
 * Aural Home:                            Aural Home.          (line   6)
 * Aural Presentation:                    Aural Presentation.  (line   6)
-* automatic speech limits, Notmuch:      Notmuch Mail.        (line 242)
+* automatic speech limits, Notmuch:      Notmuch Mail.        (line 247)
 * automatic speech, Term:                Term Speech Feedback.
                                                               (line   6)
 * buffer cycling:                        Desktop Objects.     (line  36)
 * buffers:                               Desktop Objects.     (line   6)
 * buffers <1>:                           Desktop Management.  (line   6)
-* byte-code, Notmuch integration:        Notmuch Mail.        (line 343)
+* byte-code, Notmuch integration:        Notmuch Mail.        (line 348)
 * character echo:                        Controlling Echo.    (line   6)
 * character mode, Term:                  Term Input Modes.    (line   6)
 * clipboard security, EAT:               EAT Terminal Access. (line 300)
@@ -2547,7 +2547,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * EWW:                                   Web Browsing.        (line   6)
 * explaining presentation:               Explaining Presentation.
                                                               (line   6)
-* fields, Notmuch speech:                Notmuch Mail.        (line 242)
+* fields, Notmuch speech:                Notmuch Mail.        (line 247)
 * finding:                               Context-Sensitive Interaction.
                                                               (line  56)
 * Forms mode:                            Desktop Applications.
@@ -2560,7 +2560,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * mail search, Notmuch:                  Notmuch Mail.        (line   6)
 * major modes:                           Object Oriented Desktop.
                                                               (line   6)
-* message composition, Notmuch:          Notmuch Mail.        (line 314)
+* message composition, Notmuch:          Notmuch Mail.        (line 319)
 * messaging:                             Messaging.           (line   6)
 * MIME parts, Notmuch:                   Notmuch Mail.        (line 152)
 * minor modes:                           Object Oriented Desktop.
@@ -2571,7 +2571,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Notmuch mail:                          Notmuch Mail.        (line   6)
 * Notmuch Search:                        Notmuch Mail.        (line 107)
 * Notmuch Show:                          Notmuch Mail.        (line 152)
-* Notmuch Tree support:                  Notmuch Mail.        (line 314)
+* Notmuch Tree support:                  Notmuch Mail.        (line 319)
 * OCR:                                   Desktop Applications.
                                                               (line  36)
 * Online Help:                           Using Online Help.   (line   6)
@@ -2595,7 +2595,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * presentation profiles:                 Presentation Profiles.
                                                               (line   6)
-* privacy, Notmuch speech:               Notmuch Mail.        (line 242)
+* privacy, Notmuch speech:               Notmuch Mail.        (line 247)
 * programming:                           Editing Code.        (line   6)
 * remote terminal trust:                 EAT Terminal Access. (line 300)
 * review mode, Term:                     Reviewing The Term Screen.
@@ -2620,14 +2620,14 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * speech system:                         Speech System.       (line   6)
 * starting Notmuch:                      Notmuch Mail.        (line  23)
 * startup palette:                       Saving And Startup.  (line   6)
-* status cues, Notmuch:                  Notmuch Mail.        (line 242)
+* status cues, Notmuch:                  Notmuch Mail.        (line 247)
 * structured navigation:                 Context-Sensitive Interaction.
                                                               (line  28)
 * structured navigation <1>:             Browsing Structure.  (line   6)
 * tables, OCR:                           Desktop Applications.
                                                               (line  36)
 * tabs:                                  Desktop Management.  (line   6)
-* tags, Notmuch:                         Notmuch Mail.        (line 214)
+* tags, Notmuch:                         Notmuch Mail.        (line 219)
 * Tempo:                                 Structured Editing.  (line   6)
 * Term mode:                             Running Terminal Based Applications.
                                                               (line   6)
@@ -2637,7 +2637,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * terminal output, speech policy:        EAT Terminal Access. (line  62)
 * terminal privacy:                      EAT Terminal Access. (line 275)
 * terminal screen review:                EAT Terminal Access. (line 148)
-* troubleshooting, Notmuch:              Notmuch Mail.        (line 343)
+* troubleshooting, Notmuch:              Notmuch Mail.        (line 348)
 * TTS:                                   Speech System.       (line   6)
 * voice adjustments:                     Editing Named Voices.
                                                               (line   6)

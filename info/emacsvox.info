@@ -16,7 +16,7 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 Indirect:
 emacsvox.info-1: 384
-emacsvox.info-2: 307026
+emacsvox.info-2: 307098
 
 Tag Table:
 (Indirect)
@@ -109,35 +109,35 @@ Node: Desktop Management264674
 Node: Personal Information Management265176
 Node: Desktop Applications265708
 Node: Notmuch Mail273850
-Ref: Notmuch fields and privacy283920
-Node: Agent Shell289618
-Node: EAT Terminal Access307026
-Node: Running Terminal Based Applications324507
-Node: Starting Term325462
-Node: Term Input Modes326301
-Node: Term Speech Feedback327461
-Node: Reviewing The Term Screen328655
-Node: Term Help And Recovery330556
-Node: Emacsvox Keyboard Commands331455
-Node: Copyright333700
-Node: Acknowledgments334287
-Node: Developer Guide335313
-Node: Documentation Maintenance336477
-Node: Speech Server Protocols341277
-Ref: Testing A Direct Legacy Server347184
-Ref: Commands That Queue Output347743
-Ref: Commands That Set State350777
-Node: Integration Maintenance353371
-Ref: Background startup ownership and failure recovery356213
-Ref: Supported Emacs versions359366
-Ref: Native Windows builds362045
-Ref: Offline Windows development bundle364318
-Ref: Public Windows installer previews373371
-Ref: Remote preview validation376435
-Ref: Internal ownership and renderer tests396665
-Ref: Upstream contract layers400245
-Node: Authoring Sound Packs427994
-Node: Concept Index431259
+Ref: Notmuch fields and privacy284200
+Node: Agent Shell289898
+Node: EAT Terminal Access307098
+Node: Running Terminal Based Applications324579
+Node: Starting Term325534
+Node: Term Input Modes326373
+Node: Term Speech Feedback327533
+Node: Reviewing The Term Screen328727
+Node: Term Help And Recovery330628
+Node: Emacsvox Keyboard Commands331527
+Node: Copyright333772
+Node: Acknowledgments334359
+Node: Developer Guide335385
+Node: Documentation Maintenance336549
+Node: Speech Server Protocols341349
+Ref: Testing A Direct Legacy Server347256
+Ref: Commands That Queue Output347815
+Ref: Commands That Set State350849
+Node: Integration Maintenance353443
+Ref: Background startup ownership and failure recovery356285
+Ref: Supported Emacs versions359438
+Ref: Native Windows builds362117
+Ref: Offline Windows development bundle364390
+Ref: Public Windows installer previews373443
+Ref: Remote preview validation376507
+Ref: Internal ownership and renderer tests396737
+Ref: Upstream contract layers400317
+Node: Authoring Sound Packs428066
+Node: Concept Index431331
 
 End Tag Table
 

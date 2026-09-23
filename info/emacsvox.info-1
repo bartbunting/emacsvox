@@ -5649,11 +5649,16 @@ fields.
 9.4 Read a thread and its MIME parts
 ====================================
 
-Opening a thread speaks one semantic message summary and the first
-visible body line.  Hidden alternative bodies are skipped.  If a message
-has no visible body text, point falls back to a leaf MIME-part button
-when possible.  Moving onto such a button identifies its bounded
+Opening a thread selects its newest unread message among the open
+messages matching the search.  If there are none, it keeps Notmuch's
+initial selection.  Emacsvox speaks that message's semantic summary and
+first visible body line.  Hidden alternative bodies are skipped.  If a
+message has no visible body text, point falls back to a leaf MIME-part
+button when possible.  Moving onto such a button identifies its bounded
 filename, content type, and size.
+
+   Line reading speaks the visible sender row even when the preceding
+message ends with folded quoted text.  The quote stays folded.
 
 ‘n’
      Run ‘notmuch-show-next-open-message’.
@@ -5891,14 +5896,11 @@ an active request; its normal confirmation setting still applies.
 
    With Agent Shell's persistent prompt enabled, you can keep typing
 while the agent works.  Brackets and navigation letters remain ordinary
-input at that prompt.  Reading the live prompt says “Agent working” and
-whether normal submission will queue or steer the input.  A pending
-permission is announced as “Waiting for permission.” These cues also
-precede the first line of a draft; later lines keep ordinary reading
-feedback.  “Ready for input” is reserved for an empty prompt when the
-agent is idle.  The route follows your normal submit setting and
-accounts for providers that cannot steer; custom submit functions are
-identified without guessing what they will do.
+input at that prompt.  Reading the live prompt says “Agent busy” while
+the agent works.  A pending permission is announced as “Waiting for
+permission.” These cues also precede the first line of a draft; later
+lines keep ordinary reading feedback.  “Ready for input” is reserved for
+an empty prompt when the agent is idle.
 
    In the viewport editor, Emacsvox announces whether a prompt was
 submitted, queued, or sent for steering, and whether the editor stays

@@ -686,27 +686,14 @@ before the first response character, including when approaching from below."
                return (cons (overlay-end overlay) end)))))
 
 (defun emacsvox-agent-shell--live-prompt-state-speech ()
-  "Describe a non-idle prompt and its normal submit route, or return nil.
-Read the current state without invoking a submit function.  Custom routes
-are left unspecified; steering without provider support falls back to queueing."
+  "Briefly describe a non-idle prompt's state, or return nil."
   (let ((status (condition-case nil
                     (agent-shell-status :shell-buffer (current-buffer))
                   (error 'unknown))))
     (pcase status
       ('ready nil)
-      ((or 'busy 'blocked)
-       (concat
-        (if (eq status 'blocked) "Waiting for permission. " "Agent working. ")
-        (pcase (if (boundp 'agent-shell-busy-submit-default-function)
-                   agent-shell-busy-submit-default-function
-                 'agent-shell-busy-submit-queue)
-          ('agent-shell-busy-submit-queue "Input will queue.")
-          ('agent-shell-busy-submit-steer
-           (if (and (fboundp 'agent-shell-steering-supported-p)
-                    (ignore-errors (agent-shell-steering-supported-p)))
-               "Input will steer."
-             "Input will queue."))
-          (_ "Input uses a custom submit action."))))
+      ('busy "Agent busy.")
+      ('blocked "Waiting for permission.")
       (_ "Input state unavailable."))))
 
 (defun emacsvox-agent-shell--add-chat-label-for-speech (text)

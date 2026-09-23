@@ -1575,7 +1575,7 @@
       (should (equal (car (car tabulated-list-entries)) '(:language "en-us"))))))
 
 (ert-deftest emacsvox-aural-workbench-language-selection-follows-metadata-and-filter ()
-  "Selection survives a language correction; hidden voices remain browseable."
+  "Selection survives a language correction; hidden voices remain browsable."
   (emacsvox-test--with-voice-workbench
     (let* ((inventory (emacsvox-test--language-inventory))
            (tts-voice-inventory-function (lambda () inventory))

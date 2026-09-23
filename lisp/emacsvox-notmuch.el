@@ -1488,8 +1488,26 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
  '(notmuch-bury-or-kill-this-buffer)
  #'emacsvox-notmuch--close-feedback)
 
+(defun emacsvox-notmuch--prefer-unread-message ()
+  "Select the newest open, matching unread message in the current thread.
+Keep Notmuch's initial position when no such message exists.  Inspecting
+messages does not change their read state."
+  (when (eq major-mode 'notmuch-show-mode)
+    (let (position timestamp)
+      (notmuch-show-mapc
+       (lambda ()
+         (let* ((message (notmuch-show-get-message-properties))
+                (date (or (plist-get message :timestamp) 0)))
+           (when (and (plist-get message :match)
+                      (plist-get message :message-visible)
+                      (member "unread" (plist-get message :tags))
+                      (or (null position) (> date timestamp)))
+             (setq position (point) timestamp date)))))
+      (when position (goto-char position)))))
+
 (defun emacsvox-notmuch--show-feedback ()
-  "Speak the first message in a newly opened Notmuch thread."
+  "Prefer unread mail and speak the selected message in a newly opened thread."
+  (emacsvox-notmuch--prefer-unread-message)
   (emacsvox-notmuch--move-to-message-body)
   (let* ((message
           (and
@@ -1503,6 +1521,26 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
      message
      (emacsvox-notmuch--landed-body-line)
      facts 'state-change 'open-object 'replaceable 'lane)))
+
+(defun emacsvox--advice-emacsvox-speak-line-notmuch-around
+    (original &rest arguments)
+  "Read the visible Notmuch row when point precedes it in folded text.
+Physical line motion can leave point at the start of an invisible quote
+whose final newline precedes the next message's sender.  Preserve point
+and folding while presenting the visible row through the core path."
+  (if (and (eq major-mode 'notmuch-show-mode) (invisible-p (point)))
+      (save-excursion
+        (let ((origin (point)))
+          (while (and (< (point) (point-max)) (invisible-p (point)))
+            (goto-char (next-char-property-change (point))))
+          (when (eobp) (goto-char origin))
+          (apply original arguments)))
+    (apply original arguments)))
+
+(push
+ '(emacsvox-speak-line
+   :around emacsvox--advice-emacsvox-speak-line-notmuch-around)
+ emacsvox-notmuch--advice)
 
 (defun emacsvox--advice-emacsvox-speak-visual-line-notmuch-around
     (original &rest arguments)

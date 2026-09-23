@@ -547,6 +547,30 @@ Return the beginning of the inserted row."
          "… [widget label shortened: 200000 characters omitted; "
          "RET opens full details] button"))))))
 
+(ert-deftest emacsvox-notmuch-sender-line-after-hidden-quote-is-spoken ()
+  "A cursor in the preceding folded quote speaks the visible sender row."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (insert "Previous message\n")
+    (let ((hidden-start (point)))
+      (insert "Hidden quoted message\nHidden quoted details\n")
+      (let* ((sender-start (point))
+             (fold (make-overlay hidden-start sender-start))
+             (sender "Sender <sender@example.com> (today) (unread)")
+             spoken)
+        (insert sender "\nSubject: A reply\n")
+        (overlay-put fold 'invisible t)
+        (goto-char hidden-start)
+        (let ((before (buffer-string)))
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest _)
+                       (push (substring-no-properties text) spoken))))
+            (emacsvox-speak-line))
+          (should (equal spoken (list sender)))
+          (should (= (point) hidden-start))
+          (should (equal-including-properties before (buffer-string)))
+          (should (overlay-get fold 'invisible)))))))
+
 (ert-deftest emacsvox-notmuch-show-visual-lines-leave-blank-policy-to-core ()
   "Notmuch should not duplicate core visual-line blank presentation."
   (dolist (case '((notmuch-show-mode "")
@@ -1394,6 +1418,8 @@ Return the beginning of the inserted row."
   "Entering a Notmuch message remains interruptible foreground speech."
   (with-temp-buffer
     (setq major-mode 'notmuch-show-mode)
+    (emacsvox-notmuch-test--insert-rendered-show-message "entry" t)
+    (goto-char (point-min))
     (let (submission)
       (cl-letf
           (((symbol-function 'emacsvox-notmuch--move-to-message-body) #'ignore)
@@ -1886,6 +1912,49 @@ Return the beginning of the inserted row."
       '((icon select-object)
         (speak
          "Finished saving attachments; attachment scan incomplete"))))))
+
+(ert-deftest emacsvox-notmuch-opening-thread-prefers-newest-matching-unread ()
+  "Thread entry selects unread mail by date and preserves the query and tags."
+  (dolist (case '((t "read-root" "newer-unread")
+                  (nil "read-root" "read-root")
+                  (nil "read-reply" "read-reply")))
+    (with-temp-buffer
+      (setq major-mode 'notmuch-show-mode)
+      (let ((ems--interactive-fn-name 'notmuch-search-show-thread)
+            starts tags-before spoken-id)
+        ;; Thread order need not be date order. Hidden and nonmatching unread
+        ;; messages must not displace a message selected by this search.
+        (dolist (row '(("read-root" 100 t t nil)
+                       ("newer-unread" 300 t t t)
+                       ("older-unread" 200 t t t)
+                       ("read-reply" 400 t t nil)
+                       ("unmatched-unread" 500 nil t t)
+                       ("hidden-unread" 600 t nil t)))
+          (let ((start (emacsvox-notmuch-test--insert-rendered-show-message
+                        (nth 0 row) (nth 3 row))))
+            (push (cons (nth 0 row) start) starts)
+            (save-excursion
+              (goto-char start)
+              (notmuch-show-set-prop :timestamp (nth 1 row))
+              (notmuch-show-set-prop :match (nth 2 row))
+              (notmuch-show-set-prop
+               :tags (when (and (nth 4 row)
+                                (or (car case) (not (nth 2 row))
+                                    (not (nth 3 row))))
+                       '("unread"))))))
+        (notmuch-show-mapc
+         (lambda () (push (copy-sequence (notmuch-show-get-tags)) tags-before)))
+        (goto-char (cdr (assoc (nth 1 case) starts)))
+        (cl-letf (((symbol-function 'emacsvox-notmuch--submit-show-message)
+                   (lambda (message &rest _)
+                     (setq spoken-id (plist-get message :id)))))
+          (emacsvox--advice-notmuch-search-show-thread-after))
+        (should (equal (notmuch-show-get-message-id t) (nth 2 case)))
+        (should (equal spoken-id (nth 2 case)))
+        (let (tags-after)
+          (notmuch-show-mapc
+           (lambda () (push (copy-sequence (notmuch-show-get-tags)) tags-after)))
+          (should (equal tags-before tags-after)))))))
 
 (ert-deftest emacsvox-notmuch-opening-thread-speaks-semantic-message ()
   "Opening a search result selects the line before the message body."

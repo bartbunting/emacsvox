@@ -8031,8 +8031,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should (eq (get-text-property 0 'face spoken)
                       'agent-shell-chat-me-label)))))))
 
-(ert-deftest emacsvox-agent-shell-live-prompt-speech-identifies-busy-route ()
-  "Reading a live prompt tracks busy routes without altering input or history."
+(ert-deftest emacsvox-agent-shell-live-prompt-speech-identifies-busy-state ()
+  "Reading a live prompt gives brief status without altering input or history."
   (dolist (draft '("" "draft"))
     (with-temp-buffer
       (emacsvox-agent-shell-test--insert-live-chat-input draft)
@@ -8041,14 +8041,14 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         ;; Reuse the prompt through transitions so no stale ready cue survives.
         (dolist (case '((ready agent-shell-busy-submit-queue t nil)
                         (busy agent-shell-busy-submit-queue t
-                              "Agent working. Input will queue.")
+                              "Agent busy.")
                         (busy agent-shell-busy-submit-steer t
-                              "Agent working. Input will steer.")
+                              "Agent busy.")
                         (busy agent-shell-busy-submit-steer nil
-                              "Agent working. Input will queue.")
+                              "Agent busy.")
                         (blocked agent-shell-busy-submit-queue t
-                                 "Waiting for permission. Input will queue.")
-                        (busy ignore t "Agent working. Input uses a custom submit action.")
+                                 "Waiting for permission.")
+                        (busy ignore t "Agent busy.")
                         (unknown ignore t "Input state unavailable.")
                         (ready agent-shell-busy-submit-steer t nil)))
           (let ((agent-shell-busy-submit-default-function (nth 1 case))
@@ -8179,9 +8179,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (redisplay t)
           (dolist (case '((ready agent-shell-busy-submit-queue nil)
                           (busy agent-shell-busy-submit-queue
-                                "Agent working. Input will queue.")
+                                "Agent busy.")
                           (busy agent-shell-busy-submit-steer
-                                "Agent working. Input will steer.")))
+                                "Agent busy.")))
             (let ((agent-shell-busy-submit-default-function (nth 1 case)))
               (setf (alist-get :supports-steering agent-shell--state) t)
               (dolist (position (list (1+ (marker-position (car comint-last-prompt)))
@@ -8244,7 +8244,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                    (lambda (text) (push (substring-no-properties text) spoken))))
           (emacsvox-agent-shell--speak-visual-line-around
            #'emacsvox-speak-visual-line)
-          (should (string-prefix-p "Me. Agent working. Input will queue. word"
+          (should (string-prefix-p "Me. Agent busy. word"
                                   (car spoken)))
           (should-not (string-match-p "LAST" (car spoken)))
           (goto-char (point-max))

@@ -158,7 +158,7 @@
     ("pt" . "Portuguese") ("ro" . "Romanian") ("ru" . "Russian")
     ("sk" . "Slovak") ("sl" . "Slovenian") ("sq" . "Albanian")
     ("sr" . "Serbian") ("sv" . "Swedish") ("sw" . "Swahili")
-    ("ta" . "Tamil") ("te" . "Telugu") ("th" . "Thai")
+    ("ta" . "Tamil") ("te" . "Telugu") ("th" . "Thai") ; codespell:ignore te
     ("tr" . "Turkish") ("uk" . "Ukrainian") ("ur" . "Urdu")
     ("vi" . "Vietnamese") ("yue" . "Cantonese") ("zh" . "Chinese"))
   "Readable language labels; unrecognized tags remain visible verbatim.")

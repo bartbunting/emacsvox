@@ -17,6 +17,11 @@ the primary speech stream. Navigation interrupts it, and it no longer speaks
 over the selected message through the notification stream. Refreshes that
 finish in another buffer retain generic notification feedback.
 
+Opening a Notmuch thread now selects its newest open, matching unread
+message. When none is unread, it keeps Notmuch's initial selection.
+Reading a sender line after a folded quote no longer goes silent when Emacs
+leaves point in the preceding hidden text.
+
 EAT line-mode history navigation speaks the recalled command without also
 announcing the history-item counter or input-restored message. Those messages
 remain visible in the echo area; unrelated messages and errors are preserved.
@@ -46,8 +51,8 @@ Agent Shell 0.78.1 support keeps brackets editable at the persistent prompt
 while the agent works. Viewport submission feedback distinguishes queueing
 from steering, including the override command and unsupported-steering
 fallback. Full header speech includes the optional cumulative cost indicator.
-Reading a busy live prompt identifies queue or steering input, or a pending
-permission, instead of saying the agent is ready for input.
+Reading a busy live prompt briefly says "Agent busy" or "Waiting for
+permission", without repeating how input will be submitted.
 
 Rendered table borders are omitted from response and line speech, preventing
 decorative box-drawing characters from forcing an Eloquence-to-eSpeak switch.
