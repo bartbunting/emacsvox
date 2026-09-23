@@ -911,7 +911,10 @@
   "The default palette exposes the ACSS personalities and built-in styles."
   (let ((entries
          (emacsvox-aural-effective-voice-entries 'acss-default)))
-    (should (= (length entries) 26))
+    (should (= (length entries) 27))
+    (should (equal (alist-get 'default entries)
+                   '(:family nil :average-pitch nil :pitch-range nil
+                     :stress nil :richness nil)))
     (should (eq (alist-get 'bolden entries) 'voice-bolden))
     (should (eq (emacsvox-aural-voice 'smoothen) 'voice-smoothen))
     (should

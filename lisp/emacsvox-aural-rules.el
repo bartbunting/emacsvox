@@ -2207,7 +2207,9 @@ which establishes a new complete base before applying those dimensions."
   (let ((plan
          (emacsvox-aural--make-render-plan
           :before nil
-          :content (emacsvox-aural--make-content-style :speak t)
+          ;; Ordinary speech participates in the same palette routing and
+          ;; shared/choice/context tuning as explicitly named voices.
+          :content (emacsvox-aural--make-content-style :speak t :voice 'default)
           :after nil
           :matched-rules nil
           :rule-scores nil

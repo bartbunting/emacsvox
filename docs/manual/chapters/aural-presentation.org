@@ -927,6 +927,14 @@ voice creates a complete entry in your destination palette when saved.
 Editing a built-in palette asks for a personal child. Opening the editor
 and previewing a draft do not change live feedback or save settings.
 
+The named voice =default= controls ordinary reading and spoken labels that
+have no explicitly selected voice. Choose it to change the physical voice,
+fallbacks or tuning for normal text. Each palette has its own effective
+=default= entry, inherited from its parent until you save a local edit.
+Switching palettes also switches the ordinary reading voice. Other named
+voices, such as =indent= and =bolden=, keep their own settings; changing
+=default= does not change every voice in the palette.
+
 If you opened an experiment from an installed physical voice, these same
 controls apply, but saving first asks for a destination. See
 [[info:emacsvox#Keeping A Voice Experiment][Keep an Installed Voice Experiment]] for that sequence.

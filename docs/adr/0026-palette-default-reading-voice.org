@@ -1,0 +1,45 @@
+#+title: ADR 0026: Palette-owned Default Reading Voice
+#+date: 2026-09-24
+
+* Status
+
+Accepted by the maintainer on 2026-09-24 following Parham's request to assign
+an eSpeak variant to ordinary speech through the existing palette editor.
+
+* Decision
+
+Add =default= to the standard palette's named voices. Its initial definition
+uses adapter-default adjustments and Automatic physical choices. Personal
+palettes inherit this complete entry through the existing standard-root chain.
+An existing personal entry with that name remains authoritative; no personal
+file is rewritten merely by loading the new standard entry.
+
+Ordinary content starts with =default= before presentation rules run. Sparse
+contextual adjustments compose over it under the existing shared, choice,
+context precedence. A named voice replaces that base; changing =default= does
+not retune =indent=, headings, or every other named voice. Speech actions
+without an explicit voice also use =default=.
+
+This refines ADR 0018's treatment of ordinary unstyled content. Explicit raw
+styles, generated ACSS handles, explicit nil resets and =inaudible= retain
+their existing low-level meanings. Unknown voice references still degrade
+without sending the unknown name to the server. Physical experiments and
+exact auditions do not acquire the active palette's default tuning.
+
+Use the existing named-voice picker, common editor, private preview, immutable
+choice snapshots, palette inheritance and acknowledged application to both
+speech lanes. Switching palettes switches the ordinary reading voice along
+with other named entries. Saving to the collection and selecting a startup
+palette remain distinct actions. No storage schema, speech protocol, engine
+installation, or release change is required.
+
+The legacy =omnivox-set-voice= setting remains an adapter-level control. It is
+not copied into a palette, and it does not replace an explicit palette choice.
+
+* Verification
+
+Cover the variants browser's actual =u= completion and save workflow, normal
+speech on both lanes, return from a named span to ordinary text, contextual
+adjustments, palette switching, frozen registrations and private previews.
+Preserve explicit resets, generated voices and silence. A graphical editor
+check supplements batch tests; native macOS listening remains separate.

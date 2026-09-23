@@ -57,6 +57,53 @@
                   emacsvox-aural-voice-palette-registry)))
      ,@body))
 
+(defun emacsvox-test--set-palette-default (palette voice-id pitch)
+  "Give test PALETTE an exact local VOICE-ID, shared PITCH and choice tuning."
+  (let* ((data (copy-tree (emacsvox-aural-voice-palette-data-form
+                          (emacsvox-aural-voice-palette palette))))
+         (id (format "%s-default-test" palette)))
+    (push `(default :style (:family nil :average-pitch ,pitch :pitch-range nil
+                           :stress nil :richness nil)
+                    :choices nil :local-choices ,id)
+          (plist-get data :entries))
+    (push `(:schema-version 3 :id ,id :palette ,palette :voice default
+            :choices ((:id "selected" :selector (:kind exact :scope local
+                                                :engine-id "espeak" :voice-id ,voice-id)
+                                  :adjustments (:richness 0))))
+          emacsvox-aural-routing--choice-sets)
+    (puthash palette (emacsvox-aural-compile-voice-palette-data data)
+             emacsvox-aural-voice-palette-registry)))
+
+(ert-deftest emacsvox-aural-voice-runtime-default-switches-with-palette-and-preview ()
+  "The ordinary voice's preview and registration follow A-B-A selection."
+  (emacsvox-test--with-owned-runtime
+   (emacsvox-test--set-palette-default 'reading-owned "espeak:gmw/en+max" 2)
+   (emacsvox-test--set-palette-default 'alternative-owned "espeak:gmw/en+m1" 7)
+   (cl-letf (((symbol-function 'voice-from-acss) (lambda (_) 'test-default-style))
+             ((symbol-function 'tts-get-voice-command) (lambda (_) ""))
+             ((symbol-function 'emacsvox-aural-active-voice-capabilities)
+              (lambda () '(:adapter omnivox :dimensions (average-pitch pitch-range stress richness)))))
+     (dolist (case '((reading-owned "espeak:gmw/en+max" 2)
+                     (alternative-owned "espeak:gmw/en+m1" 7)
+                     (reading-owned "espeak:gmw/en+max" 2)))
+       (setq emacsvox-aural-voice-palette-override (car case))
+       (let* ((plan (emacsvox-aural-compile-plan
+                     (emacsvox-aural--resolve-matches nil 'object)
+                     '(:content "Ordinary text") '(:icons-enabled nil)))
+              (content (emacsvox-aural-concrete-plan-content plan))
+              (definition (omnivox--logical-definition-json "default" nil t))
+              (preview (emacsvox-aural-voice-workbench--logical-preview-entry 'default)))
+         (should (eq (emacsvox-aural-concrete-content-voice-request content) 'default))
+         (should (= (plist-get (emacsvox-aural-concrete-content-voice-style content) :average-pitch)
+                    (nth 2 case)))
+         (should (equal (plist-get (aref (plist-get definition :preferences) 0) :voice_id)
+                        (cadr case)))
+         (should (equal (plist-get (car (plist-get preview :selectors)) :voice-id) (cadr case)))
+         (should (= (plist-get (plist-get preview :acss) :average-pitch) (/ (nth 2 case) 9.0)))
+         (should (equal (plist-get (car (plist-get (emacsvox-aural-voice-runtime--resolve 'default)
+                                                  :choices)) :adjustments)
+                        '(:richness 0))))))))
+
 (ert-deftest emacsvox-aural-voice-runtime-registration-keeps-owned-and-legacy-scopes ()
   "Owned choices and aliases override old bindings; unrelated IDs remain unchanged."
   (emacsvox-test--with-owned-runtime
@@ -184,6 +231,8 @@
 (ert-deftest emacsvox-aural-voice-runtime-two-lanes-freeze-owned-registrations ()
   "Real requests retain their palette snapshot and report partial lane failure."
   (emacsvox-test--with-owned-runtime
+   (emacsvox-test--set-palette-default 'reading-owned "espeak:gmw/en+max" 2)
+   (emacsvox-test--set-palette-default 'alternative-owned "espeak:gmw/en+m1" 7)
    (let* ((speaker (make-pipe-process :name "owned-main" :noquery t))
           (notification (make-pipe-process :name "owned-notify" :noquery t))
           (tts-speaker-process speaker) (tts-notify-process notification)
@@ -239,8 +288,12 @@
                             (plist-get (cdadr registrations) :definitions)))
              (dolist (write registrations)
                (let* ((request (cdr write))
+                      (ordinary (cl-find "default" (plist-get request :definitions)
+                                         :key (lambda (d) (plist-get d :id)) :test #'equal))
                       (definition (cl-find "voice-bolden" (plist-get request :definitions)
                                            :key (lambda (d) (plist-get d :id)) :test #'equal)))
+                 (should (equal (plist-get ordinary :preferences)
+                                '((:kind "exact" :engine_id "espeak" :voice_id "espeak:gmw/en+max"))))
                  (should (equal (plist-get definition :preferences)
                                 '((:kind "exact" :engine_id "dectalk" :voice_id "Paul")
                                   (:kind "properties" :engine_id "eloquence" :language :null :gender "male"))))

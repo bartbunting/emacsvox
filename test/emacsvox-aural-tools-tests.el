@@ -494,6 +494,7 @@
              :content
              (emacsvox-aural--make-content-style
               :voice 'voice-bolden)))
+           (choice "animate")
            answers
            prepared
            spoken)
@@ -518,7 +519,7 @@
                 (lambda (prompt &rest _)
                   (push prompt answers)
                   (if (string-prefix-p "Voice for " prompt)
-                      "animate"
+                      choice
                     "always (personal)")))
                ((symbol-function
                  'emacsvox-aural-editor-open-prefilled-rule)
@@ -548,7 +549,11 @@
             (should
              (string-match-p
               "currently bolden"
-              (car (last answers)))))
+              (car (last answers))))
+            (setq choice "default")
+            (emacsvox-aural-remap-voice-at-point)
+            (should (equal (plist-get (cadr prepared) :render)
+                           '(:content (:voice default)))))
         (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-tools-home-remaps-unspoken-shell-prompt ()
@@ -1602,7 +1607,7 @@
         (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-tools-recent-feedback-navigation-retains-voices ()
-  "Content navigation keeps each voice while titles and metadata stay neutral."
+  "Content navigation keeps each voice while labels use the reading default."
   (emacsvox-test--with-aural-tools
     (let* ((first (emacsvox-aural--make-concrete-content
                    :text "Hello " :speak t :voice-request 'bolden
@@ -1649,11 +1654,12 @@
                   (and value-first (equal (car pair) "Hello")
                        '(select-object))))
                 (should-not (emacsvox-aural-concrete-plan-after plan))))
-            (should-not
-             (emacsvox-aural-concrete-content-voice-request
-              (emacsvox-aural-concrete-plan-content
-               (emacsvox-aural-concrete-plan-at
-                (string-match "Content" spoken) spoken)))))
+            (should
+             (eq (emacsvox-aural-concrete-content-voice-request
+                  (emacsvox-aural-concrete-plan-content
+                   (emacsvox-aural-concrete-plan-at
+                    (string-match "Content" spoken) spoken)))
+                 'default)))
           (emacsvox-aural-ui-next-column)
           (should-not (get-text-property
                        0 'emacsvox-aural-recent-feedback-voice spoken)))

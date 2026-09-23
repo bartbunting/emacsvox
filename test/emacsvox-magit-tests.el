@@ -1894,8 +1894,8 @@
               (should
                (eq
                 (emacsvox-aural-concrete-content-voice-request content)
-                (and voice-lock-enabled
-                     'monotone-extra))))))))))
+                (if voice-lock-enabled
+                    'monotone-extra 'default))))))))))
 
 (ert-deftest emacsvox-magit-view-and-process-facts-express-intent ()
   "Magit view lifecycle and process completion use distinct semantics."

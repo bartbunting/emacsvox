@@ -121,7 +121,7 @@ Operational semantic contract version: =1=.
 | =accepted= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | The current candidate or choice was accepted |
 | =activity-ended= | =event= | =core= | - | - | - | - | - | - | - | - | A repeating or ongoing activity ended |
 | =agent-block= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | One navigable structural block in an agent transcript |
-| =agent-block-kind= | =attribute= | =agent-shell= | =agent-response=, =user-prompt=, =thought=, =tool-call=, =activity-group=, =plan=, =permission=, =error=, =table=, =source-block=, =other= | - | - | - | - | - | - | - | The structural kind of an Agent Shell transcript block |
+| =agent-block-kind= | =attribute= | =agent-shell= | =agent-response=, =user-prompt=, =thought=, =tool-call=, =activity-group=, =plan=, =permission=, =error=, =table=, =source-block=, =heading=, =link=, =other= | - | - | - | - | - | - | - | The structural kind of an Agent Shell transcript block |
 | =agent-content-copied= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | Agent Shell content was copied for reuse |
 | =agent-content-inspected= | =event= | =agent-shell= | - | - | - | - | - | =inspection= | =before=, =content=, =after= | - | The user explicitly requested Agent Shell content |
 | =agent-diff= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection= | =before=, =content=, =after= | - | A change review opened from an agent session |
@@ -141,10 +141,10 @@ Operational semantic contract version: =1=.
 | =agent-permission-result= | =attribute= | =agent-shell= | =allowed=, =denied=, =cancelled=, =sent= | - | - | - | - | - | - | - | The result of an Agent Shell permission decision |
 | =agent-plan= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =inspection= | =before=, =content=, =after= | - | A plan produced by an agent |
 | =agent-prompt-cancelled= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | Agent Shell prompt composition was cancelled |
-| =agent-prompt-disposition= | =attribute= | =agent-shell= | =submitted=, =queued=, =sent= | - | - | - | - | - | - | - | Whether an Agent Shell prompt was submitted, queued, or sent |
+| =agent-prompt-disposition= | =attribute= | =agent-shell= | =submitted=, =queued=, =steered=, =sent= | - | - | - | - | - | - | - | Whether an Agent Shell prompt was submitted, queued, steered, or sent |
 | =agent-prompt-editor= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =edit=, =state-change= | =before=, =content=, =after= | - | An editor used to compose an Agent Shell prompt |
 | =agent-prompt-opened= | =event= | =agent-shell= | - | - | - | - | - | =edit=, =state-change= | =before=, =content=, =after= | - | An Agent Shell prompt editor was opened |
-| =agent-prompt-submitted= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A composed Agent Shell prompt was submitted or queued |
+| =agent-prompt-submitted= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A composed Agent Shell prompt was submitted, queued, or sent for steering |
 | =agent-queue-changed= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A queued prompt started or the prompt queue paused |
 | =agent-queue-count= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | Number of prompts still waiting in the queue |
 | =agent-queue-state= | =attribute= | =agent-shell= | =started=, =paused= | - | - | - | - | - | - | - | Whether a queued prompt started or the queue paused |
@@ -596,6 +596,7 @@ Existing device-independent ACSS personalities
 | =brighten= | =voice-brighten= |
 | =brighten-extra= | =voice-brighten-extra= |
 | =brighten-medium= | =voice-brighten-medium= |
+| =default= | =:family=, =nil=, =:average-pitch=, =nil=, =:pitch-range=, =nil=, =:stress=, =nil=, =:richness=, =nil= |
 | =indent= | =voice-indent= |
 | =lighten= | =voice-lighten= |
 | =lighten-extra= | =voice-lighten-extra= |

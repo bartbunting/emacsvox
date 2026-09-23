@@ -10,6 +10,15 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Default reading voice in palettes
+
+Each voice palette now includes =default= for ordinary reading. In eSpeak's
+Voice variants browser, select Max, press =u=, and choose your palette and
+=default=. Preview it and use Save and apply in the existing editor. The
+choice, fallbacks and tuning belong to that palette and follow palette
+switches on both speech streams. Other named voices keep their own settings.
+Use at Startup remains the separate action for choosing a startup palette.
+
 ** Interruptible Notmuch refresh and EAT history feedback
 
 Refreshing the selected Notmuch search buffer queues its completion count on

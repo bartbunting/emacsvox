@@ -1706,6 +1706,11 @@ it with the palette's settings@comma{} then @kbd{w} to @emph{Save and apply}@com
 or choose @emph{Save to collection without selecting} to keep it for later.
 Editing a built-in palette creates a personal copy. @emph{Use at Startup} in
 Voice Palettes controls which palette is selected next time.
+To use Max for ordinary reading@comma{} choose your English base with
+@kbd{b}@comma{} select @samp{Max}@comma{} press @kbd{u}@comma{} and choose
+your palette followed by @samp{default}. Preview and @emph{Save and apply} in the
+editor. The same @samp{default} entry is available alongside @samp{indent} and the
+other named voices when editing a palette directly.
 @kbd{q} returns to the variants list with its selection retained;
 @kbd{v} opens the base-voice browser. Existing saved variant
 references remain valid. An older Omnivox worker must be updated once to
@@ -3765,6 +3770,14 @@ opens the named voice used by the captured source item. Editing an inherited
 voice creates a complete entry in your destination palette when saved.
 Editing a built-in palette asks for a personal child. Opening the editor
 and previewing a draft do not change live feedback or save settings.
+
+The named voice @samp{default} controls ordinary reading and spoken labels that
+have no explicitly selected voice. Choose it to change the physical voice@comma{}
+fallbacks or tuning for normal text. Each palette has its own effective
+@samp{default} entry@comma{} inherited from its parent until you save a local edit.
+Switching palettes also switches the ordinary reading voice. Other named
+voices@comma{} such as @samp{indent} and @samp{bolden}@comma{} keep their own settings; changing
+@samp{default} does not change every voice in the palette.
 
 If you opened an experiment from an installed physical voice@comma{} these same
 controls apply@comma{} but saving first asks for a destination. See

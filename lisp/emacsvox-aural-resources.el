@@ -446,7 +446,9 @@ themed overrides below an active sound pack."
   "Built-in tones matching established nonverbal presentation signals.")
 
 (defconst emacsvox-aural-default-voice-entries
-  '((animate . voice-animate)
+  '((default . (:family nil :average-pitch nil :pitch-range nil
+               :stress nil :richness nil))
+    (animate . voice-animate)
     (animate-extra . voice-animate-extra)
     (animate-medium . voice-animate-medium)
     (annotate . voice-annotate)

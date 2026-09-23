@@ -549,6 +549,11 @@ visibly; stop the sessions using that release before retrying. Press
   or choose /Save to collection without selecting/ to keep it for later.
   Editing a built-in palette creates a personal copy. /Use at Startup/ in
   Voice Palettes controls which palette is selected next time.
+  To use Max for ordinary reading, choose your English base with
+  @@texinfo:@kbd{b}@@, select =Max=, press @@texinfo:@kbd{u}@@, and choose
+  your palette followed by =default=. Preview and /Save and apply/ in the
+  editor. The same =default= entry is available alongside =indent= and the
+  other named voices when editing a palette directly.
   @@texinfo:@kbd{q}@@ returns to the variants list with its selection retained;
   @@texinfo:@kbd{v}@@ opens the base-voice browser. Existing saved variant
   references remain valid. An older Omnivox worker must be updated once to

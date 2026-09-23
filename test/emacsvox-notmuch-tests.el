@@ -982,8 +982,8 @@ Return the beginning of the inserted row."
            #'emacsvox-aural-concrete-action-cue
            (emacsvox-aural-concrete-plan-before plan))
           (and icons-enabled '(warn-user))))
-        (should-not
-         (emacsvox-aural-concrete-content-voice-request content))
+        (should
+         (eq (emacsvox-aural-concrete-content-voice-request content) 'default))
         (should (eq (plist-get context :module) 'notmuch))
         (should (eq (plist-get context :occasion) 'navigation))
         (should

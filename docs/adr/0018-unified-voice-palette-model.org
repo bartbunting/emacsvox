@@ -11,6 +11,9 @@ long-term coexistence of legacy shared routing and owned palettes, and its
 user-facing conversion-on-first-save workflow. The remaining ownership, storage,
 preview and composition requirements of ADRs 0015–0017 remain in force.
 
+[[file:0026-palette-default-reading-voice.org][ADR 0026]] subsequently adds a palette-owned =default= for ordinary reading,
+refining the unstyled-content boundary while preserving explicit raw resets.
+
 The [[file:../aural-interface-review.org][interface review]] records the evidence. The
 [[file:../aural-interface-consolidation-plan.org][delivery plan]] defines tested commits and reasoning-level handoffs.
 

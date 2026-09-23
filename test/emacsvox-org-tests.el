@@ -655,9 +655,9 @@
          (emacsvox-aural-render-plan-before plan))
         '(org-fragment-heading-level-label-action
           org-fragment-heading-section-cue-action)))
-      (should-not
-       (emacsvox-aural-content-style-voice
-        (emacsvox-aural-render-plan-content plan)))
+      (should
+       (eq (emacsvox-aural-content-style-voice
+            (emacsvox-aural-render-plan-content plan)) 'default))
       (should
        (equal
         (emacsvox-aural-concrete-action-text

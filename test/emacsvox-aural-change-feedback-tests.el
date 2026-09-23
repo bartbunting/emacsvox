@@ -340,6 +340,13 @@
       (should emacsvox-aural-change-feedback-render)
       (should-not emacsvox-aural-session-rules))))
 
+(ert-deftest emacsvox-aural-guided-default-selects-the-palette-voice ()
+  "Choosing default retains its named identity in the proposed rule."
+  (emacsvox-test--with-guided-feedback
+    (emacsvox-test--guided-choose "Change the content voice" "default")
+    (should (equal emacsvox-aural-change-feedback-render
+                   '(:content (:voice default))))))
+
 (ert-deftest emacsvox-aural-guided-part-switch-keeps-unfinished-drafts ()
   "Returning to another part restores its draft and keeps it resumable from Home."
   (emacsvox-test--with-guided-feedback

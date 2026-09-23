@@ -280,15 +280,17 @@ facts do not distinguish the object."
 
 (defun emacsvox-aural-tools--voice-remap-current-voice (render context)
   "Return the requested voice represented by RENDER and CONTEXT."
-  (or
-   (emacsvox-aural-content-style-voice
-    (emacsvox-aural-render-plan-content render))
-   (cl-loop
-    for face in (plist-get context :legacy-faces)
-    thereis
-    (and
-     (fboundp 'voice-setup-get-voice-for-face)
-     (voice-setup-get-voice-for-face face)))))
+  (let* ((content (emacsvox-aural-render-plan-content render))
+         (voice (emacsvox-aural-content-style-voice content)))
+    (if (or (assq 'voice (emacsvox-aural-content-style-provenance content))
+            (and voice (not (eq voice 'default))))
+        voice
+      (or (cl-loop
+           for face in (plist-get context :legacy-faces)
+           thereis
+           (and (fboundp 'voice-setup-get-voice-for-face)
+                (voice-setup-get-voice-for-face face)))
+          voice))))
 
 (defun emacsvox-aural-tools--voice-remap-default-name (voice)
   "Return the active palette name corresponding to VOICE."
@@ -428,7 +430,7 @@ refined before `w' saves or applies it."
            (emacsvox-aural-tools--voice-remap-candidates)
            nil 'must-match nil nil default))
          (voice
-          (unless (or (string-empty-p answer) (string= answer "default"))
+          (unless (string-empty-p answer)
             (intern answer)))
          (scope (emacsvox-aural-tools--voice-remap-scope source))
          (rule

@@ -162,7 +162,7 @@
                                     position prepared))))
                       (should
                        (eq (emacsvox-aural-concrete-content-voice-request content)
-                           (and enabled name)))
+                           (if enabled name 'default)))
                       (should
                        (equal
                         (emacsvox-aural-concrete-content-voice-command content)

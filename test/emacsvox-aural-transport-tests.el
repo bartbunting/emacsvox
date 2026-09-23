@@ -1829,6 +1829,49 @@ write.  State synchronization lines in a combined write are ignored."
          (span (aref (plist-get envelope :spans) 0)))
     (should (eq (plist-get span :logical_voice_id) :null))))
 
+(ert-deftest emacsvox-aural-ordinary-speech-uses-palette-default-on-both-lanes ()
+  "Plain spans return to default after a named span, on both speech lanes."
+  (emacsvox-test--with-transport-scheme
+    (let ((emacsvox-aural-voice-palette-registry
+           (copy-hash-table emacsvox-aural-voice-palette-registry))
+          (emacsvox-aural-voice-palette-override 'ordinary-default-test))
+      (emacsvox-aural-register-voice-palette
+       'ordinary-default-test :summary "Ordinary reading voice"
+       :entries '((default . (:family nil :average-pitch 3 :pitch-range nil
+                             :stress nil :richness nil :rate-offset -2))))
+      (dolist (lane '(main notification))
+        (let* ((text (concat "Plain " (propertize "emphasis " 'personality 'bolden) "plain"))
+               (result (emacsvox-test--capture-native-timeline text :lane lane))
+               (spans (plist-get (plist-get result :timeline) :spans)))
+          (should (equal (mapcar (lambda (s) (plist-get s :logical_voice_id)) spans)
+                         '("default" "bolden" "default")))
+          (dolist (span (list (car spans) (car (last spans))))
+            (should (= (plist-get span :rate_offset) -2))
+            (should (numberp (plist-get (plist-get span :acss) :average_pitch)))))))))
+
+(ert-deftest emacsvox-aural-palette-default-is-the-base-for-contextual-adjustments ()
+  "A sparse rule keeps default routing; an explicit preset still replaces it."
+  (emacsvox-test--with-transport-scheme
+    (setq emacsvox-aural-session-rules
+          '((:id default-context :match (:role heading)
+             :render (:content (:voice (:pitch-range 2))))))
+    (let* ((result (emacsvox-test--capture-native-timeline "Heading" :facts '(:role heading)))
+           (span (car (plist-get (plist-get result :timeline) :spans))))
+      (should (equal (plist-get span :logical_voice_id) "default"))
+      (should (numberp (plist-get (plist-get span :acss) :pitch_range))))))
+
+(ert-deftest emacsvox-aural-speech-labels-use-palette-default ()
+  "Unvoiced before/after labels use the ordinary reading voice too."
+  (emacsvox-test--with-transport-scheme
+    (setq emacsvox-aural-session-rules
+          '((:id default-label :match (:role heading)
+             :render (:before ((:id label :kind speech :text "Heading"))))))
+    (let* ((result (emacsvox-test--capture-native-timeline "Title" :facts '(:role heading)))
+           (spans (plist-get (plist-get result :timeline) :spans)))
+      (should (= (length spans) 2))
+      (should (equal (mapcar (lambda (s) (plist-get s :logical_voice_id)) spans)
+                     '("default" "default"))))))
+
 (ert-deftest emacsvox-aural-delivers-negotiated-structured-timelines-once ()
   "Each direct Aural presentation is built once and replaces its legacy packet."
   (let* ((process

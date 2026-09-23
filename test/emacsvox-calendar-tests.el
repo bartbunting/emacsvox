@@ -132,11 +132,12 @@
                                 content) requests)))))
             (emacsvox-calendar-speak-date))
           (should (equal requests
-                         (list (and marked
-                                    (pcase personality
-                                      ('voice-bolden 'bolden)
-                                      ('voice-lighten 'lighten)
-                                      (_ personality)))))))))))
+                         (list (or (and marked
+                                        (pcase personality
+                                          ('voice-bolden 'bolden)
+                                          ('voice-lighten 'lighten)
+                                          (_ personality)))
+                                   'default)))))))))
 
 (ert-deftest emacsvox-calendar-movement-feedback-is-target-aware ()
   "Only the matching interactive Calendar movement produces feedback."

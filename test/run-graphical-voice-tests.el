@@ -73,6 +73,7 @@
                         omnivox-library-removal-graphical-review-preserves-origin-and-return
                         omnivox-espeak-variants-graphical-refresh-keeps-focus-and-parent
                         omnivox-espeak-variants-graphical-navigation-speaks-every-row
+                        omnivox-espeak-variants-default-is-a-saveable-palette-destination
                         omnivox-catalogue-graphical-navigation-and-background-refresh
                         omnivox-catalogue-graphical-group-navigation
                         omnivox-engine-settings-graphical-customize-returns-to-details
@@ -94,8 +95,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 34)
-                                (= (ert-stats-completed stats) 34)
+          (setq status (if (and (= (ert-stats-total stats) 35)
+                                (= (ert-stats-completed stats) 35)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

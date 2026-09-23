@@ -606,7 +606,7 @@
          render description (component (list (intern operation))))
     (pcase operation
       ("Change the content voice"
-       (setq component '(content) render (list :content (list :voice (unless (eq voice 'default) voice)))
+       (setq component '(content) render (list :content (list :voice voice))
              description (format "Content voice %s" voice)))
       ((or "Add a sound" "Add a tone" "Add a spoken label")
        (let* ((phase (emacsvox-aural-change-feedback--placement))

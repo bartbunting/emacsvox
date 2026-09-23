@@ -566,7 +566,13 @@ and ACSS dimensions to the rules that supplied them."
   (let* ((palette (or palette (emacsvox-aural-effective-voice-palette)))
          (emacsvox-aural-voice-runtime--palette palette)
          (capability (emacsvox-aural-active-voice-capabilities))
-         (kind (emacsvox-aural--voice-reference-kind voice palette)))
+         ;; Reuse preparation's palette snapshot for named voices.  Rebuilding
+         ;; the effective inventory per plain-text run is needlessly costly.
+         (resolved (and voice (symbolp voice) (not (eq voice 'inaudible))
+                        (not (emacsvox-aural--generated-voice-name-p voice))
+                        (emacsvox-aural-voice-runtime--owned voice palette)))
+         (kind (if resolved 'named
+                 (emacsvox-aural--voice-reference-kind voice palette))))
     (cond
      ((null voice)
       (emacsvox-aural--make-compiled-voice
@@ -619,7 +625,7 @@ and ACSS dimensions to the rules that supplied them."
            (eq kind 'unknown))
       (emacsvox-aural--compile-unknown-voice voice palette provenance capability))
      ((symbolp voice)
-      (if-let* ((resolved (emacsvox-aural-voice-runtime--owned voice palette)))
+      (if resolved
           (emacsvox-aural--compile-owned-voice resolved palette provenance)
         (emacsvox-aural--compile-unknown-voice voice palette provenance capability)))
      (t
@@ -861,7 +867,7 @@ according to `emacsvox-aural-unsupported-volume-policy'."
     ('speech
      (let* ((voice
              (emacsvox-aural-compile-voice-style
-              (emacsvox-aural-action-voice action)
+              (or (emacsvox-aural-action-voice action) 'default)
               palette
               (mapcar
                (lambda (property)

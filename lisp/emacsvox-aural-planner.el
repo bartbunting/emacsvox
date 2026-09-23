@@ -620,6 +620,14 @@ adapter records applied to the first explicit presentation object."
   (unless (stringp text)
     (emacsvox-aural--transport-error
      "Aural text preparation requires a string: %S" text))
+  (emacsvox-aural-voice-runtime--call-with-resolution-snapshot
+   (lambda ()
+     (emacsvox-aural--prepare-text-with-voices
+      text facts context compatibility-actions))))
+
+(defun emacsvox-aural--prepare-text-with-voices
+    (text facts context compatibility-actions)
+  "Prepare TEXT with FACTS, CONTEXT and COMPATIBILITY-ACTIONS in one snapshot."
   (let* ((prepared
           (copy-sequence (emacsvox-aural-annotate-source-text text)))
          (base-facts (or facts emacsvox-aural-submission-facts))

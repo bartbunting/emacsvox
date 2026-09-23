@@ -1724,11 +1724,15 @@ current engine with its selection retained.
      apply_, or choose _Save to collection without selecting_ to keep it
      for later.  Editing a built-in palette creates a personal copy.
      _Use at Startup_ in Voice Palettes controls which palette is
-     selected next time.  ‘q’ returns to the variants list with its
-     selection retained; ‘v’ opens the base-voice browser.  Existing
-     saved variant references remain valid.  An older Omnivox worker
-     must be updated once to provide on-demand variants; the screen
-     reports missing support explicitly.
+     selected next time.  To use Max for ordinary reading, choose your
+     English base with ‘b’, select ‘Max’, press ‘u’, and choose your
+     palette followed by ‘default’.  Preview and _Save and apply_ in the
+     editor.  The same ‘default’ entry is available alongside ‘indent’
+     and the other named voices when editing a palette directly.  ‘q’
+     returns to the variants list with its selection retained; ‘v’ opens
+     the base-voice browser.  Existing saved variant references remain
+     valid.  An older Omnivox worker must be updated once to provide
+     on-demand variants; the screen reports missing support explicitly.
    • _Get more voices_ in Piper, Flite, MBROLA or RHVoice details opens
      the reviewed download catalogue.  Piper is grouped by language,
      voice name and quality; Flite offers AWB and RMS.  Voices with one
@@ -3761,6 +3765,15 @@ voice creates a complete entry in your destination palette when saved.
 Editing a built-in palette asks for a personal child.  Opening the
 editor and previewing a draft do not change live feedback or save
 settings.
+
+   The named voice ‘default’ controls ordinary reading and spoken labels
+that have no explicitly selected voice.  Choose it to change the
+physical voice, fallbacks or tuning for normal text.  Each palette has
+its own effective ‘default’ entry, inherited from its parent until you
+save a local edit.  Switching palettes also switches the ordinary
+reading voice.  Other named voices, such as ‘indent’ and ‘bolden’, keep
+their own settings; changing ‘default’ does not change every voice in
+the palette.
 
    If you opened an experiment from an installed physical voice, these
 same controls apply, but saving first asks for a destination.  See *note
