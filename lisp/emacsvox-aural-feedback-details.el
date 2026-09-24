@@ -181,9 +181,43 @@ Return lists of zero-based run indices in playback order."
      (if indices (mapcar (lambda (i) (nth i runs)) indices) runs))))
 
 (defun emacsvox-aural-feedback-details-play-field ()
-  "Replay the field or span at point, with its recorded voices and actions."
+  "Replay the field, span or spoken label at point with its recorded settings."
   (interactive)
-  (emacsvox-aural-feedback-details-play (emacsvox-aural-feedback-details--target)))
+  (if (emacsvox-aural-feedback-details--speech-action)
+      (emacsvox-aural-feedback-details--play-speech-action)
+    (emacsvox-aural-feedback-details-play (emacsvox-aural-feedback-details--target))))
+
+(defun emacsvox-aural-feedback-details--speech-action ()
+  "Return the recorded spoken label at point, when present."
+  (get-text-property (point) 'emacsvox-aural-feedback-speech-action))
+
+(defun emacsvox-aural-feedback-details--play-speech-action ()
+  "Replay only the selected spoken label, without the surrounding field."
+  (interactive)
+  (emacsvox-aural-feedback-details--complete)
+  (pcase-let* ((`(,original ,action ,phase)
+                (or (emacsvox-aural-feedback-details--speech-action)
+                    (user-error "Move to a spoken label first")))
+               (plan (copy-emacsvox-aural-concrete-plan original))
+               (emacsvox-aural--history-recording-inhibited t))
+    (setf (emacsvox-aural-concrete-plan-before plan)
+          (and (eq phase 'before) (list action))
+          (emacsvox-aural-concrete-plan-after plan)
+          (and (eq phase 'after) (list action))
+          (emacsvox-aural-concrete-plan-content plan)
+          (emacsvox-aural--make-concrete-content :text "" :speak nil))
+    (emacsvox-aural-preview-play-runs (list (list plan "" nil)))))
+
+(defun emacsvox-aural-feedback-details--edit-speech-voice ()
+  "Edit the selected spoken label's named palette voice."
+  (pcase-let* ((`(,plan ,action ,_) (emacsvox-aural-feedback-details--speech-action))
+               (target (emacsvox-aural-feedback-details--named-voice
+                        plan (emacsvox-aural-concrete-action-voice-request action))))
+    (unless target
+      (user-error "This spoken label has no editable named palette voice"))
+    (emacsvox-aural-feedback-details--open-voice
+     target (emacsvox-aural-concrete-action-text action)
+     (emacsvox-aural-concrete-plan-context plan))))
 
 (defun emacsvox-aural-feedback-details--merge-rules (rules additions)
   "Return a private RULES layer incorporating ordered ADDITIONS by identity."
@@ -241,17 +275,21 @@ Return lists of zero-based run indices in playback order."
     (emacsvox-aural-preview-message "Proposed feedback: current rules plus draft changes")))
 
 (defun emacsvox-aural-feedback-details-change ()
-  "Open or resume a guided change to the field or span at point."
+  "Change the field or span, or edit a spoken label's named palette voice."
   (interactive)
-  (emacsvox-aural-feedback-details--change))
+  (if (emacsvox-aural-feedback-details--speech-action)
+      (emacsvox-aural-feedback-details--edit-speech-voice)
+    (emacsvox-aural-feedback-details--change)))
 
 (defun emacsvox-aural-feedback-details--choose-voice ()
-  "Choose another named voice for items matching the selected field or span."
+  "Choose a field's named voice, or edit the selected spoken label's voice."
   (interactive)
-  (unless (emacsvox-aural-feedback-details--spoken-p
-           (emacsvox-aural-feedback-details--target))
-    (user-error "This feedback has no spoken content; use Change field or Sound overrides"))
-  (emacsvox-aural-feedback-details--change t))
+  (if (emacsvox-aural-feedback-details--speech-action)
+      (emacsvox-aural-feedback-details--edit-speech-voice)
+    (unless (emacsvox-aural-feedback-details--spoken-p
+             (emacsvox-aural-feedback-details--target))
+      (user-error "This feedback has no spoken content; use Change field or Sound overrides"))
+    (emacsvox-aural-feedback-details--change t)))
 
 (defun emacsvox-aural-feedback-details--spoken-p (indices)
   "Return non-nil when INDICES contain spoken content."
@@ -356,6 +394,8 @@ A pending sound or other component change keeps the full editor visible."
   "Replace, suppress, or restore an exact sound in the selected field or span.
 The existing sound override editor owns its separate unsaved rule draft."
   (interactive)
+  (when (emacsvox-aural-feedback-details--speech-action)
+    (user-error "This is a spoken label; move to its field to change sounds"))
   (emacsvox-aural-feedback-details--complete)
   (let* ((indices (emacsvox-aural-feedback-details--target))
          (record (copy-emacsvox-aural-presentation-record
@@ -494,34 +534,70 @@ The existing sound override editor owns its separate unsaved rule draft."
     (_ (concat (capitalize (emacsvox-aural-humanize (plist-get diagnostic :reason)))
                ". See Debug details for the captured values."))))
 
+(defun emacsvox-aural-feedback-details--named-voice (plan request)
+  "Return the palette and canonical name for PLAN's voice REQUEST."
+  (require 'emacsvox-aural-voice-runtime)
+  (let* ((preset (if (emacsvox-aural-voice-style-p request)
+                     (plist-get request :preset) request))
+         (palette (emacsvox-aural-concrete-plan-voice-palette plan))
+         (resolved (and preset (symbolp preset)
+                        (emacsvox-aural-voice-runtime--owned preset palette)))
+         (name (plist-get resolved :name)))
+    (when name (list palette name))))
+
+(defun emacsvox-aural-feedback-details--open-voice (target text context)
+  "Open named voice TARGET with retained sample TEXT from CONTEXT."
+  (require 'emacsvox-aural-voice-editor)
+  (emacsvox-aural-voice-editor-open
+   (car target) (cadr target) (current-buffer)
+   (emacsvox-emoji--retained-text text (plist-get context :emoji-naming))))
+
+(defun emacsvox-aural-feedback-details--insert-voice-link (target text context)
+  "Insert an editor link for named voice TARGET, using TEXT and CONTEXT."
+  (emacsvox-aural-feedback-details--button
+   (format "Edit named voice %s" (cadr target))
+   (lambda ()
+     (interactive)
+     (emacsvox-aural-feedback-details--open-voice target text context)))
+  (insert (format " — affects every use in palette %s.\n" (car target))))
+
 (defun emacsvox-aural-feedback-details--insert-voice-links (indices)
   "Link the named voices in INDICES to their existing palette editors."
-  (require 'emacsvox-aural-voice-runtime)
   (let (seen)
     (dolist (index indices)
       (let* ((plan (emacsvox-aural-feedback-details--plan index))
              (content (emacsvox-aural-concrete-plan-content plan))
-             (request (emacsvox-aural-concrete-content-voice-request content))
-             (preset (if (emacsvox-aural-voice-style-p request)
-                         (plist-get request :preset) request))
-             (palette (emacsvox-aural-concrete-plan-voice-palette plan))
-             (resolved (and preset (symbolp preset)
-                            (emacsvox-aural-voice-runtime--owned preset palette)))
-             (name (plist-get resolved :name))
-             (identity (list palette name)))
-        (when (and name (not (member identity seen)))
-          (push identity seen)
-          (emacsvox-aural-feedback-details--button
-           (format "Edit named voice %s" name)
-           (lambda ()
-             (interactive)
-             (require 'emacsvox-aural-voice-editor)
-             (emacsvox-aural-voice-editor-open
-              palette name (current-buffer)
-              (emacsvox-emoji--retained-text
-               (emacsvox-aural-concrete-content-text content)
-               (plist-get (emacsvox-aural-concrete-plan-context plan) :emoji-naming)))))
-          (insert (format " — affects every use in palette %s.\n" palette)))))))
+             (target (emacsvox-aural-feedback-details--named-voice
+                      plan (emacsvox-aural-concrete-content-voice-request content))))
+        (when (and target (not (member target seen)))
+          (push target seen)
+          (emacsvox-aural-feedback-details--insert-voice-link
+           target (emacsvox-aural-concrete-content-text content)
+           (emacsvox-aural-concrete-plan-context plan)))))))
+
+(defun emacsvox-aural-feedback-details--insert-speech-action (plan action phase)
+  "Insert playback and voice controls for PLAN's spoken ACTION in PHASE."
+  (let ((start (point))
+        (target (emacsvox-aural-feedback-details--named-voice
+                 plan (emacsvox-aural-concrete-action-voice-request action))))
+    (emacsvox-aural-feedback-details--heading
+     (format "%s speech: %s"
+             (capitalize (symbol-name phase))
+             (emacsvox-aural-feedback-details--action-description action)))
+    (make-text-button start (1- (point)) 'follow-link t
+                      'action (lambda (_) (emacsvox-aural-feedback-details--play-speech-action)))
+    (emacsvox-aural-feedback-details--button
+     (if emacsvox-aural-feedback-details--simulation
+         "Play simulated spoken label" "Play original spoken label")
+     #'emacsvox-aural-feedback-details--play-speech-action)
+    (insert "\n")
+    (if target
+        (emacsvox-aural-feedback-details--insert-voice-link
+         target (emacsvox-aural-concrete-action-text action)
+         (emacsvox-aural-concrete-plan-context plan))
+      (insert "No editable named palette voice for this label.\n"))
+    (put-text-property start (point) 'emacsvox-aural-feedback-speech-action
+                       (list plan action phase))))
 
 (defun emacsvox-aural-feedback-details--insert-explanation (indices)
   "Insert only the voice sources, actions, and limitations belonging to INDICES."
@@ -552,18 +628,22 @@ The existing sound override editor owns its separate unsaved rule draft."
     (dolist (line (nreverse substitutions)) (insert line "\n"))
     (when adjustments (insert "Voice adjustments: " (string-join (nreverse adjustments) "; ") ".\n"))
     (dolist (phase '(before after))
-      (let (descriptions)
+      (let (descriptions spoken)
         (dolist (index indices)
           (let* ((plan (emacsvox-aural-feedback-details--plan index))
                  (actions (if (eq phase 'before) (emacsvox-aural-concrete-plan-before plan)
                             (emacsvox-aural-concrete-plan-after plan))))
             (dolist (action actions)
+              (when (eq (emacsvox-aural-concrete-action-kind action) 'speech)
+                (push (cons plan action) spoken))
               (push (format "%s, from %s"
                             (emacsvox-aural-feedback-details--action-description action)
                             (emacsvox-aural-feedback-details--source-description
                              (emacsvox-aural-concrete-action-source action) plan)) descriptions))))
         (insert (capitalize (symbol-name phase)) ": "
-                (if descriptions (string-join (nreverse descriptions) "; ") "Nothing") ".\n")))
+                (if descriptions (string-join (nreverse descriptions) "; ") "Nothing") ".\n")
+        (dolist (entry (nreverse spoken))
+          (emacsvox-aural-feedback-details--insert-speech-action (car entry) (cdr entry) phase))))
     (dolist (limitation (nreverse limitations)) (insert "Limitation: " limitation "\n"))))
 
 (defun emacsvox-aural-feedback-details-debug ()
@@ -682,7 +762,7 @@ The existing sound override editor owns its separate unsaved rule draft."
       (make-text-button start (1- (point)) 'follow-link t
                         'action (lambda (_) (emacsvox-aural-feedback-details-debug))))
     (insert "Open the raw snapshot in a separate buffer for troubleshooting.\n")
-    (insert "\nRET expands sections or activates actions. n/p headings; arrows read lines; TAB actions.\nO play field; P play all; C change field; r choose voice; R sound overrides.\nV preview all changes; S stop; g update draft status; q return.\n")
+    (insert "\nRET expands sections or activates actions. n/p headings; arrows read lines; TAB actions.\nO play field or spoken label; P play all; C change field; r choose voice; R sound overrides.\nOn a spoken label, C or r edits its named palette voice.\nV preview all changes; S stop; g update draft status; q return.\n")
     (goto-char (point-min))
     (when-let* ((position
                  (when target (cl-loop for pos = (point-min) then (next-single-property-change
@@ -721,7 +801,8 @@ The existing sound override editor owns its separate unsaved rule draft."
     (while (and (not found) (zerop (forward-line (if previous -1 1))))
       (setq found (get-text-property (point) 'emacsvox-aural-feedback-heading)))
     (unless found (goto-char start))
-    (if-let* ((_ (not (get-text-property (point) 'emacsvox-aural-feedback-span-section)))
+    (if-let* ((_ (not (or (get-text-property (point) 'emacsvox-aural-feedback-span-section)
+                         (emacsvox-aural-feedback-details--speech-action))))
               (indices (get-text-property (point) 'emacsvox-aural-feedback-target))
               (expanded (cl-some (lambda (group) (memq (car indices) group))
                                  emacsvox-aural-feedback-details--expanded)))

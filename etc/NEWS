@@ -10,6 +10,14 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Edit spoken labels from Feedback Details
+
+Spoken Before and After labels, including =indent 2=, now have individual
+playback controls and links to their named palette voices. Open a field in
+Feedback Details and select Edit named voice indent to tune its voice using
+the recorded label as the preview text. On a label, =O= plays only that label;
+=C= or =r= opens its named voice editor. Original recordings remain unchanged.
+
 ** Default reading voice in palettes
 
 Each voice palette now includes =default= for ordinary reading. In eSpeak's

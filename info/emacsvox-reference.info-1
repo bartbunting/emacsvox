@@ -2989,7 +2989,7 @@ planner with private rule layers and captured source context.
 
  -- Command: emacsvox-aural-feedback-details-change
 
-     Open or resume a guided change to the field or span at point.
+     Change the field or span, or edit a spoken label’s named palette voice.
 
 2.26.1.2 emacsvox-aural-feedback-details-debug
 ..............................................
@@ -3085,7 +3085,7 @@ planner with private rule layers and captured source context.
 
  -- Command: emacsvox-aural-feedback-details-play-field
 
-     Replay the field or span at point, with its recorded voices and actions.
+     Replay the field, span or spoken label at point with its recorded settings.
 
 2.26.1.10 emacsvox-aural-feedback-details-preview
 .................................................

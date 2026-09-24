@@ -338,6 +338,16 @@ section without repeating the field's content. A single-span field shows its
 text and controls once, and its heading omits the span count. Press
 @@texinfo:@kbd{RET}@@ on the field heading again to collapse it.
 
+Spoken labels such as /indent 2/ have their own /Before speech/ or
+/After speech/ headings within the expanded field. They are separate from
+the content voice spans. Press @@texinfo:@kbd{RET}@@ on a spoken label's
+heading, or @@texinfo:@kbd{O}@@ within that entry, to replay just that label
+with its recorded settings. Its /Edit named voice indent/ link opens the
+palette voice editor using /indent 2/ as the sample. This changes every use
+of that named voice in the recorded palette. The report keeps its original
+recording; use the editor's preview to hear your changes. Labels without a
+named palette voice remain playable and explain why no editor link is shown.
+
 Fields with unapplied drafts announce /unsaved change/ after their names. The
 report also shows how many fields have unsaved changes. These labels update as
 you edit or apply a change, preserving the report's buttons and your return
@@ -348,10 +358,10 @@ draft buffer. The original or simulated presentation remains the same.
 - n or p :: Move between headings. Collapsed fields speak only their heading; expanded fields also speak their content in the recorded voices.
 - Up or Down :: Review individual lines without speaking the complete report.
 - TAB or Shift-TAB :: Move between action buttons; RET activates an action or expands a field.
-- O :: Play the original field or span at point, or its labelled simulated baseline.
+- O :: Play the original field, span or spoken label at point, or its labelled simulated baseline.
 - P :: Play the complete original presentation, or the labelled simulation.
-- C :: Open or resume a change to the selected field or distinguishable span.
-- r :: Choose another named voice for matching items in the compact editor.
+- C :: Open or resume a change to the selected field or distinguishable span. On a spoken label, edit its named palette voice.
+- r :: Choose another named voice for matching items in the compact editor. On a spoken label, edit its named palette voice.
 - R :: Replace, suppress, or restore an exact sound in the selected field or span.
 - V :: Preview the complete presentation with all linked draft changes.
 - S :: Stop playback.

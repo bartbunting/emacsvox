@@ -452,6 +452,62 @@
          (should-not callbacks)
          (should (equal before (emacsvox-aural-read-user-data))))))))
 
+(ert-deftest emacsvox-aural-voice-editor-spoken-label-link-retains-palette-and-return ()
+  "A spoken label opens its recorded palette and returns to its visible link."
+  (require 'emacsvox-aural-feedback-details)
+  (emacsvox-test--with-voice-editor
+   (save-window-excursion
+     (with-temp-buffer
+       (switch-to-buffer (current-buffer))
+       (emacsvox-aural-feedback-details-mode)
+       (let* ((report (current-buffer))
+              (window (selected-window))
+              (plan (emacsvox-aural--make-concrete-plan
+                     :voice-palette 'reading-owned
+                     :before (list (emacsvox-aural--make-concrete-action
+                                    :kind 'speech :text "indent 2" :voice-request 'indent))
+                     :content (emacsvox-aural--make-concrete-content
+                               :text "Test" :speak t :voice-request 'default)))
+              (saved (emacsvox-aural-read-user-data)))
+         (setq emacsvox-aural-feedback-details--record
+               (emacsvox-aural--make-presentation-record
+                :plan plan :plans (list plan) :queued-at (current-time))
+               emacsvox-aural-feedback-details--expanded '((0)))
+         (emacsvox-aural-feedback-details--render)
+         (search-forward "Before speech:")
+         (beginning-of-line)
+         ;; TAB reaches independent playback, then the named voice editor.
+         (call-interactively (key-binding (kbd "TAB")))
+         (should (equal (button-label (button-at (point))) "Play original spoken label"))
+         (call-interactively (key-binding (kbd "TAB")))
+         (should (equal (button-label (button-at (point))) "Edit named voice indent"))
+         (let ((position (point))
+               (emacsvox-aural-voice-palette-override 'source-child))
+           (call-interactively (key-binding (kbd "RET")))
+           (should (derived-mode-p 'emacsvox-aural-voice-editor-mode))
+           (should (eq (emacsvox-aural-voice-editor--get :palette) 'reading-owned))
+           (should (eq (emacsvox-aural-voice-editor--get :voice) 'indent))
+           (should (equal (emacsvox-aural-voice-editor--get :text) "indent 2"))
+           (emacsvox-aural-voice-editor--put :automatic-sample nil)
+           (emacsvox-aural-voice-editor--set 'average-pitch 6)
+           (emacsvox-aural-voice-editor-play)
+           (should (equal (plist-get (caar requests) :text) "indent 2"))
+           (cl-letf (((symbol-function 'completing-read)
+                      (lambda (&rest _) "Keep draft and return")))
+             (call-interactively (key-binding (kbd "q"))))
+           (should (eq (current-buffer) report))
+           (should (eq (selected-window) window))
+           (should (= (point) position))
+           (should (equal (button-label (button-at (point))) "Edit named voice indent"))
+           (when (display-graphic-p)
+             (redisplay t)
+             (should (pos-visible-in-window-p (point) window)))
+           (call-interactively (key-binding (kbd "C")))
+           (should (= (plist-get (plist-get (emacsvox-aural-voice-editor--working) :definition)
+                                 :average-pitch) 6)))
+         (should-not callbacks)
+         (should (equal saved (emacsvox-aural-read-user-data))))))))
+
 (ert-deftest emacsvox-aural-voice-editor-graphical-save-remains-visible ()
   "The bottom save actions remain visible after expansion and redisplay."
   (skip-unless (display-graphic-p))

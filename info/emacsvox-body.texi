@@ -3135,6 +3135,16 @@ section without repeating the field's content. A single-span field shows its
 text and controls once@comma{} and its heading omits the span count. Press
 @kbd{RET} on the field heading again to collapse it.
 
+Spoken labels such as @emph{indent 2} have their own @emph{Before speech} or
+@emph{After speech} headings within the expanded field. They are separate from
+the content voice spans. Press @kbd{RET} on a spoken label's
+heading@comma{} or @kbd{O} within that entry@comma{} to replay just that label
+with its recorded settings. Its @emph{Edit named voice indent} link opens the
+palette voice editor using @emph{indent 2} as the sample. This changes every use
+of that named voice in the recorded palette. The report keeps its original
+recording; use the editor's preview to hear your changes. Labels without a
+named palette voice remain playable and explain why no editor link is shown.
+
 Fields with unapplied drafts announce @emph{unsaved change} after their names. The
 report also shows how many fields have unsaved changes. These labels update as
 you edit or apply a change@comma{} preserving the report's buttons and your return
@@ -3149,13 +3159,13 @@ Review individual lines without speaking the complete report.
 @item TAB or Shift-TAB
 Move between action buttons; RET activates an action or expands a field.
 @item O
-Play the original field or span at point@comma{} or its labelled simulated baseline.
+Play the original field@comma{} span or spoken label at point@comma{} or its labelled simulated baseline.
 @item P
 Play the complete original presentation@comma{} or the labelled simulation.
 @item C
-Open or resume a change to the selected field or distinguishable span.
+Open or resume a change to the selected field or distinguishable span. On a spoken label@comma{} edit its named palette voice.
 @item r
-Choose another named voice for matching items in the compact editor.
+Choose another named voice for matching items in the compact editor. On a spoken label@comma{} edit its named palette voice.
 @item R
 Replace@comma{} suppress@comma{} or restore an exact sound in the selected field or span.
 @item V

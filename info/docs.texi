@@ -3108,7 +3108,7 @@ planner with private rule layers and captured source context.
 @findex emacsvox-aural-feedback-details-change
 
 @format
-Open or resume a guided change to the field or span at point.
+Change the field or span, or edit a spoken label’s named palette voice.
 @end format
 @end deffn
 
@@ -3218,7 +3218,7 @@ Play the recorded or simulated baseline, or only the supplied INDICES.
 @findex emacsvox-aural-feedback-details-play-field
 
 @format
-Replay the field or span at point, with its recorded voices and actions.
+Replay the field, span or spoken label at point with its recorded settings.
 @end format
 @end deffn
 

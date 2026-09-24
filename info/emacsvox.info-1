@@ -3129,6 +3129,17 @@ A single-span field shows its text and controls once, and its heading
 omits the span count.  Press ‘RET’ on the field heading again to
 collapse it.
 
+   Spoken labels such as _indent 2_ have their own _Before speech_ or
+_After speech_ headings within the expanded field.  They are separate
+from the content voice spans.  Press ‘RET’ on a spoken label's heading,
+or ‘O’ within that entry, to replay just that label with its recorded
+settings.  Its _Edit named voice indent_ link opens the palette voice
+editor using _indent 2_ as the sample.  This changes every use of that
+named voice in the recorded palette.  The report keeps its original
+recording; use the editor's preview to hear your changes.  Labels
+without a named palette voice remain playable and explain why no editor
+link is shown.
+
    Fields with unapplied drafts announce _unsaved change_ after their
 names.  The report also shows how many fields have unsaved changes.
 These labels update as you edit or apply a change, preserving the
@@ -3145,17 +3156,17 @@ presentation remains the same.
      Move between action buttons; RET activates an action or expands a
      field.
 ‘O’
-     Play the original field or span at point, or its labelled simulated
-     baseline.
+     Play the original field, span or spoken label at point, or its
+     labelled simulated baseline.
 ‘P’
      Play the complete original presentation, or the labelled
      simulation.
 ‘C’
      Open or resume a change to the selected field or distinguishable
-     span.
+     span.  On a spoken label, edit its named palette voice.
 ‘r’
      Choose another named voice for matching items in the compact
-     editor.
+     editor.  On a spoken label, edit its named palette voice.
 ‘R’
      Replace, suppress, or restore an exact sound in the selected field
      or span.
