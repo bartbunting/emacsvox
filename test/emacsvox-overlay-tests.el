@@ -107,6 +107,41 @@
       (should-not (get-text-property 2 'personality))
       (should-not (get-text-property 2 'invisible)))))
 
+(ert-deftest emacsvox-overlay-voice-does-not-leak-after-shortening ()
+  "Deleting the last highlighted character still leaves an unvoiced boundary."
+  (with-temp-buffer
+    (insert "word")
+    (let ((overlay (make-overlay 1 5 nil t nil)))
+      (cl-letf (((symbol-function 'tts-get-voice-for-face)
+                 (lambda (face)
+                   (and (eq face 'highlight) 'voice-bolden))))
+        (overlay-put overlay 'face 'highlight)
+        (delete-char -1)
+        (insert-and-inherit "ds outside")
+        (should (= (overlay-end overlay) 4))
+        (delete-overlay overlay))
+      (should (equal (buffer-string) "words outside"))
+      (should-not (text-property-not-all 1 (point-max) 'personality nil)))))
+
+(ert-deftest emacsvox-overlay-voice-preserves-other-property-stickiness ()
+  "Voice mirroring preserves existing sticky and nonsticky text properties."
+  (dolist (nonsticky '(nil (face) t))
+    (with-temp-buffer
+      (insert (propertize "word" 'face 'italic 'test-sticky t
+                          'rear-nonsticky nonsticky))
+      (let ((overlay (make-overlay 1 5 nil t nil)))
+        (cl-letf (((symbol-function 'tts-get-voice-for-face)
+                   (lambda (face)
+                     (and (eq face 'highlight) 'voice-bolden))))
+          (overlay-put overlay 'face 'highlight)
+          (insert-and-inherit " suffix")
+          (should-not (get-text-property 5 'personality))
+          (should (eq (get-text-property 5 'face)
+                      (and (null nonsticky) 'italic)))
+          (should (eq (get-text-property 5 'test-sticky)
+                      (not (eq nonsticky t))))
+          (delete-overlay overlay))))))
+
 (ert-deftest emacsvox-move-overlay-moves-mirrored-properties ()
   "Moving an overlay transfers its mirrored properties between buffers."
   (let ((source (generate-new-buffer " *emacsvox-overlay-source*"))

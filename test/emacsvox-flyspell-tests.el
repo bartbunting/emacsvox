@@ -2,6 +2,7 @@
 
 (require 'cl-lib)
 (require 'ert)
+(require 'emacsvox-advice)
 (require 'package)
 (package-initialize)
 (require 'flyspell)
@@ -131,6 +132,23 @@
                  (lambda (candidate) (eq candidate overlay))))
         (emacsvox--advice-flyspell-unhighlight-at-before 2))
       (should-not (text-property-any 1 5 'personality 'voice-bolden)))))
+
+(ert-deftest emacsvox-flyspell-typing-past-highlight-does-not-leak-voice ()
+  "Completing a highlighted word leaves no voice on its newly typed suffix."
+  (with-temp-buffer
+    (insert "I'm presu")
+    (let ((overlay (make-flyspell-overlay
+                    5 (point-max) 'flyspell-incorrect 'highlight)))
+      (should (eq (get-text-property 5 'personality) 'voice-bolden))
+      ;; Ordinary typing inherits text properties, while Flyspell's overlay
+      ;; deliberately excludes text inserted at its end.
+      (insert-and-inherit "ming all ")
+      (should (= (overlay-end overlay) 10))
+      (flyspell-unhighlight-at 5)
+      (should (equal (buffer-string) "I'm presuming all "))
+      (should-not (overlays-in (point-min) (point-max)))
+      (should-not (text-property-not-all
+                   (point-min) (point-max) 'personality nil)))))
 
 (ert-deftest emacsvox-flyspell-defers-optional-correction-advice ()
   (dolist (target emacsvox-flyspell--correct-targets)

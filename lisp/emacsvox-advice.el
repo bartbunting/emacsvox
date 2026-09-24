@@ -130,7 +130,21 @@ DOCSTRING and BODY define the feedback function for each command."
     (with-current-buffer
         (if (bufferp object) object (current-buffer))
       (with-silent-modifications
-        (put-text-property start end 'personality voice object)))))
+        (put-text-property start end 'personality voice object)
+        ;; Overlay boundaries and inherited text properties move differently:
+        ;; Flyspell excludes typing at its end, but a sticky mirrored voice
+        ;; would spread into that typing and survive deletion of the overlay.
+        ;; Protect every character so shortening the overlay remains safe.
+        (let ((position start))
+          (while (< position end)
+            (let ((next (next-single-property-change
+                         position 'rear-nonsticky object end))
+                  (nonsticky (get-text-property
+                              position 'rear-nonsticky object)))
+              (unless (or (eq nonsticky t) (memq 'personality nonsticky))
+                (put-text-property position next 'rear-nonsticky
+                                   (cons 'personality nonsticky) object))
+              (setq position next))))))))
 
 (defun ems--remove-personality  (start end voice &optional object)
   "Remove  personality. "
