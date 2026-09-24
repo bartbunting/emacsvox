@@ -1711,6 +1711,11 @@ To use Max for ordinary reading@comma{} choose your English base with
 your palette followed by @samp{default}. Preview and @emph{Save and apply} in the
 editor. The same @samp{default} entry is available alongside @samp{indent} and the
 other named voices when editing a palette directly.
+To apply the selected base and variant to every named voice@comma{} press
+@kbd{V} instead. Choose a new personal palette or update an
+existing one@comma{} compare the proposed voices@comma{} then save. Shared adjustments
+and existing fallback tuning are retained. See
+@ref{Editing Named Voices,Editing Named Voices,,emacsvox,} for the complete review and recovery workflow.
 @kbd{q} returns to the variants list with its selection retained;
 @kbd{v} opens the base-voice browser. Existing saved variant
 references remain valid. An older Omnivox worker must be updated once to
@@ -3788,6 +3793,47 @@ fallbacks or tuning for normal text. Each palette has its own effective
 Switching palettes also switches the ordinary reading voice. Other named
 voices@comma{} such as @samp{indent} and @samp{bolden}@comma{} keep their own settings; changing
 @samp{default} does not change every voice in the palette.
+
+To use one physical voice across a whole palette@comma{} select it in @emph{Browse voices}
+or the eSpeak @emph{Voice variants} browser and press @kbd{V}. Choose
+@emph{Update an existing personal palette} or @emph{Create a new personal palette}.
+A new palette copies the voices@comma{} adjustments and fallbacks from the palette
+you choose. All effective named voices are included@comma{} including @samp{default} and
+inherited names.
+
+The review starts at @samp{default}. Move through its rows with up/down; use
+@kbd{O} for the original@comma{} @kbd{P} for the proposed
+voice@comma{} or @kbd{B} to compare both. @kbd{A} compares
+a few representative voices. @kbd{S} stops the preview and
+@kbd{x} shows details@comma{} including affected descendant palettes@comma{}
+retained fallbacks and the reported playback result. A fallback may speak
+when the chosen physical voice is unavailable.
+
+An existing exact choice is promoted with its tuning intact. If several
+choices match@comma{} the first is promoted and the others remain in order.
+A newly added choice follows each named voice's shared adjustments. Shared
+pitch@comma{} relative rate and other settings remain; existing choices retain their
+individual tuning. Inherited entries become complete local entries when saved.
+This is a one-time edit: later edits to one named voice are independent@comma{} and
+newly inherited names do not automatically acquire the chosen physical voice.
+
+Press @kbd{w} to save the whole review and apply the palette to
+both speech streams@comma{} or @kbd{c} to save it to the collection
+without selecting or applying it. Startup selection remains separate.
+@kbd{C-c C-k} cancels an unsaved review without writing settings.
+@kbd{q} returns to the browser while retaining the review. Use
+@emph{Resume palette voice review} in the browser's actions menu to return.
+
+If another voice editor has unsaved changes@comma{} use @kbd{r} to open
+and resolve it@comma{} then @kbd{g} to refresh the review. Changed saved
+inputs also require a fresh review. A partial save retains its original
+proposal for retry; repeat the same save action. If saving succeeds but one
+speech stream fails to apply it@comma{} the palette remains saved. Retry the original
+action and check the result. Selecting another palette supersedes that retry;
+use Voice Palettes to deliberately select the saved palette later.
+The review's actions menu also offers @emph{Close saved result} once saving and
+application have finished. This closes the result without undoing saved data
+or changing the currently selected palette.
 
 If you opened an experiment from an installed physical voice@comma{} these same
 controls apply@comma{} but saving first asks for a destination. See

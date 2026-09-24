@@ -60,6 +60,8 @@
 (declare-function emacsvox-aural-voice-editor-open "emacsvox-aural-voice-editor" (palette voice &optional source text))
 (declare-function emacsvox-aural-voice-editor-experiment "emacsvox-aural-voice-editor" (pair source text))
 (declare-function emacsvox-aural-voice-editor--status-for "emacsvox-aural-voice-editor" (palette voice))
+(declare-function emacsvox-aural-voice-bulk-open "emacsvox-aural-voice-bulk" (pair &optional origin))
+(autoload 'emacsvox-aural-voice-bulk-resume "emacsvox-aural-voice-bulk" nil t)
 
 (declare-function emacsvox-aural "emacsvox-aural-home"
                   (&optional source-buffer))
@@ -1404,6 +1406,19 @@ Single voices are direct rows.  Omit redundant branches with just one child."
                   (plist-get (cadr pair) :voice-id))))
    (emacsvox-aural-voice-workbench--browse-pairs)))
 
+(defun emacsvox-aural-voice-workbench-use-across-palette ()
+  "Review the selected physical voice across every named voice in a palette."
+  (interactive)
+  (unless (eq emacsvox-aural-voice-workbench-view 'physical)
+    (user-error "Choose a physical voice in Browse voices first"))
+  (let ((pair (or (emacsvox-aural-voice-workbench--physical-pair (tabulated-list-get-id))
+                  (user-error "Choose a physical voice"))))
+    (when-let* ((reason (emacsvox-aural-voice-workbench--unavailable-reason pair)))
+      (user-error "%s" reason))
+    (emacsvox-aural-voice-workbench-stop-preview)
+    (require 'emacsvox-aural-voice-bulk)
+    (emacsvox-aural-voice-bulk-open pair (current-buffer))))
+
 (defun emacsvox-aural-voice-workbench--explicit-selectors (logical-voice)
   "Return LOGICAL-VOICE's explicitly staged selectors."
   (copy-tree
@@ -2702,6 +2717,7 @@ when they remain unsaved."
       "v browses its voices directly; q returns to the engine.\n"
       "Physical voices are grouped by language; RET expands or collapses a heading.\n"
       "On a voice, RET plays a sample. P also previews; x shows details; t edits.\n"
+      "V reviews this physical voice across all voices in a new or existing palette.\n"
       "Single-language lists start expanded. Groups and selected voices survive refresh.\n"
       "Column sorting keeps languages together and sorts the voices within them.\n"
       "n/p or up/down moves rows; left/right moves columns.\n"
@@ -2754,7 +2770,9 @@ when they remain unsaved."
       ('emacsvox-aural-voice-workbench-find-voice (eq view 'physical))
       ('emacsvox-aural-voice-workbench-quick-filter
        (emacsvox-aural-voice-workbench--library-p))
-      ('emacsvox-aural-voice-workbench-compare
+      ('emacsvox-aural-voice-bulk-resume t)
+      ((or 'emacsvox-aural-voice-workbench-compare
+           'emacsvox-aural-voice-workbench-use-across-palette)
        (and row (eq view 'physical) (not (emacsvox-aural-voice-workbench--language-row-p row))))
       ((or 'emacsvox-aural-voice-workbench--library-apply
            'emacsvox-aural-voice-workbench--library-download
@@ -2804,6 +2822,9 @@ when they remain unsaved."
   "Spoken workbench for logical styles and physical voice routing."
   (setq-local emacsvox-aural-ui-action-filter
               #'emacsvox-aural-voice-workbench--action-applicable-p)
+  (setq-local emacsvox-aural-ui-extra-actions
+              '(("Use this voice across a palette" . emacsvox-aural-voice-workbench-use-across-palette)
+                ("Resume palette voice review" . emacsvox-aural-voice-bulk-resume)))
   (setq-local emacsvox-aural-voice-workbench-view 'logical)
   (setq-local emacsvox-aural-voice-workbench-inventory (tts-voice-inventory))
   (setq-local emacsvox-aural-voice-workbench-committed-profile
@@ -2842,6 +2863,7 @@ when they remain unsaved."
 (dolist
     (binding
      '(("RET" . emacsvox-aural-voice-workbench-open-row)
+       ("V" . emacsvox-aural-voice-workbench-use-across-palette)
        ("l" . emacsvox-aural-voice-workbench-logical-view)
        ("v" . emacsvox-aural-voice-workbench-physical-view)
        ("e" . emacsvox-aural-voice-workbench-engine-view)

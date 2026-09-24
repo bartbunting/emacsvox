@@ -101,6 +101,7 @@ emacsvox-aural-voice-runtime.elc \
 emacsvox-aural-voice-drafts.elc \
 emacsvox-aural-voice-editing.elc \
 emacsvox-aural-voice-editor.elc \
+emacsvox-aural-voice-bulk.elc \
 emacsvox-aural-voice-engine-controls.elc \
 emacsvox-aural-voice-context.elc \
 emacsvox-aural-profile-service.elc \
@@ -401,6 +402,7 @@ emacsvox-aural-voice-runtime.elc: emacsvox-aural-voice-data.elc emacsvox-aural-s
 emacsvox-aural-voice-drafts.elc: emacsvox-aural-voice-runtime.elc
 emacsvox-aural-voice-editing.elc: emacsvox-aural-voice-drafts.elc emacsvox-aural-compiler.elc
 emacsvox-aural-voice-editor.elc: emacsvox-aural-voice-editing.elc emacsvox-aural-voice-workbench.elc
+emacsvox-aural-voice-bulk.elc: emacsvox-aural-voice-editor.elc
 emacsvox-aural-voice-engine-controls.elc: emacsvox-aural-voice-editor.elc omnivox-parameters.elc
 emacsvox-aural-voice-context.elc: emacsvox-aural-voice-editor.elc emacsvox-aural-editor.elc emacsvox-aural-tools.elc
 omnivox-choice-codec.elc: emacsvox-aural-rules.elc emacsvox-aural-routing-profiles.elc

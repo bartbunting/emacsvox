@@ -1,0 +1,255 @@
+#+title: Apply a Physical Voice Across a Palette — Implementation Plan
+#+date: 2026-09-24
+#+startup: content
+
+* Status and scope
+
+Implemented on 2026-09-24 following the maintainer's instruction to proceed.
+Regression, graphical, compiled and muted native checks pass; listening
+acceptance remains open. Personal settings and existing Emacs sessions have
+not been changed. The maintainer selected promotion of an existing matching
+choice with its tuning preserved, retention of shared settings and fallback
+tuning, and applying to all voices with a choice of a new or existing palette.
+The detailed rules below record the delivered behavior and editor contracts.
+
+Parham's example is an English eSpeak base voice with the Max variant. The
+operation also accepts other supported physical voices. The first version
+targets every effective named voice, including =default= and inherited names;
+subset selection is deferred. It is a one-time bulk edit, with no ongoing link
+between named voices and no propagation from later edits to =default=.
+
+All ADRs were reviewed. In particular, retain complete ownership and copy rules
+from [[file:adr/0018-unified-voice-palette-model.org][ADR 0018]], ordered saving from [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]], private previews from
+[[file:adr/0016-complete-voice-preview.org][ADR 0016]], shared/choice/context precedence from [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], exact variant
+selection from [[file:adr/0020-on-demand-espeak-variants.org][ADR 0020]], native tuning from [[file:adr/0022-engine-described-voice-parameters.org][ADR 0022]], and ordinary reading
+from [[file:adr/0026-palette-default-reading-voice.org][ADR 0026]]. Use current schema 3/4 readers and writers. No new storage or
+speech protocol, engine installation, or process restart is needed by this plan.
+
+* Choice and tuning rules
+
+Match only an exact selector with the same engine ID and physical voice ID.
+Use the validated local selector for persistence; a browser's session selector
+does not become saved session state. An eSpeak base-plus-variant identity is
+one exact voice. Display names, engine-default selectors and property selectors
+that happen to resolve to that voice today are not matches.
+
+- When a match exists, move the first matching record in the original order
+  to the front. Preserve its choice ID, common adjustments and native settings.
+- If several records match, retain every other record in its relative order,
+  including differently tuned matches. Do not merge tuning or delete duplicates.
+  Show the promoted record and retained matches in the review details.
+- If the first choice already matches, keep its record and order unchanged.
+- If none matches, prepend a new exact local choice with a fresh choice ID,
+  empty common adjustments and no native patch. It follows the named voice's
+  shared settings and the selected engine's existing mappings/defaults. Do not
+  copy tuning from the old preferred choice, even within the same engine, or
+  from a physical audition.
+
+Keep all other choices, including unavailable choices, in their original order
+with their full tuning. Preserve each named voice's definition representation,
+language, relative rate, omitted values, explicit nil, zero and optional effects.
+Shared settings are not flattened into choice patches. Existing matching native
+settings remain subject to ordinary runtime qualification and degradation
+reporting; preservation does not guarantee audible equivalence.
+
+An Automatic entry has no explicit choices. Adding the selected voice gives it
+one explicit choice; ordinary workstation fallback still applies. Do not invent
+an Automatic row or copy the workstation's current physical choice into storage.
+
+For an existing personal palette, retain its identity, parent and metadata.
+Materialize each inherited entry as a complete local entry, with local snapshots
+owned by the destination, even when its preferred choice already matches. This
+pins the reviewed entries to that palette. Preserve unchanged direct entries
+without allocating replacement snapshots. If every entry is already direct and
+preferred, report that there are no changes; saving need not rewrite the stores.
+
+A new palette is an independent copy of the chosen source's effective entries,
+with =acss-default= as parent and fresh destination-owned local snapshots. Later
+source-palette edits do not affect those entries. New standard names can still
+be inherited, and retained personality definitions keep their normal external
+settings dependency. Names introduced after the bulk edit do not acquire the
+selected physical voice automatically.
+
+* Interaction and review
+
+1. Offer /Use this voice across a palette/ in both physical-voice and eSpeak
+   variant browsers. Keep the existing single-voice action available. Resolve
+   the selected base and variant through current-worker inventory.
+2. Offer /Update an existing personal palette/ and /Create a new personal
+   palette/. Updating selects a writable personal destination. Creating selects
+   a source palette, defaulting to the current palette, and an unused name;
+   the standard palette is a valid source. Explain that creating copies the
+   source's adjustments and fallbacks. No palette is created at this step.
+3. Prepare an unsaved review containing every effective named entry in a stable
+   order. Summarize the source/destination, chosen voice, total names, added or
+   promoted choices, inherited entries becoming local, and unchanged entries.
+   Show known uses and affected descendant palettes for an update, once for
+   the operation. Keep raw IDs and detailed provenance in expandable details.
+4. Each row offers /Play original/, /Play proposed/ and /Compare/. Start at
+   =default= and offer a short representative sequence including available
+   =indent=, =animate= and =bolden= entries. Allow inspection of every row.
+   Use identical comparison text, captured relative-rate basis and private
+   complete-chain previews. Report actual fallback and unsupported tuning;
+   a successful fallback must not be presented as hearing the chosen voice.
+5. Offer /Save and apply/, /Save to collection/, /Back/ and /Cancel/. Saving
+   and applying selects the destination through the existing palette service.
+   Saving to collection does not select it or request application. If the
+   destination is already selected, make saved-versus-applied status clear.
+   Startup selection remains the separate existing action.
+
+Use the existing spoken UI controls and navigation conventions. Opening,
+comparison and cancellation before Save write nothing and do not publish draft
+voices to live speech. Stop or leaving the view cancels its pending previews;
+late results cannot update another view or revision. The review is for listening
+and saving, not another full tuning editor; individual tuning remains available
+through the common editor after the bulk operation.
+
+* Conflicts, saving and recovery
+
+Capture the source entries, ancestry, full local choice records and destination
+identity for the review. Before preparation and again before saving, check for
+conflicting dirty drafts or unfinished saves affecting the source, destination,
+or descendants whose voices would change. List them with access to their existing
+editors; preserve them and require resolution before proceeding. Do not merge,
+save or discard individual drafts automatically. Refresh clean affected views
+after successful publication; recheck drafts opened while the review was active.
+
+Recheck source definitions, local snapshots, effective name inventory,
+destination availability and store fingerprints before writes. A changed input
+requires a refreshed review. Missing local snapshots or invalid ownership block
+the whole proposal with an explanation, rather than copying a degraded portable
+chain or silently skipping a voice. Ordinary physical unavailability remains
+visible and retains the saved fallback policy; it does not remove entries.
+
+Build one complete destination and one frozen save proposal for the entire
+operation. Reuse the existing coordinator: persist immutable local snapshots
+first, then the palette references, then publish the complete registry state.
+Do not save or activate one voice at a time. No atomic transaction across the
+two files or speech streams is claimed.
+
+- Before any successful write, failure leaves the old palette and live state.
+- If the local-store write succeeds but palette publication fails, retain the
+  previous palette and old referenced snapshots. Report the partial save and
+  retry the same proposal after conflict checks, without allocating new IDs.
+- Once saved, an application failure does not undo or resave the palette.
+  Report each stream's acknowledgement, timeout, failure or degraded tuning;
+  offer retry through the existing apply path. Claim full application only
+  when both streams confirm the required settings.
+- A retry must not overwrite newer saved data or reselect a palette after the
+  user has chosen another configuration. Report superseded state and let the
+  existing palette selection workflow handle a deliberate later application.
+  Stale callbacks cannot mark newer edits saved or applied. Never replay speech.
+
+* Reuse and implementation slices
+
+Source inspection on 2026-09-24 identifies these boundaries:
+
+1. Add pure bulk proposal construction beside
+   [[file:../lisp/emacsvox-aural-voice-editing.el][voice-editing]] and [[file:../lisp/emacsvox-aural-voice-data.el][voice-data]]. Reuse prepared resolution,
+   =--move-choice=, =--copy-owned= and =--put-choices= with destination ownership
+   checks. The current single-voice =--keep= prepends; it does not perform the
+   required promotion. The single-voice proposal builder is not a bulk save
+   loop. Preserve existing single-voice behavior while adding this operation.
+2. Add the bulk draft scope and conflict handling using
+   [[file:../lisp/emacsvox-aural-voice-drafts.el][voice-drafts]]. Its =--prepare= already accepts a complete palette plus
+   choice sets. Reuse =--save= and its acknowledged application/retry states.
+   Extend guards narrowly where full local snapshots and overlapping draft
+   scopes need coverage; preserve existing public command signatures.
+3. Add the spoken review and browser entry points using
+   [[file:../lisp/emacsvox-aural-voice-editor.el][voice-editor]] preview lifecycle and save presentation,
+   [[file:../lisp/emacsvox-aural-voice-palettes.el][voice-palettes]] inventory/copy/impact services,
+   [[file:../lisp/emacsvox-aural-voice-workbench.el][voice-workbench]] physical selection and
+   [[file:../lisp/omnivox-espeak-variants.el][espeak-variants]] validated base/variant selection. Use private draft
+   previews, rather than the saved-palette preview browser for proposed rows.
+4. Verify the complete workflow, then update the maintained voice guide and
+   generated reference/manuals. Remove the backlog item only after the feature
+   and required acceptance are complete.
+
+High suits these bounded implementation slices. Any discovered need for a new
+server contract or broader architecture change is a separate design question.
+
+* Acceptance
+
+Extend the existing voice-data, voice-editing, voice-drafts, voice-editor,
+voice-palettes, voice-workbench and eSpeak-variants ERT suites as appropriate.
+Expected results must cover observable saved data and behavior:
+
+- First-match promotion, differently tuned duplicates, already-preferred
+  choices, exact identity versus dynamic selectors, and repeated application.
+- New untuned choices; shared nil/zero/omission and relative-rate preservation;
+  native patches on promoted and retained choices; cross-engine insertion.
+- Automatic entries, inherited ownership, all effective names including
+  =default=, independent copies, descendant impact and missing local snapshots.
+- Cancellation without writes, private before/after previews, unsaved-draft
+  conflicts, edits during review, source/local-store drift and partial writes.
+- One coordinated save, both save actions, idempotent retries, per-stream
+  application failures, stale callbacks and superseded configurations.
+
+After implementation, run affected source suites, =make check-emacs= and the
+appropriate =make bytecode= or =make bytecode-rebuild=, then
+=make bytecode-check= and =make compiled-aural-test=. Extend and run
+=make graphical-voice-test= in a fresh graphical Emacs to verify both browser
+entry paths, keyboard focus, complete review rows, previews, save and cancel.
+Broaden runtime/transport checks only if shared behavior changes warrant it.
+
+Listening acceptance uses an isolated personal copy with English eSpeak plus
+Max: compare ordinary reading and representative named voices, then confirm
+normal main and notification speech after application. Verify a retained
+fallback, Stop, and a later independent edit to one named voice. Record the
+actual Emacs/package/worker paths and versions; batch receipts and graphical
+checks do not establish audible success. Report unavailable native or listening
+environments explicitly.
+
+For the implemented user documentation, bring byte-code current before
+=make docs-reference=, iterate with =make docs-org-preview=, then run
+=make docs-update= and =make docs-release-check=. This plan alone needs the
+non-mutating documentation gate and local-link review, without new Lisp tests
+or generated manual changes.
+
+* Delivery and verification — 2026-09-24
+
+The new [[file:../lisp/emacsvox-aural-voice-bulk.el][bulk review]] connects both browsers' =V= action to complete proposal
+construction in =voice-editing= and one coordinated save in =voice-drafts=.
+It reuses private editor previews and per-stream acknowledged application.
+Draft and input guards run before preparation and between publication steps.
+Saved results can be closed without removing a newer review of the same voice
+and palette. The maintained voice guide, NEWS and generated manuals are updated.
+
+Verification used =/home/bart/opt/emacs-31/bin/emacs=, version 31.0.90:
+
+- =make check-emacs=, =make bytecode-rebuild= and subsequent incremental
+  =make bytecode= / =make bytecode-check= passed. A fresh Emacs is required for
+  live use because the save record gained a slot; no existing profile was
+  partially reloaded.
+- The affected source selection ran 238 tests: 232 passed and six graphical
+  tests were skipped in batch. All six ran successfully in the separate real
+  graphical suite, =make graphical-voice-test=, which passed all 37 tests.
+- =make compiled-aural-test= passed in a fresh isolated compiled environment.
+  The new [[file:../test/emacsvox-aural-voice-bulk-tests.el][bulk regression suite]] covers promotion, tuning and ownership,
+  independent copies, private comparison, conflicts, stale results, partial
+  writes, application retries and both browser entry paths.
+- =make headers-check=, =git diff --check=, =make docs-org-preview=,
+  =make docs-reference=, =make docs-update= and =make docs-release-check= passed.
+
+Muted native verification used fresh main and notification workers launched by
+=/home/bart/src/emacsvox/servers/omnivox=, with Omnivox 1.12.0 at
+=/mnt/c/Users/bart/AppData/Local/Emacsvox/Omnivox/runtime/2faa4a181c27b40c/omnivox.exe=.
+Both workers used an isolated temporary profile and =OMNIVOX_AUDIO_OUTPUT=null=.
+The installed eSpeak data directory was supplied explicitly through
+=ESPEAK_NG_DATA=; no engines or data were installed or modified. The live
+inventory's exact English US plus Max ID was preserved, including its Windows
+path separator.
+
+Native receipts confirmed all eight original/proposed sample starts for
+=default=, =indent=, =animate= and =bolden=; each proposed example used Max.
+A private proposal with an unavailable preferred voice reached the retained
+English US fallback. Both streams acknowledged the saved palette and completed
+ordinary Max reading, correlated by process name and generation. A later
+independent =indent= pitch edit applied without changing =default=, and Stop
+retired an active private preview. These results establish runtime behavior,
+not audible success.
+
+Remaining acceptance: in a fresh Emacs, listen to the review, original/proposed
+comparisons, normal main and notification reading, fallback, Stop and a later
+independent named-voice edit. Keep the backlog item until this spoken walkthrough
+confirms both the sound and the clarity of the interaction.

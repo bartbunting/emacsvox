@@ -233,6 +233,80 @@ NEW explicitly requests creation of a voice that must not already exist."
     (emacsvox-aural-compile-voice-palette-data data)
     (list :palette data :choice-sets sets)))
 
+(defun emacsvox-aural-voice-editing--prefer-physical (choices selector)
+  "Promote the first exact SELECTOR in CHOICES, or add it without tuning.
+Keep every other complete record in order, including differently tuned matches."
+  (let* ((selector (emacsvox-aural-validate-routing-selector selector t))
+         (rows (emacsvox-aural-routing--validate-choices choices nil t))
+         (match (cl-find selector rows :test #'equal
+                         :key (lambda (row)
+                                (emacsvox-aural-validate-routing-selector
+                                 (plist-get row :selector) t)))))
+    (unless (and (eq (plist-get selector :kind) 'exact)
+                 (eq (plist-get selector :scope) 'local))
+      (user-error "Choose an exact local physical voice"))
+    (if match
+        (emacsvox-aural-voice-data--move-choice rows (plist-get match :id) 0)
+      (cons (list :id (emacsvox-aural-voice-editing--new-id)
+                  :selector selector :adjustments nil) rows))))
+
+(defun emacsvox-aural-voice-editing--bulk-physical (source destination selector summary)
+  "Propose SELECTOR across SOURCE in DESTINATION with SUMMARY, without writes.
+Capture complete originals and proposed snapshots for private comparison.
+Existing destinations must be SOURCE itself and writable.  New destinations
+are independent copies.  All inherited entries become destination-owned."
+  (let* ((registry emacsvox-aural-voice-palette-registry)
+         (record (or (gethash source registry) (user-error "Unknown source palette")))
+         (existing (eq source destination))
+         (prepared (emacsvox-aural-voice-data--prepare-resolution
+                    source registry emacsvox-aural-routing--choice-sets nil))
+         (entries (plist-get prepared :entries))
+         (data (if existing (emacsvox-aural-voice-palette-data-form record)
+                 (list :schema-version 3 :id destination :summary summary
+                       :routing 'owned :parent 'acss-default :entries nil)))
+         sets reviews)
+    (when (if existing (emacsvox-aural-voice-palette-built-in record)
+            (gethash destination registry))
+      (user-error "Choose a writable personal palette or an unused copy name"))
+    (dolist (item entries)
+      (let* ((entry (copy-tree (plist-get item :entry)))
+             (name (car entry))
+             (resolved (emacsvox-aural-voice-data--resolve-prepared name prepared))
+             (before (plist-get resolved :choices))
+             (after (emacsvox-aural-voice-editing--prefer-physical before selector))
+             (local (and existing (eq source (plist-get item :palette))))
+             (original (emacsvox-aural-voice-editing--freeze
+                        (list :definition (copy-tree (plist-get resolved :definition))
+                              :selectors (emacsvox-aural-voice-data--selectors before)
+                              :choices before :language (plist-get resolved :language)) source))
+             (proposed (copy-tree original)))
+        (when (plist-get resolved :diagnostics)
+          (user-error "Cannot change %s: its local voice choices are missing" name))
+        (setq proposed (plist-put proposed :choices after))
+        (setq proposed (plist-put proposed :selectors (emacsvox-aural-voice-data--selectors after)))
+        (unless (and local (equal before after))
+          ;; Copy the complete defining entry before assigning destination-owned
+          ;; local snapshots.  Never reuse an ancestor's reference under this owner.
+          (setq data (plist-put data :schema-version
+                                (max (plist-get data :schema-version) (plist-get item :schema-version))))
+          (setq data (plist-put data :entries
+                                (cons entry (assq-delete-all name (copy-tree (plist-get data :entries))))))
+          (let ((result (emacsvox-aural-voice-data--put-choices
+                         data name after (emacsvox-aural-voice-editing--new-id))))
+            (setq data (plist-get result :palette)
+                  sets (append sets (plist-get result :choice-sets)))))
+        (push (list :name name :owner (plist-get item :palette) :local local
+                    :action (cond ((equal before after) 'unchanged)
+                                  ((= (length before) (length after)) 'promoted)
+                                  (t 'added))
+                    :original original :proposed proposed) reviews)))
+    (list :palette data :choice-sets sets
+          :rows (sort reviews (lambda (a b)
+                               (let ((a (plist-get a :name)) (b (plist-get b :name)))
+                                 (if (eq a 'default) (not (eq b 'default))
+                                   (and (not (eq b 'default))
+                                        (string-lessp (symbol-name a) (symbol-name b))))))))))
+
 (defun emacsvox-aural-voice-editing--preview-style (style selectors language text)
   "Normalize raw STYLE with SELECTORS, LANGUAGE and TEXT for legacy previews."
   (let (acss effects)

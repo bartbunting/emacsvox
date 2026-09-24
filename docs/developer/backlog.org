@@ -6,6 +6,39 @@ source, and remove them when completed or deliberately declined.
 
 * User experience
 
+** TODO Complete listening acceptance of palette-wide physical voices
+
+Requested by Parham and added to the backlog on 2026-09-24. He wants an
+English eSpeak base voice with the Max variant as the starting physical voice
+for every named voice, without setting each entry individually. The
+palette-owned =default= in [[file:../adr/0026-palette-default-reading-voice.org][ADR 0026]] controls ordinary reading; it does not
+propagate its choices to =indent=, =animate= or the other named voices.
+
+The [[file:../palette-physical-voice-plan.org][implementation plan]] records the maintainer's 2026-09-24 direction and
+the detailed workflow. First version: apply to all effective named voices,
+including =default= and inherited names, with a choice to update a personal
+palette or create an independent personal copy. Subset selection is deferred.
+Enter from either physical-voice or variant browsing, preserving the exact
+eSpeak base-plus-variant pair where selected.
+
+Promote the first existing exact match with its tuning intact, retaining other
+matches and fallbacks in order. Otherwise prepend an untuned choice that follows
+the named voice's shared settings. Preserve shared pitch, relative rate and
+other adjustments; never transfer another choice's native tuning implicitly.
+Follow the ownership, complete-entry and copy rules in [[file:../adr/0018-unified-voice-palette-model.org][ADR 0018]].
+
+Implemented on 2026-09-24. =V= in either browser opens the complete review,
+with original/proposed comparisons, coordinated saving, unsaved-draft conflict
+handling and recovery. Later named-voice edits remain independent. Source,
+compiled, graphical and documentation checks pass. Muted native checks confirm
+Max on both streams, a retained fallback, Stop and an independent later edit.
+
+Complete the listening walkthrough in a fresh Emacs before closing this item:
+review navigation and speech, representative comparisons, ordinary main and
+notification reading, fallback, Stop and a later individual edit. The
+[[file:../palette-physical-voice-plan.org][implementation plan]] records the tested toolchain and acceptance limits;
+existing live sessions and personal settings have not been changed.
+
 ** TODO Verify streaming macOS system voices with Emacsvox
 
 Near-term priority requested on 2026-09-17 alongside WSL speech responsiveness,

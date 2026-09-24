@@ -176,6 +176,17 @@ Save to collection.  Opening it changes no saved data or startup settings."
      pair source "This is the selected eSpeak voice variant.")
     (emacsvox-aural-voice-editor-keep-experiment 'physical 'preferred source)))
 
+(declare-function emacsvox-aural-voice-bulk-open "emacsvox-aural-voice-bulk" (pair &optional origin))
+(autoload 'emacsvox-aural-voice-bulk-resume "emacsvox-aural-voice-bulk" nil t)
+
+(defun omnivox-espeak-variants-use-across-palette ()
+  "Review this exact base and variant across every named voice in a palette."
+  (interactive)
+  (let ((pair (omnivox-espeak-variants--pair)))
+    (setq omnivox-espeak-variants--preview-token nil)
+    (require 'emacsvox-aural-voice-bulk)
+    (emacsvox-aural-voice-bulk-open pair (current-buffer))))
+
 (defun omnivox-espeak-variants-voices ()
   "Browse eSpeak base voices."
   (interactive)
@@ -197,6 +208,7 @@ Save to collection.  Opening it changes no saved data or startup settings."
                        ("P" . omnivox-espeak-variants-preview)
                        ("p" . omnivox-espeak-variants-preview)
                        ("u" . omnivox-espeak-variants-use)
+                       ("V" . omnivox-espeak-variants-use-across-palette)
                        ("b" . omnivox-espeak-variants-base)
                        ("v" . omnivox-espeak-variants-voices)
                        ("g" . omnivox-espeak-variants-refresh)
@@ -205,7 +217,7 @@ Save to collection.  Opening it changes no saved data or startup settings."
     map))
 
 (define-derived-mode omnivox-espeak-variants-mode emacsvox-aural-tabulated-mode "eSpeak variants"
-  "Preview bundled variants with p or RET; use u to choose a palette destination.
+  "Preview variants with p or RET; u edits one named voice, V reviews a palette.
 Choose a base with b.  No variant enablement, setting save or restart is needed."
   (emacsvox-aural-ui-configure-tabulated "eSpeak variants"
                                         #'omnivox-espeak-variants--speak-row
@@ -214,6 +226,8 @@ Choose a base with b.  No variant enablement, setting save or restart is needed.
   (setq-local emacsvox-aural-ui-extra-actions
               '(("Preview variant" . omnivox-espeak-variants-preview)
                 ("Use in palette" . omnivox-espeak-variants-use)
+                ("Use this voice across a palette" . omnivox-espeak-variants-use-across-palette)
+                ("Resume palette voice review" . emacsvox-aural-voice-bulk-resume)
                 ("Choose base voice" . omnivox-espeak-variants-base)))
   (setq tabulated-list-format
         `[("Variant" 28 ,(lambda (a b)

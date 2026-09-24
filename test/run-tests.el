@@ -66,6 +66,7 @@
   (require 'omnivox-library-tests)
   (require 'omnivox-catalogue-tests)
   (require 'emacsvox-aural-voice-editor-tests)
+  (require 'emacsvox-aural-voice-bulk-tests)
   (require 'emacsvox-aural-voice-engine-controls-tests)
   (require 'emacsvox-aural-voice-context-tests)
   (require 'emacsvox-aural-voice-workbench-tests)

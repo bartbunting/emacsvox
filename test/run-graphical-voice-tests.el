@@ -34,6 +34,7 @@
         (add-to-list 'load-path (expand-file-name "test/" root))
         (require 'emacsvox-preamble)
         (require 'emacsvox-aural-voice-editor-tests)
+        (require 'emacsvox-aural-voice-bulk-tests)
         (require 'emacsvox-aural-voice-engine-controls-tests)
         (require 'omnivox-explanation-tests)
         (require 'emacsvox-aural-feedback-details)
@@ -52,6 +53,7 @@
                             emacsvox-aural-feedback-details--insert-voice-links
                             emacsvox-aural-feedback-details--insert-speech-action
                             emacsvox-aural-voice-editor-refresh
+                            emacsvox-aural-voice-bulk--render
                             emacsvox-aural-voice-engine-controls--render
                             emacsvox-omnivox-components--render-details
                             emacsvox-aural-voice-workbench--open-engine))
@@ -61,6 +63,7 @@
             (message "%s: %s" function file)))
         (let ((stats (ert-run-tests-batch
                       '(member
+                        emacsvox-aural-voice-bulk-graphical-browser-review-cancel-and-save
                         emacsvox-engine-controls-graphical-groups-search-and-focus
                         emacsvox-engine-controls-help-is-spoken-and-returns-to-parameter
                         emacsvox-engine-controls-table-columns-and-keyboard-adjustment
@@ -97,8 +100,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 36)
-                                (= (ert-stats-completed stats) 36)
+          (setq status (if (and (= (ert-stats-total stats) 37)
+                                (= (ert-stats-completed stats) 37)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

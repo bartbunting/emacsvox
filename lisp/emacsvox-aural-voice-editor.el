@@ -176,7 +176,8 @@ Select a faithful wire form before any entry interrupts foreground speech."
                        (setq emacsvox-aural-voice-editor--preview-owner nil))
                      (with-current-buffer buffer
                        (emacsvox-aural-voice-editor--put :preview-operation nil)
-                       (emacsvox-aural-voice-editor-refresh))
+                       (funcall (or (plist-get context :refresh)
+                                    #'emacsvox-aural-voice-editor-refresh)))
                      (when (and (funcall current) (memq (plist-get result :status) '(failed error unsupported)))
                        (tts-notify (emacsvox-aural-voice-editor--preview-status result))))) current))
           (when (and (funcall current) (eq emacsvox-aural-voice-editor--preview-owner context))

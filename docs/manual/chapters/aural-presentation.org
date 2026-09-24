@@ -945,6 +945,47 @@ Switching palettes also switches the ordinary reading voice. Other named
 voices, such as =indent= and =bolden=, keep their own settings; changing
 =default= does not change every voice in the palette.
 
+To use one physical voice across a whole palette, select it in /Browse voices/
+or the eSpeak /Voice variants/ browser and press @@texinfo:@kbd{V}@@. Choose
+/Update an existing personal palette/ or /Create a new personal palette/.
+A new palette copies the voices, adjustments and fallbacks from the palette
+you choose. All effective named voices are included, including =default= and
+inherited names.
+
+The review starts at =default=. Move through its rows with up/down; use
+@@texinfo:@kbd{O}@@ for the original, @@texinfo:@kbd{P}@@ for the proposed
+voice, or @@texinfo:@kbd{B}@@ to compare both. @@texinfo:@kbd{A}@@ compares
+a few representative voices. @@texinfo:@kbd{S}@@ stops the preview and
+@@texinfo:@kbd{x}@@ shows details, including affected descendant palettes,
+retained fallbacks and the reported playback result. A fallback may speak
+when the chosen physical voice is unavailable.
+
+An existing exact choice is promoted with its tuning intact. If several
+choices match, the first is promoted and the others remain in order.
+A newly added choice follows each named voice's shared adjustments. Shared
+pitch, relative rate and other settings remain; existing choices retain their
+individual tuning. Inherited entries become complete local entries when saved.
+This is a one-time edit: later edits to one named voice are independent, and
+newly inherited names do not automatically acquire the chosen physical voice.
+
+Press @@texinfo:@kbd{w}@@ to save the whole review and apply the palette to
+both speech streams, or @@texinfo:@kbd{c}@@ to save it to the collection
+without selecting or applying it. Startup selection remains separate.
+@@texinfo:@kbd{C-c C-k}@@ cancels an unsaved review without writing settings.
+@@texinfo:@kbd{q}@@ returns to the browser while retaining the review. Use
+/Resume palette voice review/ in the browser's actions menu to return.
+
+If another voice editor has unsaved changes, use @@texinfo:@kbd{r}@@ to open
+and resolve it, then @@texinfo:@kbd{g}@@ to refresh the review. Changed saved
+inputs also require a fresh review. A partial save retains its original
+proposal for retry; repeat the same save action. If saving succeeds but one
+speech stream fails to apply it, the palette remains saved. Retry the original
+action and check the result. Selecting another palette supersedes that retry;
+use Voice Palettes to deliberately select the saved palette later.
+The review's actions menu also offers /Close saved result/ once saving and
+application have finished. This closes the result without undoing saved data
+or changing the currently selected palette.
+
 If you opened an experiment from an installed physical voice, these same
 controls apply, but saving first asks for a destination. See
 [[info:emacsvox#Keeping A Voice Experiment][Keep an Installed Voice Experiment]] for that sequence.

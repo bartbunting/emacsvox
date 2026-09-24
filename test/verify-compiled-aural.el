@@ -352,6 +352,8 @@
                   "emacsvox-emoji-tests.el"
                   "emacsvox-emoji-integration-tests.el"
                   "emacsvox-aural-voice-editor-tests.el"
+                  "omnivox-espeak-variants-tests.el"
+                  "emacsvox-aural-voice-bulk-tests.el"
                   "emacsvox-aural-voice-context-tests.el"
                   "emacsvox-aural-transport-tests.el"
                   "omnivox-choice-consumer-tests.el"
@@ -369,6 +371,7 @@
                      emacsvox-aural-voice-drafts--save
                      emacsvox-aural-voice-editing--proposal
                      emacsvox-aural-voice-editor-open
+                     emacsvox-aural-voice-bulk-open
                      emacsvox-aural-voice-context--resolve
                       emacsvox-aural--validate-voice-style
                       emacsvox-aural--voice-style-field
@@ -419,6 +422,7 @@
   (let ((stats
          (ert-run-tests-batch
           '(and (not (member emacsvox-emoji-graphical-explanation-is-visible
+                             emacsvox-aural-voice-bulk-graphical-browser-review-cancel-and-save
                              emacsvox-aural-voice-editor-graphical-save-remains-visible
                              emacsvox-aural-voice-editor-graphical-more-controls-below-button))
                 (or "^emacsvox-emoji-" "^emacsvox-aural-rules-"
@@ -437,6 +441,7 @@
                "^tts-handoff-"
                "^tts-preparation-"
                "^emacsvox-aural-voice-editor-"
+               "^emacsvox-aural-voice-bulk-"
                "^emacsvox-aural-voice-context-"
                (tag voice-palette-tools)
                     (tag voice-style-ui)

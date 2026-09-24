@@ -10,6 +10,15 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Apply a physical voice across a palette
+
+Press =V= on a physical voice in Browse voices or on an eSpeak variant to
+review it across all named voices, including =default=. Update a personal
+palette or create a new independent copy. Existing matching choices are
+promoted with their tuning; shared adjustments and remaining fallbacks are
+preserved. Compare original and proposed voices before one coordinated save,
+with separate Save and apply and Save to collection actions and retry support.
+
 ** Edit spoken labels from Feedback Details
 
 Spoken Before and After labels, including =indent 2=, now have individual

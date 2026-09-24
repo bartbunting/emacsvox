@@ -74,6 +74,8 @@
           "emacsvox-aural-voice-palettes.el"
           "emacsvox-aural-voice-workbench.el"
           "emacsvox-aural-voice-editor.el"
+          "emacsvox-aural-voice-bulk.el"
+          "omnivox-espeak-variants.el"
           "emacsvox-aural-voice-context.el"
           "emacsvox-aural-change-feedback.el"
           "emacsvox-aural-provider-org.el"

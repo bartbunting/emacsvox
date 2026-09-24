@@ -554,6 +554,11 @@ visibly; stop the sessions using that release before retrying. Press
   your palette followed by =default=. Preview and /Save and apply/ in the
   editor. The same =default= entry is available alongside =indent= and the
   other named voices when editing a palette directly.
+  To apply the selected base and variant to every named voice, press
+  @@texinfo:@kbd{V}@@ instead. Choose a new personal palette or update an
+  existing one, compare the proposed voices, then save. Shared adjustments
+  and existing fallback tuning are retained. See
+  [[info:emacsvox#Editing Named Voices][Editing Named Voices]] for the complete review and recovery workflow.
   @@texinfo:@kbd{q}@@ returns to the variants list with its selection retained;
   @@texinfo:@kbd{v}@@ opens the base-voice browser. Existing saved variant
   references remain valid. An older Omnivox worker must be updated once to

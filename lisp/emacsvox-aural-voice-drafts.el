@@ -41,7 +41,7 @@
 
 (cl-defstruct (emacsvox-aural-voice-save (:constructor emacsvox-aural-voice-drafts--make-save))
   id draft snapshot palette choice-sets select watches before-palette
-  aural-file routing-file before-files aural-data routing-data completed
+  aural-file routing-file before-files aural-data routing-data completed check
   (state 'ready) result operation)
 
 (defvar emacsvox-aural-voice-drafts--registry (make-hash-table :test #'equal)
@@ -125,14 +125,17 @@ SOURCES identifies palettes to watch for edits made after opening."
                       id emacsvox-aural-voice-palette-registry))) ids))
 
 (cl-defun emacsvox-aural-voice-drafts--prepare
-    (draft palette choice-sets &key select sources user-rules-transform
+    (draft palette choice-sets &key select sources user-rules-transform check
            (aural-file emacsvox-aural-schemes-file)
            (routing-file emacsvox-aural-routing-profiles-file))
   "Freeze DRAFT, destination PALETTE and new CHOICE-SETS for one save.
 SELECT requests activation after complete persistence; nil saves to collection.
 SOURCES lists palettes whose effective definitions must remain unchanged.
 USER-RULES-TRANSFORM prepares coordinated rule edits before validating the result.
-AURAL-FILE and ROUTING-FILE identify the two existing stores."
+AURAL-FILE and ROUTING-FILE identify the two existing stores.
+CHECK optionally validates additional captured inputs before preparation and
+each publication step.  It must not mutate configuration."
+  (when check (funcall check))
   (when-let* ((previous (emacsvox-aural-voice-draft-proposal draft)))
     (when (memq (emacsvox-aural-voice-save-state previous)
                 '(saving partial failed applying))
@@ -189,7 +192,7 @@ AURAL-FILE and ROUTING-FILE identify the two existing stores."
     (setq routing (emacsvox-aural-routing--with-choice-sets routing sets))
     (let ((proposal
            (emacsvox-aural-voice-drafts--make-save
-            :id (cl-incf emacsvox-aural-voice-drafts--serial) :draft draft
+            :id (cl-incf emacsvox-aural-voice-drafts--serial) :draft draft :check check
             :snapshot (copy-tree (emacsvox-aural-voice-draft-working draft))
             :palette palette :choice-sets (copy-tree sets) :select select
             :watches (emacsvox-aural-voice-drafts--watch
@@ -199,11 +202,13 @@ AURAL-FILE and ROUTING-FILE identify the two existing stores."
             :before-files before-files
             :aural-data (emacsvox-aural--validate-user-data aural)
             :routing-data (emacsvox-aural-validate-routing-user-data routing))))
+      (when check (funcall check))
       (setf (emacsvox-aural-voice-draft-proposal draft) proposal)
       proposal)))
 
 (defun emacsvox-aural-voice-drafts--check-live (proposal)
   "Reject changed destination or inherited source data for PROPOSAL."
+  (when-let* ((check (emacsvox-aural-voice-save-check proposal))) (funcall check))
   (let* ((data (emacsvox-aural-voice-save-palette proposal))
          (id (plist-get data :id))
          (emacsvox-aural-voice-palette-registry (copy-hash-table emacsvox-aural-voice-palette-registry))
