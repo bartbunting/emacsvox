@@ -151,6 +151,7 @@
   (org-next-visible-heading 1)
   (emacsvox-speak-line))
 
+;;;###autoload
 (defun emacsvox-view-emacsvox-tips ()
   "Browse  Emacsvox productivity tips."
   (interactive)

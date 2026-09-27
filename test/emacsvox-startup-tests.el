@@ -38,6 +38,25 @@
   (should (eq (lookup-key global-map [menu-bar help-menu emacsvox-welcome])
               'emacsvox-welcome)))
 
+(ert-deftest emacsvox-startup-tips-command-autoloads ()
+  "The Tips shortcut is interactive before the utilities library is loaded."
+  (let ((emacs (expand-file-name invocation-name invocation-directory))
+        (lisp (expand-file-name "lisp/" emacsvox-startup-tests--root)))
+    (with-temp-buffer
+      (let ((status
+             (call-process
+              emacs nil t nil "-Q" "--batch" "-L" lisp
+              "-l" (expand-file-name "emacsvox-preamble.el" lisp)
+              "-l" (expand-file-name "emacsvox-loaddefs.el" lisp)
+              "--eval"
+              (prin1-to-string
+               '(progn
+                  (when (featurep 'emacsvox-wizards)
+                    (error "Utilities were unexpectedly loaded"))
+                  (unless (commandp 'emacsvox-view-emacsvox-tips)
+                    (error "Tips is not an interactive command at startup")))))))
+        (unless (eq status 0) (ert-fail (buffer-string)))))))
+
 (ert-deftest emacsvox-setup-detects-newer-startup-source ()
   "The setup entry point identifies byte-code that can shadow new source."
   (let* ((directory (make-temp-file "emacsvox-setup-stale-" t))
