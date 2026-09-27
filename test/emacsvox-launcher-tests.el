@@ -949,5 +949,52 @@
       (delete-file fake-emacs)
       (delete-file fake-omnivox))))
 
+(ert-deftest emacsvox-launcher-pinned-windows-runtime-keeps-matching-espeak-data ()
+  "Pinned bundles use their recorded data without borrowing a newer bundle's."
+  (dolist (selection '(config environment unrelated override))
+    (let* ((root (emacsvox-launcher-tests--make-checkout))
+           (versions (expand-file-name "servers/omnivox-bin/versions/" root))
+           (old (expand-file-name "old/" versions))
+           (new (expand-file-name "new/" versions))
+           (native (expand-file-name "Windows runtime/" root))
+           (program (expand-file-name "omnivox.exe" native))
+           (other (expand-file-name "Other runtime/omnivox.exe" root))
+           (tools (expand-file-name "tools/" root))
+           (config (expand-file-name "program-config" root))
+           (process-environment (copy-sequence process-environment)))
+      (unwind-protect
+          (progn
+            (dolist (directory (list old new native tools)) (make-directory directory t))
+            (dolist (file (list program other))
+              (emacsvox-launcher-tests--write-executable
+               file "#!/bin/sh\nprintf 'DATA=%s\\n' \"${ESPEAK_NG_DATA-}\"\n"))
+            (emacsvox-launcher-tests--write-executable
+             (expand-file-name "wslpath" tools)
+             "#!/bin/sh\nprintf '%s\\n' \"$2\"\n")
+            (with-temp-file (expand-file-name "windows-runtime.path" old)
+              (insert (directory-file-name native) "\n"))
+            (with-temp-file (expand-file-name "windows-runtime.path" new)
+              (insert (expand-file-name "New Windows runtime" root) "\n"))
+            (with-temp-file (expand-file-name "espeak-ng-data.path" old)
+              (insert "matching native data\n"))
+            (with-temp-file (expand-file-name "espeak-ng-data.path" new)
+              (insert "different newer data\n"))
+            (make-symbolic-link new (expand-file-name "servers/omnivox-bin/current" root))
+            (with-temp-file config
+              (insert (if (eq selection 'unrelated) other program) "\n"))
+            (setenv "PATH" (concat tools path-separator (getenv "PATH")))
+            (setenv "OMNIVOX_PROGRAM" (and (eq selection 'environment) program))
+            (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE" config)
+            (setenv "ESPEAK_NG_DATA" (and (eq selection 'override) "explicit data"))
+            (let* ((result (emacsvox-launcher-tests--call
+                            (expand-file-name "servers/omnivox" root)))
+                   (expected (pcase selection
+                               ('override "explicit data")
+                               ('unrelated "")
+                               (_ "matching native data"))))
+              (should (zerop (car result)))
+              (should (string-search (concat "DATA=" expected "\n") (cadr result)))))
+        (delete-directory root t)))))
+
 (provide 'emacsvox-launcher-tests)
 ;;; emacsvox-launcher-tests.el ends here

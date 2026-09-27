@@ -128,6 +128,32 @@ else
     fi
 fi
 
+# An explicitly selected development bundle can keep its executable on Windows
+# and its matching eSpeak data in shared storage.  Resolve only metadata for
+# that exact executable; a pin must not inherit the current bundle's data.
+if $windows_runtime && [ -z "${ESPEAK_NG_DATA-}" ]; then
+    for staged_runtime in "$server_directory/omnivox-bin/current" \
+        "$server_directory/omnivox-bin/versions/"*; do
+        [ -r "$staged_runtime/espeak-ng-data.path" ] || continue
+        matching_runtime=false
+        if [ "$resolved_program" -ef "$staged_runtime/omnivox.exe" ]; then
+            matching_runtime=true
+        elif [ -r "$staged_runtime/windows-runtime.path" ]; then
+            staged_windows_path=$(sed -n '1p' "$staged_runtime/windows-runtime.path")
+            if [ -n "$staged_windows_path" ] &&
+               staged_windows_directory=$(wslpath -u "$staged_windows_path") &&
+               [ "$resolved_program" -ef "$staged_windows_directory/omnivox.exe" ]; then
+                matching_runtime=true
+            fi
+        fi
+        if $matching_runtime; then
+            ESPEAK_NG_DATA=$(sed -n '1p' "$staged_runtime/espeak-ng-data.path")
+            if [ -n "$ESPEAK_NG_DATA" ]; then export ESPEAK_NG_DATA; fi
+            break
+        fi
+    done
+fi
+
 # Private per-Emacs-profile settings use paths visible to Emacs.  Convert only
 # after resolving the actual native target; explicit native environment values
 # keep precedence.  These inputs are data, never shell source.
