@@ -2678,7 +2678,7 @@ subsequent navigation can cancel it.  Other completions use notifications."
            (emacsvox-notmuch--search-buffer-focused-p buffer))
       (with-current-buffer buffer
         (emacsvox-notmuch--submit-text-feedback
-         facts 'state-change icon text 'ordered 'none))
+         facts 'notification icon text 'ordered 'none))
     (emacsvox-notmuch--notify-search-feedback facts icon text)))
 
 (defun emacsvox-notmuch--maybe-speak-initial-search-result (process)

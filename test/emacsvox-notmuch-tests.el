@@ -4022,13 +4022,40 @@ Return the beginning of the inserted row."
                              (unless (eq style 'cue)
                                "Search refreshed, 2 threads")))
               (let ((arguments (cdar submissions)))
-                (should (eq (plist-get arguments :occasion) 'state-change))
+                (should (eq (plist-get arguments :occasion) 'notification))
                 (should (eq (plist-get arguments :delivery-policy) 'ordered))
                 (should (eq (plist-get arguments :interruption-policy) 'none))
                 (should (equal (plist-get arguments :facts)
                                '(:role mail-view :mail-view-kind search
                                  :mail-action-kind refresh
                                  :events (refresh-completed))))))))))))
+
+(ert-deftest emacsvox-notmuch-focused-refresh-compiles-before-main-speech ()
+  "Refresh completion passes semantic validation without changing speech lanes."
+  (save-window-excursion
+    (with-temp-buffer
+      (set-window-buffer (selected-window) (current-buffer))
+      (setq major-mode 'notmuch-search-mode)
+      (let ((emacsvox-aural-user-rules nil)
+            (emacsvox-aural-session-rules nil)
+            (emacsvox-aural-buffer-rules nil)
+            spoken submission)
+        (cl-letf (((symbol-function 'tts-speak)
+                   (lambda (text) (setq spoken text)))
+                  ((symbol-function 'emacsvox-aural-submit-notification)
+                   (lambda (&rest _) (ert-fail "Refresh changed speech lanes"))))
+          (setq submission
+                (emacsvox-notmuch--search-completion-feedback
+                 (current-buffer) 'refresh
+                 (emacsvox-notmuch--search-completion-facts
+                  'refresh 'refresh-completed)
+                 'task-done "Search refreshed, 2 threads")))
+        (should (equal (substring-no-properties spoken)
+                       "Search refreshed, 2 threads"))
+        (should (eq (emacsvox-aural-submission-lane submission) 'main))
+        (should (eq (emacsvox-aural-submission-delivery-policy submission) 'ordered))
+        (should (eq (emacsvox-aural-submission-interruption-policy submission) 'none))
+        (should (emacsvox-aural-submission-plans submission))))))
 
 (ert-deftest emacsvox-notmuch-background-refresh-announces-on-notification-stream ()
   "An explicit refresh reports its final count without replaying a row."
