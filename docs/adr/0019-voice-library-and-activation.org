@@ -18,7 +18,7 @@ configuration unless activation establishes evidence from both.
 
 * Decision
 
-Adopt the authoritative =docs/voice-library-contract.org= in the Omnivox
+Adopt the authoritative =docs/reference/voice-library.org= in the Omnivox
 repository, paired with its ADR 0007. Omnivox owns storage formats, native
 validation and the reusable download, installation and storage service.
 Downloaded files belong to the user; Omnivox manages their lifecycle.

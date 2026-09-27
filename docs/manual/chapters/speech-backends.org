@@ -1352,9 +1352,9 @@ Use the boundary at which speech failed to choose the next diagnostic:
 
   The failure is below Emacsvox.  Consult Omnivox's
   [[https://github.com/bartbunting/omnivox/blob/main/README.md][build guide]],
-  [[https://github.com/bartbunting/omnivox/blob/main/STATUS.md][platform status]],
+  [[https://github.com/bartbunting/omnivox/blob/main/docs/STATUS.md][platform status]],
   and
-  [[https://github.com/bartbunting/omnivox/blob/main/docs/DIAGNOSTICS.md][diagnostics guide]].  Do not diagnose Emacs configuration until the tone and
+  [[https://github.com/bartbunting/omnivox/blob/main/docs/guides/diagnostics.md][diagnostics guide]].  Do not diagnose Emacs configuration until the tone and
   speech check passes.
 - The check passes but Emacsvox is silent ::
 

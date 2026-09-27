@@ -2513,9 +2513,9 @@ identify the installed executable.  Keep its adjacent @code{espeak-ng-data} and
 @item @code{omnivox --check} reports an error or is inaudible
 The failure is below Emacsvox.  Consult Omnivox's
 @uref{https://github.com/bartbunting/omnivox/blob/main/README.md, build guide}@comma{}
-@uref{https://github.com/bartbunting/omnivox/blob/main/STATUS.md, platform status}@comma{}
+@uref{https://github.com/bartbunting/omnivox/blob/main/docs/STATUS.md, platform status}@comma{}
 and
-@uref{https://github.com/bartbunting/omnivox/blob/main/docs/DIAGNOSTICS.md, diagnostics guide}.  Do not diagnose Emacs configuration until the tone and
+@uref{https://github.com/bartbunting/omnivox/blob/main/docs/guides/diagnostics.md, diagnostics guide}.  Do not diagnose Emacs configuration until the tone and
 speech check passes.
 @item The check passes but Emacsvox is silent
 Confirm that @code{TTS_PROGRAM=omnivox} was present before Emacsvox loaded@comma{} then
@@ -7234,13 +7234,13 @@ The canonical protocol documents are:
 
 @itemize
 @item
-@uref{https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md, Omnivox Control Protocol}
+@uref{https://github.com/bartbunting/omnivox/blob/main/docs/protocols/control.md, Omnivox Control Protocol}
 
 @item
-@uref{https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md, Omnivox Presentation Timeline Protocol}
+@uref{https://github.com/bartbunting/omnivox/blob/main/docs/protocols/presentation-timeline.md, Omnivox Presentation Timeline Protocol}
 
 @item
-@uref{https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md, Omnivox Helper Protocol}
+@uref{https://github.com/bartbunting/omnivox/blob/main/docs/protocols/helper.md, Omnivox Helper Protocol}
 @end itemize
 
 @subsection Legacy Line Protocol

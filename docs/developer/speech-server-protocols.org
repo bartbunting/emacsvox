@@ -73,11 +73,11 @@ of acoustic onset.
 
 The canonical protocol documents are:
 
-- [[https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md][Omnivox Control Protocol]]
+- [[https://github.com/bartbunting/omnivox/blob/main/docs/protocols/control.md][Omnivox Control Protocol]]
 
-- [[https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md][Omnivox Presentation Timeline Protocol]]
+- [[https://github.com/bartbunting/omnivox/blob/main/docs/protocols/presentation-timeline.md][Omnivox Presentation Timeline Protocol]]
 
-- [[https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md][Omnivox Helper Protocol]]
+- [[https://github.com/bartbunting/omnivox/blob/main/docs/protocols/helper.md][Omnivox Helper Protocol]]
 
 ** Legacy Line Protocol
 :PROPERTIES:

@@ -848,13 +848,13 @@ acoustic onset.
    The canonical protocol documents are:
 
    • Omnivox Control Protocol
-     (https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md)
+     (https://github.com/bartbunting/omnivox/blob/main/docs/protocols/control.md)
 
    • Omnivox Presentation Timeline Protocol
-     (https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md)
+     (https://github.com/bartbunting/omnivox/blob/main/docs/protocols/presentation-timeline.md)
 
    • Omnivox Helper Protocol
-     (https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md)
+     (https://github.com/bartbunting/omnivox/blob/main/docs/protocols/helper.md)
 
 16.2.2 Legacy Line Protocol
 ---------------------------

@@ -26,8 +26,9 @@ stable identifiers below a configured workstation sound directory; arbitrary
 remote filesystem paths and uploads are outside the first version.
 
 The Omnivox repository defines the versioned wire contract in its remote
-protocol and ADR 0008. Workstation packaging and optional engines retain the
-installation ownership established by ADRs 0005 and 0008. Capability readiness
+protocol and ADR 0004 (after the 2026-09-27 Omnivox consolidation). Workstation
+packaging and optional engines retain the installation ownership established
+by ADRs 0005 and 0008. Capability readiness
 and routing readiness remain the separate checkpoints in ADR 0007.
 
 * Consequences

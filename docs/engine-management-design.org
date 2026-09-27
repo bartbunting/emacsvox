@@ -29,7 +29,7 @@ The shared library boundary is now recorded in accepted
 [[file:adr/0019-voice-library-and-activation.org][ADR 0019]] and Omnivox ADR 0007 (renumbered in its 2026-09-27
 consolidation). The authoritative version-1 format,
 stable identity rules, precedence, negotiated status and two-lane activation
-contract is =docs/voice-library-contract.org= in the Omnivox repository.
+contract is =docs/reference/voice-library.org= in the Omnivox repository.
 The maintainer accepted the contract and ownership split on 2026-09-15.
 Omnivox owns the reusable download, installation and storage service;
 downloaded files belong to the user. Implementation proceeds in slices.
