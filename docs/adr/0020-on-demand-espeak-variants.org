@@ -4,7 +4,9 @@
 
 * Status
 
-Accepted by the maintainer on 2026-09-17, paired with Omnivox ADR 0014.
+Accepted by the maintainer on 2026-09-17. The paired Omnivox decision is now
+ADR 0006, =docs/adr/0006-voice-selection-and-customization.md=, after its
+2026-09-27 consolidation.
 
 * Decision
 

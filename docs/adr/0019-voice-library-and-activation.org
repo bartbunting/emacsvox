@@ -4,7 +4,8 @@
 
 * Status
 
-Accepted on 2026-09-15 with Omnivox ADR 0012.
+Accepted on 2026-09-15. The paired Omnivox decision is now ADR 0007,
+=docs/adr/0007-managed-voice-lifecycle.md=, after its 2026-09-27 consolidation.
 
 * Context
 
@@ -18,7 +19,7 @@ configuration unless activation establishes evidence from both.
 * Decision
 
 Adopt the authoritative =docs/voice-library-contract.org= in the Omnivox
-repository, paired with its ADR 0012. Omnivox owns storage formats, native
+repository, paired with its ADR 0007. Omnivox owns storage formats, native
 validation and the reusable download, installation and storage service.
 Downloaded files belong to the user; Omnivox manages their lifecycle.
 Emacsvox owns the reviewed catalogue, accessible interaction and coordination

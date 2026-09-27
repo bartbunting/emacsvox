@@ -461,7 +461,10 @@ choice row, particularly when two records name the same physical selector.
 
 The implementation note =docs/per-fallback-streaming-handoff.md= in the isolated
 Omnivox worktree, committed as =48c7411=, records the complete design, code
-references and required test matrix under ADR 0011. Its selected handoff is:
+references and required test matrix under the then-current Omnivox ADR 0011.
+The maintained reference is now =docs/PREPARED-SYNTHESIS.md= under Omnivox
+ADR 0006 following its 2026-09-27 documentation consolidation. The original
+handoff is:
 
 - Keep authoritative registry/policy/rate snapshots immutable and carry context
   on each span. Retain the resolver's original row index and reason; strict

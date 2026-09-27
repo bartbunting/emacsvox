@@ -26,7 +26,8 @@ recovery. Remote/native-direct settings providers, the shared voice library,
 acquisition providers and the new backend contracts remain planned work.
 
 The shared library boundary is now recorded in accepted
-[[file:adr/0019-voice-library-and-activation.org][ADR 0019]] and Omnivox ADR 0012. The authoritative version-1 format,
+[[file:adr/0019-voice-library-and-activation.org][ADR 0019]] and Omnivox ADR 0007 (renumbered in its 2026-09-27
+consolidation). The authoritative version-1 format,
 stable identity rules, precedence, negotiated status and two-lane activation
 contract is =docs/voice-library-contract.org= in the Omnivox repository.
 The maintainer accepted the contract and ownership split on 2026-09-15.
@@ -689,8 +690,9 @@ catalogue do not need to be redesigned for each one.
 
 * Architecture decisions and compatibility
 
-All 18 Emacsvox ADRs and all 11 sibling Omnivox ADRs were reviewed for this
-design. The following decisions constrain implementation:
+The original review covered all 18 then-existing Emacsvox ADRs and all 11
+then-existing Omnivox ADRs. Omnivox consolidated and renumbered its records on
+2026-09-27; the following references use its replacement numbering:
 
 - Extend the accepted [[file:adr/0008-modular-omnivox-engine-installation.org][module-installation ADR]] with explicit, user-selected
   reviewed voice acquisition. Keep exact-version executable modules,
@@ -700,18 +702,18 @@ design. The following decisions constrain implementation:
   policy. Both lanes use one activated library generation; their helper state
   and cancellation remain independent.
 - Preserve platform/role boundaries and remote restrictions from Emacsvox
-  ADRs 0010–0014 and Omnivox ADR 0008. A general screen is not permission for
+  ADRs 0010–0014 and Omnivox ADR 0004. A general screen is not permission for
   remote installation over the speech socket.
 - Preserve palette ownership and exact/complete preview contracts from
-  Emacsvox ADRs 0015–0018 and Omnivox ADRs 0010–0011. Package management cannot
+  Emacsvox ADRs 0015–0018 and Omnivox ADR 0006. Package management cannot
   quietly rewrite named voices or their fallback-specific tuning.
-- Keep Omnivox ADRs 0001–0003 and 0005 helper boundaries. Record the MBROLA
+- Keep Omnivox ADR 0001 helper and distribution boundaries. Record the MBROLA
   companion, dependencies, licensing and platform evidence in an Omnivox ADR
   before implementing its production integration.
-- Keep Omnivox ADR 0006 bounded delivery and the rule that fallback cannot
-  replay speech after PCM has been accepted. Follow ADRs 0004 and 0007 for
+- Keep Omnivox ADR 0003 bounded delivery and the rule that fallback cannot
+  replay speech after PCM has been accepted. Follow Omnivox ADRs 0002 and 0003 for
   measured rate behavior and truthful marker support. Audio-device failures
-  remain output failures, consistent with ADR 0009.
+  remain output failures, consistent with Omnivox ADR 0005.
 
 The voice-library schema, stable IDs, per-voice eligibility, configuration
 precedence and activation lifecycle are now accepted in the cross-project

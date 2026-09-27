@@ -4,7 +4,8 @@
 * Status
 
 Accepted direction under the maintainer's request to add RHVoice downloads and
-uninstallation. Paired with Omnivox ADR 0016.
+uninstallation. The paired Omnivox decision is now ADR 0007,
+=docs/adr/0007-managed-voice-lifecycle.md=, after its 2026-09-27 consolidation.
 
 * Decision
 
