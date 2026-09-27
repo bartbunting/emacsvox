@@ -31,6 +31,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'seq)
 (require 'subr-x)
 (require 'tts-queue-state)
 
@@ -72,6 +73,10 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
 (defvar omnivox-engine-inventory)
 (defvar omnivox-control-capabilities)
 (defvar omnivox-available-voices)
+(defvar omnivox-library--timeout)
+(declare-function omnivox-library--control "omnivox-library" (process command))
+(declare-function omnivox-library-apply--uuid "omnivox-library-apply" (value))
+(declare-function omnivox--install-control-filter "omnivox-voices" (process))
 (declare-function tts--omnivox-program-p "tts-speak" (&optional program))
 (declare-function tts--retire-process "tts-speak" (process))
 (declare-function tts--speech-process-sentinel "tts-speak" (process event))
@@ -86,6 +91,39 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
 (defun omnivox-remote-enabled-p ()
   "Return non-nil when Omnivox uses the remote workstation transport."
   (and omnivox-remote-host (tts--omnivox-program-p)))
+
+(defun omnivox-remote--begin-activation ()
+  "Retire both remote lanes before selecting a fresh workstation configuration."
+  (let ((omnivox-remote--connecting t))
+    (when (timerp omnivox-remote--retry-timer) (cancel-timer omnivox-remote--retry-timer))
+    (setq omnivox-remote--retry-timer nil)
+    (dolist (process (delete-dups (list tts-speaker-process tts-notify-process)))
+      (when (and (processp process) (process-get process 'omnivox-remote-managed))
+        (tts--retire-process process)))
+    (setq omnivox-remote--session nil)))
+
+(defun omnivox-remote--acknowledge-engines (process)
+  "Verify PROCESS agrees with its live peer's workstation configuration.
+Older hosts without the feature retain ordinary negotiation. A restarted
+workstation can prepare a new activation when no old lane remains live."
+  (require 'omnivox-library)
+  (omnivox--install-control-filter process)
+  (let* ((omnivox-library--timeout 180)
+         (capabilities (omnivox-library--control process '(:type "capabilities"))))
+    (unless (equal (plist-get capabilities :type) "capabilities")
+      (error "Missing remote worker capabilities"))
+    (when (seq-contains-p (plist-get capabilities :features) "engine_configuration_v1" #'equal)
+      (let* ((status (omnivox-library--control process '(:type "engine_configuration_status_v1")))
+             (identity (plist-get status :activation_id)))
+        (unless (equal (plist-get status :type) "engine_configuration_status_v1")
+          (error "Missing remote worker configuration acknowledgement"))
+        (omnivox-library-apply--uuid identity)
+        (dolist (peer (delete-dups (list tts-speaker-process tts-notify-process)))
+          (when (and (processp peer) (not (eq peer process)) (process-live-p peer)
+                     (process-get peer 'omnivox-remote-managed))
+            (unless (equal identity (process-get peer 'omnivox-engine-activation))
+              (error "Remote speech lanes acknowledged different engine configurations"))))
+        (process-put process 'omnivox-engine-activation identity)))))
 
 (defun omnivox-remote--token ()
   "Read and validate the private token without including it in errors."
@@ -230,6 +268,7 @@ The token is sent only through loopback; use SSH to encrypt the remote link."
 
 (defun omnivox-remote--retry ()
   "Restore failed remote lanes without replaying prior speech."
+  (when (timerp omnivox-remote--retry-timer) (cancel-timer omnivox-remote--retry-timer))
   (setq omnivox-remote--retry-timer nil)
   (when (and (omnivox-remote-enabled-p) (not omnivox-remote--suspended))
     (condition-case err

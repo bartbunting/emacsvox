@@ -51,6 +51,14 @@ format and acceptance checklist are Omnivox's
 =docs/plans/extensible-engine-framework.md=. This work adds no configuration
 editor or remote management channel.
 
+For remote speech, the workstation broker prepares and retains its own snapshot
+per authenticated session. Automatic lane recovery retains the session;
+deliberate speech restart retires both lanes and selects a fresh session.
+Workers advertising =engine_configuration_v1= must acknowledge the same identity
+as their live peer before publication. A restarted workstation can prepare a
+new activation after its old lanes have disconnected. Launch definitions remain
+workstation-local.
+
 Recommended order: useful engine details; Piper voice acquisition and multiple
 models; Flite acquisition using its existing loader; eSpeak variant selection;
 an isolated MBROLA prototype followed by integration; then other providers.

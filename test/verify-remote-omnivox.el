@@ -14,6 +14,11 @@
 (require 'tts-speak)
 (require 'omnivox-voices)
 
+(when (getenv "OMNIVOX_REMOTE_TEST_COMPILED")
+  (dolist (function '(tts-initialize omnivox-remote--acknowledge-engines))
+    (unless (string-suffix-p ".elc" (symbol-file function 'defun))
+      (error "Compiled remote acceptance loaded source"))))
+
 (setq tts-program "omnivox"
       tts-notification-device nil
       omnivox-remote-host "127.0.0.1"
@@ -38,13 +43,18 @@
               (process-get tts-notify-process omnivox--control-inventory-property)))
        "both workstation inventories")
       (unless (omnivox-query-voices) (error "Workstation has no voices"))
+      (let ((identity (process-get tts-speaker-process 'omnivox-engine-activation)))
+        (unless (and (stringp identity)
+                     (equal identity (process-get tts-notify-process 'omnivox-engine-activation)))
+          (error "Remote lanes did not acknowledge one activation")))
       (let (terminal)
         (tts--protocol-queue-text "Remote Emacs speech test.")
         (tts--protocol-dispatch-tracked (lambda (_ status) (setq terminal status)))
         (omnivox-remote-test-wait (lambda () terminal) "tracked speech completion")
         (unless (eq terminal 'completed) (error "Speech failed: %s" terminal)))
       (let ((old tts-notify-process)
-            (speaker tts-speaker-process))
+            (speaker tts-speaker-process)
+            (identity (process-get tts-notify-process 'omnivox-engine-activation)))
         (delete-process old)
         (omnivox-remote-test-wait
          (lambda () (and (process-live-p tts-notify-process)
@@ -52,7 +62,9 @@
                          (process-get tts-notify-process omnivox--control-inventory-property)))
          "notification reconnect")
         (unless (eq speaker tts-speaker-process)
-          (error "Notification recovery replaced the healthy speaker")))
+          (error "Notification recovery replaced the healthy speaker"))
+        (unless (equal identity (process-get tts-notify-process 'omnivox-engine-activation))
+          (error "Notification recovery changed its engine configuration")))
       (let ((old tts-speaker-process)
             (notification tts-notify-process) terminal)
         (process-send-string old "sh 10000\n")
@@ -67,6 +79,15 @@
          "speaker reconnect")
         (unless (eq notification tts-notify-process)
           (error "Speaker recovery replaced the healthy notification lane")))
+      (let ((identity (process-get tts-speaker-process 'omnivox-engine-activation)))
+        (tts-restart)
+        (omnivox-remote-test-wait
+         (lambda ()
+           (and (process-get tts-speaker-process omnivox--control-inventory-property)
+                (process-get tts-notify-process omnivox--control-inventory-property)))
+         "fresh remote activation")
+        (when (equal identity (process-get tts-speaker-process 'omnivox-engine-activation))
+          (error "Explicit restart reused the old engine activation")))
       (princ "Remote Emacs inventories, tracked speech, and lane recovery passed.\n"))
   (omnivox-remote-disconnect))
 

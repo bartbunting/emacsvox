@@ -3887,6 +3887,8 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
                   (error "Native speech startup failed; see the speech diagnostics")))
               (omnivox-library--acknowledge-engines
                process (or omnivox--library-startup omnivox--engine-startup)))
+            (when (process-get process 'omnivox-remote-managed)
+              (omnivox-remote--acknowledge-engines process))
             (tts--initialize-output-volumes process)
             (setq configured t))
         (unless (or configured
@@ -3900,6 +3902,7 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
   
   ;; fallback of fallbacks
   (unless tts-program (setq tts-program "espeak"))
+  (when (omnivox-remote-enabled-p) (omnivox-remote--begin-activation))
   (require 'omnivox-library)
   (let* ((omnivox--engine-startup (omnivox-library--prepare-engines))
          (new (tts-make-process "Speaker"))
@@ -3954,21 +3957,23 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
 (defun tts--recover-speaker ()
   "Recover main speech from its retained activation without restarting its peer."
   (require 'omnivox-library)
-  (let ((omnivox--engine-startup
-         (or (omnivox-library--engine-reference tts-speaker-process)
-             (omnivox-library--engine-reference tts-notify-process)
-             (omnivox-library--current-engine-reference))))
-    (if (not omnivox--engine-startup)
-        (tts-initialize)
-      (let ((new (tts-make-process "Speaker")) (old tts-speaker-process))
-        (unwind-protect
-            (progn
-              (when (processp old) (tts--retire-process old))
-              (setq tts-speaker-process new)
-              (omnivox-library--remember-engines new))
-          (unless (eq tts-speaker-process new) (tts--retire-process new))))
-      (require 'voice-setup)
-      (voice-setup))))
+  (if (omnivox-remote-enabled-p)
+      (omnivox-remote--retry)
+    (let ((omnivox--engine-startup
+           (or (omnivox-library--engine-reference tts-speaker-process)
+               (omnivox-library--engine-reference tts-notify-process)
+               (omnivox-library--current-engine-reference))))
+      (if (not omnivox--engine-startup)
+          (tts-initialize)
+        (let ((new (tts-make-process "Speaker")) (old tts-speaker-process))
+          (unwind-protect
+              (progn
+                (when (processp old) (tts--retire-process old))
+                (setq tts-speaker-process new)
+                (omnivox-library--remember-engines new))
+            (unless (eq tts-speaker-process new) (tts--retire-process new))))
+        (require 'voice-setup)
+        (voice-setup)))))
 
 (defun tts-restart ()
   "Restart TTS server."
