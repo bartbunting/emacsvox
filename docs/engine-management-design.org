@@ -46,10 +46,11 @@ without the configuration capability retain their previous startup path.
 Managed Apply prepares the candidate once and shares it with the second lane.
 Preflight, replacement and rollback verify the actual worker acknowledgement;
 rollback retains each previous lane's own startup record. The authoritative
-format and acceptance checklist are Omnivox's
+formats and configuration rules are Omnivox's
 =docs/reference/engine-startup-snapshot.md= and
-=docs/plans/extensible-engine-framework.md=. This work adds no configuration
-editor or remote management channel.
+=docs/reference/engine-configuration.md=. The completed first-slice audit is
+=docs/benchmarks/2026-09-28-engine-framework-audit.md=. This work adds no
+configuration editor or remote management channel.
 
 For remote speech, the workstation broker prepares and retains its own snapshot
 per authenticated session. Automatic lane recovery retains the session;
