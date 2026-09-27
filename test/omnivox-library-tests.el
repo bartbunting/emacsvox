@@ -182,10 +182,28 @@
       (delete-process peer) (delete-process new))))
 
 (ert-deftest omnivox-library-engine-native-pair-freezes-and-recovers ()
-  "Opt-in process acceptance using a staged Unix Omnivox and isolated storage."
+  "Use a staged Unix binary or Windows executable from WSL with isolated storage."
   (skip-unless (getenv "EMACSVOX_ENGINE_FRAMEWORK_TEST_SERVER"))
   (let* ((server (getenv "EMACSVOX_ENGINE_FRAMEWORK_TEST_SERVER"))
-         (root (make-temp-file "engine configuration acceptance " t))
+         (espeak-data (getenv "EMACSVOX_ENGINE_FRAMEWORK_TEST_ESPEAK_DATA"))
+         (windows (string-suffix-p ".exe" server t))
+         (command-output
+          (lambda (program &rest arguments)
+            (with-temp-buffer
+              (unless (zerop (apply #'call-process program nil t nil arguments))
+                (error "Native fixture path command failed: %s" program))
+              (string-trim (buffer-string)))))
+         (native-path (lambda (path) (if windows (funcall command-output "wslpath" "-w" path) path)))
+         (root (let ((temporary-file-directory
+                      (if windows
+                          (file-name-as-directory
+                           (funcall command-output "wslpath" "-u"
+                                    (funcall command-output "powershell.exe" "-NoProfile" "-NonInteractive"
+                                             "-Command" "[IO.Path]::GetTempPath()")))
+                        temporary-file-directory)))
+                 (make-temp-file "engine configuration acceptance " t)))
+         ;; The launcher uses POSIX log pipes even when the worker is native.
+         (logs (make-temp-file "engine configuration logs " t))
          (config (expand-file-name "configuration" root))
          (process-environment (seq-filter (lambda (entry) (string-match-p "\\`\\(?:PATH\\|HOME\\|LANG\\|USER\\|TMPDIR\\)=" entry)) process-environment))
          (tts-program "omnivox") (tts-speaker-process nil) (tts-notify-process nil)
@@ -196,12 +214,15 @@
         (progn
           (make-directory config)
           (setenv "OMNIVOX_PROGRAM" server)
-          (setenv "OMNIVOX_CONFIG_DIR" config)
-          (setenv "OMNIVOX_VOICE_ROOT" (expand-file-name "voices" root))
-          (setenv "OMNIVOX_LOG_DIRECTORY" (expand-file-name "logs" root))
+          (setenv "OMNIVOX_CONFIG_DIR" (funcall native-path config))
+          (setenv "OMNIVOX_VOICE_ROOT" (funcall native-path (expand-file-name "voices" root)))
+          (setenv "OMNIVOX_LOG_DIRECTORY" logs)
           (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE" (expand-file-name "absent-launcher-config" root))
           (setenv "OMNIVOX_AUDIO_OUTPUT" "null")
           (setenv "OMNIVOX_ENGINE" "espeak")
+          ;; Explicit Windows payloads can keep data outside their binary
+          ;; directory; use the exact staged native path supplied by the run.
+          (when espeak-data (setenv "ESPEAK_NG_DATA" espeak-data))
           (with-temp-file (expand-file-name "config.json" config)
             (let ((overrides (make-hash-table :test #'equal)))
               (dolist (id '("winrt" "macos" "piper" "rhvoice" "flite" "rutts" "tgspeechbox" "eloquence" "dectalk" "mbrola"))
@@ -231,7 +252,8 @@
               (should (equal identity (process-get tts-speaker-process 'omnivox-engine-activation))))))
       (dolist (process attempts)
         (when (process-live-p process) (omnivox-library--retire process)))
-      (delete-directory root t))))
+      (delete-directory root t)
+      (delete-directory logs t))))
 
 (defun omnivox-library-tests--removal-review ()
   "Return a frozen package review fixture."
