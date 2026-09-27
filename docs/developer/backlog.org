@@ -89,6 +89,30 @@ Collect and triage live feedback on the validated Phase 9 support recorded in
 separately, preserving the documented privacy and conservative-speech
 boundaries.
 
+** TODO Add a speech-engine settings screen
+
+Requested on 2026-09-28. Extend the existing /Speech engines/ area with settings
+opened from each engine's details page. Build on the
+[[file:../engine-management-design.org][engine-management design]] and Omnivox's
+[[https://github.com/bartbunting/omnivox/blob/main/docs/reference/engine-configuration.md][version-1 configuration rules]]. This is backlog scope; implementation has not begun.
+
+Let users add a compatible installed engine, choose its program file, turn
+engines on or off, and choose preferred and backup engines. Include permission
+for automatic selection, a check and spoken sample, and an advanced section for
+startup arguments and waiting times. Reuse the Voice Workbench for choosing
+voices and adjusting how they sound.
+
+Show saved settings separately from those currently in use. Saving should not
+restart speech; provide an explicit Apply action that checks changes and uses
+the same prepared settings for normal and notification speech. Plan safe saving,
+failed-Apply recovery and clear spoken feedback before implementation. Preserve
+unrelated settings and explain when another setting takes priority.
+
+Settings belong to the computer running Omnivox, including Windows when Emacs
+runs under WSL. Start with local configuration; remote editing needs separate
+design and authorization. Engine downloads and new language-selection rules
+remain outside this item.
+
 ** TODO Design an ordinary preferred physical-voice control
 
 Aural Home already groups engine, rate, notification and spatial controls.
