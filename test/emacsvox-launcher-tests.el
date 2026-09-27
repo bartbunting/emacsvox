@@ -542,7 +542,7 @@
                   (expand-file-name "missing-config" directory))
           (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
           (setenv "OMNIVOX_AUDIO_OUTPUT" "null")
-          (setenv "WSLENV" "EXISTING/p")
+          (setenv "WSLENV" "EXISTING/p:OMNIVOX_CONFIG_DIR/p:OMNIVOX_OWNED_STARTUP/l:OMNIVOX_OWNED_ENGINE_STARTUP/pl")
           (with-temp-buffer
             (should (zerop (call-process launcher nil t)))
             (let ((output (buffer-string)))
@@ -559,6 +559,8 @@
                (string-search
                 (concat "RHVOICE_CONFIG=" rhvoice-config "\n") output))
               (dolist (name '("OMNIVOX_AUDIO_OUTPUT"
+                              "OMNIVOX_CONFIG_DIR" "OMNIVOX_OWNED_STARTUP"
+                              "OMNIVOX_OWNED_ENGINE_STARTUP" "OMNIVOX_OWNED_ENGINE_STARTUP_SHA256"
                               "OMNIVOX_REMOTE_NOTIFICATION_TARGET"
                               "OMNIVOX_RHVOICE_HELPER"
                               "OMNIVOX_RHVOICE_LIBRARY"

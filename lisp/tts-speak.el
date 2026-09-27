@@ -3813,7 +3813,14 @@ device, make sure it exists first.  For SwiftMac, use `left' or `right'."
 
 ;; Helper: tts-make-process:
 (defvar omnivox-library--birth-collector)
+(defvar omnivox--library-startup)
+(defvar omnivox--engine-startup nil)
 (declare-function omnivox-library--owner "omnivox-library" (process))
+(declare-function omnivox-library--prepare-engines "omnivox-library" ())
+(declare-function omnivox-library--engine-reference "omnivox-library" (process))
+(declare-function omnivox-library--current-engine-reference "omnivox-library" ())
+(declare-function omnivox-library--remember-engines "omnivox-library" (process))
+(declare-function omnivox-library--acknowledge-engines "omnivox-library" (process startup))
 (declare-function omnivox-library--command "omnivox-library" (program))
 (declare-function omnivox-library--startup-environment "omnivox-library" (environment))
 (defun tts--resolve-program (program)
@@ -3877,7 +3884,9 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
               (let ((owner (omnivox-library--owner process)))
                 (when (or (stringp (plist-get owner :startup_error))
                           (process-get process 'omnivox-library-retired))
-                  (error "Native speech startup failed; see the speech diagnostics"))))
+                  (error "Native speech startup failed; see the speech diagnostics")))
+              (omnivox-library--acknowledge-engines
+               process (or omnivox--library-startup omnivox--engine-startup)))
             (tts--initialize-output-volumes process)
             (setq configured t))
         (unless (or configured
@@ -3891,8 +3900,10 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
   
   ;; fallback of fallbacks
   (unless tts-program (setq tts-program "espeak"))
-  (let ((new (tts-make-process "Speaker"))
-        (old-speaker tts-speaker-process))
+  (require 'omnivox-library)
+  (let* ((omnivox--engine-startup (omnivox-library--prepare-engines))
+         (new (tts-make-process "Speaker"))
+         (old-speaker tts-speaker-process) quit-data)
     ;; Retire the old server only after its replacement starts successfully.
     ;; If retirement is quit, the unpublished replacement still needs an owner
     ;; responsible for deleting it.
@@ -3900,14 +3911,23 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
         (progn
           (when (processp old-speaker)
             (tts--retire-process old-speaker))
-          (setq tts-speaker-process new))
+          (setq tts-speaker-process new)
+          (omnivox-library--remember-engines new))
       (unless (eq tts-speaker-process new)
         (tts--retire-process new)))
     (cond
      ((tts-multistream-p tts-program)
       (condition-case error-data
           (tts-notify-initialize)
-        (error
+        ((error quit)
+         (when (eq (car error-data) 'quit) (setq quit-data error-data))
+         ;; An old notifier belongs to a different deliberate activation.
+         ;; Keep main speech available, without publishing a mixed pair.
+         (when omnivox--engine-startup
+           (let ((stale tts-notify-process))
+             (setq tts-notify-process nil)
+             (when (and (processp stale) (not (eq stale new)))
+               (tts--retire-process stale))))
          (when (and (omnivox-remote-enabled-p)
                     (tts--notification-process-configured-p)
                     (not (process-live-p tts-notify-process)))
@@ -3928,7 +3948,27 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
       (setq emacsvox-play-program nil))
     ;; `voice-setup' requires us, so we can't require it at top-level.
     (require 'voice-setup)
-    (voice-setup)))
+    (voice-setup)
+    (when quit-data (signal (car quit-data) (cdr quit-data)))))
+
+(defun tts--recover-speaker ()
+  "Recover main speech from its retained activation without restarting its peer."
+  (require 'omnivox-library)
+  (let ((omnivox--engine-startup
+         (or (omnivox-library--engine-reference tts-speaker-process)
+             (omnivox-library--engine-reference tts-notify-process)
+             (omnivox-library--current-engine-reference))))
+    (if (not omnivox--engine-startup)
+        (tts-initialize)
+      (let ((new (tts-make-process "Speaker")) (old tts-speaker-process))
+        (unwind-protect
+            (progn
+              (when (processp old) (tts--retire-process old))
+              (setq tts-speaker-process new)
+              (omnivox-library--remember-engines new))
+          (unless (eq tts-speaker-process new) (tts--retire-process new))))
+      (require 'voice-setup)
+      (voice-setup))))
 
 (defun tts-restart ()
   "Restart TTS server."
@@ -4059,7 +4099,7 @@ by the audio device's buffering latency."
   ;; ensure text is a  string
   (unless (stringp text) (when text (setq text (format "%s" text))))
   ;; ensure  the process  is live
-  (unless (process-live-p tts-speaker-process) (tts-initialize))
+  (unless (process-live-p tts-speaker-process) (tts--recover-speaker))
   ;; If you dont want me to talk,or my server is not running,
   ;; I will remain silent.
   ;; I also do nothing if text is nil or ""
@@ -4336,7 +4376,13 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
   "Initialize a separate notification TTS process when configured."
   (interactive)
   
-  (let ((old tts-notify-process)
+  (require 'omnivox-library)
+  (let ((omnivox--engine-startup
+         (or omnivox--engine-startup
+             (omnivox-library--engine-reference tts-speaker-process)
+             (omnivox-library--engine-reference tts-notify-process)
+             (omnivox-library--current-engine-reference)))
+        (old tts-notify-process)
         (new nil)
         (tts-program
          (if (string-match "cloud" tts-program) "cloud-notify" tts-program)))

@@ -3177,7 +3177,8 @@
         (tts-program "omnivox")
         events)
     (cl-letf
-        (((symbol-function 'tts-make-process)
+        (((symbol-function 'omnivox-library--prepare-engines) #'ignore)
+         ((symbol-function 'tts-make-process)
           (lambda (_name) 'new-speaker))
          ((symbol-function 'tts-multistream-p) (lambda (_) t))
          ((symbol-function 'tts-notify-initialize)

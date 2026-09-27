@@ -34,6 +34,23 @@ The maintainer accepted the contract and ownership split on 2026-09-15.
 Omnivox owns the reusable download, installation and storage service;
 downloaded files belong to the user. Implementation proceeds in slices.
 
+The extensible-engine configuration integration uses Omnivox's existing local
+service and owners. A deliberate local speech start prepares one native engine
+snapshot for both lanes; each worker independently acknowledges its activation
+identifier before publication. Ordinary recovery reuses that snapshot, including
+after process globals have been cleared. Per-lane audio settings stay separate.
+If notification startup fails during a fresh activation, main speech remains
+available and the previous activation's notifier is retired. Older local hosts
+without the configuration capability retain their previous startup path.
+
+Managed Apply prepares the candidate once and shares it with the second lane.
+Preflight, replacement and rollback verify the actual worker acknowledgement;
+rollback retains each previous lane's own startup record. The authoritative
+format and acceptance checklist are Omnivox's
+=docs/reference/engine-startup-snapshot.md= and
+=docs/plans/extensible-engine-framework.md=. This work adds no configuration
+editor or remote management channel.
+
 Recommended order: useful engine details; Piper voice acquisition and multiple
 models; Flite acquisition using its existing loader; eSpeak variant selection;
 an isolated MBROLA prototype followed by integration; then other providers.

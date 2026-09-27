@@ -68,6 +68,8 @@
 (declare-function omnivox--routing-policy-content "omnivox-voices" (process))
 (declare-function omnivox--process-logical-registry-content "omnivox-voices" (process))
 (defvar omnivox--library-startup nil "Dynamically bound native startup record.")
+(defvar omnivox--engine-startup nil "Prepared configuration shared by speech lanes.")
+(defvar omnivox-library--current-engines nil "Published local activation and launcher.")
 (defvar omnivox-library--birth-collector nil "Provider callback retaining every attempted process.")
 (defvar omnivox-library--support-cache nil)
 (defvar omnivox-library--sequence 0)
@@ -221,13 +223,87 @@ Cancellation suppresses CALLBACK.  Capability discovery is asynchronous too."
       (list program "--voice-library-owner") (list program)))
 
 (defun omnivox-library--startup-environment (environment)
-  "Extend ENVIRONMENT with frozen native inputs during explicit Apply."
+  "Extend ENVIRONMENT with the retained native startup for this activation."
   (let ((process-environment (copy-sequence environment)))
-    (when omnivox--library-startup
-      (setenv "OMNIVOX_OWNED_STARTUP" (plist-get omnivox--library-startup :path))
-      (setenv "OMNIVOX_OWNED_STARTUP_SHA256" (plist-get omnivox--library-startup :sha256))
-      (setenv "OMNIVOX_OWNED_LIBRARY" (plist-get omnivox--library-startup :candidate)))
+    (when (or omnivox--library-startup omnivox--engine-startup)
+      (dolist (name '("OMNIVOX_OWNED_STARTUP" "OMNIVOX_OWNED_STARTUP_SHA256"
+                      "OMNIVOX_OWNED_LIBRARY" "OMNIVOX_OWNED_ENGINE_STARTUP"
+                      "OMNIVOX_OWNED_ENGINE_STARTUP_SHA256"))
+        (setenv name nil))
+      (if omnivox--library-startup
+          (progn
+            (setenv "OMNIVOX_OWNED_STARTUP" (plist-get omnivox--library-startup :path))
+            (setenv "OMNIVOX_OWNED_STARTUP_SHA256" (plist-get omnivox--library-startup :sha256))
+            (setenv "OMNIVOX_OWNED_LIBRARY" (plist-get omnivox--library-startup :candidate)))
+        (setenv "OMNIVOX_OWNED_ENGINE_STARTUP" (plist-get omnivox--engine-startup :path))
+        (setenv "OMNIVOX_OWNED_ENGINE_STARTUP_SHA256" (plist-get omnivox--engine-startup :sha256))))
     process-environment))
+
+(defun omnivox-library--engine-reference (process)
+  "Return PROCESS's acknowledged startup reference, even after it exits."
+  (when (and (processp process) (tts--omnivox-program-p tts-program)
+             (not (omnivox-remote-enabled-p)))
+    (let* ((owner (process-get process 'omnivox-library-owner))
+           (identity (plist-get owner :activation_id)))
+      (when (and (stringp identity)
+                 (equal identity (process-get process 'omnivox-engine-activation)))
+        (list :path (plist-get owner :startup) :sha256 (plist-get owner :startup_sha256)
+              :activation-id identity)))))
+
+(defun omnivox-library--remember-engines (process)
+  "Retain published PROCESS's activation after lifecycle cleanup clears globals."
+  (setq omnivox-library--current-engines
+        (cons tts-program (omnivox-library--engine-reference process))))
+
+(defun omnivox-library--current-engine-reference ()
+  "Return the published activation for recovery through the same launcher."
+  (when (and (equal tts-program (car omnivox-library--current-engines))
+             (not (omnivox-remote-enabled-p)))
+    (cdr omnivox-library--current-engines)))
+
+(defun omnivox-library--prepare-engines ()
+  "Prepare one local activation; retain compatibility with older launchers."
+  (when (and (tts--omnivox-program-p tts-program) (not (omnivox-remote-enabled-p)))
+    (let ((program (tts--resolve-program tts-program)))
+      (when (and program (omnivox-library--supported-p program))
+        (let* ((default-directory (expand-file-name "~/"))
+               (service (omnivox-library--service)))
+          (unwind-protect
+              (let* ((host (omnivox-library--request service '(:command "host")))
+                     (version (plist-get host :engine_configuration_version)))
+                (when version
+                  (unless (eql version 1) (error "Unsupported native engine configuration version"))
+                  (let ((reply (omnivox-library--request service '(:command "engine-snapshot"))))
+                    (unless (equal (plist-get reply :type) "prepared_startup")
+                      (error "Missing prepared engine configuration"))
+                    (omnivox-library-apply--uuid (plist-get reply :activation_id))
+                    (list :path (plist-get reply :startup) :sha256 (plist-get reply :startup_sha256)
+                          :activation-id (plist-get reply :activation_id)))))
+            (when (process-live-p service) (delete-process service))))))))
+
+(defun omnivox-library--acknowledge-engines (process startup)
+  "Verify PROCESS installed STARTUP, independently of its launcher metadata.
+This check does not publish capability or routing readiness hooks."
+  (let* ((owner (process-get process 'omnivox-library-owner))
+         (expected (or (plist-get startup :activation-id)
+                       (and (stringp (plist-get owner :activation_id))
+                            (plist-get owner :activation_id)))))
+    (when expected
+      (omnivox-library-apply--uuid expected)
+      (unless (equal expected (plist-get owner :activation_id))
+        (error "Native owner acknowledged a different engine configuration"))
+      ;; External initialization has a 120-second batch budget.  Keep this
+      ;; distinct from the routing deadline, which starts after capabilities.
+      (let* ((omnivox-library--timeout 180)
+             (capabilities (omnivox-library--control process '(:type "capabilities"))))
+        (unless (and (equal (plist-get capabilities :type) "capabilities")
+                     (seq-contains-p (plist-get capabilities :features) "engine_configuration_v1" #'equal))
+          (error "Worker does not advertise engine configuration acknowledgement"))
+        (let ((status (omnivox-library--control process '(:type "engine_configuration_status_v1"))))
+          (unless (and (equal (plist-get status :type) "engine_configuration_status_v1")
+                       (equal expected (plist-get status :activation_id)))
+            (error "Worker acknowledged a different engine configuration"))
+          (process-put process 'omnivox-engine-activation expected))))))
 
 (defun omnivox-library--handle-line (process line)
   "Consume a local owner response LINE from its exact PROCESS connection."
@@ -274,14 +350,22 @@ Cancellation suppresses CALLBACK.  Capability discovery is asynchronous too."
                     :filter #'omnivox-library--service-filter
                     :stderr (get-buffer-create "*Omnivox voice library diagnostics*")))))
 
-(defun omnivox-library--candidate-startup (generation role process)
-  "Resolve native inputs for GENERATION and ROLE using PROCESS voice policy."
+(defun omnivox-library--candidate-startup (generation role process &optional shared)
+  "Resolve GENERATION and ROLE with PROCESS policy and optional SHARED engines."
   (let ((service (omnivox-library--service role)))
     (unwind-protect
-        (let ((snapshot (omnivox-library--request service (list :command "snapshot" :generation generation))))
+        (let ((snapshot (omnivox-library--request
+                         service (append (list :command "snapshot" :generation generation)
+                                         (when (plist-get shared :activation-id)
+                                           (list :startup (plist-get shared :path)
+                                                 :startup_sha256 (plist-get shared :sha256)))))))
           (unless (equal (plist-get snapshot :type) "snapshot") (error "Missing native candidate snapshot"))
+          (when (plist-get shared :activation-id)
+            (unless (equal (plist-get shared :activation-id) (plist-get snapshot :activation_id))
+              (error "Candidate lanes have different engine configurations")))
           (list :role role :startup
                 (list :path (plist-get snapshot :startup) :sha256 (plist-get snapshot :startup_sha256)
+                      :activation-id (plist-get snapshot :activation_id)
                       :policy (omnivox--routing-policy-content process)
                       :registration (omnivox--process-logical-registry-content process))))
       (when (process-live-p service) (delete-process service)))))
@@ -361,6 +445,7 @@ OWNER sends the private prefix through the speech queue."
     (unless registration (error "Actual logical registration is not retained; restart speech first"))
     (list :role role :worker (plist-get owner :worker)
           :startup (list :path (plist-get owner :startup) :sha256 (plist-get owner :startup_sha256)
+                         :activation-id (process-get process 'omnivox-engine-activation)
                          :policy (omnivox-library--policy-snapshot process)
                          :registration (tts--dispatch-copy-data registration))
           :configuration (plist-get status :configuration)
@@ -376,6 +461,7 @@ OWNER sends the private prefix through the speech queue."
 
 (defun omnivox-library--ready (process startup)
   "Establish ordinary readiness on PROCESS with frozen STARTUP settings."
+  (omnivox-library--acknowledge-engines process startup)
   (let ((registration (tts--dispatch-copy-data (plist-get startup :registration))))
     (when (plist-member registration :choice-process-generation)
       (setq registration (plist-put registration :choice-process-generation
@@ -494,6 +580,7 @@ All attempted replacement processes remain owned until retirement is confirmed."
                        (omnivox-library--proof process role)))))
          (publish ()
            (setq tts-speaker-process (aref pair 0) tts-notify-process (aref pair 1))
+           (omnivox-library--remember-engines tts-speaker-process)
            (seq-doseq (process pair)
              (process-put process 'omnivox-library-frozen-policy nil)
              (process-put process 'omnivox-library-frozen-registration nil)
@@ -631,9 +718,11 @@ All attempted replacement processes remain owned until retirement is confirmed."
                                                         (when (member "mbrola" managed) '(:mbrola t))
                                                         (when (member "rhvoice" managed) '(:rhvoice t)))))
                (candidate (plist-get staged :candidate))
+               (main-startup (omnivox-library--candidate-startup generation 'speaker (aref old-pair 0)))
                (startups
-                (vector (omnivox-library--candidate-startup generation 'speaker (aref old-pair 0))
-                        (omnivox-library--candidate-startup generation 'notification (aref old-pair 1))))
+                (vector main-startup
+                        (omnivox-library--candidate-startup generation 'notification (aref old-pair 1)
+                                                            (plist-get main-startup :startup))))
                (eligible (omnivox-library--eligible index (append (plist-get (aref previous 0) :eligible-voices) nil)
                                                     managed (plist-get (plist-get (aref startups 0) :startup) :policy)))
                (removed (seq-difference (plist-get (aref previous 0) :eligible-voices) eligible #'equal))
