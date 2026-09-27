@@ -202,6 +202,73 @@
         (should (eq (cadr command-presentation) 'markdown))
         (should (eq (caddr command-presentation) 'navigation))))))
 
+(ert-deftest emacsvox-markdown-list-links-survive-line-navigation ()
+  "Links inside lists reach speech in both normal and clean reading modes."
+  (require 'emacsvox-advice)
+  (dolist (reading-mode '(nil t))
+    (dolist (case '(("- [README.md](README.md)" "item README.md link")
+                    ("1. [README.md](README.md)" "item README.md link")
+                    ("- [guide][ref]" "item guide link")
+                    ("- ![diagram](diagram.png)" "item image: diagram")
+                    ("- plain item" "item plain item")
+                    ("- [x] [guide](guide.md)" "checked: guide link")))
+      (with-temp-buffer
+        (insert "before\n" (car case) "\nafter\n")
+        (markdown-mode)
+        (let ((emacsvox-markdown-reading-mode reading-mode)
+              (line-move-visual nil)
+              (visual-line-mode nil)
+              (tts-quiet nil)
+              (tts-speaker-process 'speaker)
+              (emacsvox-aural-presentation-history nil)
+              speech)
+          (cl-letf
+              (((symbol-function 'process-live-p)
+                (lambda (process) (eq process 'speaker)))
+               ((symbol-function 'tts-initialize)
+                (lambda () (ert-fail "Reinitialized a live speaker")))
+               ((symbol-function 'tts-speak)
+                (lambda (text) (push (substring-no-properties text) speech))))
+            (dolist (command '(next-line previous-line))
+              (setq speech nil)
+              (goto-char (point-min))
+              (when (eq command 'previous-line) (forward-line 2))
+              (call-interactively command)
+              (should (= (line-number-at-pos) 2))
+              (should
+               (equal speech
+                      (list (if reading-mode (cadr case) (car case))))))))))))
+
+(ert-deftest emacsvox-markdown-list-links-preserve-link-navigation-cues ()
+  "Link commands within lists submit speech and retain their button cue."
+  (dolist (line '("- [README.md](README.md)" "1. [README.md](README.md)"))
+    (with-temp-buffer
+      (insert "before\n" line "\nafter\n")
+      (markdown-mode)
+      (let ((tts-quiet nil)
+            (tts-speaker-process 'speaker)
+            (emacsvox-aural-presentation-history nil)
+            speech facts)
+        (cl-letf
+            (((symbol-function 'process-live-p)
+              (lambda (process) (eq process 'speaker)))
+             ((symbol-function 'tts-initialize)
+              (lambda () (ert-fail "Reinitialized a live speaker")))
+             ((symbol-function 'tts-speak)
+              (lambda (text)
+                (push (substring-no-properties text) speech)
+                (setq facts (copy-tree emacsvox-aural-submission-facts)))))
+          (dolist (command '(markdown-next-link markdown-previous-link))
+            (setq speech nil facts nil)
+            (goto-char (if (eq command 'markdown-next-link)
+                           (point-min) (point-max)))
+            (call-interactively command)
+            (should (= (line-number-at-pos) 2))
+            (should (equal speech (list line)))
+            (should
+             (equal (emacsvox-markdown-test--compatibility-cues facts 'navigation)
+                    '(button)))))))))
+
 (ert-deftest emacsvox-markdown-compatibility-cues-remain-stable ()
   "Data-only Markdown defaults preserve established line and command cues."
   (should

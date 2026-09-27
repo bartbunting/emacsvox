@@ -407,7 +407,10 @@ when the distinction is relevant to compatibility presentation."
      (when heading (list :level (plist-get heading :level)))
      (when visibility (list :visibility visibility))
      (when fence (list :markdown-language fence))
-     (when list-kind (list :markdown-list-kind list-kind))
+     ;; A link or other structure can take precedence over its list container.
+     ;; List attributes must describe the selected role, not just the syntax.
+     (when (and list-kind (memq role '(markdown-list-item markdown-task)))
+       (list :markdown-list-kind list-kind))
      (when task (list :markdown-task-state task))
      (when navigation-kind
        (list :markdown-navigation-kind navigation-kind)))))
