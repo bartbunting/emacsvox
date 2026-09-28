@@ -100,6 +100,7 @@
     "emacsvox-aural-voice-drafts.el"
     "emacsvox-aural-voice-editing.el"
     "emacsvox-aural-voice-editor.el"
+    "emacsvox-aural-voice-bulk.el"
     "emacsvox-aural-voice-engine-controls.el"
     "emacsvox-aural-voice-context.el"
     "emacsvox-aural-profile-service.el"
