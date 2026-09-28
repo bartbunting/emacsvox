@@ -383,11 +383,13 @@
 
 (ert-deftest emacsvox-launcher-falls-back-to-native-omnivox ()
   "Without a staged WSL runtime, the launcher uses Omnivox from PATH."
+  ;; Configuration fixtures omit the streaming log filter: the synchronous
+  ;; fallback keeps cleanup independent of an orphaned writer.  Streaming
+  ;; logging is covered by `emacsvox-launcher-rotates-omnivox-stderr-by-size'.
   (let* ((directory (make-temp-file "emacsvox-native-launcher-" t))
          (server-directory (expand-file-name "servers" directory))
          (binary-directory (expand-file-name "bin" directory))
          (launcher (expand-file-name "omnivox" server-directory))
-         (filter (expand-file-name "omnivox-log-filter" server-directory))
          (program (expand-file-name "omnivox" binary-directory))
          (log-directory (expand-file-name "logs" directory))
          (process-environment (copy-sequence process-environment)))
@@ -399,13 +401,9 @@
            (expand-file-name
             "servers/omnivox" emacsvox-launcher-tests--root)
            launcher)
-          (copy-file
-           (expand-file-name
-            "servers/omnivox-log-filter" emacsvox-launcher-tests--root)
-           filter)
           (with-temp-file program
             (insert "#!/bin/sh\nprintf 'native:%s\\n' \"$*\"\n"))
-          (dolist (file (list launcher filter program))
+          (dolist (file (list launcher program))
             (set-file-modes file #o700))
          (setenv "PATH"
                   (concat binary-directory path-separator (getenv "PATH")))
@@ -427,7 +425,6 @@
          (runtime-directory
           (expand-file-name "omnivox-bin/current" server-directory))
          (launcher (expand-file-name "omnivox" server-directory))
-         (filter (expand-file-name "omnivox-log-filter" server-directory))
          (program (expand-file-name "custom-omnivox.Exe" directory))
          (staged-program (expand-file-name "omnivox.exe" runtime-directory))
          (log-directory (expand-file-name "logs" directory))
@@ -439,15 +436,11 @@
            (expand-file-name
             "servers/omnivox" emacsvox-launcher-tests--root)
            launcher)
-          (copy-file
-           (expand-file-name
-            "servers/omnivox-log-filter" emacsvox-launcher-tests--root)
-           filter)
           (with-temp-file program
             (insert "#!/bin/sh\nprintf 'configured:%s\\n' \"$*\"\n"))
           (with-temp-file staged-program
             (insert "#!/bin/sh\nprintf 'staged:%s\\n' \"$*\"\n"))
-          (dolist (file (list launcher filter program staged-program))
+          (dolist (file (list launcher program staged-program))
             (set-file-modes file #o700))
           (setenv "OMNIVOX_PROGRAM" program)
           (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE"
@@ -490,7 +483,6 @@
          (runtime-directory
           (expand-file-name "omnivox-bin/current" server-directory))
          (launcher (expand-file-name "omnivox" server-directory))
-         (filter (expand-file-name "omnivox-log-filter" server-directory))
          (program (expand-file-name "omnivox.exe" runtime-directory))
          (model "C:\\Models\\voice.onnx")
          (rhvoice-library "C:\\RHVoice\\RHVoice.dll")
@@ -505,10 +497,6 @@
            (expand-file-name
             "servers/omnivox" emacsvox-launcher-tests--root)
            launcher)
-          (copy-file
-           (expand-file-name
-            "servers/omnivox-log-filter" emacsvox-launcher-tests--root)
-           filter)
           (with-temp-file (expand-file-name "piper-model.path" runtime-directory)
             (insert model "\n"))
           (with-temp-file
@@ -529,7 +517,7 @@
              "printf 'RHVOICE_CONFIG=%s\\n' \"${OMNIVOX_RHVOICE_CONFIG-}\"\n"
              "printf 'AUDIO_OUTPUT=%s\\n' \"${OMNIVOX_AUDIO_OUTPUT-}\"\n"
              "printf 'WSLENV=%s\\n' \"${WSLENV-}\"\n"))
-          (dolist (file (list launcher filter program))
+          (dolist (file (list launcher program))
             (set-file-modes file #o700))
           (dolist (name '("OMNIVOX_PIPER_MODEL"
                           "OMNIVOX_RHVOICE_LIBRARY"
@@ -586,7 +574,6 @@
          (runtime-directory
           (expand-file-name "omnivox-bin/current" server-directory))
          (launcher (expand-file-name "omnivox" server-directory))
-         (filter (expand-file-name "omnivox-log-filter" server-directory))
          (configured-program (expand-file-name "installed omnivox.exe" directory))
          (staged-program (expand-file-name "omnivox.exe" runtime-directory))
          (config-file (expand-file-name "config/omnivox-program" directory))
@@ -599,17 +586,13 @@
           (copy-file
            (expand-file-name "servers/omnivox" emacsvox-launcher-tests--root)
            launcher)
-          (copy-file
-           (expand-file-name
-            "servers/omnivox-log-filter" emacsvox-launcher-tests--root)
-           filter)
           (with-temp-file configured-program
             (insert "#!/bin/sh\nprintf 'user-config:%s\\n' \"$*\"\n"))
           (with-temp-file staged-program
             (insert "#!/bin/sh\nprintf 'staged:%s\\n' \"$*\"\n"))
           (with-temp-file config-file
             (insert configured-program "\n"))
-          (dolist (file (list launcher filter configured-program staged-program))
+          (dolist (file (list launcher configured-program staged-program))
             (set-file-modes file #o700))
           (setenv "OMNIVOX_PROGRAM" nil)
           (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE" config-file)

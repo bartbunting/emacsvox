@@ -159,7 +159,7 @@ windows-preview-publish:
 compat-test: check-emacs config
 	$(EMACS) -Q --batch -l test/run-compat-tests.el
 
-core-test: check-emacs
+core-test: check-emacs config
 	$(EMACS) -Q --batch -l test/run-core-tests.el
 
 test-deps: check-emacs
