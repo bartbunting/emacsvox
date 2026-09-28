@@ -1,0 +1,318 @@
+{
+  "description": "Shared table browser controls, logical navigation and copying, with legacy local bindings removed",
+  "base_commit": "85cd277bf9651e87b62136fe29d7a8f9275d4a80",
+  "emacs": "31.0.90",
+  "source_sha256": {
+    "lisp/emacsvox-table-ui.el": "7399d80af267607759dd246e1dd6cea0634a9e47739230c17d154f030786d42d",
+    "test/emacsvox-table-ui-tests.el": "61ded56e66b782950c673757505980a6e0dc942069757f597ecd2be5cd1958f2"
+  },
+  "suites": {
+    "source": {
+      "case_count": 28,
+      "cases": [
+        {
+          "name": "emacsvox-table-reader-arrow-entry-counts-and-boundaries",
+          "status": "passed",
+          "elapsed_seconds": 0.760773
+        },
+        {
+          "name": "emacsvox-table-reader-arrow-entry-moves-and-speaks-once",
+          "status": "passed",
+          "elapsed_seconds": 0.008928
+        },
+        {
+          "name": "emacsvox-table-reader-arrow-entry-preserves-other-bindings",
+          "status": "passed",
+          "elapsed_seconds": 0.002158
+        },
+        {
+          "name": "emacsvox-table-reader-blank-ragged-headerless-and-boundaries",
+          "status": "passed",
+          "elapsed_seconds": 0.005613
+        },
+        {
+          "name": "emacsvox-table-reader-discovery-skips-code-and-restores-prose",
+          "status": "passed",
+          "elapsed_seconds": 0.003438
+        },
+        {
+          "name": "emacsvox-table-reader-equivalent-source-navigation",
+          "status": "passed",
+          "elapsed_seconds": 0.00454
+        },
+        {
+          "name": "emacsvox-table-reader-existing-table-prefix-survives",
+          "status": "passed",
+          "elapsed_seconds": 8.4e-05
+        },
+        {
+          "name": "emacsvox-table-reader-keys-are-explicit-and-editing-restores",
+          "status": "passed",
+          "elapsed_seconds": 0.006239
+        },
+        {
+          "name": "emacsvox-table-reader-logical-copy-and-formatting",
+          "status": "passed",
+          "elapsed_seconds": 0.006275
+        },
+        {
+          "name": "emacsvox-table-reader-markdown-pipe-prose-before-table",
+          "status": "passed",
+          "elapsed_seconds": 0.000831
+        },
+        {
+          "name": "emacsvox-table-reader-markdown-quoting-and-optional-pipes",
+          "status": "passed",
+          "elapsed_seconds": 0.002215
+        },
+        {
+          "name": "emacsvox-table-reader-org-links-and-separators",
+          "status": "passed",
+          "elapsed_seconds": 0.003455
+        },
+        {
+          "name": "emacsvox-table-reader-rejects-prose-and-code",
+          "status": "passed",
+          "elapsed_seconds": 0.001644
+        },
+        {
+          "name": "emacsvox-table-reader-rich-content-preserves-literal-code",
+          "status": "passed",
+          "elapsed_seconds": 0.00048
+        },
+        {
+          "name": "emacsvox-table-reader-settings-are-local",
+          "status": "passed",
+          "elapsed_seconds": 0.000862
+        },
+        {
+          "name": "emacsvox-table-reader-submissions-resolve-native-semantic-plans",
+          "status": "passed",
+          "elapsed_seconds": 0.012531
+        },
+        {
+          "name": "emacsvox-table-ui-character-motion-keeps-model-current",
+          "status": "passed",
+          "elapsed_seconds": 0.301013
+        },
+        {
+          "name": "emacsvox-table-ui-csv-distinguishes-empty-fields-and-blank-records",
+          "status": "passed",
+          "elapsed_seconds": 8.2e-05
+        },
+        {
+          "name": "emacsvox-table-ui-csv-file-preserves-open-unsaved-source",
+          "status": "passed",
+          "elapsed_seconds": 0.033832
+        },
+        {
+          "name": "emacsvox-table-ui-csv-keeps-logical-fields",
+          "status": "passed",
+          "elapsed_seconds": 0.000309
+        },
+        {
+          "name": "emacsvox-table-ui-csv-preserves-unrelated-scratch",
+          "status": "passed",
+          "elapsed_seconds": 8e-05
+        },
+        {
+          "name": "emacsvox-table-ui-csv-rejects-empty-and-malformed-input",
+          "status": "passed",
+          "elapsed_seconds": 0.000228
+        },
+        {
+          "name": "emacsvox-table-ui-csv-view-retains-multiline-cell-positions",
+          "status": "passed",
+          "elapsed_seconds": 0.000336
+        },
+        {
+          "name": "emacsvox-table-ui-inspection-copy-and-preferences",
+          "status": "passed",
+          "elapsed_seconds": 0.000819
+        },
+        {
+          "name": "emacsvox-table-ui-native-plans",
+          "status": "passed",
+          "elapsed_seconds": 0.003696
+        },
+        {
+          "name": "emacsvox-table-ui-old-local-bindings-removed-prefix-preserved",
+          "status": "passed",
+          "elapsed_seconds": 0.000344
+        },
+        {
+          "name": "emacsvox-table-ui-search-filters-and-sort-after-motion",
+          "status": "passed",
+          "elapsed_seconds": 0.575883
+        },
+        {
+          "name": "emacsvox-table-ui-shared-navigation-and-boundaries",
+          "status": "passed",
+          "elapsed_seconds": 0.000798
+        }
+      ],
+      "log_sha256": "51348823d5ef805f9e0a7dbd49490db8c85564e121c88beb8b334224630ef8c9"
+    },
+    "compiled": {
+      "case_count": 28,
+      "cases": [
+        {
+          "name": "emacsvox-table-reader-arrow-entry-counts-and-boundaries",
+          "status": "passed",
+          "elapsed_seconds": 0.792277
+        },
+        {
+          "name": "emacsvox-table-reader-arrow-entry-moves-and-speaks-once",
+          "status": "passed",
+          "elapsed_seconds": 0.004716
+        },
+        {
+          "name": "emacsvox-table-reader-arrow-entry-preserves-other-bindings",
+          "status": "passed",
+          "elapsed_seconds": 0.001627
+        },
+        {
+          "name": "emacsvox-table-reader-blank-ragged-headerless-and-boundaries",
+          "status": "passed",
+          "elapsed_seconds": 0.002464
+        },
+        {
+          "name": "emacsvox-table-reader-discovery-skips-code-and-restores-prose",
+          "status": "passed",
+          "elapsed_seconds": 0.00199
+        },
+        {
+          "name": "emacsvox-table-reader-equivalent-source-navigation",
+          "status": "passed",
+          "elapsed_seconds": 0.002569
+        },
+        {
+          "name": "emacsvox-table-reader-existing-table-prefix-survives",
+          "status": "passed",
+          "elapsed_seconds": 6.9e-05
+        },
+        {
+          "name": "emacsvox-table-reader-keys-are-explicit-and-editing-restores",
+          "status": "passed",
+          "elapsed_seconds": 0.002826
+        },
+        {
+          "name": "emacsvox-table-reader-logical-copy-and-formatting",
+          "status": "passed",
+          "elapsed_seconds": 0.002169
+        },
+        {
+          "name": "emacsvox-table-reader-markdown-pipe-prose-before-table",
+          "status": "passed",
+          "elapsed_seconds": 0.000466
+        },
+        {
+          "name": "emacsvox-table-reader-markdown-quoting-and-optional-pipes",
+          "status": "passed",
+          "elapsed_seconds": 0.001915
+        },
+        {
+          "name": "emacsvox-table-reader-org-links-and-separators",
+          "status": "passed",
+          "elapsed_seconds": 0.0028
+        },
+        {
+          "name": "emacsvox-table-reader-rejects-prose-and-code",
+          "status": "passed",
+          "elapsed_seconds": 0.001305
+        },
+        {
+          "name": "emacsvox-table-reader-rich-content-preserves-literal-code",
+          "status": "passed",
+          "elapsed_seconds": 0.0003
+        },
+        {
+          "name": "emacsvox-table-reader-settings-are-local",
+          "status": "passed",
+          "elapsed_seconds": 0.000523
+        },
+        {
+          "name": "emacsvox-table-reader-submissions-resolve-native-semantic-plans",
+          "status": "passed",
+          "elapsed_seconds": 0.051861
+        },
+        {
+          "name": "emacsvox-table-ui-character-motion-keeps-model-current",
+          "status": "passed",
+          "elapsed_seconds": 0.279408
+        },
+        {
+          "name": "emacsvox-table-ui-csv-distinguishes-empty-fields-and-blank-records",
+          "status": "passed",
+          "elapsed_seconds": 5.3e-05
+        },
+        {
+          "name": "emacsvox-table-ui-csv-file-preserves-open-unsaved-source",
+          "status": "passed",
+          "elapsed_seconds": 0.029489
+        },
+        {
+          "name": "emacsvox-table-ui-csv-keeps-logical-fields",
+          "status": "passed",
+          "elapsed_seconds": 0.000118
+        },
+        {
+          "name": "emacsvox-table-ui-csv-preserves-unrelated-scratch",
+          "status": "passed",
+          "elapsed_seconds": 6.1e-05
+        },
+        {
+          "name": "emacsvox-table-ui-csv-rejects-empty-and-malformed-input",
+          "status": "passed",
+          "elapsed_seconds": 0.000355
+        },
+        {
+          "name": "emacsvox-table-ui-csv-view-retains-multiline-cell-positions",
+          "status": "passed",
+          "elapsed_seconds": 0.00037
+        },
+        {
+          "name": "emacsvox-table-ui-inspection-copy-and-preferences",
+          "status": "passed",
+          "elapsed_seconds": 0.000777
+        },
+        {
+          "name": "emacsvox-table-ui-native-plans",
+          "status": "passed",
+          "elapsed_seconds": 0.004961
+        },
+        {
+          "name": "emacsvox-table-ui-old-local-bindings-removed-prefix-preserved",
+          "status": "passed",
+          "elapsed_seconds": 0.000406
+        },
+        {
+          "name": "emacsvox-table-ui-search-filters-and-sort-after-motion",
+          "status": "passed",
+          "elapsed_seconds": 0.536631
+        },
+        {
+          "name": "emacsvox-table-ui-shared-navigation-and-boundaries",
+          "status": "passed",
+          "elapsed_seconds": 0.000452
+        }
+      ],
+      "log_sha256": "f44c9d6dabcc768fcf794083836825aee99a74235e84c3995646e0dfdb66a57e"
+    },
+    "graphical_compiled": {
+      "case_count": 1,
+      "cases": [
+        {
+          "name": "emacsvox-table-ui-graphical-multiline-navigation",
+          "status": "passed",
+          "elapsed_seconds": 0.02962
+        }
+      ],
+      "log_sha256": "931245d5e68e88e12123828eea10e636d00c54b7707afe2bdd8db6a101df0510"
+    }
+  },
+  "limitations": [
+    "Listening acceptance pending; live sessions were not reloaded",
+    "No navigation performance remeasurement; ERT timings are test durations, not latency benchmarks"
+  ]
+}

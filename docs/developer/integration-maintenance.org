@@ -17,8 +17,10 @@ changing an integration.
 ~emacsvox-table-reader.el~ supplies common cell/row/column formatting, copying,
 and movement decisions. Agent Shell retains its rendered source-property
 adapter, contextual map, public commands, and preferences. Markdown and Org
-register source adapters and use an explicit reader minor mode. The existing
-table browser and tabulated-list integrations are separate.
+register source adapters and use an explicit reader minor mode. The table
+browser uses a buffer-local adapter for shared inspection, copying and speech
+preferences. Its own movement commands keep the standalone view at vertical
+boundaries. Tabulated-list integration remains separate.
 
 An adapter supplies a fresh cell snapshot and a native Aural submission
 function. Snapshots contain complete logical rows, flat source positions in
@@ -26,8 +28,19 @@ row order, table bounds, optional header information, and zero-based internal
 coordinates. Movement rejects missing cells and handles boundaries before
 changing point. Source adapters rebuild snapshots for each command; source
 edits end explicit reading. No native table editing command is used for
-navigation. Presentation remains under each integration's registered Aural
+navigation. Presentation remains under each integration's Aural
 module and role, with one main-lane submission per reader action.
+
+The read-only table browser caches logical string rows when rendering. Text
+properties map every character, including embedded line breaks and delimiters,
+to a model cell. Pre/post-command hooks synchronize the model after ordinary
+character movement; snapshot extraction also synchronizes it. Browser movement
+uses the model and its rendered position index. New reader actions submit under
+module ~table-ui~, with role ~field~ for cells and explicit main-lane delivery.
+The local browser map is independent of the legacy speech-prefix map. CSV
+parsing preserves quoted fields and visited source buffers before constructing
+the view. Sorting constructs a new view and carries over both filters and the
+shared speech preferences.
 
 The shared prefix adds only previously unused keys: ~C-r~ toggles source-table
 reading, and ~[~ / ~]~ discover tables. Printable reader keys are contextual.
@@ -49,7 +62,11 @@ real wrapped-table movement and copying. The source-reader graphical case
 graphical Emacs with Markdown Mode installed; its batch skip is not a pass.
 Check source text and modified state, effective keys, complete wrapped values,
 source edits, code exclusion, title preferences, and native Aural submissions.
-Listening acceptance is separate from submission and graphical checks.
+Browser coverage lives in ~test/emacsvox-table-ui-tests.el~; use
+~EMACSVOX_TABLE_UI_TEST_LOAD=compiled~ in a fresh Emacs after building to verify
+the compiled implementation. Its ~emacsvox-table-ui-graphical-multiline-navigation~
+case requires a graphical display and checks actual wrapping and logical cell
+movement. Listening acceptance is separate from submission and graphical checks.
 
 ** Source checkout and byte-code lifecycle
 :PROPERTIES:

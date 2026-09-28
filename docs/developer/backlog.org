@@ -48,9 +48,10 @@ binding audit records current live and pinned dependencies, existing key
 conflicts and 34 passing baseline checks on each dependency set. The approved
 first milestone implements shared logical operations for Agent Shell, Markdown
 and Org, explicit source-table reading, and vertical exits to prose. Its
-implementation and acceptance evidence are recorded in the plan. Subsequent
-browser/CSV, tabulated-list, EWW, table.el and SES adapters still need their
-mode-specific binding and behaviour review.
+implementation and acceptance evidence are recorded in the plan. The browser/CSV
+adapter now uses shared controls and retains search, filters and sorting.
+Listening acceptance is pending. Tabulated-list, EWW, table.el and SES adapters
+still need their mode-specific binding and behaviour review.
 
 ** TODO Verify streaming macOS system voices with Emacsvox
 

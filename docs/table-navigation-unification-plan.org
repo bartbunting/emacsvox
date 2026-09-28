@@ -252,15 +252,20 @@ or the speech table prefix. The speech table prefix
 =C-r= and =q= restore normal keys; source edits or movement outside the table
 also end reading. Prefix =[ / ]= discover tables from prose, while =t/T= are
 contextual inside the reader. Agent Shell keeps its automatic rendered-table
-context and existing prompt guards. Future application adapters still require
+context and existing prompt guards. The standalone browser applies its reading
+map immediately and q closes the view. Future application adapters still require
 their own activation review.
 
 ** PARTLY RESOLVED D2. Shared keys and compatibility
 
 The accepted first-milestone map is implemented for Agent Shell, Markdown and
 Org, including contextual Control-Meta arrow entry in source tables. Their
-binding audits and regression checks are complete. The following decisions
-apply to the remaining application adapters.
+binding audits and regression checks are complete. The browser migration is
+also approved: replace conflicting local controls with the shared map and remove
+old local aliases. Keep the speech-prefix commands and browser search, filters,
+sorting, register copying and whole-table clipboard. Top/bottom remain on
+=M-</M->=; there is no previous-table =T= in a standalone view. The following
+decisions apply to the remaining application adapters.
 
 Approve the candidate map after a complete conflict audit. Existing conflicts
 include Org Meta-arrows, generic table-browser =r/c/T/k= meanings, tabulated-list
@@ -269,9 +274,9 @@ structural-navigation bindings outside tables. Decide which legacy bindings stay
 as aliases, which need migration, and how displaced commands remain accessible.
 Do not silently change global or ordinary editing bindings.
 
-** OPEN D3. Full-row defaults in application tables
+** PARTLY RESOLVED D3. Full-row defaults in application tables
 
-The maintainer explicitly requested full-row Up/Down in Agent Shell. Decide
+The maintainer approved full-row Up/Down in Agent Shell and the table browser. Decide
 whether that becomes the default everywhere or only within explicit table
 reading. Recommended starting point: full-row movement in the shared reader,
 while preserving application-specific selected-cell navigation until reviewed.
@@ -282,7 +287,10 @@ This includes the Aural editors and applications derived from tabulated-list.
 The first milestone recognizes a single separator-marked header row, uses
 one-based data coordinates, announces empty cells as "blank", and suppresses
 duplicate header/value text. Remaining adapters need an explicit policy where
-their source supplies no reliable header metadata.
+their source supplies no reliable header metadata. The browser retains its
+existing first-row header model and padding for ragged rows. Its spoken
+coordinates use one-based data rows/columns; filter indexes and jump prompts
+remain zero-based, including the header row.
 
 Choose how headers are detected or explicitly selected, including tables without
 headers, multiple header rows, row titles, and mid-table separators. Do not
@@ -296,14 +304,19 @@ Vertical moves beyond a table leave for adjacent prose; if no surrounding
 content exists, announce that boundary and stay. Horizontal boundaries and
 missing ragged-row cells keep point unchanged. Counts may be zero or negative.
 Meta-Up/Down exit only in the reader, preserving Org's ordinary editing keys.
-Hidden-row and standalone application-table policies remain future work.
+The standalone browser reports vertical and horizontal boundaries without
+moving point. Hidden-row policies in other application tables remain future work.
 
 ** PARTLY RESOLVED D6. Shared implementation and source positions
 
 ~emacsvox-table-reader.el~ now provides common formatting, copying and movement
 decisions. Markdown and Org supply fresh source snapshots; Agent Shell retains
-its rendered-position adapter. Source edits end explicit reading. The remaining
-work is adapting application data and display positions to this boundary.
+its rendered-position adapter. Source edits end explicit reading. The browser
+caches string rows when rendering and synchronizes its model from cell text
+properties after character movement. Shared inspections use a buffer-local
+adapter; movement uses the existing model/position index with standalone
+boundaries. Reader actions submit under =table-ui= on the main lane. The
+remaining work is adapting other applications to this boundary.
 
 Choose how much of the existing table model/UI to reuse, extend, or wrap. Its
 vector data and first-row/column header assumptions do not by themselves model
@@ -320,8 +333,11 @@ view should not become a requirement for reading Markdown or Org.
 ** PARTLY RESOLVED D7. Preferences and migration
 
 Markdown and Org share title/data-order defaults and buffer-local overrides;
-Agent Shell retains its established settings. Browser filters and application
-preferences still need a compatibility policy for their own migrations.
+Agent Shell retains its established settings. The browser now shares the
+reader's title/data-order preferences. Its f/g filters remain explicit and
+shared row movement always reads the whole row. Sorting preserves both filters
+and shared preferences. Legacy speech-prefix controls retain their functions.
+Other application preferences still need a policy for their own migrations.
 
 Choose shared defaults and per-buffer/mode overrides for headers, data order,
 row versus cell feedback, and filtered reading. Map existing Org, Agent Shell,
@@ -333,7 +349,9 @@ integrations have different roles and metadata, not just different strings.
 
 The first milestone copies logical plain text, uses tabs between row cells and
 newlines between column cells, and preserves full wrapped values. Links use
-their labels and inline code its literal text. Remaining work concerns other
+their labels and inline code its literal text. The browser applies the same
+copy controls to decoded logical fields, including embedded line breaks, and
+retains its whole-table clipboard on K. Remaining work concerns other
 adapters' rich content and formula values.
 
 Decide whether shared copy commands return displayed text, source markup, or
@@ -387,11 +405,15 @@ and the normal meaning of Tab/Return outside the shared reading context.
 
 CSV preparation now preserves quoted commas, doubled quotes, multiline fields
 and empty fields without changing or closing an already visited source buffer.
-Malformed or empty input is rejected before creating a view. This prerequisite
-does not change the browser's navigation bindings; their migration is pending.
+Malformed or empty input is rejected before creating a view. The approved
+browser migration now uses shared row/cell reading, copying and speech
+preferences, removes displaced local bindings, and preserves the speech-prefix
+commands. Character movement tracks the model cell; filtering, searching and
+sorting remain available. Standalone browser boundaries retain point in the
+view, and q closes it. Listening acceptance remains pending.
 
-Migrate the table browser/CSV and tabulated-list consumers in independently
-reviewable steps, preserving filters, searching, and application actions. Add
+Migrate tabulated-list consumers in an independently reviewable step,
+preserving searching and application actions. Add
 EWW, table.el, and SES according to their reviewed capabilities and D9. Revisit
 each application's deliberate selected-cell behavior under D3.
 
@@ -444,7 +466,7 @@ sections. No running user session or saved preferences were changed.
 
 * Next action
 
-Complete listening acceptance in a fresh Emacs. Then review browser/CSV and
-tabulated-list behaviour under D2-D9 before extending the reader to those
-applications. Their native bindings, editing feedback and selected-cell defaults
-remain separate decisions; this first milestone does not migrate them.
+Complete listening acceptance for the source readers and table browser in a
+fresh Emacs. Then review tabulated-list behaviour under D2-D9 before extending
+the reader there. Its native application bindings, editing feedback and
+selected-cell defaults remain a separate decision.

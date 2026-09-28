@@ -158,8 +158,37 @@ produces an error before a table view is created.
 
 Browsing preserves the source text. If the file is already open, its buffer
 and unsaved edits remain available, and the view uses those current contents.
-The CSV browser still has its established navigation, searching and filtering
-commands; use @@texinfo:@kbd{C-h m}@@ there for its current keys.
+The browser uses the shared table controls immediately; there is no separate
+reading-mode toggle:
+
+- Up/Down and ~C-M-Up/Down~ move by logical row and read the whole row.
+- ~C-M-Left/Right~ and Tab/Shift-Tab move by cell. Plain Left/Right and
+  ~C-b/C-f~ move by character; ~C-p/C-n~ move by logical row.
+- Return or Space reads the cell; ~r~ reads the row and ~c~ reads the column.
+- ~.~ gives coordinates and ~=~ gives dimensions. The first row supplies
+  column titles and is announced separately from the data rows.
+- ~w~ or ~k k~ copies the cell, ~k r~ copies the row with tabs between cells,
+  and ~k c~ copies the column with newlines between cells. ~K~ copies the
+  whole table to the table clipboard for ~emacsvox-table-paste-from-clipboard~.
+- ~a~ changes column titles, row titles, or data order for the view, using
+  the shared reader preferences. ~q~ closes the view.
+
+These replace the old browser cell-arrow, header-reading, automatic-speech,
+and single-key table-copy bindings. The old local aliases ~b~, ~n~, ~p~, ~A~,
+~B~, ~E~, and ~T~ are removed. The speech-prefix table commands remain available.
+
+Search with ~s~, ~R~ (row), ~C~ (column), or ~h~ (headers); ~#~ sorts on the
+current column. ~M-<~ and ~M->~ jump to the top and bottom. At a table edge,
+movement reports the boundary and leaves point in place.
+
+Filters remain on ~f~ (row) and ~g~ (column); a prefix argument requests a new
+filter. Filter indexes and the ~j~ jump prompt retain zero-based model
+coordinates, including the header row, even though spoken coordinates count
+data rows and columns from one. For example, a row filter ~(0 "value" 2)~
+reads the first column, the word “value”, and the third column. ~M-l~ and ~M-s~
+load and save filters. Filters are explicit inspections; shared row movement
+always reads the whole row. Sorting preserves filters and shared speech
+preferences. Use @@texinfo:@kbd{C-h m}@@ for the full browser key map.
 
 ** Web Browsing With EWW
 :PROPERTIES:

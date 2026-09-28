@@ -15,8 +15,8 @@ END-INFO-DIR-ENTRY
 Indirect:
 emacsvox-reference.info-1: 397
 emacsvox-reference.info-2: 305704
-emacsvox-reference.info-3: 603108
-emacsvox-reference.info-4: 1069112
+emacsvox-reference.info-3: 601875
+emacsvox-reference.info-4: 1068463
 
 Tag Table:
 (Indirect)
@@ -268,78 +268,78 @@ Node: emacsvox-tab-bar546306
 Node: emacsvox-table546738
 Node: emacsvox-table-reader547012
 Node: emacsvox-table-ui553478
-Node: emacsvox-tabulate568446
-Node: emacsvox-tabulated-list568759
-Node: emacsvox-tar569811
-Node: emacsvox-tcl570597
-Node: emacsvox-tempo570809
-Node: emacsvox-tetris571185
-Node: emacsvox-texinfo573367
-Node: emacsvox-todo-mode573604
-Node: emacsvox-transient573939
-Node: emacsvox-treesit576783
-Node: emacsvox-typo577269
-Node: emacsvox-url-template577609
-Node: emacsvox-vdiff579914
-Node: emacsvox-version581257
-Node: emacsvox-vertico581655
-Node: emacsvox-view581961
-Node: emacsvox-vterm582424
-Node: emacsvox-wdired582945
-Node: emacsvox-we583196
-Node: emacsvox-websearch595891
-Node: emacsvox-webspace599941
-Node: emacsvox-welcome603108
-Node: emacsvox-which-key606263
-Node: emacsvox-widget607149
-Node: emacsvox-windmove608637
-Node: emacsvox-windows-speech608972
-Node: emacsvox-wizards613150
-Node: emacsvox-woman645202
-Node: emacsvox-xkcd645430
-Node: emacsvox-xref646040
-Node: emacsvox-xslt646339
-Node: emacsvox-yaml648035
-Node: emacsvox-yasnippet648291
-Node: espeak-voices648535
-Node: g-utils649154
-Node: gm-nnir649608
-Node: gmaps650251
-Node: gweb655566
-Node: ladspa655895
-Node: light657774
-Node: mac-voices658860
-Node: omaps659269
-Node: omnivox-catalogue659496
-Node: omnivox-choice-codec659832
-Node: omnivox-engine-settings660254
-Node: omnivox-espeak-variants660740
-Node: omnivox-library661112
-Node: omnivox-library-apply661531
-Node: omnivox-native-codec662193
-Node: omnivox-parameters662628
-Node: omnivox-parameters-codec663064
-Node: omnivox-preview663428
-Node: omnivox-remote663847
-Node: omnivox-voices664249
-Node: outloud-voices664576
-Node: pip665174
-Node: plain-voices666935
-Node: soundscape667293
-Node: sox671959
-Node: sox-gen674617
-Node: swiftmac-voices680926
-Node: tetris681172
-Node: tts-queue-state681331
-Node: tts-speak681654
-Node: voice-defs697998
-Node: voice-setup703647
-Node: xbacklight706796
-Node: URL Templates707971
-Node: Reference Concept Index713270
-Node: Key Index713454
-Node: Function Index745664
-Node: Variable Index1069112
+Node: emacsvox-tabulate567213
+Node: emacsvox-tabulated-list567526
+Node: emacsvox-tar568578
+Node: emacsvox-tcl569364
+Node: emacsvox-tempo569576
+Node: emacsvox-tetris569952
+Node: emacsvox-texinfo572134
+Node: emacsvox-todo-mode572371
+Node: emacsvox-transient572706
+Node: emacsvox-treesit575550
+Node: emacsvox-typo576036
+Node: emacsvox-url-template576376
+Node: emacsvox-vdiff578681
+Node: emacsvox-version580024
+Node: emacsvox-vertico580422
+Node: emacsvox-view580728
+Node: emacsvox-vterm581191
+Node: emacsvox-wdired581712
+Node: emacsvox-we581963
+Node: emacsvox-websearch594658
+Node: emacsvox-webspace598708
+Node: emacsvox-welcome601875
+Node: emacsvox-which-key605030
+Node: emacsvox-widget605916
+Node: emacsvox-windmove607404
+Node: emacsvox-windows-speech607739
+Node: emacsvox-wizards611917
+Node: emacsvox-woman643969
+Node: emacsvox-xkcd644197
+Node: emacsvox-xref644807
+Node: emacsvox-xslt645106
+Node: emacsvox-yaml646802
+Node: emacsvox-yasnippet647058
+Node: espeak-voices647302
+Node: g-utils647921
+Node: gm-nnir648375
+Node: gmaps649018
+Node: gweb654333
+Node: ladspa654662
+Node: light656541
+Node: mac-voices657627
+Node: omaps658036
+Node: omnivox-catalogue658263
+Node: omnivox-choice-codec658599
+Node: omnivox-engine-settings659021
+Node: omnivox-espeak-variants659507
+Node: omnivox-library659879
+Node: omnivox-library-apply660298
+Node: omnivox-native-codec660960
+Node: omnivox-parameters661395
+Node: omnivox-parameters-codec661831
+Node: omnivox-preview662195
+Node: omnivox-remote662614
+Node: omnivox-voices663016
+Node: outloud-voices663343
+Node: pip663941
+Node: plain-voices665702
+Node: soundscape666060
+Node: sox670726
+Node: sox-gen673384
+Node: swiftmac-voices679693
+Node: tetris679939
+Node: tts-queue-state680098
+Node: tts-speak680421
+Node: voice-defs696765
+Node: voice-setup702414
+Node: xbacklight705563
+Node: URL Templates706738
+Node: Reference Concept Index712037
+Node: Key Index712221
+Node: Function Index744431
+Node: Variable Index1068463
 
 End Tag Table
 

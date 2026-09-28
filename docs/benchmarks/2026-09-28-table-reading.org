@@ -68,6 +68,28 @@ performed for this follow-up; the original navigation baseline below remains
 unchanged. Complete logs are retained locally in the implementation directory's
 =arrow-entry/= subdirectory.
 
+** Shared browser controls
+
+The browser/CSV follow-up replaces the old local bindings with shared logical
+row/cell navigation, inspection, copying and title/data-order preferences.
+Search, filters, sorting, the table clipboard and speech-prefix commands remain
+available. Character movement synchronizes the current model cell, including
+inside embedded newlines. Sorting preserves filters and shared preferences.
+
+[[file:data/2026-09-28-table-browser.json][Retained test results and source hashes]] record 28 source and 28 compiled
+checks across the reader and browser, plus one compiled graphical browser
+check. All passed. The graphical case uses an isolated Xvfb frame and verifies
+actual wrapped-cell copying and logical row movement. Coverage also checks
+single main-lane navigation submissions, boundary feedback, removed local
+bindings, preserved prefix commands, and search/filter/sort after character
+movement. The full byte-code rebuild, header check, generated documentation and
+documentation release gate passed.
+
+Listening acceptance remains pending; the live sessions were not reloaded.
+No navigation performance remeasurement is claimed for this slice. Full logs
+and the graphical driver are retained locally under
+=~/.local/state/emacsvox/diagnostics/2026-09-28-table-browser/=.
+
 * Measurement method and retained evidence
 
 The CSV preparation follow-up has [[file:data/2026-09-28-table-csv.json][separate retained results]]: 22 source checks

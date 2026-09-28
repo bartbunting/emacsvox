@@ -5356,8 +5356,45 @@ produces an error before a table view is created.
 
 Browsing preserves the source text. If the file is already open@comma{} its buffer
 and unsaved edits remain available@comma{} and the view uses those current contents.
-The CSV browser still has its established navigation@comma{} searching and filtering
-commands; use @kbd{C-h m} there for its current keys.
+The browser uses the shared table controls immediately; there is no separate
+reading-mode toggle:
+
+@itemize
+@item
+Up/Down and @code{C-M-Up/Down} move by logical row and read the whole row.
+@item
+@code{C-M-Left/Right} and Tab/Shift-Tab move by cell. Plain Left/Right and
+@code{C-b/C-f} move by character; @code{C-p/C-n} move by logical row.
+@item
+Return or Space reads the cell; @code{r} reads the row and @code{c} reads the column.
+@item
+@code{.} gives coordinates and @code{=} gives dimensions. The first row supplies
+column titles and is announced separately from the data rows.
+@item
+@code{w} or @code{k k} copies the cell@comma{} @code{k r} copies the row with tabs between cells@comma{}
+and @code{k c} copies the column with newlines between cells. @code{K} copies the
+whole table to the table clipboard for @code{emacsvox-table-paste-from-clipboard}.
+@item
+@code{a} changes column titles@comma{} row titles@comma{} or data order for the view@comma{} using
+the shared reader preferences. @code{q} closes the view.
+@end itemize
+
+These replace the old browser cell-arrow@comma{} header-reading@comma{} automatic-speech@comma{}
+and single-key table-copy bindings. The old local aliases @code{b}@comma{} @code{n}@comma{} @code{p}@comma{} @code{A}@comma{}
+@code{B}@comma{} @code{E}@comma{} and @code{T} are removed. The speech-prefix table commands remain available.
+
+Search with @code{s}@comma{} @code{R} (row)@comma{} @code{C} (column)@comma{} or @code{h} (headers); @code{#} sorts on the
+current column. @code{M-<} and @code{M->} jump to the top and bottom. At a table edge@comma{}
+movement reports the boundary and leaves point in place.
+
+Filters remain on @code{f} (row) and @code{g} (column); a prefix argument requests a new
+filter. Filter indexes and the @code{j} jump prompt retain zero-based model
+coordinates@comma{} including the header row@comma{} even though spoken coordinates count
+data rows and columns from one. For example@comma{} a row filter @code{(0 "value" 2)}
+reads the first column@comma{} the word “value”@comma{} and the third column. @code{M-l} and @code{M-s}
+load and save filters. Filters are explicit inspections; shared row movement
+always reads the whole row. Sorting preserves filters and shared speech
+preferences. Use @kbd{C-h m} for the full browser key map.
 
 @node Web Browsing
 @section Web Browsing With EWW
@@ -7644,8 +7681,10 @@ changing an integration.
 @code{emacsvox-table-reader.el} supplies common cell/row/column formatting@comma{} copying@comma{}
 and movement decisions. Agent Shell retains its rendered source-property
 adapter@comma{} contextual map@comma{} public commands@comma{} and preferences. Markdown and Org
-register source adapters and use an explicit reader minor mode. The existing
-table browser and tabulated-list integrations are separate.
+register source adapters and use an explicit reader minor mode. The table
+browser uses a buffer-local adapter for shared inspection@comma{} copying and speech
+preferences. Its own movement commands keep the standalone view at vertical
+boundaries. Tabulated-list integration remains separate.
 
 An adapter supplies a fresh cell snapshot and a native Aural submission
 function. Snapshots contain complete logical rows@comma{} flat source positions in
@@ -7653,8 +7692,19 @@ row order@comma{} table bounds@comma{} optional header information@comma{} and z
 coordinates. Movement rejects missing cells and handles boundaries before
 changing point. Source adapters rebuild snapshots for each command; source
 edits end explicit reading. No native table editing command is used for
-navigation. Presentation remains under each integration's registered Aural
+navigation. Presentation remains under each integration's Aural
 module and role@comma{} with one main-lane submission per reader action.
+
+The read-only table browser caches logical string rows when rendering. Text
+properties map every character@comma{} including embedded line breaks and delimiters@comma{}
+to a model cell. Pre/post-command hooks synchronize the model after ordinary
+character movement; snapshot extraction also synchronizes it. Browser movement
+uses the model and its rendered position index. New reader actions submit under
+module @code{table-ui}@comma{} with role @code{field} for cells and explicit main-lane delivery.
+The local browser map is independent of the legacy speech-prefix map. CSV
+parsing preserves quoted fields and visited source buffers before constructing
+the view. Sorting constructs a new view and carries over both filters and the
+shared speech preferences.
 
 The shared prefix adds only previously unused keys: @code{C-r} toggles source-table
 reading@comma{} and @code{[} / @code{]} discover tables. Printable reader keys are contextual.
@@ -7676,7 +7726,11 @@ real wrapped-table movement and copying. The source-reader graphical case
 graphical Emacs with Markdown Mode installed; its batch skip is not a pass.
 Check source text and modified state@comma{} effective keys@comma{} complete wrapped values@comma{}
 source edits@comma{} code exclusion@comma{} title preferences@comma{} and native Aural submissions.
-Listening acceptance is separate from submission and graphical checks.
+Browser coverage lives in @code{test/emacsvox-table-ui-tests.el}; use
+@code{EMACSVOX_TABLE_UI_TEST_LOAD=compiled} in a fresh Emacs after building to verify
+the compiled implementation. Its @code{emacsvox-table-ui-graphical-multiline-navigation}
+case requires a graphical display and checks actual wrapping and logical cell
+movement. Listening acceptance is separate from submission and graphical checks.
 
 @subsection Source checkout and byte-code lifecycle
 

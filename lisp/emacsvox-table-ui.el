@@ -43,6 +43,8 @@
   (require 'derived))
 (require 'emacsvox-preamble)
 (require 'emacsvox-table)
+(require 'emacsvox-table-reader)
+(require 'emacsvox-aural-submission)
 
 ;;;   emacsvox table mode
 
@@ -56,79 +58,34 @@ Table mode is designed to allow speech users to browse tabular
 data with full contextual feedback while retaining all the power
 of the two-dimensional spatial layout of tables.
 
-In table mode, the arrow keys move between cells of the table.
-Emacsvox speaks the cell contents in a user-customizable way.  The
-visual display is kept in sync with the speech you hear; however
-Emacsvox is examining the entire table in order to speak the current
-cell content intelligently.
+Up/Down and Control-Meta-Up/Down move by logical row and speak the whole
+row.  Control-Meta-Left/Right and TAB/Shift-TAB move by cell.  Plain
+Left/Right and C-b/C-f move by character.  RET or SPC reads the cell;
+r reads the row and c reads the column.  Use . for coordinates and =
+for dimensions.  The first row supplies column titles.
 
-You can interactively specify that emacsvox should speak either the row or
-column header (or both) while speaking each cell.  You can also specify a row
-or column filter that should be applied when speaking entire rows or columns
---this lets you view slices of a table.  You can move to a specific row or
-column by searching the cell contents or by searching the row or column
-headers to locate items of interest.
+Use w or k k to copy a cell, k r to copy a row, k c to copy a column,
+and K to copy the whole table to the table clipboard.  Use a to change
+titles and data order with the shared reader preferences.
 
-Here is a short description of the special commands provided in this mode.
+Search with s, R (row), C (column), or h (headers).  Use # to sort on
+the current column, M-< and M-> for the top and bottom, and j to jump
+to zero-based model coordinates.  q closes the view.
 
-The next four commands help you move to the edges of the table:
-
-E               emacsvox-table-goto-right
-A               emacsvox-table-goto-left
-B               emacsvox-table-goto-bottom
-T               emacsvox-table-goto-top
-
-The next two commands let you search the table.
-The commands ask you if you want to search rows or columns.
-When searching headers remember that row 0 is the column header,
-and that column 0 is the row header.
-
-h               emacsvox-table-search-headers
-s               emacsvox-table-search
-
-The next command lets you specify how cell contents should be spoken.  Specify
-one of: `b' for both, `c' for column, `r' for row, `f' for row filtering and
-`g' for column filtering. --table cells with then be spoken with both (or
-either)row and column headers, or with the filter applied.
-
-a               emacsvox-table-select-automatic-speaking-method
-
-The next set of commands speak the current table cell:
-
-.               emacsvox-table-speak-coordinates
-b               emacsvox-table-speak-both-headers-and-element
-SPC             emacsvox-table-speak-current-element
-c               emacsvox-table-speak-column-header-and-element
-r               e macspeak-table-speak-row-header-and-element
-
-The next set of commands navigate the table:
-
-right               emacsvox-table-next-column
-left               emacsvox-table-previous-column
-down               emacsvox-table-next-row
-up               emacsvox-table-previous-row
-j               emacsvox-table-goto
-S-tab               emacsvox-table-previous-column
-TAB               emacsvox-table-next-column
-
-Row and Column Filtering
-
-Filtering is designed to let you view slices of a table.
-They are specified as lists of numbers and strings.
-The concept is best explained with an example.
-
-A row filter specifies which of the entries in the current row should be
-spoken.Entries are numbered starting with 0.  Thus, when working with a table
-having 8 columns, a row filter of (1 2 3) will speak only entries 1 2 and 3.
-Use the sample tables in etc/tables   to familiarize yourself with this
-feature. Note that you can intersperse meaningful strings in the list that
-specifies the filter.
+Row and column filters remain on f and g; a prefix argument requests a
+new filter.  Filters use zero-based model indexes, including the header
+row.  For example, (1 2 3) reads those three columns in a row filter.
+Strings in the list add labels.  M-l and M-s load and save filters.
 
 Full List Of Keybindings:
 \\{emacsvox-table-mode-map}"
   (set (make-local-variable 'voice-lock-mode) t)
-  (put-text-property (point-min) (point-max)
-                     'point-entered 'emacsvox-table-point-motion-hook)
+  (setq-local emacsvox-table-reader--adapter
+              '(emacsvox-table-mode emacsvox-table-ui--snapshot
+                                    emacsvox-table-ui--submit))
+  (setq-local emacsvox-table-speak-element #'emacsvox-table-reader-speak-cell)
+  (add-hook 'pre-command-hook #'emacsvox-table-ui--sync-point nil t)
+  (add-hook 'post-command-hook #'emacsvox-table-ui--sync-point nil t)
   (set-buffer-modified-p nil)
   (setq buffer-undo-list  t)
   (setq buffer-read-only t)
@@ -184,8 +141,134 @@ Full List Of Keybindings:
    ("x" emacsvox-table-copy-current-element-to-register)
    )
  do
- (emacsvox-keymap-update emacsvox-table-mode-map binding)
  (emacsvox-keymap-update emacsvox-table-submap binding))
+
+;; The speech prefix retains its established commands.  The browser has a
+;; separate map so displaced local bindings do not survive as aliases.
+(let ((map emacsvox-table-mode-map)
+      (copy (make-sparse-keymap)))
+  (dolist (binding
+           '(("<up>" . emacsvox-table-ui-previous-row)
+             ("<down>" . emacsvox-table-ui-next-row)
+             ("C-p" . emacsvox-table-ui-previous-row)
+             ("C-n" . emacsvox-table-ui-next-row)
+             ("C-M-<up>" . emacsvox-table-ui-previous-row)
+             ("C-M-<down>" . emacsvox-table-ui-next-row)
+             ("C-M-<left>" . emacsvox-table-ui-previous-column)
+             ("C-M-<right>" . emacsvox-table-ui-next-column)
+             ("<left>" . left-char) ("<right>" . right-char)
+             ("C-b" . backward-char) ("C-f" . forward-char)
+             ("TAB" . emacsvox-table-ui-next-column)
+             ("<backtab>" . emacsvox-table-ui-previous-column)
+             ("S-<tab>" . emacsvox-table-ui-previous-column)
+             ("RET" . emacsvox-table-reader-speak-cell)
+             ("SPC" . emacsvox-table-reader-speak-cell)
+             ("r" . emacsvox-table-reader-speak-row)
+             ("c" . emacsvox-table-reader-speak-column)
+             ("." . emacsvox-table-reader-speak-context)
+             ("=" . emacsvox-table-reader-speak-dimensions)
+             ("a" . emacsvox-table-reader-select-speaking-method)
+             ("w" . emacsvox-table-reader-copy-cell)
+             ("K" . emacsvox-table-copy-to-clipboard)
+             ("x" . emacsvox-table-copy-current-element-to-register)
+             ("s" . emacsvox-table-search)
+             ("R" . emacsvox-table-search-row)
+             ("C" . emacsvox-table-search-column)
+             ("h" . emacsvox-table-search-headers)
+             ("f" . emacsvox-table-speak-row-filtered)
+             ("g" . emacsvox-table-speak-column-filtered)
+             ("M-l" . emacsvox-table-ui-filter-load)
+             ("M-s" . emacsvox-table-ui-filter-save)
+             ("#" . emacsvox-table-sort-on-current-column)
+             ("j" . emacsvox-table-goto)
+             ("M-<" . emacsvox-table-goto-top)
+             ("M->" . emacsvox-table-goto-bottom)
+             ("," . emacsvox-table-find-csv-file)
+             ("v" . emacsvox-table-view-csv-buffer)
+             ("q" . quit-window)
+             ("Q" . emacsvox-kill-buffer-quietly)))
+    (define-key map (kbd (car binding)) (cdr binding)))
+  (define-key copy "k" #'emacsvox-table-reader-copy-cell)
+  (define-key copy "r" #'emacsvox-table-reader-copy-row)
+  (define-key copy "c" #'emacsvox-table-reader-copy-column)
+  (define-key map "k" copy))
+
+(defvar-local emacsvox-table-ui--rows nil
+  "Logical string rows for the current read-only browser view.")
+
+(defun emacsvox-table-ui--sync-point ()
+  "Keep the table model at the logical cell containing point.
+At end of buffer, retain the last cell.  Embedded newlines belong to their
+cell, not to an additional logical row."
+  (when (and (bound-and-true-p emacsvox-table) (< (point-min) (point-max)))
+    (let* ((position (min (point) (1- (point-max))))
+           (row (get-text-property position 'row))
+           (column (get-text-property position 'column)))
+      (when (and (integerp row) (integerp column))
+        (emacsvox-table-goto-cell emacsvox-table row column)))))
+
+(defun emacsvox-table-ui--snapshot ()
+  "Return a shared-reader cell from the browser's logical data."
+  (emacsvox-table-ui--sync-point)
+  (let* ((row (emacsvox-table-current-row emacsvox-table))
+         (column (emacsvox-table-current-column emacsvox-table))
+         (values (nth row emacsvox-table-ui--rows)))
+    (list :data (nth column values) :rows emacsvox-table-ui--rows
+          :row-title (car values)
+          :column-title (nth column (car emacsvox-table-ui--rows))
+          :row-index row :column-index column :column-titles-p t
+          :row-count (emacsvox-table-num-rows emacsvox-table)
+          :column-count (emacsvox-table-num-columns emacsvox-table))))
+
+(defun emacsvox-table-ui--submit (text occasion presentation icon)
+  "Present TEXT once for browser OCCASION, PRESENTATION and ICON."
+  (emacsvox-aural-submit
+   text :module 'table-ui :occasion occasion :lane 'main
+   :facts (append (when (eq presentation 'cell) '(:role field))
+                  (list :events (list (if (eq occasion 'state-change)
+                                          'state-changed 'focus-entered))))
+   :compatibility-actions (list (emacsvox-aural-compatibility-icon icon))))
+
+(defun emacsvox-table-ui--move (rows columns)
+  "Move by logical ROWS and COLUMNS, reporting boundaries without leaving."
+  (emacsvox-table-ui--sync-point)
+  (let* ((row (+ rows (emacsvox-table-current-row emacsvox-table)))
+         (column (+ columns (emacsvox-table-current-column emacsvox-table)))
+         (boundary (cond ((< row 0) "Top of table.")
+                         ((>= row (emacsvox-table-num-rows emacsvox-table))
+                          "Bottom of table.")
+                         ((< column 0) "Left edge of table.")
+                         ((>= column (emacsvox-table-num-columns emacsvox-table))
+                          "Right edge of table."))))
+    (if boundary
+        (emacsvox-table-ui--submit boundary 'navigation 'context 'warn-user)
+      (emacsvox-table-goto-cell emacsvox-table row column)
+      (emacsvox-table-synchronize-display)
+      (emacsvox-table-ui--submit
+       (funcall (if (zerop rows) #'emacsvox-table-reader--cell-speech
+                  #'emacsvox-table-reader--row-speech)
+                (emacsvox-table-ui--snapshot))
+       'navigation (if (zerop rows) 'cell 'row) 'item))))
+
+(defun emacsvox-table-ui-next-row (&optional count)
+  "Move COUNT logical rows down and read the entire row."
+  (interactive "p")
+  (emacsvox-table-ui--move (or count 1) 0))
+
+(defun emacsvox-table-ui-previous-row (&optional count)
+  "Move COUNT logical rows up and read the entire row."
+  (interactive "p")
+  (emacsvox-table-ui--move (- (or count 1)) 0))
+
+(defun emacsvox-table-ui-next-column (&optional count)
+  "Move COUNT cells right and read the entire cell."
+  (interactive "p")
+  (emacsvox-table-ui--move 0 (or count 1)))
+
+(defun emacsvox-table-ui-previous-column (&optional count)
+  "Move COUNT cells left and read the entire cell."
+  (interactive "p")
+  (emacsvox-table-ui--move 0 (- (or count 1))))
 
 ;;;   speaking current entry
 
@@ -501,6 +584,9 @@ Optional prefix arg prompts for a new filter."
       (setq buffer-undo-list  t)
       (erase-buffer)
       (set (make-local-variable 'emacsvox-table) table)
+      (setq emacsvox-table-ui--rows
+            (mapcar (lambda (row) (mapcar (lambda (value) (format "%s" value)) row))
+                    (emacsvox-table-elements table)))
       (set (make-local-variable 'ems--positions) (make-hash-table))
       (setq count (1-  (emacsvox-table-num-columns table)))
       (cl-loop
@@ -527,6 +613,7 @@ Optional prefix arg prompts for a new filter."
        (cl-incf i))))
   (switch-to-buffer buffer)
   (emacsvox-table-goto-cell emacsvox-table 0 0)
+  (emacsvox-table-synchronize-display)
   (setq truncate-lines t)
   (message "Use Emacsvox Table UI to browse this table."))
 
@@ -1110,6 +1197,9 @@ markup to use."
   (let* ((column  (emacsvox-table-current-column emacsvox-table))
          (row-head   nil)
          (row-filter emacsvox-table-speak-row-filter)
+         (column-filter emacsvox-table-speak-column-filter)
+         (titles emacsvox-table-reader-titles)
+         (data-position emacsvox-table-reader-data-position)
          (rows (append
                 (emacsvox-table-elements emacsvox-table) nil))
          (sorted-table nil)
@@ -1146,7 +1236,10 @@ markup to use."
     (emacsvox-table-prepare-table-buffer
      (emacsvox-table-make-table  sorted-table) buffer)
     (switch-to-buffer buffer)
-    (setq emacsvox-table-speak-row-filter row-filter)
+    (setq emacsvox-table-speak-row-filter row-filter
+          emacsvox-table-speak-column-filter column-filter)
+    (setq-local emacsvox-table-reader-titles titles
+                emacsvox-table-reader-data-position data-position)
     (emacsvox-table-goto  0 column)
     (call-interactively #'emacsvox-table-next-row)))
 
