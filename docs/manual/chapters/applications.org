@@ -84,6 +84,60 @@ tables, and other document elements.  Begin with @@texinfo:@kbd{C-h m}@@ in the 
 see @@texinfo:@ref{Using Online Help}@@ for the common discovery commands and
 @@texinfo:@ref{Web Browsing}@@ for the maintained Web route.
 
+*** Reading Markdown and Org tables
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+In a Markdown or Org table, press the speech prefix followed by
+@@texinfo:@kbd{C-t C-r}@@ to enter table reading. With the default prefix,
+this is @@texinfo:@kbd{C-e C-t C-r}@@. Emacsvox announces the dimensions and
+current cell. Press @@texinfo:@kbd{q}@@ or the same prefix command to restore
+ordinary editing keys.
+
+Use the speech prefix followed by @@texinfo:@kbd{C-t ]}@@ or
+@@texinfo:@kbd{C-t [}@@ to find and enter the next or previous table from
+prose. Inside table reading, @@texinfo:@kbd{t}@@ and @@texinfo:@kbd{T}@@ do
+the same. Code examples are skipped.
+
+While table reading is active:
+
+- Up/Down and Control-Meta-Up/Down move by logical row, retain the column,
+  and read the complete destination row.
+- Control-Meta-Left/Right move between cells. Plain Left/Right retain
+  character movement. Tab and Shift-Tab move between cells without editing;
+  Return or Space reads the current cell.
+- @@texinfo:@kbd{r}@@ reads the row; @@texinfo:@kbd{c}@@ reads the column.
+  @@texinfo:@kbd{.}@@ announces coordinates; @@texinfo:@kbd{=}@@ gives dimensions.
+- @@texinfo:@kbd{a}@@ changes column titles, row titles, or data/title order
+  for this buffer. The customization group ~emacsvox-table-reader~ sets defaults.
+- @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{k k}@@ copies the cell;
+  @@texinfo:@kbd{k r}@@ copies the row with tabs between cells;
+  @@texinfo:@kbd{k c}@@ copies the column with newlines between cells.
+- Meta-Up/Down leave directly for preceding/following prose. Up/Down also
+  leave when movement crosses a vertical table edge. If there is no content
+  beyond that edge, point stays in the table.
+
+A horizontal edge or a missing cell in a shorter row leaves point unchanged
+and announces the boundary. Separators are skipped. A separator immediately
+after the first row identifies column titles; otherwise the first row is data.
+Coordinates distinguish the header from one-based data rows. Empty cells are
+spoken as “blank.” Wrapping never shortens a logical cell's speech or copy.
+
+Reading commands preserve document text: they do not align tables, create
+rows, or evaluate Org formulas. Copies use cell values, with ordinary links
+represented by their labels and inline code by its literal text. Use the host
+mode to copy exact markup or formulas. This reader covers simple pipe tables;
+HTML spans, nested tables, and spreadsheet-specific structures have separate
+interfaces.
+
+Leaving the table restores ordinary mode keys. Other editing commands retain
+their normal meaning; an edit ends the reading context. Org's existing table
+editing feedback and Markdown's markup-stripping speech option remain
+independent of this reader. Agent Shell uses the same logical reading
+operations with its existing automatic table entry, commands and preferences;
+see @@texinfo:@ref{Agent Shell}@@.
+
 ** Web Browsing With EWW
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Web Browsing

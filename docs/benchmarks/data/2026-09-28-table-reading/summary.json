@@ -1,0 +1,98 @@
+{
+  "baseline": [
+    {
+      "mode": "agent-shell",
+      "data_rows": 32,
+      "median_ms_per_move": 0.5583465099334717
+    },
+    {
+      "mode": "markdown-mode",
+      "data_rows": 32,
+      "median_ms_per_move": 2.786499261856079
+    },
+    {
+      "mode": "org-mode",
+      "data_rows": 32,
+      "median_ms_per_move": 0.3676176071166992
+    },
+    {
+      "mode": "agent-shell",
+      "data_rows": 256,
+      "median_ms_per_move": 4.478919506072998
+    },
+    {
+      "mode": "markdown-mode",
+      "data_rows": 256,
+      "median_ms_per_move": 27.449476718902588
+    },
+    {
+      "mode": "org-mode",
+      "data_rows": 256,
+      "median_ms_per_move": 2.63671875
+    }
+  ],
+  "candidate": [
+    {
+      "mode": "agent-shell",
+      "data_rows": 32,
+      "median_ms_per_move": 0.537949800491333
+    },
+    {
+      "mode": "markdown-mode",
+      "data_rows": 32,
+      "median_ms_per_move": 2.6746273040771484
+    },
+    {
+      "mode": "org-mode",
+      "data_rows": 32,
+      "median_ms_per_move": 0.2904534339904785
+    },
+    {
+      "mode": "agent-shell",
+      "data_rows": 256,
+      "median_ms_per_move": 3.610718250274658
+    },
+    {
+      "mode": "markdown-mode",
+      "data_rows": 256,
+      "median_ms_per_move": 24.962735176086426
+    },
+    {
+      "mode": "org-mode",
+      "data_rows": 256,
+      "median_ms_per_move": 2.3053348064422607
+    }
+  ],
+  "final": [
+    {
+      "mode": "agent-shell",
+      "data_rows": 32,
+      "median_ms_per_move": 0.4602491855621338
+    },
+    {
+      "mode": "markdown-mode",
+      "data_rows": 32,
+      "median_ms_per_move": 2.638983726501465
+    },
+    {
+      "mode": "org-mode",
+      "data_rows": 32,
+      "median_ms_per_move": 0.33357739448547363
+    },
+    {
+      "mode": "agent-shell",
+      "data_rows": 256,
+      "median_ms_per_move": 3.5900235176086426
+    },
+    {
+      "mode": "markdown-mode",
+      "data_rows": 256,
+      "median_ms_per_move": 24.460768699645996
+    },
+    {
+      "mode": "org-mode",
+      "data_rows": 256,
+      "median_ms_per_move": 2.264547348022461
+    }
+  ]
+}

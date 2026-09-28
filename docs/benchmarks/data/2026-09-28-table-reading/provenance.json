@@ -1,0 +1,32 @@
+{
+  "date": "2026-09-28",
+  "baseline_commit": "69d7d40159789d9f6ca5cfa37ee4e67af253caa2",
+  "candidate_source_sha256": {
+    "lisp/emacsvox-table-reader.el": "421fddd5844b6a178e4a2d60a831ece4853771734d61ea24f8e05854e4390c48",
+    "lisp/emacsvox-agent-shell.el": "2394637f6678830d83d23c22ab16d65c26fae55f7e78e2a1cd5bfddf5f49ca64",
+    "lisp/emacsvox-markdown.el": "f91e6eb781fd915ceedf9682f30ee644e19a20a32e2469de93e15a6879c67cf3",
+    "lisp/emacsvox-org.el": "868b5ef5b2375f2a3aa1872ec2994bde48d996ca84908167f5a603a640cb84d3",
+    "lisp/emacsvox-keymap.el": "1c40c4390535169308ca122910a443494674abc253cf21aaec5701eed4b41351",
+    "test/emacsvox-table-reader-tests.el": "2baa681614a419d65be8873bc7b85d85bd540905b3bf619afbf0cae6986cb06a",
+    "test/emacsvox-agent-shell-tests.el": "c55c403223744f3bdfedcf357d81fdddfc72a6158ef01864d680cf2b2ba5c56a",
+    "utils/table-reader-benchmark.el": "08c7d755bae4d0f11657bb307a71bb0e4c754dc9b71772b5ea069994bdd1257f"
+  },
+  "emacs": "31.0.90",
+  "pinned_agent_shell": "0.78.1 (7a1e4b3a53fb5df8ac8c15205e1f3609deb9e8c2)",
+  "live_agent_shell": "0.79.2 (d551202139dc0ad5f671fd19ca237515eb4ae762)",
+  "markdown_mode": "20260827.909",
+  "org": "bundled with selected Emacs",
+  "benchmark_driver": "utils/table-reader-benchmark.el",
+  "benchmark_scope": "logical row navigation and formatting; Aural submission stubbed; no synthesis or acoustic measurement",
+  "audio_acceptance": "not performed",
+  "graphical_environment": "isolated Xvfb 1280x800x24",
+  "baseline_scope": "Only Agent Shell uses the previous implementation. Markdown/Org are repeated measurements of the new readers.",
+  "candidate_note": "candidate.json predates the adjacent-pipe-prose recognition correction; final.json includes it. Final source differs only by indentation formatting from the measured byte-code.",
+  "implementation_commit": "a6bfefd4c110f8fbc9e722b14190975f3704f86a",
+  "platform": {
+    "system": "Linux",
+    "release": "6.18.33.2-microsoft-standard-WSL2",
+    "architecture": "x86_64"
+  },
+  "cpu_model": "Intel(R) Core(TM) Ultra 9 185H"
+}

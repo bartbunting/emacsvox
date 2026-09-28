@@ -298,7 +298,10 @@ list editing, setting changes, updated tool output, and change-review entry.
 
 Moving into a rendered Markdown table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
-the ordinary Agent Shell keys.
+the ordinary Agent Shell keys. Markdown and Org source buffers offer explicit
+table reading with matching logical operations; see
+@@texinfo:@ref{Browsing Structure}@@. Agent Shell retains its own table speech
+preferences and automatic contextual activation.
 Plain Left and Right move by character within the table. Use Control-Meta-Left
 and Control-Meta-Right to move between columns. Up and Down, also available as
 Control-Meta-Up and Control-Meta-Down, move between logical rows and read the

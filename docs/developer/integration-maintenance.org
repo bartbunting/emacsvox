@@ -9,6 +9,41 @@ from the user task guides.  Optional package APIs and renderers evolve, so
 recheck the upstream interfaces and keep compatibility behavior bounded when
 changing an integration.
 
+** Logical table readers
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+~emacsvox-table-reader.el~ supplies common cell/row/column formatting, copying,
+and movement decisions. Agent Shell retains its rendered source-property
+adapter, contextual map, public commands, and preferences. Markdown and Org
+register source adapters and use an explicit reader minor mode. The existing
+table browser and tabulated-list integrations are separate.
+
+An adapter supplies a fresh cell snapshot and a native Aural submission
+function. Snapshots contain complete logical rows, flat source positions in
+row order, table bounds, optional header information, and zero-based internal
+coordinates. Movement rejects missing cells and handles boundaries before
+changing point. Source adapters rebuild snapshots for each command; source
+edits end explicit reading. No native table editing command is used for
+navigation. Presentation remains under each integration's registered Aural
+module and role, with one main-lane submission per reader action.
+
+The shared prefix adds only previously unused keys: ~C-r~ toggles source-table
+reading, and ~[~ / ~]~ discover tables. Printable reader keys are contextual.
+Org's native ~TAB~, ~RET~ and Meta-arrow editing bindings remain available
+outside reading. Agent Shell's existing scoped overrides and prompt behaviour
+remain as documented in its integration contract.
+
+Regression coverage lives in ~test/emacsvox-table-reader-tests.el~ and the
+Agent Shell table cases. The graphical Agent Shell integration gate includes
+real wrapped-table movement and copying. The source-reader graphical case
+~emacsvox-table-reader-graphical-wrapped-source~ must also run in a fresh
+graphical Emacs with Markdown Mode installed; its batch skip is not a pass.
+Check source text and modified state, effective keys, complete wrapped values,
+source edits, code exclusion, title preferences, and native Aural submissions.
+Listening acceptance is separate from submission and graphical checks.
+
 ** Source checkout and byte-code lifecycle
 :PROPERTIES:
 :TEXINFO_NODE: no

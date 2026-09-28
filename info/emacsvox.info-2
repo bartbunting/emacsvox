@@ -1098,7 +1098,45 @@ behavior bounded when changing an integration.
 
 * Authoring Sound Packs::        Prepare a personal resource directory and validate its cue metadata.
 
-16.3.1 Source checkout and byte-code lifecycle
+16.3.1 Logical table readers
+----------------------------
+
+‘emacsvox-table-reader.el’ supplies common cell/row/column formatting,
+copying, and movement decisions.  Agent Shell retains its rendered
+source-property adapter, contextual map, public commands, and
+preferences.  Markdown and Org register source adapters and use an
+explicit reader minor mode.  The existing table browser and
+tabulated-list integrations are separate.
+
+   An adapter supplies a fresh cell snapshot and a native Aural
+submission function.  Snapshots contain complete logical rows, flat
+source positions in row order, table bounds, optional header
+information, and zero-based internal coordinates.  Movement rejects
+missing cells and handles boundaries before changing point.  Source
+adapters rebuild snapshots for each command; source edits end explicit
+reading.  No native table editing command is used for navigation.
+Presentation remains under each integration's registered Aural module
+and role, with one main-lane submission per reader action.
+
+   The shared prefix adds only previously unused keys: ‘C-r’ toggles
+source-table reading, and ‘[’ / ‘]’ discover tables.  Printable reader
+keys are contextual.  Org's native ‘TAB’, ‘RET’ and Meta-arrow editing
+bindings remain available outside reading.  Agent Shell's existing
+scoped overrides and prompt behaviour remain as documented in its
+integration contract.
+
+   Regression coverage lives in ‘test/emacsvox-table-reader-tests.el’
+and the Agent Shell table cases.  The graphical Agent Shell integration
+gate includes real wrapped-table movement and copying.  The
+source-reader graphical case
+‘emacsvox-table-reader-graphical-wrapped-source’ must also run in a
+fresh graphical Emacs with Markdown Mode installed; its batch skip is
+not a pass.  Check source text and modified state, effective keys,
+complete wrapped values, source edits, code exclusion, title
+preferences, and native Aural submissions.  Listening acceptance is
+separate from submission and graphical checks.
+
+16.3.2 Source checkout and byte-code lifecycle
 ----------------------------------------------
 
 Use the Emacs selected by the ignored repository-local ‘local.mk’.  When
@@ -1515,7 +1553,7 @@ checker runs.
      through a separate SSH host.  Remote access remains preview
      independently of native Windows desktop support.
 
-16.3.2 Debian package builds
+16.3.3 Debian package builds
 ----------------------------
 
 ‘make deb’ builds a local development package in ‘dist/’ using Python 3,
@@ -1561,7 +1599,7 @@ toolchain can differ from a locally prepared package.  Let CI attach the
 release deb instead of uploading a differently built local package with
 the same name.
 
-16.3.3 Emacsvox release staging and publication
+16.3.4 Emacsvox release staging and publication
 -----------------------------------------------
 
 The repository-level ‘VERSION’ file is the canonical stable release
@@ -1631,7 +1669,7 @@ release target pushes ‘master’ or the documentation branch.  Use ‘make
 release-check’ alone when a non-mutating preflight is wanted without
 creating an artifact.
 
-16.3.4 Future Aural contract decisions
+16.3.5 Future Aural contract decisions
 --------------------------------------
 
 The completed Aural implementation diary is preserved under
@@ -1651,7 +1689,7 @@ implementation:
 is defined by the Aural implementation, its generated reference, and
 accepted ADRs.
 
-16.3.5 Voice-style metadata ownership
+16.3.6 Voice-style metadata ownership
 -------------------------------------
 
 The private ‘emacsvox-aural--voice-style-fields’ table in
@@ -1739,7 +1777,7 @@ preview or palette lookup.  Preserve final-write, timeout, reentrancy,
 and trace regressions when working on later delivery slices; metadata
 validation alone cannot establish process lifecycle or audible behavior.
 
-16.3.6 Timeline preparation boundaries
+16.3.7 Timeline preparation boundaries
 --------------------------------------
 
 Two private helpers in ‘lisp/emacsvox-aural-transport.el’ make
@@ -1778,7 +1816,7 @@ compiled implementation resident.  Keep the full failure, reentrancy,
 and golden-trace suites as regression checks; captured writes establish
 protocol behavior, not audible playback.
 
-16.3.7 Aural interface source ownership
+16.3.8 Aural interface source ownership
 ---------------------------------------
 
 Ordinary-buffer entry captures a source buffer, a marker, and a guarded
@@ -1805,7 +1843,7 @@ fragment identifiers, and personal/session scopes each share one working
 editor.  Reopening a dirty editor preserves its draft and source
 association.
 
-16.3.8 Remote speech recovery
+16.3.9 Remote speech recovery
 -----------------------------
 
 Ordinary ‘tts-initialize’ startup schedules the existing remote retry
@@ -1820,8 +1858,8 @@ remote recovery.  Exercise these boundaries in
 ‘test/omnivox-remote-tests.el’ with controlled connection failures and
 timers.
 
-16.3.9 Omnivox voice configuration applies
-------------------------------------------
+16.3.10 Omnivox voice configuration applies
+-------------------------------------------
 
 ‘omnivox-apply-voice-configuration’ captures one generation and its
 definitions for the original speech processes.  Applies may overlap.
@@ -1846,7 +1884,7 @@ late-reply, overlapping-apply, and replacement regressions in
 ‘test/emacsvox-tts-tests.el’ and spoken timeout feedback coverage in
 ‘test/emacsvox-aural-voice-workbench-tests.el’.
 
-16.3.10 Notmuch contracts
+16.3.11 Notmuch contracts
 -------------------------
 
 The live module is registered as an optional package integration.  Its
@@ -1877,7 +1915,7 @@ exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
 focused selector, including real displayed-window reading for both
 advance paths.
 
-16.3.11 Agent Shell contracts
+16.3.12 Agent Shell contracts
 -----------------------------
 
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
@@ -2025,7 +2063,7 @@ deliberately disabling them or while testing live integration changes.
      workflow semantic provider so Aural rules can customize their
      presentation.
 
-16.3.12 Magit contracts
+16.3.13 Magit contracts
 -----------------------
 
 Staging and selected synchronous operations collect Git outcomes at
@@ -2052,7 +2090,7 @@ from source, then again in a fresh Emacs with
 live buffer created with the former highlight mirroring needs a Magit
 refresh to rebuild its source properties.
 
-16.3.13 WSL2 Omnivox development staging
+16.3.14 WSL2 Omnivox development staging
 ----------------------------------------
 
 The ordinary WSL2 user route is implemented by
@@ -2211,7 +2249,7 @@ repository to make its release guard pass.  Use ‘make windows-omnivox’
 only for the reproducible clean-release path documented in the
 user-facing WSL2 route.
 
-16.3.14 Windows staging implementation and fixtures
+16.3.15 Windows staging implementation and fixtures
 ---------------------------------------------------
 
 Make owns option and clean-source guards, toolchain verification,
@@ -2256,7 +2294,7 @@ reproducibility, real Windows path conversion, engine startup, or
 audible playback; run the existing native gates for that acceptance in
 an appropriate staging environment.
 
-16.3.15 Aural experiments and guided changes
+16.3.16 Aural experiments and guided changes
 --------------------------------------------
 
 Physical experiments use the common voice editor with an exact
@@ -2303,7 +2341,7 @@ Row action predicates should hide operations that cannot apply to that
 row; this includes editing built-in options and reordering items outside
 the active-order view.
 
-16.3.16 Repeatable voice performance measurements
+16.3.17 Repeatable voice performance measurements
 -------------------------------------------------
 
 Use ‘utils/voice_benchmark.py’ to retain comparable measurements of
@@ -2428,7 +2466,7 @@ and comparison logic.
 
 File: emacsvox.info,  Node: Authoring Sound Packs,  Up: Integration Maintenance
 
-16.3.17 Authoring Sound Packs
+16.3.18 Authoring Sound Packs
 -----------------------------
 
 Ordinary selection, preview, and cue remapping are covered in *note

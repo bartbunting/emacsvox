@@ -5300,6 +5300,57 @@ headings, links, lists, tables, and other document elements.  Begin with
 discovery commands and *note Web Browsing:: for the maintained Web
 route.
 
+8.3.1 Reading Markdown and Org tables
+-------------------------------------
+
+In a Markdown or Org table, press the speech prefix followed by ‘C-t
+C-r’ to enter table reading.  With the default prefix, this is ‘C-e C-t
+C-r’.  Emacsvox announces the dimensions and current cell.  Press ‘q’ or
+the same prefix command to restore ordinary editing keys.
+
+   Use the speech prefix followed by ‘C-t ]’ or ‘C-t [’ to find and
+enter the next or previous table from prose.  Inside table reading, ‘t’
+and ‘T’ do the same.  Code examples are skipped.
+
+   While table reading is active:
+
+   • Up/Down and Control-Meta-Up/Down move by logical row, retain the
+     column, and read the complete destination row.
+   • Control-Meta-Left/Right move between cells.  Plain Left/Right
+     retain character movement.  Tab and Shift-Tab move between cells
+     without editing; Return or Space reads the current cell.
+   • ‘r’ reads the row; ‘c’ reads the column.  ‘.’ announces
+     coordinates; ‘=’ gives dimensions.
+   • ‘a’ changes column titles, row titles, or data/title order for this
+     buffer.  The customization group ‘emacsvox-table-reader’ sets
+     defaults.
+   • ‘w’ or ‘k k’ copies the cell; ‘k r’ copies the row with tabs
+     between cells; ‘k c’ copies the column with newlines between cells.
+   • Meta-Up/Down leave directly for preceding/following prose.  Up/Down
+     also leave when movement crosses a vertical table edge.  If there
+     is no content beyond that edge, point stays in the table.
+
+   A horizontal edge or a missing cell in a shorter row leaves point
+unchanged and announces the boundary.  Separators are skipped.  A
+separator immediately after the first row identifies column titles;
+otherwise the first row is data.  Coordinates distinguish the header
+from one-based data rows.  Empty cells are spoken as “blank.” Wrapping
+never shortens a logical cell's speech or copy.
+
+   Reading commands preserve document text: they do not align tables,
+create rows, or evaluate Org formulas.  Copies use cell values, with
+ordinary links represented by their labels and inline code by its
+literal text.  Use the host mode to copy exact markup or formulas.  This
+reader covers simple pipe tables; HTML spans, nested tables, and
+spreadsheet-specific structures have separate interfaces.
+
+   Leaving the table restores ordinary mode keys.  Other editing
+commands retain their normal meaning; an edit ends the reading context.
+Org's existing table editing feedback and Markdown's markup-stripping
+speech option remain independent of this reader.  Agent Shell uses the
+same logical reading operations with its existing automatic table entry,
+commands and preferences; see *note Agent Shell::.
+
 
 File: emacsvox.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Structure,  Up: Emacs Packages
 
@@ -6207,8 +6258,11 @@ change-review entry.
 
 Moving into a rendered Markdown table activates a contextual table map.
 It announces the table dimensions and current cell.  Leaving the table
-restores the ordinary Agent Shell keys.  Plain Left and Right move by
-character within the table.  Use Control-Meta-Left and
+restores the ordinary Agent Shell keys.  Markdown and Org source buffers
+offer explicit table reading with matching logical operations; see *note
+Browsing Structure::.  Agent Shell retains its own table speech
+preferences and automatic contextual activation.  Plain Left and Right
+move by character within the table.  Use Control-Meta-Left and
 Control-Meta-Right to move between columns.  Up and Down, also available
 as Control-Meta-Up and Control-Meta-Down, move between logical rows and
 read the entire destination row, retaining the current column.  Wrapped

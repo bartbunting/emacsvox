@@ -45,11 +45,12 @@ Requested on 2026-09-22. The [[file:../table-navigation-unification-plan.org][ta
 Org, Agent Shell, and other table-reader behavior; proposed common keys;
 open decisions; implementation slices; and acceptance checks. The 2026-09-28
 binding audit records current live and pinned dependencies, existing key
-conflicts and 34 passing baseline checks on each dependency set. Shared
-implementation has not begun. Settle reading versus editing, legacy-key
-compatibility, header policy, and application-specific row/cell defaults before
-the dependent implementation slices. Preserve the existing Agent Shell full-row
-navigation and editable-prompt behavior.
+conflicts and 34 passing baseline checks on each dependency set. The approved
+first milestone implements shared logical operations for Agent Shell, Markdown
+and Org, explicit source-table reading, and vertical exits to prose. Its
+implementation and acceptance evidence are recorded in the plan. Subsequent
+browser/CSV, tabulated-list, EWW, table.el and SES adapters still need their
+mode-specific binding and behaviour review.
 
 ** TODO Verify streaming macOS system voices with Emacsvox
 

@@ -1,0 +1,4059 @@
+{
+  "pinned_integration": {
+    "case_count": 605,
+    "cases": [
+      {
+        "name": "emacsvox-agent-shell-actionable-items-are-semantic",
+        "status": "passed",
+        "elapsed_seconds": 0.160834
+      },
+      {
+        "name": "emacsvox-agent-shell-actionable-items-speak-in-both-views",
+        "status": "passed",
+        "elapsed_seconds": 0.002474
+      },
+      {
+        "name": "emacsvox-agent-shell-advice-name-preserves-other-modules",
+        "status": "passed",
+        "elapsed_seconds": 7.4e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-advice-targets-exist",
+        "status": "passed",
+        "elapsed_seconds": 8e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-automatic-mode-line-remains-concise",
+        "status": "passed",
+        "elapsed_seconds": 0.002179
+      },
+      {
+        "name": "emacsvox-agent-shell-automatic-response-is-bounded-before-aural",
+        "status": "passed",
+        "elapsed_seconds": 0.261427
+      },
+      {
+        "name": "emacsvox-agent-shell-automatic-response-is-navigation-replaceable",
+        "status": "passed",
+        "elapsed_seconds": 7.7e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-automatic-tool-output-is-bounded-before-aural",
+        "status": "passed",
+        "elapsed_seconds": 0.010415
+      },
+      {
+        "name": "emacsvox-agent-shell-background-errors-are-bounded-before-aural",
+        "status": "passed",
+        "elapsed_seconds": 0.006081
+      },
+      {
+        "name": "emacsvox-agent-shell-background-notifies-without-content",
+        "status": "passed",
+        "elapsed_seconds": 0.000756
+      },
+      {
+        "name": "emacsvox-agent-shell-background-selector-cancels-auto-sessions",
+        "status": "passed",
+        "elapsed_seconds": 0.002974
+      },
+      {
+        "name": "emacsvox-agent-shell-block-body-limit-can-be-disabled",
+        "status": "passed",
+        "elapsed_seconds": 6.9e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-block-body-limit-uses-word-boundary",
+        "status": "passed",
+        "elapsed_seconds": 4.5e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-block-jumps-bound-body-previews",
+        "status": "passed",
+        "elapsed_seconds": 0.000466
+      },
+      {
+        "name": "emacsvox-agent-shell-block-jumps-use-native-submissions",
+        "status": "passed",
+        "elapsed_seconds": 0.000247
+      },
+      {
+        "name": "emacsvox-agent-shell-block-locations-are-semantic",
+        "status": "passed",
+        "elapsed_seconds": 0.002017
+      },
+      {
+        "name": "emacsvox-agent-shell-block-navigation-does-not-wrap",
+        "status": "passed",
+        "elapsed_seconds": 0.002207
+      },
+      {
+        "name": "emacsvox-agent-shell-block-navigation-expands-activity-members",
+        "status": "passed",
+        "elapsed_seconds": 0.004697
+      },
+      {
+        "name": "emacsvox-agent-shell-block-navigation-has-viewport-fallback",
+        "status": "passed",
+        "elapsed_seconds": 0.000338
+      },
+      {
+        "name": "emacsvox-agent-shell-block-navigation-is-directional",
+        "status": "passed",
+        "elapsed_seconds": 0.002034
+      },
+      {
+        "name": "emacsvox-agent-shell-block-navigation-keeps-adjacent-fragments",
+        "status": "passed",
+        "elapsed_seconds": 0.000257
+      },
+      {
+        "name": "emacsvox-agent-shell-block-navigation-reads-activity-group",
+        "status": "passed",
+        "elapsed_seconds": 0.00239
+      },
+      {
+        "name": "emacsvox-agent-shell-block-navigation-selects-and-repeats",
+        "status": "passed",
+        "elapsed_seconds": 0.00203
+      },
+      {
+        "name": "emacsvox-agent-shell-block-navigation-selects-rendered-tables",
+        "status": "passed",
+        "elapsed_seconds": 0.002084
+      },
+      {
+        "name": "emacsvox-agent-shell-block-selector-bracket-accepts-default",
+        "status": "passed",
+        "elapsed_seconds": 0.002744
+      },
+      {
+        "name": "emacsvox-agent-shell-buffer-death-cleans-buffer-state",
+        "status": "passed",
+        "elapsed_seconds": 0.150658
+      },
+      {
+        "name": "emacsvox-agent-shell-cancellation-discards-partial-response",
+        "status": "passed",
+        "elapsed_seconds": 0.000218
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-label-lookup-scales-by-property-run",
+        "status": "passed",
+        "elapsed_seconds": 0.001986
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-labels-are-voiced-and-spoken",
+        "status": "passed",
+        "elapsed_seconds": 0.000598
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-labels-follow-separate-content-lines",
+        "status": "passed",
+        "elapsed_seconds": 0.000421
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-navigation-crosses-label-padding",
+        "status": "passed",
+        "elapsed_seconds": 0.00045
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-navigation-escapes-row-before-label",
+        "status": "passed",
+        "elapsed_seconds": 0.000185
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-navigation-escapes-stalled-display-row",
+        "status": "passed",
+        "elapsed_seconds": 0.000223
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-navigation-is-directionally-symmetric",
+        "status": "passed",
+        "elapsed_seconds": 0.000641
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-navigation-preserves-boundary-errors",
+        "status": "passed",
+        "elapsed_seconds": 0.000235
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-navigation-preserves-prompt-rows",
+        "status": "passed",
+        "elapsed_seconds": 0.001326
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-navigation-skips-hidden-marker-row",
+        "status": "passed",
+        "elapsed_seconds": 0.000484
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-overlay-identifiers-remain-compatible",
+        "status": "passed",
+        "elapsed_seconds": 6.7e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-chat-quoted-marker-remains-content",
+        "status": "passed",
+        "elapsed_seconds": 0.000277
+      },
+      {
+        "name": "emacsvox-agent-shell-collapsed-body-keeps-visual-line-presenter",
+        "status": "passed",
+        "elapsed_seconds": 4.2e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-config-events-compare-confirmed-values",
+        "status": "passed",
+        "elapsed_seconds": 0.000441
+      },
+      {
+        "name": "emacsvox-agent-shell-content-categories-carry-specific-intent",
+        "status": "passed",
+        "elapsed_seconds": 0.000117
+      },
+      {
+        "name": "emacsvox-agent-shell-content-text-uses-atomic-submissions",
+        "status": "passed",
+        "elapsed_seconds": 9.8e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-context-header-voices-usage-severity",
+        "status": "passed",
+        "elapsed_seconds": 4.6e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-context-navigation-infers-current-type",
+        "status": "passed",
+        "elapsed_seconds": 0.001455
+      },
+      {
+        "name": "emacsvox-agent-shell-context-navigation-prefers-nested-table",
+        "status": "passed",
+        "elapsed_seconds": 0.001013
+      },
+      {
+        "name": "emacsvox-agent-shell-context-navigation-preserves-input",
+        "status": "passed",
+        "elapsed_seconds": 0.000611
+      },
+      {
+        "name": "emacsvox-agent-shell-context-navigation-selects-at-plain-text",
+        "status": "passed",
+        "elapsed_seconds": 0.001487
+      },
+      {
+        "name": "emacsvox-agent-shell-current-codex-output-reaches-full-speech",
+        "status": "passed",
+        "elapsed_seconds": 0.009608
+      },
+      {
+        "name": "emacsvox-agent-shell-current-list-editor-speaks-structure",
+        "status": "passed",
+        "elapsed_seconds": 0.0005
+      },
+      {
+        "name": "emacsvox-agent-shell-decorated-thought-toggle-is-semantic",
+        "status": "passed",
+        "elapsed_seconds": 0.00039
+      },
+      {
+        "name": "emacsvox-agent-shell-delayed-agent-message-speaks-once",
+        "status": "passed",
+        "elapsed_seconds": 0.000129
+      },
+      {
+        "name": "emacsvox-agent-shell-diff-entry-announces-files-and-hunks",
+        "status": "passed",
+        "elapsed_seconds": 0.017069
+      },
+      {
+        "name": "emacsvox-agent-shell-disable-cleans-existing-buffer-state",
+        "status": "passed",
+        "elapsed_seconds": 0.152094
+      },
+      {
+        "name": "emacsvox-agent-shell-empty-chat-label-overlay-is-spoken",
+        "status": "passed",
+        "elapsed_seconds": 0.000102
+      },
+      {
+        "name": "emacsvox-agent-shell-enable-activates-existing-shells-symmetrically",
+        "status": "passed",
+        "elapsed_seconds": 0.000375
+      },
+      {
+        "name": "emacsvox-agent-shell-enable-disable-feedback-is-native",
+        "status": "passed",
+        "elapsed_seconds": 0.000157
+      },
+      {
+        "name": "emacsvox-agent-shell-enable-disable-manages-current-targets",
+        "status": "passed",
+        "elapsed_seconds": 0.001406
+      },
+      {
+        "name": "emacsvox-agent-shell-end-to-end-vocabulary-is-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000143
+      },
+      {
+        "name": "emacsvox-agent-shell-error-discards-partial-response",
+        "status": "passed",
+        "elapsed_seconds": 0.000286
+      },
+      {
+        "name": "emacsvox-agent-shell-exceptional-lifecycle-is-spoken",
+        "status": "passed",
+        "elapsed_seconds": 0.000579
+      },
+      {
+        "name": "emacsvox-agent-shell-expansion-speech-excludes-body",
+        "status": "passed",
+        "elapsed_seconds": 8.1e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-explicit-header-command-speaks-full-state",
+        "status": "passed",
+        "elapsed_seconds": 0.000263
+      },
+      {
+        "name": "emacsvox-agent-shell-explicit-response-reading-remains-complete",
+        "status": "passed",
+        "elapsed_seconds": 0.000134
+      },
+      {
+        "name": "emacsvox-agent-shell-failed-turn-retains-completed-answer",
+        "status": "passed",
+        "elapsed_seconds": 8.9e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-fallback-content-is-native",
+        "status": "passed",
+        "elapsed_seconds": 0.000181
+      },
+      {
+        "name": "emacsvox-agent-shell-feature-fragments-are-optional-built-ins",
+        "status": "passed",
+        "elapsed_seconds": 0.000101
+      },
+      {
+        "name": "emacsvox-agent-shell-feature-fragments-compose-on-navigation",
+        "status": "passed",
+        "elapsed_seconds": 0.004848
+      },
+      {
+        "name": "emacsvox-agent-shell-fenced-tool-output-survives-rendering",
+        "status": "passed",
+        "elapsed_seconds": 0.00597
+      },
+      {
+        "name": "emacsvox-agent-shell-focus-includes-associated-viewport",
+        "status": "passed",
+        "elapsed_seconds": 0.000134
+      },
+      {
+        "name": "emacsvox-agent-shell-focused-announcement-is-one-submission",
+        "status": "passed",
+        "elapsed_seconds": 0.000336
+      },
+      {
+        "name": "emacsvox-agent-shell-focused-out-of-turn-is-one-submission",
+        "status": "passed",
+        "elapsed_seconds": 0.00022
+      },
+      {
+        "name": "emacsvox-agent-shell-fold-action-ret-announces-state-concisely",
+        "status": "passed",
+        "elapsed_seconds": 0.003331
+      },
+      {
+        "name": "emacsvox-agent-shell-fold-toggle-emits-state-change-facts",
+        "status": "passed",
+        "elapsed_seconds": 0.002298
+      },
+      {
+        "name": "emacsvox-agent-shell-foldable-locations-expose-visibility",
+        "status": "passed",
+        "elapsed_seconds": 0.002057
+      },
+      {
+        "name": "emacsvox-agent-shell-folded-header-is-not-a-blank-line",
+        "status": "passed",
+        "elapsed_seconds": 0.002264
+      },
+      {
+        "name": "emacsvox-agent-shell-folded-navigation-preserves-other-positions",
+        "status": "passed",
+        "elapsed_seconds": 0.000586
+      },
+      {
+        "name": "emacsvox-agent-shell-folded-navigation-restores-heading-actions",
+        "status": "passed",
+        "elapsed_seconds": 0.000622
+      },
+      {
+        "name": "emacsvox-agent-shell-folded-visual-line-uses-visible-heading",
+        "status": "passed",
+        "elapsed_seconds": 0.000118
+      },
+      {
+        "name": "emacsvox-agent-shell-folded-wrapped-heading-speaks-current-row",
+        "status": "passed",
+        "elapsed_seconds": 0.000202
+      },
+      {
+        "name": "emacsvox-agent-shell-full-level-honors-thought-method",
+        "status": "passed",
+        "elapsed_seconds": 0.000196
+      },
+      {
+        "name": "emacsvox-agent-shell-full-level-speaks-turn-thoughts-and-plans",
+        "status": "passed",
+        "elapsed_seconds": 0.00128
+      },
+      {
+        "name": "emacsvox-agent-shell-generated-reference-excludes-internals",
+        "status": "passed",
+        "elapsed_seconds": 0.009251
+      },
+      {
+        "name": "emacsvox-agent-shell-graphical-header-gets-brief-fallback",
+        "status": "passed",
+        "elapsed_seconds": 0.000309
+      },
+      {
+        "name": "emacsvox-agent-shell-header-cost-follows-upstream-option",
+        "status": "passed",
+        "elapsed_seconds": 0.000921
+      },
+      {
+        "name": "emacsvox-agent-shell-header-feedback-is-native",
+        "status": "passed",
+        "elapsed_seconds": 0.000153
+      },
+      {
+        "name": "emacsvox-agent-shell-header-formatters-describe-viewport",
+        "status": "passed",
+        "elapsed_seconds": 5.2e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-header-formatters-separate-detail-levels",
+        "status": "passed",
+        "elapsed_seconds": 0.000131
+      },
+      {
+        "name": "emacsvox-agent-shell-header-prefers-public-session-id",
+        "status": "passed",
+        "elapsed_seconds": 0.000419
+      },
+      {
+        "name": "emacsvox-agent-shell-header-state-uses-semantic-session-data",
+        "status": "passed",
+        "elapsed_seconds": 8.6e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-historical-input-skips-hidden-prompt-source",
+        "status": "passed",
+        "elapsed_seconds": 0.001064
+      },
+      {
+        "name": "emacsvox-agent-shell-horizontal-motion-keeps-normal-scope",
+        "status": "passed",
+        "elapsed_seconds": 0.000638
+      },
+      {
+        "name": "emacsvox-agent-shell-interactive-shell-commands-are-native",
+        "status": "passed",
+        "elapsed_seconds": 0.000134
+      },
+      {
+        "name": "emacsvox-agent-shell-internal-fold-toggle-remains-silent",
+        "status": "passed",
+        "elapsed_seconds": 0.002397
+      },
+      {
+        "name": "emacsvox-agent-shell-item-navigation-skips-empty-lines",
+        "status": "passed",
+        "elapsed_seconds": 0.000238
+      },
+      {
+        "name": "emacsvox-agent-shell-latest-answer-has-plain-legacy-fallback",
+        "status": "passed",
+        "elapsed_seconds": 9e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-latest-answer-keeps-only-response-bodies",
+        "status": "passed",
+        "elapsed_seconds": 0.001868
+      },
+      {
+        "name": "emacsvox-agent-shell-legacy-tool-group-remains-navigable",
+        "status": "passed",
+        "elapsed_seconds": 0.00062
+      },
+      {
+        "name": "emacsvox-agent-shell-letter-links-silence-duplicate-sensor-hints",
+        "status": "passed",
+        "elapsed_seconds": 0.032558
+      },
+      {
+        "name": "emacsvox-agent-shell-letter-navigation-finds-agent-responses",
+        "status": "passed",
+        "elapsed_seconds": 0.003914
+      },
+      {
+        "name": "emacsvox-agent-shell-letter-navigation-finds-failed-tools",
+        "status": "passed",
+        "elapsed_seconds": 0.003611
+      },
+      {
+        "name": "emacsvox-agent-shell-letter-navigation-finds-rendered-content",
+        "status": "passed",
+        "elapsed_seconds": 0.018797
+      },
+      {
+        "name": "emacsvox-agent-shell-letter-navigation-finds-submitted-prompts",
+        "status": "passed",
+        "elapsed_seconds": 0.000932
+      },
+      {
+        "name": "emacsvox-agent-shell-letter-navigation-skips-current-and-hidden",
+        "status": "passed",
+        "elapsed_seconds": 0.002879
+      },
+      {
+        "name": "emacsvox-agent-shell-letter-response-navigation-skips-enclosing-answer",
+        "status": "passed",
+        "elapsed_seconds": 0.00393
+      },
+      {
+        "name": "emacsvox-agent-shell-lifecycle-carries-aural-facts",
+        "status": "passed",
+        "elapsed_seconds": 0.000105
+      },
+      {
+        "name": "emacsvox-agent-shell-lifecycle-feedback-can-be-disabled",
+        "status": "passed",
+        "elapsed_seconds": 0.000125
+      },
+      {
+        "name": "emacsvox-agent-shell-lifecycle-subscription-is-idempotent",
+        "status": "passed",
+        "elapsed_seconds": 0.00021
+      },
+      {
+        "name": "emacsvox-agent-shell-lifecycle-transitions-are-semantic",
+        "status": "passed",
+        "elapsed_seconds": 0.007798
+      },
+      {
+        "name": "emacsvox-agent-shell-line-navigation-speech-is-bounded",
+        "status": "passed",
+        "elapsed_seconds": 0.000311
+      },
+      {
+        "name": "emacsvox-agent-shell-list-editor-delegates-ordinary-feedback",
+        "status": "passed",
+        "elapsed_seconds": 0.000844
+      },
+      {
+        "name": "emacsvox-agent-shell-live-chat-prompt-announces-editability",
+        "status": "passed",
+        "elapsed_seconds": 0.002306
+      },
+      {
+        "name": "emacsvox-agent-shell-live-input-empty-visual-range-speaks",
+        "status": "passed",
+        "elapsed_seconds": 0.014727
+      },
+      {
+        "name": "emacsvox-agent-shell-live-input-horizontal-boundaries-are-semantic",
+        "status": "passed",
+        "elapsed_seconds": 0.002652
+      },
+      {
+        "name": "emacsvox-agent-shell-live-input-visual-boundaries-read-only-input",
+        "status": "passed",
+        "elapsed_seconds": 0.000774
+      },
+      {
+        "name": "emacsvox-agent-shell-live-prompt-line-speech-crosses-field-boundary",
+        "status": "passed",
+        "elapsed_seconds": 0.003454
+      },
+      {
+        "name": "emacsvox-agent-shell-live-prompt-lookup-uses-local-fields",
+        "status": "passed",
+        "elapsed_seconds": 0.001123
+      },
+      {
+        "name": "emacsvox-agent-shell-live-prompt-speech-identifies-busy-state",
+        "status": "passed",
+        "elapsed_seconds": 0.004879
+      },
+      {
+        "name": "emacsvox-agent-shell-local-block-lookup-skips-prompt-scan",
+        "status": "passed",
+        "elapsed_seconds": 0.000133
+      },
+      {
+        "name": "emacsvox-agent-shell-markdown-face-inventory-is-current",
+        "status": "passed",
+        "elapsed_seconds": 0.000934
+      },
+      {
+        "name": "emacsvox-agent-shell-markdown-face-voices-are-explicit",
+        "status": "passed",
+        "elapsed_seconds": 0.000105
+      },
+      {
+        "name": "emacsvox-agent-shell-mode-change-cleans-buffer-state",
+        "status": "passed",
+        "elapsed_seconds": 0.151126
+      },
+      {
+        "name": "emacsvox-agent-shell-mode-line-command-speaks-full-header",
+        "status": "passed",
+        "elapsed_seconds": 0.000753
+      },
+      {
+        "name": "emacsvox-agent-shell-mode-line-prefix-retains-buffer-info",
+        "status": "passed",
+        "elapsed_seconds": 0.000439
+      },
+      {
+        "name": "emacsvox-agent-shell-multiple-permission-fixture-is-complete",
+        "status": "passed",
+        "elapsed_seconds": 0.002102
+      },
+      {
+        "name": "emacsvox-agent-shell-new-events-accept-user-speech-and-cues",
+        "status": "passed",
+        "elapsed_seconds": 0.00158
+      },
+      {
+        "name": "emacsvox-agent-shell-new-notifications-identify-background-session",
+        "status": "passed",
+        "elapsed_seconds": 0.000355
+      },
+      {
+        "name": "emacsvox-agent-shell-old-viewport-resolver-falls-back-narrowly",
+        "status": "passed",
+        "elapsed_seconds": 8.5e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-out-of-turn-background-notifies-by-name",
+        "status": "passed",
+        "elapsed_seconds": 0.013622
+      },
+      {
+        "name": "emacsvox-agent-shell-out-of-turn-cleanup-cancels-delivery",
+        "status": "passed",
+        "elapsed_seconds": 0.000661
+      },
+      {
+        "name": "emacsvox-agent-shell-out-of-turn-message-resumes-after-pause",
+        "status": "passed",
+        "elapsed_seconds": 0.036653
+      },
+      {
+        "name": "emacsvox-agent-shell-out-of-turn-respects-suppression-levels",
+        "status": "passed",
+        "elapsed_seconds": 0.038696
+      },
+      {
+        "name": "emacsvox-agent-shell-out-of-turn-version-cache-is-bounded",
+        "status": "passed",
+        "elapsed_seconds": 0.000577
+      },
+      {
+        "name": "emacsvox-agent-shell-out-of-turn-versions-are-session-local",
+        "status": "passed",
+        "elapsed_seconds": 0.000262
+      },
+      {
+        "name": "emacsvox-agent-shell-out-of-turn-versions-handle-interleaving",
+        "status": "passed",
+        "elapsed_seconds": 0.000199
+      },
+      {
+        "name": "emacsvox-agent-shell-output-blank-skips-prompt-scan",
+        "status": "passed",
+        "elapsed_seconds": 0.00039
+      },
+      {
+        "name": "emacsvox-agent-shell-permission-and-item-feedback-is-native",
+        "status": "passed",
+        "elapsed_seconds": 0.00057
+      },
+      {
+        "name": "emacsvox-agent-shell-permission-announcement-can-be-disabled",
+        "status": "passed",
+        "elapsed_seconds": 0.00014
+      },
+      {
+        "name": "emacsvox-agent-shell-permission-button-advice-observes-boundary",
+        "status": "passed",
+        "elapsed_seconds": 0.00066
+      },
+      {
+        "name": "emacsvox-agent-shell-permission-button-feedback-is-semantic",
+        "status": "passed",
+        "elapsed_seconds": 0.000373
+      },
+      {
+        "name": "emacsvox-agent-shell-permission-fields-retain-bounded-actions",
+        "status": "passed",
+        "elapsed_seconds": 0.000793
+      },
+      {
+        "name": "emacsvox-agent-shell-permission-fixture-is-urgent",
+        "status": "passed",
+        "elapsed_seconds": 0.002711
+      },
+      {
+        "name": "emacsvox-agent-shell-permission-operation-updates-are-deduplicated",
+        "status": "passed",
+        "elapsed_seconds": 0.001447
+      },
+      {
+        "name": "emacsvox-agent-shell-permission-responses-are-semantic",
+        "status": "passed",
+        "elapsed_seconds": 0.002045
+      },
+      {
+        "name": "emacsvox-agent-shell-permission-subscription-is-idempotent",
+        "status": "passed",
+        "elapsed_seconds": 0.001136
+      },
+      {
+        "name": "emacsvox-agent-shell-permission-urgency-reaches-every-stream",
+        "status": "passed",
+        "elapsed_seconds": 0.001228
+      },
+      {
+        "name": "emacsvox-agent-shell-persistent-prompt-keeps-navigation-keys-editable",
+        "status": "passed",
+        "elapsed_seconds": 0.105338
+      },
+      {
+        "name": "emacsvox-agent-shell-physical-line-bypasses-core-length-prompt",
+        "status": "passed",
+        "elapsed_seconds": 0.000554
+      },
+      {
+        "name": "emacsvox-agent-shell-programmatic-session-controls-are-unchanged",
+        "status": "passed",
+        "elapsed_seconds": 7.7e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-prompt-letters-do-not-discover-tables",
+        "status": "passed",
+        "elapsed_seconds": 0.001873
+      },
+      {
+        "name": "emacsvox-agent-shell-prompt-search-recognizes-comint-face",
+        "status": "passed",
+        "elapsed_seconds": 0.000107
+      },
+      {
+        "name": "emacsvox-agent-shell-provider-tool-ids-cannot-spoof-semantics",
+        "status": "passed",
+        "elapsed_seconds": 0.007083
+      },
+      {
+        "name": "emacsvox-agent-shell-public-viewport-resolver-owns-workflows",
+        "status": "passed",
+        "elapsed_seconds": 0.000776
+      },
+      {
+        "name": "emacsvox-agent-shell-push-completes-before-next-queued-turn",
+        "status": "passed",
+        "elapsed_seconds": 0.030019
+      },
+      {
+        "name": "emacsvox-agent-shell-push-error-clears-origin",
+        "status": "passed",
+        "elapsed_seconds": 0.000287
+      },
+      {
+        "name": "emacsvox-agent-shell-queue-announces-start-and-pause",
+        "status": "passed",
+        "elapsed_seconds": 0.001067
+      },
+      {
+        "name": "emacsvox-agent-shell-quiet-retains-urgent-background-events",
+        "status": "passed",
+        "elapsed_seconds": 0.000229
+      },
+      {
+        "name": "emacsvox-agent-shell-rejected-push-preserves-running-response",
+        "status": "passed",
+        "elapsed_seconds": 0.000613
+      },
+      {
+        "name": "emacsvox-agent-shell-render-answer-selection-keeps-order-and-faces",
+        "status": "passed",
+        "elapsed_seconds": 8.6e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-render-chat-label-ignores-syntax-table",
+        "status": "passed",
+        "elapsed_seconds": 9.4e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-render-chrome-filter-preserves-source",
+        "status": "passed",
+        "elapsed_seconds": 6e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-render-copy-preserves-aural-properties",
+        "status": "passed",
+        "elapsed_seconds": 4.2e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-render-group-provenance-beats-tool-id",
+        "status": "passed",
+        "elapsed_seconds": 8.8e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-render-load-is-independent",
+        "status": "passed",
+        "elapsed_seconds": 0.085316
+      },
+      {
+        "name": "emacsvox-agent-shell-render-prompt-removal-preserves-content",
+        "status": "passed",
+        "elapsed_seconds": 0.000142
+      },
+      {
+        "name": "emacsvox-agent-shell-render-status-needs-authenticating-face",
+        "status": "passed",
+        "elapsed_seconds": 0.000302
+      },
+      {
+        "name": "emacsvox-agent-shell-render-table-borders-preserve-data",
+        "status": "passed",
+        "elapsed_seconds": 0.000144
+      },
+      {
+        "name": "emacsvox-agent-shell-rendered-markdown-has-semantic-voices",
+        "status": "passed",
+        "elapsed_seconds": 0.002179
+      },
+      {
+        "name": "emacsvox-agent-shell-rendered-plan-speaks-semantic-statuses",
+        "status": "passed",
+        "elapsed_seconds": 0.000733
+      },
+      {
+        "name": "emacsvox-agent-shell-rendered-response-waits-for-turn-complete",
+        "status": "passed",
+        "elapsed_seconds": 0.014105
+      },
+      {
+        "name": "emacsvox-agent-shell-rendered-tool-content-is-native",
+        "status": "passed",
+        "elapsed_seconds": 0.000118
+      },
+      {
+        "name": "emacsvox-agent-shell-response-commands-report-empty-session",
+        "status": "passed",
+        "elapsed_seconds": 0.000215
+      },
+      {
+        "name": "emacsvox-agent-shell-response-inspection-identifies-first-partial",
+        "status": "passed",
+        "elapsed_seconds": 0.00013
+      },
+      {
+        "name": "emacsvox-agent-shell-response-inspection-is-native",
+        "status": "passed",
+        "elapsed_seconds": 9.2e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-response-inspection-keeps-completed-while-busy",
+        "status": "passed",
+        "elapsed_seconds": 0.000223
+      },
+      {
+        "name": "emacsvox-agent-shell-response-level-applies-one-turn-budget",
+        "status": "passed",
+        "elapsed_seconds": 0.00124
+      },
+      {
+        "name": "emacsvox-agent-shell-response-level-reduces-focused-chatter",
+        "status": "passed",
+        "elapsed_seconds": 0.003753
+      },
+      {
+        "name": "emacsvox-agent-shell-response-navigation-omits-table-borders",
+        "status": "passed",
+        "elapsed_seconds": 0.002722
+      },
+      {
+        "name": "emacsvox-agent-shell-response-overview-counts-rendered-markdown",
+        "status": "passed",
+        "elapsed_seconds": 0.001523
+      },
+      {
+        "name": "emacsvox-agent-shell-response-overview-is-structural-and-bounded",
+        "status": "passed",
+        "elapsed_seconds": 0.000282
+      },
+      {
+        "name": "emacsvox-agent-shell-restored-content-stays-automatically-silent",
+        "status": "passed",
+        "elapsed_seconds": 0.012817
+      },
+      {
+        "name": "emacsvox-agent-shell-session-controls-wait-for-success",
+        "status": "passed",
+        "elapsed_seconds": 0.000538
+      },
+      {
+        "name": "emacsvox-agent-shell-session-override-beats-focus-default",
+        "status": "passed",
+        "elapsed_seconds": 3.5e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-session-restore-reseeds-completed-answer",
+        "status": "passed",
+        "elapsed_seconds": 7.4e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-setting-warnings-are-semantic-and-deduplicated",
+        "status": "passed",
+        "elapsed_seconds": 0.001296
+      },
+      {
+        "name": "emacsvox-agent-shell-source-block-locations-are-semantic",
+        "status": "passed",
+        "elapsed_seconds": 0.003776
+      },
+      {
+        "name": "emacsvox-agent-shell-source-block-navigation-is-concise",
+        "status": "passed",
+        "elapsed_seconds": 0.007398
+      },
+      {
+        "name": "emacsvox-agent-shell-source-block-presentation-is-complete",
+        "status": "passed",
+        "elapsed_seconds": 0.004075
+      },
+      {
+        "name": "emacsvox-agent-shell-source-block-read-and-copy-use-public-body",
+        "status": "passed",
+        "elapsed_seconds": 0.003553
+      },
+      {
+        "name": "emacsvox-agent-shell-source-navigation-expands-parent",
+        "status": "passed",
+        "elapsed_seconds": 0.006694
+      },
+      {
+        "name": "emacsvox-agent-shell-speak-content-orders-feedback",
+        "status": "passed",
+        "elapsed_seconds": 0.000245
+      },
+      {
+        "name": "emacsvox-agent-shell-speak-last-response-works-in-session-views",
+        "status": "passed",
+        "elapsed_seconds": 0.003071
+      },
+      {
+        "name": "emacsvox-agent-shell-speak-response-overview-is-explicit",
+        "status": "passed",
+        "elapsed_seconds": 0.000156
+      },
+      {
+        "name": "emacsvox-agent-shell-speech-bindings-upgrade-live-map",
+        "status": "passed",
+        "elapsed_seconds": 0.000149
+      },
+      {
+        "name": "emacsvox-agent-shell-speech-copy-preserves-current-and-legacy-faces",
+        "status": "passed",
+        "elapsed_seconds": 0.000971
+      },
+      {
+        "name": "emacsvox-agent-shell-speech-level-control-works-in-viewport",
+        "status": "passed",
+        "elapsed_seconds": 0.000331
+      },
+      {
+        "name": "emacsvox-agent-shell-speech-level-cycle-is-session-local",
+        "status": "passed",
+        "elapsed_seconds": 0.000311
+      },
+      {
+        "name": "emacsvox-agent-shell-speech-level-feedback-is-native",
+        "status": "passed",
+        "elapsed_seconds": 7.4e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-speech-omits-fragment-visual-chrome",
+        "status": "passed",
+        "elapsed_seconds": 0.000264
+      },
+      {
+        "name": "emacsvox-agent-shell-speech-omits-source-copy-chrome",
+        "status": "passed",
+        "elapsed_seconds": 0.003534
+      },
+      {
+        "name": "emacsvox-agent-shell-speech-setup-preserves-disabled-undo",
+        "status": "passed",
+        "elapsed_seconds": 3.9e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-speech-setup-preserves-live-prompt-undo",
+        "status": "passed",
+        "elapsed_seconds": 0.000117
+      },
+      {
+        "name": "emacsvox-agent-shell-speech-setup-preserves-package-header",
+        "status": "passed",
+        "elapsed_seconds": 3e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-speech-setup-preserves-punctuation-override",
+        "status": "passed",
+        "elapsed_seconds": 3.7e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-split-chat-labels-follow-only-adjacent-content",
+        "status": "passed",
+        "elapsed_seconds": 0.000134
+      },
+      {
+        "name": "emacsvox-agent-shell-split-prompt-source-is-crossed-as-one-unit",
+        "status": "passed",
+        "elapsed_seconds": 6.1e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-stale-viewport-does-not-select-a-session",
+        "status": "passed",
+        "elapsed_seconds": 0.00012
+      },
+      {
+        "name": "emacsvox-agent-shell-status-faces-have-semantic-contrast",
+        "status": "passed",
+        "elapsed_seconds": 4.5e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-status-speech-is-scoped-and-customizable",
+        "status": "passed",
+        "elapsed_seconds": 9.4e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-steering-confirms-actual-outcomes",
+        "status": "passed",
+        "elapsed_seconds": 0.002328
+      },
+      {
+        "name": "emacsvox-agent-shell-steering-failure-and-disabled-callback",
+        "status": "passed",
+        "elapsed_seconds": 0.00041
+      },
+      {
+        "name": "emacsvox-agent-shell-streaming-defers-body-snapshot",
+        "status": "passed",
+        "elapsed_seconds": 0.109119
+      },
+      {
+        "name": "emacsvox-agent-shell-table-arrows-separate-characters-and-columns",
+        "status": "passed",
+        "elapsed_seconds": 0.007529
+      },
+      {
+        "name": "emacsvox-agent-shell-table-arrows-speak-whole-rows",
+        "status": "passed",
+        "elapsed_seconds": 0.01138
+      },
+      {
+        "name": "emacsvox-agent-shell-table-cell-feedback-is-customizable",
+        "status": "passed",
+        "elapsed_seconds": 0.001494
+      },
+      {
+        "name": "emacsvox-agent-shell-table-column-speech-respects-title-settings",
+        "status": "passed",
+        "elapsed_seconds": 0.00185
+      },
+      {
+        "name": "emacsvox-agent-shell-table-commands-use-native-submissions",
+        "status": "passed",
+        "elapsed_seconds": 0.001062
+      },
+      {
+        "name": "emacsvox-agent-shell-table-context-describes-header-and-data",
+        "status": "passed",
+        "elapsed_seconds": 0.001242
+      },
+      {
+        "name": "emacsvox-agent-shell-table-context-handles-headerless-and-outside",
+        "status": "passed",
+        "elapsed_seconds": 0.000823
+      },
+      {
+        "name": "emacsvox-agent-shell-table-copy-cell-copies-logical-value",
+        "status": "passed",
+        "elapsed_seconds": 0.000808
+      },
+      {
+        "name": "emacsvox-agent-shell-table-copy-cell-handles-blank-and-outside",
+        "status": "passed",
+        "elapsed_seconds": 0.000861
+      },
+      {
+        "name": "emacsvox-agent-shell-table-copy-row-and-column-are-plain",
+        "status": "passed",
+        "elapsed_seconds": 0.000844
+      },
+      {
+        "name": "emacsvox-agent-shell-table-discovery-selects-nearest-visible",
+        "status": "passed",
+        "elapsed_seconds": 0.000538
+      },
+      {
+        "name": "emacsvox-agent-shell-table-entry-has-one-navigation-submission",
+        "status": "passed",
+        "elapsed_seconds": 0.000585
+      },
+      {
+        "name": "emacsvox-agent-shell-table-entry-is-directional-in-both-views",
+        "status": "passed",
+        "elapsed_seconds": 0.002768
+      },
+      {
+        "name": "emacsvox-agent-shell-table-explicit-exit-moves-past-table",
+        "status": "passed",
+        "elapsed_seconds": 0.000585
+      },
+      {
+        "name": "emacsvox-agent-shell-table-feedback-handles-title-cells-and-blanks",
+        "status": "passed",
+        "elapsed_seconds": 0.000792
+      },
+      {
+        "name": "emacsvox-agent-shell-table-feedback-preserves-logical-cells",
+        "status": "passed",
+        "elapsed_seconds": 0.000735
+      },
+      {
+        "name": "emacsvox-agent-shell-table-feedback-respects-headerless-tables",
+        "status": "passed",
+        "elapsed_seconds": 0.000553
+      },
+      {
+        "name": "emacsvox-agent-shell-table-grid-navigation-accepts-bottom-entry",
+        "status": "passed",
+        "elapsed_seconds": 0.000621
+      },
+      {
+        "name": "emacsvox-agent-shell-table-grid-navigation-accepts-leading-border",
+        "status": "passed",
+        "elapsed_seconds": 0.000625
+      },
+      {
+        "name": "emacsvox-agent-shell-table-grid-navigation-handles-edges",
+        "status": "passed",
+        "elapsed_seconds": 0.000757
+      },
+      {
+        "name": "emacsvox-agent-shell-table-grid-navigation-is-logical",
+        "status": "passed",
+        "elapsed_seconds": 0.00183
+      },
+      {
+        "name": "emacsvox-agent-shell-table-letter-keys-navigate-transcripts",
+        "status": "passed",
+        "elapsed_seconds": 0.004124
+      },
+      {
+        "name": "emacsvox-agent-shell-table-navigation-is-contextual",
+        "status": "passed",
+        "elapsed_seconds": 0.000787
+      },
+      {
+        "name": "emacsvox-agent-shell-table-navigation-speaks-in-both-views",
+        "status": "passed",
+        "elapsed_seconds": 0.001137
+      },
+      {
+        "name": "emacsvox-agent-shell-table-presentation-is-complete",
+        "status": "passed",
+        "elapsed_seconds": 0.000616
+      },
+      {
+        "name": "emacsvox-agent-shell-table-row-column-handle-table-kinds",
+        "status": "passed",
+        "elapsed_seconds": 0.001378
+      },
+      {
+        "name": "emacsvox-agent-shell-table-row-column-reject-outside-table",
+        "status": "passed",
+        "elapsed_seconds": 0.000241
+      },
+      {
+        "name": "emacsvox-agent-shell-table-row-speech-respects-title-settings",
+        "status": "passed",
+        "elapsed_seconds": 0.001489
+      },
+      {
+        "name": "emacsvox-agent-shell-table-sequential-boundaries-exit",
+        "status": "passed",
+        "elapsed_seconds": 0.00302
+      },
+      {
+        "name": "emacsvox-agent-shell-table-speaking-method-is-interactive",
+        "status": "passed",
+        "elapsed_seconds": 0.000537
+      },
+      {
+        "name": "emacsvox-agent-shell-task-guide-covers-live-public-keymaps",
+        "status": "passed",
+        "elapsed_seconds": 0.127842
+      },
+      {
+        "name": "emacsvox-agent-shell-text-header-keeps-emacsvox-path",
+        "status": "passed",
+        "elapsed_seconds": 0.000215
+      },
+      {
+        "name": "emacsvox-agent-shell-thought-methods-use-native-submissions",
+        "status": "passed",
+        "elapsed_seconds": 0.000135
+      },
+      {
+        "name": "emacsvox-agent-shell-thought-toggle-announces-state-concisely",
+        "status": "passed",
+        "elapsed_seconds": 0.002883
+      },
+      {
+        "name": "emacsvox-agent-shell-toggle-all-emits-one-aggregate-change",
+        "status": "passed",
+        "elapsed_seconds": 0.000141
+      },
+      {
+        "name": "emacsvox-agent-shell-toggle-filter-restores-after-sensors",
+        "status": "passed",
+        "elapsed_seconds": 6e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-toggle-hint-filter-is-narrow",
+        "status": "passed",
+        "elapsed_seconds": 2.8e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-tool-feedback-can-be-disabled",
+        "status": "passed",
+        "elapsed_seconds": 0.00013
+      },
+      {
+        "name": "emacsvox-agent-shell-tool-fixture-announces-transitions",
+        "status": "passed",
+        "elapsed_seconds": 0.001077
+      },
+      {
+        "name": "emacsvox-agent-shell-tool-full-verbosity-speaks-output",
+        "status": "passed",
+        "elapsed_seconds": 0.000324
+      },
+      {
+        "name": "emacsvox-agent-shell-tool-output-capture-stops-at-next-fragment",
+        "status": "passed",
+        "elapsed_seconds": 3.9e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-tool-output-ignores-empty-and-nontext-blocks",
+        "status": "passed",
+        "elapsed_seconds": 4.2e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-tool-presentation-is-complete",
+        "status": "passed",
+        "elapsed_seconds": 0.000103
+      },
+      {
+        "name": "emacsvox-agent-shell-tool-status-policy-uses-semantic-cues",
+        "status": "passed",
+        "elapsed_seconds": 0.00037
+      },
+      {
+        "name": "emacsvox-agent-shell-tool-status-verbosity-is-icon-only",
+        "status": "passed",
+        "elapsed_seconds": 0.000201
+      },
+      {
+        "name": "emacsvox-agent-shell-tool-subscription-cleans-state",
+        "status": "passed",
+        "elapsed_seconds": 0.000197
+      },
+      {
+        "name": "emacsvox-agent-shell-tool-updates-speak-once-per-status",
+        "status": "passed",
+        "elapsed_seconds": 0.000135
+      },
+      {
+        "name": "emacsvox-agent-shell-transforms-before-native-preparation",
+        "status": "passed",
+        "elapsed_seconds": 0.000388
+      },
+      {
+        "name": "emacsvox-agent-shell-turn-sections-use-real-id-and-order",
+        "status": "passed",
+        "elapsed_seconds": 0.001266
+      },
+      {
+        "name": "emacsvox-agent-shell-ui-face-inventory-is-current",
+        "status": "passed",
+        "elapsed_seconds": 0.000444
+      },
+      {
+        "name": "emacsvox-agent-shell-ui-face-voices-are-explicit",
+        "status": "passed",
+        "elapsed_seconds": 5.4e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-unclassified-input-keeps-prompt-fallback",
+        "status": "passed",
+        "elapsed_seconds": 7.2e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-unknown-block-respects-speech-level",
+        "status": "passed",
+        "elapsed_seconds": 0.000224
+      },
+      {
+        "name": "emacsvox-agent-shell-unknown-block-uses-fallback",
+        "status": "passed",
+        "elapsed_seconds": 0.000115
+      },
+      {
+        "name": "emacsvox-agent-shell-urgent-permission-follows-bounded-response",
+        "status": "passed",
+        "elapsed_seconds": 0.000404
+      },
+      {
+        "name": "emacsvox-agent-shell-user-message-fixture-is-semantic",
+        "status": "passed",
+        "elapsed_seconds": 0.000605
+      },
+      {
+        "name": "emacsvox-agent-shell-vertical-entry-adds-block-facts-once",
+        "status": "passed",
+        "elapsed_seconds": 0.001332
+      },
+      {
+        "name": "emacsvox-agent-shell-vertical-motion-silences-toggle-hint",
+        "status": "passed",
+        "elapsed_seconds": 4.4e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-viewport-cancel-announces-accepted-only",
+        "status": "passed",
+        "elapsed_seconds": 0.000216
+      },
+      {
+        "name": "emacsvox-agent-shell-viewport-controls-are-native",
+        "status": "passed",
+        "elapsed_seconds": 0.000263
+      },
+      {
+        "name": "emacsvox-agent-shell-viewport-submit-announces-continued-compose",
+        "status": "passed",
+        "elapsed_seconds": 0.000139
+      },
+      {
+        "name": "emacsvox-agent-shell-viewport-submit-announces-dismissal",
+        "status": "passed",
+        "elapsed_seconds": 0.000108
+      },
+      {
+        "name": "emacsvox-agent-shell-viewport-submit-announces-queueing",
+        "status": "passed",
+        "elapsed_seconds": 9.8e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-viewport-submit-announces-success",
+        "status": "passed",
+        "elapsed_seconds": 0.000138
+      },
+      {
+        "name": "emacsvox-agent-shell-viewport-submit-does-not-confirm-error",
+        "status": "passed",
+        "elapsed_seconds": 0.000104
+      },
+      {
+        "name": "emacsvox-agent-shell-viewport-submit-presentation-is-complete",
+        "status": "passed",
+        "elapsed_seconds": 8.6e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-viewport-submit-reports-actual-busy-route",
+        "status": "passed",
+        "elapsed_seconds": 0.001931
+      },
+      {
+        "name": "emacsvox-agent-shell-viewport-submit-uses-public-status",
+        "status": "passed",
+        "elapsed_seconds": 7.1e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-visibility-fragment-replaces-toggle-cue",
+        "status": "passed",
+        "elapsed_seconds": 0.000239
+      },
+      {
+        "name": "emacsvox-agent-shell-visibility-labels-follow-navigation-content",
+        "status": "passed",
+        "elapsed_seconds": 0.000898
+      },
+      {
+        "name": "emacsvox-agent-shell-visible-block-text-omits-hidden-content",
+        "status": "passed",
+        "elapsed_seconds": 5.3e-05
+      },
+      {
+        "name": "emacsvox-agent-shell-visual-chrome-filter-is-property-scoped",
+        "status": "passed",
+        "elapsed_seconds": 0.000168
+      },
+      {
+        "name": "emacsvox-agent-shell-visual-input-boundaries-keep-normal-scope",
+        "status": "passed",
+        "elapsed_seconds": 0.000121
+      },
+      {
+        "name": "emacsvox-agent-shell-visual-line-keeps-nonblank-eol-speech",
+        "status": "passed",
+        "elapsed_seconds": 0.000174
+      },
+      {
+        "name": "emacsvox-agent-shell-visual-line-kill-speaks-only-killed-input",
+        "status": "passed",
+        "elapsed_seconds": 0.000967
+      },
+      {
+        "name": "emacsvox-agent-shell-visual-line-kill-survives-advice-load-order",
+        "status": "passed",
+        "elapsed_seconds": 2.549371
+      },
+      {
+        "name": "emacsvox-agent-shell-visual-line-speech-is-bounded",
+        "status": "passed",
+        "elapsed_seconds": 0.000323
+      },
+      {
+        "name": "emacsvox-agent-shell-visual-lines-leave-blank-policy-to-core",
+        "status": "passed",
+        "elapsed_seconds": 0.000217
+      },
+      {
+        "name": "emacsvox-agent-shell-yank-dwim-image-does-not-speak-old-region",
+        "status": "passed",
+        "elapsed_seconds": 0.001073
+      },
+      {
+        "name": "emacsvox-agent-shell-yank-dwim-speaks-interactive-text-once",
+        "status": "passed",
+        "elapsed_seconds": 0.00043
+      },
+      {
+        "name": "emacsvox-eat-advice-is-current-and-direct",
+        "status": "passed",
+        "elapsed_seconds": 0.000216
+      },
+      {
+        "name": "emacsvox-eat-alternate-cursor-row-is-automatic-navigation",
+        "status": "passed",
+        "elapsed_seconds": 8.3e-05
+      },
+      {
+        "name": "emacsvox-eat-alternate-screen-focus-loss-discards-delivery",
+        "status": "passed",
+        "elapsed_seconds": 4.9e-05
+      },
+      {
+        "name": "emacsvox-eat-alternate-screen-tab-records-navigation-not-completion",
+        "status": "passed",
+        "elapsed_seconds": 5.5e-05
+      },
+      {
+        "name": "emacsvox-eat-alternate-screen-transitions-are-semantic",
+        "status": "passed",
+        "elapsed_seconds": 6.4e-05
+      },
+      {
+        "name": "emacsvox-eat-ambiguous-deletion-is-action-only-and-semantic",
+        "status": "passed",
+        "elapsed_seconds": 7.2e-05
+      },
+      {
+        "name": "emacsvox-eat-application-status-is-retained-but-not-automatic",
+        "status": "passed",
+        "elapsed_seconds": 0.000145
+      },
+      {
+        "name": "emacsvox-eat-asynchronous-update-has-no-immediate-cursor-speech",
+        "status": "passed",
+        "elapsed_seconds": 5.5e-05
+      },
+      {
+        "name": "emacsvox-eat-background-bell-keeps-eat-behavior-without-speech",
+        "status": "passed",
+        "elapsed_seconds": 0.000168
+      },
+      {
+        "name": "emacsvox-eat-background-lifecycle-is-private-by-default",
+        "status": "passed",
+        "elapsed_seconds": 5.5e-05
+      },
+      {
+        "name": "emacsvox-eat-background-monitor-classifies-only-text-output",
+        "status": "passed",
+        "elapsed_seconds": 0.000122
+      },
+      {
+        "name": "emacsvox-eat-background-monitor-coalesces-counts-and-cues",
+        "status": "passed",
+        "elapsed_seconds": 0.001281
+      },
+      {
+        "name": "emacsvox-eat-background-monitor-reports-count-only-on-return",
+        "status": "passed",
+        "elapsed_seconds": 0.001426
+      },
+      {
+        "name": "emacsvox-eat-background-monitoring-is-buffer-local-and-explicit",
+        "status": "passed",
+        "elapsed_seconds": 6.3e-05
+      },
+      {
+        "name": "emacsvox-eat-background-update-is-silent",
+        "status": "passed",
+        "elapsed_seconds": 6.4e-05
+      },
+      {
+        "name": "emacsvox-eat-bash-command-error-is-spoken",
+        "status": "passed",
+        "elapsed_seconds": 0.626594
+      },
+      {
+        "name": "emacsvox-eat-bash-navigation-and-kills-omit-prompt",
+        "status": "passed",
+        "elapsed_seconds": 0.626844
+      },
+      {
+        "name": "emacsvox-eat-bash-readline-files-preserve-visible-spelling",
+        "status": "passed",
+        "elapsed_seconds": 0.595286
+      },
+      {
+        "name": "emacsvox-eat-bash-readline-unique-ambiguous-and-repeated-tab",
+        "status": "passed",
+        "elapsed_seconds": 0.426151
+      },
+      {
+        "name": "emacsvox-eat-bell-wrapper-preserves-and-deduplicates",
+        "status": "passed",
+        "elapsed_seconds": 0.000254
+      },
+      {
+        "name": "emacsvox-eat-candidate-output-is-semantic-retained-and-singular",
+        "status": "passed",
+        "elapsed_seconds": 0.000233
+      },
+      {
+        "name": "emacsvox-eat-completion-captures-bounded-public-screen-state",
+        "status": "passed",
+        "elapsed_seconds": 0.000295
+      },
+      {
+        "name": "emacsvox-eat-completion-output-aligns-scroll-and-fails-closed",
+        "status": "passed",
+        "elapsed_seconds": 0.000168
+      },
+      {
+        "name": "emacsvox-eat-completion-output-preserves-columns-and-help-rows",
+        "status": "passed",
+        "elapsed_seconds": 0.000161
+      },
+      {
+        "name": "emacsvox-eat-completion-output-waits-for-redrawn-input",
+        "status": "passed",
+        "elapsed_seconds": 9.7e-05
+      },
+      {
+        "name": "emacsvox-eat-completion-presentation-bounds-large-item-lists",
+        "status": "passed",
+        "elapsed_seconds": 8.4e-05
+      },
+      {
+        "name": "emacsvox-eat-completion-presentation-counts-without-inventing-items",
+        "status": "passed",
+        "elapsed_seconds": 6.6e-05
+      },
+      {
+        "name": "emacsvox-eat-completion-review-preserves-retained-layout",
+        "status": "passed",
+        "elapsed_seconds": 9.2e-05
+      },
+      {
+        "name": "emacsvox-eat-completion-survives-compatible-intermediate-update",
+        "status": "passed",
+        "elapsed_seconds": 0.000111
+      },
+      {
+        "name": "emacsvox-eat-completion-timeout-is-generation-and-serial-safe",
+        "status": "passed",
+        "elapsed_seconds": 2.8e-05
+      },
+      {
+        "name": "emacsvox-eat-concealed-redaction-preserves-screen-coordinates",
+        "status": "passed",
+        "elapsed_seconds": 3.4e-05
+      },
+      {
+        "name": "emacsvox-eat-current-row-review-uses-only-retained-snapshot",
+        "status": "passed",
+        "elapsed_seconds": 7.6e-05
+      },
+      {
+        "name": "emacsvox-eat-deletion-arms-only-after-successful-transport",
+        "status": "passed",
+        "elapsed_seconds": 0.000249
+      },
+      {
+        "name": "emacsvox-eat-editor-fixture-speaks-cursor-and-retains-status",
+        "status": "passed",
+        "elapsed_seconds": 0.002252
+      },
+      {
+        "name": "emacsvox-eat-empty-alternate-screen-updates-are-safe",
+        "status": "passed",
+        "elapsed_seconds": 0.000351
+      },
+      {
+        "name": "emacsvox-eat-empty-terminal-reset-completes-feedback",
+        "status": "passed",
+        "elapsed_seconds": 0.00019
+      },
+      {
+        "name": "emacsvox-eat-empty-terminal-update-is-safe",
+        "status": "passed",
+        "elapsed_seconds": 0.000114
+      },
+      {
+        "name": "emacsvox-eat-eshell-background-update-remains-private",
+        "status": "passed",
+        "elapsed_seconds": 0.000403
+      },
+      {
+        "name": "emacsvox-eat-eshell-lifecycle-is-shared-without-start-chatter",
+        "status": "passed",
+        "elapsed_seconds": 0.002785
+      },
+      {
+        "name": "emacsvox-eat-eshell-update-speaks-one-rendered-output-transaction",
+        "status": "passed",
+        "elapsed_seconds": 0.000885
+      },
+      {
+        "name": "emacsvox-eat-eshell-visual-lifecycle-is-distinct",
+        "status": "passed",
+        "elapsed_seconds": 7.3e-05
+      },
+      {
+        "name": "emacsvox-eat-focus-classifier-finds-one-paired-style-move",
+        "status": "passed",
+        "elapsed_seconds": 0.000136
+      },
+      {
+        "name": "emacsvox-eat-focus-classifier-rejects-multiple-style-moves",
+        "status": "passed",
+        "elapsed_seconds": 9.2e-05
+      },
+      {
+        "name": "emacsvox-eat-focus-classifier-rejects-weak-style-evidence",
+        "status": "passed",
+        "elapsed_seconds": 0.000217
+      },
+      {
+        "name": "emacsvox-eat-focus-classifier-uses-alternate-screen-cursor-row",
+        "status": "passed",
+        "elapsed_seconds": 5.6e-05
+      },
+      {
+        "name": "emacsvox-eat-follow-live-uses-the-selected-window-point",
+        "status": "passed",
+        "elapsed_seconds": 0.000397
+      },
+      {
+        "name": "emacsvox-eat-frozen-review-controls-source-and-keeps-frozen-state",
+        "status": "passed",
+        "elapsed_seconds": 0.000263
+      },
+      {
+        "name": "emacsvox-eat-frozen-review-copies-screen-style-and-anchors",
+        "status": "passed",
+        "elapsed_seconds": 0.000184
+      },
+      {
+        "name": "emacsvox-eat-frozen-review-jumps-without-touching-terminal",
+        "status": "passed",
+        "elapsed_seconds": 0.000145
+      },
+      {
+        "name": "emacsvox-eat-frozen-review-keeps-exact-completion-copy",
+        "status": "passed",
+        "elapsed_seconds": 0.000148
+      },
+      {
+        "name": "emacsvox-eat-frozen-review-mode-has-complete-navigation-map",
+        "status": "passed",
+        "elapsed_seconds": 6.8e-05
+      },
+      {
+        "name": "emacsvox-eat-frozen-review-navigates-selection-like-styles",
+        "status": "passed",
+        "elapsed_seconds": 0.000361
+      },
+      {
+        "name": "emacsvox-eat-frozen-review-navigation-is-row-bounded",
+        "status": "passed",
+        "elapsed_seconds": 0.000218
+      },
+      {
+        "name": "emacsvox-eat-frozen-review-never-overwrites-name-collision",
+        "status": "passed",
+        "elapsed_seconds": 0.000137
+      },
+      {
+        "name": "emacsvox-eat-frozen-review-quit-announces-close-boundary",
+        "status": "passed",
+        "elapsed_seconds": 0.000206
+      },
+      {
+        "name": "emacsvox-eat-high-confidence-focus-is-native-and-replaceable",
+        "status": "passed",
+        "elapsed_seconds": 0.00013
+      },
+      {
+        "name": "emacsvox-eat-history-counter-does-not-compete-with-input",
+        "status": "passed",
+        "elapsed_seconds": 0.000236
+      },
+      {
+        "name": "emacsvox-eat-history-isearch-presents-only-when-it-ends",
+        "status": "passed",
+        "elapsed_seconds": 6.9e-05
+      },
+      {
+        "name": "emacsvox-eat-ineligible-raw-input-stays-silent",
+        "status": "passed",
+        "elapsed_seconds": 5.6e-05
+      },
+      {
+        "name": "emacsvox-eat-inline-completion-does-not-reclassify-history",
+        "status": "passed",
+        "elapsed_seconds": 0.000133
+      },
+      {
+        "name": "emacsvox-eat-inline-completion-is-screen-based-and-path-aware",
+        "status": "passed",
+        "elapsed_seconds": 0.000418
+      },
+      {
+        "name": "emacsvox-eat-inline-completion-rejects-output-and-unsafe-state",
+        "status": "passed",
+        "elapsed_seconds": 8.8e-05
+      },
+      {
+        "name": "emacsvox-eat-input-correlates-immediate-cursor-feedback",
+        "status": "passed",
+        "elapsed_seconds": 5.9e-05
+      },
+      {
+        "name": "emacsvox-eat-input-recording-excludes-submit-and-completion",
+        "status": "passed",
+        "elapsed_seconds": 0.00013
+      },
+      {
+        "name": "emacsvox-eat-input-start-is-recorded-and-reset-at-submit",
+        "status": "passed",
+        "elapsed_seconds": 5.3e-05
+      },
+      {
+        "name": "emacsvox-eat-keyboard-yank-speaks-yanked-content",
+        "status": "passed",
+        "elapsed_seconds": 8.5e-05
+      },
+      {
+        "name": "emacsvox-eat-killing-source-kills-frozen-review",
+        "status": "passed",
+        "elapsed_seconds": 0.000221
+      },
+      {
+        "name": "emacsvox-eat-last-change-review-locates-style-only-change",
+        "status": "passed",
+        "elapsed_seconds": 4.7e-05
+      },
+      {
+        "name": "emacsvox-eat-last-change-review-presents-retained-row-window",
+        "status": "passed",
+        "elapsed_seconds": 4.6e-05
+      },
+      {
+        "name": "emacsvox-eat-likely-focus-review-labels-uncertainty",
+        "status": "passed",
+        "elapsed_seconds": 4.5e-05
+      },
+      {
+        "name": "emacsvox-eat-line-history-navigation-is-native-and-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 8.7e-05
+      },
+      {
+        "name": "emacsvox-eat-main-screen-history-speaks-resulting-row",
+        "status": "passed",
+        "elapsed_seconds": 5.6e-05
+      },
+      {
+        "name": "emacsvox-eat-main-screen-navigation-requires-rendered-change",
+        "status": "passed",
+        "elapsed_seconds": 4e-05
+      },
+      {
+        "name": "emacsvox-eat-major-mode-change-kills-frozen-review",
+        "status": "passed",
+        "elapsed_seconds": 0.000168
+      },
+      {
+        "name": "emacsvox-eat-medium-highlight-is-retained-but-not-automatic",
+        "status": "passed",
+        "elapsed_seconds": 4.9e-05
+      },
+      {
+        "name": "emacsvox-eat-menu-fixture-tracks-selection-with-fixed-cursor",
+        "status": "passed",
+        "elapsed_seconds": 0.002042
+      },
+      {
+        "name": "emacsvox-eat-meta-word-input-bypasses-legacy-line-speech",
+        "status": "passed",
+        "elapsed_seconds": 9.5e-05
+      },
+      {
+        "name": "emacsvox-eat-meta-word-navigation-speaks-rendered-span",
+        "status": "passed",
+        "elapsed_seconds": 8e-05
+      },
+      {
+        "name": "emacsvox-eat-metadata-is-retained-below-verbose",
+        "status": "passed",
+        "elapsed_seconds": 7.5e-05
+      },
+      {
+        "name": "emacsvox-eat-mode-feedback-is-human-and-semantic",
+        "status": "passed",
+        "elapsed_seconds": 4.5e-05
+      },
+      {
+        "name": "emacsvox-eat-mode-setup-installs-selection-monitor",
+        "status": "passed",
+        "elapsed_seconds": 6e-05
+      },
+      {
+        "name": "emacsvox-eat-multiline-completion-defers-to-quiesced-output",
+        "status": "passed",
+        "elapsed_seconds": 0.000101
+      },
+      {
+        "name": "emacsvox-eat-navigation-events-have-content-free-directions",
+        "status": "passed",
+        "elapsed_seconds": 0.000107
+      },
+      {
+        "name": "emacsvox-eat-navigation-intents-merge-only-one-direction",
+        "status": "passed",
+        "elapsed_seconds": 0.000139
+      },
+      {
+        "name": "emacsvox-eat-navigation-parses-fresh-key-symbols",
+        "status": "passed",
+        "elapsed_seconds": 0.000122
+      },
+      {
+        "name": "emacsvox-eat-observed-deletion-fails-closed",
+        "status": "passed",
+        "elapsed_seconds": 8.4e-05
+      },
+      {
+        "name": "emacsvox-eat-observed-forward-kills-speak-only-removed-text",
+        "status": "passed",
+        "elapsed_seconds": 9.5e-05
+      },
+      {
+        "name": "emacsvox-eat-output-classifier-excludes-the-prompt-row",
+        "status": "passed",
+        "elapsed_seconds": 5.7e-05
+      },
+      {
+        "name": "emacsvox-eat-output-classifier-handles-scroll-without-repetition",
+        "status": "passed",
+        "elapsed_seconds": 3.5e-05
+      },
+      {
+        "name": "emacsvox-eat-output-classifier-replaces-empty-placeholder",
+        "status": "passed",
+        "elapsed_seconds": 4.1e-05
+      },
+      {
+        "name": "emacsvox-eat-output-classifier-skips-final-input-echo",
+        "status": "passed",
+        "elapsed_seconds": 4.4e-05
+      },
+      {
+        "name": "emacsvox-eat-output-row-overlap-is-linear-and-scroll-aware",
+        "status": "passed",
+        "elapsed_seconds": 3.6e-05
+      },
+      {
+        "name": "emacsvox-eat-output-suppresses-empty-presentations",
+        "status": "passed",
+        "elapsed_seconds": 5e-05
+      },
+      {
+        "name": "emacsvox-eat-output-uses-one-native-bounded-transaction",
+        "status": "passed",
+        "elapsed_seconds": 6.9e-05
+      },
+      {
+        "name": "emacsvox-eat-pager-fixture-bounds-repaint-and-retains-review",
+        "status": "passed",
+        "elapsed_seconds": 0.002217
+      },
+      {
+        "name": "emacsvox-eat-pager-search-fixture-retains-styled-match",
+        "status": "passed",
+        "elapsed_seconds": 0.001795
+      },
+      {
+        "name": "emacsvox-eat-partial-candidate-rows-do-not-speak-twice",
+        "status": "passed",
+        "elapsed_seconds": 0.000327
+      },
+      {
+        "name": "emacsvox-eat-password-cancellation-clears-secure-state",
+        "status": "passed",
+        "elapsed_seconds": 8.8e-05
+      },
+      {
+        "name": "emacsvox-eat-password-command-never-presents-secret-content",
+        "status": "passed",
+        "elapsed_seconds": 0.000222
+      },
+      {
+        "name": "emacsvox-eat-paste-feedback-covers-every-public-entry-point",
+        "status": "passed",
+        "elapsed_seconds": 8.9e-05
+      },
+      {
+        "name": "emacsvox-eat-paste-invalidates-completion-before-content-is-sent",
+        "status": "passed",
+        "elapsed_seconds": 4.7e-05
+      },
+      {
+        "name": "emacsvox-eat-process-exit-discards-background-pending-output",
+        "status": "passed",
+        "elapsed_seconds": 6.3e-05
+      },
+      {
+        "name": "emacsvox-eat-process-exit-does-not-flush-scrollback-output",
+        "status": "passed",
+        "elapsed_seconds": 7.9e-05
+      },
+      {
+        "name": "emacsvox-eat-process-exit-flushes-live-output-before-lifecycle",
+        "status": "passed",
+        "elapsed_seconds": 0.000102
+      },
+      {
+        "name": "emacsvox-eat-process-generations-clear-transient-state",
+        "status": "passed",
+        "elapsed_seconds": 0.00013
+      },
+      {
+        "name": "emacsvox-eat-process-lifecycle-is-semantic-and-singular",
+        "status": "passed",
+        "elapsed_seconds": 0.00011
+      },
+      {
+        "name": "emacsvox-eat-process-start-seeds-the-first-public-screen",
+        "status": "passed",
+        "elapsed_seconds": 0.000488
+      },
+      {
+        "name": "emacsvox-eat-progress-fixture-coalesces-real-rewrites",
+        "status": "passed",
+        "elapsed_seconds": 0.001312
+      },
+      {
+        "name": "emacsvox-eat-prompt-navigation-presents-reached-line-once",
+        "status": "passed",
+        "elapsed_seconds": 9.5e-05
+      },
+      {
+        "name": "emacsvox-eat-prompt-status-policy-retains-all-and-bounds-speech",
+        "status": "passed",
+        "elapsed_seconds": 0.000112
+      },
+      {
+        "name": "emacsvox-eat-prompt-status-recognizes-only-public-eat-faces",
+        "status": "passed",
+        "elapsed_seconds": 7.9e-05
+      },
+      {
+        "name": "emacsvox-eat-quiescence-carries-current-navigation-intent",
+        "status": "passed",
+        "elapsed_seconds": 0.000125
+      },
+      {
+        "name": "emacsvox-eat-rapid-alternate-screen-round-trip-keeps-boundaries",
+        "status": "passed",
+        "elapsed_seconds": 0.000772
+      },
+      {
+        "name": "emacsvox-eat-raw-deletion-cannot-speak-adjacent-screen-text",
+        "status": "passed",
+        "elapsed_seconds": 5.8e-05
+      },
+      {
+        "name": "emacsvox-eat-raw-input-actions-normalize-without-content",
+        "status": "passed",
+        "elapsed_seconds": 7.3e-05
+      },
+      {
+        "name": "emacsvox-eat-raw-input-feedback-requires-safe-main-screen",
+        "status": "passed",
+        "elapsed_seconds": 5.7e-05
+      },
+      {
+        "name": "emacsvox-eat-raw-input-parses-fresh-key-symbols",
+        "status": "passed",
+        "elapsed_seconds": 3e-05
+      },
+      {
+        "name": "emacsvox-eat-real-alternate-screen-repaint-is-one-boundary",
+        "status": "passed",
+        "elapsed_seconds": 0.000558
+      },
+      {
+        "name": "emacsvox-eat-real-background-monitor-never-speaks-output",
+        "status": "passed",
+        "elapsed_seconds": 0.000819
+      },
+      {
+        "name": "emacsvox-eat-real-backspace-speaks-rendered-deletion",
+        "status": "passed",
+        "elapsed_seconds": 0.002734
+      },
+      {
+        "name": "emacsvox-eat-real-carriage-return-is-status-not-output",
+        "status": "passed",
+        "elapsed_seconds": 0.000645
+      },
+      {
+        "name": "emacsvox-eat-real-concealed-output-is-never-retained-or-spoken",
+        "status": "passed",
+        "elapsed_seconds": 0.001273
+      },
+      {
+        "name": "emacsvox-eat-real-delete-speaks-rendered-deletion",
+        "status": "passed",
+        "elapsed_seconds": 0.00118
+      },
+      {
+        "name": "emacsvox-eat-real-eshell-process-is-singular-and-restores-generic-hook",
+        "status": "passed",
+        "elapsed_seconds": 0.180807
+      },
+      {
+        "name": "emacsvox-eat-real-eshell-visual-command-flushes-short-output",
+        "status": "passed",
+        "elapsed_seconds": 0.256379
+      },
+      {
+        "name": "emacsvox-eat-real-inverse-move-is-a-likely-highlight",
+        "status": "passed",
+        "elapsed_seconds": 0.001277
+      },
+      {
+        "name": "emacsvox-eat-real-main-screen-arrows-speak-rendered-result",
+        "status": "passed",
+        "elapsed_seconds": 0.001651
+      },
+      {
+        "name": "emacsvox-eat-real-multiline-output-is-one-quiesced-transaction",
+        "status": "passed",
+        "elapsed_seconds": 0.000691
+      },
+      {
+        "name": "emacsvox-eat-real-navigation-speaks-one-replaceable-highlight",
+        "status": "passed",
+        "elapsed_seconds": 0.001055
+      },
+      {
+        "name": "emacsvox-eat-real-overflowing-list-reports-a-visible-lower-bound",
+        "status": "passed",
+        "elapsed_seconds": 0.001483
+      },
+      {
+        "name": "emacsvox-eat-real-prompt-overlay-failure-follows-observer-path",
+        "status": "passed",
+        "elapsed_seconds": 0.000508
+      },
+      {
+        "name": "emacsvox-eat-real-sgr-styles-have-normalized-traits",
+        "status": "passed",
+        "elapsed_seconds": 0.002561
+      },
+      {
+        "name": "emacsvox-eat-real-split-candidate-output-waits-for-prompt",
+        "status": "passed",
+        "elapsed_seconds": 0.000853
+      },
+      {
+        "name": "emacsvox-eat-real-title-snapshot-is-bounded",
+        "status": "passed",
+        "elapsed_seconds": 0.000129
+      },
+      {
+        "name": "emacsvox-eat-real-wrapped-inline-completion-is-one-result",
+        "status": "passed",
+        "elapsed_seconds": 0.000518
+      },
+      {
+        "name": "emacsvox-eat-reload-invalidates-every-initialized-buffer",
+        "status": "passed",
+        "elapsed_seconds": 7.2e-05
+      },
+      {
+        "name": "emacsvox-eat-repeated-backspace-names-rendered-order",
+        "status": "passed",
+        "elapsed_seconds": 3e-05
+      },
+      {
+        "name": "emacsvox-eat-repeated-completion-output-is-deduplicated",
+        "status": "passed",
+        "elapsed_seconds": 6.5e-05
+      },
+      {
+        "name": "emacsvox-eat-reset-and-reload-feedback-is-semantic",
+        "status": "passed",
+        "elapsed_seconds": 6.1e-05
+      },
+      {
+        "name": "emacsvox-eat-reset-invalidates-before-terminal-update",
+        "status": "passed",
+        "elapsed_seconds": 0.000142
+      },
+      {
+        "name": "emacsvox-eat-review-is-blocked-during-secure-input",
+        "status": "passed",
+        "elapsed_seconds": 6.7e-05
+      },
+      {
+        "name": "emacsvox-eat-review-prefix-is-available-in-every-input-mode",
+        "status": "passed",
+        "elapsed_seconds": 0.000125
+      },
+      {
+        "name": "emacsvox-eat-review-reports-absent-state-accessibly",
+        "status": "passed",
+        "elapsed_seconds": 4.2e-05
+      },
+      {
+        "name": "emacsvox-eat-router-help-fixture-coalesces-delayed-rows-and-bell",
+        "status": "passed",
+        "elapsed_seconds": 0.41025
+      },
+      {
+        "name": "emacsvox-eat-screen-diff-classifies-metadata-independently",
+        "status": "passed",
+        "elapsed_seconds": 5.1e-05
+      },
+      {
+        "name": "emacsvox-eat-screen-diff-classifies-prompt-status-independently",
+        "status": "passed",
+        "elapsed_seconds": 5.8e-05
+      },
+      {
+        "name": "emacsvox-eat-screen-diff-classifies-unchanged-and-cursor-only",
+        "status": "passed",
+        "elapsed_seconds": 4.1e-05
+      },
+      {
+        "name": "emacsvox-eat-screen-diff-extracts-inserted-rows",
+        "status": "passed",
+        "elapsed_seconds": 4.7e-05
+      },
+      {
+        "name": "emacsvox-eat-screen-diff-finds-same-length-and-style-changes",
+        "status": "passed",
+        "elapsed_seconds": 5.2e-05
+      },
+      {
+        "name": "emacsvox-eat-screen-diff-refuses-cross-generation-comparison",
+        "status": "passed",
+        "elapsed_seconds": 3.3e-05
+      },
+      {
+        "name": "emacsvox-eat-screen-metadata-is-control-free-and-bounded",
+        "status": "passed",
+        "elapsed_seconds": 4.3e-05
+      },
+      {
+        "name": "emacsvox-eat-screen-observer-classifies-alternate-transitions",
+        "status": "passed",
+        "elapsed_seconds": 0.000603
+      },
+      {
+        "name": "emacsvox-eat-screen-observer-classifies-repaint-and-resize",
+        "status": "passed",
+        "elapsed_seconds": 0.000664
+      },
+      {
+        "name": "emacsvox-eat-screen-observer-coalesces-an-update-burst",
+        "status": "passed",
+        "elapsed_seconds": 0.000717
+      },
+      {
+        "name": "emacsvox-eat-screen-observer-discards-focus-lost-delivery",
+        "status": "passed",
+        "elapsed_seconds": 0.000797
+      },
+      {
+        "name": "emacsvox-eat-screen-observer-has-an-absolute-burst-deadline",
+        "status": "passed",
+        "elapsed_seconds": 5.7e-05
+      },
+      {
+        "name": "emacsvox-eat-screen-observer-is-chunk-boundary-independent",
+        "status": "passed",
+        "elapsed_seconds": 0.002583
+      },
+      {
+        "name": "emacsvox-eat-screen-observer-reset-starts-a-fresh-baseline",
+        "status": "passed",
+        "elapsed_seconds": 0.000581
+      },
+      {
+        "name": "emacsvox-eat-screen-snapshot-captures-public-prompt-overlay",
+        "status": "passed",
+        "elapsed_seconds": 0.000751
+      },
+      {
+        "name": "emacsvox-eat-screen-snapshot-excludes-scrollback",
+        "status": "passed",
+        "elapsed_seconds": 0.000428
+      },
+      {
+        "name": "emacsvox-eat-screen-snapshot-tracks-alternate-display",
+        "status": "passed",
+        "elapsed_seconds": 0.00044
+      },
+      {
+        "name": "emacsvox-eat-screen-snapshot-uses-public-visible-state",
+        "status": "passed",
+        "elapsed_seconds": 0.000588
+      },
+      {
+        "name": "emacsvox-eat-scrollback-retains-the-latest-status",
+        "status": "passed",
+        "elapsed_seconds": 5.8e-05
+      },
+      {
+        "name": "emacsvox-eat-scrollback-suppresses-but-retains-output",
+        "status": "passed",
+        "elapsed_seconds": 6.8e-05
+      },
+      {
+        "name": "emacsvox-eat-secure-input-suppresses-screen-observation",
+        "status": "passed",
+        "elapsed_seconds": 4.9e-05
+      },
+      {
+        "name": "emacsvox-eat-sensitive-boundary-kills-frozen-review",
+        "status": "passed",
+        "elapsed_seconds": 0.000293
+      },
+      {
+        "name": "emacsvox-eat-signalled-process-uses-warning-lifecycle",
+        "status": "passed",
+        "elapsed_seconds": 8.7e-05
+      },
+      {
+        "name": "emacsvox-eat-space-speaks-only-the-character",
+        "status": "passed",
+        "elapsed_seconds": 4.8e-05
+      },
+      {
+        "name": "emacsvox-eat-speaks-same-line-directory-completion",
+        "status": "passed",
+        "elapsed_seconds": 0.000588
+      },
+      {
+        "name": "emacsvox-eat-state-facts-use-registered-vocabulary",
+        "status": "passed",
+        "elapsed_seconds": 0.000207
+      },
+      {
+        "name": "emacsvox-eat-status-classifier-is-conservative",
+        "status": "passed",
+        "elapsed_seconds": 5.8e-05
+      },
+      {
+        "name": "emacsvox-eat-status-is-rate-limited-and-replaceable",
+        "status": "passed",
+        "elapsed_seconds": 0.000103
+      },
+      {
+        "name": "emacsvox-eat-style-traits-normalize-rendered-properties",
+        "status": "passed",
+        "elapsed_seconds": 0.000106
+      },
+      {
+        "name": "emacsvox-eat-tab-detection-accepts-raw-and-symbolic-events",
+        "status": "passed",
+        "elapsed_seconds": 4.1e-05
+      },
+      {
+        "name": "emacsvox-eat-terminal-selection-policy-never-speaks-payloads",
+        "status": "passed",
+        "elapsed_seconds": 0.002758
+      },
+      {
+        "name": "emacsvox-eat-terminal-tab-does-not-require-private-mode-state",
+        "status": "passed",
+        "elapsed_seconds": 6.1e-05
+      },
+      {
+        "name": "emacsvox-eat-terse-suppresses-routine-output-but-retains-it",
+        "status": "passed",
+        "elapsed_seconds": 0.00012
+      },
+      {
+        "name": "emacsvox-eat-toggle-mode-feedback-includes-resulting-state",
+        "status": "passed",
+        "elapsed_seconds": 4.3e-05
+      },
+      {
+        "name": "emacsvox-eat-unclassified-change-invalidates-retained-focus",
+        "status": "passed",
+        "elapsed_seconds": 2.8e-05
+      },
+      {
+        "name": "emacsvox-eat-verbose-metadata-is-rate-limited",
+        "status": "passed",
+        "elapsed_seconds": 5.7e-05
+      },
+      {
+        "name": "emacsvox-eat-verbose-metadata-is-semantic-and-replaceable",
+        "status": "passed",
+        "elapsed_seconds": 5.2e-05
+      },
+      {
+        "name": "emacsvox-eat-verbosity-command-cycles-buffer-local-policy",
+        "status": "passed",
+        "elapsed_seconds": 5.3e-05
+      },
+      {
+        "name": "emacsvox-eat-verbosity-is-buffer-local",
+        "status": "passed",
+        "elapsed_seconds": 2.6e-05
+      },
+      {
+        "name": "emacsvox-eat-visible-screen-review-is-a-frozen-copy",
+        "status": "passed",
+        "elapsed_seconds": 5.3e-05
+      },
+      {
+        "name": "emacsvox-eat-yank-feedback-is-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 4.4e-05
+      },
+      {
+        "name": "emacsvox-notmuch-advice-is-current-and-direct",
+        "status": "passed",
+        "elapsed_seconds": 0.000263
+      },
+      {
+        "name": "emacsvox-notmuch-archive-errors-do-not-announce",
+        "status": "passed",
+        "elapsed_seconds": 0.000398
+      },
+      {
+        "name": "emacsvox-notmuch-attachment-cue-follows-message-content",
+        "status": "passed",
+        "elapsed_seconds": 8.6e-05
+      },
+      {
+        "name": "emacsvox-notmuch-automatic-field-byte-boundary-is-utf8",
+        "status": "passed",
+        "elapsed_seconds": 7.4e-05
+      },
+      {
+        "name": "emacsvox-notmuch-automatic-field-character-boundary-is-exact",
+        "status": "passed",
+        "elapsed_seconds": 9.4e-05
+      },
+      {
+        "name": "emacsvox-notmuch-automatic-field-defaults-are-explicit",
+        "status": "passed",
+        "elapsed_seconds": 2.3e-05
+      },
+      {
+        "name": "emacsvox-notmuch-automatic-mark-read-remains-silent",
+        "status": "passed",
+        "elapsed_seconds": 3.7e-05
+      },
+      {
+        "name": "emacsvox-notmuch-automatic-part-filename-is-bounded",
+        "status": "passed",
+        "elapsed_seconds": 0.00323
+      },
+      {
+        "name": "emacsvox-notmuch-background-refresh-announces-on-notification-stream",
+        "status": "passed",
+        "elapsed_seconds": 0.00156
+      },
+      {
+        "name": "emacsvox-notmuch-background-search-notification-is-generic",
+        "status": "passed",
+        "elapsed_seconds": 5.8e-05
+      },
+      {
+        "name": "emacsvox-notmuch-body-position-keeps-attachment-fallback",
+        "status": "passed",
+        "elapsed_seconds": 7.3e-05
+      },
+      {
+        "name": "emacsvox-notmuch-boundary-feedback-uses-one-native-submission",
+        "status": "passed",
+        "elapsed_seconds": 5.1e-05
+      },
+      {
+        "name": "emacsvox-notmuch-bounds-custom-formatter-output",
+        "status": "passed",
+        "elapsed_seconds": 0.000173
+      },
+      {
+        "name": "emacsvox-notmuch-bounds-mail-before-header-transforms",
+        "status": "passed",
+        "elapsed_seconds": 0.000324
+      },
+      {
+        "name": "emacsvox-notmuch-bounds-tags-before-native-formatting",
+        "status": "passed",
+        "elapsed_seconds": 0.000129
+      },
+      {
+        "name": "emacsvox-notmuch-decorated-subject-reaches-synthesis-as-names",
+        "status": "passed",
+        "elapsed_seconds": 0.015257
+      },
+      {
+        "name": "emacsvox-notmuch-delayed-search-defers-result-presentation",
+        "status": "passed",
+        "elapsed_seconds": 0.000534
+      },
+      {
+        "name": "emacsvox-notmuch-describes-tag-changes",
+        "status": "passed",
+        "elapsed_seconds": 6.9e-05
+      },
+      {
+        "name": "emacsvox-notmuch-direct-tag-errors-do-not-announce",
+        "status": "passed",
+        "elapsed_seconds": 0.000171
+      },
+      {
+        "name": "emacsvox-notmuch-empty-search-is-explicit-after-completion",
+        "status": "passed",
+        "elapsed_seconds": 8.9e-05
+      },
+      {
+        "name": "emacsvox-notmuch-empty-text-feedback-is-action-only",
+        "status": "passed",
+        "elapsed_seconds": 3.4e-05
+      },
+      {
+        "name": "emacsvox-notmuch-explicit-search-details-are-untruncated",
+        "status": "passed",
+        "elapsed_seconds": 0.000147
+      },
+      {
+        "name": "emacsvox-notmuch-fast-search-completes-exactly-once",
+        "status": "passed",
+        "elapsed_seconds": 8.7e-05
+      },
+      {
+        "name": "emacsvox-notmuch-fields-carry-semantic-facts",
+        "status": "passed",
+        "elapsed_seconds": 0.000126
+      },
+      {
+        "name": "emacsvox-notmuch-fields-validate-while-opening-message",
+        "status": "passed",
+        "elapsed_seconds": 0.000631
+      },
+      {
+        "name": "emacsvox-notmuch-focused-refresh-compiles-before-main-speech",
+        "status": "passed",
+        "elapsed_seconds": 0.002045
+      },
+      {
+        "name": "emacsvox-notmuch-focused-refresh-uses-interruptible-main-speech",
+        "status": "passed",
+        "elapsed_seconds": 0.000334
+      },
+      {
+        "name": "emacsvox-notmuch-formats-semantic-attachment",
+        "status": "passed",
+        "elapsed_seconds": 4.6e-05
+      },
+      {
+        "name": "emacsvox-notmuch-formats-semantic-search-result",
+        "status": "passed",
+        "elapsed_seconds": 0.000128
+      },
+      {
+        "name": "emacsvox-notmuch-formats-semantic-show-message",
+        "status": "passed",
+        "elapsed_seconds": 0.000211
+      },
+      {
+        "name": "emacsvox-notmuch-hello-navigation-speaks-search-name-and-count",
+        "status": "passed",
+        "elapsed_seconds": 0.000132
+      },
+      {
+        "name": "emacsvox-notmuch-hello-widget-label-is-bounded",
+        "status": "passed",
+        "elapsed_seconds": 0.00023
+      },
+      {
+        "name": "emacsvox-notmuch-incomplete-scan-never-claims-no-attachment",
+        "status": "passed",
+        "elapsed_seconds": 7e-05
+      },
+      {
+        "name": "emacsvox-notmuch-initial-result-precedes-tracking",
+        "status": "passed",
+        "elapsed_seconds": 0.001414
+      },
+      {
+        "name": "emacsvox-notmuch-initial-result-respects-search-ownership",
+        "status": "passed",
+        "elapsed_seconds": 0.000843
+      },
+      {
+        "name": "emacsvox-notmuch-inspection-retains-compatibility-status-cues",
+        "status": "passed",
+        "elapsed_seconds": 0.000119
+      },
+      {
+        "name": "emacsvox-notmuch-killed-search-owner-cancels-silently",
+        "status": "passed",
+        "elapsed_seconds": 0.050961
+      },
+      {
+        "name": "emacsvox-notmuch-landed-message-speaks-first-body-line",
+        "status": "passed",
+        "elapsed_seconds": 0.002976
+      },
+      {
+        "name": "emacsvox-notmuch-limits-body-copy-before-source-preparation",
+        "status": "passed",
+        "elapsed_seconds": 0.000379
+      },
+      {
+        "name": "emacsvox-notmuch-limits-visible-page-before-source-preparation",
+        "status": "passed",
+        "elapsed_seconds": 0.000441
+      },
+      {
+        "name": "emacsvox-notmuch-manual-mark-read-reports-status-change",
+        "status": "passed",
+        "elapsed_seconds": 6.2e-05
+      },
+      {
+        "name": "emacsvox-notmuch-message-entry-interrupts-the-main-lane",
+        "status": "passed",
+        "elapsed_seconds": 0.000139
+      },
+      {
+        "name": "emacsvox-notmuch-mime-scan-bounds-broad-input",
+        "status": "passed",
+        "elapsed_seconds": 7.9e-05
+      },
+      {
+        "name": "emacsvox-notmuch-mime-scan-bounds-deep-input",
+        "status": "passed",
+        "elapsed_seconds": 0.000145
+      },
+      {
+        "name": "emacsvox-notmuch-mime-scan-handles-cycles-and-improper-lists",
+        "status": "passed",
+        "elapsed_seconds": 6.3e-05
+      },
+      {
+        "name": "emacsvox-notmuch-mime-scan-is-complete-for-normal-message",
+        "status": "passed",
+        "elapsed_seconds": 6.6e-05
+      },
+      {
+        "name": "emacsvox-notmuch-mime-scan-reports-conservative-lower-bound",
+        "status": "passed",
+        "elapsed_seconds": 0.000135
+      },
+      {
+        "name": "emacsvox-notmuch-mode-hooks-set-semantic-module",
+        "status": "passed",
+        "elapsed_seconds": 2.8e-05
+      },
+      {
+        "name": "emacsvox-notmuch-native-boundary-presents-one-transaction",
+        "status": "passed",
+        "elapsed_seconds": 0.003487
+      },
+      {
+        "name": "emacsvox-notmuch-native-part-navigation-presents-once",
+        "status": "passed",
+        "elapsed_seconds": 0.002343
+      },
+      {
+        "name": "emacsvox-notmuch-navigation-during-search-gets-summary-only",
+        "status": "passed",
+        "elapsed_seconds": 0.00015
+      },
+      {
+        "name": "emacsvox-notmuch-open-feedback-interrupts-the-main-lane",
+        "status": "passed",
+        "elapsed_seconds": 0.000144
+      },
+      {
+        "name": "emacsvox-notmuch-opening-row-matches-navigation-presentation",
+        "status": "passed",
+        "elapsed_seconds": 0.008549
+      },
+      {
+        "name": "emacsvox-notmuch-opening-thread-is-one-native-submission",
+        "status": "passed",
+        "elapsed_seconds": 0.000306
+      },
+      {
+        "name": "emacsvox-notmuch-opening-thread-prefers-newest-matching-unread",
+        "status": "passed",
+        "elapsed_seconds": 0.000424
+      },
+      {
+        "name": "emacsvox-notmuch-opening-thread-speaks-semantic-message",
+        "status": "passed",
+        "elapsed_seconds": 0.000112
+      },
+      {
+        "name": "emacsvox-notmuch-part-action-has-semantic-context",
+        "status": "passed",
+        "elapsed_seconds": 6e-05
+      },
+      {
+        "name": "emacsvox-notmuch-part-button-announces-visibility",
+        "status": "passed",
+        "elapsed_seconds": 7.1e-05
+      },
+      {
+        "name": "emacsvox-notmuch-part-button-default-reports-once",
+        "status": "passed",
+        "elapsed_seconds": 6.1e-05
+      },
+      {
+        "name": "emacsvox-notmuch-programmatic-archive-remains-silent",
+        "status": "passed",
+        "elapsed_seconds": 9.1e-05
+      },
+      {
+        "name": "emacsvox-notmuch-programmatic-direct-tag-remains-silent",
+        "status": "passed",
+        "elapsed_seconds": 0.000171
+      },
+      {
+        "name": "emacsvox-notmuch-quit-interrupts-before-close-feedback",
+        "status": "passed",
+        "elapsed_seconds": 5.2e-05
+      },
+      {
+        "name": "emacsvox-notmuch-recognizes-replied-and-forwarded-statuses",
+        "status": "passed",
+        "elapsed_seconds": 3e-05
+      },
+      {
+        "name": "emacsvox-notmuch-refresh-all-remains-silent",
+        "status": "passed",
+        "elapsed_seconds": 6.5e-05
+      },
+      {
+        "name": "emacsvox-notmuch-refresh-failure-uses-notification-stream",
+        "status": "passed",
+        "elapsed_seconds": 7.4e-05
+      },
+      {
+        "name": "emacsvox-notmuch-registers-mail-preview-examples",
+        "status": "passed",
+        "elapsed_seconds": 3.4e-05
+      },
+      {
+        "name": "emacsvox-notmuch-save-attachments-keeps-incomplete-scan-truthful",
+        "status": "passed",
+        "elapsed_seconds": 8.7e-05
+      },
+      {
+        "name": "emacsvox-notmuch-search-archive-reports-state-and-destination",
+        "status": "passed",
+        "elapsed_seconds": 0.001122
+      },
+      {
+        "name": "emacsvox-notmuch-search-arrows-match-thread-navigation",
+        "status": "passed",
+        "elapsed_seconds": 8.1e-05
+      },
+      {
+        "name": "emacsvox-notmuch-search-completion-compiles-view-and-row-facts",
+        "status": "passed",
+        "elapsed_seconds": 0.004451
+      },
+      {
+        "name": "emacsvox-notmuch-search-completion-cue-and-silent-styles",
+        "status": "passed",
+        "elapsed_seconds": 9e-05
+      },
+      {
+        "name": "emacsvox-notmuch-search-completion-style-is-customizable",
+        "status": "passed",
+        "elapsed_seconds": 2.8e-05
+      },
+      {
+        "name": "emacsvox-notmuch-search-details-have-manual-binding",
+        "status": "passed",
+        "elapsed_seconds": 4.6e-05
+      },
+      {
+        "name": "emacsvox-notmuch-search-identifies-user-owned-entry-paths",
+        "status": "passed",
+        "elapsed_seconds": 3.8e-05
+      },
+      {
+        "name": "emacsvox-notmuch-search-navigation-announces-boundaries",
+        "status": "passed",
+        "elapsed_seconds": 0.00014
+      },
+      {
+        "name": "emacsvox-notmuch-search-navigation-detects-real-boundaries",
+        "status": "passed",
+        "elapsed_seconds": 8.5e-05
+      },
+      {
+        "name": "emacsvox-notmuch-search-navigation-speaks-selected-result",
+        "status": "passed",
+        "elapsed_seconds": 8e-05
+      },
+      {
+        "name": "emacsvox-notmuch-search-region-reports-only-actual-tag-delta",
+        "status": "passed",
+        "elapsed_seconds": 0.000549
+      },
+      {
+        "name": "emacsvox-notmuch-search-result-fields-are-configurable",
+        "status": "passed",
+        "elapsed_seconds": 7.3e-05
+      },
+      {
+        "name": "emacsvox-notmuch-search-status-uses-icons-not-words",
+        "status": "passed",
+        "elapsed_seconds": 0.002786
+      },
+      {
+        "name": "emacsvox-notmuch-search-tag-no-ops-are-explicit",
+        "status": "passed",
+        "elapsed_seconds": 0.000506
+      },
+      {
+        "name": "emacsvox-notmuch-search-tag-reports-actual-change-once",
+        "status": "passed",
+        "elapsed_seconds": 0.000433
+      },
+      {
+        "name": "emacsvox-notmuch-sender-line-after-hidden-quote-is-spoken",
+        "status": "passed",
+        "elapsed_seconds": 0.000128
+      },
+      {
+        "name": "emacsvox-notmuch-show-advance-announces-thread-end",
+        "status": "passed",
+        "elapsed_seconds": 5.6e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-advance-speaks-message-transition",
+        "status": "passed",
+        "elapsed_seconds": 5.3e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-advance-speaks-window-after-scroll",
+        "status": "passed",
+        "elapsed_seconds": 0.000178
+      },
+      {
+        "name": "emacsvox-notmuch-show-all-visibility-mismatch-is-not-success",
+        "status": "passed",
+        "elapsed_seconds": 4e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-archive-message-reports-actual-change",
+        "status": "passed",
+        "elapsed_seconds": 0.000829
+      },
+      {
+        "name": "emacsvox-notmuch-show-archive-no-ops-are-truthful",
+        "status": "passed",
+        "elapsed_seconds": 0.000291
+      },
+      {
+        "name": "emacsvox-notmuch-show-archive-thread-observes-every-message",
+        "status": "passed",
+        "elapsed_seconds": 0.000448
+      },
+      {
+        "name": "emacsvox-notmuch-show-archive-wrapper-has-one-owner",
+        "status": "passed",
+        "elapsed_seconds": 0.000919
+      },
+      {
+        "name": "emacsvox-notmuch-show-button-navigation-describes-attachment",
+        "status": "passed",
+        "elapsed_seconds": 0.000131
+      },
+      {
+        "name": "emacsvox-notmuch-show-closing-message-uses-icon-only",
+        "status": "passed",
+        "elapsed_seconds": 8.1e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-fields-have-distinct-voices",
+        "status": "passed",
+        "elapsed_seconds": 4.4e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-inspection-reveals-full-part-filename",
+        "status": "passed",
+        "elapsed_seconds": 0.000127
+      },
+      {
+        "name": "emacsvox-notmuch-show-message-fields-are-configurable",
+        "status": "passed",
+        "elapsed_seconds": 8.1e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-navigation-can-return-from-message-bodies",
+        "status": "passed",
+        "elapsed_seconds": 0.000365
+      },
+      {
+        "name": "emacsvox-notmuch-show-navigation-selects-and-speaks-message-body",
+        "status": "passed",
+        "elapsed_seconds": 7.6e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-next-navigation-announces-thread-end",
+        "status": "passed",
+        "elapsed_seconds": 0.000194
+      },
+      {
+        "name": "emacsvox-notmuch-show-open-all-feedback-is-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 6.1e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-open-or-close-all-reports-thread-state",
+        "status": "passed",
+        "elapsed_seconds": 0.000252
+      },
+      {
+        "name": "emacsvox-notmuch-show-opening-message-cues-and-speaks",
+        "status": "passed",
+        "elapsed_seconds": 5.3e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-position-has-manual-binding",
+        "status": "passed",
+        "elapsed_seconds": 5.7e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-position-speaks-ordinal-and-details",
+        "status": "passed",
+        "elapsed_seconds": 0.002248
+      },
+      {
+        "name": "emacsvox-notmuch-show-previous-navigation-announces-thread-start",
+        "status": "passed",
+        "elapsed_seconds": 0.000159
+      },
+      {
+        "name": "emacsvox-notmuch-show-rewind-is-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 4.4e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-save-attachments-confirms-completion",
+        "status": "passed",
+        "elapsed_seconds": 0.000154
+      },
+      {
+        "name": "emacsvox-notmuch-show-save-part-confirms-filename",
+        "status": "passed",
+        "elapsed_seconds": 8.1e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-speaker-is-quiet-outside-show-mode",
+        "status": "passed",
+        "elapsed_seconds": 2.8e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-status-uses-icons-not-words",
+        "status": "passed",
+        "elapsed_seconds": 0.004816
+      },
+      {
+        "name": "emacsvox-notmuch-show-tag-all-compares-every-message",
+        "status": "passed",
+        "elapsed_seconds": 0.000466
+      },
+      {
+        "name": "emacsvox-notmuch-show-tag-no-op-is-explicit",
+        "status": "passed",
+        "elapsed_seconds": 0.000126
+      },
+      {
+        "name": "emacsvox-notmuch-show-tag-reports-actual-change-once",
+        "status": "passed",
+        "elapsed_seconds": 0.000334
+      },
+      {
+        "name": "emacsvox-notmuch-show-view-part-confirms-filename",
+        "status": "passed",
+        "elapsed_seconds": 6.8e-05
+      },
+      {
+        "name": "emacsvox-notmuch-show-visual-lines-leave-blank-policy-to-core",
+        "status": "passed",
+        "elapsed_seconds": 6.6e-05
+      },
+      {
+        "name": "emacsvox-notmuch-space-archive-reports-state-before-destination",
+        "status": "passed",
+        "elapsed_seconds": 0.000541
+      },
+      {
+        "name": "emacsvox-notmuch-space-delegates-end-of-thread-archive-state",
+        "status": "passed",
+        "elapsed_seconds": 4.6e-05
+      },
+      {
+        "name": "emacsvox-notmuch-space-uses-state-aware-reading",
+        "status": "passed",
+        "elapsed_seconds": 0.000134
+      },
+      {
+        "name": "emacsvox-notmuch-status-feedback-shares-message-facts",
+        "status": "passed",
+        "elapsed_seconds": 0.000132
+      },
+      {
+        "name": "emacsvox-notmuch-status-fragment-resolves-once-per-message",
+        "status": "passed",
+        "elapsed_seconds": 0.005325
+      },
+      {
+        "name": "emacsvox-notmuch-status-tag-changes-remain-nonverbal",
+        "status": "passed",
+        "elapsed_seconds": 0.000473
+      },
+      {
+        "name": "emacsvox-notmuch-streamed-first-result-speaks-before-completion",
+        "status": "passed",
+        "elapsed_seconds": 0.000888
+      },
+      {
+        "name": "emacsvox-notmuch-tag-menu-reports-structured-difference",
+        "status": "passed",
+        "elapsed_seconds": 0.000102
+      },
+      {
+        "name": "emacsvox-notmuch-tag-truncation-never-creates-status-word",
+        "status": "passed",
+        "elapsed_seconds": 0.000255
+      },
+      {
+        "name": "emacsvox-notmuch-task-guide-covers-live-keys-and-defaults",
+        "status": "passed",
+        "elapsed_seconds": 0.101646
+      },
+      {
+        "name": "emacsvox-notmuch-task-guide-links-form-documentation-triangle",
+        "status": "passed",
+        "elapsed_seconds": 0.015185
+      },
+      {
+        "name": "emacsvox-notmuch-total-budget-preserves-semantic-actions",
+        "status": "passed",
+        "elapsed_seconds": 0.000188
+      },
+      {
+        "name": "emacsvox-notmuch-untouched-search-speaks-final-row-and-count",
+        "status": "passed",
+        "elapsed_seconds": 0.000336
+      }
+    ],
+    "log_sha256": "ab276911c42b9df30db88b57115d5714f71b366191a45b1f6285c32276640304"
+  },
+  "source_integrations_and_startup": {
+    "case_count": 144,
+    "cases": [
+      {
+        "name": "emacsvox-markdown-aural-vocabulary-is-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000116
+      },
+      {
+        "name": "emacsvox-markdown-command-classification-is-semantic",
+        "status": "passed",
+        "elapsed_seconds": 5.9e-05
+      },
+      {
+        "name": "emacsvox-markdown-compatibility-cues-remain-stable",
+        "status": "passed",
+        "elapsed_seconds": 0.000534
+      },
+      {
+        "name": "emacsvox-markdown-current-advice-is-direct",
+        "status": "passed",
+        "elapsed_seconds": 0.000746
+      },
+      {
+        "name": "emacsvox-markdown-cycle-classification-follows-context",
+        "status": "passed",
+        "elapsed_seconds": 7e-05
+      },
+      {
+        "name": "emacsvox-markdown-delete-calls-original-once",
+        "status": "passed",
+        "elapsed_seconds": 9.6e-05
+      },
+      {
+        "name": "emacsvox-markdown-delete-no-op-stays-silent",
+        "status": "passed",
+        "elapsed_seconds": 3.4e-05
+      },
+      {
+        "name": "emacsvox-markdown-empty-line-keeps-first-class-condition",
+        "status": "passed",
+        "elapsed_seconds": 0.000126
+      },
+      {
+        "name": "emacsvox-markdown-face-map-covers-current-interface",
+        "status": "passed",
+        "elapsed_seconds": 0.000201
+      },
+      {
+        "name": "emacsvox-markdown-headings-cover-atx-and-setext",
+        "status": "passed",
+        "elapsed_seconds": 6.6e-05
+      },
+      {
+        "name": "emacsvox-markdown-line-and-command-share-heading-intent",
+        "status": "passed",
+        "elapsed_seconds": 0.015611
+      },
+      {
+        "name": "emacsvox-markdown-line-feedback-is-one-native-transaction",
+        "status": "passed",
+        "elapsed_seconds": 0.000121
+      },
+      {
+        "name": "emacsvox-markdown-list-links-preserve-link-navigation-cues",
+        "status": "passed",
+        "elapsed_seconds": 0.009499
+      },
+      {
+        "name": "emacsvox-markdown-list-links-survive-line-navigation",
+        "status": "passed",
+        "elapsed_seconds": 0.032739
+      },
+      {
+        "name": "emacsvox-markdown-navigation-preserves-blank-line-tones",
+        "status": "passed",
+        "elapsed_seconds": 0.006515
+      },
+      {
+        "name": "emacsvox-markdown-operation-feedback-names-the-result",
+        "status": "passed",
+        "elapsed_seconds": 6e-05
+      },
+      {
+        "name": "emacsvox-markdown-reading-mode-carries-task-state",
+        "status": "passed",
+        "elapsed_seconds": 0.001148
+      },
+      {
+        "name": "emacsvox-markdown-reading-mode-toggle-is-native",
+        "status": "passed",
+        "elapsed_seconds": 0.000121
+      },
+      {
+        "name": "emacsvox-markdown-region-edits-are-not-task-completions",
+        "status": "passed",
+        "elapsed_seconds": 0.00037
+      },
+      {
+        "name": "emacsvox-markdown-speak-line-calls-original-once",
+        "status": "passed",
+        "elapsed_seconds": 0.00024
+      },
+      {
+        "name": "emacsvox-markdown-structural-line-plans-are-audible",
+        "status": "passed",
+        "elapsed_seconds": 0.000647
+      },
+      {
+        "name": "emacsvox-markdown-structural-lines-submit-action-feedback",
+        "status": "passed",
+        "elapsed_seconds": 0.000379
+      },
+      {
+        "name": "emacsvox-markdown-structure-facts-are-specific",
+        "status": "passed",
+        "elapsed_seconds": 0.000384
+      },
+      {
+        "name": "emacsvox-org-action-allows-specific-cue-overrides",
+        "status": "passed",
+        "elapsed_seconds": 0.000383
+      },
+      {
+        "name": "emacsvox-org-agenda-file-cycle-presents-buffer",
+        "status": "passed",
+        "elapsed_seconds": 0.000183
+      },
+      {
+        "name": "emacsvox-org-agenda-filter-preserves-informative-message",
+        "status": "passed",
+        "elapsed_seconds": 0.321254
+      },
+      {
+        "name": "emacsvox-org-agenda-line-change-owns-result",
+        "status": "passed",
+        "elapsed_seconds": 0.000133
+      },
+      {
+        "name": "emacsvox-org-agenda-navigation-is-one-native-submission",
+        "status": "passed",
+        "elapsed_seconds": 8.3e-05
+      },
+      {
+        "name": "emacsvox-org-agenda-state-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000497
+      },
+      {
+        "name": "emacsvox-org-agenda-table-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000268
+      },
+      {
+        "name": "emacsvox-org-arrow-and-structural-navigation-present-alike",
+        "status": "passed",
+        "elapsed_seconds": 0.86074
+      },
+      {
+        "name": "emacsvox-org-babel-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000281
+      },
+      {
+        "name": "emacsvox-org-babel-execution-speaks-the-result",
+        "status": "passed",
+        "elapsed_seconds": 0.002623
+      },
+      {
+        "name": "emacsvox-org-babel-navigation-identifies-source-block",
+        "status": "passed",
+        "elapsed_seconds": 0.001301
+      },
+      {
+        "name": "emacsvox-org-calendar-feedback-remains-unconditional",
+        "status": "passed",
+        "elapsed_seconds": 0.000113
+      },
+      {
+        "name": "emacsvox-org-capture-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000103
+      },
+      {
+        "name": "emacsvox-org-capture-lifecycle-cues-remain-unconditional",
+        "status": "passed",
+        "elapsed_seconds": 0.000114
+      },
+      {
+        "name": "emacsvox-org-capture-target-feedback-remains-unconditional",
+        "status": "passed",
+        "elapsed_seconds": 8.8e-05
+      },
+      {
+        "name": "emacsvox-org-clock-lifecycle-preserves-message-once",
+        "status": "passed",
+        "elapsed_seconds": 0.000113
+      },
+      {
+        "name": "emacsvox-org-clock-navigation-speaks-destination",
+        "status": "passed",
+        "elapsed_seconds": 9e-05
+      },
+      {
+        "name": "emacsvox-org-clock-timer-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000151
+      },
+      {
+        "name": "emacsvox-org-cycle-keeps-table-feedback-unconditional",
+        "status": "passed",
+        "elapsed_seconds": 4.9e-05
+      },
+      {
+        "name": "emacsvox-org-cycle-nontable-feedback-is-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 0.000207
+      },
+      {
+        "name": "emacsvox-org-cycle-submits-explicit-visibility-change",
+        "status": "passed",
+        "elapsed_seconds": 0.00107
+      },
+      {
+        "name": "emacsvox-org-default-plan-preserves-navigation-output-order",
+        "status": "passed",
+        "elapsed_seconds": 0.000625
+      },
+      {
+        "name": "emacsvox-org-delete-char-calls-original-once",
+        "status": "passed",
+        "elapsed_seconds": 4.8e-05
+      },
+      {
+        "name": "emacsvox-org-delete-char-is-quiet-programmatically",
+        "status": "passed",
+        "elapsed_seconds": 3.3e-05
+      },
+      {
+        "name": "emacsvox-org-document-state-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000202
+      },
+      {
+        "name": "emacsvox-org-document-state-owns-message-and-result",
+        "status": "passed",
+        "elapsed_seconds": 0.000451
+      },
+      {
+        "name": "emacsvox-org-editing-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000194
+      },
+      {
+        "name": "emacsvox-org-eww-preview-cleans-up-after-open-error",
+        "status": "passed",
+        "elapsed_seconds": 3.7e-05
+      },
+      {
+        "name": "emacsvox-org-eww-preview-is-native-and-one-shot",
+        "status": "passed",
+        "elapsed_seconds": 5e-05
+      },
+      {
+        "name": "emacsvox-org-explanation-infers-navigation-and-speaks-options",
+        "status": "passed",
+        "elapsed_seconds": 0.002029
+      },
+      {
+        "name": "emacsvox-org-export-dispatch-uses-explicit-arguments",
+        "status": "passed",
+        "elapsed_seconds": 6.6e-05
+      },
+      {
+        "name": "emacsvox-org-export-to-file-uses-explicit-file",
+        "status": "passed",
+        "elapsed_seconds": 5.3e-05
+      },
+      {
+        "name": "emacsvox-org-external-link-cues-transition-once",
+        "status": "passed",
+        "elapsed_seconds": 0.000108
+      },
+      {
+        "name": "emacsvox-org-face-presentation-covers-current-org",
+        "status": "passed",
+        "elapsed_seconds": 0.101188
+      },
+      {
+        "name": "emacsvox-org-feature-fragments-are-optional-built-ins",
+        "status": "passed",
+        "elapsed_seconds": 0.000151
+      },
+      {
+        "name": "emacsvox-org-feature-fragments-compose-with-the-base-scheme",
+        "status": "passed",
+        "elapsed_seconds": 0.003826
+      },
+      {
+        "name": "emacsvox-org-field-editor-context-action-reports-close",
+        "status": "passed",
+        "elapsed_seconds": 0.001108
+      },
+      {
+        "name": "emacsvox-org-generic-end-of-line-delegates-in-org-mode",
+        "status": "passed",
+        "elapsed_seconds": 5.3e-05
+      },
+      {
+        "name": "emacsvox-org-heading-edit-feedback-is-native-and-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 0.000973
+      },
+      {
+        "name": "emacsvox-org-headings-carry-live-semantic-facts",
+        "status": "passed",
+        "elapsed_seconds": 0.000898
+      },
+      {
+        "name": "emacsvox-org-internal-link-presents-destination",
+        "status": "passed",
+        "elapsed_seconds": 0.000631
+      },
+      {
+        "name": "emacsvox-org-item-boundary-navigation-is-native",
+        "status": "passed",
+        "elapsed_seconds": 8.5e-05
+      },
+      {
+        "name": "emacsvox-org-item-feedback-captures-semantic-boundary",
+        "status": "passed",
+        "elapsed_seconds": 0.00087
+      },
+      {
+        "name": "emacsvox-org-item-feedback-is-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 3.2e-05
+      },
+      {
+        "name": "emacsvox-org-last-capture-feedback-is-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 5.6e-05
+      },
+      {
+        "name": "emacsvox-org-legacy-completion-calls-original-once",
+        "status": "passed",
+        "elapsed_seconds": 5.6e-05
+      },
+      {
+        "name": "emacsvox-org-legacy-completion-does-not-create-a-command",
+        "status": "passed",
+        "elapsed_seconds": 0.002976
+      },
+      {
+        "name": "emacsvox-org-legacy-completion-presents-visible-candidate",
+        "status": "passed",
+        "elapsed_seconds": 0.000124
+      },
+      {
+        "name": "emacsvox-org-link-refile-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000163
+      },
+      {
+        "name": "emacsvox-org-list-style-feedback-is-one-native-submission",
+        "status": "passed",
+        "elapsed_seconds": 0.000721
+      },
+      {
+        "name": "emacsvox-org-markdown-export-feedback-is-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 5e-05
+      },
+      {
+        "name": "emacsvox-org-misc-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 6.8e-05
+      },
+      {
+        "name": "emacsvox-org-mixed-face-heading-has-one-object-presentation",
+        "status": "passed",
+        "elapsed_seconds": 0.003891
+      },
+      {
+        "name": "emacsvox-org-navigation-captures-event-and-context",
+        "status": "passed",
+        "elapsed_seconds": 0.000812
+      },
+      {
+        "name": "emacsvox-org-occur-is-outline-navigation-not-an-item",
+        "status": "passed",
+        "elapsed_seconds": 0.000563
+      },
+      {
+        "name": "emacsvox-org-owned-semantics-are-registered",
+        "status": "passed",
+        "elapsed_seconds": 7.5e-05
+      },
+      {
+        "name": "emacsvox-org-paragraph-feedback-is-one-native-submission",
+        "status": "passed",
+        "elapsed_seconds": 0.000105
+      },
+      {
+        "name": "emacsvox-org-presentation-options-queue-one-concrete-plan",
+        "status": "passed",
+        "elapsed_seconds": 0.001888
+      },
+      {
+        "name": "emacsvox-org-publish-hook-is-reload-safe-and-explicit",
+        "status": "passed",
+        "elapsed_seconds": 8.6e-05
+      },
+      {
+        "name": "emacsvox-org-refile-preserves-completion-message",
+        "status": "passed",
+        "elapsed_seconds": 8e-05
+      },
+      {
+        "name": "emacsvox-org-return-reports-a-real-table-move-once",
+        "status": "passed",
+        "elapsed_seconds": 0.001035
+      },
+      {
+        "name": "emacsvox-org-return-selects-table-or-line-feedback",
+        "status": "passed",
+        "elapsed_seconds": 5.4e-05
+      },
+      {
+        "name": "emacsvox-org-risky-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 3.5e-05
+      },
+      {
+        "name": "emacsvox-org-source-edit-feedback-is-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 3.7e-05
+      },
+      {
+        "name": "emacsvox-org-state-messages-use-native-submission",
+        "status": "passed",
+        "elapsed_seconds": 4.2e-05
+      },
+      {
+        "name": "emacsvox-org-structure-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000203
+      },
+      {
+        "name": "emacsvox-org-structure-feedback-uses-one-native-submission",
+        "status": "passed",
+        "elapsed_seconds": 0.000379
+      },
+      {
+        "name": "emacsvox-org-subtree-feedback-is-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 4.8e-05
+      },
+      {
+        "name": "emacsvox-org-table-and-fill-state-feedback-is-explicit",
+        "status": "passed",
+        "elapsed_seconds": 3.6e-05
+      },
+      {
+        "name": "emacsvox-org-table-command-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 0.000128
+      },
+      {
+        "name": "emacsvox-org-table-editor-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 7.3e-05
+      },
+      {
+        "name": "emacsvox-org-table-editor-lifecycle-is-semantic",
+        "status": "passed",
+        "elapsed_seconds": 0.000516
+      },
+      {
+        "name": "emacsvox-org-table-formula-reports-resulting-cell",
+        "status": "passed",
+        "elapsed_seconds": 0.00048
+      },
+      {
+        "name": "emacsvox-org-table-inspection-preserves-message",
+        "status": "passed",
+        "elapsed_seconds": 0.000438
+      },
+      {
+        "name": "emacsvox-org-table-movement-feedback-remains-unconditional",
+        "status": "passed",
+        "elapsed_seconds": 2.7e-05
+      },
+      {
+        "name": "emacsvox-org-table-presentation-is-semantic-and-contextual",
+        "status": "passed",
+        "elapsed_seconds": 0.000567
+      },
+      {
+        "name": "emacsvox-org-timestamp-feedback-is-target-aware",
+        "status": "passed",
+        "elapsed_seconds": 5.7e-05
+      },
+      {
+        "name": "emacsvox-org-timestamp-native-plan-resolves-cue-once",
+        "status": "passed",
+        "elapsed_seconds": 0.00124
+      },
+      {
+        "name": "emacsvox-org-todo-feedback-reports-current-state",
+        "status": "passed",
+        "elapsed_seconds": 3.9e-05
+      },
+      {
+        "name": "emacsvox-org-user-overrides-cover-every-context-axis",
+        "status": "passed",
+        "elapsed_seconds": 0.002189
+      },
+      {
+        "name": "emacsvox-org-visibility-advice-is-directly-registered",
+        "status": "passed",
+        "elapsed_seconds": 7.3e-05
+      },
+      {
+        "name": "emacsvox-org-visibility-and-indirect-feedback-is-native",
+        "status": "passed",
+        "elapsed_seconds": 0.000135
+      },
+      {
+        "name": "emacsvox-org-visibility-fragment-speaks-level-and-new-state",
+        "status": "passed",
+        "elapsed_seconds": 0.000877
+      },
+      {
+        "name": "emacsvox-programming-mode-preserves-punctuation-override",
+        "status": "passed",
+        "elapsed_seconds": 3.8e-05
+      },
+      {
+        "name": "emacsvox-programming-mode-uses-canonical-tts-state",
+        "status": "passed",
+        "elapsed_seconds": 3.9e-05
+      },
+      {
+        "name": "emacsvox-setup-detects-newer-startup-source",
+        "status": "passed",
+        "elapsed_seconds": 0.00068
+      },
+      {
+        "name": "emacsvox-setup-loads-newer-omnivox-and-advice-source",
+        "status": "passed",
+        "elapsed_seconds": 0.565999
+      },
+      {
+        "name": "emacsvox-setup-prefers-source-while-loading-stale-tree",
+        "status": "passed",
+        "elapsed_seconds": 0.33865
+      },
+      {
+        "name": "emacsvox-setup-tracks-loaded-core-dependencies",
+        "status": "passed",
+        "elapsed_seconds": 0.84944
+      },
+      {
+        "name": "emacsvox-setup-tracks-maintained-runtime-inventory",
+        "status": "passed",
+        "elapsed_seconds": 0.004493
+      },
+      {
+        "name": "emacsvox-startup-applies-the-selected-presentation-profile",
+        "status": "passed",
+        "elapsed_seconds": 0.00013
+      },
+      {
+        "name": "emacsvox-startup-deferred-adapter-retains-source-preference",
+        "status": "passed",
+        "elapsed_seconds": 0.050898
+      },
+      {
+        "name": "emacsvox-startup-failure-notifies-despite-warning-failure",
+        "status": "passed",
+        "elapsed_seconds": 0.000297
+      },
+      {
+        "name": "emacsvox-startup-isolates-immediate-and-deferred-adapter-failures",
+        "status": "passed",
+        "elapsed_seconds": 0.056046
+      },
+      {
+        "name": "emacsvox-startup-preparation-continues-after-adapter-failure",
+        "status": "passed",
+        "elapsed_seconds": 0.036627
+      },
+      {
+        "name": "emacsvox-startup-profile-failure-warns-and-falls-back",
+        "status": "passed",
+        "elapsed_seconds": 9.8e-05
+      },
+      {
+        "name": "emacsvox-startup-protocol-readiness-schedules-bounded-fallback",
+        "status": "passed",
+        "elapsed_seconds": 7.8e-05
+      },
+      {
+        "name": "emacsvox-startup-ready-message-is-a-stable-spoken-checkpoint",
+        "status": "passed",
+        "elapsed_seconds": 3.4e-05
+      },
+      {
+        "name": "emacsvox-startup-records-quit-without-consuming-it",
+        "status": "passed",
+        "elapsed_seconds": 4.9e-05
+      },
+      {
+        "name": "emacsvox-startup-retains-delayed-tasks-and-completion",
+        "status": "passed",
+        "elapsed_seconds": 0.00045
+      },
+      {
+        "name": "emacsvox-startup-retains-task-errors-when-warning-path-fails",
+        "status": "passed",
+        "elapsed_seconds": 0.000479
+      },
+      {
+        "name": "emacsvox-startup-retains-thread-creation-failure",
+        "status": "passed",
+        "elapsed_seconds": 0.289208
+      },
+      {
+        "name": "emacsvox-startup-routing-readiness-replaces-fallback",
+        "status": "passed",
+        "elapsed_seconds": 5.9e-05
+      },
+      {
+        "name": "emacsvox-startup-status-speaks-once-and-opens-readable-errors",
+        "status": "passed",
+        "elapsed_seconds": 0.020048
+      },
+      {
+        "name": "emacsvox-startup-threads-preserve-source-loading-preference",
+        "status": "passed",
+        "elapsed_seconds": 0.000499
+      },
+      {
+        "name": "emacsvox-startup-tips-command-autoloads",
+        "status": "passed",
+        "elapsed_seconds": 0.642426
+      },
+      {
+        "name": "emacsvox-startup-welcome-help-entry",
+        "status": "passed",
+        "elapsed_seconds": 8.3e-05
+      },
+      {
+        "name": "emacsvox-startup-without-profile-selects-baseline-sound-pack",
+        "status": "passed",
+        "elapsed_seconds": 8.5e-05
+      },
+      {
+        "name": "emacsvox-table-reader-blank-ragged-headerless-and-boundaries",
+        "status": "passed",
+        "elapsed_seconds": 0.006643
+      },
+      {
+        "name": "emacsvox-table-reader-discovery-skips-code-and-restores-prose",
+        "status": "passed",
+        "elapsed_seconds": 0.003924
+      },
+      {
+        "name": "emacsvox-table-reader-equivalent-source-navigation",
+        "status": "passed",
+        "elapsed_seconds": 0.004701
+      },
+      {
+        "name": "emacsvox-table-reader-existing-table-prefix-survives",
+        "status": "passed",
+        "elapsed_seconds": 0.00156
+      },
+      {
+        "name": "emacsvox-table-reader-keys-are-explicit-and-editing-restores",
+        "status": "passed",
+        "elapsed_seconds": 0.003534
+      },
+      {
+        "name": "emacsvox-table-reader-logical-copy-and-formatting",
+        "status": "passed",
+        "elapsed_seconds": 0.004867
+      },
+      {
+        "name": "emacsvox-table-reader-markdown-pipe-prose-before-table",
+        "status": "passed",
+        "elapsed_seconds": 0.000731
+      },
+      {
+        "name": "emacsvox-table-reader-markdown-quoting-and-optional-pipes",
+        "status": "passed",
+        "elapsed_seconds": 0.00314
+      },
+      {
+        "name": "emacsvox-table-reader-org-links-and-separators",
+        "status": "passed",
+        "elapsed_seconds": 0.003406
+      },
+      {
+        "name": "emacsvox-table-reader-rejects-prose-and-code",
+        "status": "passed",
+        "elapsed_seconds": 0.001518
+      },
+      {
+        "name": "emacsvox-table-reader-rich-content-preserves-literal-code",
+        "status": "passed",
+        "elapsed_seconds": 0.000353
+      },
+      {
+        "name": "emacsvox-table-reader-settings-are-local",
+        "status": "passed",
+        "elapsed_seconds": 0.000645
+      },
+      {
+        "name": "emacsvox-table-reader-submissions-resolve-native-semantic-plans",
+        "status": "passed",
+        "elapsed_seconds": 0.010405
+      }
+    ],
+    "log_sha256": "e99411178c3ad030e5787306d6ff4cb45cbb3ea5cd81421412eaaf26f66fdc22"
+  },
+  "compiled_reader": {
+    "case_count": 13,
+    "cases": [
+      {
+        "name": "emacsvox-table-reader-blank-ragged-headerless-and-boundaries",
+        "status": "passed",
+        "elapsed_seconds": 0.746128
+      },
+      {
+        "name": "emacsvox-table-reader-discovery-skips-code-and-restores-prose",
+        "status": "passed",
+        "elapsed_seconds": 0.002197
+      },
+      {
+        "name": "emacsvox-table-reader-equivalent-source-navigation",
+        "status": "passed",
+        "elapsed_seconds": 0.00233
+      },
+      {
+        "name": "emacsvox-table-reader-existing-table-prefix-survives",
+        "status": "passed",
+        "elapsed_seconds": 0.00183
+      },
+      {
+        "name": "emacsvox-table-reader-keys-are-explicit-and-editing-restores",
+        "status": "passed",
+        "elapsed_seconds": 0.00245
+      },
+      {
+        "name": "emacsvox-table-reader-logical-copy-and-formatting",
+        "status": "passed",
+        "elapsed_seconds": 0.002806
+      },
+      {
+        "name": "emacsvox-table-reader-markdown-pipe-prose-before-table",
+        "status": "passed",
+        "elapsed_seconds": 0.000469
+      },
+      {
+        "name": "emacsvox-table-reader-markdown-quoting-and-optional-pipes",
+        "status": "passed",
+        "elapsed_seconds": 0.001333
+      },
+      {
+        "name": "emacsvox-table-reader-org-links-and-separators",
+        "status": "passed",
+        "elapsed_seconds": 0.003138
+      },
+      {
+        "name": "emacsvox-table-reader-rejects-prose-and-code",
+        "status": "passed",
+        "elapsed_seconds": 0.001914
+      },
+      {
+        "name": "emacsvox-table-reader-rich-content-preserves-literal-code",
+        "status": "passed",
+        "elapsed_seconds": 0.000327
+      },
+      {
+        "name": "emacsvox-table-reader-settings-are-local",
+        "status": "passed",
+        "elapsed_seconds": 0.000603
+      },
+      {
+        "name": "emacsvox-table-reader-submissions-resolve-native-semantic-plans",
+        "status": "passed",
+        "elapsed_seconds": 0.009321
+      }
+    ],
+    "log_sha256": "140db214a0766bb4ebc3736be37028bd266ba982d12565b7f81e9fb4d894ddba"
+  },
+  "live_dependency_tables": {
+    "case_count": 35,
+    "cases": [
+      {
+        "name": "emacsvox-agent-shell-block-navigation-selects-rendered-tables",
+        "status": "passed",
+        "elapsed_seconds": 0.284724
+      },
+      {
+        "name": "emacsvox-agent-shell-context-navigation-prefers-nested-table",
+        "status": "passed",
+        "elapsed_seconds": 0.001387
+      },
+      {
+        "name": "emacsvox-agent-shell-persistent-prompt-keeps-navigation-keys-editable",
+        "status": "passed",
+        "elapsed_seconds": 0.022324
+      },
+      {
+        "name": "emacsvox-agent-shell-prompt-letters-do-not-discover-tables",
+        "status": "passed",
+        "elapsed_seconds": 0.003196
+      },
+      {
+        "name": "emacsvox-agent-shell-response-navigation-omits-table-borders",
+        "status": "passed",
+        "elapsed_seconds": 0.004585
+      },
+      {
+        "name": "emacsvox-agent-shell-table-arrows-separate-characters-and-columns",
+        "status": "passed",
+        "elapsed_seconds": 0.008479
+      },
+      {
+        "name": "emacsvox-agent-shell-table-arrows-speak-whole-rows",
+        "status": "passed",
+        "elapsed_seconds": 0.011697
+      },
+      {
+        "name": "emacsvox-agent-shell-table-cell-feedback-is-customizable",
+        "status": "passed",
+        "elapsed_seconds": 0.001117
+      },
+      {
+        "name": "emacsvox-agent-shell-table-column-speech-respects-title-settings",
+        "status": "passed",
+        "elapsed_seconds": 0.001422
+      },
+      {
+        "name": "emacsvox-agent-shell-table-commands-use-native-submissions",
+        "status": "passed",
+        "elapsed_seconds": 0.000865
+      },
+      {
+        "name": "emacsvox-agent-shell-table-context-describes-header-and-data",
+        "status": "passed",
+        "elapsed_seconds": 0.001063
+      },
+      {
+        "name": "emacsvox-agent-shell-table-context-handles-headerless-and-outside",
+        "status": "passed",
+        "elapsed_seconds": 0.000733
+      },
+      {
+        "name": "emacsvox-agent-shell-table-copy-cell-copies-logical-value",
+        "status": "passed",
+        "elapsed_seconds": 0.000778
+      },
+      {
+        "name": "emacsvox-agent-shell-table-copy-cell-handles-blank-and-outside",
+        "status": "passed",
+        "elapsed_seconds": 0.000937
+      },
+      {
+        "name": "emacsvox-agent-shell-table-copy-row-and-column-are-plain",
+        "status": "passed",
+        "elapsed_seconds": 0.001059
+      },
+      {
+        "name": "emacsvox-agent-shell-table-discovery-selects-nearest-visible",
+        "status": "passed",
+        "elapsed_seconds": 0.000834
+      },
+      {
+        "name": "emacsvox-agent-shell-table-entry-has-one-navigation-submission",
+        "status": "passed",
+        "elapsed_seconds": 0.000702
+      },
+      {
+        "name": "emacsvox-agent-shell-table-entry-is-directional-in-both-views",
+        "status": "passed",
+        "elapsed_seconds": 0.006841
+      },
+      {
+        "name": "emacsvox-agent-shell-table-explicit-exit-moves-past-table",
+        "status": "passed",
+        "elapsed_seconds": 0.002016
+      },
+      {
+        "name": "emacsvox-agent-shell-table-feedback-handles-title-cells-and-blanks",
+        "status": "passed",
+        "elapsed_seconds": 0.001396
+      },
+      {
+        "name": "emacsvox-agent-shell-table-feedback-preserves-logical-cells",
+        "status": "passed",
+        "elapsed_seconds": 0.001024
+      },
+      {
+        "name": "emacsvox-agent-shell-table-feedback-respects-headerless-tables",
+        "status": "passed",
+        "elapsed_seconds": 0.000744
+      },
+      {
+        "name": "emacsvox-agent-shell-table-grid-navigation-accepts-bottom-entry",
+        "status": "passed",
+        "elapsed_seconds": 0.000726
+      },
+      {
+        "name": "emacsvox-agent-shell-table-grid-navigation-accepts-leading-border",
+        "status": "passed",
+        "elapsed_seconds": 0.000676
+      },
+      {
+        "name": "emacsvox-agent-shell-table-grid-navigation-handles-edges",
+        "status": "passed",
+        "elapsed_seconds": 0.000869
+      },
+      {
+        "name": "emacsvox-agent-shell-table-grid-navigation-is-logical",
+        "status": "passed",
+        "elapsed_seconds": 0.001748
+      },
+      {
+        "name": "emacsvox-agent-shell-table-letter-keys-navigate-transcripts",
+        "status": "passed",
+        "elapsed_seconds": 0.004542
+      },
+      {
+        "name": "emacsvox-agent-shell-table-navigation-is-contextual",
+        "status": "passed",
+        "elapsed_seconds": 0.001206
+      },
+      {
+        "name": "emacsvox-agent-shell-table-navigation-speaks-in-both-views",
+        "status": "passed",
+        "elapsed_seconds": 0.001927
+      },
+      {
+        "name": "emacsvox-agent-shell-table-presentation-is-complete",
+        "status": "passed",
+        "elapsed_seconds": 0.001159
+      },
+      {
+        "name": "emacsvox-agent-shell-table-row-column-handle-table-kinds",
+        "status": "passed",
+        "elapsed_seconds": 0.003075
+      },
+      {
+        "name": "emacsvox-agent-shell-table-row-column-reject-outside-table",
+        "status": "passed",
+        "elapsed_seconds": 0.000406
+      },
+      {
+        "name": "emacsvox-agent-shell-table-row-speech-respects-title-settings",
+        "status": "passed",
+        "elapsed_seconds": 0.00227
+      },
+      {
+        "name": "emacsvox-agent-shell-table-sequential-boundaries-exit",
+        "status": "passed",
+        "elapsed_seconds": 0.004511
+      },
+      {
+        "name": "emacsvox-agent-shell-table-speaking-method-is-interactive",
+        "status": "passed",
+        "elapsed_seconds": 0.000786
+      }
+    ],
+    "log_sha256": "281cc80a8ec33bf8c4c5d7e3474533bff09f0b9f80de2ddbc214279d0b525dbd"
+  },
+  "pinned_graphical": {
+    "case_count": 4,
+    "cases": [
+      {
+        "name": "emacsvox-agent-shell-live-input-graphical-visual-speech",
+        "status": "passed",
+        "elapsed_seconds": 0.087338
+      },
+      {
+        "name": "emacsvox-agent-shell-live-input-graphical-wrapped-speech",
+        "status": "passed",
+        "elapsed_seconds": 0.014999
+      },
+      {
+        "name": "emacsvox-agent-shell-response-graphical-bidirectional-speech",
+        "status": "passed",
+        "elapsed_seconds": 0.372406
+      },
+      {
+        "name": "emacsvox-agent-shell-table-graphical-wrapped-navigation",
+        "status": "passed",
+        "elapsed_seconds": 0.0149
+      }
+    ],
+    "log_sha256": "8bf170cd904e9347ce6ef34c71e368895ccf8745a6096411df917fd3af24dac9"
+  },
+  "source_reader_graphical": {
+    "case_count": 1,
+    "cases": [
+      {
+        "name": "emacsvox-table-reader-graphical-wrapped-source",
+        "status": "passed",
+        "elapsed_seconds": 1.248533
+      }
+    ],
+    "log_sha256": "e59ea6cb61da39804ddf7503bb8e823e2a8fc92405a65856bbdc19ee3aa7751f"
+  },
+  "live_dependency_graphical": {
+    "case_count": 1,
+    "cases": [
+      {
+        "name": "emacsvox-agent-shell-table-graphical-wrapped-navigation",
+        "status": "passed",
+        "elapsed_seconds": 0.016487
+      }
+    ],
+    "log_sha256": "e59f86aff7aa344129d4ff5bbd7e56bc4e547a67e19a329a06b61f80a4692a1f"
+  }
+}

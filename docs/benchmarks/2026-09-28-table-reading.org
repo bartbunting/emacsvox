@@ -1,0 +1,81 @@
+#+title: Shared table reading: verification and navigation baseline
+#+date: 2026-09-28
+
+* Result
+
+Implementation =a6bfefd4c= covers the first shared-reader milestone for Agent
+Shell, Markdown and Org. Source
+and compiled checks passed, including actual graphical wrapping. No navigation
+slowdown was observed for Agent Shell in the two measured table sizes.
+
+| Logical row movement, median milliseconds | 32 data rows | 256 data rows |
+|-------------------------------------------+--------------+---------------|
+| Agent Shell before                        |        0.558 |         4.479 |
+| Agent Shell final                         |        0.460 |         3.590 |
+| New Markdown reader                       |        2.639 |        24.461 |
+| New Org reader                            |        0.334 |         2.265 |
+
+These are local navigation and formatting measurements. They exclude Aural
+submission, synthesis, playback and acoustic onset. They establish a repeatable
+baseline for the new source readers, not a comparison with native Org editing
+or Markdown's previous line-reading commands. Larger tables need additional
+measurement before making a latency guarantee.
+
+* Verification
+
+The selected Emacs was 31.0.90. Pinned integrations used Agent Shell 0.78.1;
+additional checks used the live session's Agent Shell 0.79.2 source checkout.
+Markdown Mode was package 20260827.909 and Org came with the selected Emacs.
+
+- 605 pinned integration tests passed, with graphical cases excluded from the
+  batch selector and checked separately.
+- 144 source tests passed across Markdown, Org, the reader and startup.
+- 13 reader tests passed with all three reader modules explicitly loaded from
+  byte-code in a fresh Emacs.
+- 35 table/navigation/prompt checks passed with compiled Emacsvox and the live
+  session's Agent Shell dependency.
+- Four pinned graphical integration cases passed, including rendered table
+  wrapping. A separate graphical case passed for both Markdown and Org source
+  tables, and the rendered-table case also passed with the live dependency.
+- The full byte-code rebuild, final incremental build and preflight, source
+  header check, manual preview/generation and documentation release gate passed.
+
+Coverage includes unchanged source and modified state, restored editing keys,
+ragged/blank cells, header detection, positive/negative/zero movement counts,
+logical copying, source edits, code exclusion, nested links, literal code,
+adjacent prose containing pipes, native Aural facts and one submission per
+reader action. Agent Shell keeps its existing commands and preferences.
+
+Graphical checks ran in isolated Xvfb frames. They verify layout and navigation;
+they do not establish that speech was heard. The maintainer's running Emacs and
+saved preferences were left unchanged. Listening acceptance belongs in a fresh
+Emacs that loads the compiled change.
+
+* Measurement method and retained evidence
+
+The driver is [[file:../../utils/table-reader-benchmark.el][utils/table-reader-benchmark.el]]. Each record has 30 measured rounds after
+five warm-up rounds, with 20 row movements per round. Each sample is the round's
+amortized milliseconds per movement; the table above gives the median of those
+samples, not a percentile of individual keystroke latencies. The fixture has
+three columns and either 32 or 256 data rows. Garbage collection uses a 64 MiB
+threshold and native JIT is disabled. Normal desktop activity can still add
+noise, so these numbers are not a statistical performance guarantee.
+
+Both Agent Shell implementations used byte-code and the same pinned renderer.
+The baseline facade came from =69d7d4015=. The baseline file contains repeated
+measurements of the new Markdown/Org readers; only its Agent Shell records
+represent old behaviour. An intermediate candidate run and the final run are
+both retained. The final source differs from the measured source only in
+indentation formatting of the Markdown table recognizer.
+
+To repeat, put the project Lisp and the selected dependencies on =load-path=,
+initialize the installed Markdown package, disable native JIT, and load the
+driver in a fresh batch Emacs. Set =EMACSVOX_TABLE_BENCHMARK_OUTPUT= to the JSON
+output file. For a comparison, set =EMACSVOX_TABLE_BENCHMARK_AGENT_LIBRARY= to
+byte-code compiled from the selected baseline facade. Check the actual loaded
+paths in each output before comparing measurements.
+
+[[file:data/2026-09-28-table-reading/summary.json][Summary measurements]], [[file:data/2026-09-28-table-reading/test-results.json][individual test results]], [[file:data/2026-09-28-table-reading/provenance.json][source/toolchain provenance]] and
+[[file:data/2026-09-28-table-reading/SHA256SUMS][checksums]] accompany the raw JSON measurements in the same directory.
+Complete command output and the graphical probe scripts are also retained
+locally under =~/.local/state/emacsvox/diagnostics/2026-09-28-table-navigation/implementation/=.

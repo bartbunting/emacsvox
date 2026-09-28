@@ -4,14 +4,14 @@
 
 * Status and intended outcome
 
-Work authorized on 2026-09-28; behavior and binding review is in progress.
-Shared runtime implementation has not started. The maintainer requested a
-common table-navigation experience across Emacsvox, using the recent Agent
-Shell behavior as the starting point. This document records the investigation
-and proposal so implementation can begin from an explicit contract. Proposed
-keys, defaults, architecture, and migration choices below are not yet accepted
-decisions. Creating this plan does not enable new behavior or change live
-settings.
+The first milestone was authorized on 2026-09-28: shared logical operations for
+Agent Shell, Markdown and Org, explicit activation in editable source buffers,
+and vertical exits to adjacent prose. The implementation and automated
+verification are complete; listening acceptance remains a separate check in
+a fresh Emacs.
+Later application adapters and their open decisions remain separate work.
+The accepted first-milestone contract below takes precedence over the earlier
+inventory and candidate choices. It does not change personal settings.
 
 The established Agent Shell baseline is committed:
 
@@ -162,20 +162,20 @@ their own keys while active. The first implementation needs effective-binding
 checks for these contexts as well as ordinary table movement; the batch baseline
 above does not establish every future map interaction.
 
-** Proposed first-milestone behavior
+** Accepted first-milestone behavior
 
 - Agent Shell keeps automatic contextual table reading and its existing public
   commands and preferences. Editable Markdown/Org require explicit entry;
-  leaving the reading context restores ordinary editing. This activation
-  choice is awaiting the maintainer's response.
+  leaving the reading context restores ordinary editing. The maintainer
+  approved explicit entry on 2026-09-28.
 - Up/Down and Control-Meta-Up/Down move by logical row, preserve the column and
   read the whole row. Control-Meta-Left/Right move by cell; plain Left/Right
   retain character inspection. Space reads the cell and =r/c= read row/column.
 - Vertical boundaries leave an embedded table and speak the adjacent prose,
   matching Agent Shell. Horizontal boundaries stay put and announce the edge.
   A missing cell in a shorter row stays put and reports the missing cell,
-  preserving the current Agent Shell behavior. The vertical-edge choice is
-  awaiting the maintainer's response.
+  preserving the current Agent Shell behavior. The maintainer approved
+  vertical exits on 2026-09-28.
 - A separator is structural, not a data row. Distinguish a recognized header
   from data rather than assuming every first row is a title. Keep separate
   header-row announcements, one-based data coordinates, and the common word
@@ -194,9 +194,12 @@ above does not establish every future map interaction.
   after edits or streamed replacements, and reject unavailable/stale cells
   rather than navigating using invalid positions.
 
-No runtime or personal-setting change is made by this audit. Settle D1/D5 and
-confirm the first-milestone contract before implementing the dependent reader.
-Other open decisions remain attached to the adapter or feature they govern.
+The first milestone uses =C-e C-t C-r= for explicit entry/exit and
+=C-e C-t [ / ]= for discovery, respecting a customized speech prefix. Inside
+source-table reading, =q= exits, Tab/Shift-Tab move by cell without editing,
+and Return reads the cell. Other native edits end the reading context.
+Markdown's markup-stripping speech option remains independent. Other open
+decisions remain attached to the adapter or feature they govern.
 
 * Proposed common interaction
 
@@ -226,7 +229,7 @@ The proposed activation policy is automatic in suitable read-only views and
 explicit in editable Markdown/Org buffers. Do not infer read-only status solely
 from =buffer-read-only=: Agent Shell combines a transcript with editable input,
 and applications can contain writable fields inside otherwise protected views.
-The relationship to Markdown's existing speech-cleanup reading mode is open.
+Markdown's existing speech-cleanup reading mode remains independent.
 
 One action should produce one replaceable main-lane announcement, with its cues
 and context submitted together. Apply [[file:adr/0009-foreground-and-notification-speech-lanes.org][ADR 0009]]: adapters describe navigation to
@@ -239,13 +242,14 @@ Resolve decisions before the implementation slice that depends on them.
 Independent inventory and fixtures can proceed without settling every later
 adapter. Record selections, rationale, and affected integrations here.
 
-** OPEN D1. Activation, scope, and return to editing
+** RESOLVED D1 for the first milestone. Activation and return to editing
 
-Choose the entry/exit commands, whether activation lasts for a table or a buffer,
-and how automatic activation works in read-only views. Recommended starting
-point: explicit reading in editable buffers, with an announced exit to editing;
-automatic contextual controls in rendered transcripts. Decide how =t/T= remain
-available between tables without consuming letters in editable prose.
+Markdown and Org use explicit, table-scoped reading. The speech table prefix
+=C-r= and =q= restore normal keys; source edits or movement outside the table
+also end reading. Prefix =[ / ]= discover tables from prose, while =t/T= are
+contextual inside the reader. Agent Shell keeps its automatic rendered-table
+context and existing prompt guards. Future application adapters still require
+their own activation review.
 
 ** OPEN D2. Shared keys and compatibility
 
@@ -272,14 +276,13 @@ assume every first row is a heading. Decide how header rows contribute to row
 numbers and dimensions, whether "blank" becomes the common empty-cell word,
 and how duplicate header/value announcements are avoided.
 
-** OPEN D5. Boundaries and irregular tables
+** RESOLVED D5 for the first milestone. Boundaries and irregular tables
 
-Decide whether vertical edges leave an embedded table or stop with an edge cue;
-standalone table views have no surrounding prose. Specify horizontal edges,
-prefix counts, hidden rows, and a retained column that is absent in a shorter
-row. Options for shorter rows include a missing-cell announcement or clamping
-while remembering the preferred column. Choose explicit exit keys without
-reusing Org's editing keys outside the reading context.
+Vertical moves beyond a table leave for adjacent prose; if no surrounding
+content exists, announce that boundary and stay. Horizontal boundaries and
+missing ragged-row cells keep point unchanged. Counts may be zero or negative.
+Meta-Up/Down exit only in the reader, preserving Org's ordinary editing keys.
+Hidden-row and standalone application-table policies remain future work.
 
 ** OPEN D6. Shared implementation and source positions
 
@@ -322,7 +325,7 @@ each adapter has acceptance evidence.
 
 * Proposed implementation slices
 
-** TODO 0. Complete the behavior and binding contract
+** DONE 0. Complete the first-milestone behavior and binding contract
 
 Recheck installed, live, and pinned dependency paths/versions and effective
 bindings, not only source keymaps. Follow the Agent Shell conflict-audit rules in
@@ -330,7 +333,7 @@ bindings, not only source keymaps. Follow the Agent Shell conflict-audit rules i
 Inventory equivalent maps for each planned adapter. Record decisions D1-D5 and
 the first-milestone parts of D6-D9, plus representative input/output fixtures.
 
-** TODO 1. Establish shared operations using the Agent Shell baseline
+** DONE 1. Establish shared operations using the Agent Shell baseline
 
 Select the reusable implementation after the inventory. Introduce the smallest
 shared boundary for cell/row/column lookup, navigation, inspection, copying, and
@@ -338,14 +341,14 @@ presentation. Migrate Agent Shell without losing its existing table behavior,
 live-prompt protection, cursor-hint filtering, or reload handling. Preserve old
 commands and settings while the chosen migration is implemented.
 
-** TODO 2. Add Markdown table reading
+** DONE 2. Add Markdown table reading
 
 Use Markdown-aware parsing for escaped pipes, code spans, links, empty cells,
 alignment rows, optional outer pipes, and code-fence exclusions. Add the chosen
 reading activation and source-position mapping. Keep native editing commands
 available and verify reading never invokes their row-creation/alignment effects.
 
-** TODO 3. Add Org table reading
+** DONE 3. Add Org table reading
 
 Use Org's structural data with movement that does not realign or recalculate.
 Implement the selected header policy and compatibility with existing feedback
@@ -394,8 +397,18 @@ per slice; update this plan as decisions become settled.
   =make docs-release-check=. This planning document alone does not require Lisp
   compilation or new behavioral tests.
 
+* First-milestone evidence
+
+The shared reader, Markdown/Org adapters and retained Agent Shell interface are
+implemented. The [[file:benchmarks/2026-09-28-table-reading.org][verification and performance report]] records source, compiled,
+pinned/live-dependency and graphical results, with retained individual test
+outcomes and raw navigation measurements. Maintained usage and implementation
+guidance are in the manual's Browsing Structure and Integration Maintenance
+sections. No running user session or saved preferences were changed.
+
 * Next action
 
-Start with slice 0: produce the binding-conflict inventory and select activation,
-speech defaults, and boundary behavior for Agent Shell, Markdown, and Org. That
-gives the first shared implementation a concrete, reviewable acceptance contract.
+Complete listening acceptance in a fresh Emacs. Then review browser/CSV and
+tabulated-list behaviour under D2-D9 before extending the reader to those
+applications. Their native bindings, editing feedback and selected-cell defaults
+remain separate decisions; this first milestone does not migrate them.
