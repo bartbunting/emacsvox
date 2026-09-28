@@ -1,0 +1,401 @@
+#+title: Unified Table Navigation — Plan and Open Decisions
+#+date: 2026-09-22
+#+startup: content
+
+* Status and intended outcome
+
+Work authorized on 2026-09-28; behavior and binding review is in progress.
+Shared runtime implementation has not started. The maintainer requested a
+common table-navigation experience across Emacsvox, using the recent Agent
+Shell behavior as the starting point. This document records the investigation
+and proposal so implementation can begin from an explicit contract. Proposed
+keys, defaults, architecture, and migration choices below are not yet accepted
+decisions. Creating this plan does not enable new behavior or change live
+settings.
+
+The established Agent Shell baseline is committed:
+
+- =dde32aed0=: link navigation combines the label and action in one utterance,
+  filtering the cursor sensor's duplicate notification.
+- =1cd130e0a=: Up/Down and Control-Meta-Up/Down speak the complete destination
+  table row while retaining the current column.
+- =0cbaf5aa5=: the maintained guide and generated manuals describe those changes.
+
+The desired outcome is one learnable set of table-reading operations, consistent
+speech, and access to the original document or application. Reading must preserve
+document text, editable prompts, and each mode's editing capabilities.
+
+* Current behavior and evidence
+
+This inventory comes from source and read-only inspection on 2026-09-22. It is
+not a claim that all integrations have received graphical or spoken acceptance.
+Recheck actual loaded packages and effective bindings when implementation starts.
+The inspected session used Emacs 31.0.90, its bundled Org, Markdown Mode package
+=20260827.909=, and Agent Shell package =20260921.1420=.
+
+** Markdown
+
+[[file:../lisp/emacsvox-markdown.el][The Markdown integration]] provides table-aware line speech, but no equivalent
+of Agent Shell's contextual cell/row/column navigation. Markdown Mode's Tab and
+Shift-Tab move between cells; Return moves to the next row. These are editing
+operations: they can align a table or create a row.
+
+Emacsvox generally presents the resulting line. Its reading mode removes pipes
+and other markup and treats separator rows specially; it does not retain cell
+boundaries or announce column titles as a logical table reader would. The
+=emacsvox-markdown--speak-table-row= helper currently has no callers. Its simple
+pipe splitting is not a suitable parser for escaped pipes, code, or blank cells.
+
+Automatic Markdown reading mode was disabled in the inspected session. The
+existing =C-c C-s r= toggle changes speech cleanup, not table-navigation keys or
+editing protection.
+
+** Org
+
+[[file:../lisp/emacsvox-org.el][The Org integration]] speaks after native field and row movement. Tab/Shift-Tab
+move between fields, Return moves down, and Emacsvox binds Shift-Return to
+previous-row movement. Plain Up/Down remain ordinary line movement.
+
+=emacsvox-org-table-after-movement-function= defaults to current-cell speech;
+that was also the inspected session's setting. Alternatives speak row headers,
+column headers, or headers with the cell. Header commands use the first column
+and first row. Empty current cells are called "space", whereas Agent Shell
+uses "blank". There is no matching full-row/full-column reading interface here.
+
+Org's table editing, formula, and inspection commands have separate speech
+support. Native movement can realign, recalculate, or extend a table. Those
+commands should not be reused blindly for non-mutating reading. Meta-Up/Down
+are editing commands that can reorder rows.
+
+** Agent Shell
+
+[[file:../lisp/emacsvox-agent-shell.el][The Agent Shell integration]] reads logical cells from rendered-table metadata
+and Markdown source. Its contextual map provides full-row vertical navigation,
+modified horizontal cell movement, cell/row/column inspection and copying,
+position and dimensions, header preferences, and table exit. Logical cells are
+read in full even when their display wraps. Entry announces dimensions and the
+current cell; vertical movement beyond an embedded table can leave it.
+
+Table navigation is scoped to rendered transcript content. Navigation letters
+remain literal input in live prompts and viewport editors, including while the
+agent is busy. See the [[file:manual/chapters/agent-shell.org][maintained Agent Shell guide]].
+
+** Other table consumers
+
+- [[file:../lisp/emacsvox-table.el][The existing table model]] and [[file:../lisp/emacsvox-table-ui.el][table browser]] support CSV and extracted data,
+  cell navigation, coordinates, headers, searching, copying, and row/column
+  filters. Movement normally speaks a cell through a configurable function.
+  Left/Right move between cells; =r= and =c= mean header plus cell, not whole
+  row and column. The model normally treats the first row/column as headers.
+- [[file:../lisp/emacsvox-tabulated-list.el][Tabulated-list support]] binds arrows to cell-oriented movement and =.= to
+  current-cell speech. Application-specific maps and presentations may override
+  that base behavior. For example, selected-cell navigation is an explicit
+  existing requirement in the [[file:aural-interface-consolidation-plan.org][Aural interface delivery contract]].
+- [[file:../lisp/emacsvox-eww.el][EWW]] has its own DOM-based cell and row commands on Meta-arrows and can open
+  a table in the separate table browser. Its current implementation explicitly
+  limits support to plain, non-nested tables; merged-cell handling needs review.
+- [[file:../lisp/emacsvox-etable.el][table.el support]] and [[file:../lisp/emacsvox-ses.el][SES spreadsheet support]] are additional adapters to
+  inventory before claiming coverage across Emacsvox. Their editing and formula
+  semantics must remain available.
+
+* Current binding audit, 2026-09-28
+
+The first milestone is proposed for Agent Shell, Markdown and Org. The other
+adapters remain separate slices: their existing navigation, editing, filtering
+and application actions must not change as a side effect of the first milestone.
+
+** Dependencies and verification
+
+Read-only inspection identified the primary live Emacs as PID 8796, socket
+=emacsvox=, using Emacs 31.0.90. Its Agent Shell implementation was loaded from
+the source checkout at commit =d551202139dc0ad5f671fd19ca237515eb4ae762=
+(version 0.79.2), with Shell Maker package =20260910.119=, Markdown Mode package
+=20260827.909=, and bundled Org. Its existing speech processes were not changed.
+
+The integration lock selects Agent Shell commit
+=7a1e4b3a53fb5df8ac8c15205e1f3609deb9e8c2= (version 0.78.1) and Shell Maker
+=f448a74a8eded23aa42f8d60a41c5d8d3a183d07=. The old =.test-deps= directory
+does not match the current lock. Prepared and verified the unchanged lock in
+a separate =TEST_DEPS_DIR=; no dependency upgrade is part of this work.
+
+The 34 selected existing table, presentation, discovery and editable-prompt
+tests pass against both the verified pinned dependencies and the source
+dependencies used by the live session. The latter run must prefer newer source:
+the checkout contains an older =agent-shell.elc= which does not represent the
+implementation loaded in the live session. These are batch baseline checks,
+not graphical or listening acceptance of a new reader.
+
+Compared the complete Emacsvox Agent Shell speech-control, table-navigation
+and block-repeat maps with the upstream shell, viewport view/edit, inherited
+Shell Maker and fragment maps. Inspected permission-button, inline-link and
+transient-menu definitions separately. Effective ordinary table bindings were
+also sampled in fresh Markdown, Org, table-browser and tabulated-list buffers.
+
+** Conflicts that constrain the implementation
+
+| Context | Existing binding | Constraint on the shared reader |
+|---------+------------------+---------------------------------|
+| Agent Shell transcript | =r= quotes a region upstream; the current table map reads a row. | Preserve the existing table-only override; quoting remains available outside the table and through its named command. |
+| Agent Shell viewport | =r/c/a= reply, continue and reply again upstream; the current table map reads a row/column and selects speech settings. | Keep these overrides scoped to tables. Exit restores view actions; the upstream named commands remain available. |
+| Agent Shell viewport | =t= selects thought level upstream; Emacsvox already uses =t/T= for transcript table discovery. | Preserve the established override and document =M-x agent-shell-viewport-set-session-thought-level= as the displaced action. |
+| Agent Shell transcript | =k= discovers source blocks; inside a table it prefixes copying. | Preserve =k k/k r/k c= and ensure map precedence cannot turn the prefix into block navigation. |
+| Editable prompts | Printable navigation keys must insert text, including while busy. | Use the actual editable-input boundary, not only the buffer's read-only flag. |
+| Org table | =M-Up/M-Down= move rows; =TAB/RET= invoke native editing-aware commands. | Shared reading must use its own non-mutating movement and restore normal editing immediately on exit. |
+| Markdown and Org | =C-M= arrows have inherited structural movement; letters and Space insert text. | Override only within the explicit reading context. Character arrows stay character movement. |
+| Table browser | =r/c= speak a header plus cell, =T= goes to the top, and =k= copies to its table clipboard. | Defer this adapter's key migration; do not install the Agent Shell map globally. |
+| Tabulated lists | Vertical movement presents the selected cell; =.= reads that cell. | Preserve application-specific cell navigation until that adapter's reviewed slice. |
+
+The global table prefix is not mostly empty. Although
+[[file:../lisp/emacsvox-keymap.el][emacsvox-keymap.el]] initially adds only =f= and comma, loading
+[[file:../lisp/emacsvox-table-ui.el][emacsvox-table-ui.el]] installs the browser's complete map there as well.
+It also replaces =f= (find file) with filtered row speech. Reusing =r/c/k/T=
+for the new operations would change an existing global interface and introduce
+load-order problems. First-milestone proposal: add an unused entry under the
+existing prefix, =C-e C-t C-r=, to enter or leave shared table reading, and
+unused =[ / ]= entries there for previous/next table discovery. Do not rebind
+the existing browser commands as part of this slice. The actual speech prefix
+can be customized; the =C-e= spelling describes its default.
+
+Permission buttons retain their supplied action keys and =RET=. Inline links
+and fragments retain activation/toggle actions. Transient menus must retain
+their own keys while active. The first implementation needs effective-binding
+checks for these contexts as well as ordinary table movement; the batch baseline
+above does not establish every future map interaction.
+
+** Proposed first-milestone behavior
+
+- Agent Shell keeps automatic contextual table reading and its existing public
+  commands and preferences. Editable Markdown/Org require explicit entry;
+  leaving the reading context restores ordinary editing. This activation
+  choice is awaiting the maintainer's response.
+- Up/Down and Control-Meta-Up/Down move by logical row, preserve the column and
+  read the whole row. Control-Meta-Left/Right move by cell; plain Left/Right
+  retain character inspection. Space reads the cell and =r/c= read row/column.
+- Vertical boundaries leave an embedded table and speak the adjacent prose,
+  matching Agent Shell. Horizontal boundaries stay put and announce the edge.
+  A missing cell in a shorter row stays put and reports the missing cell,
+  preserving the current Agent Shell behavior. The vertical-edge choice is
+  awaiting the maintainer's response.
+- A separator is structural, not a data row. Distinguish a recognized header
+  from data rather than assuming every first row is a title. Keep separate
+  header-row announcements, one-based data coordinates, and the common word
+  "blank". Initial automatic detection covers a single clearly marked header
+  row; complex or explicitly selected headers need their later contract.
+- Copy logical plain text: tabs between row cells, newlines between column
+  cells. Exact markup and formula copying remain host-mode operations.
+- Preserve existing Agent Shell title/data-order choices. Shared defaults for
+  new readers do not rewrite Org's native editing-feedback preferences or
+  application-specific cell-reading settings.
+- Extract shared operations and formatting behind mode-specific recognition,
+  source-position and presentation adapters. Retain existing Agent Shell and
+  Org Aural roles/facts so personal presentation rules keep matching. Reading
+  produces one main-lane submission; adapters do not add transport stops.
+- Keep the original document as the navigation surface. Refresh source mapping
+  after edits or streamed replacements, and reject unavailable/stale cells
+  rather than navigating using invalid positions.
+
+No runtime or personal-setting change is made by this audit. Settle D1/D5 and
+confirm the first-milestone contract before implementing the dependent reader.
+Other open decisions remain attached to the adapter or feature they govern.
+
+* Proposed common interaction
+
+These are candidate bindings in an active table-reading context, not changes to
+ordinary editing maps. A shared prefix should also make operations available
+without taking over printable keys. Emacsvox already has a table prefix under
+its speech prefix; audit and extend it rather than assuming it is unused.
+
+| Key | Proposed operation |
+|-----+--------------------|
+| Up/Down; C-M-Up/Down | Move by logical row, retain the column, read the complete row. |
+| Left/Right | Move by character for exact inspection. |
+| C-M-Left/Right | Move between columns and read the destination cell. |
+| Space | Read the current cell. |
+| r / c | Read the whole row / column. |
+| . / = | Announce position / dimensions. |
+| a | Select header announcements and data/header order. |
+| w; k k / k r / k c | Copy the cell; cell / row / column. |
+| t / T | Move to the next / previous table in a reading context. |
+
+Skip structural separators, identify blank cells consistently, and retain full
+logical content despite display wrapping. Navigation never creates rows,
+realigns source, evaluates formulas, or changes document text. Copying should
+produce useful cell values without renderer padding or decorative borders.
+
+The proposed activation policy is automatic in suitable read-only views and
+explicit in editable Markdown/Org buffers. Do not infer read-only status solely
+from =buffer-read-only=: Agent Shell combines a transcript with editable input,
+and applications can contain writable fields inside otherwise protected views.
+The relationship to Markdown's existing speech-cleanup reading mode is open.
+
+One action should produce one replaceable main-lane announcement, with its cues
+and context submitted together. Apply [[file:adr/0009-foreground-and-notification-speech-lanes.org][ADR 0009]]: adapters describe navigation to
+Aural policy instead of sending their own transport stop/play sequences.
+Suppress duplicate navigation hints narrowly; preserve asynchronous notifications.
+
+* Decisions still to make
+
+Resolve decisions before the implementation slice that depends on them.
+Independent inventory and fixtures can proceed without settling every later
+adapter. Record selections, rationale, and affected integrations here.
+
+** OPEN D1. Activation, scope, and return to editing
+
+Choose the entry/exit commands, whether activation lasts for a table or a buffer,
+and how automatic activation works in read-only views. Recommended starting
+point: explicit reading in editable buffers, with an announced exit to editing;
+automatic contextual controls in rendered transcripts. Decide how =t/T= remain
+available between tables without consuming letters in editable prose.
+
+** OPEN D2. Shared keys and compatibility
+
+Approve the candidate map after a complete conflict audit. Existing conflicts
+include Org Meta-arrows, generic table-browser =r/c/T/k= meanings, tabulated-list
+=.=, and the old Left/Right cell commands. Control-Meta arrows also have inherited
+structural-navigation bindings outside tables. Decide which legacy bindings stay
+as aliases, which need migration, and how displaced commands remain accessible.
+Do not silently change global or ordinary editing bindings.
+
+** OPEN D3. Full-row defaults in application tables
+
+The maintainer explicitly requested full-row Up/Down in Agent Shell. Decide
+whether that becomes the default everywhere or only within explicit table
+reading. Recommended starting point: full-row movement in the shared reader,
+while preserving application-specific selected-cell navigation until reviewed.
+This includes the Aural editors and applications derived from tabulated-list.
+
+** OPEN D4. Headers, coordinates, and blanks
+
+Choose how headers are detected or explicitly selected, including tables without
+headers, multiple header rows, row titles, and mid-table separators. Do not
+assume every first row is a heading. Decide how header rows contribute to row
+numbers and dimensions, whether "blank" becomes the common empty-cell word,
+and how duplicate header/value announcements are avoided.
+
+** OPEN D5. Boundaries and irregular tables
+
+Decide whether vertical edges leave an embedded table or stop with an edge cue;
+standalone table views have no surrounding prose. Specify horizontal edges,
+prefix counts, hidden rows, and a retained column that is absent in a shorter
+row. Options for shorter rows include a missing-cell announcement or clamping
+while remembering the preferred column. Choose explicit exit keys without
+reusing Org's editing keys outside the reading context.
+
+** OPEN D6. Shared implementation and source positions
+
+Choose how much of the existing table model/UI to reuse, extend, or wrap. Its
+vector data and first-row/column header assumptions do not by themselves model
+live source positions, optional headers, or merged cells. Recommended direction:
+shared operations and presentation, with mode-specific adapters for table
+recognition, logical values, headers, positions, and capabilities. Final module
+names and public interfaces are not selected.
+
+Specify source/display mapping, cache invalidation after edits or streamed
+updates, and how a stale position is reported. Preserve the existing browser's
+filtering/searching features. Prefer navigating in the source; a detached table
+view should not become a requirement for reading Markdown or Org.
+
+** OPEN D7. Preferences and migration
+
+Choose shared defaults and per-buffer/mode overrides for headers, data order,
+row versus cell feedback, and filtered reading. Map existing Org, Agent Shell,
+and table-browser settings without losing explicit user choices. Decide how
+existing commands and Aural facts remain compatible during migration; current
+integrations have different roles and metadata, not just different strings.
+
+** OPEN D8. Copying and rich cell content
+
+Decide whether shared copy commands return displayed text, source markup, or
+formula values, and how links and inline code are represented. Recommended
+default: logical plain-text values, tabs between copied row cells, and newlines
+between copied column cells. Keep exact source/formula copying available through
+the host mode. Reading a row must not silently shorten wrapped content.
+
+** OPEN D9. Complex tables and rollout scope
+
+Confirm rollout order and define handling of HTML spans, nested tables, and
+spreadsheet-specific cells. Recommended first milestone: Agent Shell, Markdown,
+and Org; next the table browser/CSV and tabulated lists, then EWW, table.el, and
+SES. Unsupported structures need truthful capability feedback, not invented
+coordinates or silent flattening. Do not advertise universal coverage before
+each adapter has acceptance evidence.
+
+* Proposed implementation slices
+
+** TODO 0. Complete the behavior and binding contract
+
+Recheck installed, live, and pinned dependency paths/versions and effective
+bindings, not only source keymaps. Follow the Agent Shell conflict-audit rules in
+[[file:../AGENTS.md][AGENTS.md]] for shell, viewport, prompt, permission, inline, and transient maps.
+Inventory equivalent maps for each planned adapter. Record decisions D1-D5 and
+the first-milestone parts of D6-D9, plus representative input/output fixtures.
+
+** TODO 1. Establish shared operations using the Agent Shell baseline
+
+Select the reusable implementation after the inventory. Introduce the smallest
+shared boundary for cell/row/column lookup, navigation, inspection, copying, and
+presentation. Migrate Agent Shell without losing its existing table behavior,
+live-prompt protection, cursor-hint filtering, or reload handling. Preserve old
+commands and settings while the chosen migration is implemented.
+
+** TODO 2. Add Markdown table reading
+
+Use Markdown-aware parsing for escaped pipes, code spans, links, empty cells,
+alignment rows, optional outer pipes, and code-fence exclusions. Add the chosen
+reading activation and source-position mapping. Keep native editing commands
+available and verify reading never invokes their row-creation/alignment effects.
+
+** TODO 3. Add Org table reading
+
+Use Org's structural data with movement that does not realign or recalculate.
+Implement the selected header policy and compatibility with existing feedback
+settings. Preserve native field editing, formula commands, row/column reordering,
+and the normal meaning of Tab/Return outside the shared reading context.
+
+** TODO 4. Extend to the remaining integrations
+
+Migrate the table browser/CSV and tabulated-list consumers in independently
+reviewable steps, preserving filters, searching, and application actions. Add
+EWW, table.el, and SES according to their reviewed capabilities and D9. Revisit
+each application's deliberate selected-cell behavior under D3.
+
+** TODO 5. Complete documentation and spoken acceptance
+
+Update the maintained user guide as each adapter ships, with a common key table,
+activation/editing explanation, and documented exceptions. Keep implementation
+contracts in the developer guide, following [[file:adr/0001-documentation-authoring-and-publication.org][ADR 0001]] and [[file:adr/0004-documentation-audiences.org][ADR 0004]]. Record
+commits, verified dependency versions, automated results, and listening feedback
+per slice; update this plan as decisions become settled.
+
+* Acceptance and verification
+
+- Equivalent simple tables produce matching navigation and speech across the
+  first three adapters: full row vertically, one cell horizontally, and no
+  duplicate announcements. Cell/row/column inspection and copying also agree.
+- Cover headers and no headers, blanks, ragged rows, separators, escaped pipes,
+  inline code/links, wrapped cells, multiple tables, and both movement directions.
+  Confirm full logical content and the selected column, not only rendered text.
+- Check entry, exit, edges, prefix counts, source updates, and stale positions.
+  Confirm commands outside a supported table fail clearly without changing text.
+- Verify source text and modified state remain unchanged during reading. Reading
+  must not add rows, align, recalculate, reorder data, or steal editable prompt
+  input. Test ordinary editing immediately after leaving the reading context.
+- Exercise effective bindings with mode/minor/overlay/text-property maps, real
+  cursor sensors, and both idle and busy Agent Shell prompt editors. Test repeated
+  setup/reload and late package loading for duplicate advice or stale maps.
+- Use the shared Aural submission path; verify rapid movement replaces old
+  navigation speech and does not duplicate cursor hints or suppress unrelated
+  notifications. Obtain listening acceptance for clarity and interruption.
+- Run affected suites and applicable gates under [[file:../AGENTS.md][the repository workflow]].
+  Compile before fresh compiled verification; public-interface or macro changes
+  require the prescribed byte-code rebuild. Include real graphical checks for
+  wrapping, overlays, and focus, and report skipped checks separately.
+- Update generated documentation through the established targets and run
+  =make docs-release-check=. This planning document alone does not require Lisp
+  compilation or new behavioral tests.
+
+* Next action
+
+Start with slice 0: produce the binding-conflict inventory and select activation,
+speech defaults, and boundary behavior for Agent Shell, Markdown, and Org. That
+gives the first shared implementation a concrete, reviewable acceptance contract.
