@@ -20741,7 +20741,8 @@ Current buffer must be in emacsvox-table mode.
 
 @format
 Process a csv (comma separated values) file.
-The processed  data is presented using emacsvox table navigation.
+The processed data is presented using Emacsvox table navigation.
+An already visited source buffer and any unsaved edits are preserved.
 
 (fn FILENAME)
 @end format
@@ -21322,8 +21323,9 @@ Save out filter settings.
 @findex emacsvox-table-view-csv-buffer
 
 @format
-Process a csv (comma separated values) data.
-The processed  data is  presented using emacsvox table navigation.
+Browse CSV data from BUFFER-NAME, or the current buffer.
+Quoted commas, doubled quotes and multiline fields remain logical cells.
+The source buffer is preserved.
 
 (fn &optional BUFFER-NAME)
 @end format

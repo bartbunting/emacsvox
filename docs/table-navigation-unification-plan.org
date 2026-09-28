@@ -247,14 +247,20 @@ adapter. Record selections, rationale, and affected integrations here.
 
 ** RESOLVED D1 for the first milestone. Activation and return to editing
 
-Markdown and Org use explicit, table-scoped reading. The speech table prefix
+Markdown and Org use table-scoped reading, entered with Control-Meta arrows
+or the speech table prefix. The speech table prefix
 =C-r= and =q= restore normal keys; source edits or movement outside the table
 also end reading. Prefix =[ / ]= discover tables from prose, while =t/T= are
 contextual inside the reader. Agent Shell keeps its automatic rendered-table
 context and existing prompt guards. Future application adapters still require
 their own activation review.
 
-** OPEN D2. Shared keys and compatibility
+** PARTLY RESOLVED D2. Shared keys and compatibility
+
+The accepted first-milestone map is implemented for Agent Shell, Markdown and
+Org, including contextual Control-Meta arrow entry in source tables. Their
+binding audits and regression checks are complete. The following decisions
+apply to the remaining application adapters.
 
 Approve the candidate map after a complete conflict audit. Existing conflicts
 include Org Meta-arrows, generic table-browser =r/c/T/k= meanings, tabulated-list
@@ -271,7 +277,12 @@ reading. Recommended starting point: full-row movement in the shared reader,
 while preserving application-specific selected-cell navigation until reviewed.
 This includes the Aural editors and applications derived from tabulated-list.
 
-** OPEN D4. Headers, coordinates, and blanks
+** PARTLY RESOLVED D4. Headers, coordinates, and blanks
+
+The first milestone recognizes a single separator-marked header row, uses
+one-based data coordinates, announces empty cells as "blank", and suppresses
+duplicate header/value text. Remaining adapters need an explicit policy where
+their source supplies no reliable header metadata.
 
 Choose how headers are detected or explicitly selected, including tables without
 headers, multiple header rows, row titles, and mid-table separators. Do not
@@ -287,21 +298,30 @@ missing ragged-row cells keep point unchanged. Counts may be zero or negative.
 Meta-Up/Down exit only in the reader, preserving Org's ordinary editing keys.
 Hidden-row and standalone application-table policies remain future work.
 
-** OPEN D6. Shared implementation and source positions
+** PARTLY RESOLVED D6. Shared implementation and source positions
+
+~emacsvox-table-reader.el~ now provides common formatting, copying and movement
+decisions. Markdown and Org supply fresh source snapshots; Agent Shell retains
+its rendered-position adapter. Source edits end explicit reading. The remaining
+work is adapting application data and display positions to this boundary.
 
 Choose how much of the existing table model/UI to reuse, extend, or wrap. Its
 vector data and first-row/column header assumptions do not by themselves model
 live source positions, optional headers, or merged cells. Recommended direction:
 shared operations and presentation, with mode-specific adapters for table
-recognition, logical values, headers, positions, and capabilities. Final module
-names and public interfaces are not selected.
+recognition, logical values, headers, positions, and capabilities. Reuse the
+implemented shared reader when adding the remaining adapters.
 
 Specify source/display mapping, cache invalidation after edits or streamed
 updates, and how a stale position is reported. Preserve the existing browser's
 filtering/searching features. Prefer navigating in the source; a detached table
 view should not become a requirement for reading Markdown or Org.
 
-** OPEN D7. Preferences and migration
+** PARTLY RESOLVED D7. Preferences and migration
+
+Markdown and Org share title/data-order defaults and buffer-local overrides;
+Agent Shell retains its established settings. Browser filters and application
+preferences still need a compatibility policy for their own migrations.
 
 Choose shared defaults and per-buffer/mode overrides for headers, data order,
 row versus cell feedback, and filtered reading. Map existing Org, Agent Shell,
@@ -309,7 +329,12 @@ and table-browser settings without losing explicit user choices. Decide how
 existing commands and Aural facts remain compatible during migration; current
 integrations have different roles and metadata, not just different strings.
 
-** OPEN D8. Copying and rich cell content
+** PARTLY RESOLVED D8. Copying and rich cell content
+
+The first milestone copies logical plain text, uses tabs between row cells and
+newlines between column cells, and preserves full wrapped values. Links use
+their labels and inline code its literal text. Remaining work concerns other
+adapters' rich content and formula values.
 
 Decide whether shared copy commands return displayed text, source markup, or
 formula values, and how links and inline code are represented. Recommended
@@ -360,12 +385,20 @@ and the normal meaning of Tab/Return outside the shared reading context.
 
 ** TODO 4. Extend to the remaining integrations
 
+CSV preparation now preserves quoted commas, doubled quotes, multiline fields
+and empty fields without changing or closing an already visited source buffer.
+Malformed or empty input is rejected before creating a view. This prerequisite
+does not change the browser's navigation bindings; their migration is pending.
+
 Migrate the table browser/CSV and tabulated-list consumers in independently
 reviewable steps, preserving filters, searching, and application actions. Add
 EWW, table.el, and SES according to their reviewed capabilities and D9. Revisit
 each application's deliberate selected-cell behavior under D3.
 
-** TODO 5. Complete documentation and spoken acceptance
+** TODO 5. Complete spoken acceptance and document later adapters
+
+The first milestone's maintained user/developer guidance and generated manuals
+are current. Its listening acceptance is still pending.
 
 Update the maintained user guide as each adapter ships, with a common key table,
 activation/editing explanation, and documented exceptions. Keep implementation

@@ -70,6 +70,15 @@ unchanged. Complete logs are retained locally in the implementation directory's
 
 * Measurement method and retained evidence
 
+The CSV preparation follow-up has [[file:data/2026-09-28-table-csv.json][separate retained results]]: 22 source checks
+cover the CSV browser and shared reader, and six CSV checks pass with the
+compiled browser in a fresh Emacs. They cover quoting, embedded newlines,
+empty input and fields, actual browser cell positions, and preservation of
+visited source buffers and unrelated scratch contents. Browser bindings remain
+unchanged in this prerequisite slice. No navigation performance remeasurement
+or listening acceptance is claimed for it. Full local logs are retained under
+=~/.local/state/emacsvox/diagnostics/2026-09-28-table-csv/=.
+
 The driver is [[file:../../utils/table-reader-benchmark.el][utils/table-reader-benchmark.el]]. Each record has 30 measured rounds after
 five warm-up rounds, with 20 row movements per round. Each sample is the round's
 amortized milliseconds per movement; the table above gives the median of those

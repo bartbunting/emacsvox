@@ -575,44 +575,79 @@ the documentation on the table browser."
 ;;;###autoload
 (defun emacsvox-table-find-csv-file (filename)
   "Process a csv (comma separated values) file.
-The processed  data is presented using emacsvox table navigation. "
+The processed data is presented using Emacsvox table navigation.
+An already visited source buffer and any unsaved edits are preserved."
   (interactive "FFind CSV file: ")
-  (let  ((buffer (find-file-noselect filename)))
-    (emacsvox-table-view-csv-buffer buffer)
-    (kill-buffer buffer)))
+  (let* ((existing (get-file-buffer filename))
+         (buffer (find-file-noselect filename)))
+    (unwind-protect
+        (emacsvox-table-view-csv-buffer buffer)
+      (when (and (not existing) (buffer-live-p buffer)
+                 (not (buffer-modified-p buffer)))
+        (kill-buffer buffer)))))
+
+(defun emacsvox-table-ui--csv-records ()
+  "Return accessible CSV records as a vector of field vectors.
+Decode quoted fields and doubled quotes, retaining embedded line breaks.
+Ignore blank records outside quoted fields.  Reject malformed quoting and
+empty input without changing source text, point, or the modified state."
+  (save-excursion
+    (goto-char (point-min))
+    (let (records fields characters state record-present)
+      (cl-labels
+          ((finish-field ()
+             (push (concat (nreverse characters)) fields)
+             (setq characters nil state nil))
+           (finish-record ()
+             (finish-field)
+             (when record-present (push (vconcat (nreverse fields)) records))
+             (setq fields nil record-present nil)))
+        (while (not (eobp))
+          (let ((character (char-after)))
+            (forward-char)
+            (cond
+             ((eq state 'quoted)
+              (if (= character ?\")
+                  (if (eq (char-after) ?\")
+                      (progn (push ?\" characters) (forward-char))
+                    (setq state 'closed))
+                (push character characters)))
+             ((= character ?,)
+              (setq record-present t)
+              (finish-field))
+             ((memq character '(?\n ?\r))
+              (when (and (= character ?\r) (eq (char-after) ?\n))
+                (forward-char))
+              (finish-record))
+             ((eq state 'closed)
+              (user-error "Unexpected character after quoted CSV field at line %d"
+                          (line-number-at-pos)))
+             ((= character ?\")
+              (when characters
+                (user-error "Unexpected quote in CSV field at line %d"
+                            (line-number-at-pos)))
+              (setq state 'quoted record-present t))
+             (t
+              (push character characters)
+              (unless (memq character '(?\s ?\t))
+                (setq record-present t))))))
+        (when (eq state 'quoted)
+          (user-error "Unterminated quoted CSV field"))
+        (when (or record-present fields characters state) (finish-record)))
+      (unless records (user-error "No CSV records to browse"))
+      (vconcat (nreverse records)))))
 
 ;;;###autoload
 (defun emacsvox-table-view-csv-buffer (&optional buffer-name)
-  "Process a csv (comma separated values) data.
-The processed  data is  presented using emacsvox table navigation. "
+  "Browse CSV data from BUFFER-NAME, or the current buffer.
+Quoted commas, doubled quotes and multiline fields remain logical cells.
+The source buffer is preserved."
   (interactive)
-  (or buffer-name
-      (setq buffer-name (current-buffer)))
-  (let ((scratch (get-buffer-create "*csv-scratch*"))
-        (table nil)
-        (elements nil)
-        (fields nil)
-        (buffer (get-buffer-create
-                 (format "*%s-table*" buffer-name))))
-    (save-current-buffer
-      (set-buffer scratch)
-      (setq buffer-undo-list  t)
-      (erase-buffer)
-      (insert-buffer-substring buffer-name)
-      (goto-char (point-min))
-      (flush-lines "^ *$")
-      (goto-char (point-min))
-      (setq elements
-            (make-vector (count-lines (point-min) (point-max))
-                         nil))
-      (cl-loop for i from 0 to (1- (length elements))
-               do
-               (setq fields (ems-csv-get-fields))
-               (aset elements i (apply 'vector fields))
-               (forward-line 1))
-      (setq table (emacsvox-table-make-table elements))
-      )
-    (kill-buffer scratch)
+  (let* ((source (get-buffer (or buffer-name (current-buffer))))
+         (table (with-current-buffer source
+                  (emacsvox-table-make-table
+                   (emacsvox-table-ui--csv-records))))
+         (buffer (get-buffer-create (format "*%s-table*" (buffer-name source)))))
     (emacsvox-table-prepare-table-buffer table buffer)
     (emacsvox-icon 'open-object)))
 

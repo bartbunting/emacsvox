@@ -253,6 +253,7 @@
   (require 'emacsvox-rust-mode-tests)
   (require 'emacsvox-markdown-tests)
   (require 'emacsvox-table-reader-tests)
+  (require 'emacsvox-table-ui-tests)
   (require 'emacsvox-maths-tests)
   (require 'emacsvox-py-tests)
   (require 'emacsvox-2048-tests)

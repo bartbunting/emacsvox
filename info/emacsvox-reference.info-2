@@ -8259,7 +8259,8 @@ User interface to tables
      ‘C-e C-t ,’
 
      Process a csv (comma separated values) file.
-     The processed  data is presented using emacsvox table navigation.
+     The processed data is presented using Emacsvox table navigation.
+     An already visited source buffer and any unsaved edits are preserved.
 
      (fn FILENAME)
 
@@ -8666,8 +8667,9 @@ User interface to tables
  -- Command: emacsvox-table-view-csv-buffer (&optional buffer-name)
      ‘C-e C-t v’
 
-     Process a csv (comma separated values) data.
-     The processed  data is  presented using emacsvox table navigation.
+     Browse CSV data from BUFFER-NAME, or the current buffer.
+     Quoted commas, doubled quotes and multiline fields remain logical cells.
+     The source buffer is preserved.
 
      (fn &optional BUFFER-NAME)
 

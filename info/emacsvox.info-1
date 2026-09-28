@@ -5357,6 +5357,22 @@ speech option remain independent of this reader.  Agent Shell uses the
 same logical reading operations with its existing automatic table entry,
 commands and preferences; see *note Agent Shell::.
 
+8.3.2 Browsing CSV data
+-----------------------
+
+Use ‘emacsvox-table-find-csv-file’ to open a CSV file in the table
+browser, or ‘emacsvox-table-view-csv-buffer’ to browse the current
+buffer's CSV data.  Quoted commas, doubled quotation marks, and
+multiline fields remain single logical cells.  Blank records outside
+quoted fields are skipped; empty fields remain cells.  Empty input or
+malformed quoting produces an error before a table view is created.
+
+   Browsing preserves the source text.  If the file is already open, its
+buffer and unsaved edits remain available, and the view uses those
+current contents.  The CSV browser still has its established navigation,
+searching and filtering commands; use ‘C-h m’ there for its current
+keys.
+
 
 File: emacsvox.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Structure,  Up: Emacs Packages
 
