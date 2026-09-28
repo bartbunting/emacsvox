@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 301 loaded; 0 intentionally omitted.
+@c Modules: 302 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -48,21 +48,21 @@
 @c Loaded: emacsvox-sdcv.elc emacsvox-ses.elc emacsvox-setup.elc emacsvox-sgml-mode.elc emacsvox-sh-script.elc
 @c Loaded: emacsvox-slime.elc emacsvox-smartparens.elc emacsvox-solitaire.elc emacsvox-sounds.elc emacsvox-speak.elc
 @c Loaded: emacsvox-speedbar.elc emacsvox-sql.elc emacsvox-sudoku.elc emacsvox-supercite.elc emacsvox-syslog.elc
-@c Loaded: emacsvox-tab-bar.elc emacsvox-table-ui.elc emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc
-@c Loaded: emacsvox-tar.elc emacsvox-tcl.elc emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc
-@c Loaded: emacsvox-todo-mode.elc emacsvox-transient.elc emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc
-@c Loaded: emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc
-@c Loaded: emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-welcome.elc
-@c Loaded: emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc
-@c Loaded: emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc
-@c Loaded: emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc gm-nnir.elc
-@c Loaded: gmaps.elc gweb.elc ladspa.elc light.elc mac-voices.elc
-@c Loaded: omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc omnivox-engine-settings.elc omnivox-espeak-variants.elc
-@c Loaded: omnivox-library-apply.elc omnivox-library.elc omnivox-native-codec.elc omnivox-parameters-codec.elc omnivox-parameters.elc
-@c Loaded: omnivox-preview.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc pip.elc
-@c Loaded: plain-voices.elc soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc
-@c Loaded: tetris.elc tts-queue-state.elc tts-speak.elc voice-defs.elc voice-setup.elc
-@c Loaded: xbacklight.elc
+@c Loaded: emacsvox-tab-bar.elc emacsvox-table-reader.elc emacsvox-table-ui.elc emacsvox-table.elc emacsvox-tabulate.elc
+@c Loaded: emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc emacsvox-tempo.elc emacsvox-tetris.elc
+@c Loaded: emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-transient.elc emacsvox-treesit.elc emacsvox-typo.elc
+@c Loaded: emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc emacsvox-view.elc
+@c Loaded: emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc
+@c Loaded: emacsvox-welcome.elc emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc
+@c Loaded: emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc
+@c Loaded: emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc
+@c Loaded: gm-nnir.elc gmaps.elc gweb.elc ladspa.elc light.elc
+@c Loaded: mac-voices.elc omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc omnivox-engine-settings.elc
+@c Loaded: omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc omnivox-native-codec.elc omnivox-parameters-codec.elc
+@c Loaded: omnivox-parameters.elc omnivox-preview.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc
+@c Loaded: pip.elc plain-voices.elc soundscape.elc sox-gen.elc sox.elc
+@c Loaded: swiftmac-voices.elc tetris.elc tts-queue-state.elc tts-speak.elc voice-defs.elc
+@c Loaded: voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -70,7 +70,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1601 commands and 221 options.
+This chapter documents a total of 1619 commands and 224 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -306,6 +306,7 @@ This chapter documents a total of 1601 commands and 221 options.
 * emacsvox-syslog:: Speech-enable SYSLOG.
 * emacsvox-tab-bar:: Speech-enable tab-bar.
 * emacsvox-table:: Table data model.
+* emacsvox-table-reader:: Shared logical table reading.
 * emacsvox-table-ui:: Table Navigation UI.
 * emacsvox-tabulate:: Handle table data.
 * emacsvox-tabulated-list:: Speech-enable.
@@ -20410,6 +20411,271 @@ tabs.
 
 Implements a module that provides a high level interface to
 tabulated information.
+
+@node emacsvox-table-reader
+@section emacsvox-table-reader
+
+Common logical table formatting and navigation.  Adapters supply complete
+cell values and source positions; reading never calls native table editors.
+Agent Shell retains its public commands and presentation preferences.
+
+@subsection Emacsvox-Table-Reader Commands
+
+@subsubsection emacsvox-table-reader-copy-cell
+@deffn {Command} emacsvox-table-reader-copy-cell
+@findex emacsvox-table-reader-copy-cell
+
+@format
+Copy the logical cell as plain text.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-copy-column
+@deffn {Command} emacsvox-table-reader-copy-column
+@findex emacsvox-table-reader-copy-column
+
+@format
+Copy the logical column as newline-separated plain text.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-copy-row
+@deffn {Command} emacsvox-table-reader-copy-row
+@findex emacsvox-table-reader-copy-row
+
+@format
+Copy the logical row as tab-separated plain text.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-exit-backward
+@deffn {Command} emacsvox-table-reader-exit-backward
+@findex emacsvox-table-reader-exit-backward
+
+@format
+Leave table reading and move to preceding prose.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-exit-forward
+@deffn {Command} emacsvox-table-reader-exit-forward
+@findex emacsvox-table-reader-exit-forward
+
+@format
+Leave table reading and move to following prose.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-mode
+@deffn {Command} emacsvox-table-reader-mode  (&optional arg)
+@table @kbd
+@item C-e C-t C-r
+@kindex C-e C-t C-r
+@end table
+
+@findex emacsvox-table-reader-mode
+
+@format
+Read a Markdown or Org table in place with contextual navigation keys.
+
+Use the speech prefix followed by C-t C-r to toggle reading.  Up/Down read
+logical rows, C-M-Left/Right read cells, and r/c read rows/columns.  TAB moves
+right without editing and RET reads the cell.  q restores normal mode keys.
+Leaving the table or editing its source also ends this context.  This mode
+is independent of Markdown’s markup-stripping speech preference.
+
+This is a minor mode.  If called interactively, toggle the
+‘Emacsvox-Table-Reader mode’ mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable ‘emacsvox-table-reader-mode’.
+
+The mode’s hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-next-column
+@deffn {Command} emacsvox-table-reader-next-column  (&optional count)
+@findex emacsvox-table-reader-next-column
+
+@format
+Move COUNT logical columns right and read the destination cell.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-next-row
+@deffn {Command} emacsvox-table-reader-next-row  (&optional count)
+@findex emacsvox-table-reader-next-row
+
+@format
+Move COUNT logical rows down, retaining the column and reading the row.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-next-table
+@deffn {Command} emacsvox-table-reader-next-table
+@table @kbd
+@item C-e C-t ]
+@kindex C-e C-t ]
+@end table
+
+@findex emacsvox-table-reader-next-table
+
+@format
+Find the next supported table and enter explicit reading.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-previous-column
+@deffn {Command} emacsvox-table-reader-previous-column  (&optional count)
+@findex emacsvox-table-reader-previous-column
+
+@format
+Move COUNT logical columns left and read the destination cell.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-previous-row
+@deffn {Command} emacsvox-table-reader-previous-row  (&optional count)
+@findex emacsvox-table-reader-previous-row
+
+@format
+Move COUNT logical rows up, retaining the column and reading the row.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-previous-table
+@deffn {Command} emacsvox-table-reader-previous-table
+@table @kbd
+@item C-e C-t [
+@kindex C-e C-t [
+@end table
+
+@findex emacsvox-table-reader-previous-table
+
+@format
+Find the previous supported table and enter explicit reading.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-select-speaking-method
+@deffn {Command} emacsvox-table-reader-select-speaking-method
+@findex emacsvox-table-reader-select-speaking-method
+
+@format
+Choose table titles or data order for this buffer.
+Press c for column titles, r for row titles, or o for data order.
+Agent Shell and Org editing feedback retain their existing preferences.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-speak-cell
+@deffn {Command} emacsvox-table-reader-speak-cell
+@findex emacsvox-table-reader-speak-cell
+
+@format
+Speak the complete logical table cell at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-speak-column
+@deffn {Command} emacsvox-table-reader-speak-column
+@findex emacsvox-table-reader-speak-column
+
+@format
+Speak the complete logical table column at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-speak-context
+@deffn {Command} emacsvox-table-reader-speak-context
+@findex emacsvox-table-reader-speak-context
+
+@format
+Speak the current logical table coordinates.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-speak-dimensions
+@deffn {Command} emacsvox-table-reader-speak-dimensions
+@findex emacsvox-table-reader-speak-dimensions
+
+@format
+Speak the current table dimensions, distinguishing headers from data.
+@end format
+@end deffn
+
+@subsubsection emacsvox-table-reader-speak-row
+@deffn {Command} emacsvox-table-reader-speak-row
+@findex emacsvox-table-reader-speak-row
+
+@format
+Speak the complete logical table row at point.
+@end format
+@end deffn
+
+@subsection emacsvox-table-reader Options
+
+@defvar {User Option} emacsvox-table-reader-data-position
+@verbatim
+Whether table cell data precedes or follows its titles.
+@end verbatim
+
+Default Value:
+@verbatim
+
+first
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-table-reader-mode-hook
+@verbatim
+Hook run after entering or leaving ‘emacsvox-table-reader-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-table-reader-titles
+@verbatim
+Titles spoken with cells in the explicit table reader.
+Agent Shell retains its own table speech preferences.
+@end verbatim
+
+Default Value:
+@verbatim
+
+(column)
+
+@end verbatim
+
+@end defvar
 
 @node emacsvox-table-ui
 @section emacsvox-table-ui

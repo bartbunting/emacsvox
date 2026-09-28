@@ -7319,8 +7319,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        (equal
         (emacsvox-agent-shell-test--capture-events
           (emacsvox-agent-shell--table-navigation-post-command))
-        '((stop nil)
-          (icon open-object)
+        '((icon open-object)
           (speak
            "Table, 1 data row, 2 columns. Engineer, Alice, Role."))))
       (should emacsvox-agent-shell--table-navigation-active)
@@ -10283,6 +10282,57 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 (funcall-interactively 'agent-shell-list-edit-newline))
               (cadr ordinary-events)))
       (should (equal (buffer-string) "  \n")))))
+
+
+(ert-deftest emacsvox-agent-shell-table-entry-has-one-navigation-submission ()
+  "Entry replaces foreground speech through Aural without a second direct stop."
+  (emacsvox-agent-shell-test--with-rendered-table
+      "before\n| Name | Role |\n|---|---|\n| Alice | Engineer |\n"
+    (goto-char (point-min))
+    (emacsvox-agent-shell--table-navigation-setup)
+    (search-forward "Engineer")
+    (cl-letf (((symbol-function 'tts-stop)
+               (lambda (&rest _) (ert-fail "Direct stop bypassed Aural policy"))))
+      (let ((presentations
+             (emacsvox-agent-shell-test--capture-presentations
+               (emacsvox-agent-shell--table-navigation-post-command))))
+        (should (= (length presentations) 1))
+        (should (eq (nth 4 (car presentations)) 'navigation))))))
+
+(ert-deftest emacsvox-agent-shell-table-graphical-wrapped-navigation ()
+  "A real rendered and wrapped table retains full source values and row keys."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (with-temp-buffer
+      (set-window-buffer (selected-window) (current-buffer))
+      (let ((long (concat (apply #'concat (make-list 80 "long content ")) "FINAL"))
+            (emacsvox-agent-shell-table-titles '(column))
+            (emacsvox-agent-shell-table-data-position 'first)
+            (kill-ring nil) (kill-ring-yank-pointer nil))
+        (insert (concat "before\n| Name | Notes |\n|---|---|\n| Alice | " long
+                        " |\n| Bob | End |\nafter\n"))
+        (agent-shell-markdown-replace-markup)
+        (goto-char (point-min))
+        (search-forward "Name")
+        (emacsvox-agent-shell--table-navigation-setup)
+        (emacsvox-agent-shell-test--capture-presentations
+          (call-interactively (key-binding (kbd "C-M-<right>")))
+          (let ((presentations
+                 (emacsvox-agent-shell-test--capture-presentations
+                   (call-interactively (key-binding (kbd "<down>"))))))
+            (should (string-match-p "FINAL" (nth 1 (car presentations)))))
+          (redisplay t)
+          (let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point))
+                 (next (emacsvox-table-reader--destination cell 1 0)))
+            ;; The renderer may use physical continuation rows or display wraps.
+            ;; In either case there must be multiple actual screen lines.
+            (should (> (count-screen-lines (point) (cadr next)) 1)))
+          (call-interactively (key-binding (kbd "w")))
+          (should (equal (car kill-ring) long))
+          (call-interactively (key-binding (kbd "<down>")))
+          (should (looking-at "End"))
+          (call-interactively (key-binding (kbd "M-<down>")))
+          (should (looking-at "after")))))))
 
 (provide 'emacsvox-agent-shell-tests)
 ;;; emacsvox-agent-shell-tests.el ends here

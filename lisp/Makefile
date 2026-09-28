@@ -323,6 +323,7 @@ emacsvox-sudoku.elc \
 emacsvox-supercite.elc \
 emacsvox-syslog.elc \
 emacsvox-tab-bar.elc \
+emacsvox-table-reader.elc \
 emacsvox-table-ui.elc \
 emacsvox-table.elc \
 emacsvox-tabulate.elc \
@@ -385,7 +386,8 @@ emacsvox-bookshare.elc emacsvox-epub.elc emacsvox-eww.elc emacsvox-librivox.elc:
 
 emacsvox-preamble.elc: emacsvox-version.elc
 
-emacsvox-agent-shell.elc: emacsvox-agent-shell-render.elc
+emacsvox-agent-shell.elc: emacsvox-agent-shell-render.elc emacsvox-table-reader.elc
+emacsvox-markdown.elc emacsvox-org.elc: emacsvox-table-reader.elc
 
 emacsvox-eat-input.elc: emacsvox-eat-core.elc
 emacsvox-eat-review.elc: emacsvox-eat-core.elc emacsvox-eat-input.elc

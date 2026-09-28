@@ -56,6 +56,7 @@
 (cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 (require 'emacsvox-agent-shell-render)
+(require 'emacsvox-table-reader)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-aural-submission)
@@ -5229,6 +5230,7 @@ Markdown renderer."
           (when current-row
             (let ((all-rows (plist-get parsed :rows)))
               (list
+               :positions starts
                :data (nth column-index current-row)
                :row-index row-index
                :row-count (length all-rows)
@@ -5245,33 +5247,18 @@ Markdown renderer."
                  (car current-row))))))))))
 
 (defun emacsvox-agent-shell--table-title (title face data)
-  "Return TITLE voiced with FACE unless it is blank or duplicates DATA."
-  (when-let* ((title (and title (string-trim title)))
-              ((not (string-empty-p title)))
-              ((not (string= (substring-no-properties title)
-                             (substring-no-properties data)))))
-    (setq title (copy-sequence title))
-    (add-face-text-property 0 (length title) face t title)
-    title))
+  "Delegate table title to the shared reader."
+  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
+        (emacsvox-table-reader-data-position
+         emacsvox-agent-shell-table-data-position))
+    (emacsvox-table-reader--title title face data)))
 
 (defun emacsvox-agent-shell--table-cell-speech (cell)
-  "Format semantic table CELL according to the table speech options."
-  (let* ((raw-data (or (plist-get cell :data) ""))
-         (data (string-trim raw-data))
-         (data (if (string-empty-p data) "blank" data))
-         (row-title
-          (when (memq 'row emacsvox-agent-shell-table-titles)
-            (emacsvox-agent-shell--table-title
-             (plist-get cell :row-title) 'italic data)))
-         (column-title
-          (when (memq 'column emacsvox-agent-shell-table-titles)
-            (emacsvox-agent-shell--table-title
-             (plist-get cell :column-title) 'bold data)))
-         (titles (delq nil (list row-title column-title)))
-         (parts (if (eq emacsvox-agent-shell-table-data-position 'first)
-                    (cons data titles)
-                  (append titles (list data)))))
-    (concat (mapconcat #'identity parts ", ") ".")))
+  "Delegate table cell-speech to the shared reader."
+  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
+        (emacsvox-table-reader-data-position
+         emacsvox-agent-shell-table-data-position))
+    (emacsvox-table-reader--cell-speech cell)))
 
 (defun emacsvox-agent-shell--table-cell-facts (cell &optional event)
   "Return registered semantic facts for table CELL and optional EVENT."
@@ -5294,37 +5281,18 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
     t))
 
 (defun emacsvox-agent-shell--table-context-speech (cell)
-  "Format the position and dimensions of semantic table CELL."
-  (let ((row-index (plist-get cell :row-index))
-        (row-count (plist-get cell :row-count))
-        (column (1+ (plist-get cell :column-index)))
-        (column-count (plist-get cell :column-count)))
-    (cond
-     ((and (plist-get cell :column-titles-p) (zerop row-index))
-      (let ((data-rows (1- row-count)))
-        (format "Header row, column %d of %d; table has %d data %s."
-                column column-count data-rows
-                (if (= data-rows 1) "row" "rows"))))
-     ((plist-get cell :column-titles-p)
-      (format "Data row %d of %d, column %d of %d."
-              row-index (1- row-count) column column-count))
-     (t
-      (format "Row %d of %d, column %d of %d."
-              (1+ row-index) row-count column column-count)))))
+  "Delegate table context-speech to the shared reader."
+  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
+        (emacsvox-table-reader-data-position
+         emacsvox-agent-shell-table-data-position))
+    (emacsvox-table-reader--context-speech cell)))
 
 (defun emacsvox-agent-shell--table-dimensions-speech (cell)
-  "Format the dimensions of the table containing semantic CELL."
-  (let* ((column-titles-p (plist-get cell :column-titles-p))
-         (rows (- (plist-get cell :row-count)
-                  (if column-titles-p 1 0)))
-         (columns (plist-get cell :column-count)))
-    (format "Table, %d %s, %d %s."
-            rows
-            (if column-titles-p
-                (if (= rows 1) "data row" "data rows")
-              (if (= rows 1) "row" "rows"))
-            columns
-            (if (= columns 1) "column" "columns"))))
+  "Delegate table dimensions-speech to the shared reader."
+  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
+        (emacsvox-table-reader-data-position
+         emacsvox-agent-shell-table-data-position))
+    (emacsvox-table-reader--dimensions-speech cell)))
 
 (defun emacsvox-agent-shell--table-entry-feedback (direction)
   "Enter and speak the table at point in navigation DIRECTION."
@@ -5373,61 +5341,25 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
     (user-error "Not in a rendered Markdown table")))
 
 (defun emacsvox-agent-shell--table-leading-title-speech (title face)
-  "Format leading table TITLE with FACE, or return nil when it is blank."
-  (when-let* ((title (emacsvox-agent-shell--table-title title face "")))
-    (concat title ".")))
+  "Delegate table leading-title-speech to the shared reader."
+  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
+        (emacsvox-table-reader-data-position
+         emacsvox-agent-shell-table-data-position))
+    (emacsvox-table-reader--leading-title-speech title face)))
 
 (defun emacsvox-agent-shell--table-row-speech (cell)
-  "Format the logical table row containing semantic CELL."
-  (let* ((rows (plist-get cell :rows))
-         (row-index (plist-get cell :row-index))
-         (row (nth row-index rows))
-         (column-titles-p (plist-get cell :column-titles-p))
-         (header-row-p (and column-titles-p (zerop row-index)))
-         (row-title
-          (when (and (not header-row-p)
-                     (memq 'row emacsvox-agent-shell-table-titles))
-            (emacsvox-agent-shell--table-leading-title-speech
-             (car row) 'italic)))
-         (first-column (if row-title 1 0))
-         entries)
-    (when header-row-p
-      (push "Header row." entries))
-    (when row-title
-      (push row-title entries))
-    (cl-loop
-     for data in (nthcdr first-column row)
-     for column from first-column
-     do
-     (push
-      (emacsvox-agent-shell--table-cell-speech
-       (list :data data
-             :column-title
-             (when column-titles-p (nth column (car rows)))))
-      entries))
-    (string-join (nreverse entries) " ")))
+  "Delegate table row-speech to the shared reader."
+  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
+        (emacsvox-table-reader-data-position
+         emacsvox-agent-shell-table-data-position))
+    (emacsvox-table-reader--row-speech cell)))
 
 (defun emacsvox-agent-shell--table-column-speech (cell)
-  "Format the logical table column containing semantic CELL."
-  (let* ((rows (plist-get cell :rows))
-         (column (plist-get cell :column-index))
-         (column-titles-p (plist-get cell :column-titles-p))
-         (column-title
-          (when (and column-titles-p
-                     (memq 'column emacsvox-agent-shell-table-titles))
-            (emacsvox-agent-shell--table-leading-title-speech
-             (nth column (car rows)) 'bold)))
-         (data-rows (if column-titles-p (cdr rows) rows))
-         entries)
-    (when column-title
-      (push column-title entries))
-    (dolist (row data-rows)
-      (push
-       (emacsvox-agent-shell--table-cell-speech
-        (list :data (nth column row)
-              :row-title (car row)))
-       entries))
-    (string-join (nreverse entries) " ")))
+  "Delegate table column-speech to the shared reader."
+  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
+        (emacsvox-table-reader-data-position
+         emacsvox-agent-shell-table-data-position))
+    (emacsvox-table-reader--column-speech cell)))
 
 (defun emacsvox-agent-shell-table-speak-row ()
   "Speak the logical Markdown table row at point."
@@ -5454,8 +5386,11 @@ When WHOLE-ROW is non-nil, speak its entire logical row."
 ;; Agent-shell does not currently expose a current-cell value or copy command.
 ;; Prefer speech-enabling that command if agent-shell adds one in the future.
 (defun emacsvox-agent-shell--table-plain-cell (data)
-  "Return table cell DATA without padding or text properties."
-  (substring-no-properties (string-trim (or data ""))))
+  "Delegate table plain-cell to the shared reader."
+  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
+        (emacsvox-table-reader-data-position
+         emacsvox-agent-shell-table-data-position))
+    (emacsvox-table-reader--plain-cell data)))
 
 (defun emacsvox-agent-shell--table-copy (text object)
   "Copy plain TEXT to the kill ring and announce copied table OBJECT."
@@ -5528,24 +5463,11 @@ Return nil when that logical cell does not exist."
    'navigation 'warn-user))
 
 (defun emacsvox-agent-shell--table-exit-destination (region direction)
-  "Return a useful point outside table REGION in DIRECTION."
-  (pcase direction
-    ('backward
-     (when (> (car region) (point-min))
-       (save-excursion
-         (goto-char (car region))
-         (backward-char 1)
-         (skip-chars-backward " \t\n\r")
-         (beginning-of-line)
-         (back-to-indentation)
-         (point))))
-    ('forward
-     (when (< (cdr region) (point-max))
-       (save-excursion
-         (goto-char (cdr region))
-         (skip-chars-forward " \t\n\r")
-         (back-to-indentation)
-         (point))))))
+  "Delegate table exit-destination to the shared reader."
+  (let ((emacsvox-table-reader-titles emacsvox-agent-shell-table-titles)
+        (emacsvox-table-reader-data-position
+         emacsvox-agent-shell-table-data-position))
+    (emacsvox-table-reader--exit-destination region direction)))
 
 (defun emacsvox-agent-shell--table-exit (direction)
   "Leave the rendered table at point in DIRECTION and speak the destination."
@@ -5584,34 +5506,12 @@ Return nil when that logical cell does not exist."
 (defun emacsvox-agent-shell--table-move (row-delta column-delta)
   "Move by ROW-DELTA and COLUMN-DELTA in the logical table at point."
   (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (let* ((row (plist-get cell :row-index))
-             (column (plist-get cell :column-index))
-             (rows (plist-get cell :rows))
-             (target-row (+ row row-delta))
-             (target-column (+ column column-delta)))
-        (cond
-         ((< target-row 0)
-          (emacsvox-agent-shell--table-exit 'backward))
-         ((>= target-row (length rows))
-          (emacsvox-agent-shell--table-exit 'forward))
-         ((< target-column 0)
-          (emacsvox-agent-shell--table-boundary-feedback
-           "Left edge of table."))
-         ((>= target-column (length (nth target-row rows)))
-          (emacsvox-agent-shell--table-boundary-feedback
-           (if (zerop row-delta)
-               "Right edge of table."
-             "No cell in that row.")))
-         (t
-          (if-let* ((target
-                    (emacsvox-agent-shell--table-cell-position
-                     cell target-row target-column)))
-              (progn
-                (goto-char target)
-                (emacsvox-agent-shell--table-cell-feedback
-                 (not (zerop row-delta))))
-            (emacsvox-agent-shell--table-boundary-feedback
-             "No rendered cell at that position.")))))
+      (pcase (emacsvox-table-reader--destination cell row-delta column-delta)
+        (`(exit ,direction) (emacsvox-agent-shell--table-exit direction))
+        (`(boundary ,text) (emacsvox-agent-shell--table-boundary-feedback text))
+        (`(cell ,position)
+         (goto-char position)
+         (emacsvox-agent-shell--table-cell-feedback (not (zerop row-delta)))))
     (user-error "Not in a rendered Markdown table")))
 
 (defun emacsvox-agent-shell-table-next-column (&optional count)
@@ -5714,7 +5614,6 @@ Return nil when that logical cell does not exist."
      ((not (equal table-start
                   emacsvox-agent-shell--table-navigation-table-start))
       (setq emacsvox-agent-shell--table-navigation-active t)
-      (tts-stop)
       (emacsvox-agent-shell--table-navigation-entry-feedback
        (if (and emacsvox-agent-shell--table-navigation-origin
                 (< (point) emacsvox-agent-shell--table-navigation-origin))

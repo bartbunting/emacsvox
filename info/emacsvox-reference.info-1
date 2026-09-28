@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1601 commands and 221 options.
+   This chapter documents a total of 1619 commands and 224 options.
 
 * Menu:
 
@@ -655,6 +655,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-syslog:: Speech-enable SYSLOG.
 * emacsvox-tab-bar:: Speech-enable tab-bar.
 * emacsvox-table:: Table data model.
+* emacsvox-table-reader:: Shared logical table reading.
 * emacsvox-table-ui:: Table Navigation UI.
 * emacsvox-tabulate:: Handle table data.
 * emacsvox-tabulated-list:: Speech-enable.

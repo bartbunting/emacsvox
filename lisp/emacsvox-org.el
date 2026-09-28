@@ -38,6 +38,7 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'emacsvox-preamble)
+(require 'emacsvox-table-reader)
 (require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-org)
@@ -2531,6 +2532,59 @@ Press `y' to play to next amark."
 (advice-add
  'org-export-to-file :after #'emacsvox--advice-org-export-to-file-after
  '((name . emacsvox)))
+
+
+;;; Explicit table reading, separate from native editing feedback:
+
+(defun emacsvox-org--table-object-text (object)
+  "Return logical text from an Org inline OBJECT, preserving literal code."
+  (if (stringp object) (substring-no-properties object)
+    (concat
+     (pcase (org-element-type object)
+       ((or 'code 'verbatim) (org-element-property :value object))
+       ('link (if (org-element-contents object)
+                  (mapconcat #'emacsvox-org--table-object-text
+                             (org-element-contents object) "")
+                (org-element-property :raw-link object)))
+       (_ (mapconcat #'emacsvox-org--table-object-text
+                     (org-element-contents object) "")))
+     (make-string (or (org-element-property :post-blank object) 0) ?\s))))
+
+(defun emacsvox-org--table-plain-text (text)
+  "Return logical Org cell TEXT, using link labels and literal code values.
+Formulas are not evaluated; unrecognized syntax remains literal."
+  (if (not (string-match-p "[][*/_=~+]" text)) text
+    (mapconcat
+     #'emacsvox-org--table-object-text
+     (org-element-parse-secondary-string
+      text '(bold italic underline strike-through code verbatim link)) "")))
+
+(defun emacsvox-org--table-snapshot ()
+  "Return a fresh logical Org table cell, excluding source/example blocks."
+  (when (and (org-at-table-p)
+             (org-element-lineage (org-element-at-point) '(table) t))
+    (emacsvox-table-reader--source-cell
+     (cons (org-table-begin) (org-table-end)) nil
+     #'emacsvox-org--table-plain-text
+     (lambda (line) (string-match-p "\\`[ \t]*|[-+|]+[ \t]*\\'" line)))))
+
+(defun emacsvox-org--table-submit (text occasion presentation icon)
+  "Submit reader TEXT under Org OCCASION, PRESENTATION and ICON."
+  (let* ((emacsvox-org--table-presentation-occasion occasion)
+         (facts (emacsvox-org--table-facts
+                 (if (memq presentation '(context dimensions)) 'coordinates 'cell)
+                 (if (eq occasion 'navigation) 'table-navigation 'table-inspection)
+                 (if (eq occasion 'state-change) 'state-changed 'focus-entered))))
+    ;; Existing cell/header options keep their registered meanings.  Whole
+    ;; row/column speech carries coordinates without pretending to be a cell.
+    (when (memq presentation '(row column))
+      (setq facts (cl-loop for (key value) on facts by #'cddr
+                           unless (eq key :org-table-presentation)
+                           append (list key value))))
+    (emacsvox-org--submit-text text facts occasion icon)))
+
+(setf (alist-get 'org-mode emacsvox-table-reader--adapters)
+      '(emacsvox-org--table-snapshot emacsvox-org--table-submit))
 
 (provide 'emacsvox-org)
 

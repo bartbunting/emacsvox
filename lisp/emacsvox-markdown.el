@@ -45,6 +45,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-table-reader)
 (require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-markdown)
@@ -52,6 +53,7 @@
 ;;;  Silence byte-compiler:
 
 (defvar markdown-mode-map)
+(declare-function markdown-code-block-at-point-p "markdown-mode")
 (declare-function markdown-heading-at-point "markdown-mode")
 (declare-function markdown-outline-level "markdown-mode")
 
@@ -804,6 +806,151 @@ When reading mode is active, strip markup from speech."
     (emacsvox-markdown--install-advice)
     (emacsvox-markdown-setup)
     (add-hook 'markdown-mode-hook #'emacsvox-markdown-mode-hook)))
+
+
+;;; Explicit table reading:
+
+(defun emacsvox-markdown--table-separator-p (line)
+  "Return non-nil for a Markdown table delimiter LINE."
+  (let ((text (string-trim line)))
+    (setq text (string-remove-prefix "|" (string-remove-suffix "|" text)))
+    (and (not (string-empty-p text))
+         (seq-every-p (lambda (cell)
+                        (string-match-p "\\`[ \t]*:?-+:?[ \t]*\\'" cell))
+                      (split-string text "|")))))
+
+(defun emacsvox-markdown--table-line-p ()
+  "Recognize a candidate pipe row outside Markdown code blocks."
+  (and (not (markdown-code-block-at-point-p))
+       (save-excursion
+         (beginning-of-line)
+         (and (not (looking-at-p "    \\|\t"))
+              (search-forward "|" (line-end-position) t)
+              (let ((spans (emacsvox-table-reader--pipe-spans
+                            (line-beginning-position) (line-end-position) t)))
+                (or (> (length spans) 1)
+                    (save-excursion
+                      (back-to-indentation) (eq (char-after) ?|))))))))
+
+(defun emacsvox-markdown--table-region ()
+  "Find a source pipe table at point, rejecting prose and fenced code.
+Rows without outer pipes require a delimiter immediately after the header.
+Outer-pipe tables may omit the header delimiter."
+  (syntax-propertize (point-max))
+  (when (emacsvox-markdown--table-line-p)
+    (save-excursion
+      (let ((origin (line-beginning-position)))
+        (beginning-of-line)
+        (while (and (not (bobp))
+                    (save-excursion (forward-line -1)
+                                    (emacsvox-markdown--table-line-p)))
+          (forward-line -1))
+        (let ((begin (point))
+              (outer (looking-at-p "[ \t]*|"))
+              (header (save-excursion
+                        (forward-line 1)
+                        (emacsvox-markdown--table-separator-p
+                         (buffer-substring-no-properties
+                          (line-beginning-position) (line-end-position))))))
+          ;; A prose line may contain a pipe immediately before a valid header.
+          ;; In that case the delimiter identifies the real table start.
+          (unless (or outer header)
+            (save-excursion
+              (while (and (not header) (zerop (forward-line 1))
+                          (emacsvox-markdown--table-line-p))
+                (when (emacsvox-markdown--table-separator-p
+                       (buffer-substring-no-properties
+                        (line-beginning-position) (line-end-position)))
+                  (setq header t
+                        begin (save-excursion (forward-line -1) (point)))))))
+          (goto-char begin)
+          (when (and (<= begin origin) (or outer header))
+            (while (and (not (eobp)) (emacsvox-markdown--table-line-p)
+                        (or header (looking-at-p "[ \t]*|")))
+              (forward-line 1))
+            (when (> (point) begin) (cons begin (point)))))))))
+
+(defun emacsvox-markdown--table-delimited-end (open close)
+  "Return the end of a balanced OPEN/CLOSE construct at point, or nil."
+  (when (eq (char-after) open)
+    (save-excursion
+      (forward-char)
+      (let ((depth 1))
+        (while (and (> depth 0) (not (eobp)))
+          (cond
+           ((eq (char-after) ?\\) (forward-char (min 2 (- (point-max) (point)))))
+           ((eq (char-after) open) (cl-incf depth) (forward-char))
+           ((eq (char-after) close) (cl-decf depth) (forward-char))
+           (t (forward-char))))
+        (when (zerop depth) (point))))))
+
+(defun emacsvox-markdown--table-link ()
+  "Return (LABEL . END) for a complete inline or reference link at point."
+  (save-excursion
+    (when (eq (char-after) ?!) (forward-char))
+    (let ((start (point))
+          (end (emacsvox-markdown--table-delimited-end ?\[ ?\])))
+      (when end
+        (goto-char end)
+        (when-let* ((finish
+                     (pcase (char-after)
+                       (?\( (emacsvox-markdown--table-delimited-end ?\( ?\)))
+                       (?\[ (emacsvox-markdown--table-delimited-end ?\[ ?\])))))
+          (cons (buffer-substring-no-properties (1+ start) (1- end)) finish))))))
+
+(defun emacsvox-markdown--table-plain-text (text)
+  "Return logical TEXT, preserving literal code and escaped punctuation.
+Use labels for inline/reference links and images.  Unknown markup remains
+literal; cell values are never truncated to their displayed width."
+  (with-temp-buffer
+    (insert text)
+    (goto-char (point-min))
+    (let (pieces)
+      (while (not (eobp))
+        (cond
+         ((looking-at "\\\\\\([[:punct:]]\\)")
+          (push (match-string-no-properties 1) pieces)
+          (goto-char (match-end 0)))
+         ((eq (char-after) ?`)
+          (let* ((begin (point)) (width (skip-chars-forward "`"))
+                 (start (point)) close finish)
+            (while (and (not close) (re-search-forward "`+" nil t))
+              (when (= width (- (match-end 0) (match-beginning 0)))
+                (setq close (match-beginning 0) finish (match-end 0))))
+            (if close
+                (progn (push (buffer-substring-no-properties start close) pieces)
+                       (goto-char finish))
+              (push (buffer-substring-no-properties begin start) pieces)
+              (goto-char start))))
+         ((when-let* ((link (emacsvox-markdown--table-link)))
+            (push (emacsvox-markdown--table-plain-text (car link)) pieces)
+            (goto-char (cdr link))
+            t))
+         ((looking-at "\\(\\*\\*\\|__\\|~~\\|\\*\\|_\\)\\([^ \t\n].*?\\)\\1")
+          (push (match-string-no-properties 2) pieces)
+          (goto-char (match-end 0)))
+         (t (push (string (char-after)) pieces) (forward-char))))
+      (apply #'concat (nreverse pieces)))))
+
+(defun emacsvox-markdown--table-snapshot ()
+  "Return a fresh logical Markdown table cell at point."
+  (when-let* ((region (emacsvox-markdown--table-region)))
+    (emacsvox-table-reader--source-cell
+     region t #'emacsvox-markdown--table-plain-text
+     #'emacsvox-markdown--table-separator-p)))
+
+(defun emacsvox-markdown--table-submit (text occasion _presentation icon)
+  "Submit reader TEXT with Markdown semantics under OCCASION and ICON."
+  (emacsvox-aural-submit
+   text :module 'markdown :occasion occasion
+   :facts (list :role 'markdown-table-row
+                :events (list (if (eq occasion 'state-change)
+                                  'state-changed 'focus-entered))
+                :markdown-navigation-kind 'structural)
+   :compatibility-actions (list (emacsvox-aural-compatibility-icon icon))))
+
+(setf (alist-get 'markdown-mode emacsvox-table-reader--adapters)
+      '(emacsvox-markdown--table-snapshot emacsvox-markdown--table-submit))
 
 (provide 'emacsvox-markdown)
 

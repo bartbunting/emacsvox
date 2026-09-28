@@ -8000,7 +8000,7 @@ EWW open Web pages in a new buffer, then set
 EWW-BROWSE-URL-NEW-WINDOW-IS-TAB to nil to avoid leaking tabs.
 
 
-File: emacsvox-reference.info,  Node: emacsvox-table,  Next: emacsvox-table-ui,  Prev: emacsvox-tab-bar,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-table,  Next: emacsvox-table-reader,  Prev: emacsvox-tab-bar,  Up: Emacsvox Commands And Options
 
 2.233 emacsvox-table
 ====================
@@ -8009,17 +8009,222 @@ Implements a module that provides a high level interface to tabulated
 information.
 
 
-File: emacsvox-reference.info,  Node: emacsvox-table-ui,  Next: emacsvox-tabulate,  Prev: emacsvox-table,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-table-reader,  Next: emacsvox-table-ui,  Prev: emacsvox-table,  Up: Emacsvox Commands And Options
 
-2.234 emacsvox-table-ui
+2.234 emacsvox-table-reader
+===========================
+
+Common logical table formatting and navigation.  Adapters supply
+complete cell values and source positions; reading never calls native
+table editors.  Agent Shell retains its public commands and presentation
+preferences.
+
+2.234.1 Emacsvox-Table-Reader Commands
+--------------------------------------
+
+2.234.1.1 emacsvox-table-reader-copy-cell
+.........................................
+
+ -- Command: emacsvox-table-reader-copy-cell
+
+     Copy the logical cell as plain text.
+
+2.234.1.2 emacsvox-table-reader-copy-column
+...........................................
+
+ -- Command: emacsvox-table-reader-copy-column
+
+     Copy the logical column as newline-separated plain text.
+
+2.234.1.3 emacsvox-table-reader-copy-row
+........................................
+
+ -- Command: emacsvox-table-reader-copy-row
+
+     Copy the logical row as tab-separated plain text.
+
+2.234.1.4 emacsvox-table-reader-exit-backward
+.............................................
+
+ -- Command: emacsvox-table-reader-exit-backward
+
+     Leave table reading and move to preceding prose.
+
+2.234.1.5 emacsvox-table-reader-exit-forward
+............................................
+
+ -- Command: emacsvox-table-reader-exit-forward
+
+     Leave table reading and move to following prose.
+
+2.234.1.6 emacsvox-table-reader-mode
+....................................
+
+ -- Command: emacsvox-table-reader-mode (&optional arg)
+     ‘C-e C-t C-r’
+
+     Read a Markdown or Org table in place with contextual navigation keys.
+
+     Use the speech prefix followed by C-t C-r to toggle reading.  Up/Down read
+     logical rows, C-M-Left/Right read cells, and r/c read rows/columns.  TAB moves
+     right without editing and RET reads the cell.  q restores normal mode keys.
+     Leaving the table or editing its source also ends this context.  This mode
+     is independent of Markdown’s markup-stripping speech preference.
+
+     This is a minor mode.  If called interactively, toggle the
+     ‘Emacsvox-Table-Reader mode’ mode.  If the prefix argument is positive,
+     enable the mode, and if it is zero or negative, disable the mode.
+
+     If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+     mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+     if ARG is a negative number.
+
+     To check whether the minor mode is enabled in the current buffer,
+     evaluate the variable ‘emacsvox-table-reader-mode’.
+
+     The mode’s hook is called both when the mode is enabled and when it is
+     disabled.
+
+     (fn &optional ARG)
+
+2.234.1.7 emacsvox-table-reader-next-column
+...........................................
+
+ -- Command: emacsvox-table-reader-next-column (&optional count)
+
+     Move COUNT logical columns right and read the destination cell.
+
+     (fn &optional COUNT)
+
+2.234.1.8 emacsvox-table-reader-next-row
+........................................
+
+ -- Command: emacsvox-table-reader-next-row (&optional count)
+
+     Move COUNT logical rows down, retaining the column and reading the row.
+
+     (fn &optional COUNT)
+
+2.234.1.9 emacsvox-table-reader-next-table
+..........................................
+
+ -- Command: emacsvox-table-reader-next-table
+     ‘C-e C-t ]’
+
+     Find the next supported table and enter explicit reading.
+
+2.234.1.10 emacsvox-table-reader-previous-column
+................................................
+
+ -- Command: emacsvox-table-reader-previous-column (&optional count)
+
+     Move COUNT logical columns left and read the destination cell.
+
+     (fn &optional COUNT)
+
+2.234.1.11 emacsvox-table-reader-previous-row
+.............................................
+
+ -- Command: emacsvox-table-reader-previous-row (&optional count)
+
+     Move COUNT logical rows up, retaining the column and reading the row.
+
+     (fn &optional COUNT)
+
+2.234.1.12 emacsvox-table-reader-previous-table
+...............................................
+
+ -- Command: emacsvox-table-reader-previous-table
+     ‘C-e C-t [’
+
+     Find the previous supported table and enter explicit reading.
+
+2.234.1.13 emacsvox-table-reader-select-speaking-method
+.......................................................
+
+ -- Command: emacsvox-table-reader-select-speaking-method
+
+     Choose table titles or data order for this buffer.
+     Press c for column titles, r for row titles, or o for data order.
+     Agent Shell and Org editing feedback retain their existing preferences.
+
+2.234.1.14 emacsvox-table-reader-speak-cell
+...........................................
+
+ -- Command: emacsvox-table-reader-speak-cell
+
+     Speak the complete logical table cell at point.
+
+2.234.1.15 emacsvox-table-reader-speak-column
+.............................................
+
+ -- Command: emacsvox-table-reader-speak-column
+
+     Speak the complete logical table column at point.
+
+2.234.1.16 emacsvox-table-reader-speak-context
+..............................................
+
+ -- Command: emacsvox-table-reader-speak-context
+
+     Speak the current logical table coordinates.
+
+2.234.1.17 emacsvox-table-reader-speak-dimensions
+.................................................
+
+ -- Command: emacsvox-table-reader-speak-dimensions
+
+     Speak the current table dimensions, distinguishing headers from data.
+
+2.234.1.18 emacsvox-table-reader-speak-row
+..........................................
+
+ -- Command: emacsvox-table-reader-speak-row
+
+     Speak the complete logical table row at point.
+
+2.234.2 emacsvox-table-reader Options
+-------------------------------------
+
+ -- Variable: User Option emacsvox-table-reader-data-position
+     Whether table cell data precedes or follows its titles.
+
+     Default Value:
+
+     first
+
+
+ -- Variable: User Option emacsvox-table-reader-mode-hook
+     Hook run after entering or leaving ‘emacsvox-table-reader-mode’.
+     No problems result if this variable is not bound.
+     ‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+
+     Default Value:
+
+     nil
+
+
+ -- Variable: User Option emacsvox-table-reader-titles
+     Titles spoken with cells in the explicit table reader.
+     Agent Shell retains its own table speech preferences.
+
+     Default Value:
+
+     (column)
+
+
+
+File: emacsvox-reference.info,  Node: emacsvox-table-ui,  Next: emacsvox-tabulate,  Prev: emacsvox-table-reader,  Up: Emacsvox Commands And Options
+
+2.235 emacsvox-table-ui
 =======================
 
 User interface to tables
 
-2.234.1 Emacsvox-Table-Ui Commands
+2.235.1 Emacsvox-Table-Ui Commands
 ----------------------------------
 
-2.234.1.1 emacsvox-table-copy-current-element-to-kill-ring
+2.235.1.1 emacsvox-table-copy-current-element-to-kill-ring
 ..........................................................
 
  -- Command: emacsvox-table-copy-current-element-to-kill-ring
@@ -8027,7 +8232,7 @@ User interface to tables
 
      Copy current table element to kill ring.
 
-2.234.1.2 emacsvox-table-copy-current-element-to-register
+2.235.1.2 emacsvox-table-copy-current-element-to-register
 .........................................................
 
  -- Command: emacsvox-table-copy-current-element-to-register (register)
@@ -8037,7 +8242,7 @@ User interface to tables
 
      (fn REGISTER)
 
-2.234.1.3 emacsvox-table-copy-to-clipboard
+2.235.1.3 emacsvox-table-copy-to-clipboard
 ..........................................
 
  -- Command: emacsvox-table-copy-to-clipboard
@@ -8046,7 +8251,7 @@ User interface to tables
      Copy table in current buffer to the table clipboard.
      Current buffer must be in emacsvox-table mode.
 
-2.234.1.4 emacsvox-table-find-csv-file
+2.235.1.4 emacsvox-table-find-csv-file
 ......................................
 
  -- Command: emacsvox-table-find-csv-file (filename)
@@ -8057,7 +8262,7 @@ User interface to tables
 
      (fn FILENAME)
 
-2.234.1.5 emacsvox-table-find-file
+2.235.1.5 emacsvox-table-find-file
 ..................................
 
  -- Command: emacsvox-table-find-file (filename)
@@ -8073,7 +8278,7 @@ User interface to tables
 
      (fn FILENAME)
 
-2.234.1.6 emacsvox-table-goto
+2.235.1.6 emacsvox-table-goto
 .............................
 
  -- Command: emacsvox-table-goto (row column)
@@ -8083,7 +8288,7 @@ User interface to tables
 
      (fn ROW COLUMN)
 
-2.234.1.7 emacsvox-table-goto-bottom
+2.235.1.7 emacsvox-table-goto-bottom
 ....................................
 
  -- Command: emacsvox-table-goto-bottom
@@ -8092,7 +8297,7 @@ User interface to tables
 
      Goes to the bottom of the current column.
 
-2.234.1.8 emacsvox-table-goto-left
+2.235.1.8 emacsvox-table-goto-left
 ..................................
 
  -- Command: emacsvox-table-goto-left
@@ -8101,7 +8306,7 @@ User interface to tables
 
      Goes to the left of the current row.
 
-2.234.1.9 emacsvox-table-goto-right
+2.235.1.9 emacsvox-table-goto-right
 ...................................
 
  -- Command: emacsvox-table-goto-right
@@ -8110,7 +8315,7 @@ User interface to tables
 
      Goes to the right of the current row.
 
-2.234.1.10 emacsvox-table-goto-top
+2.235.1.10 emacsvox-table-goto-top
 ..................................
 
  -- Command: emacsvox-table-goto-top
@@ -8119,7 +8324,7 @@ User interface to tables
 
      Goes to the top of the current column.
 
-2.234.1.11 emacsvox-table-mode
+2.235.1.11 emacsvox-table-mode
 ..............................
 
  -- Command: emacsvox-table-mode
@@ -8251,7 +8456,7 @@ User interface to tables
      run, this mode runs the hook ‘emacsvox-table-mode-hook’, as the final
      or penultimate step during initialization.
 
-2.234.1.12 emacsvox-table-next-column
+2.235.1.12 emacsvox-table-next-column
 .....................................
 
  -- Command: emacsvox-table-next-column (&optional count)
@@ -8263,7 +8468,7 @@ User interface to tables
 
      (fn &optional COUNT)
 
-2.234.1.13 emacsvox-table-next-row
+2.235.1.13 emacsvox-table-next-row
 ..................................
 
  -- Command: emacsvox-table-next-row (&optional count)
@@ -8275,7 +8480,7 @@ User interface to tables
 
      (fn &optional COUNT)
 
-2.234.1.14 emacsvox-table-paste-from-clipboard
+2.235.1.14 emacsvox-table-paste-from-clipboard
 ..............................................
 
  -- Command: emacsvox-table-paste-from-clipboard
@@ -8284,7 +8489,7 @@ User interface to tables
      Use the major  mode of this buffer to  decide what kind of table
      markup to use.
 
-2.234.1.15 emacsvox-table-previous-column
+2.235.1.15 emacsvox-table-previous-column
 .........................................
 
  -- Command: emacsvox-table-previous-column (&optional count)
@@ -8296,7 +8501,7 @@ User interface to tables
 
      (fn &optional COUNT)
 
-2.234.1.16 emacsvox-table-previous-row
+2.235.1.16 emacsvox-table-previous-row
 ......................................
 
  -- Command: emacsvox-table-previous-row (&optional count)
@@ -8308,7 +8513,7 @@ User interface to tables
 
      (fn &optional COUNT)
 
-2.234.1.17 emacsvox-table-search
+2.235.1.17 emacsvox-table-search
 ................................
 
  -- Command: emacsvox-table-search (&optional what)
@@ -8321,7 +8526,7 @@ User interface to tables
 
      (fn &optional WHAT)
 
-2.234.1.18 emacsvox-table-search-column
+2.235.1.18 emacsvox-table-search-column
 .......................................
 
  -- Command: emacsvox-table-search-column
@@ -8329,7 +8534,7 @@ User interface to tables
 
      Search in current table column.
 
-2.234.1.19 emacsvox-table-search-headers
+2.235.1.19 emacsvox-table-search-headers
 ........................................
 
  -- Command: emacsvox-table-search-headers
@@ -8339,7 +8544,7 @@ User interface to tables
      row or column to search and pattern to look for.  If there is a
      match, makes the matching row or column current.
 
-2.234.1.20 emacsvox-table-search-row
+2.235.1.20 emacsvox-table-search-row
 ....................................
 
  -- Command: emacsvox-table-search-row
@@ -8347,7 +8552,7 @@ User interface to tables
 
      Search in current table row.
 
-2.234.1.21 emacsvox-table-select-automatic-speaking-method
+2.235.1.21 emacsvox-table-select-automatic-speaking-method
 ..........................................................
 
  -- Command: emacsvox-table-select-automatic-speaking-method
@@ -8356,7 +8561,7 @@ User interface to tables
      Interactively select the kind of automatic speech to produce when
      browsing table elements
 
-2.234.1.22 emacsvox-table-sort-on-current-column
+2.235.1.22 emacsvox-table-sort-on-current-column
 ................................................
 
  -- Command: emacsvox-table-sort-on-current-column
@@ -8364,7 +8569,7 @@ User interface to tables
 
      Sort table on current column.
 
-2.234.1.23 emacsvox-table-speak-both-headers-and-element
+2.235.1.23 emacsvox-table-speak-both-headers-and-element
 ........................................................
 
  -- Command: emacsvox-table-speak-both-headers-and-element
@@ -8372,7 +8577,7 @@ User interface to tables
 
      Speak  both row and column header and table element
 
-2.234.1.24 emacsvox-table-speak-column-filtered
+2.235.1.24 emacsvox-table-speak-column-filtered
 ...............................................
 
  -- Command: emacsvox-table-speak-column-filtered (&optional prefix)
@@ -8383,7 +8588,7 @@ User interface to tables
 
      (fn &optional PREFIX)
 
-2.234.1.25 emacsvox-table-speak-column-header-and-element
+2.235.1.25 emacsvox-table-speak-column-header-and-element
 .........................................................
 
  -- Command: emacsvox-table-speak-column-header-and-element
@@ -8391,7 +8596,7 @@ User interface to tables
 
      Speak  column header and table element
 
-2.234.1.26 emacsvox-table-speak-coordinates
+2.235.1.26 emacsvox-table-speak-coordinates
 ...........................................
 
  -- Command: emacsvox-table-speak-coordinates
@@ -8399,7 +8604,7 @@ User interface to tables
 
      Speak current table coordinates.
 
-2.234.1.27 emacsvox-table-speak-current-element
+2.235.1.27 emacsvox-table-speak-current-element
 ...............................................
 
  -- Command: emacsvox-table-speak-current-element
@@ -8407,7 +8612,7 @@ User interface to tables
 
      Speak current table element
 
-2.234.1.28 emacsvox-table-speak-dimensions
+2.235.1.28 emacsvox-table-speak-dimensions
 ..........................................
 
  -- Command: emacsvox-table-speak-dimensions
@@ -8415,7 +8620,7 @@ User interface to tables
 
      Speak current table dimensions.
 
-2.234.1.29 emacsvox-table-speak-row-filtered
+2.235.1.29 emacsvox-table-speak-row-filtered
 ............................................
 
  -- Command: emacsvox-table-speak-row-filtered (&optional prefix)
@@ -8426,7 +8631,7 @@ User interface to tables
 
      (fn &optional PREFIX)
 
-2.234.1.30 emacsvox-table-speak-row-header-and-element
+2.235.1.30 emacsvox-table-speak-row-header-and-element
 ......................................................
 
  -- Command: emacsvox-table-speak-row-header-and-element
@@ -8434,7 +8639,7 @@ User interface to tables
 
      Speak  row header and table element
 
-2.234.1.31 emacsvox-table-ui-filter-load
+2.235.1.31 emacsvox-table-ui-filter-load
 ........................................
 
  -- Command: emacsvox-table-ui-filter-load (file)
@@ -8444,7 +8649,7 @@ User interface to tables
 
      (fn FILE)
 
-2.234.1.32 emacsvox-table-ui-filter-save
+2.235.1.32 emacsvox-table-ui-filter-save
 ........................................
 
  -- Command: emacsvox-table-ui-filter-save (file)
@@ -8454,7 +8659,7 @@ User interface to tables
 
      (fn FILE)
 
-2.234.1.33 emacsvox-table-view-csv-buffer
+2.235.1.33 emacsvox-table-view-csv-buffer
 .........................................
 
  -- Command: emacsvox-table-view-csv-buffer (&optional buffer-name)
@@ -8465,7 +8670,7 @@ User interface to tables
 
      (fn &optional BUFFER-NAME)
 
-2.234.1.34 emacsvox-table-view-csv-url
+2.235.1.34 emacsvox-table-view-csv-url
 ......................................
 
  -- Command: emacsvox-table-view-csv-url (url &optional buffer-name)
@@ -8478,7 +8683,7 @@ User interface to tables
 
 File: emacsvox-reference.info,  Node: emacsvox-tabulate,  Next: emacsvox-tabulated-list,  Prev: emacsvox-table-ui,  Up: Emacsvox Commands And Options
 
-2.235 emacsvox-tabulate
+2.236 emacsvox-tabulate
 =======================
 
 This module is a simple table recognizer.  Can recognize the columns in
@@ -8487,30 +8692,30 @@ tabulated output, e.g.  ps, ls output
 
 File: emacsvox-reference.info,  Node: emacsvox-tabulated-list,  Next: emacsvox-tar,  Prev: emacsvox-tabulate,  Up: Emacsvox Commands And Options
 
-2.236 emacsvox-tabulated-list
+2.237 emacsvox-tabulated-list
 =============================
 
 TABULATED-LIST == tabulated list mode Speech-enable tabulated lists and
 provide commands for intelligent spoken output
 
-2.236.1 Emacsvox-Tabulated-List Commands
+2.237.1 Emacsvox-Tabulated-List Commands
 ----------------------------------------
 
-2.236.1.1 emacsvox-tabulated-list-next-row
+2.237.1.1 emacsvox-tabulated-list-next-row
 ..........................................
 
  -- Command: emacsvox-tabulated-list-next-row
 
      Move to next row and speak that cell
 
-2.236.1.2 emacsvox-tabulated-list-previous-row
+2.237.1.2 emacsvox-tabulated-list-previous-row
 ..............................................
 
  -- Command: emacsvox-tabulated-list-previous-row
 
      Move to previous row and speak that cell.
 
-2.236.1.3 emacsvox-tabulated-list-speak-cell
+2.237.1.3 emacsvox-tabulated-list-speak-cell
 ............................................
 
  -- Command: emacsvox-tabulated-list-speak-cell (&optional
@@ -8523,29 +8728,29 @@ provide commands for intelligent spoken output
 
 File: emacsvox-reference.info,  Node: emacsvox-tar,  Next: emacsvox-tcl,  Prev: emacsvox-tabulated-list,  Up: Emacsvox Commands And Options
 
-2.237 emacsvox-tar
+2.238 emacsvox-tar
 ==================
 
 Auditory interface to tar mode
 
-2.237.1 Emacsvox-Tar Commands
+2.238.1 Emacsvox-Tar Commands
 -----------------------------
 
-2.237.1.1 emacsvox-tar-speak-file-date
+2.238.1.1 emacsvox-tar-speak-file-date
 ......................................
 
  -- Command: emacsvox-tar-speak-file-date
 
      Speak date of file current entry
 
-2.237.1.2 emacsvox-tar-speak-file-permissions
+2.238.1.2 emacsvox-tar-speak-file-permissions
 .............................................
 
  -- Command: emacsvox-tar-speak-file-permissions
 
      Speak permissions of file current entry
 
-2.237.1.3 emacsvox-tar-speak-file-size
+2.238.1.3 emacsvox-tar-speak-file-size
 ......................................
 
  -- Command: emacsvox-tar-speak-file-size
@@ -8555,7 +8760,7 @@ Auditory interface to tar mode
 
 File: emacsvox-reference.info,  Node: emacsvox-tcl,  Next: emacsvox-tempo,  Prev: emacsvox-tar,  Up: Emacsvox Commands And Options
 
-2.238 emacsvox-tcl
+2.239 emacsvox-tcl
 ==================
 
 Provide additional advice to tcl-mode
@@ -8563,7 +8768,7 @@ Provide additional advice to tcl-mode
 
 File: emacsvox-reference.info,  Node: emacsvox-tempo,  Next: emacsvox-tetris,  Prev: emacsvox-tcl,  Up: Emacsvox Commands And Options
 
-2.239 emacsvox-tempo
+2.240 emacsvox-tempo
 ====================
 
 tempo.el provides the infrastructure for building up templates.  This is
@@ -8573,29 +8778,29 @@ extends Emacsvox to provide fluent spoken feedback
 
 File: emacsvox-reference.info,  Node: emacsvox-tetris,  Next: emacsvox-texinfo,  Prev: emacsvox-tempo,  Up: Emacsvox Commands And Options
 
-2.240 emacsvox-tetris
+2.241 emacsvox-tetris
 =====================
 
 Speech-enables tetris.
 
-2.240.1 Emacsvox-Tetris Commands
+2.241.1 Emacsvox-Tetris Commands
 --------------------------------
 
-2.240.1.1 emacsvox-tetris-goto-bottom-row
+2.241.1.1 emacsvox-tetris-goto-bottom-row
 .........................................
 
  -- Command: emacsvox-tetris-goto-bottom-row
 
      Move to and speak bottom row
 
-2.240.1.2 emacsvox-tetris-goto-top-row
+2.241.1.2 emacsvox-tetris-goto-top-row
 ......................................
 
  -- Command: emacsvox-tetris-goto-top-row
 
      Move to and speak the top row
 
-2.240.1.3 emacsvox-tetris-speak-column
+2.241.1.3 emacsvox-tetris-speak-column
 ......................................
 
  -- Command: emacsvox-tetris-speak-column (&optional x)
@@ -8604,56 +8809,56 @@ Speech-enables tetris.
 
      (fn &optional X)
 
-2.240.1.4 emacsvox-tetris-speak-coordinates
+2.241.1.4 emacsvox-tetris-speak-coordinates
 ...........................................
 
  -- Command: emacsvox-tetris-speak-coordinates
 
      Speak current position
 
-2.240.1.5 emacsvox-tetris-speak-current-shape
+2.241.1.5 emacsvox-tetris-speak-current-shape
 .............................................
 
  -- Command: emacsvox-tetris-speak-current-shape
 
      Speak current shape
 
-2.240.1.6 emacsvox-tetris-speak-current-shape-and-coordinates
+2.241.1.6 emacsvox-tetris-speak-current-shape-and-coordinates
 .............................................................
 
  -- Command: emacsvox-tetris-speak-current-shape-and-coordinates
 
      Speak shape orientation and coordinates
 
-2.240.1.7 emacsvox-tetris-speak-next-shape
+2.241.1.7 emacsvox-tetris-speak-next-shape
 ..........................................
 
  -- Command: emacsvox-tetris-speak-next-shape
 
      Speak next shape
 
-2.240.1.8 emacsvox-tetris-speak-row
+2.241.1.8 emacsvox-tetris-speak-row
 ...................................
 
  -- Command: emacsvox-tetris-speak-row
 
      Speak current tetris row
 
-2.240.1.9 emacsvox-tetris-speak-row-number
+2.241.1.9 emacsvox-tetris-speak-row-number
 ..........................................
 
  -- Command: emacsvox-tetris-speak-row-number
 
      Speak where on the tetris board we are
 
-2.240.1.10 emacsvox-tetris-speak-score
+2.241.1.10 emacsvox-tetris-speak-score
 ......................................
 
  -- Command: emacsvox-tetris-speak-score
 
      Speak the score
 
-2.240.1.11 emacsvox-tetris-speak-x-coordinate
+2.241.1.11 emacsvox-tetris-speak-x-coordinate
 .............................................
 
  -- Command: emacsvox-tetris-speak-x-coordinate
@@ -8663,7 +8868,7 @@ Speech-enables tetris.
 
 File: emacsvox-reference.info,  Node: emacsvox-texinfo,  Next: emacsvox-todo-mode,  Prev: emacsvox-tetris,  Up: Emacsvox Commands And Options
 
-2.241 emacsvox-texinfo
+2.242 emacsvox-texinfo
 ======================
 
 This module speech enables net-texinfo mode
@@ -8671,7 +8876,7 @@ This module speech enables net-texinfo mode
 
 File: emacsvox-reference.info,  Node: emacsvox-todo-mode,  Next: emacsvox-transient,  Prev: emacsvox-texinfo,  Up: Emacsvox Commands And Options
 
-2.242 emacsvox-todo-mode
+2.243 emacsvox-todo-mode
 ========================
 
 todo-mode (part of Emacs 21) provides todo-lists that can be integrated
@@ -8680,13 +8885,13 @@ with the Emacs calendar.  This module speech-enables todo-mode
 
 File: emacsvox-reference.info,  Node: emacsvox-transient,  Next: emacsvox-treesit,  Prev: emacsvox-todo-mode,  Up: Emacsvox Commands And Options
 
-2.243 emacsvox-transient
+2.244 emacsvox-transient
 ========================
 
 TRANSIENT == Transient commands -- used by magit and friends.  This
 module speech-enables transient.
 
-2.243.1 Introduction
+2.244.1 Introduction
 --------------------
 
 Package Transient is similar to package Hydra in the sense that it can
@@ -8704,7 +8909,7 @@ displayed temporarily.  Note that without this functionality, learning
 complex packages like Magit would be difficult because the list of
 available commands can be very long.
 
-2.243.2 Recommended Customizations
+2.244.2 Recommended Customizations
 ----------------------------------
 
 I use the following customizations via .custom, adjust to taste, but use
@@ -8716,7 +8921,7 @@ these only after reading the transient info documentations.
    this pops up the transient buffer after a short delay and lets you
 move through the buttons with the up/down arrows.
 
-2.243.3 Browsing Contents Of transient-show
+2.244.3 Browsing Contents Of transient-show
 -------------------------------------------
 
 When executing a command defined via Transient -- e.g.  command
@@ -8726,10 +8931,10 @@ calls 2‘transient-suspend’.  Emacsvox now displays a
 recently displayed transient choices.  Pressing ‘r’ resumes the
 transient; Pressing ‘C-q’ quits the transient.
 
-2.243.4 Emacsvox-Transient Commands
+2.244.4 Emacsvox-Transient Commands
 -----------------------------------
 
-2.243.4.1 emacsvox-transient-mode
+2.244.4.1 emacsvox-transient-mode
 .................................
 
  -- Command: emacsvox-transient-mode
@@ -8740,14 +8945,14 @@ transient; Pressing ‘C-q’ quits the transient.
      run, this mode runs the hook ‘emacsvox-transient-mode-hook’, as the
      final or penultimate step during initialization.
 
-2.243.4.2 emacsvox-transient-next-section
+2.244.4.2 emacsvox-transient-next-section
 .........................................
 
  -- Command: emacsvox-transient-next-section
 
      Next transient section.
 
-2.243.4.3 emacsvox-transient-previous-section
+2.244.4.3 emacsvox-transient-previous-section
 .............................................
 
  -- Command: emacsvox-transient-previous-section
@@ -8757,15 +8962,15 @@ transient; Pressing ‘C-q’ quits the transient.
 
 File: emacsvox-reference.info,  Node: emacsvox-treesit,  Next: emacsvox-typo,  Prev: emacsvox-transient,  Up: Emacsvox Commands And Options
 
-2.244 emacsvox-treesit
+2.245 emacsvox-treesit
 ======================
 
 TREESIT == Syntax Trees Speech-enable treesit navigation commands.
 
-2.244.1 Emacsvox-Treesit Commands
+2.245.1 Emacsvox-Treesit Commands
 ---------------------------------
 
-2.244.1.1 emacsvox-treesit-inspect
+2.245.1.1 emacsvox-treesit-inspect
 ..................................
 
  -- Command: emacsvox-treesit-inspect
@@ -8775,7 +8980,7 @@ TREESIT == Syntax Trees Speech-enable treesit navigation commands.
 
 File: emacsvox-reference.info,  Node: emacsvox-typo,  Next: emacsvox-url-template,  Prev: emacsvox-treesit,  Up: Emacsvox Commands And Options
 
-2.245 emacsvox-typo
+2.246 emacsvox-typo
 ===================
 
 TYPO == Typographical Editing This module speech-enables typo-mode.
@@ -8785,7 +8990,7 @@ inserted char.
 
 File: emacsvox-reference.info,  Node: emacsvox-url-template,  Next: emacsvox-vdiff,  Prev: emacsvox-typo,  Up: Emacsvox Commands And Options
 
-2.246 emacsvox-url-template
+2.247 emacsvox-url-template
 ===========================
 
 It is often useful to have "parametrized hot list entries" i.e., hotlist
@@ -8794,10 +8999,10 @@ values for the parametrized portions of the URL e.g.  the date.  See
 *Note URL Templates::, for details on the URL templates that are
 presently defined.
 
-2.246.1 Emacsvox-Url-Template Commands
+2.247.1 Emacsvox-Url-Template Commands
 --------------------------------------
 
-2.246.1.1 emacsvox-url-template-fetch
+2.247.1.1 emacsvox-url-template-fetch
 .....................................
 
  -- Command: emacsvox-url-template-fetch (&optional documentation)
@@ -8811,7 +9016,7 @@ presently defined.
 
      (fn &optional DOCUMENTATION)
 
-2.246.1.2 emacsvox-url-template-help
+2.247.1.2 emacsvox-url-template-help
 ....................................
 
  -- Command: emacsvox-url-template-help
@@ -8820,7 +9025,7 @@ presently defined.
      Use Emacs completion to obtain a list of available
      resources.
 
-2.246.1.3 emacsvox-url-template-load
+2.247.1.3 emacsvox-url-template-load
 ....................................
 
  -- Command: emacsvox-url-template-load (file)
@@ -8829,7 +9034,7 @@ presently defined.
 
      (fn FILE)
 
-2.246.1.4 emacsvox-url-template-nls-add-to-wishlist
+2.247.1.4 emacsvox-url-template-nls-add-to-wishlist
 ...................................................
 
  -- Command: emacsvox-url-template-nls-add-to-wishlist (book)
@@ -8838,7 +9043,7 @@ presently defined.
 
      (fn BOOK)
 
-2.246.1.5 emacsvox-url-template-save
+2.247.1.5 emacsvox-url-template-save
 ....................................
 
  -- Command: emacsvox-url-template-save (file)
@@ -8847,7 +9052,7 @@ presently defined.
 
      (fn FILE)
 
-2.246.2 emacsvox-url-template Options
+2.247.2 emacsvox-url-template Options
 -------------------------------------
 
  -- Variable: User Option emacsvox-stock-tickers
@@ -8863,7 +9068,7 @@ presently defined.
 
 File: emacsvox-reference.info,  Node: emacsvox-vdiff,  Next: emacsvox-version,  Prev: emacsvox-url-template,  Up: Emacsvox Commands And Options
 
-2.247 emacsvox-vdiff
+2.248 emacsvox-vdiff
 ====================
 
 VDIFF == vimdiff Installable from melpa, vdiff enables synchronized
@@ -8876,24 +9081,24 @@ provides commands that speak the current hunk.  These are bound in
    • ‘emacsvox-vdiff-speak-other-hunk’ bound to ‘C-SPC’.
    • ‘emacsvox-vdiff-speak-other-line’ bound to ‘l’.
 
-2.247.1 Emacsvox-Vdiff Commands
+2.248.1 Emacsvox-Vdiff Commands
 -------------------------------
 
-2.247.1.1 emacsvox-vdiff-speak-other-hunk
+2.248.1.1 emacsvox-vdiff-speak-other-hunk
 .........................................
 
  -- Command: emacsvox-vdiff-speak-other-hunk
 
      Speak corresponding hunk from other buffer.
 
-2.247.1.2 emacsvox-vdiff-speak-other-line
+2.248.1.2 emacsvox-vdiff-speak-other-line
 .........................................
 
  -- Command: emacsvox-vdiff-speak-other-line
 
      Speak corresponding line from other buffer.
 
-2.247.1.3 emacsvox-vdiff-speak-this-hunk
+2.248.1.3 emacsvox-vdiff-speak-this-hunk
 ........................................
 
  -- Command: emacsvox-vdiff-speak-this-hunk
@@ -8903,7 +9108,7 @@ provides commands that speak the current hunk.  These are bound in
 
 File: emacsvox-reference.info,  Node: emacsvox-version,  Next: emacsvox-vertico,  Prev: emacsvox-vdiff,  Up: Emacsvox Commands And Options
 
-2.248 emacsvox-version
+2.249 emacsvox-version
 ======================
 
 Read the canonical release identifier from the repository-level VERSION
@@ -8913,7 +9118,7 @@ users on the same value without generating a second version source.
 
 File: emacsvox-reference.info,  Node: emacsvox-vertico,  Next: emacsvox-view,  Prev: emacsvox-version,  Up: Emacsvox Commands And Options
 
-2.249 emacsvox-vertico
+2.250 emacsvox-vertico
 ======================
 
 Vertico is a modern completion UI that uses Emacs's native completion
@@ -8922,15 +9127,15 @@ engine This module speech-enables Vertico's UI
 
 File: emacsvox-reference.info,  Node: emacsvox-view,  Next: emacsvox-vterm,  Prev: emacsvox-vertico,  Up: Emacsvox Commands And Options
 
-2.250 emacsvox-view
+2.251 emacsvox-view
 ===================
 
 Provide additional advice to view-mode
 
-2.250.1 Emacsvox-View Commands
+2.251.1 Emacsvox-View Commands
 ------------------------------
 
-2.250.1.1 emacsvox-view-line-to-top
+2.251.1.1 emacsvox-view-line-to-top
 ...................................
 
  -- Command: emacsvox-view-line-to-top
@@ -8940,12 +9145,12 @@ Provide additional advice to view-mode
 
 File: emacsvox-reference.info,  Node: emacsvox-vterm,  Next: emacsvox-wdired,  Prev: emacsvox-view,  Up: Emacsvox Commands And Options
 
-2.251 emacsvox-vterm
+2.252 emacsvox-vterm
 ====================
 
 VTERM == vterm using native vterm library
 
-2.251.1 Usage
+2.252.1 Usage
 -------------
 
    • Turn on ‘emacsvox-comint-autospeak’ for using the shell.
@@ -8957,7 +9162,7 @@ VTERM == vterm using native vterm library
 
 File: emacsvox-reference.info,  Node: emacsvox-wdired,  Next: emacsvox-we,  Prev: emacsvox-vterm,  Up: Emacsvox Commands And Options
 
-2.252 emacsvox-wdired
+2.253 emacsvox-wdired
 =====================
 
 Speech-enable wdired to permit in-place renaming of groups of files.
@@ -8965,7 +9170,7 @@ Speech-enable wdired to permit in-place renaming of groups of files.
 
 File: emacsvox-reference.info,  Node: emacsvox-we,  Next: emacsvox-websearch,  Prev: emacsvox-wdired,  Up: Emacsvox Commands And Options
 
-2.253 emacsvox-we
+2.254 emacsvox-we
 =================
 
 we is for webedit Invoke XSLT to edit/transform Web pages before they
@@ -8973,10 +9178,10 @@ get rendered.  we makes emacsvox's webedit layer independent of a given
 Emacs web browser EWW This module will use the abstraction provided by
 browse-url to handle Web pages.
 
-2.253.1 Emacsvox-We Commands
+2.254.1 Emacsvox-We Commands
 ----------------------------
 
-2.253.1.1 emacsvox-we-class-follow-and-filter
+2.254.1.1 emacsvox-we-class-follow-and-filter
 .............................................
 
  -- Command: emacsvox-we-class-follow-and-filter (class url &optional
@@ -8990,7 +9195,7 @@ browse-url to handle Web pages.
 
      (fn CLASS URL &optional PROMPT)
 
-2.253.1.2 emacsvox-we-class-follow-and-filter-link
+2.254.1.2 emacsvox-we-class-follow-and-filter-link
 ..................................................
 
  -- Command: emacsvox-we-class-follow-and-filter-link (&optional prompt)
@@ -9003,7 +9208,7 @@ browse-url to handle Web pages.
 
      (fn &optional PROMPT)
 
-2.253.1.3 emacsvox-we-count-matches
+2.254.1.3 emacsvox-we-count-matches
 ...................................
 
  -- Command: emacsvox-we-count-matches (url locator)
@@ -9013,7 +9218,7 @@ browse-url to handle Web pages.
 
      (fn URL LOCATOR)
 
-2.253.1.4 emacsvox-we-count-nested-tables
+2.254.1.4 emacsvox-we-count-nested-tables
 .........................................
 
  -- Command: emacsvox-we-count-nested-tables (url)
@@ -9023,7 +9228,7 @@ browse-url to handle Web pages.
 
      (fn URL)
 
-2.253.1.5 emacsvox-we-count-tables
+2.254.1.5 emacsvox-we-count-tables
 ..................................
 
  -- Command: emacsvox-we-count-tables (url)
@@ -9033,7 +9238,7 @@ browse-url to handle Web pages.
 
      (fn URL)
 
-2.253.1.6 emacsvox-we-extract-by-class
+2.254.1.6 emacsvox-we-extract-by-class
 ......................................
 
  -- Command: emacsvox-we-extract-by-class (class url &optional speak)
@@ -9045,7 +9250,7 @@ browse-url to handle Web pages.
 
      (fn CLASS URL &optional SPEAK)
 
-2.253.1.7 emacsvox-we-extract-by-class-list
+2.254.1.7 emacsvox-we-extract-by-class-list
 ...........................................
 
  -- Command: emacsvox-we-extract-by-class-list (classes url &optional
@@ -9059,7 +9264,7 @@ browse-url to handle Web pages.
 
      (fn CLASSES URL &optional SPEAK)
 
-2.253.1.8 emacsvox-we-extract-by-id
+2.254.1.8 emacsvox-we-extract-by-id
 ...................................
 
  -- Command: emacsvox-we-extract-by-id (id url &optional speak)
@@ -9072,7 +9277,7 @@ browse-url to handle Web pages.
 
      (fn ID URL &optional SPEAK)
 
-2.253.1.9 emacsvox-we-extract-by-id-list
+2.254.1.9 emacsvox-we-extract-by-id-list
 ........................................
 
  -- Command: emacsvox-we-extract-by-id-list (ids url &optional speak)
@@ -9084,7 +9289,7 @@ browse-url to handle Web pages.
 
      (fn IDS URL &optional SPEAK)
 
-2.253.1.10 emacsvox-we-extract-by-role
+2.254.1.10 emacsvox-we-extract-by-role
 ......................................
 
  -- Command: emacsvox-we-extract-by-role (role url &optional speak)
@@ -9096,7 +9301,7 @@ browse-url to handle Web pages.
 
      (fn ROLE URL &optional SPEAK)
 
-2.253.1.11 emacsvox-we-extract-matching-urls
+2.254.1.11 emacsvox-we-extract-matching-urls
 ............................................
 
  -- Command: emacsvox-we-extract-matching-urls (pattern url &optional
@@ -9107,7 +9312,7 @@ browse-url to handle Web pages.
 
      (fn PATTERN URL &optional SPEAK)
 
-2.253.1.12 emacsvox-we-extract-nested-table
+2.254.1.12 emacsvox-we-extract-nested-table
 ...........................................
 
  -- Command: emacsvox-we-extract-nested-table (index url &optional
@@ -9121,7 +9326,7 @@ browse-url to handle Web pages.
 
      (fn INDEX URL &optional SPEAK)
 
-2.253.1.13 emacsvox-we-extract-nested-table-list
+2.254.1.13 emacsvox-we-extract-nested-table-list
 ................................................
 
  -- Command: emacsvox-we-extract-nested-table-list (tables url &optional
@@ -9132,7 +9337,7 @@ browse-url to handle Web pages.
 
      (fn TABLES URL &optional SPEAK)
 
-2.253.1.14 emacsvox-we-extract-speakable
+2.254.1.14 emacsvox-we-extract-speakable
 ........................................
 
  -- Command: emacsvox-we-extract-speakable (url &optional speak)
@@ -9142,7 +9347,7 @@ browse-url to handle Web pages.
 
      (fn URL &optional SPEAK)
 
-2.253.1.15 emacsvox-we-extract-table-by-match
+2.254.1.15 emacsvox-we-extract-table-by-match
 .............................................
 
  -- Command: emacsvox-we-extract-table-by-match (match url &optional
@@ -9154,7 +9359,7 @@ browse-url to handle Web pages.
 
      (fn MATCH URL &optional SPEAK)
 
-2.253.1.16 emacsvox-we-extract-table-by-position
+2.254.1.16 emacsvox-we-extract-table-by-position
 ................................................
 
  -- Command: emacsvox-we-extract-table-by-position (pos url &optional
@@ -9166,7 +9371,7 @@ browse-url to handle Web pages.
 
      (fn POS URL &optional SPEAK)
 
-2.253.1.17 emacsvox-we-extract-tables-by-match-list
+2.254.1.17 emacsvox-we-extract-tables-by-match-list
 ...................................................
 
  -- Command: emacsvox-we-extract-tables-by-match-list (match-list url
@@ -9179,7 +9384,7 @@ browse-url to handle Web pages.
 
      (fn MATCH-LIST URL &optional SPEAK)
 
-2.253.1.18 emacsvox-we-extract-tables-by-position-list
+2.254.1.18 emacsvox-we-extract-tables-by-position-list
 ......................................................
 
  -- Command: emacsvox-we-extract-tables-by-position-list (positions url
@@ -9192,7 +9397,7 @@ browse-url to handle Web pages.
 
      (fn POSITIONS URL &optional SPEAK)
 
-2.253.1.19 emacsvox-we-follow-and-extract-main
+2.254.1.19 emacsvox-we-follow-and-extract-main
 ..............................................
 
  -- Command: emacsvox-we-follow-and-extract-main (&optional speak)
@@ -9202,7 +9407,7 @@ browse-url to handle Web pages.
 
      (fn &optional SPEAK)
 
-2.253.1.20 emacsvox-we-follow-and-filter-by-id
+2.254.1.20 emacsvox-we-follow-and-filter-by-id
 ..............................................
 
  -- Command: emacsvox-we-follow-and-filter-by-id (id prompt)
@@ -9215,7 +9420,7 @@ browse-url to handle Web pages.
 
      (fn ID PROMPT)
 
-2.253.1.21 emacsvox-we-junk-by-class
+2.254.1.21 emacsvox-we-junk-by-class
 ....................................
 
  -- Command: emacsvox-we-junk-by-class (class url &optional speak)
@@ -9227,7 +9432,7 @@ browse-url to handle Web pages.
 
      (fn CLASS URL &optional SPEAK)
 
-2.253.1.22 emacsvox-we-junk-by-class-list
+2.254.1.22 emacsvox-we-junk-by-class-list
 .........................................
 
  -- Command: emacsvox-we-junk-by-class-list (classes url &optional
@@ -9242,7 +9447,7 @@ browse-url to handle Web pages.
 
      (fn CLASSES URL &optional SPEAK)
 
-2.253.1.23 emacsvox-we-style-filter
+2.254.1.23 emacsvox-we-style-filter
 ...................................
 
  -- Command: emacsvox-we-style-filter (style url &optional speak)
@@ -9255,7 +9460,7 @@ browse-url to handle Web pages.
 
      (fn STYLE URL &optional SPEAK)
 
-2.253.1.24 emacsvox-we-toggle-xsl-keep-result
+2.254.1.24 emacsvox-we-toggle-xsl-keep-result
 .............................................
 
  -- Command: emacsvox-we-toggle-xsl-keep-result
@@ -9263,7 +9468,7 @@ browse-url to handle Web pages.
 
      Toggle xsl keep result flag.
 
-2.253.1.25 emacsvox-we-url-expand-and-execute
+2.254.1.25 emacsvox-we-url-expand-and-execute
 .............................................
 
  -- Command: emacsvox-we-url-expand-and-execute (&optional prefix)
@@ -9273,7 +9478,7 @@ browse-url to handle Web pages.
 
      (fn &optional PREFIX)
 
-2.253.1.26 emacsvox-we-url-rewrite-and-follow
+2.254.1.26 emacsvox-we-url-rewrite-and-follow
 .............................................
 
  -- Command: emacsvox-we-url-rewrite-and-follow (&optional prompt)
@@ -9291,7 +9496,7 @@ browse-url to handle Web pages.
 
      (fn &optional PROMPT)
 
-2.253.1.27 emacsvox-we-xpath-follow-and-filter
+2.254.1.27 emacsvox-we-xpath-follow-and-filter
 ..............................................
 
  -- Command: emacsvox-we-xpath-follow-and-filter (&optional prompt)
@@ -9304,7 +9509,7 @@ browse-url to handle Web pages.
 
      (fn &optional PROMPT)
 
-2.253.1.28 emacsvox-we-xpath-junk-and-follow
+2.254.1.28 emacsvox-we-xpath-junk-and-follow
 ............................................
 
  -- Command: emacsvox-we-xpath-junk-and-follow (&optional prompt)
@@ -9318,7 +9523,7 @@ browse-url to handle Web pages.
 
      (fn &optional PROMPT)
 
-2.253.1.29 emacsvox-we-xsl-toggle
+2.254.1.29 emacsvox-we-xsl-toggle
 .................................
 
  -- Command: emacsvox-we-xsl-toggle
@@ -9326,7 +9531,7 @@ browse-url to handle Web pages.
 
      Toggle  application of XSL transformations.
 
-2.253.1.30 emacsvox-we-xslt-apply
+2.254.1.30 emacsvox-we-xslt-apply
 .................................
 
  -- Command: emacsvox-we-xslt-apply (xsl)
@@ -9336,7 +9541,7 @@ browse-url to handle Web pages.
 
      (fn XSL)
 
-2.253.1.31 emacsvox-we-xslt-filter
+2.254.1.31 emacsvox-we-xslt-filter
 ..................................
 
  -- Command: emacsvox-we-xslt-filter (path url &optional speak)
@@ -9347,7 +9552,7 @@ browse-url to handle Web pages.
 
      (fn PATH URL &optional SPEAK)
 
-2.253.1.32 emacsvox-we-xslt-junk
+2.254.1.32 emacsvox-we-xslt-junk
 ................................
 
  -- Command: emacsvox-we-xslt-junk (path url &optional speak)
@@ -9357,7 +9562,7 @@ browse-url to handle Web pages.
 
      (fn PATH URL &optional SPEAK)
 
-2.253.1.33 emacsvox-we-xslt-select
+2.254.1.33 emacsvox-we-xslt-select
 ..................................
 
  -- Command: emacsvox-we-xslt-select (xsl)
@@ -9367,7 +9572,7 @@ browse-url to handle Web pages.
 
      (fn XSL)
 
-2.253.2 emacsvox-we Options
+2.254.2 emacsvox-we Options
 ---------------------------
 
  -- Variable: User Option emacsvox-we-filters-rename-buffer
@@ -9381,15 +9586,15 @@ browse-url to handle Web pages.
 
 File: emacsvox-reference.info,  Node: emacsvox-websearch,  Next: emacsvox-webspace,  Prev: emacsvox-we,  Up: Emacsvox Commands And Options
 
-2.254 emacsvox-websearch
+2.255 emacsvox-websearch
 ========================
 
 This module provides utility functions for searching the WWW
 
-2.254.1 Emacsvox-Websearch Commands
+2.255.1 Emacsvox-Websearch Commands
 -----------------------------------
 
-2.254.1.1 emacsvox-websearch-amazon-search
+2.255.1.1 emacsvox-websearch-amazon-search
 ..........................................
 
  -- Command: emacsvox-websearch-amazon-search
@@ -9398,7 +9603,7 @@ This module provides utility functions for searching the WWW
 
      Amazon search.
 
-2.254.1.2 emacsvox-websearch-ask-jeeves
+2.255.1.2 emacsvox-websearch-ask-jeeves
 .......................................
 
  -- Command: emacsvox-websearch-ask-jeeves (query)
@@ -9409,7 +9614,7 @@ This module provides utility functions for searching the WWW
 
      (fn QUERY)
 
-2.254.1.3 emacsvox-websearch-foldoc-search
+2.255.1.3 emacsvox-websearch-foldoc-search
 ..........................................
 
  -- Command: emacsvox-websearch-foldoc-search (query)
@@ -9420,7 +9625,7 @@ This module provides utility functions for searching the WWW
 
      (fn QUERY)
 
-2.254.1.4 emacsvox-websearch-google
+2.255.1.4 emacsvox-websearch-google
 ...................................
 
  -- Command: emacsvox-websearch-google (query &optional flag)
@@ -9434,7 +9639,7 @@ This module provides utility functions for searching the WWW
 
      (fn QUERY &optional FLAG)
 
-2.254.1.5 emacsvox-websearch-google-feeling-lucky
+2.255.1.5 emacsvox-websearch-google-feeling-lucky
 .................................................
 
  -- Command: emacsvox-websearch-google-feeling-lucky (query)
@@ -9445,7 +9650,7 @@ This module provides utility functions for searching the WWW
 
      (fn QUERY)
 
-2.254.1.6 emacsvox-websearch-google-lite
+2.255.1.6 emacsvox-websearch-google-lite
 ........................................
 
  -- Command: emacsvox-websearch-google-lite (query &optional options)
@@ -9457,7 +9662,7 @@ This module provides utility functions for searching the WWW
 
      (fn QUERY &optional OPTIONS)
 
-2.254.1.7 emacsvox-websearch-google-news
+2.255.1.7 emacsvox-websearch-google-news
 ........................................
 
  -- Command: emacsvox-websearch-google-news
@@ -9466,14 +9671,14 @@ This module provides utility functions for searching the WWW
 
      Invoke Google News url template.
 
-2.254.1.8 emacsvox-websearch-google-search-in-date-range
+2.255.1.8 emacsvox-websearch-google-search-in-date-range
 ........................................................
 
  -- Command: emacsvox-websearch-google-search-in-date-range
 
      Use this from inside the calendar to do Google date-range searches.
 
-2.254.1.9 emacsvox-websearch-google-with-toolbelt
+2.255.1.9 emacsvox-websearch-google-with-toolbelt
 .................................................
 
  -- Command: emacsvox-websearch-google-with-toolbelt (query)
@@ -9484,7 +9689,7 @@ This module provides utility functions for searching the WWW
 
      (fn QUERY)
 
-2.254.1.10 emacsvox-websearch-gutenberg
+2.255.1.10 emacsvox-websearch-gutenberg
 .......................................
 
  -- Command: emacsvox-websearch-gutenberg (type query)
@@ -9495,7 +9700,7 @@ This module provides utility functions for searching the WWW
 
      (fn TYPE QUERY)
 
-2.254.1.11 emacsvox-websearch-help
+2.255.1.11 emacsvox-websearch-help
 ..................................
 
  -- Command: emacsvox-websearch-help
@@ -9504,7 +9709,7 @@ This module provides utility functions for searching the WWW
 
      Displays key mapping used by Emacsvox Websearch.
 
-2.254.1.12 emacsvox-websearch-web-filter-google
+2.255.1.12 emacsvox-websearch-web-filter-google
 ...............................................
 
  -- Command: emacsvox-websearch-web-filter-google (query &optional
@@ -9517,7 +9722,7 @@ This module provides utility functions for searching the WWW
 
      (fn QUERY &optional OPTIONS)
 
-2.254.1.13 emacsvox-websearch-wikipedia-search
+2.255.1.13 emacsvox-websearch-wikipedia-search
 ..............................................
 
  -- Command: emacsvox-websearch-wikipedia-search (query)
@@ -9529,7 +9734,7 @@ This module provides utility functions for searching the WWW
 
      (fn QUERY)
 
-2.254.1.14 emacsvox-websearch-youtube-search
+2.255.1.14 emacsvox-websearch-youtube-search
 ............................................
 
  -- Command: emacsvox-websearch-youtube-search (query)
@@ -9543,15 +9748,15 @@ This module provides utility functions for searching the WWW
 
 File: emacsvox-reference.info,  Node: emacsvox-webspace,  Next: emacsvox-welcome,  Prev: emacsvox-websearch,  Up: Emacsvox Commands And Options
 
-2.255 emacsvox-webspace
+2.256 emacsvox-webspace
 =======================
 
 WEBSPACE == Smart Web Gadgets For The Emacsvox Desktop
 
-2.255.1 Emacsvox-Webspace Commands
+2.256.1 Emacsvox-Webspace Commands
 ----------------------------------
 
-2.255.1.1 emacsvox-webspace-feed-reader
+2.256.1.1 emacsvox-webspace-feed-reader
 .......................................
 
  -- Command: emacsvox-webspace-feed-reader (&optional refresh)
@@ -9563,28 +9768,28 @@ WEBSPACE == Smart Web Gadgets For The Emacsvox Desktop
 
      (fn &optional REFRESH)
 
-2.255.1.2 emacsvox-webspace-filter
+2.256.1.2 emacsvox-webspace-filter
 ..................................
 
  -- Command: emacsvox-webspace-filter
 
      Open headline at point and filter for content.
 
-2.255.1.3 emacsvox-webspace-headlines
+2.256.1.3 emacsvox-webspace-headlines
 .....................................
 
  -- Command: emacsvox-webspace-headlines
 
      Startup Headlines ticker using RSS/Atom  feeds.
 
-2.255.1.4 emacsvox-webspace-headlines-browse
+2.256.1.4 emacsvox-webspace-headlines-browse
 ............................................
 
  -- Command: emacsvox-webspace-headlines-browse
 
      Display buffer of browsable headlines.
 
-2.255.1.5 emacsvox-webspace-headlines-update
+2.256.1.5 emacsvox-webspace-headlines-update
 ............................................
 
  -- Command: emacsvox-webspace-headlines-update
@@ -9592,7 +9797,7 @@ WEBSPACE == Smart Web Gadgets For The Emacsvox Desktop
      Setup news updates.
      Updated headlines found in emacsvox-webspace-headlines.
 
-2.255.1.6 emacsvox-webspace-mode
+2.256.1.6 emacsvox-webspace-mode
 ................................
 
  -- Command: emacsvox-webspace-mode
@@ -9622,21 +9827,21 @@ WEBSPACE == Smart Web Gadgets For The Emacsvox Desktop
      run, this mode runs the hook ‘emacsvox-webspace-mode-hook’, as the
      final or penultimate step during initialization.
 
-2.255.1.7 emacsvox-webspace-open
+2.256.1.7 emacsvox-webspace-open
 ................................
 
  -- Command: emacsvox-webspace-open
 
      Open headline at point by following its link property.
 
-2.255.1.8 emacsvox-webspace-yank-link
+2.256.1.8 emacsvox-webspace-yank-link
 .....................................
 
  -- Command: emacsvox-webspace-yank-link
 
      Yank link under point into kill ring.
 
-2.255.2 emacsvox-webspace Options
+2.256.2 emacsvox-webspace Options
 ---------------------------------
 
  -- Variable: User Option emacsvox-webspace-feeds
@@ -9645,144 +9850,3 @@ WEBSPACE == Smart Web Gadgets For The Emacsvox Desktop
      Default Value:
 
      nil
-
-
-
-File: emacsvox-reference.info,  Node: emacsvox-welcome,  Next: emacsvox-which-key,  Prev: emacsvox-webspace,  Up: Emacsvox Commands And Options
-
-2.256 emacsvox-welcome
-======================
-
-A short, keyboard-accessible introduction.  The startup preference
-belongs to the Emacs profile, independently of the application
-installation.
-
-2.256.1 Emacsvox-Welcome Commands
----------------------------------
-
-2.256.1.1 emacsvox-welcome
-..........................
-
- -- Command: emacsvox-welcome
-     ‘C-h W’
-     ‘<f1> W’
-     ‘<help> W’
-     ‘<menu-bar> <help-menu> <emacsvox-welcome>’
-
-     Open the Emacsvox getting-started screen and speak a short introduction.
-
-2.256.1.2 emacsvox-welcome-mode
-...............................
-
- -- Command: emacsvox-welcome-mode
-
-     Getting started.  TAB and Shift-TAB choose actions; RET activates; q returns.
-
-     In addition to any hooks its parent mode ‘special-mode’ might have
-     run, this mode runs the hook ‘emacsvox-welcome-mode-hook’, as the
-     final or penultimate step during initialization.
-
-     Key             Binding
-     -----------------------------------------------------
-     TAB		emacsvox-welcome-next
-     RET		push-button
-     SPC		push-button
-     -		negative-argument
-     0 .. 9		digit-argument
-     <		beginning-of-buffer
-     >		end-of-buffer
-     ?		describe-mode
-     g		revert-buffer
-     h		describe-mode
-     n		emacsvox-welcome-next
-     p		emacsvox-welcome-previous
-     q		quit-window
-     DEL		scroll-down-command
-     S-SPC		scroll-down-command
-     <backtab>	emacsvox-welcome-previous
-
-2.256.1.3 emacsvox-welcome-next
-...............................
-
- -- Command: emacsvox-welcome-next (&optional backward)
-
-     Move to and speak the next action, or the previous with BACKWARD.
-
-     (fn &optional BACKWARD)
-
-2.256.1.4 emacsvox-welcome-output
-.................................
-
- -- Command: emacsvox-welcome-output
-
-     Open the speech, tones, earcons and notification output settings.
-
-2.256.1.5 emacsvox-welcome-previous
-...................................
-
- -- Command: emacsvox-welcome-previous
-
-     Move to and speak the previous action.
-
-2.256.1.6 emacsvox-welcome-test-speech
-......................................
-
- -- Command: emacsvox-welcome-test-speech
-
-     Play a short sample using the current speech settings.
-
-2.256.1.7 emacsvox-welcome-toggle-startup
-.........................................
-
- -- Command: emacsvox-welcome-toggle-startup
-
-     Toggle and persist the startup welcome choice in this Emacs profile.
-
-2.256.1.8 emacsvox-welcome-voices
-.................................
-
- -- Command: emacsvox-welcome-voices
-
-     Open voice and engine browsing.
-
-2.256.2 emacsvox-welcome Options
---------------------------------
-
- -- Variable: User Option emacsvox-welcome-show-at-startup
-     Whether to offer the welcome screen at startup.
-     The screen’s toggle remembers an explicit choice in this Emacs profile.
-     A saved choice takes precedence over this default.  Explicitly opened files,
-     automated speech checks, and sessions already in use keep their current buffer.
-
-     Default Value:
-
-     t
-
-
-
-File: emacsvox-reference.info,  Node: emacsvox-which-key,  Next: emacsvox-widget,  Prev: emacsvox-welcome,  Up: Emacsvox Commands And Options
-
-2.257 emacsvox-which-key
-========================
-
-Which-Key displays available keybindings in a popup after pressing a
-prefix key.  This module speech-enables Which-Key to provide auditory
-feedback for available bindings, supporting navigation through pages and
-speaking the current binding options.
-
-2.257.1 Emacsvox-Which-Key Commands
------------------------------------
-
-2.257.1.1 emacsvox-which-key-speak
-..................................
-
- -- Command: emacsvox-which-key-speak
-
-     Speak the current or last which-key popup content.
-
-2.257.1.2 emacsvox-which-key-toggle-auto-speak
-..............................................
-
- -- Command: emacsvox-which-key-toggle-auto-speak
-
-     Toggle automatic speaking of which-key popups.

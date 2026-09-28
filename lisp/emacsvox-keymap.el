@@ -337,6 +337,9 @@
 (cl-loop
  for binding in
  '(
+   ("C-r" emacsvox-table-reader-mode)
+   ("]" emacsvox-table-reader-next-table)
+   ("[" emacsvox-table-reader-previous-table)
    ("f" emacsvox-table-find-file)
    ("," emacsvox-table-find-csv-file)
    )
