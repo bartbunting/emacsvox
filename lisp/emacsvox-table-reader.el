@@ -246,6 +246,67 @@ mode's registered Aural facts.  No adapter may edit the source to read it.")
 (defvar-local emacsvox-table-reader--region nil
   "Markers delimiting the table in the current reading context.")
 
+(defvar emacsvox-table-reader--entering nil
+  "Non-nil while the first arrow's feedback should announce reader entry.")
+
+(defun emacsvox-table-reader--entry-filter (command)
+  "Offer COMMAND only at a supported source table outside reading mode.
+Returning nil lets Emacs resolve the existing binding in lower keymaps."
+  (when (and (not emacsvox-table-reader-mode)
+             (seq-some (lambda (entry) (derived-mode-p (car entry)))
+                       emacsvox-table-reader--adapters)
+             (save-excursion
+               (save-match-data (emacsvox-table-reader--snapshot))))
+    command))
+
+(defun emacsvox-table-reader--enter-and-move (rows columns)
+  "Enter reading and move by ROWS and COLUMNS with one spoken result."
+  (let ((cell (emacsvox-table-reader--cell))
+        (origin (point)))
+    (emacsvox-table-reader--enter cell t)
+    ;; Keep boundary and zero-count behaviour relative to the original point.
+    (goto-char origin)
+    (let ((emacsvox-table-reader--entering t))
+      (emacsvox-table-reader--move rows columns))))
+
+(defun emacsvox-table-reader--enter-next-row (count)
+  "Enter table reading and move COUNT rows down."
+  (interactive "p")
+  (emacsvox-table-reader--enter-and-move count 0))
+(defun emacsvox-table-reader--enter-previous-row (count)
+  "Enter table reading and move COUNT rows up."
+  (interactive "p")
+  (emacsvox-table-reader--enter-and-move (- count) 0))
+(defun emacsvox-table-reader--enter-next-column (count)
+  "Enter table reading and move COUNT columns right."
+  (interactive "p")
+  (emacsvox-table-reader--enter-and-move 0 count))
+(defun emacsvox-table-reader--enter-previous-column (count)
+  "Enter table reading and move COUNT columns left."
+  (interactive "p")
+  (emacsvox-table-reader--enter-and-move 0 (- count)))
+
+(defvar emacsvox-table-reader--entry-enabled t
+  "Allow conditional Control-Meta arrow entry into source-table reading.
+The entry map contributes no binding outside supported tables.")
+
+(defvar emacsvox-table-reader--entry-map
+  (let ((map (make-sparse-keymap)))
+    (dolist (binding '(("C-M-<up>" . emacsvox-table-reader--enter-previous-row)
+                       ("C-M-<down>" . emacsvox-table-reader--enter-next-row)
+                       ("C-M-<left>" . emacsvox-table-reader--enter-previous-column)
+                       ("C-M-<right>" . emacsvox-table-reader--enter-next-column)))
+      (define-key map (kbd (car binding))
+                  `(menu-item "Table reading" ,(cdr binding)
+                              :filter emacsvox-table-reader--entry-filter)))
+    map)
+  "Conditional arrow bindings that preserve the underlying maps elsewhere.")
+
+(unless (assq 'emacsvox-table-reader--entry-enabled minor-mode-map-alist)
+  (push (cons 'emacsvox-table-reader--entry-enabled
+              emacsvox-table-reader--entry-map)
+        minor-mode-map-alist))
+
 (defun emacsvox-table-reader--adapter ()
   "Return a registered adapter for the current major mode."
   (or (seq-find (lambda (entry) (derived-mode-p (car entry)))
@@ -267,7 +328,10 @@ mode's registered Aural facts.  No adapter may edit the source to read it.")
 OCCASION, PRESENTATION and ICON describe the user's action."
   (funcall (nth 2 (or emacsvox-table-reader--adapter
                       (emacsvox-table-reader--adapter)))
-           text occasion presentation icon))
+           (if (and emacsvox-table-reader--entering emacsvox-table-reader-mode)
+               (concat "Table reading. " text)
+             text)
+           occasion presentation icon))
 
 (defun emacsvox-table-reader--release ()
   "Release the reading context without speech or source changes."
@@ -300,8 +364,9 @@ OCCASION, PRESENTATION and ICON describe the user's action."
                    (= (cdr region) (cadr emacsvox-table-reader--region)))
         (emacsvox-table-reader--leave)))))
 
-(defun emacsvox-table-reader--enter (cell)
-  "Activate reading at CELL without modifying or aligning the source."
+(defun emacsvox-table-reader--enter (cell &optional quiet)
+  "Activate reading at CELL without modifying or aligning the source.
+With QUIET, let the following movement submit the single entry announcement."
   (emacsvox-table-reader--release)
   (goto-char (cadr (emacsvox-table-reader--destination cell 0 0)))
   (setq emacsvox-table-reader--adapter (emacsvox-table-reader--adapter)
@@ -313,10 +378,11 @@ OCCASION, PRESENTATION and ICON describe the user's action."
   (add-hook 'after-change-functions #'emacsvox-table-reader--after-change nil t)
   (add-hook 'change-major-mode-hook #'emacsvox-table-reader--release nil t)
   (add-hook 'kill-buffer-hook #'emacsvox-table-reader--release nil t)
-  (emacsvox-table-reader--submit
-   (concat "Table reading. " (emacsvox-table-reader--dimensions-speech cell)
-           " " (emacsvox-table-reader--cell-speech cell))
-   'navigation 'cell 'open-object)
+  (unless quiet
+    (emacsvox-table-reader--submit
+     (concat "Table reading. " (emacsvox-table-reader--dimensions-speech cell)
+             " " (emacsvox-table-reader--cell-speech cell))
+     'navigation 'cell 'open-object))
   (force-mode-line-update))
 
 (defun emacsvox-table-reader--inspect (presentation)
@@ -530,7 +596,8 @@ Other editing commands retain their normal meaning; editing ends reading.")
 ;;;###autoload
 (define-minor-mode emacsvox-table-reader-mode
   "Read a Markdown or Org table in place with contextual navigation keys.
-Use the speech prefix followed by C-t C-r to toggle reading.  Up/Down read
+Use a Control-Meta arrow inside a table to enter reading and move, or use
+the speech prefix followed by C-t C-r to toggle reading.  Up/Down read
 logical rows, C-M-Left/Right read cells, and r/c read rows/columns.  TAB moves
 right without editing and RET reads the cell.  q restores normal mode keys.
 Leaving the table or editing its source also ends this context.  This mode

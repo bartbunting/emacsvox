@@ -8065,7 +8065,8 @@ preferences.
 
      Read a Markdown or Org table in place with contextual navigation keys.
 
-     Use the speech prefix followed by C-t C-r to toggle reading.  Up/Down read
+     Use a Control-Meta arrow inside a table to enter reading and move, or use
+     the speech prefix followed by C-t C-r to toggle reading.  Up/Down read
      logical rows, C-M-Left/Right read cells, and r/c read rows/columns.  TAB moves
      right without editing and RET reads the cell.  q restores normal mode keys.
      Leaving the table or editing its source also ends this context.  This mode

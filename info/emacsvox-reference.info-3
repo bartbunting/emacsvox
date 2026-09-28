@@ -4173,9 +4173,9 @@ File: emacsvox-reference.info,  Node: Key Index,  Next: Function Index,  Prev: R
 * C-e C-t ,:                             emacsvox-table-ui.  (line   43)
 * C-e C-t .:                             emacsvox-table-ui.  (line  388)
 * C-e C-t [:                             emacsvox-table-reader.
-                                                             (line  128)
+                                                             (line  129)
 * C-e C-t ]:                             emacsvox-table-reader.
-                                                             (line  102)
+                                                             (line  103)
 * C-e C-t #:                             emacsvox-table-ui.  (line  353)
 * C-e C-t <:                             emacsvox-table-ui.  (line   90)
 * C-e C-t <down>:                        emacsvox-table-ui.  (line  262)
@@ -8065,53 +8065,53 @@ Function Index
 * emacsvox-table-reader-mode <1>:        emacsvox-table-reader.
                                                              (line   55)
 * emacsvox-table-reader-next-column:     emacsvox-table-reader.
-                                                             (line   82)
-* emacsvox-table-reader-next-column <1>: emacsvox-table-reader.
                                                              (line   83)
+* emacsvox-table-reader-next-column <1>: emacsvox-table-reader.
+                                                             (line   84)
 * emacsvox-table-reader-next-row:        emacsvox-table-reader.
-                                                             (line   91)
-* emacsvox-table-reader-next-row <1>:    emacsvox-table-reader.
                                                              (line   92)
+* emacsvox-table-reader-next-row <1>:    emacsvox-table-reader.
+                                                             (line   93)
 * emacsvox-table-reader-next-table:      emacsvox-table-reader.
-                                                             (line  100)
+                                                             (line  101)
 * emacsvox-table-reader-next-table <1>:  emacsvox-table-reader.
-                                                             (line  103)
+                                                             (line  104)
 * emacsvox-table-reader-previous-column: emacsvox-table-reader.
-                                                             (line  108)
-* emacsvox-table-reader-previous-column <1>: emacsvox-table-reader.
                                                              (line  109)
+* emacsvox-table-reader-previous-column <1>: emacsvox-table-reader.
+                                                             (line  110)
 * emacsvox-table-reader-previous-row:    emacsvox-table-reader.
-                                                             (line  117)
-* emacsvox-table-reader-previous-row <1>: emacsvox-table-reader.
                                                              (line  118)
+* emacsvox-table-reader-previous-row <1>: emacsvox-table-reader.
+                                                             (line  119)
 * emacsvox-table-reader-previous-table:  emacsvox-table-reader.
-                                                             (line  126)
+                                                             (line  127)
 * emacsvox-table-reader-previous-table <1>: emacsvox-table-reader.
-                                                             (line  129)
+                                                             (line  130)
 * emacsvox-table-reader-select-speaking-method: emacsvox-table-reader.
-                                                             (line  134)
-* emacsvox-table-reader-select-speaking-method <1>: emacsvox-table-reader.
                                                              (line  135)
+* emacsvox-table-reader-select-speaking-method <1>: emacsvox-table-reader.
+                                                             (line  136)
 * emacsvox-table-reader-speak-cell:      emacsvox-table-reader.
-                                                             (line  143)
-* emacsvox-table-reader-speak-cell <1>:  emacsvox-table-reader.
                                                              (line  144)
+* emacsvox-table-reader-speak-cell <1>:  emacsvox-table-reader.
+                                                             (line  145)
 * emacsvox-table-reader-speak-column:    emacsvox-table-reader.
-                                                             (line  150)
-* emacsvox-table-reader-speak-column <1>: emacsvox-table-reader.
                                                              (line  151)
+* emacsvox-table-reader-speak-column <1>: emacsvox-table-reader.
+                                                             (line  152)
 * emacsvox-table-reader-speak-context:   emacsvox-table-reader.
-                                                             (line  157)
-* emacsvox-table-reader-speak-context <1>: emacsvox-table-reader.
                                                              (line  158)
+* emacsvox-table-reader-speak-context <1>: emacsvox-table-reader.
+                                                             (line  159)
 * emacsvox-table-reader-speak-dimensions: emacsvox-table-reader.
-                                                             (line  164)
-* emacsvox-table-reader-speak-dimensions <1>: emacsvox-table-reader.
                                                              (line  165)
+* emacsvox-table-reader-speak-dimensions <1>: emacsvox-table-reader.
+                                                             (line  166)
 * emacsvox-table-reader-speak-row:       emacsvox-table-reader.
-                                                             (line  171)
-* emacsvox-table-reader-speak-row <1>:   emacsvox-table-reader.
                                                              (line  172)
+* emacsvox-table-reader-speak-row <1>:   emacsvox-table-reader.
+                                                             (line  173)
 * emacsvox-table-search:                 emacsvox-table-ui.  (line  303)
 * emacsvox-table-search <1>:             emacsvox-table-ui.  (line  306)
 * emacsvox-table-search-column:          emacsvox-table-ui.  (line  316)

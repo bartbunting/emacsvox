@@ -5303,10 +5303,16 @@ route.
 8.3.1 Reading Markdown and Org tables
 -------------------------------------
 
-In a Markdown or Org table, press the speech prefix followed by ‘C-t
-C-r’ to enter table reading.  With the default prefix, this is ‘C-e C-t
-C-r’.  Emacsvox announces the dimensions and current cell.  Press ‘q’ or
-the same prefix command to restore ordinary editing keys.
+In a Markdown or Org table, press a Control-Meta arrow to enter table
+reading and move immediately.  Left/Right move by cell; Up/Down move by
+logical row.  The first movement announces table reading and the
+destination in one spoken result.  Outside supported tables, these
+arrows keep their existing bindings, including in code examples.
+
+   You can still press the speech prefix followed by ‘C-t C-r’ to enter
+without moving.  With the default prefix, this is ‘C-e C-t C-r’.  This
+entry announces the dimensions and current cell.  Press ‘q’ or the same
+prefix command to restore ordinary editing keys.
 
    Use the speech prefix followed by ‘C-t ]’ or ‘C-t [’ to find and
 enter the next or previous table from prose.  Inside table reading, ‘t’

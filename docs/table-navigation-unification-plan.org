@@ -141,7 +141,7 @@ also sampled in fresh Markdown, Org, table-browser and tabulated-list buffers.
 | Agent Shell transcript | =k= discovers source blocks; inside a table it prefixes copying. | Preserve =k k/k r/k c= and ensure map precedence cannot turn the prefix into block navigation. |
 | Editable prompts | Printable navigation keys must insert text, including while busy. | Use the actual editable-input boundary, not only the buffer's read-only flag. |
 | Org table | =M-Up/M-Down= move rows; =TAB/RET= invoke native editing-aware commands. | Shared reading must use its own non-mutating movement and restore normal editing immediately on exit. |
-| Markdown and Org | =C-M= arrows have inherited structural movement; letters and Space insert text. | Override only within the explicit reading context. Character arrows stay character movement. |
+| Markdown and Org | =C-M= arrows have inherited structural movement; letters and Space insert text. | Within supported tables, =C-M= arrows enter reading and move. Outside tables, preserve effective bindings. Structural commands remain on =C-M-f/b/u/d=. Character arrows stay character movement. |
 | Table browser | =r/c= speak a header plus cell, =T= goes to the top, and =k= copies to its table clipboard. | Defer this adapter's key migration; do not install the Agent Shell map globally. |
 | Tabulated lists | Vertical movement presents the selected cell; =.= reads that cell. | Preserve application-specific cell navigation until that adapter's reviewed slice. |
 
@@ -165,9 +165,11 @@ above does not establish every future map interaction.
 ** Accepted first-milestone behavior
 
 - Agent Shell keeps automatic contextual table reading and its existing public
-  commands and preferences. Editable Markdown/Org require explicit entry;
-  leaving the reading context restores ordinary editing. The maintainer
-  approved explicit entry on 2026-09-28.
+  commands and preferences. Editable Markdown/Org enter reading through a
+  Control-Meta arrow inside a table or the existing prefix toggle; leaving
+  the reading context restores ordinary editing. A first arrow enters and
+  moves with one spoken result. Outside tables, arrows retain their effective
+  bindings. The maintainer approved this entry policy on 2026-09-28.
 - Up/Down and Control-Meta-Up/Down move by logical row, preserve the column and
   read the whole row. Control-Meta-Left/Right move by cell; plain Left/Right
   retain character inspection. Space reads the cell and =r/c= read row/column.
@@ -194,7 +196,8 @@ above does not establish every future map interaction.
   after edits or streamed replacements, and reject unavailable/stale cells
   rather than navigating using invalid positions.
 
-The first milestone uses =C-e C-t C-r= for explicit entry/exit and
+The first milestone retains =C-e C-t C-r= for entry/exit and adds contextual
+Control-Meta arrows for entry with movement. It uses
 =C-e C-t [ / ]= for discovery, respecting a customized speech prefix. Inside
 source-table reading, =q= exits, Tab/Shift-Tab move by cell without editing,
 and Return reads the cell. Other native edits end the reading context.

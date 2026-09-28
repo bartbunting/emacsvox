@@ -89,11 +89,17 @@ see @@texinfo:@ref{Using Online Help}@@ for the common discovery commands and
 :TEXINFO_NODE: no
 :END:
 
-In a Markdown or Org table, press the speech prefix followed by
-@@texinfo:@kbd{C-t C-r}@@ to enter table reading. With the default prefix,
-this is @@texinfo:@kbd{C-e C-t C-r}@@. Emacsvox announces the dimensions and
-current cell. Press @@texinfo:@kbd{q}@@ or the same prefix command to restore
-ordinary editing keys.
+In a Markdown or Org table, press a Control-Meta arrow to enter table reading
+and move immediately. Left/Right move by cell; Up/Down move by logical row.
+The first movement announces table reading and the destination in one spoken
+result. Outside supported tables, these arrows keep their existing bindings,
+including in code examples.
+
+You can still press the speech prefix followed by @@texinfo:@kbd{C-t C-r}@@
+to enter without moving. With the default prefix, this is
+@@texinfo:@kbd{C-e C-t C-r}@@. This entry announces the dimensions and current
+cell. Press @@texinfo:@kbd{q}@@ or the same prefix command to restore ordinary
+editing keys.
 
 Use the speech prefix followed by @@texinfo:@kbd{C-t ]}@@ or
 @@texinfo:@kbd{C-t [}@@ to find and enter the next or previous table from

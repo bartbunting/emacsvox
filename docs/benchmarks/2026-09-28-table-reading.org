@@ -51,6 +51,23 @@ they do not establish that speech was heard. The maintainer's running Emacs and
 saved preferences were left unchanged. Listening acceptance belongs in a fresh
 Emacs that loads the compiled change.
 
+** Contextual arrow entry
+
+The follow-up adds Control-Meta arrow entry and movement in Markdown/Org
+tables while retaining the prefix toggle and effective bindings elsewhere.
+[[file:data/2026-09-28-table-arrow-entry.json][Retained results and source hashes]] record 16 source and 16 compiled reader
+checks, 147 affected source checks, 35 Agent Shell checks against each of the
+pinned and live dependencies, and one compiled graphical check covering both
+source modes. All passed. Coverage includes one submission on entry, ordinary
+and customized binding fallback, code exclusion, prefix counts, boundaries,
+and restored editing. The graphical check used an isolated Xvfb frame.
+
+Byte-code compilation, manual/reference generation and the documentation
+release gate passed. No listening acceptance or performance remeasurement was
+performed for this follow-up; the original navigation baseline below remains
+unchanged. Complete logs are retained locally in the implementation directory's
+=arrow-entry/= subdirectory.
+
 * Measurement method and retained evidence
 
 The driver is [[file:../../utils/table-reader-benchmark.el][utils/table-reader-benchmark.el]]. Each record has 30 measured rounds after

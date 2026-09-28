@@ -31,6 +31,13 @@ module and role, with one main-lane submission per reader action.
 
 The shared prefix adds only previously unused keys: ~C-r~ toggles source-table
 reading, and ~[~ / ~]~ discover tables. Printable reader keys are contextual.
+Control-Meta arrows also enter reading and move within supported source tables.
+A conditional minor-mode map uses menu-item filters: returning nil outside
+these tables preserves the effective binding in lower maps, including personal
+bindings. The filter preserves point and match data, excludes code examples,
+and defers to the active reader map after entry. First-arrow entry and movement
+produce one submission. Structural movement remains available outside tables;
+inside tables, its usual ~C-M-f/b/u/d~ keys remain available.
 Org's native ~TAB~, ~RET~ and Meta-arrow editing bindings remain available
 outside reading. Agent Shell's existing scoped overrides and prompt behaviour
 remain as documented in its integration contract.

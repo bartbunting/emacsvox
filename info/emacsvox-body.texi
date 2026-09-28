@@ -5282,11 +5282,17 @@ see @ref{Using Online Help} for the common discovery commands and
 
 @subsection Reading Markdown and Org tables
 
-In a Markdown or Org table@comma{} press the speech prefix followed by
-@kbd{C-t C-r} to enter table reading. With the default prefix@comma{}
-this is @kbd{C-e C-t C-r}. Emacsvox announces the dimensions and
-current cell. Press @kbd{q} or the same prefix command to restore
-ordinary editing keys.
+In a Markdown or Org table@comma{} press a Control-Meta arrow to enter table reading
+and move immediately. Left/Right move by cell; Up/Down move by logical row.
+The first movement announces table reading and the destination in one spoken
+result. Outside supported tables@comma{} these arrows keep their existing bindings@comma{}
+including in code examples.
+
+You can still press the speech prefix followed by @kbd{C-t C-r}
+to enter without moving. With the default prefix@comma{} this is
+@kbd{C-e C-t C-r}. This entry announces the dimensions and current
+cell. Press @kbd{q} or the same prefix command to restore ordinary
+editing keys.
 
 Use the speech prefix followed by @kbd{C-t ]} or
 @kbd{C-t [} to find and enter the next or previous table from
@@ -7638,6 +7644,13 @@ module and role@comma{} with one main-lane submission per reader action.
 
 The shared prefix adds only previously unused keys: @code{C-r} toggles source-table
 reading@comma{} and @code{[} / @code{]} discover tables. Printable reader keys are contextual.
+Control-Meta arrows also enter reading and move within supported source tables.
+A conditional minor-mode map uses menu-item filters: returning nil outside
+these tables preserves the effective binding in lower maps@comma{} including personal
+bindings. The filter preserves point and match data@comma{} excludes code examples@comma{}
+and defers to the active reader map after entry. First-arrow entry and movement
+produce one submission. Structural movement remains available outside tables;
+inside tables@comma{} its usual @code{C-M-f/b/u/d} keys remain available.
 Org's native @code{TAB}@comma{} @code{RET} and Meta-arrow editing bindings remain available
 outside reading. Agent Shell's existing scoped overrides and prompt behaviour
 remain as documented in its integration contract.
