@@ -824,6 +824,25 @@ including real displayed-window reading for both advance paths.
 Use ~M-x emacsvox-agent-shell-enable~ to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
+The reviewed integration pins now target Agent Shell 0.81.1 at =5535365= and
+Shell Maker 0.97.4 at =a76d4d6=. ACP retains its reviewed snapshot. A personal
+package upgrade does not refresh =test/integration-dependencies.json= or its
+prepared tree. When the preparer rejects a changed lock, choose a fresh
+=TEST_DEPS_DIR= and pass the same directory to preparation and both integration
+gates; preserve the old directory until it is no longer needed.
+
+For every pin refresh, compare all Emacsvox navigation, speech-control, table,
+and repeat keys against shell and viewport maps, inherited Shell Maker maps,
+list editing, inline actions, permission controls, and transients. Verify
+effective keys in real prompt and transcript contexts. The 0.81.1 refresh keeps
+the existing scoped overrides: viewport ~t~ discovers tables; table ~r~ reads
+rows instead of quoting or replying; viewport table ~c~ reads columns and ~a~
+selects table speech instead of continuing or repeating a reply. The table ~k~
+copy prefix takes precedence over Emacsvox's source-block jump. These preserve
+consistent reading keys; the displaced commands remain available through
+~M-x~ as documented in the Agent Shell user chapter. Prompt letters remain
+literal input, and repeat navigation must release unrelated keys.
+
 *** Internal ownership and renderer tests
 :PROPERTIES:
 :TEXINFO_NODE: no

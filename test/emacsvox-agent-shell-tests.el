@@ -8081,6 +8081,34 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should (= origin (point)))
           (should (equal-including-properties source (buffer-string))))))))
 
+(ert-deftest emacsvox-agent-shell-animated-prompt-keeps-semantic-speech ()
+  "Heartbeat frames must not enter speech or change the editable draft."
+  (dolist (draft '("" "draft"))
+    (with-temp-buffer
+      (emacsvox-agent-shell-test--insert-live-chat-input draft)
+      (let ((source (buffer-string))
+            (origin (point))
+            (agent-shell-show-busy-indicator t))
+        (dotimes (beat 4)
+          (setf (alist-get :heartbeat agent-shell--state)
+                `((:status . busy) (:value . ,beat)))
+          (should-not
+           (emacsvox-agent-shell-test--capture-events
+             (agent-shell-chat--animate-live-marker)))
+          (cl-letf (((symbol-function 'agent-shell-status)
+                     (lambda (&rest _) 'busy)))
+            (let ((emacsvox-agent-shell--chat-label-context
+                   (emacsvox-agent-shell--chat-label-context-at-point)))
+              (should
+               (equal
+                (substring-no-properties
+                 (emacsvox-agent-shell--prepare-speech-text
+                  (buffer-substring (line-beginning-position) (line-end-position))))
+                (concat "Me. Agent busy."
+                        (unless (string-empty-p draft) (concat " " draft)))))))
+          (should (= origin (point)))
+          (should (equal-including-properties source (buffer-string))))))))
+
 (ert-deftest emacsvox-agent-shell-live-prompt-line-speech-crosses-field-boundary ()
   "Physical and visual speech agree at live input without changing fields."
   (skip-unless (require 'agent-shell-chat-mode nil t))
@@ -8171,18 +8199,24 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   (dolist (draft '("" "draft" "first\nsecond"))
     (save-window-excursion
       (with-temp-buffer
-        (let* ((input (emacsvox-agent-shell-test--insert-live-chat-input draft))
+        (let* ((agent-shell-show-busy-indicator t)
+               (input (emacsvox-agent-shell-test--insert-live-chat-input draft))
                (emacsvox-aural-source-transform-function
                 #'emacsvox-agent-shell--prepare-speech-text))
           (set-window-buffer (selected-window) (current-buffer))
           (redisplay t)
-          (dolist (case '((ready agent-shell-busy-submit-queue nil)
-                          (busy agent-shell-busy-submit-queue
-                                "Agent busy.")
-                          (busy agent-shell-busy-submit-steer
-                                "Agent busy.")))
+          (dolist (case '((ready agent-shell-busy-submit-queue nil 0)
+                          (busy agent-shell-busy-submit-queue "Agent busy." 0)
+                          (busy agent-shell-busy-submit-queue "Agent busy." 1)
+                          (busy agent-shell-busy-submit-queue "Agent busy." 2)
+                          (busy agent-shell-busy-submit-queue "Agent busy." 3)
+                          (busy agent-shell-busy-submit-steer "Agent busy." 0)))
             (let ((agent-shell-busy-submit-default-function (nth 1 case)))
               (setf (alist-get :supports-steering agent-shell--state) t)
+              (setf (alist-get :heartbeat agent-shell--state)
+                    `((:status . ,(car case)) (:value . ,(nth 3 case))))
+              (agent-shell-chat--animate-live-marker)
+              (redisplay t)
               (dolist (position (list (1+ (marker-position (car comint-last-prompt)))
                                      (car input)))
                 (goto-char position)
@@ -9897,6 +9931,206 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 (execute-kbd-macro (kbd "]")))
               (should selected))))))))
 
+(ert-deftest emacsvox-agent-shell-upstream-binding-overlap-is-reviewed ()
+  "Pin upgrades must not silently introduce additional command overrides."
+  (let (overlap)
+    (dolist (own '(emacsvox-agent-shell--speech-control-map
+                   emacsvox-agent-shell--table-navigation-map
+                   emacsvox-agent-shell--block-repeat-map))
+      (dolist (upstream '(agent-shell-mode-map shell-maker-mode-map
+                          agent-shell-viewport-view-mode-map
+                          agent-shell-viewport-edit-mode-map
+                          agent-shell-ui-fragment-map
+                          agent-shell-list-edit-mode-map))
+        (dolist (entry (emacsvox-agent-shell-test--public-key-bindings
+                        (symbol-value own)))
+          (let ((key (kbd (car entry))))
+            ;; A command on a shorter key also conflicts with a new prefix.
+            (dotimes (index (length key))
+              (let* ((prefix (seq-take key (1+ index)))
+                     (binding (lookup-key (symbol-value upstream) prefix)))
+                (when (commandp binding)
+                  (cl-pushnew (list own upstream (key-description prefix) binding)
+                              overlap :test #'equal))))))))
+    (should
+     (equal
+      (sort overlap (lambda (a b) (string< (prin1-to-string a) (prin1-to-string b))))
+      '((emacsvox-agent-shell--speech-control-map
+         agent-shell-viewport-view-mode-map "t" agent-shell-viewport-set-session-thought-level)
+        (emacsvox-agent-shell--table-navigation-map
+         agent-shell-mode-map "r" agent-shell-quote-region)
+        (emacsvox-agent-shell--table-navigation-map
+         agent-shell-viewport-view-mode-map "a" agent-shell-viewport-reply-again)
+        (emacsvox-agent-shell--table-navigation-map
+         agent-shell-viewport-view-mode-map "c" agent-shell-viewport-reply-continue)
+        (emacsvox-agent-shell--table-navigation-map
+         agent-shell-viewport-view-mode-map "r" agent-shell-viewport-reply))))))
+
+(ert-deftest emacsvox-agent-shell-viewport-editor-keeps-navigation-letters ()
+  "Viewport editing keeps letters literal and native submit routes reachable."
+  (dolist (busy '(nil t))
+    (save-window-excursion
+      (emacsvox-agent-shell-test--with-current-session
+        (let ((shell (current-buffer))
+              (agent-shell-file-completion-enabled nil)
+              (text "[]tThHkKuUlLeEjJnp"))
+          (with-temp-buffer
+            (cl-letf (((symbol-function 'agent-shell-viewport--update-header) #'ignore)
+                      ((symbol-function 'agent-shell--shell-buffer)
+                       (lambda (&rest _) shell))
+                      ((symbol-function 'shell-maker-busy) (lambda () busy)))
+              (agent-shell-viewport-edit-mode)
+              (switch-to-buffer (current-buffer))
+              (emacsvox-agent-shell-test--capture-events
+                (execute-kbd-macro text))
+              (should (equal (buffer-string) text))
+              (should-not emacsvox-agent-shell--table-navigation-active)
+              (should (eq (key-binding (kbd "C-c C-c"))
+                          #'agent-shell-viewport-compose-send))
+              (should (eq (key-binding (kbd "M-RET"))
+                          #'agent-shell-viewport-compose-send-override))
+              (should (eq (key-binding (kbd "C-c C-k"))
+                          #'agent-shell-viewport-compose-cancel)))))))))
+
+(ert-deftest emacsvox-agent-shell-table-prefix-survives-repeat-navigation ()
+  "Entering a table by repeat navigation must leave its copy prefix usable."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (save-window-excursion
+      (emacsvox-agent-shell-test--with-rendered-table
+          "before\n| A | B |\n|---|---|\n| one | two |\nafter\n"
+        (switch-to-buffer (current-buffer))
+        (setq major-mode mode)
+        (use-local-map (if (eq mode 'agent-shell-mode) agent-shell-mode-map
+                         agent-shell-viewport-view-mode-map))
+        (goto-char (point-min))
+        (emacsvox-agent-shell--table-navigation-setup)
+        (let ((kill-ring nil) (kill-ring-yank-pointer nil))
+          (unwind-protect
+              (progn
+                (emacsvox-agent-shell-test--capture-events
+                  (execute-kbd-macro (kbd "t")))
+                (should emacsvox-agent-shell--table-navigation-active)
+                (should (eq (key-binding (kbd "k r"))
+                            #'emacsvox-agent-shell-table-copy-row))
+                (emacsvox-agent-shell-test--capture-events
+                  (execute-kbd-macro (kbd "k r")))
+                (should (equal (current-kill 0) "A\tB"))
+                (emacsvox-agent-shell-test--capture-events
+                  (execute-kbd-macro (kbd "M-<down>")))
+                (should-not emacsvox-agent-shell--table-navigation-active)
+                (should (eq (key-binding (kbd "r"))
+                            (if (eq mode 'agent-shell-mode) #'agent-shell-quote-region
+                              #'agent-shell-viewport-reply))))
+            (emacsvox-agent-shell--table-navigation-cleanup)))))))
+
+(ert-deftest emacsvox-agent-shell-busy-context-keeps-editable-input ()
+  "Context insertion must preserve the transcript and literal prompt keys."
+  (dolist (command '(agent-shell-quote-region agent-shell-send-region
+                     agent-shell-send-dwim))
+    (save-window-excursion
+      (emacsvox-agent-shell-test--with-current-session
+        (switch-to-buffer (current-buffer))
+        (use-local-map agent-shell-mode-map)
+        (emacsvox-agent-shell--table-navigation-setup)
+        (goto-char (point-min))
+        (insert-before-markers "Previous answer\n\n")
+        (let ((transcript (buffer-substring (point-min)
+                                            (agent-shell--prompt-input-start))))
+          (set-mark (point-min))
+          (goto-char (+ (point-min) (length "Previous answer")))
+          (setq mark-active t)
+          (setq-local transient-mark-mode t)
+          (cl-letf (((symbol-function 'shell-maker-busy) (lambda () t))
+                    ((symbol-function 'agent-shell--shell-buffer)
+                     (lambda (&rest _) (current-buffer)))
+                    ((symbol-function 'agent-shell--get-region-context)
+                     (lambda (&rest _) "Selected context"))
+                    ((symbol-function 'agent-shell--context)
+                     (lambda (&rest _) "Selected context"))
+                    ((symbol-function 'agent-shell--display-buffer) #'ignore)
+                    ((symbol-function 'agent-shell--prompt-queue-read)
+                     (lambda (&rest _) (ert-fail "Live input was queued"))))
+            (emacsvox-agent-shell-test--capture-events
+              (call-interactively command))
+            (should
+             (string-match-p
+              (if (eq command 'agent-shell-quote-region)
+                  "> Previous answer" "Selected context")
+              (agent-shell--prompt-input)))
+            (goto-char (point-max))
+            (deactivate-mark)
+            (emacsvox-agent-shell-test--capture-events
+              (execute-kbd-macro (kbd "t")))
+            (should (eq (char-before) ?t))
+            (should-not (map-elt agent-shell--state :pending-prompts))
+            (should
+             (equal-including-properties
+              transcript (buffer-substring (point-min)
+                                           (agent-shell--prompt-input-start))))))))))
+
+(ert-deftest emacsvox-agent-shell-image-preview-survives-busy-submission ()
+  "Speech advice must preserve image metadata through queueing and steering."
+  (dolist (route '(agent-shell-busy-submit-queue agent-shell-busy-submit-steer))
+    (emacsvox-agent-shell-test--with-current-session
+      (let ((agent-shell-busy-submit-default-function route)
+            (image (propertize "@screenshot.png" 'display 'preview
+                               'agent-shell-context-image t))
+            handed-off)
+        (insert "Describe " image)
+        (cl-letf (((symbol-function 'shell-maker-busy) (lambda () t))
+                  ((symbol-function 'agent-shell-steering-supported-p)
+                   (lambda () t))
+                  ((symbol-function 'agent-shell-experimental--send-steering)
+                   (lambda (&rest args)
+                     (setq handed-off (plist-get args :prompt))))
+                  ((symbol-function 'agent-shell--prompt-queue-echo) #'ignore))
+          (emacsvox-agent-shell-test--capture-events
+            (call-interactively #'agent-shell-submit)))
+        (should-not (agent-shell--prompt-input))
+        (when (eq route 'agent-shell-busy-submit-queue)
+          (let ((queued (car (map-elt agent-shell--state :pending-prompts))))
+            (should (equal-including-properties queued (concat "Describe " image))))
+          (cl-letf (((symbol-function 'shell-maker-busy) #'ignore)
+                    ((symbol-function 'shell-maker-submit)
+                     (lambda () (setq handed-off (agent-shell--prompt-input)))))
+            (emacsvox-agent-shell-test--capture-events
+              (agent-shell--prompt-queue-process-next))))
+        (should (equal-including-properties handed-off (concat "Describe " image)))))))
+
+(ert-deftest emacsvox-agent-shell-native-image-paste-preserves-draft ()
+  "Native clipboard insertion leaves the draft readable without stale yank speech."
+  (require 'yank-media)
+  (let ((directory (make-temp-file "emacsvox-agent-image-" t)))
+    (unwind-protect
+        (dolist (busy '(nil t))
+          (save-window-excursion
+            (emacsvox-agent-shell-test--with-current-session
+              (switch-to-buffer (current-buffer))
+              (insert "Describe this ")
+              (set-mark (point-min))
+              (yank-media-handler "image/.*" #'agent-shell--yank-media-image)
+              (cl-letf (((symbol-function 'shell-maker-busy) (lambda () busy))
+                        ((symbol-function 'agent-shell--shell-buffer)
+                         (lambda (&rest _) (current-buffer)))
+                        ((symbol-function 'agent-shell--dot-subdir)
+                         (lambda (&rest _) directory))
+                        ((symbol-function 'agent-shell--display-buffer) #'ignore)
+                        ((symbol-function 'yank-media--find-matching-media)
+                         (lambda (&rest _) '(image/png)))
+                        ((symbol-function 'yank-media--get-selection)
+                         (lambda (&rest _) "image bytes"))
+                        ((symbol-function 'emacsvox-speak-region)
+                         (lambda (&rest _) (ert-fail "Image paste read the old region"))))
+                (emacsvox-agent-shell-test--capture-events
+                  (call-interactively #'yank-media)))
+              (let ((input (agent-shell--prompt-input)))
+                (should (string-prefix-p "Describe this" input))
+                (should (string-match-p "@.*clipboard-.*\\.png" input))
+                (should (string-match-p "clipboard-"
+                                        (emacsvox-agent-shell--prepare-speech-text input))))
+              (should-not (map-elt agent-shell--state :pending-prompts)))))
+      (delete-directory directory t))))
+
 (ert-deftest emacsvox-agent-shell-viewport-submit-reports-actual-busy-route ()
   "Normal, override and custom busy routes report queueing or steering once."
   (skip-unless (fboundp 'agent-shell--busy-submit))
@@ -9978,6 +10212,32 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                     (plist-get (plist-get (cdar spoken) :facts) :events)))
       (dolist (entry spoken)
         (should (eq 'notification (plist-get (cdr entry) :lane)))))))
+
+(ert-deftest emacsvox-agent-shell-long-tool-output-announces-upstream-omission ()
+  "Full speech retains upstream truncation notices and following output lines."
+  (dolist (expanded '(nil t))
+    (emacsvox-agent-shell-test--with-current-session
+      (let ((emacsvox-agent-shell-tool-output-verbosity 'full)
+            (agent-shell-tool-use-expand-by-default expanded)
+            spoken)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (push text spoken))))
+          (agent-shell--on-notification
+           :state agent-shell--state
+           :acp-notification
+           `((method . "session/update")
+             (params (update
+                      (sessionUpdate . "tool_call_update")
+                      (toolCallId . "long-output") (title . "Read output")
+                      (status . "completed")
+                      (content . [((type . "content")
+                                   (content (type . "text")
+                                            (text . ,(concat (make-string 33000 ?x)
+                                                             "\nlast line"))))]))))))
+        (should (= 1 (length spoken)))
+        (should (string-match-p "32600 characters omitted" (car spoken)))
+        (should (string-match-p "last line" (car spoken)))
+        (should-not (string-match-p "automatic speech shortened" (car spoken)))))))
 
 (ert-deftest emacsvox-agent-shell-fenced-tool-output-survives-rendering ()
   "Standard ACP output, including Pi terminal text, must retain its last line."

@@ -55,6 +55,16 @@ permission.” These cues also precede the first line of a draft; later
 lines keep ordinary reading feedback.  “Ready for input” is reserved for
 an empty prompt when the agent is idle.
 
+   With Agent Shell 0.81.1, quoting a selected region, sending source
+context, dropping files, and inserting shell-command output can add to
+that live draft while the agent works.  These insertions do not submit
+the draft.  If there is no live prompt while busy, Agent Shell offers
+its queue editor instead.  Use ‘M-x yank-media’ to attach a clipboard
+image on a display that supports native clipboard access.  Image
+previews survive queueing and steering.  The animated busy marker does
+not add repeated speech; reading the prompt continues to give its
+current state.
+
    In the viewport editor, Emacsvox announces whether a prompt was
 submitted, queued, or sent for steering, and whether the editor stays
 open.  The normal and override send commands follow Agent Shell's
@@ -145,8 +155,12 @@ leaving navigation speech independent.
 limited by ‘emacsvox-agent-shell-automatic-content-max-characters’,
 which defaults to 2,000 characters.  A shortened presentation gives
 exact omitted character and line counts and tells you where to inspect
-the full content.  The complete text stays in the Agent Shell buffer;
-the limit is applied before Aural compiles the automatic speech copy.
+the full content.  The complete text rendered by Agent Shell stays in
+its buffer; this speech limit is applied before Aural compiles the
+automatic speech copy.  Agent Shell separately shortens tool output
+lines longer than 32,768 characters, keeping their beginning and end
+with an omitted-character count.  Full tool speech reads that notice;
+the removed middle is not available by reading the buffer.
 
 10.3 Respond to urgent permissions
 ==================================
@@ -303,6 +317,17 @@ previous table.  These keys skip the current table and announce the
 destination table and cell.  Like the bracket navigation keys, they
 insert themselves in a live prompt or viewport editor, including while
 the agent is working.
+
+   In viewport view mode, ‘t’ takes the place of Agent Shell's
+thought-level shortcut; use ‘M-x
+agent-shell-viewport-set-session-thought-level’ for that action.  Inside
+a table, ‘r’, ‘c’, and ‘a’ read rows, read columns, and select the table
+speaking method.  To invoke the displaced viewport actions there, use
+‘M-x agent-shell-viewport-reply’, ‘M-x
+agent-shell-viewport-reply-continue’, or ‘M-x
+agent-shell-viewport-reply-again’.  In the shell transcript, table ‘r’
+replaces quoting; use ‘M-x agent-shell-quote-region’ with a selected
+region.  Leaving the table restores these ordinary bindings.
 
    Continuous speech and response-block reading omit rendered table
 borders and keep the cell text.  Decorative borders therefore do not
@@ -2308,6 +2333,28 @@ advance paths.
 
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
+
+   The reviewed integration pins now target Agent Shell 0.81.1 at
+‘5535365’ and Shell Maker 0.97.4 at ‘a76d4d6’.  ACP retains its reviewed
+snapshot.  A personal package upgrade does not refresh
+‘test/integration-dependencies.json’ or its prepared tree.  When the
+preparer rejects a changed lock, choose a fresh ‘TEST_DEPS_DIR’ and pass
+the same directory to preparation and both integration gates; preserve
+the old directory until it is no longer needed.
+
+   For every pin refresh, compare all Emacsvox navigation,
+speech-control, table, and repeat keys against shell and viewport maps,
+inherited Shell Maker maps, list editing, inline actions, permission
+controls, and transients.  Verify effective keys in real prompt and
+transcript contexts.  The 0.81.1 refresh keeps the existing scoped
+overrides: viewport ‘t’ discovers tables; table ‘r’ reads rows instead
+of quoting or replying; viewport table ‘c’ reads columns and ‘a’ selects
+table speech instead of continuing or repeating a reply.  The table ‘k’
+copy prefix takes precedence over Emacsvox's source-block jump.  These
+preserve consistent reading keys; the displaced commands remain
+available through ‘M-x’ as documented in the Agent Shell user chapter.
+Prompt letters remain literal input, and repeat navigation must release
+unrelated keys.
 
   1. Internal ownership and renderer tests
 
