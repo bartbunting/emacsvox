@@ -8,6 +8,7 @@
 
 (require 'ert)
 (require 'sh-script)
+(require 'shell)
 
 (let ((module
        (expand-file-name
@@ -39,22 +40,24 @@
 
 (ert-deftest emacsvox-sh-script-mode-setup-retains-feedback ()
   "Entering Sh mode configures speech and announces the mode."
-  (let ((emacsvox-audio-indentation nil)
-        events)
-    (cl-letf (((symbol-function 'tts-apply-punctuation-mode-policy)
-               (lambda () (push 'punctuation-policy events)))
-              ((symbol-function 'emacsvox-toggle-audio-indentation)
-               (lambda ()
-                 (setq emacsvox-audio-indentation t)
-                 (push 'indentation events)))
-              ((symbol-function 'emacsvox-speak-mode-line)
-               (lambda () (push 'mode-line events))))
-      (emacsvox--advice-sh-mode-after))
-    (should emacsvox-audio-indentation)
-    (should
-     (equal
-      (nreverse events)
-      '(punctuation-policy indentation mode-line)))))
+  (save-window-excursion
+    (set-window-buffer (selected-window) (current-buffer))
+    (let ((emacsvox-audio-indentation nil)
+          events)
+      (cl-letf (((symbol-function 'tts-apply-punctuation-mode-policy)
+                 (lambda () (push 'punctuation-policy events)))
+                ((symbol-function 'emacsvox-toggle-audio-indentation)
+                 (lambda ()
+                   (setq emacsvox-audio-indentation t)
+                   (push 'indentation events)))
+                ((symbol-function 'emacsvox-speak-mode-line)
+                 (lambda () (push 'mode-line events))))
+        (emacsvox--advice-sh-mode-after))
+      (should emacsvox-audio-indentation)
+      (should
+       (equal
+        (nreverse events)
+        '(punctuation-policy indentation mode-line))))))
 
 (ert-deftest emacsvox-sh-script-navigation-is-target-aware ()
   "Only the matching Sh command-navigation advice produces feedback."
@@ -70,6 +73,57 @@
      (equal
       (nreverse events)
       '((icon large-movement) line)))))
+
+(ert-deftest emacsvox-sh-script-comint-fontification-is-quiet ()
+  "Preparing a hidden Shell fontification buffer must not announce its parent."
+  (save-window-excursion
+    (with-temp-buffer
+      (shell-mode)
+      ;; Exercise Comint's real indirect buffer without needing a shell process
+      ;; solely for Shell's choice of syntax-highlighting major mode.
+      (setq-local comint-indirect-setup-function #'sh-mode)
+      (set-window-buffer (selected-window) (current-buffer))
+      (let (announcements)
+        (cl-letf (((symbol-function 'tts-apply-punctuation-mode-policy) #'ignore)
+                  ((symbol-function 'tts--protocol-sync) #'ignore)
+                  ((symbol-function 'emacsvox-speak-mode-line)
+                   (lambda () (push (buffer-name) announcements))))
+          (let ((indirect (comint-indirect-buffer)))
+            (should (buffer-live-p indirect))
+            (with-current-buffer indirect
+              (should (derived-mode-p 'sh-mode))
+              (should emacsvox-audio-indentation))))
+        (should-not announcements)))))
+
+(ert-deftest emacsvox-sh-script-graphical-shell-startup-speaks-once ()
+  "Starting and redisplaying a real shell announces its header only once."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-advice)
+  (require 'emacsvox-comint)
+  (let ((buffer (generate-new-buffer "*shell-announcement-test*"))
+        (explicit-shell-file-name "/bin/sh")
+        (explicit-sh-args '("-i"))
+        (emacsvox-comint-autospeak nil)
+        (emacsvox-use-icons nil)
+        announcements)
+    (unwind-protect
+        (save-window-excursion
+          (cl-letf (((symbol-function 'tts-stop) #'ignore)
+                    ((symbol-function 'tts--protocol-sync) #'ignore)
+                    ((symbol-function 'tts-speak) #'ignore)
+                    ((symbol-function 'emacsvox-icon) #'ignore)
+                    ((symbol-function 'emacsvox-speak-mode-line)
+                     (lambda () (push (current-buffer) announcements))))
+            (funcall-interactively #'shell buffer)
+            (accept-process-output (get-buffer-process buffer) 1)
+            (font-lock-ensure)
+            (redisplay t)
+            (should (buffer-live-p comint--indirect-buffer))
+            (should (equal announcements (list buffer)))))
+      (when-let* ((process (get-buffer-process buffer)))
+        (set-process-query-on-exit-flag process nil)
+        (delete-process process))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 (ert-deftest emacsvox-sh-script-here-document-calls-original-once ()
   "Interactive here-document expansion is run once and announced."

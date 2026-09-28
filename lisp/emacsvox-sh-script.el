@@ -43,7 +43,10 @@
   (tts-apply-punctuation-mode-policy)
   (unless emacsvox-audio-indentation
     (emacsvox-toggle-audio-indentation))
-  (emacsvox-speak-mode-line))
+  ;; Comint also enters Sh mode in a hidden indirect fontification buffer.
+  ;; Its setup must not announce the unrelated selected window's header.
+  (when (eq (current-buffer) (window-buffer (selected-window)))
+    (emacsvox-speak-mode-line)))
 
 (advice-add 'sh-mode :after
             #'emacsvox--advice-sh-mode-after)
