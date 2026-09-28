@@ -44,6 +44,19 @@ checks the accepted Info-node inventory in [[file:nodes.txt][nodes.txt]], and ru
 full documentation validation.  Public HTML continues through the separately
 reviewed =gh-pages= worktree.
 
+* Plain-text export
+
+To read the complete manual outside Emacs, export it as one UTF-8 text file:
+
+#+begin_example
+make docs-org-text
+#+end_example
+
+The file is written to =.docs-preview/org-manual/emacsvox.txt= unless
+=DOCS_ORG_TEXT= names another path.  Inline Texinfo keys, acronyms, and cross
+references are rendered as plain text.  Like the preview, this export does not
+load or compile Emacsvox and never updates tracked files.
+
 * Export conventions
 
 - =TEXINFO_NODE_NAME= preserves a stable Info node name when it differs from

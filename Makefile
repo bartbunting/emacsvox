@@ -48,6 +48,7 @@ DOCS_ORG_BODY ?= $(CURDIR)/info/emacsvox-body.texi
 DOCS_ORG_NODES ?= $(CURDIR)/docs/manual/nodes.txt
 DOCS_ORG_PREVIEW_DIR ?= $(DOCS_PREVIEW_DIR)/org-manual
 DOCS_ORG_HTMLXREF ?= $(CURDIR)/info/htmlxref.cnf
+DOCS_ORG_TEXT ?= $(DOCS_ORG_PREVIEW_DIR)/emacsvox.txt
 VERSION_FILE ?= $(CURDIR)/VERSION
 VERSION = $(shell sed -n '1p' "$(VERSION_FILE)" 2>/dev/null)
 DIST_DIR ?= $(CURDIR)/dist
@@ -70,7 +71,7 @@ TEST_DEPS_CACHE ?= $(CURDIR)/.test-deps-cache
 .PHONY: reference-test advice-audit name-audit tts-audit
 .PHONY: check-emacs bytecode bytecode-check bytecode-rebuild generated-reference
 .PHONY: docs-preview docs-update docs-reference docs-generate
-.PHONY: docs-org-export docs-org-preview docs-org-generate docs-org-check
+.PHONY: docs-org-export docs-org-preview docs-org-text docs-org-generate docs-org-check
 .PHONY: docs-check docs-release-check docs-check-external
 .PHONY: docs-publish docs-publish-pages
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
@@ -277,6 +278,14 @@ docs-org-preview: docs-org-export
 			--output=emacsvox-org.html emacsvox-org.texi; \
 		echo "Previewed Org manual at $(DOCS_ORG_PREVIEW_DIR)/emacsvox-org.html"; \
 		echo "Built Org Info at $(DOCS_ORG_PREVIEW_DIR)/emacsvox-org.info"
+
+# Export the maintained manual as one UTF-8 plain-text file for reading
+# outside Emacs.  Like the preview, it does not load Emacsvox.
+docs-org-text: check-emacs
+	EMACSVOX_ORG_SOURCE="$(DOCS_ORG_SOURCE)" \
+	EMACSVOX_ORG_OUTPUT="$(DOCS_ORG_TEXT)" \
+	$(EMACS) -Q --batch -L utils -l utils/emacsvox-org-text-export.el \
+		-f emacsvox-org-text-export-batch
 
 # Update the tracked Texinfo body consumed by the release wrapper.  This is an
 # explicit authoring action, analogous to updating tracked Info output.

@@ -367,7 +367,7 @@ installer verifies, see
 The check plays a tone followed by speech.  When you hear both, the speech
 server is ready.  If either is missing, use
 @@texinfo:@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}@@
-before continuing.  @@texinfo:@xref{Speech Backends}@@ contains the complete platform
+before continuing.  @@texinfo:@ref{Speech Backends}@@ contains the complete platform
 matrix, build details, and compatibility alternatives.  Native Windows Emacs
 on x64 is supported with Emacs 30.2 or newer. Its PowerShell installer reuses
 a prebuilt Emacs, can download a verified Emacs with =-DownloadEmacs=, or

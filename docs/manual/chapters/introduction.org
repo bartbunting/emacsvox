@@ -78,7 +78,7 @@ options together.  You do not need to configure it before beginning.  See
 Emacsvox sends speech through a speech server.  New GNU/Linux, macOS, and WSL2
 installations use Omnivox; established direct servers remain available for
 compatible existing setups.  The installation chapter introduces only what
-you need for first speech.  @@texinfo:@xref{Speech Backends}@@ contains the platform and
+you need for first speech.  @@texinfo:@ref{Speech Backends}@@ contains the platform and
 compatibility details.
 
 ** About This Manual

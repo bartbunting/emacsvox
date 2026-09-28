@@ -123,7 +123,7 @@ operation and can use the same context to announce state changes.
 
 You do not need to predict which commands every mode provides.  Press
 @@texinfo:@kbd{C-h m}@@ in the buffer you are using, then @@texinfo:@kbd{C-h k}@@ followed by a key
-when you want a fuller explanation.  @@texinfo:@xref{Using Online Help}@@ provides a
+when you want a fuller explanation.  @@texinfo:@ref{Using Online Help}@@ provides a
 short practical guide to these discovery commands.
 
 ** Hear And Navigate The Current Context
@@ -153,7 +153,7 @@ changes without interrupting the spoken content.  Ordinary text remains
 available through the usual reading commands.
 
 The exact result depends on the mode, the Emacsvox integration, and your Aural
-Presentation settings.  @@texinfo:@xref{Aural Presentation}@@ explains how the
+Presentation settings.  @@texinfo:@ref{Aural Presentation}@@ explains how the
 parts fit together, including the established Voice Lock compatibility layer;
 @@texinfo:@kbd{C-e E}@@ explains the presentation chosen for the object at point.
 
@@ -171,7 +171,7 @@ definitions and diagnostics, and EWW exposes links and document structure.
 
 Begin with @@texinfo:@kbd{C-h m}@@.  It describes the commands available in the
 running buffer, including personal customizations and installed packages.
-@@texinfo:@xref{Browsing Structure}@@ points to maintained guides for several common
+@@texinfo:@ref{Browsing Structure}@@ points to maintained guides for several common
 types of content.
 
 *** Move Between Tasks Without Losing Your Place

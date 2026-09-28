@@ -146,7 +146,7 @@ what you hear.
    Emacsvox sends speech through a speech server.  New GNU/Linux, macOS,
 and WSL2 installations use Omnivox; established direct servers remain
 available for compatible existing setups.  The installation chapter
-introduces only what you need for first speech.  *Note Speech Backends::
+introduces only what you need for first speech.  *note Speech Backends::
 contains the platform and compatibility details.
 
 1.4 About This Manual
@@ -530,7 +530,7 @@ Release Under WSL2::.
    The check plays a tone followed by speech.  When you hear both, the
 speech server is ready.  If either is missing, use *note Backend
 Diagnostics And Responsibilities: Backend Diagnostics And Ownership.
-before continuing.  *Note Speech Backends:: contains the complete
+before continuing.  *note Speech Backends:: contains the complete
 platform matrix, build details, and compatibility alternatives.  Native
 Windows Emacs on x64 is supported with Emacs 30.2 or newer.  Its
 PowerShell installer reuses a prebuilt Emacs, can download a verified
@@ -2672,7 +2672,7 @@ state changes.
 
    You do not need to predict which commands every mode provides.  Press
 ‘C-h m’ in the buffer you are using, then ‘C-h k’ followed by a key when
-you want a fuller explanation.  *Note Using Online Help:: provides a
+you want a fuller explanation.  *note Using Online Help:: provides a
 short practical guide to these discovery commands.
 
 
@@ -2695,7 +2695,7 @@ events or state changes without interrupting the spoken content.
 Ordinary text remains available through the usual reading commands.
 
    The exact result depends on the mode, the Emacsvox integration, and
-your Aural Presentation settings.  *Note Aural Presentation:: explains
+your Aural Presentation settings.  *note Aural Presentation:: explains
 how the parts fit together, including the established Voice Lock
 compatibility layer; ‘C-e E’ explains the presentation chosen for the
 object at point.
@@ -2711,7 +2711,7 @@ document structure.
 
    Begin with ‘C-h m’.  It describes the commands available in the
 running buffer, including personal customizations and installed
-packages.  *Note Browsing Structure:: points to maintained guides for
+packages.  *note Browsing Structure:: points to maintained guides for
 several common types of content.
 
 5.3.3 Move Between Tasks Without Losing Your Place

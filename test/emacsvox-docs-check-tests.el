@@ -10,6 +10,7 @@
 (require 'ert)
 (require 'emacsvox-docs-check)
 (require 'emacsvox-org-export)
+(require 'emacsvox-org-text-export)
 
 (cl-defmacro emacsvox-docs-check-tests--with-directory
     ((directory) &rest body)
@@ -114,6 +115,33 @@
         (goto-char (point-min))
         (should-not (search-forward "\\input texinfo" nil t))
         (should-not (search-forward "@bye" nil t))))))
+
+(ert-deftest emacsvox-org-text-export-renders-inline-texinfo ()
+  "Plain-text export should keep keys and references from Texinfo snippets."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((source (expand-file-name "manual.org" directory))
+          (output (expand-file-name "build/manual.txt" directory)))
+      (with-temp-file source
+        (insert "#+title: Test Manual\n\n* Chapter\n\n"
+                "Use @@texinfo:@kbd{TAB}@@ and @@texinfo:@kbd{S-TAB}@@.\n"
+                "Run @@texinfo:@kbd{M-x term @key{RET}}@@ for a "
+                "@@texinfo:@acronym{TTS}@@ shell.\n"
+                "@@texinfo:@xref{Speech Backends}@@.  "
+                "@@texinfo:@ref{Agent Shell}@@ explains it; "
+                "@@texinfo:@pxref{Top,,,eat,Eat User Manual}@@.\n"
+                "@@texinfo:@anchor{Hidden}@@Done@@texinfo:@NDash{}@@now.\n"))
+      (emacsvox-docs-check-tests--without-live-export-feedback
+        (emacsvox-org-text-export source output))
+      (with-temp-buffer
+        (insert-file-contents output)
+        (let ((text (replace-regexp-in-string "[ \n]+" " " (buffer-string))))
+          (should (string-search "Use TAB and S-TAB." text))
+          (should (string-search "Run M-x term RET for a TTS shell." text))
+          (should (string-search "See Speech Backends." text))
+          (should (string-search "Agent Shell explains it; see Eat User Manual."
+                                 text))
+          (should (string-search "Done–now." text))
+          (should-not (string-search "@" text)))))))
 
 (ert-deftest emacsvox-docs-check-rejects-generated-drift ()
   "A changed generated artifact should name the stale checked file."

@@ -78,7 +78,7 @@ options together.  You do not need to configure it before beginning.  See
 Emacsvox sends speech through a speech server.  New GNU/Linux@comma{} macOS@comma{} and WSL2
 installations use Omnivox; established direct servers remain available for
 compatible existing setups.  The installation chapter introduces only what
-you need for first speech.  @xref{Speech Backends} contains the platform and
+you need for first speech.  @ref{Speech Backends} contains the platform and
 compatibility details.
 
 @section About This Manual
@@ -453,7 +453,7 @@ installer verifies@comma{} see
 The check plays a tone followed by speech.  When you hear both@comma{} the speech
 server is ready.  If either is missing@comma{} use
 @ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}
-before continuing.  @xref{Speech Backends} contains the complete platform
+before continuing.  @ref{Speech Backends} contains the complete platform
 matrix@comma{} build details@comma{} and compatibility alternatives.  Native Windows Emacs
 on x64 is supported with Emacs 30.2 or newer. Its PowerShell installer reuses
 a prebuilt Emacs@comma{} can download a verified Emacs with @samp{-DownloadEmacs}@comma{} or
@@ -2664,7 +2664,7 @@ operation and can use the same context to announce state changes.
 
 You do not need to predict which commands every mode provides.  Press
 @kbd{C-h m} in the buffer you are using@comma{} then @kbd{C-h k} followed by a key
-when you want a fuller explanation.  @xref{Using Online Help} provides a
+when you want a fuller explanation.  @ref{Using Online Help} provides a
 short practical guide to these discovery commands.
 
 @node Context-Sensitive Interaction
@@ -2687,7 +2687,7 @@ changes without interrupting the spoken content.  Ordinary text remains
 available through the usual reading commands.
 
 The exact result depends on the mode@comma{} the Emacsvox integration@comma{} and your Aural
-Presentation settings.  @xref{Aural Presentation} explains how the
+Presentation settings.  @ref{Aural Presentation} explains how the
 parts fit together@comma{} including the established Voice Lock compatibility layer;
 @kbd{C-e E} explains the presentation chosen for the object at point.
 
@@ -2702,7 +2702,7 @@ definitions and diagnostics@comma{} and EWW exposes links and document structure
 
 Begin with @kbd{C-h m}.  It describes the commands available in the
 running buffer@comma{} including personal customizations and installed packages.
-@xref{Browsing Structure} points to maintained guides for several common
+@ref{Browsing Structure} points to maintained guides for several common
 types of content.
 
 @subsection Move Between Tasks Without Losing Your Place
