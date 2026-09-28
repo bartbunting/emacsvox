@@ -555,6 +555,7 @@ reference/emacsvox_002daural_002dtools.html
 reference/emacsvox_002daural_002dtransport.html
 reference/emacsvox_002daural_002dui.html
 reference/emacsvox_002daural_002dvalidation.html
+reference/emacsvox_002daural_002dvoice_002dbulk.html
 reference/emacsvox_002daural_002dvoice_002dcontext.html
 reference/emacsvox_002daural_002dvoice_002ddata.html
 reference/emacsvox_002daural_002dvoice_002ddrafts.html
@@ -733,6 +734,7 @@ reference/emacsvox_002dsupercite.html
 reference/emacsvox_002dsyslog.html
 reference/emacsvox_002dtab_002dbar.html
 reference/emacsvox_002dtable.html
+reference/emacsvox_002dtable_002dreader.html
 reference/emacsvox_002dtable_002dui.html
 reference/emacsvox_002dtabulate.html
 reference/emacsvox_002dtabulated_002dlist.html

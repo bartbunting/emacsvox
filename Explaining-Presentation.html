@@ -135,6 +135,16 @@ section without repeating the field&rsquo;s content. A single-span field shows i
 text and controls once, and its heading omits the span count. Press
 <kbd class="kbd">RET</kbd> on the field heading again to collapse it.
 </p>
+<p>Spoken labels such as <em class="emph">indent 2</em> have their own <em class="emph">Before speech</em> or
+<em class="emph">After speech</em> headings within the expanded field. They are separate from
+the content voice spans. Press <kbd class="kbd">RET</kbd> on a spoken label&rsquo;s
+heading, or <kbd class="kbd">O</kbd> within that entry, to replay just that label
+with its recorded settings. Its <em class="emph">Edit named voice indent</em> link opens the
+palette voice editor using <em class="emph">indent 2</em> as the sample. This changes every use
+of that named voice in the recorded palette. The report keeps its original
+recording; use the editor&rsquo;s preview to hear your changes. Labels without a
+named palette voice remain playable and explain why no editor link is shown.
+</p>
 <p>Fields with unapplied drafts announce <em class="emph">unsaved change</em> after their names. The
 report also shows how many fields have unsaved changes. These labels update as
 you edit or apply a change, preserving the report&rsquo;s buttons and your return
@@ -152,16 +162,16 @@ draft buffer. The original or simulated presentation remains the same.
 <dd><p>Move between action buttons; RET activates an action or expands a field.
 </p></dd>
 <dt><kbd class="kbd">O</kbd></dt>
-<dd><p>Play the original field or span at point, or its labelled simulated baseline.
+<dd><p>Play the original field, span or spoken label at point, or its labelled simulated baseline.
 </p></dd>
 <dt><kbd class="kbd">P</kbd></dt>
 <dd><p>Play the complete original presentation, or the labelled simulation.
 </p></dd>
 <dt><kbd class="kbd">C</kbd></dt>
-<dd><p>Open or resume a change to the selected field or distinguishable span.
+<dd><p>Open or resume a change to the selected field or distinguishable span. On a spoken label, edit its named palette voice.
 </p></dd>
 <dt><kbd class="kbd">r</kbd></dt>
-<dd><p>Choose another named voice for matching items in the compact editor.
+<dd><p>Choose another named voice for matching items in the compact editor. On a spoken label, edit its named palette voice.
 </p></dd>
 <dt><kbd class="kbd">R</kbd></dt>
 <dd><p>Replace, suppress, or restore an exact sound in the selected field or span.

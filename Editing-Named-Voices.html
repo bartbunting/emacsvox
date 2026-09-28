@@ -50,6 +50,55 @@ voice creates a complete entry in your destination palette when saved.
 Editing a built-in palette asks for a personal child. Opening the editor
 and previewing a draft do not change live feedback or save settings.
 </p>
+<p>The named voice &lsquo;<samp class="samp">default</samp>&rsquo; controls ordinary reading and spoken labels that
+have no explicitly selected voice. Choose it to change the physical voice,
+fallbacks or tuning for normal text. Each palette has its own effective
+&lsquo;<samp class="samp">default</samp>&rsquo; entry, inherited from its parent until you save a local edit.
+Switching palettes also switches the ordinary reading voice. Other named
+voices, such as &lsquo;<samp class="samp">indent</samp>&rsquo; and &lsquo;<samp class="samp">bolden</samp>&rsquo;, keep their own settings; changing
+&lsquo;<samp class="samp">default</samp>&rsquo; does not change every voice in the palette.
+</p>
+<p>To use one physical voice across a whole palette, select it in <em class="emph">Browse voices</em>
+or the eSpeak <em class="emph">Voice variants</em> browser and press <kbd class="kbd">V</kbd>. Choose
+<em class="emph">Update an existing personal palette</em> or <em class="emph">Create a new personal palette</em>.
+A new palette copies the voices, adjustments and fallbacks from the palette
+you choose. All effective named voices are included, including &lsquo;<samp class="samp">default</samp>&rsquo; and
+inherited names.
+</p>
+<p>The review starts at &lsquo;<samp class="samp">default</samp>&rsquo;. Move through its rows with up/down; use
+<kbd class="kbd">O</kbd> for the original, <kbd class="kbd">P</kbd> for the proposed
+voice, or <kbd class="kbd">B</kbd> to compare both. <kbd class="kbd">A</kbd> compares
+a few representative voices. <kbd class="kbd">S</kbd> stops the preview and
+<kbd class="kbd">x</kbd> shows details, including affected descendant palettes,
+retained fallbacks and the reported playback result. A fallback may speak
+when the chosen physical voice is unavailable.
+</p>
+<p>An existing exact choice is promoted with its tuning intact. If several
+choices match, the first is promoted and the others remain in order.
+A newly added choice follows each named voice&rsquo;s shared adjustments. Shared
+pitch, relative rate and other settings remain; existing choices retain their
+individual tuning. Inherited entries become complete local entries when saved.
+This is a one-time edit: later edits to one named voice are independent, and
+newly inherited names do not automatically acquire the chosen physical voice.
+</p>
+<p>Press <kbd class="kbd">w</kbd> to save the whole review and apply the palette to
+both speech streams, or <kbd class="kbd">c</kbd> to save it to the collection
+without selecting or applying it. Startup selection remains separate.
+<kbd class="kbd">C-c C-k</kbd> cancels an unsaved review without writing settings.
+<kbd class="kbd">q</kbd> returns to the browser while retaining the review. Use
+<em class="emph">Resume palette voice review</em> in the browser&rsquo;s actions menu to return.
+</p>
+<p>If another voice editor has unsaved changes, use <kbd class="kbd">r</kbd> to open
+and resolve it, then <kbd class="kbd">g</kbd> to refresh the review. Changed saved
+inputs also require a fresh review. A partial save retains its original
+proposal for retry; repeat the same save action. If saving succeeds but one
+speech stream fails to apply it, the palette remains saved. Retry the original
+action and check the result. Selecting another palette supersedes that retry;
+use Voice Palettes to deliberately select the saved palette later.
+The review&rsquo;s actions menu also offers <em class="emph">Close saved result</em> once saving and
+application have finished. This closes the result without undoing saved data
+or changing the currently selected palette.
+</p>
 <p>If you opened an experiment from an installed physical voice, these same
 controls apply, but saving first asks for a destination. See
 <a data-manual="emacsvox" href="../Keeping-A-Voice-Experiment.html#Keeping-A-Voice-Experiment">Keep an Installed Voice Experiment</a> for that sequence.

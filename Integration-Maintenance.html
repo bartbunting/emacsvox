@@ -46,15 +46,16 @@ changing an integration.
 </p>
 
 <ul class="mini-toc">
-<li><a href="#Source-checkout-and-byte_002dcode-lifecycle" accesskey="1">Source checkout and byte-code lifecycle</a></li>
-<li><a href="#Debian-package-builds" accesskey="2">Debian package builds</a></li>
-<li><a href="#Emacsvox-release-staging-and-publication" accesskey="3">Emacsvox release staging and publication</a></li>
-<li><a href="#Future-Aural-contract-decisions" accesskey="4">Future Aural contract decisions</a></li>
-<li><a href="#Voice_002dstyle-metadata-ownership" accesskey="5">Voice-style metadata ownership</a></li>
-<li><a href="#Timeline-preparation-boundaries" accesskey="6">Timeline preparation boundaries</a></li>
-<li><a href="#Aural-interface-source-ownership" accesskey="7">Aural interface source ownership</a></li>
-<li><a href="#Remote-speech-recovery" accesskey="8">Remote speech recovery</a></li>
-<li><a href="#Omnivox-voice-configuration-applies" accesskey="9">Omnivox voice configuration applies</a></li>
+<li><a href="#Logical-table-readers" accesskey="1">Logical table readers</a></li>
+<li><a href="#Source-checkout-and-byte_002dcode-lifecycle" accesskey="2">Source checkout and byte-code lifecycle</a></li>
+<li><a href="#Debian-package-builds" accesskey="3">Debian package builds</a></li>
+<li><a href="#Emacsvox-release-staging-and-publication" accesskey="4">Emacsvox release staging and publication</a></li>
+<li><a href="#Future-Aural-contract-decisions" accesskey="5">Future Aural contract decisions</a></li>
+<li><a href="#Voice_002dstyle-metadata-ownership" accesskey="6">Voice-style metadata ownership</a></li>
+<li><a href="#Timeline-preparation-boundaries" accesskey="7">Timeline preparation boundaries</a></li>
+<li><a href="#Aural-interface-source-ownership" accesskey="8">Aural interface source ownership</a></li>
+<li><a href="#Remote-speech-recovery" accesskey="9">Remote speech recovery</a></li>
+<li><a href="#Omnivox-voice-configuration-applies">Omnivox voice configuration applies</a></li>
 <li><a href="#Notmuch-contracts">Notmuch contracts</a></li>
 <li><a href="#Agent-Shell-contracts">Agent Shell contracts</a></li>
 <li><a href="#Magit-contracts">Magit contracts</a></li>
@@ -64,8 +65,66 @@ changing an integration.
 <li><a href="#Repeatable-voice-performance-measurements">Repeatable voice performance measurements</a></li>
 <li><a href="Authoring-Sound-Packs.html">Authoring Sound Packs</a></li>
 </ul>
+<div class="subsection-level-extent" id="Logical-table-readers">
+<h4 class="subsection"><span>16.3.1 Logical table readers<a class="copiable-link" href="#Logical-table-readers"> &para;</a></span></h4>
+
+<p><code class="code">emacsvox-table-reader.el</code> supplies common cell/row/column formatting, copying,
+and movement decisions. Agent Shell retains its rendered source-property
+adapter, contextual map, public commands, and preferences. Markdown and Org
+register source adapters and use an explicit reader minor mode. The table
+browser uses a buffer-local adapter for shared inspection, copying and speech
+preferences. Its own movement commands keep the standalone view at vertical
+boundaries. Tabulated-list integration remains separate.
+</p>
+<p>An adapter supplies a fresh cell snapshot and a native Aural submission
+function. Snapshots contain complete logical rows, flat source positions in
+row order, table bounds, optional header information, and zero-based internal
+coordinates. Movement rejects missing cells and handles boundaries before
+changing point. Source adapters rebuild snapshots for each command; source
+edits end explicit reading. No native table editing command is used for
+navigation. Presentation remains under each integration&rsquo;s Aural
+module and role, with one main-lane submission per reader action.
+</p>
+<p>The read-only table browser caches logical string rows when rendering. Text
+properties map every character, including embedded line breaks and delimiters,
+to a model cell. Pre/post-command hooks synchronize the model after ordinary
+character movement; snapshot extraction also synchronizes it. Browser movement
+uses the model and its rendered position index. New reader actions submit under
+module <code class="code">table-ui</code>, with role <code class="code">field</code> for cells and explicit main-lane delivery.
+The local browser map is independent of the legacy speech-prefix map. CSV
+parsing preserves quoted fields and visited source buffers before constructing
+the view. Sorting constructs a new view and carries over both filters and the
+shared speech preferences.
+</p>
+<p>The shared prefix adds only previously unused keys: <code class="code">C-r</code> toggles source-table
+reading, and <code class="code">[</code> / <code class="code">]</code> discover tables. Printable reader keys are contextual.
+Control-Meta arrows also enter reading and move within supported source tables.
+A conditional minor-mode map uses menu-item filters: returning nil outside
+these tables preserves the effective binding in lower maps, including personal
+bindings. The filter preserves point and match data, excludes code examples,
+and defers to the active reader map after entry. First-arrow entry and movement
+produce one submission. Structural movement remains available outside tables;
+inside tables, its usual <code class="code">C-M-f/b/u/d</code> keys remain available.
+Org&rsquo;s native <code class="code">TAB</code>, <code class="code">RET</code> and Meta-arrow editing bindings remain available
+outside reading. Agent Shell&rsquo;s existing scoped overrides and prompt behaviour
+remain as documented in its integration contract.
+</p>
+<p>Regression coverage lives in <code class="code">test/emacsvox-table-reader-tests.el</code> and the
+Agent Shell table cases. The graphical Agent Shell integration gate includes
+real wrapped-table movement and copying. The source-reader graphical case
+<code class="code">emacsvox-table-reader-graphical-wrapped-source</code> must also run in a fresh
+graphical Emacs with Markdown Mode installed; its batch skip is not a pass.
+Check source text and modified state, effective keys, complete wrapped values,
+source edits, code exclusion, title preferences, and native Aural submissions.
+Browser coverage lives in <code class="code">test/emacsvox-table-ui-tests.el</code>; use
+<code class="code">EMACSVOX_TABLE_UI_TEST_LOAD=compiled</code> in a fresh Emacs after building to verify
+the compiled implementation. Its <code class="code">emacsvox-table-ui-graphical-multiline-navigation</code>
+case requires a graphical display and checks actual wrapping and logical cell
+movement. Listening acceptance is separate from submission and graphical checks.
+</p>
+</div>
 <div class="subsection-level-extent" id="Source-checkout-and-byte_002dcode-lifecycle">
-<h4 class="subsection"><span>16.3.1 Source checkout and byte-code lifecycle<a class="copiable-link" href="#Source-checkout-and-byte_002dcode-lifecycle"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.2 Source checkout and byte-code lifecycle<a class="copiable-link" href="#Source-checkout-and-byte_002dcode-lifecycle"> &para;</a></span></h4>
 
 <p>Use the Emacs selected by the ignored repository-local <code class="code">local.mk</code>.  When Emacs
 30.2 or newer is not the system <code class="code">emacs</code>, set its absolute path there:
@@ -457,7 +516,7 @@ remains preview independently of native Windows desktop support.
 
 </div>
 <div class="subsection-level-extent" id="Debian-package-builds">
-<h4 class="subsection"><span>16.3.2 Debian package builds<a class="copiable-link" href="#Debian-package-builds"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.3 Debian package builds<a class="copiable-link" href="#Debian-package-builds"> &para;</a></span></h4>
 
 <p><code class="code">make deb</code> builds a local development package in <code class="code">dist/</code> using Python 3,
 <code class="code">dpkg-deb</code>, Git and the selected Emacs. It stages runtime sources and generates
@@ -498,7 +557,7 @@ instead of uploading a differently built local package with the same name.
 </p>
 </div>
 <div class="subsection-level-extent" id="Emacsvox-release-staging-and-publication">
-<h4 class="subsection"><span>16.3.3 Emacsvox release staging and publication<a class="copiable-link" href="#Emacsvox-release-staging-and-publication"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.4 Emacsvox release staging and publication<a class="copiable-link" href="#Emacsvox-release-staging-and-publication"> &para;</a></span></h4>
 
 <p>The repository-level <code class="code">VERSION</code> file is the canonical stable release
 identifier.  Calendar-versioning policy, including delayed patches and
@@ -571,7 +630,7 @@ when a non-mutating preflight is wanted without creating an artifact.
 </p>
 </div>
 <div class="subsection-level-extent" id="Future-Aural-contract-decisions">
-<h4 class="subsection"><span>16.3.4 Future Aural contract decisions<a class="copiable-link" href="#Future-Aural-contract-decisions"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.5 Future Aural contract decisions<a class="copiable-link" href="#Future-Aural-contract-decisions"> &para;</a></span></h4>
 
 <p>The completed Aural implementation diary is preserved under
 <code class="code">archive/emacsvox/migrations/</code> rather than serving as current instructions.
@@ -592,7 +651,7 @@ by the Aural implementation, its generated reference, and accepted ADRs.
 </p>
 </div>
 <div class="subsection-level-extent" id="Voice_002dstyle-metadata-ownership">
-<h4 class="subsection"><span>16.3.5 Voice-style metadata ownership<a class="copiable-link" href="#Voice_002dstyle-metadata-ownership"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.6 Voice-style metadata ownership<a class="copiable-link" href="#Voice_002dstyle-metadata-ownership"> &para;</a></span></h4>
 
 <p>The private <code class="code">emacsvox-aural--voice-style-fields</code> table in
 &lsquo;<samp class="samp">lisp/emacsvox-aural-rules.el</samp>&rsquo; owns accepted field names, groups, value types,
@@ -672,7 +731,7 @@ process lifecycle or audible behavior.
 </p>
 </div>
 <div class="subsection-level-extent" id="Timeline-preparation-boundaries">
-<h4 class="subsection"><span>16.3.6 Timeline preparation boundaries<a class="copiable-link" href="#Timeline-preparation-boundaries"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.7 Timeline preparation boundaries<a class="copiable-link" href="#Timeline-preparation-boundaries"> &para;</a></span></h4>
 
 <p>Two private helpers in &lsquo;<samp class="samp">lisp/emacsvox-aural-transport.el</samp>&rsquo; make preparation
 inputs explicit.  <code class="code">emacsvox-aural--timeline-effect-transition</code> takes previous
@@ -706,7 +765,7 @@ protocol behavior, not audible playback.
 </p>
 </div>
 <div class="subsection-level-extent" id="Aural-interface-source-ownership">
-<h4 class="subsection"><span>16.3.7 Aural interface source ownership<a class="copiable-link" href="#Aural-interface-source-ownership"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.8 Aural interface source ownership<a class="copiable-link" href="#Aural-interface-source-ownership"> &para;</a></span></h4>
 
 <p>Ordinary-buffer entry captures a source buffer, a marker, and a guarded source
 line.  Child interfaces and Help inherit that context through the inspection
@@ -731,7 +790,7 @@ Reopening a dirty editor preserves its draft and source association.
 </p>
 </div>
 <div class="subsection-level-extent" id="Remote-speech-recovery">
-<h4 class="subsection"><span>16.3.8 Remote speech recovery<a class="copiable-link" href="#Remote-speech-recovery"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.9 Remote speech recovery<a class="copiable-link" href="#Remote-speech-recovery"> &para;</a></span></h4>
 
 <p>Ordinary <code class="code">tts-initialize</code> startup schedules the existing remote retry when
 main speech starts but a configured notification connection fails.  The
@@ -745,7 +804,7 @@ streams do not start remote recovery.  Exercise these boundaries in
 </p>
 </div>
 <div class="subsection-level-extent" id="Omnivox-voice-configuration-applies">
-<h4 class="subsection"><span>16.3.9 Omnivox voice configuration applies<a class="copiable-link" href="#Omnivox-voice-configuration-applies"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.10 Omnivox voice configuration applies<a class="copiable-link" href="#Omnivox-voice-configuration-applies"> &para;</a></span></h4>
 
 <p><code class="code">omnivox-apply-voice-configuration</code> captures one generation and its definitions
 for the original speech processes.  Applies may overlap.  Each owns its request
@@ -769,7 +828,7 @@ feedback coverage in <code class="code">test/emacsvox-aural-voice-workbench-test
 </p>
 </div>
 <div class="subsection-level-extent" id="Notmuch-contracts">
-<h4 class="subsection"><span>16.3.10 Notmuch contracts<a class="copiable-link" href="#Notmuch-contracts"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.11 Notmuch contracts<a class="copiable-link" href="#Notmuch-contracts"> &para;</a></span></h4>
 
 <p>The live module is registered as an optional package integration.  Its stable
 extension points are the Hello, Search, Show, and Tree mode hooks; Search and
@@ -797,10 +856,29 @@ including real displayed-window reading for both advance paths.
 </p>
 </div>
 <div class="subsection-level-extent" id="Agent-Shell-contracts">
-<h4 class="subsection"><span>16.3.11 Agent Shell contracts<a class="copiable-link" href="#Agent-Shell-contracts"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.12 Agent Shell contracts<a class="copiable-link" href="#Agent-Shell-contracts"> &para;</a></span></h4>
 
 <p>Use <code class="code">M-x emacsvox-agent-shell-enable</code> to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
+</p>
+<p>The reviewed integration pins now target Agent Shell 0.81.1 at &lsquo;<samp class="samp">5535365</samp>&rsquo; and
+Shell Maker 0.97.4 at &lsquo;<samp class="samp">a76d4d6</samp>&rsquo;. ACP retains its reviewed snapshot. A personal
+package upgrade does not refresh &lsquo;<samp class="samp">test/integration-dependencies.json</samp>&rsquo; or its
+prepared tree. When the preparer rejects a changed lock, choose a fresh
+&lsquo;<samp class="samp">TEST_DEPS_DIR</samp>&rsquo; and pass the same directory to preparation and both integration
+gates; preserve the old directory until it is no longer needed.
+</p>
+<p>For every pin refresh, compare all Emacsvox navigation, speech-control, table,
+and repeat keys against shell and viewport maps, inherited Shell Maker maps,
+list editing, inline actions, permission controls, and transients. Verify
+effective keys in real prompt and transcript contexts. The 0.81.1 refresh keeps
+the existing scoped overrides: viewport <code class="code">t</code> discovers tables; table <code class="code">r</code> reads
+rows instead of quoting or replying; viewport table <code class="code">c</code> reads columns and <code class="code">a</code>
+selects table speech instead of continuing or repeating a reply. The table <code class="code">k</code>
+copy prefix takes precedence over Emacsvox&rsquo;s source-block jump. These preserve
+consistent reading keys; the displaced commands remain available through
+<code class="code">M-x</code> as documented in the Agent Shell user chapter. Prompt letters remain
+literal input, and repeat navigation must release unrelated keys.
 </p>
 <ol class="enumerate">
 <li> <a class="anchor" id="Internal-ownership-and-renderer-tests"></a>Internal ownership and renderer tests
@@ -913,7 +991,7 @@ semantic provider so Aural rules can customize their presentation.
 
 </div>
 <div class="subsection-level-extent" id="Magit-contracts">
-<h4 class="subsection"><span>16.3.12 Magit contracts<a class="copiable-link" href="#Magit-contracts"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.13 Magit contracts<a class="copiable-link" href="#Magit-contracts"> &para;</a></span></h4>
 
 <p>Staging and selected synchronous operations collect Git outcomes at
 <code class="code">magit-process-finish</code>, before Magit can raise an error.  One interactive
@@ -938,7 +1016,7 @@ highlight mirroring needs a Magit refresh to rebuild its source properties.
 </p>
 </div>
 <div class="subsection-level-extent" id="WSL2-Omnivox-development-staging">
-<h4 class="subsection"><span>16.3.13 WSL2 Omnivox development staging<a class="copiable-link" href="#WSL2-Omnivox-development-staging"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.14 WSL2 Omnivox development staging<a class="copiable-link" href="#WSL2-Omnivox-development-staging"> &para;</a></span></h4>
 
 <p>The ordinary WSL2 user route is implemented by
 <code class="code">bin/emacsvox-wsl-install</code> and pinned by <code class="code">etc/wsl-install.conf</code>.  Treat either
@@ -1074,7 +1152,7 @@ reproducible clean-release path documented in the user-facing WSL2 route.
 </p>
 </div>
 <div class="subsection-level-extent" id="Windows-staging-implementation-and-fixtures">
-<h4 class="subsection"><span>16.3.14 Windows staging implementation and fixtures<a class="copiable-link" href="#Windows-staging-implementation-and-fixtures"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.15 Windows staging implementation and fixtures<a class="copiable-link" href="#Windows-staging-implementation-and-fixtures"> &para;</a></span></h4>
 
 <p>Make owns option and clean-source guards, toolchain verification, companion
 preparation, Docker compilation, and final runtime verification.  Its
@@ -1116,7 +1194,7 @@ acceptance in an appropriate staging environment.
 </p>
 </div>
 <div class="subsection-level-extent" id="Aural-experiments-and-guided-changes">
-<h4 class="subsection"><span>16.3.15 Aural experiments and guided changes<a class="copiable-link" href="#Aural-experiments-and-guided-changes"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.16 Aural experiments and guided changes<a class="copiable-link" href="#Aural-experiments-and-guided-changes"> &para;</a></span></h4>
 
 <p>Physical experiments use the common voice editor with an exact engine/voice
 selector, an immutable opening snapshot, a mutable working style and undo
@@ -1159,7 +1237,7 @@ built-in options and reordering items outside the active-order view.
 </p>
 </div>
 <div class="subsection-level-extent" id="Repeatable-voice-performance-measurements">
-<h4 class="subsection"><span>16.3.16 Repeatable voice performance measurements<a class="copiable-link" href="#Repeatable-voice-performance-measurements"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.17 Repeatable voice performance measurements<a class="copiable-link" href="#Repeatable-voice-performance-measurements"> &para;</a></span></h4>
 
 <p>Use &lsquo;<samp class="samp">utils/voice_benchmark.py</samp>&rsquo; to retain comparable measurements of ordinary
 speech, native voice settings and the voice editor. It starts private speech

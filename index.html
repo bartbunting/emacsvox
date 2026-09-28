@@ -235,7 +235,11 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
   <ul class="toc-numbered-mark">
     <li><a id="toc-Document-Authoring" href="Document-Authoring.html">8.1 Document Authoring</a></li>
     <li><a id="toc-Structured-Editing-And-Templates" href="Structured-Editing.html">8.2 Structured Editing And Templates</a></li>
-    <li><a id="toc-Browsing-Structure" href="Browsing-Structure.html">8.3 Browsing Structure</a></li>
+    <li><a id="toc-Browsing-Structure" href="Browsing-Structure.html">8.3 Browsing Structure</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Reading-Markdown-and-Org-tables" href="Browsing-Structure.html#Reading-Markdown-and-Org-tables">8.3.1 Reading Markdown and Org tables</a></li>
+      <li><a id="toc-Browsing-CSV-data" href="Browsing-Structure.html#Browsing-CSV-data">8.3.2 Browsing CSV data</a></li>
+    </ul></li>
     <li><a id="toc-Web-Browsing-With-EWW" href="Web-Browsing.html">8.4 Web Browsing With EWW</a></li>
     <li><a id="toc-Messaging" href="Messaging.html">8.5 Messaging</a></li>
     <li><a id="toc-Editing-Code" href="Editing-Code.html">8.6 Editing Code</a></li>
@@ -322,23 +326,24 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
     </ul></li>
     <li><a id="toc-Integration-Maintenance" href="Integration-Maintenance.html">16.3 Integration Maintenance</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Source-checkout-and-byte_002dcode-lifecycle" href="Integration-Maintenance.html#Source-checkout-and-byte_002dcode-lifecycle">16.3.1 Source checkout and byte-code lifecycle</a></li>
-      <li><a id="toc-Debian-package-builds" href="Integration-Maintenance.html#Debian-package-builds">16.3.2 Debian package builds</a></li>
-      <li><a id="toc-Emacsvox-release-staging-and-publication" href="Integration-Maintenance.html#Emacsvox-release-staging-and-publication">16.3.3 Emacsvox release staging and publication</a></li>
-      <li><a id="toc-Future-Aural-contract-decisions" href="Integration-Maintenance.html#Future-Aural-contract-decisions">16.3.4 Future Aural contract decisions</a></li>
-      <li><a id="toc-Voice_002dstyle-metadata-ownership" href="Integration-Maintenance.html#Voice_002dstyle-metadata-ownership">16.3.5 Voice-style metadata ownership</a></li>
-      <li><a id="toc-Timeline-preparation-boundaries" href="Integration-Maintenance.html#Timeline-preparation-boundaries">16.3.6 Timeline preparation boundaries</a></li>
-      <li><a id="toc-Aural-interface-source-ownership" href="Integration-Maintenance.html#Aural-interface-source-ownership">16.3.7 Aural interface source ownership</a></li>
-      <li><a id="toc-Remote-speech-recovery" href="Integration-Maintenance.html#Remote-speech-recovery">16.3.8 Remote speech recovery</a></li>
-      <li><a id="toc-Omnivox-voice-configuration-applies" href="Integration-Maintenance.html#Omnivox-voice-configuration-applies">16.3.9 Omnivox voice configuration applies</a></li>
-      <li><a id="toc-Notmuch-contracts" href="Integration-Maintenance.html#Notmuch-contracts">16.3.10 Notmuch contracts</a></li>
-      <li><a id="toc-Agent-Shell-contracts" href="Integration-Maintenance.html#Agent-Shell-contracts">16.3.11 Agent Shell contracts</a></li>
-      <li><a id="toc-Magit-contracts" href="Integration-Maintenance.html#Magit-contracts">16.3.12 Magit contracts</a></li>
-      <li><a id="toc-WSL2-Omnivox-development-staging" href="Integration-Maintenance.html#WSL2-Omnivox-development-staging">16.3.13 WSL2 Omnivox development staging</a></li>
-      <li><a id="toc-Windows-staging-implementation-and-fixtures" href="Integration-Maintenance.html#Windows-staging-implementation-and-fixtures">16.3.14 Windows staging implementation and fixtures</a></li>
-      <li><a id="toc-Aural-experiments-and-guided-changes" href="Integration-Maintenance.html#Aural-experiments-and-guided-changes">16.3.15 Aural experiments and guided changes</a></li>
-      <li><a id="toc-Repeatable-voice-performance-measurements" href="Integration-Maintenance.html#Repeatable-voice-performance-measurements">16.3.16 Repeatable voice performance measurements</a></li>
-      <li><a id="toc-Authoring-Sound-Packs" href="Authoring-Sound-Packs.html">16.3.17 Authoring Sound Packs</a></li>
+      <li><a id="toc-Logical-table-readers" href="Integration-Maintenance.html#Logical-table-readers">16.3.1 Logical table readers</a></li>
+      <li><a id="toc-Source-checkout-and-byte_002dcode-lifecycle" href="Integration-Maintenance.html#Source-checkout-and-byte_002dcode-lifecycle">16.3.2 Source checkout and byte-code lifecycle</a></li>
+      <li><a id="toc-Debian-package-builds" href="Integration-Maintenance.html#Debian-package-builds">16.3.3 Debian package builds</a></li>
+      <li><a id="toc-Emacsvox-release-staging-and-publication" href="Integration-Maintenance.html#Emacsvox-release-staging-and-publication">16.3.4 Emacsvox release staging and publication</a></li>
+      <li><a id="toc-Future-Aural-contract-decisions" href="Integration-Maintenance.html#Future-Aural-contract-decisions">16.3.5 Future Aural contract decisions</a></li>
+      <li><a id="toc-Voice_002dstyle-metadata-ownership" href="Integration-Maintenance.html#Voice_002dstyle-metadata-ownership">16.3.6 Voice-style metadata ownership</a></li>
+      <li><a id="toc-Timeline-preparation-boundaries" href="Integration-Maintenance.html#Timeline-preparation-boundaries">16.3.7 Timeline preparation boundaries</a></li>
+      <li><a id="toc-Aural-interface-source-ownership" href="Integration-Maintenance.html#Aural-interface-source-ownership">16.3.8 Aural interface source ownership</a></li>
+      <li><a id="toc-Remote-speech-recovery" href="Integration-Maintenance.html#Remote-speech-recovery">16.3.9 Remote speech recovery</a></li>
+      <li><a id="toc-Omnivox-voice-configuration-applies" href="Integration-Maintenance.html#Omnivox-voice-configuration-applies">16.3.10 Omnivox voice configuration applies</a></li>
+      <li><a id="toc-Notmuch-contracts" href="Integration-Maintenance.html#Notmuch-contracts">16.3.11 Notmuch contracts</a></li>
+      <li><a id="toc-Agent-Shell-contracts" href="Integration-Maintenance.html#Agent-Shell-contracts">16.3.12 Agent Shell contracts</a></li>
+      <li><a id="toc-Magit-contracts" href="Integration-Maintenance.html#Magit-contracts">16.3.13 Magit contracts</a></li>
+      <li><a id="toc-WSL2-Omnivox-development-staging" href="Integration-Maintenance.html#WSL2-Omnivox-development-staging">16.3.14 WSL2 Omnivox development staging</a></li>
+      <li><a id="toc-Windows-staging-implementation-and-fixtures" href="Integration-Maintenance.html#Windows-staging-implementation-and-fixtures">16.3.15 Windows staging implementation and fixtures</a></li>
+      <li><a id="toc-Aural-experiments-and-guided-changes" href="Integration-Maintenance.html#Aural-experiments-and-guided-changes">16.3.16 Aural experiments and guided changes</a></li>
+      <li><a id="toc-Repeatable-voice-performance-measurements" href="Integration-Maintenance.html#Repeatable-voice-performance-measurements">16.3.17 Repeatable voice performance measurements</a></li>
+      <li><a id="toc-Authoring-Sound-Packs" href="Authoring-Sound-Packs.html">16.3.18 Authoring Sound Packs</a></li>
     </ul></li>
   </ul></li>
   <li><a id="toc-Concept-Index" href="Concept-Index.html" rel="index">17 Concept Index</a></li>

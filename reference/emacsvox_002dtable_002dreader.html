@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-table-reader (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-table-reader (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-table-reader (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dtable_002dui.html" rel="next" title="emacsvox-table-ui">
+<link href="emacsvox_002dtable.html" rel="prev" title="emacsvox-table">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dtable_002dreader">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dtable_002dui.html" accesskey="n" rel="next">emacsvox-table-ui</a>, Previous: <a href="emacsvox_002dtable.html" accesskey="p" rel="prev">emacsvox-table</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dtable_002dreader-1"><span>2.234 emacsvox-table-reader<a class="copiable-link" href="#emacsvox_002dtable_002dreader-1"> &para;</a></span></h3>
+
+<p>Common logical table formatting and navigation.  Adapters supply complete
+cell values and source positions; reading never calls native table editors.
+Agent Shell retains its public commands and presentation preferences.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dTable_002dReader-Commands" accesskey="1">Emacsvox-Table-Reader Commands</a></li>
+<li><a href="#emacsvox_002dtable_002dreader-Options" accesskey="2">emacsvox-table-reader Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dTable_002dReader-Commands">
+<h4 class="subsection"><span>2.234.1 Emacsvox-Table-Reader Commands<a class="copiable-link" href="#Emacsvox_002dTable_002dReader-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dtable_002dreader_002dcopy_002dcell" accesskey="1">emacsvox-table-reader-copy-cell</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dcopy_002dcolumn" accesskey="2">emacsvox-table-reader-copy-column</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dcopy_002drow" accesskey="3">emacsvox-table-reader-copy-row</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dexit_002dbackward" accesskey="4">emacsvox-table-reader-exit-backward</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dexit_002dforward" accesskey="5">emacsvox-table-reader-exit-forward</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dmode" accesskey="6">emacsvox-table-reader-mode</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dnext_002dcolumn" accesskey="7">emacsvox-table-reader-next-column</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dnext_002drow" accesskey="8">emacsvox-table-reader-next-row</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dnext_002dtable" accesskey="9">emacsvox-table-reader-next-table</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dprevious_002dcolumn">emacsvox-table-reader-previous-column</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dprevious_002drow">emacsvox-table-reader-previous-row</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dprevious_002dtable">emacsvox-table-reader-previous-table</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dselect_002dspeaking_002dmethod">emacsvox-table-reader-select-speaking-method</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dspeak_002dcell">emacsvox-table-reader-speak-cell</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dspeak_002dcolumn">emacsvox-table-reader-speak-column</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dspeak_002dcontext">emacsvox-table-reader-speak-context</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dspeak_002ddimensions">emacsvox-table-reader-speak-dimensions</a></li>
+<li><a href="#emacsvox_002dtable_002dreader_002dspeak_002drow">emacsvox-table-reader-speak-row</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dcopy_002dcell">
+<h4 class="subsubsection"><span>2.234.1.1 emacsvox-table-reader-copy-cell<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dcopy_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dcopy_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-copy-cell</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dcopy_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dcopy_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy the logical cell as plain text.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dcopy_002dcolumn">
+<h4 class="subsubsection"><span>2.234.1.2 emacsvox-table-reader-copy-column<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dcopy_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dcopy_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-copy-column</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dcopy_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dcopy_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy the logical column as newline-separated plain text.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dcopy_002drow">
+<h4 class="subsubsection"><span>2.234.1.3 emacsvox-table-reader-copy-row<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dcopy_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dcopy_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-copy-row</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dcopy_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dcopy_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy the logical row as tab-separated plain text.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dexit_002dbackward">
+<h4 class="subsubsection"><span>2.234.1.4 emacsvox-table-reader-exit-backward<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dexit_002dbackward"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dexit_002dbackward"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-exit-backward</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dexit_002dbackward"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dexit_002dbackward-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Leave table reading and move to preceding prose.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dexit_002dforward">
+<h4 class="subsubsection"><span>2.234.1.5 emacsvox-table-reader-exit-forward<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dexit_002dforward"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dexit_002dforward"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-exit-forward</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dexit_002dforward"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dexit_002dforward-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Leave table reading and move to following prose.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dmode">
+<h4 class="subsubsection"><span>2.234.1.6 emacsvox-table-reader-mode<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-mode</strong> <var class="def-var-arguments">(&amp;optional arg)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dmode"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-C_002dr"></a><span><kbd class="kbd">C-e C-t C-r</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-C_002dr"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Read a Markdown or Org table in place with contextual navigation keys.
+
+Use a Control-Meta arrow inside a table to enter reading and move, or use
+the speech prefix followed by C-t C-r to toggle reading.  Up/Down read
+logical rows, C-M-Left/Right read cells, and r/c read rows/columns.  TAB moves
+right without editing and RET reads the cell.  q restores normal mode keys.
+Leaving the table or editing its source also ends this context.  This mode
+is independent of Markdown’s markup-stripping speech preference.
+
+This is a minor mode.  If called interactively, toggle the
+‘Emacsvox-Table-Reader mode’ mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable ‘emacsvox-table-reader-mode’.
+
+The mode’s hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &amp;optional ARG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dnext_002dcolumn">
+<h4 class="subsubsection"><span>2.234.1.7 emacsvox-table-reader-next-column<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dnext_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-next-column</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dnext_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dnext_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT logical columns right and read the destination cell.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dnext_002drow">
+<h4 class="subsubsection"><span>2.234.1.8 emacsvox-table-reader-next-row<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dnext_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dnext_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-next-row</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dnext_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dnext_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT logical rows down, retaining the column and reading the row.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dnext_002dtable">
+<h4 class="subsubsection"><span>2.234.1.9 emacsvox-table-reader-next-table<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dnext_002dtable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dnext_002dtable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-next-table</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dnext_002dtable"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-_005d"></a><span><kbd class="kbd">C-e C-t ]</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_005d"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dnext_002dtable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Find the next supported table and enter explicit reading.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dprevious_002dcolumn">
+<h4 class="subsubsection"><span>2.234.1.10 emacsvox-table-reader-previous-column<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dprevious_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-previous-column</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dprevious_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dprevious_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT logical columns left and read the destination cell.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dprevious_002drow">
+<h4 class="subsubsection"><span>2.234.1.11 emacsvox-table-reader-previous-row<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dprevious_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dprevious_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-previous-row</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dprevious_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dprevious_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move COUNT logical rows up, retaining the column and reading the row.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dprevious_002dtable">
+<h4 class="subsubsection"><span>2.234.1.12 emacsvox-table-reader-previous-table<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dprevious_002dtable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dprevious_002dtable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-previous-table</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dprevious_002dtable"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-_005b"></a><span><kbd class="kbd">C-e C-t [</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_005b"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dprevious_002dtable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Find the previous supported table and enter explicit reading.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dselect_002dspeaking_002dmethod">
+<h4 class="subsubsection"><span>2.234.1.13 emacsvox-table-reader-select-speaking-method<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dselect_002dspeaking_002dmethod"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dselect_002dspeaking_002dmethod"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-select-speaking-method</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dselect_002dspeaking_002dmethod"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dselect_002dspeaking_002dmethod-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose table titles or data order for this buffer.
+Press c for column titles, r for row titles, or o for data order.
+Agent Shell and Org editing feedback retain their existing preferences.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dspeak_002dcell">
+<h4 class="subsubsection"><span>2.234.1.14 emacsvox-table-reader-speak-cell<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dspeak_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dspeak_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-speak-cell</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dspeak_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dspeak_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the complete logical table cell at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dspeak_002dcolumn">
+<h4 class="subsubsection"><span>2.234.1.15 emacsvox-table-reader-speak-column<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dspeak_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dspeak_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-speak-column</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dspeak_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dspeak_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the complete logical table column at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dspeak_002dcontext">
+<h4 class="subsubsection"><span>2.234.1.16 emacsvox-table-reader-speak-context<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dspeak_002dcontext"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dspeak_002dcontext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-speak-context</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dspeak_002dcontext"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dspeak_002dcontext-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current logical table coordinates.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dspeak_002ddimensions">
+<h4 class="subsubsection"><span>2.234.1.17 emacsvox-table-reader-speak-dimensions<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dspeak_002ddimensions"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dspeak_002ddimensions"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-speak-dimensions</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dspeak_002ddimensions"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dspeak_002ddimensions-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current table dimensions, distinguishing headers from data.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dreader_002dspeak_002drow">
+<h4 class="subsubsection"><span>2.234.1.18 emacsvox-table-reader-speak-row<a class="copiable-link" href="#emacsvox_002dtable_002dreader_002dspeak_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dreader_002dspeak_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-reader-speak-row</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dreader_002dspeak_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dreader_002dspeak_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the complete logical table row at point.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dtable_002dreader-Options">
+<h4 class="subsection"><span>2.234.2 emacsvox-table-reader Options<a class="copiable-link" href="#emacsvox_002dtable_002dreader-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-156"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-table-reader-data-position</var><a class="copiable-link" href="#index-User-Option-156"> &para;</a></span></dt>
+<dd><pre class="verbatim">Whether table cell data precedes or follows its titles.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+first
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-157"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-table-reader-mode-hook</var><a class="copiable-link" href="#index-User-Option-157"> &para;</a></span></dt>
+<dd><pre class="verbatim">Hook run after entering or leaving ‘emacsvox-table-reader-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-158"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-table-reader-titles</var><a class="copiable-link" href="#index-User-Option-158"> &para;</a></span></dt>
+<dd><pre class="verbatim">Titles spoken with cells in the explicit table reader.
+Agent Shell retains its own table speech preferences.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(column)
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dtable_002dui.html">emacsvox-table-ui</a>, Previous: <a href="emacsvox_002dtable.html">emacsvox-table</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

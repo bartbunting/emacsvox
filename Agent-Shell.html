@@ -87,6 +87,15 @@ as “Waiting for permission.”  These cues also precede the first line of a dr
 later lines keep ordinary reading feedback.  “Ready for input” is reserved for
 an empty prompt when the agent is idle.
 </p>
+<p>With Agent Shell 0.81.1, quoting a selected region, sending source context,
+dropping files, and inserting shell-command output can add to that live draft
+while the agent works. These insertions do not submit the draft. If there is
+no live prompt while busy, Agent Shell offers its queue editor instead.
+Use <code class="code">M-x yank-media</code> to attach a clipboard image on a display that supports
+native clipboard access. Image previews survive queueing and steering.
+The animated busy marker does not add repeated speech; reading the prompt
+continues to give its current state.
+</p>
 <p>In the viewport editor, Emacsvox announces whether a prompt was
 submitted, queued, or sent for steering, and whether the editor stays open.
 The normal and override send commands follow Agent Shell&rsquo;s configured busy
@@ -178,8 +187,11 @@ use the notification lane, leaving navigation speech independent.
 <code class="code">emacsvox-agent-shell-automatic-content-max-characters</code>, which defaults to
 2,000 characters.  A shortened presentation gives exact omitted character and
 line counts and tells you where to inspect the full content.  The complete text
-stays in the Agent Shell buffer; the limit is applied before Aural compiles the
-automatic speech copy.
+rendered by Agent Shell stays in its buffer; this speech limit is applied before
+Aural compiles the automatic speech copy. Agent Shell separately shortens tool
+output lines longer than 32,768 characters, keeping their beginning and end with
+an omitted-character count. Full tool speech reads that notice; the removed
+middle is not available by reading the buffer.
 </p>
 </div>
 <div class="section-level-extent" id="Respond-to-urgent-permissions">
@@ -339,7 +351,10 @@ list editing, setting changes, updated tool output, and change-review entry.
 
 <p>Moving into a rendered Markdown table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
-the ordinary Agent Shell keys.
+the ordinary Agent Shell keys. Markdown and Org source buffers offer explicit
+table reading with matching logical operations; see
+<a class="ref" href="Browsing-Structure.html">Browsing Structure</a>. Agent Shell retains its own table speech
+preferences and automatic contextual activation.
 Plain Left and Right move by character within the table. Use Control-Meta-Left
 and Control-Meta-Right to move between columns. Up and Down, also available as
 Control-Meta-Up and Control-Meta-Down, move between logical rows and read the
@@ -351,6 +366,15 @@ in full, using your table title settings.
 and announce the destination table and cell. Like the bracket navigation keys,
 they insert themselves in a live prompt or viewport editor, including while
 the agent is working.
+</p>
+<p>In viewport view mode, <code class="code">t</code> takes the place of Agent Shell&rsquo;s thought-level
+shortcut; use <code class="code">M-x agent-shell-viewport-set-session-thought-level</code> for that
+action. Inside a table, <code class="code">r</code>, <code class="code">c</code>, and <code class="code">a</code> read rows, read columns, and select
+the table speaking method. To invoke the displaced viewport actions there,
+use <code class="code">M-x agent-shell-viewport-reply</code>, <code class="code">M-x agent-shell-viewport-reply-continue</code>,
+or <code class="code">M-x agent-shell-viewport-reply-again</code>. In the shell transcript, table <code class="code">r</code>
+replaces quoting; use <code class="code">M-x agent-shell-quote-region</code> with a selected region.
+Leaving the table restores these ordinary bindings.
 </p>
 <p>Continuous speech and response-block reading omit rendered table borders and
 keep the cell text. Decorative borders therefore do not force a switch to a
