@@ -116,7 +116,7 @@ The six groups are:
 #+attr_texinfo: :columns 0.35 0.65
 | Task group | Destinations |
 | Understand and change feedback | Feedback for this item, Recent feedback, and Return to source item. |
-| Voices and speech | Voice palettes, Browse voices, Preferred speech engine, Speech rate, and Voice Workbench. |
+| Voices and speech | Voice palettes, Browse voices, Preferred speech engine, Speech rate, Punctuation, and Voice Workbench. |
 | Sounds and output | Sound packs, Spatial settings, Audio output, and Review notifications. |
 | Optional feedback and rules | Presentation options, Your feedback rules, Current buffer rules, and Explain feedback as you navigate. |
 | Saved setups and unfinished changes | Presentation profiles and Resume unfinished changes. |

@@ -77,6 +77,7 @@
     "omnivox-voices.el"
     "omnivox-remote.el"
     "omnivox-engine-settings.el"
+    "omnivox-punctuation.el"
     "emacsvox-pronounce.el"
     "emacsvox-speak.el"
     "sox-gen.el"

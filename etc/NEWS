@@ -10,6 +10,15 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Review and edit punctuation pronunciations
+
+Open =M-x omnivox-punctuation= or /Punctuation/ in Aural Home's /Voices and
+speech/ group. Review host-provided defaults, edit each existing punctuation
+level, preserve a character or restore its default. Drafts survive leaving the
+screen. Save validates on the local speech host and preserves other settings;
+restart both speech workers separately when ready. File conflicts retain the
+draft. This requires an updated local Omnivox host with punctuation editing.
+
 ** Apply a physical voice across a palette
 
 Press =V= on a physical voice in Browse voices or on an eSpeak variant to

@@ -1026,6 +1026,55 @@ presentation profiles are intentionally outside this starter chapter.  Use
 live help for the current speech keymap and see @ref{Aural Presentation} when
 you want a complete presentation setup rather than a temporary buffer change.
 
+@strong{Review punctuation pronunciations.} With a supporting local Omnivox host@comma{}
+run @code{M-x omnivox-punctuation}@comma{} or choose @emph{Punctuation} under @emph{Voices and speech}
+in Aural Home. This editor shows saved host settings and an unsaved draft;
+running speech may still use an earlier configuration. It requires the updated
+bundled local launcher and Omnivox's punctuation-editor capability. Older hosts
+report that an update is needed. Remote and native-direct configuration editing
+are not provided by this interface.
+
+Each row names its Unicode character explicitly and shows the pronunciation and
+whether it comes from a default or an override. The initial level is @emph{some}.
+
+@table @kbd
+@item l
+Choose @emph{none}@comma{} @emph{some}@comma{} or @emph{all}. Each level has independent overrides.
+@item RET
+Speak a name@comma{} preserve the character@comma{} or restore its shipped default.
+@item a
+Add a character that is absent from the table.
+@item d
+Restore the selected character's default in this level.
+@item s
+Save edits for all three levels on the speech host. Saving does not
+restart speech or change another setting in the configuration file.
+@item r
+After confirmation@comma{} restart this session's main and notification speech
+workers with the saved settings. Save or discard drafts first.
+@item g
+Read the saved file again@comma{} asking before discarding edits.
+@item q
+Return to the previous view@comma{} retaining the draft. Reopen @emph{Punctuation}
+or choose @emph{Resume unfinished changes} in Aural Home to continue.
+@item ?
+Read help@comma{} including the selected host configuration path.
+@end table
+
+@emph{Preserve character} leaves punctuation for the engine's pronunciation and
+pauses; it does not promise silence. Org normally selects @emph{some}. To name
+apostrophes in Org prose@comma{} set both @emph{APOSTROPHE}@comma{} U+0027@comma{} and
+@emph{RIGHT SINGLE QUOTATION MARK}@comma{} U+2019@comma{} to speak “apostrophe” in @emph{some}.
+This also names apostrophes inside contractions. Omnivox 1.15.0 names straight@comma{}
+curly and modifier apostrophes at @emph{all} by default@comma{} without a configuration file.
+Custom named levels are future work.
+
+A save rejects changes if the file or selected target differs from the version
+you reviewed. Your draft is retained so you can review the conflict. Saving
+upgrades the file to Omnivox configuration version 3@comma{} preserving other settings;
+Omnivox 1.14.0 and earlier cannot read this version. Do not save a file used by
+an older executable. This feature is currently unreleased.
+
 @node Miscellaneous
 @subsection Stop Or Restart Speech
 
@@ -2883,7 +2932,7 @@ The six groups are:
 @item Understand and change feedback
 @tab Feedback for this item@comma{} Recent feedback@comma{} and Return to source item.
 @item Voices and speech
-@tab Voice palettes@comma{} Browse voices@comma{} Preferred speech engine@comma{} Speech rate@comma{} and Voice Workbench.
+@tab Voice palettes@comma{} Browse voices@comma{} Preferred speech engine@comma{} Speech rate@comma{} Punctuation@comma{} and Voice Workbench.
 @item Sounds and output
 @tab Sound packs@comma{} Spatial settings@comma{} Audio output@comma{} and Review notifications.
 @item Optional feedback and rules

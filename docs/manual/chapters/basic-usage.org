@@ -359,6 +359,45 @@ presentation profiles are intentionally outside this starter chapter.  Use
 live help for the current speech keymap and see @@texinfo:@ref{Aural Presentation}@@ when
 you want a complete presentation setup rather than a temporary buffer change.
 
+*Review punctuation pronunciations.* With a supporting local Omnivox host,
+run ~M-x omnivox-punctuation~, or choose /Punctuation/ under /Voices and speech/
+in Aural Home. This editor shows saved host settings and an unsaved draft;
+running speech may still use an earlier configuration. It requires the updated
+bundled local launcher and Omnivox's punctuation-editor capability. Older hosts
+report that an update is needed. Remote and native-direct configuration editing
+are not provided by this interface.
+
+Each row names its Unicode character explicitly and shows the pronunciation and
+whether it comes from a default or an override. The initial level is /some/.
+
+#+attr_texinfo: :indic kbd :compact t
+- l :: Choose /none/, /some/, or /all/. Each level has independent overrides.
+- RET :: Speak a name, preserve the character, or restore its shipped default.
+- a :: Add a character that is absent from the table.
+- d :: Restore the selected character's default in this level.
+- s :: Save edits for all three levels on the speech host. Saving does not
+  restart speech or change another setting in the configuration file.
+- r :: After confirmation, restart this session's main and notification speech
+  workers with the saved settings. Save or discard drafts first.
+- g :: Read the saved file again, asking before discarding edits.
+- q :: Return to the previous view, retaining the draft. Reopen /Punctuation/
+  or choose /Resume unfinished changes/ in Aural Home to continue.
+- ? :: Read help, including the selected host configuration path.
+
+/Preserve character/ leaves punctuation for the engine's pronunciation and
+pauses; it does not promise silence. Org normally selects /some/. To name
+apostrophes in Org prose, set both /APOSTROPHE/, U+0027, and
+/RIGHT SINGLE QUOTATION MARK/, U+2019, to speak “apostrophe” in /some/.
+This also names apostrophes inside contractions. Omnivox 1.15.0 names straight,
+curly and modifier apostrophes at /all/ by default, without a configuration file.
+Custom named levels are future work.
+
+A save rejects changes if the file or selected target differs from the version
+you reviewed. Your draft is retained so you can review the conflict. Saving
+upgrades the file to Omnivox configuration version 3, preserving other settings;
+Omnivox 1.14.0 and earlier cannot read this version. Do not save a file used by
+an older executable. This feature is currently unreleased.
+
 *** Stop Or Restart Speech
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Miscellaneous

@@ -43,6 +43,7 @@
         (require 'emacsvox-omnivox-components-tests)
         (require 'emacsvox-aural-voice-workbench-tests)
         (require 'omnivox-engine-settings-tests)
+        (require 'omnivox-punctuation-tests)
         (require 'omnivox-espeak-variants-tests)
         (require 'omnivox-catalogue-tests)
         (require 'omnivox-library-tests)
@@ -56,6 +57,7 @@
                             emacsvox-aural-voice-bulk--render
                             emacsvox-aural-voice-engine-controls--render
                             emacsvox-omnivox-components--render-details
+                            omnivox-punctuation--render
                             emacsvox-aural-voice-workbench--open-engine))
           (let ((file (symbol-file function)))
             (unless (and file (string-suffix-p ".elc" file))
@@ -80,6 +82,7 @@
                         omnivox-espeak-variants-default-is-a-saveable-palette-destination
                         omnivox-catalogue-graphical-navigation-and-background-refresh
                         omnivox-catalogue-graphical-group-navigation
+                        omnivox-punctuation-graphical-navigation-edit-and-return
                         omnivox-engine-settings-graphical-customize-returns-to-details
                         emacsvox-aural-voice-workbench-graphical-engine-browser-return
                         emacsvox-aural-workbench-graphical-engine-management-round-trip
@@ -100,8 +103,8 @@
                         emacsvox-aural-voice-editor-graphical-save-remains-visible
                         emacsvox-aural-voice-editor-graphical-more-controls-below-button
                         emacsvox-aural-guided-graphical-minibuffer-history-follows-origin))))
-          (setq status (if (and (= (ert-stats-total stats) 37)
-                                (= (ert-stats-completed stats) 37)
+          (setq status (if (and (= (ert-stats-total stats) 38)
+                                (= (ert-stats-completed stats) 38)
                                 (zerop (ert-stats-completed-unexpected stats))
                                 (zerop (ert-stats-skipped stats)))
                            0 1))))

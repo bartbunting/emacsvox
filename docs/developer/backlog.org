@@ -92,9 +92,27 @@ checks do not establish that the full interaction is clearly spoken.
 
 ** TODO Refine punctuation speech behavior
 
-Collect representative prose, code, shell, and structured-text examples before
-changing punctuation defaults.  Preserve an easy path to literal punctuation
-when it carries meaning.
+Deliver the work in the two stages described by the
+[[https://github.com/bartbunting/omnivox/blob/v1.15.0/docs/plans/punctuation-configuration.md][Omnivox punctuation plan]]. Stage one configures the existing =none=, =some= and
+=all= tables on the speech host, including common Unicode punctuation and sparse
+pronunciation overrides. Emacsvox retains its mode/buffer level selection;
+Org's default =some= preserves apostrophes unless the host table is overridden.
+Omnivox 1.15.0 names straight, curly and modifier apostrophes at =all= by default,
+without requiring a configuration file.
+
+The follow-up =omnivox-punctuation= interface reviews host-provided defaults and
+saved overrides, edits independent drafts, saves through the negotiated local
+service, and offers a separate explicit speech restart. Aural Home exposes it
+under /Voices and speech/. File conflicts retain the draft. Remote and
+native-direct editing remain outside the existing local management provider.
+
+Stage two remains deferred: discover custom named profiles from both workers,
+offer mode/buffer selection, and negotiate built-in fallbacks with older servers.
+The proposed =most= level is also deferred beyond Omnivox 1.15.0; its exact
+defaults and compatibility behavior need coordinated host/client work.
+Keep character inspection independent of prose levels. Collect representative
+prose, code, shell and structured-text listening examples before further default
+changes; automated preparation checks do not establish audible acceptance.
 
 ** TODO Collect live feedback on EAT phase 9
 

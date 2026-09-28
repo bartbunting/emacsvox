@@ -84,6 +84,9 @@
 (declare-function emacsvox-aural-prefer-engine
                   "emacsvox-aural-voice-workbench" (engine-id &optional save))
 (declare-function tts-set-rate "tts-speak" (rate &optional prefix))
+(declare-function omnivox-punctuation "omnivox-punctuation" ())
+(declare-function omnivox-punctuation--dirty-p "omnivox-punctuation" ())
+
 (declare-function emacsvox-view-notifications "emacsvox-speak" ())
 
 (defvar-local emacsvox-aural-home-expanded-groups nil
@@ -93,7 +96,7 @@
   '((understand "Understand and change feedback"
                 explain recent-feedback return-source)
     (resources "Voices and speech"
-               voices browse-voices speech-engine speech-rate voice-workbench)
+               voices browse-voices speech-engine speech-rate punctuation voice-workbench)
     (output "Sounds and output"
             sounds spatial-settings output-volumes notification-log)
     (optional "Optional feedback and rules" features overrides buffer-rules training)
@@ -116,6 +119,8 @@
        (or (and (derived-mode-p 'emacsvox-aural-change-feedback-mode)
                 (emacsvox-aural-change-feedback--pending-p))
            (bound-and-true-p emacsvox-aural-editor-dirty)
+           (and (derived-mode-p 'omnivox-punctuation-mode)
+                (omnivox-punctuation--dirty-p))
            (and (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
                 (emacsvox-aural-voice-workbench--dirty-p)))))
    (buffer-list))
@@ -248,6 +253,9 @@
      (list 'speech-rate
            (vector "Speech rate" (format "%s" (bound-and-true-p tts-speech-rate))
                    "Set the source buffer rate; prefix sets the global rate"))
+     (list 'punctuation
+           (vector "Punctuation" "Saved speech-host settings"
+                   "Review pronunciations, edit overrides, and explicitly restart speech"))
      (list 'output-volumes
            (vector "Audio output" "Customize"
                    "Choose notification output and adjust speech, tone and earcon volumes"))
@@ -558,6 +566,7 @@
      (require 'emacsvox-aural-voice-workbench)
      (call-interactively #'emacsvox-aural-prefer-engine))
     ('speech-rate (emacsvox-aural-home--call-in-source #'tts-set-rate))
+    ('punctuation (require 'omnivox-punctuation) (call-interactively #'omnivox-punctuation))
     ((or 'notifications 'output-volumes) (customize-group 'tts-output))
     ('notification-log (call-interactively #'emacsvox-view-notifications))
     ('explain

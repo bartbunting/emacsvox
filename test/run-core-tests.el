@@ -35,6 +35,7 @@
                     omnivox-native-runtime-tests
                     omnivox-library-apply-tests
                     omnivox-library-tests
+                    omnivox-punctuation-tests
                     emacsvox-voice-tests
                     emacsvox-speak-tests
                     emacsvox-aural-transport-tests
