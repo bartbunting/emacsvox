@@ -1451,8 +1451,12 @@ spelled out  instead of being spoken."
       (funcall speaker (emacsvox-aural-source-substring start end)))))
 
 (defsubst emacsvox-is-alpha-p (c)
-  "Check if `C' is an alphabetic char."
-  (and (= ?w (char-syntax c))
+  "Return non-nil if C is a letter or number spoken without a Unicode name.
+Use Unicode categories rather than the buffer's word syntax: Org treats
+apostrophes as word constituents.  Keep numbers on the letter/phonetic path
+and respect `tts-unicode-untouched-charsets'."
+  (and (memq (get-char-code-property c 'general-category)
+             '(Lu Ll Lt Lm Lo Nd Nl No))
        (tts-unicode-char-untouched-p c)))
 
 ;;;   phonemic table

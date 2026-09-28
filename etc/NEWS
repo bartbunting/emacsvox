@@ -10,6 +10,14 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Hear apostrophes when typing or navigating in Org
+
+Character echo and character navigation now identify letters and numbers by
+Unicode category instead of the major mode's word syntax. Straight apostrophes
+in Org are announced as "apostrophe", independently of the prose punctuation
+level. Letter and digit feedback still respects the existing Unicode settings.
+Thanks to Joe Luke for the report and reproduction.
+
 ** Review and edit punctuation pronunciations
 
 Open =M-x omnivox-punctuation= or /Punctuation/ in Aural Home's /Voices and
