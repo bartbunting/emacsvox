@@ -38,6 +38,8 @@
 (require 'emacsvox-aural-planner)
 
 (declare-function emacsvox-speak-line "emacsvox-speak" (&optional arg))
+(declare-function emacsvox-aural-replay--play "emacsvox-aural-replay"
+                  (record &optional indices speech-action))
 (declare-function emacsvox-aural-change-feedback "emacsvox-aural-change-feedback" (&optional record))
 (declare-function emacsvox-aural-change-feedback--select-part "emacsvox-aural-change-feedback" (number))
 (declare-function emacsvox-aural-change-feedback--rule "emacsvox-aural-change-feedback" ())
@@ -175,10 +177,13 @@ Return lists of zero-based run indices in playback order."
   "Play the recorded or simulated baseline, or only the supplied INDICES."
   (interactive)
   (emacsvox-aural-feedback-details--complete)
+  (require 'emacsvox-aural-replay)
   (let* ((emacsvox-aural--history-recording-inhibited t)
          (runs (emacsvox-aural-presentation-record-runs emacsvox-aural-feedback-details--record)))
-    (emacsvox-aural-preview-play-runs
-     (if indices (mapcar (lambda (i) (nth i runs)) indices) runs))))
+    (if emacsvox-aural-feedback-details--simulation
+        (emacsvox-aural-preview-play-runs
+         (if indices (mapcar (lambda (i) (nth i runs)) indices) runs))
+      (emacsvox-aural-replay--play emacsvox-aural-feedback-details--record indices))))
 
 (defun emacsvox-aural-feedback-details-play-field ()
   "Replay the field, span or spoken label at point with its recorded settings."
@@ -195,6 +200,7 @@ Return lists of zero-based run indices in playback order."
   "Replay only the selected spoken label, without the surrounding field."
   (interactive)
   (emacsvox-aural-feedback-details--complete)
+  (require 'emacsvox-aural-replay)
   (pcase-let* ((`(,original ,action ,phase)
                 (or (emacsvox-aural-feedback-details--speech-action)
                     (user-error "Move to a spoken label first")))
@@ -206,7 +212,10 @@ Return lists of zero-based run indices in playback order."
           (and (eq phase 'after) (list action))
           (emacsvox-aural-concrete-plan-content plan)
           (emacsvox-aural--make-concrete-content :text "" :speak nil))
-    (emacsvox-aural-preview-play-runs (list (list plan "" nil)))))
+    (if emacsvox-aural-feedback-details--simulation
+        (emacsvox-aural-preview-play-runs (list (list plan "" nil)))
+      (emacsvox-aural-replay--play emacsvox-aural-feedback-details--record nil
+                                 (list original action phase)))))
 
 (defun emacsvox-aural-feedback-details--edit-speech-voice ()
   "Edit the selected spoken label's named palette voice."
@@ -690,6 +699,8 @@ The existing sound override editor owns its separate unsaved rule draft."
     (emacsvox-aural-feedback-details--heading "Aural Feedback Details")
     (insert (if emacsvox-aural-feedback-details--simulation
                 "Simulated feedback.\n" "Captured feedback.\n"))
+    (unless emacsvox-aural-feedback-details--simulation
+      (insert "Original playback uses the recorded engine and voice; incomplete voice evidence cannot be replayed.\n"))
     (when (emacsvox-aural-presentation-record-effective-payload-truncated-p record)
       (insert "Truncated preview; complete playback unavailable.\n"))
     (insert (format "Source: %s\n\n"

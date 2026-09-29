@@ -279,14 +279,7 @@ workstation can prepare a new activation when no old lane remains live."
             (tts--protocol-sync))
           (when (and (tts--notification-process-configured-p)
                      (not (process-live-p tts-notify-process)))
-            (tts-notify-initialize)
-            (when (process-live-p tts-notify-process)
-              (omnivox--negotiate-process tts-notify-process)
-              (let ((tts-speaker-process tts-notify-process))
-                (tts--protocol-sync))
-              (unless (string-empty-p omnivox-default-voice-id)
-                (tts-queue--send-typed
-                 tts-notify-process (format "tts_set_voice %s\n" omnivox-default-voice-id) 'neutral))))
+            (tts-notify-initialize))
           (setq omnivox-remote--retry-delay 1 omnivox-remote--last-error nil))
       (error
        (setq omnivox-remote--last-error (error-message-string err))

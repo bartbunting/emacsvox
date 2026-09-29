@@ -45,10 +45,21 @@
   "One bounded, data-only record of a transport-submitted presentation.
 
 PLAN remains the representative first run for compatibility.  PLANS and
-PAUSES retain bounded formatting-run previews in a native transaction."
+PAUSES retain bounded formatting-run previews in a native transaction.
+PLAYBACK and PLAYBACK-RUNS hold private, data-only actual voice evidence."
   id queued-at plan source-buffer-name source-position object-id run-id
   plans pauses transaction-id payload-preview payload-character-count
-  payload-byte-count payload-sha256 payload-truncated-p)
+  payload-byte-count payload-sha256 payload-truncated-p playback playback-runs)
+
+(cl-defstruct (emacsvox-aural--playback (:constructor emacsvox-aural--make-playback))
+  "Bounded playback evidence shared by one presentation's retained records."
+  (run-sequence 0) dispatches unavailable)
+
+(defvar emacsvox-aural--history-playback nil
+  "Data-only playback evidence for the current presentation.")
+
+(defvar emacsvox-aural--history-captured-plans nil
+  "Temporary original-plan to retained-run associations for this delivery.")
 
 (defconst emacsvox-aural--history-preview-max-bytes 4096
   "Maximum aggregate UTF-8 speech preview retained in one history record.")
@@ -343,6 +354,13 @@ Return the preview budget left after PLAN."
           (if (plist-get payload :truncated-p)
               (emacsvox-aural--bound-history-plans plans)
             plans))
+         (playback-runs
+          (mapcar (lambda (plan)
+                    (let* ((context (emacsvox-aural-concrete-plan-context plan))
+                           (id (plist-get context :playback-run-id)))
+                      ;; This association is history metadata, not rule input.
+                      (cl-remf (emacsvox-aural-concrete-plan-context plan) :playback-run-id)
+                      id)) plans))
          (plan (car plans))
          (context (emacsvox-aural-concrete-plan-context plan)))
     (emacsvox-aural--make-presentation-record
@@ -357,6 +375,8 @@ Return the preview budget left after PLAN."
      :payload-byte-count (plist-get payload :byte-count)
      :payload-sha256 (plist-get payload :sha256)
      :payload-truncated-p (plist-get payload :truncated-p)
+     :playback emacsvox-aural--history-playback
+     :playback-runs playback-runs
      :source-buffer-name (plist-get context :source-buffer-name)
      :source-position (plist-get context :source-position)
      :object-id
@@ -394,6 +414,13 @@ combined history record."
              (if text-supplied-p
                  (emacsvox-aural--freeze-presentation-plan plan text)
                (emacsvox-aural--freeze-presentation-plan plan))))
+        (when emacsvox-aural--history-playback
+          (let ((id (cl-incf (emacsvox-aural--playback-run-sequence
+                             emacsvox-aural--history-playback))))
+            (setf (emacsvox-aural-concrete-plan-context frozen)
+                  (plist-put (emacsvox-aural-concrete-plan-context frozen)
+                             :playback-run-id id))
+            (push (cons plan id) emacsvox-aural--history-captured-plans)))
         (if
             (and
              emacsvox-aural--history-transaction-id
@@ -415,7 +442,10 @@ combined history record."
 Concrete runs submitted beneath the call are retained together when
 their plans carry the matching transaction identifier.  Unrelated legacy
 presentations keep independent history records."
-  (let* ((emacsvox-aural--history-transaction-id transaction-id)
+  (let* ((emacsvox-aural--history-playback
+          (or emacsvox-aural--history-playback
+              (emacsvox-aural--make-playback)))
+         (emacsvox-aural--history-transaction-id transaction-id)
          (emacsvox-aural--history-transaction-runs nil)
          (deferred-state (list :registered nil :delivered nil :record nil))
          (emacsvox-aural--delivery-history-registrar

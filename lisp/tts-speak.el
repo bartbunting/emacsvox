@@ -57,6 +57,9 @@
 (defvar emacsvox-aural-source-invisible-property)
 (defvar emacsvox-aural--source-visibility-captured-property)
 (defvar emacsvox-aural--current-submission-id)
+(defvar omnivox-default-voice-id)
+
+(declare-function omnivox--negotiate-process "omnivox-voices" (process))
 
 (declare-function ems--fastload "emacsvox-preamble" (file))
 (declare-function emacsvox-aural-diagnostic-log-event
@@ -3897,6 +3900,9 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
     process))
 
 (declare-function voice-setup "voice-setup" ())
+(defvar tts--initializing nil
+  "Non-nil while full speech startup will configure both processes together.")
+
 (defun tts-initialize ()
   "Initialize speech system."
   
@@ -3904,7 +3910,8 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
   (unless tts-program (setq tts-program "espeak"))
   (when (omnivox-remote-enabled-p) (omnivox-remote--begin-activation))
   (require 'omnivox-library)
-  (let* ((omnivox--engine-startup (omnivox-library--prepare-engines))
+  (let* ((tts--initializing t)
+         (omnivox--engine-startup (omnivox-library--prepare-engines))
          (new (tts-make-process "Speaker"))
          (old-speaker tts-speaker-process) quit-data)
     ;; Retire the old server only after its replacement starts successfully.
@@ -4404,6 +4411,24 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
           (error "Fail: Notification Speech Server"))))
     ;; Publish the replacement before retirement hooks observe global state.
     (setq tts-notify-process new)
+    (when (and (processp new) (tts--omnivox-program-p)
+               (not tts--initializing))
+      ;; Full startup calls `voice-setup' for both lanes.  A notification-only
+      ;; reset must restore its own routing and voice state as well.
+      (let (configured)
+        (unwind-protect
+            (progn
+              (require 'omnivox-voices)
+              (omnivox--negotiate-process new)
+              (let ((tts-speaker-process new)) (tts--protocol-sync))
+              (unless (string-empty-p omnivox-default-voice-id)
+                (tts-queue--send-typed
+                 new (format "tts_set_voice %s\n" omnivox-default-voice-id)
+                 'neutral))
+              (setq configured t))
+          (unless configured
+            (setq tts-notify-process old)
+            (tts--retire-process new)))))
     (when (and (processp old) (not (eq old new)))
       (tts--retire-process old))
     new))

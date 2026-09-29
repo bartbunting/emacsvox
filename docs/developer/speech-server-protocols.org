@@ -71,6 +71,17 @@ mixer-source consumption and may precede physical sound by the output device's
 buffer latency; a protocol write or terminal callback is therefore not proof
 of acoustic onset.
 
+Recent Feedback retains a separate, data-only playback snapshot. Owned,
+validated start and voice-choice events associate actual physical voices with
+the frozen registry layers and retained run ranges. A presentation shares a
+64 KiB evidence budget, with at most 128 dispatches and 128 spans per dispatch;
+speech text remains subject to the existing 4096-byte history limit. Exhausted
+or incomplete evidence disables original replay without blocking delivery.
+Completed snapshots drive exact private voice previews with fallback disabled.
+They never rewrite the named-voice registry or borrow another lane's latest
+logical-voice realization. Ordinary history navigation retains the requested
+annotations; explicit original playback uses this observed snapshot.
+
 The canonical protocol documents are:
 
 - [[https://github.com/bartbunting/omnivox/blob/main/docs/protocols/control.md][Omnivox Control Protocol]]

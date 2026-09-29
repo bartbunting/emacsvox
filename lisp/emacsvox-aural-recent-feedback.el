@@ -45,6 +45,8 @@
                   "emacsvox-aural-feedback-details" (record))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
+(declare-function emacsvox-aural-replay--play "emacsvox-aural-replay"
+                  (record &optional indices speech-action))
 
 (defun emacsvox-aural-recent-feedback--record (&optional id)
   "Return the retained feedback record for optional row ID."
@@ -424,12 +426,11 @@ the value across sessions."
   (emacsvox-aural-feedback-details (emacsvox-aural-recent-feedback--record)))
 
 (defun emacsvox-aural-recent-feedback-replay ()
-  "Replay the complete frozen presentation at point when it was retained."
+  "Replay the presentation at point using its recorded actual voices."
   (interactive)
+  (require 'emacsvox-aural-replay)
   (let* ((record (emacsvox-aural-recent-feedback--record))
-         (id (emacsvox-aural-presentation-record-id record))
-         (plans
-          (emacsvox-aural-presentation-record-effective-plans record)))
+         (id (emacsvox-aural-presentation-record-id record)))
     (when
         (emacsvox-aural-presentation-record-effective-payload-truncated-p
          record)
@@ -442,15 +443,8 @@ the value across sessions."
          ""))
        (emacsvox-aural-presentation-record-payload-byte-count record)))
     (let ((emacsvox-aural--history-recording-inhibited t))
-      (if (cdr plans)
-          (emacsvox-aural-preview-play-runs
-           (emacsvox-aural-presentation-record-runs record)
-           (emacsvox-aural-presentation-record-effective-transaction-id
-            record))
-        (emacsvox-aural-preview-play-plan (car plans))))
+      (emacsvox-aural-replay--play record))
     (emacsvox-aural-recent-feedback-refresh id)
-    (emacsvox-aural-preview-message
-     "Replayed aural presentation %s" id)
     record))
 
 (defun emacsvox-aural-recent-feedback-audition-cues ()

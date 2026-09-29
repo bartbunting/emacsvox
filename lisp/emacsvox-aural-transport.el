@@ -82,6 +82,8 @@
 (declare-function omnivox--choice-provenance "omnivox-voices" (snapshot logical))
 (declare-function omnivox--choice-tuning-supported-p "omnivox-voices" (process))
 (declare-function omnivox--prepare-choice-dispatch "omnivox-voices" (owner snapshot spans))
+(declare-function emacsvox-aural-replay--attach "emacsvox-aural-replay"
+                  (owner snapshot built runs capture associations))
 (declare-function omnivox--choice-span-projection "omnivox-choice-codec" (registration logical request balance))
 (declare-function omnivox--choice-registration-version "omnivox-voices" (snapshot))
 (declare-function omnivox--native-tuning-supported-p "omnivox-voices" (process))
@@ -888,7 +890,11 @@ OWNER so a logical transaction cannot be partially delivered across streams."
     (tts--call-with-preparation
      owner
      (lambda ()
-       (let ((emacsvox-aural--delivery-transaction-active-p t)
+       (let ((emacsvox-aural--history-playback
+              (or emacsvox-aural--history-playback
+                  (emacsvox-aural--make-playback)))
+             (emacsvox-aural--history-captured-plans nil)
+             (emacsvox-aural--delivery-transaction-active-p t)
              (emacsvox-aural--delivery-transaction-entries nil)
              (emacsvox-aural--delivery-transaction-effects nil)
              (emacsvox-aural--delivery-timeline-runs nil)
@@ -2032,6 +2038,12 @@ the authoritative check after punctuation and split-cap preprocessing."
                (actual-id (car registration)))
           (when snapshot
             (omnivox--prepare-choice-dispatch (nth 2 registration) snapshot (nth 2 built)))
+          (when emacsvox-aural--history-captured-plans
+            (require 'emacsvox-aural-replay)
+            (emacsvox-aural-replay--attach
+             (nth 2 registration) snapshot built runs
+             emacsvox-aural--history-playback
+             (reverse emacsvox-aural--history-captured-plans)))
           (unless (= actual-id 1)
             (setq envelope (plist-put envelope :dispatch_id actual-id)))
           (list

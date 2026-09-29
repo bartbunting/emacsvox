@@ -48,6 +48,7 @@
           emacsvox-aural-transport
           emacsvox-aural-submission
           emacsvox-aural-preview
+          emacsvox-aural-replay
           emacsvox-aural-validation
           emacsvox-aural-ui
           emacsvox-aural-inspection

@@ -3140,16 +3140,17 @@ same report link; opening it does not save or apply anything.
 
 To inspect something heard earlier@comma{} open Aural Home and choose @emph{Recent
 feedback}@comma{} or press @kbd{H} there.  Each row preserves a recorded presentation; the history has a size limit.
-Moving through the Content column speaks the preview using its recorded voices@comma{}
-including voice changes within an entry.  Column titles and the other fields use
-the normal interface voice.
+Moving through the Content column speaks the preview using its captured voice
+annotations@comma{} including voice changes within an entry. Column titles and the
+other fields use the normal interface voice. Use @kbd{P} to hear the
+engine and physical voice that actually delivered the presentation.
 Useful commands in the feedback browser include:
 
 @table @kbd
 @item RET or e
 Open a readable Feedback Details buffer for the selected presentation.
 @item P
-Replay its complete ordered presentation without adding a history entry.
+Replay its retained presentation with the actual recorded voices@comma{} without adding a history entry.
 @item c
 Audition only its auditory cues.
 @item r
@@ -3176,13 +3177,13 @@ Press @kbd{q} to return to the same row and column in Recent Feedback.
 The report groups consecutive voice spans into semantic fields where the
 integration supplies them. In a Notmuch search result@comma{} for example@comma{} you can
 visit @emph{Authors}@comma{} @emph{Subject}@comma{} @emph{Date}@comma{} @emph{Message count}@comma{} and @emph{Tags}. Headings identify
-the recorded voices. Collapsed fields show only their headings. Visibility is
+the recorded logical voices. Collapsed fields show only their headings. Visibility is
 conveyed through the selected aural presentation@comma{} using earcons or optional
 spoken labels; the words @emph{expanded} and @emph{collapsed} are not inserted into the
 heading text. Press
 @kbd{RET} on a heading to reveal its text@comma{} playback and change
 controls@comma{} voice source@comma{} sounds@comma{} and any backend limitations. Field content is
-read in its recorded voices. Only fields with multiple spans show separate
+read with its captured voice annotations. Only fields with multiple spans show separate
 span sections@comma{} behind @emph{Individual voice spans}. Expand that section only when
 you want to inspect or change an individual span. Its heading announces the
 section without repeating the field's content. A single-span field shows its
@@ -3207,7 +3208,7 @@ draft buffer. The original or simulated presentation remains the same.
 
 @table @kbd
 @item n or p
-Move between headings. Collapsed fields speak only their heading; expanded fields also speak their content in the recorded voices.
+Move between headings. Collapsed fields speak only their heading; expanded fields also speak their content with its captured voice annotations.
 @item Up or Down
 Review individual lines without speaking the complete report.
 @item TAB or Shift-TAB
@@ -3258,15 +3259,29 @@ review and saving; that draft is not included in the report's linked-field
 preview. @emph{Restore inherited behavior} removes an override made by this sound
 workflow in the selected scope. Press @kbd{q} to return to the report.
 
-Original playback uses retained output; a simulated report labels its baseline
-playback as simulated throughout the report and linked change editor.
+Original playback uses the engine and physical voice reported during the
+original delivery@comma{} including notification voices and fallback choices. It keeps
+the captured voice tuning even after a palette change. Speech is synthesized
+again at the current reading speed and with the host's current pronunciation
+settings; history does not store audio. Cues and pauses retain their order@comma{}
+but their timing can differ from the original delivery.
+
+This requires a completed presentation with complete Omnivox voice receipts.
+Older@comma{} interrupted@comma{} truncated@comma{} or unsupported recordings remain inspectable@comma{}
+but original playback reports that it is unavailable rather than guessing a
+voice. Presentations with cues positioned inside speech@comma{} or voice changes that
+cannot be aligned after host text processing@comma{} are also unavailable. If a recorded
+voice is no longer available@comma{} playback stops instead of substituting another.
+Navigate over the source again to capture a new example.
+
+A simulated report labels its baseline playback as simulated throughout the
+report and linked change editor.
 Proposed playback uses current rules@comma{}
 captured buffer context@comma{} and the linked drafts without applying them. A span
 can be targeted separately only when its semantic field@comma{} a distinct named
 face@comma{} or an explicit voice annotation identifies it. Truncated history cannot provide complete playback or a
 comparable change preview. Older records missing preview inputs remain
-readable and replayable when complete; navigate over the source again to
-capture a new example before previewing changes.
+readable; capture a new example before previewing changes.
 
 Each expanded field explains where its voice and sounds came from@comma{} such as
 a visual face or your personal override. These explanations use the captured
@@ -7418,6 +7433,17 @@ records rather than adding a wire-protocol version.  Playback markers track
 mixer-source consumption and may precede physical sound by the output device's
 buffer latency; a protocol write or terminal callback is therefore not proof
 of acoustic onset.
+
+Recent Feedback retains a separate@comma{} data-only playback snapshot. Owned@comma{}
+validated start and voice-choice events associate actual physical voices with
+the frozen registry layers and retained run ranges. A presentation shares a
+64 KiB evidence budget@comma{} with at most 128 dispatches and 128 spans per dispatch;
+speech text remains subject to the existing 4096-byte history limit. Exhausted
+or incomplete evidence disables original replay without blocking delivery.
+Completed snapshots drive exact private voice previews with fallback disabled.
+They never rewrite the named-voice registry or borrow another lane's latest
+logical-voice realization. Ordinary history navigation retains the requested
+annotations; explicit original playback uses this observed snapshot.
 
 The canonical protocol documents are:
 

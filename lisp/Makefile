@@ -116,6 +116,7 @@ emacsvox-aural-submission.elc \
 emacsvox-aural-transport.elc \
 emacsvox-aural-description.elc \
 emacsvox-aural-preview.elc \
+emacsvox-aural-replay.elc \
 emacsvox-aural-validation.elc \
 emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc \
@@ -448,6 +449,7 @@ emacsvox-aural-submission.elc emacsvox-version.elc
 emacsvox-aural-description.elc: \
 emacsvox-aural-concrete.elc emacsvox-aural-rules.elc
 emacsvox-aural-preview.elc: emacsvox-aural-transport.elc
+emacsvox-aural-replay.elc: emacsvox-aural-preview.elc tts-speak.elc omnivox-voices.elc
 emacsvox-aural-validation.elc: emacsvox-aural-transport.elc
 emacsvox-aural-inspection.elc: \
 emacsvox-aural-concrete.elc emacsvox-aural-rules.elc \

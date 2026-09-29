@@ -297,14 +297,15 @@ same report link; opening it does not save or apply anything.
 
 To inspect something heard earlier, open Aural Home and choose /Recent
 feedback/, or press @@texinfo:@kbd{H}@@ there.  Each row preserves a recorded presentation; the history has a size limit.
-Moving through the Content column speaks the preview using its recorded voices,
-including voice changes within an entry.  Column titles and the other fields use
-the normal interface voice.
+Moving through the Content column speaks the preview using its captured voice
+annotations, including voice changes within an entry. Column titles and the
+other fields use the normal interface voice. Use @@texinfo:@kbd{P}@@ to hear the
+engine and physical voice that actually delivered the presentation.
 Useful commands in the feedback browser include:
 
 #+attr_texinfo: :indic kbd :compact t
 - RET or e :: Open a readable Feedback Details buffer for the selected presentation.
-- P :: Replay its complete ordered presentation without adding a history entry.
+- P :: Replay its retained presentation with the actual recorded voices, without adding a history entry.
 - c :: Audition only its auditory cues.
 - r :: Prepare a voice remap from the selected record.
 - R :: Replace, suppress, or restore one exact earcon.
@@ -325,13 +326,13 @@ Press @@texinfo:@kbd{q}@@ to return to the same row and column in Recent Feedbac
 The report groups consecutive voice spans into semantic fields where the
 integration supplies them. In a Notmuch search result, for example, you can
 visit /Authors/, /Subject/, /Date/, /Message count/, and /Tags/. Headings identify
-the recorded voices. Collapsed fields show only their headings. Visibility is
+the recorded logical voices. Collapsed fields show only their headings. Visibility is
 conveyed through the selected aural presentation, using earcons or optional
 spoken labels; the words /expanded/ and /collapsed/ are not inserted into the
 heading text. Press
 @@texinfo:@kbd{RET}@@ on a heading to reveal its text, playback and change
 controls, voice source, sounds, and any backend limitations. Field content is
-read in its recorded voices. Only fields with multiple spans show separate
+read with its captured voice annotations. Only fields with multiple spans show separate
 span sections, behind /Individual voice spans/. Expand that section only when
 you want to inspect or change an individual span. Its heading announces the
 section without repeating the field's content. A single-span field shows its
@@ -355,7 +356,7 @@ position. @@texinfo:@kbd{g}@@ updates draft status, for example after killing a
 draft buffer. The original or simulated presentation remains the same.
 
 #+attr_texinfo: :indic kbd :compact t
-- n or p :: Move between headings. Collapsed fields speak only their heading; expanded fields also speak their content in the recorded voices.
+- n or p :: Move between headings. Collapsed fields speak only their heading; expanded fields also speak their content with its captured voice annotations.
 - Up or Down :: Review individual lines without speaking the complete report.
 - TAB or Shift-TAB :: Move between action buttons; RET activates an action or expands a field.
 - O :: Play the original field, span or spoken label at point, or its labelled simulated baseline.
@@ -395,15 +396,29 @@ review and saving; that draft is not included in the report's linked-field
 preview. /Restore inherited behavior/ removes an override made by this sound
 workflow in the selected scope. Press @@texinfo:@kbd{q}@@ to return to the report.
 
-Original playback uses retained output; a simulated report labels its baseline
-playback as simulated throughout the report and linked change editor.
+Original playback uses the engine and physical voice reported during the
+original delivery, including notification voices and fallback choices. It keeps
+the captured voice tuning even after a palette change. Speech is synthesized
+again at the current reading speed and with the host's current pronunciation
+settings; history does not store audio. Cues and pauses retain their order,
+but their timing can differ from the original delivery.
+
+This requires a completed presentation with complete Omnivox voice receipts.
+Older, interrupted, truncated, or unsupported recordings remain inspectable,
+but original playback reports that it is unavailable rather than guessing a
+voice. Presentations with cues positioned inside speech, or voice changes that
+cannot be aligned after host text processing, are also unavailable. If a recorded
+voice is no longer available, playback stops instead of substituting another.
+Navigate over the source again to capture a new example.
+
+A simulated report labels its baseline playback as simulated throughout the
+report and linked change editor.
 Proposed playback uses current rules,
 captured buffer context, and the linked drafts without applying them. A span
 can be targeted separately only when its semantic field, a distinct named
 face, or an explicit voice annotation identifies it. Truncated history cannot provide complete playback or a
 comparable change preview. Older records missing preview inputs remain
-readable and replayable when complete; navigate over the source again to
-capture a new example before previewing changes.
+readable; capture a new example before previewing changes.
 
 Each expanded field explains where its voice and sounds came from, such as
 a visual face or your personal override. These explanations use the captured

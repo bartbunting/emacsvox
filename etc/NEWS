@@ -10,6 +10,15 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Replay the voice that delivered a notification
+
+Original playback in Recent Feedback and Feedback Details now uses the engine
+and physical voice reported during delivery, including fallback choices, even
+after changing palettes. This requires a new, completed recording with complete
+voice evidence. Older or incomplete recordings report that original playback
+is unavailable. Resetting the notification server also restores its Omnivox
+configuration and default voice.
+
 ** Hear apostrophes when typing or navigating in Org
 
 Character echo and character navigation now identify letters and numbers by

@@ -56,6 +56,7 @@
           "emacsvox-speak.el"
           "emacsvox-aural-description.el"
           "emacsvox-aural-preview.el"
+          "emacsvox-aural-replay.el"
           "emacsvox-aural-validation.el"
           "emacsvox-aural-ui.el"
           "emacsvox-aural-inspection.el"
