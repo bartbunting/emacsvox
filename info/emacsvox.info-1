@@ -95,12 +95,14 @@ interrupting you with unnecessary words.
 1.1 Where To Begin
 ==================
 
-   • If Emacsvox is not installed yet, start with *note Installation::.
-     It takes you from a source checkout to a clean speaking session and
-     includes a recovery path if speech does not start.
+   • If Emacsvox is not installed yet, start with *note Installation:
+     Installation.  It takes you from a source checkout to a clean
+     speaking session and includes a recovery path if speech does not
+     start.
 
-   • If Emacsvox is already speaking, continue with *note Basic Usage::
-     for a short first-session guide and the essential reading commands.
+   • If Emacsvox is already speaking, continue with *note Basic Usage:
+     Basic Usage. for a short first-session guide and the essential
+     reading commands.
 
    • If Emacs itself is new to you, ‘C-h t’ opens the Emacs tutorial.
      Emacsvox speaks the tutorial and the commands you use while
@@ -108,7 +110,8 @@ interrupting you with unnecessary words.
 
    • In any Emacs buffer, ‘C-h m’ describes the active modes and their
      commands, while ‘C-h k’ followed by a key explains that key.  See
-     *note Using Online Help:: when you want to explore further.
+     *note Using Online Help: Using Online Help. when you want to
+     explore further.
 
 1.2 The Welcome Screen
 ======================
@@ -116,8 +119,8 @@ interrupting you with unnecessary words.
 At an idle startup, after speech is ready, Emacsvox offers a short
 welcome screen.  It has actions to test speech, adjust rate and output
 volumes, choose voices and engines, open the tutorial or manual, and
-start normal use.  Use ‘TAB’ and ‘S-TAB’ to choose actions, ‘RET’ to
-activate one, and ‘q’ to return.  Arrow keys read the instructions
+start normal use.  Use ‘<TAB>’ and ‘S-<TAB>’ to choose actions, ‘<RET>’
+to activate one, and ‘q’ to return.  Arrow keys read the instructions
 normally.
 
    Toggle Show this welcome screen at startup to stop showing it
@@ -140,14 +143,14 @@ Emacsvox combines several kinds of feedback:
    You can adjust this presentation gradually.  Aural Home, opened with
 ‘C-e H’, brings voices, sound packs, profiles, and other presentation
 options together.  You do not need to configure it before beginning.
-See *note Aural Presentation:: when you want to understand or change
-what you hear.
+See *note Aural Presentation: Aural Presentation. when you want to
+understand or change what you hear.
 
    Emacsvox sends speech through a speech server.  New GNU/Linux, macOS,
 and WSL2 installations use Omnivox; established direct servers remain
 available for compatible existing setups.  The installation chapter
-introduces only what you need for first speech.  *Note Speech Backends::
-contains the platform and compatibility details.
+introduces only what you need for first speech.  *note Speech Backends:
+Speech Backends. contains the platform and compatibility details.
 
 1.4 About This Manual
 =====================
@@ -220,9 +223,9 @@ speech from ‘emacsvox --check’.  For remote Emacs or WSL with an
 existing Windows speech server, use ‘sudo apt install
 --no-install-recommends ./emacsvox_VERSION_all.deb’.  Remote sessions
 start with ‘emacsvox --remote’ after the workstation service, token and
-tunnel are prepared as described in *note Installing Remote Emacsvox::.
-The package does not acquire a Windows speech runtime; the guided WSL
-source installer below handles that.
+tunnel are prepared as described in *note Installing Remote Emacsvox:
+Installing Remote Emacsvox.  The package does not acquire a Windows
+speech runtime; the guided WSL source installer below handles that.
 
    Emacsvox installs under ‘/usr/share/emacsvox’, with the command
 ‘/usr/bin/emacsvox’.  It includes Lisp sources, sounds and offline
@@ -250,11 +253,12 @@ package, or offers an explicit source build.
    On GNU/Linux and macOS, install Emacs 30.2 or newer and ‘make’.
 Omnivox 1.12.0 or newer is the supported speech-server baseline.  On
 macOS, use Homebrew (https://brew.sh) to install Omnivox as described in
-*note Installing An Omnivox Release Binary::; Emacs and Emacsvox are
-installed separately.  Manual release-archive installation requires
-‘curl’, ‘tar’, and either ‘sha256sum’ on GNU/Linux or ‘shasum’ on macOS.
-GNU Texinfo is needed only when building or editing the documentation,
-not for an ordinary installation.
+*note Installing An Omnivox Release Binary: Installing An Omnivox
+Release Binary.; Emacs and Emacsvox are installed separately.  Manual
+release-archive installation requires ‘curl’, ‘tar’, and either
+‘sha256sum’ on GNU/Linux or ‘shasum’ on macOS.  GNU Texinfo is needed
+only when building or editing the documentation, not for an ordinary
+installation.
 
    Ubuntu 26.04 provides Emacs 30.2 as a distribution package, which
 satisfies this requirement.  The same minimum applies to native Windows.
@@ -280,7 +284,7 @@ toolchain, CMake, and Clang with libclang.  It additionally requires
 command-line tools on macOS.  These are not requirements for the
 recommended WSL2 binary route.  Docker and Windows .NET Framework are
 needed only for the advanced reproducible source-build route in *note
-Building Omnivox For WSL2::.
+Building Omnivox For WSL2: Building Omnivox For WSL2.
 
    Run the clone from a terminal on GNU/Linux, macOS, or WSL.  Under
 WSL, keep the checkout on the Linux filesystem.  The following concrete
@@ -300,9 +304,9 @@ only when following the Omnivox source-build or reproducible WSL2 build
 route.
 
    If this machine will send speech to another workstation, use *note
-Installing Remote Emacsvox:: instead of installing a local speech
-server.  For a local WSL2 desktop, first ask the guided installer to
-inspect the machine without changing it:
+Installing Remote Emacsvox: Installing Remote Emacsvox. instead of
+installing a local speech server.  For a local WSL2 desktop, first ask
+the guided installer to inspect the machine without changing it:
 
      cd ~/src/emacsvox
      ./bin/emacsvox-wsl-install --check
@@ -333,12 +337,12 @@ below ‘$XDG_CACHE_HOME/emacsvox/logs’, normally
 ‘~/.cache/emacsvox/logs’.  If a build fails, the installer shows its
 final log lines and the complete log path.  Continue only after hearing
 both the final tone and speech.  You can then skip to the last step in
-*note Quick Installation:: and start Emacsvox.
+*note Quick Installation: Quick Installation. and start Emacsvox.
 
    After the core installation works, optional speech engines are
-available from ‘M-x emacsvox-omnivox-manage-components RET’.  The same
+available from ‘M-x emacsvox-omnivox-manage-components <RET>’.  The same
 engine list is _Browse voices_ in Aural Home, opened with ‘C-e H’ and
-then ‘I’.  Select an engine and press ‘RET’ for details.  It
+then ‘I’.  Select an engine and press ‘<RET>’ for details.  It
 distinguishes engines already included in the core, downloadable
 engines, and bridges that still need a user-supplied runtime.  Choose
 _Install engine_ to confirm, checksum-verify, install, and validate that
@@ -389,8 +393,8 @@ location.
 
    Installation can finish before the workstation is connected.  Follow
 the _Remote workstation speech_ instructions in *note Supported Platform
-Routes:: to prepare its service, private token, and SSH reverse forward.
-Then run on the Emacs host:
+Routes: Supported Platform Routes. to prepare its service, private
+token, and SSH reverse forward.  Then run on the Emacs host:
 
      ./bin/emacsvox --remote --diagnose
      ./bin/emacsvox --remote --check
@@ -435,7 +439,7 @@ File: emacsvox.info,  Node: Updating Emacsvox Under WSL2,  Next: Building And Te
 The guided installer recompiles the source already present in the
 Emacsvox checkout, but it does not fetch newer source itself.  Keep the
 current speaking Emacsvox session open while updating.  Run the commands
-from ‘M-x shell RET’ in that session, or from another accessible WSL
+from ‘M-x shell <RET>’ in that session, or from another accessible WSL
 terminal:
 
      cd ~/src/emacsvox
@@ -469,8 +473,8 @@ updated checkout:
 remains the known-good source of speech while you test the replacement.
 The new process cannot retain Lisp loaded from the previous version.
 Confirm that it speaks the ready message and ordinary buffer contents.
-In the new session, use ‘M-x emacsvox-speak-version RET’ to hear the
-Emacsvox version and ‘M-x tts-speak-version RET’ to hear the live
+In the new session, use ‘M-x emacsvox-speak-version <RET>’ to hear the
+Emacsvox version and ‘M-x tts-speak-version <RET>’ to hear the live
 speech-server version.  Only after these checks pass should you save
 work in the old session and exit it.  You can then continue in the
 isolated session or start Emacsvox through your normal customized entry
@@ -491,8 +495,9 @@ its tone and speech, before performing the second-session test above.
 This manual route rebuilds Emacsvox but does not download or select a
 newly pinned Omnivox release.  When Omnivox also needs to be updated
 independently, follow the _Manual Release Installation_ subsection in
-*note Installing An Omnivox Windows Release Under WSL2::, then repeat
-the diagnostic and audible check above.
+*note Installing An Omnivox Windows Release Under WSL2: Installing An
+Omnivox Windows Release Under WSL2., then repeat the diagnostic and
+audible check above.
 
 
 File: emacsvox.info,  Node: Building And Testing The Speech Server,  Next: Quick Installation,  Prev: Updating Emacsvox Under WSL2,  Up: Installation
@@ -501,14 +506,15 @@ File: emacsvox.info,  Node: Building And Testing The Speech Server,  Next: Quick
 =============================
 
 If you used the guided WSL2 installer above, Omnivox is already
-installed and checked.  Continue to *note Quick Installation::.
+installed and checked.  Continue to *note Quick Installation: Quick
+Installation.
 
    On macOS, follow the Homebrew instructions in *note Installing An
-Omnivox Release Binary::.  They install the matching Mac binary and
-record its stable executable path for Emacsvox, including Emacs sessions
-that do not inherit the shell's ‘PATH’.  Homebrew installs Omnivox only;
-continue below to build and start Emacsvox with your selected Emacs 30.2
-or newer.
+Omnivox Release Binary: Installing An Omnivox Release Binary.  They
+install the matching Mac binary and record its stable executable path
+for Emacsvox, including Emacs sessions that do not inherit the shell's
+‘PATH’.  Homebrew installs Omnivox only; continue below to build and
+start Emacsvox with your selected Emacs 30.2 or newer.
 
    On a matching GNU/Linux x86-64 host, or for a manual Mac
 installation, use the archive instructions in that same section.  They
@@ -518,21 +524,22 @@ Then run:
 
      omnivox --check
 
-   Use *note Installing Omnivox From Source:: instead on Linux ARM64, an
-incompatible Linux distribution, or a host whose security policy does
-not permit the unsigned macOS archive.  No proprietary speech runtime is
-needed for either GNU/Linux or macOS route.
+   Use *note Installing Omnivox From Source: Installing Omnivox From
+Source. instead on Linux ARM64, an incompatible Linux distribution, or a
+host whose security policy does not permit the unsigned macOS archive.
+No proprietary speech runtime is needed for either GNU/Linux or macOS
+route.
 
    For a manual WSL2 installation, or to understand exactly what the
 guided installer verifies, see *note Installing An Omnivox Windows
-Release Under WSL2::.
+Release Under WSL2: Installing An Omnivox Windows Release Under WSL2.
 
    The check plays a tone followed by speech.  When you hear both, the
 speech server is ready.  If either is missing, use *note Backend
 Diagnostics And Responsibilities: Backend Diagnostics And Ownership.
-before continuing.  *Note Speech Backends:: contains the complete
-platform matrix, build details, and compatibility alternatives.  Native
-Windows Emacs on x64 is supported with Emacs 30.2 or newer.  Its
+before continuing.  *note Speech Backends: Speech Backends. contains the
+complete platform matrix, build details, and compatibility alternatives.
+Native Windows Emacs on x64 is supported with Emacs 30.2 or newer.  Its
 PowerShell installer reuses a prebuilt Emacs, can download a verified
 Emacs with ‘-DownloadEmacs’, or offers an explicit source build, and
 installs Omnivox without WSL.  Follow *note Installing Native Windows
@@ -629,25 +636,25 @@ the checkpoint through the capability-ready fallback so a routing error
 cannot suppress it indefinitely.
 
    This checkpoint describes the speech server.  Type ‘M-x
-emacsvox-startup-status RET’ to check background preparation of Emacsvox
-and its package integrations.  The command speaks a summary and opens a
-report.  Integrations waiting for their packages are normal: their
-speech support loads when you open those packages.  Run the command
-again to refresh the report; ‘q’ closes it.
+emacsvox-startup-status <RET>’ to check background preparation of
+Emacsvox and its package integrations.  The command speaks a summary and
+opens a report.  Integrations waiting for their packages are normal:
+their speech support loads when you open those packages.  Run the
+command again to refresh the report; ‘q’ closes it.
 
    You now have a working Emacsvox session.  Try these checks before
 connecting it to your personal configuration:
 
-  1. Type ‘M-x tts-speak-version RET’.  The live speech adapter should
+  1. Type ‘M-x tts-speak-version <RET>’.  The live speech adapter should
      speak its version response.
 
-  2. Type ‘C-h v tts-program RET’.  The displayed current value should
+  2. Type ‘C-h v tts-program <RET>’.  The displayed current value should
      name ‘omnivox’.
 
   3. Use ‘C-n’ and ‘C-p’ to move over lines and confirm ordinary spoken
-     navigation.  Type ‘M-x emacsvox-describe-emacsvox RET’ for the
-     Emacsvox overview.  *Note Basic Usage::, for the tested starter
-     commands.
+     navigation.  Type ‘M-x emacsvox-describe-emacsvox <RET>’ for the
+     Emacsvox overview.  See *note Basic Usage: Basic Usage., for the
+     tested starter commands.
 
    If the initial speech is too fast, press ‘C-e d -’ and then repeat
 ‘-’ to slow the current buffer, or use ‘C-e d r’ to enter an exact rate
@@ -656,9 +663,10 @@ a multiplier below one, such as ‘0.7’.  Put ‘C-u’ before the exact-rate
 or character-factor command to change the global default rather than
 only the current buffer.
 
-   When these checks pass, continue to *note Basic Usage:: for a short
-guided first session, or use *note Persistent Startup:: to connect
-Emacsvox to your normal Emacs configuration.
+   When these checks pass, continue to *note Basic Usage: Basic Usage.
+for a short guided first session, or use *note Persistent Startup:
+Persistent Startup. to connect Emacsvox to your normal Emacs
+configuration.
 
 
 File: emacsvox.info,  Node: Recovering From No Speech,  Next: Persistent Startup,  Prev: Confirming First Speech,  Up: Installation
@@ -699,9 +707,9 @@ The audible check passes, but "Emacsvox is ready" is absent
      init-file configuration.  For an Omnivox process error, inspect the
      private log directory described below.
 The ready message is heard, but one mode lacks spoken feedback
-     Type ‘M-x emacsvox-startup-status RET’.  The report names failed
+     Type ‘M-x emacsvox-startup-status <RET>’.  The report names failed
      startup work or package integrations and retains the original
-     error.  Use ‘M-x emacsvox-speak-buffer RET’ to hear the full
+     error.  Use ‘M-x emacsvox-speak-buffer <RET>’ to hear the full
      report.  Correct the named package, configuration, or Emacsvox
      problem, then verify in a fresh session.  For source edits, follow
      the byte-code build procedure before testing.  Repeating startup or
@@ -710,8 +718,8 @@ The ready message is heard, but one mode lacks spoken feedback
      the original error when requesting help.
 The ready message is heard, but speech later stops
      If Emacs reports that an Emacsvox speech server exited, inspect the
-     Omnivox session log and type ‘M-x tts-restart RET’ after correcting
-     the speech-server problem.  Logs are below
+     Omnivox session log and type ‘M-x tts-restart <RET>’ after
+     correcting the speech-server problem.  Logs are below
      ‘$XDG_STATE_HOME/emacsvox/omnivox’, defaulting to
      ‘~/.local/state/emacsvox/omnivox’.  Spoken text is omitted unless
      explicit text logging is enabled.
@@ -719,8 +727,9 @@ The isolated launcher works, but a customized Emacs start does not
      Remove or comment out the Emacsvox environment and ‘load-file’
      forms from the personal init file.  This is the rollback: it leaves
      the checkout and the known-good ‘./bin/emacsvox’ path intact.
-     Re-add the forms in the order shown in *note Persistent Startup::;
-     speech-server selection must happen before setup is loaded.
+     Re-add the forms in the order shown in *note Persistent Startup:
+     Persistent Startup.; speech-server selection must happen before
+     setup is loaded.
 
 
 File: emacsvox.info,  Node: Persistent Startup,  Prev: Recovering From No Speech,  Up: Installation
@@ -728,9 +737,9 @@ File: emacsvox.info,  Node: Persistent Startup,  Prev: Recovering From No Speech
 2.9 Persistent Startup
 ======================
 
-After *note Confirming First Speech:: succeeds, add these forms to your
-Emacs init file, replacing the example path with the absolute path of
-the checkout:
+After *note Confirming First Speech: Confirming First Speech. succeeds,
+add these forms to your Emacs init file, replacing the example path with
+the absolute path of the checkout:
 
      (setenv "TTS_PROGRAM" "omnivox")
      (load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
@@ -776,7 +785,7 @@ Meta key, which is usually Alt or Option.  For example, ‘C-n’ means hold
 Control and press ‘n’.  A sequence such as ‘C-e l’ means press ‘C-e’,
 release it, and then press ‘l’.
 
-   ‘M-x’ prompts for an Emacs command by name, and <RET> means the
+   ‘M-x’ prompts for an Emacs command by name, and ‘<RET>’ means the
 Return or Enter key.  A _buffer_ is the Emacs workspace containing text
 or an application.  _Point_ is the current editing position—the place
 affected by movement and editing commands.
@@ -806,9 +815,10 @@ Try these actions in the clean session started during installation:
 
    These commands are enough to begin exploring safely.  The rest of
 this chapter adds reading controls and speech settings as you need them.
-The generated *note (emacsvox-reference)Emacsvox Keymaps:: records the
-complete default keymaps, while live help remains authoritative when a
-package or personal configuration changes a binding.
+The generated *note Emacsvox Keymaps: (emacsvox-reference)Emacsvox
+Keymaps. in _Emacsvox Reference Manual_ records the complete default
+keymaps, while live help remains authoritative when a package or
+personal configuration changes a binding.
 
 
 File: emacsvox.info,  Node: Overview,  Next: Working,  Up: Basic Usage
@@ -832,8 +842,8 @@ automatically.
    For an everyday Voice Lock experiment, see *note Hear Structure With
 Voice Lock: Voice-lock.  When you want to understand or change voices,
 sounds, pronunciation, or other presentation choices, continue with
-*note Aural Presentation::.  The generated reference remains the exact
-inventory of their commands and options.
+*note Aural Presentation: Aural Presentation.  The generated reference
+remains the exact inventory of their commands and options.
 
 
 File: emacsvox.info,  Node: Working,  Next: Reading,  Prev: Overview,  Up: Basic Usage
@@ -863,8 +873,8 @@ three useful groups of explicit commands:
      Emacsvox integrations in the buffer where you are working.
 
    To move among buffers with the same major mode, use ‘C-e n’ and ‘C-e
-p’, then repeat with just ‘n’ or ‘p’.  See *note Desktop Objects:: for
-examples and the other buffer-selection controls.
+p’, then repeat with just ‘n’ or ‘p’.  See *note Desktop Objects:
+Desktop Objects. for examples and the other buffer-selection controls.
 
    The following sections introduce a practical starter set.  Use live
 Help or the generated reference when you need the complete commands for
@@ -892,7 +902,8 @@ They use the default ‘C-e’ prefix.
    This is deliberately a starter set, not a second complete key
 reference.  If a binding below differs in your session, use ‘C-h k’ on
 that key and check your customizations.  The complete generated defaults
-are in the *note (emacsvox-reference)Emacsvox Keymaps::.
+are in the *note Emacsvox Keymaps: (emacsvox-reference)Emacsvox Keymaps.
+in _Emacsvox Reference Manual_.
 
 ‘C-e c’
 
@@ -962,9 +973,9 @@ detailed, or inappropriate for the current task.  Most settings apply
 only to the current buffer.  Press ‘C-u’ before a command when its help
 says that a prefix argument changes the default for all buffers.
 
-   The generated *note (emacsvox-reference)Emacsvox Keymaps:: contains
-the complete speech keymap, including specialist server and
-text-chunking controls.
+   The generated *note Emacsvox Keymaps: (emacsvox-reference)Emacsvox
+Keymaps. in _Emacsvox Reference Manual_ contains the complete speech
+keymap, including specialist server and text-chunking controls.
 
 * Menu:
 
@@ -1039,8 +1050,8 @@ the global default.
    Character-rate scaling, text chunking, engine-specific controls, and
 reusable presentation profiles are intentionally outside this starter
 chapter.  Use live help for the current speech keymap and see *note
-Aural Presentation:: when you want a complete presentation setup rather
-than a temporary buffer change.
+Aural Presentation: Aural Presentation. when you want a complete
+presentation setup rather than a temporary buffer change.
 
    *Review punctuation pronunciations.*  With a supporting local Omnivox
 host, run ‘M-x omnivox-punctuation’, or choose _Punctuation_ under
@@ -1147,8 +1158,9 @@ speech, semantic feedback, tones, or auditory icons.
    The exact personalities depend on the speech engine and active
 presentation settings.  For an explanation of the separate Voice Lock,
 face-presentation, and semantic-presentation layers, see *note Voice
-Lock::.  Use *note Aural Presentation:: when you want to choose voices,
-sounds, profiles, or other reusable presentation behavior.
+Lock: Voice Lock.  Use *note Aural Presentation: Aural Presentation.
+when you want to choose voices, sounds, profiles, or other reusable
+presentation behavior.
 
 
 File: emacsvox.info,  Node: Status Information,  Prev: Voice-lock,  Up: Basic Usage
@@ -1159,7 +1171,8 @@ File: emacsvox.info,  Node: Status Information,  Prev: Voice-lock,  Up: Basic Us
 Use these commands when you need context without moving point.  They
 repeat the last message, identify the current buffer and modes, or
 report your position.  Less common status commands are listed in the
-*note (emacsvox-reference)Emacsvox Keymaps::.
+*note Emacsvox Keymaps: (emacsvox-reference)Emacsvox Keymaps. in
+_Emacsvox Reference Manual_.
 
 ‘C-e a’
 
@@ -1218,10 +1231,10 @@ WSL-to-Windows launcher; remote and direct native launches retain their
 existing limits.
 
    For a first installation, follow the linear procedure in *note
-Installation::.  Return here when you need platform-specific build
-details, compatibility servers, or deeper diagnostics.  Omnivox build
-internals, engine behavior, and versioned protocols are documented and
-maintained in the Omnivox repository
+Installation: Installation.  Return here when you need platform-specific
+build details, compatibility servers, or deeper diagnostics.  Omnivox
+build internals, engine behavior, and versioned protocols are documented
+and maintained in the Omnivox repository
 (https://github.com/bartbunting/omnivox).
 
 * Menu:
@@ -1348,9 +1361,9 @@ WSL's separate loopback instead.  Windows OpenSSH uses your Windows SSH
 keys and host-trust configuration.
 
    For a remote-only Linux installation and isolated launch commands,
-follow *note Installing Remote Emacsvox::.  The ‘--remote’ launcher
-supplies the connection options before initializing speech and needs no
-local Omnivox executable.
+follow *note Installing Remote Emacsvox: Installing Remote Emacsvox.
+The ‘--remote’ launcher supplies the connection options before
+initializing speech and needs no local Omnivox executable.
 
    For a personal Emacs configuration, set these options before starting
 Emacsvox:
@@ -1438,10 +1451,10 @@ launching Emacs session sees the same configuration location.
 
    Emacsvox uses its own bundled Lisp adapter.  Do not load the Homebrew
 package's ‘libexec/omnivox-voices.el’, which is intended for upstream
-Emacspeak.  Continue with *note Quick Installation:: to compile
-Emacsvox, run ‘./bin/emacsvox --diagnose’ and ‘./bin/emacsvox --check’,
-and start an isolated speaking session.  Confirm the selected server and
-audible output on your Mac.
+Emacspeak.  Continue with *note Quick Installation: Quick Installation.
+to compile Emacsvox, run ‘./bin/emacsvox --diagnose’ and ‘./bin/emacsvox
+--check’, and start an isolated speaking session.  Confirm the selected
+server and audible output on your Mac.
 
    To upgrade Omnivox later:
 
@@ -1468,10 +1481,10 @@ optional-engine installer is not a Homebrew package manager.
 
    The tap installs the published binaries without adding Apple
 Developer ID signing or notarization.  If local security policy refuses
-the verified binary, use *note Installing Omnivox From Source::.  Native
-tap checks cover WAV synthesis and package operations; they do not
-replace listening acceptance inside Emacs or prove an upgrade between
-different upstream versions.
+the verified binary, use *note Installing Omnivox From Source:
+Installing Omnivox From Source.  Native tap checks cover WAV synthesis
+and package operations; they do not replace listening acceptance inside
+Emacs or prove an upgrade between different upstream versions.
 
 4.2.2 Manual archive installation
 ---------------------------------
@@ -1542,8 +1555,9 @@ On GNU/Linux, a missing runtime library or incompatible glibc also means
 that the source route is the appropriate path.
 
    For Emacs running under WSL2, continue to *note Installing An Omnivox
-Windows Release Under WSL2::.  That route uses the verified Windows
-archive without requiring a compiler or Docker.
+Windows Release Under WSL2: Installing An Omnivox Windows Release Under
+WSL2.  That route uses the verified Windows archive without requiring a
+compiler or Docker.
 
 
 File: emacsvox.info,  Node: Installing An Omnivox Windows Release Under WSL2,  Next: Trying Native Windows Emacsvox,  Prev: Installing An Omnivox Release Binary,  Up: Speech Backends
@@ -1687,11 +1701,11 @@ speaks the selected engine using the current speech inventory, without
 waiting for file checks or fresh discovery.  Optional engines absent
 from that inventory remain visible as _not reported_, so their
 installation controls are still reachable.  Press ‘v’ to browse an
-engine's voices directly, or ‘RET’ for engine details.  Details start
+engine's voices directly, or ‘<RET>’ for engine details.  Details start
 with a short status summary and the voice actions, with _Browse voices_
 selected.  Matching main and notification status is combined.  Problems
 remain visible near the top.  _Startup settings_ and _Diagnostics_ start
-collapsed; press ‘RET’ on a section to expand or collapse it.  Each
+collapsed; press ‘<RET>’ on a section to expand or collapse it.  Each
 engine remembers its expanded sections and selection.
 
    _Available_ describes discovery from the current running worker.  An
@@ -1730,9 +1744,9 @@ current engine with its selection retained.
      installed library, including disabled downloads.  This separate
      browser keeps the general Voice Workbench's filters and staged
      edits intact.  Languages form expandable headings with voice
-     counts; ‘RET’ expands or collapses a heading.  A single-language
+     counts; ‘<RET>’ expands or collapses a heading.  A single-language
      list starts expanded, and the browser remembers groups and the
-     selected voice.  On a voice, ‘RET’ or ‘P’ speaks an exact sample;
+     selected voice.  On a voice, ‘<RET>’ or ‘P’ speaks an exact sample;
      ‘x’ shows details; ‘t’ opens the existing voice editor for an
      unsaved experiment.  Saving there asks for a palette destination.
      Browsing and auditioning do not change a palette.  ‘q’ returns to
@@ -1768,9 +1782,9 @@ current engine with its selection retained.
      unchanged until Apply.
    • _Voice variants_ in eSpeak details lists the bundled variants
      reported by the running speech worker.  Choose a base voice with
-     ‘b’, then use the arrow keys or ‘C-n’/‘C-p’ to browse variants.
+     ‘b’, then use the arrow keys or ‘C-n’ / ‘C-p’ to browse variants.
      The whole list is alphabetical by displayed name, ignoring
-     capitalization.  Press ‘P’ or ‘RET’ to hear the selected
+     capitalization.  Press ‘P’ or ‘<RET>’ to hear the selected
      combination immediately.  Variants need no enabling, settings save,
      download or speech restart.  The existing ‘p’ preview shortcut also
      remains available.  Press ‘u’ for _Use in palette_, then choose a
@@ -1799,27 +1813,28 @@ current engine with its selection retained.
      the reviewed download catalogue.  Piper is grouped by language,
      voice name and quality; Flite offers AWB and RMS.  Voices with one
      quality appear directly in their language group; only voices with
-     several qualities need another group.  Press ‘RET’ to open a group
-     or model, and ‘q’ to return.  ‘/’ searches all models by name or
-     language, including outside the current group.  Model details show
-     download size, source, licence information and storage location.
-     ‘s’ shows or hides the speakers sharing that model.  A model with
-     several speakers downloads once; each speaker can be enabled
-     separately after installation.  Press ‘i’ to install.  The download
-     runs in the background without speaking each progress update.
-     Omnivox checks each file and validates the voice before adding it
-     disabled.  Stay in the catalogue and press ‘e’ to enable or disable
-     the installed voice, then ‘a’ to review and Apply to both speech
-     streams.  For a shared model, ‘e’ asks which speaker to change.
-     Enabling alone does not restart speech.  These actions also appear
-     near the top of model details, alongside the installed and enabled
-     status.  Installation and Apply confirmations offer ‘yes’ and ‘no’
-     through completion.  Type ‘y TAB RET’ to confirm; an empty ‘RET’
-     declines, and ‘C-g’ cancels.  Press ‘c’ to request cancellation and
-     wait for cleanup.  The shipped collection contains reviewed, pinned
-     models that passed native validation.  Models with unresolved terms
-     or unsupported configurations are withheld; the catalogue is not a
-     live listing of every upstream download.
+     several qualities need another group.  Press ‘<RET>’ to open a
+     group or model, and ‘q’ to return.  ‘/’ searches all models by name
+     or language, including outside the current group.  Model details
+     show download size, source, licence information and storage
+     location.  ‘s’ shows or hides the speakers sharing that model.  A
+     model with several speakers downloads once; each speaker can be
+     enabled separately after installation.  Press ‘i’ to install.  The
+     download runs in the background without speaking each progress
+     update.  Omnivox checks each file and validates the voice before
+     adding it disabled.  Stay in the catalogue and press ‘e’ to enable
+     or disable the installed voice, then ‘a’ to review and Apply to
+     both speech streams.  For a shared model, ‘e’ asks which speaker to
+     change.  Enabling alone does not restart speech.  These actions
+     also appear near the top of model details, alongside the installed
+     and enabled status.  Installation and Apply confirmations offer
+     ‘yes’ and ‘no’ through completion.  Type ‘y <TAB> <RET>’ to
+     confirm; an empty ‘<RET>’ declines, and ‘C-g’ cancels.  Press ‘c’
+     to request cancellation and wait for cleanup.  The shipped
+     collection contains reviewed, pinned models that passed native
+     validation.  Models with unresolved terms or unsupported
+     configurations are withheld; the catalogue is not a live listing of
+     every upstream download.
    • MBROLA offers US1, US2 and US3; British English en1 is already
      included.  These downloads require the updated, separately
      configured development companion on Linux or Windows.  Older
@@ -1896,7 +1911,7 @@ current engine with its selection retained.
      Both worker inventories are requested asynchronously.
    • To install an engine, choose _Manage installed release_ and check
      the displayed installation and location.  If its files are
-     available to download, activate _Install engine_ with ‘RET’, then
+     available to download, activate _Install engine_ with ‘<RET>’, then
      confirm.  The manager verifies the version-matched download.  The
      table shows its operation in progress while the current engine's
      status stays separate.
@@ -1907,9 +1922,9 @@ current engine with its selection retained.
      short notice without selecting another buffer.  The last result
      remains in the release view; _Read last result_ opens its complete
      output.
-   • In details, ‘TAB’ moves to the next action or section; ‘S-TAB’
-     moves to the previous one.  ‘RET’ activates an action or toggles a
-     section.  Arrow keys read visible fields and values.  ‘q’ returns
+   • In details, ‘<TAB>’ moves to the next action or section; ‘S-<TAB>’
+     moves to the previous one.  ‘<RET>’ activates an action or toggles
+     a section.  Arrow keys read visible fields and values.  ‘q’ returns
      to the selected engine row and ‘h’ opens Aural Home, and ‘?’ opens
      help.  Background refresh preserves selection and expanded
      sections.
@@ -2237,17 +2252,17 @@ Verify the installation with these checks:
 
   1. Emacsvox speaks its startup introduction.
 
-  2. ‘C-h v tts-program RET’ displays the absolute path to the verified
-     ‘omnivox.exe’.
+  2. ‘C-h v tts-program <RET>’ displays the absolute path to the
+     verified ‘omnivox.exe’.
 
-  3. ‘M-x tts-speak-version RET’ speaks the Omnivox version response,
-     and ‘M-x omnivox-list-voices RET’ displays the Windows voices.
+  3. ‘M-x tts-speak-version <RET>’ speaks the Omnivox version response,
+     and ‘M-x omnivox-list-voices <RET>’ displays the Windows voices.
 
   4. ‘C-n’ and ‘C-p’ speak ordinary line movement, ‘C-e s’ stops current
-     speech, and ‘M-x tts-restart RET’ restores speech without a process
-     error.
+     speech, and ‘M-x tts-restart <RET>’ restores speech without a
+     process error.
 
-  5. Type ‘M-x emacsvox-toggle-icons RET’ twice.  The second toggle,
+  5. Type ‘M-x emacsvox-toggle-icons <RET>’ twice.  The second toggle,
      which turns icons back on, plays a short auditory icon in addition
      to plain speech.
 
@@ -2329,8 +2344,9 @@ File: emacsvox.info,  Node: Building Omnivox For WSL2,  Next: Selecting And Chec
 Use this advanced route when maintaining the reproducible Emacsvox
 Windows bundle or its optional engine integrations.  Ordinary WSL2 users
 should use the pre-built release in *note Installing An Omnivox Windows
-Release Under WSL2::.  This target builds from source and currently
-produces an x86-64 Windows runtime.
+Release Under WSL2: Installing An Omnivox Windows Release Under WSL2.
+This target builds from source and currently produces an x86-64 Windows
+runtime.
 
    Before running it, install or configure all of the following:
 
@@ -2434,8 +2450,8 @@ process, so Piper appears only after the newly staged server has started
 and successfully loaded its model and helper.
 
    Maintainers testing tracked changes should use the development route
-in *note Integration Maintenance:: rather than weakening the
-clean-release guard:
+in *note Integration Maintenance: Integration Maintenance. rather than
+weakening the clean-release guard:
 
      OMNIVOX_RHVOICE_LIBRARY=/mnt/c/path/to/RHVoice.dll \
        OMNIVOX_RHVOICE_DATA=/mnt/c/path/to/RHVoice/data \
@@ -2464,9 +2480,9 @@ inspect the engines reported by the new process.
 separate ‘windows-omnivox-piper-dev’ target and its native Windows CI
 artifact.  The target requires the archive's published SHA-256 and a
 reviewed external model, and rejects a dirty or different Omnivox
-checkout.  See *note Integration Maintenance:: for the complete command
-and provenance checks.  This development path does not change the
-companion pinned for reproducible releases.
+checkout.  See *note Integration Maintenance: Integration Maintenance.
+for the complete command and provenance checks.  This development path
+does not change the companion pinned for reproducible releases.
 
 
 File: emacsvox.info,  Node: Selecting And Checking Omnivox,  Next: Compatibility Speech Servers,  Prev: Building Omnivox For WSL2,  Up: Speech Backends
@@ -2728,8 +2744,8 @@ state changes.
 
    You do not need to predict which commands every mode provides.  Press
 ‘C-h m’ in the buffer you are using, then ‘C-h k’ followed by a key when
-you want a fuller explanation.  *Note Using Online Help:: provides a
-short practical guide to these discovery commands.
+you want a fuller explanation.  *note Using Online Help: Using Online
+Help. provides a short practical guide to these discovery commands.
 
 
 File: emacsvox.info,  Node: Context-Sensitive Interaction,  Prev: Object Oriented Desktop,  Up: Audio Desktop
@@ -2751,10 +2767,10 @@ events or state changes without interrupting the spoken content.
 Ordinary text remains available through the usual reading commands.
 
    The exact result depends on the mode, the Emacsvox integration, and
-your Aural Presentation settings.  *Note Aural Presentation:: explains
-how the parts fit together, including the established Voice Lock
-compatibility layer; ‘C-e E’ explains the presentation chosen for the
-object at point.
+your Aural Presentation settings.  *note Aural Presentation: Aural
+Presentation. explains how the parts fit together, including the
+established Voice Lock compatibility layer; ‘C-e E’ explains the
+presentation chosen for the object at point.
 
 5.3.2 Move By The Structure Of The Content
 ------------------------------------------
@@ -2767,8 +2783,8 @@ document structure.
 
    Begin with ‘C-h m’.  It describes the commands available in the
 running buffer, including personal customizations and installed
-packages.  *Note Browsing Structure:: points to maintained guides for
-several common types of content.
+packages.  *note Browsing Structure: Browsing Structure. points to
+maintained guides for several common types of content.
 
 5.3.3 Move Between Tasks Without Losing Your Place
 --------------------------------------------------
@@ -2857,8 +2873,8 @@ For a first listening experiment:
 
   1. Press ‘C-e H’, then ‘/’, and choose _Browse voices_ from the
      searchable actions.
-  2. Select an available engine and press ‘v’ to list its voices.  <RET>
-     opens an Omnivox engine's status, downloads, and settings.
+  2. Select an available engine and press ‘v’ to list its voices.
+     ‘<RET>’ opens an Omnivox engine's status, downloads, and settings.
   3. Move to a voice and press ‘P’ to hear a sample.  ‘S’ stops it.
      Browsing and previewing save no settings.
   4. Press ‘h’ to return to Home.  From Home, ‘C-c C-o’ returns to the
@@ -2883,7 +2899,7 @@ settings.  If a prepared remap's source item changes or disappears,
 Emacsvox asks you to prepare that change again before applying it.
 
    Aural Home begins with six task groups in one spoken table.  Press
-<RET> or <TAB> to expand or collapse a group.  Each action names a
+‘<RET>’ or ‘<TAB>’ to expand or collapse a group.  Each action names a
 destination, reports its current status, and describes its purpose.  ‘/’
 searches all actions, including collapsed groups; the matching group
 opens with your destination selected.
@@ -2957,11 +2973,11 @@ capture options, palette, sound pack, and spatial settings.  Physical
 choices and their adjustments belong to the selected palette's named
 voices; shared engine settings are saved separately.
 
-   You can press <RET> on a row without memorizing its shortcut.  Aural
-Home also provides direct keys for frequent routes, including ‘x’ for
-Feedback Details, ‘O’ for your feedback rules, ‘H’ for recent feedback,
-‘P’ for profiles, ‘V’ for voice palettes, ‘W’ for Voice Workbench, and
-‘D’ for Aural Doctor.
+   You can press ‘<RET>’ on a row without memorizing its shortcut.
+Aural Home also provides direct keys for frequent routes, including ‘x’
+for Feedback Details, ‘O’ for your feedback rules, ‘H’ for recent
+feedback, ‘P’ for profiles, ‘V’ for voice palettes, ‘W’ for Voice
+Workbench, and ‘D’ for Aural Doctor.
 
    _Feedback for this item_ combines explanation, playback, and access
 to voice and sound changes.  The direct shortcuts ‘c’, ‘r’, ‘T’, and ‘R’
@@ -2971,7 +2987,7 @@ available from Home's Help, search, and the matching-criteria section of
 a change editor.
 
    The voice editor contains fields and buttons rather than table
-columns: left/right changes a numeric value, and <RET> edits a field.
+columns: left/right changes a numeric value, and ‘<RET>’ edits a field.
 See *note Edit a Named Voice: (emacsvox)Editing Named Voices.  Keys are
 local to the view: for example, ‘w’ saves a voice in its editor but
 exports a palette in the palette manager.  Use ‘C-c C-a’ to choose an
@@ -3182,23 +3198,23 @@ Headings identify the recorded logical voices.  Collapsed fields show
 only their headings.  Visibility is conveyed through the selected aural
 presentation, using earcons or optional spoken labels; the words
 _expanded_ and _collapsed_ are not inserted into the heading text.
-Press ‘RET’ on a heading to reveal its text, playback and change
+Press ‘<RET>’ on a heading to reveal its text, playback and change
 controls, voice source, sounds, and any backend limitations.  Field
 content is read with its captured voice annotations.  Only fields with
 multiple spans show separate span sections, behind _Individual voice
 spans_.  Expand that section only when you want to inspect or change an
 individual span.  Its heading announces the section without repeating
 the field's content.  A single-span field shows its text and controls
-once, and its heading omits the span count.  Press ‘RET’ on the field
+once, and its heading omits the span count.  Press ‘<RET>’ on the field
 heading again to collapse it.
 
    Spoken labels such as _indent 2_ have their own _Before speech_ or
 _After speech_ headings within the expanded field.  They are separate
-from the content voice spans.  Press ‘RET’ on a spoken label's heading,
-or ‘O’ within that entry, to replay just that label with its recorded
-settings.  Its _Edit named voice indent_ link opens the palette voice
-editor using _indent 2_ as the sample.  This changes every use of that
-named voice in the recorded palette.  The report keeps its original
+from the content voice spans.  Press ‘<RET>’ on a spoken label's
+heading, or ‘O’ within that entry, to replay just that label with its
+recorded settings.  Its _Edit named voice indent_ link opens the palette
+voice editor using _indent 2_ as the sample.  This changes every use of
+that named voice in the recorded palette.  The report keeps its original
 recording; use the editor's preview to hear your changes.  Labels
 without a named palette voice remain playable and explain why no editor
 link is shown.
@@ -3368,8 +3384,8 @@ palette definitions and saved rules alone.
      simulation.
 
   3. Open ‘C-e H c’.  Press ‘c’, select _Content voice_, and choose
-     ‘annotate’ with ‘RET’.  If ‘annotate’ is already the original, use
-     ‘bolden’ instead.  ‘O’ plays the original and ‘P’ previews your
+     ‘annotate’ with ‘<RET>’.  If ‘annotate’ is already the original,
+     use ‘bolden’ instead.  ‘O’ plays the original and ‘P’ previews your
      choice.  At this point the change exists only in the draft.
 
   4. Press ‘m’ to inspect _What should match_.  Keep the Org module and
@@ -3411,22 +3427,22 @@ File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For
      use Home's ‘H’, select a _Recent Feedback_ record, and press ‘C’.
      A record containing several parts expands numbered parts in
      playback order.  Move with ‘n’ and ‘p’ to hear their text in the
-     captured voices; ‘O’ replays the part at point.  Press ‘RET’ to
+     captured voices; ‘O’ replays the part at point.  Press ‘<RET>’ to
      select it.  Truncated history cannot supply a complete
      original/proposed comparison.
 
   2. Press ‘c’ to expand component changes in the panel.  Move to a
-     choice and press ‘RET’.  _Content voice_ expands voice choices and
-     identifies the original voice and proposed replacement.  The
+     choice and press ‘<RET>’.  _Content voice_ expands voice choices
+     and identifies the original voice and proposed replacement.  The
      original named voice comes first when available, followed by
-     alternatives in alphabetical order.  Press ‘RET’ on a voice to
+     alternatives in alphabetical order.  Press ‘<RET>’ on a voice to
      select it for the draft; the panel stays open for comparison.
      Available changes include the content voice, adding a sound or
      tone, adding a spoken label, replacing an existing sound, changing
      a tone, or suppressing one component.  You can add a cue when the
      original has none.  The choices use the facts and components
      supplied by the integration; they cannot add missing semantic
-     distinctions.  ‘RET’ on _Parts_ reopens the parts; unfinished
+     distinctions.  ‘<RET>’ on _Parts_ reopens the parts; unfinished
      choices are retained separately when you switch between parts.
      Press ‘q’ to go back one level: from a voice choice to _Content
      voice_, then to _Change_.  The section closes and focus returns to
@@ -3440,7 +3456,7 @@ File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For
      and its captured buffer context.  It does not apply your draft to
      live feedback.
 
-  4. Press ‘m’ or ‘RET’ on _What should match_ to expand the matching
+  4. Press ‘m’ or ‘<RET>’ on _What should match_ to expand the matching
      criteria.  Each fact, state, event, and occasion shows _Included_
      or _Excluded_.  All included conditions must match; excluded
      conditions are ignored, not forbidden.  The _Captured example_ (or
@@ -3451,7 +3467,7 @@ File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For
      them.  For example, a mail action of _select_ describes the
      operation that produced the feedback, not whether a row is selected
      in this editor.  Include that action or an event such as _operation
-     failed_ to limit the rule to it.  Press ‘RET’ on a criterion to
+     failed_ to limit the rule to it.  Press ‘<RET>’ on a criterion to
      exclude or include it; excluded criteria stay available to restore.
      For example, exclude _with state unread_ while keeping _with role
      field_, _with field kind authors_, and _from the notmuch
@@ -3505,7 +3521,7 @@ File: emacsvox.info,  Node: Choosing A Voice For An Item,  Next: Managing Feedba
      prompt first.
 
      In the remapping screen, move with ‘n’ and ‘p’ or the arrow keys.
-     Press ‘RET’ on _Voice_ to choose a voice, _Preview original_ to
+     Press ‘<RET>’ on _Voice_ to choose a voice, _Preview original_ to
      hear the captured item, or _Preview change_ to hear your choice.
      ‘O’ and ‘P’ also play these previews; ‘S’ stops.  Previewing does
      not save the mapping or retune the named voice.
@@ -3535,11 +3551,11 @@ File: emacsvox.info,  Node: Managing Feedback Rules,  Next: Presentation Options
 6.4.4 Review And Remove Your Rules
 ----------------------------------
 
-In _Your feedback rules_, ‘RET’ or ‘e’ opens the selected rule's
+In _Your feedback rules_, ‘<RET>’ or ‘e’ opens the selected rule's
 settings panel.  In the rule list, the same keys open that panel.  Only
 the selected rule appears while its panel is open; the other rules
 remain in the working draft.  ‘n’ and ‘p’ move through the visible
-settings; ‘SPC’ reads the current setting and value.  ‘RET’ expands
+settings; ‘<SPC>’ reads the current setting and value.  ‘<RET>’ expands
 _What should match_, _Content_, _Before content_, or _After content_.
 Matching criteria toggle between included and excluded.  Within
 _Content_, _voice_ and _speak_ expand their choices in place, showing
@@ -3574,7 +3590,7 @@ Presentation Options are maintained additions such as richer heading
 feedback or integration-specific cues.  From Aural Home, open
 _Presentation Options_:
 
-  1. Use <TAB> or <RET> on a collection to expand it.
+  1. Use ‘<TAB>’ or ‘<RET>’ on a collection to expand it.
 
   2. Move to an option and press ‘P’ to preview it composed with the
      current configuration.  Press ‘C-u P’ to preview it in isolation.
@@ -3615,10 +3631,11 @@ engine preference, see *note Installed Voices and Engines:
 (emacsvox)Installed Voices And Engines.
 
    Use the _Voice Palettes_ manager to choose a palette or manage its
-named voices.  Press <RET> on a palette to browse its voices, use ‘P’ to
-audition the palette sequence before editing, and use ‘a’ in the palette
-manager to activate a selected palette.  Built-in palettes remain
-intact; editing can open an unsaved personal child in the common editor.
+named voices.  Press ‘<RET>’ on a palette to browse its voices, use ‘P’
+to audition the palette sequence before editing, and use ‘a’ in the
+palette manager to activate a selected palette.  Built-in palettes
+remain intact; editing can open an unsaved personal child in the common
+editor.
 
    *Upgrading personal palettes.*  This version accepts palette schema 3
 only.  Before upgrading a setup with older personal palettes, back up
@@ -3718,14 +3735,14 @@ current palette before starting so you can return to it.
      palette, but does not activate it.  Its standard voices are
      inherited.
 
-  2. Press ‘RET’ to enter the new palette.  Find ‘bolden’ and move to
+  2. Press ‘<RET>’ to enter the new palette.  Find ‘bolden’ and move to
      its _Source_ column.  It should name ‘acss-default’.  ‘.’ repeats
-     the column title and value; ‘SPC’ reads the whole row.  ‘P’
+     the column title and value; ‘<SPC>’ reads the whole row.  ‘P’
      previews the voice.
 
   3. Press ‘e’ to edit ‘bolden’ here.  The editor identifies the
      destination palette and inherited source.  Move to _Average Pitch_,
-     press ‘RET’, and enter ‘6’ (or ‘5’ if it is already six).  ‘B’
+     press ‘<RET>’, and enter ‘6’ (or ‘5’ if it is already six).  ‘B’
      compares the opening voice with the edited voice using the same
      text.  Unsupported adjustments are reported; see *note Voice
      Adjustments: (emacsvox)Voice Adjustments. if the contrast is
@@ -3914,7 +3931,7 @@ Experiment. for that sequence.
 
    The editor uses the ordinary navigation voice for its labelled
 fields.  ‘n/p’, up/down or Tab moves between fields.  Left/right adjusts
-a numeric field and moves between fields elsewhere; <RET> activates a
+a numeric field and moves between fields elsewhere; ‘<RET>’ activates a
 button or enters an adjustment value.  Press ‘d’ on an adjustment to
 restore the adapter default; blank numeric entry does the same.  Zero is
 an explicit value, such as the lowest pitch or leftmost pan, whereas
@@ -4106,15 +4123,16 @@ whether to keep its settings or return to shared settings.
    Choose _Customize this voice_ in that row's menu for optional
 individual tuning.  The panel names the physical voice it edits.  Each
 field says _use shared value_, _custom value_, or _explicit adapter
-default_.  ‘RET’ offers all three states; left/right sets a number, ‘d’
-restores adapter default, and ‘i’ returns the field to its shared value.
-Zero is an explicit setting.  Later shared edits affect only inherited
-fields.  _More adjustments and effects_ reveals the additional controls.
-Automatic samples speak the value or state before the sample and
-audition this row.  _Play whole fallback chain_ checks normal selection.
-Use _Return to shared settings_ to leave individual tuning; all edits
-belong to the same voice draft and the same Save action.  Removing a row
-disables its controls until undo or a return to shared settings.
+default_.  ‘<RET>’ offers all three states; left/right sets a number,
+‘d’ restores adapter default, and ‘i’ returns the field to its shared
+value.  Zero is an explicit setting.  Later shared edits affect only
+inherited fields.  _More adjustments and effects_ reveals the additional
+controls.  Automatic samples speak the value or state before the sample
+and audition this row.  _Play whole fallback chain_ checks normal
+selection.  Use _Return to shared settings_ to leave individual tuning;
+all edits belong to the same voice draft and the same Save action.
+Removing a row disables its controls until undo or a return to shared
+settings.
 
    With Omnivox's per-choice tuning support, complete previews retain
 the full fallback chain and each row's settings.  _Last sample playback
@@ -4147,14 +4165,14 @@ controls shows them read-only.  Engine-wide and startup settings are
 also read-only here; their help identifies their scope.
 
    Actions come first, followed by expandable groups with columns for
-parameter, value, source, and range.  ‘RET’ on a control offers _Set
+parameter, value, source, and range.  ‘<RET>’ on a control offers _Set
 value_, _Follow common settings_, _Engine voice default_, and _Parameter
 help_.  Values use the engine's units and limits.  Help explains the
 default's source, common controls that affect the parameter, and
 reported side effects.  Press ‘?’ on a parameter to open and hear its
 help; ‘q’ returns to that row.  Left/right changes a set numeric value
 by the engine's step, within its limits.  For an inherited value or an
-unknown default, first choose a value with ‘RET’; the editor does not
+unknown default, first choose a value with ‘<RET>’; the editor does not
 guess the engine's current setting.  ‘i’ removes an override; ‘d’
 requests the engine voice default.  _Reset engine-specific settings_
 removes its native overrides while preserving common adjustments and
@@ -4219,7 +4237,7 @@ whether the rule lasts always (personal), for this Emacs session, or for
 this buffer.  Choose one adjustment and its value.  It opens the
 ordinary rule editor with that field prepared; changing richness alone
 produces a richness-only patch and does not select a different named
-voice.  Review the rule's match with <RET>, use ‘V’ to adjust another
+voice.  Review the rule's match with ‘<RET>’, use ‘V’ to adjust another
 voice field, and save that scope with ‘w’.  Palette definitions are
 unchanged.  Existing unsaved work in that rule editor must be completed
 before preparing another contextual rule.
@@ -4249,8 +4267,8 @@ source buffer keeps its original text.  This can keep the preferred
 voice speaking when the rest of the text is compatible; the normal
 repertoire checks still decide which engine can handle it.
 
-   The feature is enabled by default.  Use ‘M-x customize-group RET
-emacsvox-emoji RET’ to review its options.  Set
+   The feature is enabled by default.  Use ‘M-x customize-group <RET>
+emacsvox-emoji <RET>’ to review its options.  Set
 ‘emacsvox-emoji-naming-enabled’ to nil to disable it globally, or
 disable it only in the current source buffer with:
 
@@ -4353,10 +4371,10 @@ engines.  Open it from Aural Home with ‘W’.  Its main views are:
      inspect their parameters and what their current engines support.
 
    For physical voices, choose _Browse voices_ in Home, then press ‘v’
-on an engine to browse its voices.  On an Omnivox engine, <RET> opens
+on an engine to browse its voices.  On an Omnivox engine, ‘<RET>’ opens
 its status, downloads, and settings; ‘q’ returns to the selected engine.
-Other speech adapters use <RET> to browse voices directly.  <RET> or ‘P’
-on a voice plays a named sample; ‘x’ shows details and ‘t’ opens the
+Other speech adapters use ‘<RET>’ to browse voices directly.  ‘<RET>’ or
+‘P’ on a voice plays a named sample; ‘x’ shows details and ‘t’ opens the
 voice editor.  Filters set with ‘F’ and each view's selected row and
 column survive navigation through Home.  The engine selected for
 browsing is a temporary limit: switching to the logical, styles, or
@@ -4370,7 +4388,7 @@ the workbench.  The direct view shortcuts remain available.
    Languages containing just one voice show that voice directly.
 Languages with several voices appear under expandable headings.  Each
 heading reports its voice count and whether it is expanded or collapsed;
-press <RET> to toggle it.  Languages and voices start in alphabetical
+press ‘<RET>’ to toggle it.  Languages and voices start in alphabetical
 order, ignoring capitalization.  Related regions form a tree: expand
 _English_, then _United Kingdom_ to browse voices such as _English (West
 Midlands)_.  Redundant single-child levels are omitted, and private
@@ -4559,7 +4577,7 @@ destination.  Note the active palette before beginning.
      that palette at startup.
   5. To reverse this change before saving, use ‘u’ or discard the draft.
      After saving, reopen the named voice, expand _Fallbacks_, open the
-     added choice's action menu with ‘RET’, choose _Remove_, preview,
+     added choice's action menu with ‘<RET>’, choose _Remove_, preview,
      and save.  Removing that row retains the other choices and shared
      settings.  Reactivate your original palette if you also want to
      restore the session selection.
@@ -4661,7 +4679,7 @@ File: emacsvox.info,  Node: Sound Pack Walkthrough,  Next: Changing One Sound,  
   1. Open ‘C-e H’, choose _Sound packs_, and note the currently active
      pack.  Select another pack of kind _sound_ and press ‘P’ for a
      representative cue.  Preview does not select the pack.
-  2. Press ‘RET’ to browse its cues.  Inspect _Availability_ and
+  2. Press ‘<RET>’ to browse its cues.  Inspect _Availability_ and
      _Provider_: a cue may come from the pack itself, its parent, or a
      registered fallback.  Press ‘P’ on a few cues you recognize.  ‘S’
      stops playback.
@@ -4689,8 +4707,8 @@ File: emacsvox.info,  Node: Changing One Sound,  Next: Changing Tones,  Prev: So
 ----------------------------------
 
   1. Repeat the action that produces the unwanted cue.  Open ‘C-e H H’,
-     select that recorded feedback, and press ‘RET’ to explain it.  Find
-     the cue name and whether it occurs before or after content.
+     select that recorded feedback, and press ‘<RET>’ to explain it.
+     Find the cue name and whether it occurs before or after content.
   2. Return to the feedback list and press ‘C’ for _Change this
      feedback_.  If the record has several parts, select the part
      containing that cue.  Press ‘c’, choose _Suppress one component_,
@@ -4941,8 +4959,8 @@ starting.
      ‘reading-setup-demo’.
   3. Choose a different palette or sound pack for working, then save
      another new profile named ‘working-setup-demo’.  Both profiles
-     should show their selected resources in the list.  ‘RET’ describes
-     a profile's saved fields.
+     should show their selected resources in the list.  ‘<RET>’
+     describes a profile's saved fields.
   4. Select ‘reading-setup-demo’ and press ‘a’ to apply it.  Check the
      active palette and sound pack in Home, then repeat familiar
      feedback.  Select ‘working-setup-demo’ and apply it to compare the
@@ -5173,7 +5191,8 @@ palettes, and Voice Workbench.  Older configurations can still customize
 a named legacy voice's ‘-settings’ option, such as
 ‘voice-monotone-settings’.  Customize the settings option rather than a
 generated ‘acss-...’ voice symbol.  Historical background is preserved
-in *note (emacsvox-heritage)Audio Formatting And Aural CSS::.
+in *note Audio Formatting And Aural CSS: (emacsvox-heritage)Audio
+Formatting And Aural CSS. in _Emacspeak Heritage_.
 
    Named formatting voices such as ‘bolden’ and ‘annotate’ follow the
 active palette.  An inherited standard entry may use a personality's
@@ -5185,10 +5204,11 @@ change the resulting voice.
    The *note Developer Guide: (emacsvox)Integration Maintenance. covers
 voice-style metadata, rule authoring contracts, and integration
 behavior; *note Speech Server Protocols: (emacsvox)Speech Server
-Protocols. covers delivery.  The generated *note
-(emacsvox-reference)Emacsvox Commands And Options:: records exact
-commands, options, and keymaps.  These references complement the tasks
-here; they are not prerequisites for using Aural Home.
+Protocols. covers delivery.  The generated *note Emacsvox Commands And
+Options: (emacsvox-reference)Emacsvox Commands And Options. in _Emacsvox
+Reference Manual_ records exact commands, options, and keymaps.  These
+references complement the tasks here; they are not prerequisites for
+using Aural Home.
 
 
 File: emacsvox.info,  Node: Using Online Help,  Next: Emacs Packages,  Prev: Aural Presentation,  Up: Top
@@ -5285,9 +5305,10 @@ manuals, follow cross-references, or keep a help buffer for later.
      object at point received its voices, sounds, and other auditory
      actions.
 
-   The generated *note (emacsvox-reference)Emacsvox Keymaps:: records
-all default Emacsvox bindings.  Prefer ‘C-h k’, ‘C-h m’, and ‘C-h b’
-when a running package or customization changes those defaults.
+   The generated *note Emacsvox Keymaps: (emacsvox-reference)Emacsvox
+Keymaps. in _Emacsvox Reference Manual_ records all default Emacsvox
+bindings.  Prefer ‘C-h k’, ‘C-h m’, and ‘C-h b’ when a running package
+or customization changes those defaults.
 
 
 File: emacsvox.info,  Node: Emacs Packages,  Next: Notmuch Mail,  Prev: Using Online Help,  Up: Top
@@ -5299,8 +5320,9 @@ Emacsvox prepares speech support for many Emacs modes as their libraries
 are loaded.  Start the application normally; when its buffer appears,
 use ‘C-h m’ for the active modes and their commands, ‘C-h b’ for the
 effective bindings, and ‘C-h k’ followed by a key to identify one
-binding.  The generated *note (emacsvox-reference)Emacsvox Commands And
-Options:: records the public Emacsvox commands and options.
+binding.  The generated *note Emacsvox Commands And Options:
+(emacsvox-reference)Emacsvox Commands And Options. in _Emacsvox
+Reference Manual_ records the public Emacsvox commands and options.
 
    This chapter is a curated starting point, not a promise that every
 module in the generated reference has a maintained task guide.  Emacs
@@ -5310,8 +5332,8 @@ when diagnosing a problem.
 
    Earlier Emacspeak surveys, including their W3, Dismal, and
 scanner/OCR setup, are preserved as historical material in *note
-Historical Application Survey: (emacsvox-heritage)Emacs Packages.  They
-are not current setup instructions.
+Historical Application Survey: (emacsvox-heritage)Emacs Packages. in
+_Emacspeak Heritage_.  They are not current setup instructions.
 
 * Menu:
 
@@ -5337,7 +5359,7 @@ Emacsvox speaks ordinary movement and editing, applies voice-lock where
 the mode exposes useful faces, and adds mode-specific feedback where an
 integration exists.  Open or create the document in its normal Emacs
 mode, then use ‘C-h m’ to discover that mode's workflow.  For outlines
-and templates, see *note Structured Editing::.
+and templates, see *note Structured Editing: Structured Editing.
 
 
 File: emacsvox.info,  Node: Structured Editing,  Next: Browsing Structure,  Prev: Document Authoring,  Up: Emacs Packages
@@ -5350,14 +5372,17 @@ libraries.  In Outline mode, heading navigation speaks the reached
 heading and visibility commands announce what was hidden or exposed.
 Start a dedicated outline with ‘M-x outline-mode’, or enable
 ‘outline-minor-mode’ in a suitable document.  See *note
-(emacsvox-reference)emacsvox-outline:: for the Emacsvox integration and
-*note (emacs)Outline Mode:: for the underlying editor.
+emacsvox-outline: (emacsvox-reference)emacsvox-outline. in _Emacsvox
+Reference Manual_ for the Emacsvox integration and *note Outline Mode:
+(emacs)Outline Mode. in _The GNU Emacs Manual_ for the underlying
+editor.
 
    Tempo supplies template fields for modes and packages that use it.
 Emacsvox speaks inserted text and the line reached when moving between
 template marks.  The package that supplied a template also provides its
 insertion commands; use that package's mode help, together with *note
-(emacsvox-reference)emacsvox-tempo::.
+emacsvox-tempo: (emacsvox-reference)emacsvox-tempo. in _Emacsvox
+Reference Manual_.
 
 
 File: emacsvox.info,  Node: Browsing Structure,  Next: Web Browsing,  Prev: Structured Editing,  Up: Emacs Packages
@@ -5369,9 +5394,9 @@ Use the structure exposed by the active Emacs mode rather than treating
 every buffer as plain text.  Info provides node and menu navigation,
 Outline provides heading and visibility commands, and EWW exposes HTML
 headings, links, lists, tables, and other document elements.  Begin with
-‘C-h m’ in the buffer; see *note Using Online Help:: for the common
-discovery commands and *note Web Browsing:: for the maintained Web
-route.
+‘C-h m’ in the buffer; see *note Using Online Help: Using Online Help.
+for the common discovery commands and *note Web Browsing: Web Browsing.
+for the maintained Web route.
 
 8.3.1 Reading Markdown and Org tables
 -------------------------------------
@@ -5428,7 +5453,7 @@ commands retain their normal meaning; an edit ends the reading context.
 Org's existing table editing feedback and Markdown's markup-stripping
 speech option remain independent of this reader.  Agent Shell uses the
 same logical reading operations with its existing automatic table entry,
-commands and preferences; see *note Agent Shell::.
+commands and preferences; see *note Agent Shell: Agent Shell.
 
 8.3.2 Browsing CSV data
 -----------------------
@@ -5487,12 +5512,13 @@ File: emacsvox.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Stru
 =========================
 
 EWW is the built-in browser supported for current Emacsvox.  Run ‘M-x
-eww <RET>’, enter a URL or search words, and press <RET>.  Emacsvox
+eww <RET>’, enter a URL or search words, and press ‘<RET>’.  Emacsvox
 speaks EWW navigation and rendering feedback and adds commands for
 moving by HTML structure and filtering the displayed DOM.  In an EWW
 buffer, use ‘C-h m’ for the live workflow and ‘C-h b’ for its effective
-keys.  See *note (emacs)EWW:: for browser operation and *note
-(emacsvox-reference)emacsvox-eww:: for the speech integration.
+keys.  See *note EWW: (emacs)EWW. in _The GNU Emacs Manual_ for browser
+operation and *note emacsvox-eww: (emacsvox-reference)emacsvox-eww. in
+_Emacsvox Reference Manual_ for the speech integration.
 
    The former Emacs/W3 and w3m survey is historical.  Do not install
 either one on the strength of the Heritage manual; use EWW unless a
@@ -5506,9 +5532,10 @@ File: emacsvox.info,  Node: Messaging,  Next: Editing Code,  Prev: Web Browsing,
 
 Emacsvox integrates with several Emacs mail and messaging modes.  The
 curated workflow for indexed mail search, asynchronous results, thread
-reading, attachments, and privacy controls is *note Notmuch Mail::.  For
-another client, start with its own manual and ‘C-h m’; use the generated
-reference to find an Emacsvox module with the same package or mode name.
+reading, attachments, and privacy controls is *note Notmuch Mail:
+Notmuch Mail.  For another client, start with its own manual and ‘C-h
+m’; use the generated reference to find an Emacsvox module with the same
+package or mode name.
 
 
 File: emacsvox.info,  Node: Editing Code,  Next: Development Environment,  Prev: Messaging,  Up: Emacs Packages
@@ -5590,18 +5617,19 @@ File: emacsvox.info,  Node: Desktop Applications,  Prev: Personal Information Ma
 8.10.1 Terminal Applications
 ----------------------------
 
-For a new full-terminal workflow, use *note EAT Terminal Access::.  When
-a built-in terminal with no additional package is preferable, use *note
-Running Terminal Based Applications::.  For ordinary line-oriented shell
-commands, ‘M-x shell’ is usually the simplest route.
+For a new full-terminal workflow, use *note EAT Terminal Access: EAT
+Terminal Access.  When a built-in terminal with no additional package is
+preferable, use *note Running Terminal Based Applications: Running
+Terminal Based Applications.  For ordinary line-oriented shell commands,
+‘M-x shell’ is usually the simplest route.
 
    In WSL Shell buffers, command-name completion skips Windows drive
 directories by default.  Scanning large directories such as
 ‘C:\Windows\System32’ can otherwise pause Emacs for many seconds.
 Windows programs still run by name, and explicit filename completion,
 including paths under ‘/mnt/c/’, remains available.  To include Windows
-command names in completion again, use ‘M-x customize-option RET
-emacsvox-shell-complete-windows-commands RET’ and enable the option.
+command names in completion again, use ‘M-x customize-option <RET>
+emacsvox-shell-complete-windows-commands <RET>’ and enable the option.
 This setting leaves native Windows and remote Shell buffers unchanged.
 
 8.10.2 Forms Mode
@@ -5610,9 +5638,10 @@ This setting leaves native Windows and remote Shell buffers unchanged.
 The built-in Forms library presents records from a structured text file
 one at a time.  Emacsvox speaks field values, record movement, searches,
 and status changes while Forms mode is active.  Forms requires a format
-specification; see *note (emacs)Forms Mode:: for setup and operation,
-and *note (emacsvox-reference)emacsvox-forms:: for the speech
-integration.
+specification; see *note Forms Mode: (emacs)Forms Mode. in _The GNU
+Emacs Manual_ for setup and operation, and *note emacsvox-forms:
+(emacsvox-reference)emacsvox-forms. in _Emacsvox Reference Manual_ for
+the speech integration.
 
 8.10.3 OCR And PDF-To-Text With PaddleOCR
 -----------------------------------------
@@ -5701,7 +5730,7 @@ the OCR buffer:
    • Press ‘o’, choose an image or PDF, and wait for the completion cue.
      OCR runs asynchronously, and the result appears as a new page in
      the buffer.
-   • Press <SPC> to read the current result, ‘s’ to save it, or ‘w’ to
+   • Press ‘<SPC>’ to read the current result, ‘s’ to save it, or ‘w’ to
      save the complete OCR buffer.  Press ‘[’ and ‘]’ to move between
      results.
    • Press ‘d’ to open the per-user OCR directory.  Engine progress and
@@ -5764,10 +5793,11 @@ setup first.  The official Notmuch Emacs manual
 (https://notmuchmail.org/doc/latest/notmuch-emacs.html) covers that
 setup and the complete upstream command set.
 
-   The generated *note (emacsvox-reference)emacsvox-notmuch:: section is
-the exhaustive Emacsvox command and option reference.  This chapter
-follows the tasks a user performs and explains when automatic feedback
-occurs.
+   The generated *note emacsvox-notmuch:
+(emacsvox-reference)emacsvox-notmuch. in _Emacsvox Reference Manual_
+section is the exhaustive Emacsvox command and option reference.  This
+chapter follows the tasks a user performs and explains when automatic
+feedback occurs.
 
 9.1 Start Notmuch
 =================
@@ -5850,8 +5880,8 @@ completion.  These policies use the same stream selection for refreshes.
 Other search summaries use the notification stream.  Failures remain
 audible and generic for every policy, with focused refresh failures
 using the primary stream too.  The deliberate global refresh-all command
-remains silent.  See *note Aural Presentation:: for the streams' general
-behavior and configuration.
+remains silent.  See *note Aural Presentation: Aural Presentation. for
+the streams' general behavior and configuration.
 
 9.3 Navigate and inspect Search results
 =======================================
@@ -5895,8 +5925,8 @@ equivalent to the standard next and previous thread commands.
    The default Search fields are authors, subject, relative date,
 matched and total message counts, and ordinary tags.  Status tags
 configured as auditory cues are not repeated as words.  See *note
-Notmuch fields and privacy:: to omit or reorder potentially sensitive
-fields.
+Notmuch fields and privacy: Notmuch fields and privacy. to omit or
+reorder potentially sensitive fields.
 
 9.4 Read a thread and its MIME parts
 ====================================
@@ -5933,7 +5963,7 @@ message ends with folded quoted text.  The quote stays folded.
 ‘M-RET’
      Run ‘notmuch-show-open-or-close-all’.  It opens every message and
      reports the resulting thread state and total, such as "Opened all 5
-     messages."  Use a prefix argument, ‘C-u M-RET’, to close every
+     messages."  Use a prefix argument, ‘C-u M-<RET>’, to close every
      message and receive the corresponding total.
 ‘C-c C-p’
      Run ‘emacsvox-notmuch-speak-show-position’.  It reports the message
@@ -5996,7 +6026,7 @@ nested tag or archive command.
 9.6 Choose fields, status, and privacy
 ======================================
 
-Run ‘M-x customize-group RET emacsvox-notmuch RET’ to change Notmuch
+Run ‘M-x customize-group <RET> emacsvox-notmuch <RET>’ to change Notmuch
 speech without altering Notmuch's own database or display.
 
 ‘emacsvox-notmuch-search-result-fields’
@@ -6043,7 +6073,7 @@ presentation:
 
    A shortened Search or Show presentation states what was omitted and
 points to ‘C-c C-p’ for explicit full configured details; a shortened
-Hello item points to <RET>.  The explicit Search and Show inspection
+Hello item points to ‘<RET>’.  The explicit Search and Show inspection
 commands deliberately bypass the automatic content limits; use them only
 when speaking the complete configured fields is appropriate.
 
@@ -6109,5 +6139,5 @@ exact bounded presentation submitted for a Notmuch action.  These
 diagnostics do not query or modify the mail database.
 
    If you are changing the integration rather than using it, see *note
-Integration Maintenance:: for the build, test, renderer, and
-asynchronous lifecycle contracts.
+Integration Maintenance: Integration Maintenance. for the build, test,
+renderer, and asynchronous lifecycle contracts.

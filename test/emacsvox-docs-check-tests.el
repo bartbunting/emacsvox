@@ -10,6 +10,7 @@
 (require 'ert)
 (require 'emacsvox-docs-check)
 (require 'emacsvox-org-export)
+(require 'emacsvox-org-text-export)
 
 (cl-defmacro emacsvox-docs-check-tests--with-directory
     ((directory) &rest body)
@@ -114,6 +115,90 @@
         (goto-char (point-min))
         (should-not (search-forward "\\input texinfo" nil t))
         (should-not (search-forward "@bye" nil t))))))
+
+(ert-deftest emacsvox-org-export-renders-org-keys-and-literals ()
+  "Native Org keys retain named-key formatting and escape Texinfo syntax."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((source (expand-file-name "manual.org" directory))
+          (output (expand-file-name "manual.texi" directory)))
+      (with-temp-file source
+        (insert "#+title: Test Manual\n\n* Chapter\n\n"
+                "Use ~C-x C-f~, ~TAB~, ~S-TAB~, ~M-RET~ and ~M-x term RET~.\n"
+                "Keys ~{~, ~}~, ~C-c @~ and ~C-e ,~ remain literal.\n"
+                "Read =local.mk= and =EMACS==; TTS keeps its name.\n"))
+      (emacsvox-docs-check-tests--without-live-export-feedback
+        (emacsvox-org-export source output t))
+      (with-temp-buffer
+        (insert-file-contents output)
+        (dolist (expected '("@kbd{C-x C-f}" "@kbd{@key{TAB}}"
+                            "@kbd{S-@key{TAB}}" "@kbd{M-@key{RET}}"
+                            "@kbd{M-x term @key{RET}}" "@kbd{@{}"
+                            "@kbd{@}}" "@kbd{C-c @@}" "@kbd{C-e @comma{}}"
+                            "@code{local.mk}" "@code{EMACS=}"))
+          (should (string-search expected (buffer-string))))))))
+
+(ert-deftest emacsvox-org-text-export-renders-native-org ()
+  "Standard text export retains Org keys, literals and cross-references."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((source (expand-file-name "manual.org" directory))
+          (output (expand-file-name "build/manual.txt" directory)))
+      (with-temp-file source
+        (insert "#+title: Test Manual\n\n* Chapter\n\n"
+                "Use ~TAB~ and ~S-TAB~. Run ~M-x term RET~ for a TTS shell.\n"
+                "See [[*Speech Backends][Speech Backends]] and "
+                "[[info:emacs#EWW][EWW in the Emacs manual]].\n"
+                "Read =local.mk=. Done–now.\n\n* Speech Backends\n\nText.\n"))
+      (emacsvox-docs-check-tests--without-live-export-feedback
+        (emacsvox-org-text-export source output))
+      (with-temp-buffer
+        (insert-file-contents output)
+        (let ((text (replace-regexp-in-string "[ \n]+" " " (buffer-string))))
+          (dolist (expected '("TAB" "S-TAB" "M-x term RET" "TTS shell"
+                              "Speech Backends" "EWW in the Emacs manual"
+                              "local.mk" "Done–now."))
+            (should (string-search expected text)))
+          (should-not (string-search "@kbd" text)))))))
+
+(ert-deftest emacsvox-org-export-standard-html-retains-keys ()
+  "The standard Org HTML backend needs no Emacsvox key translator."
+  (require 'ox-html)
+  (let ((html (org-export-string-as
+               "Use ~C-x C-f~, ~RET~ and ~M-x term RET~. Read =local.mk=."
+               'html t)))
+    (dolist (expected '("<code>C-x C-f</code>" "<code>RET</code>"
+                        "<code>M-x term RET</code>" "<code>local.mk</code>"))
+      (should (string-search expected html)))))
+
+(ert-deftest emacsvox-org-text-export-rejects-broken-links ()
+  "Text exports must report missing destinations rather than lose references."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((source (expand-file-name "manual.org" directory)))
+      (with-temp-file source
+        (insert "#+title: Test Manual\n\nSee [[*Missing][missing chapter]].\n"))
+      (emacsvox-docs-check-tests--without-live-export-feedback
+        (should-error
+         (emacsvox-org-text-export source (expand-file-name "out.txt" directory)))))))
+
+(ert-deftest emacsvox-org-export-native-links-preserve-info-nodes ()
+  "Org links must use stable Info nodes even when printed headings differ."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((source (expand-file-name "manual.org" directory))
+          (output (expand-file-name "manual.texi" directory)))
+      (with-temp-file source
+        (insert "#+title: Test Manual\n\n* Chapter\n\n"
+                "See [[*Friendly Heading][Destination]] and [[Privacy]].\n"
+                "Read [[info:emacs#EWW][EWW in the Emacs manual]].\n\n"
+                "* Friendly Heading\n:PROPERTIES:\n"
+                ":TEXINFO_NODE_NAME: Stable Node\n:END:\n\n"
+                "<<Privacy>>Private text.\n"))
+      (emacsvox-docs-check-tests--without-live-export-feedback
+        (emacsvox-org-export source output t))
+      (with-temp-buffer
+        (insert-file-contents output)
+        (dolist (expected '("@node Stable Node" "@ref{Stable Node, , Destination}"
+                            "@anchor{Privacy}" "@ref{Privacy}"
+                            "@ref{EWW,EWW in the Emacs manual,,emacs,}"))
+          (should (string-search expected (buffer-string))))))))
 
 (ert-deftest emacsvox-docs-check-rejects-generated-drift ()
   "A changed generated artifact should name the stale checked file."

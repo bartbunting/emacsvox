@@ -14,17 +14,17 @@ introduces the reading and speech controls you are most likely to need.
 :TEXINFO_NODE: no
 :END:
 
-Emacs documentation writes @@texinfo:@kbd{C-}@@ for the Control key and @@texinfo:@kbd{M-}@@ for the
-Meta key, which is usually Alt or Option.  For example, @@texinfo:@kbd{C-n}@@ means
-hold Control and press @@texinfo:@kbd{n}@@.  A sequence such as @@texinfo:@kbd{C-e l}@@ means press
-@@texinfo:@kbd{C-e}@@, release it, and then press @@texinfo:@kbd{l}@@.
+Emacs documentation writes ~C-~ for the Control key and ~M-~ for the
+Meta key, which is usually Alt or Option.  For example, ~C-n~ means
+hold Control and press ~n~.  A sequence such as ~C-e l~ means press
+~C-e~, release it, and then press ~l~.
 
-@@texinfo:@kbd{M-x}@@ prompts for an Emacs command by name, and @@texinfo:@key{RET}@@ means the
+~M-x~ prompts for an Emacs command by name, and ~RET~ means the
 Return or Enter key.  A /buffer/ is the Emacs workspace containing text or an
 application.  /Point/ is the current editing position—the place affected by
 movement and editing commands.
 
-If Emacs itself is new to you, @@texinfo:@kbd{C-h t}@@ opens its interactive tutorial.
+If Emacs itself is new to you, ~C-h t~ opens its interactive tutorial.
 You can return to this chapter whenever the tutorial refers to buffers, point,
 windows, or key sequences.
 
@@ -35,23 +35,23 @@ windows, or key sequences.
 
 Try these actions in the clean session started during installation:
 
-1. Press @@texinfo:@kbd{C-n}@@ and @@texinfo:@kbd{C-p}@@ to move down and up by one line.  Emacsvox
+1. Press ~C-n~ and ~C-p~ to move down and up by one line.  Emacsvox
    speaks the line you reach.
 
-1. Press @@texinfo:@kbd{C-e l}@@ to hear the current line without moving.
+1. Press ~C-e l~ to hear the current line without moving.
 
-1. Press @@texinfo:@kbd{C-e s}@@ whenever you want to stop speech immediately.
+1. Press ~C-e s~ whenever you want to stop speech immediately.
 
-1. Press @@texinfo:@kbd{C-h k}@@ followed by any key to hear what that key does.
+1. Press ~C-h k~ followed by any key to hear what that key does.
 
-1. Press @@texinfo:@kbd{C-h m}@@ to hear about the modes and commands available in the
+1. Press ~C-h m~ to hear about the modes and commands available in the
    current buffer.
 
-1. Press @@texinfo:@kbd{C-h C-e}@@ to open the Emacsvox overview.
+1. Press ~C-h C-e~ to open the Emacsvox overview.
 
 These commands are enough to begin exploring safely.  The rest of this chapter
 adds reading controls and speech settings as you need them.  The generated
-@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@ records the complete default keymaps, while live
+[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/ records the complete default keymaps, while live
 help remains authoritative when a package or personal configuration changes a
 binding.
 
@@ -74,9 +74,9 @@ can also correct names and technical terms globally or for one mode or file.
 You do not need to configure these systems before beginning; first notice what
 the active mode presents automatically.
 
-For an everyday Voice Lock experiment, see @@texinfo:@ref{Voice-lock,Hear Structure With Voice Lock}@@.
+For an everyday Voice Lock experiment, see [[*Hear Structure With Voice Lock][Hear Structure With Voice Lock]].
 When you want to understand or change voices, sounds, pronunciation, or other
-presentation choices, continue with @@texinfo:@ref{Aural Presentation}@@.  The generated
+presentation choices, continue with [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]].  The generated
 reference remains the exact inventory of their commands and options.
 
 ** Using Emacs Buffers
@@ -96,21 +96,21 @@ useful groups of explicit commands:
 
 - Reading commands speak a character, word, line, region, or larger portion of
   a buffer without requiring you to move first.  Their names usually begin
-  with ~emacsvox-speak-~, and their default keys use the main @@texinfo:@kbd{C-e}@@
+  with =emacsvox-speak-=, and their default keys use the main ~C-e~
   prefix.[fn::The prefix is inherited from Emacspeak, where C-e was mnemonic
   for the project name.]
 
 - Speech-system commands change settings such as rate, punctuation, and echo.
-  Their names usually begin with ~tts-~, and many are grouped under
-  @@texinfo:@kbd{C-e d}@@.[fn::Historically, d was mnemonic for DECtalk; the prefix now
+  Their names usually begin with =tts-=, and many are grouped under
+  ~C-e d~.[fn::Historically, d was mnemonic for DECtalk; the prefix now
   contains engine-independent speech controls.]
 
 - Help commands describe the active modes, available keys, and Emacsvox
   integrations in the buffer where you are working.
 
-To move among buffers with the same major mode, use @@texinfo:@kbd{C-e n}@@
-and @@texinfo:@kbd{C-e p}@@, then repeat with just @@texinfo:@kbd{n}@@ or
-@@texinfo:@kbd{p}@@.  See @@texinfo:@ref{Desktop Objects}@@ for examples and the
+To move among buffers with the same major mode, use ~C-e n~
+and ~C-e p~, then repeat with just ~n~ or
+~p~.  See [[*Buffers Hold Your Work][Desktop Objects]] for examples and the
 other buffer-selection controls.
 
 The following sections introduce a practical starter set.  Use live Help or
@@ -127,12 +127,12 @@ application.
 Ordinary Emacs movement speaks the text crossed by point: moving by a
 character, word, line, or paragraph presents the corresponding unit.
 The commands below let you inspect useful units without first moving.
-They use the default @@texinfo:@kbd{C-e}@@ prefix.
+They use the default ~C-e~ prefix.
 
 This is deliberately a starter set, not a second complete key reference.
-If a binding below differs in your session, use @@texinfo:@kbd{C-h k}@@ on that key
+If a binding below differs in your session, use ~C-h k~ on that key
 and check your customizations.  The complete generated defaults are in the
-@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/.
 
 # basic-usage-live-keys-begin
 #+attr_texinfo: :indic kbd :compact t
@@ -142,7 +142,7 @@ and check your customizations.  The complete generated defaults are in the
 
   #+kindex: C-e c
 
-  ~emacsvox-speak-char~
+  =emacsvox-speak-char=
   speaks the character at point phonetically.
 - C-e w ::
 
@@ -150,7 +150,7 @@ and check your customizations.  The complete generated defaults are in the
 
   #+kindex: C-e w
 
-  ~emacsvox-speak-word~
+  =emacsvox-speak-word=
   speaks the current word.  Repeating it at the same position spells the
   word.
 - C-e l ::
@@ -159,7 +159,7 @@ and check your customizations.  The complete generated defaults are in the
 
   #+kindex: C-e l
 
-  ~emacsvox-speak-line~
+  =emacsvox-speak-line=
   speaks the current line.
 - C-e [ ::
 
@@ -167,7 +167,7 @@ and check your customizations.  The complete generated defaults are in the
 
   #+kindex: C-e [
 
-  ~emacsvox-speak-paragraph~
+  =emacsvox-speak-paragraph=
   speaks the current paragraph.
 - C-e ] ::
 
@@ -175,7 +175,7 @@ and check your customizations.  The complete generated defaults are in the
 
   #+kindex: C-e ]
 
-  ~emacsvox-speak-page~
+  =emacsvox-speak-page=
   speaks the current page.
 - C-e r ::
 
@@ -183,7 +183,7 @@ and check your customizations.  The complete generated defaults are in the
 
   #+kindex: C-e r
 
-  ~emacsvox-speak-region~
+  =emacsvox-speak-region=
   speaks the active region between point and mark.
 - C-e i ::
 
@@ -191,7 +191,7 @@ and check your customizations.  The complete generated defaults are in the
 
   #+kindex: C-e i
 
-  ~emacsvox-speak-rest-of-buffer~
+  =emacsvox-speak-rest-of-buffer=
   speaks from point to the end of the buffer.
 - C-e b ::
 
@@ -199,7 +199,7 @@ and check your customizations.  The complete generated defaults are in the
 
   #+kindex: C-e b
 
-  ~emacsvox-speak-buffer~
+  =emacsvox-speak-buffer=
   speaks the entire current buffer.
 - C-e s ::
 
@@ -207,7 +207,7 @@ and check your customizations.  The complete generated defaults are in the
 
   #+kindex: C-e s
 
-  ~tts-stop~
+  =tts-stop=
   stops current speech.
 - C-e C-d ::
 
@@ -215,25 +215,25 @@ and check your customizations.  The complete generated defaults are in the
 
   #+kindex: C-e C-d
 
-  ~emacsvox-toggle-show-point~
+  =emacsvox-toggle-show-point=
   toggles the aural indication of point within spoken text.
 
 # basic-usage-live-keys-end
 
 Many speaking commands accept a prefix argument to limit speech to the
-text before or after point.  Use @@texinfo:@kbd{C-h k}@@ on a command before relying
+text before or after point.  Use ~C-h k~ on a command before relying
 on those variants, because their exact argument behavior is documented
 with the command.
 
 #+findex: emacsvox-delayed-phonetic-mode
 #+vindex: emacsvox-delayed-phonetic-delay
 
-Use @@texinfo:@kbd{M-x emacsvox-delayed-phonetic-mode}@@ to toggle delayed
+Use ~M-x emacsvox-delayed-phonetic-mode~ to toggle delayed
 phonetic descriptions. When enabled, moving by character speaks the letter
 normally; pausing then speaks its phonetic name, such as "alpha" for "a".
-These are the same English letter names used by @@texinfo:@kbd{C-e c}@@.
+These are the same English letter names used by ~C-e c~.
 
-The mode starts enabled. Customize ~emacsvox-delayed-phonetic-delay~ to change
+The mode starts enabled. Customize =emacsvox-delayed-phonetic-delay= to change
 the default one-second delay to another positive number of seconds. You can
 save the mode's enabled or disabled setting through Customize as well.
 
@@ -258,11 +258,11 @@ reading do not trigger delayed descriptions.
 
 Start with the controls in this section when speech is too fast, too detailed,
 or inappropriate for the current task.  Most settings apply only to the current
-buffer.  Press @@texinfo:@kbd{C-u}@@ before a command when its help says that a prefix
+buffer.  Press ~C-u~ before a command when its help says that a prefix
 argument changes the default for all buffers.
 
 The generated
-@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@ contains the complete speech keymap, including specialist
+[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/ contains the complete speech keymap, including specialist
 server and text-chunking controls.
 
 *** Choose Typing Echo
@@ -283,7 +283,7 @@ you finish it, and optional line echo speaks a completed line.  Toggle each
 kind independently to suit the buffer: character feedback may help in a
 form where accuracy matters, while word echo is often more fluent for prose.
 
-The commands below affect the current buffer.  Press @@texinfo:@kbd{C-u}@@ first to
+The commands below affect the current buffer.  Press ~C-u~ first to
 change the corresponding default and apply it to the current buffer.
 
 #+attr_texinfo: :indic kbd :compact t
@@ -293,7 +293,7 @@ change the corresponding default and apply it to the current buffer.
 
   #+kindex: C-e d k
 
-  ~emacsvox-toggle-character-echo~
+  =emacsvox-toggle-character-echo=
 
   Toggle character echo.
 - C-e d w ::
@@ -302,7 +302,7 @@ change the corresponding default and apply it to the current buffer.
 
   #+kindex: C-e d w
 
-  ~emacsvox-toggle-word-echo~
+  =emacsvox-toggle-word-echo=
 
   Toggle word echo.
 - C-e d l ::
@@ -311,7 +311,7 @@ change the corresponding default and apply it to the current buffer.
 
   #+kindex: C-e d l
 
-  ~emacsvox-toggle-line-echo~
+  =emacsvox-toggle-line-echo=
 
   Toggle line echo.
 
@@ -328,19 +328,19 @@ text.  Start with rate and punctuation, then change capitalization or
 indentation feedback only when the distinction would help your current task.
 
 The commands affect the current buffer unless their interactive help describes
-a global prefix form.  Use @@texinfo:@kbd{C-h k}@@ on a key before changing the global
+a global prefix form.  Use ~C-h k~ on a key before changing the global
 default.
 
 #+attr_texinfo: :indic kbd :compact t
 - C-e d r ::
 
-  Enter a speech rate for the current buffer with ~tts-set-rate~.
+  Enter a speech rate for the current buffer with =tts-set-rate=.
 - C-e d DIGIT ::
 
-  Choose one of ten predefined rates with @@texinfo:@kbd{0}@@ through @@texinfo:@kbd{9}@@.
+  Choose one of ten predefined rates with ~0~ through ~9~.
 - C-e d p ::
 
-  Choose ~some~, ~all~, or ~none~ punctuation with ~tts-set-punctuations~.
+  Choose =some=, =all=, or =none= punctuation with =tts-set-punctuations=.
 - C-e d s ::
 
   Toggle splitting of mixed-capital identifiers into separate words.
@@ -356,7 +356,7 @@ default.
 
 Character-rate scaling, text chunking, engine-specific controls, and reusable
 presentation profiles are intentionally outside this starter chapter.  Use
-live help for the current speech keymap and see @@texinfo:@ref{Aural Presentation}@@ when
+live help for the current speech keymap and see [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] when
 you want a complete presentation setup rather than a temporary buffer change.
 
 *Review punctuation pronunciations.* With a supporting local Omnivox host,
@@ -413,10 +413,10 @@ synthesizer.
 #+attr_texinfo: :indic kbd :compact t
 - C-e s ::
 
-  Stop speech now with ~tts-stop~.
+  Stop speech now with =tts-stop=.
 - C-e d q ::
 
-  Toggle quiet mode in the current buffer.  Press @@texinfo:@kbd{C-u}@@ first to toggle
+  Toggle quiet mode in the current buffer.  Press ~C-u~ first to toggle
   it globally.
 - C-e C-s ::
 
@@ -425,7 +425,7 @@ synthesizer.
 
   Speak the selected adapter and its version information.
 
-Use @@texinfo:@kbd{C-h m}@@ or the generated keymap reference for server selection,
+Use ~C-h m~ or the generated keymap reference for server selection,
 repeated-pattern cleanup, text splitting, language selection, and direct engine
 controls.  Those specialist settings are intentionally outside this starter
 guide.
@@ -444,17 +444,17 @@ words to the document.
 
 Try it in source code, Org, Info, or EWW.  Move between two differently styled
 elements, such as a comment and a string or a heading and a link.  Press
-@@texinfo:@kbd{C-e d v}@@ to turn Voice Lock off in that buffer, compare the same text,
+~C-e d v~ to turn Voice Lock off in that buffer, compare the same text,
 then press the key again to restore it.
 
-Use @@texinfo:@kbd{C-e d C-v}@@ when you want to change Voice Lock globally.  Turning it
+Use ~C-e d C-v~ when you want to change Voice Lock globally.  Turning it
 off removes this layer of voice changes; it does not silence ordinary speech,
 semantic feedback, tones, or auditory icons.
 
 The exact personalities depend on the speech engine and active presentation
 settings.  For an explanation of the separate Voice Lock, face-presentation,
-and semantic-presentation layers, see @@texinfo:@ref{Voice Lock}@@.  Use
-@@texinfo:@ref{Aural Presentation}@@ when you want to choose voices, sounds, profiles, or
+and semantic-presentation layers, see [[*Voice Lock And Advanced Configuration][Voice Lock]].  Use
+[[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] when you want to choose voices, sounds, profiles, or
 other reusable presentation behavior.
 
 ** Find Out Where You Are
@@ -467,7 +467,7 @@ other reusable presentation behavior.
 Use these commands when you need context without moving point.  They repeat the
 last message, identify the current buffer and modes, or report your position.
 Less common status commands are listed in the
-@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/.
 
 # basic-usage-live-keys-begin
 #+attr_texinfo: :indic kbd :compact t
@@ -477,7 +477,7 @@ Less common status commands are listed in the
 
   #+kindex: C-e a
 
-  ~emacsvox-speak-message-again~
+  =emacsvox-speak-message-again=
 
   Repeat the last Emacs message.
 - C-e m ::
@@ -486,7 +486,7 @@ Less common status commands are listed in the
 
   #+kindex: C-e m
 
-  ~emacsvox-speak-mode-line~
+  =emacsvox-speak-mode-line=
 
   Speak the mode line, including the buffer name and major mode.
 - C-e f ::
@@ -495,7 +495,7 @@ Less common status commands are listed in the
 
   #+kindex: C-e f
 
-  ~emacsvox-speak-buffer-filename~
+  =emacsvox-speak-buffer-filename=
 
   Speak the current file name, or the default directory when the buffer is not
   visiting a file.
@@ -505,7 +505,7 @@ Less common status commands are listed in the
 
   #+kindex: C-e C-l
 
-  ~what-line~
+  =what-line=
 
   Report the current line number and position in the buffer.
 - C-e = ::
@@ -514,7 +514,7 @@ Less common status commands are listed in the
 
   #+kindex: C-e =
 
-  ~emacsvox-speak-current-column~
+  =emacsvox-speak-current-column=
 
   Speak the current column.
 - C-e % ::
@@ -523,7 +523,7 @@ Less common status commands are listed in the
 
   #+kindex: C-e %
 
-  ~emacsvox-speak-current-percentage~
+  =emacsvox-speak-current-percentage=
 
   Announce the percentage into the current buffer.
 

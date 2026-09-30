@@ -9,7 +9,6 @@
 #+texinfo_dir_name: Emacsvox Org Manual
 #+texinfo_dir_desc: Speech-enabled audio desktop.
 #+texinfo_header: @include style.texi
-#+macro: kbd (eval (org-texinfo-kbd-macro $1))
 
 #+begin_comment
 This is the canonical source for the hand-maintained Emacsvox user

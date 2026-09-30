@@ -14,7 +14,7 @@ changing an integration.
 :TEXINFO_NODE: no
 :END:
 
-~emacsvox-table-reader.el~ supplies common cell/row/column formatting, copying,
+=emacsvox-table-reader.el= supplies common cell/row/column formatting, copying,
 and movement decisions. Agent Shell retains its rendered source-property
 adapter, contextual map, public commands, and preferences. Markdown and Org
 register source adapters and use an explicit reader minor mode. The table
@@ -36,7 +36,7 @@ properties map every character, including embedded line breaks and delimiters,
 to a model cell. Pre/post-command hooks synchronize the model after ordinary
 character movement; snapshot extraction also synchronizes it. Browser movement
 uses the model and its rendered position index. New reader actions submit under
-module ~table-ui~, with role ~field~ for cells and explicit main-lane delivery.
+module =table-ui=, with role =field= for cells and explicit main-lane delivery.
 The local browser map is independent of the legacy speech-prefix map. CSV
 parsing preserves quoted fields and visited source buffers before constructing
 the view. Sorting constructs a new view and carries over both filters and the
@@ -55,16 +55,16 @@ Org's native ~TAB~, ~RET~ and Meta-arrow editing bindings remain available
 outside reading. Agent Shell's existing scoped overrides and prompt behaviour
 remain as documented in its integration contract.
 
-Regression coverage lives in ~test/emacsvox-table-reader-tests.el~ and the
+Regression coverage lives in =test/emacsvox-table-reader-tests.el= and the
 Agent Shell table cases. The graphical Agent Shell integration gate includes
 real wrapped-table movement and copying. The source-reader graphical case
-~emacsvox-table-reader-graphical-wrapped-source~ must also run in a fresh
+=emacsvox-table-reader-graphical-wrapped-source= must also run in a fresh
 graphical Emacs with Markdown Mode installed; its batch skip is not a pass.
 Check source text and modified state, effective keys, complete wrapped values,
 source edits, code exclusion, title preferences, and native Aural submissions.
-Browser coverage lives in ~test/emacsvox-table-ui-tests.el~; use
-~EMACSVOX_TABLE_UI_TEST_LOAD=compiled~ in a fresh Emacs after building to verify
-the compiled implementation. Its ~emacsvox-table-ui-graphical-multiline-navigation~
+Browser coverage lives in =test/emacsvox-table-ui-tests.el=; use
+=EMACSVOX_TABLE_UI_TEST_LOAD=compiled= in a fresh Emacs after building to verify
+the compiled implementation. Its =emacsvox-table-ui-graphical-multiline-navigation=
 case requires a graphical display and checks actual wrapping and logical cell
 movement. Listening acceptance is separate from submission and graphical checks.
 
@@ -73,14 +73,14 @@ movement. Listening acceptance is separate from submission and graphical checks.
 :TEXINFO_NODE: no
 :END:
 
-Use the Emacs selected by the ignored repository-local ~local.mk~.  When Emacs
-30.2 or newer is not the system ~emacs~, set its absolute path there:
+Use the Emacs selected by the ignored repository-local =local.mk=.  When Emacs
+30.2 or newer is not the system =emacs=, set its absolute path there:
 
 #+begin_example
 EMACS=/path/to/emacs-31/bin/emacs
 #+end_example
 
-Run ~make check-emacs~ before diagnosing compilation.  After an ordinary Lisp
+Run =make check-emacs= before diagnosing compilation.  After an ordinary Lisp
 edit, use the incremental build:
 
 #+begin_example
@@ -94,19 +94,19 @@ interface, use:
 make bytecode-rebuild
 #+end_example
 
-That target removes ignored generated ~.elc~ files and recompiles them with
+That target removes ignored generated =.elc= files and recompiles them with
 the selected Emacs; it does not clean or discard source changes.
-~make bytecode-check~ is the non-mutating preflight for startup or deployment.
+=make bytecode-check= is the non-mutating preflight for startup or deployment.
 It reports missing, stale, orphaned, or wrong-Emacs byte-code.
 
-Each ~make config~ fully regenerates =lisp/emacsvox-loaddefs.el= from the
+Each =make config= fully regenerates =lisp/emacsvox-loaddefs.el= from the
 current sources, including edited autoloads, new modules, and deleted modules.
-The build targets ~make bytecode~, ~make bytecode-rebuild~, ~make emacsvox~,
-and ~make all~ run configuration before compiling; ~make compat-test~ runs it
+The build targets =make bytecode=, =make bytecode-rebuild=, =make emacsvox=,
+and =make all= run configuration before compiling; =make compat-test= runs it
 before testing.  The
-portable command ~emacs -Q --batch -l etc/configure-emacsvox.el~ uses the same
+portable command =emacs -Q --batch -l etc/configure-emacsvox.el= uses the same
 full regeneration.  Saving a source file or starting Emacs does not regenerate
-autoloads.  Neither ~make bytecode-check~ nor ~make docs-release-check~ does so.
+autoloads.  Neither =make bytecode-check= nor =make docs-release-check= does so.
 Regenerating the index alone does not force all modules to be recompiled.
 
 Tests deliberately prefer source and therefore do not prove that the
@@ -121,23 +121,23 @@ During development, load the changing setup source explicitly:
 #+end_src
 
 The setup entry point warns and prefers source when newer Lisp would otherwise
-be hidden by stale local byte-code.  In a stable checkout with current ~.elc~
-files, ~(load-library "emacsvox-setup")~ may be used.  Do not use
-~load-library~ as the first load after editing the source tree: Emacs can
-select an old ~emacsvox-setup.elc~ before the newer source checker runs.
+be hidden by stale local byte-code.  In a stable checkout with current =.elc=
+files, =(load-library "emacsvox-setup")= may be used.  Do not use
+=load-library= as the first load after editing the source tree: Emacs can
+select an old =emacsvox-setup.elc= before the newer source checker runs.
 
 *** Background startup ownership and failure recovery
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-~emacsvox~ starts two named background tasks: ~core-advice~ loads core command
-feedback and ~package-preparation~ registers optional package adapters.  The
+=emacsvox= starts two named background tasks: =core-advice= loads core command
+feedback and =package-preparation= registers optional package adapters.  The
 private task registry retains each thread, state, start/end times, and original
 error for the Emacs session.  Repeated startup reuses these records, including
 completed and failed tasks, instead of starting duplicate background work.
 Other startup effects, including speech-server initialization, still run when
-~emacsvox~ is called again; this is not a general-purpose retry command.
+=emacsvox= is called again; this is not a general-purpose retry command.
 
 Registration completion is separate from adapter loading.  An already-loaded
 package triggers its adapter immediately; another package gets a deferred load
@@ -148,7 +148,7 @@ and still propagates.  Source fallback from the setup guard is preserved in
 both background tasks and deferred callbacks.
 
 ~M-x emacsvox-startup-status~ speaks a summary and selects a Help report with
-task durations and original adapter errors.  Calling ~emacsvox-startup-status~
+task durations and original adapter errors.  Calling =emacsvox-startup-status=
 from Lisp returns the summary without speech or a window.  Failures also issue
 a warning and attempt a notification in interactive Emacs; retained records
 remain available if either feedback path fails.  Successful completion adds no
@@ -168,7 +168,7 @@ interactive startup latency.
 The focused tests exercise real deferred loads, failure isolation, task reuse,
 source fallback, and spoken status with speech intercepted.  Check source with
 the selected Emacs using =test/emacsvox-startup-tests.el=.  For fresh compiled
-parity, first run ~make bytecode-check~, then set
+parity, first run =make bytecode-check=, then set
 =EMACSVOX_STARTUP_TEST_LOAD=compiled= when loading the same test file in a new
 batch Emacs.  This selects =emacsvox.elc= explicitly; it does not make every
 test dependency compiled.  Audible diagnosis and real startup latency still
@@ -180,27 +180,27 @@ need an isolated interactive session.
 :END:
 
 The Lisp runtime and all platform routes support Emacs 30.2 and newer. Run
-~make compat-test~ for the core compatibility contracts without installing
+=make compat-test= for the core compatibility contracts without installing
 third-party packages. CI builds all maintained modules and runs this gate on
-Emacs 30.2 and 31.1. The full ~make test~ suite additionally requires the
-optional integration packages, including ~lua-mode~ on Emacs 30.
+Emacs 30.2 and 31.1. The full =make test= suite additionally requires the
+optional integration packages, including =lua-mode= on Emacs 30.
 
-The separate core speech CI job runs ~make core-test~, ~make trace-test~, and
-~make compiled-aural-test~ on both versions with a private home directory.
+The separate core speech CI job runs =make core-test=, =make trace-test=, and
+=make compiled-aural-test= on both versions with a private home directory.
 It covers speech, voice configuration, transport, Voice Workbench, startup,
 and golden speech traces without optional Emacs packages.  It requires GNU
-Make, Git, a POSIX shell, and Tcl (~tclsh~); missing prerequisites fail before
+Make, Git, a POSIX shell, and Tcl (=tclsh=); missing prerequisites fail before
 the core tests run.  The fresh CI checkout exercises source, followed by an
 isolated compiled Aural check.  Optional integration suites remain outside
 this job.
 
 The separate integration CI job runs Agent Shell, Notmuch, and EAT tests on
 both versions with a private home directory and six reviewed dependency
-snapshots.  ~make test-deps~ verifies the archive hashes in
+snapshots.  =make test-deps= verifies the archive hashes in
 =test/integration-dependencies.json= and stages sources and autoloads under
-ignored =.test-deps/=; it never changes personal packages.  ~make integration-test~
+ignored =.test-deps/=; it never changes personal packages.  =make integration-test=
 verifies that prepared tree before loading it and runs the batch cases.
-~make graphical-integration-test~ uses the same verified tree for the two Agent
+=make graphical-integration-test= uses the same verified tree for the two Agent
 Shell display-row cases in a real graphical Emacs on a private Xvfb display.
 Both gates fail on missing dependencies or skipped selected tests. The graphical
 runner requires =xvfb-run=, =Xvfb=, =xauth= and =timeout=, captures its log,
@@ -212,7 +212,7 @@ speech events and exercise disposable EAT subprocesses; they do not replace
 listening tests or compiled integration checks.  See =test/README.org= for
 preparation checks, directory overrides, recovery, and coverage boundaries.
 
-Keep each Emacs version's build in a separate checkout; never reuse ~.elc~
+Keep each Emacs version's build in a separate checkout; never reuse =.elc=
 files across versions. All platforms, including native Windows x64, use this minimum.
 The documentation toolchain retains its independent pin.
 
@@ -262,8 +262,8 @@ remains preview, as recorded in
 :TEXINFO_NODE: no
 :END:
 
-~make windows-bundle-dev~ downloads checksum-pinned Emacs and Omnivox archives
-and creates a development ZIP below ~dist/~. Packaging needs Python 3.11 or
+=make windows-bundle-dev= downloads checksum-pinned Emacs and Omnivox archives
+and creates a development ZIP below =dist/=. Packaging needs Python 3.11 or
 newer and Git on the build machine. To use a prepared cache without network:
 
 #+begin_src sh
@@ -272,11 +272,11 @@ python3 utils/emacsvox-windows-bundle.py --offline \
 make windows-bundle-test
 #+end_src
 
-Extract the ZIP on a local Windows drive and run ~Install.cmd~, or run
-~Install.ps1 -InstallRoot "C:\path with spaces\Emacsvox"~ from PowerShell.
-The destination needs neither Git nor build tools. ~-Check~ verifies the
-bundle without writing installation state; ~-NoAudioCheck~ prepares an
-unattended installation. Run the printed launch command with ~-Check~ to
+Extract the ZIP on a local Windows drive and run =Install.cmd=, or run
+=Install.ps1 -InstallRoot "C:\path with spaces\Emacsvox"= from PowerShell.
+The destination needs neither Git nor build tools. =-Check= verifies the
+bundle without writing installation state; =-NoAudioCheck= prepares an
+unattended installation. Run the printed launch command with =-Check= to
 perform the graphical speech check afterward.
 
 From a Windows checkout, repeat acquisition and installation acceptance with:
@@ -287,7 +287,7 @@ From a Windows checkout, repeat acquisition and installation acceptance with:
 
 This tests a fresh install, a repeated install, damaged inputs, long paths,
 profile preservation and protection of edited sources. It limits PATH to
-Windows tools. Add ~-KeepInstallation~ to retain the successful test directory;
+Windows tools. Add =-KeepInstallation= to retain the successful test directory;
 failed test directories are retained with their logs automatically.
 
 Each bundle records its source commit and hashes the exact payload, including
@@ -338,9 +338,9 @@ page and cancels without installing. It does not replace listening with a
 screen reader or keyboard-only navigation.
 
 For rollback acceptance, stage an intentionally failing fixture with
-~python3 test/prepare_windows_setup_failure.py --bundle /path/to/bundle.zip
---staging-directory /path/to/failure-stage~ and compile it using the same
-build command. Pass its executable as ~-FailedUpgrade~ to the lifecycle test.
+=python3 test/prepare_windows_setup_failure.py --bundle /path/to/bundle.zip
+--staging-directory /path/to/failure-stage= and compile it using the same
+build command. Pass its executable as =-FailedUpgrade= to the lifecycle test.
 This fixture fails during configuration, before activation; the test checks
 that the previous selection and launcher still work. Keep the failure
 fixture separate from user-facing artifacts.
@@ -460,11 +460,11 @@ readiness. Its notes identify the remaining interactive and lifecycle checks.
 :END:
 
 Keep remote installer fixtures separate from connected acceptance. In the
-Omnivox checkout, run ~make dev~ followed by ~make remote-test~; set
-~OMNIVOX_REMOTE_TEST_SLOW=1~ to cover heartbeat expiry. Set
-~OMNIVOX_REMOTE_TEST_EMACS~ to the selected Emacs and
-~OMNIVOX_REMOTE_TEST_EMACSVOX~ to the matching Emacsvox checkout for client
-acceptance. The Omnivox ~docs/REMOTE.md~ guide records Windows relay tests,
+Omnivox checkout, run =make dev= followed by =make remote-test=; set
+=OMNIVOX_REMOTE_TEST_SLOW=1= to cover heartbeat expiry. Set
+=OMNIVOX_REMOTE_TEST_EMACS= to the selected Emacs and
+=OMNIVOX_REMOTE_TEST_EMACSVOX= to the matching Emacsvox checkout for client
+acceptance. The Omnivox =docs/REMOTE.md= guide records Windows relay tests,
 real-device options, and retained evidence. Null-output tests do not establish
 audible playback or acceptance through a separate SSH host. Remote access
 remains preview independently of native Windows desktop support.
@@ -474,26 +474,26 @@ remains preview independently of native Windows desktop support.
 :TEXINFO_NODE: no
 :END:
 
-~make deb~ builds a local development package in ~dist/~ using Python 3,
-~dpkg-deb~, Git and the selected Emacs. It stages runtime sources and generates
+=make deb= builds a local development package in =dist/= using Python 3,
+=dpkg-deb=, Git and the selected Emacs. It stages runtime sources and generates
 autoloads in a private directory, preserving checkout byte-code and personal
-configuration. The deb has architecture ~all~, an Emacs 30.2 dependency
+configuration. The deb has architecture =all=, an Emacs 30.2 dependency
 (including terminal and graphical alternatives), and an Omnivox recommendation.
 It loads source and does not install emacsen-common hooks or compile on install.
 The ownership and release boundaries are recorded in
 [[file:../adr/0013-debian-package.org][ADR 0013]].
 
-~make deb-test~ checks the actual archive, reproducibility, source startup,
+=make deb-test= checks the actual archive, reproducibility, source startup,
 remote diagnosis, dependency metadata and refusal of an unprepared release.
 CI additionally installs, reinstalls and purges the package in a disposable
-Ubuntu 26.04 container using ~test/debian-install-smoke.sh~. It uploads the
+Ubuntu 26.04 container using =test/debian-install-smoke.sh=. It uploads the
 development deb and checksum as CI artifacts, without publishing a release.
 
 After preparing the checked source archive using the release procedure below,
-~make release-deb~ produces ~dist/emacsvox_VERSION-1_all.deb~ and its checksum.
+=make release-deb= produces =dist/emacsvox_VERSION-1_all.deb= and its checksum.
 The script itself verifies the existing clean-source artifact gate before and
-after packaging. Local versions instead contain ~+git~ with the source commit
-and source hash, and revision ~-0local1~. The included ~BUILD-INFO.json~ records
+after packaging. Local versions instead contain =+git= with the source commit
+and source hash, and revision =-0local1=. The included =BUILD-INFO.json= records
 the exact source identity and autoload Emacs version. Neither package target
 creates a tag, uploads release assets, adds an apt repository or changes the
 manual release publication approval boundary.
@@ -516,23 +516,23 @@ instead of uploading a differently built local package with the same name.
 :TEXINFO_NODE: no
 :END:
 
-The repository-level ~VERSION~ file is the canonical stable release
+The repository-level =VERSION= file is the canonical stable release
 identifier.  Calendar-versioning policy, including delayed patches and
 backports, is recorded in
-[[file:../adr/0002-calendar-versioning.org][ADR 0002]].  When advancing a release, update ~VERSION~, the literal
-package header in ~lisp/emacsvox.el~, and the current heading in ~etc/NEWS~
+[[file:../adr/0002-calendar-versioning.org][ADR 0002]].  When advancing a release, update =VERSION=, the literal
+package header in =lisp/emacsvox.el=, and the current heading in =etc/NEWS=
 together, then run:
 
 #+begin_example
 make version-check
 #+end_example
 
-Between releases, ~etc/NEWS~ uses the ~Emacsvox Unreleased~ heading, so changes
+Between releases, =etc/NEWS= uses the =Emacsvox Unreleased= heading, so changes
 can be recorded before deciding whether the next publication is a patch or a
 new feature-release series.  After publishing, preserve those notes verbatim
-as ~etc/NEWS-VERSION~ and start a new unreleased file.  Ordinary
-~version-check~ accepts that state; ~release-check~, ~release-tag~, and
-~release-publish~ require the current NEWS heading to match ~VERSION~ exactly.
+as =etc/NEWS-VERSION= and start a new unreleased file.  Ordinary
+=version-check= accepts that state; =release-check=, =release-tag=, and
+=release-publish= require the current NEWS heading to match =VERSION= exactly.
 
 Prepare an artifact only from a separate clean, committed worktree.  Build
 fresh byte-code and run the guarded artifact target:
@@ -542,22 +542,22 @@ make bytecode-rebuild
 make release-artifact
 #+end_example
 
-~release-artifact~ runs the complete test and documentation gates before
-creating ~dist/emacsvox-YYYY.MONTH.PATCH.tar.bz2~, its SHA-256 checksum, and a
+=release-artifact= runs the complete test and documentation gates before
+creating =dist/emacsvox-YYYY.MONTH.PATCH.tar.bz2=, its SHA-256 checksum, and a
 provenance record naming the checked source commit.  For a patch-zero feature
 release, the series must match the current month.  A corrective or backport
 release retains its original non-future series as required by ADR 0002.
-The source archive includes the maintained ~utils/~ tools needed by the
+The source archive includes the maintained =utils/= tools needed by the
 installers, launchers and build. Before recording checked provenance, the
 artifact target extracts the actual archive into a temporary directory and
 runs the remote-only installer with the selected Emacs in a private home. It
 checks fresh compiled startup, the offline manual and the remote helper's
 credential validation without opening a workstation connection or playing
-speech. ~make source-archive-check~ repeats this check on an existing archive;
-~make source-archive-test~ checks export contents and rejection of missing
+speech. =make source-archive-check= repeats this check on an existing archive;
+=make source-archive-test= checks export contents and rejection of missing
 helpers, local configuration and byte-code. CI runs both checks before a
 release as well. On native Windows, run
-~test/emacsvox-source-archive-tests.ps1 -Archive PATH -Emacs PATH~ to check the
+=test/emacsvox-source-archive-tests.ps1 -Archive PATH -Emacs PATH= to check the
 actual archive's installer doctor, complete native compilation and fresh
 byte-code validation in a temporary Windows directory.
 
@@ -574,15 +574,15 @@ make release-tag
 make release-publish
 #+end_example
 
-~release-tag~ validates the artifact against the still-clean ~HEAD~ and creates
+=release-tag= validates the artifact against the still-clean =HEAD= and creates
 a local annotated, unsigned tag; it does not push the tag.  The unsigned-tag
 policy and its trust boundary are recorded in
-[[file:../adr/0006-annotated-unsigned-release-tags.org][ADR 0006]].  ~release-publish~
+[[file:../adr/0006-annotated-unsigned-release-tags.org][ADR 0006]].  =release-publish=
 repeats the artifact and source-commit validation, pushes only that exact tag,
 and creates the GitHub release in the repository identified by
-~RELEASE_REMOTE~.  This explicit selection prevents the GitHub CLI from
-choosing an ~upstream~ remote when releasing from a fork.  No release target
-pushes ~master~ or the documentation branch.  Use ~make release-check~ alone
+=RELEASE_REMOTE=.  This explicit selection prevents the GitHub CLI from
+choosing an =upstream= remote when releasing from a fork.  No release target
+pushes =master= or the documentation branch.  Use =make release-check= alone
 when a non-mutating preflight is wanted without creating an artifact.
 
 ** Future Aural contract decisions
@@ -591,7 +591,7 @@ when a non-mutating preflight is wanted without creating an artifact.
 :END:
 
 The completed Aural implementation diary is preserved under
-~archive/emacsvox/migrations/~ rather than serving as current instructions.
+=archive/emacsvox/migrations/= rather than serving as current instructions.
 Three questions from that diary remain deliberately undecided and require an
 explicit architecture decision before implementation:
 
@@ -610,7 +610,7 @@ by the Aural implementation, its generated reference, and accepted ADRs.
 :TEXINFO_NODE: no
 :END:
 
-The private ~emacsvox-aural--voice-style-fields~ table in
+The private =emacsvox-aural--voice-style-fields= table in
 =lisp/emacsvox-aural-rules.el= owns accepted field names, groups, value types,
 and integer bounds.  The existing public dimension lists and private accepted
 key list are derived from it; validation traverses the descriptors directly.
@@ -622,17 +622,17 @@ rate.  The accepted-key inventory places relative and legacy rate before the
 post-synthesis fields.  ACSS dimension order also determines positional legacy
 personality settings, and rich dimension order determines adjustment rows.
 
-Every accepted field allows ~nil~.  Validation preserves the original plist,
+Every accepted field allows =nil=.  Validation preserves the original plist,
 including duplicate fields, for which the first value is used.  Field absence,
-explicit ~nil~, and zero remain distinct during composition and persistence.
-Legacy ~:rate~ is accepted for loading saved data but is not applied as a new
+explicit =nil=, and zero remain distinct during composition and persistence.
+Legacy =:rate= is accepted for loading saved data but is not applied as a new
 rate; nonzero legacy values produce the existing retuning degradation.
 The table supplies no implicit defaults and does not declare engine support.
 
-An explicit ~nil~ over a preset is a compatibility behavior to characterize,
+An explicit =nil= over a preset is a compatibility behavior to characterize,
 not an authoring decision settled by the metadata table.  For example, the
 current compiler clears the reported average-pitch value for
-~(:preset base :average-pitch nil)~ while retaining the base voice command and
+=(:preset base :average-pitch nil)= while retaining the base voice command and
 emitting no pitch-reset command.  The tests preserve this distinction.  A
 future inheritance, omission, or reset policy needs a separate decision.
 
@@ -663,13 +663,13 @@ The rule tests state field inventories, bounds, error precedence, and
 composition expectations independently of the metadata.  Scheme tests cover
 saved rich palettes and explicit-nil rules; transport tests check distinct
 ACSS mappings, zero and omitted wire fields, effects, and preset behavior.
-~make compiled-aural-test~ also runs these style contracts with the isolated
+=make compiled-aural-test= also runs these style contracts with the isolated
 compiled subsystem loaded, checking that the implementations stay in that
-build. The ~voice-style-ui~ tests exercise common-editor entry, inherited
+build. The =voice-style-ui= tests exercise common-editor entry, inherited
 reset and draft retention in source and compiled runs. Editor tests also cover
 numeric bounds, explicit defaults, undo and comparison. They capture auditions
 and do not start audio.
-Run ~make graphical-voice-test~ for the voice editor's link, return navigation,
+Run =make graphical-voice-test= for the voice editor's link, return navigation,
 and save-button checks in a fresh graphical Emacs with current byte-code.
 It requires Xvfb, xvfb-run and xauth, and uses a separate virtual display so
 test windows cannot take desktop focus. The launcher prints the graphical
@@ -692,28 +692,28 @@ process lifecycle or audible behavior.
 :END:
 
 Two private helpers in =lisp/emacsvox-aural-transport.el= make preparation
-inputs explicit.  ~emacsvox-aural--timeline-effect-transition~ takes previous
+inputs explicit.  =emacsvox-aural--timeline-effect-transition= takes previous
 effects, normalized next effects, and a span ID, returning a directive and the
 next state.  Replacement copies the saved state separately from the directive;
 retention preserves the previous state.  The builder still owns the state
 accumulator, span numbering, and when normalization runs.  Suppressed or empty
 content does not advance effects, while spoken boundary actions do.
 
-~emacsvox-aural--encode-timeline-delivery-fields~ takes a policy and replacement
-key.  The existing ~emacsvox-aural--timeline-delivery-fields~ wrapper reads the
+=emacsvox-aural--encode-timeline-delivery-fields= takes a policy and replacement
+key.  The existing =emacsvox-aural--timeline-delivery-fields= wrapper reads the
 dynamic submission variables at the end of timeline construction.  Preserve
 that capture point: resource resolution earlier in construction can re-enter
 Lisp and change the submission state.  The serializer preserves ordered
 defaults, key conversion, circular printing, diagnostics, and byte bounds.
 
 The complete builder is not pure.  Cue resolution through
-~omnivox-remote-resource~ may perform I/O; relative-rate support comes from the
+=omnivox-remote-resource= may perform I/O; relative-rate support comes from the
 live speech process.  Those operations, action placement, dispatch
 registration, framing, fallback, and process writes retain their existing
 owners and sequence.  Separating a complete delivery candidate from those
 effects requires further design and failure-path characterization.
 
-The ~delivery-preparation~ tests in =test/emacsvox-aural-transport-tests.el=
+The =delivery-preparation= tests in =test/emacsvox-aural-transport-tests.el=
 check complete serialized timelines and final writes, semantic bindings,
 state ownership, policy inputs, and capture timing.  The compiled Aural gate
 also runs these contracts and existing stop and send-failure regressions with
@@ -728,7 +728,7 @@ protocol behavior, not audible playback.
 
 Ordinary-buffer entry captures a source buffer, a marker, and a guarded source
 line.  Child interfaces and Help inherit that context through the inspection
-and shared UI helpers.  Use ~emacsvox-aural-inspection-call-in-source~ for
+and shared UI helpers.  Use =emacsvox-aural-inspection-call-in-source= for
 contextual commands so that moving the source cursor does not retarget an
 open interface.  Re-entry from an ordinary buffer deliberately captures a new
 target.  A dead or replaced source is reported rather than resolved through
@@ -752,28 +752,28 @@ Reopening a dirty editor preserves its draft and source association.
 :TEXINFO_NODE: no
 :END:
 
-Ordinary ~tts-initialize~ startup schedules the existing remote retry when
+Ordinary =tts-initialize= startup schedules the existing remote retry when
 main speech starts but a configured notification connection fails.  The
-scheduler respects ~omnivox-remote-auto-reconnect~, explicit suspension, and
+scheduler respects =omnivox-remote-auto-reconnect=, explicit suspension, and
 its single pending timer.  The retry restores only missing lanes; it keeps a
 working main process and negotiates fresh configuration for the new notifier.
-~omnivox-remote-disconnect~ cancels the timer and suspends even a retry callback
+=omnivox-remote-disconnect= cancels the timer and suspends even a retry callback
 that has already been dispatched.  Local speech and disabled notification
 streams do not start remote recovery.  Exercise these boundaries in
-~test/omnivox-remote-tests.el~ with controlled connection failures and timers.
+=test/omnivox-remote-tests.el= with controlled connection failures and timers.
 
 ** Omnivox voice configuration applies
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-~omnivox-apply-voice-configuration~ captures one generation and its definitions
+=omnivox-apply-voice-configuration= captures one generation and its definitions
 for the original speech processes.  Applies may overlap.  Each owns its request
 identifiers and retires only those callbacks when a process result becomes
 terminal.  Acknowledging routing precedes logical registration; one aggregate
 reports applied, partial, or failed after all participating processes finish.
 
-The timeout closes pending results as failed with phase ~timeout~, cancels
+The timeout closes pending results as failed with phase =timeout=, cancels
 the timer, and releases the apply's pending callbacks.  A late acknowledgement
 cannot start another phase, update acknowledged configuration, or publish a
 second terminal result.  A reply from a stopped or replaced process also
@@ -784,8 +784,8 @@ This closes client work; it cannot undo a change already sent to the server.
 The Workbench therefore describes a timeout as an unconfirmed server outcome
 and offers reapplication of the committed profile.  No late-reply history is
 retained for expired applies.  Keep request-table, late-reply, overlapping-apply,
-and replacement regressions in ~test/emacsvox-tts-tests.el~ and spoken timeout
-feedback coverage in ~test/emacsvox-aural-voice-workbench-tests.el~.
+and replacement regressions in =test/emacsvox-tts-tests.el= and spoken timeout
+feedback coverage in =test/emacsvox-aural-voice-workbench-tests.el=.
 
 ** Notmuch contracts
 :PROPERTIES:
@@ -799,7 +799,7 @@ Advice is installed only when a target exists and is target-aware, so a nested
 or programmatic upstream call does not claim the outer user's feedback.
 
 The Show landing and visibility paths also read renderer metadata such as
-~:headers-overlay~, ~:message-visible~, message extents, ~:notmuch-part~,
+=:headers-overlay=, =:message-visible=, message extents, =:notmuch-part=,
 part-hidden state, and Notmuch part-button types.  Missing optional metadata
 should reduce presentation detail rather than authorize an operation.  Review
 these adapters whenever the Notmuch renderer changes.
@@ -811,9 +811,9 @@ owning buffer and process status are authoritative.  A killed owner remains
 silent, concurrent buffers cannot overwrite one another, and the global
 refresh-all path intentionally acquires no ownership.
 
-Run ~make notmuch-test~ for the explicit source suite.  After current byte-code
-exists, run ~make compiled-notmuch-test~; it verifies the exact loaded
-~emacsvox-notmuch.elc~, compiler version, and the same focused selector,
+Run =make notmuch-test= for the explicit source suite.  After current byte-code
+exists, run =make compiled-notmuch-test=; it verifies the exact loaded
+=emacsvox-notmuch.elc=, compiler version, and the same focused selector,
 including real displayed-window reading for both advance paths.
 
 ** Agent Shell contracts
@@ -886,7 +886,7 @@ With the Emacs selected by =local.mk=, it can also run directly:
 Keep the existing Agent Shell integration tests alongside these smaller
 contracts.  They exercise real pinned upstream renderers, speech delivery,
 enable/disable, and buffer-death cleanup.  After preparing the pinned
-dependencies with ~make test-deps~, run source and compiled parity checks:
+dependencies with =make test-deps=, run source and compiled parity checks:
 
 #+begin_example
 make integration-test
@@ -898,8 +898,8 @@ EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled make graphical-integration-test
 #+end_example
 
 The environment setting selects the exact renderer and main integration
-~.elc~ files in a fresh Emacs; other dependencies retain the runner's source
-preference.  Without it, both modules load explicitly from ~.el~ sources.
+=.elc= files in a fresh Emacs; other dependencies retain the runner's source
+preference.  Without it, both modules load explicitly from =.el= sources.
 The tests capture speech events and do not establish audible playback.
 
 *** Upstream contract layers
@@ -912,24 +912,24 @@ The integration uses three deliberately different contract layers:
 #+attr_texinfo: :columns .18 .37 .45
 | Layer | Agent Shell owner | Emacsvox rule |
 |---+---+---|
-| Public structured API | ~agent-shell-subscribe-to~, ~agent-shell-unsubscribe~, ~agent-shell-status~, and ~agent-shell-shell-buffer~; lifecycle, permission, and tool events | Primary authority for processing, completion, errors, permission urgency, and tool status. The public turn boundary triggers inspection of renderer-owned response sections. Event and response data is treated as untrusted content and bounded before automatic Aural submission. |
-| Experimental renderer metadata | ~agent-shell-ui-state~, ~agent-shell-ui-section~, rendered Markdown table/source properties, and renderer-owned faces | Feature-detected navigation and presentation input. Renderer group provenance outranks provider-controlled IDs; prose and IDs cannot manufacture structured permission or lifecycle authority. |
-| Private compatibility fallback | The aggregate ~agent-shell--state~, the legacy viewport ownership resolver, viewport position helpers, and legacy face, prompt, or ID inference | Kept in narrow adapter functions for older Agent Shell releases or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response. |
+| Public structured API | =agent-shell-subscribe-to=, =agent-shell-unsubscribe=, =agent-shell-status=, and =agent-shell-shell-buffer=; lifecycle, permission, and tool events | Primary authority for processing, completion, errors, permission urgency, and tool status. The public turn boundary triggers inspection of renderer-owned response sections. Event and response data is treated as untrusted content and bounded before automatic Aural submission. |
+| Experimental renderer metadata | =agent-shell-ui-state=, =agent-shell-ui-section=, rendered Markdown table/source properties, and renderer-owned faces | Feature-detected navigation and presentation input. Renderer group provenance outranks provider-controlled IDs; prose and IDs cannot manufacture structured permission or lifecycle authority. |
+| Private compatibility fallback | The aggregate =agent-shell--state=, the legacy viewport ownership resolver, viewport position helpers, and legacy face, prompt, or ID inference | Kept in narrow adapter functions for older Agent Shell releases or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response. |
 
-The lifecycle subscription currently consumes ~init-started~,
-~init-finished~, ~session-selected~, ~session-restored~, ~input-submitted~,
-~turn-complete~, and ~error~.  Dedicated subscriptions consume
-~permission-request~, ~permission-response~, and ~tool-call-update~.  Add new
+The lifecycle subscription currently consumes =init-started=,
+=init-finished=, =session-selected=, =session-restored=, =input-submitted=,
+=turn-complete=, and =error=.  Dedicated subscriptions consume
+=permission-request=, =permission-response=, and =tool-call-update=.  Add new
 semantic behavior at the public event layer when Agent Shell exposes it; keep
 renderer and private fallbacks isolated and covered by compatibility tests.
 
-The lifecycle subscription also observes ~config-option-update~.  Configuration
+The lifecycle subscription also observes =config-option-update=.  Configuration
 snapshots suppress initial inventory and duplicate callback/event confirmation.
 Late tool details are compared only for permissions established by a public
-~permission-request~ event, and their snapshots are removed on resolution.
+=permission-request= event, and their snapshots are removed on resolution.
 
-Current Agent Shell omits rendered Codex ~rawOutput~ and textual diffs from
-~tool-call-update~.  A narrow ~agent-shell--on-notification~ adapter joins that
+Current Agent Shell omits rendered Codex =rawOutput= and textual diffs from
+=tool-call-update=.  A narrow =agent-shell--on-notification= adapter joins that
 public event to the body rendered during the same call, matching both the
 owning buffer and qualified fragment ID.  Full tool speech is submitted after
 rendering returns.  Output digests and lifecycle statuses are tracked separately
@@ -938,13 +938,13 @@ without a matching public event do not authorize tool feedback.
 
 Until upstream exposes public steering and push lifecycle events, small
 adapters wrap the structured steering request's callbacks and the accepted
-~session/push~ lifecycle.  Push speech finishes before the original completion
+=session/push= lifecycle.  Push speech finishes before the original completion
 callback can drain the next queued prompt.  Callback generations invalidate
 pending speech feedback on session change or integration cleanup; original
 transport callbacks still run.  No transcript text is interpreted as a
 steering outcome or push completion.
 
-The queue adapter marks actual queue draining and lets ~input-submitted~
+The queue adapter marks actual queue draining and lets =input-submitted=
 confirm that a queued prompt started.  Prompt list editing and diff entry have
 native command feedback.  New asynchronous tool, queue, steering, setting, and
 permission-detail submissions explicitly select the notification lane; list
@@ -958,7 +958,7 @@ semantic provider so Aural rules can customize their presentation.
 :END:
 
 Staging and selected synchronous operations collect Git outcomes at
-~magit-process-finish~, before Magit can raise an error.  One interactive
+=magit-process-finish=, before Magit can raise an error.  One interactive
 command owns the aggregate result across nested calls.  A process that Magit
 starts and waits for contributes only to the collector attached when it was
 started; unrelated process callbacks cannot change that result.  Uncollected
@@ -974,7 +974,7 @@ competing selection icon.
 
 Regression tests use isolated repositories for real Git failures and real
 section trees for highlighting and visibility.  Run the Magit tests from
-source, then again in a fresh Emacs with ~EMACSVOX_MAGIT_TEST_LOAD=compiled~
+source, then again in a fresh Emacs with =EMACSVOX_MAGIT_TEST_LOAD=compiled=
 after bringing byte-code current.  A live buffer created with the former
 highlight mirroring needs a Magit refresh to rebuild its source properties.
 
@@ -984,36 +984,36 @@ highlight mirroring needs a Magit refresh to rebuild its source properties.
 :END:
 
 The ordinary WSL2 user route is implemented by
-~bin/emacsvox-wsl-install~ and pinned by ~etc/wsl-install.conf~.  Treat either
+=bin/emacsvox-wsl-install= and pinned by =etc/wsl-install.conf=.  Treat either
 file as release tooling.  When advancing GNU Emacs or Omnivox, update the
 version, archive name, URL, and SHA-256 together; exercise x64 and ARM64
 selection in the isolated installer tests; and perform one real installation
 of the newly pinned archive before updating the user manual.  The installer
-must remain per-user, must not invoke ~sudo~ or edit shell startup files, and
-must preserve an explicit ~EMACS~ or ~local.mk~ selection rather than silently
+must remain per-user, must not invoke =sudo= or edit shell startup files, and
+must preserve an explicit =EMACS= or =local.mk= selection rather than silently
 replacing it.
 
 The installed Omnivox executable is recorded as an absolute WSL path in the
-data-only ~$XDG_CONFIG_HOME/emacsvox/omnivox-program~ file.  Launcher selection
-is explicit ~OMNIVOX_PROGRAM~, that per-user file, developer staging, then
-~PATH~.  Keep the selection tests synchronized with this order.  A configured
+data-only =$XDG_CONFIG_HOME/emacsvox/omnivox-program= file.  Launcher selection
+is explicit =OMNIVOX_PROGRAM=, that per-user file, developer staging, then
+=PATH=.  Keep the selection tests synchronized with this order.  A configured
 but invalid path is a visible configuration error; silently falling through
 would hide a stale or damaged user installation.
 
 This section describes the reproducible source-build path, not the ordinary
 pre-built WSL2 installation.  The complete source-build prerequisite checklist
 is in
-@@texinfo:@ref{Building Omnivox For WSL2}@@.  Dependency ownership is deliberately
+[[*Building Omnivox For WSL2][Building Omnivox For WSL2]].  Dependency ownership is deliberately
 split across three boundaries:
 
 #+attr_texinfo: :columns .18 .30 .52
 | Boundary | Supplied by | Dependencies |
 |---+---+---|
-| Windows and WSL host | Maintainer | WSL interoperation, ~powershell.exe~, ~wslpath~, Windows .NET Framework 4.7.2 or newer, Docker with Linux/AMD64 support, Git, Make, download and checksum tools, standard GNU shell utilities, network access, and writable Windows ~LocalAppData~. |
-| Pinned release toolchain | Emacsvox target | The immutable Rust/Debian container, MinGW cross tools and runtime DLLs, CMake, Clang and libclang, eSpeak build dependencies, Roslyn, .NET 4.0 reference assemblies, and official Windows Piper companion.  The exact versions, source commit, and downloaded-package hashes live in ~servers/omnivox-release/toolchain.lock~. |
-| Build source | Git checkouts | The current Emacsvox checkout and the Omnivox checkout selected by ~OMNIVOX_DIR~, including Omnivox's locked Rust dependencies and checksum-locked Flite and RuTTS source inputs. |
+| Windows and WSL host | Maintainer | WSL interoperation, =powershell.exe=, =wslpath=, Windows .NET Framework 4.7.2 or newer, Docker with Linux/AMD64 support, Git, Make, download and checksum tools, standard GNU shell utilities, network access, and writable Windows =LocalAppData=. |
+| Pinned release toolchain | Emacsvox target | The immutable Rust/Debian container, MinGW cross tools and runtime DLLs, CMake, Clang and libclang, eSpeak build dependencies, Roslyn, .NET 4.0 reference assemblies, and official Windows Piper companion.  The exact versions, source commit, and downloaded-package hashes live in =servers/omnivox-release/toolchain.lock=. |
+| Build source | Git checkouts | The current Emacsvox checkout and the Omnivox checkout selected by =OMNIVOX_DIR=, including Omnivox's locked Rust dependencies and checksum-locked Flite and RuTTS source inputs. |
 
-~make verify-windows-omnivox-toolchain~ prepares the cached Roslyn inputs,
+=make verify-windows-omnivox-toolchain= prepares the cached Roslyn inputs,
 builds the Docker image, and validates this boundary before compilation.  The
 full target then builds Omnivox's two 32-bit helper sources deterministically,
 builds native Windows Omnivox plus its RHVoice, Flite, and RuTTS helpers in the
@@ -1032,9 +1032,9 @@ Windows-local copy, and all configured external inputs.  The separate live
 verifier executes that exact Windows-local runtime, prewarms the bounded eSpeak
 voice cache tied to the verified content-addressed data, discovers the compiled
 Flite and RuTTS voices, and requires real WAV synthesis from both helpers.
-Use ~make verify-windows-omnivox-live~ to repeat only the executable smoke gate.
+Use =make verify-windows-omnivox-live= to repeat only the executable smoke gate.
 
-~OMNIVOX_PIPER_MODEL~ is an optional staging input, not a release payload.
+=OMNIVOX_PIPER_MODEL= is an optional staging input, not a release payload.
 When supplied, the target validates the adjacent configuration, copies both
 files into a content-addressed Windows-local model cache, records their hashes,
 and writes the Windows path used by the launcher.  The recursive runtime
@@ -1044,19 +1044,19 @@ The public-domain engineering voice used in Omnivox CI is approved only for
 that bounded test purpose and is not a model-distribution default.
 
 Maintainers testing tracked Emacsvox or Omnivox changes may use
-~make windows-omnivox-dev~.  That target records both worktree-diff hashes and
+=make windows-omnivox-dev=.  That target records both worktree-diff hashes and
 labels the result as a development build.  It builds the RHVoice, Flite, and
 RuTTS companions but omits Piper, because the currently pinned Piper companion
 must not be mixed with later Omnivox source.  It also rejects
-~OMNIVOX_PIPER_MODEL~.  Advance the checked Piper companion and source commit
+=OMNIVOX_PIPER_MODEL=.  Advance the checked Piper companion and source commit
 together before these integrations enter the clean release path.  See
-~servers/omnivox-release/README.org~ for the pinned toolchain, licensing,
+=servers/omnivox-release/README.org= for the pinned toolchain, licensing,
 provenance, and restaging contract.
 
 To test Piper before that release-pin advance, commit and push a clean Omnivox
-revision and run its ~Piper Native Validation~ workflow.  Download the
-~omnivox-piper-windows-x64~ artifact, which contains the companion archive and
-~piper-sha256sums.txt~, then stage it with a reviewed model:
+revision and run its =Piper Native Validation= workflow.  Download the
+=omnivox-piper-windows-x64= artifact, which contains the companion archive and
+=piper-sha256sums.txt=, then stage it with a reviewed model:
 
 #+begin_example
 OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.12.0-piper-windows-x64.zip \
@@ -1068,15 +1068,15 @@ OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.12.0-piper-windows
 This is a development-only bridge, not a release-pin bypass.  It verifies the
 outer archive hash, rejects unsafe archive members and symbolic links, checks
 the companion's internal manifest, and requires its source provenance to name
-the exact clean Omnivox ~HEAD~ and the Windows MSVC target.  The staged runtime
+the exact clean Omnivox =HEAD= and the Windows MSVC target.  The staged runtime
 records the artifact hash and companion tree hash and labels the companion
-~github-actions-native-development-build~ with version ~development-ci~.  The
+=github-actions-native-development-build= with version =development-ci=.  The
 version-looking archive filename comes from Omnivox's current package metadata
 and does not assert that post-tag code was released.  The final live gate loads
 the separately cached model and requires Piper to enumerate that voice and
 synthesize a non-empty WAV.
 
-The ordinary ~windows-omnivox-dev~ target remains appropriate for uncommitted
+The ordinary =windows-omnivox-dev= target remains appropriate for uncommitted
 Omnivox work because it rebuilds all included companions locally and omits
 Piper.  The CI-artifact target deliberately rejects a dirty Omnivox checkout:
 commit and push the change, let the native workflow build that exact commit,
@@ -1084,22 +1084,22 @@ then use its new artifact.  Emacsvox itself may contain tracked changes; their
 diff hash remains part of the local runtime identity.
 
 After one complete development runtime has been staged, use
-~make windows-omnivox-main-dev~ for changes confined to the main Rust server or
+=make windows-omnivox-main-dev= for changes confined to the main Rust server or
 its main-only audio output.  This guarded path uses the same pinned toolchain
-to rebuild only ~omnivox.exe~, derives a new content-addressed runtime from the
+to rebuild only =omnivox.exe=, derives a new content-addressed runtime from the
 current hash-verified development payload, records the original complete build
 and reused manifest in provenance, hard-links the unchanged payload, and runs a
 focused live check of the new Windows main executable.  It refuses reuse when
 helper, helper-protocol, dependency, toolchain, or companion inputs changed; in
-that case rerun ~make windows-omnivox-dev~.  Run
-~make verify-windows-omnivox-runtime verify-windows-omnivox-live~ when a
-complete development audit is useful.  The clean ~make windows-omnivox~ release
+that case rerun =make windows-omnivox-dev=.  Run
+=make verify-windows-omnivox-runtime verify-windows-omnivox-live= when a
+complete development audit is useful.  The clean =make windows-omnivox= release
 path always rebuilds and verifies every payload and never uses incremental
 reuse.
 
-The development target accepts ~OMNIVOX_RHVOICE_LIBRARY~ and
-~OMNIVOX_RHVOICE_DATA~ together, plus an optional
-~OMNIVOX_RHVOICE_CONFIG~ directory.  It resolves WSL or Windows absolute paths,
+The development target accepts =OMNIVOX_RHVOICE_LIBRARY= and
+=OMNIVOX_RHVOICE_DATA= together, plus an optional
+=OMNIVOX_RHVOICE_CONFIG= directory.  It resolves WSL or Windows absolute paths,
 requires the C API DLL and the language/voice data layout, records content
 digests in provenance and machine-local Windows path pointers beside the
 selected runtime, and leaves all RHVoice files external.  Those pointers let
@@ -1111,7 +1111,7 @@ helper always provides its built-in male and female Russian voices without
 RuLex.
 
 Do not bypass the Omnivox release target manually or clean either repository
-to make its release guard pass.  Use ~make windows-omnivox~ only for the
+to make its release guard pass.  Use =make windows-omnivox= only for the
 reproducible clean-release path documented in the user-facing WSL2 route.
 
 ** Windows staging implementation and fixtures
@@ -1121,27 +1121,27 @@ reproducible clean-release path documented in the user-facing WSL2 route.
 
 Make owns option and clean-source guards, toolchain verification, companion
 preparation, Docker compilation, and final runtime verification.  Its
-~windows-omnivox~ target passes prepared build outputs to the internal
+=windows-omnivox= target passes prepared build outputs to the internal
 =servers/omnivox-release/stage-runtime.sh= script.  Use the guarded Make
 targets rather than invoking this script directly.
 
 The script owns host-side payload staging: input checks, content hashes,
 optional voice-data caches, diagnostics, provenance, path files, and selection
 of the completed runtime.  Make passes the Emacsvox root as
-~EMACSVOX_STAGE_ROOT~, the resolved ~OMNIVOX_*~ source/build/runtime paths and
+=EMACSVOX_STAGE_ROOT=, the resolved =OMNIVOX_*= source/build/runtime paths and
 feature switches, and the two pinned Roslyn/reference-assembly archive hashes.
 The assignments at the call site and the script's initial parameter checks
 define the complete internal input list.  Optional user inputs retain their
-~OMNIVOX_PIPER_MODEL~, ~OMNIVOX_RHVOICE_*~, and ~OMNIVOX_ECI_DLL~ environment
+=OMNIVOX_PIPER_MODEL=, =OMNIVOX_RHVOICE_*=, and =OMNIVOX_ECI_DLL= environment
 variables.  Main-only development staging remains separately owned by
 =stage-main-dev.sh= with its existing reuse restrictions.
 
-Run ~make windows-staging-test~ on a GNU/Linux host with Python 3, Git, Make,
+Run =make windows-staging-test= on a GNU/Linux host with Python 3, Git, Make,
 and the standard GNU file/checksum tools.  The tests use private repositories,
 prepared payloads, runtime directories, and a simulated LocalAppData.  Docker,
 Windows commands, and compiler/verifier boundaries are replaced by fixtures;
 Git guards, copying, hashing, provenance, and link activation execute normally.
-The suite is also included in ~make test~ and its own CI job.  It exercises
+The suite is also included in =make test= and its own CI job.  It exercises
 clean/development variants, optional companions and external voice inputs,
 paths containing spaces, corrupt caches, missing inputs, rejected main-only
 reuse, interruption, and activation failure.
@@ -1197,7 +1197,7 @@ resolves it with current rules and the captured buffer context.
 
 Shared Help and offline task nodes preserve the original source and exact
 return position.  New interfaces should use the shared parent modes and add
-a task-node mapping to ~emacsvox-aural-ui-manual-nodes~.  Row action predicates
+a task-node mapping to =emacsvox-aural-ui-manual-nodes=.  Row action predicates
 should hide operations that cannot apply to that row; this includes editing
 built-in options and reordering items outside the active-order view.
 
@@ -1333,7 +1333,7 @@ and resource metadata. A pack supplies recordings for registered cue names;
 the presentation rules decide when those cues occur.
 
 The standard personal discovery root is =~/.emacsvox/sounds/packs/=, controlled
-by ~emacsvox-aural-personal-sound-packs-directory~. Each immediate child is a
+by =emacsvox-aural-personal-sound-packs-directory=. Each immediate child is a
 candidate pack, and its directory basename becomes its identifier. Choose an
 unused identifier. A directory containing =button.ogg= is discovered without
 a manifest. A partial pack can instead supply the data-only manifest
@@ -1350,33 +1350,33 @@ Lisp data form in =my-cues/emacsvox-sound-pack.el=:
 #+end_src
 
 The file contains data, not executable initialization: do not wrap the form in
-~setq~, quote it, or add a second form. Put a replacement recording such as
+=setq=, quote it, or add a second form. Put a replacement recording such as
 =button.ogg= in the same directory. Its basename names the registered cue.
 Unknown cue names fail the resource audit; introducing a new semantic cue
 requires an integration to register its intent and use it. Every standalone
 sound pack must resolve =button=, directly or through its declared parent.
 
-The optional ~:profiles~ field lists registered cue-coverage requirements.
+The optional =:profiles= field lists registered cue-coverage requirements.
 These are resource validation contracts, distinct from Presentation Profiles
 that select a user's setup. Keep the coverage appropriate to the intended
 uses rather than treating a successful single audition as complete coverage.
-Default spatialization is ~neutral~, ~stereo~, or ~pre-spatialized~. Use the
+Default spatialization is =neutral=, =stereo=, or =pre-spatialized=. Use the
 last for recordings that already encode their intended spatial placement,
 so runtime balance does not position them a second time.
 
-Open Aural Home's /Sound packs/ and press @@texinfo:@kbd{g}@@ to rescan.
-Inspect the new pack with @@texinfo:@key{RET}@@: the replacement should be
+Open Aural Home's /Sound packs/ and press ~g~ to rescan.
+Inspect the new pack with ~RET~: the replacement should be
 native, while unchanged cues identify their parent or fallback provider.
-Audition individual cues with @@texinfo:@kbd{P}@@ and validate with
-@@texinfo:@kbd{v}@@ before activating the pack. Missing or malformed assets
+Audition individual cues with ~P~ and validate with
+~v~ before activating the pack. Missing or malformed assets
 are errors to resolve, not cues to copy from an unrelated installed pack.
 No activation follows from writing the directory or previewing it.
 
-The manager's @@texinfo:@kbd{e}@@ edits metadata for discovered packs only.
+The manager's ~e~ edits metadata for discovered packs only.
 It replaces the manifest atomically, retains the previous file with a =~=
 suffix, and restores the old metadata if validation of the refreshed pack
 fails. It does not edit recordings. After changing files externally, refresh
-the pack; ~emacsvox-aural-refresh-resource-pack~ refreshes an already registered
-pack, and ~emacsvox-aural-refresh-discovered-resource-packs~ rescans discovery
+the pack; =emacsvox-aural-refresh-resource-pack= refreshes an already registered
+pack, and =emacsvox-aural-refresh-discovered-resource-packs= rescans discovery
 roots. Engine installation, remote sound-directory placement, and user
 startup selection remain separate tasks.

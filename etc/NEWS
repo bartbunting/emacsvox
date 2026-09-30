@@ -10,6 +10,14 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Read the manual as plain text
+
+Run =make docs-org-text= to export the complete manual as UTF-8 text under
+=.docs-preview/org-manual/emacsvox.txt=. Keys, literals and references now
+use ordinary Org markup, so standard Org text and HTML exports retain them.
+The maintained Info export preserves keyboard formatting and existing nodes.
+Thanks to Lubos Pintes for the plain-text export contribution.
+
 ** Use the palette voice for character feedback
 
 Typing and character navigation now use the palette's default voice, including

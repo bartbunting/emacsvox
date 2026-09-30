@@ -26,18 +26,18 @@ mark events without interrupting you with unnecessary words.
 :END:
 
 - If Emacsvox is not installed yet, start with
-  @@texinfo:@ref{Installation}@@.  It takes you from a source checkout to a clean
+  [[*Getting Started: Installation and First Speech][Installation]].  It takes you from a source checkout to a clean
   speaking session and includes a recovery path if speech does not start.
 
-- If Emacsvox is already speaking, continue with @@texinfo:@ref{Basic Usage}@@ for a
+- If Emacsvox is already speaking, continue with [[*Basic Usage][Basic Usage]] for a
   short first-session guide and the essential reading commands.
 
-- If Emacs itself is new to you, @@texinfo:@kbd{C-h t}@@ opens the Emacs tutorial.
+- If Emacs itself is new to you, ~C-h t~ opens the Emacs tutorial.
   Emacsvox speaks the tutorial and the commands you use while following it.
 
-- In any Emacs buffer, @@texinfo:@kbd{C-h m}@@ describes the active modes and their
-  commands, while @@texinfo:@kbd{C-h k}@@ followed by a key explains that key.  See
-  @@texinfo:@ref{Using Online Help}@@ when you want to explore further.
+- In any Emacs buffer, ~C-h m~ describes the active modes and their
+  commands, while ~C-h k~ followed by a key explains that key.  See
+  [[*Find Help While You Work][Using Online Help]] when you want to explore further.
 
 ** The Welcome Screen
 :PROPERTIES:
@@ -47,14 +47,14 @@ mark events without interrupting you with unnecessary words.
 At an idle startup, after speech is ready, Emacsvox offers a short welcome
 screen. It has actions to test speech, adjust rate and output volumes, choose
 voices and engines, open the tutorial or manual, and start normal use.
-Use @@texinfo:@kbd{TAB}@@ and @@texinfo:@kbd{S-TAB}@@ to choose actions,
-@@texinfo:@kbd{RET}@@ to activate one, and @@texinfo:@kbd{q}@@ to return.
+Use ~TAB~ and ~S-TAB~ to choose actions,
+~RET~ to activate one, and ~q~ to return.
 Arrow keys read the instructions normally.
 
 Toggle Show this welcome screen at startup to stop showing it automatically.
 The choice is saved in this Emacs profile and survives application upgrades.
-Open it again through Help's Emacsvox welcome entry, @@texinfo:@kbd{C-h W}@@,
-or @@texinfo:@code{M-x emacsvox-welcome}@@. Startup leaves explicitly opened
+Open it again through Help's Emacsvox welcome entry, ~C-h W~,
+or ~M-x emacsvox-welcome~. Startup leaves explicitly opened
 files and sessions already in use alone.
 
 ** What You Will Hear
@@ -71,14 +71,14 @@ Emacsvox combines several kinds of feedback:
 - pauses and spatial cues that help separate related information.
 
 You can adjust this presentation gradually.  Aural Home, opened with
-@@texinfo:@kbd{C-e H}@@, brings voices, sound packs, profiles, and other presentation
+~C-e H~, brings voices, sound packs, profiles, and other presentation
 options together.  You do not need to configure it before beginning.  See
-@@texinfo:@ref{Aural Presentation}@@ when you want to understand or change what you hear.
+[[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] when you want to understand or change what you hear.
 
 Emacsvox sends speech through a speech server.  New GNU/Linux, macOS, and WSL2
 installations use Omnivox; established direct servers remain available for
 compatible existing setups.  The installation chapter introduces only what
-you need for first speech.  @@texinfo:@xref{Speech Backends}@@ contains the platform and
+you need for first speech.  [[*Speech Backends][Speech Backends]] contains the platform and
 compatibility details.
 
 ** About This Manual
@@ -92,7 +92,7 @@ the source, while the heritage manual preserves Emacspeak essays and
 application guides for their historical and design value.  Historical material
 may describe software or Web services from its original period.
 
-Rapidly changing features are also documented in ~README.org~, ~etc/NEWS~,
+Rapidly changing features are also documented in =README.org=, =etc/NEWS=,
 and the generated Aural Presentation reference.  When a copied key binding
-differs from your running Emacs, prefer the live help shown by @@texinfo:@kbd{C-h m}@@ or
-@@texinfo:@kbd{C-h k}@@.
+differs from your running Emacs, prefer the live help shown by ~C-h m~ or
+~C-h k~.

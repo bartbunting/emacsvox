@@ -11,6 +11,7 @@
 (require 'cl-lib)
 (require 'org)
 (require 'ox-texinfo)
+(require 'ol-info)
 (require 'subr-x)
 
 (declare-function org-texinfo-headline "ox-texinfo")
@@ -28,9 +29,17 @@
         rendered
       (replace-regexp-in-string "\\`@node[^\n]*\n" "" rendered))))
 
+(defun emacsvox-org-export--code (code _contents _info)
+  "Export Org CODE as keyboard notation, including named keys.
+The maintained manual reserves ~...~ for keys and =...= for other literals."
+  (org-texinfo-kbd-macro
+   (org-texinfo--sanitize-content (org-element-property :value code)) t))
+
 (unless (org-export-get-backend 'emacsvox-texinfo)
   (org-export-define-derived-backend 'emacsvox-texinfo 'texinfo
-    :translate-alist '((headline . emacsvox-org-export--headline))))
+    :translate-alist '((headline . emacsvox-org-export--headline)
+                      (code . emacsvox-org-export--code)
+                      (verbatim . org-texinfo-code))))
 
 (defun emacsvox-org-export--required-environment (name)
   "Return the non-empty environment variable NAME."

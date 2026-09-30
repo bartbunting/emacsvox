@@ -14,8 +14,8 @@ of information in that buffer; and Emacsvox presents that context through
 speech, voice changes, sounds, and structured navigation.
 
 You can begin without learning a new desktop model.  Open a file or application
-normally, use @@texinfo:@kbd{C-e m}@@ to hear the current buffer and mode, and press
-@@texinfo:@kbd{C-h m}@@ to discover what that buffer can do.  The rest of this chapter
+normally, use ~C-e m~ to hear the current buffer and mode, and press
+~C-h m~ to discover what that buffer can do.  The rest of this chapter
 explains why the same approach works for text, Web pages, mail, shells, source
 code, and many other tasks.
 
@@ -34,7 +34,7 @@ page, a mail search, a shell session, or a temporary Help result.  Some buffers
 are connected to files; many useful application buffers are not.
 
 The mode line identifies the selected buffer and its major mode.  Press
-@@texinfo:@kbd{C-e m}@@ whenever you want to hear it.  Common buffer commands include:
+~C-e m~ whenever you want to hear it.  Common buffer commands include:
 
 #+attr_texinfo: :indic kbd :compact t
 - C-x b ::
@@ -44,7 +44,7 @@ The mode line identifies the selected buffer and its major mode.  Press
 
 - C-x C-b ::
 
-  Open a buffer list.  In that list, use @@texinfo:@kbd{C-h m}@@ to learn its navigation,
+  Open a buffer list.  In that list, use ~C-h m~ to learn its navigation,
   selection, saving, and cleanup commands.
 
 - C-x k ::
@@ -72,32 +72,32 @@ among them without remembering their names or opening a buffer list.  This is
 useful when comparing Org notes, reviewing several directories in Dired, or
 moving between source files.
 
-Press @@texinfo:@kbd{C-e n}@@ to select the next buffer with the same major
-mode, or @@texinfo:@kbd{C-e p}@@ to select the previous one.  For example, from
+Press ~C-e n~ to select the next buffer with the same major
+mode, or ~C-e p~ to select the previous one.  For example, from
 an Org buffer these commands visit other Org buffers, skipping all buffers
 that do not use the same major mode.  Buffers are grouped by major mode, not
 by project or directory.
 
-After the first command, you only need the final letter: @@texinfo:@kbd{n}@@
-continues forward and @@texinfo:@kbd{p}@@ moves backward.  You can change
+After the first command, you only need the final letter: ~n~
+continues forward and ~p~ moves backward.  You can change
 direction at any time, and cycling wraps around when you reach the end.  For
-example, @@texinfo:@kbd{C-e n n p}@@ moves forward twice, then returns to the
+example, ~C-e n n p~ moves forward twice, then returns to the
 buffer you just left.
 
-To navigate without the major-mode filter, use @@texinfo:@kbd{C-e .}@@ for
-next buffer or @@texinfo:@kbd{C-e ,}@@ for previous buffer.  You can then repeat
-with just @@texinfo:@kbd{.}@@ or @@texinfo:@kbd{,}@@, in the same way as
-@@texinfo:@kbd{n}@@ and @@texinfo:@kbd{p}@@.  You can also switch between these
+To navigate without the major-mode filter, use ~C-e .~ for
+next buffer or ~C-e ,~ for previous buffer.  You can then repeat
+with just ~.~ or ~,~, in the same way as
+~n~ and ~p~.  You can also switch between these
 controls while cycling.
 
-The temporary buffer-selection controls also include @@texinfo:@kbd{b}@@ to
-select a buffer by name, @@texinfo:@kbd{f}@@ to open a file,
-@@texinfo:@kbd{k}@@ to kill a buffer, and @@texinfo:@kbd{o}@@ to change windows.
+The temporary buffer-selection controls also include ~b~ to
+select a buffer by name, ~f~ to open a file,
+~k~ to kill a buffer, and ~o~ to change windows.
 
-Press @@texinfo:@kbd{C-g}@@ when finished to return to normal editing.  A key
+Press ~C-g~ when finished to return to normal editing.  A key
 outside the temporary buffer-selection controls also ends cycling and
 performs its normal action.  To choose a particular buffer by name, use
-@@texinfo:@kbd{C-x b}@@.
+~C-x b~.
 
 ** Let Modes Give Each Buffer Its Tools
 :PROPERTIES:
@@ -122,8 +122,8 @@ meaningful unit supplied by the active mode.  Emacsvox speaks the result of the
 operation and can use the same context to announce state changes.
 
 You do not need to predict which commands every mode provides.  Press
-@@texinfo:@kbd{C-h m}@@ in the buffer you are using, then @@texinfo:@kbd{C-h k}@@ followed by a key
-when you want a fuller explanation.  @@texinfo:@xref{Using Online Help}@@ provides a
+~C-h m~ in the buffer you are using, then ~C-h k~ followed by a key
+when you want a fuller explanation.  [[*Find Help While You Work][Using Online Help]] provides a
 short practical guide to these discovery commands.
 
 ** Hear And Navigate The Current Context
@@ -153,9 +153,9 @@ changes without interrupting the spoken content.  Ordinary text remains
 available through the usual reading commands.
 
 The exact result depends on the mode, the Emacsvox integration, and your Aural
-Presentation settings.  @@texinfo:@xref{Aural Presentation}@@ explains how the
+Presentation settings.  [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] explains how the
 parts fit together, including the established Voice Lock compatibility layer;
-@@texinfo:@kbd{C-e E}@@ explains the presentation chosen for the object at point.
+~C-e E~ explains the presentation chosen for the object at point.
 
 *** Move By The Structure Of The Content
 :PROPERTIES:
@@ -169,9 +169,9 @@ For example, Info moves among nodes and menu entries, Org and Outline move
 among headings, Dired moves among files, programming modes understand
 definitions and diagnostics, and EWW exposes links and document structure.
 
-Begin with @@texinfo:@kbd{C-h m}@@.  It describes the commands available in the
+Begin with ~C-h m~.  It describes the commands available in the
 running buffer, including personal customizations and installed packages.
-@@texinfo:@xref{Browsing Structure}@@ points to maintained guides for several common
+[[*Browsing Structure][Browsing Structure]] points to maintained guides for several common
 types of content.
 
 *** Move Between Tasks Without Losing Your Place
@@ -182,9 +182,9 @@ types of content.
 #+cindex: desktop navigation
 
 Buffers keep different tasks available in one Emacs session.  Use
-@@texinfo:@kbd{C-x b}@@ to return to a known buffer or @@texinfo:@kbd{C-x C-b}@@ to browse the
+~C-x b~ to return to a known buffer or ~C-x C-b~ to browse the
 current set.  Emacs windows can show more than one buffer at a time; if the
-selected window is unclear, @@texinfo:@kbd{C-e C-w}@@ describes the arrangement.
+selected window is unclear, ~C-e C-w~ describes the arrangement.
 
 Applications often create several related buffers, such as a search result and
 an individual message.  Their mode help explains the commands for moving among
@@ -200,9 +200,9 @@ dialog that must be completed before doing anything else.
 
 #+cindex: finding
 
-In most text buffers, @@texinfo:@kbd{C-s}@@ searches forward incrementally and
-@@texinfo:@kbd{C-r}@@ searches backward.  Type more text to narrow the match, repeat the
-search key to move to another match, and press @@texinfo:@kbd{C-g}@@ to cancel.  This same
+In most text buffers, ~C-s~ searches forward incrementally and
+~C-r~ searches backward.  Type more text to narrow the match, repeat the
+search key to move to another match, and press ~C-g~ to cancel.  This same
 basic search is available in documents, Help, source code, and many application
 results.
 

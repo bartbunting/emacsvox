@@ -10,9 +10,9 @@ at the end of the published manual so that an installed Info manual and an
 offline checkout remain complete, but it is not part of the ordinary
 installation and use path.
 
-Before making a governed change, read ~AGENTS.md~ and every accepted record in
-~docs/adr/~.  Use the Emacs selected by ~local.mk~ for repository checks.  The
-generated @@texinfo:@ref{Top,Emacsvox Reference Manual,,emacsvox-reference,Emacsvox Reference Manual}@@
+Before making a governed change, read =AGENTS.md= and every accepted record in
+=docs/adr/=.  Use the Emacs selected by =local.mk= for repository checks.  The
+generated [[info:emacsvox-reference#Top][Emacsvox Reference Manual]]
 is the exact inventory of Lisp commands, options, and keymaps; the chapters
 that follow explain contracts and procedures that cannot be generated from
 those interfaces.

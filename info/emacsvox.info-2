@@ -26,7 +26,8 @@ prompt editor, or permission controls.  See Agent Shell
 (https://github.com/xenodium/agent-shell) for provider installation and
 configuration.
 
-   The generated *note (emacsvox-reference)emacsvox-agent-shell::
+   The generated *note emacsvox-agent-shell:
+(emacsvox-reference)emacsvox-agent-shell. in _Emacsvox Reference Manual_
 section is the exhaustive Emacsvox command and option reference.  This
 chapter follows the tasks a user performs in a session.
 
@@ -180,11 +181,11 @@ permission controls remain the place to inspect and decide the request.
 
    If the request belongs to another session, switch to the named
 buffer.  Use ‘M-x agent-shell-jump-to-latest-permission-button-row’ to
-find its latest permission row, or use Agent Shell's ‘TAB’ and ‘S-TAB’
-item navigation.  Move among the buttons and press ‘RET’, or use a
-direct choice key displayed by Agent Shell.  Choice keys are supplied by
-Agent Shell and the provider, so the visible permission row is
-authoritative.
+find its latest permission row, or use Agent Shell's ‘<TAB>’ and
+‘S-<TAB>’ item navigation.  Move among the buttons and press ‘<RET>’, or
+use a direct choice key displayed by Agent Shell.  Choice keys are
+supplied by Agent Shell and the provider, so the visible permission row
+is authoritative.
 
    Error blocks remain exceptional feedback rather than routine
 transcript chatter.  Lifecycle error announcements follow
@@ -245,7 +246,7 @@ a bounded body preview.
      (‘emacsvox-agent-shell-previous-link’).  Move to the next or
      previous visible rendered link and speak its label and Return
      action together.  The cursor hint remains visible without a second
-     voice repeating it.  Press ‘RET’ to follow the link.
+     voice repeating it.  Press ‘<RET>’ to follow the link.
 ‘e / E’
      Use ‘e’ (‘emacsvox-agent-shell-next-error’) or ‘E’
      (‘emacsvox-agent-shell-previous-error’).  Move to the next or
@@ -304,13 +305,14 @@ Moving into a rendered Markdown table activates a contextual table map.
 It announces the table dimensions and current cell.  Leaving the table
 restores the ordinary Agent Shell keys.  Markdown and Org source buffers
 offer explicit table reading with matching logical operations; see *note
-Browsing Structure::.  Agent Shell retains its own table speech
-preferences and automatic contextual activation.  Plain Left and Right
-move by character within the table.  Use Control-Meta-Left and
-Control-Meta-Right to move between columns.  Up and Down, also available
-as Control-Meta-Up and Control-Meta-Down, move between logical rows and
-read the entire destination row, retaining the current column.  Wrapped
-cells are read in full, using your table title settings.
+Browsing Structure: Browsing Structure.  Agent Shell retains its own
+table speech preferences and automatic contextual activation.  Plain
+Left and Right move by character within the table.  Use
+Control-Meta-Left and Control-Meta-Right to move between columns.  Up
+and Down, also available as Control-Meta-Up and Control-Meta-Down, move
+between logical rows and read the entire destination row, retaining the
+current column.  Wrapped cells are read in full, using your table title
+settings.
 
    Outside editable input, press ‘t’ for the next table or ‘T’ for the
 previous table.  These keys skip the current table and announce the
@@ -396,8 +398,8 @@ reinstall speech hooks after deliberately disabling them.  Neither
 recovery command discards transcript files or project work.
 
    If you are changing the integration rather than using it, see *note
-Integration Maintenance:: for its public event, renderer, and
-compatibility contracts.
+Integration Maintenance: Integration Maintenance. for its public event,
+renderer, and compatibility contracts.
 
 
 File: emacsvox.info,  Node: EAT Terminal Access,  Next: Running Terminal Based Applications,  Prev: Agent Shell,  Up: Top
@@ -409,7 +411,7 @@ EAT (Emulate A Terminal) is a third-party terminal emulator; it is not
 part of stock Emacs.  It is commonly installed from NonGNU ELPA.  Start
 it with ‘M-x eat’; use a prefix argument to create or select another EAT
 terminal.  See the EAT manual for terminal setup and EAT's complete
-command reference (*note (eat)Top::).
+command reference (see *note Eat User Manual: (eat)Top.).
 
    Emacsvox observes EAT's bounded rendered screen.  It does not parse a
 shell's private state and it does not generate shell or router
@@ -424,7 +426,7 @@ EAT provides four input modes.  Emacsvox announces a human-readable mode
 name whenever you switch modes.
 
 Semi-character mode
-     This is EAT's default.  Most keys, including <TAB>, go to the
+     This is EAT's default.  Most keys, including ‘<TAB>’, go to the
      terminal, while Emacs prefixes such as ‘C-x’, ‘C-c’, and ‘M-x’
      remain available.  Use ‘C-q’ before a normally reserved key to send
      it to the terminal.  Switch here with ‘C-c C-j’.
@@ -437,20 +439,20 @@ Emacs mode
      this for normal Emacs buffer motion and inspection.  Switch here
      with ‘C-c C-e’.
 Line mode
-     The pending input line is edited locally and sent on <RET>.  <TAB>
-     runs Emacs's ‘completion-at-point’, so a configured Emacs
+     The pending input line is edited locally and sent on ‘<RET>’.
+     ‘<TAB>’ runs Emacs's ‘completion-at-point’, so a configured Emacs
      completion front end such as Corfu can display its result.  Switch
      here from semi-character or Emacs mode with ‘C-c C-l’.  Line mode
      is not available in EAT's embedded Eshell terminal.
 
-   In semi-character and character mode, <TAB> belongs to Bash Readline,
-a remote shell, a router CLI, or whichever terminal application is
-running.  Corfu is not involved.  In line mode, <TAB> belongs to Emacs
-completion and does not ask a remote CLI for candidates.  Therefore
-semi-character mode is usually the right choice for SSH sessions and
-network-device CLIs.  If an Emacs completion backend blocks in line
-mode, ‘C-g’ cancels that Emacs operation; switch to semi-character mode
-if terminal-side completion was intended.
+   In semi-character and character mode, ‘<TAB>’ belongs to Bash
+Readline, a remote shell, a router CLI, or whichever terminal
+application is running.  Corfu is not involved.  In line mode, ‘<TAB>’
+belongs to Emacs completion and does not ask a remote CLI for
+candidates.  Therefore semi-character mode is usually the right choice
+for SSH sessions and network-device CLIs.  If an Emacs completion
+backend blocks in line mode, ‘C-g’ cancels that Emacs operation; switch
+to semi-character mode if terminal-side completion was intended.
 
    Shell completion must itself be configured.  For example, Bash can
 complete ‘git pul’ to ‘git pull’ only when the shell has suitable
@@ -477,7 +479,7 @@ silent.  Terminal bells, paste actions, input-mode changes,
 application-screen boundaries, and process exit are content-free
 semantic events rather than arbitrary screen speech.
 
-   In semi-character and character mode on the main screen, <RET> is
+   In semi-character and character mode on the main screen, ‘<RET>’ is
 silent.  After a rendered Left or Right movement, Emacsvox names the
 character reached; after Up or Down, it speaks the resulting input or
 history row without the observed shell prompt.  ‘M-b’, ‘M-f’, and
@@ -490,7 +492,7 @@ the echo area, but are not spoken over the command on the notification
 stream.
 
    An echoed Space is named without reading the prompt or the rest of
-the line.  For <BACKSPACE>, <DELETE>, ‘M-d’, and ‘C-k’, Emacsvox
+the line.  For ‘BACKSPACE’, ‘<DELETE>’, ‘M-d’, and ‘C-k’, Emacsvox
 compares bounded public screen snapshots before and after the key.  When
 one same-row removal is unambiguous, it speaks the character or text
 actually removed.  Otherwise it gives only a deletion tone; it never
@@ -513,7 +515,8 @@ colored row alone is not treated as proof of the active item.
 =============================
 
 On the main terminal screen, Emacsvox takes a public screen snapshot
-before a terminal-side <TAB> and waits briefly for EAT output to settle.
+before a terminal-side ‘<TAB>’ and waits briefly for EAT output to
+settle.
 
    • A unique inline completion speaks the newly displayed field.  For
      example, ‘~/sr<TAB>’ can speak ‘src slash’ after the shell displays
@@ -537,8 +540,8 @@ before a terminal-side <TAB> and waits briefly for EAT output to settle.
    The completion result is derived from the rendered screen, so the
 same design works with local Readline, SSH, and unstructured router
 help.  If the peer makes no visible change, there is nothing reliable to
-announce.  On an alternate screen, <TAB> is treated as navigation rather
-than shell completion.
+announce.  On an alternate screen, ‘<TAB>’ is treated as navigation
+rather than shell completion.
 
    Use ‘C-e q c’ to speak the latest retained candidate or help layout,
 or open frozen review with ‘C-e q r’ and press ‘c’.  These commands are
@@ -782,13 +785,13 @@ Emacsvox speech-enables the built-in Emacs Term terminal emulator
 through the module named ‘emacsvox-eterm’.  The module name is
 inherited; users do not install a separate Eterm package.
 
-   For a new full-terminal workflow, prefer *note EAT Terminal Access::.
-EAT has the richer current guide for bounded screen output,
-terminal-side completion, scrollback, alternate screens, and
-asynchronous rendering.  Use built-in Term when avoiding an additional
-package matters or an application specifically works better there.  For
-ordinary line-oriented shell commands, ‘M-x shell’ is usually simpler
-than either terminal emulator.
+   For a new full-terminal workflow, prefer *note EAT Terminal Access:
+EAT Terminal Access.  EAT has the richer current guide for bounded
+screen output, terminal-side completion, scrollback, alternate screens,
+and asynchronous rendering.  Use built-in Term when avoiding an
+additional package matters or an application specifically works better
+there.  For ordinary line-oriented shell commands, ‘M-x shell’ is
+usually simpler than either terminal emulator.
 
 * Menu:
 
@@ -805,17 +808,17 @@ File: emacsvox.info,  Node: Starting Term,  Next: Term Input Modes,  Up: Running
 ==================
 
 Run ‘M-x term <RET>’.  At the ‘Run program:’ prompt, accept the proposed
-shell or enter another executable and press <RET>.  Emacsvox currently
+shell or enter another executable and press ‘<RET>’.  Emacsvox currently
 makes the selected Term window fill the frame when ‘term’ or ‘ansi-term’
 starts.  This changes only the window layout: it does not kill the
 buffers that were displayed in the other windows.
 
    Term handles terminal emulation, while the child program handles its
 prompts, input, and completion.  Emacsvox observes the rendered Term
-buffer and adds speech feedback and review commands.  See *note
-(emacs)Term Mode:: for the emulator itself and *note
-(emacsvox-reference)emacsvox-eterm:: for the complete Emacsvox API
-inventory.
+buffer and adds speech feedback and review commands.  See *note Term
+Mode: (emacs)Term Mode. in _The GNU Emacs Manual_ for the emulator
+itself and *note emacsvox-eterm: (emacsvox-reference)emacsvox-eterm. in
+_Emacsvox Reference Manual_ for the complete Emacsvox API inventory.
 
 
 File: emacsvox.info,  Node: Term Input Modes,  Next: Term Speech Feedback,  Prev: Starting Term,  Up: Running Terminal Based Applications
@@ -833,10 +836,10 @@ Character mode
      to the child program, use ‘C-c C-h m’ for mode help and ‘C-c M-x’
      to run an Emacs command.
 Line mode
-     Normal Emacs editing commands edit the pending input.  <RET> sends
-     that input to the terminal program.  Use ‘C-h m’ and other ordinary
-     Emacs Help keys directly.  Press ‘C-c C-k’ to return to character
-     mode.
+     Normal Emacs editing commands edit the pending input.  ‘<RET>’
+     sends that input to the terminal program.  Use ‘C-h m’ and other
+     ordinary Emacs Help keys directly.  Press ‘C-c C-k’ to return to
+     character mode.
 
    Emacsvox announces ‘Terminal line mode’ or ‘Terminal character mode’
 after an interactive switch.  In either mode, ‘C-t’ begins the Emacsvox
@@ -934,8 +937,8 @@ File: emacsvox.info,  Node: Term Help And Recovery,  Prev: Reviewing The Term Sc
      to character mode.
 
    • If a full-screen application redraws in a way that Term cannot
-     present reliably, retry it in *note EAT Terminal Access:: and use
-     EAT's explicit review commands.
+     present reliably, retry it in *note EAT Terminal Access: EAT
+     Terminal Access. and use EAT's explicit review commands.
 
 
 File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Copyright,  Prev: Running Terminal Based Applications,  Up: Top
@@ -944,9 +947,10 @@ File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Copyright,  Prev:
 ******************************
 
 This chapter explains how to discover the bindings that are current in
-your Emacs session.  For the small starter set, see *note Basic Usage::.
-For the complete generated default bindings, see *note
-(emacsvox-reference)Emacsvox Keymaps::.
+your Emacs session.  For the small starter set, see *note Basic Usage:
+Basic Usage.  For the complete generated default bindings, see *note
+Emacsvox Keymaps: (emacsvox-reference)Emacsvox Keymaps. in _Emacsvox
+Reference Manual_.
 
    Most Emacsvox commands use one of these two default prefixes:
 
@@ -988,7 +992,8 @@ the chosen prefix; inspect them with Help.
 
    If live Help and this manual differ, live Help describes your running
 session.  Check customizations first, then compare the generated
-defaults in the *note (emacsvox-reference)Emacsvox Keymaps::.
+defaults in the *note Emacsvox Keymaps: (emacsvox-reference)Emacsvox
+Keymaps. in _Emacsvox Reference Manual_.
 
 
 File: emacsvox.info,  Node: Copyright,  Next: Acknowledgments,  Prev: Emacsvox Keyboard Commands,  Up: Top
@@ -998,7 +1003,7 @@ File: emacsvox.info,  Node: Copyright,  Next: Acknowledgments,  Prev: Emacsvox K
 
 This manual documents Emacsvox, a speech extension to Emacs.
 
-   Copyright (C)1994 - 2024 T.  V.  Raman All Rights Reserved.
+   Copyright (C)1994 – 2024 T.  V.  Raman All Rights Reserved.
 
    Permission is granted to make and distribute verbatim copies of this
 manual without charge provided the copyright notice and this permission
@@ -1105,6 +1110,18 @@ ADR 0004 before choosing a source directory.
 inspecting or rebuilding Lisp byte-code:
 
      make docs-org-preview
+
+   Use ordinary Org code markup for keys (‘C-x C-f’ or ‘M-x term <RET>’)
+and verbatim markup for other literals (‘local.mk’ or ‘make
+docs-update’).  The Texinfo exporter preserves keyboard and named-key
+formatting; standard Org text and HTML exports retain the key text.  Use
+Org heading links within the manual and described ‘info:’ links to other
+manuals.
+
+   Run ‘make docs-org-text’ for a complete UTF-8 text copy at
+‘.docs-preview/org-manual/emacsvox.txt’.  Set ‘DOCS_ORG_TEXT’ to choose
+another output path.  This also uses the standard Org exporter without
+loading Emacsvox.
 
    The ignored Info, Texinfo, and HTML previews appear under
 ‘.docs-preview/org-manual/’.  Once the text settles, run ‘make
@@ -1396,8 +1413,8 @@ time.
 
           p filename
 
-     *dispatch* play the audio file identified by filename for playing
-     -- ‘ogg’ file.
+     *dispatch* play the audio file identified by filename for playing —
+     ‘ogg’ file.
 
           t freq length
 
@@ -1554,10 +1571,10 @@ filter preserves point and match data, excludes code examples, and
 defers to the active reader map after entry.  First-arrow entry and
 movement produce one submission.  Structural movement remains available
 outside tables; inside tables, its usual ‘C-M-f/b/u/d’ keys remain
-available.  Org's native ‘TAB’, ‘RET’ and Meta-arrow editing bindings
-remain available outside reading.  Agent Shell's existing scoped
-overrides and prompt behaviour remain as documented in its integration
-contract.
+available.  Org's native ‘<TAB>’, ‘<RET>’ and Meta-arrow editing
+bindings remain available outside reading.  Agent Shell's existing
+scoped overrides and prompt behaviour remain as documented in its
+integration contract.
 
    Regression coverage lives in ‘test/emacsvox-table-reader-tests.el’
 and the Agent Shell table cases.  The graphical Agent Shell integration
@@ -2574,8 +2591,9 @@ damaged user installation.
 
    This section describes the reproducible source-build path, not the
 ordinary pre-built WSL2 installation.  The complete source-build
-prerequisite checklist is in *note Building Omnivox For WSL2::.
-Dependency ownership is deliberately split across three boundaries:
+prerequisite checklist is in *note Building Omnivox For WSL2: Building
+Omnivox For WSL2.  Dependency ownership is deliberately split across
+three boundaries:
 
 Boundary      Supplied by            Dependencies
 ---------------------------------------------------------------------------
@@ -2970,7 +2988,7 @@ that already encode their intended spatial placement, so runtime balance
 does not position them a second time.
 
    Open Aural Home's _Sound packs_ and press ‘g’ to rescan.  Inspect the
-new pack with <RET>: the replacement should be native, while unchanged
+new pack with ‘<RET>’: the replacement should be native, while unchanged
 cues identify their parent or fallback provider.  Audition individual
 cues with ‘P’ and validate with ‘v’ before activating the pack.  Missing
 or malformed assets are errors to resolve, not cues to copy from an
@@ -2998,36 +3016,36 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 
 * acss-default:                          Voices And Routing.  (line   6)
 * Agent Shell:                           Agent Shell.         (line   6)
-* alternate screen, EAT:                 EAT Terminal Access. (line 336)
+* alternate screen, EAT:                 EAT Terminal Access. (line 337)
 * applications:                          Emacs Packages.      (line   6)
-* archiving, Notmuch:                    Notmuch Mail.        (line 219)
+* archiving, Notmuch:                    Notmuch Mail.        (line 220)
 * artificial intelligence agents:        Agent Shell.         (line   6)
 * asynchronous search, Notmuch:          Notmuch Mail.        (line   6)
-* attachments, Notmuch:                  Notmuch Mail.        (line 152)
+* attachments, Notmuch:                  Notmuch Mail.        (line 153)
 * Audio Desktop:                         Audio Desktop.       (line   6)
 * audio formatting:                      Context-Sensitive Interaction.
                                                               (line  14)
 * Aural Doctor:                          Presentation Troubleshooting.
                                                               (line   6)
-* Aural history, mail privacy:           Notmuch Mail.        (line 301)
+* Aural history, mail privacy:           Notmuch Mail.        (line 302)
 * Aural Home:                            Aural Home.          (line   6)
 * Aural Presentation:                    Aural Presentation.  (line   6)
-* automatic speech limits, Notmuch:      Notmuch Mail.        (line 247)
+* automatic speech limits, Notmuch:      Notmuch Mail.        (line 248)
 * automatic speech, Term:                Term Speech Feedback.
                                                               (line   6)
 * buffer cycling:                        Desktop Objects.     (line  36)
 * buffers:                               Desktop Objects.     (line   6)
 * buffers <1>:                           Desktop Management.  (line   6)
-* byte-code, Notmuch integration:        Notmuch Mail.        (line 348)
+* byte-code, Notmuch integration:        Notmuch Mail.        (line 349)
 * character echo:                        Controlling Echo.    (line   6)
 * character mode, Term:                  Term Input Modes.    (line   6)
-* clipboard security, EAT:               EAT Terminal Access. (line 300)
+* clipboard security, EAT:               EAT Terminal Access. (line 301)
 * completion candidates, terminal:       EAT Terminal Access. (line 113)
 * completion, EAT:                       EAT Terminal Access. (line  21)
 * Context-Sensitive Interaction:         Context-Sensitive Interaction.
                                                               (line   6)
 * Corfu, EAT:                            EAT Terminal Access. (line  21)
-* curses applications, EAT:              EAT Terminal Access. (line 336)
+* curses applications, EAT:              EAT Terminal Access. (line 337)
 * desktop navigation:                    Context-Sensitive Interaction.
                                                               (line  42)
 * development tools:                     Development Environment.
@@ -3035,23 +3053,23 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * document authoring:                    Document Authoring.  (line   6)
 * EAT automatic speech:                  EAT Terminal Access. (line  62)
 * EAT input modes:                       EAT Terminal Access. (line  21)
-* EAT review commands:                   EAT Terminal Access. (line 148)
-* EAT shell integration:                 EAT Terminal Access. (line 247)
+* EAT review commands:                   EAT Terminal Access. (line 149)
+* EAT shell integration:                 EAT Terminal Access. (line 248)
 * EAT terminal emulator:                 EAT Terminal Access. (line   6)
 * Emacs Keyboard Commands:               Emacsvox Keyboard Commands.
                                                               (line   6)
-* Eshell, EAT accessibility:             EAT Terminal Access. (line 359)
+* Eshell, EAT accessibility:             EAT Terminal Access. (line 360)
 * Eterm, Emacsvox module name:           Running Terminal Based Applications.
                                                               (line   6)
 * EWW:                                   Web Browsing.        (line   6)
 * explaining presentation:               Explaining Presentation.
                                                               (line   6)
-* fields, Notmuch speech:                Notmuch Mail.        (line 247)
+* fields, Notmuch speech:                Notmuch Mail.        (line 248)
 * finding:                               Context-Sensitive Interaction.
                                                               (line  56)
 * Forms mode:                            Desktop Applications.
-                                                              (line  26)
-* frozen EAT review:                     EAT Terminal Access. (line 181)
+                                                              (line  27)
+* frozen EAT review:                     EAT Terminal Access. (line 182)
 * integrations:                          Emacs Packages.      (line   6)
 * Introduction:                          Introduction.        (line   6)
 * line echo:                             Controlling Echo.    (line   6)
@@ -3059,30 +3077,30 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * mail search, Notmuch:                  Notmuch Mail.        (line   6)
 * major modes:                           Object Oriented Desktop.
                                                               (line   6)
-* message composition, Notmuch:          Notmuch Mail.        (line 319)
+* message composition, Notmuch:          Notmuch Mail.        (line 320)
 * messaging:                             Messaging.           (line   6)
-* MIME parts, Notmuch:                   Notmuch Mail.        (line 152)
+* MIME parts, Notmuch:                   Notmuch Mail.        (line 153)
 * minor modes:                           Object Oriented Desktop.
                                                               (line   6)
 * notification stream:                   Aural Speech Output. (line  13)
-* notification stream, Notmuch:          Notmuch Mail.        (line  63)
-* Notmuch Hello:                         Notmuch Mail.        (line  23)
+* notification stream, Notmuch:          Notmuch Mail.        (line  64)
+* Notmuch Hello:                         Notmuch Mail.        (line  24)
 * Notmuch mail:                          Notmuch Mail.        (line   6)
-* Notmuch Search:                        Notmuch Mail.        (line 107)
-* Notmuch Show:                          Notmuch Mail.        (line 152)
-* Notmuch Tree support:                  Notmuch Mail.        (line 319)
+* Notmuch Search:                        Notmuch Mail.        (line 108)
+* Notmuch Show:                          Notmuch Mail.        (line 153)
+* Notmuch Tree support:                  Notmuch Mail.        (line 320)
 * OCR:                                   Desktop Applications.
-                                                              (line  36)
+                                                              (line  38)
 * Online Help:                           Using Online Help.   (line   6)
-* OSC 52, EAT:                           EAT Terminal Access. (line 300)
+* OSC 52, EAT:                           EAT Terminal Access. (line 301)
 * Outline mode:                          Structured Editing.  (line   6)
 * packages, speech support:              Emacs Packages.      (line   6)
 * PaddleOCR:                             Desktop Applications.
-                                                              (line  36)
+                                                              (line  38)
 * palette inheritance:                   Voices And Routing.  (line   6)
-* password input, EAT:                   EAT Terminal Access. (line 275)
+* password input, EAT:                   EAT Terminal Access. (line 276)
 * PDF, converting to text:               Desktop Applications.
-                                                              (line  36)
+                                                              (line  38)
 * personal information management:       Personal Information Management.
                                                               (line   6)
 * physical voices:                       Installed Voices And Engines.
@@ -3094,21 +3112,21 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * presentation profiles:                 Presentation Profiles.
                                                               (line   6)
-* privacy, Notmuch speech:               Notmuch Mail.        (line 247)
+* privacy, Notmuch speech:               Notmuch Mail.        (line 248)
 * programming:                           Editing Code.        (line   6)
-* remote terminal trust:                 EAT Terminal Access. (line 300)
+* remote terminal trust:                 EAT Terminal Access. (line 301)
 * review mode, Term:                     Reviewing The Term Screen.
                                                               (line   6)
 * review pointer, Term:                  Reviewing The Term Screen.
                                                               (line   6)
 * router completion:                     EAT Terminal Access. (line 113)
-* saved searches, Notmuch:               Notmuch Mail.        (line  38)
+* saved searches, Notmuch:               Notmuch Mail.        (line  39)
 * saving aural settings:                 Saving And Startup.  (line   6)
-* search fields, Notmuch:                Notmuch Mail.        (line 107)
-* search results, asynchronous rendering: Notmuch Mail.       (line  63)
+* search fields, Notmuch:                Notmuch Mail.        (line 108)
+* search results, asynchronous rendering: Notmuch Mail.       (line  64)
 * searching:                             Context-Sensitive Interaction.
                                                               (line  56)
-* shell command status:                  EAT Terminal Access. (line 247)
+* shell command status:                  EAT Terminal Access. (line 248)
 * sound packs:                           Sounds And Space.    (line   6)
 * spatial presentation:                  Sounds And Space.    (line   6)
 * speech access, terminal:               EAT Terminal Access. (line   6)
@@ -3117,16 +3135,16 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * speech settings:                       Speech System.       (line   6)
 * speech streams:                        Aural Speech Output. (line  13)
 * speech system:                         Speech System.       (line   6)
-* starting Notmuch:                      Notmuch Mail.        (line  23)
+* starting Notmuch:                      Notmuch Mail.        (line  24)
 * startup palette:                       Saving And Startup.  (line   6)
-* status cues, Notmuch:                  Notmuch Mail.        (line 247)
+* status cues, Notmuch:                  Notmuch Mail.        (line 248)
 * structured navigation:                 Context-Sensitive Interaction.
                                                               (line  28)
 * structured navigation <1>:             Browsing Structure.  (line   6)
 * tables, OCR:                           Desktop Applications.
-                                                              (line  36)
+                                                              (line  38)
 * tabs:                                  Desktop Management.  (line   6)
-* tags, Notmuch:                         Notmuch Mail.        (line 219)
+* tags, Notmuch:                         Notmuch Mail.        (line 220)
 * Tempo:                                 Structured Editing.  (line   6)
 * Term mode:                             Running Terminal Based Applications.
                                                               (line   6)
@@ -3134,9 +3152,9 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * terminal applications:                 Running Terminal Based Applications.
                                                               (line   6)
 * terminal output, speech policy:        EAT Terminal Access. (line  62)
-* terminal privacy:                      EAT Terminal Access. (line 275)
-* terminal screen review:                EAT Terminal Access. (line 148)
-* troubleshooting, Notmuch:              Notmuch Mail.        (line 348)
+* terminal privacy:                      EAT Terminal Access. (line 276)
+* terminal screen review:                EAT Terminal Access. (line 149)
+* troubleshooting, Notmuch:              Notmuch Mail.        (line 349)
 * TTS:                                   Speech System.       (line   6)
 * voice adjustments:                     Editing Named Voices.
                                                               (line   6)
@@ -3148,6 +3166,6 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Voice Workbench:                       Installed Voices And Engines.
                                                               (line   6)
 * Web browsing:                          Web Browsing.        (line   6)
-* widgets, Notmuch Hello:                Notmuch Mail.        (line  38)
+* widgets, Notmuch Hello:                Notmuch Mail.        (line  39)
 * windows:                               Desktop Management.  (line   6)
 * word echo:                             Controlling Echo.    (line   6)

@@ -13,10 +13,10 @@
 
 Emacsvox prepares speech support for many Emacs modes as their libraries are
 loaded.  Start the application normally; when its buffer appears, use
-@@texinfo:@kbd{C-h m}@@ for the active modes and their commands, @@texinfo:@kbd{C-h b}@@ for the
-effective bindings, and @@texinfo:@kbd{C-h k}@@ followed by a key to identify one binding.
+~C-h m~ for the active modes and their commands, ~C-h b~ for the
+effective bindings, and ~C-h k~ followed by a key to identify one binding.
 The generated
-@@texinfo:@ref{Emacsvox Commands And Options,,,emacsvox-reference,Emacsvox Reference Manual}@@ records the public Emacsvox commands and options.
+[[info:emacsvox-reference#Emacsvox Commands And Options][Emacsvox Commands And Options]] in /Emacsvox Reference Manual/ records the public Emacsvox commands and options.
 
 This chapter is a curated starting point, not a promise that every module in
 the generated reference has a maintained task guide.  Emacs itself or a
@@ -25,7 +25,7 @@ adds the speech feedback.  Consult both sets of help when diagnosing a problem.
 
 Earlier Emacspeak surveys, including their W3, Dismal, and scanner/OCR setup,
 are preserved as historical material in
-@@texinfo:@ref{Emacs Packages,Historical Application Survey,,emacsvox-heritage,Emacspeak Heritage}@@.  They are not current setup instructions.
+[[info:emacsvox-heritage#Emacs Packages][Historical Application Survey]] in /Emacspeak Heritage/.  They are not current setup instructions.
 
 ** Document Authoring
 :PROPERTIES:
@@ -38,8 +38,8 @@ Emacs major modes provide the editing commands for each document format.
 Emacsvox speaks ordinary movement and editing, applies voice-lock where the
 mode exposes useful faces, and adds mode-specific feedback where an integration
 exists.  Open or create the document in its normal Emacs mode, then use
-@@texinfo:@kbd{C-h m}@@ to discover that mode's workflow.  For outlines and templates, see
-@@texinfo:@ref{Structured Editing}@@.
+~C-h m~ to discover that mode's workflow.  For outlines and templates, see
+[[*Structured Editing And Templates][Structured Editing]].
 
 ** Structured Editing And Templates
 :PROPERTIES:
@@ -58,17 +58,17 @@ exists.  Open or create the document in its normal Emacs mode, then use
 Emacsvox has maintained integrations for the built-in Outline and Tempo
 libraries.  In Outline mode, heading navigation speaks the reached heading and
 visibility commands announce what was hidden or exposed.  Start a dedicated
-outline with @@texinfo:@kbd{M-x outline-mode}@@, or enable ~outline-minor-mode~ in a
+outline with ~M-x outline-mode~, or enable =outline-minor-mode= in a
 suitable document.  See
-@@texinfo:@ref{emacsvox-outline,,,emacsvox-reference,Emacsvox Reference Manual}@@ for the
-Emacsvox integration and @@texinfo:@ref{Outline Mode,,,emacs,The GNU Emacs Manual}@@ for
+[[info:emacsvox-reference#emacsvox-outline][emacsvox-outline]] in /Emacsvox Reference Manual/ for the
+Emacsvox integration and [[info:emacs#Outline Mode][Outline Mode]] in /The GNU Emacs Manual/ for
 the underlying editor.
 
 Tempo supplies template fields for modes and packages that use it.  Emacsvox
 speaks inserted text and the line reached when moving between template marks.
 The package that supplied a template also provides its insertion commands;
 use that package's mode help, together with
-@@texinfo:@ref{emacsvox-tempo,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+[[info:emacsvox-reference#emacsvox-tempo][emacsvox-tempo]] in /Emacsvox Reference Manual/.
 
 ** Browsing Structure
 :PROPERTIES:
@@ -80,9 +80,9 @@ use that package's mode help, together with
 Use the structure exposed by the active Emacs mode rather than treating every
 buffer as plain text.  Info provides node and menu navigation, Outline provides
 heading and visibility commands, and EWW exposes HTML headings, links, lists,
-tables, and other document elements.  Begin with @@texinfo:@kbd{C-h m}@@ in the buffer;
-see @@texinfo:@ref{Using Online Help}@@ for the common discovery commands and
-@@texinfo:@ref{Web Browsing}@@ for the maintained Web route.
+tables, and other document elements.  Begin with ~C-h m~ in the buffer;
+see [[*Find Help While You Work][Using Online Help]] for the common discovery commands and
+[[*Web Browsing With EWW][Web Browsing]] for the maintained Web route.
 
 *** Reading Markdown and Org tables
 :PROPERTIES:
@@ -95,15 +95,15 @@ The first movement announces table reading and the destination in one spoken
 result. Outside supported tables, these arrows keep their existing bindings,
 including in code examples.
 
-You can still press the speech prefix followed by @@texinfo:@kbd{C-t C-r}@@
+You can still press the speech prefix followed by ~C-t C-r~
 to enter without moving. With the default prefix, this is
-@@texinfo:@kbd{C-e C-t C-r}@@. This entry announces the dimensions and current
-cell. Press @@texinfo:@kbd{q}@@ or the same prefix command to restore ordinary
+~C-e C-t C-r~. This entry announces the dimensions and current
+cell. Press ~q~ or the same prefix command to restore ordinary
 editing keys.
 
-Use the speech prefix followed by @@texinfo:@kbd{C-t ]}@@ or
-@@texinfo:@kbd{C-t [}@@ to find and enter the next or previous table from
-prose. Inside table reading, @@texinfo:@kbd{t}@@ and @@texinfo:@kbd{T}@@ do
+Use the speech prefix followed by ~C-t ]~ or
+~C-t [~ to find and enter the next or previous table from
+prose. Inside table reading, ~t~ and ~T~ do
 the same. Code examples are skipped.
 
 While table reading is active:
@@ -113,13 +113,13 @@ While table reading is active:
 - Control-Meta-Left/Right move between cells. Plain Left/Right retain
   character movement. Tab and Shift-Tab move between cells without editing;
   Return or Space reads the current cell.
-- @@texinfo:@kbd{r}@@ reads the row; @@texinfo:@kbd{c}@@ reads the column.
-  @@texinfo:@kbd{.}@@ announces coordinates; @@texinfo:@kbd{=}@@ gives dimensions.
-- @@texinfo:@kbd{a}@@ changes column titles, row titles, or data/title order
-  for this buffer. The customization group ~emacsvox-table-reader~ sets defaults.
-- @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{k k}@@ copies the cell;
-  @@texinfo:@kbd{k r}@@ copies the row with tabs between cells;
-  @@texinfo:@kbd{k c}@@ copies the column with newlines between cells.
+- ~r~ reads the row; ~c~ reads the column.
+  ~.~ announces coordinates; ~=~ gives dimensions.
+- ~a~ changes column titles, row titles, or data/title order
+  for this buffer. The customization group =emacsvox-table-reader= sets defaults.
+- ~w~ or ~k k~ copies the cell;
+  ~k r~ copies the row with tabs between cells;
+  ~k c~ copies the column with newlines between cells.
 - Meta-Up/Down leave directly for preceding/following prose. Up/Down also
   leave when movement crosses a vertical table edge. If there is no content
   beyond that edge, point stays in the table.
@@ -142,15 +142,15 @@ their normal meaning; an edit ends the reading context. Org's existing table
 editing feedback and Markdown's markup-stripping speech option remain
 independent of this reader. Agent Shell uses the same logical reading
 operations with its existing automatic table entry, commands and preferences;
-see @@texinfo:@ref{Agent Shell}@@.
+see [[*Agent Shell][Agent Shell]].
 
 *** Browsing CSV data
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Use @@texinfo:@command{emacsvox-table-find-csv-file}@@ to open a CSV file in
-the table browser, or @@texinfo:@command{emacsvox-table-view-csv-buffer}@@ to
+Use =emacsvox-table-find-csv-file= to open a CSV file in
+the table browser, or =emacsvox-table-view-csv-buffer= to
 browse the current buffer's CSV data. Quoted commas, doubled quotation marks,
 and multiline fields remain single logical cells. Blank records outside quoted
 fields are skipped; empty fields remain cells. Empty input or malformed quoting
@@ -169,7 +169,7 @@ reading-mode toggle:
   column titles and is announced separately from the data rows.
 - ~w~ or ~k k~ copies the cell, ~k r~ copies the row with tabs between cells,
   and ~k c~ copies the column with newlines between cells. ~K~ copies the
-  whole table to the table clipboard for ~emacsvox-table-paste-from-clipboard~.
+  whole table to the table clipboard for =emacsvox-table-paste-from-clipboard=.
 - ~a~ changes column titles, row titles, or data order for the view, using
   the shared reader preferences. ~q~ closes the view.
 
@@ -184,11 +184,11 @@ movement reports the boundary and leaves point in place.
 Filters remain on ~f~ (row) and ~g~ (column); a prefix argument requests a new
 filter. Filter indexes and the ~j~ jump prompt retain zero-based model
 coordinates, including the header row, even though spoken coordinates count
-data rows and columns from one. For example, a row filter ~(0 "value" 2)~
+data rows and columns from one. For example, a row filter =(0 "value" 2)=
 reads the first column, the word “value”, and the third column. ~M-l~ and ~M-s~
 load and save filters. Filters are explicit inspections; shared row movement
 always reads the whole row. Sorting preserves filters and shared speech
-preferences. Use @@texinfo:@kbd{C-h m}@@ for the full browser key map.
+preferences. Use ~C-h m~ for the full browser key map.
 
 ** Web Browsing With EWW
 :PROPERTIES:
@@ -203,12 +203,12 @@ preferences. Use @@texinfo:@kbd{C-h m}@@ for the full browser key map.
 #+findex: eww
 
 EWW is the built-in browser supported for current Emacsvox.  Run
-@@texinfo:@kbd{M-x eww @key{RET}}@@, enter a URL or search words, and press @@texinfo:@key{RET}@@.
+~M-x eww RET~, enter a URL or search words, and press ~RET~.
 Emacsvox speaks EWW navigation and rendering feedback and adds commands for
 moving by HTML structure and filtering the displayed DOM.  In an EWW buffer,
-use @@texinfo:@kbd{C-h m}@@ for the live workflow and @@texinfo:@kbd{C-h b}@@ for its effective keys.
-See @@texinfo:@ref{EWW,,,emacs,The GNU Emacs Manual}@@ for browser operation and
-@@texinfo:@ref{emacsvox-eww,,,emacsvox-reference,Emacsvox Reference Manual}@@ for the
+use ~C-h m~ for the live workflow and ~C-h b~ for its effective keys.
+See [[info:emacs#EWW][EWW]] in /The GNU Emacs Manual/ for browser operation and
+[[info:emacsvox-reference#emacsvox-eww][emacsvox-eww]] in /Emacsvox Reference Manual/ for the
 speech integration.
 
 The former Emacs/W3 and w3m survey is historical.  Do not install either one
@@ -224,8 +224,8 @@ integration says otherwise.
 
 Emacsvox integrates with several Emacs mail and messaging modes.  The curated
 workflow for indexed mail search, asynchronous results, thread reading,
-attachments, and privacy controls is @@texinfo:@ref{Notmuch Mail}@@.  For another client,
-start with its own manual and @@texinfo:@kbd{C-h m}@@; use the generated reference to find
+attachments, and privacy controls is [[*Notmuch Mail][Notmuch Mail]].  For another client,
+start with its own manual and ~C-h m~; use the generated reference to find
 an Emacsvox module with the same package or mode name.
 
 ** Editing Code
@@ -238,7 +238,7 @@ an Emacsvox module with the same package or mode name.
 Programming modes provide language-aware movement, indentation, compilation,
 and navigation.  Emacsvox speaks those operations and uses voice-lock to
 distinguish faces such as comments, strings, warnings, and language constructs.  Use
-@@texinfo:@kbd{C-h m}@@ in the source buffer for the language mode, and search the generated
+~C-h m~ in the source buffer for the language mode, and search the generated
 reference for an integration named after that mode.
 
 ** Development Environment
@@ -261,7 +261,7 @@ individually with its mode help before combining it into a larger workflow.
 
 Magit navigation speaks the reached section or line.  Empty and whitespace-only
 lines use the normal line tones.  Commit hashes are silent by default; changing
-the voice assigned to the ~magit-hash~ face changes this consistently for both
+the voice assigned to the =magit-hash= face changes this consistently for both
 navigation and explicit reading.  Moving the section highlight preserves that
 choice.
 
@@ -289,7 +289,7 @@ to copy; it does not repeat an older kill-ring entry as a new copy.
 
 Emacs buffers, windows, frames, and tabs provide the workspace.  Their standard
 commands receive speech feedback, and the active help describes any additional
-mode-specific bindings.  Use @@texinfo:@kbd{C-x b}@@ to select a buffer and @@texinfo:@kbd{C-h m}@@ in
+mode-specific bindings.  Use ~C-x b~ to select a buffer and ~C-h m~ in
 specialized buffer-list or tab interfaces to learn their local commands.
 
 ** Personal Information Management
@@ -315,10 +315,10 @@ reference.
 :TEXINFO_NODE: no
 :END:
 
-For a new full-terminal workflow, use @@texinfo:@ref{EAT Terminal Access}@@.  When a
+For a new full-terminal workflow, use [[*Speech Access To EAT][EAT Terminal Access]].  When a
 built-in terminal with no additional package is preferable, use
-@@texinfo:@ref{Running Terminal Based Applications}@@.  For ordinary line-oriented shell
-commands, @@texinfo:@kbd{M-x shell}@@ is usually the simplest route.
+[[*Term Terminal Access][Running Terminal Based Applications]].  For ordinary line-oriented shell
+commands, ~M-x shell~ is usually the simplest route.
 
 #+vindex: emacsvox-shell-complete-windows-commands
 
@@ -327,7 +327,7 @@ by default.  Scanning large directories such as =C:\Windows\System32= can
 otherwise pause Emacs for many seconds.  Windows programs still run by name,
 and explicit filename completion, including paths under =/mnt/c/=, remains
 available.  To include Windows command names in completion again, use
-@@texinfo:@kbd{M-x customize-option RET emacsvox-shell-complete-windows-commands RET}@@
+~M-x customize-option RET emacsvox-shell-complete-windows-commands RET~
 and enable the option.  This setting leaves native Windows and remote Shell
 buffers unchanged.
 
@@ -343,8 +343,8 @@ buffers unchanged.
 The built-in Forms library presents records from a structured text file one at
 a time.  Emacsvox speaks field values, record movement, searches, and status
 changes while Forms mode is active.  Forms requires a format specification;
-see @@texinfo:@ref{Forms Mode,,,emacs,The GNU Emacs Manual}@@ for setup and operation, and
-@@texinfo:@ref{emacsvox-forms,,,emacsvox-reference,Emacsvox Reference Manual}@@ for the
+see [[info:emacs#Forms Mode][Forms Mode]] in /The GNU Emacs Manual/ for setup and operation, and
+[[info:emacsvox-reference#emacsvox-forms][emacsvox-forms]] in /Emacsvox Reference Manual/ for the
 speech integration.
 
 *** OCR And PDF-To-Text With PaddleOCR
@@ -364,9 +364,9 @@ speech integration.
 
 Emacsvox uses PaddleOCR PP-StructureV3 to turn an image or PDF into UTF-8
 Markdown text.  PP-StructureV3 recovers document reading order and represents
-recognized tables as Markdown or embedded HTML, so keep the ~.md~ output when
+recognized tables as Markdown or embedded HTML, so keep the =.md= output when
 table structure matters.  Markdown is plain text and can instead be named
-~.txt~ when its lightweight markup is acceptable.
+=.txt= when its lightweight markup is acceptable.
 
 The supported baseline below is CPU-only x86-64 WSL2 or GNU/Linux.  Paddle's
 Linux wheel requires an AVX-capable x86-64 processor and Python 3.9 through
@@ -376,7 +376,7 @@ system Python, or another project's packages.  The initial installation uses
 about 1.7 GB.  The first complete PP-StructureV3 run downloads approximately
 another 1.8 GB of models; later runs reuse that cache.
 
-Follow the [[https://docs.astral.sh/uv/getting-started/installation/][official uv installation guide]] if command ~uv~ is not already available,
+Follow the [[https://docs.astral.sh/uv/getting-started/installation/][official uv installation guide]] if command =uv= is not already available,
 then create the isolated environment:
 
 #+begin_src sh
@@ -385,7 +385,7 @@ uv venv --python 3.13 --seed \
   "$HOME/.local/share/emacsvox/paddleocr-venv"
 #+end_src
 
-Install the tested CPU runtime and the PaddleOCR ~all~ variant.  The ~all~
+Install the tested CPU runtime and the PaddleOCR =all= variant.  The =all=
 extra includes the document-parsing dependencies needed by PP-StructureV3,
 including table and formula support.
 
@@ -412,7 +412,7 @@ With the Debian package, use the installed launcher instead:
 Use that installed path in the image-recognition examples below as well.
 
 The expected line names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the CPU
-device.  A warning that ~ccache~ is absent is harmless for normal inference.
+device.  A warning that =ccache= is absent is harmless for normal inference.
 oneDNN, formerly called MKL-DNN, is Paddle's optional optimized CPU execution
 backend; it is not an OCR model.  The launcher deliberately leaves it disabled
 because the stable PaddlePaddle 3.3.0 CPU runtime has an
@@ -445,47 +445,47 @@ usually more exact than OCR.  OCR quality still depends on scan quality;
 large PDF can take substantial CPU time because table, layout, formula,
 orientation, and unwarping models are all active by default.
 
-Within Emacsvox, press @@texinfo:@kbd{C-e C-o}@@ or run
-@@texinfo:@kbd{M-x emacsvox-ocr @key{RET}}@@.  In the OCR buffer:
+Within Emacsvox, press ~C-e C-o~ or run
+~M-x emacsvox-ocr RET~.  In the OCR buffer:
 
 - Press ~o~, choose an image or PDF, and wait for the completion cue.  OCR runs
   asynchronously, and the result appears as a new page in the buffer.
-- Press @@texinfo:@key{SPC}@@ to read the current result, ~s~ to save it, or ~w~ to
+- Press ~SPC~ to read the current result, ~s~ to save it, or ~w~ to
   save the complete OCR buffer.  Press ~[~ and ~]~ to move between results.
 - Press ~d~ to open the per-user OCR directory.  Engine progress and errors are
-  kept separately in buffer ~*Emacsvox OCR Errors*~.
+  kept separately in buffer =*Emacsvox OCR Errors*=.
 
 For ordinary use inside Emacs, customize OCR in Emacs rather than setting shell
 environment variables.  Run
-@@texinfo:@kbd{M-x customize-group @key{RET} emacsvox-ocr @key{RET}}@@.  The bundled adapter
+~M-x customize-group RET emacsvox-ocr RET~.  The bundled adapter
 has typed options for its normal choices:
 
-- ~emacsvox-ocr-paddleocr-python~ selects an exact Python executable when the
-  default isolated environment is not appropriate.  Leave it at ~nil~ for the
+- =emacsvox-ocr-paddleocr-python= selects an exact Python executable when the
+  default isolated environment is not appropriate.  Leave it at =nil= for the
   installation path used above.
-- ~emacsvox-ocr-paddleocr-language~ and ~emacsvox-ocr-paddleocr-device~ select
+- =emacsvox-ocr-paddleocr-language= and =emacsvox-ocr-paddleocr-device= select
   the recognition language and Paddle device.
-- ~emacsvox-ocr-paddleocr-use-table-recognition~ and
-  ~emacsvox-ocr-paddleocr-use-formula-recognition~ control the structural
+- =emacsvox-ocr-paddleocr-use-table-recognition= and
+  =emacsvox-ocr-paddleocr-use-formula-recognition= control the structural
   models.  Both are enabled by default.
-- ~emacsvox-ocr-paddleocr-use-document-orientation~,
-  ~emacsvox-ocr-paddleocr-use-document-unwarping~, and
-  ~emacsvox-ocr-paddleocr-use-text-line-orientation~ control image correction.
-- ~emacsvox-ocr-paddleocr-enable-mkldnn~ enables oneDNN/MKL-DNN acceleration.
+- =emacsvox-ocr-paddleocr-use-document-orientation=,
+  =emacsvox-ocr-paddleocr-use-document-unwarping=, and
+  =emacsvox-ocr-paddleocr-use-text-line-orientation= control image correction.
+- =emacsvox-ocr-paddleocr-enable-mkldnn= enables oneDNN/MKL-DNN acceleration.
   It does not enable or disable any OCR model.  Keep it disabled for the tested
   PaddlePaddle 3.3.0 CPU setup on WSL.
 
-The PaddleOCR options apply only while ~emacsvox-ocr-engine~ names the bundled
+The PaddleOCR options apply only while =emacsvox-ocr-engine= names the bundled
 adapter.  Selecting a different engine preserves the generic engine interface.
-~emacsvox-ocr-engine-options~ remains an advanced list of literal arguments;
+=emacsvox-ocr-engine-options= remains an advanced list of literal arguments;
 for the bundled adapter it follows, and can override, the typed options.
 
 The environment variables are retained for direct shell or automation use of
-~bin/emacsvox-paddleocr~, not as the primary Emacs configuration interface.
-~EMACSVOX_PADDLEOCR_VENV~ changes the launcher's environment directory,
-~EMACSVOX_PADDLEOCR_PYTHON~ selects an exact Python executable, and
-~EMACSVOX_PADDLEOCR_LANGUAGE~ or ~EMACSVOX_PADDLEOCR_DEVICE~ changes the
-standalone defaults.  See ~./bin/emacsvox-paddleocr --help~ for command-line
+=bin/emacsvox-paddleocr=, not as the primary Emacs configuration interface.
+=EMACSVOX_PADDLEOCR_VENV= changes the launcher's environment directory,
+=EMACSVOX_PADDLEOCR_PYTHON= selects an exact Python executable, and
+=EMACSVOX_PADDLEOCR_LANGUAGE= or =EMACSVOX_PADDLEOCR_DEVICE= changes the
+standalone defaults.  See =./bin/emacsvox-paddleocr --help= for command-line
 switches.
 
 The direct SANE scanner-acquisition commands are retained for compatibility
