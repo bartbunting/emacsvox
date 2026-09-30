@@ -44,6 +44,7 @@
 (require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-aural-submission)
 (require 'tabulated-list)
+(require 'emacsvox-table-reader)
 
 ;;;  Map Faces:
 
@@ -166,6 +167,112 @@
    (emacsvox-keymap-update tabulated-list-mode-map b)))
 
 (emacsvox-tabulated-list-setup)
+
+;;; Explicit shared reading:
+
+(defun emacsvox-tabulated-list--label (descriptor)
+  "Return the logical text of a column DESCRIPTOR, or nil if unsupported."
+  (cond ((stringp descriptor) descriptor)
+        ((and (consp descriptor) (stringp (car descriptor))) (car descriptor))))
+
+(defun emacsvox-tabulated-list--snapshot ()
+  "Read visible, printed entries in display order without invoking producers.
+Use complete entry values rather than truncated display text.  Custom printers
+and ambiguous column names are not supported.  Headers are metadata, not rows."
+  (when (and (eq tabulated-list-printer #'tabulated-list-print-entry)
+             (> (length tabulated-list-format) 0)
+             (tabulated-list-get-entry))
+    (let* ((origin (point))
+           (titles (mapcar #'car (append tabulated-list-format nil)))
+           rows positions selected-row selected-column
+           (supported (= (length titles) (length (delete-dups (copy-sequence titles))))))
+      (save-excursion
+        (goto-char (point-min))
+        (while (and supported (< (point) (point-max)))
+          (let* ((start (point))
+                 (entry (tabulated-list-get-entry))
+                 (end (min (next-single-property-change
+                            start 'tabulated-list-entry nil (point-max))
+                           (next-single-property-change
+                            start 'tabulated-list-id nil (point-max)))))
+            (when (and entry (not (invisible-p start)))
+              (let ((values (mapcar #'emacsvox-tabulated-list--label
+                                    (append entry nil)))
+                    cell-positions)
+                (setq supported (and (= (length values) (length titles))
+                                     (cl-every #'stringp values)))
+                (cl-loop for title in titles for column from 0 do
+                         (let ((position
+                                (text-property-any start end
+                                                   'tabulated-list-column-name title)))
+                           ;; An empty final column has no printed characters;
+                           ;; the row's newline is its stable source position.
+                           (when (and (not position)
+                                      (= column (1- (length titles)))
+                                      (equal (nth column values) ""))
+                             (setq position (1- end)))
+                           (when (and position (invisible-p position))
+                             (setq supported nil))
+                           (push position cell-positions)))
+                (setq cell-positions (nreverse cell-positions))
+                (when (and (<= start origin) (< origin end))
+                  (setq selected-row (length rows)
+                        selected-column
+                        (or (cl-position
+                             (get-text-property origin 'tabulated-list-column-name)
+                             titles :test #'equal)
+                            (if (>= origin (1- end)) (1- (length titles)) 0))))
+                (push values rows)
+                (push cell-positions positions)))
+            (goto-char end))))
+      (when (and supported selected-row)
+        (setq rows (nreverse rows)
+              positions (apply #'append (nreverse positions)))
+        (list :region (cons (point-min) (point-max))
+              :rows rows :positions positions
+              :row-index selected-row :row-count (length rows)
+              :column-index selected-column :column-count (length titles)
+              :column-titles titles :column-title (nth selected-column titles)
+              :row-title (car (nth selected-row rows))
+              :data (nth selected-column (nth selected-row rows)))))))
+
+(defun emacsvox-tabulated-list--reader-submit (text occasion presentation icon)
+  "Submit shared-reader TEXT with OCCASION, PRESENTATION and ICON."
+  (let* ((cell (emacsvox-tabulated-list--snapshot))
+         (empty (and (eq presentation 'cell)
+                     (string-empty-p (string-trim (or (plist-get cell :data) ""))))))
+    (emacsvox-aural-submit
+     text :module (emacsvox-tabulated-list--module) :occasion occasion
+     :facts (emacsvox-tabulated-list--cell-facts empty)
+     :compatibility-actions (list (emacsvox-aural-compatibility-icon icon)))))
+
+(defun emacsvox-tabulated-list--reader-key (key command)
+  "Offer reader COMMAND on KEY only when the application has no action there."
+  (let* ((emacsvox-table-reader-mode nil)
+         (binding (key-binding key)))
+    (when (memq binding '(nil undefined self-insert-command)) command)))
+
+(defvar emacsvox-tabulated-list--reader-map
+  (let ((map (copy-keymap emacsvox-table-reader-mode-map)))
+    ;; Keep the shared navigation and q-to-leave contract.  Application actions
+    ;; win on all other keys, including text-button maps at point.  Commands
+    ;; displaced by an application remain available by their M-x names.
+    (dolist (key '("TAB" "<backtab>" "RET" "SPC" "r" "c" "." "="
+                   "w" "a" "t" "T" "k"))
+      (let* ((sequence (kbd key))
+             (command (lookup-key map sequence)))
+        (define-key map sequence
+                    `(menu-item "Table reading" ,command
+                                :filter ,(apply-partially
+                                          #'emacsvox-tabulated-list--reader-key
+                                          sequence)))))
+    map)
+  "Explicit reading map that preserves tabulated applications' action keys.")
+
+(setf (alist-get 'tabulated-list-mode emacsvox-table-reader--adapters)
+      (list #'emacsvox-tabulated-list--snapshot
+            #'emacsvox-tabulated-list--reader-submit
+            emacsvox-tabulated-list--reader-map))
 
 (provide 'emacsvox-tabulated-list)
 ;;;  end of file

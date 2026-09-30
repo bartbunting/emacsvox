@@ -10,6 +10,13 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Read tabulated application lists with shared table controls
+
+Control-Meta arrows or =C-e C-t C-r= enter explicit shared reading in ordinary
+tabulated lists. Read full rows and cells, including truncated values and blank
+fields, while retaining application actions. Refresh ends reading, and =q=
+restores ordinary navigation. EWW, table.el and SES are unchanged.
+
 ** Read the manual as plain text
 
 Run =make docs-org-text= to export the complete manual as UTF-8 text under

@@ -8063,14 +8063,16 @@ preferences.
  -- Command: emacsvox-table-reader-mode (&optional arg)
      ‘C-e C-t C-r’
 
-     Read a Markdown or Org table in place with contextual navigation keys.
+     Read a Markdown, Org or tabulated list table in place.
 
      Use a Control-Meta arrow inside a table to enter reading and move, or use
      the speech prefix followed by C-t C-r to toggle reading.  Up/Down read
      logical rows, C-M-Left/Right read cells, and r/c read rows/columns.  TAB moves
      right without editing and RET reads the cell.  q restores normal mode keys.
-     Leaving the table or editing its source also ends this context.  This mode
-     is independent of Markdown’s markup-stripping speech preference.
+     Leaving the table or editing its source also ends this context.  Tabulated
+     applications retain their action keys; use M-x reader commands when an action
+     occupies a short key.  This mode is independent of Markdown’s markup-stripping
+     speech preference.
 
      This is a minor mode.  If called interactively, toggle the
      ‘Emacsvox-Table-Reader mode’ mode.  If the prefix argument is positive,

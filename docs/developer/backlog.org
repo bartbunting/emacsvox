@@ -50,8 +50,10 @@ first milestone implements shared logical operations for Agent Shell, Markdown
 and Org, explicit source-table reading, and vertical exits to prose. Its
 implementation and acceptance evidence are recorded in the plan. The browser/CSV
 adapter now uses shared controls and retains search, filters and sorting.
-Listening acceptance is pending. Tabulated-list, EWW, table.el and SES adapters
-still need their mode-specific binding and behaviour review.
+Listening acceptance is pending. Tabulated lists now have explicit shared
+reading that preserves application actions and ordinary selected-cell defaults.
+EWW, table.el and SES remain deferred and are outside the current implementation
+request.
 
 ** TODO Verify streaming macOS system voices with Emacsvox
 

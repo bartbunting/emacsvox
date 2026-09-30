@@ -5409,6 +5409,30 @@ independent of this reader. Agent Shell uses the same logical reading
 operations with its existing automatic table entry@comma{} commands and preferences;
 see @ref{Agent Shell, , Agent Shell}.
 
+@subsection Reading application lists
+
+In an application built on Tabulated List mode@comma{} use a Control-Meta arrow or
+@kbd{C-e C-t C-r} to enter shared reading. Ordinary application navigation stays
+unchanged until you enter. Within reading@comma{} Up/Down read complete logical rows@comma{}
+Control-Meta-Left/Right read cells@comma{} and plain Left/Right inspect characters.
+@kbd{q} leaves reading and restores the application's usual navigation.
+
+Application actions take precedence over other shared reader keys. Opening an
+item@comma{} refreshing@comma{} sorting@comma{} searching@comma{} and editing keep their existing commands@comma{}
+including Return on a button. Where a shared key is already occupied@comma{} use
+@kbd{M-x emacsvox-table-reader-speak-cell}@comma{} @kbd{M-x emacsvox-table-reader-speak-row}@comma{}
+@kbd{M-x emacsvox-table-reader-speak-column}@comma{} @kbd{M-x emacsvox-table-reader-speak-context}@comma{}
+or @kbd{M-x emacsvox-table-reader-speak-dimensions}. The matching
+@code{emacsvox-table-reader-copy-cell}@comma{} @code{emacsvox-table-reader-copy-row} and
+@code{emacsvox-table-reader-copy-column} commands copy logical values.
+
+Speech and copies use complete entry text even when a column is truncated.
+Column headings come from the application@comma{} not the first item. Coordinates
+count visible data rows; hidden rows are excluded@comma{} and empty cells say “blank.”
+At the first or last row@comma{} movement stops at the boundary. A refresh ends
+reading; enter again to inspect the refreshed list. Custom table printers@comma{}
+image-only cells and duplicate column names are not supported by this reader.
+
 @subsection Browsing CSV data
 
 Use @code{emacsvox-table-find-csv-file} to open a CSV file in
@@ -7801,7 +7825,8 @@ adapter@comma{} contextual map@comma{} public commands@comma{} and preferences. 
 register source adapters and use an explicit reader minor mode. The table
 browser uses a buffer-local adapter for shared inspection@comma{} copying and speech
 preferences. Its own movement commands keep the standalone view at vertical
-boundaries. Tabulated-list integration remains separate.
+boundaries. Tabulated lists register an explicit reader adapter while retaining
+their ordinary application navigation outside that context.
 
 An adapter supplies a fresh cell snapshot and a native Aural submission
 function. Snapshots contain complete logical rows@comma{} flat source positions in
@@ -7811,6 +7836,15 @@ changing point. Source adapters rebuild snapshots for each command; source
 edits end explicit reading. No native table editing command is used for
 navigation. Presentation remains under each integration's Aural
 module and role@comma{} with one main-lane submission per reader action.
+
+The tabulated-list adapter reads printed entry properties in display order@comma{}
+without calling entry producers. It uses full string/button labels and column
+metadata@comma{} skips invisible rows@comma{} and maps an empty final cell to its newline.
+Refreshes retire the reader before positions can become stale. An optional
+adapter map preserves application and button actions; only shared navigation
+and @kbd{q} deliberately override them during reading. Other occupied keys retain
+their application action@comma{} with shared commands accessible through @kbd{M-x}.
+Standalone list bounds include the buffer@comma{} so vertical edges stay put.
 
 The read-only table browser caches logical string rows when rendering. Text
 properties map every character@comma{} including embedded line breaks and delimiters@comma{}
@@ -7848,6 +7882,10 @@ Browser coverage lives in @code{test/emacsvox-table-ui-tests.el}; use
 the compiled implementation. Its @code{emacsvox-table-ui-graphical-multiline-navigation}
 case requires a graphical display and checks actual wrapping and logical cell
 movement. Listening acceptance is separate from submission and graphical checks.
+Tabulated-list coverage lives in @code{test/emacsvox-tabulated-list-tests.el}@comma{}
+including full values@comma{} blanks@comma{} buttons@comma{} native action keys@comma{} sorting@comma{} filtering@comma{}
+refresh and hidden rows. Its graphical navigation case must run on a real
+graphical Emacs; a batch skip does not establish display acceptance.
 
 @subsection Source checkout and byte-code lifecycle
 

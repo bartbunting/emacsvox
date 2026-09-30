@@ -412,10 +412,14 @@ commands. Character movement tracks the model cell; filtering, searching and
 sorting remain available. Standalone browser boundaries retain point in the
 view, and q closes it. Listening acceptance remains pending.
 
-Migrate tabulated-list consumers in an independently reviewable step,
-preserving searching and application actions. Add
-EWW, table.el, and SES according to their reviewed capabilities and D9. Revisit
-each application's deliberate selected-cell behavior under D3.
+The maintainer selected tabulated lists on 2026-09-30 and explicitly excluded
+EWW, table.el and SES from this work. The tabulated-list adapter uses explicit
+reading: ordinary selected-cell defaults remain, while shared row arrows read
+full rows after entry. Application and button actions retain their keys; shared
+inspection/copy commands remain available through M-x when their short key is
+occupied. Column metadata supplies titles without inserting a synthetic row.
+Printed order, full labels, hidden rows, empty cells and refresh are covered.
+EWW, table.el and SES remain separate future adapters.
 
 ** TODO 5. Complete spoken acceptance and document later adapters
 
@@ -466,7 +470,8 @@ sections. No running user session or saved preferences were changed.
 
 * Next action
 
-Complete listening acceptance for the source readers and table browser in a
-fresh Emacs. Then review tabulated-list behaviour under D2-D9 before extending
-the reader there. Its native application bindings, editing feedback and
-selected-cell defaults remain a separate decision.
+Complete listening acceptance for the source readers, table browser and
+explicit tabulated-list reader in a fresh Emacs. The tabulated-list extension
+preserves ordinary selected-cell navigation and application actions; its shared
+controls apply only after explicit entry. EWW, table.el and SES are excluded
+from the current work.

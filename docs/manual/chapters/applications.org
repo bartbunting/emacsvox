@@ -144,6 +144,33 @@ independent of this reader. Agent Shell uses the same logical reading
 operations with its existing automatic table entry, commands and preferences;
 see [[*Agent Shell][Agent Shell]].
 
+*** Reading application lists
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+In an application built on Tabulated List mode, use a Control-Meta arrow or
+~C-e C-t C-r~ to enter shared reading. Ordinary application navigation stays
+unchanged until you enter. Within reading, Up/Down read complete logical rows,
+Control-Meta-Left/Right read cells, and plain Left/Right inspect characters.
+~q~ leaves reading and restores the application's usual navigation.
+
+Application actions take precedence over other shared reader keys. Opening an
+item, refreshing, sorting, searching, and editing keep their existing commands,
+including Return on a button. Where a shared key is already occupied, use
+~M-x emacsvox-table-reader-speak-cell~, ~M-x emacsvox-table-reader-speak-row~,
+~M-x emacsvox-table-reader-speak-column~, ~M-x emacsvox-table-reader-speak-context~,
+or ~M-x emacsvox-table-reader-speak-dimensions~. The matching
+=emacsvox-table-reader-copy-cell=, =emacsvox-table-reader-copy-row= and
+=emacsvox-table-reader-copy-column= commands copy logical values.
+
+Speech and copies use complete entry text even when a column is truncated.
+Column headings come from the application, not the first item. Coordinates
+count visible data rows; hidden rows are excluded, and empty cells say “blank.”
+At the first or last row, movement stops at the boundary. A refresh ends
+reading; enter again to inspect the refreshed list. Custom table printers,
+image-only cells and duplicate column names are not supported by this reader.
+
 *** Browsing CSV data
 :PROPERTIES:
 :TEXINFO_NODE: no

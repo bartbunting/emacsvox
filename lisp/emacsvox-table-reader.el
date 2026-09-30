@@ -145,7 +145,8 @@ Agent Shell retains its own table speech preferences."
       (emacsvox-table-reader--cell-speech
        (list :data data
              :column-title
-             (when column-titles-p (nth column (car rows)))))
+             (nth column (or (plist-get cell :column-titles)
+                             (and column-titles-p (car rows))))))
       entries))
     (string-join (nreverse entries) " ")))
 
@@ -155,10 +156,10 @@ Agent Shell retains its own table speech preferences."
          (column (plist-get cell :column-index))
          (column-titles-p (plist-get cell :column-titles-p))
          (column-title
-          (when (and column-titles-p
+          (when (and (or column-titles-p (plist-get cell :column-titles))
                      (memq 'column emacsvox-table-reader-titles))
             (emacsvox-table-reader--leading-title-speech
-             (nth column (car rows)) 'bold)))
+             (nth column (or (plist-get cell :column-titles) (car rows))) 'bold)))
          (data-rows (if column-titles-p (cdr rows) rows))
          entries)
     (when column-title
@@ -236,15 +237,18 @@ and a flat :positions list in row order.  Missing cells never clamp."
   "Non-nil during explicit table reading.")
 
 (defvar emacsvox-table-reader--adapters nil
-  "Alist of (MAJOR-MODE SNAPSHOT SUBMIT) table adapters.
+  "Alist of (MAJOR-MODE SNAPSHOT SUBMIT [KEYMAP]) table adapters.
 SNAPSHOT returns a fresh cell plist at point, or nil outside a supported table.
 SUBMIT accepts text, occasion, presentation and icon.  Adapters retain their
-mode's registered Aural facts.  No adapter may edit the source to read it.")
+mode's registered Aural facts.  Optional KEYMAP preserves application actions
+inside the reading context.  No adapter may edit the source to read it.")
 
 (defvar-local emacsvox-table-reader--adapter nil
   "Adapter selected when explicit reading begins.")
 (defvar-local emacsvox-table-reader--region nil
   "Markers delimiting the table in the current reading context.")
+(defvar-local emacsvox-table-reader--map-override nil
+  "Owned entry in `minor-mode-overriding-map-alist' during reading.")
 
 (defvar emacsvox-table-reader--entering nil
   "Non-nil while the first arrow's feedback should announce reader entry.")
@@ -336,6 +340,11 @@ OCCASION, PRESENTATION and ICON describe the user's action."
 (defun emacsvox-table-reader--release ()
   "Release the reading context without speech or source changes."
   (setq emacsvox-table-reader-mode nil)
+  (when emacsvox-table-reader--map-override
+    (setq minor-mode-overriding-map-alist
+          (delq emacsvox-table-reader--map-override
+                minor-mode-overriding-map-alist)
+          emacsvox-table-reader--map-override nil))
   (mapc (lambda (marker) (set-marker marker nil)) emacsvox-table-reader--region)
   (setq emacsvox-table-reader--region nil)
   (remove-hook 'post-command-hook #'emacsvox-table-reader--post-command t)
@@ -374,6 +383,12 @@ With QUIET, let the following movement submit the single entry announcement."
         emacsvox-table-reader--region
         (list (copy-marker (car (plist-get cell :region)))
               (copy-marker (cdr (plist-get cell :region)))))
+  (when-let* ((map (nth 3 emacsvox-table-reader--adapter)))
+    (setq emacsvox-table-reader--map-override
+          (cons 'emacsvox-table-reader-mode map))
+    (setq-local minor-mode-overriding-map-alist
+                (cons emacsvox-table-reader--map-override
+                      minor-mode-overriding-map-alist)))
   (add-hook 'post-command-hook #'emacsvox-table-reader--post-command nil t)
   (add-hook 'after-change-functions #'emacsvox-table-reader--after-change nil t)
   (add-hook 'change-major-mode-hook #'emacsvox-table-reader--release nil t)
@@ -595,13 +610,15 @@ Other editing commands retain their normal meaning; editing ends reading.")
 
 ;;;###autoload
 (define-minor-mode emacsvox-table-reader-mode
-  "Read a Markdown or Org table in place with contextual navigation keys.
+  "Read a Markdown, Org or tabulated list table in place.
 Use a Control-Meta arrow inside a table to enter reading and move, or use
 the speech prefix followed by C-t C-r to toggle reading.  Up/Down read
 logical rows, C-M-Left/Right read cells, and r/c read rows/columns.  TAB moves
 right without editing and RET reads the cell.  q restores normal mode keys.
-Leaving the table or editing its source also ends this context.  This mode
-is independent of Markdown's markup-stripping speech preference."
+Leaving the table or editing its source also ends this context.  Tabulated
+applications retain their action keys; use M-x reader commands when an action
+occupies a short key.  This mode is independent of Markdown's markup-stripping
+speech preference."
   :lighter " Table"
   :group 'emacsvox-table-reader
   (if (not emacsvox-table-reader-mode)

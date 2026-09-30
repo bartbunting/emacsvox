@@ -1537,7 +1537,8 @@ preferences.  Markdown and Org register source adapters and use an
 explicit reader minor mode.  The table browser uses a buffer-local
 adapter for shared inspection, copying and speech preferences.  Its own
 movement commands keep the standalone view at vertical boundaries.
-Tabulated-list integration remains separate.
+Tabulated lists register an explicit reader adapter while retaining
+their ordinary application navigation outside that context.
 
    An adapter supplies a fresh cell snapshot and a native Aural
 submission function.  Snapshots contain complete logical rows, flat
@@ -1548,6 +1549,16 @@ adapters rebuild snapshots for each command; source edits end explicit
 reading.  No native table editing command is used for navigation.
 Presentation remains under each integration's Aural module and role,
 with one main-lane submission per reader action.
+
+   The tabulated-list adapter reads printed entry properties in display
+order, without calling entry producers.  It uses full string/button
+labels and column metadata, skips invisible rows, and maps an empty
+final cell to its newline.  Refreshes retire the reader before positions
+can become stale.  An optional adapter map preserves application and
+button actions; only shared navigation and ‘q’ deliberately override
+them during reading.  Other occupied keys retain their application
+action, with shared commands accessible through ‘M-x’.  Standalone list
+bounds include the buffer, so vertical edges stay put.
 
    The read-only table browser caches logical string rows when
 rendering.  Text properties map every character, including embedded line
@@ -1591,6 +1602,11 @@ to verify the compiled implementation.  Its
 ‘emacsvox-table-ui-graphical-multiline-navigation’ case requires a
 graphical display and checks actual wrapping and logical cell movement.
 Listening acceptance is separate from submission and graphical checks.
+Tabulated-list coverage lives in
+‘test/emacsvox-tabulated-list-tests.el’, including full values, blanks,
+buttons, native action keys, sorting, filtering, refresh and hidden
+rows.  Its graphical navigation case must run on a real graphical Emacs;
+a batch skip does not establish display acceptance.
 
 16.3.2 Source checkout and byte-code lifecycle
 ----------------------------------------------

@@ -16,7 +16,7 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 Indirect:
 emacsvox.info-1: 384
-emacsvox.info-2: 306372
+emacsvox.info-2: 307928
 
 Tag Table:
 (Indirect)
@@ -101,43 +101,43 @@ Node: Emacs Packages267330
 Node: Document Authoring268790
 Node: Structured Editing269362
 Node: Browsing Structure270478
-Node: Web Browsing277007
-Node: Messaging277922
-Node: Editing Code278432
-Node: Development Environment278951
-Node: Desktop Management280487
-Node: Personal Information Management280989
-Node: Desktop Applications281521
-Node: Notmuch Mail289810
-Ref: Notmuch fields and privacy300256
-Node: Agent Shell306372
-Node: EAT Terminal Access324985
-Node: Running Terminal Based Applications342543
-Node: Starting Term343518
-Node: Term Input Modes344445
-Node: Term Speech Feedback345611
-Node: Reviewing The Term Screen346805
-Node: Term Help And Recovery348706
-Node: Emacsvox Keyboard Commands349625
-Node: Copyright351978
-Node: Acknowledgments352567
-Node: Developer Guide353593
-Node: Documentation Maintenance354757
-Node: Speech Server Protocols360172
-Ref: Testing A Direct Legacy Server366867
-Ref: Commands That Queue Output367426
-Ref: Commands That Set State371264
-Node: Integration Maintenance373858
-Ref: Background startup ownership and failure recovery380496
-Ref: Supported Emacs versions383649
-Ref: Native Windows builds386328
-Ref: Offline Windows development bundle388601
-Ref: Public Windows installer previews397654
-Ref: Remote preview validation400718
-Ref: Internal ownership and renderer tests422292
-Ref: Upstream contract layers425872
-Node: Authoring Sound Packs453647
-Node: Concept Index456918
+Node: Web Browsing278563
+Node: Messaging279478
+Node: Editing Code279988
+Node: Development Environment280507
+Node: Desktop Management282043
+Node: Personal Information Management282545
+Node: Desktop Applications283077
+Node: Notmuch Mail291366
+Ref: Notmuch fields and privacy301812
+Node: Agent Shell307928
+Node: EAT Terminal Access326541
+Node: Running Terminal Based Applications344099
+Node: Starting Term345074
+Node: Term Input Modes346001
+Node: Term Speech Feedback347167
+Node: Reviewing The Term Screen348361
+Node: Term Help And Recovery350262
+Node: Emacsvox Keyboard Commands351181
+Node: Copyright353534
+Node: Acknowledgments354123
+Node: Developer Guide355149
+Node: Documentation Maintenance356313
+Node: Speech Server Protocols361728
+Ref: Testing A Direct Legacy Server368423
+Ref: Commands That Queue Output368982
+Ref: Commands That Set State372820
+Node: Integration Maintenance375414
+Ref: Background startup ownership and failure recovery383059
+Ref: Supported Emacs versions386212
+Ref: Native Windows builds388891
+Ref: Offline Windows development bundle391164
+Ref: Public Windows installer previews400217
+Ref: Remote preview validation403281
+Ref: Internal ownership and renderer tests424855
+Ref: Upstream contract layers428435
+Node: Authoring Sound Packs456210
+Node: Concept Index459481
 
 End Tag Table
 
