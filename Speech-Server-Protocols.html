@@ -57,7 +57,7 @@ detailed Omnivox contracts are owned by the Omnivox repository; this manual
 summarizes their relationship to Emacsvox and then documents the legacy line
 protocol.
 </p>
-<p>For additional notes on how to log and view <abbr class="acronym">TTS</abbr> server
+<p>For additional notes on how to log and view TTS server
 commands when developing a speech server, see
 the historical Emacspeak article at
 <a class="uref" href="http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html">http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html</a>.
@@ -112,6 +112,17 @@ mixer-source consumption and may precede physical sound by the output device&rsq
 buffer latency; a protocol write or terminal callback is therefore not proof
 of acoustic onset.
 </p>
+<p>Recent Feedback retains a separate, data-only playback snapshot. Owned,
+validated start and voice-choice events associate actual physical voices with
+the frozen registry layers and retained run ranges. A presentation shares a
+64 KiB evidence budget, with at most 128 dispatches and 128 spans per dispatch;
+speech text remains subject to the existing 4096-byte history limit. Exhausted
+or incomplete evidence disables original replay without blocking delivery.
+Completed snapshots drive exact private voice previews with fallback disabled.
+They never rewrite the named-voice registry or borrow another lane&rsquo;s latest
+logical-voice realization. Ordinary history navigation retains the requested
+annotations; explicit original playback uses this observed snapshot.
+</p>
 <p>The canonical protocol documents are:
 </p>
 <ul class="itemize mark-bullet">
@@ -126,9 +137,9 @@ of acoustic onset.
 <div class="subsection-level-extent" id="Legacy-Line-Protocol">
 <h4 class="subsection"><span>16.2.2 Legacy Line Protocol<a class="copiable-link" href="#Legacy-Line-Protocol"> &para;</a></span></h4>
 
-<p>The <abbr class="acronym">TTS</abbr> server reads commands from standard input.
-Script <strong class="strong">speech-server</strong> can be used to cause a <abbr class="acronym">TTS</abbr>
-server to communicate via a <abbr class="acronym">TCP</abbr> socket. Speech server
+<p>The TTS server reads commands from standard input.
+Script <strong class="strong">speech-server</strong> can be used to cause a TTS
+server to communicate via a TCP socket. Speech server
 commands are used by the client application to make specific requests
 of the server; the server listens for these requests in a non-blocking
 read-eval-print (REPL)  loop and executes requests as they become available. Requests can
@@ -137,7 +148,7 @@ be classified as follows:
 <ul class="itemize mark-bullet">
 <li>Commands that send text to be spoken.
 
-</li><li>Commands that set <strong class="strong">state</strong> of the <abbr class="acronym">TTS</abbr> server.
+</li><li>Commands that set <strong class="strong">state</strong> of the TTS server.
 </li></ul>
 
 <p>All commands are of the form
@@ -157,15 +168,15 @@ requests, i.e. start producing output.
 </p>
 <p>Once the server has been asked to produce output, it removes items
 from the front of the queue, sends the requisite commands to the
-underlying <abbr class="acronym">TTS</abbr> engine, and waits for the engine to
+underlying TTS engine, and waits for the engine to
 acknowledge that the request has been completely processed. This is a
 non-blocking operation, i.e., if the client application generates
 additional requests, these are processed <strong class="strong">immediately</strong>.
 </p>
-<p>This design allows a legacy Emacsvox <abbr class="acronym">TTS</abbr> server to be
+<p>This design allows a legacy Emacsvox TTS server to be
 <strong class="strong">highly</strong> responsive; Client applications can queue large
 amounts of text (typically queued a clause at a time to achieve the
-best prosody), ask the <abbr class="acronym">TTS</abbr> server to start speaking, and
+best prosody), ask the TTS server to start speaking, and
 interrupt the spoken output at any time.
 </p>
 <ol class="enumerate">
@@ -203,7 +214,7 @@ request on the queue are clearly marked.
 <pre class="example-preformatted">version
 </pre></div>
 
-<p>Speaks the <strong class="strong">version</strong> of the <abbr class="acronym">TTS</abbr> engine. Produces
+<p>Speaks the <strong class="strong">version</strong> of the TTS engine. Produces
 output immediately.
 </p>
 <div class="example">
@@ -217,7 +228,7 @@ process the queue.
 </p>
 <p>Note that this command needs to handle the special syntax for morpheme
 boundaries <code class="code">[*]</code>.  The <code class="code">[*]</code> syntax is specific to the
-Dectalk family of synthesizers; servers for other <abbr class="acronym">TTS</abbr>
+Dectalk family of synthesizers; servers for other TTS
 engines need to map this pattern to the engine-specific code for each
 engine. As an example, see <code class="code">servers/outloud</code> A morpheme boundary
 results in synthesizing compound words such as <strong class="strong">left bracket</strong>
@@ -229,11 +240,22 @@ being synthesized as two separate words.
 </pre></div>
 
 <p>Speak <strong class="strong">c</strong> a single character, as a letter.  The character is
-spoken immediately. This command uses the <abbr class="acronym">TTS</abbr> engine&rsquo;s
+spoken immediately. This command uses the TTS engine&rsquo;s
 capability to speak a single character with the ability to flush
 speech <strong class="strong">immediately</strong>.  Client applications wishing to produce
 character-at-a-time output, e.g., when providing character echo during
 keyboard input should use this command.
+</p>
+<p>Omnivox clients that negotiate <code class="code">palette_letter_v1</code> and its complete layered
+voice bundle use <code class="code">emacsvox_letter {BASE64_UTF8_JSON}</code> instead. Its version 4
+or 5 timeline envelope has one layered span containing one visible Unicode
+scalar, ordered delivery, no replacement key, and no actions. Registration and
+validation precede interruption. The command retains isolated-character rate,
+uppercase pitch, pronunciation and short streaming startup while applying the
+palette&rsquo;s <code class="code">default</code> voice, actual fallback tuning and native parameters.
+Playback receipts use the existing layered timeline contracts. Legacy servers
+continue to receive <code class="code">l</code>; ordinary phonetic words and punctuation names use the
+normal palette speech path.
 </p>
 <div class="example">
 <pre class="example-preformatted">d
@@ -241,9 +263,9 @@ keyboard input should use this command.
 
 <p>This command is used to <strong class="strong">dispatch</strong> all queued requests.  It was
 renamed to a single character command (like many of the commonly used
-<abbr class="acronym">TTS</abbr> server commands) to work more effectively over slow
+TTS server commands) to work more effectively over slow
 (9600) dialup lines.  The effect of calling this command is for the
-<abbr class="acronym">TTS</abbr> server to start processing items that have been queued
+TTS server to start processing items that have been queued
 via earlier requests.
 </p>
 <div class="example">
@@ -265,10 +287,10 @@ all pending requests are flushed from the queue.
 <pre class="example-preformatted">c codes
 </pre></div>
 
-<p>Queues synthesis codes to be sent to the <abbr class="acronym">TTS</abbr> engine.  Codes
+<p>Queues synthesis codes to be sent to the TTS engine.  Codes
 are sent to the engine with no further transformation or processing.
 The codes are inserted into the output queue and will be dispatched to
-the <abbr class="acronym">TTS</abbr> engine at the appropriate point in the output
+the TTS engine at the appropriate point in the output
 stream.
 </p>
 <div class="example">
@@ -283,7 +305,7 @@ an <code class="code">ogg</code> file.
 </pre></div>
 
 <p><strong class="strong">dispatch</strong> play the audio file identified by filename for
-playing   &mdash; <code class="code">ogg</code> file.
+playing  — <code class="code">ogg</code> file.
 </p>
 <div class="example">
 <pre class="example-preformatted">t freq length
@@ -307,15 +329,15 @@ milliseconds.
 <pre class="example-preformatted">tts_reset
 </pre></div>
 
-<p><strong class="strong">Immediately</strong> reset <abbr class="acronym">TTS</abbr> engine to default settings.
+<p><strong class="strong">Immediately</strong> reset TTS engine to default settings.
 Stops all speech and clears the queue.
 </p>
 <div class="example">
 <pre class="example-preformatted">tts_set_punctuations mode
 </pre></div>
 
-<p>Queues setting <abbr class="acronym">TTS</abbr> engine to the specified punctuation
-mode. Typically, <abbr class="acronym">TTS</abbr> servers provide at least three modes:
+<p>Queues setting TTS engine to the specified punctuation
+mode. Typically, TTS servers provide at least three modes:
 </p>
 <ul class="itemize mark-bullet">
 <li>None: Do not speak punctuation characters.
@@ -347,7 +369,7 @@ speech rate of <strong class="strong">500 * 1.2 = 600</strong>.
 </pre></div>
 
 <p>Queues changing of the state of <strong class="strong">split caps</strong> processing.  Turn
-this on to speak mixed-case (<abbr class="acronym">AKA</abbr> Camel Case) identifiers.
+this on to speak mixed-case (AKA Camel Case) identifiers.
 </p>
 <div class="example">
 <pre class="example-preformatted">tts_sync_state punct splitcaps caps rate

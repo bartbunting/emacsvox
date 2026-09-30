@@ -21,6 +21,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -119,7 +120,7 @@ loopback instead.  Windows OpenSSH uses your Windows SSH keys and host-trust
 configuration.
 </p>
 <p>For a remote-only Linux installation and isolated launch commands, follow
-<a class="ref" href="Installing-Remote-Emacsvox.html">Installing On A Remote Linux Host</a>.  The <code class="code">--remote</code> launcher supplies
+<a class="ref" href="Installing-Remote-Emacsvox.html">Installing Remote Emacsvox</a>.  The <code class="code">--remote</code> launcher supplies
 the connection options before initializing speech and needs no local Omnivox
 executable.
 </p>
@@ -132,9 +133,9 @@ executable.
       omnivox-remote-token-file &quot;~/.config/omnivox/remote-token&quot;)
 </pre></div>
 
-<p>Use <code class="code">M-x omnivox-remote-connect</code> to connect or retry manually,
-<code class="code">M-x omnivox-remote-status</code> to inspect the connection, and
-<code class="code">M-x omnivox-remote-disconnect</code> to stop it and suspend retries.  After a lost
+<p>Use <kbd class="kbd">M-x omnivox-remote-connect</kbd> to connect or retry manually,
+<kbd class="kbd">M-x omnivox-remote-status</kbd> to inspect the connection, and
+<kbd class="kbd">M-x omnivox-remote-disconnect</kbd> to stop it and suspend retries.  After a lost
 connection, Emacsvox reconnects with fresh voice and routing information;
 unfinished speech is discarded.  Foreground and notification speech retain
 separate workers.  Only one Emacs session may own a service at a time.

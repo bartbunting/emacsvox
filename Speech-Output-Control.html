@@ -74,8 +74,66 @@ to preview spoken-column and tonal choices.
 
 <p>Character-rate scaling, text chunking, engine-specific controls, and reusable
 presentation profiles are intentionally outside this starter chapter.  Use
-live help for the current speech keymap and see <a class="ref" href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> when
+live help for the current speech keymap and see <a class="ref" href="Aural-Presentation.html">Aural Presentation</a> when
 you want a complete presentation setup rather than a temporary buffer change.
+</p>
+<p><strong class="strong">Review punctuation pronunciations.</strong> With a supporting local Omnivox host,
+run <kbd class="kbd">M-x omnivox-punctuation</kbd>, or choose <em class="emph">Punctuation</em> under <em class="emph">Voices and speech</em>
+in Aural Home. This editor shows saved host settings and an unsaved draft;
+running speech may still use an earlier configuration. It requires the updated
+bundled local launcher and Omnivox&rsquo;s punctuation-editor capability. Older hosts
+report that an update is needed. Remote and native-direct configuration editing
+are not provided by this interface.
+</p>
+<p>Each row names its Unicode character explicitly and shows the pronunciation and
+whether it comes from a default or an override. The initial level is <em class="emph">some</em>.
+</p>
+<dl class="table">
+<dt><kbd class="kbd">l</kbd></dt>
+<dd><p>Choose <em class="emph">none</em>, <em class="emph">some</em>, or <em class="emph">all</em>. Each level has independent overrides.
+</p></dd>
+<dt><kbd class="kbd">RET</kbd></dt>
+<dd><p>Speak a name, preserve the character, or restore its shipped default.
+</p></dd>
+<dt><kbd class="kbd">a</kbd></dt>
+<dd><p>Add a character that is absent from the table.
+</p></dd>
+<dt><kbd class="kbd">d</kbd></dt>
+<dd><p>Restore the selected character&rsquo;s default in this level.
+</p></dd>
+<dt><kbd class="kbd">s</kbd></dt>
+<dd><p>Save edits for all three levels on the speech host. Saving does not
+restart speech or change another setting in the configuration file.
+</p></dd>
+<dt><kbd class="kbd">r</kbd></dt>
+<dd><p>After confirmation, restart this session&rsquo;s main and notification speech
+workers with the saved settings. Save or discard drafts first.
+</p></dd>
+<dt><kbd class="kbd">g</kbd></dt>
+<dd><p>Read the saved file again, asking before discarding edits.
+</p></dd>
+<dt><kbd class="kbd">q</kbd></dt>
+<dd><p>Return to the previous view, retaining the draft. Reopen <em class="emph">Punctuation</em>
+or choose <em class="emph">Resume unfinished changes</em> in Aural Home to continue.
+</p></dd>
+<dt><kbd class="kbd">?</kbd></dt>
+<dd><p>Read help, including the selected host configuration path.
+</p></dd>
+</dl>
+
+<p><em class="emph">Preserve character</em> leaves punctuation for the engine&rsquo;s pronunciation and
+pauses; it does not promise silence. Org normally selects <em class="emph">some</em>. To name
+apostrophes in Org prose, set both <em class="emph">APOSTROPHE</em>, U+0027, and
+<em class="emph">RIGHT SINGLE QUOTATION MARK</em>, U+2019, to speak “apostrophe” in <em class="emph">some</em>.
+This also names apostrophes inside contractions. Omnivox 1.15.0 names straight,
+curly and modifier apostrophes at <em class="emph">all</em> by default, without a configuration file.
+Custom named levels are future work.
+</p>
+<p>A save rejects changes if the file or selected target differs from the version
+you reviewed. Your draft is retained so you can review the conflict. Saving
+upgrades the file to Omnivox configuration version 3, preserving other settings;
+Omnivox 1.14.0 and earlier cannot read this version. Do not save a file used by
+an older executable. This feature is currently unreleased.
 </p>
 </div>
 <hr>

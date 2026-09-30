@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -46,22 +47,22 @@ already happened, use Home&rsquo;s <kbd class="kbd">H</kbd>, select a <em class=
 record, and press <kbd class="kbd">C</kbd>.  A record containing several parts
 expands numbered parts in playback order.  Move with <kbd class="kbd">n</kbd>
 and <kbd class="kbd">p</kbd> to hear their text in the captured voices;
-<kbd class="kbd">O</kbd> replays the part at point.  Press <kbd class="kbd">RET</kbd>
+<kbd class="kbd">O</kbd> replays the part at point.  Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>
 to select it.  Truncated history cannot supply a complete
 original/proposed comparison.
 
 </li><li> Press <kbd class="kbd">c</kbd> to expand component changes in the panel.
-Move to a choice and press <kbd class="kbd">RET</kbd>.  <em class="emph">Content voice</em> expands
+Move to a choice and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>.  <em class="emph">Content voice</em> expands
 voice choices and identifies the original voice and proposed replacement.
 The original named voice comes first when available, followed by alternatives
-in alphabetical order.  Press <kbd class="kbd">RET</kbd> on a voice to select it
+in alphabetical order.  Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> on a voice to select it
 for the draft; the panel stays open for comparison.  Available changes
 include the content voice, adding a sound or tone, adding a spoken label,
 replacing an existing sound, changing a tone, or suppressing one component.
 You can add a cue when the original has none.  The choices use the facts
 and components supplied by the integration; they cannot add missing
 semantic distinctions.
-<kbd class="kbd">RET</kbd> on <em class="emph">Parts</em> reopens the parts; unfinished choices are
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> on <em class="emph">Parts</em> reopens the parts; unfinished choices are
 retained separately when you switch between parts.
 Press <kbd class="kbd">q</kbd> to go back one level: from a voice choice to
 <em class="emph">Content voice</em>, then to <em class="emph">Change</em>.  The section closes and focus returns
@@ -75,7 +76,7 @@ long to keep it.  <kbd class="kbd">O</kbd> plays the recorded original example;
 with current rules and its captured buffer context.  It does not apply
 your draft to live feedback.
 
-</li><li> Press <kbd class="kbd">m</kbd> or <kbd class="kbd">RET</kbd> on <em class="emph">What should match</em>
+</li><li> Press <kbd class="kbd">m</kbd> or <kbd class="kbd"><kbd class="key">RET</kbd></kbd> on <em class="emph">What should match</em>
 to expand the matching criteria.  Each fact, state, event, and occasion
 shows <em class="emph">Included</em> or <em class="emph">Excluded</em>.  All included conditions must match;
 excluded conditions are ignored, not forbidden.
@@ -86,7 +87,7 @@ additional facts appear as <em class="emph">Excluded</em> until you include them
 a mail action of <em class="emph">select</em> describes the operation that produced the
 feedback, not whether a row is selected in this editor.  Include that
 action or an event such as <em class="emph">operation failed</em> to limit the rule to it.
-Press <kbd class="kbd">RET</kbd> on a criterion
+Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> on a criterion
 to exclude or include it; excluded criteria stay available to restore.
 For example, exclude <em class="emph">with state unread</em> while keeping <em class="emph">with role field</em>,
 <em class="emph">with field kind authors</em>, and <em class="emph">from the notmuch integration</em> to match

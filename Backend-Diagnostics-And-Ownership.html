@@ -20,6 +20,7 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -56,7 +57,7 @@ speech check passes.
 </p></dd>
 <dt>The check passes but Emacsvox is silent</dt>
 <dd><p>Confirm that <code class="code">TTS_PROGRAM=omnivox</code> was present before Emacsvox loaded, then
-use <code class="code">M-x tts-speak-version</code>.  Under WSL2 with a release binary, rerun
+use <kbd class="kbd">M-x tts-speak-version</kbd>.  Under WSL2 with a release binary, rerun
 <code class="code">./bin/emacsvox-wsl-install --check</code>.  For a source-built development
 runtime, run <code class="code">make verify-windows-omnivox-runtime</code> and restart the speech
 process after restaging.
@@ -69,9 +70,9 @@ process after restaging.
 passwords, messages, and document contents.
 </p></dd>
 <dt>Speech works but feels delayed</dt>
-<dd><p>Press <code class="code">C-e d D</code> to enable a private diagnostic log, then reproduce one short
-presentation and press <code class="code">C-e d D</code> again to disable logging.  The default file
-is <code class="code">~/.emacsvox-aural-diagnostics.log</code>; use <code class="code">C-u C-e d D</code> when enabling to
+<dd><p>Press <kbd class="kbd">C-e d D</kbd> to enable a private diagnostic log, then reproduce one short
+presentation and press <kbd class="kbd">C-e d D</kbd> again to disable logging.  The default file
+is <code class="code">~/.emacsvox-aural-diagnostics.log</code>; use <kbd class="kbd">C-u C-e d D</kbd> when enabling to
 choose another file.  Its <code class="code">dispatch-sent</code>, <code class="code">mixer-source-observed</code>, and
 <code class="code">playback-terminal-observed</code> records share an Omnivox dispatch ID.  Match
 that ID in the ordinary Omnivox session log to separate Emacs submission,

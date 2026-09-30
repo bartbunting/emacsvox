@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -56,7 +57,7 @@ not finish within five seconds, Emacsvox speaks the checkpoint through the
 capability-ready fallback so a routing error cannot suppress it indefinitely.
 </p>
 <p>This checkpoint describes the speech server.  Type
-<kbd class="kbd">M-x emacsvox-startup-status RET</kbd> to check background preparation
+<kbd class="kbd">M-x emacsvox-startup-status <kbd class="key">RET</kbd></kbd> to check background preparation
 of Emacsvox and its package integrations.  The command speaks a summary and
 opens a report.  Integrations waiting for their packages are normal: their
 speech support loads when you open those packages.  Run the command again to
@@ -66,15 +67,15 @@ refresh the report; <kbd class="kbd">q</kbd> closes it.
 it to your personal configuration:
 </p>
 <ol class="enumerate">
-<li> Type <kbd class="kbd">M-x tts-speak-version RET</kbd>.  The live speech adapter should speak its
+<li> Type <kbd class="kbd">M-x tts-speak-version <kbd class="key">RET</kbd></kbd>.  The live speech adapter should speak its
 version response.
 
-</li><li> Type <kbd class="kbd">C-h v tts-program RET</kbd>.  The displayed current value should name
+</li><li> Type <kbd class="kbd">C-h v tts-program <kbd class="key">RET</kbd></kbd>.  The displayed current value should name
 <code class="code">omnivox</code>.
 
 </li><li> Use <kbd class="kbd">C-n</kbd> and <kbd class="kbd">C-p</kbd> to move over lines and confirm ordinary spoken
-navigation.  Type <kbd class="kbd">M-x emacsvox-describe-emacsvox RET</kbd> for the Emacsvox
-overview.  See <a class="xref" href="Basic-Usage.html">Basic Usage</a>, for the tested starter commands.
+navigation.  Type <kbd class="kbd">M-x emacsvox-describe-emacsvox <kbd class="key">RET</kbd></kbd> for the Emacsvox
+overview.  See <a class="ref" href="Basic-Usage.html">Basic Usage</a>, for the tested starter commands.
 </li></ol>
 
 <p>If the initial speech is too fast, press <kbd class="kbd">C-e d -</kbd> and then repeat

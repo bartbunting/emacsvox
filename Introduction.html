@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 ul.mark-bullet {list-style-type: disc}
 -->
@@ -67,7 +68,7 @@ mark events without interrupting you with unnecessary words.
 
 <ul class="itemize mark-bullet">
 <li>If Emacsvox is not installed yet, start with
-<a class="ref" href="Installation.html">Getting Started: Installation and First Speech</a>.  It takes you from a source checkout to a clean
+<a class="ref" href="Installation.html">Installation</a>.  It takes you from a source checkout to a clean
 speaking session and includes a recovery path if speech does not start.
 
 </li><li>If Emacsvox is already speaking, continue with <a class="ref" href="Basic-Usage.html">Basic Usage</a> for a
@@ -78,7 +79,7 @@ Emacsvox speaks the tutorial and the commands you use while following it.
 
 </li><li>In any Emacs buffer, <kbd class="kbd">C-h m</kbd> describes the active modes and their
 commands, while <kbd class="kbd">C-h k</kbd> followed by a key explains that key.  See
-<a class="ref" href="Using-Online-Help.html">Find Help While You Work</a> when you want to explore further.
+<a class="ref" href="Using-Online-Help.html">Using Online Help</a> when you want to explore further.
 </li></ul>
 
 </div>
@@ -88,14 +89,14 @@ commands, while <kbd class="kbd">C-h k</kbd> followed by a key explains that key
 <p>At an idle startup, after speech is ready, Emacsvox offers a short welcome
 screen. It has actions to test speech, adjust rate and output volumes, choose
 voices and engines, open the tutorial or manual, and start normal use.
-Use <kbd class="kbd">TAB</kbd> and <kbd class="kbd">S-TAB</kbd> to choose actions,
-<kbd class="kbd">RET</kbd> to activate one, and <kbd class="kbd">q</kbd> to return.
+Use <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> and <kbd class="kbd">S-<kbd class="key">TAB</kbd></kbd> to choose actions,
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> to activate one, and <kbd class="kbd">q</kbd> to return.
 Arrow keys read the instructions normally.
 </p>
 <p>Toggle Show this welcome screen at startup to stop showing it automatically.
 The choice is saved in this Emacs profile and survives application upgrades.
 Open it again through Help&rsquo;s Emacsvox welcome entry, <kbd class="kbd">C-h W</kbd>,
-or <code class="code">M-x emacsvox-welcome</code>. Startup leaves explicitly opened
+or <kbd class="kbd">M-x emacsvox-welcome</kbd>. Startup leaves explicitly opened
 files and sessions already in use alone.
 </p>
 </div>
@@ -115,12 +116,12 @@ completing an action; and
 <p>You can adjust this presentation gradually.  Aural Home, opened with
 <kbd class="kbd">C-e H</kbd>, brings voices, sound packs, profiles, and other presentation
 options together.  You do not need to configure it before beginning.  See
-<a class="ref" href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> when you want to understand or change what you hear.
+<a class="ref" href="Aural-Presentation.html">Aural Presentation</a> when you want to understand or change what you hear.
 </p>
 <p>Emacsvox sends speech through a speech server.  New GNU/Linux, macOS, and WSL2
 installations use Omnivox; established direct servers remain available for
 compatible existing setups.  The installation chapter introduces only what
-you need for first speech.  See <a class="xref" href="Speech-Backends.html">Speech Backends</a> contains the platform and
+you need for first speech.  <a class="ref" href="Speech-Backends.html">Speech Backends</a> contains the platform and
 compatibility details.
 </p>
 </div>

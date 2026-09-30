@@ -21,6 +21,8 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -89,6 +91,16 @@ rebuilding Lisp byte-code:
 <pre class="example-preformatted">make docs-org-preview
 </pre></div>
 
+<p>Use ordinary Org code markup for keys (<kbd class="kbd">C-x C-f</kbd> or <kbd class="kbd">M-x term <kbd class="key">RET</kbd></kbd>) and
+verbatim markup for other literals (<code class="code">local.mk</code> or <code class="code">make docs-update</code>).
+The Texinfo exporter preserves keyboard and named-key formatting; standard
+Org text and HTML exports retain the key text. Use Org heading links within
+the manual and described <code class="code">info:</code> links to other manuals.
+</p>
+<p>Run <code class="code">make docs-org-text</code> for a complete UTF-8 text copy at
+<code class="code">.docs-preview/org-manual/emacsvox.txt</code>. Set <code class="code">DOCS_ORG_TEXT</code> to choose another
+output path. This also uses the standard Org exporter without loading Emacsvox.
+</p>
 <p>The ignored Info, Texinfo, and HTML previews appear under
 <code class="code">.docs-preview/org-manual/</code>.  Once the text settles, run <code class="code">make docs-update</code> to
 update the tracked generated Texinfo body and checked Info files.  Do not edit

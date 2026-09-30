@@ -49,19 +49,19 @@ Previous: <a href="Personal-Information-Management.html" accesskey="p" rel="prev
 <div class="subsection-level-extent" id="Terminal-Applications">
 <h4 class="subsection"><span>8.10.1 Terminal Applications<a class="copiable-link" href="#Terminal-Applications"> &para;</a></span></h4>
 
-<p>For a new full-terminal workflow, use <a class="ref" href="EAT-Terminal-Access.html">Speech Access To EAT</a>.  When a
+<p>For a new full-terminal workflow, use <a class="ref" href="EAT-Terminal-Access.html">EAT Terminal Access</a>.  When a
 built-in terminal with no additional package is preferable, use
-<a class="ref" href="Running-Terminal-Based-Applications.html">Term Terminal Access</a>.  For ordinary line-oriented shell
+<a class="ref" href="Running-Terminal-Based-Applications.html">Running Terminal Based Applications</a>.  For ordinary line-oriented shell
 commands, <kbd class="kbd">M-x shell</kbd> is usually the simplest route.
 </p>
 <a class="index-entry-id" id="index-emacsvox_002dshell_002dcomplete_002dwindows_002dcommands"></a>
 
 <p>In WSL Shell buffers, command-name completion skips Windows drive directories
-by default.  Scanning large directories such as &lsquo;<samp class="samp">C:\Windows\System32</samp>&rsquo; can
+by default.  Scanning large directories such as <code class="code">C:\Windows\System32</code> can
 otherwise pause Emacs for many seconds.  Windows programs still run by name,
-and explicit filename completion, including paths under &lsquo;<samp class="samp">/mnt/c/</samp>&rsquo;, remains
+and explicit filename completion, including paths under <code class="code">/mnt/c/</code>, remains
 available.  To include Windows command names in completion again, use
-<kbd class="kbd">M-x customize-option RET emacsvox-shell-complete-windows-commands RET</kbd>
+<kbd class="kbd">M-x customize-option <kbd class="key">RET</kbd> emacsvox-shell-complete-windows-commands <kbd class="key">RET</kbd></kbd>
 and enable the option.  This setting leaves native Windows and remote Shell
 buffers unchanged.
 </p>
@@ -76,8 +76,8 @@ buffers unchanged.
 <p>The built-in Forms library presents records from a structured text file one at
 a time.  Emacsvox speaks field values, record movement, searches, and status
 changes while Forms mode is active.  Forms requires a format specification;
-see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Forms-Mode.html#Forms-Mode">Forms Mode</a> in <cite class="cite">The GNU Emacs Manual</cite> for setup and operation, and
-<a data-manual="emacsvox-reference" href="reference/emacsvox_002dforms.html#emacsvox_002dforms">emacsvox-forms</a> in <cite class="cite">Emacsvox Reference Manual</cite> for the
+see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Forms-Mode.html#Forms-Mode">Forms Mode</a> in <em class="emph">The GNU Emacs Manual</em> for setup and operation, and
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002dforms.html#emacsvox_002dforms">emacsvox-forms</a> in <em class="emph">Emacsvox Reference Manual</em> for the
 speech integration.
 </p>
 </div>
@@ -181,11 +181,11 @@ orientation, and unwarping models are all active by default.
 <kbd class="kbd">M-x emacsvox-ocr <kbd class="key">RET</kbd></kbd>.  In the OCR buffer:
 </p>
 <ul class="itemize mark-bullet">
-<li>Press <code class="code">o</code>, choose an image or PDF, and wait for the completion cue.  OCR runs
+<li>Press <kbd class="kbd">o</kbd>, choose an image or PDF, and wait for the completion cue.  OCR runs
 asynchronously, and the result appears as a new page in the buffer.
-</li><li>Press <kbd class="key">SPC</kbd> to read the current result, <code class="code">s</code> to save it, or <code class="code">w</code> to
-save the complete OCR buffer.  Press <code class="code">[</code> and <code class="code">]</code> to move between results.
-</li><li>Press <code class="code">d</code> to open the per-user OCR directory.  Engine progress and errors are
+</li><li>Press <kbd class="kbd"><kbd class="key">SPC</kbd></kbd> to read the current result, <kbd class="kbd">s</kbd> to save it, or <kbd class="kbd">w</kbd> to
+save the complete OCR buffer.  Press <kbd class="kbd">[</kbd> and <kbd class="kbd">]</kbd> to move between results.
+</li><li>Press <kbd class="kbd">d</kbd> to open the per-user OCR directory.  Engine progress and errors are
 kept separately in buffer <code class="code">*Emacsvox OCR Errors*</code>.
 </li></ul>
 
@@ -226,7 +226,7 @@ switches.
 </p>
 <p>The direct SANE scanner-acquisition commands are retained for compatibility
 but are not part of this tested WSL baseline.  It is usually simpler to scan
-with a Windows application and choose the resulting image or PDF with <code class="code">o</code>.
+with a Windows application and choose the resulting image or PDF with <kbd class="kbd">o</kbd>.
 Scanner configuration is independent of PaddleOCR.
 </p>
 </div>

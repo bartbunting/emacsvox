@@ -46,8 +46,8 @@ Next: <a href="Web-Browsing.html" accesskey="n" rel="next">Web Browsing With EWW
 buffer as plain text.  Info provides node and menu navigation, Outline provides
 heading and visibility commands, and EWW exposes HTML headings, links, lists,
 tables, and other document elements.  Begin with <kbd class="kbd">C-h m</kbd> in the buffer;
-see <a class="ref" href="Using-Online-Help.html">Find Help While You Work</a> for the common discovery commands and
-<a class="ref" href="Web-Browsing.html">Web Browsing With EWW</a> for the maintained Web route.
+see <a class="ref" href="Using-Online-Help.html">Using Online Help</a> for the common discovery commands and
+<a class="ref" href="Web-Browsing.html">Web Browsing</a> for the maintained Web route.
 </p>
 <ul class="mini-toc">
 <li><a href="#Reading-Markdown-and-Org-tables" accesskey="1">Reading Markdown and Org tables</a></li>
@@ -117,8 +117,8 @@ see <a class="ref" href="Agent-Shell.html">Agent Shell</a>.
 <div class="subsection-level-extent" id="Browsing-CSV-data">
 <h4 class="subsection"><span>8.3.2 Browsing CSV data<a class="copiable-link" href="#Browsing-CSV-data"> &para;</a></span></h4>
 
-<p>Use <code class="command">emacsvox-table-find-csv-file</code> to open a CSV file in
-the table browser, or <code class="command">emacsvox-table-view-csv-buffer</code> to
+<p>Use <code class="code">emacsvox-table-find-csv-file</code> to open a CSV file in
+the table browser, or <code class="code">emacsvox-table-view-csv-buffer</code> to
 browse the current buffer&rsquo;s CSV data. Quoted commas, doubled quotation marks,
 and multiline fields remain single logical cells. Blank records outside quoted
 fields are skipped; empty fields remain cells. Empty input or malformed quoting
@@ -130,32 +130,32 @@ The browser uses the shared table controls immediately; there is no separate
 reading-mode toggle:
 </p>
 <ul class="itemize mark-bullet">
-<li>Up/Down and <code class="code">C-M-Up/Down</code> move by logical row and read the whole row.
-</li><li><code class="code">C-M-Left/Right</code> and Tab/Shift-Tab move by cell. Plain Left/Right and
-<code class="code">C-b/C-f</code> move by character; <code class="code">C-p/C-n</code> move by logical row.
-</li><li>Return or Space reads the cell; <code class="code">r</code> reads the row and <code class="code">c</code> reads the column.
-</li><li><code class="code">.</code> gives coordinates and <code class="code">=</code> gives dimensions. The first row supplies
+<li>Up/Down and <kbd class="kbd">C-M-Up/Down</kbd> move by logical row and read the whole row.
+</li><li><kbd class="kbd">C-M-Left/Right</kbd> and Tab/Shift-Tab move by cell. Plain Left/Right and
+<kbd class="kbd">C-b/C-f</kbd> move by character; <kbd class="kbd">C-p/C-n</kbd> move by logical row.
+</li><li>Return or Space reads the cell; <kbd class="kbd">r</kbd> reads the row and <kbd class="kbd">c</kbd> reads the column.
+</li><li><kbd class="kbd">.</kbd> gives coordinates and <kbd class="kbd">=</kbd> gives dimensions. The first row supplies
 column titles and is announced separately from the data rows.
-</li><li><code class="code">w</code> or <code class="code">k k</code> copies the cell, <code class="code">k r</code> copies the row with tabs between cells,
-and <code class="code">k c</code> copies the column with newlines between cells. <code class="code">K</code> copies the
+</li><li><kbd class="kbd">w</kbd> or <kbd class="kbd">k k</kbd> copies the cell, <kbd class="kbd">k r</kbd> copies the row with tabs between cells,
+and <kbd class="kbd">k c</kbd> copies the column with newlines between cells. <kbd class="kbd">K</kbd> copies the
 whole table to the table clipboard for <code class="code">emacsvox-table-paste-from-clipboard</code>.
-</li><li><code class="code">a</code> changes column titles, row titles, or data order for the view, using
-the shared reader preferences. <code class="code">q</code> closes the view.
+</li><li><kbd class="kbd">a</kbd> changes column titles, row titles, or data order for the view, using
+the shared reader preferences. <kbd class="kbd">q</kbd> closes the view.
 </li></ul>
 
 <p>These replace the old browser cell-arrow, header-reading, automatic-speech,
-and single-key table-copy bindings. The old local aliases <code class="code">b</code>, <code class="code">n</code>, <code class="code">p</code>, <code class="code">A</code>,
-<code class="code">B</code>, <code class="code">E</code>, and <code class="code">T</code> are removed. The speech-prefix table commands remain available.
+and single-key table-copy bindings. The old local aliases <kbd class="kbd">b</kbd>, <kbd class="kbd">n</kbd>, <kbd class="kbd">p</kbd>, <kbd class="kbd">A</kbd>,
+<kbd class="kbd">B</kbd>, <kbd class="kbd">E</kbd>, and <kbd class="kbd">T</kbd> are removed. The speech-prefix table commands remain available.
 </p>
-<p>Search with <code class="code">s</code>, <code class="code">R</code> (row), <code class="code">C</code> (column), or <code class="code">h</code> (headers); <code class="code">#</code> sorts on the
-current column. <code class="code">M-&lt;</code> and <code class="code">M-&gt;</code> jump to the top and bottom. At a table edge,
+<p>Search with <kbd class="kbd">s</kbd>, <kbd class="kbd">R</kbd> (row), <kbd class="kbd">C</kbd> (column), or <kbd class="kbd">h</kbd> (headers); <kbd class="kbd">#</kbd> sorts on the
+current column. <kbd class="kbd">M-&lt;</kbd> and <kbd class="kbd">M-&gt;</kbd> jump to the top and bottom. At a table edge,
 movement reports the boundary and leaves point in place.
 </p>
-<p>Filters remain on <code class="code">f</code> (row) and <code class="code">g</code> (column); a prefix argument requests a new
-filter. Filter indexes and the <code class="code">j</code> jump prompt retain zero-based model
+<p>Filters remain on <kbd class="kbd">f</kbd> (row) and <kbd class="kbd">g</kbd> (column); a prefix argument requests a new
+filter. Filter indexes and the <kbd class="kbd">j</kbd> jump prompt retain zero-based model
 coordinates, including the header row, even though spoken coordinates count
 data rows and columns from one. For example, a row filter <code class="code">(0 &quot;value&quot; 2)</code>
-reads the first column, the word “value”, and the third column. <code class="code">M-l</code> and <code class="code">M-s</code>
+reads the first column, the word “value”, and the third column. <kbd class="kbd">M-l</kbd> and <kbd class="kbd">M-s</kbd>
 load and save filters. Filters are explicit inspections; shared row movement
 always reads the whole row. Sorting preserves filters and shared speech
 preferences. Use <kbd class="kbd">C-h m</kbd> for the full browser key map.

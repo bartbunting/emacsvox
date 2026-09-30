@@ -21,6 +21,7 @@
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 ul.mark-bullet {list-style-type: disc}
 -->
@@ -56,11 +57,11 @@ engine list. Opening speaks the selected engine using the current speech
 inventory, without waiting for file checks or fresh discovery. Optional engines
 absent from that inventory remain visible as <em class="emph">not reported</em>, so their installation
 controls are still reachable. Press <kbd class="kbd">v</kbd> to browse an engine&rsquo;s
-voices directly, or <kbd class="kbd">RET</kbd> for engine details.
+voices directly, or <kbd class="kbd"><kbd class="key">RET</kbd></kbd> for engine details.
 Details start with a short status summary and the voice actions, with <em class="emph">Browse
 voices</em> selected. Matching main and notification status is combined. Problems
 remain visible near the top. <em class="emph">Startup settings</em> and <em class="emph">Diagnostics</em> start
-collapsed; press <kbd class="kbd">RET</kbd> on a section to
+collapsed; press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> on a section to
 expand or collapse it. Each engine remembers its expanded sections and selection.
 </p>
 <p><em class="emph">Available</em> describes discovery from the current running worker. An older check
@@ -96,9 +97,9 @@ visibly; stop the sessions using that release before retrying. Press
 <li><em class="emph">Browse voices</em> combines that engine&rsquo;s reported voices with its installed
 library, including disabled downloads. This separate browser keeps the general Voice Workbench&rsquo;s filters and
 staged edits intact. Languages form expandable headings with voice counts;
-<kbd class="kbd">RET</kbd> expands or collapses a heading. A single-language list
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> expands or collapses a heading. A single-language list
 starts expanded, and the browser remembers groups and the selected voice.
-On a voice, <kbd class="kbd">RET</kbd> or <kbd class="kbd">P</kbd> speaks an exact sample;
+On a voice, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> or <kbd class="kbd">P</kbd> speaks an exact sample;
 <kbd class="kbd">x</kbd> shows details;
 <kbd class="kbd">t</kbd> opens the existing voice editor for an unsaved experiment.
 Saving there asks for a palette destination. Browsing and auditioning do not
@@ -114,7 +115,7 @@ downloaded voice must be enabled and applied before sampling.
 </li><li>Under <em class="emph">Startup settings</em>, <em class="emph">Edit file settings</em> for the bundled local Omnivox launcher opens the
 selected engine&rsquo;s file option in Customize. Piper accepts one local ONNX
 model with its matching JSON file. Eloquence and DECtalk accept their runtime
-DLL paths. Flite accepts external &lsquo;<samp class="samp">.flitevox</samp>&rsquo; files, each with a <em class="emph">Load file</em>
+DLL paths. Flite accepts external <code class="code">.flitevox</code> files, each with a <em class="emph">Load file</em>
 switch. Use absolute paths as seen by Emacs; WSL converts them for the chosen
 Windows executable. Keep required companion files beside their runtime or
 model. Remote speech settings must be changed on the speech host.
@@ -130,9 +131,9 @@ previous configurations. Disabling keeps the files and saved palette
 references. Changing <em class="emph">Enabled</em> leaves <em class="emph">Active</em> unchanged until Apply.
 </li><li><em class="emph">Voice variants</em> in eSpeak details lists the bundled variants reported by
 the running speech worker. Choose a base voice with <kbd class="kbd">b</kbd>,
-then use the arrow keys or <kbd class="kbd">C-n</kbd>/<kbd class="kbd">C-p</kbd> to
+then use the arrow keys or <kbd class="kbd">C-n</kbd> / <kbd class="kbd">C-p</kbd> to
 browse variants. The whole list is alphabetical by displayed name, ignoring
-capitalization. Press <kbd class="kbd">P</kbd> or <kbd class="kbd">RET</kbd> to hear
+capitalization. Press <kbd class="kbd">P</kbd> or <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to hear
 the selected combination immediately. Variants need no enabling, settings
 save, download or speech restart. The existing <kbd class="kbd">p</kbd> preview
 shortcut also remains available.
@@ -144,9 +145,9 @@ or choose <em class="emph">Save to collection without selecting</em> to keep it 
 Editing a built-in palette creates a personal copy. <em class="emph">Use at Startup</em> in
 Voice Palettes controls which palette is selected next time.
 To use Max for ordinary reading, choose your English base with
-<kbd class="kbd">b</kbd>, select &lsquo;<samp class="samp">Max</samp>&rsquo;, press <kbd class="kbd">u</kbd>, and choose
-your palette followed by &lsquo;<samp class="samp">default</samp>&rsquo;. Preview and <em class="emph">Save and apply</em> in the
-editor. The same &lsquo;<samp class="samp">default</samp>&rsquo; entry is available alongside &lsquo;<samp class="samp">indent</samp>&rsquo; and the
+<kbd class="kbd">b</kbd>, select <code class="code">Max</code>, press <kbd class="kbd">u</kbd>, and choose
+your palette followed by <code class="code">default</code>. Preview and <em class="emph">Save and apply</em> in the
+editor. The same <code class="code">default</code> entry is available alongside <code class="code">indent</code> and the
 other named voices when editing a palette directly.
 To apply the selected base and variant to every named voice, press
 <kbd class="kbd">V</kbd> instead. Choose a new personal palette or update an
@@ -161,7 +162,7 @@ provide on-demand variants; the screen reports missing support explicitly.
 catalogue. Piper is grouped by language, voice name and quality; Flite
 offers AWB and RMS. Voices with one quality appear directly in their
 language group; only voices with several qualities need another group.
-Press <kbd class="kbd">RET</kbd> to open a group or model,
+Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to open a group or model,
 and <kbd class="kbd">q</kbd> to return. <kbd class="kbd">/</kbd> searches all models
 by name or language, including outside the current group. Model details
 show download size, source, licence information and storage location.
@@ -175,8 +176,8 @@ the installed voice, then <kbd class="kbd">a</kbd> to review and Apply to both
 speech streams. For a shared model, <kbd class="kbd">e</kbd> asks which speaker
 to change. Enabling alone does not restart speech. These actions also appear
 near the top of model details, alongside the installed and enabled status.
-Installation and Apply confirmations offer &lsquo;<samp class="samp">yes</samp>&rsquo; and &lsquo;<samp class="samp">no</samp>&rsquo; through completion.
-Type <kbd class="kbd">y TAB RET</kbd> to confirm; an empty <kbd class="kbd">RET</kbd>
+Installation and Apply confirmations offer <code class="code">yes</code> and <code class="code">no</code> through completion.
+Type <kbd class="kbd">y <kbd class="key">TAB</kbd> <kbd class="key">RET</kbd></kbd> to confirm; an empty <kbd class="kbd"><kbd class="key">RET</kbd></kbd>
 declines, and <kbd class="kbd">C-g</kbd> cancels.
 Press <kbd class="kbd">c</kbd> to request cancellation and wait for cleanup.
 The shipped collection contains reviewed, pinned models that passed native
@@ -239,9 +240,9 @@ data and palette references, but new helpers omit it. Existing helpers keep
 it loaded until restarted. Built-in SLT remains loaded, and each speech
 worker loads its own copy of enabled external voices. These file switches
 do not provide a general per-voice policy or a memory measurement.
-</li><li>Explicit &lsquo;<samp class="samp">OMNIVOX_PIPER_MODEL</samp>&rsquo;, &lsquo;<samp class="samp">OMNIVOX_FLITE_VOICES</samp>&rsquo; and runtime environment
+</li><li>Explicit <code class="code">OMNIVOX_PIPER_MODEL</code>, <code class="code">OMNIVOX_FLITE_VOICES</code> and runtime environment
 settings override these options; details identify such overrides. The
-legacy &lsquo;<samp class="samp">EMACSVOX_ECI_DLL</samp>&rsquo; and &lsquo;<samp class="samp">EMACSVOX_DECTALK_DLL</samp>&rsquo; overrides also remain
+legacy <code class="code">EMACSVOX_ECI_DLL</code> and <code class="code">EMACSVOX_DECTALK_DLL</code> overrides also remain
 effective. Clearing an option returns to existing discovery or launcher
 defaults. Direct native executable launches do not consume the bundled
 launcher&rsquo;s file options.
@@ -249,7 +250,7 @@ launcher&rsquo;s file options.
 details. Both worker inventories are requested asynchronously.
 </li><li>To install an engine, choose <em class="emph">Manage installed release</em> and check the displayed
 installation and location. If its files are available to download, activate
-<em class="emph">Install engine</em> with <kbd class="kbd">RET</kbd>,
+<em class="emph">Install engine</em> with <kbd class="kbd"><kbd class="key">RET</kbd></kbd>,
 then confirm. The manager verifies the version-matched download. The table
 shows its operation in progress while the current engine&rsquo;s status stays separate.
 </li><li>In the installed-release view, <em class="emph">Refresh release files</em> runs a bounded background
@@ -257,9 +258,9 @@ file check. <em class="emph">Check release engine</em> lists voices in that rele
 a sample. A changed installation target requires refreshing before retrying.
 Completion produces a short notice without selecting another buffer. The last
 result remains in the release view; <em class="emph">Read last result</em> opens its complete output.
-</li><li>In details, <kbd class="kbd">TAB</kbd> moves to the next action or section;
-<kbd class="kbd">S-TAB</kbd> moves to the previous one.
-<kbd class="kbd">RET</kbd> activates an action or toggles a section.
+</li><li>In details, <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> moves to the next action or section;
+<kbd class="kbd">S-<kbd class="key">TAB</kbd></kbd> moves to the previous one.
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> activates an action or toggles a section.
 Arrow keys read visible fields and values.
 <kbd class="kbd">q</kbd> returns to the selected engine row and
 <kbd class="kbd">h</kbd> opens Aural Home, and <kbd class="kbd">?</kbd> opens help.
@@ -293,12 +294,12 @@ manager safely recognizes an interrupted removal when the expected helper is
 the only file left; it continues to refuse directories containing unrecognized
 files.
 </p>
-<p>The manager reads &lsquo;<samp class="samp">etc/omnivox-components.conf</samp>&rsquo;.  Every archive name, byte size,
+<p>The manager reads <code class="code">etc/omnivox-components.conf</code>.  Every archive name, byte size,
 and SHA-256 hash is pinned to the same Omnivox version as the installed core.
 The WSL2 installer rejects a mismatched core, an unsafe archive layout, missing
 source provenance, or a helper that cannot pass its staged voice-discovery
 check.  It then installs the engine below the same versioned Windows
-&lsquo;<samp class="samp">LocalAppData</samp>&rsquo; release directory.  It does not invoke &lsquo;<samp class="samp">sudo</samp>&rsquo; or edit shell
+<code class="code">LocalAppData</code> release directory.  It does not invoke <code class="code">sudo</code> or edit shell
 startup files.
 </p>
 <p>The choices have different boundaries:
@@ -317,12 +318,12 @@ Supply those only when you have the appropriate distribution and licence.
 </li></ul>
 
 <p>For a terminal-only installation, run
-&lsquo;<samp class="samp">./bin/emacsvox-omnivox-components --list</samp>&rsquo; and then, for example,
-&lsquo;<samp class="samp">./bin/emacsvox-omnivox-components --install flite</samp>&rsquo;.  Multiple engine names may
-follow &lsquo;<samp class="samp">--install</samp>&rsquo; or &lsquo;<samp class="samp">--uninstall</samp>&rsquo;.  For example, use
-&lsquo;<samp class="samp">./bin/emacsvox-omnivox-components --uninstall flite</samp>&rsquo; to remove the managed
+<code class="code">./bin/emacsvox-omnivox-components --list</code> and then, for example,
+<code class="code">./bin/emacsvox-omnivox-components --install flite</code>.  Multiple engine names may
+follow <code class="code">--install</code> or <code class="code">--uninstall</code>.  For example, use
+<code class="code">./bin/emacsvox-omnivox-components --uninstall flite</code> to remove the managed
 Flite directory while retaining its cached archive.  Restart Omnivox after a
-terminal installation or removal, then use &lsquo;<samp class="samp">--test ENGINE</samp>&rsquo; or the Emacs
+terminal installation or removal, then use <code class="code">--test ENGINE</code> or the Emacs
 manager&rsquo;s <kbd class="kbd">t</kbd> command.  The direct Omnivox release assets remain
 available for maintainers and recovery, but the manager is the recommended way
 to select them.

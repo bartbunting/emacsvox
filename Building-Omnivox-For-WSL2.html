@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 ul.mark-bullet {list-style-type: disc}
 -->
@@ -43,7 +44,7 @@ Next: <a href="Selecting-And-Checking-Omnivox.html" accesskey="n" rel="next">Sel
 <p>Use this advanced route when maintaining the reproducible Emacsvox Windows
 bundle or its optional engine integrations.  Ordinary WSL2 users should use
 the pre-built release in
-<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>.  This target
+<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Installing An Omnivox Windows Release Under WSL2</a>.  This target
 builds from source and currently produces an x86-64 Windows runtime.
 </p>
 <p>Before running it, install or configure all of the following:
@@ -148,7 +149,7 @@ physical voice is present:
 </pre></div>
 
 <p>In Emacsvox, restart both speech processes or restart Emacs, then press
-<code class="code">C-e d e</code>.  That command lists the engines reported by the live process, so
+<kbd class="kbd">C-e d e</kbd>.  That command lists the engines reported by the live process, so
 Piper appears only after the newly staged server has started and successfully
 loaded its model and helper.
 </p>
@@ -177,7 +178,7 @@ configuration directory.  The library, data, and configuration remain external
 and are not copied into the Omnivox payload.  Installation and validation
 instructions are in Omnivox&rsquo;s checkout under <code class="code">docs/RHVOICE.md</code> and
 <code class="code">docs/RUTTS.md</code>.  Restart both speech processes or Emacs after restaging or
-changing those inputs, then use <code class="code">C-e d e</code> to inspect the engines reported by the
+changing those inputs, then use <kbd class="kbd">C-e d e</kbd> to inspect the engines reported by the
 new process.
 </p>
 <p>Piper testing from a newer committed Omnivox revision uses the separate

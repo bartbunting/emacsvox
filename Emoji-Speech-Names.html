@@ -23,6 +23,7 @@
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -42,12 +43,12 @@ Next: <a href="Installed-Voices-And-Engines.html" accesskey="n" rel="next">Brows
 
 <p>A voice such as Eloquence may need a fallback engine for an emoji in otherwise
 compatible text. Emoji naming changes the speech text before engine
-selection: &lsquo;<samp class="samp">Forecast 🔮</samp>&rsquo; becomes &lsquo;<samp class="samp">Forecast crystal ball</samp>&rsquo;. The source buffer
+selection: <code class="code">Forecast 🔮</code> becomes <code class="code">Forecast crystal ball</code>. The source buffer
 keeps its original text. This can keep the preferred voice speaking when the
 rest of the text is compatible; the normal repertoire checks still decide
 which engine can handle it.
 </p>
-<p>The feature is enabled by default. Use <kbd class="kbd">M-x customize-group RET emacsvox-emoji RET</kbd>
+<p>The feature is enabled by default. Use <kbd class="kbd">M-x customize-group <kbd class="key">RET</kbd> emacsvox-emoji <kbd class="key">RET</kbd></kbd>
 to review its options. Set <code class="code">emacsvox-emoji-naming-enabled</code> to nil to disable it
 globally, or disable it only in the current source buffer with:
 </p>
@@ -68,17 +69,17 @@ default. Voice previews opened from an aural screen use the remembered source
 buffer&rsquo;s settings; contextual previews use their captured source policy.
 Changing a setting during playback does not change the submitted sample.
 </p>
-<p>Enabled naming uses every exact name in Emacs&rsquo;s emoji table, including &lsquo;<samp class="samp">🌱</samp>&rsquo;
+<p>Enabled naming uses every exact name in Emacs&rsquo;s emoji table, including <code class="code">🌱</code>
 (seedling), flags, keycaps and joined emoji. There is no need to approve each
 new emoji. <code class="code">emacsvox-emoji-approved-sequences</code> defaults to <code class="code">t</code> for this full
 table; optionally set it to a list of complete sequences to restrict naming.
 An unknown joined emoji stays intact, even when a component has a name.
 Arrow and harpoon symbols also receive names, including all directions,
-diagonals, double arrows and curved arrows. For example, &lsquo;<samp class="samp">← ↑ → ↓</samp>&rsquo; becomes
+diagonals, double arrows and curved arrows. For example, <code class="code">← ↑ → ↓</code> becomes
 <em class="emph">left arrow up arrow right arrow down arrow</em>. Symbols outside the emoji table,
-such as &lsquo;<samp class="samp">⇒</samp>&rsquo; and &lsquo;<samp class="samp">⟶</samp>&rsquo;, use their Unicode names. Text and emoji presentation
+such as <code class="code">⇒</code> and <code class="code">⟶</code>, use their Unicode names. Text and emoji presentation
 selectors are supported; unknown joined or accented sequences remain intact.
-Box-drawing characters also receive their Unicode names: for example, &lsquo;<samp class="samp">│</samp>&rsquo;
+Box-drawing characters also receive their Unicode names: for example, <code class="code">│</code>
 becomes <em class="emph">box drawings light vertical</em>. This includes light, heavy, double,
 rounded and dashed borders and junctions. The same naming settings and limits
 apply; custom names can shorten names you use frequently.
@@ -86,7 +87,7 @@ Foreign-language letters and unrelated symbols retain the existing fallback
 behaviour. Exact character inspection also retains its existing behaviour.
 </p>
 <p><code class="code">emacsvox-emoji-maximum-count</code> defaults to 64 occurrences, counting repetitions
-separately. A subject such as &lsquo;<samp class="samp">🤔Dinner? 🍕🍕🍕</samp>&rsquo; is spoken as <em class="emph">thinking face
+separately. A subject such as <code class="code">🤔Dinner? 🍕🍕🍕</code> is spoken as <em class="emph">thinking face
 Dinner? pizza pizza pizza</em>, avoiding fallback caused by its four emoji.
 Above the configured limit, automatic naming is skipped for the whole item.
 One captured presentation object can

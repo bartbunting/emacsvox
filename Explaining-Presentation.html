@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -79,9 +80,10 @@ same report link; opening it does not save or apply anything.
 </p>
 <p>To inspect something heard earlier, open Aural Home and choose <em class="emph">Recent
 feedback</em>, or press <kbd class="kbd">H</kbd> there.  Each row preserves a recorded presentation; the history has a size limit.
-Moving through the Content column speaks the preview using its recorded voices,
-including voice changes within an entry.  Column titles and the other fields use
-the normal interface voice.
+Moving through the Content column speaks the preview using its captured voice
+annotations, including voice changes within an entry. Column titles and the
+other fields use the normal interface voice. Use <kbd class="kbd">P</kbd> to hear the
+engine and physical voice that actually delivered the presentation.
 Useful commands in the feedback browser include:
 </p>
 <dl class="table">
@@ -89,7 +91,7 @@ Useful commands in the feedback browser include:
 <dd><p>Open a readable Feedback Details buffer for the selected presentation.
 </p></dd>
 <dt><kbd class="kbd">P</kbd></dt>
-<dd><p>Replay its complete ordered presentation without adding a history entry.
+<dd><p>Replay its retained presentation with the actual recorded voices, without adding a history entry.
 </p></dd>
 <dt><kbd class="kbd">c</kbd></dt>
 <dd><p>Audition only its auditory cues.
@@ -122,22 +124,22 @@ Press <kbd class="kbd">q</kbd> to return to the same row and column in Recent Fe
 <p>The report groups consecutive voice spans into semantic fields where the
 integration supplies them. In a Notmuch search result, for example, you can
 visit <em class="emph">Authors</em>, <em class="emph">Subject</em>, <em class="emph">Date</em>, <em class="emph">Message count</em>, and <em class="emph">Tags</em>. Headings identify
-the recorded voices. Collapsed fields show only their headings. Visibility is
+the recorded logical voices. Collapsed fields show only their headings. Visibility is
 conveyed through the selected aural presentation, using earcons or optional
 spoken labels; the words <em class="emph">expanded</em> and <em class="emph">collapsed</em> are not inserted into the
 heading text. Press
-<kbd class="kbd">RET</kbd> on a heading to reveal its text, playback and change
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> on a heading to reveal its text, playback and change
 controls, voice source, sounds, and any backend limitations. Field content is
-read in its recorded voices. Only fields with multiple spans show separate
+read with its captured voice annotations. Only fields with multiple spans show separate
 span sections, behind <em class="emph">Individual voice spans</em>. Expand that section only when
 you want to inspect or change an individual span. Its heading announces the
 section without repeating the field&rsquo;s content. A single-span field shows its
 text and controls once, and its heading omits the span count. Press
-<kbd class="kbd">RET</kbd> on the field heading again to collapse it.
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> on the field heading again to collapse it.
 </p>
 <p>Spoken labels such as <em class="emph">indent 2</em> have their own <em class="emph">Before speech</em> or
 <em class="emph">After speech</em> headings within the expanded field. They are separate from
-the content voice spans. Press <kbd class="kbd">RET</kbd> on a spoken label&rsquo;s
+the content voice spans. Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> on a spoken label&rsquo;s
 heading, or <kbd class="kbd">O</kbd> within that entry, to replay just that label
 with its recorded settings. Its <em class="emph">Edit named voice indent</em> link opens the
 palette voice editor using <em class="emph">indent 2</em> as the sample. This changes every use
@@ -153,7 +155,7 @@ draft buffer. The original or simulated presentation remains the same.
 </p>
 <dl class="table">
 <dt><kbd class="kbd">n or p</kbd></dt>
-<dd><p>Move between headings. Collapsed fields speak only their heading; expanded fields also speak their content in the recorded voices.
+<dd><p>Move between headings. Collapsed fields speak only their heading; expanded fields also speak their content with its captured voice annotations.
 </p></dd>
 <dt><kbd class="kbd">Up or Down</kbd></dt>
 <dd><p>Review individual lines without speaking the complete report.
@@ -215,15 +217,29 @@ review and saving; that draft is not included in the report&rsquo;s linked-field
 preview. <em class="emph">Restore inherited behavior</em> removes an override made by this sound
 workflow in the selected scope. Press <kbd class="kbd">q</kbd> to return to the report.
 </p>
-<p>Original playback uses retained output; a simulated report labels its baseline
-playback as simulated throughout the report and linked change editor.
+<p>Original playback uses the engine and physical voice reported during the
+original delivery, including notification voices and fallback choices. It keeps
+the captured voice tuning even after a palette change. Speech is synthesized
+again at the current reading speed and with the host&rsquo;s current pronunciation
+settings; history does not store audio. Cues and pauses retain their order,
+but their timing can differ from the original delivery.
+</p>
+<p>This requires a completed presentation with complete Omnivox voice receipts.
+Older, interrupted, truncated, or unsupported recordings remain inspectable,
+but original playback reports that it is unavailable rather than guessing a
+voice. Presentations with cues positioned inside speech, or voice changes that
+cannot be aligned after host text processing, are also unavailable. If a recorded
+voice is no longer available, playback stops instead of substituting another.
+Navigate over the source again to capture a new example.
+</p>
+<p>A simulated report labels its baseline playback as simulated throughout the
+report and linked change editor.
 Proposed playback uses current rules,
 captured buffer context, and the linked drafts without applying them. A span
 can be targeted separately only when its semantic field, a distinct named
 face, or an explicit voice annotation identifies it. Truncated history cannot provide complete playback or a
 comparable change preview. Older records missing preview inputs remain
-readable and replayable when complete; navigate over the source again to
-capture a new example before previewing changes.
+readable; capture a new example before previewing changes.
 </p>
 <p>Each expanded field explains where its voice and sounds came from, such as
 a visual face or your personal override. These explanations use the captured

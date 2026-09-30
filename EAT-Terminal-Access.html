@@ -54,7 +54,7 @@ Next: <a href="Running-Terminal-Based-Applications.html" accesskey="n" rel="next
 stock Emacs.  It is commonly installed from NonGNU ELPA.  Start it with
 <kbd class="kbd">M-x eat</kbd>; use a prefix argument to create or select another EAT terminal.
 See the EAT manual for terminal setup and EAT&rsquo;s complete command reference
-(see <cite class="cite"><a data-manual="eat" href="https://elpa.nongnu.org/nongnu/doc/eat.html#Top">Eat User Manual</a></cite>).
+(see <a data-manual="eat" href="https://elpa.nongnu.org/nongnu/doc/eat.html#Top">Eat User Manual</a>).
 </p>
 <p>Emacsvox observes EAT&rsquo;s bounded rendered screen.  It does not parse a shell&rsquo;s
 private state and it does not generate shell or router completion candidates.
@@ -104,7 +104,7 @@ whenever you switch modes.
 </p>
 <dl class="table">
 <dt>Semi-character mode</dt>
-<dd><p>This is EAT&rsquo;s default.  Most keys, including <kbd class="key">TAB</kbd>, go to the terminal,
+<dd><p>This is EAT&rsquo;s default.  Most keys, including <kbd class="kbd"><kbd class="key">TAB</kbd></kbd>, go to the terminal,
 while Emacs prefixes such as <kbd class="kbd">C-x</kbd>, <kbd class="kbd">C-c</kbd>, and <kbd class="kbd">M-x</kbd> remain
 available.  Use <kbd class="kbd">C-q</kbd> before a normally reserved key to send it to the
 terminal.  Switch here with <kbd class="kbd">C-c C-j</kbd>.
@@ -119,7 +119,7 @@ mode with <kbd class="kbd">C-M-m</kbd> or <kbd class="kbd">M-<kbd class="key">RE
 Emacs buffer motion and inspection.  Switch here with <kbd class="kbd">C-c C-e</kbd>.
 </p></dd>
 <dt>Line mode</dt>
-<dd><p>The pending input line is edited locally and sent on <kbd class="key">RET</kbd>.  <kbd class="key">TAB</kbd> runs
+<dd><p>The pending input line is edited locally and sent on <kbd class="kbd"><kbd class="key">RET</kbd></kbd>.  <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> runs
 Emacs&rsquo;s <code class="code">completion-at-point</code>, so a configured Emacs completion front end
 such as Corfu can display its result.  Switch here from semi-character or Emacs
 mode with <kbd class="kbd">C-c C-l</kbd>.  Line mode is not available in EAT&rsquo;s embedded Eshell
@@ -127,9 +127,9 @@ terminal.
 </p></dd>
 </dl>
 
-<p>In semi-character and character mode, <kbd class="key">TAB</kbd> belongs to Bash Readline, a
+<p>In semi-character and character mode, <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> belongs to Bash Readline, a
 remote shell, a router CLI, or whichever terminal application is running.
-Corfu is not involved.  In line mode, <kbd class="key">TAB</kbd> belongs to Emacs completion and
+Corfu is not involved.  In line mode, <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> belongs to Emacs completion and
 does not ask a remote CLI for candidates.  Therefore semi-character mode is
 usually the right choice for SSH sessions and network-device CLIs.  If an
 Emacs completion backend blocks in line mode, <kbd class="kbd">C-g</kbd> cancels that Emacs
@@ -165,7 +165,7 @@ remain silent.  Terminal bells, paste actions, input-mode changes,
 application-screen boundaries, and process exit are content-free semantic
 events rather than arbitrary screen speech.
 </p>
-<p>In semi-character and character mode on the main screen, <kbd class="key">RET</kbd> is silent.
+<p>In semi-character and character mode on the main screen, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> is silent.
 After a rendered Left or Right movement, Emacsvox names the character reached;
 after Up or Down, it speaks the resulting input or history row without the
 observed shell prompt.  <kbd class="kbd">M-b</kbd>, <kbd class="kbd">M-f</kbd>, and modified Left or Right word
@@ -177,7 +177,7 @@ history-item counter and input-restored message remain visible in the echo
 area, but are not spoken over the command on the notification stream.
 </p>
 <p>An echoed Space is named without reading the prompt or the rest of the line.
-For <kbd class="key">BACKSPACE</kbd>, <kbd class="key">DELETE</kbd>, <kbd class="kbd">M-d</kbd>, and <kbd class="kbd">C-k</kbd>, Emacsvox compares
+For <kbd class="kbd">BACKSPACE</kbd>, <kbd class="kbd"><kbd class="key">DELETE</kbd></kbd>, <kbd class="kbd">M-d</kbd>, and <kbd class="kbd">C-k</kbd>, Emacsvox compares
 bounded public screen snapshots before and after the key.  When one same-row
 removal is unambiguous, it speaks the character or text actually removed.
 Otherwise it gives only a deletion tone; it never guesses from adjacent prompt
@@ -206,7 +206,7 @@ active item.
 <a class="index-entry-id" id="index-TAB-_0028EAT-terminal-completion_0029"></a>
 
 <p>On the main terminal screen, Emacsvox takes a public screen snapshot before a
-terminal-side <kbd class="key">TAB</kbd> and waits briefly for EAT output to settle.
+terminal-side <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> and waits briefly for EAT output to settle.
 </p>
 <ul class="itemize mark-bullet">
 <li>A unique inline completion speaks the newly displayed field.  For example,
@@ -229,7 +229,7 @@ screen resize are coalesced without replaying the same candidate text.
 <p>The completion result is derived from the rendered screen, so the same design
 works with local Readline, SSH, and unstructured router help.  If the peer makes
 no visible change, there is nothing reliable to announce.  On an alternate
-screen, <kbd class="key">TAB</kbd> is treated as navigation rather than shell completion.
+screen, <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> is treated as navigation rather than shell completion.
 </p>
 <p>Use <kbd class="kbd">C-e q c</kbd> to speak the latest retained candidate or help layout, or
 open frozen review with <kbd class="kbd">C-e q r</kbd> and press <kbd class="kbd">c</kbd>.  These commands are

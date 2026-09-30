@@ -23,6 +23,7 @@
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -78,9 +79,9 @@ For an Omnivox process error, inspect the private log directory described
 below.
 </p></dd>
 <dt>The ready message is heard, but one mode lacks spoken feedback</dt>
-<dd><p>Type <kbd class="kbd">M-x emacsvox-startup-status RET</kbd>.  The report names failed
+<dd><p>Type <kbd class="kbd">M-x emacsvox-startup-status <kbd class="key">RET</kbd></kbd>.  The report names failed
 startup work or package integrations and retains the original error.  Use
-<kbd class="kbd">M-x emacsvox-speak-buffer RET</kbd> to hear the full report.  Correct
+<kbd class="kbd">M-x emacsvox-speak-buffer <kbd class="key">RET</kbd></kbd> to hear the full report.  Correct
 the named package, configuration, or Emacsvox problem, then verify in a fresh
 session.  For source edits, follow the byte-code build procedure before
 testing.  Repeating startup or restarting the speech server does not retry
@@ -89,7 +90,7 @@ installed.  Keep the original error when requesting help.
 </p></dd>
 <dt>The ready message is heard, but speech later stops</dt>
 <dd><p>If Emacs reports that an Emacsvox speech server exited, inspect the Omnivox
-session log and type <kbd class="kbd">M-x tts-restart RET</kbd> after correcting the
+session log and type <kbd class="kbd">M-x tts-restart <kbd class="key">RET</kbd></kbd> after correcting the
 speech-server problem.  Logs are below <code class="code">$XDG_STATE_HOME/emacsvox/omnivox</code>, defaulting to
 <code class="code">~/.local/state/emacsvox/omnivox</code>.  Spoken text is omitted unless explicit
 text logging is enabled.

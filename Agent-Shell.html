@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -50,7 +51,7 @@ controls.  See <a class="uref" href="https://github.com/xenodium/agent-shell">Ag
 provider installation and configuration.
 </p>
 <p>The generated
-<a data-manual="emacsvox-reference" href="reference/emacsvox_002dagent_002dshell.html#emacsvox_002dagent_002dshell">emacsvox-agent-shell</a> in <cite class="cite">Emacsvox Reference Manual</cite>
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002dagent_002dshell.html#emacsvox_002dagent_002dshell">emacsvox-agent-shell</a> in <em class="emph">Emacsvox Reference Manual</em>
 section is the exhaustive Emacsvox command and option reference.  This chapter
 follows the tasks a user performs in a session.
 </p>
@@ -67,9 +68,9 @@ follows the tasks a user performs in a session.
 <div class="section-level-extent" id="Start-and-control-a-session">
 <h3 class="section"><span>10.1 Start and control a session<a class="copiable-link" href="#Start-and-control-a-session"> &para;</a></span></h3>
 
-<p>Load Emacsvox and start Agent Shell with <code class="code">M-x agent-shell</code>.  Emacsvox loads
+<p>Load Emacsvox and start Agent Shell with <kbd class="kbd">M-x agent-shell</kbd>.  Emacsvox loads
 its integration after Agent Shell and activates both new and already existing
-shell buffers.  Run <code class="code">M-x emacsvox-agent-shell-enable</code> only when manually
+shell buffers.  Run <kbd class="kbd">M-x emacsvox-agent-shell-enable</kbd> only when manually
 re-enabling support after it was disabled or while diagnosing a live reload.
 </p>
 <p>Compose and submit prompts with Agent Shell&rsquo;s normal editing commands.  The
@@ -91,7 +92,7 @@ an empty prompt when the agent is idle.
 dropping files, and inserting shell-command output can add to that live draft
 while the agent works. These insertions do not submit the draft. If there is
 no live prompt while busy, Agent Shell offers its queue editor instead.
-Use <code class="code">M-x yank-media</code> to attach a clipboard image on a display that supports
+Use <kbd class="kbd">M-x yank-media</kbd> to attach a clipboard image on a display that supports
 native clipboard access. Image previews survive queueing and steering.
 The animated busy marker does not add repeated speech; reading the prompt
 continues to give its current state.
@@ -108,7 +109,7 @@ pause does not make a partial answer sound complete.  A cancelled, refused, or
 failed turn reports its outcome without replacing the last successfully
 completed response.
 </p>
-<p>When you use <code class="code">M-x agent-shell-prompt-steer</code>, Emacsvox confirms whether the
+<p>When you use <kbd class="kbd">M-x agent-shell-prompt-steer</kbd>, Emacsvox confirms whether the
 agent accepted the steer, declined it, or started a separate turn.  A separate
 turn is announced as still in progress; it is not reported as complete until
 Agent Shell supplies a completion boundary.  Server-pushed turns, when
@@ -116,7 +117,7 @@ supported by the provider, follow the same completed-response speech policy.
 </p>
 <p>Queued prompts announce when they start and how many remain.  If an interrupted
 or failed turn leaves prompts waiting, the queue announcement gives its count
-and the command <code class="code">M-x agent-shell-prompt-queue-resume</code>.  Queue-start feedback
+and the command <kbd class="kbd">M-x agent-shell-prompt-queue-resume</kbd>.  Queue-start feedback
 follows the session&rsquo;s speech level; paused-queue warnings follow
 <code class="code">emacsvox-agent-shell-signal-processing</code>.
 </p>
@@ -126,7 +127,7 @@ In the viewport prompt editor, continuing a list announces its bullet or next
 number and indentation.  Indenting and dedenting announce the new indentation;
 leaving an empty list item announces that the list ended.
 </p>
-<p>Use <code class="code">M-x emacsvox-agent-shell-speak-header</code> to hear the full session header.
+<p>Use <kbd class="kbd">M-x emacsvox-agent-shell-speak-header</kbd> to hear the full session header.
 When <code class="code">agent-shell-show-cost-indicator</code> is enabled and the provider reports a
 positive cost, this includes the cumulative cost with Agent Shell&rsquo;s currency
 and rounding.  Brief announcements when entering a session stay concise.
@@ -166,7 +167,7 @@ tool content.
 session&rsquo;s level, including <code class="code">auto</code>.  Press <kbd class="kbd">C-c C-S-q</kbd> to run
 <code class="code">emacsvox-agent-shell-select-background-speech-level</code> and change the
 shared background default.
-<code class="code">M-x emacsvox-agent-shell-cycle-speech-level</code> cycles toward less routine
+<kbd class="kbd">M-x emacsvox-agent-shell-cycle-speech-level</kbd> cycles toward less routine
 speech; use a prefix argument to restore <code class="code">auto</code>.
 </p>
 <p>Thought content defaults to an icon under
@@ -210,9 +211,9 @@ routine output do not repeat the warning.  The permission controls remain the
 place to inspect and decide the request.
 </p>
 <p>If the request belongs to another session, switch to the named buffer.  Use
-<code class="code">M-x agent-shell-jump-to-latest-permission-button-row</code> to find its latest
-permission row, or use Agent Shell&rsquo;s <kbd class="kbd">TAB</kbd> and <kbd class="kbd">S-TAB</kbd> item navigation.
-Move among the buttons and press <kbd class="kbd">RET</kbd>, or use a direct choice key displayed
+<kbd class="kbd">M-x agent-shell-jump-to-latest-permission-button-row</kbd> to find its latest
+permission row, or use Agent Shell&rsquo;s <kbd class="kbd"><kbd class="key">TAB</kbd></kbd> and <kbd class="kbd">S-<kbd class="key">TAB</kbd></kbd> item navigation.
+Move among the buttons and press <kbd class="kbd"><kbd class="key">RET</kbd></kbd>, or use a direct choice key displayed
 by Agent Shell.  Choice keys are supplied by Agent Shell and the provider, so
 the visible permission row is authoritative.
 </p>
@@ -263,7 +264,7 @@ Move to the next or previous visible Markdown heading and speak its text.
 <kbd class="kbd">K</kbd> (<code class="code">emacsvox-agent-shell-previous-source-block</code>).
 Move to the next or previous source block and announce its language and
 line count. Inside a table, lowercase <kbd class="kbd">k</kbd> remains the table
-copy prefix; use <code class="code">M-x emacsvox-agent-shell-next-source-block</code> to jump forward
+copy prefix; use <kbd class="kbd">M-x emacsvox-agent-shell-next-source-block</kbd> to jump forward
 to code from there.
 </p></dd>
 <dt><kbd class="kbd">u / U</kbd></dt>
@@ -284,7 +285,7 @@ From code or a table inside an answer, they skip that enclosing answer.
 Move to the next or previous visible rendered link and speak its label and
 Return action together. The cursor hint remains visible without a second
 voice repeating it.
-Press <kbd class="kbd">RET</kbd> to follow the link.
+Press <kbd class="kbd"><kbd class="key">RET</kbd></kbd> to follow the link.
 </p></dd>
 <dt><kbd class="kbd">e / E</kbd></dt>
 <dd><p>Use <kbd class="kbd">e</kbd> (<code class="code">emacsvox-agent-shell-next-error</code>) or
@@ -367,13 +368,13 @@ and announce the destination table and cell. Like the bracket navigation keys,
 they insert themselves in a live prompt or viewport editor, including while
 the agent is working.
 </p>
-<p>In viewport view mode, <code class="code">t</code> takes the place of Agent Shell&rsquo;s thought-level
-shortcut; use <code class="code">M-x agent-shell-viewport-set-session-thought-level</code> for that
-action. Inside a table, <code class="code">r</code>, <code class="code">c</code>, and <code class="code">a</code> read rows, read columns, and select
+<p>In viewport view mode, <kbd class="kbd">t</kbd> takes the place of Agent Shell&rsquo;s thought-level
+shortcut; use <kbd class="kbd">M-x agent-shell-viewport-set-session-thought-level</kbd> for that
+action. Inside a table, <kbd class="kbd">r</kbd>, <kbd class="kbd">c</kbd>, and <kbd class="kbd">a</kbd> read rows, read columns, and select
 the table speaking method. To invoke the displaced viewport actions there,
-use <code class="code">M-x agent-shell-viewport-reply</code>, <code class="code">M-x agent-shell-viewport-reply-continue</code>,
-or <code class="code">M-x agent-shell-viewport-reply-again</code>. In the shell transcript, table <code class="code">r</code>
-replaces quoting; use <code class="code">M-x agent-shell-quote-region</code> with a selected region.
+use <kbd class="kbd">M-x agent-shell-viewport-reply</kbd>, <kbd class="kbd">M-x agent-shell-viewport-reply-continue</kbd>,
+or <kbd class="kbd">M-x agent-shell-viewport-reply-again</kbd>. In the shell transcript, table <kbd class="kbd">r</kbd>
+replaces quoting; use <kbd class="kbd">M-x agent-shell-quote-region</kbd> with a selected region.
 Leaving the table restores these ordinary bindings.
 </p>
 <p>Continuous speech and response-block reading omit rendered table borders and
@@ -456,8 +457,8 @@ as complete.  Press <kbd class="kbd">C-c r</kbd> for the preceding completed res
 <kbd class="kbd">C-c R</kbd> for its overview.  Read the error block in the transcript for the
 provider&rsquo;s details and edit the live prompt before resubmitting.
 </p>
-<p>Use <code class="code">M-x agent-shell-restart</code> when Agent Shell itself needs a fresh process
-for the same project.  Use <code class="code">M-x emacsvox-agent-shell-enable</code> to reinstall
+<p>Use <kbd class="kbd">M-x agent-shell-restart</kbd> when Agent Shell itself needs a fresh process
+for the same project.  Use <kbd class="kbd">M-x emacsvox-agent-shell-enable</kbd> to reinstall
 speech hooks after deliberately disabling them.  Neither recovery command
 discards transcript files or project work.
 </p>

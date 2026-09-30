@@ -23,6 +23,7 @@
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -43,7 +44,7 @@ Next: <a href="Building-And-Testing-The-Speech-Server.html" accesskey="n" rel="n
 <p>The guided installer recompiles the source already present in the Emacsvox
 checkout, but it does not fetch newer source itself.  Keep the current speaking
 Emacsvox session open while updating.  Run the commands from
-<kbd class="kbd">M-x shell RET</kbd> in that session, or from another accessible WSL terminal:
+<kbd class="kbd">M-x shell <kbd class="key">RET</kbd></kbd> in that session, or from another accessible WSL terminal:
 </p>
 <div class="example">
 <pre class="example-preformatted">cd ~/src/emacsvox
@@ -78,8 +79,8 @@ checkout:
 known-good source of speech while you test the replacement.  The new process
 cannot retain Lisp loaded from the previous version.  Confirm that it speaks
 the ready message and ordinary buffer contents.  In the new session, use
-<kbd class="kbd">M-x emacsvox-speak-version RET</kbd> to hear the Emacsvox version and
-<kbd class="kbd">M-x tts-speak-version RET</kbd> to hear the live speech-server version.  Only
+<kbd class="kbd">M-x emacsvox-speak-version <kbd class="key">RET</kbd></kbd> to hear the Emacsvox version and
+<kbd class="kbd">M-x tts-speak-version <kbd class="key">RET</kbd></kbd> to hear the live speech-server version.  Only
 after these checks pass should you save work in the old session and exit it.
 You can then continue in the isolated session or start Emacsvox through your
 normal customized entry point.  If the new session does not speak, close it but
@@ -101,7 +102,7 @@ and speech, before performing the second-session test above.  This manual route
 rebuilds Emacsvox but does not download or select a newly pinned Omnivox
 release.  When Omnivox also needs to be updated independently, follow the
 <em class="emph">Manual Release Installation</em> subsection in
-<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>, then repeat
+<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Installing An Omnivox Windows Release Under WSL2</a>, then repeat
 the diagnostic and audible check above.
 </p>
 </div>

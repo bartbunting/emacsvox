@@ -22,6 +22,7 @@
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -47,7 +48,7 @@ supported Emacs, suggests a suitable package, or offers an explicit source build
 <p>On GNU/Linux and macOS, install Emacs 30.2 or newer and <code class="code">make</code>.  Omnivox 1.12.0
 or newer is the supported speech-server baseline.  On macOS, use
 <a class="uref" href="https://brew.sh">Homebrew</a> to install Omnivox as described in
-<a class="ref" href="Installing-An-Omnivox-Release-Binary.html">Install Omnivox From A Release Binary</a>; Emacs and Emacsvox
+<a class="ref" href="Installing-An-Omnivox-Release-Binary.html">Installing An Omnivox Release Binary</a>; Emacs and Emacsvox
 are installed separately.  Manual release-archive installation requires <code class="code">curl</code>,
 <code class="code">tar</code>, and either <code class="code">sha256sum</code> on GNU/Linux or <code class="code">shasum</code> on macOS.  GNU Texinfo
 is needed only when building or editing the documentation, not for an ordinary
@@ -101,7 +102,7 @@ Clone Omnivox beside Emacsvox only when following the Omnivox source-build or
 reproducible WSL2 build route.
 </p>
 <p>If this machine will send speech to another workstation, use
-<a class="ref" href="Installing-Remote-Emacsvox.html">Installing On A Remote Linux Host</a> instead of installing a local
+<a class="ref" href="Installing-Remote-Emacsvox.html">Installing Remote Emacsvox</a> instead of installing a local
 speech server.  For a local WSL2 desktop, first ask the guided installer to inspect the machine without
 changing it:
 </p>
@@ -135,16 +136,16 @@ compiler output is kept below <code class="code">$XDG_CACHE_HOME/emacsvox/logs</
 <code class="code">~/.cache/emacsvox/logs</code>.  If a build fails, the installer shows its final log
 lines and the complete log path.  Continue only after hearing both the final
 tone and speech.  You can then skip to the last step in
-<a class="ref" href="Quick-Installation.html">Build And Start Emacsvox</a> and start Emacsvox.
+<a class="ref" href="Quick-Installation.html">Quick Installation</a> and start Emacsvox.
 </p>
 <p>After the core installation works, optional speech engines are available from
-<kbd class="kbd">M-x emacsvox-omnivox-manage-components RET</kbd>. The same engine list
+<kbd class="kbd">M-x emacsvox-omnivox-manage-components <kbd class="key">RET</kbd></kbd>. The same engine list
 is <em class="emph">Browse voices</em> in Aural Home, opened with
 <kbd class="kbd">C-e H</kbd> and then <kbd class="kbd">I</kbd>. Select an engine and press
-<kbd class="kbd">RET</kbd> for details. It distinguishes engines
+<kbd class="kbd"><kbd class="key">RET</kbd></kbd> for details. It distinguishes engines
 already included in the core, downloadable engines, and bridges that still
 need a user-supplied runtime. Choose <em class="emph">Install engine</em> to confirm,
-checksum-verify, install, and validate that engine without &lsquo;<samp class="samp">sudo</samp>&rsquo;.
+checksum-verify, install, and validate that engine without <code class="code">sudo</code>.
 Expand <em class="emph">Engine installation</em> and choose <em class="emph">Uninstall engine</em> for a manager-installed engine to confirm and remove
 it while retaining the verified download cache; choose <em class="emph">Install engine</em> to
 reinstall it later. The manager never removes core engines or separately

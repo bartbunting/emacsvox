@@ -57,7 +57,7 @@ and Emacs components and complete their setup first.  The
 <a class="uref" href="https://notmuchmail.org/doc/latest/notmuch-emacs.html">official Notmuch Emacs manual</a> covers that setup and the complete upstream command set.
 </p>
 <p>The generated
-<a data-manual="emacsvox-reference" href="reference/emacsvox_002dnotmuch.html#emacsvox_002dnotmuch">emacsvox-notmuch</a> in <cite class="cite">Emacsvox Reference Manual</cite> section
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002dnotmuch.html#emacsvox_002dnotmuch">emacsvox-notmuch</a> in <em class="emph">Emacsvox Reference Manual</em> section
 is the exhaustive Emacsvox command and option reference.  This chapter follows
 the tasks a user performs and explains when automatic feedback occurs.
 </p>
@@ -145,7 +145,7 @@ For a user-owned non-refresh search that remains selected, Emacsvox gives a
 progress cue.  With the default <code class="code">adaptive</code> policy, it speaks the selected
 message as soon as the first complete result is available, while the search
 continues.  This uses the same message summary, voices, and status cues as
-<code class="code">n</code>, <code class="code">p</code>, and the arrow keys.  It does not announce an empty row or move point.
+<kbd class="kbd">n</kbd>, <kbd class="kbd">p</kbd>, and the arrow keys.  It does not announce an empty row or move point.
 </p>
 <p>The default <code class="code">adaptive</code> completion policy distinguishes two interactions:
 </p>
@@ -175,7 +175,7 @@ These policies use the same stream selection for refreshes.  Other search
 summaries use the notification stream.  Failures remain audible and generic
 for every policy, with focused refresh failures using the primary stream too.
 The deliberate global refresh-all command remains silent.  See
-<a class="ref" href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> for the streams&rsquo; general behavior and
+<a class="ref" href="Aural-Presentation.html">Aural Presentation</a> for the streams&rsquo; general behavior and
 configuration.
 </p>
 </div>
@@ -289,7 +289,7 @@ visibility.
 <dt><kbd class="kbd">M-RET</kbd></dt>
 <dd><p>Run <code class="code">notmuch-show-open-or-close-all</code>.  It opens every message and reports
 the resulting thread state and total, such as &ldquo;Opened all 5 messages.&rdquo;  Use a
-prefix argument, <kbd class="kbd">C-u M-RET</kbd>, to close every message and receive the
+prefix argument, <kbd class="kbd">C-u M-<kbd class="key">RET</kbd></kbd>, to close every message and receive the
 corresponding total.
 </p></dd>
 <dt><kbd class="kbd">C-c C-p</kbd></dt>
@@ -379,7 +379,7 @@ archive command.
 
 <a class="index-entry-id" id="index-automatic-speech-limits_002c-Notmuch"></a>
 
-<p>Run <kbd class="kbd">M-x customize-group RET emacsvox-notmuch RET</kbd> to change Notmuch speech
+<p>Run <kbd class="kbd">M-x customize-group <kbd class="key">RET</kbd> emacsvox-notmuch <kbd class="key">RET</kbd></kbd> to change Notmuch speech
 without altering Notmuch&rsquo;s own database or display.
 </p>
 <dl class="table">
@@ -435,7 +435,7 @@ claiming that no attachment exists.
 
 <p>A shortened Search or Show presentation states what was omitted and points to
 <kbd class="kbd">C-c C-p</kbd> for explicit full configured details; a shortened Hello item
-points to <kbd class="key">RET</kbd>.  The explicit Search and Show inspection commands
+points to <kbd class="kbd"><kbd class="key">RET</kbd></kbd>.  The explicit Search and Show inspection commands
 deliberately bypass the automatic content limits; use them only when speaking
 the complete configured fields is appropriate.
 </p>

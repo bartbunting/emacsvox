@@ -21,6 +21,8 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 ul.mark-bullet {list-style-type: disc}
 -->
@@ -96,16 +98,16 @@ parsing preserves quoted fields and visited source buffers before constructing
 the view. Sorting constructs a new view and carries over both filters and the
 shared speech preferences.
 </p>
-<p>The shared prefix adds only previously unused keys: <code class="code">C-r</code> toggles source-table
-reading, and <code class="code">[</code> / <code class="code">]</code> discover tables. Printable reader keys are contextual.
+<p>The shared prefix adds only previously unused keys: <kbd class="kbd">C-r</kbd> toggles source-table
+reading, and <kbd class="kbd">[</kbd> / <kbd class="kbd">]</kbd> discover tables. Printable reader keys are contextual.
 Control-Meta arrows also enter reading and move within supported source tables.
 A conditional minor-mode map uses menu-item filters: returning nil outside
 these tables preserves the effective binding in lower maps, including personal
 bindings. The filter preserves point and match data, excludes code examples,
 and defers to the active reader map after entry. First-arrow entry and movement
 produce one submission. Structural movement remains available outside tables;
-inside tables, its usual <code class="code">C-M-f/b/u/d</code> keys remain available.
-Org&rsquo;s native <code class="code">TAB</code>, <code class="code">RET</code> and Meta-arrow editing bindings remain available
+inside tables, its usual <kbd class="kbd">C-M-f/b/u/d</kbd> keys remain available.
+Org&rsquo;s native <kbd class="kbd"><kbd class="key">TAB</kbd></kbd>, <kbd class="kbd"><kbd class="key">RET</kbd></kbd> and Meta-arrow editing bindings remain available
 outside reading. Agent Shell&rsquo;s existing scoped overrides and prompt behaviour
 remain as documented in its integration contract.
 </p>
@@ -152,7 +154,7 @@ the selected Emacs; it does not clean or discard source changes.
 <code class="code">make bytecode-check</code> is the non-mutating preflight for startup or deployment.
 It reports missing, stale, orphaned, or wrong-Emacs byte-code.
 </p>
-<p>Each <code class="code">make config</code> fully regenerates &lsquo;<samp class="samp">lisp/emacsvox-loaddefs.el</samp>&rsquo; from the
+<p>Each <code class="code">make config</code> fully regenerates <code class="code">lisp/emacsvox-loaddefs.el</code> from the
 current sources, including edited autoloads, new modules, and deleted modules.
 The build targets <code class="code">make bytecode</code>, <code class="code">make bytecode-rebuild</code>, <code class="code">make emacsvox</code>,
 and <code class="code">make all</code> run configuration before compiling; <code class="code">make compat-test</code> runs it
@@ -199,7 +201,7 @@ are not automatically retried on another package load.  User quit is recorded
 and still propagates.  Source fallback from the setup guard is preserved in
 both background tasks and deferred callbacks.
 </p>
-<p><code class="code">M-x emacsvox-startup-status</code> speaks a summary and selects a Help report with
+<p><kbd class="kbd">M-x emacsvox-startup-status</kbd> speaks a summary and selects a Help report with
 task durations and original adapter errors.  Calling <code class="code">emacsvox-startup-status</code>
 from Lisp returns the summary without speech or a window.  Failures also issue
 a warning and attempt a notification in interactive Emacs; retained records
@@ -219,10 +221,10 @@ interactive startup latency.
 </p>
 <p>The focused tests exercise real deferred loads, failure isolation, task reuse,
 source fallback, and spoken status with speech intercepted.  Check source with
-the selected Emacs using &lsquo;<samp class="samp">test/emacsvox-startup-tests.el</samp>&rsquo;.  For fresh compiled
+the selected Emacs using <code class="code">test/emacsvox-startup-tests.el</code>.  For fresh compiled
 parity, first run <code class="code">make bytecode-check</code>, then set
-&lsquo;<samp class="samp">EMACSVOX_STARTUP_TEST_LOAD=compiled</samp>&rsquo; when loading the same test file in a new
-batch Emacs.  This selects &lsquo;<samp class="samp">emacsvox.elc</samp>&rsquo; explicitly; it does not make every
+<code class="code">EMACSVOX_STARTUP_TEST_LOAD=compiled</code> when loading the same test file in a new
+batch Emacs.  This selects <code class="code">emacsvox.elc</code> explicitly; it does not make every
 test dependency compiled.  Audible diagnosis and real startup latency still
 need an isolated interactive session.
 </p>
@@ -247,19 +249,19 @@ this job.
 <p>The separate integration CI job runs Agent Shell, Notmuch, and EAT tests on
 both versions with a private home directory and six reviewed dependency
 snapshots.  <code class="code">make test-deps</code> verifies the archive hashes in
-&lsquo;<samp class="samp">test/integration-dependencies.json</samp>&rsquo; and stages sources and autoloads under
-ignored &lsquo;<samp class="samp">.test-deps/</samp>&rsquo;; it never changes personal packages.  <code class="code">make integration-test</code>
+<code class="code">test/integration-dependencies.json</code> and stages sources and autoloads under
+ignored <code class="code">.test-deps/</code>; it never changes personal packages.  <code class="code">make integration-test</code>
 verifies that prepared tree before loading it and runs the batch cases.
 <code class="code">make graphical-integration-test</code> uses the same verified tree for the two Agent
 Shell display-row cases in a real graphical Emacs on a private Xvfb display.
 Both gates fail on missing dependencies or skipped selected tests. The graphical
-runner requires &lsquo;<samp class="samp">xvfb-run</samp>&rsquo;, &lsquo;<samp class="samp">Xvfb</samp>&rsquo;, &lsquo;<samp class="samp">xauth</samp>&rsquo; and &lsquo;<samp class="samp">timeout</samp>&rsquo;, captures its log,
+runner requires <code class="code">xvfb-run</code>, <code class="code">Xvfb</code>, <code class="code">xauth</code> and <code class="code">timeout</code>, captures its log,
 disables speech output and stops its isolated session after 60 seconds.
 CI runs both gates on each supported Emacs version.
 Pin updates require upstream review, new archive hashes,
 and fresh preparation for both Emacs versions.  These source tests capture
 speech events and exercise disposable EAT subprocesses; they do not replace
-listening tests or compiled integration checks.  See &lsquo;<samp class="samp">test/README.org</samp>&rsquo; for
+listening tests or compiled integration checks.  See <code class="code">test/README.org</code> for
 preparation checks, directory overrides, recovery, and coverage boundaries.
 </p>
 <p>Keep each Emacs version&rsquo;s build in a separate checkout; never reuse <code class="code">.elc</code>
@@ -270,7 +272,7 @@ The documentation toolchain retains its independent pin.
 
 
 <p>Use a separate checkout on a Windows drive.  The native installer regenerates
-autoloads and all modules from the &lsquo;<samp class="samp">lisp/Makefile</samp>&rsquo; inventory with the selected
+autoloads and all modules from the <code class="code">lisp/Makefile</code> inventory with the selected
 Windows Emacs.  Its launcher verifies that byte-code in a fresh process.
 Do not share generated byte-code with a WSL checkout using another Emacs.
 </p>
@@ -286,17 +288,17 @@ Do not share generated byte-code with a WSL checkout using another Emacs.
 <p>The PowerShell tests use temporary fixtures and an existing native Emacs.
 They check doctor behavior, explicit selections, prebuilt/offline preflight,
 incomplete installations, platform rejection, checksums, archive paths, argument handling, and atomic
-configuration replacement.  &lsquo;<samp class="samp">test/emacsvox-native-bytecode-tests.el</samp>&rsquo; compares
+configuration replacement.  <code class="code">test/emacsvox-native-bytecode-tests.el</code> compares
 the native inventory with GNU Make and checks dependency order and byte-code
 preflight failures.  Keep the WSL x64/ARM64 and remote installer tests passing.
 </p>
 <p>Actual acquisition acceptance must start with the pinned archives in an empty
-installation root, not a reused developer runtime. For &lsquo;<samp class="samp">-DownloadEmacs</samp>&rsquo;,
+installation root, not a reused developer runtime. For <code class="code">-DownloadEmacs</code>,
 verify the complete upstream Windows ZIP and its bundled runtime features.
 For source builds, start with a private toolchain. Keep MSYS2 package versions,
-compiler/configure/build/install logs, and &lsquo;<samp class="samp">emacsvox-build.json</samp>&rsquo; with the
+compiler/configure/build/install logs, and <code class="code">emacsvox-build.json</code> with the
 installed Emacs.  The installation logs also include
-&lsquo;<samp class="samp">native-install-provenance.json</samp>&rsquo; with Lisp source hashes and selected pins.
+<code class="code">native-install-provenance.json</code> with Lisp source hashes and selected pins.
 MSYS2 packages are signed rolling inputs; these records do not claim a frozen
 or bit-identical compiler environment.  Verify fresh graphical startup,
 acknowledged routing, and tracked completion on both speech lanes with a PATH
@@ -357,10 +359,10 @@ checkout, build the executable with:
 <pre class="example-preformatted">.\utils\emacsvox-windows-setup-build.ps1 -StagingDirectory &quot;C:\path\to\setup-stage&quot; -InstallCompiler
 </pre></div>
 
-<p>&lsquo;<samp class="samp">-InstallCompiler</samp>&rsquo; acquires the checksum-pinned Inno Setup compiler and
+<p><code class="code">-InstallCompiler</code> acquires the checksum-pinned Inno Setup compiler and
 verifies its publisher signature before installing it per-user on the build
-machine. &lsquo;<samp class="samp">etc/windows-setup.conf</samp>&rsquo; owns these build-tool pins. An existing
-pinned compiler may be selected with &lsquo;<samp class="samp">-Compiler</samp>&rsquo;. The output directory
+machine. <code class="code">etc/windows-setup.conf</code> owns these build-tool pins. An existing
+pinned compiler may be selected with <code class="code">-Compiler</code>. The output directory
 contains the setup executable, checksum and compiler/payload provenance.
 No compiler is needed on the destination machine.
 </p>
@@ -393,7 +395,7 @@ that the previous selection and launcher still work. Keep the failure
 fixture separate from user-facing artifacts.
 </p>
 <p>The main GitHub Actions CI workflow builds the installer on Windows x64 for
-pushes and pull requests to &lsquo;<samp class="samp">master</samp>&rsquo;, and can also be started manually. Its
+pushes and pull requests to <code class="code">master</code>, and can also be started manually. Its
 Linux packaging fixtures run first. The Windows job checks native ownership
 and cleanup helpers, verifies the cached Emacs and Omnivox downloads, and
 uses the pinned Inno compiler. It tests installation, shortcut launch,
@@ -403,20 +405,20 @@ run with only Windows tools on PATH.
 The core speech CI job also exercises startup and welcome-screen preferences
 on each supported Emacs version without needing an audio device.
 </p>
-<p>The &lsquo;<samp class="samp">emacsvox-windows-installer-evidence</samp>&rsquo; artifact retains build manifests,
+<p>The <code class="code">emacsvox-windows-installer-evidence</code> artifact retains build manifests,
 checksums, compiler provenance and lifecycle logs for 14 days, including
-failed runs. To export lifecycle logs locally, add &lsquo;<samp class="samp">-LogDirectory</samp>&rsquo; with a new
-directory to &lsquo;<samp class="samp">emacsvox-windows-setup-tests.ps1</samp>&rsquo;. Its &lsquo;<samp class="samp">result.json</samp>&rsquo; records
+failed runs. To export lifecycle logs locally, add <code class="code">-LogDirectory</code> with a new
+directory to <code class="code">emacsvox-windows-setup-tests.ps1</code>. Its <code class="code">result.json</code> records
 whether acceptance passed and which optional checks were requested.
 </p>
 <p>CI does not run audio or interactive screen-reader acceptance. It does not
-yet exercise a successful second-build upgrade; use &lsquo;<samp class="samp">-Upgrade</samp>&rsquo; locally for
+yet exercise a successful second-build upgrade; use <code class="code">-Upgrade</code> locally for
 that check.
 </p>
 <p>Successful runs offer two separate downloads in the job summary:
-&lsquo;<samp class="samp">emacsvox-windows-installer</samp>&rsquo; contains the tested setup executable, its checksums,
-provenance, launch instructions and &lsquo;<samp class="samp">SOURCE-DOWNLOADS.md</samp>&rsquo;, linking directly to
-matching third-party sources on their upstream hosts. &lsquo;<samp class="samp">emacsvox-windows-sources</samp>&rsquo;
+<code class="code">emacsvox-windows-installer</code> contains the tested setup executable, its checksums,
+provenance, launch instructions and <code class="code">SOURCE-DOWNLOADS.md</code>, linking directly to
+matching third-party sources on their upstream hosts. <code class="code">emacsvox-windows-sources</code>
 contains our exact Emacsvox code, build scripts, runtime assets and the same
 source index. Unshipped historical soundscapes and talk recordings are omitted. It does not
 mirror the large upstream archives. Sources are optional and are not installed on users&rsquo;
@@ -426,11 +428,11 @@ an installer, and remove binaries before their sources when deleting artifacts.
 Keep the upstream locations accessible; repair broken source links or withdraw
 the affected installer.
 </p>
-<p>&lsquo;<samp class="samp">etc/windows-sources.json</samp>&rsquo; binds the reviewed Emacs/Omnivox runtime archives
+<p><code class="code">etc/windows-sources.json</code> binds the reviewed Emacs/Omnivox runtime archives
 to source archives and licence notices. It records exact DLL package matches,
 additional MSYS2 sources absent from the GNU dependency ZIP, and locked Rust
-dependencies. &lsquo;<samp class="samp">etc/windows-sources.txt</samp>&rsquo; explains the archive contents and build
-recipes. The application includes &lsquo;<samp class="samp">etc/WINDOWS-THIRD-PARTY-NOTICES.txt</samp>&rsquo;;
+dependencies. <code class="code">etc/windows-sources.txt</code> explains the archive contents and build
+recipes. The application includes <code class="code">etc/WINDOWS-THIRD-PARTY-NOTICES.txt</code>;
 Emacs and Omnivox also retain their own notices. Runtime updates require a
 source and notice review; link the exact versions with their checksums.
 </p>
@@ -439,7 +441,7 @@ installer, intact payloads and compiler provenance. It verifies the pinned
 upstream archives in a private build cache and publishes their links beside
 the installer. It checks both downloads before making either available.
 Only the main tested executable is uploaded. The failed-upgrade fixture and
-offline bundle remain build inputs. Run &lsquo;<samp class="samp">make windows-sources-test</samp>&rsquo; for the
+offline bundle remain build inputs. Run <code class="code">make windows-sources-test</code> for the
 isolated source/publication boundary checks.
 </p>
 <p>The setup executable remains a development artifact. Stable release
@@ -452,13 +454,13 @@ integration and remaining acceptance work are recorded in
 
 
 <p>Use a Windows preview when testers need public downloads without Actions
-sign-in or artifact expiry. Keep &lsquo;<samp class="samp">VERSION</samp>&rsquo; and the &lsquo;<samp class="samp">Unreleased</samp>&rsquo; NEWS heading
+sign-in or artifact expiry. Keep <code class="code">VERSION</code> and the <code class="code">Unreleased</code> NEWS heading
 unchanged. Do not use the stable release targets or a stable version tag for
 this operation. The tag identifies the installer source commit; the clean
 publication tooling checkout may be newer and records its own commit.
 </p>
-<p>Start with a successful complete &lsquo;<samp class="samp">CI</samp>&rsquo; run from &lsquo;<samp class="samp">master</samp>&rsquo; in the repository
-selected by &lsquo;<samp class="samp">RELEASE_REMOTE</samp>&rsquo; (default &lsquo;<samp class="samp">origin</samp>&rsquo;). The installer, matching sources
+<p>Start with a successful complete <code class="code">CI</code> run from <code class="code">master</code> in the repository
+selected by <code class="code">RELEASE_REMOTE</code> (default <code class="code">origin</code>). The installer, matching sources
 and evidence artifacts must still be available for preparation. For example:
 </p>
 <div class="example">
@@ -472,9 +474,9 @@ make windows-preview-check WINDOWS_PREVIEW_DIR=/path/to/new-preview-directory
 <p>Preparation downloads and verifies the exact CI assets. It checks all archived
 Emacsvox source files against Git, the installer and setup provenance, source
 pairing, upstream source index, and native lifecycle result. It writes the
-publishable files under &lsquo;<samp class="samp">assets/</samp>&rsquo; and a local &lsquo;<samp class="samp">preview.json</samp>&rsquo; receipt. It creates
+publishable files under <code class="code">assets/</code> and a local <code class="code">preview.json</code> receipt. It creates
 no tag or GitHub release and refuses to overwrite an existing output directory.
-Review &lsquo;<samp class="samp">assets/README-preview.md</samp>&rsquo;, the executable, sources and checksums.
+Review <code class="code">assets/README-preview.md</code>, the executable, sources and checksums.
 These instructions include permanent source links; the old CI-only README is
 not published. Upstream sources remain upstream links, not mirrored archives.
 </p>
@@ -489,7 +491,7 @@ make windows-preview-publish WINDOWS_PREVIEW_DIR=/path/to/new-preview-directory
 unsigned tag at the tested source commit. The second pushes that exact tag,
 creates a private GitHub draft, attaches sources and installer, verifies all
 remote SHA256 values, then publishes as a prerelease with Latest disabled.
-It always selects the repository explicitly from &lsquo;<samp class="samp">RELEASE_REMOTE</samp>&rsquo;&rsquo;s push URL.
+It always selects the repository explicitly from <code class="code">RELEASE_REMOTE</code>&rsquo;s push URL.
 It does not edit the installer or source ZIP. If uploading fails, rerun the
 publish target against the same prepared directory; it resumes only a matching
 draft with intact assets. A mismatched draft, conflicting tag or published
@@ -654,7 +656,7 @@ by the Aural implementation, its generated reference, and accepted ADRs.
 <h4 class="subsection"><span>16.3.6 Voice-style metadata ownership<a class="copiable-link" href="#Voice_002dstyle-metadata-ownership"> &para;</a></span></h4>
 
 <p>The private <code class="code">emacsvox-aural--voice-style-fields</code> table in
-&lsquo;<samp class="samp">lisp/emacsvox-aural-rules.el</samp>&rsquo; owns accepted field names, groups, value types,
+<code class="code">lisp/emacsvox-aural-rules.el</code> owns accepted field names, groups, value types,
 and integer bounds.  The existing public dimension lists and private accepted
 key list are derived from it; validation traverses the descriptors directly.
 Composition and provenance continue to consume the accepted-key inventory.
@@ -694,7 +696,7 @@ one editor&rsquo;s blank-input behavior for the other&rsquo;s.
 </p>
 <p>The common editor displays low-pass and high-pass as amounts from zero through
 nine, increasing with stronger filtering. Low-pass converts between amount and
-stored cutoff with &lsquo;<samp class="samp">9 - value</samp>&rsquo;; high-pass retains its numeric direction. Zero
+stored cutoff with <code class="code">9 - value</code>; high-pass retains its numeric direction. Zero
 is labelled neutral. Stored cutoffs and adapter-default nil retain their
 meaning. Invalid boundary steps must fail before history, dirty state, refresh
 or audition changes.
@@ -719,9 +721,9 @@ test windows cannot take desktop focus. The launcher prints the graphical
 ERT log and exits unsuccessfully for failures, skips, startup errors or a
 45-second timeout. A missing virtual-display tool fails before starting Emacs.
 The graphical redisplay test is reported as skipped in ordinary batch runs.
-The connected saved-style regression edits a custom &lsquo;<samp class="samp">bolden</samp>&rsquo;, reads its saved
+The connected saved-style regression edits a custom <code class="code">bolden</code>, reads its saved
 data back, and compares common-editor and Workbench previews with the final
-normal-speech wire for &lsquo;<samp class="samp">voice-bolden</samp>&rsquo;.  Workbench uses the compiler&rsquo;s palette
+normal-speech wire for <code class="code">voice-bolden</code>.  Workbench uses the compiler&rsquo;s palette
 resolution and the shared effect normalizer: gain and pan level five must
 remain exactly neutral at 0.5.  Preserve both this path and the independently
 specified Workbench scale cases when changing preview or palette lookup.
@@ -733,7 +735,7 @@ process lifecycle or audible behavior.
 <div class="subsection-level-extent" id="Timeline-preparation-boundaries">
 <h4 class="subsection"><span>16.3.7 Timeline preparation boundaries<a class="copiable-link" href="#Timeline-preparation-boundaries"> &para;</a></span></h4>
 
-<p>Two private helpers in &lsquo;<samp class="samp">lisp/emacsvox-aural-transport.el</samp>&rsquo; make preparation
+<p>Two private helpers in <code class="code">lisp/emacsvox-aural-transport.el</code> make preparation
 inputs explicit.  <code class="code">emacsvox-aural--timeline-effect-transition</code> takes previous
 effects, normalized next effects, and a span ID, returning a directive and the
 next state.  Replacement copies the saved state separately from the directive;
@@ -755,7 +757,7 @@ registration, framing, fallback, and process writes retain their existing
 owners and sequence.  Separating a complete delivery candidate from those
 effects requires further design and failure-path characterization.
 </p>
-<p>The <code class="code">delivery-preparation</code> tests in &lsquo;<samp class="samp">test/emacsvox-aural-transport-tests.el</samp>&rsquo;
+<p>The <code class="code">delivery-preparation</code> tests in <code class="code">test/emacsvox-aural-transport-tests.el</code>
 check complete serialized timelines and final writes, semantic bindings,
 state ownership, policy inputs, and capture timing.  The compiled Aural gate
 also runs these contracts and existing stop and send-failure regressions with
@@ -858,34 +860,34 @@ including real displayed-window reading for both advance paths.
 <div class="subsection-level-extent" id="Agent-Shell-contracts">
 <h4 class="subsection"><span>16.3.12 Agent Shell contracts<a class="copiable-link" href="#Agent-Shell-contracts"> &para;</a></span></h4>
 
-<p>Use <code class="code">M-x emacsvox-agent-shell-enable</code> to reinstall speech hooks after
+<p>Use <kbd class="kbd">M-x emacsvox-agent-shell-enable</kbd> to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 </p>
-<p>The reviewed integration pins now target Agent Shell 0.81.1 at &lsquo;<samp class="samp">5535365</samp>&rsquo; and
-Shell Maker 0.97.4 at &lsquo;<samp class="samp">a76d4d6</samp>&rsquo;. ACP retains its reviewed snapshot. A personal
-package upgrade does not refresh &lsquo;<samp class="samp">test/integration-dependencies.json</samp>&rsquo; or its
+<p>The reviewed integration pins now target Agent Shell 0.81.1 at <code class="code">5535365</code> and
+Shell Maker 0.97.4 at <code class="code">a76d4d6</code>. ACP retains its reviewed snapshot. A personal
+package upgrade does not refresh <code class="code">test/integration-dependencies.json</code> or its
 prepared tree. When the preparer rejects a changed lock, choose a fresh
-&lsquo;<samp class="samp">TEST_DEPS_DIR</samp>&rsquo; and pass the same directory to preparation and both integration
+<code class="code">TEST_DEPS_DIR</code> and pass the same directory to preparation and both integration
 gates; preserve the old directory until it is no longer needed.
 </p>
 <p>For every pin refresh, compare all Emacsvox navigation, speech-control, table,
 and repeat keys against shell and viewport maps, inherited Shell Maker maps,
 list editing, inline actions, permission controls, and transients. Verify
 effective keys in real prompt and transcript contexts. The 0.81.1 refresh keeps
-the existing scoped overrides: viewport <code class="code">t</code> discovers tables; table <code class="code">r</code> reads
-rows instead of quoting or replying; viewport table <code class="code">c</code> reads columns and <code class="code">a</code>
-selects table speech instead of continuing or repeating a reply. The table <code class="code">k</code>
+the existing scoped overrides: viewport <kbd class="kbd">t</kbd> discovers tables; table <kbd class="kbd">r</kbd> reads
+rows instead of quoting or replying; viewport table <kbd class="kbd">c</kbd> reads columns and <kbd class="kbd">a</kbd>
+selects table speech instead of continuing or repeating a reply. The table <kbd class="kbd">k</kbd>
 copy prefix takes precedence over Emacsvox&rsquo;s source-block jump. These preserve
 consistent reading keys; the displaced commands remain available through
-<code class="code">M-x</code> as documented in the Agent Shell user chapter. Prompt letters remain
+<kbd class="kbd">M-x</kbd> as documented in the Agent Shell user chapter. Prompt letters remain
 literal input, and repeat navigation must release unrelated keys.
 </p>
 <ol class="enumerate">
 <li> <a class="anchor" id="Internal-ownership-and-renderer-tests"></a>Internal ownership and renderer tests
 
 
-<p>The main &lsquo;<samp class="samp">lisp/emacsvox-agent-shell.el</samp>&rsquo; module requires the internal
-&lsquo;<samp class="samp">lisp/emacsvox-agent-shell-render.el</samp>&rsquo; module.  The renderer module depends
+<p>The main <code class="code">lisp/emacsvox-agent-shell.el</code> module requires the internal
+<code class="code">lisp/emacsvox-agent-shell-render.el</code> module.  The renderer module depends
 only on Emacs libraries, with no reverse dependency on the main integration.
 Its private helper names and argument contracts remain available through the
 main module.
@@ -909,11 +911,11 @@ module.  Assess their private dependencies and lifecycle contracts before
 considering another extraction; a heading or a line count alone is not a
 reason to create a module.
 </p>
-<p>The independent &lsquo;<samp class="samp">test/emacsvox-agent-shell-render-tests.el</samp>&rsquo; suite runs in the
+<p>The independent <code class="code">test/emacsvox-agent-shell-render-tests.el</code> suite runs in the
 core and integration gates without needing optional packages of its own.  It
 checks property-preserving copies, compatibility renderings, group provenance,
 answer selection, and a fresh module load without integration registrations.
-With the Emacs selected by &lsquo;<samp class="samp">local.mk</samp>&rsquo;, it can also run directly:
+With the Emacs selected by <code class="code">local.mk</code>, it can also run directly:
 </p>
 <div class="example">
 <pre class="example-preformatted">/path/to/emacs -Q --batch -L lisp \
@@ -1157,7 +1159,7 @@ reproducible clean-release path documented in the user-facing WSL2 route.
 <p>Make owns option and clean-source guards, toolchain verification, companion
 preparation, Docker compilation, and final runtime verification.  Its
 <code class="code">windows-omnivox</code> target passes prepared build outputs to the internal
-&lsquo;<samp class="samp">servers/omnivox-release/stage-runtime.sh</samp>&rsquo; script.  Use the guarded Make
+<code class="code">servers/omnivox-release/stage-runtime.sh</code> script.  Use the guarded Make
 targets rather than invoking this script directly.
 </p>
 <p>The script owns host-side payload staging: input checks, content hashes,
@@ -1169,7 +1171,7 @@ The assignments at the call site and the script&rsquo;s initial parameter checks
 define the complete internal input list.  Optional user inputs retain their
 <code class="code">OMNIVOX_PIPER_MODEL</code>, <code class="code">OMNIVOX_RHVOICE_*</code>, and <code class="code">OMNIVOX_ECI_DLL</code> environment
 variables.  Main-only development staging remains separately owned by
-&lsquo;<samp class="samp">stage-main-dev.sh</samp>&rsquo; with its existing reuse restrictions.
+<code class="code">stage-main-dev.sh</code> with its existing reuse restrictions.
 </p>
 <p>Run <code class="code">make windows-staging-test</code> on a GNU/Linux host with Python 3, Git, Make,
 and the standard GNU file/checksum tools.  The tests use private repositories,
@@ -1203,7 +1205,7 @@ Keep prepares a named-voice draft, including any reviewed row placement and
 adjustment scope. The destination still requires an explicit save.
 </p>
 <p>The unified palette contract is recorded in ADR 0018. Every nonroot palette
-uses complete schema 3 entries and an explicit parent chain to &lsquo;<samp class="samp">acss-default</samp>&rsquo;.
+uses complete schema 3 entries and an explicit parent chain to <code class="code">acss-default</code>.
 Palette definitions and immutable local-choice snapshots are saved through the
 common coordinator. Frozen proposals retain separate persistence and apply
 completion, and retry does not repeat a successful write. Save failures,
@@ -1239,17 +1241,17 @@ built-in options and reordering items outside the active-order view.
 <div class="subsection-level-extent" id="Repeatable-voice-performance-measurements">
 <h4 class="subsection"><span>16.3.17 Repeatable voice performance measurements<a class="copiable-link" href="#Repeatable-voice-performance-measurements"> &para;</a></span></h4>
 
-<p>Use &lsquo;<samp class="samp">utils/voice_benchmark.py</samp>&rsquo; to retain comparable measurements of ordinary
+<p>Use <code class="code">utils/voice_benchmark.py</code> to retain comparable measurements of ordinary
 speech, native voice settings and the voice editor. It starts private speech
 workers and fresh Emacs processes; it does not connect to a running Emacs or
 save editor drafts. The default null audio output avoids speaking the workload.
-Reports remain below the ignored &lsquo;<samp class="samp">.benchmarks/</samp>&rsquo; directory.
+Reports remain below the ignored <code class="code">.benchmarks/</code> directory.
 </p>
 <p>The runner requires Python 3, the selected Emacs toolchain, and an Omnivox
-checkout containing &lsquo;<samp class="samp">tools/benchmark_server.py</samp>&rsquo; and &lsquo;<samp class="samp">tools/process_metrics.py</samp>&rsquo;.
-It reuses that checkout&rsquo;s lifecycle workloads. On Linux, &lsquo;<samp class="samp">xvfb-run</samp>&rsquo; provides
+checkout containing <code class="code">tools/benchmark_server.py</code> and <code class="code">tools/process_metrics.py</code>.
+It reuses that checkout&rsquo;s lifecycle workloads. On Linux, <code class="code">xvfb-run</code> provides
 a private graphical display when installed. The plan can explicitly select
-&lsquo;<samp class="samp">native</samp>&rsquo; for a visible graphical Emacs or &lsquo;<samp class="samp">batch</samp>&rsquo; for a nongraphical run.
+<code class="code">native</code> for a visible graphical Emacs or <code class="code">batch</code> for a nongraphical run.
 Batch measurements do not establish graphical responsiveness. Build current
 byte-code before running; the runner refuses stale byte-code.
 </p>
@@ -1266,27 +1268,27 @@ affect the selected engines. For example:
 </pre></div>
 
 <p>Initialization captures supported runtime overrides from the environment,
-including &lsquo;<samp class="samp">OMNIVOX_DECTALK_DLL</samp>&rsquo;, &lsquo;<samp class="samp">OMNIVOX_ECI_DLL</samp>&rsquo; and &lsquo;<samp class="samp">ESPEAK_NG_DATA</samp>&rsquo;.
-Inspect the resulting JSON plan. Its initial routes are Eloquence &lsquo;<samp class="samp">v1</samp>&rsquo;,
-DECtalk &lsquo;<samp class="samp">paul</samp>&rsquo; and eSpeak&rsquo;s British English voice (&lsquo;<samp class="samp">espeak:gmw/en</samp>&rsquo;, with a
+including <code class="code">OMNIVOX_DECTALK_DLL</code>, <code class="code">OMNIVOX_ECI_DLL</code> and <code class="code">ESPEAK_NG_DATA</code>.
+Inspect the resulting JSON plan. Its initial routes are Eloquence <code class="code">v1</code>,
+DECtalk <code class="code">paul</code> and eSpeak&rsquo;s British English voice (<code class="code">espeak:gmw/en</code>, with a
 backslash on Windows); remove unavailable engines or change exact
 voice IDs. Native routes also specify one parameter and test value. A missing
 voice, fallback voice, unsupported parameter or failed native readback fails
 the workload. It must not become a fast but invalid result.
 </p>
 <p>If a separately retained failure prevents one case from producing timings,
-a route may declare &lsquo;<samp class="samp">exclude_cases</samp>&rsquo; as an object mapping case names to reasons.
+a route may declare <code class="code">exclude_cases</code> as an object mapping case names to reasons.
 Exclusions appear at the top of the report and must match on both sides of a
 comparison. An excluded case supplies no evidence about its performance or
 correctness; do not treat a completed timing run as clearing that failure.
 </p>
 <p>The plan pins the executable path. When staging a new development build,
-update &lsquo;<samp class="samp">targets[].program</samp>&rsquo; before measuring it. Retain the earlier executable
+update <code class="code">targets[].program</code> before measuring it. Retain the earlier executable
 and complete helper payload if an old-build comparison is wanted.
-&lsquo;<samp class="samp">--baseline-program</samp>&rsquo; at initialization adds a second target for ordinary
+<code class="code">--baseline-program</code> at initialization adds a second target for ordinary
 speech, with native controls and editor tests disabled for that older worker.
 An editor comparison against older Lisp needs a target with its own
-&lsquo;<samp class="samp">emacsvox_root</samp>&rsquo; and current byte-code for that checkout. Keep runtime inputs,
+<code class="code">emacsvox_root</code> and current byte-code for that checkout. Keep runtime inputs,
 rate, display mode, machine and benchmark driver identical between runs.
 </p>
 <p>Run a short setup check, then collect the repeatable baseline:
@@ -1320,25 +1322,25 @@ python3 utils/voice_benchmark.py compare \
   .benchmarks/before .benchmarks/after --output .benchmarks/comparison.md
 </pre></div>
 
-<p>Use &lsquo;<samp class="samp">--flavour legacy --mode warm</samp>&rsquo; to examine ordinary speech, or
-&lsquo;<samp class="samp">--flavour editor --mode ui</samp>&rsquo; for the editor. A plan containing both builds can
-be compared against itself with &lsquo;<samp class="samp">--before-target baseline --after-target
-current</samp>&rsquo;. Every report contains medians, 95th percentiles, maxima and raw
+<p>Use <code class="code">--flavour legacy --mode warm</code> to examine ordinary speech, or
+<code class="code">--flavour editor --mode ui</code> for the editor. A plan containing both builds can
+be compared against itself with <code class="code">--before-target baseline --after-target
+current</code>. Every report contains medians, 95th percentiles, maxima and raw
 observations. The default comparison flags a series only when its 95th
 percentile rises by more than both 5 milliseconds and 15 percent, with at least
 20 observations on each side. Short setup checks and low-count cold openings
 are explicitly inconclusive. Repeat flagged runs before attributing a change
-to code. With &lsquo;<samp class="samp">--fail-on-regression</samp>&rsquo;, exit status is 1 for a flagged slowdown,
+to code. With <code class="code">--fail-on-regression</code>, exit status is 1 for a flagged slowdown,
 3 for insufficient evidence, and 2 for an invalid run or comparison.
 </p>
 <p>The index records executable and helper hashes, runtime input hashes, driver
 hashes, source commit and dirty-tree identity, toolchain and host information.
 Comparison validates the retained raw-report hashes and recomputes summaries.
 Changed runtime data or incompatible test settings are rejected. Retain the
-whole run directory, not just &lsquo;<samp class="samp">report.md</samp>&rsquo;. The source identity may differ
+whole run directory, not just <code class="code">report.md</code>. The source identity may differ
 between runs: that is the change under investigation.
 </p>
-<p>Add &lsquo;<samp class="samp">BENCHMARK_RESOURCES=1</samp>&rsquo; for a separate process-tree CPU and memory phase.
+<p>Add <code class="code">BENCHMARK_RESOURCES=1</code> for a separate process-tree CPU and memory phase.
 Sampling runs after the latency jobs so process enumeration does not distort
 those timings. Resource reports identify their observation provider and its
 limitations; unavailable memory evidence is not zero memory use. Editor
@@ -1351,7 +1353,7 @@ sound reaching the listener. Editor previews currently expose completion but
 no onset event. Null audio bypasses the physical device, so device latency or
 audible clipping needs a separate listening or loopback measurement. Results
 from null and real audio are not comparable. Run
-&lsquo;<samp class="samp">make voice-benchmark-test</samp>&rsquo; to check evidence integrity and comparison logic.
+<code class="code">make voice-benchmark-test</code> to check evidence integrity and comparison logic.
 </p>
 </div>
 </div>

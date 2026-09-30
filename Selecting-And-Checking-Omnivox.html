@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -81,9 +82,9 @@ uses the absolute executable named by <code class="code">TTS_PROGRAM</code>. For
 installation procedure, see
 <a class="ref" href="Trying-Native-Windows-Emacsvox.html">Installing Native Windows Emacsvox</a>.
 </p>
-<p>Inside a running Emacsvox session, <code class="code">M-x omnivox</code> selects the same server
-temporarily.  Use <code class="code">M-x tts-speak-version</code> to identify the live adapter
-and <code class="code">M-x tts-restart</code> after changing server configuration.  This backend
+<p>Inside a running Emacsvox session, <kbd class="kbd">M-x omnivox</kbd> selects the same server
+temporarily.  Use <kbd class="kbd">M-x tts-speak-version</kbd> to identify the live adapter
+and <kbd class="kbd">M-x tts-restart</kbd> after changing server configuration.  This backend
 contract stops at a proven speech server; the complete isolated Emacs start,
 expected startup speech, and no-speech recovery belong to the first-use
 procedure.

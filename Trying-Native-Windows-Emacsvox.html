@@ -23,6 +23,7 @@
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 ul.mark-bullet {list-style-type: disc}
 -->
@@ -58,7 +59,7 @@ Docker, Rust, and a system MSYS2 installation are not required.
 <h4 class="subsection"><span>4.4.1 Using a Windows Setup Build<a class="copiable-link" href="#Using-a-Windows-Setup-Build"> &para;</a></span></h4>
 
 <p>If you have a development Setup executable, run it to install
-&lsquo;<samp class="samp">Emacsvox Windows</samp>&rsquo; for your Windows account. The wizard shows the Emacsvox
+<code class="code">Emacsvox Windows</code> for your Windows account. The wizard shows the Emacsvox
 version and the included Emacs and Omnivox versions. No administrator
 privileges or internet connection are needed.
 The wizard offers an optional desktop shortcut; it always creates a Start
@@ -67,7 +68,7 @@ The final page confirms installation and explains how to start and uninstall.
 Choose Test speech for two short announcements, and Start Emacsvox if wanted.
 Finish runs your chosen actions and closes Setup.
 </p>
-<p>The default directory is &lsquo;<samp class="samp">%LOCALAPPDATA%\Emacsvox\Desktop Dev</samp>&rsquo;. Use the
+<p>The default directory is <code class="code">%LOCALAPPDATA%\Emacsvox\Desktop Dev</code>. Use the
 Start menu shortcut, or search Start for Emacsvox Windows, to launch afterward.
 A desktop shortcut is not required. Run Setup again to repair
 missing application files or install a newer development build. Close the
@@ -126,9 +127,9 @@ The installer then installs the pinned Omnivox core and prepares Emacsvox.
 Later runs reuse installed components and verified cached archives.
 </p>
 <p>To select an existing Emacs explicitly, add
-&lsquo;<samp class="samp">-Emacs &quot;C:\path\to\Emacs\bin\emacs.exe&quot;</samp>&rsquo;.  Explicit &lsquo;<samp class="samp">-Emacs</samp>&rsquo;, &lsquo;<samp class="samp">EMACS</samp>&rsquo; environment,
-and &lsquo;<samp class="samp">local.mk</samp>&rsquo; selections must agree and require native Emacs 30.2 or newer.
-&lsquo;<samp class="samp">-DownloadEmacs</samp>&rsquo; and &lsquo;<samp class="samp">-BuildEmacs</samp>&rsquo; select their respective managed Emacs
+<code class="code">-Emacs &quot;C:\path\to\Emacs\bin\emacs.exe&quot;</code>.  Explicit <code class="code">-Emacs</code>, <code class="code">EMACS</code> environment,
+and <code class="code">local.mk</code> selections must agree and require native Emacs 30.2 or newer.
+<code class="code">-DownloadEmacs</code> and <code class="code">-BuildEmacs</code> select their respective managed Emacs
 instead of a saved or PATH selection. They reuse a complete matching
 installation when one exists and cannot replace an explicit selection.
 Choose only one of these options.
@@ -137,23 +138,23 @@ Choose only one of these options.
 </p>
 <ul class="itemize mark-bullet">
 <li>Emacs, Omnivox, the isolated profile, and logs below
-&lsquo;<samp class="samp">%LOCALAPPDATA%\Emacsvox\Native</samp>&rsquo;.
-</li><li>Private build tools below &lsquo;<samp class="samp">%LOCALAPPDATA%\Emacsvox\Toolchains\msys2-20260611</samp>&rsquo;.
-</li><li>Verified archive cache below &lsquo;<samp class="samp">%LOCALAPPDATA%\Emacsvox\Downloads</samp>&rsquo;.
-</li><li>A data-only &lsquo;<samp class="samp">native-install.json</samp>&rsquo; in this checkout, ignored by Git.
+<code class="code">%LOCALAPPDATA%\Emacsvox\Native</code>.
+</li><li>Private build tools below <code class="code">%LOCALAPPDATA%\Emacsvox\Toolchains\msys2-20260611</code>.
+</li><li>Verified archive cache below <code class="code">%LOCALAPPDATA%\Emacsvox\Downloads</code>.
+</li><li>A data-only <code class="code">native-install.json</code> in this checkout, ignored by Git.
 </li></ul>
 
-<p>&lsquo;<samp class="samp">-InstallRoot</samp>&rsquo;, &lsquo;<samp class="samp">-ToolchainRoot</samp>&rsquo;, and &lsquo;<samp class="samp">-CacheDirectory</samp>&rsquo; select other local
+<p><code class="code">-InstallRoot</code>, <code class="code">-ToolchainRoot</code>, and <code class="code">-CacheDirectory</code> select other local
 Windows directories.  The MSYS2 build-tool path must not contain spaces;
-choose &lsquo;<samp class="samp">-ToolchainRoot</samp>&rsquo; if the default does.  Checkout and installed Emacs
+choose <code class="code">-ToolchainRoot</code> if the default does.  Checkout and installed Emacs
 paths may contain spaces.  The installer leaves personal Emacs initialization,
 system PATH, Windows services, and JAWS settings alone.
 </p>
-<p>For installation from an already prepared archive cache, add &lsquo;<samp class="samp">-Offline</samp>&rsquo; and
-&lsquo;<samp class="samp">-CacheDirectory &quot;C:\path\to\archives&quot;</samp>&rsquo;. This disables downloads and
+<p>For installation from an already prepared archive cache, add <code class="code">-Offline</code> and
+<code class="code">-CacheDirectory &quot;C:\path\to\archives&quot;</code>. This disables downloads and
 checks every required archive before changing the installation. Missing or
 damaged archives stop installation. Offline mode supports prebuilt or
-existing Emacs; it does not support &lsquo;<samp class="samp">-BuildEmacs</samp>&rsquo;. The read-only &lsquo;<samp class="samp">-Check</samp>&rsquo;
+existing Emacs; it does not support <code class="code">-BuildEmacs</code>. The read-only <code class="code">-Check</code>
 command reports the plan without checking cached archives or playing audio.
 </p>
 <p>The source archives are checksum-pinned.  MSYS2 compiler packages come from
@@ -163,7 +164,7 @@ Emacs includes its runtime DLLs, so launching it does not need MSYS2 on PATH.
 </p>
 <p>The default final check opens a temporary native Emacs window, verifies both
 speech lanes, speaks two announcements, and closes that test window.  Confirm
-that you hear both announcements.  &lsquo;<samp class="samp">-NoAudioCheck</samp>&rsquo; skips this step when needed;
+that you hear both announcements.  <code class="code">-NoAudioCheck</code> skips this step when needed;
 run the explicit check before accepting speech:
 </p>
 <div class="example">
@@ -173,7 +174,7 @@ run the explicit check before accepting speech:
 </pre></div>
 
 <p>The last command opens the isolated native desktop.  It uses Windows speech
-by default.  An explicit &lsquo;<samp class="samp">OMNIVOX_ENGINE</samp>&rsquo; environment selection remains
+by default.  An explicit <code class="code">OMNIVOX_ENGINE</code> environment selection remains
 available for separately configured engines.  Native optional-engine
 installation, ARM64, and other native Windows roles are not provided by this
 guided installer.
@@ -185,9 +186,9 @@ failed build, retain the logs under the reported build directory.  Inspect an
 incomplete installation before moving it aside or selecting a new directory;
 the installer does not overwrite an unknown partial tree.
 </p>
-<p>JAWS speech muting does not disable its keyboard shortcuts.  If &lsquo;<samp class="samp">M-&lt;</samp>&rsquo; or
-&lsquo;<samp class="samp">M-&gt;</samp>&rsquo; is intercepted, test with &lsquo;<samp class="samp">JAWSKey+3</samp>&rsquo; before the shortcut.  Bart&rsquo;s
-&lsquo;<samp class="samp">workstation-config</samp>&rsquo; repository supplies the separately installed,
+<p>JAWS speech muting does not disable its keyboard shortcuts.  If <kbd class="kbd">M-&lt;</kbd> or
+<kbd class="kbd">M-&gt;</kbd> is intercepted, test with <code class="code">JAWSKey+3</code> before the shortcut.  Bart&rsquo;s
+<code class="code">workstation-config</code> repository supplies the separately installed,
 Emacs-specific JAWS override used on the test workstation.
 </p>
 </div>
@@ -196,7 +197,7 @@ Emacs-specific JAWS override used on the test workstation.
 
 <p>The following manual procedure remains available for an already installed
 native Windows Emacs 30.2 or newer.  It does not acquire Emacs or replace the
-guided x64 checks above.  Set &lsquo;<samp class="samp">$Emacsvox</samp>&rsquo; to the checkout&rsquo;s absolute Windows
+guided x64 checks above.  Set <code class="code">$Emacsvox</code> to the checkout&rsquo;s absolute Windows
 path and continue in one PowerShell window.
 </p>
 </div>
@@ -306,19 +307,19 @@ alternative.
 <ol class="enumerate">
 <li> Emacsvox speaks its startup introduction.
 
-</li><li> <kbd class="kbd">C-h v tts-program RET</kbd> displays the absolute path to the
+</li><li> <kbd class="kbd">C-h v tts-program <kbd class="key">RET</kbd></kbd> displays the absolute path to the
 verified <code class="code">omnivox.exe</code>.
 
-</li><li> <kbd class="kbd">M-x tts-speak-version RET</kbd> speaks the Omnivox version
-response, and <kbd class="kbd">M-x omnivox-list-voices RET</kbd> displays the
+</li><li> <kbd class="kbd">M-x tts-speak-version <kbd class="key">RET</kbd></kbd> speaks the Omnivox version
+response, and <kbd class="kbd">M-x omnivox-list-voices <kbd class="key">RET</kbd></kbd> displays the
 Windows voices.
 
 </li><li> <kbd class="kbd">C-n</kbd> and <kbd class="kbd">C-p</kbd> speak ordinary line
 movement, <kbd class="kbd">C-e s</kbd> stops current speech, and
-<kbd class="kbd">M-x tts-restart RET</kbd> restores speech without a process
+<kbd class="kbd">M-x tts-restart <kbd class="key">RET</kbd></kbd> restores speech without a process
 error.
 
-</li><li> Type <kbd class="kbd">M-x emacsvox-toggle-icons RET</kbd> twice.  The second
+</li><li> Type <kbd class="kbd">M-x emacsvox-toggle-icons <kbd class="key">RET</kbd></kbd> twice.  The second
 toggle, which turns icons back on, plays a short auditory icon in addition
 to plain speech.
 </li></ol>
