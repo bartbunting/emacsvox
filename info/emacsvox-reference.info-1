@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1623 commands and 224 options.
+   This chapter documents a total of 1624 commands and 224 options.
 
 * Menu:
 
@@ -2190,14 +2190,21 @@ deterministic repairs are explicit commands from the spoken report.
 
      Open the spoken Aural Doctor and announce its overall result.
 
-2.22.1.2 emacsvox-aural-doctor-help
+2.22.1.2 emacsvox-aural-doctor-copy-report
+..........................................
+
+ -- Command: emacsvox-aural-doctor-copy-report
+
+     Copy displayed diagnostic findings, excluding log contents and speech text.
+
+2.22.1.3 emacsvox-aural-doctor-help
 ...................................
 
  -- Command: emacsvox-aural-doctor-help
 
      Display and speak Aural Doctor help.
 
-2.22.1.3 emacsvox-aural-doctor-mode
+2.22.1.4 emacsvox-aural-doctor-mode
 ...................................
 
  -- Command: emacsvox-aural-doctor-mode
@@ -2214,36 +2221,37 @@ deterministic repairs are explicit commands from the spoken report.
      ?		emacsvox-aural-doctor-help
      h		emacsvox-aural
      r		emacsvox-aural-doctor-repair-current
+     y		emacsvox-aural-doctor-copy-report
 
-2.22.1.4 emacsvox-aural-doctor-next
+2.22.1.5 emacsvox-aural-doctor-next
 ...................................
 
  -- Command: emacsvox-aural-doctor-next
 
      Move to and speak the next diagnostic finding.
 
-2.22.1.5 emacsvox-aural-doctor-next-column
+2.22.1.6 emacsvox-aural-doctor-next-column
 ..........................................
 
  -- Command: emacsvox-aural-doctor-next-column
 
      Move right and speak the next diagnostic column.
 
-2.22.1.6 emacsvox-aural-doctor-previous
+2.22.1.7 emacsvox-aural-doctor-previous
 .......................................
 
  -- Command: emacsvox-aural-doctor-previous
 
      Move to and speak the previous diagnostic finding.
 
-2.22.1.7 emacsvox-aural-doctor-previous-column
+2.22.1.8 emacsvox-aural-doctor-previous-column
 ..............................................
 
  -- Command: emacsvox-aural-doctor-previous-column
 
      Move left and speak the previous diagnostic column.
 
-2.22.1.8 emacsvox-aural-doctor-refresh
+2.22.1.9 emacsvox-aural-doctor-refresh
 ......................................
 
  -- Command: emacsvox-aural-doctor-refresh (&optional id)
@@ -2252,42 +2260,42 @@ deterministic repairs are explicit commands from the spoken report.
 
      (fn &optional ID)
 
-2.22.1.9 emacsvox-aural-doctor-refresh-sound-packs
-..................................................
+2.22.1.10 emacsvox-aural-doctor-refresh-sound-packs
+...................................................
 
  -- Command: emacsvox-aural-doctor-refresh-sound-packs
 
      Refresh dynamically discovered and registered sound packs.
 
-2.22.1.10 emacsvox-aural-doctor-reload-personal-data
+2.22.1.11 emacsvox-aural-doctor-reload-personal-data
 ....................................................
 
  -- Command: emacsvox-aural-doctor-reload-personal-data
 
      Reload the validated personal aural data file.
 
-2.22.1.11 emacsvox-aural-doctor-repair-current
+2.22.1.12 emacsvox-aural-doctor-repair-current
 ..............................................
 
  -- Command: emacsvox-aural-doctor-repair-current
 
      Run the deterministic repair offered by the finding at point.
 
-2.22.1.12 emacsvox-aural-doctor-restore-bindings
+2.22.1.13 emacsvox-aural-doctor-restore-bindings
 ................................................
 
  -- Command: emacsvox-aural-doctor-restore-bindings
 
      Restore the documented aural home and point-explanation bindings.
 
-2.22.1.13 emacsvox-aural-doctor-speak-current
+2.22.1.14 emacsvox-aural-doctor-speak-current
 .............................................
 
  -- Command: emacsvox-aural-doctor-speak-current
 
      Speak the complete diagnostic finding at point.
 
-2.22.1.14 emacsvox-aural-doctor-speak-current-cell
+2.22.1.15 emacsvox-aural-doctor-speak-current-cell
 ..................................................
 
  -- Command: emacsvox-aural-doctor-speak-current-cell

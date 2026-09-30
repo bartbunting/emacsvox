@@ -10,6 +10,12 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Diagnose each speech worker separately
+
+Aural Doctor reports main and notification capabilities, engine availability,
+acknowledged configuration agreement, and configured log locations without
+starting or probing speech. Press =y= to copy the displayed report.
+
 ** Edit engine configuration without restarting speech
 
 Open /Engine configuration/ from engine details, or run

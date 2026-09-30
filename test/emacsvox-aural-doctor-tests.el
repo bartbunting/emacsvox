@@ -252,5 +252,59 @@
       (should (string-match-p "used ordinary speech"
                               (emacsvox-aural-doctor-finding-detail finding))))))
 
+
+(ert-deftest emacsvox-aural-doctor-separates-workers-and-rejects-stale-evidence ()
+  (let ((main (make-pipe-process :name "doctor main" :noquery t))
+        (notify (make-pipe-process :name "doctor notify" :noquery t)))
+    (unwind-protect
+        (let ((tts-speaker-process main) (tts-notify-process notify))
+          (process-put main 'omnivox--control-inventory
+                       '(:preferred_engine_id "espeak" :engines
+                         ((:id "espeak" :availability (:status "available")))) )
+          (process-put notify 'omnivox--control-inventory
+                       '(:engines ((:id "espeak" :availability (:status "unavailable")))))
+          (process-put main 'omnivox-engine-activation "main-startup")
+          (process-put notify 'omnivox-engine-activation "notify-startup")
+          (cl-letf (((symbol-function 'tts-start) (lambda (&rest _) (ert-fail "Doctor started speech")))
+                    ((symbol-function 'omnivox-refresh-voice-inventory) (lambda (&rest _) (ert-fail "Doctor sent probe"))))
+            (should (eq 'info (emacsvox-aural-doctor-finding-severity
+                              (nth 2 (emacsvox-aural-doctor--worker-findings "main" main)))))
+            (should (eq 'warning (emacsvox-aural-doctor-finding-severity
+                                 (nth 2 (emacsvox-aural-doctor--worker-findings "notification" notify)))))
+            (should (equal "workers differ" (emacsvox-aural-doctor-finding-status
+                                             (emacsvox-aural-doctor--configuration-finding))))
+            (delete-process notify)
+            (should (equal "not observed" (emacsvox-aural-doctor-finding-status
+                                           (nth 2 (emacsvox-aural-doctor--worker-findings "notification" notify)))))
+            (should (equal "not fully observed" (emacsvox-aural-doctor-finding-status
+                                                 (emacsvox-aural-doctor--configuration-finding))))))
+      (when (process-live-p main) (delete-process main))
+      (when (process-live-p notify) (delete-process notify)))))
+
+(ert-deftest emacsvox-aural-doctor-disabled-engine-is-not-a-failure ()
+  (let ((process (make-pipe-process :name "doctor disabled" :noquery t)))
+    (unwind-protect
+        (progn
+          (process-put process 'omnivox--control-inventory
+                       '(:engines ((:id "flite" :availability (:status "unavailable")))
+                         :engine_runtime ((:engine_id "flite" :disabled_by_policy t))))
+          (let ((finding (nth 2 (emacsvox-aural-doctor--worker-findings "main" process))))
+            (should (eq 'info (emacsvox-aural-doctor-finding-severity finding)))
+            (should (string-match-p "disabled by policy" (emacsvox-aural-doctor-finding-detail finding)))))
+      (delete-process process))))
+
+(ert-deftest emacsvox-aural-doctor-copies-observations-without-log-contents ()
+  (let ((emacsvox-aural-diagnostic-log-file "/unread/private.log")
+        (emacsvox-aural-last-diagnostic-log-error nil)
+        (kill-ring nil))
+    (with-temp-buffer
+      (emacsvox-aural-doctor-mode)
+      (setq emacsvox-aural-doctor-findings (list (emacsvox-aural-doctor--speech-log-finding)))
+      (cl-letf (((symbol-function 'emacsvox-aural-ui-speak) #'ignore)
+                ((symbol-function 'insert-file-contents) (lambda (&rest _) (ert-fail "Doctor read log"))))
+        (call-interactively (key-binding (kbd "y"))))
+      (should (string-match-p "/unread/private.log" (car kill-ring)))
+      (should (string-match-p "does not read or copy" (car kill-ring))))))
+
 (provide 'emacsvox-aural-doctor-tests)
 ;;; emacsvox-aural-doctor-tests.el ends here

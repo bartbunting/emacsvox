@@ -3292,6 +3292,7 @@ This module defines the generic TTS interface.
 
      100
 
+
  -- Variable: User Option tts-punctuation-mode-policy-alist
      Automatic punctuation modes, ordered from specific to general.
 
@@ -4833,58 +4834,62 @@ Function Index
                                                              (line   16)
 * emacsvox-aural-doctor <1>:             emacsvox-aural-doctor.
                                                              (line   17)
-* emacsvox-aural-doctor-help:            emacsvox-aural-doctor.
+* emacsvox-aural-doctor-copy-report:     emacsvox-aural-doctor.
                                                              (line   23)
-* emacsvox-aural-doctor-help <1>:        emacsvox-aural-doctor.
+* emacsvox-aural-doctor-copy-report <1>: emacsvox-aural-doctor.
                                                              (line   24)
-* emacsvox-aural-doctor-mode:            emacsvox-aural-doctor.
+* emacsvox-aural-doctor-help:            emacsvox-aural-doctor.
                                                              (line   30)
-* emacsvox-aural-doctor-mode <1>:        emacsvox-aural-doctor.
+* emacsvox-aural-doctor-help <1>:        emacsvox-aural-doctor.
                                                              (line   31)
+* emacsvox-aural-doctor-mode:            emacsvox-aural-doctor.
+                                                             (line   37)
+* emacsvox-aural-doctor-mode <1>:        emacsvox-aural-doctor.
+                                                             (line   38)
 * emacsvox-aural-doctor-next:            emacsvox-aural-doctor.
-                                                             (line   48)
-* emacsvox-aural-doctor-next <1>:        emacsvox-aural-doctor.
-                                                             (line   49)
-* emacsvox-aural-doctor-next-column:     emacsvox-aural-doctor.
-                                                             (line   55)
-* emacsvox-aural-doctor-next-column <1>: emacsvox-aural-doctor.
                                                              (line   56)
-* emacsvox-aural-doctor-previous:        emacsvox-aural-doctor.
-                                                             (line   62)
-* emacsvox-aural-doctor-previous <1>:    emacsvox-aural-doctor.
+* emacsvox-aural-doctor-next <1>:        emacsvox-aural-doctor.
+                                                             (line   57)
+* emacsvox-aural-doctor-next-column:     emacsvox-aural-doctor.
                                                              (line   63)
-* emacsvox-aural-doctor-previous-column: emacsvox-aural-doctor.
-                                                             (line   69)
-* emacsvox-aural-doctor-previous-column <1>: emacsvox-aural-doctor.
+* emacsvox-aural-doctor-next-column <1>: emacsvox-aural-doctor.
+                                                             (line   64)
+* emacsvox-aural-doctor-previous:        emacsvox-aural-doctor.
                                                              (line   70)
-* emacsvox-aural-doctor-refresh:         emacsvox-aural-doctor.
-                                                             (line   76)
-* emacsvox-aural-doctor-refresh <1>:     emacsvox-aural-doctor.
+* emacsvox-aural-doctor-previous <1>:    emacsvox-aural-doctor.
+                                                             (line   71)
+* emacsvox-aural-doctor-previous-column: emacsvox-aural-doctor.
                                                              (line   77)
-* emacsvox-aural-doctor-refresh-sound-packs: emacsvox-aural-doctor.
+* emacsvox-aural-doctor-previous-column <1>: emacsvox-aural-doctor.
+                                                             (line   78)
+* emacsvox-aural-doctor-refresh:         emacsvox-aural-doctor.
+                                                             (line   84)
+* emacsvox-aural-doctor-refresh <1>:     emacsvox-aural-doctor.
                                                              (line   85)
-* emacsvox-aural-doctor-refresh-sound-packs <1>: emacsvox-aural-doctor.
-                                                             (line   86)
-* emacsvox-aural-doctor-reload-personal-data: emacsvox-aural-doctor.
-                                                             (line   92)
-* emacsvox-aural-doctor-reload-personal-data <1>: emacsvox-aural-doctor.
+* emacsvox-aural-doctor-refresh-sound-packs: emacsvox-aural-doctor.
                                                              (line   93)
-* emacsvox-aural-doctor-repair-current:  emacsvox-aural-doctor.
-                                                             (line   99)
-* emacsvox-aural-doctor-repair-current <1>: emacsvox-aural-doctor.
+* emacsvox-aural-doctor-refresh-sound-packs <1>: emacsvox-aural-doctor.
+                                                             (line   94)
+* emacsvox-aural-doctor-reload-personal-data: emacsvox-aural-doctor.
                                                              (line  100)
-* emacsvox-aural-doctor-restore-bindings: emacsvox-aural-doctor.
-                                                             (line  106)
-* emacsvox-aural-doctor-restore-bindings <1>: emacsvox-aural-doctor.
+* emacsvox-aural-doctor-reload-personal-data <1>: emacsvox-aural-doctor.
+                                                             (line  101)
+* emacsvox-aural-doctor-repair-current:  emacsvox-aural-doctor.
                                                              (line  107)
-* emacsvox-aural-doctor-speak-current:   emacsvox-aural-doctor.
-                                                             (line  113)
-* emacsvox-aural-doctor-speak-current <1>: emacsvox-aural-doctor.
+* emacsvox-aural-doctor-repair-current <1>: emacsvox-aural-doctor.
+                                                             (line  108)
+* emacsvox-aural-doctor-restore-bindings: emacsvox-aural-doctor.
                                                              (line  114)
-* emacsvox-aural-doctor-speak-current-cell: emacsvox-aural-doctor.
-                                                             (line  120)
-* emacsvox-aural-doctor-speak-current-cell <1>: emacsvox-aural-doctor.
+* emacsvox-aural-doctor-restore-bindings <1>: emacsvox-aural-doctor.
+                                                             (line  115)
+* emacsvox-aural-doctor-speak-current:   emacsvox-aural-doctor.
                                                              (line  121)
+* emacsvox-aural-doctor-speak-current <1>: emacsvox-aural-doctor.
+                                                             (line  122)
+* emacsvox-aural-doctor-speak-current-cell: emacsvox-aural-doctor.
+                                                             (line  128)
+* emacsvox-aural-doctor-speak-current-cell <1>: emacsvox-aural-doctor.
+                                                             (line  129)
 * emacsvox-aural-edit-feature-fragment:  emacsvox-aural-editor.
                                                              (line   16)
 * emacsvox-aural-edit-feature-fragment <1>: emacsvox-aural-editor.

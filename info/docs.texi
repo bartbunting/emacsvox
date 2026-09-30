@@ -70,7 +70,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1623 commands and 224 options.
+This chapter documents a total of 1624 commands and 224 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -2161,6 +2161,15 @@ Open the spoken Aural Doctor and announce its overall result.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-doctor-copy-report
+@deffn {Command} emacsvox-aural-doctor-copy-report
+@findex emacsvox-aural-doctor-copy-report
+
+@format
+Copy displayed diagnostic findings, excluding log contents and speech text.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-doctor-help
 @deffn {Command} emacsvox-aural-doctor-help
 @findex emacsvox-aural-doctor-help
@@ -2187,6 +2196,7 @@ Key             Binding
 ?		emacsvox-aural-doctor-help
 h		emacsvox-aural
 r		emacsvox-aural-doctor-repair-current
+y		emacsvox-aural-doctor-copy-report
 
 @end format
 @end deffn
@@ -8729,7 +8739,6 @@ Speech-enable the debugger by speech-enabling interactive commands.
 
 @node emacsvox-denote
 @section emacsvox-denote
-
 DENOTE == Protesilaos Stavrou's note-taking package.
 Speech-enable denote for creating, linking, and managing notes
 using a strict file-naming scheme with org/markdown/text.
@@ -27043,6 +27052,7 @@ Default Value:
 @verbatim
 
 100
+
 @end verbatim
 
 @end defvar

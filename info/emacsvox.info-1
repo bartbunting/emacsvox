@@ -5110,6 +5110,17 @@ fallback, and the speech backend.  It does not start the speech server
 or change settings automatically.  When one row offers a reviewed safe
 repair, press ‘r’ on that row to run it.
 
+   Separate main and notification rows show each current connection's
+capabilities and last reported engine inventory.  Configuration
+agreement compares acknowledged startup identities; it does not claim
+saved files are already in use.  Missing or retired connections report
+unknown evidence.  A running process or available engine does not prove
+audible playback.  The log row names the configured aural log and
+bundled launcher's log directory without opening them.  Press ‘y’ to
+copy the displayed report; review personal paths and configuration
+details before sharing it.  Speech text and log contents are not
+included.
+
    Press ‘?’ in any Aural interface for its complete current keys.  If
 speech itself is absent rather than merely presented incorrectly, follow
 *note Backend Diagnostics And Responsibilities: Backend Diagnostics And

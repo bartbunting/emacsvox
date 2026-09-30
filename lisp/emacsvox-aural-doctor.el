@@ -42,6 +42,10 @@
 (defvar emacsvox-keymap)
 (defvar emacsvox-prefix)
 (defvar tts-speaker-process)
+(defvar tts-notify-process)
+(defvar emacsvox-aural-diagnostic-log-file)
+(defvar emacsvox-aural-last-diagnostic-log-error)
+(defvar emacsvox-aural--diagnostic-session-id)
 (defvar voice-setup-face-voice-table)
 
 (declare-function voice-setup-face-mapping-conflicts
@@ -294,6 +298,101 @@
          (format "%s" (process-name tts-speaker-process))
        "Speech starts the configured server on demand"))))
 
+(defun emacsvox-aural-doctor--worker-findings (role process)
+  "Describe ROLE's PROCESS using retained observations only."
+  (let* ((live (and (processp process) (process-live-p process)))
+         (capabilities (and live (process-get process 'omnivox--control-capabilities)))
+         (inventory (and live (process-get process 'omnivox--control-inventory)))
+         (features (plist-get capabilities :features))
+         (received (and inventory (process-get process 'omnivox-inventory-received-at)))
+         (engines (plist-get inventory :engines))
+         (runtime (plist-get inventory :engine_runtime))
+         (disabled (lambda (id)
+                     (plist-get (seq-find (lambda (entry) (equal id (plist-get entry :engine_id))) runtime)
+                                :disabled_by_policy)))
+         (unavailable (seq-filter
+                       (lambda (engine)
+                         (and (not (funcall disabled (plist-get engine :id)))
+                              (equal (plist-get (plist-get engine :availability) :status) "unavailable"))) engines)))
+    (list
+     (emacsvox-aural-doctor--finding
+      (intern (concat role "-worker")) 'info (concat (capitalize role) " speech worker")
+      (if live "running; audio unverified" "not running")
+      (if live
+          (format "Process %s; PID %s; transport %s. A live process does not establish audible playback."
+                  (process-name process) (or (process-id process) "not local") (process-type process))
+        "No live worker observed. Speech may start it on demand."))
+     (emacsvox-aural-doctor--finding
+      (intern (concat role "-capabilities")) 'info (concat (capitalize role) " capabilities")
+      (if capabilities "negotiated" "not observed")
+      (if capabilities
+          (format "Protocol %s; %s features. Playback completion: %s; engine inventory: %s; exact preview: %s."
+                  (or (plist-get capabilities :protocol_version) "unspecified") (length features)
+                  (if (member "tracked_playback_completion" features) "supported" "not advertised")
+                  (if (member "engine_inventory" features) "supported" "not advertised")
+                  (if (member "exact_voice_preview" features) "supported" "not advertised"))
+        "No current Omnivox capability reply. This may be an older or different server; no probe was sent."))
+     (emacsvox-aural-doctor--finding
+      (intern (concat role "-engines")) (if unavailable 'warning 'info)
+      (concat (capitalize role) " engine inventory")
+      (cond (unavailable "unavailable engines") (inventory "last reported") (t "not observed"))
+      (if inventory
+          (format "Received %s. Preferred engine %s. %s. Reported availability does not establish audible output."
+                  (if received (format-time-string "%Y-%m-%d %H:%M:%S" received) "at an unknown time")
+                  (or (plist-get inventory :preferred_engine_id) "unspecified")
+                  (if engines
+                      (mapconcat
+                       (lambda (engine)
+                         (format "%s: %s%s%s" (plist-get engine :id)
+                                 (or (plist-get (plist-get engine :availability) :status) "unknown")
+                                 (if (funcall disabled (plist-get engine :id)) "; disabled by policy" "")
+                                 (if-let* ((reason (plist-get (plist-get engine :availability) :reason)))
+                                     (concat "; " reason) "")))
+                       engines "; ")
+                    "No engines reported"))
+        "No inventory from this live connection. Use Speech engines for an explicit refresh or sample.")))))
+
+(defun emacsvox-aural-doctor--configuration-finding ()
+  "Compare acknowledged live startup identities without reading native files."
+  (let* ((main (and (processp tts-speaker-process) (process-live-p tts-speaker-process)
+                    (process-get tts-speaker-process 'omnivox-engine-activation)))
+         (notify (and (processp tts-notify-process) (process-live-p tts-notify-process)
+                      (process-get tts-notify-process 'omnivox-engine-activation)))
+         (different (and main notify (not (equal main notify)))))
+    (emacsvox-aural-doctor--finding
+     'speech-configuration (if different 'warning 'info) "Speech configuration"
+     (cond (different "workers differ") ((and main notify) "workers agree") (t "not fully observed"))
+     (format "Main activation %s; notification activation %s. These are acknowledged startup identities, not current saved-file revisions. Save does not Apply."
+             (or main "unknown") (or notify "unknown")))))
+
+(defun emacsvox-aural-doctor--speech-log-finding ()
+  "Report configured log locations without reading possibly private speech text."
+  (let* ((aural (and (boundp 'emacsvox-aural-diagnostic-log-file) emacsvox-aural-diagnostic-log-file))
+         (failure (and (boundp 'emacsvox-aural-last-diagnostic-log-error) emacsvox-aural-last-diagnostic-log-error))
+         (state (or (getenv "XDG_STATE_HOME") (expand-file-name "~/.local/state")))
+         (directory (or (getenv "OMNIVOX_LOG_DIRECTORY") (expand-file-name "emacsvox/omnivox" state))))
+    (emacsvox-aural-doctor--finding
+     'speech-logs (if failure 'warning 'info) "Speech diagnostic logs"
+     (cond (failure "last write failed") (aural "aural logging enabled") (t "aural logging disabled"))
+     (format "Emacs PID %s; session %s. Aural log %s. Bundled launcher's configured log directory: %s. Existing workers may have inherited different settings. Logs can contain speech text; this report does not read or copy them."
+             (emacs-pid) (if (boundp 'emacsvox-aural--diagnostic-session-id) emacsvox-aural--diagnostic-session-id "unknown")
+             (or aural "not enabled") directory))))
+
+(defun emacsvox-aural-doctor-copy-report ()
+  "Copy displayed diagnostic findings, excluding log contents and speech text."
+  (interactive)
+  (unless emacsvox-aural-doctor-findings (user-error "Run Aural Doctor first"))
+  (kill-new
+   (concat "Emacsvox Aural Doctor\nEmacs " emacs-version "\n\n"
+           (mapconcat (lambda (finding)
+                        (format "%s: %s (%s)\n%s\n"
+                                (emacsvox-aural-doctor-finding-check finding)
+                                (emacsvox-aural-doctor-finding-status finding)
+                                (emacsvox-aural-doctor-finding-severity finding)
+                                (emacsvox-aural-doctor-finding-detail finding)))
+                      emacsvox-aural-doctor-findings "\n")))
+  (emacsvox-aural-ui-speak "Diagnostic report copied. Review paths and configuration details before sharing."))
+
 (defun emacsvox-aural-doctor--unknown-voice-finding ()
   "Report recent unresolved runtime voices without repeating warning speech."
   (let ((recent emacsvox-aural--unknown-voice-diagnostics))
@@ -412,7 +511,11 @@
     (emacsvox-aural-doctor--face-mapping-finding)
     (emacsvox-aural-doctor--unknown-voice-finding)
     (emacsvox-aural-doctor--speech-server-finding)
-    (emacsvox-aural-doctor--training-finding))))
+    (emacsvox-aural-doctor--training-finding)
+    (emacsvox-aural-doctor--configuration-finding)
+    (emacsvox-aural-doctor--speech-log-finding))
+   (emacsvox-aural-doctor--worker-findings "main" tts-speaker-process)
+   (emacsvox-aural-doctor--worker-findings "notification" tts-notify-process)))
 
 (defun emacsvox-aural-doctor-summary (&optional findings)
   "Return a concise spoken summary of FINDINGS or a fresh diagnostic run."
@@ -560,7 +663,7 @@
       "left/right column    . speak titled cell\n"
       "SPC speak row        r run the offered safe repair\n"
       "g rerun all checks   h aural home\n"
-      "q quit\n")))
+      "y copy report        q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
@@ -586,7 +689,8 @@
 
 (dolist
     (binding
-     '(("r" . emacsvox-aural-doctor-repair-current)
+     '(("y" . emacsvox-aural-doctor-copy-report)
+       ("r" . emacsvox-aural-doctor-repair-current)
        ("h" . emacsvox-aural)
        ("?" . emacsvox-aural-doctor-help)))
   (define-key
