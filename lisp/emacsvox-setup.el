@@ -78,6 +78,7 @@
     "omnivox-remote.el"
     "omnivox-engine-settings.el"
     "omnivox-punctuation.el"
+    "omnivox-punctuation-profiles.el"
     "omnivox-engine-configuration.el"
     "emacsvox-pronounce.el"
     "emacsvox-speak.el"

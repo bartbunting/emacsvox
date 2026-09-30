@@ -2357,6 +2357,7 @@ write.  State synchronization lines in a combined write are ignored."
 
 (ert-deftest emacsvox-aural-capitalization-sync-keeps-structured-timeline ()
   "Capitalization state sync cannot force positioned tones onto legacy wire."
+  (dolist (mode '("some" some (profile "prose" some)))
   (emacsvox-test--with-transport-scheme
     (let* ((text
             "The quick brown donkey fell off the ledge because he hit the edge of the sledge with his WEDGE")
@@ -2371,7 +2372,7 @@ write.  State synchronization lines in a combined write are ignored."
            (tts-caps t)
            (tts-split-caps t)
            (tts-stop-immediately nil)
-           (tts-punctuation-mode "some")
+           (tts-punctuation-mode mode)
            (tts-speech-rate 100)
            (tts-quiet nil)
            (voice-lock-mode t)
@@ -2385,6 +2386,8 @@ write.  State synchronization lines in a combined write are ignored."
            writes)
       (unwind-protect
           (progn
+            (process-put process 'omnivox-punctuation-profiles
+                         (list (list :id "prose" :fallback "some" :sha256 (make-string 64 ?a))))
             (process-put
              process emacsvox-aural--structured-timeline-process-property 3)
             (process-put process tts--tracked-playback-completion-property t)
@@ -2400,6 +2403,8 @@ write.  State synchronization lines in a combined write are ignored."
               (tts-speak text))
             (should (= (length writes) 1))
             (let ((wire (car writes)))
+              (when (listp mode)
+                (should (string-match-p "tts_set_punctuation_profile prose" wire)))
               (should
                (string-prefix-p
                 "tts_set_capitalization_presentation tone\n"
@@ -2430,7 +2435,7 @@ write.  State synchronization lines in a combined write are ignored."
                         (plist-get position :utf8_offset))))
                    tones)
                   (list (list 440.0 0) (list 1300.0 wedge-offset)))))))
-        (delete-process process)))))
+        (delete-process process))))))
 
 (ert-deftest emacsvox-aural-keeps-whole-legacy-packet-on-raw-write ()
   "An unmodelled command prevents partial structured conversion."

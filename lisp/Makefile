@@ -80,6 +80,7 @@ omnivox-remote.elc \
 omnivox-engine-settings.elc \
 omnivox-engine-configuration.elc \
 omnivox-punctuation.elc \
+omnivox-punctuation-profiles.elc \
 omnivox-espeak-variants.elc \
 tts-speak.elc \
 $(VOICE_OBJECTS)

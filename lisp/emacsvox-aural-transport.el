@@ -488,6 +488,9 @@ This checks framing eligibility only; it does not infer inline voice semantics."
                   (<= (string-to-number (car fields)) 24000)
                   (emacsvox-aural--legacy-frame-uint-p (cadr fields) 60000)
                   (< 0 (string-to-number (cadr fields)))))
+            ("tts_set_punctuation_profile"
+             (and args (string-match-p "\\`[a-z][a-z0-9_-]\\{0,31\\}\\'" args)
+                  (not (member args '("none" "some" "all")))))
             ("tts_set_punctuations" (member args '("none" "some" "all")))
             ("tts_split_caps" (member args '("0" "1")))
             ("tts_set_capitalization_presentation"
@@ -988,7 +991,7 @@ Signal a clear installation error when negotiation found an older version."
 (defun emacsvox-aural--structured-compatible-delivery-entry-p (entry)
   "Return non-nil when ENTRY can accompany a structured timeline."
   (memq (emacsvox-aural--delivery-entry-kind entry)
-        '(structured-fallback named-fallback sync-state sync-capitalization
+        '(structured-fallback named-fallback sync-state sync-capitalization sync-punctuation-profile
           ordinary-dispatch explicit-dispatch)))
 
 (defun emacsvox-aural--call-with-named-queue (name text function)
@@ -1077,7 +1080,7 @@ Signal a clear installation error when negotiation found an older version."
              (cl-incf dispatches)
              (setq owners (append (emacsvox-aural--delivery-entry-owners entry) owners)
                    last-dispatch kind tail nil))
-            ((memq kind '(sync-state sync-capitalization))
+            ((memq kind '(sync-state sync-capitalization sync-punctuation-profile))
              (let ((prior (assq kind states)))
                (if prior
                    (unless (equal (cdr prior) command) (setq reason 'state-transition))

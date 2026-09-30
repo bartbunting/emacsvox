@@ -108,8 +108,9 @@ service, and offers a separate explicit speech restart. Aural Home exposes it
 under /Voices and speech/. File conflicts retain the draft. Remote and
 native-direct editing remain outside the existing local management provider.
 
-Stage two remains deferred: discover custom named profiles from both workers,
-offer mode/buffer selection, and negotiate built-in fallbacks with older servers.
+Stage two is implemented in development: named profile drafts on the host,
+catalogues from both workers, mode/buffer selections and retained built-in
+fallbacks for older, absent or disagreeing servers. Listening acceptance remains.
 The proposed =most= level is also deferred beyond Omnivox 1.15.0; its exact
 defaults and compatibility behavior need coordinated host/client work.
 Keep character inspection independent of prose levels. Collect representative

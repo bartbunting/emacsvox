@@ -35,11 +35,14 @@
 (require 'subr-x)
 (require 'emacsvox-aural-ui)
 (require 'omnivox-library)
+(require 'omnivox-punctuation-profiles)
 (declare-function tts-restart "tts" ())
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 
-(defconst omnivox-punctuation--levels '("none" "some" "all"))
+(defvar-local omnivox-punctuation--levels '("none" "some" "all"))
 (defvar-local omnivox-punctuation--review nil)
+(defvar-local omnivox-punctuation--profiles nil)
+(defvar-local omnivox-punctuation--saved-profiles nil)
 (defvar-local omnivox-punctuation--defaults nil)
 (defvar-local omnivox-punctuation--draft nil)
 (defvar-local omnivox-punctuation--saved nil)
@@ -52,17 +55,20 @@
   (let ((service (omnivox-library--service)))
     (unwind-protect
         (progn
-          (unless (eql 1 (plist-get (omnivox-library--request service '(:command "host"))
-                                   :punctuation_configuration_version))
-            (user-error "Update the local Omnivox speech host to use the punctuation editor"))
+          (let ((host (omnivox-library--request service '(:command "host"))))
+            (unless (eql 1 (plist-get host :punctuation_configuration_version))
+              (user-error "Update the local Omnivox speech host to use the punctuation editor"))
+            (when (and (plist-member command :profiles_json)
+                       (not (eql 1 (plist-get host :punctuation_profiles_configuration_version))))
+              (user-error "Update the local Omnivox host to save named profiles")))
           (let ((reply (omnivox-library--request service command)))
             (unless (equal (plist-get reply :type) "punctuation_configuration")
               (error "Unexpected punctuation configuration response"))
             (plist-get reply :review)))
       (when (process-live-p service) (delete-process service)))))
 
-(defun omnivox-punctuation--tables (data)
-  "Decode the three punctuation tables in host plist DATA."
+(defun omnivox-punctuation--tables (data &optional levels)
+  "Decode punctuation tables in host plist DATA for LEVELS or built-ins."
   (mapcar
    (lambda (level)
      (let ((table (make-hash-table :test #'equal))
@@ -74,7 +80,7 @@
              (error "Invalid host punctuation entry"))
            (puthash key value table)))
        (cons level table)))
-   omnivox-punctuation--levels))
+   (or levels '("none" "some" "all"))))
 
 (defun omnivox-punctuation--accept (review)
   "Replace this buffer's saved baseline and draft with host REVIEW."
@@ -82,16 +88,34 @@
                (string-match-p "\\`[a-f0-9]\\{64\\}\\'" (or (plist-get review :sha256) "")))
     (error "Missing punctuation file identity"))
   (let ((defaults (omnivox-punctuation--tables (plist-get review :defaults)))
-        (draft (omnivox-punctuation--tables (plist-get review :overrides))))
+        (draft (omnivox-punctuation--tables (plist-get review :overrides)))
+        (profiles (plist-get review :profiles)) metadata)
+    (while profiles
+      (let* ((id (substring (symbol-name (pop profiles)) 1))
+             (entry (pop profiles)) (base (plist-get entry :base)))
+        (unless (and (stringp base)
+                     (omnivox-punctuation-profiles--mode-p (list 'profile id (intern base))))
+          (error "Invalid saved punctuation profile"))
+        (push (cons id base) metadata)
+        (setq defaults (append defaults (list (cons id (copy-hash-table (cdr (assoc base defaults))))))
+              draft (append draft (omnivox-punctuation--tables
+                                   (list (intern (concat ":" id)) (plist-get entry :overrides)) (list id))))))
     (setq omnivox-punctuation--review review
+          omnivox-punctuation--profiles metadata
+          omnivox-punctuation--saved-profiles (copy-tree metadata)
+          omnivox-punctuation--levels (mapcar #'car draft)
           omnivox-punctuation--defaults defaults
           omnivox-punctuation--draft draft
           omnivox-punctuation--saved
-          (mapcar (lambda (entry) (cons (car entry) (copy-hash-table (cdr entry)))) draft))))
+          (mapcar (lambda (entry) (cons (car entry) (copy-hash-table (cdr entry)))) draft))
+    (unless (member omnivox-punctuation--level omnivox-punctuation--levels)
+      (setq omnivox-punctuation--level "some"))))
 
 (defun omnivox-punctuation--dirty-p ()
   "Whether the draft differs from the last successful read or save."
   (not
+   (and (equal omnivox-punctuation--profiles omnivox-punctuation--saved-profiles)
+        (= (length omnivox-punctuation--draft) (length omnivox-punctuation--saved))
    (cl-every
     (lambda (entry)
       (let ((table (cdr entry))
@@ -99,7 +123,7 @@
         (and saved (= (hash-table-count table) (hash-table-count saved))
              (cl-loop for key being the hash-keys of table using (hash-values value)
                       always (equal value (gethash key saved :absent))))))
-    omnivox-punctuation--draft)))
+    omnivox-punctuation--draft))))
 
 (defun omnivox-punctuation--table (tables)
   "Return the selected level in TABLES."
@@ -109,7 +133,9 @@
   "Return CHARACTER's effective value in the selected draft level."
   (let ((override (gethash character (omnivox-punctuation--table omnivox-punctuation--draft) :absent)))
     (if (eq override :absent)
-        (gethash character (omnivox-punctuation--table omnivox-punctuation--defaults) :null)
+        (if-let* ((base (cdr (assoc omnivox-punctuation--level omnivox-punctuation--profiles))))
+            (let ((omnivox-punctuation--level base)) (omnivox-punctuation--value character))
+          (gethash character (omnivox-punctuation--table omnivox-punctuation--defaults) :null))
       override)))
 
 (defun omnivox-punctuation--description (value)
@@ -125,13 +151,13 @@
   "Refresh the draft view, retaining SELECTED character and column."
   (let ((keys (make-hash-table :test #'equal))
         (table (omnivox-punctuation--table omnivox-punctuation--draft))
-        (saved (omnivox-punctuation--table omnivox-punctuation--saved)))
+        (saved (or (omnivox-punctuation--table omnivox-punctuation--saved) (make-hash-table :test #'equal))))
     (dolist (tables (list omnivox-punctuation--defaults omnivox-punctuation--draft
                          omnivox-punctuation--saved))
       (dolist (entry tables)
         (maphash (lambda (key _value) (puthash key t keys)) (cdr entry))))
     (setq header-line-format
-          (format " %s | %s | RET edit, l level, a add, d default, s save, r restart, ? help"
+          (format " %s | %s | RET edit, l level/profile, N new profile, a add, s save, r restart, ? help"
                   omnivox-punctuation--level
                   (if (omnivox-punctuation--dirty-p) "Unsaved edits" omnivox-punctuation--status)))
     (emacsvox-aural-ui-refresh-tabulated
@@ -217,18 +243,57 @@
   "Save all draft levels on the speech host, without restarting speech."
   (interactive)
   (unless (omnivox-punctuation--dirty-p) (user-error "No punctuation changes to save"))
-  (let ((tables (make-hash-table :test #'equal)))
-    (dolist (entry omnivox-punctuation--draft) (puthash (car entry) (cdr entry) tables))
+  (let ((tables (make-hash-table :test #'equal)) (profiles (make-hash-table :test #'equal)))
+    (dolist (entry omnivox-punctuation--draft)
+      (if-let* ((base (cdr (assoc (car entry) omnivox-punctuation--profiles))))
+          (puthash (car entry) (list :base base :overrides (cdr entry)) profiles)
+        (puthash (car entry) (cdr entry) tables)))
     ;; Errors deliberately leave the draft and original revision intact.
     (omnivox-punctuation--accept
      (omnivox-punctuation--request
-      (list :command "punctuation-save"
-            :expected_sha256 (plist-get omnivox-punctuation--review :sha256)
-            :punctuation_json (decode-coding-string
-                               (json-serialize tables :null-object :null) 'utf-8 t)))))
+      (append (list :command "punctuation-save"
+                    :expected_sha256 (plist-get omnivox-punctuation--review :sha256)
+                    :punctuation_json (decode-coding-string
+                                       (json-serialize tables :null-object :null) 'utf-8 t))
+              (when (plist-member omnivox-punctuation--review :profiles)
+                (list :profiles_json (decode-coding-string
+                                      (json-serialize profiles :null-object :null) 'utf-8 t)))))))
   (setq omnivox-punctuation--status "Saved; restart speech to apply")
   (omnivox-punctuation--render)
   (emacsvox-aural-ui-speak omnivox-punctuation--status))
+
+(defun omnivox-punctuation-new-profile (id base)
+  "Create draft profile ID inheriting built-in BASE; Save does not activate it."
+  (interactive (list (read-string "Profile ID (lowercase): ")
+                     (completing-read "Inherit built-in level: " '("none" "some" "all") nil t)))
+  (unless (plist-member omnivox-punctuation--review :profiles)
+    (user-error "Update Omnivox to create named punctuation profiles"))
+  (unless (and (stringp base) (omnivox-punctuation-profiles--mode-p (list 'profile id (intern base))))
+    (user-error "Use 1–32 lowercase letters, digits, hyphens or underscores, starting with a letter"))
+  (when (member id omnivox-punctuation--levels) (user-error "Profile already exists"))
+  (when (>= (length omnivox-punctuation--profiles) 32) (user-error "At most 32 profiles are supported"))
+  (push (cons id base) omnivox-punctuation--profiles)
+  (setq omnivox-punctuation--levels (append omnivox-punctuation--levels (list id))
+        omnivox-punctuation--draft (append omnivox-punctuation--draft (list (cons id (make-hash-table :test #'equal))))
+        omnivox-punctuation--defaults (append omnivox-punctuation--defaults
+                                             (list (cons id (copy-hash-table (cdr (assoc base omnivox-punctuation--defaults))))))
+        omnivox-punctuation--level id)
+  (omnivox-punctuation--render)
+  (emacsvox-aural-ui-speak (format "Draft profile %s, inheriting %s. Edit pronunciations, then Save and restart to select it." id base)))
+
+(defun omnivox-punctuation-delete-profile ()
+  "Remove the selected named profile from the draft after confirmation."
+  (interactive)
+  (let ((id omnivox-punctuation--level))
+    (unless (assoc id omnivox-punctuation--profiles) (user-error "Built-in levels cannot be deleted"))
+    (when (yes-or-no-p (format "Remove profile %s from this draft? " id))
+      (setq omnivox-punctuation--profiles (assoc-delete-all id omnivox-punctuation--profiles)
+            omnivox-punctuation--draft (assoc-delete-all id omnivox-punctuation--draft)
+            omnivox-punctuation--defaults (assoc-delete-all id omnivox-punctuation--defaults)
+            omnivox-punctuation--levels (delete id omnivox-punctuation--levels)
+            omnivox-punctuation--level "some")
+      (omnivox-punctuation--render)
+      (emacsvox-aural-ui-speak "Profile removed from draft. Saved selections retain their built-in fallback."))))
 
 (defun omnivox-punctuation-refresh ()
   "Read saved settings again, asking before discarding draft edits."
@@ -275,16 +340,18 @@
     (princ (format "Punctuation on the speech host\n\nFile: %s\n\n"
                    path))
     (princ "This view shows saved settings and your draft, not verified live settings.\n\n")
-    (princ "l chooses none, some or all. Up/down reads rows; left/right reads columns.\n")
+    (princ "l chooses a level or profile. N creates a profile; X deletes a draft profile.\n")
     (princ "RET edits: speak a name, preserve the character, or restore its default.\n")
     (princ "a adds a character; d restores the selected default in this level.\n")
-    (princ "s saves all edited levels. Saving never restarts speech.\n")
+    (princ "s saves all levels and profiles. Saving never restarts speech.\n")
     (princ "r explicitly restarts both speech workers after confirmation.\n")
     (princ "g refreshes from the file and asks before discarding edits.\n")
     (princ "q returns to the previous view and retains your unfinished draft.\n\n")
     (princ "Preserve leaves the character for the engine's pronunciation and pauses.\n")
     (princ "Org normally selects some. Configure both straight and curly apostrophes\n")
-    (princ "there to name them in prose. Each level is independent.\n")))
+    (princ "there to name them in prose. Each built-in level is independent.\n")
+    (princ "After restart, tts-set-punctuations selects a profile reported by both workers.\n")
+    (princ "Mode policies accept (profile ID FALLBACK); absent or differing catalogues use FALLBACK.\n")))
   (when (fboundp 'emacsvox-speak-help) (emacsvox-speak-help)))
 
 (define-derived-mode omnivox-punctuation-mode emacsvox-aural-tabulated-mode "Punctuation"
@@ -297,6 +364,7 @@
   (tabulated-list-init-header))
 
 (dolist (binding '(("RET" . omnivox-punctuation-edit) ("e" . omnivox-punctuation-edit)
+                   ("N" . omnivox-punctuation-new-profile) ("X" . omnivox-punctuation-delete-profile)
                    ("a" . omnivox-punctuation-add) ("d" . omnivox-punctuation-default)
                    ("l" . omnivox-punctuation-level) ("s" . omnivox-punctuation-save)
                    ("r" . omnivox-punctuation-restart) ("g" . omnivox-punctuation-refresh)

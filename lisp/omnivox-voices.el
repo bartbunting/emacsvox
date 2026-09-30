@@ -2311,6 +2311,7 @@ taken effect on the server.  Reapply to confirm the desired configuration."
         (omnivox--record-control-error process response))
     (process-put process omnivox--control-capabilities-property response)
     (omnivox--update-unicode-preprocessing)
+    (omnivox-punctuation-profiles--negotiate process response)
     (process-put
      process tts--tracked-playback-completion-property
      (and

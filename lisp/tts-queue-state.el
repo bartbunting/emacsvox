@@ -141,7 +141,7 @@ This validator is never used to classify generic output."
                  (concat "\\`\\(?:p\\|version\\|tts_sync_state\\|tts_split_caps\\|"
                          "tts_set_\\(?:speech_rate\\|character_scale\\|pitch_multiplier\\|"
                          "sound_volume\\|tone_volume\\|voice_volume\\|voice\\|speech_channel\\|"
-                         "punctuations\\|capitalization_presentation\\)\\|"
+                         "punctuations\\|punctuation_profile\\|capitalization_presentation\\)\\|"
                          "set_\\(?:lang\\|next_lang\\|previous_lang\\|preferred_lang\\)\\|"
                          "omnivox_control\\|emacsvox_timeline\\(?:_part\\)?\\)\\(?: \\|\\'\\)")
                  value)))

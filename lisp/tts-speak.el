@@ -38,6 +38,7 @@
 (require 'omnivox-remote)
 (declare-function omnivox-engine-settings--environment "omnivox-engine-settings" (program))
 (require 'emacsvox-aural-transport)
+(require 'omnivox-punctuation-profiles)
 
 ;;;  Forward Declarations:
 
@@ -1392,14 +1393,16 @@ use their existing isolated-letter behavior."
   (emacsvox-aural--delivery-send-typed
    tts-speaker-process
    (format "tts_sync_state %s %s %s %s\n"
-           tts-punctuation-mode
+           (omnivox-punctuation-profiles--fallback tts-punctuation-mode)
            (if tts-split-caps 1 0)
            ;; Capitalization presentation is now carried by concrete aural
            ;; actions.  Disable legacy server-side scanning to avoid a second
            ;; cue for the same source boundary.
            0
            tts-speech-rate) 'neutral
-   'sync-state))
+   'sync-state)
+  (when-let* ((command (omnivox-punctuation-profiles--command tts-punctuation-mode tts-speaker-process)))
+    (emacsvox-aural--delivery-send-typed tts-speaker-process command 'neutral 'sync-punctuation-profile)))
 
 ;;;;   letter
 
@@ -1476,10 +1479,13 @@ use their existing isolated-letter behavior."
 ;;;;  punctuations
 
 (defun tts--protocol-set-punctuations (mode)
-  
-  (emacsvox-aural--delivery-send-typed
-   tts-speaker-process
-   (format "tts_set_punctuations %s\nd\n" mode) '(neutral clear)))
+  "Set MODE through built-in and negotiated profile commands."
+  (let ((profile (omnivox-punctuation-profiles--command mode tts-speaker-process)))
+    (emacsvox-aural--delivery-send-typed
+     tts-speaker-process
+     (concat (format "tts_set_punctuations %s\n" (omnivox-punctuation-profiles--fallback mode))
+             profile "d\n")
+     (if profile '(neutral neutral clear) '(neutral clear)))))
 
 ;;;;  reset
 
@@ -1624,14 +1630,17 @@ also set the global default and use it in the current buffer."
     (text-mode . some))
   "Automatic punctuation modes, ordered from specific to general.
 
-Each entry maps a major mode to `all', `some', or `none'.  The first entry
+Each entry maps a major mode to `all', `some', `none', or
+(profile ID FALLBACK), with a named Omnivox profile string and built-in fallback.  The first entry
 for which `derived-mode-p' succeeds supplies the buffer policy.  A buffer
 override set through `tts-set-punctuations' takes precedence.  When no entry
 matches, the default value of `tts-punctuation-mode' is used."
   :type '(alist
           :key-type (symbol :tag "Major mode")
           :value-type
-          (choice (const all) (const some) (const none)))
+          (choice (const all) (const some) (const none)
+                  (list :tag "Named Omnivox profile" (const profile) (string :tag "ID")
+                        (choice :tag "Built-in fallback" (const all) (const some) (const none)))))
   :group 'tts)
 
 (defvar-local tts-punctuation-mode-override nil
@@ -2610,7 +2619,7 @@ The result is a plist containing `:mode', `:source-kind', and `:source'."
          (source (plist-get state :source)))
     (format
      "Punctuation %s, %s"
-     mode
+     (omnivox-punctuation-profiles--describe mode)
      (pcase kind
        ('buffer-override "buffer override")
        ('mode-policy (format "%s policy" source))
@@ -2626,17 +2635,12 @@ The result is a plist containing `:mode', `:source-kind', and `:source'."
 
 (defun tts-set-punctuations (mode &optional prefix)
   "Set punctuation mode to MODE.
-Possible values are `some', `all', or `none'.
+Values are `some', `all', `none', or (profile ID FALLBACK).
+Named profiles require matching worker catalogues; otherwise use FALLBACK.
 Interactive PREFIX arg means set   the global default value, and then set the
 current local  value to the result."
-  (interactive
-   (list
-    (intern
-     (completing-read "Enter punctuation mode: "
-                      tts-punctuation-mode-alist
-                      nil
-                      t))
-    current-prefix-arg))
+  (interactive (list (omnivox-punctuation-profiles--read) current-prefix-arg))
+  (omnivox-punctuation-profiles--fallback mode)
   (cond
    (prefix
     (setq tts-punctuation-mode mode)
@@ -2671,9 +2675,9 @@ Interactive PREFIX arg makes the new setting global."
   (interactive "P")
   
   (cond
-   ((eq 'all tts-punctuation-mode)
+   ((eq 'all (omnivox-punctuation-profiles--fallback tts-punctuation-mode))
     (tts-set-punctuations-to-some prefix))
-   ((eq 'some tts-punctuation-mode)
+   ((memq (omnivox-punctuation-profiles--fallback tts-punctuation-mode) '(some none))
     (tts-set-punctuations-to-all prefix)))
   (when (called-interactively-p 'interactive)
     (emacsvox-icon 'button)

@@ -712,6 +712,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * omnivox-parameters-codec:: Engine parameter metadata.
 * omnivox-preview:: Owned Omnivox preview sequences.
 * omnivox-punctuation:: Review and edit host punctuation.
+* omnivox-punctuation-profiles:: Negotiated punctuation profiles.
 * omnivox-remote:: Workstation speech transport.
 * omnivox-voices:: Omnivox voice adapter.
 * outloud-voices:: Define  OutLoud tags.

@@ -123,6 +123,12 @@
               (omnivox-punctuation--change "$" "Preserve character")
               (omnivox-punctuation-save)
               (should-not (omnivox-punctuation--dirty-p))
+              (omnivox-punctuation-new-profile "proofreading" "all")
+              (omnivox-punctuation--change "※" "Speak a name" "reference mark")
+              (omnivox-punctuation-save)
+              (should-not (omnivox-punctuation--dirty-p))
+              (should (equal (cdr (assoc "proofreading" omnivox-punctuation--profiles)) "all"))
+              (should (equal (omnivox-punctuation--value "※") "reference mark"))
               (let* ((review (omnivox-punctuation--request '(:command "punctuation-review")))
                      (saved (omnivox-punctuation--tables (plist-get review :overrides))))
                 (should (equal (gethash "’" (cdr (assoc "some" saved))) "single quote"))
@@ -130,7 +136,7 @@
             (with-temp-buffer
               (insert-file-contents (expand-file-name "config.json" root))
               (let ((data (json-parse-buffer :object-type 'plist)))
-                (should (= (plist-get data :schema) 3))
+                (should (= (plist-get data :schema) 4))
                 (should (= (plist-get (plist-get (plist-get data :speech) :defaults) :rate) 0.7))))))
       (delete-directory root t))))
 

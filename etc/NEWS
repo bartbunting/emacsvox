@@ -10,6 +10,13 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Create named punctuation profiles
+
+In =omnivox-punctuation=, =N= creates a profile inheriting a built-in level;
+edit its character pronunciations, Save, then restart explicitly. Select it with
+=tts-set-punctuations= or a mode policy. Both workers must report matching
+profiles; older or differing servers use the saved built-in fallback.
+
 ** Diagnose each speech worker separately
 
 Aural Doctor reports main and notification capabilities, engine availability,

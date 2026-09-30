@@ -66,6 +66,7 @@
   (require 'omnivox-library-apply-tests)
   (require 'omnivox-library-tests)
   (require 'omnivox-punctuation-tests)
+(require 'omnivox-punctuation-profiles-tests)
   (require 'omnivox-engine-configuration-tests)
   (require 'omnivox-catalogue-tests)
   (require 'emacsvox-aural-voice-editor-tests)

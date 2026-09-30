@@ -1099,15 +1099,36 @@ selects _some_.  To name apostrophes in Org prose, set both
 _APOSTROPHE_, U+0027, and _RIGHT SINGLE QUOTATION MARK_, U+2019, to
 speak “apostrophe” in _some_.  This also names apostrophes inside
 contractions.  Omnivox 1.15.0 names straight, curly and modifier
-apostrophes at _all_ by default, without a configuration file.  Custom
-named levels are future work.
+apostrophes at _all_ by default, without a configuration file.
 
    A save rejects changes if the file or selected target differs from
 the version you reviewed.  Your draft is retained so you can review the
-conflict.  Saving upgrades the file to Omnivox configuration version 3,
-preserving other settings; Omnivox 1.14.0 and earlier cannot read this
-version.  Do not save a file used by an older executable.  This feature
-is currently unreleased.
+conflict.  Saving preserves other settings.  With a host supporting
+named profiles, saving uses Omnivox configuration version 4; Omnivox
+1.16.0 and earlier cannot read that version.  The older built-in-only
+editor service uses version 3, which requires Omnivox 1.15.0 or newer.
+Do not save a file shared with an executable that cannot read its
+format.  Named profiles are currently unreleased.
+
+   Named profiles are available with the updated Omnivox host.  In the
+punctuation editor, ‘N’ creates a profile inheriting ‘none’, ‘some’ or
+‘all’.  Use a lowercase ID such as ‘prose’ or ‘proofreading’.  Edit
+characters as usual; ‘l’ switches between levels and profiles, and ‘X’
+removes the selected profile from the draft.  Profiles inherit edits to
+their base level and can override individual characters.  ‘s’ saves all
+drafts together without changing running speech.  Restart explicitly
+with ‘r’ to load the same saved definitions in both workers.
+
+   ‘M-x tts-set-punctuations’ offers profiles whose definitions agree in
+the current speech workers.  An explicit selection applies to the
+buffer.  A mode preference in ‘tts-punctuation-mode-policy-alist’ can
+use ‘(text-mode profile "prose" some)’; it retains ‘some’ as the
+fallback for an older server, a missing profile, or workers reporting
+different definitions.  The punctuation status describes when that
+fallback is in use.  ‘tts-reset-punctuation-mode’ restores the mode
+policy.  Choosing a built-in level explicitly overrides a profile.
+Character inspection remains independent, and there is no new built-in
+‘most’ level.
 
 
 File: emacsvox.info,  Node: Miscellaneous,  Prev: Speech Output Control,  Up: Speech System
