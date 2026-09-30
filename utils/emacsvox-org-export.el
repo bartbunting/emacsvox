@@ -38,7 +38,8 @@ The maintained manual reserves ~...~ for keys and =...= for other literals."
 (unless (org-export-get-backend 'emacsvox-texinfo)
   (org-export-define-derived-backend 'emacsvox-texinfo 'texinfo
     :translate-alist '((headline . emacsvox-org-export--headline)
-                      (code . emacsvox-org-export--code))))
+                      (code . emacsvox-org-export--code)
+                      (verbatim . org-texinfo-code))))
 
 (defun emacsvox-org-export--required-environment (name)
   "Return the non-empty environment variable NAME."

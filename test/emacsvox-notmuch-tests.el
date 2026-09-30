@@ -429,12 +429,12 @@ Return the beginning of the inserted row."
     (should (string-match-p "@node Notmuch Mail" guide))
     (should
      (string-match-p
-      "@ref{emacsvox-notmuch,,,emacsvox-reference" guide))
+      "@ref{emacsvox-notmuch,emacsvox-notmuch,,emacsvox-reference,}" guide))
     (should
      (string-match-p
       (regexp-quote "#+include: \"chapters/notmuch.org\"") master))
     (should (string-match-p "\\* Notmuch Mail: Notmuch Mail\\." menu))
-    (should (string-match-p "@ref{Notmuch Mail}" applications))
+    (should (string-match-p "@ref{Notmuch Mail, , Notmuch Mail}" applications))
     (should
      (string-match-p
       "file:docs/manual/chapters/notmuch\\.org.*Notmuch Mail workflow chapter"

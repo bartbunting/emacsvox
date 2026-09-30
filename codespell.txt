@@ -1,5 +1,6 @@
 gud
 hel
+nd
 ned
 outloud
 punctuations

@@ -134,7 +134,7 @@
                             "@kbd{S-@key{TAB}}" "@kbd{M-@key{RET}}"
                             "@kbd{M-x term @key{RET}}" "@kbd{@{}"
                             "@kbd{@}}" "@kbd{C-c @@}" "@kbd{C-e @comma{}}"
-                            "@samp{local.mk}" "@samp{EMACS=}"))
+                            "@code{local.mk}" "@code{EMACS=}"))
           (should (string-search expected (buffer-string))))))))
 
 (ert-deftest emacsvox-org-text-export-renders-native-org ()
