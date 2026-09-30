@@ -15,7 +15,7 @@ controls.  See [[https://github.com/xenodium/agent-shell][Agent Shell]] for
 provider installation and configuration.
 
 The generated
-@@texinfo:@ref{emacsvox-agent-shell,,,emacsvox-reference,Emacsvox Reference Manual}@@
+[[info:emacsvox-reference#emacsvox-agent-shell][emacsvox-agent-shell]] in /Emacsvox Reference Manual/
 section is the exhaustive Emacsvox command and option reference.  This chapter
 follows the tasks a user performs in a session.
 
@@ -33,7 +33,7 @@ Compose and submit prompts with Agent Shell's normal editing commands.  The
 live prompt retains Emacs undo. Interactive text yanks speak the inserted
 text, including when a prefix argument selects a different kill-ring entry.
 Image attachment keeps Agent Shell's existing feedback. Submitted transcript
-text is history rather than editable prompt input.  Press @@texinfo:@kbd{C-c C-c}@@ to ask Agent Shell to interrupt
+text is history rather than editable prompt input.  Press ~C-c C-c~ to ask Agent Shell to interrupt
 an active request; its normal confirmation setting still applies.
 
 With Agent Shell's persistent prompt enabled, you can keep typing while the
@@ -75,7 +75,7 @@ Queued prompts announce when they start and how many remain.  If an interrupted
 or failed turn leaves prompts waiting, the queue announcement gives its count
 and the command ~M-x agent-shell-prompt-queue-resume~.  Queue-start feedback
 follows the session's speech level; paused-queue warnings follow
-~emacsvox-agent-shell-signal-processing~.
+=emacsvox-agent-shell-signal-processing=.
 
 Model, mode, thought-level, and other session setting changes announce their
 confirmed values.  Background setting announcements identify the session.
@@ -84,7 +84,7 @@ number and indentation.  Indenting and dedenting announce the new indentation;
 leaving an empty list item announces that the list ended.
 
 Use ~M-x emacsvox-agent-shell-speak-header~ to hear the full session header.
-When ~agent-shell-show-cost-indicator~ is enabled and the provider reports a
+When =agent-shell-show-cost-indicator= is enabled and the provider reports a
 positive cost, this includes the cumulative cost with Agent Shell's currency
 and rounding.  Brief announcements when entering a session stay concise.
 
@@ -93,9 +93,9 @@ and rounding.  Brief announcements when entering a session stay concise.
 :TEXINFO_NODE: no
 :END:
 
-The focused session defaults to ~response~: completed answers and routine
+The focused session defaults to =response=: completed answers and routine
 completion feedback are presented, while thought, plan, and tool chatter is
-suppressed.  An unfocused session defaults to ~notify~: its notification
+suppressed.  An unfocused session defaults to =notify=: its notification
 names the session but does not disclose response or tool content.
 
 #+attr_texinfo: :indic code :compact t
@@ -115,33 +115,33 @@ names the session but does not disclose response or tool content.
   Suppress routine automatic feedback.  Explicit inspection remains available.
 - auto ::
 
-  Use ~emacsvox-agent-shell-foreground-speech-level~ or
-  ~emacsvox-agent-shell-background-speech-level~ according to focus.
+  Use =emacsvox-agent-shell-foreground-speech-level= or
+  =emacsvox-agent-shell-background-speech-level= according to focus.
 
-Press @@texinfo:@kbd{C-c C-q}@@ to run
-~emacsvox-agent-shell-select-speech-level~ and choose the current
-session's level, including ~auto~.  Press @@texinfo:@kbd{C-c C-S-q}@@ to run
-~emacsvox-agent-shell-select-background-speech-level~ and change the
+Press ~C-c C-q~ to run
+=emacsvox-agent-shell-select-speech-level= and choose the current
+session's level, including =auto=.  Press ~C-c C-S-q~ to run
+=emacsvox-agent-shell-select-background-speech-level= and change the
 shared background default.
 ~M-x emacsvox-agent-shell-cycle-speech-level~ cycles toward less routine
-speech; use a prefix argument to restore ~auto~.
+speech; use a prefix argument to restore =auto=.
 
 Thought content defaults to an icon under
-~emacsvox-agent-shell-speak-thought-process~.  Tool feedback is separately
-controlled by ~emacsvox-agent-shell-speak-tool-calls~ and
-~emacsvox-agent-shell-tool-output-verbosity~.  Selecting background
-~response~ or ~full~, thought ~speak~, or full tool output is an
+=emacsvox-agent-shell-speak-thought-process=.  Tool feedback is separately
+controlled by =emacsvox-agent-shell-speak-tool-calls= and
+=emacsvox-agent-shell-tool-output-verbosity=.  Selecting background
+=response= or =full=, thought =speak=, or full tool output is an
 explicit disclosure choice.
 
-At ~full~ speech level, tool verbosity ~full~ reads the tool's rendered output,
+At =full= speech level, tool verbosity =full= reads the tool's rendered output,
 including Codex command output and textual diffs.  Changed output can be read
 even when the tool's status has not changed; identical updates are suppressed.
-Tool verbosity ~status~ plays status cues as tools start and finish.
+Tool verbosity =status= plays status cues as tools start and finish.
 Tool updates, steering outcomes, queue changes, and confirmed setting changes
 use the notification lane, leaving navigation speech independent.
 
 Automatic response, tool, error, permission, and similar text is limited by
-~emacsvox-agent-shell-automatic-content-max-characters~, which defaults to
+=emacsvox-agent-shell-automatic-content-max-characters=, which defaults to
 2,000 characters.  A shortened presentation gives exact omitted character and
 line counts and tells you where to inspect the full content.  The complete text
 rendered by Agent Shell stays in its buffer; this speech limit is applied before
@@ -157,7 +157,7 @@ middle is not available by reading the buffer.
 
 Permission requests are separate from routine speech levels because they can
 block the agent and require a decision.  With
-~emacsvox-agent-shell-speak-permissions~ enabled, a request interrupts the
+=emacsvox-agent-shell-speak-permissions= enabled, a request interrupts the
 appropriate speech stream, identifies the session and requested operation, and
 announces its choices.  Provider-controlled descriptions and choice labels are
 bounded, but the actual permission controls remain in Agent Shell.
@@ -169,14 +169,14 @@ place to inspect and decide the request.
 
 If the request belongs to another session, switch to the named buffer.  Use
 ~M-x agent-shell-jump-to-latest-permission-button-row~ to find its latest
-permission row, or use Agent Shell's @@texinfo:@kbd{TAB}@@ and @@texinfo:@kbd{S-TAB}@@ item navigation.
-Move among the buttons and press @@texinfo:@kbd{RET}@@, or use a direct choice key displayed
+permission row, or use Agent Shell's ~TAB~ and ~S-TAB~ item navigation.
+Move among the buttons and press ~RET~, or use a direct choice key displayed
 by Agent Shell.  Choice keys are supplied by Agent Shell and the provider, so
 the visible permission row is authoritative.
 
 Error blocks remain exceptional feedback rather than routine transcript
 chatter.  Lifecycle error announcements follow
-~emacsvox-agent-shell-signal-processing~; rendered error content remains
+=emacsvox-agent-shell-signal-processing=; rendered error content remains
 available in the transcript even when routine response speech is quiet.
 
 ** Inspect a response on demand
@@ -189,16 +189,16 @@ These commands work from the shell and its associated viewports:
 #+attr_texinfo: :indic kbd :compact t
 - C-c r ::
 
-  Run ~emacsvox-agent-shell-speak-last-response~.  It reads the latest
+  Run =emacsvox-agent-shell-speak-last-response=.  It reads the latest
   successfully completed response in full without moving point.  This deliberate
   operation does not inherit the automatic 2,000-character limit.  While a new
   turn is busy it explicitly identifies and reads the prior completed response.
 - C-c R ::
 
-  Run ~emacsvox-agent-shell-speak-response-overview~.  It reports line,
+  Run =emacsvox-agent-shell-speak-response-overview=.  It reports line,
   heading, source-block, and table counts plus a bounded opening preview.
 
-These commands remain usable at ~notify~ and ~quiet~.  If no turn has
+These commands remain usable at =notify= and =quiet=.  If no turn has
 completed, they say that no completed response is available rather than
 presenting a streaming partial or failed answer.
 
@@ -214,62 +214,62 @@ navigation reports the block type, visibility, and a bounded body preview.
 #+attr_texinfo: :indic kbd :compact t
 - h / H ::
 
-  Use @@texinfo:@kbd{h}@@ (~emacsvox-agent-shell-next-heading~) or
-  @@texinfo:@kbd{H}@@ (~emacsvox-agent-shell-previous-heading~).
+  Use ~h~ (=emacsvox-agent-shell-next-heading=) or
+  ~H~ (=emacsvox-agent-shell-previous-heading=).
   Move to the next or previous visible Markdown heading and speak its text.
 - k / K ::
 
-  Use @@texinfo:@kbd{k}@@ (~emacsvox-agent-shell-next-source-block~) or
-  @@texinfo:@kbd{K}@@ (~emacsvox-agent-shell-previous-source-block~).
+  Use ~k~ (=emacsvox-agent-shell-next-source-block=) or
+  ~K~ (=emacsvox-agent-shell-previous-source-block=).
   Move to the next or previous source block and announce its language and
-  line count. Inside a table, lowercase @@texinfo:@kbd{k}@@ remains the table
+  line count. Inside a table, lowercase ~k~ remains the table
   copy prefix; use ~M-x emacsvox-agent-shell-next-source-block~ to jump forward
   to code from there.
 - u / U ::
 
-  Use @@texinfo:@kbd{u}@@ (~emacsvox-agent-shell-next-user-prompt~) or
-  @@texinfo:@kbd{U}@@ (~emacsvox-agent-shell-previous-user-prompt~).
+  Use ~u~ (=emacsvox-agent-shell-next-user-prompt=) or
+  ~U~ (=emacsvox-agent-shell-previous-user-prompt=).
   Move to the next or previous submitted user prompt, skipping the live editor.
 - j / J ::
 
-  Use @@texinfo:@kbd{j}@@ (~emacsvox-agent-shell-next-response~) or
-  @@texinfo:@kbd{J}@@ (~emacsvox-agent-shell-previous-response~).
+  Use ~j~ (=emacsvox-agent-shell-next-response=) or
+  ~J~ (=emacsvox-agent-shell-previous-response=).
   Move to the next or previous agent response and speak its bounded body
   preview. These keys skip intervening thoughts, tools, and other block types.
   From code or a table inside an answer, they skip that enclosing answer.
 - l / L ::
 
-  Use @@texinfo:@kbd{l}@@ (~emacsvox-agent-shell-next-link~) or
-  @@texinfo:@kbd{L}@@ (~emacsvox-agent-shell-previous-link~).
+  Use ~l~ (=emacsvox-agent-shell-next-link=) or
+  ~L~ (=emacsvox-agent-shell-previous-link=).
   Move to the next or previous visible rendered link and speak its label and
   Return action together. The cursor hint remains visible without a second
   voice repeating it.
-  Press @@texinfo:@kbd{RET}@@ to follow the link.
+  Press ~RET~ to follow the link.
 - e / E ::
 
-  Use @@texinfo:@kbd{e}@@ (~emacsvox-agent-shell-next-error~) or
-  @@texinfo:@kbd{E}@@ (~emacsvox-agent-shell-previous-error~).
+  Use ~e~ (=emacsvox-agent-shell-next-error=) or
+  ~E~ (=emacsvox-agent-shell-previous-error=).
   Move to the next or previous error or failed tool call. Failed tools are
   identified by Agent Shell's error styling in their status label, rather than
   by words in their output.
 - ] ::
 
-  Run ~emacsvox-agent-shell-next-block-at-point~ to find the next block of
+  Run =emacsvox-agent-shell-next-block-at-point= to find the next block of
   the current semantic type.
 - [ ::
 
-  Run ~emacsvox-agent-shell-previous-block-at-point~ to find the preceding
+  Run =emacsvox-agent-shell-previous-block-at-point= to find the preceding
   block of the current semantic type.
 - C-c ] ::
 
-  Run ~emacsvox-agent-shell-next-block-of-type~, choose a type, and move to
+  Run =emacsvox-agent-shell-next-block-of-type=, choose a type, and move to
   its next occurrence.
 - C-c [ ::
 
-  Run ~emacsvox-agent-shell-previous-block-of-type~, choose a type, and move
+  Run =emacsvox-agent-shell-previous-block-of-type=, choose a type, and move
   to its preceding occurrence.
 
-After a successful typed jump, @@texinfo:@kbd{]}@@ and @@texinfo:@kbd{[}@@ repeat in that direction.
+After a successful typed jump, ~]~ and ~[~ repeat in that direction.
 At an editable live prompt or viewport editor, bare brackets and navigation
 letters insert themselves instead of taking over prompt editing.
 
@@ -278,17 +278,17 @@ letters insert themselves instead of taking over prompt editing.
 :TEXINFO_NODE: no
 :END:
 
-Use @@texinfo:@kbd{k}@@ or @@texinfo:@kbd{K}@@, or typed block navigation, to
+Use ~k~ or ~K~, or typed block navigation, to
 reach a source block, then:
 
 #+attr_texinfo: :indic kbd :compact t
 - C-c C-b ::
 
-  Run ~emacsvox-agent-shell-speak-source-block~ to read the complete rendered
+  Run =emacsvox-agent-shell-speak-source-block= to read the complete rendered
   source block with its language and line count.
 - C-c C-y ::
 
-  Run ~emacsvox-agent-shell-copy-source-block~ to copy the logical source
+  Run =emacsvox-agent-shell-copy-source-block= to copy the logical source
   through Agent Shell's public copy operation.
 
 The source commands are explicit operations and do not use the automatic
@@ -312,7 +312,7 @@ Moving into a rendered Markdown table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
 the ordinary Agent Shell keys. Markdown and Org source buffers offer explicit
 table reading with matching logical operations; see
-@@texinfo:@ref{Browsing Structure}@@. Agent Shell retains its own table speech
+[[*Browsing Structure][Browsing Structure]]. Agent Shell retains its own table speech
 preferences and automatic contextual activation.
 Plain Left and Right move by character within the table. Use Control-Meta-Left
 and Control-Meta-Right to move between columns. Up and Down, also available as
@@ -320,8 +320,8 @@ Control-Meta-Up and Control-Meta-Down, move between logical rows and read the
 entire destination row, retaining the current column. Wrapped cells are read
 in full, using your table title settings.
 
-Outside editable input, press @@texinfo:@kbd{t}@@ for the next table or
-@@texinfo:@kbd{T}@@ for the previous table. These keys skip the current table
+Outside editable input, press ~t~ for the next table or
+~T~ for the previous table. These keys skip the current table
 and announce the destination table and cell. Like the bracket navigation keys,
 they insert themselves in a live prompt or viewport editor, including while
 the agent is working.
@@ -343,62 +343,62 @@ available to symbol naming and exact character inspection.
 #+attr_texinfo: :indic kbd :compact t
 - t ::
 
-  Run ~emacsvox-agent-shell-next-table~ outside editable input.
+  Run =emacsvox-agent-shell-next-table= outside editable input.
 - T ::
 
-  Run ~emacsvox-agent-shell-previous-table~ outside editable input.
+  Run =emacsvox-agent-shell-previous-table= outside editable input.
 - C-M-<right> ::
 
-  Run ~emacsvox-agent-shell-table-next-column~.
+  Run =emacsvox-agent-shell-table-next-column=.
 - C-M-<left> ::
 
-  Run ~emacsvox-agent-shell-table-previous-column~.
+  Run =emacsvox-agent-shell-table-previous-column=.
 - <down> ::
 
-  Run ~emacsvox-agent-shell-table-next-row~. Also bound to
-  @@texinfo:@kbd{C-M-<down>}@@.
+  Run =emacsvox-agent-shell-table-next-row=. Also bound to
+  ~C-M-<down>~.
 - <up> ::
 
-  Run ~emacsvox-agent-shell-table-previous-row~. Also bound to
-  @@texinfo:@kbd{C-M-<up>}@@.
+  Run =emacsvox-agent-shell-table-previous-row=. Also bound to
+  ~C-M-<up>~.
 - M-<down> ::
 
-  Run ~emacsvox-agent-shell-table-exit-forward~.
+  Run =emacsvox-agent-shell-table-exit-forward=.
 - M-<up> ::
 
-  Run ~emacsvox-agent-shell-table-exit-backward~.
+  Run =emacsvox-agent-shell-table-exit-backward=.
 - SPC ::
 
-  Run ~emacsvox-agent-shell-table-speak-cell~.
+  Run =emacsvox-agent-shell-table-speak-cell=.
 - r ::
 
-  Run ~emacsvox-agent-shell-table-speak-row~.
+  Run =emacsvox-agent-shell-table-speak-row=.
 - c ::
 
-  Run ~emacsvox-agent-shell-table-speak-column~.
+  Run =emacsvox-agent-shell-table-speak-column=.
 - . ::
 
-  Run ~emacsvox-agent-shell-table-speak-context~ for row, column, and table
+  Run =emacsvox-agent-shell-table-speak-context= for row, column, and table
   position.
 - = ::
 
-  Run ~emacsvox-agent-shell-table-speak-dimensions~.
+  Run =emacsvox-agent-shell-table-speak-dimensions=.
 - w ::
 
-  Run ~emacsvox-agent-shell-table-copy-cell~.
+  Run =emacsvox-agent-shell-table-copy-cell=.
 - k k ::
 
-  Also run ~emacsvox-agent-shell-table-copy-cell~.
+  Also run =emacsvox-agent-shell-table-copy-cell=.
 - k r ::
 
-  Run ~emacsvox-agent-shell-table-copy-row~; copied cells are tab-separated.
+  Run =emacsvox-agent-shell-table-copy-row=; copied cells are tab-separated.
 - k c ::
 
-  Run ~emacsvox-agent-shell-table-copy-column~; copied cells are separated by
+  Run =emacsvox-agent-shell-table-copy-column=; copied cells are separated by
   newlines.
 - a ::
 
-  Run ~emacsvox-agent-shell-table-select-speaking-method~ to toggle column
+  Run =emacsvox-agent-shell-table-select-speaking-method= to toggle column
   titles, row titles, or whether data is spoken before titles.
 
 Copy commands use logical cell values, excluding renderer padding and Markdown
@@ -409,10 +409,10 @@ borders.  Wrapped cell contents remain complete.
 :TEXINFO_NODE: no
 :END:
 
-If a request is taking the wrong path, press @@texinfo:@kbd{C-c C-c}@@ and confirm the
+If a request is taking the wrong path, press ~C-c C-c~ and confirm the
 Agent Shell interrupt.  A failed or interrupted partial response is not cached
-as complete.  Press @@texinfo:@kbd{C-c r}@@ for the preceding completed response, or
-@@texinfo:@kbd{C-c R}@@ for its overview.  Read the error block in the transcript for the
+as complete.  Press ~C-c r~ for the preceding completed response, or
+~C-c R~ for its overview.  Read the error block in the transcript for the
 provider's details and edit the live prompt before resubmitting.
 
 Use ~M-x agent-shell-restart~ when Agent Shell itself needs a fresh process
@@ -421,5 +421,5 @@ speech hooks after deliberately disabling them.  Neither recovery command
 discards transcript files or project work.
 
 If you are changing the integration rather than using it, see
-@@texinfo:@ref{Integration Maintenance}@@ for its public event, renderer, and
+[[*Integration Maintenance][Integration Maintenance]] for its public event, renderer, and
 compatibility contracts.

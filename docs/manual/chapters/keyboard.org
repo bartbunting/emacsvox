@@ -8,9 +8,9 @@
 #+cindex: Emacs Keyboard Commands
 
 This chapter explains how to discover the bindings that are current in
-your Emacs session.  For the small starter set, see @@texinfo:@ref{Basic Usage}@@.
+your Emacs session.  For the small starter set, see [[*Basic Usage][Basic Usage]].
 For the complete generated default bindings, see
-@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/.
 
 Most Emacsvox commands use one of these two default prefixes:
 
@@ -34,27 +34,27 @@ Emacsvox.  For example:
 (setq emacsvox-prefix (kbd "C-c e"))
 #+end_src
 
-With this setting, @@texinfo:@kbd{C-c e l}@@ speaks the line and
-@@texinfo:@kbd{C-c e e}@@ provides end-of-line recovery.  Evil, EXWM,
-widgets and Term use the prefix followed by @@texinfo:@kbd{e}@@ for their
+With this setting, ~C-c e l~ speaks the line and
+~C-c e e~ provides end-of-line recovery.  Evil, EXWM,
+widgets and Term use the prefix followed by ~e~ for their
 corresponding recovery command when the prefix contains multiple events.
 Repeating such a prefix is also bound when the sequence is unused or already
 runs that recovery command.  Existing commands and submaps take precedence:
-@@texinfo:@kbd{C-c e C-c}@@ retains selective display, so
-@@texinfo:@kbd{C-c e C-c e}@@ is not installed as a recovery shortcut.
+~C-c e C-c~ retains selective display, so
+~C-c e C-c e~ is not installed as a recovery shortcut.
 Single-event prefixes retain their existing repeated-key behavior, including
-the default @@texinfo:@kbd{C-e C-e}@@.  Mode-local bindings can still shadow
+the default ~C-e C-e~.  Mode-local bindings can still shadow
 the chosen prefix; inspect them with Help.
 
 Use Emacs Help to inspect the effective result:
 
-- @@texinfo:@kbd{C-h m}@@ describes the modes and their bindings in the current buffer.
+- ~C-h m~ describes the modes and their bindings in the current buffer.
 
-- @@texinfo:@kbd{C-h k}@@, followed by a key, describes the command that key invokes.
+- ~C-h k~, followed by a key, describes the command that key invokes.
 
-- After typing a prefix such as @@texinfo:@kbd{C-e}@@, type @@texinfo:@kbd{C-h}@@ to display that
+- After typing a prefix such as ~C-e~, type ~C-h~ to display that
    prefix's current bindings.
 
 If live Help and this manual differ, live Help describes your running
 session.  Check customizations first, then compare the generated defaults
-in the @@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+in the [[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/.

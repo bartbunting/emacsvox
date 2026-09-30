@@ -13,8 +13,8 @@ commands and variables available in your running session.  This live help is
 usually more reliable than a copied key list because it includes installed
 packages and personal customizations.
 
-Most help commands begin with the @@texinfo:@kbd{C-h}@@ prefix.  If you forget what can
-follow it, press @@texinfo:@kbd{C-h C-h}@@ for ~help-for-help~.
+Most help commands begin with the ~C-h~ prefix.  If you forget what can
+follow it, press ~C-h C-h~ for =help-for-help=.
 
 ** Ask About A Key, Command, Or Setting
 :PROPERTIES:
@@ -23,19 +23,19 @@ follow it, press @@texinfo:@kbd{C-h C-h}@@ for ~help-for-help~.
 
 Use the question you have to choose a help command:
 
-- @@texinfo:@kbd{C-h k}@@ followed by a key runs ~describe-key~ and explains the
+- ~C-h k~ followed by a key runs =describe-key= and explains the
   command currently bound to that key.
 
-- @@texinfo:@kbd{C-h f}@@ runs ~describe-function~.  Enter a command or function name
+- ~C-h f~ runs =describe-function=.  Enter a command or function name
   to read its complete documentation.
 
-- @@texinfo:@kbd{C-h v}@@ runs ~describe-variable~.  Enter an option name to hear its
+- ~C-h v~ runs =describe-variable=.  Enter an option name to hear its
   current value and documentation.
 
-- @@texinfo:@kbd{C-h w}@@ runs ~where-is~ and reports the keys that invoke a command.
+- ~C-h w~ runs =where-is= and reports the keys that invoke a command.
 
-For example, press @@texinfo:@kbd{C-h k C-e l}@@ to ask what the current-line speaking
-key does.  If you know the command name but not its key, use @@texinfo:@kbd{C-h w}@@ and
+For example, press ~C-h k C-e l~ to ask what the current-line speaking
+key does.  If you know the command name but not its key, use ~C-h w~ and
 enter that name.
 
 ** Discover What The Current Buffer Can Do
@@ -45,14 +45,14 @@ enter that name.
 
 Two commands answer most questions about a buffer:
 
-- @@texinfo:@kbd{C-h m}@@ runs ~describe-mode~.  It explains the major mode, active
+- ~C-h m~ runs =describe-mode=.  It explains the major mode, active
   minor modes, and their local commands.
 
-- @@texinfo:@kbd{C-h b}@@ runs ~describe-bindings~.  It lists the effective key
+- ~C-h b~ runs =describe-bindings=.  It lists the effective key
   bindings after local package maps and personal customizations are applied.
 
 After opening Dired, EWW, mail, a terminal, or another application, start with
-@@texinfo:@kbd{C-h m}@@.  Use @@texinfo:@kbd{C-h b}@@ when you need the exact keys available in
+~C-h m~.  Use ~C-h b~ when you need the exact keys available in
 that particular buffer.
 
 ** Read And Leave A Help Window
@@ -60,29 +60,29 @@ that particular buffer.
 :TEXINFO_NODE: no
 :END:
 
-Help usually appears in a separate ~*Help*~ window, and Emacsvox speaks the
-most relevant initial result automatically.  Press @@texinfo:@kbd{C-e h}@@
-~emacsvox-speak-help~ to hear the displayed help again.
+Help usually appears in a separate =*Help*= window, and Emacsvox speaks the
+most relevant initial result automatically.  Press ~C-e h~
+=emacsvox-speak-help= to hear the displayed help again.
 
-To explore the help text directly, press @@texinfo:@kbd{C-x o}@@ to move to its window
-and use ordinary reading and navigation commands.  Press @@texinfo:@kbd{q}@@ in the Help
+To explore the help text directly, press ~C-x o~ to move to its window
+and use ordinary reading and navigation commands.  Press ~q~ in the Help
 buffer when you are finished.  If another window is selected unexpectedly,
-@@texinfo:@kbd{C-e C-w}@@ describes the current window arrangement.
+~C-e C-w~ describes the current window arrangement.
 
 ** Learn Interactively And Read Manuals
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-- @@texinfo:@kbd{C-h t}@@ opens the interactive Emacs tutorial.  Emacsvox speaks the
+- ~C-h t~ opens the interactive Emacs tutorial.  Emacsvox speaks the
   tutorial and your navigation as you work through it.
 
-- @@texinfo:@kbd{C-h i}@@ opens Info, the manual reader used by Emacs and Emacsvox.
-  Press @@texinfo:@kbd{d}@@ for the Info directory, then @@texinfo:@kbd{m}@@ and enter ~Emacsvox~
+- ~C-h i~ opens Info, the manual reader used by Emacs and Emacsvox.
+  Press ~d~ for the Info directory, then ~m~ and enter =Emacsvox=
   to open this manual.
 
-- @@texinfo:@kbd{C-h C-l}@@ runs ~emacsvox-learn-emacs~, a learning loop that speaks
-  the function of each key you press.  Leave the loop with @@texinfo:@kbd{C-g}@@.
+- ~C-h C-l~ runs =emacsvox-learn-emacs=, a learning loop that speaks
+  the function of each key you press.  Leave the loop with ~C-g~.
 
 See the Emacs manual's help and Info chapters when you want to search manuals,
 follow cross-references, or keep a help buffer for later.
@@ -92,18 +92,18 @@ follow cross-references, or keep a help buffer for later.
 :TEXINFO_NODE: no
 :END:
 
-- @@texinfo:@kbd{C-h C-e}@@ ~emacsvox-describe-emacsvox~ opens a concise Emacsvox
+- ~C-h C-e~ =emacsvox-describe-emacsvox= opens a concise Emacsvox
   overview.
 
-- @@texinfo:@kbd{C-e N}@@ ~emacsvox-view-emacsvox-news~ opens versioned project news,
-  while @@texinfo:@kbd{C-e T}@@ ~emacsvox-view-emacsvox-tips~ opens productivity tips.
+- ~C-e N~ =emacsvox-view-emacsvox-news= opens versioned project news,
+  while ~C-e T~ =emacsvox-view-emacsvox-tips= opens productivity tips.
 
-- @@texinfo:@kbd{C-e H}@@ ~emacsvox-aural~ opens Aural Home for presentation options.
+- ~C-e H~ =emacsvox-aural= opens Aural Home for presentation options.
 
-- @@texinfo:@kbd{C-e E}@@ ~emacsvox-aural-explain-presentation~ explains why the
+- ~C-e E~ =emacsvox-aural-explain-presentation= explains why the
   object at point received its voices, sounds, and other auditory actions.
 
 The generated
-@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@ records all default Emacsvox bindings.  Prefer @@texinfo:@kbd{C-h k}@@,
-@@texinfo:@kbd{C-h m}@@, and @@texinfo:@kbd{C-h b}@@ when a running package or customization
+[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/ records all default Emacsvox bindings.  Prefer ~C-h k~,
+~C-h m~, and ~C-h b~ when a running package or customization
 changes those defaults.

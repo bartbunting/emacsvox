@@ -20,7 +20,7 @@ and Emacs components and complete their setup first.  The
 [[https://notmuchmail.org/doc/latest/notmuch-emacs.html][official Notmuch Emacs manual]] covers that setup and the complete upstream command set.
 
 The generated
-@@texinfo:@ref{emacsvox-notmuch,,,emacsvox-reference,Emacsvox Reference Manual}@@ section
+[[info:emacsvox-reference#emacsvox-notmuch][emacsvox-notmuch]] in /Emacsvox Reference Manual/ section
 is the exhaustive Emacsvox command and option reference.  This chapter follows
 the tasks a user performs and explains when automatic feedback occurs.
 
@@ -35,8 +35,8 @@ the tasks a user performs and explains when automatic feedback occurs.
 
 #+findex: notmuch-search
 
-Run @@texinfo:@kbd{M-x notmuch}@@ to open Notmuch Hello.  With the standard Emacsvox global
-maps loaded, @@texinfo:@kbd{C-' m}@@ runs ~notmuch-search~ directly and prompts for a
+Run ~M-x notmuch~ to open Notmuch Hello.  With the standard Emacsvox global
+maps loaded, ~C-' m~ runs =notmuch-search= directly and prompts for a
 query.  Emacsvox loads its live integration when Notmuch loads and marks new
 Hello, Search, Show, and Tree buffers with Notmuch semantic context.
 
@@ -61,26 +61,26 @@ Hello keys in the current Notmuch map:
 #+attr_texinfo: :indic kbd :compact t
 - TAB ::
 
-  Run ~widget-forward~ to reach the next saved search, entry field, button,
+  Run =widget-forward= to reach the next saved search, entry field, button,
   or link.
 - <backtab> ::
 
-  Run ~widget-backward~ to reach the preceding widget.
+  Run =widget-backward= to reach the preceding widget.
 - RET ::
 
-  Run ~widget-button-press~; on a saved search this starts its query.
+  Run =widget-button-press=; on a saved search this starts its query.
 - j ::
 
-  Run ~notmuch-jump-search~ and choose a configured search.
+  Run =notmuch-jump-search= and choose a configured search.
 - g ::
 
-  Run ~notmuch-refresh-this-buffer~ to refresh Hello.
+  Run =notmuch-refresh-this-buffer= to refresh Hello.
 - m ::
 
-  Run ~notmuch-mua-new-mail~.  Composition then belongs to Message mode and
-  the separate ~emacsvox-message~ integration.
+  Run =notmuch-mua-new-mail=.  Composition then belongs to Message mode and
+  the separate =emacsvox-message= integration.
 
-Press @@texinfo:@kbd{?}@@ in any Notmuch view, or @@texinfo:@kbd{C-h m}@@, for the complete bindings
+Press ~?~ in any Notmuch view, or ~C-h m~, for the complete bindings
 provided by the installed Notmuch version.
 
 *** Understand asynchronous search completion
@@ -96,12 +96,12 @@ provided by the installed Notmuch version.
 
 A Notmuch search buffer can appear before its rows have finished rendering.
 For a user-owned non-refresh search that remains selected, Emacsvox gives a
-progress cue.  With the default ~adaptive~ policy, it speaks the selected
+progress cue.  With the default =adaptive= policy, it speaks the selected
 message as soon as the first complete result is available, while the search
 continues.  This uses the same message summary, voices, and status cues as
 ~n~, ~p~, and the arrow keys.  It does not announce an empty row or move point.
 
-The default ~adaptive~ completion policy distinguishes two interactions:
+The default =adaptive= completion policy distinguishes two interactions:
 
 - If the search is still selected, no command has been issued in it, and no input
    is pending, the first available result is spoken once on the primary speech
@@ -121,13 +121,13 @@ primary speech stream, without interrupting the row already being spoken.
 Navigation interrupts that announcement.  A refresh that finishes in another
 buffer uses the notification stream.  Neither case rereads the selected row.
 
-The ~summary~ policy plays only a generic count and its completion cue;
-~cue~ plays only that cue, and ~silent~ suppresses successful completion.
+The =summary= policy plays only a generic count and its completion cue;
+=cue= plays only that cue, and =silent= suppresses successful completion.
 These policies use the same stream selection for refreshes.  Other search
 summaries use the notification stream.  Failures remain audible and generic
 for every policy, with focused refresh failures using the primary stream too.
 The deliberate global refresh-all command remains silent.  See
-@@texinfo:@ref{Aural Presentation}@@ for the streams' general behavior and
+[[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] for the streams' general behavior and
 configuration.
 
 ** Navigate and inspect Search results
@@ -147,49 +147,49 @@ standard next and previous thread commands.
 #+attr_texinfo: :indic kbd :compact t
 - n ::
 
-  Run ~notmuch-search-next-thread~.
+  Run =notmuch-search-next-thread=.
 - <down> ::
 
-  Also run ~notmuch-search-next-thread~.
+  Also run =notmuch-search-next-thread=.
 - p ::
 
-  Run ~notmuch-search-previous-thread~.
+  Run =notmuch-search-previous-thread=.
 - <up> ::
 
-  Also run ~notmuch-search-previous-thread~.
+  Also run =notmuch-search-previous-thread=.
 - RET ::
 
-  Run ~notmuch-search-show-thread~.  The Show view lands on the first useful
+  Run =notmuch-search-show-thread=.  The Show view lands on the first useful
   visible body line or leaf MIME part and presents the opened message.
 - SPC ::
 
-  Run ~notmuch-search-scroll-up~.  This is upstream viewport scrolling
+  Run =notmuch-search-scroll-up=.  This is upstream viewport scrolling
   rather than semantic thread selection.
 - C-c C-p ::
 
-  Run ~emacsvox-notmuch-speak-search-details~.  This explicitly reads all
+  Run =emacsvox-notmuch-speak-search-details=.  This explicitly reads all
   configured fields for the result at point without the automatic content
   limits.
 - + ::
 
-  Run ~notmuch-search-add-tag~.
+  Run =notmuch-search-add-tag=.
 - - ::
 
-  Run ~notmuch-search-remove-tag~.
+  Run =notmuch-search-remove-tag=.
 - * ::
 
-  Run ~notmuch-search-tag-all~ for the selected results.
+  Run =notmuch-search-tag-all= for the selected results.
 - a ::
 
-  Run ~notmuch-search-archive-thread~.
+  Run =notmuch-search-archive-thread=.
 - g ::
 
-  Run ~notmuch-refresh-this-buffer~; completion follows the interruptible
+  Run =notmuch-refresh-this-buffer=; completion follows the interruptible
   refresh policy described above.
 
 The default Search fields are authors, subject, relative date, matched and
 total message counts, and ordinary tags.  Status tags configured as auditory
-cues are not repeated as words.  See @@texinfo:@ref{Notmuch fields and privacy}@@
+cues are not repeated as words.  See [[Notmuch fields and privacy][Notmuch fields and privacy]]
 to omit or reorder potentially sensitive fields.
 
 ** Read a thread and its MIME parts
@@ -216,63 +216,63 @@ ends with folded quoted text.  The quote stays folded.
 #+attr_texinfo: :indic kbd :compact t
 - n ::
 
-  Run ~notmuch-show-next-open-message~.
+  Run =notmuch-show-next-open-message=.
 - p ::
 
-  Run ~notmuch-show-previous-open-message~.
+  Run =notmuch-show-previous-open-message=.
 - N ::
 
-  Run ~notmuch-show-next-message~, including closed messages.
+  Run =notmuch-show-next-message=, including closed messages.
 - P ::
 
-  Run ~notmuch-show-previous-message~, including closed messages.
+  Run =notmuch-show-previous-message=, including closed messages.
 - SPC ::
 
-  Run ~notmuch-show-advance-and-archive~.  Within one message Emacsvox reads
+  Run =notmuch-show-advance-and-archive=.  Within one message Emacsvox reads
   the newly visible page; on a message transition it reads the new message; at
   the thread end it reports the actual archive outcome and destination.
 - DEL ::
 
-  Run ~notmuch-show-rewind~ and read the resulting page or message.
+  Run =notmuch-show-rewind= and read the resulting page or message.
 - RET ::
 
-  Run ~notmuch-show-toggle-message~ and cue the current message's resulting
+  Run =notmuch-show-toggle-message= and cue the current message's resulting
   visibility.
 - M-RET ::
 
-  Run ~notmuch-show-open-or-close-all~.  It opens every message and reports
+  Run =notmuch-show-open-or-close-all=.  It opens every message and reports
   the resulting thread state and total, such as ``Opened all 5 messages.''  Use a
-  prefix argument, @@texinfo:@kbd{C-u M-RET}@@, to close every message and receive the
+  prefix argument, ~C-u M-RET~, to close every message and receive the
   corresponding total.
 - C-c C-p ::
 
-  Run ~emacsvox-notmuch-speak-show-position~.  It reports the message
+  Run =emacsvox-notmuch-speak-show-position=.  It reports the message
   ordinal and total plus complete configured message details.  On a MIME-part
   button it instead gives the complete part description, including its full
   filename.
 - TAB ::
 
-  Run ~notmuch-show-next-button~ and identify the button or MIME part.
+  Run =notmuch-show-next-button= and identify the button or MIME part.
 - <backtab> ::
 
-  Run ~notmuch-show-previous-button~ and identify the button or MIME part.
+  Run =notmuch-show-previous-button= and identify the button or MIME part.
 - w ::
 
-  Run ~notmuch-show-save-attachments~.  Emacsvox confirms when the upstream
+  Run =notmuch-show-save-attachments=.  Emacsvox confirms when the upstream
   command returns, but Notmuch does not expose a per-attachment result through
   this command, so the confirmation cannot distinguish partial skips.
 - . s ::
 
-  Run ~notmuch-show-save-part~ on the current MIME part.
+  Run =notmuch-show-save-part= on the current MIME part.
 - . v ::
 
-  Run ~notmuch-show-view-part~.
+  Run =notmuch-show-view-part=.
 - . o ::
 
-  Run ~notmuch-show-interactively-view-part~ and choose an external action.
+  Run =notmuch-show-interactively-view-part= and choose an external action.
 - . m ::
 
-  Run ~notmuch-show-choose-mime-of-part~.
+  Run =notmuch-show-choose-mime-of-part=.
 
 Viewing, saving, overwriting, or launching a MIME part remains an explicit
 Notmuch operation.  Merely navigating or requesting details never opens an
@@ -298,26 +298,26 @@ The following common Show commands receive that result-aware feedback:
 #+attr_texinfo: :indic kbd :compact t
 - + ::
 
-  Run ~notmuch-show-add-tag~ on the current message.
+  Run =notmuch-show-add-tag= on the current message.
 - - ::
 
-  Run ~notmuch-show-remove-tag~.
+  Run =notmuch-show-remove-tag=.
 - * ::
 
-  Run ~notmuch-show-tag-all~ across the thread.
+  Run =notmuch-show-tag-all= across the thread.
 - a ::
 
-  Run ~notmuch-show-archive-message-then-next-or-next-thread~.
+  Run =notmuch-show-archive-message-then-next-or-next-thread=.
 - A ::
 
-  Run ~notmuch-show-archive-thread-then-next~.
+  Run =notmuch-show-archive-thread-then-next=.
 
 Archive feedback distinguishes a real change, unchanged archive tags, and an
-unset ~notmuch-archive-tags~ configuration.  Movement wrappers give one
+unset =notmuch-archive-tags= configuration.  Movement wrappers give one
 combined result rather than duplicating feedback from their nested tag or
 archive command.
 
-@@texinfo:@anchor{Notmuch fields and privacy}@@
+<<Notmuch fields and privacy>>
 
 ** Choose fields, status, and privacy
 :PROPERTIES:
@@ -332,20 +332,20 @@ archive command.
 
 #+cindex: automatic speech limits, Notmuch
 
-Run @@texinfo:@kbd{M-x customize-group RET emacsvox-notmuch RET}@@ to change Notmuch speech
+Run ~M-x customize-group RET emacsvox-notmuch RET~ to change Notmuch speech
 without altering Notmuch's own database or display.
 
 #+attr_texinfo: :indic code :compact t
 - emacsvox-notmuch-search-result-fields ::
 
-  Defaults to ~(authors subject date count tags)~.  Remove ~subject~ or
+  Defaults to =(authors subject date count tags)=.  Remove =subject= or
   another field to keep it out of Search navigation speech, reorder fields, or
   add a formatter function.
 - emacsvox-notmuch-show-message-fields ::
 
-  Defaults to ~(from date to cc tags attachments)~.  The subject is omitted
+  Defaults to =(from date to cc tags attachments)=.  The subject is omitted
   by default in Show, while To and Cc recipients are included.  Remove
-  ~to~, ~cc~, or any other field when recipient privacy matters.
+  =to=, =cc=, or any other field when recipient privacy matters.
 - emacsvox-notmuch-search-field-separator ::
 - emacsvox-notmuch-show-field-separator ::
 
@@ -357,10 +357,10 @@ without altering Notmuch's own database or display.
   Map unread, replied, forwarded, flagged, and personal status tags to cues or
   silence.  Removing an entry makes that status available to ordinary tag
   speech.  The optional Aural Presentation feature
-  ~mail-message-status-cues~ can own shared semantic mail-state cues.
+  =mail-message-status-cues= can own shared semantic mail-state cues.
 - emacsvox-notmuch-search-completion-style ::
 
-  Choose ~adaptive~, ~summary~, ~cue~, or ~silent~ as
+  Choose =adaptive=, =summary=, =cue=, or =silent= as
   described under asynchronous completion.
 
 Mail-controlled text is bounded before automatic speech and Aural history.
@@ -385,8 +385,8 @@ characters and 4,096 bytes for the complete automatic presentation:
   claiming that no attachment exists.
 
 A shortened Search or Show presentation states what was omitted and points to
-@@texinfo:@kbd{C-c C-p}@@ for explicit full configured details; a shortened Hello item
-points to @@texinfo:@key{RET}@@.  The explicit Search and Show inspection commands
+~C-c C-p~ for explicit full configured details; a shortened Hello item
+points to ~RET~.  The explicit Search and Show inspection commands
 deliberately bypass the automatic content limits; use them only when speaking
 the complete configured fields is appropriate.
 
@@ -401,13 +401,13 @@ Primary-stream Notmuch presentations can enter bounded Aural Presentation
 history.  By default Emacsvox retains at most 20 presentations and at most
 4,096 UTF-8 bytes of speech preview per record; records contain frozen data,
 source names, and positions, but never retain source buffers.  Run
-@@texinfo:@kbd{M-x emacsvox-aural-list-recent-feedback}@@ to inspect what was retained, or
-set ~emacsvox-aural-presentation-history-limit~ to zero to disable that
+~M-x emacsvox-aural-list-recent-feedback~ to inspect what was retained, or
+set =emacsvox-aural-presentation-history-limit= to zero to disable that
 history.
 
 Generic asynchronous completion contains no query or message metadata.
 Completions sent to the notification stream may be retained by the
-notification subsystem.  Choose ~cue~ or ~silent~ when even a generic
+notification subsystem.  Choose =cue= or =silent= when even a generic
 thread count is unwanted, and review the global notification-device and log
 settings separately.
 
@@ -435,14 +435,14 @@ settings separately.
   and explicit detail inspection have Notmuch-specific feedback.
 - Tree ::
 
-  Tree buffers receive ~emacsvox-aural-module~ context only.  Generic core
+  Tree buffers receive =emacsvox-aural-module= context only.  Generic core
   speech can still operate, but this module currently has no Tree-specific row
   formatter, navigation, mutation, visibility, or asynchronous lifecycle.
 - Composition ::
 
   Notmuch uses standard Message-mode composition.  Speech support after
-  ~notmuch-mua-new-mail~, reply, forward, or resume transitions belongs to
-  ~emacsvox-message~, not to the Notmuch integration.
+  =notmuch-mua-new-mail=, reply, forward, or resume transitions belongs to
+  =emacsvox-message=, not to the Notmuch integration.
 
 There is no independent Notmuch speech disable or unload command.  Advice,
 hooks, and the Search arrow bindings remain installed for the Emacs session
@@ -458,17 +458,17 @@ them.
 
 #+cindex: byte-code, Notmuch integration
 
-Use @@texinfo:@kbd{?}@@ or @@texinfo:@kbd{C-h m}@@ in the affected Notmuch buffer to confirm the keys
-provided by the installed Notmuch version.  Run @@texinfo:@kbd{M-x notmuch-version}@@ to
+Use ~?~ or ~C-h m~ in the affected Notmuch buffer to confirm the keys
+provided by the installed Notmuch version.  Run ~M-x notmuch-version~ to
 identify that package, and use the official manual linked at the beginning of
 this chapter for its current behavior.
 
-Run @@texinfo:@kbd{M-x emacsvox-aural-doctor}@@ when speech bindings, loaded source versus
+Run ~M-x emacsvox-aural-doctor~ when speech bindings, loaded source versus
 byte-code, Aural rules, sound resources, or the backend appear wrong.  Use
-@@texinfo:@kbd{M-x emacsvox-aural-list-recent-feedback}@@ to inspect the exact bounded
+~M-x emacsvox-aural-list-recent-feedback~ to inspect the exact bounded
 presentation submitted for a Notmuch action.  These diagnostics do not query
 or modify the mail database.
 
 If you are changing the integration rather than using it, see
-@@texinfo:@ref{Integration Maintenance}@@ for the build, test, renderer, and
+[[*Integration Maintenance][Integration Maintenance]] for the build, test, renderer, and
 asynchronous lifecycle contracts.

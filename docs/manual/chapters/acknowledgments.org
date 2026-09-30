@@ -11,7 +11,7 @@ and copyright notices throughout the source where that work remains.
 The Emacsvox documentation began with the second-edition Emacspeak user
 manual.  Jim Van Zandt and Jason White contributed to that manual.  Selected
 historical chapters remain available in the separate
-@@texinfo:@ref{Top,Emacspeak Heritage,,emacsvox-heritage,Emacspeak Heritage}@@
+[[info:emacsvox-heritage#Top][Emacspeak Heritage]]
 manual, where their original terminology and period context can be read
 without confusing them with current setup guidance.
 

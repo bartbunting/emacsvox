@@ -44,6 +44,20 @@ checks the accepted Info-node inventory in [[file:nodes.txt][nodes.txt]], and ru
 full documentation validation.  Public HTML continues through the separately
 reviewed =gh-pages= worktree.
 
+* Plain-text export
+
+To read the complete manual outside Emacs, export it as one UTF-8 text file:
+
+#+begin_example
+make docs-org-text
+#+end_example
+
+The file is written to =.docs-preview/org-manual/emacsvox.txt= unless
+=DOCS_ORG_TEXT= names another path. The manual uses ordinary Org markup;
+the standard Org ASCII backend retains keys, literals and link descriptions.
+Like the preview, this export does not load or compile Emacsvox. Its default
+output is ignored; choose an untracked destination when overriding the path.
+
 * Export conventions
 
 - =TEXINFO_NODE_NAME= preserves a stable Info node name when it differs from
@@ -53,10 +67,18 @@ reviewed =gh-pages= worktree.
 - =DESCRIPTION= supplies an Info menu description.
 - Normal Org lists, tables, links, examples, source blocks, emphasis, and
   inline code are preferred over raw Texinfo.
-- The =kbd= macro preserves keyboard notation that Org does not represent
-  natively.
-- Raw Texinfo is limited to compatibility cases such as cross-manual Info
-  references and index types not directly represented by Org.
+- Reserve code markup (~C-x C-f~, for example) for key sequences. The maintained
+  Texinfo exporter writes =@kbd= and preserves named-key notation for ~RET~,
+  ~TAB~ and similar keys. Standard Org text and HTML exports retain the same
+  key text without a special backend.
+- Use verbatim markup (=local.mk=, for example) for filenames, Lisp symbols,
+  shell commands and other literals. An Emacs command invocation such as
+  ~M-x term RET~ is a key sequence; a shell command is literal text.
+- Use Org heading links for sections in this manual and =info:= links with
+  descriptions for other manuals. Keep stable =TEXINFO_NODE_NAME= properties
+  when the printed heading differs from its existing Info node.
+- Write acronyms and punctuation as ordinary text. Raw Texinfo remains only
+  for block-level compatibility material such as the Info index.
 
 Changing an accepted node name or removing a node is a navigation compatibility
 change: update =nodes.txt= deliberately and review inbound links before doing
