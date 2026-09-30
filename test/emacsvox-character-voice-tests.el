@@ -76,6 +76,43 @@
          (should (equal (plist-get span :logical_voice_id) "default"))
          (should (string-match-p (cadr case) (plist-get span :text))))))))
 
+(ert-deftest emacsvox-character-voice-navigation-speaks-clean-symbol-names ()
+  "Character navigation must not speak punctuation from generated names."
+  (require 'emacsvox-advice)
+  (emacsvox-character-test--with-runtime
+   (dolist (process (list speaker notification))
+     (let ((tts-speaker-process process))
+       (dolist (mode '(none some all))
+         (dolist (case '((28 . "control backslash")
+                         (29 . "control right bracket")
+                         (30 . "control caret")
+                         (31 . "control underscore")
+                         (?\( . "left paren") (?\) . "right paren")
+                         (?< . "less than") (?> . "greater than")
+                         (?? . "question mark")
+                         (?\[ . "left bracket") (?\] . "right bracket")
+                         (?{ . "left brace") (?} . "right brace")
+                         (?* . "star")))
+           (with-temp-buffer
+             (insert "x" (char-to-string (car case)) "x")
+             (let ((tts-punctuation-mode mode))
+               (dolist (command '(forward-char backward-char))
+                 (goto-char (if (eq command 'forward-char) 1 3))
+                 (pcase-let* ((`(,wire-command ,envelope ,_)
+                               (emacsvox-character-test--capture
+                                (lambda ()
+                                  ;; Exclude the delayed matching-delimiter cue.
+                                  (cl-letf (((symbol-function 'sit-for) #'ignore))
+                                    (call-interactively command)))))
+                              (text (mapconcat
+                                     (lambda (span)
+                                       (plist-get (plist-get span :span) :text))
+                                     (plist-get envelope :spans) "")))
+                   (ert-info ((format "character=%S mode=%S command=%S"
+                                      (car case) mode command))
+                     (should (equal wire-command "emacsvox_timeline"))
+                     (should (equal (string-trim text) (cdr case))))))))))))))
+
 (ert-deftest emacsvox-character-voice-typing-and-arrow-navigation-use-default ()
   (require 'emacsvox-advice)
   (emacsvox-character-test--with-runtime

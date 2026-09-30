@@ -10,6 +10,12 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Speak symbol names cleanly during character navigation
+
+Names such as "left bracket" and "question mark" no longer speak an extra
+asterisk or bracket names. This correction works at every punctuation level
+and does not require an Omnivox update.
+
 ** Create named punctuation profiles
 
 In =omnivox-punctuation=, =N= creates a profile inheriting a built-in level;
