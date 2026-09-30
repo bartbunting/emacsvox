@@ -36,6 +36,7 @@
                     omnivox-library-apply-tests
                     omnivox-library-tests
                     omnivox-punctuation-tests
+                    omnivox-engine-configuration-tests
                     emacsvox-voice-tests
                     emacsvox-speak-tests
                     emacsvox-aural-transport-tests

@@ -4535,6 +4535,39 @@ value. Reordering a choice carries its adjustments with it.
 @node Speech Engine Preferences
 @subsection Set Shared Engine Preferences
 
+@enumerate
+@item
+@anchor{Edit Saved Engine Configuration}Edit Saved Engine Configuration
+
+
+From an engine's details@comma{} choose @emph{Engine configuration}@comma{} or run
+@kbd{M-x omnivox-engine-configuration}. This requires an updated local Omnivox
+host. The files belong to the speech host@comma{} including Windows when Emacs runs
+under WSL; paths entered here must make sense on that host.
+
+Use @kbd{@key{RET}} to edit the selected row. Choose enabled engines@comma{} preferred and
+backup order@comma{} or automatic-selection permission for an external helper.
+Expand @emph{Advanced startup settings} for literal program arguments and wait
+limits. @kbd{l} switches engines while retaining all drafts. @emph{Add installed helper}
+registers a compatible helper program initially disabled; it does not download
+or execute the program. Enable it@comma{} Save@comma{} then Apply to check runtime support.
+
+@kbd{s} saves the draft without changing running speech. A conflicting file edit
+keeps your draft and asks you to refresh and review. @kbd{g} rereads saved settings@comma{}
+confirming before discarding a draft. @kbd{q} returns while retaining the draft.
+The screen shows saved/draft state separately from each worker's last reported
+availability and explains explicit environment settings that take priority.
+
+@kbd{A} reviews and applies saved engine and managed voice settings to both speech
+workers through the existing preflight and rollback flow. Save all edits first.
+@emph{Check saved settings} validates files only. @kbd{P} opens the selected engine's
+live voices in the Workbench for a spoken sample; it uses the running session@comma{}
+so a saved change requires successful Apply before it can be heard there.
+
+@item
+@anchor{Choose The Shared Preferred Engine}Choose The Shared Preferred Engine
+
+
 For a quick engine preference@comma{} @kbd{C-e d e} chooses an available engine
 for the current Emacs session.  Use @kbd{C-u C-e d e} to save the new
 preference. On a first run with no saved engine settings@comma{} the ordinary command
@@ -4559,6 +4592,7 @@ Saving engine policy is separate from saving a named voice or a Presentation
 Profile. If an apply fails or is unconfirmed@comma{} see
 @ref{Recovering Aural Changes,Recovering Unfinished Changes,,emacsvox,}. Installation and optional engine modules are
 covered in @ref{Optional Omnivox Engine Modules,Optional Omnivox Engines,,emacsvox,}.
+@end enumerate
 
 @node Sounds And Space
 @section Sounds@comma{} Tones@comma{} And Spatial Cues

@@ -123,12 +123,17 @@ Collect and triage live feedback on the validated Phase 9 support recorded in
 separately, preserving the documented privacy and conservative-speech
 boundaries.
 
-** TODO Add a speech-engine settings screen
+** TODO Complete listening acceptance of engine configuration
 
 Requested on 2026-09-28. Extend the existing /Speech engines/ area with settings
 opened from each engine's details page. Build on the
 [[file:../engine-management-design.org][engine-management design]] and Omnivox's
-[[https://github.com/bartbunting/omnivox/blob/main/docs/reference/engine-configuration.md][version-1 configuration rules]]. This is backlog scope; implementation has not begun.
+[[https://github.com/bartbunting/omnivox/blob/main/docs/reference/engine-configuration.md][version-1 configuration rules]].
+
+The local settings screen, atomic saving, helper registration, and existing
+two-worker Apply flow are implemented in development. Automated checks cover
+draft retention, save conflicts, native host services, and graphical navigation.
+Listening acceptance of saved changes and failed-Apply recovery remains.
 
 Let users add a compatible installed engine, choose its program file, turn
 engines on or off, and choose preferred and backup engines. Include permission
@@ -138,8 +143,8 @@ voices and adjusting how they sound.
 
 Show saved settings separately from those currently in use. Saving should not
 restart speech; provide an explicit Apply action that checks changes and uses
-the same prepared settings for normal and notification speech. Plan safe saving,
-failed-Apply recovery and clear spoken feedback before implementation. Preserve
+the same prepared settings for normal and notification speech. Verify safe saving,
+failed-Apply recovery and clear spoken feedback during listening acceptance. Preserve
 unrelated settings and explain when another setting takes priority.
 
 Settings belong to the computer running Omnivox, including Windows when Emacs

@@ -10,6 +10,13 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Edit engine configuration without restarting speech
+
+Open /Engine configuration/ from engine details, or run
+=omnivox-engine-configuration=. Edit independent drafts, register installed
+helpers disabled, save safely, and explicitly Apply saved engine and voice
+settings to both speech workers. Requires the updated local Omnivox service.
+
 ** Read tabulated application lists with shared table controls
 
 Control-Meta arrows or =C-e C-t C-r= enter explicit shared reading in ordinary

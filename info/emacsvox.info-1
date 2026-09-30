@@ -4595,33 +4595,68 @@ File: emacsvox.info,  Node: Speech Engine Preferences,  Prev: Keeping A Voice Ex
 6.8.3 Set Shared Engine Preferences
 -----------------------------------
 
-For a quick engine preference, ‘C-e d e’ chooses an available engine for
-the current Emacs session.  Use ‘C-u C-e d e’ to save the new
-preference.  On a first run with no saved engine settings, the ordinary
-command uses the live Omnivox policy as an in-memory baseline and writes
-no file; the prefixed command explicitly saves that baseline and the
-selected preference.  Explicit physical choices in named palette voices
-still take precedence.
+  1. Edit Saved Engine Configuration
 
-   All named voices use the common editor and the same complete palette
-model.  Workbench engine policy is shared across palettes: ‘O’ toggles
-preferred engines and ‘[’ / ‘]’ reorder them; ‘f’ toggles fallback
-engines and ‘{’ / ‘}’ reorder those.  ‘D’ enables or disables an engine,
-and ‘K’ requests a recovery probe.  These are staged policy edits; ‘w’
-saves and applies them.  Physical choices for a named voice are saved in
-that voice's editor.
+     From an engine's details, choose _Engine configuration_, or run
+     ‘M-x omnivox-engine-configuration’.  This requires an updated local
+     Omnivox host.  The files belong to the speech host, including
+     Windows when Emacs runs under WSL; paths entered here must make
+     sense on that host.
 
-   Tables put voice or engine names first.  Detailed adapter
-capabilities, native identifiers and registration information are
-available with ‘x’ for Details.  Availability, failure reasons,
-predicted selection and observed playback remain distinct.  Inventory
-predictions do not prove that audio played.
+     Use ‘<RET>’ to edit the selected row.  Choose enabled engines,
+     preferred and backup order, or automatic-selection permission for
+     an external helper.  Expand _Advanced startup settings_ for literal
+     program arguments and wait limits.  ‘l’ switches engines while
+     retaining all drafts.  _Add installed helper_ registers a
+     compatible helper program initially disabled; it does not download
+     or execute the program.  Enable it, Save, then Apply to check
+     runtime support.
 
-   Saving engine policy is separate from saving a named voice or a
-Presentation Profile.  If an apply fails or is unconfirmed, see *note
-Recovering Unfinished Changes: (emacsvox)Recovering Aural Changes.
-Installation and optional engine modules are covered in *note Optional
-Omnivox Engines: (emacsvox)Optional Omnivox Engine Modules.
+     ‘s’ saves the draft without changing running speech.  A conflicting
+     file edit keeps your draft and asks you to refresh and review.  ‘g’
+     rereads saved settings, confirming before discarding a draft.  ‘q’
+     returns while retaining the draft.  The screen shows saved/draft
+     state separately from each worker's last reported availability and
+     explains explicit environment settings that take priority.
+
+     ‘A’ reviews and applies saved engine and managed voice settings to
+     both speech workers through the existing preflight and rollback
+     flow.  Save all edits first.  _Check saved settings_ validates
+     files only.  ‘P’ opens the selected engine's live voices in the
+     Workbench for a spoken sample; it uses the running session, so a
+     saved change requires successful Apply before it can be heard
+     there.
+
+  2. Choose The Shared Preferred Engine
+
+     For a quick engine preference, ‘C-e d e’ chooses an available
+     engine for the current Emacs session.  Use ‘C-u C-e d e’ to save
+     the new preference.  On a first run with no saved engine settings,
+     the ordinary command uses the live Omnivox policy as an in-memory
+     baseline and writes no file; the prefixed command explicitly saves
+     that baseline and the selected preference.  Explicit physical
+     choices in named palette voices still take precedence.
+
+     All named voices use the common editor and the same complete
+     palette model.  Workbench engine policy is shared across palettes:
+     ‘O’ toggles preferred engines and ‘[’ / ‘]’ reorder them; ‘f’
+     toggles fallback engines and ‘{’ / ‘}’ reorder those.  ‘D’ enables
+     or disables an engine, and ‘K’ requests a recovery probe.  These
+     are staged policy edits; ‘w’ saves and applies them.  Physical
+     choices for a named voice are saved in that voice's editor.
+
+     Tables put voice or engine names first.  Detailed adapter
+     capabilities, native identifiers and registration information are
+     available with ‘x’ for Details.  Availability, failure reasons,
+     predicted selection and observed playback remain distinct.
+     Inventory predictions do not prove that audio played.
+
+     Saving engine policy is separate from saving a named voice or a
+     Presentation Profile.  If an apply fails or is unconfirmed, see
+     *note Recovering Unfinished Changes: (emacsvox)Recovering Aural
+     Changes.  Installation and optional engine modules are covered in
+     *note Optional Omnivox Engines: (emacsvox)Optional Omnivox Engine
+     Modules.
 
 
 File: emacsvox.info,  Node: Sounds And Space,  Next: Aural Speech Output,  Prev: Installed Voices And Engines,  Up: Aural Presentation

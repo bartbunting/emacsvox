@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 304 loaded; 0 intentionally omitted.
+@c Modules: 305 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -58,11 +58,11 @@
 @c Loaded: emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc
 @c Loaded: g-utils.elc gm-nnir.elc gmaps.elc gweb.elc ladspa.elc
 @c Loaded: light.elc mac-voices.elc omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc
-@c Loaded: omnivox-engine-settings.elc omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc omnivox-native-codec.elc
-@c Loaded: omnivox-parameters-codec.elc omnivox-parameters.elc omnivox-preview.elc omnivox-punctuation.elc omnivox-remote.elc
-@c Loaded: omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc soundscape.elc
-@c Loaded: sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc
-@c Loaded: tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
+@c Loaded: omnivox-engine-configuration.elc omnivox-engine-settings.elc omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc
+@c Loaded: omnivox-native-codec.elc omnivox-parameters-codec.elc omnivox-parameters.elc omnivox-preview.elc omnivox-punctuation.elc
+@c Loaded: omnivox-remote.elc omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc
+@c Loaded: soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc
+@c Loaded: tts-queue-state.elc tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -353,6 +353,7 @@ This chapter documents a total of 1623 commands and 224 options.
 * omaps:: Open street  Maps.
 * omnivox-catalogue:: Available voices and downloads.
 * omnivox-choice-codec:: Individual voice wire values.
+* omnivox-engine-configuration:: Local engine configuration.
 * omnivox-engine-settings:: Local engine startup settings.
 * omnivox-espeak-variants:: Bundled eSpeak variant selection.
 * omnivox-library:: Local installed voices and Apply.
@@ -25509,6 +25510,12 @@ Pure conversions for the negotiated per-choice voice bundle.  Raw saved
 values retain presence until conversion; contextual nil keeps its existing
 ACSS meaning.  Physical route selection belongs to the server.
 
+@node omnivox-engine-configuration
+@section omnivox-engine-configuration
+
+Independent drafts of host engine settings.  Save never activates speech;
+explicit Apply uses the established two-worker preflight/rollback service.
+
 @node omnivox-engine-settings
 @section omnivox-engine-settings
 
@@ -27036,7 +27043,6 @@ Default Value:
 @verbatim
 
 100
-
 @end verbatim
 
 @end defvar

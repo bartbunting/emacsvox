@@ -1621,6 +1621,34 @@ value. Reordering a choice carries its adjustments with it.
 :DESCRIPTION: Choose engine order and distinguish it from explicit palette choices.
 :END:
 
+**** Edit Saved Engine Configuration
+
+From an engine's details, choose /Engine configuration/, or run
+~M-x omnivox-engine-configuration~. This requires an updated local Omnivox
+host. The files belong to the speech host, including Windows when Emacs runs
+under WSL; paths entered here must make sense on that host.
+
+Use ~RET~ to edit the selected row. Choose enabled engines, preferred and
+backup order, or automatic-selection permission for an external helper.
+Expand /Advanced startup settings/ for literal program arguments and wait
+limits. ~l~ switches engines while retaining all drafts. /Add installed helper/
+registers a compatible helper program initially disabled; it does not download
+or execute the program. Enable it, Save, then Apply to check runtime support.
+
+~s~ saves the draft without changing running speech. A conflicting file edit
+keeps your draft and asks you to refresh and review. ~g~ rereads saved settings,
+confirming before discarding a draft. ~q~ returns while retaining the draft.
+The screen shows saved/draft state separately from each worker's last reported
+availability and explains explicit environment settings that take priority.
+
+~A~ reviews and applies saved engine and managed voice settings to both speech
+workers through the existing preflight and rollback flow. Save all edits first.
+/Check saved settings/ validates files only. ~P~ opens the selected engine's
+live voices in the Workbench for a spoken sample; it uses the running session,
+so a saved change requires successful Apply before it can be heard there.
+
+**** Choose The Shared Preferred Engine
+
 For a quick engine preference, ~C-e d e~ chooses an available engine
 for the current Emacs session.  Use ~C-u C-e d e~ to save the new
 preference. On a first run with no saved engine settings, the ordinary command

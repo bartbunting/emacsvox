@@ -78,6 +78,7 @@ emacsvox-preamble.elc \
 tts-queue-state.elc \
 omnivox-remote.elc \
 omnivox-engine-settings.elc \
+omnivox-engine-configuration.elc \
 omnivox-punctuation.elc \
 omnivox-espeak-variants.elc \
 tts-speak.elc \

@@ -992,6 +992,9 @@ OUTPUT to the generic process sentinel EVENT."
      (list
       (list 'voices (vector "Browse voices" "Sample voices, enable or disable, and Apply"))
       (list 'check-live (vector "Refresh status" "Update runtime and voice discovery on both streams")))
+     (when (omnivox-engine-settings--supported-p)
+       (list (list 'engine-configuration
+                   (vector "Engine settings" "Edit host engine choices; Save and Apply are separate"))))
      (when (emacsvox-omnivox-components--release-supported-p)
        (list (list 'release-manager (vector "Manage installed release"
                                             "Open the release installer and its target location"))))
@@ -1057,7 +1060,7 @@ OUTPUT to the generic process sentinel EVENT."
          (visible (delq nil (mapcar (lambda (id) (assq id rows))
                                    (append '(summary runtime main-runtime-status notification-runtime-status main-problem notification-problem operation-error prototype)
                                            (when failed '(output))
-                                           '(voices download-voices espeak-variants check-live prototype-setup release-manager))))))
+                                           '(voices download-voices espeak-variants check-live engine-configuration prototype-setup release-manager))))))
     (dolist (section emacsvox-omnivox-components--detail-sections)
       (let* ((id (car section))
              (expanded (memq id emacsvox-omnivox-components--expanded-sections))
@@ -1184,6 +1187,9 @@ OUTPUT to the generic process sentinel EVENT."
      ((eq action 'voices)
       (require 'emacsvox-aural-voice-workbench)
       (emacsvox-aural-voice-workbench--open-engine id (current-buffer)))
+     ((eq action 'engine-configuration)
+      (require 'omnivox-engine-configuration)
+      (omnivox-engine-configuration id))
      ((memq action '(settings check-settings restart-settings))
       (unless (omnivox-engine-settings--supported-p)
         (user-error "Engine file settings require the bundled local Omnivox launcher"))
@@ -1258,11 +1264,11 @@ OUTPUT to the generic process sentinel EVENT."
     (while (and (not (eobp))
                 (not (or (assq (tabulated-list-get-id) emacsvox-omnivox-components--detail-sections)
                          (memq (tabulated-list-get-id)
-                               '(voices voice-library download-voices espeak-variants check-live release-manager settings check-settings restart-settings install uninstall test output back))))
+                               '(voices engine-configuration voice-library download-voices espeak-variants check-live release-manager settings check-settings restart-settings install uninstall test output back))))
                 (zerop (forward-line direction))))
     (unless (or (assq (tabulated-list-get-id) emacsvox-omnivox-components--detail-sections)
                 (memq (tabulated-list-get-id)
-                      '(voices voice-library download-voices espeak-variants check-live release-manager settings check-settings restart-settings install uninstall test output back)))
+                      '(voices engine-configuration voice-library download-voices espeak-variants check-live release-manager settings check-settings restart-settings install uninstall test output back)))
       (goto-char start))
     (emacsvox-aural-ui-speak-current-row)))
 
