@@ -55,6 +55,7 @@
   (require 'omnivox-choice-registration-tests)
   (require 'omnivox-choice-timeline-tests)
   (require 'omnivox-choice-playback-tests)
+  (require 'emacsvox-character-voice-tests)
   (require 'omnivox-choice-consumer-tests)
   (require 'tts-queue-handoff-tests)
   (require 'tts-queue-state-tests)

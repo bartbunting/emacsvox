@@ -1627,7 +1627,7 @@ not schedule descriptions.  This mode is enabled by default."
       (tts-letter (char-to-string char))
       (emacsvox--delayed-phonetic-schedule char))
      ((and tts-handle-unicode (> char 128)) (emacsvox-speak-char-name char))
-     (t (tts-dispatch (tts-char-to-speech char))))))
+     (t (tts-speak (tts-char-to-speech char))))))
 
 (defun emacsvox-speak-char (&optional prefix)
   "Speak character under point.

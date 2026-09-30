@@ -4297,12 +4297,43 @@ grouping"
     (tts-with-punctuations 'some (tts-speak contents))
     t))
 
+(defun tts--palette-letter (letter)
+  "Deliver isolated LETTER using the palette's frozen default voice.
+Keep character pronunciation, rate and pitch handling in the speech server."
+  (let ((emacsvox-aural--isolated-letter t)
+        (emacsvox-aural-submission-delivery-policy 'ordered)
+        (emacsvox-aural-submission-replacement-key nil))
+    (emacsvox-aural-call-with-delivery-transaction
+     tts-speaker-process
+     (lambda ()
+       (let* ((palette (emacsvox-aural-effective-voice-palette))
+              (voice (emacsvox-aural-compile-voice-style 'default palette))
+              (plan (emacsvox-aural--make-concrete-plan
+                     :voice-palette palette
+                     :context (or emacsvox-aural-submission-context
+                                  (emacsvox-aural-capture-context))
+                     :content (emacsvox-aural--make-concrete-content
+                               :text letter :speak t
+                               :voice-request 'default
+                               :voice-command (emacsvox-aural-compiled-voice-command voice)
+                               :voice-style (emacsvox-aural-compiled-voice-style voice)))))
+         (tts--protocol-sync)
+         (emacsvox-aural-queue-concrete-plan plan letter)
+         (tts--protocol-dispatch))))))
+
 (defun tts-letter (letter)
   "Speak a LETTER."
   (unless tts-quiet
     (when (process-live-p tts-speaker-process)
-      (tts--protocol-sync-capitalization-presentation)
-      (tts--protocol-letter letter))))
+      (if (and (stringp letter) (= (length letter) 1)
+               (not (string-match-p "[[:space:][:cntrl:]]" letter))
+               (not emacsvox-aural--delivery-transaction-active-p)
+               (fboundp 'omnivox--choice-tuning-supported-p)
+               (omnivox--choice-tuning-supported-p tts-speaker-process)
+               (omnivox--process-supports-p tts-speaker-process "palette_letter_v1"))
+          (tts--palette-letter letter)
+        (tts--protocol-sync-capitalization-presentation)
+        (tts--protocol-letter letter)))))
 ;;;  Notify:
 
 (defun tts-notify-process ()

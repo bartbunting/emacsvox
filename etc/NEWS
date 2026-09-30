@@ -10,6 +10,14 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Use the palette voice for character feedback
+
+Typing and character navigation now use the palette's default voice, including
+physical choices such as eSpeak Max and their fallback tuning. Letter feedback
+retains character speed and uppercase pitch. This requires an updated Omnivox
+server advertising palette character support; older servers keep their legacy
+letter behavior. Punctuation names now also use normal palette speech.
+
 ** Replay the voice that delivered a notification
 
 Original playback in Recent Feedback and Feedback Details now uses the engine

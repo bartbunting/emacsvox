@@ -1350,6 +1350,19 @@ time.
      character-at-a-time output, e.g., when providing character echo
      during keyboard input should use this command.
 
+     Omnivox clients that negotiate ‘palette_letter_v1’ and its complete
+     layered voice bundle use ‘emacsvox_letter {BASE64_UTF8_JSON}’
+     instead.  Its version 4 or 5 timeline envelope has one layered span
+     containing one visible Unicode scalar, ordered delivery, no
+     replacement key, and no actions.  Registration and validation
+     precede interruption.  The command retains isolated-character rate,
+     uppercase pitch, pronunciation and short streaming startup while
+     applying the palette's ‘default’ voice, actual fallback tuning and
+     native parameters.  Playback receipts use the existing layered
+     timeline contracts.  Legacy servers continue to receive ‘l’;
+     ordinary phonetic words and punctuation names use the normal
+     palette speech path.
+
           d
 
      This command is used to *dispatch* all queued requests.  It was

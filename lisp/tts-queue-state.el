@@ -134,7 +134,7 @@ This validator is never used to classify generic output."
            ('queue
             (string-match-p
              "\\`\\(?:[qc] \\|\\(?:sh\\|t\\|a\\|emacsvox_tone\\) \\)" value))
-           ('interrupt (string-match-p "\\`\\(?:l\\|tts_say\\) " value))
+           ('interrupt (string-match-p "\\`\\(?:l\\|tts_say\\|emacsvox_letter\\) " value))
            ('neutral
             (or (equal value "OMNIVOX-REMOTE ping")
                 (string-match-p

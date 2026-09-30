@@ -202,6 +202,9 @@ Each function receives the failure plist stored in
 (defconst emacsvox-aural--presentation-tone-max-duration-ms 60000
   "Longest duration accepted by the presentation-tone protocol.")
 
+(defvar emacsvox-aural--isolated-letter nil
+  "Non-nil while delivering one negotiated palette-aware character.")
+
 (defconst emacsvox-aural--structured-timeline-version 3
   "Structured presentation timeline version emitted by Emacsvox.")
 
@@ -243,6 +246,7 @@ Each function receives the failure plist stored in
   "Call FUNCTION with ARGUMENTS in fresh capture state.
 Preserve the ambient speech process, including replacements made by FUNCTION."
   (let ((tts--current-preparation nil)
+        (emacsvox-aural--isolated-letter nil)
         (tts--marker-event-function nil)
         (tts--tracked-completion-function nil)
         (tts--dispatch-origin nil)
@@ -1899,29 +1903,41 @@ the authoritative check after punctuation and split-cap preprocessing."
   "Return complete bounded protocol commands carrying ENVELOPE."
   (emacsvox-aural--validate-structured-timeline envelope)
   (pcase-let* ((`(,payload-bytes ,encoded)
-                 (emacsvox-aural--structured-timeline-payload envelope))
-                (generation (plist-get envelope :generation))
-                (dispatch-id (plist-get envelope :dispatch_id)))
-    (if (<= payload-bytes emacsvox-aural--timeline-frame-max-bytes)
-        (list (format "emacsvox_timeline {%s}\n" encoded))
-      (let* ((fragment-bytes
-              emacsvox-aural--timeline-encoded-fragment-max-bytes)
-             (part-count (/ (+ (length encoded) fragment-bytes -1)
-                            fragment-bytes)))
-        (when (> part-count emacsvox-aural--timeline-max-parts)
-          (emacsvox-aural--transport-error
-           "Structured aural presentation needs %d transport parts; limit is %d"
-           part-count emacsvox-aural--timeline-max-parts))
-        (cl-loop
-         for part-index from 0 below part-count
-         for start = (* part-index fragment-bytes)
-         for end = (min (length encoded) (+ start fragment-bytes))
-         collect
-         (format
-          "emacsvox_timeline_part %d %d %d %d %d %d %s\n"
-          (plist-get envelope :protocol_version)
-          generation dispatch-id part-index part-count payload-bytes
-          (substring encoded start end)))))))
+                (emacsvox-aural--structured-timeline-payload envelope))
+               (generation (plist-get envelope :generation))
+               (dispatch-id (plist-get envelope :dispatch_id)))
+    (if emacsvox-aural--isolated-letter
+        (let* ((spans (plist-get envelope :spans))
+               (span (and (= (length spans) 1) (aref spans 0))))
+          (unless (and (memq (plist-get envelope :protocol_version) '(4 5))
+                       (member (plist-get span :mode) '("layered" "engine_layered"))
+                       (= (length (plist-get (plist-get span :span) :text)) 1)
+                       (zerop (length (plist-get envelope :actions)))
+                       (equal (plist-get envelope :delivery_policy) "ordered")
+                       (null (plist-get envelope :replacement_key))
+                       (<= payload-bytes emacsvox-aural--timeline-frame-max-bytes))
+            (error "Palette character could not be represented faithfully"))
+          (list (format "emacsvox_letter {%s}\n" encoded)))
+      (if (<= payload-bytes emacsvox-aural--timeline-frame-max-bytes)
+          (list (format "emacsvox_timeline {%s}\n" encoded))
+        (let* ((fragment-bytes
+                emacsvox-aural--timeline-encoded-fragment-max-bytes)
+               (part-count (/ (+ (length encoded) fragment-bytes -1)
+                              fragment-bytes)))
+          (when (> part-count emacsvox-aural--timeline-max-parts)
+            (emacsvox-aural--transport-error
+             "Structured aural presentation needs %d transport parts; limit is %d"
+             part-count emacsvox-aural--timeline-max-parts))
+          (cl-loop
+           for part-index from 0 below part-count
+           for start = (* part-index fragment-bytes)
+           for end = (min (length encoded) (+ start fragment-bytes))
+           collect
+           (format
+            "emacsvox_timeline_part %d %d %d %d %d %d %s\n"
+            (plist-get envelope :protocol_version)
+            generation dispatch-id part-index part-count payload-bytes
+            (substring encoded start end))))))))
 
 (defun emacsvox-aural--named-queue-proof-reason (owner)
   "Return OWNER's compatibility reason, or nil when queue proof holds."
@@ -2057,7 +2073,9 @@ the authoritative check after punctuation and split-cap preprocessing."
              (lambda (command)
                (emacsvox-aural--make-delivery-entry
                 :process owner :kind 'structured :command command
-                :queue-description (tts-queue--describe command 'neutral)
+                :queue-description
+                (tts-queue--describe
+                 command (if emacsvox-aural--isolated-letter 'interrupt 'neutral))
                 :owners (list (nth 2 registration))))
              (emacsvox-aural--frame-structured-timeline envelope)))
            effects

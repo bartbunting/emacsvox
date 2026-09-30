@@ -8571,8 +8571,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                   backward-char ,input-start ,(1- prompt-start))))
             (pcase-let ((`(,wrapper ,command ,origin ,destination) case))
               (should
-               (assq 'dispatch
-                     (move wrapper command origin destination)))))
+               (member '(speak "newline")
+                       (move wrapper command origin destination)))))
           (dolist
               (case
                `((emacsvox-agent-shell--forward-char-around
