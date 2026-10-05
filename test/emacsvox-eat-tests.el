@@ -3059,6 +3059,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
            (emacsvox-eat--update-serial 7)
            (emacsvox-eat--quiescence-timer t)
            (emacsvox-eat--pending-follow-live-p t)
+           (emacsvox-eat--pending-automatic-p t)
            (emacsvox-eat--pending-screen-baseline
             '(:generation 3 :rows ("") :text ""))
            (emacsvox-eat--pending-screen-diff
@@ -5977,7 +5978,7 @@ only window eligibility and the final speech sink are stubbed here."
           (eat-term-scrollback-size scrollback)
           spoken)
       (unwind-protect
-          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+          (cl-letf (((symbol-function 'emacsvox-eat--foreground-p)
                      (lambda () t))
                     ((symbol-function 'emacsvox-eat--following-live-p)
                      (lambda () t))
@@ -6066,6 +6067,24 @@ only window eligibility and the final speech sink are stubbed here."
                     (list line "\r\nresult\r\n$ "))
                    '("result")))))
 
+(defun emacsvox-eat-test--focus-frame ()
+  "Focus the actual Emacs X window without requiring a window manager."
+  (redisplay t)
+  (should (= 0 (call-process
+                (executable-find "python3") nil nil nil
+                (expand-file-name
+                 "eat-focus-window.py"
+                 (file-name-directory (symbol-file 'emacsvox-eat-test--wait-until)))
+                (frame-parameter nil 'outer-window-id)))))
+
+(defun emacsvox-eat-test--wait-for-frame-focus (focused)
+  "Process real display events until frame focus equals FOCUSED."
+  (let ((deadline (+ (float-time) 3)))
+    (while (and (< (float-time) deadline)
+                (not (eq (frame-focus-state) focused)))
+      (sit-for 0.02))
+    (eq (frame-focus-state) focused)))
+
 (ert-deftest emacsvox-eat-graphical-output-survives-scrolling ()
   "A real graphical PTY speaks bounded scrolling output in both input modes."
   (skip-unless (display-graphic-p))
@@ -6075,6 +6094,8 @@ only window eligibility and the final speech sink are stubbed here."
         (save-window-excursion
           (delete-other-windows)
           (switch-to-buffer buffer)
+          (emacsvox-eat-test--focus-frame)
+          (should (emacsvox-eat-test--wait-for-frame-focus t))
           (cl-letf (((symbol-function 'emacsvox-eat--submit)
                      (lambda (text &rest _) (push text spoken)))
                     ((symbol-function 'emacsvox-icon) #'ignore)
@@ -6128,6 +6149,226 @@ only window eligibility and the final speech sink are stubbed here."
           (emacsvox-eat--cancel-quiescence)
           (emacsvox-eat--clear-output-frontier))
         (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-eat-autospeak-toggle-is-local-and-independent ()
+  "Foreground control leaves verbosity, monitoring and explicit reading intact."
+  (with-temp-buffer
+    (let ((major-mode 'eat-mode)
+          (emacsvox-eat-verbosity 'verbose)
+          (emacsvox-eat-monitor-background-output t)
+          spoken)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (text &rest _) (push text spoken))))
+        (should-not (emacsvox-eat-toggle-autospeak))
+        (should-not emacsvox-eat-autospeak)
+        (should (eq emacsvox-eat-verbosity 'verbose))
+        (should emacsvox-eat-monitor-background-output)
+        (with-temp-buffer (should emacsvox-eat-autospeak))
+        (emacsvox-eat--screen-quiesced
+         '(:collected-output "unwanted" :output-observed t) '(:cursor-row 0))
+        (should-not (member "unwanted" spoken))
+        (emacsvox-eat--submit-review "explicit reading")
+        (should (equal (car spoken) "explicit reading"))
+        (should (emacsvox-eat-toggle-autospeak 1))
+        (should-not (emacsvox-eat-toggle-autospeak 0))))))
+
+(ert-deftest emacsvox-eat-autospeak-cancels-only-local-automatic-deliveries ()
+  "Cancellation preserves manual, other-terminal and notification work."
+  (with-temp-buffer
+    (let ((tts-speaker-process 'main)
+          (tts-notify-process 'notifications)
+          (emacsvox-aural--pending-deliveries (make-hash-table :test #'equal))
+          (emacsvox-eat--terminal-id 123)
+          (emacsvox-eat--generation 4))
+      (dolist (entry (list (list 'main (emacsvox-eat--terminal-delivery-key 'status))
+                          (list 'main (emacsvox-eat--terminal-delivery-key 'metadata))
+                          (list 'main (emacsvox-eat--terminal-delivery-key 'review-navigation))
+                          (list 'main '(eat status 124 4))
+                          (list 'notifications 'other-notification)))
+        (puthash entry
+                 (emacsvox-aural--make-pending-delivery
+                  :owner (car entry) :replacement-key (cadr entry) :sequence 1)
+                 emacsvox-aural--pending-deliveries))
+      (cl-letf (((symbol-function 'tts-stop)
+                 (lambda (&rest _) (ert-fail "Must not stop admitted speech"))))
+        (emacsvox-eat--discard-automatic-feedback))
+      (should (= (hash-table-count emacsvox-aural--pending-deliveries) 3))
+      (should (gethash '(main (eat review-navigation 123 4))
+                       emacsvox-aural--pending-deliveries))
+      (should (gethash '(main (eat status 124 4)) emacsvox-aural--pending-deliveries))
+      (should (gethash '(notifications other-notification)
+                       emacsvox-aural--pending-deliveries)))))
+
+(ert-deftest emacsvox-eat-autospeak-off-preserves-requested-completion ()
+  "An explicit terminal completion remains spoken with autospeak off."
+  (let ((emacsvox-eat-autospeak nil))
+    (funcall (ert-test-body
+              (ert-get-test 'emacsvox-eat-speaks-same-line-directory-completion)))))
+
+(ert-deftest emacsvox-eat-autospeak-dispatch-preserves-other-modes ()
+  "The shared C-e C-q command selects EAT only when EAT owns the terminal."
+  (require 'emacsvox-comint)
+  (let (called)
+    (cl-letf (((symbol-function 'emacsvox-eat-toggle-autospeak)
+               (lambda (&optional _) (interactive) (setq called 'eat)))
+              ((symbol-function 'emacsvox-toggle-comint-autospeak)
+               (lambda (&optional _) (interactive) (setq called 'comint)))
+              ((symbol-function 'voice-setup-toggle-silence-personality)
+               (lambda () (interactive) (setq called 'silence))))
+      (dolist (case '((eat-mode . eat) (shell-mode . comint)
+                      (vterm-mode . comint) (eshell-mode . silence)
+                      (fundamental-mode . silence)))
+        (with-temp-buffer
+          (setq major-mode (car case))
+          (emacsvox-toggle-inaudible-or-comint-autospeak)
+          (should (eq called (cdr case)))))
+      (with-temp-buffer
+        (let ((major-mode 'eshell-mode)
+              (eat-terminal (eat-term-make (current-buffer) (point-min))))
+          (unwind-protect
+              (progn (emacsvox-toggle-inaudible-or-comint-autospeak)
+                     (should (eq called 'eat)))
+            (eat-term-delete eat-terminal)))))))
+
+(ert-deftest emacsvox-eat-autospeak-discards-a-burst-across-focus-or-toggle ()
+  "Focus loss and off/on cannot replay output collected before the boundary."
+  (dolist (boundary '(toggle focus))
+    (with-temp-buffer
+      (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+            (major-mode 'eat-mode)
+            (foreground t)
+            spoken)
+        (unwind-protect
+            (cl-letf (((symbol-function 'emacsvox-eat--foreground-p)
+                       (lambda () foreground))
+                      ((symbol-function 'emacsvox-eat--following-live-p) (lambda () t))
+                      ((symbol-function 'emacsvox-eat--submit)
+                       (lambda (text &rest _) (push text spoken))))
+              (eat-term-process-output eat-terminal "$ command")
+              (eat-term-redisplay eat-terminal)
+              (setq-local emacsvox-eat--generation 1
+                          emacsvox-eat--screen-snapshot (emacsvox-eat--capture-screen))
+              (emacsvox-eat--output-input-boundary)
+              (eat-term-process-output eat-terminal "\r\nstale\r\n")
+              (eat-term-redisplay eat-terminal)
+              (emacsvox-eat--observe-screen)
+              (should emacsvox-eat--pending-automatic-p)
+              (if (eq boundary 'toggle)
+                  (progn (emacsvox-eat-toggle-autospeak 0)
+                         (emacsvox-eat-toggle-autospeak 1))
+                (setq foreground nil)
+                (emacsvox-eat--foreground-context-changed)
+                (setq foreground t))
+              (setq spoken nil)
+              (emacsvox-eat-test--finish-screen-burst)
+              (should-not spoken)
+              (eat-term-process-output eat-terminal "fresh\r\n")
+              (eat-term-redisplay eat-terminal)
+              (emacsvox-eat--observe-screen)
+              (emacsvox-eat-test--finish-screen-burst)
+              (should (equal spoken '("fresh"))))
+          (emacsvox-eat--cancel-quiescence)
+          (emacsvox-eat--clear-output-frontier)
+          (eat-term-delete eat-terminal))))))
+
+(defun emacsvox-eat-test--deliver-queued-output (output)
+  "Render OUTPUT through EAT's real window synchronization and update hooks."
+  (setq eat--pending-output-chunks (list output))
+  (eat--process-output-queue (current-buffer))
+  (emacsvox-eat-test--finish-screen-burst))
+
+(ert-deftest emacsvox-eat-graphical-foreground-and-line-draft ()
+  "Real selection, external X focus and editable line input govern autospeak."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-comint)
+  (let ((buffer (generate-new-buffer " *EAT focus*"))
+        (other (generate-new-buffer " *EAT focus other*"))
+        (foreign-output (generate-new-buffer " *EAT foreign focus*"))
+        foreign spoken)
+    (unwind-protect
+        (save-window-excursion
+          (delete-other-windows)
+          (switch-to-buffer buffer)
+          (emacsvox-eat-test--focus-frame)
+          (should (emacsvox-eat-test--wait-for-frame-focus t))
+          (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                     (lambda (text &rest _) (push text spoken))))
+            (eat-mode)
+            (setq-local eat-terminal (eat-term-make buffer (point-min))
+                        buffer-read-only nil)
+            (eat-term-resize eat-terminal 60 10)
+            (eat-term-process-output eat-terminal "old\r\n$ ")
+            (eat-term-redisplay eat-terminal)
+            (goto-char (eat-term-display-cursor eat-terminal))
+            (setq emacsvox-eat--screen-snapshot (emacsvox-eat--capture-screen))
+            (emacsvox-eat--clear-output-frontier)
+            (dolist (mode '(eat-semi-char-mode eat-line-mode eat-emacs-mode eat-char-mode))
+              (funcall mode)
+              (should (eq (key-binding (kbd "C-e C-q"))
+                          'emacsvox-toggle-inaudible-or-comint-autospeak)))
+            (eat-line-mode)
+            (goto-char (point-max))
+            (insert "unsent draft")
+            (should (emacsvox-eat--automatic-eligible-p))
+            (emacsvox-eat-test--deliver-queued-output "\r\nwhile editing\r\n")
+            (should (member "while editing" spoken))
+            (should (string-suffix-p "unsent draft" (buffer-string)))
+            ;; Review disables automatic feedback even in line mode.
+            (goto-char (point-min))
+            (should-not (emacsvox-eat--automatic-eligible-p))
+            (emacsvox-eat--check-foreground)
+            (goto-char (point-max))
+            (should (emacsvox-eat--automatic-eligible-p))
+            (minibuffer-with-setup-hook
+                (lambda ()
+                  (with-current-buffer buffer
+                    (should-not (emacsvox-eat--foreground-p)))
+                  (setq unread-command-events (list ?\r)))
+              (read-from-minibuffer "EAT focus test: "))
+            (should (emacsvox-eat--automatic-eligible-p))
+            ;; Selecting another window with the same buffer still counts.
+            (select-window (split-window-right))
+            (set-window-buffer (selected-window) buffer)
+            (goto-char (point-max))
+            (should (emacsvox-eat--automatic-eligible-p))
+            (switch-to-buffer other)
+            (with-current-buffer buffer
+              (should-not (emacsvox-eat--automatic-eligible-p)))
+            (switch-to-buffer buffer)
+            (goto-char (point-max))
+            (setq spoken nil)
+            (setq eat--pending-output-chunks '("pending\r\n"))
+            (eat--process-output-queue buffer)
+            (should emacsvox-eat--pending-automatic-p)
+            ;; Keep quiescence pending until the external focus event arrives.
+            (cancel-timer emacsvox-eat--quiescence-timer)
+            (setq foreign
+                  (start-process
+                   "EAT foreign focus" foreign-output (executable-find "python3")
+                   (expand-file-name
+                    "eat-focus-window.py"
+                    (file-name-directory (symbol-file 'emacsvox-eat-test--wait-until)))))
+            (set-process-query-on-exit-flag foreign nil)
+            (should (emacsvox-eat-test--wait-for-frame-focus nil))
+            (sit-for 0.1)
+            (should (emacsvox-eat--selected-buffer-p))
+            (should-not (emacsvox-eat--foreground-p))
+            (should-not emacsvox-eat--pending-automatic-p)
+            (emacsvox-eat-test--finish-screen-burst)
+            (emacsvox-eat-test--deliver-queued-output "away\r\n")
+            (should-not spoken)
+            (delete-process foreign)
+            (emacsvox-eat-test--focus-frame)
+            (should (emacsvox-eat-test--wait-for-frame-focus t))
+            (should (emacsvox-eat--automatic-eligible-p))
+            (emacsvox-eat-test--deliver-queued-output "back\r\n")
+            (should (equal spoken '("back")))))
+      (when (and foreign (process-live-p foreign)) (delete-process foreign))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (emacsvox-eat--clear-transient-state)
+          (when (eat-term-live-p eat-terminal) (eat-term-delete eat-terminal))))
+      (mapc #'kill-buffer (list buffer other foreign-output)))))
 
 (provide 'emacsvox-eat-tests)
 ;;; emacsvox-eat-tests.el ends here

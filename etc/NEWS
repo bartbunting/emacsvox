@@ -22,6 +22,14 @@ rows leave the screen or scrollback is trimmed. Split chunks and wrapped lines
 are assembled without repeating command input. Automatic output remains limited
 to eight lines and 1,000 characters, with an indication of omitted output.
 
+** Control EAT foreground feedback with C-e C-q
+
+Each terminal now has an independent automatic-feedback toggle. Output requires
+Emacs keyboard focus when detectable, and remains available while editing a
+line-mode draft. Losing focus or switching feedback off discards locally pending
+work; speech already sent may finish. Explicit reading, input feedback, verbosity
+and background monitoring remain independent.
+
 ** Speak symbol names cleanly during character navigation
 
 Names such as "left bracket" and "question mark" no longer speak an extra

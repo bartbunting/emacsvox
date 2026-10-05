@@ -45,6 +45,7 @@
 (defvar eat-eshell-update-hook)
 (defvar eat-eshell-visual-command-mode)
 (defvar eat-line-mode-map)
+(defvar eat--line-mode)
 (defvar eat-mode-map)
 (defvar eat-semi-char-mode-map)
 (defvar eat-terminal)
@@ -104,6 +105,17 @@
   "Speech access to EAT terminals."
   :group 'emacsvox
   :prefix "emacsvox-eat-")
+
+(defcustom emacsvox-eat-autospeak t
+  "Whether this terminal produces automatic foreground feedback.
+Only the selected terminal with keyboard focus speaks, while following its
+live cursor or editing line input.  Turning this off discards local pending
+feedback; speech already sent to Omnivox may finish.  Explicit reading, input
+feedback, verbosity, and background monitoring remain independent."
+  :type 'boolean
+  :group 'emacsvox-eat)
+
+(make-variable-buffer-local 'emacsvox-eat-autospeak)
 
 (defcustom emacsvox-eat-verbosity 'normal
   "Amount of automatic feedback produced for EAT terminals.
@@ -172,6 +184,12 @@ when the terminal is selected again."
 
 (defvar-local emacsvox-eat--quiescence-timer nil
   "Timer waiting to finish the current EAT update burst.")
+
+(defvar-local emacsvox-eat--pending-automatic-p nil
+  "Non-nil when the whole pending burst permits automatic feedback.")
+
+(defvar emacsvox-eat--automatic-feedback-allowed-p t
+  "Dynamically bound eligibility of automatic feedback in a finished burst.")
 
 (defvar-local emacsvox-eat--pending-follow-live-p nil
   "Non-nil when every update in the pending burst followed the live cursor.")
@@ -1246,6 +1264,7 @@ resulting rendered input or history row without its observed prompt prefix."
         emacsvox-eat--pending-screen-diff nil
         emacsvox-eat--pending-alternate-screen-transitions nil
         emacsvox-eat--pending-follow-live-p nil
+        emacsvox-eat--pending-automatic-p nil
         emacsvox-eat--pending-user-input-p nil
         emacsvox-eat--pending-navigation-intent nil
         emacsvox-eat--quiescence-started-at nil))
@@ -1330,11 +1349,14 @@ be mistaken for appended output, even when the replacement text is identical."
              (anchor (copy-marker cursor))
              (display (eat-term-display-beginning terminal))
              (size (eat-term-size terminal))
-             (eligible (and (emacsvox-eat--selected-buffer-p)
+             (eligible (and emacsvox-eat-autospeak
+                            (emacsvox-eat--foreground-p)
                             (not (eat-term-in-alternative-display-p terminal))
                             (save-excursion
                               (goto-char (eat-term-display-cursor terminal))
-                              (= (line-end-position) cursor))))
+                              ;; Line-mode draft text can follow the terminal
+                              ;; extent on this same physical buffer row.
+                              (>= (line-end-position) cursor))))
              (generation emacsvox-eat--generation))
         (unless emacsvox-eat--output-frontier
           (setq emacsvox-eat--output-frontier (copy-marker cursor)))
@@ -1696,7 +1718,9 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
                 emacsvox-eat--last-likely-focus nil
                 emacsvox-eat--last-focus-presentation-identity nil)
           (emacsvox-eat--retain-screen-change diff snapshot)
-          (emacsvox-eat--present-alternate-screen-transitions states)
+          (when (and emacsvox-eat-autospeak
+                     emacsvox-eat--automatic-feedback-allowed-p)
+            (emacsvox-eat--present-alternate-screen-transitions states))
           t))
        ((when-let* ((deletion (plist-get diff :deletion)))
           (emacsvox-eat--retain-screen-change diff snapshot)
@@ -1738,7 +1762,9 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
         (emacsvox-eat--retain-screen-change diff snapshot))
        (t
         (emacsvox-eat--retain-screen-change diff snapshot)
-        (unless (eq emacsvox-eat-verbosity 'terse)
+        (when (and emacsvox-eat-autospeak
+                   emacsvox-eat--automatic-feedback-allowed-p
+                   (not (eq emacsvox-eat-verbosity 'terse)))
           (cond
            ((plist-get diff :collected-output)
             (emacsvox-eat--submit
@@ -1752,8 +1778,9 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
            (t
             (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
               (emacsvox-eat--present-status status)))))))
-    (emacsvox-eat--present-metadata-change diff snapshot)
-    (emacsvox-eat--present-prompt-status diff)))
+    (when (and emacsvox-eat-autospeak emacsvox-eat--automatic-feedback-allowed-p)
+      (emacsvox-eat--present-metadata-change diff snapshot)
+      (emacsvox-eat--present-prompt-status diff))))
 
 (defun emacsvox-eat--finish-quiescence
     (buffer generation serial &optional terminal-exiting-p)
@@ -1775,18 +1802,21 @@ the terminal still existed instead of consulting its deleted cursor."
               (deletion emacsvox-eat--deletion-intent)
               (alternate-screen-transitions
                (nreverse emacsvox-eat--pending-alternate-screen-transitions))
+              (emacsvox-eat--automatic-feedback-allowed-p
+               emacsvox-eat--pending-automatic-p)
               (followed-live-p emacsvox-eat--pending-follow-live-p)
               (user-input-p emacsvox-eat--pending-user-input-p))
           (setq emacsvox-eat--pending-screen-baseline nil
                 emacsvox-eat--pending-screen-diff nil
                 emacsvox-eat--pending-alternate-screen-transitions nil
                 emacsvox-eat--pending-follow-live-p nil
+                emacsvox-eat--pending-automatic-p nil
                 emacsvox-eat--pending-user-input-p nil
                 emacsvox-eat--pending-navigation-intent nil
                 emacsvox-eat--quiescence-started-at nil)
           (emacsvox-eat--clear-collected-output)
           (when (and diff
-                     (emacsvox-eat--selected-buffer-p))
+                     (emacsvox-eat--foreground-p))
             (setq diff (plist-put diff :user-input user-input-p))
             (when output-observed
               (setq diff (plist-put diff :output-observed t)))
@@ -1844,11 +1874,13 @@ the terminal still existed instead of consulting its deleted cursor."
   (when-let* ((new (emacsvox-eat--capture-screen)))
     (let ((old emacsvox-eat--screen-snapshot)
           (navigation (emacsvox-eat--current-navigation-intent)))
+      (unless (emacsvox-eat--automatic-eligible-p)
+        (emacsvox-eat--discard-automatic-feedback))
       (setq emacsvox-eat--recent-navigation-intent nil)
       (setq emacsvox-eat--update-serial
             (1+ emacsvox-eat--update-serial)
             emacsvox-eat--screen-snapshot new)
-      (if (or (not (emacsvox-eat--selected-buffer-p))
+      (if (or (not (emacsvox-eat--foreground-p))
               (null old)
               (not
                (equal
@@ -1858,8 +1890,13 @@ the terminal still existed instead of consulting its deleted cursor."
         (if emacsvox-eat--pending-screen-baseline
             (setq emacsvox-eat--pending-follow-live-p
                   (and emacsvox-eat--pending-follow-live-p
-                       (emacsvox-eat--following-live-p)))
+                       (emacsvox-eat--following-live-p))
+                  emacsvox-eat--pending-automatic-p
+                  (and emacsvox-eat--pending-automatic-p
+                       (emacsvox-eat--automatic-eligible-p)))
           (setq emacsvox-eat--pending-screen-baseline old
+                emacsvox-eat--pending-automatic-p
+                (emacsvox-eat--automatic-eligible-p)
                 emacsvox-eat--pending-follow-live-p
                 (emacsvox-eat--following-live-p)
                 emacsvox-eat--quiescence-started-at (float-time)))
@@ -2008,7 +2045,7 @@ the terminal still existed instead of consulting its deleted cursor."
 
 (defun emacsvox-eat--clear-sensitive-screen-state ()
   "Forget content-bearing EAT observation state in the current buffer."
-  (emacsvox-eat--clear-output-frontier)
+  (emacsvox-eat--discard-automatic-feedback)
   (emacsvox-eat--kill-review-buffer)
   (emacsvox-eat--clear-background-monitor-state)
   (emacsvox-eat--cancel-quiescence)
@@ -2040,8 +2077,8 @@ the terminal still existed instead of consulting its deleted cursor."
 
 (defun emacsvox-eat--advance-generation ()
   "Invalidate asynchronous state and advance the current EAT generation."
-  (setq emacsvox-eat--generation (1+ emacsvox-eat--generation))
   (emacsvox-eat--clear-transient-state)
+  (setq emacsvox-eat--generation (1+ emacsvox-eat--generation))
   emacsvox-eat--generation)
 
 (defun emacsvox-eat--facts (role event &optional operation properties)
@@ -2192,7 +2229,8 @@ The terminal's original bell callback has already run."
     (setq emacsvox-eat--screen-snapshot (emacsvox-eat--capture-screen))
     ;; Initial creation already has the `eat' opening announcement.  A later
     ;; exec in the same terminal needs its own lifecycle boundary.
-    (when (and (not quiet-start-p) (emacsvox-eat--selected-buffer-p))
+    (when (and (not quiet-start-p) emacsvox-eat-autospeak
+               (emacsvox-eat--foreground-p))
       (cond
        (visual-command-p
         (emacsvox-eat--submit
@@ -2222,7 +2260,7 @@ Ignore a stale or duplicate exit after another process has become active."
       (emacsvox-eat--advance-generation)
       (setq emacsvox-eat--active-process nil
             emacsvox-eat--last-exited-process process)
-      (when (emacsvox-eat--selected-buffer-p)
+      (when (and emacsvox-eat-autospeak (emacsvox-eat--foreground-p))
         (let* ((status (process-status process))
                (exit-status
                 (and
@@ -2326,6 +2364,7 @@ Ignore a stale or duplicate exit after another process has become active."
                 emacsvox-eat--last-exited-process nil))
   (add-hook 'window-selection-change-functions
             #'emacsvox-eat--window-selection-changed nil t)
+  (add-hook 'post-command-hook #'emacsvox-eat--check-foreground nil t)
   (add-hook 'kill-buffer-hook #'emacsvox-eat--kill-review-buffer nil t)
   (add-hook 'change-major-mode-hook #'emacsvox-eat--kill-review-buffer nil t)
   (add-hook 'kill-buffer-hook #'emacsvox-eat--clear-transient-state nil t)
@@ -2358,6 +2397,25 @@ Ignore a stale or duplicate exit after another process has become active."
         emacsvox-eat-review--source-buffer
       (user-error "The source EAT terminal is no longer available")))
    (t (user-error "This is not an EAT terminal or frozen review buffer"))))
+
+(defun emacsvox-eat-toggle-autospeak (&optional argument)
+  "Toggle automatic foreground feedback for this EAT terminal.
+With positive prefix ARGUMENT enable it; with zero or negative prefix disable
+it.  Speech already sent may finish.  Explicit reading and input feedback
+remain available.  This also works from the terminal's frozen review buffer."
+  (interactive "P")
+  (let ((terminal (emacsvox-eat--control-buffer)) enabled)
+    (with-current-buffer terminal
+      (emacsvox-eat--discard-automatic-feedback)
+      (setq-local emacsvox-eat-autospeak
+                  (if argument (> (prefix-numeric-value argument) 0)
+                    (not emacsvox-eat-autospeak)))
+      (setq enabled emacsvox-eat-autospeak))
+    (emacsvox-eat--submit
+     (format "Terminal automatic feedback %s" (if enabled "enabled" "disabled"))
+     (emacsvox-eat--facts 'command-interaction 'state-changed)
+     'state-change 'button)
+    enabled))
 
 (defun emacsvox-eat-toggle-background-monitoring (&optional argument)
   "Toggle content-free background-output monitoring for this EAT terminal.
@@ -2415,14 +2473,61 @@ The command also works from the terminal's frozen review buffer."
   "Return non-nil when the current EAT buffer is selected."
   (eq (current-buffer) (window-buffer (selected-window))))
 
+(defun emacsvox-eat--foreground-p ()
+  "Return non-nil when this terminal owns detectable keyboard focus.
+On displays reporting unknown focus, selected-window ownership suffices."
+  (and (emacsvox-eat--selected-buffer-p)
+       (not (active-minibuffer-window))
+       (or (not (display-graphic-p))
+           (not (null (frame-focus-state (selected-frame)))))))
+
+(defun emacsvox-eat--automatic-eligible-p ()
+  "Return non-nil when new automatic terminal feedback is eligible."
+  (and emacsvox-eat-autospeak
+       (emacsvox-eat--foreground-p)
+       (emacsvox-eat--following-live-p)))
+
+(defun emacsvox-eat--discard-automatic-feedback ()
+  "Discard only this terminal's locally pending automatic feedback.
+Ordered output has already been sent.  Never stop a shared speech process."
+  (setq emacsvox-eat--pending-automatic-p nil)
+  (emacsvox-eat--clear-output-frontier)
+  (when emacsvox-eat--terminal-id
+    (dolist (owner (list tts-speaker-process tts-notify-process))
+      (when owner
+        (dolist (kind '(status metadata))
+          (emacsvox-aural-cancel-pending-deliveries
+           owner (emacsvox-eat--terminal-delivery-key kind)))))))
+
+(defun emacsvox-eat--check-foreground ()
+  "Discard automatic feedback when this terminal loses eligibility."
+  (unless (emacsvox-eat--automatic-eligible-p)
+    (emacsvox-eat--discard-automatic-feedback)))
+
+(defun emacsvox-eat--foreground-context-changed (&rest _)
+  "Recheck initialized terminals after window, minibuffer, or frame changes."
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (local-variable-p 'emacsvox-eat--generation)
+        (emacsvox-eat--check-foreground)))))
+
+(add-hook 'window-selection-change-functions
+          #'emacsvox-eat--foreground-context-changed)
+(add-hook 'minibuffer-setup-hook #'emacsvox-eat--foreground-context-changed)
+(add-function :after after-focus-change-function
+              #'emacsvox-eat--foreground-context-changed)
+
 (defun emacsvox-eat--following-live-p ()
   "Return non-nil when the selected EAT window follows its live cursor.
-This mirrors EAT's window synchronization condition using only the public
-terminal cursor accessor."
+Editable line-mode input after the terminal extent also counts as live.
+EAT exposes its line-mode state through the minor-mode variable."
   (and (emacsvox-eat--selected-buffer-p)
        (eat-term-live-p eat-terminal)
-       (= (eat-term-display-cursor eat-terminal)
-          (window-point (selected-window)))))
+       (or (= (eat-term-display-cursor eat-terminal)
+              (window-point (selected-window)))
+           (and (bound-and-true-p eat--line-mode)
+                (>= (window-point (selected-window))
+                    (eat-term-end eat-terminal))))))
 
 ;;; Speech-Enable Terminal Emulation:
 

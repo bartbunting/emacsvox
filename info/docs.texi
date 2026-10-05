@@ -71,7 +71,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1624 commands and 224 options.
+This chapter documents a total of 1625 commands and 225 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -8450,7 +8450,7 @@ Interactive PREFIX toggles the global default and applies it locally.
 @findex emacsvox-toggle-inaudible-or-comint-autospeak
 
 @format
-Toggle comint-autospeak when in a comint or vterm buffer.
+Toggle foreground autospeak in EAT, or autospeak in comint and vterm.
 Otherwise call voice-setup-toggle-silence-personality which
 toggles personality under point.
 @end format
@@ -9045,6 +9045,20 @@ The command also works from the terminal’s frozen review buffer.
 @end format
 @end deffn
 
+@subsubsection emacsvox-eat-toggle-autospeak
+@deffn {Command} emacsvox-eat-toggle-autospeak  (&optional argument)
+@findex emacsvox-eat-toggle-autospeak
+
+@format
+Toggle automatic foreground feedback for this EAT terminal.
+With positive prefix ARGUMENT enable it; with zero or negative prefix disable
+it.  Speech already sent may finish.  Explicit reading and input feedback
+remain available.  This also works from the terminal’s frozen review buffer.
+
+(fn &optional ARGUMENT)
+@end format
+@end deffn
+
 @subsubsection emacsvox-eat-toggle-background-monitoring
 @deffn {Command} emacsvox-eat-toggle-background-monitoring  (&optional argument)
 @findex emacsvox-eat-toggle-background-monitoring
@@ -9059,6 +9073,24 @@ prefix, disable it.  The command also works from its frozen review buffer.
 @end deffn
 
 @subsection emacsvox-eat-core Options
+
+@defvar {User Option} emacsvox-eat-autospeak
+@verbatim
+Whether this terminal produces automatic foreground feedback.
+Only the selected terminal with keyboard focus speaks, while following its
+live cursor or editing line input.  Turning this off discards local pending
+feedback; speech already sent to Omnivox may finish.  Explicit reading, input
+feedback, verbosity, and background monitoring remain independent.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
 
 @defvar {User Option} emacsvox-eat-monitor-background-output
 @verbatim

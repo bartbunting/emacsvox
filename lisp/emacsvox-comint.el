@@ -83,13 +83,19 @@ Interactive PREFIX arg means toggle  global default value. "
              (if emacsvox-comint-autospeak "on" "off")
              (if prefix "" " locally")))))
 
+(declare-function emacsvox-eat--terminal-buffer-p "emacsvox-eat-core" ())
+(declare-function emacsvox-eat-toggle-autospeak "emacsvox-eat-core" (&optional argument))
+
 ;;;###autoload
 (defun emacsvox-toggle-inaudible-or-comint-autospeak ()
-  "Toggle comint-autospeak when in a comint or vterm buffer.
+  "Toggle foreground autospeak in EAT, or autospeak in comint and vterm.
 Otherwise call voice-setup-toggle-silence-personality which
 toggles personality under point."
   (interactive)
   (cond
+   ((and (fboundp 'emacsvox-eat--terminal-buffer-p)
+         (emacsvox-eat--terminal-buffer-p))
+    (funcall-interactively #'emacsvox-eat-toggle-autospeak))
    ((or (derived-mode-p 'comint-mode)
         (eq 'vterm-mode major-mode))
     (funcall-interactively #'emacsvox-toggle-comint-autospeak))

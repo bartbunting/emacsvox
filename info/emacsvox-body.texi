@@ -6693,10 +6693,31 @@ those definitions.
 
 @cindex terminal output, speech policy
 
-Automatic speech is restricted to the selected EAT buffer while its selected
-window follows the live terminal cursor.  Moving into scrollback prevents new
-output from interrupting review.  Output in another terminal or behind an
-active minibuffer is silent by default.
+@kindex C-e C-q (EAT)
+
+@findex emacsvox-eat-toggle-autospeak
+
+@vindex emacsvox-eat-autospeak
+
+Use @kbd{C-e C-q} to toggle automatic foreground feedback for this terminal.
+It starts enabled.  This controls routine output@comma{} status@comma{} automatic metadata@comma{}
+application-screen boundaries@comma{} and process lifecycle feedback.  Explicit reading@comma{}
+input and completion feedback@comma{} and the configured terminal bell remain available.
+The verbosity control @kbd{C-e q v} and background monitoring @kbd{C-e q m} remain
+independent; changing autospeak does not change either preference.
+
+Automatic speech requires the selected EAT buffer and Emacs keyboard focus.
+The selected window must follow the live cursor or be editing a line-mode draft
+after the terminal output.  Moving into scrollback prevents new output from
+interrupting review.  Another terminal or an active minibuffer also suppresses
+foreground feedback.  In terminal-only Emacs@comma{} or when the display cannot report
+keyboard focus@comma{} selection within Emacs is the available focus boundary.
+
+Switching autospeak off or losing eligibility discards locally pending automatic
+feedback.  Speech already sent to Omnivox may finish.  Returning to the terminal
+or switching autospeak on starts with fresh output; it does not replay missed
+output.  Use explicit reading to inspect it.  This control also applies while
+EAT owns an embedded Eshell terminal@comma{} without changing ordinary Eshell output.
 
 On the main screen@comma{} Emacsvox coalesces a burst before classifying it.  Complete
 new output lines are spoken once@comma{} with an automatic limit of eight lines and

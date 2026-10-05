@@ -19,7 +19,8 @@
     emacsvox-agent-shell-live-input-graphical-wrapped-speech
     emacsvox-agent-shell-response-graphical-bidirectional-speech
     emacsvox-agent-shell-table-graphical-wrapped-navigation
-    emacsvox-eat-graphical-output-survives-scrolling)
+    emacsvox-eat-graphical-output-survives-scrolling
+    emacsvox-eat-graphical-foreground-and-line-draft)
   "Cases owned by the graphical gate and excluded from the batch gate.")
 
 (defun emacsvox-integration-test--run ()
