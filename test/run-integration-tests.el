@@ -36,6 +36,10 @@
          (dependencies (expand-file-name
                         (or (getenv "EMACSVOX_TEST_DEPS_DIR") ".test-deps") root))
          (emacs (expand-file-name invocation-name invocation-directory)))
+    ;; This gate verifies submissions, not audible playback.  Never inherit
+    ;; the maintainer's live speech backend, including on the batch path.
+    ;; Set this before loading any Emacsvox module that initializes tts-program.
+    (setenv "TTS_PROGRAM" (expand-file-name "servers/log-null" root))
     ;; Verify before loading any third-party code, including autoloads.  Keep
     ;; checksum and prepared-tree validation in the preparer's single check path.
     (with-temp-buffer
