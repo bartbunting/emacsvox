@@ -213,6 +213,10 @@ onto such a button identifies its bounded filename, content type, and size.
 Line reading speaks the visible sender row even when the preceding message
 ends with folded quoted text.  The quote stays folded.
 
+In a short graphical window, ~DOWN~ advances through ordinary body text before
+speaking the next line, even when the current line is only partly visible.
+Images or text taller than the window retain Emacs's partial scrolling.
+
 #+attr_texinfo: :indic kbd :compact t
 - n ::
 

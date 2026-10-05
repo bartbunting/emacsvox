@@ -82,6 +82,24 @@ including full values, blanks, buttons, native action keys, sorting, filtering,
 refresh and hidden rows. Its graphical navigation case must run on a real
 graphical Emacs; a batch skip does not establish display acceptance.
 
+** Ordinary line movement in short windows
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Core =next-line= advice dynamically disables =auto-window-vscroll= for an
+interactive one-line forward move when the displayed row fits in the selected
+window. Native partial scrolling can otherwise scroll without moving point,
+causing the existing after advice to read the same line again. This reproduced
+while reading Notmuch HTML with a header line and mixed font heights.
+
+Preserve the interactive marker for the after advice, programmatic movement,
+prefix arguments and scrolling within genuinely tall rows. Do not change the
+buffer's scrolling preference or suppress repeated text as a substitute for
+correct movement. The graphical integration gate exercises real rendering,
+cursor movement and speech, plus a tall-image case, in
+=test/emacsvox-vertical-navigation-tests.el=.
+
 ** EAT rendered output and prompt observation
 :PROPERTIES:
 :TEXINFO_NODE: no

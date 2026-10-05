@@ -265,6 +265,27 @@ DOCSTRING and BODY define the feedback function for each command."
 
 ;;;  advice cursor movement commands to speak
 
+(defun emacsvox--advice-next-line-around (original &optional arg try-vscroll)
+  "Advance ordinary text before ORIGINAL's line feedback is presented.
+Native partial-line scrolling can consume Down by scrolling the window
+without moving point.  Bypass it for an interactive single-line move when
+the rendered row fits in the window.  Taller rows keep native scrolling."
+  (let ((auto-window-vscroll
+         (and auto-window-vscroll
+              (not (and (eq ems--interactive-fn-name 'next-line)
+                        (= (or arg 1) 1)
+                        try-vscroll
+                        (display-graphic-p)
+                        (eq (current-buffer) (window-buffer (selected-window)))
+                        ;; A stale display cannot establish the row's height.
+                        (window-line-height)
+                        (<= (line-pixel-height) (window-body-height nil t)))))))
+    ;; Read the interactive marker without consuming it: the existing after
+    ;; advice still owns the single speech presentation.
+    (funcall original arg try-vscroll)))
+
+(advice-add 'next-line :around #'emacsvox--advice-next-line-around)
+
 (defun emacsvox-advice--navigation-facts ()
   "Return current submission facts extended with focus-entry navigation."
   (let* ((facts (copy-tree emacsvox-aural-submission-facts))

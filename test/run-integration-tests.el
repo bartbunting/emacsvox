@@ -19,6 +19,9 @@
     emacsvox-agent-shell-live-input-graphical-wrapped-speech
     emacsvox-agent-shell-response-graphical-bidirectional-speech
     emacsvox-agent-shell-table-graphical-wrapped-navigation
+    emacsvox-navigation-graphical-down-advances-and-speaks-once
+    emacsvox-navigation-graphical-programmatic-movement-is-unchanged
+    emacsvox-navigation-graphical-tall-image-keeps-partial-scrolling
     emacsvox-eat-graphical-output-survives-scrolling
     emacsvox-eat-graphical-foreground-and-line-draft)
   "Cases owned by the graphical gate and excluded from the batch gate.")
@@ -70,9 +73,16 @@
     (add-to-list 'load-path (expand-file-name "lisp/" root))
     (add-to-list 'load-path (expand-file-name "test/" root))
     (load (expand-file-name "lisp/emacsvox-preamble.el" root) nil nil t)
+    ;; Core navigation advice also enables message feedback.  ERT reporting
+    ;; must not play auditory icons or submit speech in the graphical runner.
+    (setq-default emacsvox-speak-messages nil)
+    ;; Keep real UI hooks (including minibuffer entry) silent as well. Tests
+    ;; observe semantic cue submissions rather than physical sound playback.
+    (advice-add 'emacsvox-sounds-play-concrete-cue :override #'ignore)
     ;; This order also covers core advice being installed after Agent Shell.
     (dolist (module '(emacsvox-agent-shell-render-tests
                       emacsvox-agent-shell-tests emacsvox-notmuch-tests
+                      emacsvox-vertical-navigation-tests
                                                emacsvox-eat-tests))
       (require module)))
 

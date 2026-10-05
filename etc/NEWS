@@ -10,6 +10,13 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Advance past partly visible text without repeating it
+
+In short graphical windows, Down no longer consumes a press by scrolling
+ordinary text without moving the cursor and then reading that line again.
+This fixes repeated lines observed in Notmuch messages. Rows taller than the
+window retain native partial scrolling; scrolling preferences are unchanged.
+
 ** Keep EAT observation working at the right margin
 
 Terminal output ending exactly at the right margin no longer raises a cursor
