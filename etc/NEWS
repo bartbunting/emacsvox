@@ -44,6 +44,11 @@ Terminal bells retain their configured sound without speaking "Terminal bell".
 The semantic =command-terminal-bell= event lets an aural rule add a spoken
 label when wanted.
 
+** Describe Agent Shell's merged queue submissions
+
+When Agent Shell submits several queued prompts together, Emacsvox announces
+the number started and the number remaining.
+
 ** Speak symbol names cleanly during character navigation
 
 Names such as "left bracket" and "question mark" no longer speak an extra

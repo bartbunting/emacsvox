@@ -996,8 +996,10 @@ pending speech feedback on session change or integration cleanup; original
 transport callbacks still run.  No transcript text is interpreted as a
 steering outcome or push completion.
 
-The queue adapter marks actual queue draining and lets =input-submitted=
-confirm that a queued prompt started.  Prompt list editing and diff entry have
+The queue adapter captures the pending count before draining and lets
+=input-submitted= confirm how many prompts actually left the queue. This covers
+both one-at-a-time and merged submission without duplicating upstream policy.
+Prompt list editing and diff entry have
 native command feedback.  New asynchronous tool, queue, steering, setting, and
 permission-detail submissions explicitly select the notification lane; list
 editing and diff entry remain foreground interactions.  All new events and

@@ -1257,8 +1257,8 @@ available so a timer created by an older loaded version can finish safely.")
 (defvar emacsvox-agent-shell--rendering-tool-update nil
   "Dynamically scoped public event and renderer output for one tool update.")
 
-(defvar emacsvox-agent-shell--queued-prompt-p nil
-  "Non-nil while Agent Shell submits the next queued prompt.")
+(defvar emacsvox-agent-shell--queue-start-count nil
+  "Number of pending prompts before the current queue submission, or nil.")
 
 (defvar emacsvox-agent-shell--setting-command-active nil
   "Non-nil while an interactive model or mode command makes its request.")
@@ -2611,7 +2611,7 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
                   'completed)))
       ('input-submitted
        (emacsvox-agent-shell--begin-response-turn)
-       (when (and emacsvox-agent-shell--queued-prompt-p
+       (when (and emacsvox-agent-shell--queue-start-count
                   (emacsvox-agent-shell--speech-level-at-least-p 'notify))
          (emacsvox-agent-shell--queue-feedback 'started)))
       ('config-option-update
@@ -6269,7 +6269,12 @@ callbacks, arguments, return values, and transport behavior."
   (let ((count (emacsvox-agent-shell--pending-prompt-count)))
     (emacsvox-agent-shell--notify-event
      (if (eq state 'started)
-         (format "Queued prompt started. %d remaining." count)
+         (let ((submitted (- (or emacsvox-agent-shell--queue-start-count count)
+                             count)))
+           (if (> submitted 1)
+               (format "%d queued prompts started together. %d remaining."
+                       submitted count)
+             (format "Queued prompt started. %d remaining." count)))
        (format "Queue paused. %d %s waiting. Resume with M-x agent-shell-prompt-queue-resume."
                count (if (= count 1) "prompt" "prompts")))
      (emacsvox-agent-shell--presentation-facts
@@ -6278,8 +6283,9 @@ callbacks, arguments, return values, and transport behavior."
      (if (eq state 'started) 'progress 'warn-user))))
 
 (defun emacsvox-agent-shell--queue-process-around (original &rest arguments)
-  "Mark the queued submission performed by ORIGINAL for public input events."
-  (let ((emacsvox-agent-shell--queued-prompt-p t))
+  "Capture ORIGINAL's queue size so public input events describe actual draining."
+  (let ((emacsvox-agent-shell--queue-start-count
+         (emacsvox-agent-shell--pending-prompt-count)))
     (apply original arguments)))
 
 (defun emacsvox-agent-shell--queue-display-after (&rest _)

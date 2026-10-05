@@ -85,8 +85,12 @@ reported as complete until Agent Shell supplies a completion boundary.
 Server-pushed turns, when supported by the provider, follow the same
 completed-response speech policy.
 
-   Queued prompts announce when they start and how many remain.  If an
-interrupted or failed turn leaves prompts waiting, the queue
+   Queued prompts announce when they start and how many remain.  Recent
+Agent Shell versions merge queued prompts into one turn by default;
+Emacsvox announces how many prompts started together.  Set
+‘agent-shell-prompt-queue-merge’ to nil to send them one turn at a time.
+After cancellation, Agent Shell asks whether to continue with the queue.
+If you decline, or a failed turn leaves prompts waiting, the queue
 announcement gives its count and the command ‘M-x
 agent-shell-prompt-queue-resume’.  Queue-start feedback follows the
 session's speech level; paused-queue warnings follow
@@ -2643,15 +2647,16 @@ unrelated keys.
      run.  No transcript text is interpreted as a steering outcome or
      push completion.
 
-     The queue adapter marks actual queue draining and lets
-     ‘input-submitted’ confirm that a queued prompt started.  Prompt
-     list editing and diff entry have native command feedback.  New
-     asynchronous tool, queue, steering, setting, and permission-detail
-     submissions explicitly select the notification lane; list editing
-     and diff entry remain foreground interactions.  All new events and
-     their outcome, count, or setting attributes are registered by the
-     workflow semantic provider so Aural rules can customize their
-     presentation.
+     The queue adapter captures the pending count before draining and
+     lets ‘input-submitted’ confirm how many prompts actually left the
+     queue.  This covers both one-at-a-time and merged submission
+     without duplicating upstream policy.  Prompt list editing and diff
+     entry have native command feedback.  New asynchronous tool, queue,
+     steering, setting, and permission-detail submissions explicitly
+     select the notification lane; list editing and diff entry remain
+     foreground interactions.  All new events and their outcome, count,
+     or setting attributes are registered by the workflow semantic
+     provider so Aural rules can customize their presentation.
 
 16.3.14 Magit contracts
 -----------------------

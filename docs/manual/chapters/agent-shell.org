@@ -71,9 +71,13 @@ turn is announced as still in progress; it is not reported as complete until
 Agent Shell supplies a completion boundary.  Server-pushed turns, when
 supported by the provider, follow the same completed-response speech policy.
 
-Queued prompts announce when they start and how many remain.  If an interrupted
-or failed turn leaves prompts waiting, the queue announcement gives its count
-and the command ~M-x agent-shell-prompt-queue-resume~.  Queue-start feedback
+Queued prompts announce when they start and how many remain. Recent Agent Shell
+versions merge queued prompts into one turn by default; Emacsvox announces how
+many prompts started together. Set =agent-shell-prompt-queue-merge= to nil to
+send them one turn at a time. After cancellation, Agent Shell asks whether to
+continue with the queue. If you decline, or a failed turn leaves prompts waiting,
+the queue announcement gives its count and the command
+~M-x agent-shell-prompt-queue-resume~. Queue-start feedback
 follows the session's speech level; paused-queue warnings follow
 =emacsvox-agent-shell-signal-processing=.
 

@@ -97,6 +97,7 @@
 (defvar agent-shell-mode-map)
 (defvar agent-shell-show-context-usage-indicator)
 (defvar agent-shell-show-session-id)
+(defvar agent-shell-prompt-queue-merge)
 (defvar agent-shell-ui--fold-toggle-state)
 (defvar agent-shell-viewport-dismiss-on-send)
 (defvar agent-shell-viewport--position-cache)
@@ -10389,21 +10390,32 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should (equal events (when (nth 2 case) (list (list 'speak (nth 2 case))))))))))
 
 (ert-deftest emacsvox-agent-shell-queue-announces-start-and-pause ()
-  "Queue draining uses input-submitted, and stopping announces remaining work."
-  (emacsvox-agent-shell-test--with-current-session
-    (setq-local emacsvox-agent-shell-speech-level 'notify)
-    (setf (alist-get :pending-prompts agent-shell--state) '("first" "second"))
-    (let ((events
-           (emacsvox-agent-shell-test--capture-events
-             (cl-letf (((symbol-function 'agent-shell--insert-to-shell-buffer)
-                        (lambda (&rest _)
-                          (agent-shell--emit-event :event 'input-submitted))))
-               (agent-shell--prompt-queue-process-next))
-             (agent-shell--prompt-queue-display))))
-      (should (member '(speak "Queued prompt started. 1 remaining.") events))
-      (should (seq-some (lambda (event) (and (eq (car event) 'speak)
-                                            (string-prefix-p "Queue paused. 1 prompt waiting." (cadr event))))
-                        events)))))
+  "Queue feedback reflects actual single or merged submissions and paused work."
+  (dolist (merge (if (boundp 'agent-shell-prompt-queue-merge) '(nil t) '(nil)))
+    (emacsvox-agent-shell-test--with-current-session
+      (setq-local emacsvox-agent-shell-speech-level 'notify)
+      (setf (alist-get :pending-prompts agent-shell--state) '("first" "second"))
+      (let* ((agent-shell-prompt-queue-merge merge)
+             (submitted nil)
+             (events
+              (emacsvox-agent-shell-test--capture-events
+                (cl-letf (((symbol-function 'agent-shell--insert-to-shell-buffer)
+                           (lambda (&rest args)
+                             (setq submitted (plist-get args :text))
+                             (agent-shell--emit-event :event 'input-submitted))))
+                  (agent-shell--prompt-queue-process-next))
+                (agent-shell--prompt-queue-display))))
+        (should (equal submitted (if merge "first\n\nsecond" "first")))
+        (should (member (list 'speak (if merge
+                                        "2 queued prompts started together. 0 remaining."
+                                      "Queued prompt started. 1 remaining.")) events))
+        (should (eq (not merge)
+                    (not (null (seq-some
+                                (lambda (event)
+                                  (and (eq (car event) 'speak)
+                                       (string-prefix-p "Queue paused. 1 prompt waiting."
+                                                        (cadr event))))
+                                events)))))))))
 
 (ert-deftest emacsvox-agent-shell-config-events-compare-confirmed-values ()
   "Initial config is silent; changed settings announce once across callback/event order."
