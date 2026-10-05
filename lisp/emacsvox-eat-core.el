@@ -1571,6 +1571,14 @@ before redisplay joins scrollback lines, without parsing terminal escapes."
                          (format "%d additional lines not spoken" omitted))))
     (unless (string-empty-p (string-trim text)) text)))
 
+(defun emacsvox-eat--diagnose-output (decision reason)
+  "Record content-free output DECISION and REASON when diagnostics are enabled.
+These adapter decisions establish neither successful transport nor playback."
+  (emacsvox-aural-diagnostic-log-event
+   'eat-output-decision :decision decision :reason reason
+   :terminal-id emacsvox-eat--terminal-id
+   :generation emacsvox-eat--generation :update-serial emacsvox-eat--update-serial))
+
 (defun emacsvox-eat--process-rendered-output (original terminal output)
   "Call ORIGINAL on TERMINAL and OUTPUT, collecting before redisplay trims.
 Use only rendered text and fresh public terminal bounds.  A copied tail
@@ -1612,6 +1620,9 @@ be mistaken for appended output, even when the replacement text is identical."
                                       emacsvox-eat--output-frontier
                                       (eat-term-end terminal))))
                         (progn
+                          (emacsvox-eat--diagnose-output
+                           'discarded (if eligible 'continuity-unproven
+                                        'collection-ineligible))
                           (emacsvox-eat--clear-collected-output)
                           (setq emacsvox-eat--output-observed-p t
                                 emacsvox-eat--output-partial ""
@@ -2001,9 +2012,17 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
         ;; Candidate/help output can pause on a completed row before the peer
         ;; redraws its input.  Retain that partial screen without letting the
         ;; ordinary output path announce it and then repeat it at completion.
-        (emacsvox-eat--retain-screen-change diff snapshot))
+        (emacsvox-eat--retain-screen-change diff snapshot)
+        (emacsvox-eat--diagnose-output 'retained 'completion-pending))
        (t
         (emacsvox-eat--retain-screen-change diff snapshot)
+        (cond
+         ((not emacsvox-eat-autospeak)
+          (emacsvox-eat--diagnose-output 'retained 'autospeak-off))
+         ((not emacsvox-eat--automatic-feedback-allowed-p)
+          (emacsvox-eat--diagnose-output 'retained 'burst-ineligible))
+         ((eq emacsvox-eat-verbosity 'terse)
+          (emacsvox-eat--diagnose-output 'retained 'terse)))
         (when (and emacsvox-eat-autospeak
                    emacsvox-eat--automatic-feedback-allowed-p
                    (not (eq emacsvox-eat-verbosity 'terse)))
@@ -2011,20 +2030,26 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
            ((and (plist-get diff :unfinished-output-only)
                  (not (plist-get diff :prompt-output))
                  (emacsvox-eat--status-row diff snapshot))
+            (emacsvox-eat--diagnose-output 'presentation-selected 'status)
             (emacsvox-eat--present-status (emacsvox-eat--status-row diff snapshot)))
            ((plist-get diff :collected-output)
+            (emacsvox-eat--diagnose-output 'presentation-selected 'collected-output)
             (emacsvox-eat--submit
              (plist-get diff :collected-output)
              (emacsvox-eat--facts 'command-output 'command-output-received)
              'continuous))
            ((and (not (plist-get diff :output-observed))
                  (emacsvox-eat--complete-output-rows diff snapshot))
+            (emacsvox-eat--diagnose-output 'presentation-selected 'screen-output)
             (let ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
               (emacsvox-eat--present-output-rows rows)))
            (t
-            (unless (plist-get diff :prompt-output)
-              (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
-                (emacsvox-eat--present-status status))))))))
+            (if-let* (((not (plist-get diff :prompt-output)))
+                      (status (emacsvox-eat--status-row diff snapshot)))
+                (progn
+                  (emacsvox-eat--diagnose-output 'presentation-selected 'status)
+                  (emacsvox-eat--present-status status))
+              (emacsvox-eat--diagnose-output 'retained 'no-ordinary-output)))))))
     (when (and emacsvox-eat-autospeak emacsvox-eat--automatic-feedback-allowed-p)
       (emacsvox-eat--present-metadata-change diff snapshot)
       (emacsvox-eat--present-prompt-status diff))))
@@ -2101,7 +2126,8 @@ the terminal still existed instead of consulting its deleted cursor."
                   (when (and prompt emacsvox-eat-autospeak
                              emacsvox-eat--automatic-feedback-allowed-p)
                     (emacsvox-eat--present-ready-prompt prompt)))
-              (emacsvox-eat--retain-screen-change diff snapshot))))))))
+              (emacsvox-eat--retain-screen-change diff snapshot)
+              (emacsvox-eat--diagnose-output 'retained 'reviewing-scrollback))))))))
 
 (defun emacsvox-eat--flush-quiescence-before-exit ()
   "Finish eligible foreground output before EAT deletes its process state."
@@ -2753,6 +2779,9 @@ On displays reporting unknown focus, selected-window ownership suffices."
 (defun emacsvox-eat--discard-automatic-feedback ()
   "Discard only this terminal's locally pending automatic feedback.
 Ordered output has already been sent.  Never stop a shared speech process."
+  (when (or emacsvox-eat--pending-automatic-p emacsvox-eat--pending-prompt
+            emacsvox-eat--collected-output emacsvox-eat--unfinished-output)
+    (emacsvox-eat--diagnose-output 'discarded 'automatic-feedback-boundary))
   (setq emacsvox-eat--pending-automatic-p nil
         emacsvox-eat--pending-prompt nil
         emacsvox-eat--prompt-eligible-p nil)

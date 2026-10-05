@@ -8032,6 +8032,13 @@ runners force the silent @code{log-null} backend before loading Emacsvox so a fa
 test cannot start the maintainer's configured speech engine. Submission checks
 are separate from the maintainer's final audible SSH acceptance.
 
+When aural diagnostics are enabled@comma{} @code{eat-output-decision} records explain
+collection rejection@comma{} pending-work cancellation@comma{} retained output@comma{} and selection
+for presentation. Each contains fixed decision/reason symbols plus terminal@comma{}
+generation and update identifiers@comma{} without terminal text. Selection for
+presentation is not proof of transport@comma{} playback or audible output; correlate
+the ordinary aural submission and Omnivox records for those later stages.
+
 @subsection Source checkout and byte-code lifecycle
 
 Use the Emacs selected by the ignored repository-local @code{local.mk}.  When Emacs

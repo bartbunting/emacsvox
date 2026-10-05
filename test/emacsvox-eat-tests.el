@@ -6568,5 +6568,33 @@ Each chunk settles separately, exercising prompts split across quiet periods."
     (should (equal (plist-get result :prompt) prompt))
     (should (equal (mapcar #'car (plist-get result :events)) (list prompt)))))
 
+(ert-deftest emacsvox-eat-prompt-output-decision-diagnostics ()
+  "Real renderer decisions explain output selection and suppression without text."
+  (let (records)
+    (cl-letf (((symbol-function 'emacsvox-aural-diagnostic-log-event)
+               (lambda (event &rest fields)
+                 (when (eq event 'eat-output-decision) (push fields records)))))
+      (let ((result (emacsvox-eat-test--prompt-output
+                     '("\r\nvisible \e[8mPRIVATE\e[0m\r\n"))))
+        (should (plist-get result :events))
+        (should (seq-some (lambda (record)
+                            (and (eq (plist-get record :decision) 'presentation-selected)
+                                 (eq (plist-get record :reason) 'collected-output)))
+                          records)))
+      (should-not
+       (plist-get (emacsvox-eat-test--prompt-output '("\r\nPRIVATE\r\n") nil t)
+                  :events))
+      (should (seq-some (lambda (record)
+                          (eq (plist-get record :reason) 'collection-ineligible))
+                        records))
+      (should (seq-some (lambda (record)
+                          (eq (plist-get record :reason) 'autospeak-off))
+                        records))
+      (dolist (record records)
+        (should (integerp (plist-get record :generation)))
+        (should (integerp (plist-get record :update-serial)))
+        (should (= (length record) 10)))
+      (should-not (string-match-p "PRIVATE\\|visible" (format "%S" records))))))
+
 (provide 'emacsvox-eat-tests)
 ;;; emacsvox-eat-tests.el ends here

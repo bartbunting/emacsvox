@@ -130,16 +130,16 @@ Ref: Testing A Direct Legacy Server375195
 Ref: Commands That Queue Output375754
 Ref: Commands That Set State379592
 Node: Integration Maintenance382186
-Ref: Background startup ownership and failure recovery391738
-Ref: Supported Emacs versions394891
-Ref: Native Windows builds397570
-Ref: Offline Windows development bundle399843
-Ref: Public Windows installer previews408896
-Ref: Remote preview validation411960
-Ref: Internal ownership and renderer tests433536
-Ref: Upstream contract layers437116
-Node: Authoring Sound Packs464891
-Node: Concept Index468162
+Ref: Background startup ownership and failure recovery392203
+Ref: Supported Emacs versions395356
+Ref: Native Windows builds398035
+Ref: Offline Windows development bundle400308
+Ref: Public Windows installer previews409361
+Ref: Remote preview validation412425
+Ref: Internal ownership and renderer tests434001
+Ref: Upstream contract layers437581
+Node: Authoring Sound Packs465356
+Node: Concept Index468627
 
 End Tag Table
 

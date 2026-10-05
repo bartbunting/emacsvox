@@ -113,6 +113,13 @@ runners force the silent =log-null= backend before loading Emacsvox so a failed
 test cannot start the maintainer's configured speech engine. Submission checks
 are separate from the maintainer's final audible SSH acceptance.
 
+When aural diagnostics are enabled, =eat-output-decision= records explain
+collection rejection, pending-work cancellation, retained output, and selection
+for presentation. Each contains fixed decision/reason symbols plus terminal,
+generation and update identifiers, without terminal text. Selection for
+presentation is not proof of transport, playback or audible output; correlate
+the ordinary aural submission and Omnivox records for those later stages.
+
 ** Source checkout and byte-code lifecycle
 :PROPERTIES:
 :TEXINFO_NODE: no
