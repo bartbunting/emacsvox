@@ -587,7 +587,9 @@ Only public EAT terminal accessors and rendered buffer properties are used."
             (marker-position (eat-term-display-beginning eat-terminal)))
            (end (marker-position (eat-term-end eat-terminal)))
            (cursor-marker (eat-term-display-cursor eat-terminal))
-           (cursor (and cursor-marker (marker-position cursor-marker)))
+           ;; EAT returns an integer when its logical cursor is past the
+           ;; right margin, and a marker at other positions.
+           (cursor (and cursor-marker (+ 0 cursor-marker)))
            (alternate-screen
             (not (null (eat-term-in-alternative-display-p eat-terminal))))
            (coordinates

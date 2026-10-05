@@ -10,6 +10,11 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Keep EAT observation working at the right margin
+
+Terminal output ending exactly at the right margin no longer raises a cursor
+position error or interrupts screen observation.
+
 ** Speak symbol names cleanly during character navigation
 
 Names such as "left bracket" and "question mark" no longer speak an extra

@@ -5949,5 +5949,24 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (dolist (buffer (list first second ordinary))
         (when (buffer-live-p buffer) (kill-buffer buffer))))))
 
+(ert-deftest emacsvox-eat-screen-snapshot-accepts-right-margin-cursor ()
+  "Output ending exactly at the right margin still has a readable snapshot."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 40 5)
+            (eat-term-process-output eat-terminal (make-string 40 ?x))
+            (eat-term-redisplay eat-terminal)
+            (should (integerp (eat-term-display-cursor eat-terminal)))
+            (let ((screen (emacsvox-eat--capture-screen)))
+              (should (equal (plist-get screen :text) (make-string 40 ?x)))
+              (should (= (plist-get screen :cursor-offset) 39)))
+            (eat-term-process-output eat-terminal "\r\nnext\r\n")
+            (eat-term-redisplay eat-terminal)
+            (should (equal (plist-get (emacsvox-eat--capture-screen) :rows)
+                           (list (make-string 40 ?x) "next" ""))))
+        (when (eat-term-live-p eat-terminal) (eat-term-delete eat-terminal))))))
+
 (provide 'emacsvox-eat-tests)
 ;;; emacsvox-eat-tests.el ends here
