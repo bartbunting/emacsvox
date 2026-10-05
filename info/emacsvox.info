@@ -114,32 +114,32 @@ Node: Notmuch Mail295252
 Ref: Notmuch fields and privacy305698
 Node: Agent Shell311814
 Node: EAT Terminal Access330427
-Node: Running Terminal Based Applications347985
-Node: Starting Term348960
-Node: Term Input Modes349887
-Node: Term Speech Feedback351053
-Node: Reviewing The Term Screen352247
-Node: Term Help And Recovery354148
-Node: Emacsvox Keyboard Commands355067
-Node: Copyright357420
-Node: Acknowledgments358009
-Node: Developer Guide359035
-Node: Documentation Maintenance360199
-Node: Speech Server Protocols365614
-Ref: Testing A Direct Legacy Server372309
-Ref: Commands That Queue Output372868
-Ref: Commands That Set State376706
-Node: Integration Maintenance379300
-Ref: Background startup ownership and failure recovery386945
-Ref: Supported Emacs versions390098
-Ref: Native Windows builds392777
-Ref: Offline Windows development bundle395050
-Ref: Public Windows installer previews404103
-Ref: Remote preview validation407167
-Ref: Internal ownership and renderer tests428741
-Ref: Upstream contract layers432321
-Node: Authoring Sound Packs460096
-Node: Concept Index463367
+Node: Running Terminal Based Applications348239
+Node: Starting Term349214
+Node: Term Input Modes350141
+Node: Term Speech Feedback351307
+Node: Reviewing The Term Screen352501
+Node: Term Help And Recovery354402
+Node: Emacsvox Keyboard Commands355321
+Node: Copyright357674
+Node: Acknowledgments358263
+Node: Developer Guide359289
+Node: Documentation Maintenance360453
+Node: Speech Server Protocols365868
+Ref: Testing A Direct Legacy Server372563
+Ref: Commands That Queue Output373122
+Ref: Commands That Set State376960
+Node: Integration Maintenance379554
+Ref: Background startup ownership and failure recovery387199
+Ref: Supported Emacs versions390352
+Ref: Native Windows builds393031
+Ref: Offline Windows development bundle395304
+Ref: Public Windows installer previews404357
+Ref: Remote preview validation407421
+Ref: Internal ownership and renderer tests428995
+Ref: Upstream contract layers432575
+Node: Authoring Sound Packs460350
+Node: Concept Index463621
 
 End Tag Table
 

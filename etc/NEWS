@@ -15,6 +15,13 @@ Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5
 Terminal output ending exactly at the right margin no longer raises a cursor
 position error or interrupts screen observation.
 
+** Speak EAT output reliably while it scrolls
+
+Large bursts and repeated lines now produce bounded speech even after earlier
+rows leave the screen or scrollback is trimmed. Split chunks and wrapped lines
+are assembled without repeating command input. Automatic output remains limited
+to eight lines and 1,000 characters, with an indication of omitted output.
+
 ** Speak symbol names cleanly during character navigation
 
 Names such as "left bracket" and "question mark" no longer speak an extra

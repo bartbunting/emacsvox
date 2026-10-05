@@ -58,6 +58,7 @@
 (require 'emacsvox-preamble)
 (eval-when-compile (require 'eat "eat" 'no-error))
 (declare-function eat-term-display-beginning "eat" (terminal))
+(declare-function eat-term-beginning "eat" (terminal))
 (declare-function eat-term-cursor-type "eat" (terminal))
 (declare-function eat-term-display-cursor "eat" (terminal))
 (declare-function eat-term-end "eat" (terminal))
@@ -267,6 +268,33 @@ when the terminal is selected again."
 
 (defvar-local emacsvox-eat--terminal-id nil
   "Process-local integer used in replaceable EAT delivery keys.")
+
+(defvar-local emacsvox-eat--output-frontier nil
+  "Owned marker at the first unfinished rendered output row.")
+
+(defvar-local emacsvox-eat--output-skip-row-p nil
+  "Non-nil when the unfinished rendered row belongs to terminal input.")
+
+(defvar-local emacsvox-eat--output-partial ""
+  "Bounded redacted soft-wrapped prefix of the unfinished logical line.")
+
+(defvar-local emacsvox-eat--output-partial-truncated-p nil
+  "Non-nil when the unfinished logical line exceeded the collection budget.")
+
+(defvar-local emacsvox-eat--collected-output nil
+  "Bounded redacted output rows, in reverse order, awaiting presentation.")
+
+(defvar-local emacsvox-eat--collected-output-lines 0
+  "Number of completed output rows observed in the pending burst.")
+
+(defvar-local emacsvox-eat--collected-output-characters 0
+  "Number of output characters retained in the pending burst.")
+
+(defvar-local emacsvox-eat--collected-output-truncated-p nil
+  "Non-nil when the pending burst exceeded its character budget.")
+
+(defvar-local emacsvox-eat--output-observed-p nil
+  "Non-nil when the pending burst has a rendered-output observation.")
 
 (defvar emacsvox-eat--next-terminal-id 0
   "Next process-local identifier for an initialized EAT buffer.")
@@ -1212,6 +1240,7 @@ resulting rendered input or history row without its observed prompt prefix."
   "Cancel and clear the pending EAT quiescence transaction."
   (when (timerp emacsvox-eat--quiescence-timer)
     (cancel-timer emacsvox-eat--quiescence-timer))
+  (emacsvox-eat--clear-collected-output)
   (setq emacsvox-eat--quiescence-timer nil
         emacsvox-eat--pending-screen-baseline nil
         emacsvox-eat--pending-screen-diff nil
@@ -1220,6 +1249,141 @@ resulting rendered input or history row without its observed prompt prefix."
         emacsvox-eat--pending-user-input-p nil
         emacsvox-eat--pending-navigation-intent nil
         emacsvox-eat--quiescence-started-at nil))
+
+(defun emacsvox-eat--clear-collected-output ()
+  "Discard the pending bounded output collection."
+  (setq emacsvox-eat--collected-output nil
+        emacsvox-eat--collected-output-lines 0
+        emacsvox-eat--collected-output-characters 0
+        emacsvox-eat--collected-output-truncated-p nil
+        emacsvox-eat--output-observed-p nil))
+
+(defun emacsvox-eat--clear-output-frontier ()
+  "Discard rendered-output continuity and its pending collection."
+  (when (markerp emacsvox-eat--output-frontier)
+    (set-marker emacsvox-eat--output-frontier nil))
+  (setq emacsvox-eat--output-frontier nil
+        emacsvox-eat--output-skip-row-p nil
+        emacsvox-eat--output-partial ""
+        emacsvox-eat--output-partial-truncated-p nil)
+  (emacsvox-eat--clear-collected-output))
+
+(defun emacsvox-eat--output-input-boundary (&rest _)
+  "Exclude the current unfinished terminal row from output collection."
+  (setq emacsvox-eat--output-skip-row-p t
+        emacsvox-eat--output-partial ""
+        emacsvox-eat--output-partial-truncated-p nil))
+
+(defun emacsvox-eat--collect-output-row (begin end wrapped)
+  "Collect rendered BEGIN through END; WRAPPED means a soft line break.
+EAT marks inserted wrap newlines in the rendered buffer.  Read this property
+before redisplay joins scrollback lines, without parsing terminal escapes."
+  (let* ((room (max 0 (- emacsvox-eat--maximum-output-characters
+                         emacsvox-eat--collected-output-characters
+                         (length emacsvox-eat--output-partial))))
+         (limit (min end (+ begin room)))
+         (text (emacsvox-eat--redact-concealed-text
+                (buffer-substring-no-properties begin limit)
+                (emacsvox-eat--style-runs begin limit))))
+    (setq emacsvox-eat--output-partial
+          (concat emacsvox-eat--output-partial
+                  (emacsvox-eat--sanitize-output-row text))
+          emacsvox-eat--output-partial-truncated-p
+          (or emacsvox-eat--output-partial-truncated-p (< limit end)))
+    (unless wrapped
+      (cl-incf emacsvox-eat--collected-output-lines)
+      (when (<= emacsvox-eat--collected-output-lines
+                emacsvox-eat--maximum-output-lines)
+        (push emacsvox-eat--output-partial emacsvox-eat--collected-output)
+        (cl-incf emacsvox-eat--collected-output-characters
+                 (1+ (length emacsvox-eat--output-partial)))
+        (setq emacsvox-eat--collected-output-truncated-p
+              (or emacsvox-eat--collected-output-truncated-p
+                  emacsvox-eat--output-partial-truncated-p)))
+      (setq emacsvox-eat--output-partial ""
+            emacsvox-eat--output-partial-truncated-p nil))))
+
+(defun emacsvox-eat--collected-output-text ()
+  "Return the bounded pending output, including any omission notice."
+  (let ((text (string-join (reverse emacsvox-eat--collected-output) "\n"))
+        (omitted (- emacsvox-eat--collected-output-lines
+                    (length emacsvox-eat--collected-output))))
+    (when emacsvox-eat--collected-output-truncated-p
+      (setq text (concat text " … output truncated")))
+    (when (> omitted 0)
+      (setq text (concat text "\n"
+                         (format "%d additional lines not spoken" omitted))))
+    (unless (string-empty-p (string-trim text)) text)))
+
+(defun emacsvox-eat--process-rendered-output (original terminal output)
+  "Call ORIGINAL on TERMINAL and OUTPUT, collecting before redisplay trims.
+Use only rendered text and fresh public terminal bounds.  A copied tail
+marker must survive unchanged: destructive edits before that boundary cannot
+be mistaken for appended output, even when the replacement text is identical."
+  (if (or (not (eq terminal eat-terminal))
+          (not (local-variable-p 'emacsvox-eat--generation))
+          emacsvox-eat--secure-input-active-p)
+      (funcall original terminal output)
+    (save-restriction
+      (widen)
+      (let* ((cursor (+ 0 (eat-term-end terminal)))
+             (anchor (copy-marker cursor))
+             (display (eat-term-display-beginning terminal))
+             (size (eat-term-size terminal))
+             (eligible (and (emacsvox-eat--selected-buffer-p)
+                            (not (eat-term-in-alternative-display-p terminal))
+                            (save-excursion
+                              (goto-char (eat-term-display-cursor terminal))
+                              (= (line-end-position) cursor))))
+             (generation emacsvox-eat--generation))
+        (unless emacsvox-eat--output-frontier
+          (setq emacsvox-eat--output-frontier (copy-marker cursor)))
+        (unwind-protect
+            (prog1 (funcall original terminal output)
+              (condition-case nil
+                  (when (= generation emacsvox-eat--generation)
+                    (setq emacsvox-eat--output-observed-p t)
+                    (if (not (and eligible
+                                  (= anchor cursor)
+                                  (eq display (eat-term-display-beginning terminal))
+                                  (equal size (eat-term-size terminal))
+                                  (not (eat-term-in-alternative-display-p terminal))
+                                  (<= (eat-term-beginning terminal)
+                                      emacsvox-eat--output-frontier
+                                      (eat-term-end terminal))))
+                        (progn
+                          (emacsvox-eat--clear-collected-output)
+                          (setq emacsvox-eat--output-observed-p t
+                                emacsvox-eat--output-partial ""
+                                emacsvox-eat--output-partial-truncated-p nil)
+                          (set-marker emacsvox-eat--output-frontier
+                                      (eat-term-display-cursor terminal)))
+                      (save-excursion
+                        (goto-char emacsvox-eat--output-frontier)
+                        (let ((limit (eat-term-display-cursor terminal)))
+                          (while (and (<= (point) limit)
+                                      (search-forward "\n" limit t))
+                            (let ((wrapped (get-text-property
+                                            (1- (point)) 'eat--t-wrap-line)))
+                              (if emacsvox-eat--output-skip-row-p
+                                  (unless wrapped
+                                    (setq emacsvox-eat--output-skip-row-p nil))
+                                (unless (and (= emacsvox-eat--output-frontier
+                                                (1- (point)))
+                                             (string-empty-p emacsvox-eat--output-partial)
+                                             (zerop emacsvox-eat--collected-output-lines))
+                                  (emacsvox-eat--collect-output-row
+                                   emacsvox-eat--output-frontier (1- (point)) wrapped))))
+                            (set-marker emacsvox-eat--output-frontier (point)))))))
+                (error
+                 ;; Observation must never interrupt terminal rendering.
+                 (emacsvox-eat--clear-output-frontier)
+                 (setq emacsvox-eat--output-observed-p t)
+                 (emacsvox-aural-diagnostic-log-event
+                  'eat-output-observation :decision 'discarded
+                  :reason 'observation-error :generation generation
+                  :terminal-id emacsvox-eat--terminal-id))))
+          (set-marker anchor nil))))))
 
 (defun emacsvox-eat--complete-output-rows (diff snapshot)
   "Return conservative complete output rows represented by DIFF and SNAPSHOT.
@@ -1575,10 +1739,19 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
        (t
         (emacsvox-eat--retain-screen-change diff snapshot)
         (unless (eq emacsvox-eat-verbosity 'terse)
-          (if-let* ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
-              (emacsvox-eat--present-output-rows rows)
+          (cond
+           ((plist-get diff :collected-output)
+            (emacsvox-eat--submit
+             (plist-get diff :collected-output)
+             (emacsvox-eat--facts 'command-output 'command-output-received)
+             'continuous))
+           ((and (not (plist-get diff :output-observed))
+                 (emacsvox-eat--complete-output-rows diff snapshot))
+            (let ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
+              (emacsvox-eat--present-output-rows rows)))
+           (t
             (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
-              (emacsvox-eat--present-status status))))))
+              (emacsvox-eat--present-status status)))))))
     (emacsvox-eat--present-metadata-change diff snapshot)
     (emacsvox-eat--present-prompt-status diff)))
 
@@ -1596,6 +1769,8 @@ the terminal still existed instead of consulting its deleted cursor."
         (let ((baseline emacsvox-eat--pending-screen-baseline)
               (diff emacsvox-eat--pending-screen-diff)
               (snapshot emacsvox-eat--screen-snapshot)
+              (collected-output (emacsvox-eat--collected-output-text))
+              (output-observed emacsvox-eat--output-observed-p)
               (navigation emacsvox-eat--pending-navigation-intent)
               (deletion emacsvox-eat--deletion-intent)
               (alternate-screen-transitions
@@ -1609,9 +1784,14 @@ the terminal still existed instead of consulting its deleted cursor."
                 emacsvox-eat--pending-user-input-p nil
                 emacsvox-eat--pending-navigation-intent nil
                 emacsvox-eat--quiescence-started-at nil)
+          (emacsvox-eat--clear-collected-output)
           (when (and diff
                      (emacsvox-eat--selected-buffer-p))
             (setq diff (plist-put diff :user-input user-input-p))
+            (when output-observed
+              (setq diff (plist-put diff :output-observed t)))
+            (when collected-output
+              (setq diff (plist-put diff :collected-output collected-output)))
             (when alternate-screen-transitions
               (setq diff
                     (plist-put
@@ -1714,6 +1894,7 @@ the terminal still existed instead of consulting its deleted cursor."
               (emacsvox-eat--screen-diff
                emacsvox-eat--pending-screen-baseline new))
         (if (and (plist-get emacsvox-eat--pending-screen-diff :unchanged)
+                 (zerop emacsvox-eat--collected-output-lines)
                  (null emacsvox-eat--pending-alternate-screen-transitions))
             (emacsvox-eat--cancel-quiescence)
           (emacsvox-eat--schedule-quiescence))))))
@@ -1827,6 +2008,7 @@ the terminal still existed instead of consulting its deleted cursor."
 
 (defun emacsvox-eat--clear-sensitive-screen-state ()
   "Forget content-bearing EAT observation state in the current buffer."
+  (emacsvox-eat--clear-output-frontier)
   (emacsvox-eat--kill-review-buffer)
   (emacsvox-eat--clear-background-monitor-state)
   (emacsvox-eat--cancel-quiescence)
@@ -2146,6 +2328,8 @@ Ignore a stale or duplicate exit after another process has become active."
             #'emacsvox-eat--window-selection-changed nil t)
   (add-hook 'kill-buffer-hook #'emacsvox-eat--kill-review-buffer nil t)
   (add-hook 'change-major-mode-hook #'emacsvox-eat--kill-review-buffer nil t)
+  (add-hook 'kill-buffer-hook #'emacsvox-eat--clear-transient-state nil t)
+  (add-hook 'change-major-mode-hook #'emacsvox-eat--clear-transient-state nil t)
   (emacsvox-eat--install-bell-observer)
   (cl-loop
    for map-symbol in

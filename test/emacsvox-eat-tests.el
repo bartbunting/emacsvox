@@ -5968,5 +5968,166 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                            (list (make-string 40 ?x) "next" ""))))
         (when (eat-term-live-p eat-terminal) (eat-term-delete eat-terminal))))))
 
+(defun emacsvox-eat-test--rendered-burst (chunks &optional scrollback initial)
+  "Return automatic speech from real renderer CHUNKS before SCROLLBACK trim.
+INITIAL defaults to a submitted command.  Collection uses actual EAT markers;
+only window eligibility and the final speech sink are stubbed here."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          (eat-term-scrollback-size scrollback)
+          spoken)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--submit)
+                     (lambda (content &rest _) (push content spoken))))
+            (eat-term-resize eat-terminal 40 5)
+            (eat-term-process-output eat-terminal (or initial "$ command"))
+            (eat-term-redisplay eat-terminal)
+            (setq-local emacsvox-eat--generation 1
+                        emacsvox-eat--screen-snapshot
+                        (emacsvox-eat--capture-screen))
+            (unless initial (emacsvox-eat--output-input-boundary))
+            (dolist (chunk chunks)
+              (eat-term-process-output eat-terminal chunk)
+              (eat-term-redisplay eat-terminal)
+              (emacsvox-eat--observe-screen))
+            (emacsvox-eat-test--finish-screen-burst)
+            (nreverse spoken))
+        (emacsvox-eat--cancel-quiescence)
+        (emacsvox-eat--clear-output-frontier)
+        (when (eat-term-live-p eat-terminal) (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-rendered-output-survives-screen-and-scrollback ()
+  "A multi-screen burst remains bounded and useful even with zero scrollback."
+  (let ((output (concat "\r\n"
+                        (mapconcat (lambda (n) (format "row-%02d" n))
+                                   (number-sequence 1 40) "\r\n")
+                        "\r\nremote$ ")))
+    (dolist (scrollback '(nil 0 20 131072))
+      (let ((spoken (emacsvox-eat-test--rendered-burst
+                     (list output) scrollback)))
+        (should (= (length spoken) 1))
+        (should (string-prefix-p "row-01\nrow-02" (car spoken)))
+        (should (string-match-p "32 additional lines not spoken" (car spoken)))
+        (should-not (string-match-p "remote\\|command" (car spoken)))))))
+
+(ert-deftest emacsvox-eat-rendered-output-repeated-lines-and-empty-tail ()
+  "New rows speak even when the visible screen repeats or its empty tail fills."
+  (should
+   (equal (emacsvox-eat-test--rendered-burst
+           '("five\r\n") nil "one\r\ntwo\r\nthree\r\nfour\r\n")
+          '("five")))
+  (should
+   (equal (emacsvox-eat-test--rendered-burst
+           '("same\r\nsame\r\n") nil
+           "same\r\nsame\r\nsame\r\nsame\r\n")
+          '("same\nsame"))))
+
+(ert-deftest emacsvox-eat-rendered-output-assembles-chunks-and-redacts ()
+  "Completed fragments assemble once and concealed content never reaches speech."
+  (should
+   (equal (emacsvox-eat-test--rendered-burst
+           '("\r\nfir" "st\r\nvis" "ible \e[8mSECRET\e[0m\r\n$ "))
+          '("first\nvisible       "))))
+
+(ert-deftest emacsvox-eat-rendered-output-rejects-screen-replacement ()
+  "Clear, reset and an entire alternate-screen round trip cannot replay rows."
+  (dolist (output '("\e[2J\e[Hnew\r\nbody\r\n$ "
+                    "\ecnew\r\nbody\r\n$ "
+                    "\e[?1049hPRIVATE\e[?1049l\r\nresult\r\n$ "))
+    (should-not (emacsvox-eat-test--rendered-burst
+                 (list output) nil "old\r\nbody\r\n$ "))))
+
+(ert-deftest emacsvox-eat-rendered-output-wrap-boundary-is-chunk-independent ()
+  "A chunk ending exactly at the right margin cannot lose completed output."
+  (let ((row (make-string 40 ?x)))
+    (should
+     (equal (emacsvox-eat-test--rendered-burst
+             (list (concat "\r\n" row "\r\nnext\r\n$ ")))
+            (emacsvox-eat-test--rendered-burst
+             (list (concat "\r\n" row) "\r\nnext\r\n$ "))))))
+
+(ert-deftest emacsvox-eat-rendered-output-split-carriage-return ()
+  "A carriage return delivered separately cannot discard the following output."
+  (should (equal (emacsvox-eat-test--rendered-burst
+                  '("\r" "\none\r" "\ntwo\r" "\n$ "))
+                 '("one\ntwo"))))
+
+(ert-deftest emacsvox-eat-rendered-output-wraps-preserve-logical-lines ()
+  "Soft wraps join output words and never expose a wrapped command echo."
+  (let ((line (make-string 110 ?x)))
+    (should (equal (emacsvox-eat-test--rendered-burst
+                    (list (concat "\r\n" line "\r\n$ ")))
+                   (list line)))
+    (should (equal (emacsvox-eat-test--rendered-burst
+                    (list line "\r\nresult\r\n$ "))
+                   '("result")))))
+
+(ert-deftest emacsvox-eat-graphical-output-survives-scrolling ()
+  "A real graphical PTY speaks bounded scrolling output in both input modes."
+  (skip-unless (display-graphic-p))
+  (let ((buffer (generate-new-buffer " *EAT graphical output*"))
+        process spoken)
+    (unwind-protect
+        (save-window-excursion
+          (delete-other-windows)
+          (switch-to-buffer buffer)
+          (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                     (lambda (text &rest _) (push text spoken)))
+                    ((symbol-function 'emacsvox-icon) #'ignore)
+                    ((symbol-function 'emacsvox-speak-this-char) #'ignore))
+            (eat-mode)
+            (setq-local eat-enable-shell-prompt-annotation nil
+                        eat-enable-auto-line-mode nil)
+            (eat-exec
+             buffer "EAT-output-test" (executable-find "python3") nil
+             (list (expand-file-name
+                    "eat-output-peer.py"
+                    (file-name-directory
+                     (symbol-file 'emacsvox-eat-test--wait-until)))))
+            (setq process (get-buffer-process buffer))
+            (set-process-query-on-exit-flag process nil)
+            (should (emacsvox-eat-test--wait-until
+                     process (lambda () (string-suffix-p
+                                         "READY> " (emacsvox-eat-test--screen-text)))))
+            (should (emacsvox-eat-test--wait-until
+                     process (lambda () (null emacsvox-eat--quiescence-timer))))
+            (dolist (mode '(eat-semi-char-mode eat-line-mode))
+              (funcall mode)
+              (dolist (command '("burst 40" "same 40" "split 20" "margin" "redraw"))
+                (setq spoken nil)
+                (let ((serial emacsvox-eat--update-serial))
+                  (if (eq mode 'eat-line-mode)
+                      (progn (goto-char (point-max)) (insert command)
+                             (eat-line-send-input))
+                    (dolist (char (string-to-list command)) (eat-self-input 1 char))
+                    (eat-self-input 1 13))
+                  (should (emacsvox-eat-test--wait-until
+                           process
+                           (lambda ()
+                             (and (> emacsvox-eat--update-serial serial)
+                                  (string-suffix-p
+                                   "READY> " (emacsvox-eat-test--screen-text)))) 6))
+                  (should (emacsvox-eat-test--wait-until
+                           process (lambda () (null emacsvox-eat--quiescence-timer)))))
+                (let ((text (string-join (reverse spoken) "\n")))
+                  (cond
+                   ((equal command "redraw") (should (string-empty-p text)))
+                   ((equal command "margin") (should (string-match-p "next" text)))
+                   ((equal command "split 20")
+                    (should (string-match-p "row-01" text))
+                    (should (string-match-p "row-20" text)))
+                   (t (should (string-match-p "32 additional lines not spoken" text))))
+                  (should-not (string-match-p "READY>" text)))))))
+      (when (and process (process-live-p process)) (delete-process process))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (emacsvox-eat--cancel-quiescence)
+          (emacsvox-eat--clear-output-frontier))
+        (kill-buffer buffer)))))
+
 (provide 'emacsvox-eat-tests)
 ;;; emacsvox-eat-tests.el ends here

@@ -6699,10 +6699,14 @@ output from interrupting review.  Output in another terminal or behind an
 active minibuffer is silent by default.
 
 On the main screen@comma{} Emacsvox coalesces a burst before classifying it.  Complete
-new output rows are spoken once@comma{} with an automatic limit of eight rows and
+new output lines are spoken once@comma{} with an automatic limit of eight lines and
 1@comma{}000 characters.  Continued input rows and empty terminal placeholders are
 omitted without hiding the output or replaying earlier screen rows.  The
-redrawn prompt is not repeated.  Carriage-return progress and status rewrites
+output remains available to speech when it scrolls beyond the screen@comma{} including
+repeated identical lines.  Increasing scrollback is unnecessary for this
+feedback.  Wrapped output is joined and oversized bursts announce how much
+output was omitted.  The redrawn prompt is not repeated.
+Carriage-return progress and status rewrites
 use rate-limited replaceable speech.  Unchanged repaint and resize-only updates
 remain silent.  Terminal bells@comma{} paste actions@comma{} input-mode changes@comma{}
 application-screen boundaries@comma{} and process exit are content-free semantic

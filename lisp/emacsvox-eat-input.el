@@ -172,6 +172,7 @@ the recalled input's navigation presentation.  Other messages remain audible."
 
 (defun emacsvox-eat--before-terminal-paste (&rest _)
   "Invalidate input-correlated state before sending terminal paste content."
+  (emacsvox-eat--output-input-boundary)
   (emacsvox-eat--resolve-deletion-as-cue)
   (emacsvox-eat--cancel-completion)
   (emacsvox-eat--remember-input-row-offset)
@@ -341,7 +342,8 @@ reaches this advice."
 (defconst emacsvox-eat--before-advice
   (append
    '((eat-reset . emacsvox--advice-eat-reset-before)
-     (eat-reload . emacsvox--advice-eat-reload-before))
+     (eat-reload . emacsvox--advice-eat-reload-before)
+     (eat-line-send-input . emacsvox-eat--output-input-boundary))
    (mapcar
     (lambda (target)
       (cons target #'emacsvox-eat--before-terminal-paste))
@@ -351,6 +353,7 @@ reaches this advice."
 (defconst emacsvox-eat--around-advice
   (append
    '((eat-send-password . emacsvox--advice-eat-send-password-around)
+     (eat-term-process-output . emacsvox-eat--process-rendered-output)
      (eat-self-input . emacsvox--advice-eat-self-input-around))
    (mapcar
     (lambda (target)
@@ -878,6 +881,7 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
 
 (defun emacsvox--advice-eat-self-input-before (_count &optional event)
   "Capture terminal completion context before EAT sends Tab EVENT."
+  (emacsvox-eat--output-input-boundary)
   (let* ((event (or event last-command-event))
          (tab-p (emacsvox-eat--tab-event-p event))
          (direction (emacsvox-eat--navigation-direction event))
