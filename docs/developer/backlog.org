@@ -6,6 +6,22 @@ source, and remove them when completed or deliberately declined.
 
 * User experience
 
+** TODO Consider targeted cancellation of EAT speech already sent to Omnivox
+
+Deferred by the maintainer on 2026-10-05. The chosen foreground autospeak
+contract is Emacsvox-only: losing focus or switching autospeak off suppresses
+new automatic feedback and discards locally pending work. Speech already sent
+to Omnivox may finish. The foreground toggle and prompt feedback are still
+being implemented in [[file:../../lisp/emacsvox-eat-core.el][the EAT integration]].
+
+A possible future extension would cancel queued or active speech belonging to
+that terminal without interrupting manual reading, another terminal, or the
+notification lane. This needs a negotiated Omnivox operation scoped to the
+delivery domain, with a generation boundary to protect newer work after focus
+returns. Specify compatibility and test delayed cancellation before adopting
+it. [[file:../../lisp/emacsvox-aural-transport.el][Local pending-delivery cancellation]] alone cannot provide that guarantee;
+a process-wide stop is not a substitute for targeted cancellation.
+
 ** TODO Complete listening acceptance of palette-wide physical voices
 
 Requested by Parham and added to the backlog on 2026-09-24. He wants an
