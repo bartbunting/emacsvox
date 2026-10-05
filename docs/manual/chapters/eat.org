@@ -172,6 +172,13 @@ preference does not silence such questions.  In that situation the last
 identified prompt may still belong to the local shell; ~C-e q l~ reads the
 current retained cursor row.
 
+Terminal bells retain EAT's configured bell sound without speaking
+"Terminal bell" by default.  An aural rule can add that spoken label by
+matching module =eat=, role =command-interaction=, event
+=command-terminal-bell=, and occasion =notification=, with a speech action
+before or after the event.  Bell notifications remain rate-limited and obey
+the selected-buffer, live-cursor, and secure-input restrictions.
+
 In semi-character and character mode on the main screen, ~RET~ is silent.
 After a rendered Left or Right movement, Emacsvox names the character reached;
 after Up or Down, it speaks the resulting input or history row without the

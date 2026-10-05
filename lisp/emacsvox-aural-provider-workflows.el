@@ -725,6 +725,13 @@
      :roles (command-prompt)
      :occasions (continuous notification)
      :phases (before content after))
+    (command-terminal-bell
+     :kind event
+     :summary "An interactive terminal rang its bell"
+     :owner core
+     :roles (command-interaction)
+     :occasions (notification)
+     :phases (before content after))
     (command-process-signalled
      :kind event
      :summary "The user sent EOF or another signal to a command process"

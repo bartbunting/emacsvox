@@ -2632,7 +2632,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
           (eat-term-delete eat-terminal))))))
 
 (ert-deftest emacsvox-eat-bell-wrapper-preserves-and-deduplicates ()
-  "EAT's public bell callback always runs while semantic speech is throttled."
+  "EAT's bell remains audible while content-free semantic feedback is throttled."
   (with-temp-buffer
     (let* ((eat-terminal (eat-term-make (current-buffer) (point-min)))
            (now 10.0)
@@ -2665,10 +2665,11 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                       ((symbol-function 'emacsvox-eat--following-live-p)
                        (lambda () t))
                       ((symbol-function 'emacsvox-eat--submit)
-                       (lambda (content facts occasion &rest arguments)
-                         (push
-                          (list content facts occasion arguments)
-                          submissions))))
+                       (lambda (&rest _)
+                         (ert-fail "Terminal bell submitted literal speech")))
+                      ((symbol-function 'emacsvox-aural-submit-actions)
+                       (lambda (&rest arguments)
+                         (push arguments submissions))))
               (eat-term-process-output eat-terminal "\a\a")
               (should (= original-calls 2))
               (should (= (length submissions) 1))
@@ -2686,13 +2687,64 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (should
              (equal
               (car submissions)
-              '("Terminal bell"
-                (:role command-interaction
+              '(:facts (:role command-interaction
                  :command-interaction-kind shell
-                 :events (object-changed))
-                notification nil))))
+                 :events (command-terminal-bell))
+                :module eat :occasion notification))))
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-bell-speech-is-opt-in ()
+  "A real bell submission is silent unless a rule adds a spoken label."
+  (dolist (spoken '(nil t))
+    (with-temp-buffer
+      (let* ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+             (emacsvox-aural-active-scheme 'default)
+             (emacsvox-aural-enabled-feature-fragments nil)
+             (emacsvox-aural-user-rules nil)
+             (emacsvox-aural-buffer-rules nil)
+             (emacsvox-aural-session-rules
+              (when spoken
+                '((:id eat-spoken-bell
+                   :match (:module eat :role command-interaction
+                           :event command-terminal-bell :occasion notification)
+                   :render
+                   (:after (:append
+                            ((:id bell-label :kind speech
+                              :text "Terminal bell"))))))))
+             queued submission)
+        (unwind-protect
+            (progn
+              (emacsvox-eat--install-bell-observer)
+              (cl-letf
+                  (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                    (lambda () t))
+                   ((symbol-function 'emacsvox-eat--following-live-p)
+                    (lambda () t))
+                   ((symbol-function 'emacsvox-aural--ensure-speaker) #'ignore)
+                   ((symbol-function 'emacsvox-aural--call-on-submission-lane)
+                    (lambda (function &rest arguments)
+                      (apply function arguments)))
+                   ((symbol-function 'emacsvox-aural-call-with-delivery-transaction)
+                    (lambda (_process function) (funcall function)))
+                   ((symbol-function 'emacsvox-aural-queue-concrete-plan)
+                    (lambda (plan) (push plan queued)))
+                   ((symbol-function 'tts--protocol-dispatch) #'ignore))
+                (setq submission (emacsvox-eat--observe-bell eat-terminal)))
+              (should (emacsvox-aural-submission-p submission))
+              (should-not (emacsvox-aural-submission-content submission))
+              (should-not
+               (emacsvox-aural-submission-compatibility-actions submission))
+              (should (= (length queued) (if spoken 1 0)))
+              (let* ((plan (car (emacsvox-aural-submission-plans submission)))
+                     (actions (emacsvox-aural-concrete-plan-after plan)))
+                (should-not (emacsvox-aural-concrete-plan-before plan))
+                (should
+                 (equal
+                  (mapcar #'emacsvox-aural-concrete-action-text actions)
+                  (and spoken '("Terminal bell"))))))
+          (when (eat-term-live-p eat-terminal)
+            (eat-term-delete eat-terminal)))))))
 
 (ert-deftest emacsvox-eat-background-bell-keeps-eat-behavior-without-speech ()
   "A background terminal still invokes EAT's bell but discloses no feedback."
@@ -2708,7 +2760,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (emacsvox-eat--install-bell-observer)
             (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
                        (lambda () nil))
-                      ((symbol-function 'emacsvox-eat--submit)
+                      ((symbol-function 'emacsvox-aural-submit-actions)
                        (lambda (&rest event) (push event submissions))))
               (eat-term-process-output eat-terminal "\a"))
             (should original-called)

@@ -38,6 +38,12 @@ Set =emacsvox-eat-prompt-feedback= to =text= or =silent= to change that behavior
 prompts are bounded and redacted. Unmarked remote prompts, password requests,
 and confirmation questions remain ordinary output and speak without a newline.
 
+** Keep EAT terminal bells free of spoken labels
+
+Terminal bells retain their configured sound without speaking "Terminal bell".
+The semantic =command-terminal-bell= event lets an aural rule add a spoken
+label when wanted.
+
 ** Speak symbol names cleanly during character navigation
 
 Names such as "left bracket" and "question mark" no longer speak an extra

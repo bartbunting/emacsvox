@@ -2460,12 +2460,13 @@ The terminal's original bell callback has already run."
                          (>= (- now emacsvox-eat--last-bell-spoken-at)
                              emacsvox-eat--bell-minimum-interval)))
             (setq emacsvox-eat--last-bell-spoken-at now)
-            ;; EAT's original callback already provides the configured bell;
-            ;; do not add a second compatibility cue.
-            (emacsvox-eat--submit
-             "Terminal bell"
-             (emacsvox-eat--facts 'command-interaction 'object-changed)
-             'notification)))))))
+            ;; EAT's original callback already provides the configured bell.
+            ;; Keep the semantic event available for optional spoken labels,
+            ;; without adding default speech or a second compatibility cue.
+            (emacsvox-aural-submit-actions
+             :facts
+             (emacsvox-eat--facts 'command-interaction 'command-terminal-bell)
+             :module 'eat :occasion 'notification)))))))
 
 (defun emacsvox-eat--ring-bell (terminal)
   "Preserve TERMINAL's original bell callback, then notify Emacsvox safely."
