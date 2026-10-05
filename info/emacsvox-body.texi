@@ -6313,6 +6313,8 @@ follows the session's speech level; paused-queue warnings follow
 
 Model@comma{} mode@comma{} thought-level@comma{} and other session setting changes announce their
 confirmed values.  Background setting announcements identify the session.
+When grouped choices share a name@comma{} confirmation includes the group shown by
+Agent Shell's completion menu.
 In the viewport prompt editor@comma{} continuing a list announces its bullet or next
 number and indentation.  Indenting and dedenting announce the new indentation;
 leaving an empty list item announces that the list ended.
@@ -8887,6 +8889,10 @@ renderer and private fallbacks isolated and covered by compatibility tests.
 
 The lifecycle subscription also observes @code{config-option-update}.  Configuration
 snapshots suppress initial inventory and duplicate callback/event confirmation.
+Recent Agent Shell versions emit this event on successful setting requests too;
+the callback fallback remains for older versions and shares the same snapshot
+cache. Confirmations reuse upstream completion labels when available so grouped
+choices with identical names remain distinguishable.
 Late tool details are compared only for permissions established by a public
 @code{permission-request} event@comma{} and their snapshots are removed on resolution.
 

@@ -49,6 +49,11 @@ label when wanted.
 When Agent Shell submits several queued prompts together, Emacsvox announces
 the number started and the number remaining.
 
+** Disambiguate Agent Shell's grouped settings
+
+Confirmed settings with duplicate names include their group, matching Agent
+Shell's completion choices.
+
 ** Speak symbol names cleanly during character navigation
 
 Names such as "left bracket" and "question mark" no longer speak an extra

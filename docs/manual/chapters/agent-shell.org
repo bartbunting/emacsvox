@@ -83,6 +83,8 @@ follows the session's speech level; paused-queue warnings follow
 
 Model, mode, thought-level, and other session setting changes announce their
 confirmed values.  Background setting announcements identify the session.
+When grouped choices share a name, confirmation includes the group shown by
+Agent Shell's completion menu.
 In the viewport prompt editor, continuing a list announces its bullet or next
 number and indentation.  Indenting and dedenting announce the new indentation;
 leaving an empty list item announces that the list ended.

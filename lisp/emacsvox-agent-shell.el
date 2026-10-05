@@ -6109,7 +6109,12 @@ Newly advertised options establish a baseline; they are not value changes."
       (when (and announce id (not (eq previous missing))
                  (not (equal previous value)))
         (let ((name (or (map-elt option :name) id))
-              (label (or (and (fboundp 'agent-shell--config-option-value-name)
+              (label (or (and (fboundp 'agent-shell--config-option-value-choices)
+                              (car (seq-find
+                                    (lambda (choice)
+                                      (equal value (map-elt (cdr choice) :value)))
+                                    (agent-shell--config-option-value-choices option))))
+                         (and (fboundp 'agent-shell--config-option-value-name)
                               (agent-shell--config-option-value-name option value))
                          (format "%s" value))))
           (emacsvox-agent-shell--notify-event

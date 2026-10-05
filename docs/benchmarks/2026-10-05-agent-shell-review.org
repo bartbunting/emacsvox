@@ -1,0 +1,90 @@
+#+title: Agent Shell 0.84.1 compatibility review
+#+date: 2026-10-05
+
+* Scope and findings
+
+Reviewed the 42 commits from the pinned Agent Shell 0.81.1 revision
+=5535365534d0bf9f6e0257316af86e11399d3eba= through the requested checkout's
+0.84.1 revision =6a53e549e363373f9a0f7c73dc81ef6f98688b59=.
+The live Emacs had Agent Shell 0.83.5 from package =20261004.1353= loaded,
+corresponding to upstream revision =1cd4f20e0ebb=. Testing used isolated Emacs
+processes, not a reload of that session.
+
+Two user-facing adjustments were needed:
+
+- Queue feedback now distinguishes several prompts submitted together from a
+  single prompt. It derives the count from actual queue draining, preserving
+  upstream's choice between merging and one-at-a-time submission. The updated
+  test checks the submitted text as well as speech and remaining work.
+- Setting confirmation reuses upstream completion labels, including group names
+  when choices have identical names. Older versions retain their flat labels.
+  Both regressions failed against 0.84.1 before the implementation changes.
+
+Other reviewed changes need no new Emacsvox workaround:
+
+- Streamed table alignment and markup, final headings/quotes/list items, inline
+  code emphasis, and Markdown copy fixes remain upstream renderer behavior.
+  Emacsvox continues reading the renderer's semantic properties and table cells.
+- Static and function-based busy indicators preserve semantic prompt speech
+  without announcing animation frames. Emacsvox does not use the retired
+  =agent-shell-chat-busy-frames= variable.
+- Manual =@= and =/= completion now survives disabling automatic popup. Emacsvox
+  does not replace the completion setup or submission behavior.
+- Grouped settings, Codex default configuration options and the new successful
+  setting event use the existing configuration snapshot cache. That cache
+  suppresses duplicate callback/event announcements and initial inventory.
+- Distinct-file activity summaries, transcript recovery/frontmatter, and the new
+  public last-activity accessor do not require a local implementation change.
+
+The existing config-success fallback cannot yet be removed while supporting
+0.81.1, which lacks the new success event. Steering, push and tool-output
+adapters also still cover gaps upstream has not removed. No broad compatibility
+removal or local reimplementation of the new renderer behavior was warranted.
+
+* Bindings and dependencies
+
+Compared shell and viewport view/edit maps, inherited Shell Maker bindings,
+fragment and list-edit maps, speech controls, contextual tables and repeat
+navigation. Upstream changed no relevant key definitions in this revision
+range. Effective-binding tests cover prompt editing while idle/busy, transcript
+navigation, table entry/exit, contextual prefixes, permissions and viewport
+actions. There are no new conflicts. The five existing intentional overlaps
+remain documented in the maintained Agent Shell guide: viewport =t=, shell
+table =r=, and viewport table =a=, =c= and =r=.
+
+Shell Maker 0.97.5 is required by Agent Shell 0.84.1. Compared its installed
+source revision =dcc05a8cf24e= with pinned 0.97.4. Its mode-map quoting and
+narrowed auto-scroll fixes require no Emacsvox key change. ACP remained the
+pinned 0.15.1 dependency. The test lock and live package installations were
+left unchanged; newer packages were selected explicitly in isolated checks.
+
+* Verification
+
+Selected Emacs: 31.0.90 from =/home/bart/opt/emacs-31/bin/emacs=.
+The isolated runner disabled user package activation and verified that loaded
+Agent Shell modules came from the requested directory. The compiled test loader
+also verified the exact Emacsvox renderer and integration paths.
+
+| Agent Shell | Shell Maker | Check | Result |
+|-------------+-------------+-------+--------|
+| 0.81.1 pinned sources | 0.97.4 pinned sources | Agent Shell source suite | 301 passed |
+| 0.83.5 installed package | 0.97.5 installed source | Agent Shell source suite | 301 passed |
+| 0.84.1 requested checkout | 0.97.5 installed source | Agent Shell source suite | 301 passed |
+| 0.84.1 requested checkout | 0.97.5 installed source | Fresh compiled Emacsvox suite | 301 passed |
+| Pinned integration dependencies | Pinned integration dependencies | Full integration gate | 614 passed |
+| 0.84.1 requested checkout | 0.97.5 installed source | Source graphical layout/navigation | 4 passed |
+| 0.84.1 requested checkout | 0.97.5 installed source | Compiled graphical layout/navigation | 4 passed |
+
+The batch selectors excluded the four graphical cases; these ran separately in
+a real Xvfb frame. Three additional 0.84.1 probes passed for completed headings
+and quotes, static/function busy indicators, and a table streamed across link
+and inline-code boundaries. Listening was not tested, and no live profile was
+reloaded. The pre-existing developer backlog edit was preserved.
+
+Byte-code compilation and preflight, manual preview and generated Info updates,
+the documentation release gate, and whitespace checks passed. After making the
+grouped-setting test fixture independently reusable, both focused regressions
+passed again. No source implementation changed after the full passing suites.
+
+Detailed local logs and the isolated runners are retained under
+=~/.local/state/emacsvox/diagnostics/2026-10-05-agent-shell-review/=.

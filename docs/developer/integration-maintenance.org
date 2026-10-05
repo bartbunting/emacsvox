@@ -977,6 +977,10 @@ renderer and private fallbacks isolated and covered by compatibility tests.
 
 The lifecycle subscription also observes =config-option-update=.  Configuration
 snapshots suppress initial inventory and duplicate callback/event confirmation.
+Recent Agent Shell versions emit this event on successful setting requests too;
+the callback fallback remains for older versions and shares the same snapshot
+cache. Confirmations reuse upstream completion labels when available so grouped
+choices with identical names remain distinguishable.
 Late tool details are compared only for permissions established by a public
 =permission-request= event, and their snapshots are removed on resolution.
 

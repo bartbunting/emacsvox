@@ -10417,6 +10417,24 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                                                         (cadr event))))
                                 events)))))))))
 
+(ert-deftest emacsvox-agent-shell-grouped-setting-confirms-selected-group ()
+  "Confirmed settings use the same unambiguous label as upstream completion."
+  (emacsvox-agent-shell-test--with-current-session
+    (let* ((option (copy-tree
+                    '((:id . "model") (:name . "Model") (:current-value . "a/shared")
+                      (:options . (((:value . "a/shared") (:name . "Shared") (:group . "A"))
+                                   ((:value . "b/shared") (:name . "Shared") (:group . "B")))))))
+           (expected (if (fboundp 'agent-shell--config-option-value-choices)
+                         "Model: Shared (B)." "Model: Shared.")))
+      (emacsvox-agent-shell--observe-config-options (list option) nil)
+      (setf (alist-get :current-value option) "b/shared")
+      (let ((events
+             (emacsvox-agent-shell-test--capture-events
+               (agent-shell--emit-event :event 'config-option-update
+                                       :data (list (cons :config-options (list option)))))))
+        (should (equal (seq-filter (lambda (event) (eq (car event) 'speak)) events)
+                       (list (list 'speak expected))))))))
+
 (ert-deftest emacsvox-agent-shell-config-events-compare-confirmed-values ()
   "Initial config is silent; changed settings announce once across callback/event order."
   (emacsvox-agent-shell-test--with-current-session
