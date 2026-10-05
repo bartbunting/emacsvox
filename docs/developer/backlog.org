@@ -22,6 +22,31 @@ returns. Specify compatibility and test delayed cancellation before adopting
 it. [[file:../../lisp/emacsvox-aural-transport.el][Local pending-delivery cancellation]] alone cannot provide that guarantee;
 a process-wide stop is not a substitute for targeted cancellation.
 
+** TODO Investigate intermittent repeated lines while reading Notmuch email
+
+Reported on 2026-10-05; still under investigation. The maintainer described
+Down navigation sounding like A, B, A, B, C. Private aural logs around
+10:50--10:51 Sydney time confirm successive =next-line= submissions of
+physical lines 748, 748, 749, 749, 750, with the same reported point on each
+repeated line. Eight such repeats occurred in that reading session.
+Correlated Omnivox dispatches 35975--35979 confirm separate synthesis/playback
+requests; repetition was already present in Emacs's submitted text.
+
+A later attempt did not reproduce the spoken repetition. A temporary trace
+caught two Down commands taking =line-move-partial= through =scroll-up= while
+leaving point unchanged, but both were on blank lines. This is a possible
+mechanism, not a confirmed cause of the original failure. The trace was removed;
+no navigation settings or Lisp implementation were changed.
+
+On recurrence, preserve the affected buffer, point and window layout. Capture
+command origin, native movement, speech-selected bounds and post-command point,
+including folding, display properties and scrolling state. Compare the same
+paragraph with buffer-local =auto-window-vscroll= disabled before choosing a
+fix. Any fix needs a real graphical reproduction and behavioral regression
+coverage. Relevant paths are [[file:../../lisp/emacsvox-advice.el][core navigation advice]],
+[[file:../../lisp/emacsvox-notmuch.el][Notmuch line selection]] and [[file:../../lisp/emacsvox-speak.el][line presentation]]. Evidence remains in
+the private aural-submission and Omnivox logs; do not copy email bodies here.
+
 ** TODO Complete listening acceptance of palette-wide physical voices
 
 Requested by Parham and added to the backlog on 2026-09-24. He wants an
