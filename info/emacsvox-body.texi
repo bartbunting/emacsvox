@@ -6672,6 +6672,11 @@ mode with @kbd{C-c C-l}.  Line mode is not available in EAT's embedded Eshell
 terminal.
 @end table
 
+Switching to line mode does not create unlimited history.  EAT still applies
+@code{eat-term-scrollback-size} to retained terminal text; it is a character limit@comma{}
+not a line count@comma{} and @code{nil} permits unlimited retention.  The editable draft
+follows the terminal extent.  Changing input modes does not change this limit.
+
 In semi-character and character mode@comma{} @kbd{@key{TAB}} belongs to Bash Readline@comma{} a
 remote shell@comma{} a router CLI@comma{} or whichever terminal application is running.
 Corfu is not involved.  In line mode@comma{} @kbd{@key{TAB}} belongs to Emacs completion and
@@ -6726,12 +6731,36 @@ omitted without hiding the output or replaying earlier screen rows.  The
 output remains available to speech when it scrolls beyond the screen@comma{} including
 repeated identical lines.  Increasing scrollback is unnecessary for this
 feedback.  Wrapped output is joined and oversized bursts announce how much
-output was omitted.  The redrawn prompt is not repeated.
+output was omitted.  Fresh text without a newline also speaks@comma{} so password
+requests and confirmation questions remain accessible.
 Carriage-return progress and status rewrites
 use rate-limited replaceable speech.  Unchanged repaint and resize-only updates
 remain silent.  Terminal bells@comma{} paste actions@comma{} input-mode changes@comma{}
 application-screen boundaries@comma{} and process exit are content-free semantic
 events rather than arbitrary screen speech.
+
+@vindex emacsvox-eat-prompt-feedback
+
+@findex emacsvox-eat-speak-prompt
+
+@kindex C-e q p (EAT)
+
+When EAT shell integration identifies a ready prompt@comma{} Emacsvox gives a cue
+after the output instead of reading the prompt text.  Set
+@code{emacsvox-eat-prompt-feedback} to @code{text} to hear it@comma{} or @code{silent} to suppress
+prompt feedback; the default is @code{earcon}.  This preference can be buffer-local
+and is independent of verbosity.  Automatic prompt feedback obeys the same
+foreground autospeak policy.  Split and multiline prompts are collected until
+ready@comma{} and redisplay or typing does not repeat them.  If several prompts arrive
+within one coalesced burst@comma{} feedback describes the final ready prompt.
+
+Use @kbd{C-e q p} to read the most recently identified prompt explicitly@comma{} even
+with autospeak off.  Prompt recognition does not require EAT's margin
+annotations.  It does require shell integration: over SSH@comma{} an unintegrated
+remote prompt or question is ordinary output and is read as text.  The prompt
+preference does not silence such questions.  In that situation the last
+identified prompt may still belong to the local shell; @kbd{C-e q l} reads the
+current retained cursor row.
 
 In semi-character and character mode on the main screen@comma{} @kbd{@key{RET}} is silent.
 After a rendered Left or Right movement@comma{} Emacsvox names the character reached;
@@ -6851,6 +6880,8 @@ Speak a bounded copy of the retained visible screen.
 Open a read-only frozen copy for line-by-line review.
 @item C-e q t
 Speak the retained progress@comma{} application@comma{} or shell-prompt status.
+@item C-e q p
+Speak the most recently identified shell prompt.
 @item C-e q i
 Speak the retained sanitized title or working-directory change.
 @item C-e q v
@@ -7972,6 +8003,34 @@ Tabulated-list coverage lives in @code{test/emacsvox-tabulated-list-tests.el}@co
 including full values@comma{} blanks@comma{} buttons@comma{} native action keys@comma{} sorting@comma{} filtering@comma{}
 refresh and hidden rows. Its graphical navigation case must run on a real
 graphical Emacs; a batch skip does not establish display acceptance.
+
+@subsection EAT rendered output and prompt observation
+
+EAT output is collected around @code{eat-term-process-output} before redisplay can
+trim it@comma{} including a bounded unfinished row. Never retain raw process bytes or
+unredacted concealed text. Read fresh public terminal bounds@comma{} preserve soft-wrap
+continuity@comma{} and reject uncertain clear/reset/alternate-screen replacements.
+Check selected-window following after EAT synchronizes windows@comma{} not between
+chunks inside its renderer. Editable line-mode text lies after @code{eat-term-end};
+it can share the final physical row with the terminal cursor.
+
+Prompt observation wraps the public @code{ui-command-function} terminal parameter
+and preserves its original callback. EAT has already parsed the protocol:
+@code{e;B} and @code{e;C} bracket a prompt@comma{} and @code{e;J} identifies a new shell prompt cycle.
+The adapter reads bounded rendered ranges@comma{} excludes those ranges from ordinary
+output@comma{} and deduplicates same-position prompt repaint. It does not infer a
+prompt from punctuation or require annotation overlays. Keep this protocol seam
+covered against the pinned EAT source and its real Bash integration when
+upgrading. Unmarked unfinished text remains ordinary output; otherwise remote
+questions can disappear indefinitely while waiting for a newline.
+
+Foreground loss discards Emacs-local automatic work only. It must not call a
+process-wide speech stop. Already dispatched speech may finish; scoped Omnivox
+cancellation remains a separate backlog direction. The graphical gate covers
+real X11 focus loss@comma{} minibuffers@comma{} selection@comma{} line drafts and scrolling. Integration
+runners force the silent @code{log-null} backend before loading Emacsvox so a failed
+test cannot start the maintainer's configured speech engine. Submission checks
+are separate from the maintainer's final audible SSH acceptance.
 
 @subsection Source checkout and byte-code lifecycle
 

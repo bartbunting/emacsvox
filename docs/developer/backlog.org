@@ -11,8 +11,8 @@ source, and remove them when completed or deliberately declined.
 Deferred by the maintainer on 2026-10-05. The chosen foreground autospeak
 contract is Emacsvox-only: losing focus or switching autospeak off suppresses
 new automatic feedback and discards locally pending work. Speech already sent
-to Omnivox may finish. The foreground toggle and prompt feedback are still
-being implemented in [[file:../../lisp/emacsvox-eat-core.el][the EAT integration]].
+to Omnivox may finish. This contract governs foreground feedback in
+[[file:../../lisp/emacsvox-eat-core.el][the EAT integration]].
 
 A possible future extension would cancel queued or active speech belonging to
 that terminal without interrupting manual reading, another terminal, or the

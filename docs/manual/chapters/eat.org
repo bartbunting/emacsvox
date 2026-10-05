@@ -79,6 +79,11 @@ whenever you switch modes.
   mode with ~C-c C-l~.  Line mode is not available in EAT's embedded Eshell
   terminal.
 
+Switching to line mode does not create unlimited history.  EAT still applies
+=eat-term-scrollback-size= to retained terminal text; it is a character limit,
+not a line count, and =nil= permits unlimited retention.  The editable draft
+follows the terminal extent.  Changing input modes does not change this limit.
+
 In semi-character and character mode, ~TAB~ belongs to Bash Readline, a
 remote shell, a router CLI, or whichever terminal application is running.
 Corfu is not involved.  In line mode, ~TAB~ belongs to Emacs completion and
@@ -136,12 +141,36 @@ omitted without hiding the output or replaying earlier screen rows.  The
 output remains available to speech when it scrolls beyond the screen, including
 repeated identical lines.  Increasing scrollback is unnecessary for this
 feedback.  Wrapped output is joined and oversized bursts announce how much
-output was omitted.  The redrawn prompt is not repeated.
+output was omitted.  Fresh text without a newline also speaks, so password
+requests and confirmation questions remain accessible.
 Carriage-return progress and status rewrites
 use rate-limited replaceable speech.  Unchanged repaint and resize-only updates
 remain silent.  Terminal bells, paste actions, input-mode changes,
 application-screen boundaries, and process exit are content-free semantic
 events rather than arbitrary screen speech.
+
+#+vindex: emacsvox-eat-prompt-feedback
+
+#+findex: emacsvox-eat-speak-prompt
+
+#+kindex: C-e q p (EAT)
+
+When EAT shell integration identifies a ready prompt, Emacsvox gives a cue
+after the output instead of reading the prompt text.  Set
+=emacsvox-eat-prompt-feedback= to =text= to hear it, or =silent= to suppress
+prompt feedback; the default is =earcon=.  This preference can be buffer-local
+and is independent of verbosity.  Automatic prompt feedback obeys the same
+foreground autospeak policy.  Split and multiline prompts are collected until
+ready, and redisplay or typing does not repeat them.  If several prompts arrive
+within one coalesced burst, feedback describes the final ready prompt.
+
+Use ~C-e q p~ to read the most recently identified prompt explicitly, even
+with autospeak off.  Prompt recognition does not require EAT's margin
+annotations.  It does require shell integration: over SSH, an unintegrated
+remote prompt or question is ordinary output and is read as text.  The prompt
+preference does not silence such questions.  In that situation the last
+identified prompt may still belong to the local shell; ~C-e q l~ reads the
+current retained cursor row.
 
 In semi-character and character mode on the main screen, ~RET~ is silent.
 After a rendered Left or Right movement, Emacsvox names the character reached;
@@ -268,6 +297,9 @@ The default Emacsvox prefix is ~C-e~.  In every EAT input mode,
 - C-e q t ::
 
   Speak the retained progress, application, or shell-prompt status.
+- C-e q p ::
+
+  Speak the most recently identified shell prompt.
 - C-e q i ::
 
   Speak the retained sanitized title or working-directory change.

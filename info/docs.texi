@@ -71,7 +71,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1625 commands and 225 options.
+This chapter documents a total of 1626 commands and 226 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -9109,6 +9109,24 @@ nil
 
 @end defvar
 
+@defvar {User Option} emacsvox-eat-prompt-feedback
+@verbatim
+Automatic feedback for a prompt identified by EAT shell integration.
+Use ‘earcon’ for a ready cue, ‘text’ to read the prompt, or ‘silent’ for no
+prompt feedback.  This is independent of verbosity and obeys foreground
+autospeak.  Without shell integration, new unfinished text remains ordinary
+output, including password requests and confirmation questions.
+@end verbatim
+
+Default Value:
+@verbatim
+
+earcon
+
+@end verbatim
+
+@end defvar
+
 @defvar {User Option} emacsvox-eat-verbosity
 @verbatim
 Amount of automatic feedback produced for EAT terminals.
@@ -9348,6 +9366,16 @@ Speak the most recent quiesced terminal change from retained state.
 
 @format
 Speak the latest conservative terminal focus inference for review.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-speak-prompt
+@deffn {Command} emacsvox-eat-speak-prompt
+@findex emacsvox-eat-speak-prompt
+
+@format
+Read the most recently identified EAT shell prompt.
+This explicit command works regardless of autospeak or prompt preference.
 @end format
 @end deffn
 

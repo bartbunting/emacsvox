@@ -1619,7 +1619,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                   (should
                    (equal
                     (mapcar #'car submissions)
-                    '("bash: emacsvox-no-such-command: command not found"))))
+                    '("bash: emacsvox-no-such-command: command not found\nEATERR> "))))
               (emacsvox-eat-test--stop-process process))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
@@ -6012,7 +6012,7 @@ only window eligibility and the final speech sink are stubbed here."
                      (list output) scrollback)))
         (should (= (length spoken) 1))
         (should (string-prefix-p "row-01\nrow-02" (car spoken)))
-        (should (string-match-p "32 additional lines not spoken" (car spoken)))
+        (should (string-match-p "33 additional lines not spoken" (car spoken)))
         (should-not (string-match-p "remote\\|command" (car spoken)))))))
 
 (ert-deftest emacsvox-eat-rendered-output-repeated-lines-and-empty-tail ()
@@ -6032,7 +6032,7 @@ only window eligibility and the final speech sink are stubbed here."
   (should
    (equal (emacsvox-eat-test--rendered-burst
            '("\r\nfir" "st\r\nvis" "ible \e[8mSECRET\e[0m\r\n$ "))
-          '("first\nvisible       "))))
+          '("first\nvisible       \n$ "))))
 
 (ert-deftest emacsvox-eat-rendered-output-rejects-screen-replacement ()
   "Clear, reset and an entire alternate-screen round trip cannot replay rows."
@@ -6055,17 +6055,17 @@ only window eligibility and the final speech sink are stubbed here."
   "A carriage return delivered separately cannot discard the following output."
   (should (equal (emacsvox-eat-test--rendered-burst
                   '("\r" "\none\r" "\ntwo\r" "\n$ "))
-                 '("one\ntwo"))))
+                 '("one\ntwo\n$ "))))
 
 (ert-deftest emacsvox-eat-rendered-output-wraps-preserve-logical-lines ()
   "Soft wraps join output words and never expose a wrapped command echo."
   (let ((line (make-string 110 ?x)))
     (should (equal (emacsvox-eat-test--rendered-burst
                     (list (concat "\r\n" line "\r\n$ ")))
-                   (list line)))
+                   (list (concat line "\n$ "))))
     (should (equal (emacsvox-eat-test--rendered-burst
                     (list line "\r\nresult\r\n$ "))
-                   '("result")))))
+                   '("result\n$ ")))))
 
 (defun emacsvox-eat-test--focus-frame ()
   "Focus the actual Emacs X window without requiring a window manager."
@@ -6141,8 +6141,9 @@ only window eligibility and the final speech sink are stubbed here."
                    ((equal command "split 20")
                     (should (string-match-p "row-01" text))
                     (should (string-match-p "row-20" text)))
-                   (t (should (string-match-p "32 additional lines not spoken" text))))
-                  (should-not (string-match-p "READY>" text)))))))
+                   (t (should (string-match-p "33 additional lines not spoken" text))))
+                  (when (equal command "split 20")
+                    (should (string-match-p "READY>" text))))))))
       (when (and process (process-live-p process)) (delete-process process))
       (when (buffer-live-p buffer)
         (with-current-buffer buffer
@@ -6253,6 +6254,7 @@ only window eligibility and the final speech sink are stubbed here."
               (eat-term-redisplay eat-terminal)
               (emacsvox-eat--observe-screen)
               (should emacsvox-eat--pending-automatic-p)
+              (setq emacsvox-eat--pending-prompt "stale ready prompt")
               (if (eq boundary 'toggle)
                   (progn (emacsvox-eat-toggle-autospeak 0)
                          (emacsvox-eat-toggle-autospeak 1))
@@ -6260,6 +6262,7 @@ only window eligibility and the final speech sink are stubbed here."
                 (emacsvox-eat--foreground-context-changed)
                 (setq foreground t))
               (setq spoken nil)
+              (should-not emacsvox-eat--pending-prompt)
               (emacsvox-eat-test--finish-screen-burst)
               (should-not spoken)
               (eat-term-process-output eat-terminal "fresh\r\n")
@@ -6369,6 +6372,201 @@ only window eligibility and the final speech sink are stubbed here."
           (emacsvox-eat--clear-transient-state)
           (when (eat-term-live-p eat-terminal) (eat-term-delete eat-terminal))))
       (mapc #'kill-buffer (list buffer other foreign-output)))))
+
+(defun emacsvox-eat-test--prompt-output (chunks &optional preference autospeak-off)
+  "Return real rendered CHUNKS' output/prompt events and retained prompt.
+Each chunk settles separately, exercising prompts split across quiet periods."
+  (with-temp-buffer
+    (let ((eat-query-before-killing-running-terminal nil)
+          (eat-enable-shell-prompt-annotation nil)
+          (eat-enable-auto-line-mode nil)
+          events)
+      (eat-mode)
+      (setq-local buffer-read-only nil
+                  eat-terminal (eat-term-make (current-buffer) (point-min))
+                  emacsvox-eat-prompt-feedback (or preference 'earcon)
+                  emacsvox-eat-autospeak (not autospeak-off))
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--foreground-p) (lambda () t))
+                    ((symbol-function 'emacsvox-eat--selected-buffer-p) (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p) (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest args) (push (cons text args) events)))
+                    ((symbol-function 'emacsvox-aural-submit-actions)
+                     (lambda (&rest args) (push (cons 'actions args) events))))
+            (eat-term-resize eat-terminal 40 5)
+            (eat-term-process-output eat-terminal "$ command")
+            (eat-term-redisplay eat-terminal)
+            (setq emacsvox-eat--screen-snapshot (emacsvox-eat--capture-screen))
+            (emacsvox-eat--clear-output-frontier)
+            (emacsvox-eat--output-input-boundary)
+            (setf (eat-term-parameter eat-terminal 'ui-command-function) #'eat--handle-uic)
+            (emacsvox-eat--install-prompt-observer)
+            (dolist (chunk chunks)
+              (emacsvox-eat-test--deliver-screen eat-terminal chunk))
+            (list :events (nreverse events) :prompt emacsvox-eat--last-prompt))
+        (emacsvox-eat--clear-transient-state)
+        (eat-term-delete eat-terminal)))))
+
+(ert-deftest emacsvox-eat-prompt-ready-default-is-semantic-cue-after-output ()
+  "An identified prompt cues readiness after output without reading its text."
+  (let* ((result (emacsvox-eat-test--prompt-output
+                  '("\r\nhello\r\n\e]51;e;B\e\\host$ \e]51;e;C\e\\")))
+         (events (plist-get result :events)))
+    (should (equal (mapcar #'car events) '("hello" actions)))
+    (should (equal (plist-get result :prompt) "host$ "))
+    (should (eq (plist-get (cdr (cadr events)) :lane) 'main))
+    (should (equal (plist-get (plist-get (cdr (cadr events)) :facts) :events)
+                   '(command-prompt-ready)))))
+
+(ert-deftest emacsvox-eat-prompt-split-multiline-and-preferences ()
+  "Prompt fragments never leak as output and each ready prompt presents once."
+  (dolist (policy '(earcon text silent))
+    (let* ((result (emacsvox-eat-test--prompt-output
+                    '("\r\n\e]51;e;B\e\\first\r\n"
+                      "second$ " "\e]51;e;C\e\\" "\e]51;e;C\e\\") policy))
+           (events (plist-get result :events)))
+      (should (equal (plist-get result :prompt) "first\nsecond$ "))
+      (pcase policy
+        ('earcon (should (equal (mapcar #'car events) '(actions))))
+        ('text (should (equal (mapcar #'car events) '("first\nsecond$ "))))
+        ('silent (should-not events))))))
+
+(ert-deftest emacsvox-eat-prompt-no-newline-questions-remain-output ()
+  "Unmarked remote questions and prompts are spoken without fabricating readiness."
+  (dolist (policy '(earcon text silent))
+    (dolist (text '("Password: " "Continue connecting (yes/no)? " "remote$ "))
+      (let* ((result (emacsvox-eat-test--prompt-output
+                      (list (concat "\r\n" text)) policy))
+             (events (plist-get result :events)))
+        (should (equal (mapcar #'car events) (list text)))
+        (should (eq (plist-get (plist-get (cdar events) :facts) :role) 'command-output))
+        (should-not (plist-get result :prompt))))))
+
+(ert-deftest emacsvox-eat-prompt-partial-output-is-not-repeated-on-newline ()
+  "A spoken unfinished row is not replayed when its newline finally arrives."
+  (should (equal (mapcar #'car (plist-get
+                               (emacsvox-eat-test--prompt-output
+                                '("\r\nPassword: " "\r\nnext\r\n")) :events))
+                 '("Password: " "next"))))
+
+(ert-deftest emacsvox-eat-prompt-keeps-adjacent-output-and-redacts ()
+  "A prompt after non-newline output neither hides that output nor leaks concealment."
+  (let* ((result (emacsvox-eat-test--prompt-output
+                  '("\r\nanswer\e]51;e;B\e\\host \e[8mSECRET\e[0m$ \e]51;e;C\e\\") 'text))
+         (text (format "%S" result)))
+    (should (equal (caar (plist-get result :events)) "answer"))
+    (should-not (string-match-p "SECRET" text))
+    (should (string-match-p "host" text))))
+
+(ert-deftest emacsvox-eat-prompt-autospeak-off-retains-without-announcing ()
+  "Disabling autospeak keeps an identified prompt available for explicit reading."
+  (let ((result (emacsvox-eat-test--prompt-output
+                 '("\r\n\e]51;e;B\e\\host$ \e]51;e;C\e\\") 'text t)))
+    (should-not (plist-get result :events))
+    (should (equal (plist-get result :prompt) "host$ "))))
+
+(ert-deftest emacsvox-eat-prompt-redraw-versus-new-shell-cycle ()
+  "Repainting an identical prompt is quiet; a new shell cycle cues again."
+  (let ((result (emacsvox-eat-test--prompt-output
+                 '("\r\n\e]51;e;B\e\\host$ \e]51;e;C\e\\"
+                   "\r\e]51;e;B\e\\host$ \e]51;e;C\e\\"
+                   "\r\e]51;e;J\e\\\e]51;e;B\e\\host$ \e]51;e;C\e\\"))))
+    (should (equal (mapcar #'car (plist-get result :events)) '(actions actions)))))
+
+(ert-deftest emacsvox-eat-prompt-range-and-content-budgets ()
+  "Oversized prompts and many prompt signals cannot grow retained state unboundedly."
+  (let* ((long (make-string 3000 ?x))
+         (result (emacsvox-eat-test--prompt-output
+                  (list (concat "\r\n\e]51;e;B\e\\" long "\e]51;e;C\e\\")) 'text)))
+    (should (< (length (plist-get result :prompt)) 1100)))
+  (let* ((prompt "\e]51;e;J\e\\\e]51;e;B\e\\host$ \e]51;e;C\e\\\r\n")
+         (result (emacsvox-eat-test--prompt-output
+                  (list (concat "\r\n" (apply #'concat (make-list 40 prompt)))))))
+    (should (equal (mapcar #'car (plist-get result :events)) '(actions)))))
+
+(ert-deftest emacsvox-eat-prompt-manual-reading-and-secure-cleanup ()
+  "Explicit prompt reading ignores automatic preferences and secure entry erases it."
+  (with-temp-buffer
+    (let ((major-mode 'eat-mode)
+          (emacsvox-eat-autospeak nil)
+          (emacsvox-eat-prompt-feedback 'silent)
+          (emacsvox-eat--last-prompt "host$ ")
+          spoken facts)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (text semantic &rest _) (setq spoken text facts semantic))))
+        (emacsvox-eat-speak-prompt)
+        (should (equal spoken "host$ "))
+        (should (emacsvox-aural-normalize-input
+                 facts '(:module eat :mode eat-mode :occasion navigation)))
+        (emacsvox-eat--clear-sensitive-screen-state)
+        (should-not emacsvox-eat--last-prompt)
+        (emacsvox-eat-speak-prompt)
+        (should (equal spoken "No identified terminal prompt is available"))))))
+
+(ert-deftest emacsvox-eat-prompt-status-tail-remains-replaceable ()
+  "A non-newline progress rewrite retains its complete replaceable status."
+  (let* ((result (emacsvox-eat-test--prompt-output
+                  '("\r\nProgress 10%" "\rProgress 100%")))
+         (event (cadr (plist-get result :events))))
+    (should (equal (car event) "Progress 100%"))
+    (should (eq (plist-get (cdr event) :delivery-policy) 'replaceable))))
+
+(ert-deftest emacsvox-eat-prompt-bash-integration-cues-without-spoken-prompt ()
+  "Actual EAT Bash integration identifies readiness, even without margin annotations."
+  (let ((buffer (generate-new-buffer " *EAT prompt integration*")) process events)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer buffer)
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest args) (push (cons text args) events)))
+                    ((symbol-function 'emacsvox-aural-submit-actions)
+                     (lambda (&rest args) (push (cons 'actions args) events)))
+                    ((symbol-function 'ding) #'ignore))
+            (eat-mode)
+            (setq-local eat-enable-shell-prompt-annotation nil
+                        eat-enable-auto-line-mode nil)
+            (let ((process-environment (cons "INPUTRC=/dev/null" process-environment)))
+              (eat-exec buffer "EAT prompt integration" (executable-find "bash") nil
+                        '("--noprofile" "--norc" "-i")))
+            (setq process (get-buffer-process buffer))
+            (set-process-query-on-exit-flag process nil)
+            (should (emacsvox-eat-test--wait-until
+                     process (lambda () (string-match-p "bash-[^ ]+[$#] "
+                                                         (emacsvox-eat-test--screen-text)))))
+            (eat-term-send-string
+             eat-terminal
+             (concat "PS1='EATPROMPT> '; PROMPT_COMMAND=; HISTFILE=/dev/null; source "
+                     (shell-quote-argument
+                      (expand-file-name "integration/bash"
+                                        (file-name-directory (symbol-file 'eat-term-make))))
+                     "\n"))
+            (should (emacsvox-eat-test--wait-until
+                     process (lambda () (equal emacsvox-eat--last-prompt "EATPROMPT> ")) 5))
+            (should (emacsvox-eat-test--wait-until
+                     process (lambda () (null emacsvox-eat--quiescence-timer))))
+            (setq events nil)
+            (dolist (char (string-to-list "printf result")) (eat-self-input 1 char))
+            (eat-self-input 1 'return)
+            (should (emacsvox-eat-test--wait-until
+                     process (lambda () (seq-some
+                                         (lambda (event) (eq (car event) 'actions)) events))))
+            (let ((ordered (nreverse events)))
+              (should (equal (mapcar #'car ordered) '("result" actions))))))
+      (emacsvox-eat-test--stop-process process)
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-eat-prompt-empty-ready-and-soft-wraps ()
+  "An empty prompt can cue readiness; soft wraps do not split spoken words."
+  (should (equal (mapcar #'car (plist-get
+                               (emacsvox-eat-test--prompt-output
+                                '("\r\n\e]51;e;B\e\\\e]51;e;C\e\\")) :events))
+                 '(actions)))
+  (let* ((prompt (make-string 110 ?x))
+         (result (emacsvox-eat-test--prompt-output
+                  (list (concat "\r\n\e]51;e;B\e\\" prompt "\e]51;e;C\e\\")) 'text)))
+    (should (equal (plist-get result :prompt) prompt))
+    (should (equal (mapcar #'car (plist-get result :events)) (list prompt)))))
 
 (provide 'emacsvox-eat-tests)
 ;;; emacsvox-eat-tests.el ends here

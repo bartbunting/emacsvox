@@ -82,6 +82,37 @@ including full values, blanks, buttons, native action keys, sorting, filtering,
 refresh and hidden rows. Its graphical navigation case must run on a real
 graphical Emacs; a batch skip does not establish display acceptance.
 
+** EAT rendered output and prompt observation
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+EAT output is collected around =eat-term-process-output= before redisplay can
+trim it, including a bounded unfinished row. Never retain raw process bytes or
+unredacted concealed text. Read fresh public terminal bounds, preserve soft-wrap
+continuity, and reject uncertain clear/reset/alternate-screen replacements.
+Check selected-window following after EAT synchronizes windows, not between
+chunks inside its renderer. Editable line-mode text lies after =eat-term-end=;
+it can share the final physical row with the terminal cursor.
+
+Prompt observation wraps the public =ui-command-function= terminal parameter
+and preserves its original callback. EAT has already parsed the protocol:
+=e;B= and =e;C= bracket a prompt, and =e;J= identifies a new shell prompt cycle.
+The adapter reads bounded rendered ranges, excludes those ranges from ordinary
+output, and deduplicates same-position prompt repaint. It does not infer a
+prompt from punctuation or require annotation overlays. Keep this protocol seam
+covered against the pinned EAT source and its real Bash integration when
+upgrading. Unmarked unfinished text remains ordinary output; otherwise remote
+questions can disappear indefinitely while waiting for a newline.
+
+Foreground loss discards Emacs-local automatic work only. It must not call a
+process-wide speech stop. Already dispatched speech may finish; scoped Omnivox
+cancellation remains a separate backlog direction. The graphical gate covers
+real X11 focus loss, minibuffers, selection, line drafts and scrolling. Integration
+runners force the silent =log-null= backend before loading Emacsvox so a failed
+test cannot start the maintainer's configured speech engine. Submission checks
+are separate from the maintainer's final audible SSH acceptance.
+
 ** Source checkout and byte-code lifecycle
 :PROPERTIES:
 :TEXINFO_NODE: no

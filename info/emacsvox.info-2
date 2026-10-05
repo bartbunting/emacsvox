@@ -445,6 +445,12 @@ Line mode
      here from semi-character or Emacs mode with ‘C-c C-l’.  Line mode
      is not available in EAT's embedded Eshell terminal.
 
+   Switching to line mode does not create unlimited history.  EAT still
+applies ‘eat-term-scrollback-size’ to retained terminal text; it is a
+character limit, not a line count, and ‘nil’ permits unlimited
+retention.  The editable draft follows the terminal extent.  Changing
+input modes does not change this limit.
+
    In semi-character and character mode, ‘<TAB>’ belongs to Bash
 Readline, a remote shell, a router CLI, or whichever terminal
 application is running.  Corfu is not involved.  In line mode, ‘<TAB>’
@@ -494,11 +500,30 @@ earlier screen rows.  The output remains available to speech when it
 scrolls beyond the screen, including repeated identical lines.
 Increasing scrollback is unnecessary for this feedback.  Wrapped output
 is joined and oversized bursts announce how much output was omitted.
-The redrawn prompt is not repeated.  Carriage-return progress and status
-rewrites use rate-limited replaceable speech.  Unchanged repaint and
-resize-only updates remain silent.  Terminal bells, paste actions,
+Fresh text without a newline also speaks, so password requests and
+confirmation questions remain accessible.  Carriage-return progress and
+status rewrites use rate-limited replaceable speech.  Unchanged repaint
+and resize-only updates remain silent.  Terminal bells, paste actions,
 input-mode changes, application-screen boundaries, and process exit are
 content-free semantic events rather than arbitrary screen speech.
+
+   When EAT shell integration identifies a ready prompt, Emacsvox gives
+a cue after the output instead of reading the prompt text.  Set
+‘emacsvox-eat-prompt-feedback’ to ‘text’ to hear it, or ‘silent’ to
+suppress prompt feedback; the default is ‘earcon’.  This preference can
+be buffer-local and is independent of verbosity.  Automatic prompt
+feedback obeys the same foreground autospeak policy.  Split and
+multiline prompts are collected until ready, and redisplay or typing
+does not repeat them.  If several prompts arrive within one coalesced
+burst, feedback describes the final ready prompt.
+
+   Use ‘C-e q p’ to read the most recently identified prompt explicitly,
+even with autospeak off.  Prompt recognition does not require EAT's
+margin annotations.  It does require shell integration: over SSH, an
+unintegrated remote prompt or question is ordinary output and is read as
+text.  The prompt preference does not silence such questions.  In that
+situation the last identified prompt may still belong to the local
+shell; ‘C-e q l’ reads the current retained cursor row.
 
    In semi-character and character mode on the main screen, ‘<RET>’ is
 silent.  After a rendered Left or Right movement, Emacsvox names the
@@ -589,6 +614,8 @@ opens the terminal review prefix:
      Open a read-only frozen copy for line-by-line review.
 ‘C-e q t’
      Speak the retained progress, application, or shell-prompt status.
+‘C-e q p’
+     Speak the most recently identified shell prompt.
 ‘C-e q i’
      Speak the retained sanitized title or working-directory change.
 ‘C-e q v’
@@ -1629,7 +1656,39 @@ buttons, native action keys, sorting, filtering, refresh and hidden
 rows.  Its graphical navigation case must run on a real graphical Emacs;
 a batch skip does not establish display acceptance.
 
-16.3.2 Source checkout and byte-code lifecycle
+16.3.2 EAT rendered output and prompt observation
+-------------------------------------------------
+
+EAT output is collected around ‘eat-term-process-output’ before
+redisplay can trim it, including a bounded unfinished row.  Never retain
+raw process bytes or unredacted concealed text.  Read fresh public
+terminal bounds, preserve soft-wrap continuity, and reject uncertain
+clear/reset/alternate-screen replacements.  Check selected-window
+following after EAT synchronizes windows, not between chunks inside its
+renderer.  Editable line-mode text lies after ‘eat-term-end’; it can
+share the final physical row with the terminal cursor.
+
+   Prompt observation wraps the public ‘ui-command-function’ terminal
+parameter and preserves its original callback.  EAT has already parsed
+the protocol: ‘e;B’ and ‘e;C’ bracket a prompt, and ‘e;J’ identifies a
+new shell prompt cycle.  The adapter reads bounded rendered ranges,
+excludes those ranges from ordinary output, and deduplicates
+same-position prompt repaint.  It does not infer a prompt from
+punctuation or require annotation overlays.  Keep this protocol seam
+covered against the pinned EAT source and its real Bash integration when
+upgrading.  Unmarked unfinished text remains ordinary output; otherwise
+remote questions can disappear indefinitely while waiting for a newline.
+
+   Foreground loss discards Emacs-local automatic work only.  It must
+not call a process-wide speech stop.  Already dispatched speech may
+finish; scoped Omnivox cancellation remains a separate backlog
+direction.  The graphical gate covers real X11 focus loss, minibuffers,
+selection, line drafts and scrolling.  Integration runners force the
+silent ‘log-null’ backend before loading Emacsvox so a failed test
+cannot start the maintainer's configured speech engine.  Submission
+checks are separate from the maintainer's final audible SSH acceptance.
+
+16.3.3 Source checkout and byte-code lifecycle
 ----------------------------------------------
 
 Use the Emacs selected by the ignored repository-local ‘local.mk’.  When
@@ -2046,7 +2105,7 @@ checker runs.
      through a separate SSH host.  Remote access remains preview
      independently of native Windows desktop support.
 
-16.3.3 Debian package builds
+16.3.4 Debian package builds
 ----------------------------
 
 ‘make deb’ builds a local development package in ‘dist/’ using Python 3,
@@ -2092,7 +2151,7 @@ toolchain can differ from a locally prepared package.  Let CI attach the
 release deb instead of uploading a differently built local package with
 the same name.
 
-16.3.4 Emacsvox release staging and publication
+16.3.5 Emacsvox release staging and publication
 -----------------------------------------------
 
 The repository-level ‘VERSION’ file is the canonical stable release
@@ -2162,7 +2221,7 @@ release target pushes ‘master’ or the documentation branch.  Use ‘make
 release-check’ alone when a non-mutating preflight is wanted without
 creating an artifact.
 
-16.3.5 Future Aural contract decisions
+16.3.6 Future Aural contract decisions
 --------------------------------------
 
 The completed Aural implementation diary is preserved under
@@ -2182,7 +2241,7 @@ implementation:
 is defined by the Aural implementation, its generated reference, and
 accepted ADRs.
 
-16.3.6 Voice-style metadata ownership
+16.3.7 Voice-style metadata ownership
 -------------------------------------
 
 The private ‘emacsvox-aural--voice-style-fields’ table in
@@ -2270,7 +2329,7 @@ preview or palette lookup.  Preserve final-write, timeout, reentrancy,
 and trace regressions when working on later delivery slices; metadata
 validation alone cannot establish process lifecycle or audible behavior.
 
-16.3.7 Timeline preparation boundaries
+16.3.8 Timeline preparation boundaries
 --------------------------------------
 
 Two private helpers in ‘lisp/emacsvox-aural-transport.el’ make
@@ -2309,7 +2368,7 @@ compiled implementation resident.  Keep the full failure, reentrancy,
 and golden-trace suites as regression checks; captured writes establish
 protocol behavior, not audible playback.
 
-16.3.8 Aural interface source ownership
+16.3.9 Aural interface source ownership
 ---------------------------------------
 
 Ordinary-buffer entry captures a source buffer, a marker, and a guarded
@@ -2336,8 +2395,8 @@ fragment identifiers, and personal/session scopes each share one working
 editor.  Reopening a dirty editor preserves its draft and source
 association.
 
-16.3.9 Remote speech recovery
------------------------------
+16.3.10 Remote speech recovery
+------------------------------
 
 Ordinary ‘tts-initialize’ startup schedules the existing remote retry
 when main speech starts but a configured notification connection fails.
@@ -2351,7 +2410,7 @@ remote recovery.  Exercise these boundaries in
 ‘test/omnivox-remote-tests.el’ with controlled connection failures and
 timers.
 
-16.3.10 Omnivox voice configuration applies
+16.3.11 Omnivox voice configuration applies
 -------------------------------------------
 
 ‘omnivox-apply-voice-configuration’ captures one generation and its
@@ -2377,7 +2436,7 @@ late-reply, overlapping-apply, and replacement regressions in
 ‘test/emacsvox-tts-tests.el’ and spoken timeout feedback coverage in
 ‘test/emacsvox-aural-voice-workbench-tests.el’.
 
-16.3.11 Notmuch contracts
+16.3.12 Notmuch contracts
 -------------------------
 
 The live module is registered as an optional package integration.  Its
@@ -2408,7 +2467,7 @@ exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
 focused selector, including real displayed-window reading for both
 advance paths.
 
-16.3.12 Agent Shell contracts
+16.3.13 Agent Shell contracts
 -----------------------------
 
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
@@ -2578,7 +2637,7 @@ unrelated keys.
      workflow semantic provider so Aural rules can customize their
      presentation.
 
-16.3.13 Magit contracts
+16.3.14 Magit contracts
 -----------------------
 
 Staging and selected synchronous operations collect Git outcomes at
@@ -2605,7 +2664,7 @@ from source, then again in a fresh Emacs with
 live buffer created with the former highlight mirroring needs a Magit
 refresh to rebuild its source properties.
 
-16.3.14 WSL2 Omnivox development staging
+16.3.15 WSL2 Omnivox development staging
 ----------------------------------------
 
 The ordinary WSL2 user route is implemented by
@@ -2765,7 +2824,7 @@ repository to make its release guard pass.  Use ‘make windows-omnivox’
 only for the reproducible clean-release path documented in the
 user-facing WSL2 route.
 
-16.3.15 Windows staging implementation and fixtures
+16.3.16 Windows staging implementation and fixtures
 ---------------------------------------------------
 
 Make owns option and clean-source guards, toolchain verification,
@@ -2810,7 +2869,7 @@ reproducibility, real Windows path conversion, engine startup, or
 audible playback; run the existing native gates for that acceptance in
 an appropriate staging environment.
 
-16.3.16 Aural experiments and guided changes
+16.3.17 Aural experiments and guided changes
 --------------------------------------------
 
 Physical experiments use the common voice editor with an exact
@@ -2857,7 +2916,7 @@ Row action predicates should hide operations that cannot apply to that
 row; this includes editing built-in options and reordering items outside
 the active-order view.
 
-16.3.17 Repeatable voice performance measurements
+16.3.18 Repeatable voice performance measurements
 -------------------------------------------------
 
 Use ‘utils/voice_benchmark.py’ to retain comparable measurements of
@@ -2982,7 +3041,7 @@ and comparison logic.
 
 File: emacsvox.info,  Node: Authoring Sound Packs,  Up: Integration Maintenance
 
-16.3.18 Authoring Sound Packs
+16.3.19 Authoring Sound Packs
 -----------------------------
 
 Ordinary selection, preview, and cue remapping are covered in *note
@@ -3053,7 +3112,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 
 * acss-default:                          Voices And Routing.  (line   6)
 * Agent Shell:                           Agent Shell.         (line   6)
-* alternate screen, EAT:                 EAT Terminal Access. (line 358)
+* alternate screen, EAT:                 EAT Terminal Access. (line 385)
 * applications:                          Emacs Packages.      (line   6)
 * archiving, Notmuch:                    Notmuch Mail.        (line 220)
 * artificial intelligence agents:        Agent Shell.         (line   6)
@@ -3076,26 +3135,26 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * byte-code, Notmuch integration:        Notmuch Mail.        (line 349)
 * character echo:                        Controlling Echo.    (line   6)
 * character mode, Term:                  Term Input Modes.    (line   6)
-* clipboard security, EAT:               EAT Terminal Access. (line 322)
-* completion candidates, terminal:       EAT Terminal Access. (line 134)
+* clipboard security, EAT:               EAT Terminal Access. (line 349)
+* completion candidates, terminal:       EAT Terminal Access. (line 159)
 * completion, EAT:                       EAT Terminal Access. (line  21)
 * Context-Sensitive Interaction:         Context-Sensitive Interaction.
                                                               (line   6)
 * Corfu, EAT:                            EAT Terminal Access. (line  21)
-* curses applications, EAT:              EAT Terminal Access. (line 358)
+* curses applications, EAT:              EAT Terminal Access. (line 385)
 * desktop navigation:                    Context-Sensitive Interaction.
                                                               (line  42)
 * development tools:                     Development Environment.
                                                               (line   6)
 * document authoring:                    Document Authoring.  (line   6)
-* EAT automatic speech:                  EAT Terminal Access. (line  62)
+* EAT automatic speech:                  EAT Terminal Access. (line  68)
 * EAT input modes:                       EAT Terminal Access. (line  21)
-* EAT review commands:                   EAT Terminal Access. (line 170)
-* EAT shell integration:                 EAT Terminal Access. (line 269)
+* EAT review commands:                   EAT Terminal Access. (line 195)
+* EAT shell integration:                 EAT Terminal Access. (line 296)
 * EAT terminal emulator:                 EAT Terminal Access. (line   6)
 * Emacs Keyboard Commands:               Emacsvox Keyboard Commands.
                                                               (line   6)
-* Eshell, EAT accessibility:             EAT Terminal Access. (line 381)
+* Eshell, EAT accessibility:             EAT Terminal Access. (line 408)
 * Eterm, Emacsvox module name:           Running Terminal Based Applications.
                                                               (line   6)
 * EWW:                                   Web Browsing.        (line   6)
@@ -3106,7 +3165,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line  56)
 * Forms mode:                            Desktop Applications.
                                                               (line  27)
-* frozen EAT review:                     EAT Terminal Access. (line 203)
+* frozen EAT review:                     EAT Terminal Access. (line 230)
 * integrations:                          Emacs Packages.      (line   6)
 * Introduction:                          Introduction.        (line   6)
 * line echo:                             Controlling Echo.    (line   6)
@@ -3129,13 +3188,13 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * OCR:                                   Desktop Applications.
                                                               (line  38)
 * Online Help:                           Using Online Help.   (line   6)
-* OSC 52, EAT:                           EAT Terminal Access. (line 322)
+* OSC 52, EAT:                           EAT Terminal Access. (line 349)
 * Outline mode:                          Structured Editing.  (line   6)
 * packages, speech support:              Emacs Packages.      (line   6)
 * PaddleOCR:                             Desktop Applications.
                                                               (line  38)
 * palette inheritance:                   Voices And Routing.  (line   6)
-* password input, EAT:                   EAT Terminal Access. (line 297)
+* password input, EAT:                   EAT Terminal Access. (line 324)
 * PDF, converting to text:               Desktop Applications.
                                                               (line  38)
 * personal information management:       Personal Information Management.
@@ -3151,19 +3210,19 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * privacy, Notmuch speech:               Notmuch Mail.        (line 248)
 * programming:                           Editing Code.        (line   6)
-* remote terminal trust:                 EAT Terminal Access. (line 322)
+* remote terminal trust:                 EAT Terminal Access. (line 349)
 * review mode, Term:                     Reviewing The Term Screen.
                                                               (line   6)
 * review pointer, Term:                  Reviewing The Term Screen.
                                                               (line   6)
-* router completion:                     EAT Terminal Access. (line 134)
+* router completion:                     EAT Terminal Access. (line 159)
 * saved searches, Notmuch:               Notmuch Mail.        (line  39)
 * saving aural settings:                 Saving And Startup.  (line   6)
 * search fields, Notmuch:                Notmuch Mail.        (line 108)
 * search results, asynchronous rendering: Notmuch Mail.       (line  64)
 * searching:                             Context-Sensitive Interaction.
                                                               (line  56)
-* shell command status:                  EAT Terminal Access. (line 269)
+* shell command status:                  EAT Terminal Access. (line 296)
 * sound packs:                           Sounds And Space.    (line   6)
 * spatial presentation:                  Sounds And Space.    (line   6)
 * speech access, terminal:               EAT Terminal Access. (line   6)
@@ -3188,9 +3247,9 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * terminal accessibility:                EAT Terminal Access. (line   6)
 * terminal applications:                 Running Terminal Based Applications.
                                                               (line   6)
-* terminal output, speech policy:        EAT Terminal Access. (line  62)
-* terminal privacy:                      EAT Terminal Access. (line 297)
-* terminal screen review:                EAT Terminal Access. (line 170)
+* terminal output, speech policy:        EAT Terminal Access. (line  68)
+* terminal privacy:                      EAT Terminal Access. (line 324)
+* terminal screen review:                EAT Terminal Access. (line 195)
 * troubleshooting, Notmuch:              Notmuch Mail.        (line 349)
 * TTS:                                   Speech System.       (line   6)
 * voice adjustments:                     Editing Named Voices.

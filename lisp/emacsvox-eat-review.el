@@ -121,6 +121,18 @@
     (symbol-value terminal-variable))
    (t (user-error "This is not an EAT terminal or frozen review buffer"))))
 
+(defun emacsvox-eat-speak-prompt ()
+  "Read the most recently identified EAT shell prompt.
+This explicit command works regardless of autospeak or prompt preference."
+  (interactive)
+  (emacsvox-eat--ensure-review-context)
+  (if emacsvox-eat--last-prompt
+      (emacsvox-eat--submit
+       emacsvox-eat--last-prompt
+       (emacsvox-eat--facts 'command-prompt 'focus-entered 'command-navigation)
+       'navigation)
+    (emacsvox-eat--submit-review "No identified terminal prompt is available")))
+
 (defun emacsvox-eat-speak-retained-status ()
   "Speak the latest retained or explicitly frozen terminal status row."
   (interactive)
@@ -873,6 +885,8 @@ The command never captures mutable live terminal-buffer text."
             #'emacsvox-eat-speak-retained-metadata)
 (define-key emacsvox-eat-review-map (kbd "v")
             #'emacsvox-eat-cycle-verbosity)
+(define-key emacsvox-eat-review-map (kbd "p")
+            #'emacsvox-eat-speak-prompt)
 (define-key emacsvox-eat-review-map (kbd "m")
             #'emacsvox-eat-toggle-background-monitoring)
 (define-key emacsvox-keymap (kbd "q") 'emacsvox-eat-review-map)

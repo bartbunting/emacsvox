@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1625 commands and 225 options.
+   This chapter documents a total of 1626 commands and 226 options.
 
 * Menu:
 
@@ -8169,6 +8169,18 @@ Load 'emacsvox-eat' rather than requiring this module directly.
      nil
 
 
+ -- Variable: User Option emacsvox-eat-prompt-feedback
+     Automatic feedback for a prompt identified by EAT shell integration.
+     Use ‘earcon’ for a ready cue, ‘text’ to read the prompt, or ‘silent’ for no
+     prompt feedback.  This is independent of verbosity and obeys foreground
+     autospeak.  Without shell integration, new unfinished text remains ordinary
+     output, including password requests and confirmation questions.
+
+     Default Value:
+
+     earcon
+
+
  -- Variable: User Option emacsvox-eat-verbosity
      Amount of automatic feedback produced for EAT terminals.
      At ‘terse’, retain routine output and metadata for review but do not speak
@@ -8378,21 +8390,29 @@ Load 'emacsvox-eat' rather than requiring this module directly.
 
      Speak the latest conservative terminal focus inference for review.
 
-2.104.1.18 emacsvox-eat-speak-retained-metadata
+2.104.1.18 emacsvox-eat-speak-prompt
+....................................
+
+ -- Command: emacsvox-eat-speak-prompt
+
+     Read the most recently identified EAT shell prompt.
+     This explicit command works regardless of autospeak or prompt preference.
+
+2.104.1.19 emacsvox-eat-speak-retained-metadata
 ...............................................
 
  -- Command: emacsvox-eat-speak-retained-metadata
 
      Speak the latest retained or explicitly frozen title/directory change.
 
-2.104.1.19 emacsvox-eat-speak-retained-status
+2.104.1.20 emacsvox-eat-speak-retained-status
 .............................................
 
  -- Command: emacsvox-eat-speak-retained-status
 
      Speak the latest retained or explicitly frozen terminal status row.
 
-2.104.1.20 emacsvox-eat-speak-visible-screen
+2.104.1.21 emacsvox-eat-speak-visible-screen
 ............................................
 
  -- Command: emacsvox-eat-speak-visible-screen

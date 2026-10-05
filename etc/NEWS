@@ -30,6 +30,14 @@ line-mode draft. Losing focus or switching feedback off discards locally pending
 work; speech already sent may finish. Explicit reading, input feedback, verbosity
 and background monitoring remain independent.
 
+** Recognize EAT prompts without hiding interactive questions
+
+Ready prompts identified by EAT shell integration now give a cue by default.
+Set =emacsvox-eat-prompt-feedback= to =text= or =silent= to change that behavior;
+=C-e q p= explicitly reads the last identified prompt. Split and multiline
+prompts are bounded and redacted. Unmarked remote prompts, password requests,
+and confirmation questions remain ordinary output and speak without a newline.
+
 ** Speak symbol names cleanly during character navigation
 
 Names such as "left bracket" and "question mark" no longer speak an extra

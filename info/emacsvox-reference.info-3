@@ -6761,18 +6761,22 @@ Function Index
                                                              (line  181)
 * emacsvox-eat-speak-likely-focus <1>:   emacsvox-eat-review.
                                                              (line  182)
-* emacsvox-eat-speak-retained-metadata:  emacsvox-eat-review.
+* emacsvox-eat-speak-prompt:             emacsvox-eat-review.
                                                              (line  188)
-* emacsvox-eat-speak-retained-metadata <1>: emacsvox-eat-review.
+* emacsvox-eat-speak-prompt <1>:         emacsvox-eat-review.
                                                              (line  189)
-* emacsvox-eat-speak-retained-status:    emacsvox-eat-review.
-                                                             (line  195)
-* emacsvox-eat-speak-retained-status <1>: emacsvox-eat-review.
+* emacsvox-eat-speak-retained-metadata:  emacsvox-eat-review.
                                                              (line  196)
-* emacsvox-eat-speak-visible-screen:     emacsvox-eat-review.
-                                                             (line  202)
-* emacsvox-eat-speak-visible-screen <1>: emacsvox-eat-review.
+* emacsvox-eat-speak-retained-metadata <1>: emacsvox-eat-review.
+                                                             (line  197)
+* emacsvox-eat-speak-retained-status:    emacsvox-eat-review.
                                                              (line  203)
+* emacsvox-eat-speak-retained-status <1>: emacsvox-eat-review.
+                                                             (line  204)
+* emacsvox-eat-speak-visible-screen:     emacsvox-eat-review.
+                                                             (line  210)
+* emacsvox-eat-speak-visible-screen <1>: emacsvox-eat-review.
+                                                             (line  211)
 * emacsvox-eat-toggle-autospeak:         emacsvox-eat-core.  (line   23)
 * emacsvox-eat-toggle-autospeak <1>:     emacsvox-eat-core.  (line   24)
 * emacsvox-eat-toggle-background-monitoring: emacsvox-eat-core.
