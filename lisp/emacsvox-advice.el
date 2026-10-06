@@ -48,6 +48,7 @@
 
 (defvar read-passwd--password-hidden)
 (defvar read-passwd--hide-password)
+(defvar emacsvox-speak--word-navigation-p)
 (defvar emacsvox-aural-submission-facts nil
   "Dynamically bound semantic facts for the current speech submission.")
 (defvar emacsvox-aural-submission-occasion nil
@@ -397,13 +398,15 @@ When on a close delimiter, speak matching delimiter after a small delay. "
     (forward-word right-word)
     "Speak the word after moving forward."
   (skip-syntax-forward " ")
-  (let ((emacsvox-aural-submission-occasion 'navigation))
+  (let ((emacsvox-aural-submission-occasion 'navigation)
+        (emacsvox-speak--word-navigation-p t))
     (emacsvox-speak-word)))
 
 (emacsvox-advice--define-interactive-after-advice
     (backward-word left-word)
     "Speak the word after moving backward."
-  (let ((emacsvox-aural-submission-occasion 'navigation))
+  (let ((emacsvox-aural-submission-occasion 'navigation)
+        (emacsvox-speak--word-navigation-p t))
     (emacsvox-speak-word)))
 
 (emacsvox-advice--define-interactive-after-advice

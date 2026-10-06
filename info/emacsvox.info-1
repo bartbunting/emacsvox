@@ -5465,7 +5465,35 @@ headings, links, lists, tables, and other document elements.  Begin with
 for the common discovery commands and *note Web Browsing: Web Browsing.
 for the maintained Web route.
 
-8.3.1 Reading Markdown and Org tables
+8.3.1 Reading Org headings
+--------------------------
+
+Reading a whole Org heading omits its leading stars at punctuation
+levels ‘some’ and ‘none’.  Heading voices and the optional heading-level
+announcement still identify the structure.  At ‘all’ punctuation, the
+stars are counted, for example, "3 star" before a level-three heading.
+An empty heading is spoken as "Empty heading" when its stars are
+omitted.
+
+   Word reading and partial-line reading count the stars actually
+selected.  Starting at the second star of a level-three heading
+therefore says "2 star".  Word movement includes the star count when it
+reaches the first heading word, in either direction.  It keeps the usual
+cursor position.  Moving through the remaining title words speaks them
+without repeating the count or heading-level announcement.  Character
+reading and spelling retain the individual stars.  Collapsed headings
+have a collapse cue at every level; the large-movement cue belongs to
+Org structure navigation.
+
+   Counts preserve the configured character name without adding a plural
+ending.  At ‘all’ punctuation, the speech server names the ‘*’
+character, so an active Omnivox pronunciation of "asterisk" produces "3
+asterisk".  Saved punctuation editor changes take effect after
+restarting speech.  For explicit word and partial-line reads at ‘some’
+or ‘none’, the name comes from ‘tts-character-to-speech-table’, the same
+Emacs table used by character reading.
+
+8.3.2 Reading Markdown and Org tables
 -------------------------------------
 
 In a Markdown or Org table, press a Control-Meta arrow to enter table
@@ -5522,7 +5550,7 @@ speech option remain independent of this reader.  Agent Shell uses the
 same logical reading operations with its existing automatic table entry,
 commands and preferences; see *note Agent Shell: Agent Shell.
 
-8.3.2 Reading application lists
+8.3.3 Reading application lists
 -------------------------------
 
 In an application built on Tabulated List mode, use a Control-Meta arrow
@@ -5551,7 +5579,7 @@ the boundary.  A refresh ends reading; enter again to inspect the
 refreshed list.  Custom table printers, image-only cells and duplicate
 column names are not supported by this reader.
 
-8.3.3 Browsing CSV data
+8.3.4 Browsing CSV data
 -----------------------
 
 Use ‘emacsvox-table-find-csv-file’ to open a CSV file in the table

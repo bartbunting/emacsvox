@@ -1075,6 +1075,21 @@ results in the Dectalk producing a tone whose length is a function of the
 line's indentation.  Specifying `speak'
 results in the number of initial spaces being spoken.")
 
+(defvar-local emacsvox-speak--reading-transform-function nil
+  "Optional mode function preparing a selected reading unit for speech.
+Called with TEXT, source START and END, and UNIT (`line', `partial-line', or
+`word'; `word-navigation' for a word reached by movement) before presentation
+prefixes and concrete speech plans are added.")
+
+(defvar emacsvox-speak--word-navigation-p nil
+  "Non-nil while speaking the destination of a word movement command.")
+
+(defun emacsvox-speak--reading-text (text start end unit)
+  "Prepare source TEXT between START and END for reading UNIT."
+  (if emacsvox-speak--reading-transform-function
+      (funcall emacsvox-speak--reading-transform-function text start end unit)
+    text))
+
 (defun emacsvox-speak--remove-captured-line-icon
     (content icon source-offset source-length)
   "Return CONTENT without the ICON captured at SOURCE-OFFSET.
@@ -1149,13 +1164,18 @@ interruption so native submissions can apply their complete delivery policy."
     (when icon (emacsvox-icon icon))
     (setq line
           (emacsvox-speak--annotate-point
-           (emacsvox-aural-source-substring start end)
+           (emacsvox-speak--remove-captured-line-icon
+            (emacsvox-aural-source-substring start end)
+            icon (- orig start) (- end start))
            orig start end point-facts))
     (when (and (null arg) emacsvox-speak-line-column-filter)
       (setq
        line
        (emacsvox-speak-line-apply-column-filter
         line emacsvox-speak-line-invert-filter)))
+    (setq line
+          (emacsvox-speak--reading-text
+           line start end (if arg 'partial-line 'line)))
     (when emacsvox-audio-indentation (setq indent (current-indentation)))
     (when (or (invisible-p end)
               (get-text-property start 'emacsvox-hidden-block))
@@ -1206,18 +1226,7 @@ while extracting the line become ordered compatibility actions, and semantic
 line conditions remain action-only submissions.  COMPATIBILITY-ACTIONS are
 placed around the same content without escaping replaceable delivery."
   (when (listp arg) (setq arg (car arg)))
-  (let* ((source-start
-          (if (and arg (> arg 0))
-              (point)
-            (line-beginning-position)))
-         (source-end
-          (if (and arg (< arg 0))
-              (point)
-            (line-end-position)))
-         (source-icon (get-char-property (point) 'auditory-icon))
-         (source-offset (- (point) source-start))
-         (source-length (- source-end source-start))
-         (context
+  (let* ((context
           (or
            emacsvox-aural-submission-context
            (emacsvox-aural-capture-context
@@ -1256,8 +1265,7 @@ placed around the same content without escaping replaceable delivery."
         (cond
          (content
           (emacsvox-aural-submit
-           (emacsvox-speak--remove-captured-line-icon
-            content source-icon source-offset source-length)
+           content
            :facts facts
            :context context
            :module module
@@ -1449,7 +1457,15 @@ spelled out  instead of being spoken."
         (setq speaker 'emacsvox-speak-spell-word)
         (setq emacsvox-speak-last-spoken-word-position nil))
        (t (setq emacsvox-speak-last-spoken-word-position orig)))
-      (funcall speaker (emacsvox-aural-source-substring start end)))))
+      (let ((text (emacsvox-aural-source-substring start end)))
+        (funcall speaker
+                 (if (eq speaker 'tts-speak)
+                     (emacsvox-speak--reading-text
+                      text start end
+                      (if (and emacsvox-speak--word-navigation-p (null arg))
+                          'word-navigation
+                        'word))
+                   text))))))
 
 (defsubst emacsvox-is-alpha-p (c)
   "Return non-nil if C is a letter or number spoken without a Unicode name.

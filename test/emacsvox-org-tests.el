@@ -55,6 +55,362 @@
        ,@body)
      (nreverse captured)))
 
+(defun emacsvox-test--org-line-runs (&optional command arg)
+  "Return final TTS runs for COMMAND with ARG, defaulting to line reading."
+  (let ((tts-stop-immediately nil)
+        (tts-handle-unicode nil)
+        (tts-caps nil)
+        (tts-chunk-separator-syntax ".>)$\"")
+        (emacsvox-pronounce-table nil)
+        runs)
+    (cl-letf
+        (((symbol-function 'tts-speak) #'tts--speak-transaction)
+         ((symbol-function 'tts--protocol-sync) #'ignore)
+         ((symbol-function 'tts--protocol-dispatch) #'ignore)
+         ((symbol-function 'emacsvox-aural-queue-concrete-runs)
+          (lambda (new-runs)
+            (setq runs (append runs new-runs)))))
+      (funcall (or command #'emacsvox-speak-line) arg))
+    runs))
+
+(ert-deftest emacsvox-org-heading-reading-distinguishes-editing-units ()
+  "Whole headings suppress markers; editing reads count selected stars."
+  (dolist (level '(1 2 3 4 5 6 7 8))
+    (dolist (punctuation '(none some all))
+      (ert-info ((format "Level %s, punctuation %s" level punctuation))
+        (with-temp-buffer
+          (emacsvox-test--activate-org-mode #'org-mode)
+          (insert (make-string level ?*) " Heading words\nBody *** text\n")
+          (font-lock-ensure)
+          (let ((tts-punctuation-mode punctuation)
+                (emacsvox-show-point nil))
+            (goto-char (point-min))
+            (should
+             (equal
+              (mapconcat #'cadr (emacsvox-test--org-line-runs) "")
+              (concat (when (eq punctuation 'all)
+                        (format "%d * " level))
+                      "Heading words")))
+            ;; Word selection at each marker must count the selected suffix,
+            ;; not the full heading level, even with punctuation disabled.
+            (dotimes (offset level)
+              (goto-char (+ (point-min) offset))
+              (let* ((count (- level offset))
+                     (expected
+                      (format "%d %s Heading" count
+                              (if (eq punctuation 'all) "*" "star"))))
+                (should
+                 (equal (mapconcat #'cadr
+                                   (emacsvox-test--org-line-runs
+                                    #'emacsvox-speak-word) "")
+                        expected))
+                (should
+                 (equal (mapconcat #'cadr
+                                   (emacsvox-test--org-line-runs
+                                    #'emacsvox-speak-line 1) "")
+                        (concat expected " words")))))
+            (goto-char (+ (point-min) level 1))
+            (should
+             (equal (mapconcat #'cadr
+                               (emacsvox-test--org-line-runs
+                                #'emacsvox-speak-word) "")
+                    "Heading"))
+            (should
+             (equal (string-trim
+                     (mapconcat #'cadr
+                                (emacsvox-test--org-line-runs
+                                 #'emacsvox-speak-line -1) ""))
+                    (format "%d %s" level (if (eq punctuation 'all) "*" "star"))))
+            (when (> level 1)
+              (goto-char (+ (point-min) 1))
+              (should
+               (equal (mapconcat #'cadr
+                                 (emacsvox-test--org-line-runs
+                                  #'emacsvox-speak-line -1) "")
+                      (if (eq punctuation 'all) "1 *" "1 star"))))))))))
+
+(ert-deftest emacsvox-org-heading-counts-use-configured-character-names ()
+  "Editing counts share character pronunciation and preserve custom names."
+  (dolist (name '("asterisk" "étoile" "custom marker name"))
+    (with-temp-buffer
+      (emacsvox-test--activate-org-mode #'org-mode)
+      (insert "*** Heading words\n")
+      (font-lock-ensure)
+      (let ((tts-character-to-speech-table
+             (copy-sequence tts-character-to-speech-table))
+            (emacsvox-show-point nil)
+            (emacsvox-delayed-phonetic-mode nil))
+        (aset tts-character-to-speech-table ?* name)
+        (dolist (punctuation '(none some))
+          (let ((tts-punctuation-mode punctuation))
+            (goto-char (point-min))
+            (should
+             (equal (mapconcat #'cadr
+                               (emacsvox-test--org-line-runs #'emacsvox-speak-char) "")
+                    name))
+            (should
+             (equal (mapconcat #'cadr
+                               (emacsvox-test--org-line-runs #'emacsvox-speak-word) "")
+                    (concat "3 " name " Heading")))
+            (goto-char 2)
+            (should
+             (equal (mapconcat #'cadr
+                               (emacsvox-test--org-line-runs #'emacsvox-speak-line 1) "")
+                    (concat "2 " name " Heading words")))
+            (goto-char 3)
+            (should
+             (equal (mapconcat #'cadr
+                               (emacsvox-test--org-line-runs #'emacsvox-speak-word) "")
+                    (concat "1 " name " Heading")))
+            (goto-char 13)
+            (should
+             (equal (mapconcat #'cadr
+                               (emacsvox-test--org-line-runs
+                                (lambda (_arg) (call-interactively #'backward-word))) "")
+                    (concat "3 " name " Heading")))))))))
+
+(ert-deftest emacsvox-org-all-punctuation-leaves-counted-marker-for-server ()
+  "All punctuation sends the marker through the active server pronunciation."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "*** Heading words\nBody\n")
+    (font-lock-ensure)
+    (goto-char (point-min))
+    (org-fold-hide-subtree)
+    (let ((emacsvox-show-point nil)
+          (emacsvox-aural-enabled-feature-fragments '(org-heading-level-labels)))
+      (dolist (punctuation '(all (profile "proofreading" all)))
+        (let* ((tts-punctuation-mode punctuation)
+               (runs (emacsvox-test--org-line-runs))
+               (actions (mapcan
+                         (lambda (run)
+                           (copy-sequence
+                            (emacsvox-aural-concrete-plan-before (car run))))
+                         runs)))
+          ;; A literal marker lets the running server use its own name or
+          ;; Preserve-character policy, without consulting saved UI drafts.
+          (should (equal (mapconcat #'cadr runs "") "3 * Heading words"))
+          (should (member "Heading 3" (mapcar #'emacsvox-aural-concrete-action-text actions)))
+          (should (= 1 (cl-count 'ellipses actions
+                                 :key #'emacsvox-aural-concrete-action-cue))))))
+    (let ((tts-punctuation-mode 'all))
+      (goto-char 2)
+      (should
+       (equal (mapconcat #'cadr (emacsvox-test--org-line-runs #'emacsvox-speak-word) "")
+              "2 * Heading")))))
+
+(ert-deftest emacsvox-org-heading-word-navigation-keeps-normal-movement ()
+  "Word movement speaks title words without repeating the heading label."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "*** Heading words\n")
+    (font-lock-ensure)
+    (goto-char (point-min))
+    (let ((emacsvox-aural-enabled-feature-fragments '(org-heading-level-labels))
+          (tts-punctuation-mode 'some)
+          (emacsvox-show-point nil))
+      (let ((runs (emacsvox-test--org-line-runs)))
+        (should
+         (member "Heading 3"
+                 (mapcan (lambda (run)
+                           (mapcar #'emacsvox-aural-concrete-action-text
+                                   (emacsvox-aural-concrete-plan-before (car run))))
+                         runs))))
+      (dolist (case '((forward-word 13 "words")
+                      (backward-word 5 "3 star Heading")))
+        (goto-char (point-min))
+        (when (eq (car case) 'backward-word) (goto-char 13))
+        (let ((runs
+               (emacsvox-test--org-line-runs
+                (lambda (_arg) (call-interactively (car case))))))
+          (should (= (point) (cadr case)))
+          (should (equal (mapconcat #'cadr runs "") (caddr case)))
+          (dolist (run runs)
+            (should-not (emacsvox-aural-concrete-plan-before (car run)))
+            (should-not (emacsvox-aural-concrete-plan-after (car run)))))))))
+
+(ert-deftest emacsvox-org-word-navigation-counts-heading-stars-in-both-directions ()
+  "Reaching the first heading word counts stars without moving its boundary."
+  (dolist (level '(1 2 3 4 5 6 7 8))
+    (dolist (punctuation '(none some all))
+      (dolist (hidden-stars '(nil t))
+        (with-temp-buffer
+          (emacsvox-test--activate-org-mode #'org-mode)
+          (setq-local org-hide-leading-stars hidden-stars)
+          (insert "Before\n" (make-string level ?*) " Heading words\nAfter\n")
+          (font-lock-ensure)
+          (goto-char (point-min))
+          (forward-line 1)
+          (let* ((heading-start (point))
+                 (title-start (+ heading-start level 1))
+                 (second-word (+ title-start (length "Heading ")))
+                 (tts-punctuation-mode punctuation)
+                 (emacsvox-aural-enabled-feature-fragments '(org-heading-level-labels))
+                 (emacsvox-show-point nil))
+            (dolist (command '(forward-word right-word backward-word left-word))
+              (ert-info ((format "%s level=%s punctuation=%s hidden=%s"
+                                 command level punctuation hidden-stars))
+                (let ((forward (memq command '(forward-word right-word))))
+                  (goto-char (if forward (point-min) second-word))
+                  (let ((runs
+                         (emacsvox-test--org-line-runs
+                          (lambda (_arg) (call-interactively command)))))
+                    (should (= (point) (if forward heading-start title-start)))
+                    (should
+                     (equal (mapconcat #'cadr runs "")
+                            (format "%d %s Heading" level
+                                    (if (eq punctuation 'all) "*" "star"))))
+                    (dolist (run runs)
+                      (should-not (emacsvox-aural-concrete-plan-before (car run)))
+                      (should-not (emacsvox-aural-concrete-plan-after (car run))))))))))))))
+
+(ert-deftest emacsvox-org-heading-marker-reading-preserves-point-and-icons ()
+  "Removing marker text retains point feedback and emits its icon once."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "*** Heading\n")
+    (font-lock-ensure)
+    (put-text-property 1 4 'auditory-icon 'select-object)
+    (goto-char 2)
+    (let ((tts-punctuation-mode 'some)
+          (emacsvox-show-point t)
+          (emacsvox-show-point-presentation 'voice)
+          spoken icons)
+      (cl-letf (((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push icon icons))))
+        (emacsvox-speak-line-with-speaker
+         (lambda (text) (setq spoken text))))
+      (should (equal (substring-no-properties spoken) "Heading"))
+      (should (equal icons '(select-object)))
+      (should-not (text-property-not-all 0 (length spoken) 'auditory-icon nil spoken))
+      (should (memq 'point-located
+                    (plist-get (get-text-property
+                                0 emacsvox-aural-facts-property spoken)
+                               :events)))
+      (should (= (point) 2))
+      (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                     "*** Heading\n")))))
+
+(ert-deftest emacsvox-org-heading-policy-leaves-body-and-character-reading-alone ()
+  "Body punctuation, escaped source stars, spelling, and characters stay literal."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "*** Heading\nBody *** text\n#+begin_src text\n,*** code\n#+end_src\n")
+    (font-lock-ensure)
+    (let ((tts-punctuation-mode 'some)
+          (emacsvox-show-point nil)
+          (emacsvox-delayed-phonetic-mode nil)
+          (emacsvox-character-echo t)
+          spoken)
+      (goto-char (point-min))
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text) (setq spoken text)))
+                ((symbol-function 'emacsvox-icon) #'ignore)
+                ((symbol-function 'tts-stop) #'ignore))
+        (dotimes (_ 3)
+          (emacsvox-speak-char)
+          (should (equal spoken "star"))
+          (forward-char))
+        (goto-char (point-min))
+        (let ((noninteractive nil)
+              (emacsvox-speak-last-spoken-word-position (point)))
+          (call-interactively #'emacsvox-speak-word))
+        (should (string-prefix-p "* * * " spoken)))
+      (dolist (line '(2 4))
+        (goto-char (point-min))
+        (forward-line (1- line))
+        (emacsvox-speak-line-with-speaker
+         (lambda (text) (setq spoken text)))
+        (should (equal (substring-no-properties spoken)
+                       (buffer-substring-no-properties
+                        (line-beginning-position) (line-end-position))))))))
+
+(ert-deftest emacsvox-org-empty-heading-is-spoken ()
+  "An empty full heading still produces speech and folding feedback."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "*** \nBody\n")
+    (goto-char (point-min))
+    (font-lock-ensure)
+    (org-fold-hide-subtree)
+    (let* ((tts-punctuation-mode 'some)
+           (runs (emacsvox-test--org-line-runs)))
+      (should (equal (mapconcat #'cadr runs "") "Empty heading"))
+      (should
+       (equal (mapcar #'emacsvox-aural-concrete-action-cue
+                      (emacsvox-aural-concrete-plan-before (caar runs)))
+              '(ellipses))))))
+
+(ert-deftest emacsvox-org-reading-counts-source-stars-with-display-options ()
+  "Hidden stars and reduced levels do not alter editing counts or filtering."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (setq-local org-hide-leading-stars t)
+    (setq-local org-odd-levels-only t)
+    (insert "***** Heading words\n")
+    (goto-char (point-min))
+    (font-lock-ensure)
+    (let ((tts-punctuation-mode 'all)
+          (emacsvox-show-point nil))
+      (should (= (plist-get (emacsvox-org-heading-facts) :level) 3))
+      (should
+       (equal (mapconcat #'cadr (emacsvox-test--org-line-runs) "")
+              "5 * Heading words"))
+      (goto-char 3)
+      (should
+       (equal (mapconcat #'cadr
+                         (emacsvox-test--org-line-runs #'emacsvox-speak-word) "")
+              "3 * Heading")))
+    (goto-char (point-min))
+    (let ((tts-punctuation-mode 'some)
+          (emacsvox-show-point nil)
+          (emacsvox-speak-line-column-filter '((6 13)))
+          (emacsvox-speak-line-invert-filter nil)
+          spoken)
+      (emacsvox-speak-line-with-speaker
+       (lambda (text) (setq spoken text)))
+      (should (equal (substring-no-properties spoken) "Heading words"))
+      (should (eq (get-text-property 0 'personality spoken) 'inaudible))
+      (should-not (get-text-property 8 'personality spoken)))))
+
+(ert-deftest emacsvox-org-line-reading-preserves-fold-cues-at-every-level ()
+  "Reading folded headings retains one collapse cue after TTS cleanup."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments nil)
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil))
+    (dolist (level '(1 2 3 4 5 6 7 8))
+      (dolist (punctuation '(none some all))
+        (dolist (folded '(nil t))
+          (ert-info ((format "Level %s, punctuation %s, folded %s"
+                             level punctuation folded))
+            (with-temp-buffer
+              (emacsvox-test--activate-org-mode #'org-mode)
+              (setq-local org-hide-leading-stars nil)
+              (insert (make-string level ?*) " Heading. More text.\nBody\n")
+              (goto-char (point-min))
+              (font-lock-ensure)
+              (when folded (org-fold-hide-subtree))
+              (let* ((tts-punctuation-mode punctuation)
+                     (runs (emacsvox-test--org-line-runs))
+                     (before
+                      (mapcan
+                       (lambda (run)
+                         (mapcar #'emacsvox-aural-concrete-action-cue
+                                 (emacsvox-aural-concrete-plan-before (car run))))
+                       runs)))
+                (should (> (length runs) 1))
+                (should (equal before (when folded '(ellipses))))
+                (should
+                 (equal
+                  (mapcar #'emacsvox-aural-concrete-action-cue
+                          (emacsvox-aural-concrete-plan-before (caar runs)))
+                  before))
+                (dolist (run runs)
+                  (should-not
+                   (emacsvox-aural-concrete-plan-after (car run))))))))))))
+
 (defun emacsvox-test--org-resolved-voice
     (mode user-rules &optional buffer-rules)
   "Resolve a heading voice in MODE with USER-RULES and BUFFER-RULES."
@@ -450,7 +806,8 @@
     (emacsvox-test--activate-org-mode #'org-mode)
     (insert "* Heading\n")
     (goto-char (point-min))
-    (let ((ems--interactive-fn-name 'org-next-visible-heading)
+    (let ((tts-punctuation-mode 'some)
+          (ems--interactive-fn-name 'org-next-visible-heading)
           submissions)
       (cl-letf
           (((symbol-function 'emacsvox-aural-submit)
@@ -460,7 +817,7 @@
       (should (= (length submissions) 1))
       (let ((submission (car submissions)))
         (should (equal (substring-no-properties (car submission))
-                       "* Heading"))
+                       "Heading"))
         (should
          (equal
           (plist-get (cdr submission) :facts)
@@ -517,7 +874,7 @@
        (eq (plist-get (cdr submission) :occasion) 'navigation)))))
 
 (ert-deftest emacsvox-org-default-plan-preserves-navigation-output-order ()
-  "Default semantic heading output remains line then movement cue."
+  "Explicit Org structure navigation retains line then movement cue."
   (let ((emacsvox-aural-active-scheme 'default)
         (emacsvox-aural-user-rules nil)
         (emacsvox-aural-session-rules nil)
@@ -527,7 +884,8 @@
       (insert "* Heading\n")
       (goto-char (point-min))
       (let* ((facts
-              (emacsvox-org-heading-facts 'focus-entered))
+              (emacsvox-org-heading-facts
+               'focus-entered 'structure-navigation))
              (plan
               (emacsvox-aural-resolve-active
                facts (emacsvox-test--org-context))))
@@ -572,8 +930,7 @@
         (should
          (equal
           matches
-          '(org-heading-navigation-compatibility
-            org-fragment-heading-section-cue
+          '(org-fragment-heading-section-cue
             org-fragment-heading-level-label)))
         (should
          (string-match-p
@@ -584,7 +941,7 @@
            "Before the content, say Heading 1 once for the object, "
            "then play the section cue once for the object")
           summary))
-        (should (string-match-p "After the content" summary))))))
+        (should-not (string-match-p "After the content" summary))))))
 
 (ert-deftest emacsvox-org-feature-fragments-are-optional-built-ins ()
   "Org feature fragments are registered read-only and remain opt-in."
@@ -669,8 +1026,8 @@
         (plist-get level-rule :source)
         "emacsvox-aural-provider-org")))))
 
-(ert-deftest emacsvox-org-arrow-and-structural-navigation-present-alike ()
-  "Down-arrow and Org structural navigation present one heading identically."
+(ert-deftest emacsvox-org-structure-navigation-owns-movement-cue ()
+  "Arrow movement shares heading labels but reserves the cue for Org commands."
   (let ((emacsvox-aural-active-scheme 'default)
         (emacsvox-aural-enabled-feature-fragments
          '(org-heading-level-labels))
@@ -699,7 +1056,7 @@
                    plans)))))
           (emacsvox--advice-next-line-after)
           (emacsvox-org-speak-line-semantically
-           'navigation 'focus-entered))
+           'navigation 'focus-entered 'structure-navigation))
         (should (= (length plans) 2))
         (dolist (plan plans)
           (should
@@ -725,11 +1082,11 @@
         (should
          (equal
           (mapcar
-           #'emacsvox-aural-concrete-action-id
+           #'emacsvox-aural-concrete-action-cue
            (emacsvox-aural-concrete-plan-after (nth 0 plans)))
-          (mapcar
-           #'emacsvox-aural-concrete-action-id
-          (emacsvox-aural-concrete-plan-after (nth 1 plans)))))))))
+          '(large-movement)))
+        (should-not
+         (emacsvox-aural-concrete-plan-after (nth 1 plans)))))))
 
 (ert-deftest emacsvox-org-mixed-face-heading-has-one-object-presentation ()
   "A fontified Org heading does not repeat semantic feedback per face run."
@@ -840,6 +1197,7 @@
          (emacsvox-use-icons t)
          (facts
           '(:role heading :level 1 :events (focus-entered)
+            :org-action structure-navigation
             :content "Title"))
          (context
           '(:module org :mode org-mode
@@ -1175,7 +1533,8 @@
     (emacsvox-test--activate-org-mode #'org-mode)
     (insert "[[*Target]]\n* Target\nDestination\n")
     (goto-char (point-min))
-    (let ((ems--interactive-fn-name 'org-open-at-point)
+    (let ((tts-punctuation-mode 'some)
+          (ems--interactive-fn-name 'org-open-at-point)
           submissions)
       (cl-letf
           (((symbol-function 'emacsvox-aural-submit)
@@ -1186,7 +1545,7 @@
            (search-forward "* Target")
            (beginning-of-line))))
       (should (= (length submissions) 1))
-      (should (equal (caar submissions) "* Target"))
+      (should (equal (caar submissions) "Target"))
       (should
        (equal
         (plist-get (cdar submissions) :facts)

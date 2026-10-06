@@ -84,6 +84,33 @@ tables, and other document elements.  Begin with ~C-h m~ in the buffer;
 see [[*Find Help While You Work][Using Online Help]] for the common discovery commands and
 [[*Web Browsing With EWW][Web Browsing]] for the maintained Web route.
 
+*** Reading Org headings
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Reading a whole Org heading omits its leading stars at punctuation levels
+=some= and =none=.  Heading voices and the optional heading-level announcement
+still identify the structure.  At =all= punctuation, the stars are counted,
+for example, ``3 star'' before a level-three heading.  An empty heading is
+spoken as ``Empty heading'' when its stars are omitted.
+
+Word reading and partial-line reading count the stars actually selected.
+Starting at the second star of a level-three heading therefore says ``2 star''.
+Word movement includes the star count when it reaches the first heading word,
+in either direction.  It keeps the usual cursor position.  Moving through the
+remaining title words speaks them without repeating the count or heading-level
+announcement.  Character reading and spelling retain the individual stars.
+Collapsed headings have a collapse cue at every level; the large-movement cue
+belongs to Org structure navigation.
+
+Counts preserve the configured character name without adding a plural ending.
+At =all= punctuation, the speech server names the =*= character, so an active
+Omnivox pronunciation of ``asterisk'' produces ``3 asterisk''.  Saved punctuation
+editor changes take effect after restarting speech.  For explicit word and
+partial-line reads at =some= or =none=, the name comes from
+=tts-character-to-speech-table=, the same Emacs table used by character reading.
+
 *** Reading Markdown and Org tables
 :PROPERTIES:
 :TEXINFO_NODE: no

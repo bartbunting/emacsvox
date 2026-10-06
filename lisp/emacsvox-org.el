@@ -131,11 +131,119 @@ ICON-PHASE defaults to `before'."
     (when icon
       (emacsvox-org--submit-actions facts occasion icon))))
 
+(defun emacsvox-org--reading-text (text start end unit)
+  "Prepare Org TEXT from START to END for reading UNIT.
+Whole lines omit heading markers except at all punctuation.  Word and
+partial-line reads count only the selected stars, retaining editing detail.
+Word navigation includes the heading prefix when reaching its first word.
+Only source heading markers are changed; body punctuation stays intact."
+  (save-excursion
+    (save-match-data
+      ;; Forward movement can stop at the marker, whereas backward movement
+      ;; stops at the first lexical word.  Read the same heading prefix from
+      ;; either destination without changing the actual navigation position.
+      (goto-char start)
+      (when (and (eq unit 'word-navigation)
+                 (derived-mode-p 'org-mode)
+                 (org-at-heading-p)
+                 (= start (save-excursion
+                            (beginning-of-line)
+                            (forward-word 1)
+                            (backward-word 1)
+                            (point))))
+        (setq start (line-beginning-position)
+              text (emacsvox-aural-source-substring start end)))
+      (let ((result (copy-sequence text))
+            (all-punctuation
+             (eq 'all (omnivox-punctuation-profiles--fallback
+                       tts-punctuation-mode)))
+            replacements)
+        (goto-char start)
+        (beginning-of-line)
+        (while (< (point) end)
+          (when (and (derived-mode-p 'org-mode) (org-at-heading-p))
+            (let* ((marker-start (max start (point)))
+                   (marker-end (min end (+ (point) (org-outline-level))))
+                   (count (- marker-end marker-start)))
+              (when (> count 0)
+                (let* ((from (- marker-start start))
+                       (to (- marker-end start))
+                       (full (eq unit 'line))
+                       (counted (or (not full) all-punctuation))
+                       (replacement
+                        (if counted
+                            ;; Keep the character for server-side pronunciation
+                            ;; at all punctuation.  Explicit editing at lower
+                            ;; levels uses the same name as character reading.
+                            ;; Custom names need not have English plural forms.
+                            (format "%d %s" count
+                                    (if all-punctuation "*"
+                                      (tts-char-to-speech ?*)))
+                          "")))
+                  (unless counted
+                    ;; Include the separator so the first remaining character
+                    ;; carries the heading's before actions and voice.
+                    (while (and (< to (length text))
+                                (memq (aref text to) '(?\s ?\t)))
+                      (cl-incf to))
+                    (when (= to (length text))
+                      (setq replacement "Empty heading")))
+                  (when (> (length replacement) 0)
+                    ;; Use the last marker's properties: org-hide-leading-stars
+                    ;; may give the preceding stars a different face.
+                    (set-text-properties
+                     0 (length replacement)
+                     (text-properties-at (1- (- marker-end start)) text)
+                     replacement))
+                  (push (list from to replacement) replacements)))))
+          (forward-line 1))
+        ;; Apply from the end to keep all offsets in original source coordinates.
+        (dolist (change replacements)
+          (pcase-let ((`(,from ,to ,replacement) change))
+            (let ((point-facts nil))
+              (cl-loop for offset from from below to
+                       for facts = (get-text-property
+                                    offset emacsvox-aural-facts-property result)
+                       when (memq 'point-located (plist-get facts :events))
+                       do (setq point-facts facts))
+              (setq result
+                    (concat (substring result 0 from) replacement
+                            (substring result to)))
+              (when (and point-facts (< from (length result)))
+                (add-text-properties
+                 from (1+ from)
+                 (list emacsvox-aural-facts-property
+                       (emacsvox-aural-merge-facts
+                        (get-text-property from emacsvox-aural-facts-property result)
+                        point-facts))
+                 result)))))
+        (unless (eq unit 'line)
+          ;; A title word is not a newly visited heading.  Retain its face and
+          ;; point feedback, but do not replay whole-heading labels or state.
+          (let ((offset 0))
+            (while (< offset (length result))
+              (let* ((next (next-single-property-change
+                            offset emacsvox-aural-facts-property result
+                            (length result)))
+                     (facts (copy-tree
+                             (get-text-property
+                              offset emacsvox-aural-facts-property result))))
+                (when (eq (plist-get facts :role) 'heading)
+                  (setq facts (plist-put facts :role 'org-content))
+                  (dolist (key '(:level :visibility :states :org-action))
+                    (cl-remf facts key))
+                  (put-text-property
+                   offset next emacsvox-aural-facts-property facts result))
+                (setq offset next)))))
+        result))))
+
 (defun emacsvox-org--line-content ()
   "Return the current Org line with speech-relevant properties intact."
   (concat
-   (emacsvox-aural-source-substring
-    (line-beginning-position) (line-end-position))
+   (emacsvox-org--reading-text
+    (emacsvox-aural-source-substring
+     (line-beginning-position) (line-end-position))
+    (line-beginning-position) (line-end-position) 'line)
    (ems--display-props-get)))
 
 (defun emacsvox-org--buffer-summary ()
@@ -206,6 +314,8 @@ compatibility ICON."
 (defun emacsvox-org-enable-aural-annotations ()
   "Enable semantic heading facts and Org module context in this buffer."
   (setq-local emacsvox-aural-module 'org)
+  (setq-local emacsvox-speak--reading-transform-function
+              #'emacsvox-org--reading-text)
   (unless emacsvox-org-aural-annotation-enabled
     (setq-local emacsvox-org-aural-annotation-enabled t)
     (add-to-list

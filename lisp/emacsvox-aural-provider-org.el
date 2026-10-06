@@ -272,7 +272,9 @@
        :summary "Compatibility presentation for semantic Org headings"
        :rules
        ((:id org-heading-navigation-compatibility
-         :match (:role heading :module org :occasion navigation)
+         :match
+         (:role heading :module org :occasion navigation
+          :org-action structure-navigation)
          :render
          (:after
           ((:id org-heading-navigation-movement
