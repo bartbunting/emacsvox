@@ -26,6 +26,24 @@
   edits, compilation, generated-file updates, and checks that consume their
   results. Do not silently fix unrelated findings.
 
+## Writing style
+
+- Apply these rules to documentation, including ADRs and reports, code comments,
+  commit messages, and PR descriptions. Use concise, plain language that reads
+  naturally through speech. State the behaviour, decision, and reason directly.
+- Address readers as "you" in instructions. Use "the user" when describing
+  interaction with the software. Do not use "the maintainer" as a stand-in for
+  someone using the application.
+- Record decisions independently of the conversation that produced them.
+  Prefer "Accepted on DATE" or "The policy was revised on DATE" to "the
+  maintainer requested/approved/selected". Explain the rationale and resulting
+  behaviour without narrating requests or personal preferences.
+- Name people or project roles when attribution or responsibility matters,
+  such as authorship, copyright, or release approval authority. Preserve source
+  header metadata and required historical attribution.
+- Before finishing, review added and changed prose for unnecessary references
+  to who requested a change and replace them with the decision or behaviour.
+
 ## Reasoning effort
 
 - Treat effort levels as recommendations suited to the remaining work. High is
