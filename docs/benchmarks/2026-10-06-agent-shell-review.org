@@ -1,0 +1,130 @@
+#+title: Agent Shell 0.84.2 compatibility review
+#+date: 2026-10-06
+
+* Findings
+
+No further Emacsvox implementation change was found necessary for the clean
+=~/src/agent-shell= checkout at 0.84.2, revision
+=c9def6efb656a0688e65a8d54b00a37fb8372648=.
+
+The [[file:2026-10-05-agent-shell-review.org][0.84.1 review]] already covered the larger upgrade from pinned 0.81.1
+and led to the queue-submission-count and grouped-setting-confirmation fixes.
+Both fixes are present in the current Emacsvox sources. This review rechecked
+the complete binding surface and reran the affected source and compiled suites
+against 0.84.2, with focused checks for the changes since 0.84.1:
+
+- Long execute-command fallback headings now fit the window. Automatic tool
+  feedback still derives its description from the semantic tool data, with
+  Emacsvox's existing 120-character limit; it does not inherit the new window
+  truncation. Permission detail rendering also retains the operation text.
+- Expanding and collapsing a group child while subsequent children arrive
+  preserves separate displayed header lines and typed tool navigation. The
+  upstream trailing-newline fix requires no local renderer workaround.
+
+* Maintenance items
+
+The reviewed checkout requires Shell Maker 0.97.5. Emacsvox's tracked
+=test/integration-dependencies.json= still selects Agent Shell 0.81.1 at
+=5535365534d0bf9f6e0257316af86e11399d3eba= and Shell Maker 0.97.4 at
+=a76d4d6b620927ff5e635449466015340bc2fe44=.
+
+When adopting 0.84.2 as the integration-test baseline, update both dependency
+pins, their archive hashes, and the maintained baseline statements, then run
+the full pinned integration gates. Existing 0.81.1 support still passes; the
+older-version fallbacks should remain while that version is supported. ACP
+0.15.1 satisfies the new checkout's declared requirement; installed 0.15.2
+also passed the affected suite.
+
+The live Emacs, PID 1781 on socket =/run/user/1000/emacs/emacsvox=, loads
+Agent Shell 0.83.5 from
+=/home/bart/.emacs.d/elpa/agent-shell-20261004.1353/agent-shell.elc=,
+Shell Maker 0.97.5 from
+=/home/bart/.emacs.d/elpa/shell-maker-20261001.1543/shell-maker.elc=,
+and ACP 0.15.2 from =/home/bart/.emacs.d/elpa/acp/acp.elc=.
+Its Emacsvox integration comes from this repository's compiled Lisp. Updating
+the Agent Shell checkout alone does not replace those already loaded modules.
+No live package installation, reload, or dependency-lock change was performed.
+
+* Binding review
+
+Read 46 upstream Lisp files and compared 100 key-definition forms and
+contextual permission/diff builders against pinned 0.81.1. They are unchanged,
+including shell and viewport view/edit maps, fragment and list-edit maps, and
+transient menus. The effective overlap test also includes inherited Shell
+Maker bindings and Emacsvox's speech, table and repeat maps.
+
+No new conflicts were found. The five existing intentional upstream overlaps
+remain: viewport =t= for table discovery, shell-table =r= for row reading, and
+viewport-table =r=, =c= and =a= for table speech. The maintained Agent Shell
+chapter documents their scope and the displaced commands' =M-x= entry points.
+The contextual table =k= copy prefix remains reachable during repeat
+navigation. Tests cover literal navigation letters in idle/busy shell prompts
+and viewport editors, transcript navigation, table entry/exit and restored
+upstream keys. A separate probe verified effective permission actions =y=,
+=n=, =!=, diff viewing =v= and interruption =C-c C-c= in both transcript maps;
+the captured Allow action selected the expected option without contacting an
+agent.
+
+* Verification
+
+Selected Emacs: 31.0.90 from =/home/bart/opt/emacs-31/bin/emacs=.
+Fresh isolated processes verified the actual Agent Shell and Emacsvox loaded
+paths. Candidate checks loaded Shell Maker 0.97.5 source from installed
+revision =dcc05a8cf24e=. The pinned prepared dependency tree was verified
+against the unchanged lock before concluding the review.
+
+| Agent Shell | Dependencies | Check | Result |
+|-------------+--------------+-------+--------|
+| 0.81.1 pinned | Shell Maker 0.97.4, ACP 0.15.1 | Source suite | 301 passed |
+| 0.84.2 checkout | Shell Maker 0.97.5, ACP 0.15.1 | Source suite | 301 passed |
+| 0.84.2 checkout | Shell Maker 0.97.5, ACP 0.15.1 | Compiled Emacsvox suite | 301 passed |
+| 0.84.2 checkout | Shell Maker 0.97.5, ACP 0.15.2 | Source suite | 301 passed |
+| 0.84.2 checkout | Shell Maker 0.97.5, ACP 0.15.1 | Source focused probes | 2 passed |
+| 0.84.2 checkout | Shell Maker 0.97.5, ACP 0.15.2 | Compiled focused probes | 2 passed |
+| 0.84.2 checkout | Shell Maker 0.97.5, ACP 0.15.1 | Source graphical checks | 5 passed |
+| 0.84.2 checkout | Shell Maker 0.97.5, ACP 0.15.1 | Compiled graphical checks | 5 passed |
+
+The 301-case batch suites exclude the four graphical cases. Those cases and
+the added streamed-group check ran separately in real Xvfb frames, with no
+selected tests skipped. The new graphical probe exercised both leaf and
+parent-group expansion routes and checked rendered pixel positions and spoken
+navigation. Initial permission-probe fixture errors were corrected to generate
+permission text in shell mode and restore the owning shell before cleanup;
+they required no product-code change.
+
+Byte-code preflight, the documentation release check and whitespace checks
+passed. Listening and a real ACP agent round trip were not tested. Existing
+Notmuch work was preserved; this review added only this report to the repository.
+Runners and detailed logs are retained under
+=~/.local/state/emacsvox/diagnostics/2026-10-06-agent-shell-review/=.
+
+* Direct verification of the three changelog fixes
+
+The follow-up checks exercise the exact reported failures, beyond the general
+compatibility suite. All scenarios pass on the requested 0.84.2 checkout with
+both source and compiled Emacsvox. The two graphical scenarios ran in real
+Xvfb frames; there were no graphical skips.
+
+| Fix | Observable check on 0.84.2 | Before-fix control |
+|-----+---------------------------+--------------------|
+| =b76ea2a= grouped-child folding | Expand the first child, insert a second child, collapse the first: their headings occupy different screen rows and tool navigation reads each separately. Both leaf expansion and parent-group expansion routes pass. | Parent =632b4207= puts both headings at the same pixel height, reproducing the joined-child failure. |
+| =632b4207= fallback-title truncation | A 97-character command in a real 42-column window has an ellipsized heading on one displayed line. When its description arrives, the heading becomes that description and still occupies one line. Semantic tool speech and permission details retain the operation text. | Parent =6a53e549= leaves the oversized command heading intact, with no ellipsis. |
+| =6a53e549= bold around inline code | The exact =**`file.el:12`:**= example renders as =file.el:12:=, with code and bold faces on the filename and bold speech styling on the colon. Spans crossing a code boundary remain literal. | Parent =68def960= leaves the outer bold delimiters raw. |
+| =6a53e549= final heading/quote line | Stream =## Summary= or => Last quote= across two chunks without a final newline. The actual prompt-success callback renders the pending line before the turn-complete speech event; header and quote voices are retained. Cancellation also finishes rendering while preserving Emacsvox's existing silent cancellation behavior. | Parent =68def960= leaves the final header raw and the final quote without its rendered bar/face. Both failures were checked separately. |
+
+The completion probe captures upstream's actual =:on-success= callback from
+=agent-shell--send-command=. It stubs request delivery and output finishing;
+there is no ACP agent connection or listening test. The blockquote renderer
+retains =>= in source text and supplies a display property for the quote bar;
+the check verifies that property and the quote voice rather than requiring the
+source marker to disappear.
+
+Four focused cases passed with source Emacsvox and again with compiled
+Emacsvox: two batch cases and two graphical cases. The historical controls
+failed at their intended assertions, establishing that the probes detect the
+original bugs. Isolated archive copies of the three parent revisions are
+retained below the diagnostics directory's =controls/= directory; no checkout
+was switched and no live profile was changed. Logs are named
+=changelog-source.log=, =changelog-compiled.log=,
+=changelog-graphical-final.log=, =changelog-compiled-graphical.log= and
+=changelog-*-before.log=.
