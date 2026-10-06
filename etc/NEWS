@@ -10,6 +10,13 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Keep Notmuch refresh feedback interruptible
+
+Explicit mail refresh announcements now queue on the main speech stream even
+when you leave the search buffer before completion. Navigation can interrupt
+the completion cue and count, or a refresh failure, without competing speech
+from the notification stream.
+
 ** Advance past partly visible text without repeating it
 
 In short graphical windows, Down no longer consumes a press by scrolling

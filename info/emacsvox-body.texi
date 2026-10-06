@@ -5938,16 +5938,16 @@ does not disclose the query@comma{} sender@comma{} recipients@comma{} subject@co
 metadata.  Killing the owning search buffer cancels this delivery silently.
 @end itemize
 
-Refreshing the selected search buffer queues only the generic count on the
-primary speech stream@comma{} without interrupting the row already being spoken.
-Navigation interrupts that announcement.  A refresh that finishes in another
-buffer uses the notification stream.  Neither case rereads the selected row.
+An explicit refresh queues only the generic count on the primary speech
+stream@comma{} without interrupting speech already playing.  Navigation interrupts
+that announcement@comma{} including when you leave the search buffer before the
+refresh finishes.  Refresh completion does not reread the selected row.
 
 The @code{summary} policy plays only a generic count and its completion cue;
 @code{cue} plays only that cue@comma{} and @code{silent} suppresses successful completion.
 These policies use the same stream selection for refreshes.  Other search
 summaries use the notification stream.  Failures remain audible and generic
-for every policy@comma{} with focused refresh failures using the primary stream too.
+for every policy@comma{} with refresh failures using the primary stream too.
 The deliberate global refresh-all command remains silent.  See
 @ref{Aural Presentation, , Aural Presentation} for the streams' general behavior and
 configuration.

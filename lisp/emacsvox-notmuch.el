@@ -123,11 +123,11 @@ stream.  If no row was announced early, an untouched focused search speaks
 its count and selected result together at completion.
 After the user issues another command or leaves the search buffer, search
 completion contains only a generic result count on the notification stream.
-A refresh of the selected buffer queues its generic count on the primary
-stream, where navigation can interrupt it without competing speech.  Refreshes
-in other buffers use the notification stream.  `summary' sends only the generic
-count, `cue' sends only a task-completion cue, and `silent' suppresses successful
-completion feedback.  These styles use the same refresh stream selection.
+A user-owned refresh queues its generic count on the primary stream even after
+leaving its buffer; navigation can interrupt it without competing speech.
+`summary' sends only the generic count, `cue' sends only a task-completion cue,
+and `silent' suppresses successful completion feedback.  These styles use the
+same refresh stream selection.
 
 Failures remain audible for every style.  Notification feedback contains no
 query or message metadata and may be retained in the notifications log.  A
@@ -2672,10 +2672,10 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
 (defun emacsvox-notmuch--search-completion-feedback
     (buffer kind facts icon &optional text)
   "Present search KIND's completion in BUFFER using FACTS, ICON and TEXT.
-A focused refresh joins primary speech without interrupting the current row;
-subsequent navigation can cancel it.  Other completions use notifications."
-  (if (and (eq kind 'refresh)
-           (emacsvox-notmuch--search-buffer-focused-p buffer))
+A user-owned refresh joins primary speech without interrupting current speech,
+even after leaving BUFFER.  Navigation can cancel it.  Other completions use
+notifications."
+  (if (eq kind 'refresh)
       (with-current-buffer buffer
         (emacsvox-notmuch--submit-text-feedback
          facts 'notification icon text 'ordered 'none))

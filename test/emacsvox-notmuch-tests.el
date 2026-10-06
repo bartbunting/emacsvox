@@ -4030,42 +4030,46 @@ Return the beginning of the inserted row."
                                  :mail-action-kind refresh
                                  :events (refresh-completed))))))))))))
 
-(ert-deftest emacsvox-notmuch-focused-refresh-compiles-before-main-speech ()
+(ert-deftest emacsvox-notmuch-refresh-compiles-before-main-speech ()
   "Refresh completion passes semantic validation without changing speech lanes."
-  (save-window-excursion
-    (with-temp-buffer
-      (set-window-buffer (selected-window) (current-buffer))
-      (setq major-mode 'notmuch-search-mode)
-      (let ((emacsvox-aural-user-rules nil)
-            (emacsvox-aural-session-rules nil)
-            (emacsvox-aural-buffer-rules nil)
-            spoken submission)
-        (cl-letf (((symbol-function 'tts-speak)
-                   (lambda (text) (setq spoken text)))
-                  ((symbol-function 'emacsvox-aural-submit-notification)
-                   (lambda (&rest _) (ert-fail "Refresh changed speech lanes"))))
-          (setq submission
-                (emacsvox-notmuch--search-completion-feedback
-                 (current-buffer) 'refresh
-                 (emacsvox-notmuch--search-completion-facts
-                  'refresh 'refresh-completed)
-                 'task-done "Search refreshed, 2 threads")))
-        (should (equal (substring-no-properties spoken)
-                       "Search refreshed, 2 threads"))
-        (should (eq (emacsvox-aural-submission-lane submission) 'main))
-        (should (eq (emacsvox-aural-submission-delivery-policy submission) 'ordered))
-        (should (eq (emacsvox-aural-submission-interruption-policy submission) 'none))
-        (should (emacsvox-aural-submission-plans submission))))))
+  (dolist (focused '(nil t))
+    (save-window-excursion
+      (with-temp-buffer
+        (when focused
+          (set-window-buffer (selected-window) (current-buffer)))
+        (should (eq focused
+                    (emacsvox-notmuch--search-buffer-focused-p (current-buffer))))
+        (setq major-mode 'notmuch-search-mode)
+        (let ((emacsvox-aural-user-rules nil)
+              (emacsvox-aural-session-rules nil)
+              (emacsvox-aural-buffer-rules nil)
+              spoken submission)
+          (cl-letf (((symbol-function 'tts-speak)
+                     (lambda (text) (setq spoken text)))
+                    ((symbol-function 'emacsvox-aural-submit-notification)
+                     (lambda (&rest _) (ert-fail "Refresh changed speech lanes"))))
+            (setq submission
+                  (emacsvox-notmuch--search-completion-feedback
+                   (current-buffer) 'refresh
+                   (emacsvox-notmuch--search-completion-facts
+                    'refresh 'refresh-completed)
+                   'task-done "Search refreshed, 2 threads")))
+          (should (equal (substring-no-properties spoken)
+                         "Search refreshed, 2 threads"))
+          (should (eq (emacsvox-aural-submission-lane submission) 'main))
+          (should (eq (emacsvox-aural-submission-delivery-policy submission) 'ordered))
+          (should (eq (emacsvox-aural-submission-interruption-policy submission) 'none))
+          (should (emacsvox-aural-submission-plans submission)))))))
 
-(ert-deftest emacsvox-notmuch-background-refresh-announces-on-notification-stream ()
+(ert-deftest emacsvox-notmuch-background-refresh-uses-interruptible-main-speech ()
   "An explicit refresh reports its final count without replaying a row."
   (let ((buffer (generate-new-buffer " *emacsvox-notmuch-refresh-test*"))
         (properties
          `((,emacsvox-notmuch--search-process-property
             . (:kind refresh :interacted nil))))
         events
-        (notification-calls 0)
-        notification-arguments)
+        (submission-calls 0)
+        submission-arguments)
     (unwind-protect
         (progn
           (with-current-buffer buffer
@@ -4077,28 +4081,73 @@ Return the beginning of the inserted row."
               ('process buffer properties 'exit 0)
             (cl-letf
                 (((symbol-function 'emacsvox-aural-submit)
-                  (lambda (&rest _)
-                    (ert-fail "Refresh replayed primary row speech")))
-                 ((symbol-function 'emacsvox-aural-submit-notification)
                   (lambda (content &rest arguments)
-                    (cl-incf notification-calls)
-                    (setq notification-arguments arguments)
-                    (setq events
-                          (emacsvox-notmuch-test--notification-events
-                           content arguments)))))
+                    (cl-incf submission-calls)
+                    (setq submission-arguments arguments)
+                    (apply (emacsvox-test--notmuch-submission-recorder
+                            (lambda (event) (push event events)))
+                           content arguments)))
+                 ((symbol-function 'emacsvox-aural-submit-notification)
+                  (lambda (&rest _)
+                    (ert-fail "Background refresh used notifications"))))
               (emacsvox--advice-notmuch-search-process-sentinel-after
                'process nil))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))
     (should
      (equal
-      events
-      '((icon task-done) (notify "Search refreshed, 2 threads"))))
-    (should (= notification-calls 1))
+      (nreverse events)
+      '((icon task-done) (speak "Search refreshed, 2 threads"))))
+    (should (= submission-calls 1))
+    (should (eq (plist-get submission-arguments :delivery-policy) 'ordered))
+    (should (eq (plist-get submission-arguments :interruption-policy) 'none))
     (should
      (equal
-      (plist-get notification-arguments :facts)
+      (plist-get submission-arguments :facts)
       '(:role mail-view :mail-view-kind search
         :mail-action-kind refresh :events (refresh-completed))))))
+
+(ert-deftest emacsvox-notmuch-navigation-interrupts-background-refresh-on-main ()
+  "A background refresh queues on main, then navigation stops only that lane."
+  (let* ((main (make-pipe-process :name "notmuch-refresh-main" :buffer nil :noquery t))
+         (notification (make-pipe-process :name "notmuch-refresh-notification"
+                                          :buffer nil :noquery t))
+         (tts-speaker-process main)
+         (tts-notify-process notification)
+         (emacsvox-use-icons nil)
+         (emacsvox-aural-user-rules nil)
+         (emacsvox-aural-session-rules nil)
+         (emacsvox-aural-buffer-rules nil)
+         writes interruptions)
+    (unwind-protect
+        (with-temp-buffer
+          (setq major-mode 'notmuch-search-mode)
+          (should-not (emacsvox-notmuch--search-buffer-focused-p (current-buffer)))
+          (dolist (process (list main notification))
+            (process-put process emacsvox-aural--structured-timeline-process-property 3)
+            (process-put process tts--tracked-playback-completion-property t))
+          (cl-letf (((symbol-function 'process-send-string)
+                     (lambda (owner command) (push (list owner command) writes)))
+                    ((symbol-function 'tts--interrupt-process)
+                     (lambda (owner &optional notifications _preserved)
+                       (push (list owner notifications) interruptions)))
+                    ((symbol-function 'tts-voice-reset-code) (lambda () "")))
+            (let ((submission
+                   (emacsvox-notmuch--search-completion-feedback
+                    (current-buffer) 'refresh
+                    (emacsvox-notmuch--search-completion-facts
+                     'refresh 'refresh-completed)
+                    'task-done "Search refreshed, 2 threads")))
+              (should (eq (emacsvox-aural-submission-lane submission) 'main)))
+            (should-not interruptions)
+            (should (= (length writes) 1))
+            (should (eq (caar writes) main))
+            (emacsvox-aural-submit "next row" :module 'notmuch :occasion 'navigation
+                                  :facts '(:role message))
+            (should (equal interruptions (list (list main nil))))
+            (should (= (length writes) 2))
+            (should (eq (caar writes) main))))
+      (delete-process main)
+      (delete-process notification))))
 
 (ert-deftest emacsvox-notmuch-refresh-all-remains-silent ()
   "The command for silently refreshing every buffer tracks no process."
@@ -4247,33 +4296,39 @@ Return the beginning of the inserted row."
       (when (buffer-live-p owner) (kill-buffer owner))
       (when (buffer-live-p parse-buffer) (kill-buffer parse-buffer)))))
 
-(ert-deftest emacsvox-notmuch-refresh-failure-uses-notification-stream ()
+(ert-deftest emacsvox-notmuch-refresh-failure-uses-interruptible-main-speech ()
   "A failed live, undisplayed owner warns even when success is silent."
   (let ((buffer (generate-new-buffer " *emacsvox-notmuch-failure-test*"))
         (properties
          `((,emacsvox-notmuch--search-process-property
             . (:kind refresh :interacted nil))))
         (emacsvox-notmuch-search-completion-style 'silent)
-        events facts)
+        events facts submission-arguments)
     (unwind-protect
         (emacsvox-notmuch-test--with-fake-search-process
             ('process buffer properties 'signal 1)
           (should (buffer-live-p buffer))
           (should-not (get-buffer-window buffer t))
           (cl-letf
-              (((symbol-function 'emacsvox-aural-submit-notification)
+              (((symbol-function 'emacsvox-aural-submit)
                 (lambda (content &rest arguments)
+                  (setq submission-arguments arguments)
                   (setq facts (copy-tree (plist-get arguments :facts)))
-                  (setq events
-                        (emacsvox-notmuch-test--notification-events
-                         content arguments)))))
+                  (apply (emacsvox-test--notmuch-submission-recorder
+                          (lambda (event) (push event events)))
+                         content arguments)))
+               ((symbol-function 'emacsvox-aural-submit-notification)
+                (lambda (&rest _)
+                  (ert-fail "Refresh failure used notifications"))))
             (emacsvox--advice-notmuch-search-process-sentinel-after
              'process nil)))
       (when (buffer-live-p buffer) (kill-buffer buffer)))
     (should
      (equal
-      events
-      '((icon warn-user) (notify "Search refresh failed"))))
+      (nreverse events)
+      '((icon warn-user) (speak "Search refresh failed"))))
+    (should (eq (plist-get submission-arguments :delivery-policy) 'ordered))
+    (should (eq (plist-get submission-arguments :interruption-policy) 'none))
     (should
      (equal
       facts

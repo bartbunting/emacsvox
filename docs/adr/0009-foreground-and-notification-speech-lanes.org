@@ -6,6 +6,9 @@
 
 Accepted.
 
+The 2026-10-06 refinement below changes user-owned Notmuch refresh feedback to
+interruptible main speech, including after leaving its buffer.
+
 * Context
 
 Emacsvox speaks information with different ownership and timing.  Some speech
@@ -61,6 +64,20 @@ The initial classification is:
 
 Other integrations classify events by the same ownership rule rather than by
 copying a mode-specific list.
+
+** Keep explicit Notmuch refresh feedback interruptible
+
+The refresh policy was revised on 2026-10-06 so that mail refresh feedback uses
+the main stream and yields to navigation.  This refines the initial refresh
+classification above: completion cues, counts and failures from a user-owned
+Notmuch refresh use the main lane whether or not its search buffer remains
+selected.  Queue the complete cue/text transaction without stopping current
+main speech; subsequent navigation can interrupt it.  This avoids overlapping
+notification speech while the user reads in another buffer.
+
+Other asynchronous search feedback retains the notification lane.  The global
+refresh-all command remains silent.  Process topology and independent
+notification interruption are unchanged.
 
 ** Make navigation an interruption boundary on the main lane
 
