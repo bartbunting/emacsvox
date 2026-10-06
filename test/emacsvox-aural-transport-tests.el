@@ -3898,6 +3898,60 @@ write.  State synchronization lines in a combined write are ignored."
                   (should-not
                    (emacsvox-aural-concrete-plan-after plan)))))))))))
 
+(ert-deftest emacsvox-aural-leading-whitespace-keeps-boundary-actions-once ()
+  "Skipping a run's whitespace retains its first cue and pause across clauses."
+  (emacsvox-test--with-transport-scheme
+    (dolist (prefix '("" " \t\n" "*** "))
+      (with-temp-buffer
+        (let ((tts-stop-immediately nil)
+              (tts-handle-unicode nil)
+              (tts-caps nil)
+              (tts-punctuation-mode 'none)
+              (tts-chunk-separator-syntax ".>)$\"")
+              (emacsvox-pronounce-table nil)
+              runs)
+          (cl-letf
+              (((symbol-function 'tts-speak) #'tts--speak-transaction)
+               ((symbol-function 'tts--protocol-sync) #'ignore)
+               ((symbol-function 'tts--protocol-dispatch) #'ignore)
+               ((symbol-function 'emacsvox-aural-queue-concrete-runs)
+                (lambda (new-runs)
+                  (setq runs (append runs new-runs)))))
+            (emacsvox-aural-submit
+             (propertize (concat prefix "First sentence. Second sentence.")
+                         'pause 0.15)
+             :context (emacsvox-test--transport-context)
+             :compatibility-actions
+             (list
+              (emacsvox-aural-compatibility-icon 'left)
+              (emacsvox-aural-compatibility-icon 'right 'after))))
+          (should (= (length runs) 2))
+          (should
+           (equal
+            (mapcar (lambda (run) (string-trim (cadr run))) runs)
+            '("First sentence." "Second sentence.")))
+          (should
+           (equal
+            (mapcar
+             (lambda (run)
+               (mapcar #'emacsvox-aural-concrete-action-cue
+                       (emacsvox-aural-concrete-plan-before (car run))))
+             runs)
+            '((left) nil)))
+          (should
+           (equal
+            (mapcar
+             (lambda (run)
+               (mapcar #'emacsvox-aural-concrete-action-cue
+                       (emacsvox-aural-concrete-plan-after (car run))))
+             runs)
+            '(nil (right))))
+          (should (equal (mapcar #'caddr runs) '(0.15 nil)))
+          (should
+           (emacsvox-aural-concrete-plan-object-start-p (caar runs)))
+          (should-not
+           (emacsvox-aural-concrete-plan-object-start-p (caadr runs))))))))
+
 (ert-deftest emacsvox-aural-clause-chunks-do-not-repeat-boundary-actions ()
   "Sentence chunking queues object boundary actions exactly once."
   (emacsvox-test--with-transport-scheme

@@ -2265,14 +2265,22 @@ Argument COMPLEMENT  is the complement of separator."
   "Return PLAN and its leading pause clipped to START through END.
 
 TTS may divide one concrete formatting run into several sentence chunks.
-Only the chunk containing the run's real beginning may queue its before
-actions and leading pause, and only the chunk containing its real end may
-queue its after actions and object-completion effects."
+Only the first spoken chunk of a run may queue its before actions and leading
+pause, even when TTS skips leading whitespace.  Only the chunk containing its
+real end may queue its after actions and object-completion effects."
   (let* ((property emacsvox-aural-concrete-plan-property)
+         (run-start
+          (if (and
+               (> start (point-min))
+               (eq plan (get-text-property (1- start) property)))
+              (previous-single-property-change
+               start property nil (point-min))
+            start))
          (continues-before
-          (and
-           (> start (point-min))
-           (eq plan (get-text-property (1- start) property))))
+          (save-excursion
+            (goto-char start)
+            (skip-syntax-backward "-" run-start)
+            (> (point) run-start)))
          (continues-after
           (and
            (< end (point-max))
@@ -2292,7 +2300,7 @@ queue its after actions and object-completion effects."
     (cons
      slice
      (unless continues-before
-       (get-text-property start 'pause)))))
+       (get-text-property run-start 'pause)))))
 
 (defun tts--concrete-positioned-actions (start end &optional payload)
   "Return compiled actions positioned inside buffer text from START to END.
