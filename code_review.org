@@ -1,0 +1,348 @@
+#+TITLE: Emacsvox Speech and Omnivox Code Review
+#+DATE: 2026-10-07
+#+OPTIONS: toc:nil
+
+* Summary
+
+This review targets Emacsvox at =41828cfe5600= and Omnivox *1.16.0* at
+=d4f28f32b127=. All Rust checks and the helper reproduction used that 1.16.0
+source. Existing live workers were inspected only to establish runtime identity.
+
+Four correctness defects were reproduced in isolation. A blocked helper write
+can prevent Stop from returning. Empty pronunciation matches can loop forever.
+Nested list speech can erase the surrounding utterance. Unanswered inventory
+requests accumulate without a deadline or general retirement cleanup. The initial
+Windows cancellation finding was withdrawn after tracing the server's existing
+native-call isolation layer; see the architecture assessment.
+
+The architecture has useful protections: immutable submission data, explicit
+speech lanes, bounded admission, process-owned dispatch identities, and prevention
+of fallback replay after audio commitment. The highest-value changes are narrow
+repairs to cancellation and ownership at the boundaries those protections miss.
+Existing test gates passed; that does not establish audible speech correctness.
+
+No fixes were implemented during the review. Locations describe the reviewed
+commits; subsequent fixes may move the source lines. Implementation results are
+recorded separately under Verification. Existing unrelated work is preserved.
+
+* Correctness Findings
+
+** [High] A blocked helper write can prevent Stop from returning
+
+- Confidence :: Confirmed bug in Omnivox 1.16.0. Reproduced with buffered synthesis and a real child-process pipe; the progressive path has the same locking pattern.
+- Location :: [[file:../omnivox/omnivox-tts/src/helper_engine.rs::1807][helper_engine.rs:1807]], [[file:../omnivox/omnivox-tts/src/helper_engine.rs::1968][helper_engine.rs:1968]], [[file:../omnivox/omnivox-tts/src/helper_engine.rs::441][helper_engine.rs:441]], and [[file:../omnivox/omnivox-tts/src/helper_engine.rs::2269][helper_engine.rs:2269]]. The server calls engine cancellation synchronously at [[file:../omnivox/omnivox-cli/src/server.rs::1719][server.rs:1719]] and [[file:../omnivox/omnivox-cli/src/server.rs::3328][server.rs:3328]].
+- Trigger :: A helper completes its handshake, then stops consuming stdin. A sufficiently large synthesis request fills the pipe. Word-based chunking does not bound the byte length of a single word; see [[file:../omnivox/omnivox-cli/src/text.rs::55][text.rs:55]].
+- Impact :: Synthesis holds the dispatch mutex while writing. Stop waits for that mutex, so the protocol reader cannot finish Stop or handle subsequent commands. Audio cancellation happens before this wait; the demonstrated failure is blocked recovery and subsequent speech, not continued playback of old audio. The other Emacsvox speech process remains independent.
+- Evidence :: The synthesis request becomes active only after the blocking send. The response timeout therefore cannot bound this write. Stop also sends cancellation before starting its cancellation watchdog. In the isolated probe, a helper stopped reading after its descriptor, a 128 KiB single-word request was submitted, and Stop was requested after 100 milliseconds. With a 100-millisecond synthesis idle timeout, Stop still had not returned after 750 milliseconds. Both threads finished only when the fixture helper exited at three seconds.
+- Recommendation :: Bound request writes and cancellation writes, including waits for their locks. Start an independent termination path before potentially blocking I/O. The existing [[file:../omnivox/omnivox-tts/src/helper_engine/deadline.rs::5][connection deadline helper]] is a useful precedent. Preserve single-request ownership, child reaping, and protection against stale watchdogs terminating a replacement connection. A byte limit can reduce exposure but does not replace cancellation of blocked I/O.
+- Regression coverage :: Use a real helper pipe that stops reading after handshake. Exercise buffered and progressive submission, blocked synthesis writes, blocked cancellation writes, prompt Stop completion, and successful subsequent speech. Verify that all fixture children and watchdogs terminate and no cancelled audio is replayed.
+
+Observed probe output:
+
+#+begin_src text
+stop_returned_within_750ms=false; synthesis_finished=false
+synthesis_result=Err(SynthesisFailed("helper protocol I/O failed: Broken pipe (os error 32)"))
+cleanup_completed_after_ms=3000
+#+end_src
+
+** [High] Empty pronunciation matches can loop indefinitely
+
+- Confidence :: Confirmed bug.
+- Location :: [[file:lisp/tts-speak.el::1731][tts-speak.el:1731]], especially the loops at lines 1739 and 1745. Entry creation accepts the input at [[file:lisp/emacsvox-pronounce.el::131][emacsvox-pronounce.el:131]] and [[file:lisp/emacsvox-pronounce.el::432][emacsvox-pronounce.el:432]]; template entries are defined at [[file:lisp/emacsvox-pronounce.el::404][emacsvox-pronounce.el:404]].
+- Trigger :: A dictionary contains an empty literal key, or a template matcher repeatedly returns a zero-width match, such as =re-search-forward= with =$=. Entry creation and application do not reject or safely advance these matches.
+- Impact :: Speech preparation does not terminate. An empty replacement spins; a nonempty replacement can also grow the scratch buffer indefinitely. Emacs cannot complete the interaction normally, and a saved dictionary repeats the problem on later speech attempts.
+- Evidence :: Source-loaded batch probes used the public local-entry function, then called =tts-apply-pronunciations=. Both an empty literal replaced with =x= and an end-of-buffer regexp replaced with =x= reached a guard on replacement attempt 21. Each had already expanded the six-character input to 26 characters. The guard deliberately stopped the reproduction before it could hang.
+- Recommendation :: Reject empty literal keys at interactive, programmatic, and dictionary-import boundaries. Also defend application against existing invalid entries. Give zero-width template matches an explicit progress rule that terminates at the end of the original input, or reject them with a useful error. Preserve legitimate deletion of nonempty matches; checking only whether point advanced would incorrectly reject deletion.
+- Regression coverage :: Cover empty literal keys with empty and nonempty replacements, zero-width regexp matches at the beginning and end, mixed consuming and empty matches, and ordinary deletion. Assert termination and resulting text, not just validation helper calls.
+
+** [Medium] Nested list speech overwrites the outer utterance
+
+- Confidence :: Confirmed bug under reentrant speech preparation.
+- Location :: [[file:lisp/tts-speak.el::4283][tts-speak.el:4283]] and the erase at [[file:lisp/tts-speak.el::4290][tts-speak.el:4290]]. Ordinary speech already protects nested scratch buffers at [[file:lisp/tts-speak.el::4178][tts-speak.el:4178]].
+- Trigger :: A pronunciation callback, or another callback during speech preparation, calls the public =tts-speak-list= function while the outer transaction uses the named scratch buffer.
+- Impact :: List assembly erases the outer text before the nested call reaches the normal scratch-buffer protection. The outer transaction can queue truncated or unrelated text without reporting an error.
+- Evidence :: A real outer =tts--speak-transaction= prepared =prefix-long-enough outer suffix=. Its pronunciation callback called =(tts-speak-list '("x"))= and returned =replacement=. With transport captured and the inner final speech call suppressed, the outer transaction queued only ="replacementx, "=. Both the prefix and suffix disappeared. This isolates corruption during list construction from any transport or cancellation policy.
+- Recommendation :: Assemble lists in a private temporary buffer, or use the same scoped scratch-buffer allocator as ordinary speech. Preserve text properties, grouping, and punctuation behavior. This is a small local repair; it does not require changing the public speech API.
+- Regression coverage :: Extend [[file:test/emacsvox-tts-tests.el::1733][the existing nested-speech regression]] with a pronunciation callback that invokes =tts-speak-list=. Assert the complete outer text and the separate inner utterance. Cover nonlocal exit from the callback and preservation of relevant voice properties.
+
+** [Medium] Unanswered control requests have no general terminal lifetime
+
+- Confidence :: Confirmed lifecycle defect when a live worker stops replying.
+- Location :: [[file:lisp/omnivox-voices.el::374][omnivox-voices.el:374]], [[file:lisp/omnivox-voices.el::410][omnivox-voices.el:410]], and [[file:lisp/omnivox-voices.el::2726][omnivox-voices.el:2726]]. Process exit and explicit retirement are at [[file:lisp/tts-speak.el::1144][tts-speak.el:1144]] and [[file:lisp/tts-speak.el::1239][tts-speak.el:1239]].
+- Trigger :: A control request is written successfully, but the backend never replies. Repeated inventory refreshes each register another request. Generic requests do not receive a deadline, admission limit, or process-retirement completion.
+- Impact :: The live process retains an increasing pending table. Inventory remains stale without a terminal failure for the request. Callers such as [[file:lisp/omnivox-voices.el::2748][engine recovery probes]] can wait indefinitely for their callback. Retiring a process leaves these entries on the retained process object; this is not evidence of a permanent leak after that object becomes collectible.
+- Evidence :: A private pipe process advertised inventory support while its writer was stubbed to accept without replying. One hundred calls to =omnivox-refresh-voice-inventory= left 100 pending entries. Explicit retirement still left 100 entries while the process object was retained. Generic removal occurs on send failure or response delivery. Some higher-level operations already manage their own deadlines and remove their own IDs, including palette application, previews, parameters, and synchronous library requests; those protections do not cover every caller.
+- Recommendation :: Give generic requests a bounded, process-owned lifetime. Coalesce concurrent inventory refreshes, expire unanswered requests, and retire outstanding callbacks once on process exit. Define a consistent failure result and discard late responses. Coordinate existing caller-specific timers before introducing general cleanup, to avoid duplicate completion.
+- Regression coverage :: Keep a backend live but silent; verify bounded pending state and timeout reporting. Test process exit, a response arriving at the deadline, late replies after retirement, and independent main and notification request tables.
+
+* Maintainability Improvements
+
+** Centralize control-request lifetime without merging speech ownership
+
+- Relevant code :: [[file:lisp/omnivox-voices.el::374][generic control requests]], [[file:lisp/omnivox-preview.el::321][preview request cleanup]], [[file:lisp/omnivox-parameters.el::110][parameter request cleanup]], and [[file:lisp/omnivox-library.el::405][library request cleanup]].
+- Concrete benefit :: One implementation can enforce timeout, terminal completion, and stale-response rules. Today callers independently remove IDs and manage timers, making omissions like the control-request finding easier to introduce.
+- Suggested change :: Introduce a small internal request record owned by its process, with one terminal transition. Migrate existing control callers incrementally. Keep operation-specific behavior in those callers and retain separate main and notification ownership.
+- Likely scope :: Moderate, across the control helper and its callers. Establish callback error semantics and regression coverage first. This does not justify replacing the speech transport or merging the two processes.
+
+** Make temporary text ownership explicit at speech preparation boundaries
+
+- Relevant code :: [[file:lisp/tts-speak.el::1731][pronunciation iteration]], [[file:lisp/tts-speak.el::4178][transaction scratch allocation]], and [[file:lisp/tts-speak.el::4263][list assembly]].
+- Concrete benefit :: Small helpers with explicit input, output, and buffer ownership make reentrancy and progress rules easier to test. They reduce dependence on the current scratch buffer and dynamically bound preparation state.
+- Suggested change :: Start with private list assembly and a progress-safe pronunciation iterator. Share scratch allocation only where buffer reuse is measurably useful. Preserve source properties and the existing frozen voice plans.
+- Likely scope :: Small to moderate. Fix the two observed defects first, then extract only the common lifetime rules demonstrated by those fixes. A wholesale split of =tts-speak.el= would add review cost without itself proving better behavior.
+
+* Architecture Assessment
+
+** Speech path traced
+
+1. Interactive reading enters through functions such as [[file:lisp/emacsvox-speak.el::1287][emacsvox-speak-line]] and [[file:lisp/emacsvox-speak.el::915][emacsvox-speak-region]]. Source extraction and [[file:lisp/emacsvox-aural-source.el::235][submission context capture]] preserve source facts, visibility, lane, and delivery intent.
+2. [[file:lisp/emacsvox-aural-submission.el::411][Submission preparation]] transforms content, captures facts and context, and builds concrete plans. [[file:lisp/emacsvox-aural-voice-runtime.el::54][Voice resolution snapshots]] and [[file:lisp/emacsvox-aural-voice-runtime.el::174][runtime snapshots]] separate the accepted palette and voice choices from subsequent edits. Pronunciation and text cleanup feed the TTS transaction.
+3. The aural transport records ordered or replaceable delivery and builds structured timelines. [[file:lisp/emacsvox-aural-transport.el::1905][Timeline framing]] and [[file:lisp/tts-queue-state.el::512][typed queue writes]] carry the prepared submission to its owning process. [[file:lisp/tts-speak.el::680][Dispatch packet writing]] connects transport submission to tracked lifecycle state.
+4. [[file:lisp/emacsvox-aural-submission.el::401][Lane selection]] binds notification submissions to the notification process. [[file:lisp/tts-speak.el::4351][Notification process selection]] provides the documented degraded fallback when that process is unavailable.
+5. Omnivox parses input, validates transactions, and admits work through [[file:../omnivox/omnivox-cli/src/work_queue.rs::110][bounded atomic admission]]. The [[file:../omnivox/omnivox-cli/src/server.rs::1215][synthesis worker]] resolves routes, prepares chunks, and invokes native engines or helpers.
+6. The pipeline submits buffered or progressive PCM to playback. Generation checks suppress obsolete work. [[file:../omnivox/omnivox-cli/src/routing.rs::1267][Progressive fallback handling]] refuses a cross-engine replay after output has been committed. [[file:../omnivox/omnivox-cli/src/server.rs::1194][Playback ticket completion]] distinguishes cancellation from completed playback.
+7. Emacs consumes status and marker lines through [[file:lisp/tts-speak.el::1016][bounded line assembly]]. [[file:lisp/tts-speak.el::615][Deferred callback delivery]] and process retirement keep callback execution separate from protocol parsing and dispose of tracked speech ownership.
+
+** State, lifecycle, and cancellation
+
+Submission copies, immutable voice decisions, process generations, and explicit
+dispatch ownership provide useful boundaries. The ordinary nested-speech path
+already allocates separate scratch buffers. The list path bypasses that rule.
+Generic control callbacks likewise have weaker ownership than speech dispatches.
+These are local inconsistencies, not evidence that all global or dynamic state
+needs replacement.
+
+The main and notification processes have separate queues and cancellation
+domains. Navigation interrupting ordered main speech is intentional under
+[[file:docs/adr/0009-foreground-and-notification-speech-lanes.org::82][ADR 0009]].
+Concurrent notification speech and degraded fallback onto the main process are
+also documented policy. No additional lane-isolation defect was established.
+
+Startup distinguishes capability negotiation from acknowledged routing readiness
+under [[file:docs/adr/0007-routing-ready-startup-checkpoint.org::24][ADR 0007]].
+Retirement cancels pending speech and tracked callbacks, with cleanup errors
+recorded independently. [[file:lisp/omnivox-remote.el::165][Remote heartbeat and retry handling]]
+uses bounded liveness checks and reconnect backoff; the policy in
+[[file:docs/adr/0010-remote-workstation-speech.org::9][ADR 0010]] excludes replay of
+old speech. No separate reconnect defect was demonstrated in the inspected paths.
+
+The helper finding exposes an important distinction: rejecting stale playback is
+not enough if cancellation itself cannot return. The isolation wrapper calls
+the underlying engine's Stop directly, so it does not contain that helper defect.
+
+** Correction: Windows cancellation already has an isolation boundary
+
+The initial review missed [[file:../omnivox/omnivox-cli/src/engine.rs::73][the WinRT wrapper installed by the server]].
+Although [[file:../omnivox/omnivox-tts/src/windows.rs::470][WinRT Stop itself is a no-op]],
+[[file:../omnivox/omnivox-cli/src/engine_execution.rs::313][the wrapper observes cancellation]],
+discards stale results, and releases the synthesis caller while retaining the
+native task. It limits outstanding tasks per engine and across the process.
+If the old task still occupies its engine, [[file:../omnivox/omnivox-cli/src/engine_execution.rs::214][bounded admission]]
+returns an unavailable result so routing can select a fallback.
+
+The claimed indefinite blockage of the shared synthesis worker is therefore not
+supported by the complete server path. The finding is withdrawn; no WinRT code
+change is proposed. [[file:../omnivox/omnivox-cli/src/engine_execution.rs::1163][The existing isolation regression]]
+checks cancellation, discarded stale output, fallback availability, and later
+reuse. It passed in the implementation follow-up. Native Windows and audible
+acceptance remain coverage gaps, not an established correctness defect.
+
+** Protocol, error handling, and observability
+
+Structured envelopes avoid relying on raw speech text as executable protocol
+syntax. The inspected framing and parsing paths include line limits, multipart
+limits, identity checks, and Unicode-aware source positions. Existing tests
+exercise split output, malformed data, write reentrancy, admission rejection, and
+stale completion. No additional framing or Unicode defect was established.
+The helper write failure concerns progress through a valid frame, not escaping.
+
+Atomic queue admission preserves previously accepted work when a new request is
+rejected. Playback tickets and progressive commitment rules give meaningful
+completion and fallback semantics. These areas appeared sound in the reviewed
+source and focused tests.
+
+Session, process-generation, submission, and dispatch identifiers make the aural
+and Omnivox logs useful for correlation. Bounded log excerpts showed completion
+and cancellation reporting, but were not a reproduction of a reported audible
+failure. A process being live, or playback being marked complete, does not prove
+that the intended text was heard. Preserve those distinctions in diagnostics.
+
+* Verification
+
+** Implementation follow-up: first slice
+
+Omnivox commit =880a48d916c6daf69935c4bf41b4bd95582ffa9c= fixes the blocked-write
+finding on the 1.16.0 source line. [[file:../omnivox/omnivox-tts/src/helper_engine.rs::1737][Synthesis dispatch]]
+now publishes its request before writing and applies the synthesis-idle deadline
+to that write. [[file:../omnivox/omnivox-tts/src/helper_engine.rs::2277][Stop]] arms cancellation
+before waiting for dispatch and independently bounds cancellation writes. A
+terminal synthesis reply cannot leave a cancellation write unprotected.
+
+Four [[file:../omnivox/omnivox-tts/src/helper_engine/cancellation_tests.rs::165][new regressions]]
+failed before the fix and passed afterward. They exercise buffered and
+progressive writes under helper protocols 5 and 6, cancellation writes, the idle
+deadline, child cleanup, and replacement speech. The full helper selection passed
+63 tests. The locked offline workspace run passed 1,159 tests with two ignored:
+native qualified-helper routing and the long eSpeak synthesis stress test.
+Clippy with warnings denied, formatting, Omnivox documentation and paired-link
+checks, and the Emacsvox documentation release check passed.
+
+The [[file:/tmp/omnivox-cancel-regression-before.log][pre-fix Stop failures]],
+[[file:/tmp/omnivox-cancel-idle-before.log][pre-fix idle-timeout failure]],
+[[file:/tmp/omnivox-cancel-helper-after.log][helper results]],
+[[file:/tmp/omnivox-cancel-workspace.log][workspace results]], and
+[[file:/tmp/omnivox-cancel-clippy.log][Clippy result]] are retained as local evidence.
+No production runtime was rebuilt, deployed, or restarted. Native Windows and
+audible acceptance remain unverified. Existing unrelated staged and unstaged
+Omnivox changes were verified unchanged by their complete diff hashes.
+
+The pronunciation, nested-list, and generic control-request findings remain
+open. The WinRT finding is withdrawn for the reason recorded above.
+
+** Source, toolchain, configuration, and runtime identity
+
+- Emacsvox source :: =/home/bart/src/emacsvox=, commit =41828cfe5600dcf4f80521961f272928b808281a=. Its worktree was clean before review. All 26 ADRs under =docs/adr/= and the repository instructions were read.
+- Omnivox review target :: =/home/bart/src/omnivox=, commit =d4f28f32b127e9e672115aee04bb0483440bcd92=. [[file:../omnivox/Cargo.toml::50][The workspace version is 1.16.0]]. Existing staged documentation/evidence and unstaged documentation edits were preserved; no maintained Rust source was changed.
+- Selected Emacs :: [[file:local.mk::2][local.mk]] selects =/home/bart/opt/emacs-31/bin/emacs=, version 31.0.90. Omnivox uses the pinned Rust 1.97.1 toolchain. Cargo checks were offline and used existing dependencies.
+- Launcher selection :: [[file:servers/omnivox::17][The launcher's configuration precedence]] selects the executable named in =/home/bart/.config/emacsvox/omnivox-program=. A probe-only invocation resolved =/mnt/c/Users/bart/AppData/Local/Emacsvox/Omnivox/runtime/ad5be9cca3f9e40b/omnivox.exe=. This explicit pin takes precedence over =servers/omnivox-bin/current=.
+- Selected executable provenance :: [[file:servers/omnivox-bin/versions/ad5be9cca3f9e40b/PROVENANCE::4][The staged manifest]] records Omnivox commit =3ff0dc09360d29f86d928ed71bdb85172fadd26b= and a development build with local changes. Its recorded executable SHA-256, =999e4163ee585c2498731cc6b5da8f8f3b357fb0ff9239b850f1a80b48b49c48=, matched the selected file. That provenance does not identify it as the reviewed 1.16.0 source.
+- Existing live session :: Bounded read-only inspection used socket =/run/user/1000/emacs/emacsvox=, Emacs PID 2033318, main process PID 2033633, and notification process PID 2033784. Both workers reported server version 1.13.0, control envelope version 1, supported timeline versions 1 through 5, and marker versions 1 through 4. The Emacs side selected timeline version 5. No worker was restarted or used for a speech reproduction.
+- Loaded Lisp evidence :: Live speech and negotiation symbols resolved to this checkout's =tts-speak.elc= and =omnivox-voices.elc=. A loaded path does not prove that resident code matches the current file. Source-forced probes below avoid that ambiguity.
+- Protocol scope :: Omnivox 1.16.0 was tested from source. [[file:../omnivox/omnivox-tts/src/helper_protocol/session.rs::11][The session negotiator]] offers helper versions 6 through 1. Version 6 adds native parameters to the common version-5 semantics. The original fixture echoes the offered version and therefore negotiates 6; the initial report incorrectly inferred 5 from the common codec constant. Live 1.13.0 capability observations were not treated as 1.16.0 acceptance evidence.
+
+** Passed checks
+
+| Check | Result |
+|-------+--------|
+| =make check-emacs= | Passed with the selected Emacs 31.0.90. |
+| =make bytecode-check= | Passed; existing bytecode was current for the selected toolchain. |
+| Core Emacsvox ERT runner | 940 passed, 0 unexpected, 17 skipped; 957 tests enumerated. |
+| Source-forced queue and preparation ERT checks | 59 passed, 0 unexpected. |
+| Omnivox 1.16.0 core crate | 61 unit tests and 1 documentation test passed. |
+| Omnivox 1.16.0 CLI binary test target | 344 passed, 1 ignored. |
+| Omnivox 1.16.0 audio library | 160 passed. |
+| Omnivox 1.16.0 helper-engine test selection | 59 passed; 430 tests outside the selection. |
+| =make docs-release-check= | Passed; maintained documentation was current and structurally valid. |
+| Report validation | Org lint passed; file links resolved and numbered references were in range. No trailing whitespace. |
+
+The core runner used the repository's normal loading policy. The additional
+queue/preparation run and Lisp defect probes explicitly preferred =.el= source.
+Counts from different runners overlap and should not be added as unique tests.
+The documentation gate generated only ignored preview artifacts; no Lisp build
+or generated maintained-file update was needed for this report.
+
+Commands used for the principal checks:
+
+#+begin_src sh
+cd /home/bart/src/emacsvox
+make check-emacs
+make bytecode-check
+/home/bart/opt/emacs-31/bin/emacs -Q --batch -l test/run-core-tests.el
+/home/bart/opt/emacs-31/bin/emacs -Q --batch -L lisp -L test \
+  --eval '(setq load-prefer-newer t load-suffixes (quote (".el" ".elc")))' \
+  -l lisp/emacsvox-preamble.el -l test/tts-queue-handoff-tests.el \
+  --eval '(ert-run-tests-batch-and-exit "\\`\\(tts-queue-\\|tts-preparation-\\)")'
+make docs-release-check
+
+cd /home/bart/src/omnivox
+cargo test --offline --locked -p omnivox-core
+cargo test --offline --locked -p omnivox-cli --bin omnivox
+cargo test --offline --locked -p omnivox-audio --lib
+cargo test --offline --locked -p omnivox-tts --lib helper_engine::tests
+#+end_src
+
+Full local outputs are retained in [[file:/tmp/emacsvox-review-core.log][the core ERT log]],
+[[file:/tmp/emacsvox-review-handoff.log][the source-forced ERT log]],
+[[file:/tmp/emacsvox-review-rust-core.log][the Rust core log]],
+[[file:/tmp/emacsvox-review-rust-cli.log][the CLI log]],
+[[file:/tmp/emacsvox-review-rust-audio.log][the audio log]],
+[[file:/tmp/emacsvox-review-rust-helper.log][the helper test log]], and
+[[file:/tmp/emacsvox-review-docs.log][the documentation log]]. These temporary files
+are local review evidence, not maintained test additions.
+
+** Isolated reproductions: four behaviors failed their intended contract
+
+The [[file:/tmp/emacsvox-review-probes.el][Lisp probe script]] loads source in a fresh batch Emacs.
+It guards pronunciation iteration, captures outer speech text, and creates only
+a private pipe for unanswered requests. No speech server is started. The nested
+list probe suppresses the inner final speech call so only text assembly can
+cause the observed corruption. The control-retirement probe disables unrelated
+hooks and retains the process object to inspect its pending table.
+
+#+begin_src sh
+/home/bart/opt/emacs-31/bin/emacs -Q --batch \
+  -l /tmp/emacsvox-review-probes.el
+#+end_src
+
+Relevant output from [[file:/tmp/emacsvox-review-probes.log][the Lisp probe log]]:
+
+#+begin_src text
+pronunciation key="": replacements=21 buffer-size=26 stopped="review iteration guard"
+pronunciation key="$": replacements=21 buffer-size=26 stopped="review iteration guard"
+nested-list-outer-transaction: queued=("replacementx, ")
+unanswered-inventories: pending=100
+retired-control-process: pending=100
+#+end_src
+
+The [[file:/tmp/emacsvox-review-helper/src/main.rs][Rust helper fixture]] uses public
+=HelperTtsEngine= APIs from the 1.16.0 checkout and a real child process. Its
+helper answers hello and descriptor requests, stops reading, and exits after
+three seconds. The driver submits 128 KiB of text, requests Stop, records the
+750-millisecond result, and joins its threads. No audio device or vendor engine
+is used. Its [[file:/tmp/emacsvox-review-helper/Cargo.toml][temporary manifest]] disables
+default engine features; only temporary manifest/lock files and ignored build
+artifacts were written.
+
+#+begin_src sh
+cargo +1.97.1 run --offline \
+  --manifest-path /tmp/emacsvox-review-helper/Cargo.toml \
+  --target-dir /home/bart/src/omnivox/target
+#+end_src
+
+The [[file:/tmp/emacsvox-review-helper.log][helper reproduction log]] contains the result quoted in
+the first finding. The fixture has a bounded self-exit, so the reproduction did
+not leave a hung helper running. These probes exit normally after recording a
+defect; their exit status is not a claim that the tested behavior passed.
+
+** Skipped and unavailable checks
+
+- Thirteen graphical ERT cases were skipped in batch. They cover voice editors, workbench navigation, engine controls, profile editing, and punctuation editing. Their full names are in the core ERT log. No graphical rendering or navigation acceptance is claimed.
+- Four native ERT cases were skipped: engine-configuration service round trip, paired voice-library workers, frozen profile catalogues, and punctuation service round trip.
+- The Rust native routing case =qualified_helpers_route_native_choices_without_playback= was ignored because =OMNIVOX_NATIVE_ROUTING_CASES= was not configured.
+- No native Windows WinRT cancellation test, audible 1.16.0 speech test, device-loss test, or live remote reconnect test was performed. No production process was interrupted to create one.
+- Optional integration suites and the complete Omnivox workspace test matrix were not run. The selected gates cover the shared speech path; they do not certify every caller, helper, or platform.
+
+* Recommended Next Steps
+
+1. Bound helper dispatch and cancellation I/O, starting with the real-pipe reproduction. Impact is high; implementation effort is moderate because watchdog and connection ownership must remain correct.
+2. Fix pronunciation progress and reject empty literal entries. Impact is high and the affected code is small. Protect legitimate deletion and existing saved dictionaries.
+3. Give list assembly private scratch storage and add the nested-list regression. This is a small change with a directly observed text-correctness benefit.
+4. Bound and retire generic control requests, coalescing inventory refreshes. This is a moderate change requiring coordination with existing operation-specific timers.
+5. Run isolated native acceptance against an explicitly identified 1.16.0 executable, including slow WinRT cancellation, two-lane interruption, crash recovery, and audible navigation. Record executable hash, negotiated protocols, and correlated submission IDs. The currently observed live workers do not supply that evidence.
+
+* Review Limitations
+
+The findings describe the inspected source commits. The selected live executable
+and resident session reported an older Omnivox version, so no 1.16.0 runtime
+behavior was inferred from those processes. No launcher pin, live configuration,
+loaded Lisp, process, hook, timer, buffer, or draft was changed for diagnosis.
+
+The shared path was traced through source extraction, preparation, voice
+resolution, admission, synthesis, playback, and completion. Not every optional
+mode integration or vendor helper implementation was audited line by line.
+Proprietary synthesis runtimes and Windows operating-system implementation code
+were unavailable for inspection. macOS and native Linux device behavior were not
+tested. Large frames were exercised in the helper reproduction and existing
+protocol tests, not against every production engine.
+
+The original helper blocking failure was reproduced with buffered output;
+the follow-up also tests progressive dispatch. The withdrawn WinRT finding
+does not justify a native engine change. The control probe demonstrates pending
+state accumulation, not a measured long-running memory profile. Temporary probe
+files and logs may disappear when =/tmp= is cleaned; the triggering conditions
+and observed results are recorded here.
+
+No additional defect was established in atomic admission, lane separation,
+structured framing, or prevention of replay after progressive output commitment.
+Passing tests and these source conclusions do not prove that a user heard the
+intended utterance in a live session.
