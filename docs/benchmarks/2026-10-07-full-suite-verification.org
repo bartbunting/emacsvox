@@ -1,0 +1,77 @@
+#+TITLE: Full Emacsvox suite verification
+#+DATE: 2026-10-07
+
+* Result
+
+The complete =make -k test= target passes with the configured Emacs 31.0.90.
+The unit run contains 4,032 tests: 3,992 pass in batch and 40 skip because they
+need a graphical display, a native service, or an optional package. All 40
+were run separately in their required environments and passed.
+
+Verification included the Agent Shell changes and used isolated Emacs processes.
+
+* Issues fixed
+
+- Seven documentation assertions still expected markup from before the Org
+  conversion. They now check the current Org code and key notation and the
+  generated Texinfo links. Live key/command checks remain in place. The
+  missing-command failure now passes one formatted argument to =ert-fail=.
+- Speech preparation fault injection depended on whether native-call
+  trampolines had already been installed by another test. Preparing the
+  required primitive interceptors before mocking them makes the faults
+  reproducible. It also prevents trampoline compilation from running while
+  its subprocess transport is mocked. All 21 preparation tests pass.
+- An EAT screen redraw could speak its trailing prompt when the terminal
+  delivered the redraw in multiple chunks. Collection now remains suppressed
+  until that burst settles. A regression checks every split point in clear
+  and reset sequences and verifies that subsequent ordinary output speaks.
+  Source and compiled checks also exercise real graphical terminal output.
+- Recursive configuration expanded =MAKEFLAGS= as shell arguments. With
+  =make -k=, the child Make interpreted =k= as a target. Configuration now
+  uses Make's inherited flags. A dry-run regression verifies recursive
+  keep-going configuration without changing generated files.
+
+* Verification
+
+| Check | Result |
+|-------+--------|
+| Complete make test target | Passed |
+| Full unit suite | 3,992 passed, zero failures, 40 batch skips |
+| Source integration | 650 passed |
+| Compiled Agent Shell and EAT integration | 650 passed |
+| Source graphical integration | 10 passed |
+| Compiled graphical integration | 10 passed |
+| Graphical voice suite | 38 passed |
+| Remaining graphical shell, table, engine, and profile checks | 6 passed |
+| Native Omnivox checks | 4 passed |
+| Mu4e checks with installed 1.12.14 package | 2 passed |
+| Core gate | 940 passed, zero failures, 17 environment skips |
+| Compatibility gate on configured Emacs | 300 passed |
+| Compiled Notmuch | 129 passed |
+| Compiled aural parity and build-tree verification | Passed |
+| Semantic traces | All 27 matched |
+| Source archive tests | 4 passed |
+| Windows staging, bundle, setup, sources, and preview tests | 51 passed |
+| Piper catalogue tests | 13 passed |
+| Dependency preparation tests | 9 passed |
+| Voice benchmark harness tests | 11 passed |
+| Debian package tests | 6 passed |
+| Byte-code preflight, headers, version, and documentation release gates | Passed |
+| Diff whitespace check | Passed |
+
+Agent Shell integration used the verified 0.86.1 dependency tree. Compiled EAT
+checks explicitly loaded all four EAT implementation modules from current
+byte-code in fresh Emacs processes. Graphical tests used private Xvfb displays.
+Mu4e was loaded from the installed system package, which is absent from the
+ordinary =-Q= test load path.
+
+The first native probe used an old Omnivox 1.15.0 binary and correctly rejected
+missing engine-setting and punctuation-profile capabilities. Running =make dev=
+in the existing Omnivox checkout produced a complete 1.16.0 development payload;
+all four native checks passed with that payload, isolated configurations, and
+null audio. Omnivox source and the live speech runtime were not changed.
+
+These checks establish behavior and speech submissions, not audible playback.
+Native Windows installer lifecycle checks require a Windows test host; this
+run covers their Linux packaging fixtures. No additional Emacs-version matrix
+or release publication was performed.

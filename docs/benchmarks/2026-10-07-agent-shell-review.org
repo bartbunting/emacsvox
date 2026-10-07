@@ -1,0 +1,94 @@
+#+TITLE: Agent Shell 0.86.1 integration review
+#+DATE: 2026-10-07
+
+* Scope and versions
+
+The supported minimum is Agent Shell 0.85.3. The refreshed integration lock
+uses Agent Shell 0.86.1 at =137b574f041552cdd04ebc1edb02fd7b4490898c=
+and Shell Maker 0.97.5 at =dcc05a8cf24eb62f2f611fd2d009a161fada5f6e=.
+ACP retains its existing pinned 0.15.1 snapshot. Minimum-version checks used
+Agent Shell =f44c96b2ab577065d5f5409629b4df588af88433= in a separate prepared
+dependency directory. Checks used the configured Emacs 31.0.90.
+
+The running Emacs session had loaded Agent Shell 0.85.3, while the sibling
+checkout contained 0.86.1. Tests checked loaded paths as well as versions.
+The live session was not upgraded or reloaded.
+
+* Findings and changes
+
+Experimental structured questions previously arrived without semantic speech;
+moving through their controls did not announce selections or required status.
+The integration now announces question requests, control values and states,
+edits, previews, submission, decline, and cancellation. Shell and viewport
+navigation resolve values from the owning session. Automatic feedback follows
+the session speech level; explicit actions still speak in quiet mode. A blocked
+prompt distinguishes a question from a permission request. The upstream
+experimental feature remains disabled by default.
+
+Configuration reads use the public getter and readiness API when available.
+The 0.85.3 fallback checks the initialization pipeline rather than treating the
+initial handshake as completed setup. Startup defaults stay quiet and later
+setting changes receive one confirmation. Compatibility branches predating
+0.85.3 were removed where the supported API now suffices.
+
+The upstream binding comparison covered shell, viewport view and edit maps,
+Shell Maker inheritance, permission and question controls, inline actions,
+transients, and Emacsvox navigation, speech, table, and repeat maps. Existing
+upstream bindings were unchanged; new question maps introduce no additional
+Emacsvox override. Effective-binding tests cover transcript and table use,
+viewport navigation, and literal input while idle and busy.
+
+Upstream queue-loss confirmation and fork/resume behavior passed targeted
+checks. Declining a buffer-kill confirmation preserves the buffer and queue;
+a failed fork load retains the fork and reports failure. No additional runtime
+changes were needed for these flows.
+
+The maintained manual, developer guide, NEWS, and generated references were
+updated. Regenerating the aural reference also restored the missing entry for
+the already-registered =command-terminal-bell= cue.
+
+* Verification
+
+| Check | Result |
+|-------+--------|
+| Pinned source integration | 649 passed |
+| Pinned compiled integration | 649 passed |
+| Pinned source graphical integration | 10 passed |
+| Pinned compiled graphical integration | 10 passed |
+| 0.85.3 source Agent Shell checks | 308 passed |
+| 0.85.3 compiled Agent Shell checks | 308 passed |
+| 0.85.3 compiled graphical Agent Shell checks | 5 passed |
+| Selected upstream queue, fork, readiness, and configuration checks | 7 passed |
+| Dependency preparation tests | 9 passed |
+| Byte-code build and documentation release check | Passed |
+| Full unit suite | 3982 passed, 8 failed, 40 skipped |
+
+The full-suite failures include these seven existing documentation assertions:
+
+- =emacsvox-backend-guide-is-linked-from-user-entry-points=
+- =emacsvox-basic-usage-key-bindings-match-the-live-keymap=
+- =emacsvox-basic-usage-points-to-live-and-generated-help=
+- =emacsvox-current-applications-own-maintained-user-routes=
+- =emacsvox-eterm-current-guide-owns-the-supported-workflow=
+- =emacsvox-first-use-manual-owns-success-and-recovery=
+- =emacsvox-native-windows-guide-is-bounded-and-complete=
+
+The remaining failure is
+=tts-preparation-reservation-nonlocal-exits-leave-no-charge=, whose injected
+fault was not reached. It also fails in a separate archive of unchanged HEAD
+=609462979= after native compiling =tts-speak.el=, and passes there with
+byte-code. This native-compilation-sensitive test issue remains unresolved;
+neither its test nor speech implementation was changed for this integration.
+
+Batch skips include graphical and native-service checks. The 10 integration
+graphical checks were run separately in real graphical Emacs under Xvfb;
+other skipped graphical/native-service tests were not claimed as passing.
+Speech assertions captured submissions in isolated sessions. These checks do
+not establish audible playback or a real agent's end-to-end question exchange.
+
+* Subsequent full-suite verification
+
+The later [[file:2026-10-07-full-suite-verification.org][full-suite verification]] fixed the documentation assertions and
+native-compilation-sensitive fault injection recorded above. It also fixed a
+fragmented EAT redraw and recursive Make option forwarding. The complete test
+target now passes, and every batch skip was exercised separately and passed.
