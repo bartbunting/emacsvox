@@ -1736,20 +1736,28 @@ start of the source match."
      (goto-char (point-min))
      (cond
       ((stringp pronunciation)
+       ;; Also protect speech from old dictionaries and direct table edits.
+       (when (equal w "")
+         (user-error "Literal pronunciation terms must not be empty"))
        (while (search-forward w nil t)
          (tts--replace-pronunciation pronunciation)))
       ((consp pronunciation)
        (let ((matcher (car pronunciation))
              (pronouncer (cdr pronunciation))
-             (pronunciation ""))
-         (while (funcall matcher w nil t)
-           (setq
-            pronunciation
-            (save-match-data
-              (funcall pronouncer
-                       (buffer-substring
-                        (match-beginning 0) (match-end 0)))))
-           (tts--replace-pronunciation pronunciation))))))))
+             done)
+         (while (and (not done) (funcall matcher w nil t))
+           (let ((empty (= (match-beginning 0) (match-end 0)))
+                 (replacement
+                  (save-match-data
+                    (funcall pronouncer
+                             (buffer-substring
+                              (match-beginning 0) (match-end 0))))))
+             (tts--replace-pronunciation replacement)
+             ;; A zero-width match consumes no source text.  Skip the next
+             ;; source character, or finish after replacing at buffer end.
+             ;; Nonempty matches may delete text without moving point.
+             (when empty
+               (if (eobp) (setq done t) (forward-char 1)))))))))))
 
 ;;;   Helpers to handle invisible text:
 

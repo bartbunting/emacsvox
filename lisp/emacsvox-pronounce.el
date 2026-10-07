@@ -90,8 +90,14 @@ String: Return it as is.
 Keys are either filenames, directory names, or major mode names.
 Values are alists containing string.pronunciation pairs.")
 
+(defun emacsvox-pronounce--validate-entry (term pronunciation)
+  "Reject an empty literal TERM paired with string PRONUNCIATION."
+  (when (and (equal term "") (stringp pronunciation))
+    (user-error "Literal pronunciation terms must not be empty")))
+
 (defun emacsvox-pronounce-set-dictionary (key pr-alist)
-  
+  (dolist (entry pr-alist)
+    (emacsvox-pronounce--validate-entry (car entry) (cdr entry)))
   (when (stringp key)
     (setq key (intern key)))
   (setf (gethash key emacsvox-pronounce-dictionaries) pr-alist))
@@ -108,7 +114,7 @@ Pronunciation can be a string or a cons-pair.
 If it is a string, that string is the new pronunciation.
 A cons-pair of the form (matcher . func) results  in 
 the match  being passed to the func which returns  the new pronunciation."
-  
+  (emacsvox-pronounce--validate-entry string pronunciation)
   (let* ((dict (emacsvox-pronounce-get-dictionary key))
          (entry (and dict (assoc string dict))))
     (cond
@@ -130,7 +136,7 @@ the match  being passed to the func which returns  the new pronunciation."
 
 (defun emacsvox-pronounce-add-local-entry (string pronunciation)
   "Add  pronunciation for current buffer. "
-  
+  (emacsvox-pronounce--validate-entry string pronunciation)
   (unless emacsvox-pronounce-table
     (setq emacsvox-pronounce-table (emacsvox-pronounce-compose-table)))
   (puthash string pronunciation emacsvox-pronounce-table)
@@ -313,7 +319,7 @@ Default is emacsvox-pronounce-dictionaries-file."
      emacsvox-user-directory emacsvox-pronounce-dictionaries-file)))
   (setq filename (or  filename  emacsvox-pronounce-dictionaries-file))
   (when (file-exists-p filename)
-    (condition-case nil
+    (condition-case error-data
         (progn
           ;; `ems--fastload' is defined in `emacsvox-preamble' which requires
           ;; us, so we can't require it at top-level.
@@ -321,7 +327,8 @@ Default is emacsvox-pronounce-dictionaries-file."
           (declare-function ems--fastload "emacsvox-preamble" (file))
           (ems--fastload filename)
           (setq emacsvox-pronounce-dictionaries-loaded t))
-      (error (message "Error loading pronunciation dictionary")))))
+      (error (message "Error loading pronunciation dictionary: %s"
+                      (error-message-string error-data))))))
 
 (defun emacsvox-pronounce-clear ()
   "Clear all current pronunciation dictionaries."
@@ -597,11 +604,7 @@ First loads any persistent dictionaries if not already loaded."
   `(lambda (widget &rest ignore)
      
      (let ((value (widget-value widget)))
-       (setf
-        (gethash
-         (quote ,field-name)
-         emacsvox-pronounce-dictionaries)
-        value))))
+       (emacsvox-pronounce-set-dictionary (quote ,field-name) value))))
 
 (defun emacsvox-pronounce-edit-pronunciations (key)
   "Prompt for and launch a pronunciation editor on the

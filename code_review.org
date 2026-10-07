@@ -196,8 +196,28 @@ No production runtime was rebuilt, deployed, or restarted. Native Windows and
 audible acceptance remain unverified. Existing unrelated staged and unstaged
 Omnivox changes were verified unchanged by their complete diff hashes.
 
-The pronunciation, nested-list, and generic control-request findings remain
-open. The WinRT finding is withdrawn for the reason recorded above.
+The WinRT finding is withdrawn for the reason recorded above.
+
+** Implementation follow-up: pronunciation
+
+Empty literal terms are rejected before dictionary mutation, including editor
+and saved-dictionary entry points. Existing invalid tables fail with a useful
+error during speech preparation. Import errors now include their cause.
+Zero-width template matches replace once at each visited source boundary,
+advance past the next source character, and finish at buffer end. Nonempty
+matches may still delete text without advancing point.
+
+Seven regression tests cover entry validation, imports, editor callbacks,
+legacy tables, Unicode, zero-width templates, deletion, and voice properties.
+Five failed on the original code; all seven pass from source and in a fresh
+Emacs with both changed libraries verified as loaded from current byte-code.
+The [[file:/tmp/emacsvox-pronunciation-before.log][original failures]] and
+[[file:/tmp/emacsvox-pronunciation-compiled.log][compiled checks]] are local evidence.
+The source-loaded core suite passed 947 tests with 17 graphical or native-runtime
+checks skipped. Byte-code compilation, its freshness check, the documentation
+release gate, and Org lint passed. No live session was changed.
+
+The nested-list and generic control-request findings remain open.
 
 ** Source, toolchain, configuration, and runtime identity
 

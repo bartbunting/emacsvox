@@ -1730,6 +1730,121 @@
       (speaker "s\n")
       (speaker "version\n")))))
 
+(defun emacsvox-test--pronunciation-result (text term pronunciation)
+  "Apply one pronunciation to TEXT, bounding a regression's replacement loop."
+  (with-temp-buffer
+    (insert text)
+    (let ((table (make-hash-table :test #'equal))
+          (replace (symbol-function 'tts--replace-pronunciation))
+          (replacements 0))
+      (puthash term pronunciation table)
+      (cl-letf (((symbol-function 'tts--replace-pronunciation)
+                 (lambda (replacement)
+                   (when (> (cl-incf replacements) 50)
+                     (ert-fail "Pronunciation did not make progress"))
+                   (funcall replace replacement))))
+        (tts-apply-pronunciations table))
+      (buffer-string))))
+
+(ert-deftest emacsvox-tts-pronunciation-rejects-empty-literal-entries ()
+  "Entry points reject empty literal terms without changing saved dictionaries."
+  (let ((emacsvox-pronounce-dictionaries (make-hash-table :test #'eq)))
+    (emacsvox-pronounce-set-dictionary 'review '(("word" . "spoken")))
+    (dolist (replacement '("" "x"))
+      (should-error
+       (emacsvox-pronounce-set-dictionary
+        'review `(("valid" . "word") ("" . ,replacement)))
+       :type 'user-error)
+      (should-error
+       (emacsvox-pronounce-add-dictionary-entry 'review "" replacement)
+       :type 'user-error)
+      (with-temp-buffer
+        (setq-local emacsvox-pronounce-table (make-hash-table :test #'equal))
+        (should-error (emacsvox-pronounce-add-local-entry "" replacement)
+                      :type 'user-error)
+        (should (= 0 (hash-table-count emacsvox-pronounce-table)))))
+    (should (equal (emacsvox-pronounce-get-dictionary 'review)
+                   '(("word" . "spoken"))))))
+
+(ert-deftest emacsvox-tts-pronunciation-editor-rejects-empty-literal-entries ()
+  "A widget edit cannot bypass the dictionary entry validation."
+  (let ((emacsvox-pronounce-dictionaries (make-hash-table :test #'eq)))
+    (emacsvox-pronounce-set-dictionary 'review '(("word" . "spoken")))
+    (cl-letf (((symbol-function 'widget-value) (lambda (_) '(("" . "x")))))
+      (should-error
+       (funcall (emacsvox-pronounce-edit-generate-callback 'review) nil)
+       :type 'user-error))
+    (should (equal (emacsvox-pronounce-get-dictionary 'review)
+                   '(("word" . "spoken"))))))
+
+(ert-deftest emacsvox-tts-pronunciation-import-rejects-empty-literal-entries ()
+  "Persisted invalid entries report their cause and leave the dictionary intact."
+  (let ((file (make-temp-file "emacsvox-pronunciation-" nil ".el"))
+        (emacsvox-pronounce-dictionaries (make-hash-table :test #'eq))
+        (emacsvox-pronounce-dictionaries-loaded nil)
+        messages)
+    (unwind-protect
+        (progn
+          (emacsvox-pronounce-set-dictionary 'review '(("word" . "spoken")))
+          (with-temp-file file
+            (insert "(emacsvox-pronounce-set-dictionary 'review '((\"\" . \"x\")))\n"))
+          (cl-letf (((symbol-function 'message)
+                     (lambda (format-string &rest args)
+                       (push (apply #'format format-string args) messages))))
+            (emacsvox-pronounce-load-dictionaries file))
+          (should-not emacsvox-pronounce-dictionaries-loaded)
+          (should (equal (emacsvox-pronounce-get-dictionary 'review)
+                         '(("word" . "spoken"))))
+          (should (cl-some (lambda (message) (string-match-p "empty" message))
+                           messages)))
+      (delete-file file))))
+
+(ert-deftest emacsvox-tts-pronunciation-runtime-rejects-old-empty-literals ()
+  "Invalid entries already in a table cannot hang speech preparation."
+  (dolist (replacement '("" "x"))
+    (should-error
+     (emacsvox-test--pronunciation-result "sample" "" replacement)
+     :type 'user-error)))
+
+(ert-deftest emacsvox-tts-pronunciation-zero-width-templates-make-progress ()
+  "Empty matches visit each source boundary once, including end of buffer."
+  (dolist (case '(("ab" "$" "x" "abx")
+                  ("ab\ncd" "$" "x" "abx\ncdx")
+                  ("ab\ncd" "^" "x" "xab\nxcd")
+                  ("é猫" "" "x" "xéx猫x")
+                  ("ab" "a*" "x" "xxbx")
+                  ("" "$" "x" "x")
+                  ("ab" "$" "" "ab")
+                  ("ab" "" "" "ab")))
+    (pcase-let ((`(,text ,pattern ,replacement ,expected) case))
+      (should
+       (equal (substring-no-properties
+               (emacsvox-test--pronunciation-result
+                text pattern
+                (cons #'re-search-forward (lambda (_) replacement))))
+              expected)))))
+
+(ert-deftest emacsvox-tts-pronunciation-deletion-preserves-adjacent-matches ()
+  "Deleting a nonempty match remains valid even when point does not advance."
+  (dolist (pronunciation (list "" (cons #'search-forward (lambda (_) ""))
+                              (cons #'re-search-forward (lambda (_) ""))))
+    (should (equal (emacsvox-test--pronunciation-result "aaa b" "a" pronunciation)
+                   " b"))))
+
+(ert-deftest emacsvox-tts-pronunciation-keeps-properties-and-template-entries ()
+  "Progress handling keeps source properties and accepts empty template patterns."
+  (with-temp-buffer
+    (setq-local emacsvox-pronounce-table (make-hash-table :test #'equal))
+    (emacsvox-pronounce-add-local-entry
+     "" (cons #'re-search-forward (lambda (_) "x")))
+    (should (= 1 (hash-table-count emacsvox-pronounce-table))))
+  (let* ((text (propertize "ab" 'personality 'voice-bolden))
+         (result (emacsvox-test--pronunciation-result
+                  text "^" (cons #'re-search-forward (lambda (_) "x")))))
+    (should (equal (substring-no-properties result) "xab"))
+    (should (eq (get-text-property 1 'personality result) 'voice-bolden))
+    (should (eq (get-text-property 2 'personality result) 'voice-bolden))))
+
 (ert-deftest emacsvox-tts-reentrant-speech-preserves-outer-text ()
   "Nested speech cannot erase the enclosing TTS preparation buffer."
   (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
