@@ -55,8 +55,8 @@
 (defvar omnivox--control-registration-property)
 (defvar omnivox-engine-inventory)
 (defvar emacsvox-aural-voice-workbench--library-source)
-(declare-function omnivox--send-control-request "omnivox-voices" (process request callback))
-(declare-function omnivox--pending-requests "omnivox-voices" (process))
+(declare-function omnivox--send-control-request "omnivox-voices" (process request callback &optional timeout))
+(declare-function omnivox--take-control-request "omnivox-voices" (process identifier))
 (declare-function omnivox--install-control-filter "omnivox-voices" (process))
 (declare-function omnivox--process-routing-policy-current-p "omnivox-voices" (process))
 (declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
@@ -396,13 +396,14 @@ OWNER sends the private prefix through the speech queue."
   (let (response id)
     (setq id (omnivox--send-control-request process command
                                           (lambda (source result)
-                                            (when (eq source process) (setq response result)))))
+                                            (when (eq source process) (setq response result)))
+                                          'managed))
     (unwind-protect
         (progn
           (omnivox-library--wait (lambda () response) process (plist-get command :type))
           (when (equal (plist-get response :type) "error") (error "%s" (plist-get response :message)))
           response)
-      (when id (remhash id (omnivox--pending-requests process))))))
+      (when id (omnivox--take-control-request process id)))))
 
 (defun omnivox-library--owner (process)
   "Obtain the native owner and frozen startup of live speech PROCESS."

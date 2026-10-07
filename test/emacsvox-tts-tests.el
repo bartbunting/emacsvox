@@ -2491,8 +2491,9 @@
       (omnivox-apply-voice-configuration (lambda (result) (push result terminal)))
       (let* ((write (car requests))
              (response (emacsvox-test--configuration-ack write))
-             (callback (gethash (plist-get response :request_id)
-                                (omnivox--pending-requests speaker))))
+             (callback (omnivox--control-request-callback
+                        (gethash (plist-get response :request_id)
+                                 (omnivox--pending-requests speaker)))))
         (should (= 2 (hash-table-count (omnivox--pending-requests speaker))))
         (funcall (timer--function (car timers)))
         (funcall (timer--function (car timers)))
@@ -4999,6 +5000,239 @@ variables; nil removes the variable."
        (eq tts-voice-configuration-apply-function
            #'voice-setup-apply-voice-configuration))
       (should (equal fastloaded "voice-defs")))))
+
+(defmacro emacsvox-test--with-control-requests (&rest body)
+  "Run BODY with private lanes, captured writes, and manually fired timers."
+  (declare (indent 0) (debug t))
+  `(let* ((speaker (make-pipe-process :name "control-main" :noquery t))
+          (notification (make-pipe-process :name "control-notify" :noquery t))
+          (tts-speaker-process speaker) (tts-notify-process notification)
+          (omnivox--control-request-sequence 0)
+          (omnivox-control-last-error nil)
+          (omnivox-ready-hook nil)
+          writes timers cancelled results)
+     (unwind-protect
+         (cl-letf (((symbol-function 'tts-queue--send-typed)
+                    (lambda (process command &rest _)
+                      (push (cons process (emacsvox-test--omnivox-decode-command command)) writes)))
+                   ((symbol-function 'run-at-time)
+                    (lambda (_seconds _repeat function &rest arguments)
+                      (let ((timer (timer-create)))
+                        (timer-set-function timer function arguments)
+                        (push timer timers) timer)))
+                   ((symbol-function 'cancel-timer)
+                    (lambda (timer) (push timer cancelled))))
+           ,@body)
+       (delete-process speaker)
+       (delete-process notification)
+       (dolist (timer timers) (cancel-timer timer)))))
+
+(defun emacsvox-test--fire-control-timer (timer)
+  "Fire TIMER even if cancelled, to exercise a callback already selected to run."
+  (should (timerp timer))
+  (apply (timer--function timer) (timer--args timer)))
+
+(ert-deftest emacsvox-tts-control-lifetime-silent-worker-times-out-once ()
+  (emacsvox-test--with-control-requests
+    (let ((id (omnivox--send-control-request
+               speaker '(:type "inventory")
+               (lambda (_ response) (push response results)))))
+      (should (= (length timers) 1))
+      (emacsvox-test--fire-control-timer (car timers))
+      (emacsvox-test--fire-control-timer (car timers))
+      (omnivox--dispatch-control-response
+       speaker (list :protocol_version 1 :request_id id :type "inventory"))
+      (omnivox--dispatch-control-response
+       speaker (list :protocol_version 1 :request_id id :type "error" :message "late error"))
+      (should (= (length results) 1))
+      (should (equal (plist-get (car results) :code) "timeout"))
+      (should (= (plist-get (car results) :request_id) id))
+      (should (equal (plist-get (plist-get omnivox-control-last-error :response) :code) "timeout"))
+      (should (memq (car timers) cancelled))
+      (should (zerop (hash-table-count (omnivox--pending-requests speaker)))))))
+
+(ert-deftest emacsvox-tts-control-lifetime-response-wins-deadline ()
+  (emacsvox-test--with-control-requests
+    (let ((id (omnivox--send-control-request
+               speaker '(:type "inventory")
+               (lambda (_ response) (push response results)))))
+      (omnivox--dispatch-control-response
+       speaker (list :protocol_version 1 :request_id id :type "inventory"))
+      (should (= (length results) 1))
+      (emacsvox-test--fire-control-timer (car timers))
+      (should (= (length results) 1))
+      (should (equal (plist-get (car results) :type) "inventory"))
+      (should-not omnivox-control-last-error))))
+
+(ert-deftest emacsvox-tts-control-lifetime-coalesces-background-inventory ()
+  (emacsvox-test--with-control-requests
+    (dolist (process (list speaker notification))
+      (process-put process omnivox--control-capabilities-property '(:features ("engine_inventory"))))
+    (dotimes (_ 100) (omnivox-refresh-voice-inventory))
+    (should (= (length writes) 2))
+    (dolist (process (list speaker notification))
+      (should (= (hash-table-count (omnivox--pending-requests process)) 1)))
+    (mapc #'emacsvox-test--fire-control-timer (copy-sequence timers))
+    (omnivox-refresh-voice-inventory)
+    (should (= (length writes) 4))))
+
+(ert-deftest emacsvox-tts-control-lifetime-process-exit-is-independent ()
+  (emacsvox-test--with-control-requests
+    (let (sentinel-called)
+      (set-process-sentinel speaker (lambda (&rest _) (setq sentinel-called t)))
+      (dolist (process (list speaker notification))
+        (omnivox--send-control-request
+         process '(:type "inventory")
+         (lambda (owner response) (push (cons owner response) results))))
+      (delete-process speaker)
+      (should sentinel-called)
+      (should (= (length results) 1))
+      (should (eq (caar results) speaker))
+      (should (equal (plist-get (cdar results) :code) "process_closed"))
+      (should (zerop (hash-table-count (omnivox--pending-requests speaker))))
+      (should (= (hash-table-count (omnivox--pending-requests notification)) 1)))))
+
+(ert-deftest emacsvox-tts-control-lifetime-retirement-survives-callback-errors ()
+  (emacsvox-test--with-control-requests
+    (omnivox--send-control-request speaker '(:type "inventory") (lambda (&rest _) (error "observer failed")))
+    (omnivox--send-control-request speaker '(:type "request_engine_recovery_probe")
+                                   (lambda (_ response) (push response results)))
+    (cl-letf (((symbol-function 'emacsvox-aural-delivery-send) #'ignore))
+      (tts--retire-process speaker))
+    (should (= (length results) 1))
+    (should (equal (plist-get (car results) :code) "process_closed"))
+    (should (zerop (hash-table-count (omnivox--pending-requests speaker))))
+    (mapc #'emacsvox-test--fire-control-timer timers)
+    (should (= (length results) 1))))
+
+(ert-deftest emacsvox-tts-control-lifetime-send-failure-releases-reservation ()
+  (emacsvox-test--with-control-requests
+    (cl-letf (((symbol-function 'tts-queue--send-typed) (lambda (&rest _) (error "write failed"))))
+      (should-error (omnivox--send-control-request speaker '(:type "inventory")
+                                                 (lambda (_ response) (push response results)))))
+    (should (zerop (hash-table-count (omnivox--pending-requests speaker))))
+    (should (= (length timers) 1))
+    (should (memq (car timers) cancelled))
+    (emacsvox-test--fire-control-timer (car timers))
+    (should-not results)))
+
+(ert-deftest emacsvox-tts-control-lifetime-late-capabilities-do-not-revive-startup ()
+  (emacsvox-test--with-control-requests
+    (omnivox--negotiate-process speaker)
+    (let ((id (plist-get (cdar writes) :request_id)))
+      (mapc #'emacsvox-test--fire-control-timer (copy-sequence timers))
+      (omnivox--dispatch-control-response
+       speaker (list :protocol_version 1 :request_id id :type "capabilities" :features nil))
+      (should-not (process-get speaker omnivox--control-capabilities-property))
+      (should (eq (process-get speaker emacsvox-aural--delivery-readiness-process-property) 'failed))
+      (should-not (process-get speaker omnivox--control-negotiation-timer-property)))))
+
+(ert-deftest emacsvox-tts-control-lifetime-bounds-admission ()
+  (emacsvox-test--with-control-requests
+    (dotimes (_ omnivox--control-request-limit)
+      (omnivox--send-control-request speaker '(:type "inventory") #'ignore))
+    (should-error (omnivox--send-control-request speaker '(:type "inventory") #'ignore))
+    (should (= (length writes) omnivox--control-request-limit))
+    (omnivox--dispatch-control-response speaker '(:protocol_version 1 :request_id 1 :type "inventory"))
+    (omnivox--send-control-request speaker '(:type "inventory") #'ignore)
+    (should (= (hash-table-count (omnivox--pending-requests speaker)) omnivox--control-request-limit))))
+
+(ert-deftest emacsvox-tts-control-lifetime-reentrant-retry-owns-new-deadline ()
+  (emacsvox-test--with-control-requests
+    (omnivox--send-control-request
+     speaker '(:type "inventory")
+     (lambda (_ response)
+       (push response results)
+       (omnivox--send-control-request speaker '(:type "inventory") #'ignore)))
+    (let ((old (car timers)))
+      (emacsvox-test--fire-control-timer old)
+      (emacsvox-test--fire-control-timer old)
+      (should (= (length results) 1))
+      (should (= (length writes) 2))
+      (should (= (hash-table-count (omnivox--pending-requests speaker)) 1))
+      (should-not (memq (car timers) cancelled)))))
+
+(ert-deftest emacsvox-tts-control-lifetime-synchronous-startup-reply ()
+  (emacsvox-test--with-control-requests
+    (cl-letf (((symbol-function 'tts-queue--send-typed)
+               (lambda (process command &rest _)
+                 (omnivox--dispatch-control-response
+                  process (list :protocol_version 1
+                                :request_id (plist-get (emacsvox-test--omnivox-decode-command command) :request_id)
+                                :type "capabilities" :features nil)))))
+      (omnivox--negotiate-process speaker))
+    (should (eq (process-get speaker emacsvox-aural--delivery-readiness-process-property) 'ready))
+    (should-not (process-get speaker omnivox--control-negotiation-timer-property))
+    (should (zerop (hash-table-count (omnivox--pending-requests speaker))))
+    (should (memq (car timers) cancelled))))
+
+(ert-deftest emacsvox-tts-control-lifetime-deadline-before-write ()
+  (emacsvox-test--with-control-requests
+    (cl-letf (((symbol-function 'run-at-time)
+               (lambda (_seconds _repeat function &rest arguments)
+                 (let ((timer (timer-create)))
+                   (apply function arguments)
+                   (push timer timers) timer))))
+      (omnivox--send-control-request speaker '(:type "inventory")
+                                     (lambda (_ response) (push response results))))
+    (should (= (length results) 1))
+    (should-not writes)
+    (should (memq (car timers) cancelled))
+    (should (zerop (hash-table-count (omnivox--pending-requests speaker))))))
+
+(ert-deftest emacsvox-tts-control-lifetime-library-keeps-its-own-wait ()
+  (require 'omnivox-library)
+  (emacsvox-test--with-control-requests
+    (cl-letf (((symbol-function 'omnivox-library--wait)
+               (lambda (&rest _)
+                 (should-not timers)
+                 (should (= (hash-table-count (omnivox--pending-requests speaker)) 1))
+                 (error "Library operation timed out"))))
+      (should-error (omnivox-library--control speaker '(:type "inventory"))))
+    (should (zerop (hash-table-count (omnivox--pending-requests speaker))))))
+
+(ert-deftest emacsvox-tts-control-lifetime-real-timer ()
+  "A live, silent private pipe delivers one failure using the Emacs timer loop."
+  (let ((process (make-pipe-process :name "control-real-deadline" :noquery t))
+        (omnivox--control-request-timeout 0.01)
+        (omnivox-control-last-error nil)
+        results)
+    (unwind-protect
+        (cl-letf (((symbol-function 'tts-queue--send-typed) #'ignore))
+          (omnivox--send-control-request process '(:type "inventory")
+                                         (lambda (_ response) (push response results)))
+          (let ((deadline (+ (float-time) 1)))
+            (while (and (not results) (< (float-time) deadline))
+              (accept-process-output nil 0.01)))
+          (should (= (length results) 1))
+          (should (process-live-p process))
+          (should (equal (plist-get (car results) :code) "timeout"))
+          (should (zerop (hash-table-count (omnivox--pending-requests process)))))
+      (delete-process process))))
+
+(ert-deftest emacsvox-tts-control-lifetime-original-sentinel-error-cleans-up ()
+  (emacsvox-test--with-control-requests
+    (set-process-sentinel speaker (lambda (&rest _) (error "Original sentinel failed")))
+    (omnivox--send-control-request speaker '(:type "inventory")
+                                   (lambda (_ response) (push response results)))
+    (let ((sentinel (process-sentinel speaker)))
+      ;; Mark the pipe dead without invoking Emacs's sentinel-error debugger.
+      (set-process-sentinel speaker #'ignore)
+      (delete-process speaker)
+      (should-error (funcall sentinel speaker "closed")))
+    (should (= (length results) 1))
+    (should (zerop (hash-table-count (omnivox--pending-requests speaker))))
+    (should (memq (car timers) cancelled))))
+
+(ert-deftest emacsvox-tts-control-lifetime-navigation-stop-keeps-requests ()
+  (emacsvox-test--with-control-requests
+    (omnivox--send-control-request speaker '(:type "inventory")
+                                   (lambda (_ response) (push response results)))
+    (cl-letf (((symbol-function 'emacsvox-aural-delivery-send) #'ignore))
+      (tts--interrupt-process speaker))
+    (should-not results)
+    (should (= (hash-table-count (omnivox--pending-requests speaker)) 1))
+    (should-not cancelled)))
 
 (provide 'emacsvox-tts-tests)
 ;;; emacsvox-tts-tests.el ends here

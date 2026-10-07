@@ -217,7 +217,17 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
   "Process property retaining an incomplete Omnivox output line.")
 
 (defconst omnivox--control-pending-property 'omnivox--control-pending
-  "Process property holding callbacks for outstanding control requests.")
+  "Process property holding outstanding control requests.
+Private previews retain their operation-owned callbacks in the same table.")
+
+(cl-defstruct (omnivox--control-request (:constructor omnivox--make-control-request))
+  callback timer type)
+
+(defvar omnivox--control-request-timeout 30
+  "Seconds allowed for an ordinary control response.")
+
+(defconst omnivox--control-request-limit 64
+  "Admission limit for ordinary control requests on one speech process.")
 
 (defconst omnivox--control-capabilities-property
   'omnivox--control-capabilities
@@ -371,27 +381,106 @@ cannot overtake server initialization or fail capability checks prematurely."
         (process-put process omnivox--control-pending-property pending)
         pending)))
 
-(defun omnivox--send-control-request (process request callback)
-  "Send REQUEST to Omnivox PROCESS and register CALLBACK.
-CALLBACK receives PROCESS and the decoded response plist."
+(defun omnivox--take-control-request (process identifier)
+  "Detach IDENTIFIER from PROCESS and return its callback, cancelling its timer."
+  (let* ((pending (omnivox--pending-requests process))
+         (entry (gethash identifier pending)))
+    (remhash identifier pending)
+    (if (omnivox--control-request-p entry)
+        (progn
+          (when-let* ((timer (omnivox--control-request-timer entry)))
+            (setf (omnivox--control-request-timer entry) nil)
+            (cancel-timer timer))
+          (omnivox--control-request-callback entry))
+      entry)))
+
+(defun omnivox--fail-control-request (process identifier callback code message)
+  "Deliver a local terminal failure to detached CALLBACK for IDENTIFIER."
+  (let ((response (list :protocol_version omnivox-control-protocol-version
+                        :request_id identifier :type "error" :code code
+                        :message message :origin 'client)))
+    (omnivox--record-control-error process response)
+    (condition-case error-data
+        (emacsvox-aural--call-independent-callback callback process response)
+      (error
+       (let ((emacsvox-speak-messages nil))
+         (message "Omnivox control callback %s on %s failed: %s"
+                  identifier (process-name process) (error-message-string error-data)))))))
+
+(defun omnivox--control-request-expired (process identifier entry)
+  "Expire IDENTIFIER only while ENTRY still owns it on PROCESS."
+  (when (eq entry (gethash identifier (omnivox--pending-requests process)))
+    (omnivox--fail-control-request
+     process identifier (omnivox--take-control-request process identifier)
+     "timeout" (format "Omnivox %s request timed out" (omnivox--control-request-type entry)))))
+
+(defun omnivox--retire-control-requests (process)
+  "Detach all ordinary requests on dead PROCESS before delivering failures.
+Private preview callbacks retain their existing operation-owned cleanup."
   (unless (process-live-p process)
+    (let ((pending (omnivox--pending-requests process)) identifiers callbacks quit-data)
+      (maphash (lambda (id entry)
+                 (when (omnivox--control-request-p entry) (push id identifiers))) pending)
+      (dolist (id identifiers)
+        (push (cons id (omnivox--take-control-request process id)) callbacks))
+      (dolist (entry callbacks)
+        (condition-case condition
+            (omnivox--fail-control-request process (car entry) (cdr entry)
+                                           "process_closed" "Omnivox speech connection closed")
+          (quit (setq quit-data condition))))
+      (when quit-data (signal (car quit-data) (cdr quit-data))))))
+
+(defun omnivox--watch-control-process (process)
+  "Preserve PROCESS's sentinel and clean up requests even for a replaced lane."
+  (unless (process-get process 'omnivox--control-sentinel-installed)
+    (let ((original (process-sentinel process)))
+      (set-process-sentinel
+       process (lambda (owner event)
+                 (unwind-protect
+                     (when original (funcall original owner event))
+                   (omnivox--retire-control-requests owner)))))
+    (process-put process 'omnivox--control-sentinel-installed t)))
+
+(defun omnivox--send-control-request (process request callback &optional timeout)
+  "Send REQUEST to Omnivox PROCESS and register CALLBACK.
+CALLBACK receives PROCESS and the decoded response plist, or a local error
+response on timeout or process exit.  TIMEOUT overrides the ordinary deadline;
+`managed' leaves the deadline to an enclosing operation with its own cleanup."
+  (unless (and (process-live-p process)
+               (not (process-get process 'tts--speech-process-retiring)))
     (error "Omnivox speech process is not live"))
+  (unless (functionp callback) (error "Invalid Omnivox control callback"))
+  (setq timeout (or timeout omnivox--control-request-timeout))
+  (unless (or (eq timeout 'managed)
+              (and (numberp timeout) (> timeout 0) (< timeout 1.0e+INF)))
+    (error "Invalid Omnivox control deadline"))
+  (when (>= (hash-table-count (omnivox--pending-requests process)) omnivox--control-request-limit)
+    (error "Too many outstanding Omnivox control requests"))
+  (omnivox--watch-control-process process)
   (let* ((identifier (omnivox--next-control-request-id))
          (envelope
           (append
            (list :protocol_version omnivox-control-protocol-version
                  :request_id identifier)
            request))
-         (pending (omnivox--pending-requests process)) complete)
+         (pending (omnivox--pending-requests process))
+         (entry (omnivox--make-control-request :callback callback :type (plist-get request :type)))
+         complete)
     (unwind-protect
         (progn
-          (puthash identifier callback pending)
-          (tts-queue--send-typed
-           process
-           (format "omnivox_control {%s}\n"
-                   (omnivox--encode-control-request envelope)) 'neutral)
+          (puthash identifier entry pending)
+          (unless (eq timeout 'managed)
+            (let ((timer (run-at-time timeout nil #'omnivox--control-request-expired process identifier entry)))
+              (if (eq entry (gethash identifier pending))
+                  (setf (omnivox--control-request-timer entry) timer)
+                (cancel-timer timer))))
+          (when (eq entry (gethash identifier pending))
+            (tts-queue--send-typed
+             process
+             (format "omnivox_control {%s}\n"
+                     (omnivox--encode-control-request envelope)) 'neutral))
           (setq complete t))
-      (unless complete (remhash identifier pending)))
+      (unless complete (omnivox--take-control-request process identifier)))
     identifier))
 
 (defun omnivox--next-control-request-id ()
@@ -402,10 +491,14 @@ CALLBACK receives PROCESS and the decoded response plist."
 
 (defun omnivox--record-control-error (process response)
   "Record control error RESPONSE from PROCESS without speaking it."
-  (setq omnivox-control-last-error
-        (list :process process :response response :time (current-time)))
-  (message "Omnivox control error: %s"
-           (or (plist-get response :message) "malformed response")))
+  (unless (and (eq process (plist-get omnivox-control-last-error :process))
+               (eq response (plist-get omnivox-control-last-error :response)))
+    (setq omnivox-control-last-error
+          (list :process process :response response :time (current-time)))
+    (let ((emacsvox-speak-messages nil))
+      (message "Omnivox control error on %s, request %s: %s"
+               (process-name process) (or (plist-get response :request_id) "uncorrelated")
+               (or (plist-get response :message) "malformed response")))))
 
 (defun omnivox--dispatch-control-response (process response)
   "Match decoded control RESPONSE to its request on PROCESS."
@@ -414,13 +507,13 @@ CALLBACK receives PROCESS and the decoded response plist."
                omnivox-control-protocol-version)
     (error "Unsupported Omnivox control response version"))
   (let* ((identifier (plist-get response :request_id))
-         (pending (omnivox--pending-requests process))
-         (callback (and (integerp identifier) (gethash identifier pending))))
-    (when (integerp identifier)
-      (remhash identifier pending))
+         (callback (and (integerp identifier) (omnivox--take-control-request process identifier))))
     (cond
      (callback (funcall callback process response))
      ((omnivox-parameters--discard-retired-reply-p process identifier) nil)
+     ;; Allocated IDs are never reused.  A detached request cannot be revived,
+     ;; and its late error must not replace the original terminal diagnostic.
+     ((and (integerp identifier) (<= 1 identifier omnivox--control-request-sequence)) nil)
      ((equal (plist-get response :type) "error")
       (omnivox--record-control-error process response)))))
 
@@ -1831,8 +1924,7 @@ JSON map hash tables are copied independently and cannot be compared by `equal'.
            (member (plist-get response :code)
                    '("stale_generation" "generation_conflict"))
            (omnivox--process-supports-p process "engine_inventory"))
-      (omnivox--send-control-request
-       process '(:type "inventory") #'omnivox--handle-inventory-response))))
+      (omnivox--request-inventory process))))
 
 (defun omnivox--set-process-routing-policy (process)
   "Apply desired routing policy to one negotiated Omnivox PROCESS."
@@ -2084,7 +2176,7 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                 (remhash process pending)
                 (dolist (request requests)
                   (when (eq process (car request))
-                    (remhash (cdr request) (omnivox--pending-requests process))))
+                    (omnivox--take-control-request process (cdr request))))
                 (setq requests (cl-delete process requests :key #'car :test #'eq))
                 (push result results)
                 (when (zerop (hash-table-count pending)) (complete))))
@@ -2105,12 +2197,13 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                                    owner
                                    (omnivox--voice-configuration-result
                                     owner 'failed :phase 'submission
-                                    :code 'process-unavailable))))))))
+                                    :code 'process-unavailable)))))
+                            'managed)))
                       ;; Writing may dispatch replies, including completion,
                       ;; before the request identifier is returned to us.
                       (if (gethash process pending)
                           (push (cons process identifier) requests)
-                        (remhash identifier (omnivox--pending-requests process))))
+                        (omnivox--take-control-request process identifier)))
                   (error
                    (finish
                     process
@@ -2287,22 +2380,6 @@ taken effect on the server.  Reapply to confirm the desired configuration."
   (when (and (eq readiness 'ready) (eq process tts-speaker-process))
     (run-hook-with-args 'omnivox-ready-hook process)))
 
-(defun omnivox--capability-negotiation-timeout (process)
-  "Fail pending capability negotiation for live Omnivox PROCESS."
-  (when
-      (and
-       (process-live-p process)
-       (not
-        (process-get process omnivox--control-capabilities-property)))
-    (omnivox--finish-capability-negotiation process 'failed)
-    (setq omnivox-control-last-error
-          (list
-           :process process :error 'capability-negotiation-timeout
-           :time (current-time)))
-    (message
-     "Omnivox capability negotiation timed out after %s seconds"
-     omnivox-control-negotiation-timeout)))
-
 (defun omnivox--handle-capabilities-response (process response)
   "Store capability RESPONSE from PROCESS and request its inventory."
   (if (not (equal (plist-get response :type) "capabilities"))
@@ -2362,8 +2439,7 @@ taken effect on the server.  Reapply to confirm the desired configuration."
       (setq omnivox-control-capabilities response))
     (omnivox--finish-capability-negotiation process 'ready)
     (if (member "engine_inventory" (plist-get response :features))
-        (omnivox--send-control-request
-         process '(:type "inventory") #'omnivox--handle-inventory-response)
+        (omnivox--request-inventory process)
       (when (member "logical_voice_registration"
                     (plist-get response :features))
         (omnivox-register-logical-voices)))))
@@ -2377,15 +2453,16 @@ taken effect on the server.  Reapply to confirm the desired configuration."
     (omnivox--update-unicode-preprocessing)
     (omnivox--install-control-filter process)
     (condition-case error-data
-        (progn
-          (omnivox--send-control-request
-           process '(:type "capabilities")
-           #'omnivox--handle-capabilities-response)
-          (process-put
-           process omnivox--control-negotiation-timer-property
-           (run-at-time
-            omnivox-control-negotiation-timeout nil
-            #'omnivox--capability-negotiation-timeout process)))
+        (let* ((id (omnivox--send-control-request
+                    process '(:type "capabilities")
+                    #'omnivox--handle-capabilities-response
+                    omnivox-control-negotiation-timeout))
+               (entry (gethash id (omnivox--pending-requests process))))
+          ;; A reply can arrive during the write.  Never attach a timer to
+          ;; negotiation that already completed in that reentrant callback.
+          (when (omnivox--control-request-p entry)
+            (process-put process omnivox--control-negotiation-timer-property
+                         (omnivox--control-request-timer entry))))
       (error
        (omnivox--finish-capability-negotiation process 'failed)
        (setq omnivox-control-last-error
@@ -2723,13 +2800,25 @@ Return the number of distinct processes that received the command."
            (omnivox--inventory-runtime (plist-get engine :id))))
         (append (plist-get omnivox-engine-inventory :engines) nil))))))
 
+(defun omnivox--request-inventory (process)
+  "Refresh PROCESS's background inventory with at most one outstanding request."
+  (or (let (identifier)
+        (maphash
+         (lambda (id entry)
+           (when (and (omnivox--control-request-p entry)
+                      (equal (omnivox--control-request-type entry) "inventory")
+                      (eq (omnivox--control-request-callback entry) #'omnivox--handle-inventory-response))
+             (setq identifier id)))
+         (omnivox--pending-requests process))
+        identifier)
+      (omnivox--send-control-request process '(:type "inventory") #'omnivox--handle-inventory-response)))
+
 (defun omnivox-refresh-voice-inventory ()
   "Request fresh inventories from live Omnivox processes and return a snapshot."
   (dolist (process (delete-dups (list tts-speaker-process tts-notify-process)))
     (when (and (process-live-p process)
                (omnivox--process-supports-p process "engine_inventory"))
-      (omnivox--send-control-request
-       process '(:type "inventory") #'omnivox--handle-inventory-response)))
+      (omnivox--request-inventory process)))
   (omnivox-voice-inventory))
 
 (defun omnivox--handle-recovery-probe-response (callback process response)
@@ -2737,8 +2826,7 @@ Return the number of distinct processes that received the command."
   (if (equal (plist-get response :type) "engine_recovery_probe_requested")
       (progn
         (when (omnivox--process-supports-p process "engine_inventory")
-          (omnivox--send-control-request
-           process '(:type "inventory") #'omnivox--handle-inventory-response))
+          (omnivox--request-inventory process))
         (when (functionp callback)
           (funcall callback (copy-tree response))))
     (omnivox--record-control-error process response)

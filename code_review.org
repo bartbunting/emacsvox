@@ -24,8 +24,9 @@ Existing test gates passed; that does not establish audible speech correctness.
 No fixes were implemented during the review. Locations describe the reviewed
 commits; subsequent fixes may move the source lines. Implementation results are
 recorded separately under Verification. Existing unrelated work is preserved.
-The follow-up fixes cover helper writes, pronunciation progress, and nested list
-assembly. Generic control-request lifetime remains open.
+The follow-up fixes cover all four reproduced defects: helper writes,
+pronunciation progress, nested list assembly, and generic control-request
+lifetime. Native Windows and audible acceptance remain unverified.
 
 * Correctness Findings
 
@@ -240,9 +241,45 @@ The source-loaded core suite passed 950 tests with the same 17 graphical or
 native-runtime checks skipped. Compilation, byte-code freshness, documentation
 release checks, and Org lint passed. No live session was changed.
 
-The generic control-request finding and its shared-lifetime improvement remain
-open. Its design must coordinate timeout and retirement with the existing
-preview, parameter, palette, and library completion paths.
+** Implementation follow-up: control-request lifetime
+
+[[file:lisp/omnivox-voices.el::444][Ordinary control submission]] now reserves a process-owned request record before
+writing, with a 30-second response deadline and an admission limit of 64.
+[[file:lisp/omnivox-voices.el::2803][Background inventory refresh]] shares one outstanding request per process.
+Synchronous library inventory requests retain their own callbacks.
+
+[[file:lisp/omnivox-voices.el::384][A common detach operation]] removes the request and cancels its timer before
+callback delivery. Process exit detaches all ordinary requests before delivering
+local =process_closed= errors, even if the original sentinel or a callback
+fails. Deadline expiry delivers a correlated =timeout= error. Late replies
+cannot revive the request or replace its terminal diagnostic. Logs identify
+the process and request. A deadline does not prove that a submitted operation
+had no server-side effect.
+
+Capability negotiation uses its existing timeout setting and cannot be revived
+by a late reply. Parameter queries, palette application, and synchronous library
+operations use the common detach path while retaining their existing deadlines.
+Private preview callbacks retain their established playback ownership. Ordinary
+navigation Stop leaves metadata requests pending. The main and notification
+lanes remain independent. This also addresses the shared-lifetime maintainability
+finding without replacing the speech transport or changing the control wire.
+
+Fifteen [[file:test/emacsvox-tts-tests.el::5035][regressions]] cover silent workers, timeout/response ordering, real Emacs
+timers, admission, coalescing, process exit, callback and sentinel failures,
+immediate replies, reentrant retry, send failure, startup, caller-owned waits,
+and navigation Stop. The first seven failed against the original code.
+The [[file:/tmp/emacsvox-control-before.log][original failures]] and
+[[file:/tmp/emacsvox-control-final-focused.log][focused results]] are local evidence.
+
+The final source-loaded core suite passed 965 tests, with 17 graphical or
+native-runtime checks skipped. The separate private-preview suite passed 34
+tests. After =make bytecode-rebuild=, a fresh Emacs passed 86 focused control,
+configuration, and parameter tests with all three changed libraries verified
+as loaded from their rebuilt =.elc= files. See the
+[[file:/tmp/emacsvox-control-core.log][core results]] and [[file:/tmp/emacsvox-control-compiled.log][compiled results]].
+Byte-code freshness, Org preview and lint, generated manual updates, and the
+documentation release gate passed. No live process or installed Omnivox runtime
+was changed.
 
 ** Source, toolchain, configuration, and runtime identity
 
@@ -359,11 +396,11 @@ defect; their exit status is not a claim that the tested behavior passed.
 
 * Recommended Next Steps
 
-The helper I/O, pronunciation, and private list-storage fixes are complete in
-the implementation follow-up. The remaining priorities are:
+All four reproduced defects have implementation fixes and regression coverage.
+The remaining priorities are:
 
-1. Bound and retire generic control requests, coalescing inventory refreshes. This is a moderate change requiring coordination with existing operation-specific timers.
-2. Run isolated native acceptance against an explicitly identified 1.16.0 executable, including slow WinRT cancellation, two-lane interruption, crash recovery, and audible navigation. Record executable hash, negotiated protocols, and correlated submission IDs. The currently observed live workers do not supply that evidence.
+1. Run isolated native acceptance against an explicitly identified 1.16.0 executable, including slow WinRT cancellation, two-lane interruption, crash recovery, and audible navigation. Record executable hash, negotiated protocols, and correlated submission IDs. The currently observed live workers do not supply that evidence.
+2. Verify the compiled Lisp in a fresh target profile before applying it live. No production profile or Omnivox runtime was restarted during these fixes.
 
 * Review Limitations
 

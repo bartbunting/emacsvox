@@ -1313,6 +1313,30 @@ server.  Playback completion, source markers, and domain-scoped
 replacement remain unavailable when the selected server cannot
 acknowledge them truthfully.
 
+   Ordinary control requests belong to their speech process.  They have
+a 30-second response deadline and an admission limit of 64 outstanding
+requests per process.  Background inventory refreshes share one pending
+request per process.  Capability negotiation uses
+‘omnivox-control-negotiation-timeout’.  Previews, parameter queries,
+palette application, and synchronous library operations retain their own
+deadlines and cancellation rules.
+
+   The client detaches a request and cancels its timer before invoking
+its callback.  A response deadline or process exit produces a local
+error response with the original request ID, ‘:origin client’, and code
+‘timeout’ or ‘process_closed’.  This does not prove that a submitted
+server operation was cancelled or had no effect.  Late replies cannot
+change the completed outcome.  Ordinary navigation Stop leaves metadata
+requests pending; each speech lane owns its requests independently.
+
+   When adding an ordinary control caller, use
+‘omnivox--send-control-request’.  Its callback may run during the send.
+Use the internal ‘managed’ timeout only when the enclosing operation
+already enforces a deadline and calls ‘omnivox--take-control-request’ on
+every cancellation or nonlocal exit.  Private preview operations keep
+their existing playback ownership and reserved callbacks.  No control
+wire version changes for this client lifecycle handling.
+
    A complete timeline contains its delivery policy, replacement domain,
 generation, dispatch ID, speech spans, and positioned actions.  Small
 timelines use one bounded frame; large timelines use a bounded multipart

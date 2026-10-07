@@ -32,8 +32,8 @@
 (require 'omnivox-native-codec)
 (require 'tts-queue-state)
 
-(declare-function omnivox--send-control-request "omnivox-voices" (process request callback))
-(declare-function omnivox--pending-requests "omnivox-voices" (process))
+(declare-function omnivox--send-control-request "omnivox-voices" (process request callback &optional timeout))
+(declare-function omnivox--take-control-request "omnivox-voices" (process identifier))
 (declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
 (declare-function omnivox--native-tuning-supported-p "omnivox-voices" (process))
 (declare-function omnivox--preview-layered-request "omnivox-preview" (entry process &optional native))
@@ -107,7 +107,7 @@
       (when (omnivox-parameters--query-pending query)
         (let* ((id (omnivox-parameters--query-pending query))
                (retired (cons id (process-get process 'omnivox-parameters--retired))))
-          (remhash id (omnivox--pending-requests process))
+          (omnivox--take-control-request process id)
           ;; A late error belongs to this view, not generic notification output.
           (process-put process 'omnivox-parameters--retired
                        (cl-subseq retired 0 (min 32 (length retired))))))
@@ -263,7 +263,8 @@ the worker, whose helper may have restarted since the last inventory."
            (unless (omnivox-parameters--query-finished query)
              (setf (omnivox-parameters--query-step query)
                    (run-at-time 0 nil #'omnivox-parameters--receive query
-                                (tts--dispatch-copy-data response))))))))
+                                (tts--dispatch-copy-data response)))))
+         'managed)))
 
 (defun omnivox-parameters--request (process engine voice callback &optional current explanation)
   "Query ENGINE and optional physical VOICE on PROCESS without waiting.
