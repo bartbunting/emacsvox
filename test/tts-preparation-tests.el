@@ -8,6 +8,16 @@
 (require 'tts-dispatch-handoff-tests)
 (require 'omnivox-choice-playback-tests)
 
+;; Native calls need trampolines to reach the fault-injection replacements.
+;; Prepare them before replacing primitives: compiling a trampoline while
+;; `process-send-string' is mocked can corrupt the compiler's subprocess reply.
+;; The tests can then inhibit further trampoline compilation inside each fault.
+(when (native-comp-available-p)
+  (let ((native-comp-enable-subr-trampolines t))
+    (dolist (function '(puthash remhash process-send-string message))
+      (when (subr-primitive-p (symbol-function function))
+        (comp-subr-trampoline-install function)))))
+
 (defun tts-preparation-test--empty (process)
   "Check that PROCESS retains no preparation or dispatch reservations."
   (should (= 0 (or (process-get process 'tts--dispatch-owner-count) 0)))
