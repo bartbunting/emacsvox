@@ -281,6 +281,25 @@ Byte-code freshness, Org preview and lint, generated manual updates, and the
 documentation release gate passed. No live process or installed Omnivox runtime
 was changed.
 
+** Implementation follow-up: isolated Linux and graphical acceptance
+
+Acceptance used Emacsvox =a4f94b0d3= and a fresh Omnivox 1.16.0 development
+payload built from =880a48d916c6daf69935c4bf41b4bd95582ffa9c= with
+=CARGO_NET_OFFLINE=true make dev=. The supported build staged its matching
+eSpeak data and companions. The executable was
+=/home/bart/src/omnivox/target/debug/omnivox=, SHA-256
+=62100265cfb889d7c8c979801f396c4e49c3f30b31cdb955bbecc6528d1f94ff=.
+A private worker independently reported server version =1.16.0= and control
+envelope version =1=. [[file:/tmp/emacsvox-review-acceptance-64jk1_fb/identity.json][Build identity]],
+[[file:/tmp/emacsvox-review-acceptance-64jk1_fb/capabilities.json][capabilities]], and per-process launch records and logs are retained locally.
+
+- Passed :: =make graphical-voice-test= ran 38 tests on a private Xvfb display. Two additional graphical tests covered engine-configuration draft navigation and punctuation-profile editing. Together these cover all 13 graphical cases skipped by the batch core suite. See [[file:/tmp/emacsvox-review-graphical.log][the graphical gate]] and [[file:/tmp/emacsvox-review-extra-graphical.log][the additional graphical checks]].
+- Passed :: All four previously skipped native ERT checks ran against the Linux 1.16.0 executable: engine-configuration service round trip, paired-worker configuration freezing and recovery, frozen punctuation catalogues, and punctuation service round trip. They used temporary stores and null audio. See [[file:/tmp/emacsvox-review-native-services.log][the native service results]].
+- Passed :: [[file:test/verify-omnivox-choice-runtime.el::1][Muted choice acceptance]] verified fallback identity and completion on both lanes, historical notification replay, main-worker replacement, and re-registration. Two rounds completed with dispatch IDs 1 through 4 and registry generations 1 and 2. See [[file:/tmp/emacsvox-review-choice-runtime.log][the choice acceptance log]].
+- Passed :: [[file:test/verify-omnivox-character-runtime.el::1][Muted character acceptance]] completed lower-case, upper-case, and punctuation characters on both lanes using =espeak:gmw/en+max=. A twelve-request burst cancelled the first eleven and completed the newest, without duplicate terminal callbacks or retained dispatch metadata. See [[file:/tmp/emacsvox-review-character-runtime.log][the character acceptance log]].
+- Cleanup :: All five choice/character workers exited. Their launcher recorded each PID and command and used private configuration and log storage. The additional capability worker also exited. Existing Omnivox staged and unstaged work remained byte-for-byte unchanged, verified by complete diff hashes.
+- Still unverified :: Native Windows WinRT behavior, acoustic output, device-loss recovery, and live remote reconnect. Null-output completion proves protocol and mixer progress, not that speech was heard. No production Emacs or speech process was restarted or reloaded.
+
 ** Source, toolchain, configuration, and runtime identity
 
 - Emacsvox source :: =/home/bart/src/emacsvox=, commit =41828cfe5600dcf4f80521961f272928b808281a=. Its worktree was clean before review. All 26 ADRs under =docs/adr/= and the repository instructions were read.
@@ -386,20 +405,24 @@ the first finding. The fixture has a bounded self-exit, so the reproduction did
 not leave a hung helper running. These probes exit normally after recording a
 defect; their exit status is not a claim that the tested behavior passed.
 
-** Skipped and unavailable checks
+** Checks skipped during the original review
 
-- Thirteen graphical ERT cases were skipped in batch. They cover voice editors, workbench navigation, engine controls, profile editing, and punctuation editing. Their full names are in the core ERT log. No graphical rendering or navigation acceptance is claimed.
+The isolated acceptance follow-up above subsequently ran all 17 skipped ERT
+cases in graphical or Linux native environments. The Windows and audible
+limitations remain.
+
+- Thirteen graphical ERT cases were skipped in batch. They cover voice editors, workbench navigation, engine controls, profile editing, and punctuation editing. Their full names are in the core ERT log. The original review did not establish graphical rendering or navigation behavior; the follow-up did.
 - Four native ERT cases were skipped: engine-configuration service round trip, paired voice-library workers, frozen profile catalogues, and punctuation service round trip.
 - The Rust native routing case =qualified_helpers_route_native_choices_without_playback= was ignored because =OMNIVOX_NATIVE_ROUTING_CASES= was not configured.
 - No native Windows WinRT cancellation test, audible 1.16.0 speech test, device-loss test, or live remote reconnect test was performed. No production process was interrupted to create one.
-- Optional integration suites and the complete Omnivox workspace test matrix were not run. The selected gates cover the shared speech path; they do not certify every caller, helper, or platform.
+- Optional integration suites and the complete Omnivox workspace test matrix were not run during the original review. The helper-fix follow-up subsequently passed the workspace matrix. These gates do not certify every caller, helper, or platform.
 
 * Recommended Next Steps
 
 All four reproduced defects have implementation fixes and regression coverage.
 The remaining priorities are:
 
-1. Run isolated native acceptance against an explicitly identified 1.16.0 executable, including slow WinRT cancellation, two-lane interruption, crash recovery, and audible navigation. Record executable hash, negotiated protocols, and correlated submission IDs. The currently observed live workers do not supply that evidence.
+1. Run the remaining Windows and audible acceptance against an explicitly identified 1.16.0 development payload, including slow WinRT cancellation, device loss, and audible navigation. Linux muted two-lane speech, interruption, and worker replacement have passed. The older production workers do not supply Windows 1.16.0 evidence.
 2. Verify the compiled Lisp in a fresh target profile before applying it live. No production profile or Omnivox runtime was restarted during these fixes.
 
 * Review Limitations
@@ -413,9 +436,10 @@ The shared path was traced through source extraction, preparation, voice
 resolution, admission, synthesis, playback, and completion. Not every optional
 mode integration or vendor helper implementation was audited line by line.
 Proprietary synthesis runtimes and Windows operating-system implementation code
-were unavailable for inspection. macOS and native Linux device behavior were not
-tested. Large frames were exercised in the helper reproduction and existing
-protocol tests, not against every production engine.
+were unavailable for inspection. macOS and physical Linux audio-device behavior
+were not tested. The follow-up used Linux null output. Large frames were
+exercised in the helper reproduction and existing protocol tests, not against
+every production engine.
 
 The original helper blocking failure was reproduced with buffered output;
 the follow-up also tests progressive dispatch. The withdrawn WinRT finding
