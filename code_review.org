@@ -24,6 +24,8 @@ Existing test gates passed; that does not establish audible speech correctness.
 No fixes were implemented during the review. Locations describe the reviewed
 commits; subsequent fixes may move the source lines. Implementation results are
 recorded separately under Verification. Existing unrelated work is preserved.
+The follow-up fixes cover helper writes, pronunciation progress, and nested list
+assembly. Generic control-request lifetime remains open.
 
 * Correctness Findings
 
@@ -200,6 +202,8 @@ The WinRT finding is withdrawn for the reason recorded above.
 
 ** Implementation follow-up: pronunciation
 
+Emacsvox commit =24d6b8d63= fixes pronunciation progress.
+
 Empty literal terms are rejected before dictionary mutation, including editor
 and saved-dictionary entry points. Existing invalid tables fail with a useful
 error during speech preparation. Import errors now include their cause.
@@ -217,7 +221,28 @@ The source-loaded core suite passed 947 tests with 17 graphical or native-runtim
 checks skipped. Byte-code compilation, its freshness check, the documentation
 release gate, and Org lint passed. No live session was changed.
 
-The nested-list and generic control-request findings remain open.
+** Implementation follow-up: nested list speech
+
+[[file:lisp/tts-speak.el::4271][List speech]] now assembles its text in a private temporary buffer. It calls
+the speech transaction from the original buffer, preserving caller context and
+punctuation restoration. The temporary buffer is also removed on assembly error.
+This resolves the temporary-text ownership improvement without a shared allocator
+or broader speech refactor.
+
+Three [[file:test/emacsvox-tts-tests.el::1848][list-speech regressions]] cover a real nested pronunciation callback,
+grouping and voice properties, caller context, and failure during assembly.
+Two failed before the fix: the outer utterance lost its prefix and suffix, and
+an assembly error left the outer buffer damaged. All three pass from source
+and with the rebuilt library in a fresh Emacs.
+The [[file:/tmp/emacsvox-list-before.log][original failures]] and
+[[file:/tmp/emacsvox-list-compiled.log][compiled checks]] are local evidence.
+The source-loaded core suite passed 950 tests with the same 17 graphical or
+native-runtime checks skipped. Compilation, byte-code freshness, documentation
+release checks, and Org lint passed. No live session was changed.
+
+The generic control-request finding and its shared-lifetime improvement remain
+open. Its design must coordinate timeout and retirement with the existing
+preview, parameter, palette, and library completion paths.
 
 ** Source, toolchain, configuration, and runtime identity
 
@@ -334,11 +359,11 @@ defect; their exit status is not a claim that the tested behavior passed.
 
 * Recommended Next Steps
 
-1. Bound helper dispatch and cancellation I/O, starting with the real-pipe reproduction. Impact is high; implementation effort is moderate because watchdog and connection ownership must remain correct.
-2. Fix pronunciation progress and reject empty literal entries. Impact is high and the affected code is small. Protect legitimate deletion and existing saved dictionaries.
-3. Give list assembly private scratch storage and add the nested-list regression. This is a small change with a directly observed text-correctness benefit.
-4. Bound and retire generic control requests, coalescing inventory refreshes. This is a moderate change requiring coordination with existing operation-specific timers.
-5. Run isolated native acceptance against an explicitly identified 1.16.0 executable, including slow WinRT cancellation, two-lane interruption, crash recovery, and audible navigation. Record executable hash, negotiated protocols, and correlated submission IDs. The currently observed live workers do not supply that evidence.
+The helper I/O, pronunciation, and private list-storage fixes are complete in
+the implementation follow-up. The remaining priorities are:
+
+1. Bound and retire generic control requests, coalescing inventory refreshes. This is a moderate change requiring coordination with existing operation-specific timers.
+2. Run isolated native acceptance against an explicitly identified 1.16.0 executable, including slow WinRT cancellation, two-lane interruption, crash recovery, and audible navigation. Record executable hash, negotiated protocols, and correlated submission IDs. The currently observed live workers do not supply that evidence.
 
 * Review Limitations
 

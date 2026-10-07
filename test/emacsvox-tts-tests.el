@@ -1845,6 +1845,86 @@
     (should (eq (get-text-property 1 'personality result) 'voice-bolden))
     (should (eq (get-text-property 2 'personality result) 'voice-bolden))))
 
+(ert-deftest emacsvox-tts-list-speech-preserves-outer-pronunciation ()
+  "List speech from a pronunciation callback preserves both utterances."
+  (let ((tts-stop-immediately nil)
+        (tts-speaker-process nil)
+        (tts-handle-unicode nil)
+        (emacsvox-pronounce-table (make-hash-table :test #'equal))
+        (emacsvox-pronounce-personality nil)
+        (voice-lock-mode nil)
+        (emacsvox-use-icons nil)
+        queued)
+    (puthash "outer"
+             (cons #'search-forward
+                   (lambda (_)
+                     (tts-speak-list '("inner"))
+                     "replacement"))
+             emacsvox-pronounce-table)
+    (unwind-protect
+        (cl-letf (((symbol-function 'emacsvox-aural-prepared-text-p)
+                   (lambda (_) t))
+                  ((symbol-function 'tts-speak) #'tts--speak-transaction)
+                  ((symbol-function 'tts--protocol-sync) #'ignore)
+                  ((symbol-function 'tts-move-across-a-chunk)
+                   (lambda (&rest _) (goto-char (point-max)) t))
+                  ((symbol-function 'tts-voice-reset-code) (lambda () "reset"))
+                  ((symbol-function 'tts--protocol-queue-code) #'ignore)
+                  ((symbol-function 'tts--protocol-queue-text)
+                   (lambda (text) (push text queued)))
+                  ((symbol-function 'tts--protocol-dispatch) #'ignore))
+          (tts--speak-transaction "prefix-long-enough outer suffix")
+          (should (equal (nreverse queued)
+                         '("inner, " "prefix-long-enough replacement suffix"))))
+      (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
+        (kill-buffer scratch)))
+    (should-not tts--scratch-buffers-in-use)
+    (should-not (get-buffer " *tts-scratch-buffer* <2>"))))
+
+(ert-deftest emacsvox-tts-list-speech-preserves-grouping-and-context ()
+  "List assembly retains voice properties and speaks from the caller's buffer."
+  (with-temp-buffer
+    (setq-local tts-punctuation-mode 'all)
+    (let ((origin (current-buffer))
+          (tts-speaker-process nil)
+          spoken)
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text)
+                   (should (eq (current-buffer) origin))
+                   (should (eq tts-punctuation-mode 'some))
+                   (setq spoken text))))
+        (should (tts-speak-list
+                 (list "one" (propertize "two" 'personality 'voice-bolden)
+                       "three") '(2 1))))
+      (should (equal (substring-no-properties spoken) "one two, three, "))
+      (should (eq (get-text-property 4 'personality spoken) 'voice-bolden))
+      (should (eq (get-text-property 7 'personality spoken) 'voice-bolden))
+      (should (eq tts-punctuation-mode 'all)))))
+
+(ert-deftest emacsvox-tts-list-speech-cleans-up-after-assembly-error ()
+  "Failed list construction leaves an enclosing speech buffer and point intact."
+  (let ((outer (get-buffer-create " *tts-scratch-buffer* "))
+        assembly-buffer)
+    (unwind-protect
+        (with-current-buffer outer
+          (erase-buffer)
+          (insert "outer text")
+          (goto-char 4)
+          (let ((format-function (symbol-function 'format)))
+            (cl-letf (((symbol-function 'format)
+                       (lambda (format-string &rest arguments)
+                         (if (equal format-string " %s")
+                             (progn
+                               (setq assembly-buffer (current-buffer))
+                               (error "List formatting failed"))
+                           (apply format-function format-string arguments)))))
+              (should-error (tts-speak-list '("inner" 42)))))
+          (should (equal (buffer-string) "outer text"))
+          (should (= (point) 4))
+          (should assembly-buffer)
+          (should-not (buffer-live-p assembly-buffer)))
+      (kill-buffer outer))))
+
 (ert-deftest emacsvox-tts-reentrant-speech-preserves-outer-text ()
   "Nested speech cannot erase the enclosing TTS preparation buffer."
   (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))

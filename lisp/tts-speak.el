@@ -4288,14 +4288,11 @@ grouping"
               `(,@splits ,r)))))
   (cl-assert
    (= (length text) (apply #'+ group)) group "Argument mismatch:" text group)
-  (let ((tts-scratch-buffer (get-buffer-create " *tts-scratch-buffer* "))
-        (contents nil)
-        (count 1)
-        (inhibit-read-only t))
-    (save-current-buffer
-      (set-buffer tts-scratch-buffer)
-      (setq buffer-undo-list  t)
-      (erase-buffer)
+  (let ((contents nil)
+        (count 1))
+    ;; A callback may assemble a list while ordinary speech owns its scratch
+    ;; buffer.  Keep this text private until it enters the speech transaction.
+    (with-temp-buffer
       (cl-loop
        for element in text do
        (let
