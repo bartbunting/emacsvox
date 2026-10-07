@@ -4174,34 +4174,6 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (when (buffer-live-p buffer)
           (kill-buffer buffer))))))
 
-(ert-deftest emacsvox-agent-shell-old-viewport-resolver-falls-back-narrowly ()
-  "Agent Shell versions predating the public resolver should still work."
-  (let ((shell (generate-new-buffer "Codex Agent @ legacy-resolver"))
-        (viewport
-         (generate-new-buffer "Codex Agent @ legacy-resolver [viewport]"))
-        private-calls)
-    (unwind-protect
-        (save-window-excursion
-          (with-current-buffer shell
-            (setq major-mode 'agent-shell-mode))
-          (with-current-buffer viewport
-            (setq major-mode 'agent-shell-viewport-view-mode))
-          (switch-to-buffer viewport)
-          (cl-letf
-              (((symbol-function 'agent-shell-shell-buffer) nil)
-               ((symbol-function 'agent-shell-viewport--shell-buffer)
-                (lambda (&optional candidate)
-                  (push candidate private-calls)
-                  shell)))
-            (should-not (fboundp 'agent-shell-shell-buffer))
-            (should (emacsvox-agent-shell--session-focused-p shell))
-            (with-current-buffer viewport
-              (should (eq (emacsvox-agent-shell--session-buffer) shell)))
-            (should (equal private-calls (list viewport viewport)))))
-      (dolist (buffer (list shell viewport))
-        (when (buffer-live-p buffer)
-          (kill-buffer buffer))))))
-
 (ert-deftest emacsvox-agent-shell-stale-viewport-does-not-select-a-session ()
   "A stale viewport should report no session and never use another shell."
   (let ((unrelated (generate-new-buffer "Codex Agent @ unrelated"))
@@ -9870,6 +9842,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                   :buffer (current-buffer)
                   :agent-config '((:shell-prompt . "Test> "))))
      (setf (alist-get :initialized agent-shell--state) t
+           (alist-get :init-finished agent-shell--state) t
            (alist-get :id (alist-get :session agent-shell--state)) "test-session")
      (setq-local comint-last-output-start (copy-marker (point)))
      (setq-local shell-maker--config
@@ -9942,7 +9915,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                           agent-shell-viewport-view-mode-map
                           agent-shell-viewport-edit-mode-map
                           agent-shell-ui-fragment-map
-                          agent-shell-list-edit-mode-map))
+                          agent-shell-list-edit-mode-map
+                          agent-shell-elicitation-map
+                          agent-shell-elicitation-preview-map))
         (dolist (entry (emacsvox-agent-shell-test--public-key-bindings
                         (symbol-value own)))
           (let ((key (kbd (car entry))))
@@ -10450,7 +10425,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 ((symbol-function 'agent-shell--update-header-and-mode-line) #'ignore)
                 ((symbol-function 'emacsvox-aural-submit)
                  (lambda (text &rest args) (push (cons text args) submissions))))
-        (agent-shell--config-option-set-thought-level-id :thought-level-id "high")
+        (if (fboundp 'agent-shell-set-config-option-value)
+            (agent-shell-set-config-option-value :id "effort" :value "high")
+          (agent-shell--config-option-set-thought-level-id :thought-level-id "high"))
         (should-not submissions)
         (funcall callback nil)
         (agent-shell--emit-event :event 'config-option-update
@@ -10623,6 +10600,291 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should (looking-at "End"))
           (call-interactively (key-binding (kbd "M-<down>")))
           (should (looking-at "after")))))))
+
+
+(defun emacsvox-agent-shell-test--question-request ()
+  "Return an ACP question covering choices, previews and editable values."
+  (json-parse-string
+   "{
+  \"id\": 123,
+  \"method\": \"elicitation/create\",
+  \"params\": {
+    \"mode\": \"form\",
+    \"sessionId\": \"test-session\",
+    \"message\": \"Choose a destination\",
+    \"requestedSchema\": {
+      \"type\": \"object\",
+      \"properties\": {
+        \"destination\": {
+          \"type\": \"string\",
+          \"title\": \"Destination\",
+          \"oneOf\": [
+            {
+              \"const\": \"local\",
+              \"title\": \"Local\",
+              \"_meta\": {
+                \"_claude/askUserQuestionOption\": {
+                  \"preview\": \"Keep files on this machine.\"
+                }
+              }
+            },
+            {
+              \"const\": \"remote\",
+              \"title\": \"Remote\"
+            }
+          ]
+        },
+        \"backup\": {
+          \"type\": \"boolean\",
+          \"title\": \"Backup\"
+        },
+        \"note\": {
+          \"type\": \"string\",
+          \"title\": \"Note\"
+        }
+      },
+      \"required\": [
+        \"destination\"
+      ]
+    }
+  }
+}"
+   :object-type 'alist :array-type 'array :false-object nil :null-object nil))
+
+(defmacro emacsvox-agent-shell-test--with-question (&rest body)
+  "Run BODY with a real question renderer and no agent connection."
+  (declare (indent 0) (debug t))
+  `(save-window-excursion
+     (emacsvox-agent-shell-test--with-current-session
+       (switch-to-buffer (current-buffer))
+       (use-local-map agent-shell-mode-map)
+       (let ((agent-shell-elicitation--experimental-feature-enabled t)
+             (agent-shell-persistent-prompt-enabled nil)
+             (agent-shell-ui-debug-enabled nil))
+         (cl-letf (((symbol-function 'agent-shell--start-idle-timer) #'ignore)
+                   ((symbol-function 'acp-send-response) #'ignore))
+           ,@body)))))
+
+(defun emacsvox-agent-shell-test--question-goto (action &optional key value)
+  "Find a rendered question ACTION, optionally matching KEY and VALUE."
+  (goto-char (point-min))
+  (let (found)
+    (while (and (not found) (< (point) (point-max)))
+      (let ((control (get-text-property (point) 'agent-shell-elicitation-control)))
+        (if (and (eq action (map-elt control :action))
+                 (or (not key) (equal key (map-elt control :key)))
+                 (or (not value) (equal value (map-elt control :value))))
+            (setq found t)
+          (goto-char (next-single-property-change
+                      (point) 'agent-shell-elicitation-control nil (point-max))))))
+    (should found)))
+
+(defun emacsvox-agent-shell-test--question-speech (events)
+  "Return only spoken strings from captured EVENTS."
+  (mapcar (lambda (event) (substring-no-properties (cadr event)))
+          (seq-filter (lambda (event) (memq (car event) '(speak notify))) events)))
+
+(ert-deftest emacsvox-agent-shell-question-arrival-respects-focus-and-quiet ()
+  "A question announces once, on the appropriate lane, unless speech is quiet."
+  (dolist (focused '(nil t))
+    (dolist (level '(quiet notify))
+      (emacsvox-agent-shell-test--with-question
+        (let ((emacsvox-agent-shell-speech-level level) delivered)
+          (cl-letf (((symbol-function 'emacsvox-agent-shell--session-focused-p)
+                     (lambda (&optional _) focused))
+                    ((symbol-function 'emacsvox-agent-shell--submit-automatic-text-feedback)
+                     (lambda (text facts &rest _) (push (list 'main text facts) delivered)))
+                    ((symbol-function 'emacsvox-agent-shell--notify-background)
+                     (lambda (facts _occasion _icon text) (push (list 'background text facts) delivered)))
+                    ((symbol-function 'tts-stop) #'ignore))
+            (agent-shell--on-request :state agent-shell--state
+                                    :acp-request (emacsvox-agent-shell-test--question-request)))
+          (cl-letf (((symbol-function 'shell-maker-busy) (lambda () t)))
+            (should (equal "Waiting for an answer."
+                           (emacsvox-agent-shell--live-prompt-state-speech))))
+          (if (eq level 'quiet) (should-not delivered)
+            (should (= 1 (length delivered)))
+            (should (eq (caar delivered) (if focused 'main 'background)))
+            (should (string-match-p "Answer needed.*Choose a destination" (cadar delivered)))
+            (should (eq 'agent-question (plist-get (nth 2 (car delivered)) :role)))))))))
+
+(ert-deftest emacsvox-agent-shell-question-controls-confirm-state-and-preview ()
+  "Choices, checkboxes, edits and previews speak confirmed semantic values."
+  (emacsvox-agent-shell-test--with-question
+    (emacsvox-agent-shell-test--capture-events
+      (agent-shell--on-request :state agent-shell--state
+                              :acp-request (emacsvox-agent-shell-test--question-request)))
+    (emacsvox-agent-shell-test--question-goto 'select "destination" "local")
+    (should (eq (key-binding (kbd "RET")) 'agent-shell-elicitation-act))
+    (let ((speech (emacsvox-agent-shell-test--question-speech
+                   (emacsvox-agent-shell-test--capture-events
+                     (execute-kbd-macro (kbd "RET"))))))
+      (should (= 1 (length speech)))
+      (should (string-match-p "Destination, required.*Local, selected" (car speech)))
+      (should (string-match-p "Preview collapsed" (car speech))))
+    (let ((speech (emacsvox-agent-shell-test--question-speech
+                   (emacsvox-agent-shell-test--capture-events
+                     (execute-kbd-macro (kbd "?"))))))
+      (should (= 2 (length speech)))
+      (should (string-match-p "Preview expanded" (car speech)))
+      (should (equal (cadr speech) "Keep files on this machine.")))
+    (emacsvox-agent-shell-test--question-goto 'toggle "backup")
+    (dotimes (index 2)
+      (let ((speech (emacsvox-agent-shell-test--question-speech
+                     (emacsvox-agent-shell-test--capture-events
+                       (execute-kbd-macro (kbd "RET"))))))
+        (should (= 1 (length speech)))
+        (should (string-match-p (if (zerop index) "Backup, checked" "Backup, unchecked")
+                                (car speech)))))
+    (emacsvox-agent-shell-test--question-goto 'read "note")
+    (cl-letf (((symbol-function 'agent-shell-elicitation--read-value)
+               (lambda (&rest _) "Use the archive")))
+      (let ((speech (emacsvox-agent-shell-test--question-speech
+                     (emacsvox-agent-shell-test--capture-events
+                       (execute-kbd-macro (kbd "RET"))))))
+        (should (= 1 (length speech)))
+        (should (string-match-p "Note, optional.*Use the archive" (car speech)))))
+    (emacsvox-agent-shell-test--question-goto 'submit)
+    (let ((speech (emacsvox-agent-shell-test--question-speech
+                   (emacsvox-agent-shell-test--capture-events
+                     (execute-kbd-macro (kbd "RET"))))))
+      (should (equal speech '("Answers sent."))))))
+
+(ert-deftest emacsvox-agent-shell-question-navigation-shell-and-viewport ()
+  "Both item navigation paths identify the question field and current state."
+  (emacsvox-agent-shell-test--with-question
+    (emacsvox-agent-shell-test--capture-events
+      (agent-shell--on-request :state agent-shell--state
+                              :acp-request (emacsvox-agent-shell-test--question-request)))
+    (let ((shell (current-buffer))
+          (contents (buffer-string)))
+      (dolist (viewport '(nil t))
+        (with-temp-buffer
+          (insert contents)
+          (setq major-mode (if viewport 'agent-shell-viewport-view-mode 'agent-shell-mode))
+          (use-local-map (if viewport agent-shell-viewport-view-mode-map agent-shell-mode-map))
+          (switch-to-buffer (current-buffer))
+          (cl-letf (((symbol-function 'emacsvox-agent-shell--session-buffer) (lambda (&optional _) shell))
+                    ((symbol-function 'agent-shell-viewport--prompt-start) (lambda () nil))
+                    ((symbol-function 'agent-shell-viewport--response-start) (lambda () nil)))
+            (emacsvox-agent-shell-test--question-goto 'select "destination" "local")
+            (let ((speech (emacsvox-agent-shell-test--question-speech
+                           (emacsvox-agent-shell-test--capture-events
+                             (execute-kbd-macro (kbd "TAB"))))))
+              (should (= 1 (length speech)))
+              (should (string-match-p "Destination, required.*Remote, unselected" (car speech))))
+            (let ((speech (emacsvox-agent-shell-test--question-speech
+                           (emacsvox-agent-shell-test--capture-events
+                             (execute-kbd-macro (kbd "<backtab>"))))))
+              (should (= 1 (length speech)))
+              (should (string-match-p "Local, unselected" (car speech))))))))))
+
+(ert-deftest emacsvox-agent-shell-question-failure-and-cancellation ()
+  "Missing required values and cancelled edits do not announce success."
+  (emacsvox-agent-shell-test--with-question
+    (emacsvox-agent-shell-test--capture-events
+      (agent-shell--on-request :state agent-shell--state
+                              :acp-request (emacsvox-agent-shell-test--question-request)))
+    (emacsvox-agent-shell-test--question-goto 'submit)
+    (let ((events (emacsvox-agent-shell-test--capture-events
+                    (should-error (call-interactively #'agent-shell-elicitation-act)
+                                  :type 'user-error))))
+      (should-not (emacsvox-agent-shell-test--question-speech events)))
+    (emacsvox-agent-shell-test--question-goto 'read "note")
+    (cl-letf (((symbol-function 'agent-shell-elicitation--read-value)
+               (lambda (&rest _) (signal 'quit nil))))
+      (should-not
+       (emacsvox-agent-shell-test--question-speech
+        (emacsvox-agent-shell-test--capture-events
+          (condition-case nil (call-interactively #'agent-shell-elicitation-act)
+            (quit nil))))))
+    (emacsvox-agent-shell-test--question-goto 'decline)
+    (let ((emacsvox-agent-shell-speech-level 'quiet))
+      (should
+       (equal '("Question declined.")
+              (emacsvox-agent-shell-test--question-speech
+               (emacsvox-agent-shell-test--capture-events
+                 (execute-kbd-macro (kbd "RET")))))))))
+
+(ert-deftest emacsvox-agent-shell-initialization-gates-setting-announcements ()
+  "Handshake completion does not announce startup defaults as user changes."
+  (emacsvox-agent-shell-test--with-current-session
+    (setf (alist-get :init-finished agent-shell--state) nil
+          (alist-get :agent-config agent-shell--state)
+          '((:default-config-options . (lambda () '(("effort" . "high"))))))
+    (let ((option '((:id . "effort") (:name . "Effort") (:current-value . "low")))
+          announcements)
+      (cl-letf (((symbol-function 'emacsvox-agent-shell--notify-event)
+                 (lambda (&rest args) (push args announcements))))
+        (dolist (value '("low" "high"))
+          (setf (alist-get :current-value option) value)
+          (agent-shell--emit-event :event 'config-option-update
+                                  :data (list (cons :config-options (list option)))))
+        (should-not announcements)
+        (setf (alist-get :init-finished agent-shell--state) t
+              (alist-get :set-config-options agent-shell--state) t)
+        (setf (alist-get :current-value option) "low")
+        (agent-shell--emit-event :event 'config-option-update
+                                :data (list (cons :config-options (list option))))
+        (should (= 1 (length announcements)))))))
+
+(ert-deftest emacsvox-agent-shell-rejects-unsupported-version ()
+  "An older Agent Shell fails with an actionable version message."
+  (let ((agent-shell--version "0.85.2"))
+    (should-error (emacsvox-agent-shell-enable) :type 'user-error)))
+
+
+(ert-deftest emacsvox-agent-shell-question-graphical-controls ()
+  "Rendered question controls remain visible and operable in a real frame."
+  (skip-unless (display-graphic-p))
+  (emacsvox-agent-shell-test--with-question
+    (emacsvox-agent-shell-test--capture-events
+      (agent-shell--on-request :state agent-shell--state
+                              :acp-request (emacsvox-agent-shell-test--question-request)))
+    (redisplay t)
+    (should (pos-visible-in-window-p (point)))
+    (should (string-match-p "Choose a destination" (ems--this-line)))
+    (let ((speech (emacsvox-agent-shell-test--question-speech
+                   (emacsvox-agent-shell-test--capture-events
+                     (execute-kbd-macro (kbd "TAB RET ?"))))))
+      (redisplay t)
+      (should (pos-visible-in-window-p (point)))
+      (should (seq-some (lambda (text) (string-match-p "Local, selected" text)) speech))
+      (should (member "Keep files on this machine." speech)))))
+
+(ert-deftest emacsvox-agent-shell-question-facts-compile ()
+  "Question semantics survive the real aural validation and compilation path."
+  (emacsvox-agent-shell-test--with-question
+    (emacsvox-agent-shell-test--capture-events
+      (agent-shell--on-request :state agent-shell--state
+                              :acp-request (emacsvox-agent-shell-test--question-request)))
+    (emacsvox-agent-shell-test--question-goto 'select "destination" "local")
+    (pcase-let ((`(,text ,facts)
+                 (apply #'emacsvox-agent-shell--question-presentation
+                        (emacsvox-agent-shell--question-at-point))))
+      (cl-letf (((symbol-function 'tts-speak) #'ignore))
+        (let ((submission (emacsvox-aural-submit text :facts facts
+                                               :module 'agent-shell :occasion 'navigation)))
+          (should (emacsvox-aural-submission-plans submission)))))))
+
+(ert-deftest emacsvox-agent-shell-queued-prompts-block-buffer-kill ()
+  "Declining the upstream queue warning preserves the shell and queued text."
+  (let ((buffer (generate-new-buffer " *queued-prompt-kill-test*")) prompt)
+    (unwind-protect
+        (with-current-buffer buffer
+          (setq-local agent-shell--state '((:pending-prompts . ("Keep this request"))))
+          (add-hook 'kill-buffer-query-functions
+                    #'agent-shell--prompt-queue-confirm-kill-buffer nil t)
+          (let ((noninteractive nil))
+            (cl-letf (((symbol-function 'y-or-n-p)
+                       (lambda (text) (setq prompt text) nil)))
+              (should-not (kill-buffer buffer))))
+          (should (buffer-live-p buffer))
+          (should (equal prompt "1 prompt queued.  Kill anyway?"))
+          (should (equal (map-elt agent-shell--state :pending-prompts) '("Keep this request"))))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer (setq kill-buffer-query-functions nil))
+        (kill-buffer buffer)))))
 
 (provide 'emacsvox-agent-shell-tests)
 ;;; emacsvox-agent-shell-tests.el ends here

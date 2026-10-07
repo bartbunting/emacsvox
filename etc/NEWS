@@ -10,6 +10,18 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Speak Agent Shell question forms
+
+Experimental Agent Shell forms now announce questions, field values, required
+status, selections, edits, and answer previews in both shell and viewport
+buffers. Submission, decline, and cancellation receive spoken confirmation.
+Automatic question feedback follows the session speech level. The upstream
+experimental feature remains off by default.
+
+Emacsvox now requires Agent Shell 0.85.3 or newer. Integration tests use 0.86.1
+with Shell Maker 0.97.5. Settings use the newer public APIs when available;
+startup defaults stay quiet, and confirmed setting changes speak once.
+
 ** Keep Notmuch refresh feedback interruptible
 
 Explicit mail refresh announcements now queue on the main speech stream even

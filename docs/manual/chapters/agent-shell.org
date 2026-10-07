@@ -12,7 +12,8 @@ Agent Shell is a separately installed Emacs package for interactive AI-agent
 sessions.  Emacsvox adds speech and semantic presentation without replacing
 Agent Shell's provider setup, session management, prompt editor, or permission
 controls.  See [[https://github.com/xenodium/agent-shell][Agent Shell]] for
-provider installation and configuration.
+provider installation and configuration.  Emacsvox requires Agent Shell 0.85.3
+or newer.
 
 The generated
 [[info:emacsvox-reference#emacsvox-agent-shell][emacsvox-agent-shell]] in /Emacsvox Reference Manual/
@@ -40,11 +41,12 @@ With Agent Shell's persistent prompt enabled, you can keep typing while the
 agent works.  Brackets and navigation letters remain ordinary input at
 that prompt.  Reading the live prompt says “Agent busy” while the agent works.
 A pending permission is announced
-as “Waiting for permission.”  These cues also precede the first line of a draft;
+as “Waiting for permission”; a pending question says “Waiting for an answer.”
+These cues also precede the first line of a draft;
 later lines keep ordinary reading feedback.  “Ready for input” is reserved for
 an empty prompt when the agent is idle.
 
-With Agent Shell 0.81.1, quoting a selected region, sending source context,
+Quoting a selected region, sending source context,
 dropping files, and inserting shell-command output can add to that live draft
 while the agent works. These insertions do not submit the draft. If there is
 no live prompt while busy, Agent Shell offers its queue editor instead.
@@ -80,6 +82,8 @@ the queue announcement gives its count and the command
 ~M-x agent-shell-prompt-queue-resume~. Queue-start feedback
 follows the session's speech level; paused-queue warnings follow
 =emacsvox-agent-shell-signal-processing=.
+Agent Shell also asks before killing a shell or exiting Emacs when queued
+prompts would be lost. Declining that question keeps the prompts available.
 
 Model, mode, thought-level, and other session setting changes announce their
 confirmed values.  Background setting announcements identify the session.
@@ -93,6 +97,34 @@ Use ~M-x emacsvox-agent-shell-speak-header~ to hear the full session header.
 When =agent-shell-show-cost-indicator= is enabled and the provider reports a
 positive cost, this includes the cumulative cost with Agent Shell's currency
 and rounding.  Brief announcements when entering a session stay concise.
+
+** Answer an agent's question
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Agent Shell has experimental support for structured question forms. It is off
+by default. To try it, set =agent-shell-elicitation--experimental-feature-enabled=
+to non-nil after loading Agent Shell and start a new session so the agent learns
+that forms are supported. This upstream experimental setting may change.
+
+When a form arrives, Emacsvox announces that an answer is needed and reads the
+question. Automatic question feedback follows the session's speech level;
+=quiet= suppresses it. Explicit reading and actions still speak.
+
+Use ~TAB~ and ~S-TAB~ to move between controls in the shell or viewport.
+Emacsvox reads the field name, whether it is required, and its current value or
+selection state. Press ~RET~ to select an option, toggle a checkbox, or edit a
+text or number field. Changes are confirmed after they take effect. When an
+option has a preview, ~?~ opens or closes it; opening it reads its contents.
+The preview key applies only to controls that offer a preview.
+
+Choose /Submit/ to send the answers or /Decline/ to decline the question.
+Missing required answers are reported without announcing successful submission.
+~C-c C-c~ interrupts the running request, including any pending form. To return
+to the latest question, use ~M-x agent-shell-elicitation-jump-to-latest-form~.
+The next-field and previous-field commands are also available through ~M-x~.
+
 
 ** Choose automatic speech and privacy
 :PROPERTIES:

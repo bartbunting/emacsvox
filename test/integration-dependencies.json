@@ -19,20 +19,23 @@
     },
     {
       "name": "shell-maker",
-      "commit": "a76d4d6b620927ff5e635449466015340bc2fe44",
-      "url": "https://codeload.github.com/xenodium/shell-maker/tar.gz/a76d4d6b620927ff5e635449466015340bc2fe44",
-      "sha256": "8a713aadf1aa8628ddf487c8963d3f55479049527054ede803975ed658d65b45",
-      "archive_root": "shell-maker-a76d4d6b620927ff5e635449466015340bc2fe44",
+      "commit": "dcc05a8cf24eb62f2f611fd2d009a161fada5f6e",
+      "url": "https://codeload.github.com/xenodium/shell-maker/tar.gz/dcc05a8cf24eb62f2f611fd2d009a161fada5f6e",
+      "sha256": "bf572e4e783b97e86f9faa38fc20e39463f34aa165a5b0fb7192ef4d5443a99d",
+      "archive_root": "shell-maker-dcc05a8cf24eb62f2f611fd2d009a161fada5f6e",
       "subdirectory": "."
     },
     {
       "name": "agent-shell",
-      "commit": "5535365534d0bf9f6e0257316af86e11399d3eba",
-      "url": "https://codeload.github.com/xenodium/agent-shell/tar.gz/5535365534d0bf9f6e0257316af86e11399d3eba",
-      "sha256": "470ef2871e2a56af44b786ecfab5a0c3942c924243fb79813da99eb5c3a0293e",
-      "archive_root": "agent-shell-5535365534d0bf9f6e0257316af86e11399d3eba",
+      "commit": "137b574f041552cdd04ebc1edb02fd7b4490898c",
+      "url": "https://codeload.github.com/xenodium/agent-shell/tar.gz/137b574f041552cdd04ebc1edb02fd7b4490898c",
+      "sha256": "dbdc4b13b602d35deb66c26111164014ea476ce9f0ae07d879ec0aaa5f6dedcc",
+      "archive_root": "agent-shell-137b574f041552cdd04ebc1edb02fd7b4490898c",
       "subdirectory": ".",
-      "excluded_paths": ["CLAUDE.md", "GEMINI.md"]
+      "excluded_paths": [
+        "CLAUDE.md",
+        "GEMINI.md"
+      ]
     },
     {
       "name": "eat",

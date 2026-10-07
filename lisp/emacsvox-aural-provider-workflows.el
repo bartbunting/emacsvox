@@ -1074,6 +1074,42 @@
      :owner agent-shell
      :occasions (notification)
      :phases (before content after))
+    (agent-question
+     :kind role :owner agent-shell
+     :summary "A structured question awaiting an answer"
+     :occasions (navigation inspection state-change notification)
+     :phases (before content after))
+    (agent-question-control
+     :kind attribute :owner agent-shell :value-type symbol
+     :summary "The action offered by a question control"
+     :allowed-values (select toggle read custom preview submit decline))
+    (agent-question-field
+     :kind attribute :owner agent-shell :value-type string
+     :summary "The identifier of a question field")
+    (agent-question-requirement
+     :kind attribute :owner agent-shell :value-type symbol
+     :summary "Whether the question field requires an answer"
+     :allowed-values (required optional))
+    (agent-question-selection
+     :kind attribute :owner agent-shell :value-type symbol
+     :summary "The current selection or value state of a question control"
+     :allowed-values (selected unselected checked unchecked empty filled))
+    (agent-question-state
+     :kind attribute :owner agent-shell :value-type symbol
+     :summary "Whether a question is waiting or has been resolved"
+     :allowed-values (pending answered declined cancelled))
+    (agent-question-requested
+     :kind event :owner agent-shell
+     :summary "An agent requested an answer to a structured question"
+     :occasions (notification) :phases (before content after))
+    (agent-question-changed
+     :kind event :owner agent-shell
+     :summary "A question value or preview changed"
+     :occasions (state-change) :phases (before content after))
+    (agent-question-resolved
+     :kind event :owner agent-shell
+     :summary "A question was answered, declined, or cancelled"
+     :occasions (state-change notification) :phases (before content after))
     (agent-permission-requested
      :kind event
      :summary "An Agent Shell action requested user permission"

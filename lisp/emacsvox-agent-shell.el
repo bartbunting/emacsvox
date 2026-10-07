@@ -77,6 +77,11 @@
 (declare-function agent-shell-shell-buffer "agent-shell" t)
 (declare-function agent-shell-session-id "agent-shell" t)
 (declare-function agent-shell-status "agent-shell" t)
+(declare-function agent-shell-initialized-p "agent-shell" t)
+(declare-function agent-shell-config-options "agent-shell" t)
+(declare-function agent-shell-elicitation--pending-p "agent-shell-elicitation" t)
+(declare-function agent-shell-elicitation--preview-open-p "agent-shell-elicitation" (elicitation key value))
+(declare-function agent-shell-elicitation--option-preview-at "agent-shell-elicitation" (elicitation key value))
 (declare-function agent-shell-steering-supported-p "agent-shell" t)
 (declare-function agent-shell-subscribe-to "agent-shell" t)
 (declare-function agent-shell-unsubscribe "agent-shell" t)
@@ -694,7 +699,9 @@ before the first response character, including when approaching from below."
     (pcase status
       ('ready nil)
       ('busy "Agent busy.")
-      ('blocked "Waiting for permission.")
+      ('blocked (if (agent-shell-elicitation--pending-p)
+                    "Waiting for an answer."
+                  "Waiting for permission."))
       (_ "Input state unavailable."))))
 
 (defun emacsvox-agent-shell--add-chat-label-for-speech (text)
@@ -1299,25 +1306,12 @@ so this value never determines when a submitted turn is spoken."
   "Numeric ordering of agent-shell automatic speech levels.")
 
 (defun emacsvox-agent-shell--viewport-session-buffer (viewport-buffer)
-  "Return VIEWPORT-BUFFER's live Agent Shell session, or nil.
-Prefer Agent Shell's stable public resolver and prohibit session creation.
-The private resolver is only a compatibility fallback for Agent Shell releases
-that predate the public API."
+  "Return VIEWPORT-BUFFER's live Agent Shell session without creating one."
   (when (buffer-live-p viewport-buffer)
     (let ((shell-buffer
-           (cond
-            ((fboundp 'agent-shell-shell-buffer)
-             (with-current-buffer viewport-buffer
-               (ignore-errors
-                 (agent-shell-shell-buffer
-                  :viewport-buffer viewport-buffer
-                  :no-error t
-                  :no-create t))))
-            ;; Compatibility with Agent Shell releases before the stable public
-            ;; resolver.  Do not use this branch when the public API is present.
-            ((fboundp 'agent-shell-viewport--shell-buffer)
-             (ignore-errors
-               (agent-shell-viewport--shell-buffer viewport-buffer))))))
+           (with-current-buffer viewport-buffer
+             (agent-shell-shell-buffer
+              :viewport-buffer viewport-buffer :no-error t :no-create t))))
       (when (and (buffer-live-p shell-buffer)
                  (with-current-buffer shell-buffer
                    (derived-mode-p 'agent-shell-mode)))
@@ -2596,6 +2590,8 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
     ;; `turn-complete' is the semantic boundary: no network-pause timer is
     ;; allowed to deliver a partial response.
     (pcase event-type
+      ((or 'elicitation-request 'elicitation-response)
+       (emacsvox-agent-shell--question-event event))
       ('session-selected
        (emacsvox-agent-shell--interaction-cleanup)
        (emacsvox-agent-shell--out-of-turn-cleanup)
@@ -2617,7 +2613,7 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
       ('config-option-update
        (emacsvox-agent-shell--observe-config-options
         (map-nested-elt event '(:data :config-options))
-        (map-elt agent-shell--state :initialized)))
+        (emacsvox-agent-shell--initialized-p)))
       ('init-finished
        (emacsvox-agent-shell--observe-config-options
         (emacsvox-agent-shell--config-options) nil))
@@ -4921,10 +4917,7 @@ When INTERACTIVE-P is non-nil, announce a resulting visibility change."
        (eq (key-binding (this-command-keys-vector)) this-command)
        (or (derived-mode-p 'agent-shell-viewport-edit-mode)
            (and (derived-mode-p 'agent-shell-mode)
-                (if (fboundp 'agent-shell--point-in-live-input-p)
-                    (agent-shell--point-in-live-input-p)
-                  (and (not (shell-maker-busy))
-                       (shell-maker-point-at-last-prompt-p)))))))
+                (agent-shell--point-in-live-input-p)))))
 
 (defun emacsvox-agent-shell--navigate-block-at-point (direction &optional type)
   "Navigate in DIRECTION, preserving literal input at an editable prompt.
@@ -5979,6 +5972,7 @@ Return non-nil when point represents one of those semantic items."
       (unless (or (and (not started-in-table-p)
                        (emacsvox-agent-shell--table-discovery-feedback
                         origin 'forward))
+                  (emacsvox-agent-shell--question-feedback)
                   (emacsvox-agent-shell--permission-button-feedback)
                   (emacsvox-agent-shell--table-cell-feedback)
                   (emacsvox-agent-shell--semantic-item-feedback))
@@ -6013,6 +6007,7 @@ Return non-nil when point represents one of those semantic items."
       (unless (or (and (not started-in-table-p)
                        (emacsvox-agent-shell--table-discovery-feedback
                         origin 'backward))
+                  (emacsvox-agent-shell--question-feedback)
                   (emacsvox-agent-shell--permission-button-feedback)
                   (emacsvox-agent-shell--table-cell-feedback)
                   (emacsvox-agent-shell--semantic-item-feedback))
@@ -6053,6 +6048,154 @@ Return non-nil when point represents one of those semantic items."
            result)
       (emacsvox-agent-shell--permission-button-feedback))))
 
+;;; Question forms
+
+(defvar emacsvox-agent-shell--question-command-active nil
+  "Non-nil while an interactive question action owns its feedback.")
+
+(defun emacsvox-agent-shell--question-at-point ()
+  "Return the question control, form and field at point, or nil.
+Resolve form values in the owning shell, including from a viewport."
+  (when-let* ((control (get-text-property (point) 'agent-shell-elicitation-control))
+              (shell (emacsvox-agent-shell--session-buffer))
+              (form (map-nested-elt (buffer-local-value 'agent-shell--state shell)
+                                    (list :elicitations (map-elt control :id)))))
+    (list control form
+          (seq-find (lambda (field)
+                      (equal (map-elt field :key) (map-elt control :key)))
+                    (map-elt form :fields)))))
+
+(defun emacsvox-agent-shell--question-presentation (control form field)
+  "Return speech and semantic facts for CONTROL in FORM and FIELD."
+  (let* ((action (map-elt control :action))
+         (key (map-elt control :key))
+         (value (map-elt control :value))
+         (current (map-nested-elt form (list :values key)))
+         (option (seq-find (lambda (option) (equal value (map-elt option :value)))
+                           (map-elt field :options)))
+         (label (or (map-elt field :title) key "Question"))
+         (requirement (if (map-elt field :required) 'required 'optional))
+         (preview (map-elt option :preview))
+         (opened (and preview (agent-shell-elicitation--preview-open-p form key value)))
+         (selection
+          (pcase action
+            ('select (if (equal value current) 'selected 'unselected))
+            ('toggle (if (if value (member value current) (eq current t))
+                         'checked 'unchecked))
+            ((or 'read 'custom) (if (and current (not (equal current "")))
+                                   'filled 'empty))))
+         (speech
+          (pcase action
+            ('submit "Submit answers. Press Return to submit.")
+            ('decline "Decline question. Press Return to decline.")
+            ('preview (format "%s preview, %s. Press Return to %s."
+                              (or (map-elt option :title) value label)
+                              (if opened "expanded" "collapsed")
+                              (if opened "close" "open")))
+            (_ (format "%s, %s. %s. %s%s"
+                       label requirement
+                       (pcase action
+                         ((or 'select 'toggle)
+                          (format "%s, %s" (or (map-elt option :title) value label) selection))
+                         ('custom (format "Your own answer, %s"
+                                          (if (eq selection 'empty) "empty" current)))
+                         (_ (format "%s" (if (eq selection 'empty) "empty" current))))
+                       (pcase action
+                         ('select "Press Return to select.")
+                         ('toggle "Press Return to toggle.")
+                         (_ "Press Return to edit."))
+                       (if preview
+                           (format " Preview %s; question mark to %s."
+                                   (if opened "expanded" "collapsed")
+                                   (if opened "close" "open")) ""))))))
+    (list speech
+          (emacsvox-agent-shell--presentation-facts
+           'agent-question 'focus-entered nil
+           (append (list :agent-question-control action)
+                   (when key (list :agent-question-field key
+                                   :agent-question-requirement requirement))
+                   (when selection (list :agent-question-selection selection)))))))
+
+(defun emacsvox-agent-shell--question-feedback (&optional occasion)
+  "Speak the question control at point for OCCASION, returning non-nil."
+  (when-let* ((data (emacsvox-agent-shell--question-at-point))
+              (presentation (apply #'emacsvox-agent-shell--question-presentation data)))
+    (let ((facts (cadr presentation)))
+      (when (eq occasion 'state-change)
+        (setq facts (plist-put facts :events '(agent-question-changed))))
+      (emacsvox-agent-shell--submit-text-feedback
+       (car presentation) facts (or occasion 'navigation) 'item))
+    t))
+
+(defun emacsvox-agent-shell--question-navigation-after (result &rest _)
+  "Speak successful explicit question navigation RESULT once."
+  (when (and result
+             (or (ems-interactive-p 'agent-shell-elicitation-next-field)
+                 (ems-interactive-p 'agent-shell-elicitation-previous-field)
+                 (ems-interactive-p 'agent-shell-elicitation-jump-to-latest-form)))
+    (unless (emacsvox-agent-shell--question-feedback)
+      (emacsvox-agent-shell--submit-text-feedback
+       (ems--this-line) '(:role agent-question) 'navigation 'item)))
+  result)
+
+(defun emacsvox-agent-shell--question-action-around (original &rest arguments)
+  "Run ORIGINAL with ARGUMENTS and speak its confirmed question change."
+  (if (not (or (ems-interactive-p 'agent-shell-elicitation-act)
+               (ems-interactive-p 'agent-shell-elicitation-toggle-preview)
+               (ems-interactive-p 'agent-shell-elicitation-interrupt)))
+      (apply original arguments)
+    (let* ((emacsvox-agent-shell--question-command-active t)
+           (before (emacsvox-agent-shell--question-at-point))
+           (control (car before))
+           (action (map-elt control :action))
+           (preview-command (eq this-command 'agent-shell-elicitation-toggle-preview))
+           (ems--message-filter
+            (concat "\\(?:" ems--message-filter "\\|\\`\\(?:Answer sent\\|Declined\\)\\'\\)")))
+      (prog1 (apply original arguments)
+        (when-let* ((after (emacsvox-agent-shell--question-at-point))
+                    ((eq (map-elt (cadr after) :status) 'pending)))
+          (emacsvox-agent-shell--question-feedback 'state-change)
+          (when (or preview-command (eq action 'preview))
+            (let* ((form (cadr after))
+                   (key (map-elt control :key))
+                   (value (map-elt control :value))
+                   (preview (agent-shell-elicitation--option-preview-at form key value)))
+              (when (and preview (agent-shell-elicitation--preview-open-p form key value))
+                (emacsvox-agent-shell--submit-text-feedback
+                 preview '(:role agent-question) 'inspection)))))))))
+
+(defun emacsvox-agent-shell--question-event (event)
+  "Present question EVENT with session speech policy and semantic facts."
+  (let* ((data (map-elt event :data))
+         (request (eq (map-elt event :event) 'elicitation-request))
+         (form (map-nested-elt agent-shell--state
+                              (list :elicitations (map-elt data :request-id))))
+         (action (map-elt data :action))
+         (facts (emacsvox-agent-shell--presentation-facts
+                 'agent-question
+                 (if request 'agent-question-requested 'agent-question-resolved)
+                 nil (list :agent-question-state
+                           (if request 'pending
+                             (pcase action ('accept 'answered) ('decline 'declined) (_ 'cancelled))))))
+         (text (if request
+                   (format "Answer needed. %s. %d fields. Use Tab to move through answers and Return to choose or edit."
+                           (or (map-elt data :message)
+                               (map-elt (car (map-elt form :fields)) :title)
+                               "Agent question")
+                           (length (seq-remove (lambda (field) (map-elt field :folded-into))
+                                               (map-elt form :fields))))
+                 (pcase action
+                   ('accept "Answers sent.")
+                   ('decline "Question declined.")
+                   (_ "Question cancelled.")))))
+    (cond
+     (emacsvox-agent-shell--question-command-active
+      (emacsvox-agent-shell--submit-text-feedback text facts 'state-change 'select-object))
+     ((emacsvox-agent-shell--speech-level-at-least-p 'notify)
+      (emacsvox-agent-shell--deliver-announcement
+       facts 'notification (if request 'warn-user 'select-object) text
+       (when request 'urgent))))))
+
 ;;;  Session Management
 
 (defun emacsvox-agent-shell--notify-event (text facts &optional icon occasion)
@@ -6088,11 +6231,33 @@ ICON belongs to the same transaction.  Background text identifies its shell."
         emacsvox-agent-shell--permission-detail-cache nil
         emacsvox-agent-shell--config-option-cache nil))
 
+(defun emacsvox-agent-shell--initialized-p ()
+  "Return non-nil when the owning shell has finished initialization.
+Use the public readiness API on 0.86.1 and the pipeline flags on 0.85.3."
+  (if (fboundp 'agent-shell-initialized-p)
+      (agent-shell-initialized-p)
+    (and (map-elt agent-shell--state :initialized)
+         (map-nested-elt agent-shell--state '(:session :id))
+         (or (not (map-elt agent-shell--state :needs-authentication))
+             (map-elt agent-shell--state :authenticated))
+         (cl-every
+          (lambda (pair)
+            (let ((default (map-nested-elt agent-shell--state
+                                           (list :agent-config (car pair)))))
+              (or (not default) (not (funcall default))
+                  (map-elt agent-shell--state (cdr pair)))))
+          '((:default-model-id . :set-model)
+            (:default-session-mode-id . :set-session-mode)
+            (:default-config-options . :set-config-options))))))
+
 (defun emacsvox-agent-shell--config-options ()
-  "Read normalized config options through the optional compatibility API."
-  (when (and (boundp 'agent-shell--state)
-             (fboundp 'agent-shell--config-options))
-    (agent-shell--config-options agent-shell--state)))
+  "Read normalized config options, preferring the public API when ready."
+  (when (boundp 'agent-shell--state)
+    (if (fboundp 'agent-shell-config-options)
+        (when (and (derived-mode-p 'agent-shell-mode)
+                   (emacsvox-agent-shell--initialized-p))
+          (agent-shell-config-options))
+      (agent-shell--config-options agent-shell--state))))
 
 (defun emacsvox-agent-shell--observe-config-options (options announce)
   "Remember OPTIONS and, when ANNOUNCE is non-nil, speak changed values.
@@ -6171,11 +6336,8 @@ callbacks, arguments, return values, and transport behavior."
                                              (emacsvox-agent-shell--config-options)))))
                         ": ")))
              (announce-setting
-              (or emacsvox-agent-shell--setting-command-active
-                  (memq ems--interactive-fn-name
-                        '(agent-shell-set-session-thought-level
-                          agent-shell-set-session-config-option))
-                  (map-elt (plist-get arguments :state) :initialized))))
+              (with-current-buffer buffer
+                (emacsvox-agent-shell--initialized-p))))
         (when setting
           (with-current-buffer buffer
             (emacsvox-agent-shell--observe-config-options
@@ -6265,9 +6427,8 @@ callbacks, arguments, return values, and transport behavior."
     (apply original arguments)))
 
 (defun emacsvox-agent-shell--pending-prompt-count ()
-  "Return the current queue length, accepting the legacy state key."
-  (length (or (map-elt agent-shell--state :pending-prompts)
-              (map-elt agent-shell--state :pending-requests))))
+  "Return the current queue length."
+  (length (map-elt agent-shell--state :pending-prompts)))
 
 (defun emacsvox-agent-shell--queue-feedback (state)
   "Announce queue STATE and its remaining prompt count."
@@ -6460,6 +6621,7 @@ reads the state only after Agent Shell has updated it."
       (or (and (not started-in-table-p)
                (emacsvox-agent-shell--table-discovery-feedback
                 origin 'forward))
+          (emacsvox-agent-shell--question-feedback)
           (emacsvox-agent-shell--permission-button-feedback)
           (emacsvox-agent-shell--table-cell-feedback)
           (emacsvox-agent-shell--semantic-item-feedback)))))
@@ -6483,6 +6645,7 @@ reads the state only after Agent Shell has updated it."
       (or (and (not started-in-table-p)
                (emacsvox-agent-shell--table-discovery-feedback
                 origin 'backward))
+          (emacsvox-agent-shell--question-feedback)
           (emacsvox-agent-shell--permission-button-feedback)
           (emacsvox-agent-shell--table-cell-feedback)
           (emacsvox-agent-shell--semantic-item-feedback)))))
@@ -6522,9 +6685,8 @@ direct submission immediately changes it to busy."
       (when-let* ((shell-buffer (emacsvox-agent-shell--session-buffer)))
         (pcase (agent-shell-status :shell-buffer shell-buffer)
           ((or 'busy 'blocked)
-           ;; Newer releases allow custom busy routes, including steering.
-           ;; Observe the actual route during submission instead of guessing.
-           (unless (fboundp 'agent-shell--busy-submit) 'queued))
+           ;; Observe the actual custom busy route during submission.
+           nil)
           ('ready 'submitted)))
     (error nil)))
 
@@ -6937,7 +7099,13 @@ fragment.  Fragment names alone never manufacture a tool event."
 ;;;  Enable/Disable support:
 
 (defconst emacsvox-agent-shell--advice-list
-  '((agent-shell-yank-dwim :around emacsvox-agent-shell--yank-dwim-around)
+  '((agent-shell-elicitation-act :around emacsvox-agent-shell--question-action-around)
+    (agent-shell-elicitation-toggle-preview :around emacsvox-agent-shell--question-action-around)
+    (agent-shell-elicitation-interrupt :around emacsvox-agent-shell--question-action-around)
+    (agent-shell-elicitation-next-field :filter-return emacsvox-agent-shell--question-navigation-after)
+    (agent-shell-elicitation-previous-field :filter-return emacsvox-agent-shell--question-navigation-after)
+    (agent-shell-elicitation-jump-to-latest-form :filter-return emacsvox-agent-shell--question-navigation-after)
+    (agent-shell-yank-dwim :around emacsvox-agent-shell--yank-dwim-around)
     (agent-shell--on-notification :around
      emacsvox-agent-shell--on-notification-around)
     (agent-shell--send-request :around emacsvox-agent-shell--send-request-around)
@@ -7061,8 +7229,11 @@ fragment.  Fragment names alone never manufacture a tool event."
         (advice-remove target function)))))
 
 (defun emacsvox-agent-shell-enable ()
-  "Enable Emacsvox support for agent-shell."
+  "Enable Emacsvox support for Agent Shell 0.85.3 or newer."
   (interactive)
+  (unless (and (boundp 'agent-shell--version)
+               (version<= "0.85.3" agent-shell--version))
+    (user-error "Emacsvox requires Agent Shell 0.85.3 or newer"))
   (emacsvox-agent-shell--upgrade-response-monitoring)
   (emacsvox-agent-shell--install-advice)
   ;; Remove hooks installed by earlier versions before installing the

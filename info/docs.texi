@@ -903,7 +903,7 @@ Disable Emacsvox support for agent-shell.
 @findex emacsvox-agent-shell-enable
 
 @format
-Enable Emacsvox support for agent-shell.
+Enable Emacsvox support for Agent Shell 0.85.3 or newer.
 @end format
 @end deffn
 

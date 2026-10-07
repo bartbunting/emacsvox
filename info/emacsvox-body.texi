@@ -6273,7 +6273,8 @@ Agent Shell is a separately installed Emacs package for interactive AI-agent
 sessions.  Emacsvox adds speech and semantic presentation without replacing
 Agent Shell's provider setup@comma{} session management@comma{} prompt editor@comma{} or permission
 controls.  See @uref{https://github.com/xenodium/agent-shell, Agent Shell} for
-provider installation and configuration.
+provider installation and configuration.  Emacsvox requires Agent Shell 0.85.3
+or newer.
 
 The generated
 @ref{emacsvox-agent-shell,emacsvox-agent-shell,,emacsvox-reference,} in @emph{Emacsvox Reference Manual}
@@ -6298,11 +6299,12 @@ With Agent Shell's persistent prompt enabled@comma{} you can keep typing while t
 agent works.  Brackets and navigation letters remain ordinary input at
 that prompt.  Reading the live prompt says “Agent busy” while the agent works.
 A pending permission is announced
-as “Waiting for permission.”  These cues also precede the first line of a draft;
+as “Waiting for permission”; a pending question says “Waiting for an answer.”
+These cues also precede the first line of a draft;
 later lines keep ordinary reading feedback.  “Ready for input” is reserved for
 an empty prompt when the agent is idle.
 
-With Agent Shell 0.81.1@comma{} quoting a selected region@comma{} sending source context@comma{}
+Quoting a selected region@comma{} sending source context@comma{}
 dropping files@comma{} and inserting shell-command output can add to that live draft
 while the agent works. These insertions do not submit the draft. If there is
 no live prompt while busy@comma{} Agent Shell offers its queue editor instead.
@@ -6338,6 +6340,8 @@ the queue announcement gives its count and the command
 @kbd{M-x agent-shell-prompt-queue-resume}. Queue-start feedback
 follows the session's speech level; paused-queue warnings follow
 @code{emacsvox-agent-shell-signal-processing}.
+Agent Shell also asks before killing a shell or exiting Emacs when queued
+prompts would be lost. Declining that question keeps the prompts available.
 
 Model@comma{} mode@comma{} thought-level@comma{} and other session setting changes announce their
 confirmed values.  Background setting announcements identify the session.
@@ -6351,6 +6355,30 @@ Use @kbd{M-x emacsvox-agent-shell-speak-header} to hear the full session header.
 When @code{agent-shell-show-cost-indicator} is enabled and the provider reports a
 positive cost@comma{} this includes the cumulative cost with Agent Shell's currency
 and rounding.  Brief announcements when entering a session stay concise.
+
+@section Answer an agent's question
+
+Agent Shell has experimental support for structured question forms. It is off
+by default. To try it@comma{} set @code{agent-shell-elicitation--experimental-feature-enabled}
+to non-nil after loading Agent Shell and start a new session so the agent learns
+that forms are supported. This upstream experimental setting may change.
+
+When a form arrives@comma{} Emacsvox announces that an answer is needed and reads the
+question. Automatic question feedback follows the session's speech level;
+@code{quiet} suppresses it. Explicit reading and actions still speak.
+
+Use @kbd{@key{TAB}} and @kbd{S-@key{TAB}} to move between controls in the shell or viewport.
+Emacsvox reads the field name@comma{} whether it is required@comma{} and its current value or
+selection state. Press @kbd{@key{RET}} to select an option@comma{} toggle a checkbox@comma{} or edit a
+text or number field. Changes are confirmed after they take effect. When an
+option has a preview@comma{} @kbd{?} opens or closes it; opening it reads its contents.
+The preview key applies only to controls that offer a preview.
+
+Choose @emph{Submit} to send the answers or @emph{Decline} to decline the question.
+Missing required answers are reported without announcing successful submission.
+@kbd{C-c C-c} interrupts the running request@comma{} including any pending form. To return
+to the latest question@comma{} use @kbd{M-x agent-shell-elicitation-jump-to-latest-form}.
+The next-field and previous-field commands are also available through @kbd{M-x}.
 
 @section Choose automatic speech and privacy
 
@@ -8821,8 +8849,8 @@ including real displayed-window reading for both advance paths.
 Use @kbd{M-x emacsvox-agent-shell-enable} to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
-The reviewed integration pins now target Agent Shell 0.81.1 at @code{5535365} and
-Shell Maker 0.97.4 at @code{a76d4d6}. ACP retains its reviewed snapshot. A personal
+The minimum supported Agent Shell is 0.85.3. The integration pins target
+Agent Shell 0.86.1 at @code{137b574} and Shell Maker 0.97.5 at @code{dcc05a8}. ACP retains its reviewed snapshot. A personal
 package upgrade does not refresh @code{test/integration-dependencies.json} or its
 prepared tree. When the preparer rejects a changed lock@comma{} choose a fresh
 @code{TEST_DEPS_DIR} and pass the same directory to preparation and both integration
@@ -8830,8 +8858,8 @@ gates; preserve the old directory until it is no longer needed.
 
 For every pin refresh@comma{} compare all Emacsvox navigation@comma{} speech-control@comma{} table@comma{}
 and repeat keys against shell and viewport maps@comma{} inherited Shell Maker maps@comma{}
-list editing@comma{} inline actions@comma{} permission controls@comma{} and transients. Verify
-effective keys in real prompt and transcript contexts. The 0.81.1 refresh keeps
+list editing@comma{} inline actions@comma{} permission and question controls@comma{} and transients. Verify
+effective keys in real prompt and transcript contexts. The 0.86.1 refresh keeps
 the existing scoped overrides: viewport @kbd{t} discovers tables; table @kbd{r} reads
 rows instead of quoting or replying; viewport table @kbd{c} reads columns and @kbd{a}
 selects table speech instead of continuing or repeating a reply. The table @kbd{k}
@@ -8919,16 +8947,30 @@ The integration uses three deliberately different contract layers:
 @tab @code{agent-shell-ui-state}@comma{} @code{agent-shell-ui-section}@comma{} rendered Markdown table/source properties@comma{} and renderer-owned faces
 @tab Feature-detected navigation and presentation input. Renderer group provenance outranks provider-controlled IDs; prose and IDs cannot manufacture structured permission or lifecycle authority.
 @item Private compatibility fallback
-@tab The aggregate @code{agent-shell--state}@comma{} the legacy viewport ownership resolver@comma{} viewport position helpers@comma{} and legacy face@comma{} prompt@comma{} or ID inference
-@tab Kept in narrow adapter functions for older Agent Shell releases or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response.
+@tab The aggregate @code{agent-shell--state}@comma{} viewport position helpers@comma{} configuration access on 0.85.3@comma{} and face@comma{} prompt@comma{} or ID inference
+@tab Kept in narrow adapter functions for the supported minimum or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response.
 @end multitable
 
 The lifecycle subscription currently consumes @code{init-started}@comma{}
 @code{init-finished}@comma{} @code{session-selected}@comma{} @code{session-restored}@comma{} @code{input-submitted}@comma{}
-@code{turn-complete}@comma{} and @code{error}.  Dedicated subscriptions consume
+@code{turn-complete}@comma{} @code{error}@comma{} @code{elicitation-request}@comma{} and @code{elicitation-response}.
+Dedicated subscriptions consume
 @code{permission-request}@comma{} @code{permission-response}@comma{} and @code{tool-call-update}.  Add new
 semantic behavior at the public event layer when Agent Shell exposes it; keep
 renderer and private fallbacks isolated and covered by compatibility tests.
+
+Question feedback resolves control identity from renderer properties and values
+from the owning shell's @code{:elicitations} state. Navigation and actions work in
+both shell and viewport buffers. Public question events govern automatic
+request and response announcements; action advice confirms edits and previews.
+No new key overrides are installed. The upstream feature stays opt-in.
+
+Configuration access uses @code{agent-shell-config-options} and
+@code{agent-shell-initialized-p} when available. The 0.85.3 fallback reads normalized
+private options and checks the initialization pipeline flags. Startup defaults
+must not be announced as user changes. Verify the minimum at @code{f44c96b} as well
+as the pinned version@comma{} including source and compiled speech and graphical form
+controls. Use separate prepared dependency directories for each version.
 
 The lifecycle subscription also observes @code{config-option-update}.  Configuration
 snapshots suppress initial inventory and duplicate callback/event confirmation.

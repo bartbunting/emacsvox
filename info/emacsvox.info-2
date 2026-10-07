@@ -24,7 +24,7 @@ AI-agent sessions.  Emacsvox adds speech and semantic presentation
 without replacing Agent Shell's provider setup, session management,
 prompt editor, or permission controls.  See Agent Shell
 (https://github.com/xenodium/agent-shell) for provider installation and
-configuration.
+configuration.  Emacsvox requires Agent Shell 0.85.3 or newer.
 
    The generated *note emacsvox-agent-shell:
 (emacsvox-reference)emacsvox-agent-shell. in _Emacsvox Reference Manual_
@@ -52,19 +52,19 @@ an active request; its normal confirmation setting still applies.
 while the agent works.  Brackets and navigation letters remain ordinary
 input at that prompt.  Reading the live prompt says “Agent busy” while
 the agent works.  A pending permission is announced as “Waiting for
-permission.” These cues also precede the first line of a draft; later
-lines keep ordinary reading feedback.  “Ready for input” is reserved for
-an empty prompt when the agent is idle.
+permission”; a pending question says “Waiting for an answer.” These cues
+also precede the first line of a draft; later lines keep ordinary
+reading feedback.  “Ready for input” is reserved for an empty prompt
+when the agent is idle.
 
-   With Agent Shell 0.81.1, quoting a selected region, sending source
-context, dropping files, and inserting shell-command output can add to
-that live draft while the agent works.  These insertions do not submit
-the draft.  If there is no live prompt while busy, Agent Shell offers
-its queue editor instead.  Use ‘M-x yank-media’ to attach a clipboard
-image on a display that supports native clipboard access.  Image
-previews survive queueing and steering.  The animated busy marker does
-not add repeated speech; reading the prompt continues to give its
-current state.
+   Quoting a selected region, sending source context, dropping files,
+and inserting shell-command output can add to that live draft while the
+agent works.  These insertions do not submit the draft.  If there is no
+live prompt while busy, Agent Shell offers its queue editor instead.
+Use ‘M-x yank-media’ to attach a clipboard image on a display that
+supports native clipboard access.  Image previews survive queueing and
+steering.  The animated busy marker does not add repeated speech;
+reading the prompt continues to give its current state.
 
    In the viewport editor, Emacsvox announces whether a prompt was
 submitted, queued, or sent for steering, and whether the editor stays
@@ -94,7 +94,9 @@ If you decline, or a failed turn leaves prompts waiting, the queue
 announcement gives its count and the command ‘M-x
 agent-shell-prompt-queue-resume’.  Queue-start feedback follows the
 session's speech level; paused-queue warnings follow
-‘emacsvox-agent-shell-signal-processing’.
+‘emacsvox-agent-shell-signal-processing’.  Agent Shell also asks before
+killing a shell or exiting Emacs when queued prompts would be lost.
+Declining that question keeps the prompts available.
 
    Model, mode, thought-level, and other session setting changes
 announce their confirmed values.  Background setting announcements
@@ -110,7 +112,36 @@ provider reports a positive cost, this includes the cumulative cost with
 Agent Shell's currency and rounding.  Brief announcements when entering
 a session stay concise.
 
-10.2 Choose automatic speech and privacy
+10.2 Answer an agent's question
+===============================
+
+Agent Shell has experimental support for structured question forms.  It
+is off by default.  To try it, set
+‘agent-shell-elicitation--experimental-feature-enabled’ to non-nil after
+loading Agent Shell and start a new session so the agent learns that
+forms are supported.  This upstream experimental setting may change.
+
+   When a form arrives, Emacsvox announces that an answer is needed and
+reads the question.  Automatic question feedback follows the session's
+speech level; ‘quiet’ suppresses it.  Explicit reading and actions still
+speak.
+
+   Use ‘<TAB>’ and ‘S-<TAB>’ to move between controls in the shell or
+viewport.  Emacsvox reads the field name, whether it is required, and
+its current value or selection state.  Press ‘<RET>’ to select an
+option, toggle a checkbox, or edit a text or number field.  Changes are
+confirmed after they take effect.  When an option has a preview, ‘?’
+opens or closes it; opening it reads its contents.  The preview key
+applies only to controls that offer a preview.
+
+   Choose _Submit_ to send the answers or _Decline_ to decline the
+question.  Missing required answers are reported without announcing
+successful submission.  ‘C-c C-c’ interrupts the running request,
+including any pending form.  To return to the latest question, use ‘M-x
+agent-shell-elicitation-jump-to-latest-form’.  The next-field and
+previous-field commands are also available through ‘M-x’.
+
+10.3 Choose automatic speech and privacy
 ========================================
 
 The focused session defaults to ‘response’: completed answers and
@@ -168,7 +199,7 @@ lines longer than 32,768 characters, keeping their beginning and end
 with an omitted-character count.  Full tool speech reads that notice;
 the removed middle is not available by reading the buffer.
 
-10.3 Respond to urgent permissions
+10.4 Respond to urgent permissions
 ==================================
 
 Permission requests are separate from routine speech levels because they
@@ -197,7 +228,7 @@ transcript chatter.  Lifecycle error announcements follow
 ‘emacsvox-agent-shell-signal-processing’; rendered error content remains
 available in the transcript even when routine response speech is quiet.
 
-10.4 Inspect a response on demand
+10.5 Inspect a response on demand
 =================================
 
 These commands work from the shell and its associated viewports:
@@ -217,7 +248,7 @@ These commands work from the shell and its associated viewports:
 completed, they say that no completed response is available rather than
 presenting a streaming partial or failed answer.
 
-10.5 Navigate transcript blocks
+10.6 Navigate transcript blocks
 ===============================
 
 Agent Shell responses contain semantic prompt, response, thought,
@@ -276,7 +307,7 @@ At an editable live prompt or viewport editor, bare brackets and
 navigation letters insert themselves instead of taking over prompt
 editing.
 
-10.6 Read and copy source blocks
+10.7 Read and copy source blocks
 ================================
 
 Use ‘k’ or ‘K’, or typed block navigation, to reach a source block,
@@ -303,7 +334,7 @@ You can customize speech, voices, and earcons for steering outcomes,
 queue changes, list editing, setting changes, updated tool output, and
 change-review entry.
 
-10.7 Navigate and copy rendered tables
+10.8 Navigate and copy rendered tables
 ======================================
 
 Moving into a rendered Markdown table activates a contextual table map.
@@ -388,7 +419,7 @@ character inspection.
    Copy commands use logical cell values, excluding renderer padding and
 Markdown borders.  Wrapped cell contents remain complete.
 
-10.8 Recover from interruption or failure
+10.9 Recover from interruption or failure
 =========================================
 
 If a request is taking the wrong path, press ‘C-c C-c’ and confirm the
@@ -2511,19 +2542,20 @@ advance paths.
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
-   The reviewed integration pins now target Agent Shell 0.81.1 at
-‘5535365’ and Shell Maker 0.97.4 at ‘a76d4d6’.  ACP retains its reviewed
-snapshot.  A personal package upgrade does not refresh
-‘test/integration-dependencies.json’ or its prepared tree.  When the
-preparer rejects a changed lock, choose a fresh ‘TEST_DEPS_DIR’ and pass
-the same directory to preparation and both integration gates; preserve
-the old directory until it is no longer needed.
+   The minimum supported Agent Shell is 0.85.3.  The integration pins
+target Agent Shell 0.86.1 at ‘137b574’ and Shell Maker 0.97.5 at
+‘dcc05a8’.  ACP retains its reviewed snapshot.  A personal package
+upgrade does not refresh ‘test/integration-dependencies.json’ or its
+prepared tree.  When the preparer rejects a changed lock, choose a fresh
+‘TEST_DEPS_DIR’ and pass the same directory to preparation and both
+integration gates; preserve the old directory until it is no longer
+needed.
 
    For every pin refresh, compare all Emacsvox navigation,
 speech-control, table, and repeat keys against shell and viewport maps,
-inherited Shell Maker maps, list editing, inline actions, permission
-controls, and transients.  Verify effective keys in real prompt and
-transcript contexts.  The 0.81.1 refresh keeps the existing scoped
+inherited Shell Maker maps, list editing, inline actions, permission and
+question controls, and transients.  Verify effective keys in real prompt
+and transcript contexts.  The 0.86.1 refresh keeps the existing scoped
 overrides: viewport ‘t’ discovers tables; table ‘r’ reads rows instead
 of quoting or replying; viewport table ‘c’ reads columns and ‘a’ selects
 table speech instead of continuing or repeating a reply.  The table ‘k’
@@ -2624,21 +2656,39 @@ unrelated keys.
                                                permission or lifecycle
                                                authority.
      Private       The aggregate               Kept in narrow adapter
-     compatibility ‘agent-shell--state’, the   functions for older Agent
-     fallback      legacy viewport ownership   Shell releases or incomplete
-                   resolver, viewport          renderers.  A missing optional
-                   position helpers, and       detail may reduce header or
-                   legacy face, prompt, or     navigation richness but must
-                   ID inference                not create a permission action
+     compatibility ‘agent-shell--state’,       functions for the supported
+     fallback      viewport position           minimum or incomplete
+                   helpers, configuration      renderers.  A missing optional
+                   access on 0.85.3, and       detail may reduce header or
+                   face, prompt, or ID         navigation richness but must
+                   inference                   not create a permission action
                                                or completed response.
 
      The lifecycle subscription currently consumes ‘init-started’,
      ‘init-finished’, ‘session-selected’, ‘session-restored’,
-     ‘input-submitted’, ‘turn-complete’, and ‘error’.  Dedicated
-     subscriptions consume ‘permission-request’, ‘permission-response’,
-     and ‘tool-call-update’.  Add new semantic behavior at the public
-     event layer when Agent Shell exposes it; keep renderer and private
+     ‘input-submitted’, ‘turn-complete’, ‘error’, ‘elicitation-request’,
+     and ‘elicitation-response’.  Dedicated subscriptions consume
+     ‘permission-request’, ‘permission-response’, and
+     ‘tool-call-update’.  Add new semantic behavior at the public event
+     layer when Agent Shell exposes it; keep renderer and private
      fallbacks isolated and covered by compatibility tests.
+
+     Question feedback resolves control identity from renderer
+     properties and values from the owning shell's ‘:elicitations’
+     state.  Navigation and actions work in both shell and viewport
+     buffers.  Public question events govern automatic request and
+     response announcements; action advice confirms edits and previews.
+     No new key overrides are installed.  The upstream feature stays
+     opt-in.
+
+     Configuration access uses ‘agent-shell-config-options’ and
+     ‘agent-shell-initialized-p’ when available.  The 0.85.3 fallback
+     reads normalized private options and checks the initialization
+     pipeline flags.  Startup defaults must not be announced as user
+     changes.  Verify the minimum at ‘f44c96b’ as well as the pinned
+     version, including source and compiled speech and graphical form
+     controls.  Use separate prepared dependency directories for each
+     version.
 
      The lifecycle subscription also observes ‘config-option-update’.
      Configuration snapshots suppress initial inventory and duplicate

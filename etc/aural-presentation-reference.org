@@ -145,6 +145,15 @@ Operational semantic contract version: =1=.
 | =agent-prompt-editor= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =edit=, =state-change= | =before=, =content=, =after= | - | An editor used to compose an Agent Shell prompt |
 | =agent-prompt-opened= | =event= | =agent-shell= | - | - | - | - | - | =edit=, =state-change= | =before=, =content=, =after= | - | An Agent Shell prompt editor was opened |
 | =agent-prompt-submitted= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A composed Agent Shell prompt was submitted, queued, or sent for steering |
+| =agent-question= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection=, =state-change=, =notification= | =before=, =content=, =after= | - | A structured question awaiting an answer |
+| =agent-question-changed= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A question value or preview changed |
+| =agent-question-control= | =attribute= | =agent-shell= | =select=, =toggle=, =read=, =custom=, =preview=, =submit=, =decline= | - | - | - | - | - | - | - | The action offered by a question control |
+| =agent-question-field= | =attribute= | =agent-shell= | =string= | - | - | - | - | - | - | - | The identifier of a question field |
+| =agent-question-requested= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An agent requested an answer to a structured question |
+| =agent-question-requirement= | =attribute= | =agent-shell= | =required=, =optional= | - | - | - | - | - | - | - | Whether the question field requires an answer |
+| =agent-question-resolved= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A question was answered, declined, or cancelled |
+| =agent-question-selection= | =attribute= | =agent-shell= | =selected=, =unselected=, =checked=, =unchecked=, =empty=, =filled= | - | - | - | - | - | - | - | The current selection or value state of a question control |
+| =agent-question-state= | =attribute= | =agent-shell= | =pending=, =answered=, =declined=, =cancelled= | - | - | - | - | - | - | - | Whether a question is waiting or has been resolved |
 | =agent-queue-changed= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A queued prompt started or the prompt queue paused |
 | =agent-queue-count= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | Number of prompts still waiting in the queue |
 | =agent-queue-state= | =attribute= | =agent-shell= | =started=, =paused= | - | - | - | - | - | - | - | Whether a queued prompt started or the queue paused |
@@ -215,6 +224,7 @@ Operational semantic contract version: =1=.
 | =command-prompt= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =notification= | =before=, =content=, =after= | - | A command session prompt ready to receive input |
 | =command-prompt-ready= | =event= | =core= | - | =command-prompt= | - | - | - | =continuous=, =notification= | =before=, =content=, =after= | - | An interactive command process became ready for input |
 | =command-submitted= | =event= | =core= | - | =command-input= | - | - | - | =state-change= | =before=, =content=, =after= | - | Input was submitted to an interactive command process |
+| =command-terminal-bell= | =event= | =core= | - | =command-interaction= | - | - | - | =notification= | =before=, =content=, =after= | - | An interactive terminal rang its bell |
 | =completion-index= | =attribute= | =core= | =integer= | - | - | - | - | - | - | - | Zero-based position of a candidate in a completion list |
 | =completion-input-updated= | =event= | =core= | - | =candidate= | - | - | - | =edit=, =state-change= | =before=, =content=, =after= | - | Completion input was updated without accepting it |
 | =completion-separator-inserted= | =event= | =corfu= | - | - | - | - | - | =edit= | =before=, =content=, =after= | - | A completion separator was inserted without accepting a candidate |

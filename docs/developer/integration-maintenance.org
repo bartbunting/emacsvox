@@ -894,8 +894,8 @@ including real displayed-window reading for both advance paths.
 Use ~M-x emacsvox-agent-shell-enable~ to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
-The reviewed integration pins now target Agent Shell 0.81.1 at =5535365= and
-Shell Maker 0.97.4 at =a76d4d6=. ACP retains its reviewed snapshot. A personal
+The minimum supported Agent Shell is 0.85.3. The integration pins target
+Agent Shell 0.86.1 at =137b574= and Shell Maker 0.97.5 at =dcc05a8=. ACP retains its reviewed snapshot. A personal
 package upgrade does not refresh =test/integration-dependencies.json= or its
 prepared tree. When the preparer rejects a changed lock, choose a fresh
 =TEST_DEPS_DIR= and pass the same directory to preparation and both integration
@@ -903,8 +903,8 @@ gates; preserve the old directory until it is no longer needed.
 
 For every pin refresh, compare all Emacsvox navigation, speech-control, table,
 and repeat keys against shell and viewport maps, inherited Shell Maker maps,
-list editing, inline actions, permission controls, and transients. Verify
-effective keys in real prompt and transcript contexts. The 0.81.1 refresh keeps
+list editing, inline actions, permission and question controls, and transients. Verify
+effective keys in real prompt and transcript contexts. The 0.86.1 refresh keeps
 the existing scoped overrides: viewport ~t~ discovers tables; table ~r~ reads
 rows instead of quoting or replying; viewport table ~c~ reads columns and ~a~
 selects table speech instead of continuing or repeating a reply. The table ~k~
@@ -984,14 +984,28 @@ The integration uses three deliberately different contract layers:
 |---+---+---|
 | Public structured API | =agent-shell-subscribe-to=, =agent-shell-unsubscribe=, =agent-shell-status=, and =agent-shell-shell-buffer=; lifecycle, permission, and tool events | Primary authority for processing, completion, errors, permission urgency, and tool status. The public turn boundary triggers inspection of renderer-owned response sections. Event and response data is treated as untrusted content and bounded before automatic Aural submission. |
 | Experimental renderer metadata | =agent-shell-ui-state=, =agent-shell-ui-section=, rendered Markdown table/source properties, and renderer-owned faces | Feature-detected navigation and presentation input. Renderer group provenance outranks provider-controlled IDs; prose and IDs cannot manufacture structured permission or lifecycle authority. |
-| Private compatibility fallback | The aggregate =agent-shell--state=, the legacy viewport ownership resolver, viewport position helpers, and legacy face, prompt, or ID inference | Kept in narrow adapter functions for older Agent Shell releases or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response. |
+| Private compatibility fallback | The aggregate =agent-shell--state=, viewport position helpers, configuration access on 0.85.3, and face, prompt, or ID inference | Kept in narrow adapter functions for the supported minimum or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response. |
 
 The lifecycle subscription currently consumes =init-started=,
 =init-finished=, =session-selected=, =session-restored=, =input-submitted=,
-=turn-complete=, and =error=.  Dedicated subscriptions consume
+=turn-complete=, =error=, =elicitation-request=, and =elicitation-response=.
+Dedicated subscriptions consume
 =permission-request=, =permission-response=, and =tool-call-update=.  Add new
 semantic behavior at the public event layer when Agent Shell exposes it; keep
 renderer and private fallbacks isolated and covered by compatibility tests.
+
+Question feedback resolves control identity from renderer properties and values
+from the owning shell's =:elicitations= state. Navigation and actions work in
+both shell and viewport buffers. Public question events govern automatic
+request and response announcements; action advice confirms edits and previews.
+No new key overrides are installed. The upstream feature stays opt-in.
+
+Configuration access uses =agent-shell-config-options= and
+=agent-shell-initialized-p= when available. The 0.85.3 fallback reads normalized
+private options and checks the initialization pipeline flags. Startup defaults
+must not be announced as user changes. Verify the minimum at =f44c96b= as well
+as the pinned version, including source and compiled speech and graphical form
+controls. Use separate prepared dependency directories for each version.
 
 The lifecycle subscription also observes =config-option-update=.  Configuration
 snapshots suppress initial inventory and duplicate callback/event confirmation.

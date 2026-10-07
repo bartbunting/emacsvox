@@ -1161,7 +1161,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
  -- Command: emacsvox-agent-shell-enable
 
-     Enable Emacsvox support for agent-shell.
+     Enable Emacsvox support for Agent Shell 0.85.3 or newer.
 
 2.10.1.5 emacsvox-agent-shell-next-block-at-point
 .................................................
