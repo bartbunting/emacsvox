@@ -330,6 +330,9 @@ when the terminal is selected again."
 (defvar-local emacsvox-eat--output-observed-p nil
   "Non-nil when the pending burst has a rendered-output observation.")
 
+(defvar-local emacsvox-eat--output-continuity-lost-p nil
+  "Non-nil when the pending burst can no longer be collected as appended output.")
+
 (defvar emacsvox-eat--next-terminal-id 0
   "Next process-local identifier for an initialized EAT buffer.")
 
@@ -1292,6 +1295,7 @@ resulting rendered input or history row without its observed prompt prefix."
         emacsvox-eat--collected-output-lines 0
         emacsvox-eat--collected-output-characters 0
         emacsvox-eat--collected-output-truncated-p nil
+        emacsvox-eat--output-continuity-lost-p nil
         emacsvox-eat--output-observed-p nil))
 
 (defun emacsvox-eat--clear-output-frontier ()
@@ -1611,6 +1615,7 @@ be mistaken for appended output, even when the replacement text is identical."
                   (when (= generation emacsvox-eat--generation)
                     (setq emacsvox-eat--output-observed-p t)
                     (if (not (and eligible
+                                  (not emacsvox-eat--output-continuity-lost-p)
                                   (not emacsvox-eat--prompt-overflow-p)
                                   (= anchor cursor)
                                   (eq display (eat-term-display-beginning terminal))
@@ -1625,6 +1630,9 @@ be mistaken for appended output, even when the replacement text is identical."
                                         'collection-ineligible))
                           (emacsvox-eat--clear-collected-output)
                           (setq emacsvox-eat--output-observed-p t
+                                ;; A redraw may arrive in several chunks.  Its
+                                ;; tail stays untrusted until this burst settles.
+                                emacsvox-eat--output-continuity-lost-p t
                                 emacsvox-eat--output-partial ""
                                 emacsvox-eat--output-partial-truncated-p nil)
                           (set-marker emacsvox-eat--output-frontier

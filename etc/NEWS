@@ -10,6 +10,12 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
 
+** Keep EAT screen redraws quiet
+
+A screen redraw stays quiet when its text arrives in several chunks. Ordinary
+output resumes after the redraw settles, so a fragmented repaint cannot
+accidentally speak its trailing prompt as new output.
+
 ** Speak Agent Shell question forms
 
 Experimental Agent Shell forms now announce questions, field values, required

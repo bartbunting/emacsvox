@@ -6024,7 +6024,8 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
 (defun emacsvox-eat-test--rendered-burst (chunks &optional scrollback initial)
   "Return automatic speech from real renderer CHUNKS before SCROLLBACK trim.
 INITIAL defaults to a submitted command.  Collection uses actual EAT markers;
-only window eligibility and the final speech sink are stubbed here."
+only window eligibility and the final speech sink are stubbed here.
+A nil element in CHUNKS finishes the current burst before later output."
   (with-temp-buffer
     (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
           (eat-term-scrollback-size scrollback)
@@ -6044,9 +6045,12 @@ only window eligibility and the final speech sink are stubbed here."
                         (emacsvox-eat--capture-screen))
             (unless initial (emacsvox-eat--output-input-boundary))
             (dolist (chunk chunks)
-              (eat-term-process-output eat-terminal chunk)
-              (eat-term-redisplay eat-terminal)
-              (emacsvox-eat--observe-screen))
+              (if chunk
+                  (progn
+                    (eat-term-process-output eat-terminal chunk)
+                    (eat-term-redisplay eat-terminal)
+                    (emacsvox-eat--observe-screen))
+                (emacsvox-eat-test--finish-screen-burst)))
             (emacsvox-eat-test--finish-screen-burst)
             (nreverse spoken))
         (emacsvox-eat--cancel-quiescence)
@@ -6093,6 +6097,21 @@ only window eligibility and the final speech sink are stubbed here."
                     "\e[?1049hPRIVATE\e[?1049l\r\nresult\r\n$ "))
     (should-not (emacsvox-eat-test--rendered-burst
                  (list output) nil "old\r\nbody\r\n$ "))))
+
+(ert-deftest emacsvox-eat-rendered-output-split-redraw-stays-quiet ()
+  "A redraw's tail is silent at every chunk split; later output still speaks."
+  (dolist (output '("\e[2J\e[Hnew\r\nbody\r\n$ "
+                    "\ecnew\r\nbody\r\n$ "))
+    (dotimes (split (1- (length output)))
+      (let ((chunks (list (substring output 0 (1+ split))
+                          (substring output (1+ split)))))
+        (ert-info ((format "Redraw %S split at %d" output (1+ split)))
+          (should-not (emacsvox-eat-test--rendered-burst
+                       chunks nil "old\r\nbody\r\n$ "))
+          (should (equal (emacsvox-eat-test--rendered-burst
+                          (append chunks '(nil "\r\nfresh output\r\n"))
+                          nil "old\r\nbody\r\n$ ")
+                         '("fresh output"))))))))
 
 (ert-deftest emacsvox-eat-rendered-output-wrap-boundary-is-chunk-independent ()
   "A chunk ending exactly at the right margin cannot lose completed output."
