@@ -107,8 +107,8 @@
                          (if (re-search-forward "^- [^\n]+ ::$" end t)
                              (match-beginning 0)
                            end))))
-                  (unless (re-search-forward "^  ~\\([^~\n]+\\)~$" item-end t)
-                    (ert-fail "Missing command for documented key %s" key))
+                  (unless (re-search-forward "^  =\\([^=\n]+\\)=$" item-end t)
+                    (ert-fail (format "Missing command for documented key %s" key)))
                   (push
                    (cons key (intern (match-string-no-properties 1)))
                    bindings)))))))
@@ -175,9 +175,9 @@
              (buffer-string))))
       (should
        (string-match-p
-        "@ref{Emacsvox Keymaps,,,emacsvox-reference" guide))
-      (should (string-match-p (regexp-quote "@kbd{C-h m}") guide))
-      (should (string-match-p (regexp-quote "@kbd{C-h k}") guide)))))
+        (regexp-quote "[[info:emacsvox-reference#Emacsvox Keymaps]") guide))
+      (should (string-match-p (regexp-quote "~C-h m~") guide))
+      (should (string-match-p (regexp-quote "~C-h k~") guide)))))
 
 (ert-deftest emacsvox-keymap-exposes-aural-home-and-explanation ()
   "Aural discovery and point diagnosis have stable prefix bindings."

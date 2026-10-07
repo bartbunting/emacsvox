@@ -390,7 +390,7 @@
     (dolist
         (required
          '("@chapter Term Terminal Access"
-           "prefer @ref{EAT Terminal Access}"
+           "prefer @ref{EAT Terminal Access, , EAT Terminal Access}"
            "@kbd{M-x term @key{RET}}"
            "fill the frame"
            "@kbd{C-c C-j}"
@@ -402,7 +402,7 @@
            "The older spelling\n@code{eterm-autospeak} is not an Emacsvox variable"
            "hidden Term buffer can continue running without speaking"
            "@kbd{C-t q}"
-           "@ref{emacsvox-eterm,,,emacsvox-reference"))
+           "@ref{emacsvox-eterm,emacsvox-eterm,,emacsvox-reference,}"))
       (should (string-match-p (regexp-quote required) guide)))
     (should-not
      (string-match-p
@@ -415,8 +415,8 @@
      (string-match-p (regexp-quote "@code{eterm-autospeak}") survey))
     (dolist
         (reference
-         '("@ref{EAT Terminal Access}"
-           "@ref{Running Terminal Based Applications}"))
+         '("@ref{EAT Terminal Access, , EAT Terminal Access}"
+           "@ref{Running Terminal Based Applications, , Running Terminal Based Applications}"))
       (should (string-match-p (regexp-quote reference) applications)))))
 
 (ert-deftest emacsvox-eterm-current-guide-keys-match-live-maps ()

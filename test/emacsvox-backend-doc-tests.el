@@ -71,7 +71,7 @@
            "M-x emacsvox-toggle-icons RET"
            "Native Windows x64 is a supported desktop installation with Emacs 30.2"
            "Native Windows ARM64 is not yet supported."
-           "Do not copy or load the archive's ~omnivox-voices.el~"))
+           "Do not copy or load the archive's =omnivox-voices.el="))
       (should (string-match-p (regexp-quote required) guide)))))
 
 (ert-deftest emacsvox-backend-guide-is-linked-from-user-entry-points ()
@@ -88,7 +88,9 @@
      (string-match-p
       "file:docs/manual/chapters/speech-backends\\.org.*Speech Backends guide"
       readme))
-    (should (string-match-p "@xref{Speech Backends}" installation))
+    (should (string-match-p
+             (regexp-quote "@ref{Speech Backends, , Speech Backends}")
+             installation))
     (should
      (string-match-p
       (regexp-quote "export TTS_PROGRAM=omnivox") installation))
@@ -175,7 +177,7 @@
            "Do not continue merely because the command exited zero"
            "Emacsvox is ready."
            "Could not find speech server executable"
-           "M-x tts-restart RET"
+           "M-x tts-restart @key{RET}"
            "This is the rollback"
            "records the verified executable in a per-user configuration file"))
       (should (string-match-p (regexp-quote required) guide)))
@@ -227,13 +229,13 @@
         (required
          '("@chapter Applications And Integrations"
            "@kbd{M-x eww @key{RET}}"
-           "@ref{emacsvox-eww,,,emacsvox-reference"
-           "@ref{emacsvox-outline,,,emacsvox-reference"
-           "@ref{emacsvox-tempo,,,emacsvox-reference"
-           "@ref{emacsvox-forms,,,emacsvox-reference"
-           "@ref{Notmuch Mail}"
-           "@ref{EAT Terminal Access}"
-           "@ref{Running Terminal Based Applications}"
+           "@ref{emacsvox-eww,emacsvox-eww,,emacsvox-reference,}"
+           "@ref{emacsvox-outline,emacsvox-outline,,emacsvox-reference,}"
+           "@ref{emacsvox-tempo,emacsvox-tempo,,emacsvox-reference,}"
+           "@ref{emacsvox-forms,emacsvox-forms,,emacsvox-reference,}"
+           "@ref{Notmuch Mail, , Notmuch Mail}"
+           "@ref{EAT Terminal Access, , EAT Terminal Access}"
+           "@ref{Running Terminal Based Applications, , Running Terminal Based Applications}"
            "OCR And PDF-To-Text With PaddleOCR"
            "paddleocr[all]==3.7.0"
            "scanned-document.pdf"
