@@ -757,8 +757,8 @@ dist: release-artifact
 ###  User level target--  config
 
 config:
-	@cd etc && $(MAKE) config $(MAKEFLAGS)
-	@cd lisp && $(MAKE) EMACS="$(EMACS)" config $(MAKEFLAGS)
+	@cd etc && $(MAKE) config
+	@cd lisp && $(MAKE) EMACS="$(EMACS)" config
 
 ###   complete build
 

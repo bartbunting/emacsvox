@@ -7,6 +7,19 @@
   (expand-file-name "../" (file-name-directory load-file-name)))
 (load (expand-file-name "utils/emacsvox-native-bytecode.el" emacsvox-native-tests-root) nil t)
 
+(ert-deftest emacsvox-build-config-inherits-make-options ()
+  "Recursive configuration accepts keep-going and dry-run flags as options."
+  (skip-unless (executable-find "make"))
+  (with-temp-buffer
+    (let ((status (call-process
+                   "make" nil t nil "--no-print-directory" "-kn" "-C"
+                   emacsvox-native-tests-root "config"
+                   (concat "EMACS=" (expand-file-name invocation-name
+                                                      invocation-directory)))))
+      (ert-info ((buffer-string))
+        (should (zerop status)))
+      (should (string-match-p "emacsvox-auto-generate-autoloads" (buffer-string))))))
+
 (ert-deftest emacsvox-native-build-matches-canonical-make-inventory ()
   (let ((native (mapcar (lambda (path) (concat (file-name-nondirectory path) "c"))
                         (emacsvox-native-bytecode-plan emacsvox-native-tests-root)))
