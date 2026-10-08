@@ -7373,6 +7373,35 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not emacsvox-agent-shell--table-navigation-active))
         (emacsvox-agent-shell--table-navigation-cleanup)))))
 
+(ert-deftest emacsvox-agent-shell-table-vertical-arrows-stop-after-exit ()
+  "Repeating a table arrow after either exit must not enter surrounding lists."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (dolist (case '(("C-M-<up>" "Name" "before")
+                    ("C-M-<down>" "Alice" "after")))
+      (save-window-excursion
+        (emacsvox-agent-shell-test--with-rendered-table
+            "(before)\n| Name | Role |\n|---|---|\n| Alice | Engineer |\n(after)\n"
+          (switch-to-buffer (current-buffer))
+          (setq major-mode mode)
+          (use-local-map (if (eq mode 'agent-shell-mode) agent-shell-mode-map
+                          agent-shell-viewport-view-mode-map))
+          (emacsvox-agent-shell--table-navigation-setup)
+          (goto-char (point-min))
+          (search-forward (nth 1 case))
+          (backward-char (length (nth 1 case)))
+          (emacsvox-agent-shell-test--capture-events
+            (emacsvox-agent-shell--table-navigation-post-command)
+            (execute-kbd-macro (kbd (car case))))
+          (should-not emacsvox-agent-shell--table-navigation-active)
+          (should (string-match-p (nth 2 case)
+                                  (buffer-substring-no-properties
+                                   (line-beginning-position) (line-end-position))))
+          (let ((origin (point)))
+            (emacsvox-agent-shell-test--capture-events
+              (execute-kbd-macro (kbd (car case))))
+            (should (= (point) origin)))
+          (emacsvox-agent-shell--table-navigation-cleanup))))))
+
 (ert-deftest emacsvox-agent-shell-table-arrows-speak-whole-rows ()
   "Vertical arrows read complete rows once, retaining the selected column."
   (let ((emacsvox-agent-shell-table-titles '(column row))
@@ -9905,6 +9934,25 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 (execute-kbd-macro (kbd "]")))
               (should selected))))))))
 
+(ert-deftest emacsvox-agent-shell-prompt-vertical-arrows-stay-put ()
+  "Idle and busy shell prompts keep their draft and point on table arrows."
+  (dolist (busy '(nil t))
+    (save-window-excursion
+      (emacsvox-agent-shell-test--with-current-session
+        (switch-to-buffer (current-buffer))
+        (use-local-map agent-shell-mode-map)
+        (emacsvox-agent-shell--table-navigation-setup)
+        (insert "(draft)")
+        (let ((text (buffer-string)))
+          (dolist (case '(("C-M-<down>" . 6) ("C-M-<up>" . 7)))
+            (goto-char (+ (point-min) (cdr case)))
+            (let ((origin (point)))
+              (cl-letf (((symbol-function 'shell-maker-busy) (lambda () busy)))
+                (emacsvox-agent-shell-test--capture-events
+                  (execute-kbd-macro (kbd (car case)))))
+              (should (= (point) origin))
+              (should (equal (buffer-string) text)))))))))
+
 (ert-deftest emacsvox-agent-shell-upstream-binding-overlap-is-reviewed ()
   "Pin upgrades must not silently introduce additional command overrides."
   (let (overlap)
@@ -9918,8 +9966,12 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                           agent-shell-list-edit-mode-map
                           agent-shell-elicitation-map
                           agent-shell-elicitation-preview-map))
-        (dolist (entry (emacsvox-agent-shell-test--public-key-bindings
-                        (symbol-value own)))
+        (dolist (entry (append
+                       (emacsvox-agent-shell-test--public-key-bindings
+                        (symbol-value own))
+                       ;; No-op keys also displace upstream commands.
+                       (when (eq own 'emacsvox-agent-shell--speech-control-map)
+                         '(("C-M-<up>" . ignore) ("C-M-<down>" . ignore)))))
           (let ((key (kbd (car entry))))
             ;; A command on a shorter key also conflicts with a new prefix.
             (dotimes (index (length key))
@@ -9956,10 +10008,17 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                        (lambda (&rest _) shell))
                       ((symbol-function 'shell-maker-busy) (lambda () busy)))
               (agent-shell-viewport-edit-mode)
+              (emacsvox-agent-shell--table-navigation-setup)
               (switch-to-buffer (current-buffer))
               (emacsvox-agent-shell-test--capture-events
                 (execute-kbd-macro text))
               (should (equal (buffer-string) text))
+              (dolist (key '("C-M-<up>" "C-M-<down>"))
+                (let ((origin (point)))
+                  (emacsvox-agent-shell-test--capture-events
+                    (execute-kbd-macro (kbd key)))
+                  (should (= (point) origin))
+                  (should (equal (buffer-string) text))))
               (should-not emacsvox-agent-shell--table-navigation-active)
               (should (eq (key-binding (kbd "C-c C-c"))
                           #'agent-shell-viewport-compose-send))

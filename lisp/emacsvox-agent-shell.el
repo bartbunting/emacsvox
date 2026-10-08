@@ -1880,6 +1880,10 @@ selects the configured foreground or background level."
 
 (defun emacsvox-agent-shell--install-speech-control-bindings ()
   "Install current speech controls, including when this file is reloaded."
+  ;; The contextual table map takes precedence inside tables.  After exit,
+  ;; repeated vertical table arrows must not fall through to list movement.
+  (dolist (key '("C-M-<up>" "C-M-<down>"))
+    (define-key emacsvox-agent-shell--speech-control-map (kbd key) #'ignore))
   (define-key emacsvox-agent-shell--speech-control-map (kbd "C-c C-q")
               #'emacsvox-agent-shell-select-speech-level)
   (define-key emacsvox-agent-shell--speech-control-map (kbd "C-c C-S-q")

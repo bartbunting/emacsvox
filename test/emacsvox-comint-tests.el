@@ -17,6 +17,23 @@
   ;; Exercise source even when a compiled integration module exists.
   (load module nil nil))
 
+(ert-deftest emacsvox-shell-vertical-structural-arrows-stay-put ()
+  "Shell arrows leave point and draft text intact without changing Lisp keys."
+  (save-window-excursion
+    (with-temp-buffer
+      (shell-mode)
+      (switch-to-buffer (current-buffer))
+      (insert "(echo draft)")
+      (dolist (case '(("C-M-<down>" . 1) ("C-M-<up>" . 7)))
+        (goto-char (cdr case))
+        (execute-kbd-macro (kbd (car case)))
+        (should (= (point) (cdr case)))
+        (should (equal (buffer-string) "(echo draft)")))))
+  (with-temp-buffer
+    (emacs-lisp-mode)
+    (should (eq (key-binding (kbd "C-M-<down>")) #'down-list))
+    (should (eq (key-binding (kbd "C-M-<up>")) #'backward-up-list))))
+
 (defconst emacsvox-test--comint-removed-targets
   '(comint-dynamic-complete comint-kill-output)
   "Comint commands absent from Emacs 31.")

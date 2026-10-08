@@ -6594,6 +6594,13 @@ or @kbd{M-x agent-shell-viewport-reply-again}. In the shell transcript@comma{} t
 replaces quoting; use @kbd{M-x agent-shell-quote-region} with a selected region.
 Leaving the table restores these ordinary bindings.
 
+Outside tables@comma{} @kbd{C-M-<up>} and @kbd{C-M-<down>} do nothing in Agent Shell@comma{}
+including its viewport and prompt editor. Repeating a row key after leaving
+a table therefore keeps point at the exit. These two keys also do nothing
+in ordinary @kbd{shell-mode} buffers. For structural movement there@comma{} use
+@kbd{M-x backward-up-list} or @kbd{M-x down-list}. Source-code buffers keep their
+usual bindings.
+
 Continuous speech and response-block reading omit rendered table borders and
 keep the cell text. Decorative borders therefore do not force a switch to a
 different speech engine. Literal box-drawing characters in prose or code remain

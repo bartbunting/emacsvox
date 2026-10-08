@@ -44,6 +44,11 @@
 
 (define-key comint-mode-map (kbd "C-o") #'switch-to-completions)
 
+;; Shell output is not a Lisp structure.  Keep these arrows from jumping
+;; into or out of parentheses while leaving other Comint REPLs unchanged.
+(dolist (key '("C-M-<up>" "C-M-<down>"))
+  (define-key shell-mode-map (kbd key) #'ignore))
+
 ;;;  comint
 ;;;###autoload
 (defcustom emacsvox-comint-autospeak nil
