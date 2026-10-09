@@ -9,47 +9,65 @@ Preparation follows =a2421702f=, which adds the quiet HTML table cue.
 The Debian package recommends =omnivox (>= 1.17.0)=; remote Emacs and WSL
 retain the optional local-package relationship in ADR 0013.
 
-This is an incomplete release preparation, not a completed release gate.
-The GitHub lookup for =bartbunting/omnivox= tag =v1.17.0= returned
-"release not found" on 2026-10-09. No release tag or publication is authorized
-by this record.
+Omnivox [[https://github.com/bartbunting/omnivox/releases/tag/v1.17.0][1.17.0]] was published on 2026-10-09 from commit
+=8a2c3328d34e75b311647db2db6830a90f876ea7=. Its CI run
+[[https://github.com/bartbunting/omnivox/actions/runs/37881289669][37881289669]] completed successfully. Release publication remains a separate
+approval; this record does not authorize a tag or publication.
 
 * Prepared changes
 
-NEWS names the new Omnivox minimum and records the quieter HTML cue, shared
-table navigation, and bounded speech preparation and control requests.
-It also removes superseded Notmuch refresh behavior and an obsolete Agent
-Shell version from the accumulated notes. Archived release notes are intact.
-The generated aural reference now includes the HTML table cue and the recent
-Agent Shell collapsed-heading rule.
+The core and component manifests now pin the published Windows x64 and ARM64
+archives. The developer Piper staging lock uses the matching archive and
+source commit. TGSpeechBox is bundled in both core archives; the component
+installer now recognizes its ARM64 standalone module and installed status.
+A regression covers available and bundled ARM64 states.
 
-* Work awaiting Omnivox publication
+The Windows source index binds the new core hash to its exact Omnivox commit,
+Piper source archive and TGSpeechBox source archive. Both source archives
+passed every internal manifest checksum: 15,653 Piper entries and 15,647
+TGSpeechBox entries. The runtime Cargo.lock matches the source archive and
+release tag after newline normalization. TGSpeechBox's native input archive
+and commit match the bundled helper's provenance. Its runtime preserves
+TGSpeechBox and eSpeak notices. Emacs, Inno and their dependency pins and
+notices are unchanged.
 
-Update and verify the following together using the published release bytes:
+README, the installation and speech-backend chapters, the developer staging
+example and NEWS now describe the 1.17.0 requirement and verified inputs.
+The maintained manual was regenerated. Archived release notes remain intact.
+The untracked =etc/#NEWS#= autosave was preserved outside release staging.
 
-- =etc/wsl-install.conf=: Windows x64 and ARM64 core archives, URLs and SHA-256
-  hashes. Native Windows installation reads the same pins.
-- =etc/omnivox-components.conf=: matching Flite, RuTTS, Piper and TGSpeechBox
-  archive identities, sizes, hashes and architecture availability. Review
-  TGSpeechBox's inclusion in the new core before changing companion handling.
-- =etc/windows-sources.json=, =etc/windows-sources.txt= and
-  =etc/WINDOWS-THIRD-PARTY-NOTICES.txt=: matching runtime and source identities,
-  locked dependencies and notices for Windows redistribution.
-- README, the installation and speech-backend chapters, and the developer
-  staging example: supported minimum, verified archives, commands and paths.
-  Preserve historical version references where they describe past behavior.
-- NEWS: remove the preparation caveat only after these checks succeed.
+* Omnivox release acceptance
 
-ADR 0008 requires published, exact-version modules before updating the
-component manifest. ADRs 0005 and 0011 require isolated x64/ARM64 installer
-checks and a real newly pinned archive check before changing public
-installation guidance. Existing 1.12.0 pins and their public instructions
-remain pending those checks; they are not suitable for this release target.
+All nine downloaded Windows core and companion ZIPs passed the published
+SHA-256 checks and ZIP integrity checks. Both corresponding-source archives
+also matched the release checksums before their internal manifests were read.
 
-Confirm the released server's engine configuration, named punctuation
-profiles and palette character support on both speech lanes. Repeat the
-host and audible checks appropriate to each supported route. Existing
-development-runtime results do not qualify the released binaries.
+The real WSL installer used a separate source export, XDG configuration/cache
+and Windows temporary LocalAppData directory. It installed the published
+Windows x64 core and recorded selection only in that isolated configuration.
+The real component installer installed and checked Flite and RuTTS, verified
+Piper provenance and installation, and recognized TGSpeechBox from the core.
+No production speech process or personal server selection was changed.
+
+Two fresh Windows workers independently advertised palette letters, named
+punctuation profiles and engine configuration. WinRT, eSpeak, TGSpeechBox,
+Flite and RuTTS all completed their diagnostic synthesis/playback checks with
+null output. This checks generated audio consumption, not audible output.
+The published Linux core passed native engine-configuration and punctuation
+service round trips and the two-worker frozen punctuation-catalogue test.
+
+Isolated WSL and component tests passed 48 cases; three graphical component
+manager cases skipped. The tests cover x64 and ARM64 selection. Actual ARM64
+execution and macOS acceptance were not performed on this x64 WSL host.
+
+* Current preparation checks
+
+- Windows bundle, setup, source and preview fixtures passed all 38 tests.
+- =docs-org-preview=, =docs-update= and =docs-release-check= passed.
+- Published archives and source manifests passed the checks above.
+- Detailed logs are in =/tmp/emacsvox-1.17-*.log= and downloaded inputs in
+  =/tmp/emacsvox-omnivox-1.17.0/=. Final artifact provenance belongs to the
+  clean release worktree described below.
 
 * Final release checks
 
@@ -69,7 +87,7 @@ Tagging and publication require fresh explicit approval naming
 =2026.10.0=. Prepare the public manual from the same clean committed source
 using the existing documentation publication workflow.
 
-* Validation
+* Earlier preparation checks
 
 Checks use the configured Emacs =31.0.90=.
 
@@ -107,5 +125,6 @@ The 41 batch skips require graphical, native-service or optional-package
 environments. Those environments were not rerun for this preparation.
 
 Logs are under =/tmp/emacsvox-release-prep-*-20261009.log=.
-No released Omnivox 1.17.0 archive, native audible acceptance, supported-Emacs
-matrix, final release artifact or published documentation has been checked.
+These earlier checks preceded Omnivox publication. The release acceptance
+section above records the subsequent archive and runtime checks. Native audible
+acceptance and public documentation publication remain separate.

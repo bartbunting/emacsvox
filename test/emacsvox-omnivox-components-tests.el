@@ -40,6 +40,10 @@
      "EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_X64_ARCHIVE=tgspeechbox-x64.zip\n"
      "EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_X64_SHA256=" sha256 "\n"
      "EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_X64_SIZE="
+     (number-to-string size) "\n"
+     "EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_ARM64_ARCHIVE=tgspeechbox-arm64.zip\n"
+     "EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_ARM64_SHA256=" sha256 "\n"
+     "EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_ARM64_SIZE="
      (number-to-string size) "\n")))
 
 (defun emacsvox-omnivox-components-tests--make-archive (root)
@@ -1265,7 +1269,16 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
              (listing (emacsvox-wsl-install-tests--call installer arm "--machine-target")))
         (should (zerop (car listing)))
         (should (string-search "Omnivox 1.7.0 (windows-arm64)" (cadr listing)))
-        (should (string-search "1.7.0-windows-arm64/omnivox.exe" (cadr listing)))))))
+        (should (string-search "1.7.0-windows-arm64/omnivox.exe" (cadr listing)))
+        (should (string-search "tgspeechbox\tTGSpeechBox\tavailable\t" (cadr listing)))
+        (emacsvox-wsl-install-tests--write-executable
+         (expand-file-name
+          "Emacsvox/Omnivox/releases/1.7.0-windows-arm64/tgspeechbox/omnivox-tgspeechbox-helper.exe"
+          windows-root)
+         "#!/bin/sh\nexit 0\n")
+        (let ((installed (emacsvox-wsl-install-tests--call installer arm "--machine")))
+          (should (zerop (car installed)))
+          (should (string-search "tgspeechbox\tTGSpeechBox\tinstalled\t" (cadr installed))))))))
 
 (ert-deftest emacsvox-omnivox-components-runtime-reasons-and-worker-identity ()
   "Required-runtime status distinguishes failures without using stale workers."

@@ -17,9 +17,10 @@ that minimum; remote Emacs and WSL installations can use a speech server
 outside the local package manager. Upgrade Omnivox separately: updating
 Emacsvox does not replace an existing speech server.
 
-Release preparation is awaiting the published Omnivox 1.17.0 archives.
-Installer pins and installation instructions still describe 1.12.0 and must
-be updated and verified before this release is ready.
+The guided installers pin the verified 1.17.0 core and matching engine
+modules. TGSpeechBox is included in the Windows x64 and ARM64 core archives,
+and the module manager recognizes it on both architectures. The Windows
+source index includes its matching source and build inputs.
 
 ** Use a quieter cue for HTML tables
 

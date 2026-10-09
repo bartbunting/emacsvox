@@ -2,9 +2,9 @@
   "Schema": 1,
   "RuntimeSHA256": {
     "Emacs": "02856997d64c42e1e267b12b03ed67ff19a0599983e2f5871637077f7d12a92e",
-    "Omnivox": "9fed6f8e184d165f02f181b13fdadda0052f096015909be5499f8e6b2b45d0a0"
+    "Omnivox": "b33945f71e861b9417746bea148809b9a8235b5ae7cec0f21504cdc70fe21120"
   },
-  "OmnivoxSourceCommit": "0ce15b81235263ff19f9d73b73589dfe289b1b8c",
+  "OmnivoxSourceCommit": "8a2c3328d34e75b311647db2db6830a90f876ea7",
   "Review": {
     "GNUWindowsSignatureFingerprint": "ECE77CF417C76C1ACFCE7C2B5B6135511580F007",
     "EmacsDependencyBinaryArchive": "emacs-31-deps.zip",
@@ -13,7 +13,8 @@
     "OmnivoxCargoLockMatches": "Equal after CRLF normalization",
     "InnoNoticeURL": "https://raw.githubusercontent.com/jrsoftware/issrc/is-7_1_0/license.txt",
     "InnoNoticeSHA256": "2e5346868c2a18434489824e11d65c3031620f792fefc415d05f19cd441abf5c",
-    "RustDependencyResolution": "librsvg and Wasmtime cargo metadata --locked --offline passed after applying the MSYS2 PKGBUILD changes; no DLL rebuild claimed"
+    "RustDependencyResolution": "librsvg and Wasmtime cargo metadata --locked --offline passed after applying the MSYS2 PKGBUILD changes; no DLL rebuild claimed",
+    "OmnivoxTGSpeechBoxSource": "Bundled helper provenance matches the TGSpeechBox corresponding-source archive: Omnivox 8a2c3328d34e75b311647db2db6830a90f876ea7; TGSpeechBox 25b0e1ae65fb87705f0870c724dc8c91f3abbeba. Runtime retains TGSpeechBox and eSpeak notices."
   },
   "EmacsPackages": [
     {
@@ -7375,9 +7376,14 @@
       "SHA256": "3b74e671b98377f49abbbbba5c39156d18f9367117bb22f1051368af03278a4a"
     },
     {
-      "Path": "omnivox-1.12.0-piper-source.tar.gz",
-      "URL": "https://github.com/bartbunting/omnivox/releases/download/v1.12.0/omnivox-1.12.0-piper-source.tar.gz",
-      "SHA256": "5b507de9147293ff5b02497dcab271d318b212d130950db967358ea41793783f"
+      "Path": "omnivox-1.17.0-piper-source.tar.gz",
+      "URL": "https://github.com/bartbunting/omnivox/releases/download/v1.17.0/omnivox-1.17.0-piper-source.tar.gz",
+      "SHA256": "a38f18dc2e7b258d8c49395c8970afc82d7f5550664eae44c8a9bbaaa2904b0e"
+    },
+    {
+      "Path": "omnivox-1.17.0-tgspeechbox-source.tar.gz",
+      "URL": "https://github.com/bartbunting/omnivox/releases/download/v1.17.0/omnivox-1.17.0-tgspeechbox-source.tar.gz",
+      "SHA256": "adb06ded5b745fe88363356b8c2ceb788eb0cdaab8c252889c7e5651240f7a11"
     },
     {
       "Path": "wasmtime-tests/component-model-dac78059d47dadf3221a71548463fadb294412e3.tar.gz",
