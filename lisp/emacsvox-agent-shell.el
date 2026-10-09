@@ -3046,6 +3046,9 @@ chat source is crossed as one unit before core character speech runs."
                  (emacsvox-agent-shell--horizontal-chat-destination
                   direction steps))))
     (cond
+     ((and interactive-p
+           (emacsvox-agent-shell--table-text-motion
+            target nominal-direction count nil)) nil)
      (boundary
       ;; Consume the interactive marker so core character advice cannot add
       ;; ellipses, "control at", or an end-of-buffer warning if its advice is
@@ -5180,6 +5183,159 @@ Markdown renderer."
           (push (prop-match-beginning match) positions))))
     (nreverse positions)))
 
+(defun emacsvox-agent-shell--table-line-borders ()
+  "Return the rendered vertical border positions on the current line."
+  (let ((end (line-end-position)) borders)
+    (save-excursion
+      (goto-char (line-beginning-position))
+      (while (re-search-forward "[│|]" end t)
+        (let ((position (1- (point))))
+          (when (seq-some
+                 (lambda (property)
+                   (emacsvox-agent-shell--face-spec-includes-p
+                    (get-text-property position property)
+                    'agent-shell-markdown-table-border))
+                 '(face font-lock-face))
+            (push position borders)))))
+    (nreverse borders)))
+
+(defun emacsvox-agent-shell--table-cell-layout (region starts)
+  "Return the cell index and rendered spans at point in table REGION.
+STARTS lists the first content position of every logical cell.  Continuation
+lines use their bordered column and the preceding logical row's markers."
+  (let* ((position (point))
+         (inhibit-field-text-motion t)
+         (line-end (line-end-position))
+         (anchor (car (last (seq-take-while
+                            (lambda (start) (<= start line-end)) starts)))))
+    (when anchor
+      (save-excursion
+        (let* ((borders (emacsvox-agent-shell--table-line-borders))
+               (column (and (cdr borders)
+                            (max 0 (min (- (length borders) 2)
+                                        (1- (length (seq-take-while
+                                                     (lambda (border)
+                                                       (<= border position))
+                                                     borders))))))))
+          (when column
+            (goto-char anchor)
+            (let* ((row-start (line-beginning-position))
+                   (row-end (line-end-position))
+                   (first (seq-find (lambda (start) (>= start row-start)) starts))
+                   (next-row (seq-find (lambda (start) (> start row-end)) starts))
+                   (limit (if next-row
+                              (save-excursion
+                                (goto-char next-row) (line-beginning-position))
+                            (cdr region)))
+                   (index (+ (cl-position first starts) column))
+                   spans)
+              (goto-char row-start)
+              (while (< (point) limit)
+                (let* ((edges (emacsvox-agent-shell--table-line-borders))
+                       (left (nth column edges))
+                       (right (nth (1+ column) edges)))
+                  (when (and left right)
+                    (save-excursion
+                      (goto-char (1+ left))
+                      (skip-chars-forward " \t" right)
+                      (let ((start (point)))
+                        (goto-char right)
+                        (skip-chars-backward " \t" start)
+                        (when (< start (point))
+                          (push (cons start (point)) spans))))))
+                (forward-line 1))
+              (list :index index :spans (nreverse spans)))))))))
+
+(defun emacsvox-agent-shell--table-cell-text-map (cell)
+  "Return logical text and buffer positions for rendered CELL.
+Join hard word breaks directly.  A whitespace break uses one padding space
+as a navigable space between the two rendered fragments."
+  (let ((source (substring-no-properties (plist-get cell :data)))
+        (offset 0) (text "") positions previous-end)
+    (dolist (span (plist-get cell :spans))
+      (let* ((fragment (buffer-substring-no-properties (car span) (cdr span)))
+             (match (string-match (regexp-quote fragment) source offset)))
+        (when (and previous-end (or (null match) (> match offset)))
+          (setq text (concat text " "))
+          (push previous-end positions))
+        (setq text (concat text fragment))
+        (cl-loop for position from (car span) below (cdr span)
+                 do (push position positions))
+        (setq offset (if match (+ match (length fragment)) offset)
+              previous-end (cdr span))))
+    (when previous-end
+      (list text (vconcat (nreverse (cons previous-end positions)))))))
+
+(defun emacsvox-agent-shell--table-text-motion (target direction count word-p)
+  "Handle interactive TARGET movement through the current logical cell.
+DIRECTION and COUNT determine movement; WORD-P selects words rather than
+characters.  Return non-nil only when this function owns the movement."
+  (when (and emacsvox-agent-shell--table-navigation-active
+             (not (zerop count))
+             (derived-mode-p 'agent-shell-mode 'agent-shell-viewport-view-mode)
+             (not (and (derived-mode-p 'agent-shell-mode)
+                       (agent-shell--point-in-live-input-p))))
+    (when-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
+      (ems-interactive-p target)
+      (if-let* ((mapping (emacsvox-agent-shell--table-cell-text-map cell)))
+          (let* ((text (car mapping))
+                 (positions (cadr mapping))
+                 (offset 0)
+                 (delta (* (if (eq direction 'forward) 1 -1) count))
+                 (syntax (syntax-table)) destination speech)
+            (dotimes (index (length positions))
+              (when (<= (aref positions index) (point))
+                (setq offset index)))
+            (if word-p
+                (with-temp-buffer
+                  (set-syntax-table syntax)
+                  (insert text)
+                  (goto-char (1+ offset))
+                  (forward-word delta)
+                  (when (> delta 0) (skip-syntax-forward " "))
+                  (setq destination (1- (point)))
+                  (unless (eobp)
+                    (let ((start (point)))
+                      (forward-word 1)
+                      (setq speech (buffer-substring-no-properties start (point))))))
+              (setq destination (max 0 (min (length text) (+ offset delta)))))
+            (goto-char (aref positions destination))
+            (cond
+             ((and (< delta 0) (= offset 0))
+              (emacsvox-agent-shell--table-boundary-feedback "Beginning of cell."))
+             ((= destination (length text))
+              (emacsvox-agent-shell--table-boundary-feedback "End of cell."))
+             (word-p
+              (emacsvox-agent-shell--submit-text-feedback
+               speech (emacsvox-agent-shell--table-cell-facts cell 'focus-entered)
+               'navigation))
+             (t
+              (and tts-stop-immediately (tts-stop))
+              (let ((emacsvox-aural-submission-occasion 'navigation))
+                ;; A wrap space may occupy pixel padding with a display
+                ;; property.  Speak the text, without its layout cue.
+                (emacsvox-speak-this-char (aref text destination))))))
+        (emacsvox-agent-shell--table-boundary-feedback "Blank cell."))
+      t)))
+
+(defun emacsvox-agent-shell--forward-word-around (original &rest arguments)
+  "Follow logical table text during interactive forward word movement."
+  (if (and (memq ems--interactive-fn-name '(forward-word right-word))
+           (emacsvox-agent-shell--table-text-motion
+            ems--interactive-fn-name 'forward
+            (prefix-numeric-value (car arguments)) t))
+      nil
+    (apply original arguments)))
+
+(defun emacsvox-agent-shell--backward-word-around (original &rest arguments)
+  "Follow logical table text during interactive backward word movement."
+  (if (and (memq ems--interactive-fn-name '(backward-word left-word))
+           (emacsvox-agent-shell--table-text-motion
+            ems--interactive-fn-name 'backward
+            (prefix-numeric-value (car arguments)) t))
+      nil
+    (apply original arguments)))
+
 (defun emacsvox-agent-shell--markdown-table-cell-at-point ()
   "Return semantic Markdown table cell data for point, or nil."
   (when-let* ((source (get-text-property
@@ -5187,7 +5343,8 @@ Markdown renderer."
               (region (emacsvox-agent-shell--markdown-table-region-at-point))
               (starts
                (emacsvox-agent-shell--markdown-table-cell-starts region)))
-    (let* ((position (point))
+    (let* ((layout (emacsvox-agent-shell--table-cell-layout region starts))
+           (position (point))
            (line-start (line-beginning-position))
            (line-end (line-end-position))
            (first-cell-on-line
@@ -5209,6 +5366,7 @@ Markdown renderer."
         (when (<= start effective-position)
           (setq cell-index index))
         (setq index (1+ index)))
+      (when layout (setq cell-index (plist-get layout :index)))
       (when (>= cell-index 0)
         (let* ((parsed (emacsvox-agent-shell--markdown-table-rows source))
                (rows (plist-get parsed :rows))
@@ -5228,6 +5386,7 @@ Markdown renderer."
             (let ((all-rows (plist-get parsed :rows)))
               (list
                :positions starts
+               :spans (plist-get layout :spans)
                :data (nth column-index current-row)
                :row-index row-index
                :row-count (length all-rows)
@@ -7148,6 +7307,10 @@ fragment.  Fragment names alone never manufacture a tool event."
     (backward-char :around emacsvox-agent-shell--backward-char-around)
     (right-char :around emacsvox-agent-shell--forward-char-around)
     (forward-char :around emacsvox-agent-shell--forward-char-around)
+    (forward-word :around emacsvox-agent-shell--forward-word-around)
+    (right-word :around emacsvox-agent-shell--forward-word-around)
+    (backward-word :around emacsvox-agent-shell--backward-word-around)
+    (left-word :around emacsvox-agent-shell--backward-word-around)
     (next-line :around emacsvox-agent-shell--next-line-around)
     (previous-line :around emacsvox-agent-shell--previous-line-around)
     (tts-speak :around emacsvox-agent-shell--tts-speak-around)

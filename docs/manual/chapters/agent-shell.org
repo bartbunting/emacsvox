@@ -352,8 +352,12 @@ the ordinary Agent Shell keys. Markdown and Org source buffers offer explicit
 table reading with matching logical operations; see
 [[*Browsing Structure][Browsing Structure]]. Agent Shell retains its own table speech
 preferences and automatic contextual activation.
-Plain Left and Right move by character within the table. Use Control-Meta-Left
-and Control-Meta-Right to move between columns. Up and Down, also available as
+Plain Left and Right, or ~C-b~ and ~C-f~, move by character within the current
+cell. ~M-b~ and ~M-f~, or Control-Left and Control-Right, move by word. These
+commands follow wrapped text within the same cell, skipping borders, padding,
+and neighbouring columns. At the beginning or end of the cell, they stop and
+announce the boundary. Use Control-Meta-Left and Control-Meta-Right to move
+between columns. Up and Down, also available as
 Control-Meta-Up and Control-Meta-Down, move between logical rows and read the
 entire destination row, retaining the current column. Wrapped cells are read
 in full, using your table title settings.

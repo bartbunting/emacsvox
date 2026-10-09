@@ -7402,6 +7402,133 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (should (= (point) origin)))
           (emacsvox-agent-shell--table-navigation-cleanup))))))
 
+(defun emacsvox-agent-shell-test--wrapped-cell-motion ()
+  "Check complete cell traversal with real rendering in the current frame."
+  (dolist (mode '(agent-shell-mode agent-shell-viewport-view-mode))
+    (dolist (unicode '(nil t))
+      (let* ((agent-shell-markdown-table-use-unicode-borders unicode)
+             (left "alpha beta gamma delta")
+             (right "ONE TWO THREE FOUR FIVE")
+             (source (format "| Left | Right |\n|---|---|\n| %s | %s |\n| end |  |" left right)))
+        (save-window-excursion
+          (with-temp-buffer
+            (switch-to-buffer (current-buffer))
+            ;; Fixed column budgets exercise actual upstream wrapping, including
+            ;; in batch runs; the graphical gate also visits this helper.
+            (insert
+             (propertize
+              (concat
+               (agent-shell-markdown--render-table-data-row
+                :processed-cells '("Left" "Right") :col-widths '(8 8))
+               "\n"
+               (agent-shell-markdown--render-table-data-row
+                :processed-cells (list left right) :col-widths '(8 8))
+               "\n"
+               (agent-shell-markdown--render-table-data-row
+                :processed-cells '("end" "") :col-widths '(8 8)))
+              'agent-shell-markdown-table-source source))
+            (setq major-mode mode)
+            (use-local-map (if (eq mode 'agent-shell-mode) agent-shell-mode-map
+                            agent-shell-viewport-view-mode-map))
+            (emacsvox-agent-shell--table-navigation-setup)
+            (goto-char (point-min))
+            (search-forward "alpha")
+            (backward-char 5)
+            (emacsvox-agent-shell-test--capture-events
+              (emacsvox-agent-shell--table-navigation-post-command))
+            (when (display-graphic-p) (redisplay t))
+            (let ((origin (point)))
+              (dolist (keys '(("<right>" "<left>") ("C-f" "C-b")))
+                (goto-char origin)
+                (dotimes (index (length left))
+                  (should (= (char-after) (aref left index)))
+                  (let ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
+                    (should (= (plist-get cell :row-index) 1))
+                    (should (= (plist-get cell :column-index) 0)))
+                  (emacsvox-agent-shell-test--capture-events
+                    (execute-kbd-macro (kbd (car keys)))))
+                (let ((end (point)))
+                  (emacsvox-agent-shell-test--capture-events
+                    (execute-kbd-macro (kbd (car keys))))
+                  (should (= (point) end)))
+                (dotimes (index (length left))
+                  (emacsvox-agent-shell-test--capture-events
+                    (execute-kbd-macro (kbd (cadr keys))))
+                  (should (= (char-after) (aref left (- (length left) index 1)))))
+                (should (= (point) origin)))
+              (dolist (keys '(("M-f" "M-b") ("C-<right>" "C-<left>")))
+                (goto-char origin)
+                (dolist (word '("beta" "gamma" "delta"))
+                  (let ((events
+                         (emacsvox-agent-shell-test--capture-events
+                           (execute-kbd-macro (kbd (car keys))))))
+                    (should (looking-at word))
+                    (should (equal (seq-filter (lambda (e) (eq (car e) 'speak)) events)
+                                   (list (list 'speak word))))))
+                (dolist (word '("gamma" "beta" "alpha"))
+                  (emacsvox-agent-shell-test--capture-events
+                    (execute-kbd-macro (kbd (cadr keys))))
+                  (should (looking-at word))))
+              ;; Counts and negative arguments stay in logical cell order.
+              (emacsvox-agent-shell-test--capture-events
+                (execute-kbd-macro (kbd "C-u 11 <right>")))
+              (should (looking-at "gamma"))
+              (emacsvox-agent-shell-test--capture-events
+                (execute-kbd-macro (kbd "C-u -11 <right>")))
+              (should (= (point) origin))
+              ;; Plain movement still leaves column and row commands usable.
+              (emacsvox-agent-shell-test--capture-events
+                (execute-kbd-macro (kbd "M-f"))
+                (execute-kbd-macro (kbd "C-M-<right>")))
+              (should (looking-at "ONE"))
+              (dotimes (index (length right))
+                (should (= (char-after) (aref right index)))
+                (emacsvox-agent-shell-test--capture-events
+                  (execute-kbd-macro (kbd "<right>"))))
+              (emacsvox-agent-shell-test--capture-events
+                (execute-kbd-macro (kbd "<down>")))
+              (let ((blank (point)))
+                (emacsvox-agent-shell-test--capture-events
+                  (execute-kbd-macro (kbd "<right>"))
+                  (execute-kbd-macro (kbd "M-f")))
+                (should (= (point) blank))))))))))
+
+(ert-deftest emacsvox-agent-shell-wrapped-cell-character-and-word-motion ()
+  "Character and word keys traverse both columns without crossing cells."
+  (emacsvox-agent-shell-test--wrapped-cell-motion))
+
+(ert-deftest emacsvox-agent-shell-wrapped-cell-hard-word-break ()
+  "A word split across physical lines is spoken and traversed as one word."
+  (save-window-excursion
+    (with-temp-buffer
+      (switch-to-buffer (current-buffer))
+      (let ((text "go antidisestablishmentarianism end"))
+        (insert (propertize
+                 (agent-shell-markdown--render-table-data-row
+                  :processed-cells (list text "other column") :col-widths '(8 8))
+                 'agent-shell-markdown-table-source
+                 (format "| %s | other column |" text)))
+        (setq major-mode 'agent-shell-mode)
+        (use-local-map agent-shell-mode-map)
+        (emacsvox-agent-shell--table-navigation-setup)
+        (goto-char (point-min))
+        (search-forward "go")
+        (backward-char 2)
+        (emacsvox-agent-shell-test--capture-events
+          (emacsvox-agent-shell--table-navigation-post-command))
+        (let ((origin (point)))
+          (let ((events (emacsvox-agent-shell-test--capture-events
+                          (execute-kbd-macro (kbd "M-f")))))
+            (should (member '(speak "antidisestablishmentarianism") events)))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd "M-f")))
+          (should (looking-at "end"))
+          (goto-char origin)
+          (dotimes (index (length text))
+            (should (= (char-after) (aref text index)))
+            (emacsvox-agent-shell-test--capture-events
+              (execute-kbd-macro (kbd "<right>")))))))))
+
 (ert-deftest emacsvox-agent-shell-table-arrows-speak-whole-rows ()
   "Vertical arrows read complete rows once, retaining the selected column."
   (let ((emacsvox-agent-shell-table-titles '(column row))
@@ -10628,6 +10755,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
 (ert-deftest emacsvox-agent-shell-table-graphical-wrapped-navigation ()
   "A real rendered and wrapped table retains full source values and row keys."
   (skip-unless (display-graphic-p))
+  (emacsvox-agent-shell-test--wrapped-cell-motion)
   (save-window-excursion
     (with-temp-buffer
       (set-window-buffer (selected-window) (current-buffer))
