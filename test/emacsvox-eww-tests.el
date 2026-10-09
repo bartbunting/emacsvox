@@ -458,7 +458,7 @@
         'table-rendered))
       (should (= calls 1))
       (should (eq (get-text-property 1 'table-dom) dom))
-      (should (eq (get-text-property 1 'auditory-icon) 'fill-object))
+      (should (eq (get-text-property 1 'auditory-icon) 'html-table))
       (should (= (get-text-property 1 'table-start) 1))
       (should (= (get-text-property 1 'table-end) 4)))))
 

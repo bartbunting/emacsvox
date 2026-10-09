@@ -1939,6 +1939,12 @@ PERSISTENT requires durable references instead of generated handles."
      'point-marker
      :summary "Buffer point was reached within selected text"
      :fallback 'button))
+  (unless (emacsvox-aural-cue 'html-table)
+    (emacsvox-aural-register-cue
+     'html-table
+     :summary "An HTML table was reached while reading"
+     :fallback 'item
+     :owner 'html))
   (dolist (definition emacsvox-aural-default-tone-definitions)
     (unless (emacsvox-aural-tone (car definition))
       (emacsvox-aural-register-tone
@@ -2040,6 +2046,16 @@ compatibility source."
          :summary "Mail-state earcons"
          :owner 'mail
          :directory mail-directory)))
+    (let ((html-directory (expand-file-name "modules/html" root)))
+      (when
+          (and
+           (file-directory-p html-directory)
+           (not (emacsvox-aural-resource-overlay 'html-earcons)))
+        (emacsvox-aural-register-resource-overlay
+         'html-earcons
+         :summary "HTML reading earcons"
+         :owner 'html
+         :directory html-directory)))
     (dolist (discovery-root discovery-roots)
       (emacsvox-aural-discover-resource-packs discovery-root))
     (emacsvox-aural-validate-resource-registry)))

@@ -2488,7 +2488,7 @@ with an interactive prefix arg. "
     (unless (get-text-property start 'table-dom)
       (add-text-properties
        start (point)
-       (list 'auditory-icon 'fill-object
+       (list 'auditory-icon 'html-table
              'table-start start
              'table-end (1- (point))
              'table-dom dom)))

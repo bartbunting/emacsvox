@@ -187,6 +187,23 @@
              (concat "modules/mail/" (nth 2 definition))
              emacsvox-test--sounds-directory))))))))
 
+(ert-deftest emacsvox-aural-resources-html-table-shares-quiet-default ()
+  "HTML tables use the same quiet asset across bundled and personal packs."
+  (emacsvox-test--with-empty-resource-packs
+    (emacsvox-aural-register-bundled-resources
+     emacsvox-test--sounds-directory)
+    (emacsvox-test--with-resource-directory
+      (emacsvox-test--resource-file parent-directory "item")
+      (emacsvox-aural-register-resource-pack
+       'personal-html-test :summary "Personal HTML test pack"
+       :kind 'sound :directory parent-directory)
+      (dolist (pack '(chimes 3d personal-html-test))
+        (should
+         (equal
+          (emacsvox-aural-resolve-cue 'html-table pack)
+          (expand-file-name "modules/html/html-table.ogg"
+                            emacsvox-test--sounds-directory)))))))
+
 (ert-deftest emacsvox-aural-resources-register-default-tones ()
   "Built-in tones retain the existing pitches and durations by name."
   (should
