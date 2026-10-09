@@ -179,8 +179,8 @@ case "$tgspeechbox_companion_state" in
             '"generated_by_packaged_helper": true' \
             '"voices": 154' \
             '"target": "x86_64-pc-windows-gnu"' \
-            '"commit": "f5ec247bca50507ab1e2ed661136395538dc3e97"' \
-            '"release": "v-310@f5ec247"'; do
+            '"commit": "25b0e1ae65fb87705f0870c724dc8c91f3abbeba"' \
+            '"release": "v-310@25b0e1a"'; do
             if ! grep -Fq "$expected" \
                 "$current/tgspeechbox/SOURCE-PROVENANCE.json"; then
                 echo "Staged TGSpeechBox companion provenance is wrong: $expected" >&2
