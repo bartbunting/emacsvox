@@ -7721,8 +7721,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (emacsvox-agent-shell-test--capture-events
               (execute-kbd-macro (kbd "<right>")))))))))
 
-(ert-deftest emacsvox-agent-shell-table-arrows-speak-whole-rows ()
-  "Vertical arrows read complete rows once, retaining the selected column."
+(ert-deftest emacsvox-agent-shell-table-arrows-distinguish-cell-and-row-speech ()
+  "Modified arrows read cells; plain arrows read rows in the same column."
   (let ((emacsvox-agent-shell-table-titles '(column row))
         (emacsvox-agent-shell-table-data-position 'first)
         (agent-shell-markdown-table-max-width-fraction 0.4)
@@ -7745,14 +7745,29 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (emacsvox-agent-shell--table-navigation-post-command))
           (dolist (case `(("<down>" "Reviewer" "Bob. Reviewer, Role. blank, Notes.")
                           ("<up>" "Engineer" ,(concat "Alice. Engineer, Role. " notes ", Notes."))
-                          ("C-M-<up>" "Role" "Header row. Name. Role. Notes.")
-                          ("C-M-<down>" "Engineer" ,(concat "Alice. Engineer, Role. " notes ", Notes."))))
+                          ("C-M-<up>" "Role" "Role.")
+                          ("C-u 2 C-M-<down>" "Reviewer" "Reviewer, Bob, Role.")
+                          ("C-u -1 C-M-<down>" "Engineer" "Engineer, Alice, Role.")
+                          ("C-M-<up>" "Role" "Role.")
+                          ("C-M-<down>" "Engineer" "Engineer, Alice, Role.")))
             (let ((events (emacsvox-agent-shell-test--capture-events
                             (execute-kbd-macro (kbd (car case))))))
               (should (looking-at (nth 1 case)))
               (should (= 1 (plist-get
                             (emacsvox-agent-shell--markdown-table-cell-at-point)
                             :column-index)))
+              (should (equal (seq-filter (lambda (event) (eq (car event) 'speak)) events)
+                             (list (list 'speak (nth 2 case)))))))
+          (emacsvox-agent-shell-test--capture-events
+            (execute-kbd-macro (kbd "C-M-<right>")))
+          (dolist (case `(("C-M-<down>" "" "blank, Bob, Notes.")
+                          ("C-M-<up>" ,notes ,(concat notes ", Alice, Notes."))))
+            (let ((events (emacsvox-agent-shell-test--capture-events
+                            (execute-kbd-macro (kbd (car case))))))
+              (should (equal (plist-get
+                              (emacsvox-agent-shell--markdown-table-cell-at-point)
+                              :data)
+                             (nth 1 case)))
               (should (equal (seq-filter (lambda (event) (eq (car event) 'speak)) events)
                              (list (list 'speak (nth 2 case)))))))
           (emacsvox-agent-shell--table-navigation-cleanup))))))
@@ -10951,6 +10966,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   (save-window-excursion
     (with-temp-buffer
       (set-window-buffer (selected-window) (current-buffer))
+      (setq major-mode 'agent-shell-mode)
+      (use-local-map agent-shell-mode-map)
       (let ((long (concat (apply #'concat (make-list 80 "long content ")) "FINAL"))
             (emacsvox-agent-shell-table-titles '(column))
             (emacsvox-agent-shell-table-data-position 'first)
@@ -10965,17 +10982,41 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (call-interactively (key-binding (kbd "C-M-<right>")))
           (let ((presentations
                  (emacsvox-agent-shell-test--capture-presentations
-                   (call-interactively (key-binding (kbd "<down>"))))))
-            (should (string-match-p "FINAL" (nth 1 (car presentations)))))
+                   (call-interactively (key-binding (kbd "C-M-<down>"))))))
+            (should (= (length presentations) 1))
+            (should (equal (nth 1 (car presentations)) (concat long ", Notes."))))
           (redisplay t)
           (let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point))
                  (next (emacsvox-table-reader--destination cell 1 0)))
             ;; The renderer may use physical continuation rows or display wraps.
             ;; In either case there must be multiple actual screen lines.
             (should (> (count-screen-lines (point) (cadr next)) 1)))
+          ;; Ordinary line commands visit rendered continuation lines without
+          ;; retaining the table column; arrows skip to other logical rows.
+          (save-excursion
+            (let ((origin (point)) (last-command nil)
+                  (goal-column nil) (temporary-goal-column nil))
+              (should (eq (key-binding (kbd "C-n")) 'next-line))
+              (should (eq (key-binding (kbd "C-p")) 'previous-line))
+              (funcall-interactively (key-binding (kbd "C-n")) 1)
+              (should (> (point) origin))
+              (should (= (plist-get
+                          (emacsvox-agent-shell--markdown-table-cell-at-point)
+                          :row-index)
+                         1))
+              (let ((continuation (point)))
+                (funcall-interactively (key-binding (kbd "C-p")) 1)
+                (should (< (point) continuation)))))
           (call-interactively (key-binding (kbd "w")))
           (should (equal (car kill-ring) long))
           (call-interactively (key-binding (kbd "<down>")))
+          (should (looking-at "End"))
+          (let ((presentations
+                 (emacsvox-agent-shell-test--capture-presentations
+                   (call-interactively (key-binding (kbd "C-M-<up>"))))))
+            (should (= (length presentations) 1))
+            (should (equal (nth 1 (car presentations)) (concat long ", Notes."))))
+          (call-interactively (key-binding (kbd "C-M-<down>")))
           (should (looking-at "End"))
           (call-interactively (key-binding (kbd "M-<down>")))
           (should (looking-at "after")))))))

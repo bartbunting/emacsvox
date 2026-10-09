@@ -5685,15 +5685,17 @@ Return nil when that logical cell does not exist."
   (interactive)
   (emacsvox-agent-shell--table-exit 'forward))
 
-(defun emacsvox-agent-shell--table-move (row-delta column-delta)
-  "Move by ROW-DELTA and COLUMN-DELTA in the logical table at point."
+(defun emacsvox-agent-shell--table-move (row-delta column-delta &optional cell-only)
+  "Move by ROW-DELTA and COLUMN-DELTA in the logical table at point.
+When CELL-ONLY is non-nil, read only the destination cell after row movement."
   (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
       (pcase (emacsvox-table-reader--destination cell row-delta column-delta)
         (`(exit ,direction) (emacsvox-agent-shell--table-exit direction))
         (`(boundary ,text) (emacsvox-agent-shell--table-boundary-feedback text))
         (`(cell ,position)
          (goto-char position)
-         (emacsvox-agent-shell--table-cell-feedback (not (zerop row-delta)))))
+         (emacsvox-agent-shell--table-cell-feedback
+          (and (not cell-only) (not (zerop row-delta))))))
     (user-error "Not in a rendered Markdown table")))
 
 (defun emacsvox-agent-shell-table-next-column (&optional count)
@@ -5716,6 +5718,18 @@ Return nil when that logical cell does not exist."
   (interactive "p")
   (emacsvox-agent-shell--table-move (- (or count 1)) 0))
 
+(defun emacsvox-agent-shell-table-next-row-cell (&optional count)
+  "Move COUNT logical table rows down and speak the destination cell.
+Retain the current column and use the current table title settings."
+  (interactive "p")
+  (emacsvox-agent-shell--table-move (or count 1) 0 t))
+
+(defun emacsvox-agent-shell-table-previous-row-cell (&optional count)
+  "Move COUNT logical table rows up and speak the destination cell.
+Retain the current column and use the current table title settings."
+  (interactive "p")
+  (emacsvox-agent-shell--table-move (- (or count 1)) 0 t))
+
 (defvar emacsvox-agent-shell--table-navigation-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "<down>") #'emacsvox-agent-shell-table-next-row)
@@ -5737,8 +5751,8 @@ Return nil when that logical cell does not exist."
 
 (defun emacsvox-agent-shell--install-table-column-bindings ()
   "Keep character arrows and modified table keys current across reloads."
-  (dolist (binding '(("C-M-<up>" . emacsvox-agent-shell-table-previous-row)
-                     ("C-M-<down>" . emacsvox-agent-shell-table-next-row)
+  (dolist (binding '(("C-M-<up>" . emacsvox-agent-shell-table-previous-row-cell)
+                     ("C-M-<down>" . emacsvox-agent-shell-table-next-row-cell)
                      ("<left>" . left-char)
                      ("<right>" . right-char)
                      ("C-M-<left>" . emacsvox-agent-shell-table-previous-column)

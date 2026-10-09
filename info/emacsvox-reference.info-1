@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1626 commands and 226 options.
+   This chapter documents a total of 1628 commands and 226 options.
 
 * Menu:
 
@@ -1418,7 +1418,17 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      (fn &optional COUNT)
 
-2.10.1.38 emacsvox-agent-shell-table-previous-column
+2.10.1.38 emacsvox-agent-shell-table-next-row-cell
+..................................................
+
+ -- Command: emacsvox-agent-shell-table-next-row-cell (&optional count)
+
+     Move COUNT logical table rows down and speak the destination cell.
+     Retain the current column and use the current table title settings.
+
+     (fn &optional COUNT)
+
+2.10.1.39 emacsvox-agent-shell-table-previous-column
 ....................................................
 
  -- Command: emacsvox-agent-shell-table-previous-column (&optional
@@ -1428,7 +1438,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      (fn &optional COUNT)
 
-2.10.1.39 emacsvox-agent-shell-table-previous-row
+2.10.1.40 emacsvox-agent-shell-table-previous-row
 .................................................
 
  -- Command: emacsvox-agent-shell-table-previous-row (&optional count)
@@ -1437,7 +1447,18 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
 
      (fn &optional COUNT)
 
-2.10.1.40 emacsvox-agent-shell-table-select-speaking-method
+2.10.1.41 emacsvox-agent-shell-table-previous-row-cell
+......................................................
+
+ -- Command: emacsvox-agent-shell-table-previous-row-cell (&optional
+          count)
+
+     Move COUNT logical table rows up and speak the destination cell.
+     Retain the current column and use the current table title settings.
+
+     (fn &optional COUNT)
+
+2.10.1.42 emacsvox-agent-shell-table-select-speaking-method
 ...........................................................
 
  -- Command: emacsvox-agent-shell-table-select-speaking-method
@@ -1447,35 +1468,35 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      switch between data-first and title-first ordering.  Speak the complete
      resulting configuration after the change.
 
-2.10.1.41 emacsvox-agent-shell-table-speak-cell
+2.10.1.43 emacsvox-agent-shell-table-speak-cell
 ...............................................
 
  -- Command: emacsvox-agent-shell-table-speak-cell
 
      Speak the logical Markdown table cell at point.
 
-2.10.1.42 emacsvox-agent-shell-table-speak-column
+2.10.1.44 emacsvox-agent-shell-table-speak-column
 .................................................
 
  -- Command: emacsvox-agent-shell-table-speak-column
 
      Speak the logical Markdown table column at point.
 
-2.10.1.43 emacsvox-agent-shell-table-speak-context
+2.10.1.45 emacsvox-agent-shell-table-speak-context
 ..................................................
 
  -- Command: emacsvox-agent-shell-table-speak-context
 
      Speak current Markdown table position and dimensions.
 
-2.10.1.44 emacsvox-agent-shell-table-speak-dimensions
+2.10.1.46 emacsvox-agent-shell-table-speak-dimensions
 .....................................................
 
  -- Command: emacsvox-agent-shell-table-speak-dimensions
 
      Speak the dimensions of the Markdown table at point.
 
-2.10.1.45 emacsvox-agent-shell-table-speak-row
+2.10.1.47 emacsvox-agent-shell-table-speak-row
 ..............................................
 
  -- Command: emacsvox-agent-shell-table-speak-row

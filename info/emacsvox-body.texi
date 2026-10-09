@@ -6584,10 +6584,14 @@ cell. @kbd{M-b} and @kbd{M-f}@comma{} or Control-Left and Control-Right@comma{} 
 commands follow wrapped text within the same cell@comma{} skipping borders@comma{} padding@comma{}
 and neighbouring columns. At the beginning or end of the cell@comma{} they stop and
 announce the boundary. Use Control-Meta-Left and Control-Meta-Right to move
-between columns. Up and Down@comma{} also available as
-Control-Meta-Up and Control-Meta-Down@comma{} move between logical rows and read the
-entire destination row@comma{} retaining the current column. Wrapped cells are read
-in full@comma{} using your table title settings.
+between columns. Control-Meta-Up and Control-Meta-Down move between logical
+rows in the current column and read only the destination cell. Plain Up and
+Down make the same move and read the entire destination row. Wrapped cells
+are read in full@comma{} using your table title settings.
+
+@kbd{C-n} and @kbd{C-p} retain ordinary line movement. They can move through wrapped
+cell text@comma{} but do not stay within the logical cell or skip other columns.
+Use character and word movement to follow the cell's text in order.
 
 Outside editable input@comma{} press @kbd{t} for the next table or
 @kbd{T} for the previous table. These keys skip the current table
@@ -6626,11 +6630,13 @@ Run @code{emacsvox-agent-shell-table-next-column}.
 @item C-M-<left>
 Run @code{emacsvox-agent-shell-table-previous-column}.
 @item <down>
-Run @code{emacsvox-agent-shell-table-next-row}. Also bound to
-@kbd{C-M-<down>}.
+Run @code{emacsvox-agent-shell-table-next-row} and read the destination row.
 @item <up>
-Run @code{emacsvox-agent-shell-table-previous-row}. Also bound to
-@kbd{C-M-<up>}.
+Run @code{emacsvox-agent-shell-table-previous-row} and read the destination row.
+@item C-M-<down>
+Run @code{emacsvox-agent-shell-table-next-row-cell} and read the destination cell.
+@item C-M-<up>
+Run @code{emacsvox-agent-shell-table-previous-row-cell} and read the destination cell.
 @item M-<down>
 Run @code{emacsvox-agent-shell-table-exit-forward}.
 @item M-<up>

@@ -363,10 +363,14 @@ cell. ~M-b~ and ~M-f~, or Control-Left and Control-Right, move by word. These
 commands follow wrapped text within the same cell, skipping borders, padding,
 and neighbouring columns. At the beginning or end of the cell, they stop and
 announce the boundary. Use Control-Meta-Left and Control-Meta-Right to move
-between columns. Up and Down, also available as
-Control-Meta-Up and Control-Meta-Down, move between logical rows and read the
-entire destination row, retaining the current column. Wrapped cells are read
-in full, using your table title settings.
+between columns. Control-Meta-Up and Control-Meta-Down move between logical
+rows in the current column and read only the destination cell. Plain Up and
+Down make the same move and read the entire destination row. Wrapped cells
+are read in full, using your table title settings.
+
+~C-n~ and ~C-p~ retain ordinary line movement. They can move through wrapped
+cell text, but do not stay within the logical cell or skip other columns.
+Use character and word movement to follow the cell's text in order.
 
 Outside editable input, press ~t~ for the next table or
 ~T~ for the previous table. These keys skip the current table
@@ -410,12 +414,16 @@ available to symbol naming and exact character inspection.
   Run =emacsvox-agent-shell-table-previous-column=.
 - <down> ::
 
-  Run =emacsvox-agent-shell-table-next-row=. Also bound to
-  ~C-M-<down>~.
+  Run =emacsvox-agent-shell-table-next-row= and read the destination row.
 - <up> ::
 
-  Run =emacsvox-agent-shell-table-previous-row=. Also bound to
-  ~C-M-<up>~.
+  Run =emacsvox-agent-shell-table-previous-row= and read the destination row.
+- C-M-<down> ::
+
+  Run =emacsvox-agent-shell-table-next-row-cell= and read the destination cell.
+- C-M-<up> ::
+
+  Run =emacsvox-agent-shell-table-previous-row-cell= and read the destination cell.
 - M-<down> ::
 
   Run =emacsvox-agent-shell-table-exit-forward=.

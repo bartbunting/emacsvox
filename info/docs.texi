@@ -71,7 +71,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1626 commands and 226 options.
+This chapter documents a total of 1628 commands and 226 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -1228,6 +1228,18 @@ Move COUNT logical Markdown table rows down, retaining the column.
 @end format
 @end deffn
 
+@subsubsection emacsvox-agent-shell-table-next-row-cell
+@deffn {Command} emacsvox-agent-shell-table-next-row-cell  (&optional count)
+@findex emacsvox-agent-shell-table-next-row-cell
+
+@format
+Move COUNT logical table rows down and speak the destination cell.
+Retain the current column and use the current table title settings.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
 @subsubsection emacsvox-agent-shell-table-previous-column
 @deffn {Command} emacsvox-agent-shell-table-previous-column  (&optional count)
 @findex emacsvox-agent-shell-table-previous-column
@@ -1245,6 +1257,18 @@ Move COUNT columns left in the current logical Markdown table row.
 
 @format
 Move COUNT logical Markdown table rows up, retaining the column.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-previous-row-cell
+@deffn {Command} emacsvox-agent-shell-table-previous-row-cell  (&optional count)
+@findex emacsvox-agent-shell-table-previous-row-cell
+
+@format
+Move COUNT logical table rows up and speak the destination cell.
+Retain the current column and use the current table title settings.
 
 (fn &optional COUNT)
 @end format
