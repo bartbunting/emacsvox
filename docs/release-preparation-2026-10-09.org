@@ -20,6 +20,8 @@ NEWS names the new Omnivox minimum and records the quieter HTML cue, shared
 table navigation, and bounded speech preparation and control requests.
 It also removes superseded Notmuch refresh behavior and an obsolete Agent
 Shell version from the accumulated notes. Archived release notes are intact.
+The generated aural reference now includes the HTML table cue and the recent
+Agent Shell collapsed-heading rule.
 
 * Work awaiting Omnivox publication
 
@@ -77,11 +79,32 @@ Checks use the configured Emacs =31.0.90=.
 | =bytecode= and its fresh-process =bytecode-check= | Passed. |
 | =docs-release-check= | Passed. |
 | =deb-test= | All six tests passed, including the packaged Omnivox minimum. |
+| Source archive tests | All four passed after the version bump was committed. |
+| Windows staging, TGSpeechBox, bundle, setup, sources and preview fixtures | All 54 passed. |
+| Piper catalogue tests | All 13 passed. |
+| Full unit suite | 4,026 passed, 41 skipped; one stale-reference failure corrected below. |
+| Focused aural audit suite after reference regeneration | All 12 passed. |
+| Compiled Notmuch | All 129 passed. |
+| Compiled aural parity and build-tree startup | Passed. |
+| Semantic traces | All 27 matched. |
+| =docs-reference= and final =docs-release-check= | Passed. |
 
 The first =make test= stopped at the source-archive fixture because it exports
 =HEAD= with a prefix taken from the working =VERSION=. The uncommitted version
-bump made those identities differ. Repeat that check after committing the
-preparation; no test or release guard has been weakened.
+bump made those identities differ. The committed preparation passed this
+check without changing the fixture or weakening the release guard.
+
+The subsequent unit run found a stale aural reference. =make aural-reference=
+regenerated it; the focused audit suite then passed, including the failing
+repository audit. Other passing unit tests were retained rather than rerun
+for this generated-document change. The remaining =make test= targets passed
+separately. This is not a claim that the complete release gate has passed.
+
+The focused audit uses source preference, matching the maintained test runner.
+An initial ad hoc invocation omitted that setting and loaded old ignored
+=utils/emacsvox-aural-audit.elc=; its results were superseded by the source run.
+The 41 batch skips require graphical, native-service or optional-package
+environments. Those environments were not rerun for this preparation.
 
 Logs are under =/tmp/emacsvox-release-prep-*-20261009.log=.
 No released Omnivox 1.17.0 archive, native audible acceptance, supported-Emacs

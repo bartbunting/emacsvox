@@ -418,7 +418,7 @@ Operational semantic contract version: =1=.
 |------------+------------+-------+------------------+--------+--------|
 | =agent-shell-block-type-cues= | =agent-shell= | =11= | =0= | emacsvox-aural-provider-workflows | Use distinct semantic cues for Agent Shell block types |
 | =agent-shell-block-type-labels= | =agent-shell= | =1= | =0= | emacsvox-aural-provider-workflows | Speak the semantic type when entering an Agent Shell block |
-| =agent-shell-block-visibility-cues= | =agent-shell= | =4= | =0= | emacsvox-aural-provider-workflows | Cue folded and expanded Agent Shell blocks on entry and toggle |
+| =agent-shell-block-visibility-cues= | =agent-shell= | =5= | =0= | emacsvox-aural-provider-workflows | Cue folded and expanded Agent Shell blocks on entry and toggle |
 | =agent-shell-block-visibility-labels= | =agent-shell= | =2= | =0= | emacsvox-aural-provider-workflows | Speak collapsed or expanded after navigated Agent Shell blocks |
 | =aural-panel-state-labels= | =general= | =2= | =0= | emacsvox-aural-provider-workflows | Speak collapsed or expanded after panel controls |
 | =dired-entry-state-labels= | =dired= | =3= | =0= | emacsvox-aural-provider-workflows | Speak Dired mark and deletion-flag changes after the entry |
@@ -491,6 +491,7 @@ Default spatialization is =neutral=, =stereo=, or =pre-spatialized=.  Mark HRTF 
 | =emacsvox= | =compatibility= | =core= | =startup= | Legacy Emacsvox identity cue |
 | =fill-object= | =cue= | =core= | - | An object was filled, formatted, or reflowed |
 | =help= | =cue= | =core= | - | Help content became available |
+| =html-table= | =cue= | =html= | =item= | An HTML table was reached while reading |
 | =item= | =cue= | =core= | - | An item or candidate was reached |
 | =key= | =cue= | =core= | - | A key or key binding was presented |
 | =large-movement= | =cue= | =core= | - | Navigation moved across a structural boundary |
