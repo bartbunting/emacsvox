@@ -1766,6 +1766,12 @@
         (:append
          ((:id agent-shell-navigated-expanded-cue-action
            :kind cue :cue open-object)))))
+      (:id agent-shell-navigated-folded-replaces-compatibility
+       :match
+       (:module agent-shell :event focus-entered
+        :occasion navigation :visibility folded :legacy-cue ellipses)
+       :render
+       (:before (:remove (legacy-cue))))
       (:id agent-shell-toggled-folded-cue
        :match
        (:module agent-shell :event visibility-changed

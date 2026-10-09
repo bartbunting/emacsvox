@@ -3380,6 +3380,198 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (equal (nreverse spoken) '("this ")))
       (should (equal (buffer-string) "Codex> ")))))
 
+(defun emacsvox-agent-shell-test--folded-heading-buffer (id label expanded function)
+  "Call FUNCTION in a rendered heading for ID and LABEL, with EXPANDED state."
+  (save-window-excursion
+    (with-temp-buffer
+      (switch-to-buffer (current-buffer))
+      (insert "Before\n")
+      (let* ((range
+              (agent-shell-ui-update-fragment
+               (agent-shell-ui-make-fragment-model
+                :namespace-id "issue8" :block-id id
+                :label-left label :body "HIDDEN BODY")
+               :expanded expanded))
+             (start (map-nested-elt range '(:label-left :start))))
+        (goto-char (point-max))
+        (let ((inhibit-read-only t)) (insert "\nAfter\n"))
+        (setq major-mode 'agent-shell-mode
+              buffer-invisibility-spec t
+              truncate-lines nil
+              line-move-visual t)
+        (use-local-map agent-shell-mode-map)
+        (emacsvox-agent-shell--vertical-toggle-hint-setup)
+        (unwind-protect
+            (if (display-graphic-p)
+                (progn (redisplay t) (funcall function start))
+              ;; Batch frames do not expose reliable visual line bounds.
+              ;; These short headings fit one row; the graphical case below
+              ;; exercises real wrapping without replacing display functions.
+              (cl-letf (((symbol-function 'beginning-of-visual-line)
+                         (lambda (&rest _) (beginning-of-line)))
+                        ((symbol-function 'end-of-visual-line)
+                         (lambda (&rest _) (end-of-line))))
+                (funcall function start)))
+          (emacsvox-agent-shell--vertical-toggle-hint-cleanup))))))
+
+(defun emacsvox-agent-shell-test--heading-arrow (key)
+  "Run KEY interactively with the command hooks used by heading navigation."
+  (let ((this-command (key-binding (kbd key))))
+    (run-hooks 'pre-command-hook)
+    (unwind-protect (funcall-interactively this-command 1)
+      (run-hooks 'post-command-hook))))
+
+(ert-deftest emacsvox-agent-shell-folded-heading-navigation-cues ()
+  "Arrow entry cues real collapsed headings in both directions, like read-line."
+  (dolist (case '(("agent_capabilities" "Agent capabilities")
+                  ("available_models" "Available models")
+                  ("1-notices" "Notices")))
+    (emacsvox-agent-shell-test--folded-heading-buffer
+     (car case) (cadr case) nil
+     (lambda (start)
+       (dolist (key '("<down>" "<up>"))
+         (goto-char start)
+         (forward-line (if (equal key "<down>") -1 1))
+         (when (equal key "<up>")
+           (goto-char (point-max)) (search-backward "After"))
+         (let ((events (emacsvox-agent-shell-test--capture-events
+                         (emacsvox-agent-shell-test--heading-arrow key)
+                         (when (equal key "<up>")
+                           (let ((remaining 5))
+                             (while (and (> (point) start)
+                                         (not (get-text-property
+                                               (point) 'agent-shell-ui-state))
+                                         (> remaining 0))
+                               (cl-decf remaining)
+                               (emacsvox-agent-shell-test--heading-arrow key)))))))
+           (should (equal (map-elt (get-text-property (point) 'agent-shell-ui-state)
+                                   :collapsed) t))
+           (ert-info ((format "Entering %s with %s" (cadr case) key))
+             (should (= 1 (cl-count '(icon ellipses) events :test #'equal))))
+           (should-not (seq-some (lambda (event)
+                                  (and (eq (car event) 'speak)
+                                       (string-match-p "HIDDEN BODY" (cadr event))))
+                                events)))
+         (should (member '(icon ellipses)
+                         (emacsvox-agent-shell-test--capture-events
+                           (emacsvox-speak-line)))))))))
+
+(ert-deftest emacsvox-agent-shell-expanded-heading-has-no-fold-cue ()
+  "Expanded headings and ordinary lines do not announce hidden content."
+  (emacsvox-agent-shell-test--folded-heading-buffer
+   "agent_capabilities" "Agent capabilities" t
+   (lambda (start)
+     (goto-char start) (forward-line -1)
+     (dotimes (_ 2)
+       (should-not (member '(icon ellipses)
+                           (emacsvox-agent-shell-test--capture-events
+                             (emacsvox-agent-shell-test--heading-arrow "<down>"))))))))
+
+(ert-deftest emacsvox-agent-shell-folded-heading-toggle-state ()
+  "Navigation follows the current fold state after expanding and collapsing."
+  (emacsvox-agent-shell-test--folded-heading-buffer
+   "1-notices" "Notices" nil
+   (lambda (start)
+     (dolist (expected '(0 1))
+       (goto-char start)
+       (emacsvox-agent-shell-test--capture-events
+         (call-interactively #'agent-shell-ui-toggle-fragment))
+       (goto-char start) (forward-line -1)
+       (let ((events (emacsvox-agent-shell-test--capture-events
+                       (emacsvox-agent-shell-test--heading-arrow "<down>"))))
+         (should (= expected (cl-count '(icon ellipses) events :test #'equal))))))))
+
+(ert-deftest emacsvox-agent-shell-folded-heading-customized-cues ()
+  "Visibility customization replaces only the fold cue and preserves labels."
+  (dolist (fragments '(nil (agent-shell-block-visibility-labels)
+                      (agent-shell-block-visibility-cues)
+                      (agent-shell-block-visibility-cues
+                       agent-shell-block-visibility-labels)))
+    (let ((emacsvox-aural-active-scheme 'default)
+          (emacsvox-aural-enabled-feature-fragments fragments)
+          (emacsvox-aural-user-rules nil)
+          (emacsvox-aural-session-rules nil)
+          (emacsvox-aural-buffer-rules nil))
+      (emacsvox-agent-shell-test--folded-heading-buffer
+       "agent_capabilities" "Agent capabilities" nil
+       (lambda (start)
+         (goto-char start) (forward-line -1)
+         (let (plans)
+           (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                      (lambda (text &rest options)
+                        (let ((prepared
+                               (emacsvox-aural-prepare-text
+                                text (plist-get options :facts)
+                                (plist-get options :context)
+                                (emacsvox-aural--source-compatibility-actions
+                                 (plist-get options :compatibility-actions)))))
+                          (setq plans
+                                (append plans
+                                        (emacsvox-aural--submission-plans-in
+                                         prepared)))))))
+             (emacsvox-agent-shell-test--heading-arrow "<down>"))
+           (let* ((before (mapcan (lambda (plan)
+                                   (copy-sequence
+                                    (emacsvox-aural-concrete-plan-before plan)))
+                                 plans))
+                  (after (mapcan (lambda (plan)
+                                  (copy-sequence
+                                   (emacsvox-aural-concrete-plan-after plan)))
+                                plans))
+                  (cues (mapcar #'emacsvox-aural-concrete-action-cue before))
+                  (custom (memq 'agent-shell-block-visibility-cues fragments)))
+             (should plans)
+             (should (= (cl-count 'ellipses cues) (if custom 0 1)))
+             (should (= (cl-count 'close-object cues) (if custom 1 0)))
+             (should (= (cl-count 'left cues) 1))
+             (should (= (cl-count "collapsed"
+                                  (mapcar #'emacsvox-aural-concrete-action-text after)
+                                  :test #'equal)
+                        (if (memq 'agent-shell-block-visibility-labels fragments)
+                            1 0))))))))))
+
+(ert-deftest emacsvox-agent-shell-folded-heading-graphical-wrapping ()
+  "A wrapped heading cues entry once and cues re-entry from below."
+  (skip-unless (display-graphic-p))
+  (emacsvox-agent-shell-test--folded-heading-buffer
+   "available_models"
+   (concat "Available models " (make-string (* 3 (window-body-width)) ?x) " FINAL")
+   nil
+   (lambda (start)
+     (goto-char start)
+     (let ((end (line-end-position)))
+       (save-restriction
+         (narrow-to-region (line-beginning-position) end)
+         (should (> (count-screen-lines (point-min) (point-max)) 2)))
+       (goto-char start) (forward-line -1)
+       (let ((events (emacsvox-agent-shell-test--capture-events
+                       (emacsvox-agent-shell-test--heading-arrow "<down>"))))
+         (should (= 1 (cl-count '(icon ellipses) events :test #'equal)))
+         (should (= 1 (cl-count 'speak events :key #'car)))
+         (should-not (string-match-p "FINAL" (cadr (assq 'speak events)))))
+       (let ((rows 0) events)
+         (while (and (< (point) end) (< rows 10))
+           (redisplay t)
+           (setq events
+                 (append events
+                         (emacsvox-agent-shell-test--capture-events
+                           (emacsvox-agent-shell-test--heading-arrow "<down>"))))
+           (cl-incf rows))
+         (should (> rows 1))
+         (should (< rows 10))
+         (should-not (member '(icon ellipses) events))
+         (should (seq-some (lambda (event)
+                            (and (eq (car event) 'speak)
+                                 (string-match-p "FINAL" (cadr event)))) events)))
+       (let ((events (emacsvox-agent-shell-test--capture-events
+                       (emacsvox-agent-shell-test--heading-arrow "<up>"))))
+         (should (= 1 (cl-count '(icon ellipses) events :test #'equal)))
+         (should (eq (key-binding (kbd "RET")) 'agent-shell-ui-toggle-fragment))
+         (should-not (seq-some (lambda (event)
+                                (and (eq (car event) 'speak)
+                                     (string-match-p "HIDDEN BODY" (cadr event))))
+                              events)))))))
+
 (ert-deftest emacsvox-agent-shell-folded-visual-line-uses-visible-heading ()
   "Folded visual-line speech should not extract its invisible body."
   (with-temp-buffer

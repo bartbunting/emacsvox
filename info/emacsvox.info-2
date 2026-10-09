@@ -256,6 +256,12 @@ activity, tool, plan, permission, error, source-block, and table
 locations.  Emacsvox navigation reports the block type, visibility, and
 a bounded body preview.
 
+   Up and Down play the ellipses cue when you enter a collapsed heading,
+such as Capabilities, Models, or Notices.  Wrapped continuation rows do
+not repeat the cue; leaving and returning to the heading plays it again.
+The optional block visibility cue replaces this default cue.  Reading
+the current line with ‘C-e l’ continues to indicate hidden content.
+
 ‘h / H’
      Use ‘h’ (‘emacsvox-agent-shell-next-heading’) or ‘H’
      (‘emacsvox-agent-shell-previous-heading’).  Move to the next or

@@ -113,33 +113,33 @@ Node: Desktop Applications288414
 Node: Notmuch Mail296703
 Ref: Notmuch fields and privacy307367
 Node: Agent Shell313483
-Node: EAT Terminal Access334921
-Node: Running Terminal Based Applications355797
-Node: Starting Term356772
-Node: Term Input Modes357699
-Node: Term Speech Feedback358865
-Node: Reviewing The Term Screen360059
-Node: Term Help And Recovery361960
-Node: Emacsvox Keyboard Commands362879
-Node: Copyright365232
-Node: Acknowledgments365821
-Node: Developer Guide366847
-Node: Documentation Maintenance368011
-Node: Speech Server Protocols373426
-Ref: Testing A Direct Legacy Server381541
-Ref: Commands That Queue Output382100
-Ref: Commands That Set State385938
-Node: Integration Maintenance388532
-Ref: Background startup ownership and failure recovery399448
-Ref: Supported Emacs versions402601
-Ref: Native Windows builds405280
-Ref: Offline Windows development bundle407553
-Ref: Public Windows installer previews416606
-Ref: Remote preview validation419670
-Ref: Internal ownership and renderer tests441294
-Ref: Upstream contract layers444874
-Node: Authoring Sound Packs474573
-Node: Concept Index477844
+Node: EAT Terminal Access335282
+Node: Running Terminal Based Applications356158
+Node: Starting Term357133
+Node: Term Input Modes358060
+Node: Term Speech Feedback359226
+Node: Reviewing The Term Screen360420
+Node: Term Help And Recovery362321
+Node: Emacsvox Keyboard Commands363240
+Node: Copyright365593
+Node: Acknowledgments366182
+Node: Developer Guide367208
+Node: Documentation Maintenance368372
+Node: Speech Server Protocols373787
+Ref: Testing A Direct Legacy Server381902
+Ref: Commands That Queue Output382461
+Ref: Commands That Set State386299
+Node: Integration Maintenance388893
+Ref: Background startup ownership and failure recovery399809
+Ref: Supported Emacs versions402962
+Ref: Native Windows builds405641
+Ref: Offline Windows development bundle407914
+Ref: Public Windows installer previews416967
+Ref: Remote preview validation420031
+Ref: Internal ownership and renderer tests441655
+Ref: Upstream contract layers445235
+Node: Authoring Sound Packs474934
+Node: Concept Index478205
 
 End Tag Table
 

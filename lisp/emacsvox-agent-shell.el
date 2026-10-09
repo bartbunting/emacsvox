@@ -1084,6 +1084,9 @@ a positive argument to the advised command."
             (emacsvox-agent-shell--move-beyond-visual-source-row
              direction origin-source-bounds)))))
       (emacsvox-agent-shell--normalize-folded-heading-position)
+      ;; Core advice may wrap this adapter when loaded later.  We own the
+      ;; final presentation, so do not let that outer advice repeat it.
+      (ems-interactive-p target)
       (emacsvox-agent-shell--present-current-navigation-line))
     result))
 
@@ -3177,6 +3180,23 @@ input.  Keep the prompt source on the first row so speech can name Me."
             (when (< start end)
               (cons start end))))))))
 
+(defun emacsvox-agent-shell--call-with-folded-heading-cue
+    (function arguments)
+  "Call FUNCTION with ARGUMENTS, adding a folded cue to its speech submission.
+Keep the cue in the same presentation as the heading so aural rules can
+replace it and navigation interruption cannot cancel it separately."
+  (let ((submit (symbol-function 'emacsvox-aural-submit)))
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (text &rest options)
+            (apply submit text
+                   (plist-put
+                    options :compatibility-actions
+                    (append (plist-get options :compatibility-actions)
+                            (list (emacsvox-aural-compatibility-icon
+                                   'ellipses))))))))
+      (apply function arguments))))
+
 (defun emacsvox-agent-shell--speak-visual-line-around
     (original-function &rest arguments)
   "Add semantic block-entry context to Agent Shell visual-line speech.
@@ -3190,6 +3210,9 @@ Core visual-line presentation owns blank-line semantics and interruption."
                        (map-elt state :collapsed)
                        (memq section '(indicator label-left label-right)))
               (cons (line-beginning-position) (line-end-position))))
+           (folded-heading-entry-p
+            (and folded-heading-bounds
+                 (emacsvox-agent-shell--vertical-block-entry-facts)))
            (source-bounds
             (if folded-heading-bounds
                 ;; Invisible bodies can make the display engine treat a complete
@@ -3237,7 +3260,10 @@ Core visual-line presentation owns blank-line semantics and interruption."
                (narrow-to-region
                 (car folded-heading-bounds)
                 (cdr folded-heading-bounds))
-               (apply original-function call-arguments))))
+               (if folded-heading-entry-p
+                   (emacsvox-agent-shell--call-with-folded-heading-cue
+                    original-function call-arguments)
+                 (apply original-function call-arguments)))))
           (t original-function))
          arguments)))))
 

@@ -6486,6 +6486,12 @@ Agent Shell responses contain semantic prompt@comma{} response@comma{} thought@c
 tool@comma{} plan@comma{} permission@comma{} error@comma{} source-block@comma{} and table locations.  Emacsvox
 navigation reports the block type@comma{} visibility@comma{} and a bounded body preview.
 
+Up and Down play the ellipses cue when you enter a collapsed heading@comma{} such as
+Capabilities@comma{} Models@comma{} or Notices. Wrapped continuation rows do not repeat the
+cue; leaving and returning to the heading plays it again. The optional block
+visibility cue replaces this default cue. Reading the current line with
+@kbd{C-e l} continues to indicate hidden content.
+
 @table @kbd
 @item h / H
 Use @kbd{h} (@code{emacsvox-agent-shell-next-heading}) or
