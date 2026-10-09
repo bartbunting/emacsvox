@@ -6,9 +6,42 @@ Emacsvox News -- History Of User-Visible Changes
 
 Maintained by Emacsvox Contributors.
 
-* Emacsvox Unreleased --- Current User-Visible Changes
+* Emacsvox 2026.10.0 --- Current User-Visible Changes
 
 Released notes are preserved in [[file:NEWS-2026.9.5][NEWS for Emacsvox 2026.9.5]].
+
+** Omnivox 1.17.0 required
+
+This release requires Omnivox 1.17.0 or newer. The Debian package recommends
+that minimum; remote Emacs and WSL installations can use a speech server
+outside the local package manager. Upgrade Omnivox separately: updating
+Emacsvox does not replace an existing speech server.
+
+Release preparation is awaiting the published Omnivox 1.17.0 archives.
+Installer pins and installation instructions still describe 1.12.0 and must
+be updated and verified before this release is ready.
+
+** Use a quieter cue for HTML tables
+
+HTML tables in email and web pages now use a short, soft tick. This shared
+default applies across sound packs, including personal packs, and replaces
+the louder fill-object sound previously used for table boundaries.
+
+** Read tables consistently across text and application buffers
+
+Shared table reading now covers Agent Shell, Markdown, Org and the table
+browser. Contextual Control-Meta arrows enter table reading while ordinary
+prompt input remains editable. Character and word movement follow wrapped
+Agent Shell cells; modified row movement speaks the destination cell.
+Leaving table reading restores ordinary navigation without an unexpected
+structural jump. Collapsed Agent Shell headings receive a cue when read.
+
+** Keep speech preparation and control requests bounded
+
+Speech control requests now belong to the process that issued them, so a
+restart cannot leave requests waiting on a retired worker. List assembly
+preserves the active utterance, and pronunciation replacement always advances
+through the text.
 
 ** Keep EAT screen redraws quiet
 
@@ -187,12 +220,7 @@ choice, fallbacks and tuning belong to that palette and follow palette
 switches on both speech streams. Other named voices keep their own settings.
 Use at Startup remains the separate action for choosing a startup palette.
 
-** Interruptible Notmuch refresh and EAT history feedback
-
-Refreshing the selected Notmuch search buffer queues its completion count on
-the primary speech stream. Navigation interrupts it, and it no longer speaks
-over the selected message through the notification stream. Refreshes that
-finish in another buffer retain generic notification feedback.
+** Notmuch thread reading and EAT history feedback
 
 Opening a Notmuch thread now selects its newest open, matching unread
 message. When none is unread, it keeps Notmuch's initial selection.
@@ -224,7 +252,7 @@ Reopen the screen with C-h W or M-x emacsvox-welcome.
 
 ** Agent Shell
 
-Agent Shell 0.78.1 support keeps brackets editable at the persistent prompt
+Agent Shell support keeps brackets editable at the persistent prompt
 while the agent works. Viewport submission feedback distinguishes queueing
 from steering, including the override command and unsupported-steering
 fallback. Full header speech includes the optional cumulative cost indicator.

@@ -1,0 +1,88 @@
+#+title: Emacsvox 2026.10.0 Release Preparation
+#+date: 2026-10-09
+
+* Release identity and status
+
+The release target is =2026.10.0= with Omnivox =1.17.0= or newer.
+Preparation follows =a2421702f=, which adds the quiet HTML table cue.
+=VERSION=, the Lisp package header and the current NEWS heading agree.
+The Debian package recommends =omnivox (>= 1.17.0)=; remote Emacs and WSL
+retain the optional local-package relationship in ADR 0013.
+
+This is an incomplete release preparation, not a completed release gate.
+The GitHub lookup for =bartbunting/omnivox= tag =v1.17.0= returned
+"release not found" on 2026-10-09. No release tag or publication is authorized
+by this record.
+
+* Prepared changes
+
+NEWS names the new Omnivox minimum and records the quieter HTML cue, shared
+table navigation, and bounded speech preparation and control requests.
+It also removes superseded Notmuch refresh behavior and an obsolete Agent
+Shell version from the accumulated notes. Archived release notes are intact.
+
+* Work awaiting Omnivox publication
+
+Update and verify the following together using the published release bytes:
+
+- =etc/wsl-install.conf=: Windows x64 and ARM64 core archives, URLs and SHA-256
+  hashes. Native Windows installation reads the same pins.
+- =etc/omnivox-components.conf=: matching Flite, RuTTS, Piper and TGSpeechBox
+  archive identities, sizes, hashes and architecture availability. Review
+  TGSpeechBox's inclusion in the new core before changing companion handling.
+- =etc/windows-sources.json=, =etc/windows-sources.txt= and
+  =etc/WINDOWS-THIRD-PARTY-NOTICES.txt=: matching runtime and source identities,
+  locked dependencies and notices for Windows redistribution.
+- README, the installation and speech-backend chapters, and the developer
+  staging example: supported minimum, verified archives, commands and paths.
+  Preserve historical version references where they describe past behavior.
+- NEWS: remove the preparation caveat only after these checks succeed.
+
+ADR 0008 requires published, exact-version modules before updating the
+component manifest. ADRs 0005 and 0011 require isolated x64/ARM64 installer
+checks and a real newly pinned archive check before changing public
+installation guidance. Existing 1.12.0 pins and their public instructions
+remain pending those checks; they are not suitable for this release target.
+
+Confirm the released server's engine configuration, named punctuation
+profiles and palette character support on both speech lanes. Repeat the
+host and audible checks appropriate to each supported route. Existing
+development-runtime results do not qualify the released binaries.
+
+* Final release checks
+
+After the pins, instructions and NEWS settle, regenerate the maintained
+manual with =make docs-update= and validate =make docs-release-check=.
+Commit the completed preparation, create a separate clean release worktree,
+and run =make bytecode-rebuild= followed by =make release-artifact=.
+Inspect the archive, checksum and recorded source commit. Run
+=make release-deb= for the Debian asset. Check the supported Emacs matrix;
+local Emacs 31.0.90 results do not establish Emacs 30.2 and 31.1 acceptance.
+
+The native Windows setup remains a development/preview route under ADRs
+0024 and 0025. A stable source release does not complete its remaining
+installer acceptance or integrate it into stable release publication.
+
+Tagging and publication require fresh explicit approval naming
+=2026.10.0=. Prepare the public manual from the same clean committed source
+using the existing documentation publication workflow.
+
+* Validation
+
+Checks use the configured Emacs =31.0.90=.
+
+| Check | Result |
+|-------+--------|
+| =check-emacs=, =version-check=, =headers-check= | Passed. |
+| =bytecode= and its fresh-process =bytecode-check= | Passed. |
+| =docs-release-check= | Passed. |
+| =deb-test= | All six tests passed, including the packaged Omnivox minimum. |
+
+The first =make test= stopped at the source-archive fixture because it exports
+=HEAD= with a prefix taken from the working =VERSION=. The uncommitted version
+bump made those identities differ. Repeat that check after committing the
+preparation; no test or release guard has been weakened.
+
+Logs are under =/tmp/emacsvox-release-prep-*-20261009.log=.
+No released Omnivox 1.17.0 archive, native audible acceptance, supported-Emacs
+matrix, final release artifact or published documentation has been checked.
