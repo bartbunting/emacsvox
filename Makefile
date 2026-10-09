@@ -121,6 +121,7 @@ piper-catalogue-test:
 
 windows-staging-test:
 	python3 -m unittest discover -s test -p 'test_windows_staging.py' -v
+	python3 -m unittest discover -s test -p 'test_tgspeechbox_build.py' -v
 
 # Local development payload only; this target does not publish a release.
 windows-bundle-dev:
@@ -474,7 +475,7 @@ OMNIVOX_INCLUDE_PINNED_PIPER ?= 1
 OMNIVOX_PIPER_PREPARED ?= 0
 OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE ?=
 OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256 ?=
-OMNIVOX_INCLUDE_TGSPEECHBOX ?= 0
+OMNIVOX_INCLUDE_TGSPEECHBOX ?= 1
 OMNIVOX_TGSPEECHBOX_CXX ?= x86_64-w64-mingw32-g++-posix
 OMNIVOX_RECORD_RHVOICE ?= 0
 # Make include paths need escaped spaces even after variable expansion.
@@ -505,7 +506,7 @@ windows-omnivox-dev:
 	$(MAKE) OMNIVOX_ALLOW_DIRTY=1 \
 		OMNIVOX_BUILD_KIND=local-dirty-worktree \
 		OMNIVOX_RECORD_RHVOICE=1 \
-		OMNIVOX_INCLUDE_TGSPEECHBOX=1 \
+		OMNIVOX_INCLUDE_TGSPEECHBOX=$(OMNIVOX_INCLUDE_TGSPEECHBOX) \
 		OMNIVOX_INCLUDE_PINNED_PIPER=0 windows-omnivox
 
 windows-omnivox-piper-dev:
@@ -527,7 +528,7 @@ windows-omnivox-piper-dev:
 		$(MAKE) OMNIVOX_ALLOW_DIRTY=1 \
 			OMNIVOX_BUILD_KIND=local-dirty-worktree \
 			OMNIVOX_RECORD_RHVOICE=1 \
-			OMNIVOX_INCLUDE_TGSPEECHBOX=1 \
+			OMNIVOX_INCLUDE_TGSPEECHBOX=$(OMNIVOX_INCLUDE_TGSPEECHBOX) \
 			OMNIVOX_INCLUDE_PINNED_PIPER=1 \
 			OMNIVOX_PIPER_PREPARED=1 \
 			OMNIVOX_PIPER_DIR="$$piper_dir" \
@@ -580,8 +581,8 @@ windows-omnivox:
 			exit 1; \
 		fi; \
 		if [ "$(OMNIVOX_ALLOW_DIRTY)" != 1 ] && \
-			[ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" != 0 ]; then \
-			echo "TGSpeechBox is experimental and may only be staged by windows-omnivox-dev" >&2; \
+			[ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" != 1 ]; then \
+			echo "The clean Windows runtime must include TGSpeechBox" >&2; \
 			exit 1; \
 		fi; \
 		if [ "$(OMNIVOX_ALLOW_DIRTY)" != 1 ]; then \
@@ -596,16 +597,6 @@ windows-omnivox:
 		fi
 	$(MAKE) verify-windows-omnivox-toolchain
 	$(MAKE) verify-windows-omnivox-helpers
-	@if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
-		command -v "$(OMNIVOX_TGSPEECHBOX_CXX)" >/dev/null || { \
-			echo "TGSpeechBox requires the MinGW POSIX C++ compiler: $(OMNIVOX_TGSPEECHBOX_CXX)" >&2; \
-			exit 1; \
-		}; \
-		cd "$(OMNIVOX_DIR)" && \
-			CXX_x86_64_pc_windows_gnu="$(OMNIVOX_TGSPEECHBOX_CXX)" \
-			python3 tools/build_tgspeechbox.py --release \
-				--target $(OMNIVOX_TARGET); \
-	fi
 	@if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ] && \
 		[ "$(OMNIVOX_PIPER_PREPARED)" != 1 ]; then \
 		$(MAKE) prepare-windows-omnivox-piper; \
@@ -616,6 +607,7 @@ windows-omnivox:
 		--env CARGO_HOME=/workspace/omnivox/target/emacsvox-cargo-home \
 		--env CARGO_TARGET_DIR=/workspace/omnivox/target/emacsvox-release \
 		--volume "$(OMNIVOX_DIR):/workspace/omnivox" \
+		--volume "$(OMNIVOX_RELEASE_DIR):/workspace/emacsvox-release:ro" \
 		--workdir /workspace/omnivox \
 		"$(OMNIVOX_RELEASE_IMAGE)" sh -eu -c ' \
 			mkdir -p "$$HOME" "$$CARGO_HOME"; \
@@ -655,16 +647,9 @@ windows-omnivox:
 			python3 tools/build_rutts.py --release \
 				--target $(OMNIVOX_TARGET); \
 			if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
-				tgspeechbox_source="/workspace/omnivox/target/$(OMNIVOX_TARGET)/release/tgspeechbox"; \
-				tgspeechbox_destination="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/tgspeechbox"; \
-				if [ ! -f "$$tgspeechbox_source/omnivox-tgspeechbox-helper.exe" ] || \
-					[ ! -f "$$tgspeechbox_source/VOICE-INVENTORY.json" ] || \
-					[ ! -f "$$tgspeechbox_source/VOICE-INVENTORY-22050.json" ] || \
-					[ ! -f "$$tgspeechbox_source/VOICE-INVENTORY-44100.json" ]; then \
-					echo "Host-built TGSpeechBox companion is incomplete: $$tgspeechbox_source" >&2; \
-					exit 1; \
-				fi; \
-				cp -a "$$tgspeechbox_source" "$$tgspeechbox_destination"; \
+				CXX_x86_64_pc_windows_gnu="$(OMNIVOX_TGSPEECHBOX_CXX)" \
+					python3 /workspace/emacsvox-release/build-tgspeechbox.py build \
+						--repository /workspace/omnivox; \
 			fi; \
 			cp "$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.exe" \
 				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.unstripped.exe"; \
@@ -685,22 +670,17 @@ windows-omnivox:
 				find . -type f ! -name SHA256SUMS -print0 | LC_ALL=C sort -z | \
 				xargs -0 sha256sum) > "$$rutts_manifest"; \
 			mv "$$rutts_manifest" "$$rutts_dir/SHA256SUMS"; \
-			if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
-				tgspeechbox_dir="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/tgspeechbox"; \
-				SOURCE_DATE_EPOCH=0 x86_64-w64-mingw32-strip --strip-all \
-					"$$tgspeechbox_dir/omnivox-tgspeechbox-helper.exe"; \
-				tgspeechbox_manifest="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/tgspeechbox-SHA256SUMS"; \
-				(cd "$$tgspeechbox_dir" && \
-					find . -type f ! -name SHA256SUMS -print0 | LC_ALL=C sort -z | \
-					xargs -0 sha256sum) > "$$tgspeechbox_manifest"; \
-				mv "$$tgspeechbox_manifest" "$$tgspeechbox_dir/SHA256SUMS"; \
-			fi; \
 			mkdir -p "$$CARGO_TARGET_DIR/windows-runtime"; \
 			cp "$$(x86_64-w64-mingw32-g++-win32 -print-file-name=libstdc++-6.dll)" \
 				"$$CARGO_TARGET_DIR/windows-runtime/libstdc++-6.dll"; \
 			cp "$$(x86_64-w64-mingw32-g++-win32 -print-file-name=libgcc_s_seh-1.dll)" \
 				"$$CARGO_TARGET_DIR/windows-runtime/libgcc_s_seh-1.dll"; \
 		'
+	@if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
+		cd "$(OMNIVOX_DIR)" && \
+			python3 "$(OMNIVOX_RELEASE_DIR)/build-tgspeechbox.py" stage \
+				--repository "$(OMNIVOX_DIR)"; \
+	fi
 	EMACSVOX_STAGE_ROOT="$(CURDIR)" \
 		OMNIVOX_BUILD_KIND="$(OMNIVOX_BUILD_KIND)" \
 		OMNIVOX_CSC="$(OMNIVOX_CSC)" \

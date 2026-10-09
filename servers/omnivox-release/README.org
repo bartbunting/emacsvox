@@ -178,3 +178,13 @@ Staging changes what a newly launched speech process selects.  An existing
 Omnivox process continues running the content-addressed executable with which
 it started, so restart Emacsvox, or otherwise start a fresh speech server,
 after staging a new runtime.
+
+* TGSpeechBox
+
+Both clean and development runtime builds include TGSpeechBox by default.
+Its C++ and Rust code compiles inside the pinned container using the pinned
+MinGW POSIX C++ package. The host checks the output hashes, executes that exact
+Windows helper to generate both voice inventories, and stages its profiles,
+language data and notices. No host C++ compiler supplies release code.
+The helper remains a separate process. Development builds may explicitly omit
+it with =OMNIVOX_INCLUDE_TGSPEECHBOX=0=; clean builds require it.

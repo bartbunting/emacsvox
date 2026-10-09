@@ -16,6 +16,8 @@ RUN rm -f /etc/apt/sources.list /etc/apt/sources.list.d/debian.sources \
     && apt-get install -y --no-install-recommends \
        binutils-mingw-w64-x86-64=2.40-2+10.4 \
        cmake=3.25.1-1 \
+       g++-mingw-w64-x86-64-posix=12.2.0-14+deb12u1+25.2+b1 \
+       gcc-mingw-w64-x86-64-posix=12.2.0-14+deb12u1+25.2+b1 \
        g++-mingw-w64-x86-64-win32=12.2.0-14+deb12u1+25.2+b1 \
        gcc-mingw-w64-x86-64-win32=12.2.0-14+deb12u1+25.2+b1 \
        libasound2-dev=1.2.8-1+b1 \

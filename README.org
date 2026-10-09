@@ -65,7 +65,7 @@ checked-in Info files provide the same manual inside Emacs.
    Once first speech works, =M-x emacsvox-omnivox-manage-components RET= (or
    =C-e H= followed by =I=) opens the spoken optional-engine manager.  It can
    download, checksum-verify, and install matching Flite, RuTTS, Piper, and
-   experimental TGSpeechBox modules per user.  Proprietary Eloquence, DECtalk,
+   TGSpeechBox modules per user.  Proprietary Eloquence, DECtalk,
    and RHVoice runtimes and Piper voice models remain user supplied.
 
    On macOS, install Emacs 30.2 or newer separately and use the

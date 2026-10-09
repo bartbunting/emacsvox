@@ -107,9 +107,11 @@ class WindowsStagingTests(unittest.TestCase):
                      "VOICE-INVENTORY-44100.json", "espeak-ng-data/phontab", "packs/lang/en-us.yaml",
                      "third-party-licenses/eSpeak-NG-GPL-3.0.txt"):
             self.write(self.binaries / "tgspeechbox" / name, name + " fixture\n")
-        self.write(self.omnivox / "tools/build_tgspeechbox.py",
+        self.write(self.release / "build-tgspeechbox.py",
                    "import os\nwith open(os.environ['STAGING_EVENTS'], 'a') as f:\n"
                    "    f.write('\"build-tgspeechbox\"\\n')\n")
+        self.write(self.output / "tgspeechbox-build.json", json.dumps({
+            "compiler": "pinned fixture compiler", "compiler_sha256": "a" * 64}))
         self.write(self.binaries / "flite/voice sample.txt", "payload with spaces\n")
 
     def write(self, path, text):
@@ -154,7 +156,8 @@ class WindowsStagingTests(unittest.TestCase):
         self.assertEqual("none" if development else "piper", provenance["omnivox_features"])
         self.assertEqual("not-included" if development else "official-omnivox-release",
                          provenance["piper_companion"])
-        self.assertEqual(development, (current / "tgspeechbox").exists())
+        self.assertTrue((current / "tgspeechbox").is_dir())
+        self.assertEqual("pinned-release-container", provenance["tgspeechbox_build_environment"])
         self.assertEqual(not development, (current / "piper").exists())
         self.assertFalse((current / "omnivox.unstripped.exe").exists())
         self.assertEqual((self.binaries / "omnivox.unstripped.exe").read_bytes(),
@@ -162,7 +165,7 @@ class WindowsStagingTests(unittest.TestCase):
         expected = {"omnivox.exe", "libstdc++-6.dll", "libgcc_s_seh-1.dll",
                     "OmnivoxEloquenceHelper32.exe", "OmnivoxDectalkHelper32.exe",
                     "WINDOWS-HELPERS-COPYING", "OMNIVOX-LICENSE", "PROVENANCE"}
-        for name in ("rhvoice", "flite", "rutts", "tgspeechbox" if development else "piper"):
+        for name in ("rhvoice", "flite", "rutts", "tgspeechbox") + (() if development else ("piper",)):
             source = self.piper if name == "piper" else self.binaries / name
             for path in source.rglob("*"):
                 if path.is_file():
@@ -228,8 +231,14 @@ class WindowsStagingTests(unittest.TestCase):
                     self.write(repository / "tracked-input", "unchanged\n")
                     self.git(repository, "add", "tracked-input")
 
+    def test_development_can_explicitly_omit_tgspeechbox(self):
+        self.stage("windows-omnivox-dev", "OMNIVOX_INCLUDE_TGSPEECHBOX=0")
+        current = self.current()
+        self.assertFalse((current / "tgspeechbox").exists())
+        self.assertEqual("not-included", fields(current / "PROVENANCE")["tgspeechbox_companion"])
+
     def test_invalid_feature_combinations_fail_before_building(self):
-        for variable in ("OMNIVOX_INCLUDE_PINNED_PIPER=0", "OMNIVOX_INCLUDE_TGSPEECHBOX=1",
+        for variable in ("OMNIVOX_INCLUDE_PINNED_PIPER=0", "OMNIVOX_INCLUDE_TGSPEECHBOX=0",
                          "OMNIVOX_PIPER_PREPARED=bad", "OMNIVOX_RECORD_RHVOICE=bad",
                          "OMNIVOX_PIPER_COMPANION_STATE=github-actions-native-development-build"):
             with self.subTest(variable=variable):
@@ -315,7 +324,7 @@ class WindowsStagingTests(unittest.TestCase):
         self.assertEqual("recorded-windows-paths", provenance["rhvoice_configuration"])
         self.assertEqual(digest(library), provenance["rhvoice_library_sha256"])
         self.assertEqual("bundled-pinned-archive", provenance["dectalk_runtime"])
-        self.assertEqual("local-omnivox-experimental-build", provenance["tgspeechbox_companion"])
+        self.assertEqual("local-omnivox-build", provenance["tgspeechbox_companion"])
         self.assertEqual("dectalk\n", (current / "DECtalk.dll").read_text())
         for filename, source in (("piper-model.path", model),
                                  ("piper-model-config.path", Path(str(model) + ".json"))):

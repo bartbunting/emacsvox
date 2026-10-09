@@ -712,7 +712,7 @@ The choices have different boundaries:
 - RuTTS includes its compact Russian voices and needs no external runtime.
 - Piper installs native engine support, but appears only after you separately
   review and configure an ONNX voice model and its model card.
-- TGSpeechBox is an explicitly experimental multilingual formant engine.  The
+- TGSpeechBox is a multilingual formant engine.  The
   1.12.0 engine calibrates rate control to the Eloquence scale and supplies exact
   requested text anchors for capitalization and timed presentation.
 - RHVoice, Eloquence, and DECtalk use distributable bridges, but Emacsvox never

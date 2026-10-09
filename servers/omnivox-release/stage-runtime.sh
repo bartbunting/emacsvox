@@ -105,11 +105,11 @@ if [ "${OMNIVOX_INCLUDE_TGSPEECHBOX}" = 1 ]; then
 	tgspeechbox_companion_digest="$(cd "$tgspeechbox_companion" && \
 		find . -type f -print0 | LC_ALL=C sort -z | \
 		xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"
-	tgspeechbox_build_environment=wsl-host-development-only
-	tgspeechbox_cxx="$("${OMNIVOX_TGSPEECHBOX_CXX}" --version | sed -n '1p')"
-	tgspeechbox_cxx_path="$(command -v "${OMNIVOX_TGSPEECHBOX_CXX}")"
-	tgspeechbox_cxx_digest="$(sha256sum \
-		"$(readlink -f "$tgspeechbox_cxx_path")" | cut -d ' ' -f1)"
+	tgspeechbox_build_environment=pinned-release-container
+	tgspeechbox_cxx=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["compiler"])' \
+		"${OMNIVOX_RELEASE_TARGET_DIR}/tgspeechbox-build.json")
+	tgspeechbox_cxx_digest=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["compiler_sha256"])' \
+		"${OMNIVOX_RELEASE_TARGET_DIR}/tgspeechbox-build.json")
 fi
 piper_companion=
 piper_companion_digest=not-included
@@ -529,7 +529,7 @@ tgspeechbox_target=not-included
 tgspeechbox_markers=not-included
 tgspeechbox_rate_mapping=not-included
 if [ "${OMNIVOX_INCLUDE_TGSPEECHBOX}" = 1 ]; then
-	tgspeechbox_companion_state=local-omnivox-experimental-build
+	tgspeechbox_companion_state=local-omnivox-build
 	tgspeechbox_target=${OMNIVOX_TARGET}
 	tgspeechbox_markers=exact_requested_anchors
 	tgspeechbox_rate_mapping=calibrated_eloquence_v1

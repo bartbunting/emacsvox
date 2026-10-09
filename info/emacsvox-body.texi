@@ -1956,7 +1956,7 @@ RuTTS includes its compact Russian voices and needs no external runtime.
 Piper installs native engine support@comma{} but appears only after you separately
 review and configure an ONNX voice model and its model card.
 @item
-TGSpeechBox is an explicitly experimental multilingual formant engine.  The
+TGSpeechBox is a multilingual formant engine.  The
 1.12.0 engine calibrates rate control to the Eloquence scale and supplies exact
 requested text anchors for capitalization and timed presentation.
 @item
@@ -9212,6 +9212,14 @@ preparation@comma{} Docker compilation@comma{} and final runtime verification.  
 @code{windows-omnivox} target passes prepared build outputs to the internal
 @code{servers/omnivox-release/stage-runtime.sh} script.  Use the guarded Make
 targets rather than invoking this script directly.
+
+TGSpeechBox is included by default.  Its helper compiles inside the pinned
+container with the pinned MinGW POSIX C++ compiler.  The internal
+@code{build-tgspeechbox.py} records the executable@comma{} data and compiler hashes.  On the
+host it validates those outputs and uses the exact Windows helper to generate
+voice inventories before runtime staging.  A changed executable@comma{} data payload
+or source lock fails this handoff.  Clean builds require TGSpeechBox;
+development builds can explicitly omit it.
 
 The script owns host-side payload staging: input checks@comma{} content hashes@comma{}
 optional voice-data caches@comma{} diagnostics@comma{} provenance@comma{} path files@comma{} and selection

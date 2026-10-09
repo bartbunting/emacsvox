@@ -1215,6 +1215,14 @@ preparation, Docker compilation, and final runtime verification.  Its
 =servers/omnivox-release/stage-runtime.sh= script.  Use the guarded Make
 targets rather than invoking this script directly.
 
+TGSpeechBox is included by default.  Its helper compiles inside the pinned
+container with the pinned MinGW POSIX C++ compiler.  The internal
+=build-tgspeechbox.py= records the executable, data and compiler hashes.  On the
+host it validates those outputs and uses the exact Windows helper to generate
+voice inventories before runtime staging.  A changed executable, data payload
+or source lock fails this handoff.  Clean builds require TGSpeechBox;
+development builds can explicitly omit it.
+
 The script owns host-side payload staging: input checks, content hashes,
 optional voice-data caches, diagnostics, provenance, path files, and selection
 of the completed runtime.  Make passes the Emacsvox root as

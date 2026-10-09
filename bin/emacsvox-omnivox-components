@@ -32,7 +32,7 @@ Options:
   -h, --help             show this help and exit
 
 Piper installs its native companion but still requires a separately reviewed
-voice model. TGSpeechBox is experimental. Eloquence, DECtalk, and RHVoice
+voice model. Eloquence, DECtalk, and RHVoice
 require user-supplied runtimes; this installer never downloads them.
 EOF
 }
@@ -272,7 +272,7 @@ component_metadata()
             component_name=TGSpeechBox
             component_directory=tgspeechbox
             component_helper=omnivox-tgspeechbox-helper.exe
-            component_detail='Experimental multilingual formant engine'
+            component_detail='Multilingual formant engine'
             if [ "$omnivox_platform" = windows-x64 ]; then
                 component_archive=$EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_X64_ARCHIVE
                 component_sha256=$EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_X64_SHA256

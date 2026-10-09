@@ -691,7 +691,6 @@ OUTPUT to the generic process sentinel EVENT."
                     (or (plist-get emacsvox-omnivox-components--release-target :name) "the installed release"))
             (pcase id
               ("piper" "A separately reviewed voice model will still be required. ")
-              ("tgspeechbox" "This engine is experimental. ")
               (_ ""))))
         (emacsvox-omnivox-components--start
          record 'installation (list "--install" id))))))

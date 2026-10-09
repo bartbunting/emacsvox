@@ -95,7 +95,7 @@ tgspeechbox_companion_state=$(
     sed -n 's/^tgspeechbox_companion=//p' "$current/PROVENANCE"
 )
 case "$tgspeechbox_companion_state" in
-    local-omnivox-experimental-build)
+    local-omnivox-build | local-omnivox-experimental-build)
         for required in tgspeechbox/omnivox-tgspeechbox-helper.exe \
             tgspeechbox/VOICE-INVENTORY.json \
             tgspeechbox/VOICE-INVENTORY-22050.json \
@@ -111,16 +111,26 @@ case "$tgspeechbox_companion_state" in
             fi
         done
         for expected in \
-            'build_kind=local-dirty-worktree' \
             'tgspeechbox_target=x86_64-pc-windows-gnu' \
             'tgspeechbox_markers=exact_requested_anchors' \
-            'tgspeechbox_rate_mapping=calibrated_eloquence_v1' \
-            'tgspeechbox_build_environment=wsl-host-development-only'; do
+            'tgspeechbox_rate_mapping=calibrated_eloquence_v1'; do
             if ! grep -Fxq "$expected" "$current/PROVENANCE"; then
                 echo "Staged Omnivox provenance is missing: $expected" >&2
                 exit 1
             fi
         done
+        expected_tgspeechbox_environment=pinned-release-container
+        if [ "$tgspeechbox_companion_state" = local-omnivox-experimental-build ]; then
+            expected_tgspeechbox_environment=wsl-host-development-only
+            if ! grep -Fxq 'build_kind=local-dirty-worktree' "$current/PROVENANCE"; then
+                echo "Legacy host-built TGSpeechBox requires development provenance" >&2
+                exit 1
+            fi
+        fi
+        if ! grep -Fxq "tgspeechbox_build_environment=$expected_tgspeechbox_environment" "$current/PROVENANCE"; then
+            echo "Unexpected TGSpeechBox build environment" >&2
+            exit 1
+        fi
         expected_tgspeechbox_digest=$(
             sed -n 's/^tgspeechbox_companion_tree_sha256=//p' \
                 "$current/PROVENANCE"
@@ -251,7 +261,6 @@ case "$piper_companion_state" in
         done
         omnivox_commit=$(sed -n 's/^omnivox_commit=//p' "$current/PROVENANCE")
         for expected in \
-            'build_kind=local-dirty-worktree' \
             'omnivox_features=piper' \
             'piper_companion_version=development-ci' \
             "piper_companion_commit=$omnivox_commit"; do

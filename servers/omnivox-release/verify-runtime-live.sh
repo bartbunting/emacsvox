@@ -137,7 +137,7 @@ tgspeechbox_companion_state=$(
     sed -n 's/^tgspeechbox_companion=//p' "$current/PROVENANCE"
 )
 case "$tgspeechbox_companion_state" in
-    local-omnivox-experimental-build)
+    local-omnivox-build | local-omnivox-experimental-build)
         for sample_rate in 44100 22050; do
             tgspeechbox_voices=$(
                 run_staged_tgspeechbox "$sample_rate" \

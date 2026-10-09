@@ -31,6 +31,14 @@ actual_gcc_package=$(
     docker run --rm --platform linux/amd64 "$image" \
         dpkg-query -W -f='${Version}' gcc-mingw-w64-x86-64-win32
 )
+actual_posix_package=$(
+    docker run --rm --platform linux/amd64 "$image" \
+        dpkg-query -W -f='${Version}' g++-mingw-w64-x86-64-posix
+)
+if [ "$actual_posix_package" != "$mingw_gcc_package" ]; then
+    echo "Pinned image has MinGW POSIX package $actual_posix_package; expected $mingw_gcc_package" >&2
+    exit 1
+fi
 actual_binutils_package=$(
     docker run --rm --platform linux/amd64 "$image" \
         dpkg-query -W -f='${Version}' binutils-mingw-w64-x86-64
@@ -97,6 +105,7 @@ printf '%s\n' \
     "rustc=$actual_rust" \
     "mingw_gcc=$actual_gcc" \
     "mingw_gcc_package=$actual_gcc_package" \
+    "mingw_posix_package=$actual_posix_package" \
     "mingw_binutils_package=$actual_binutils_package" \
     "libclang_package=$actual_libclang_package" \
     "roslyn_csc=$actual_csc_version" \
