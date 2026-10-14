@@ -35,6 +35,8 @@
     ("Presentation features and scoped rules" emacsvox-settings-workflows emacsvox-settings-presentation "f")
     ("Saved setups, profiles and drafts" emacsvox-settings-workflows emacsvox-settings-setups "p")
     ("Integration speech settings" emacsvox-settings-integrations emacsvox-settings-integrations "a")
+    ("Shell/comint automatic output speech" emacsvox-settings-integrations emacsvox-settings-integrations--comint "s")
+    ("Shell/comint background output monitoring" emacsvox-settings-integrations emacsvox-settings-integrations--comint "b")
     ("Changed settings, saved defaults and drafts" emacsvox-settings-workflows emacsvox-settings-setups "c")
     ("Speech rate" emacsvox-aural-menu emacsvox-aural-menu-speech "r")
     ("Punctuation levels and profiles" emacsvox-aural-menu emacsvox-aural-menu-punctuation "p")

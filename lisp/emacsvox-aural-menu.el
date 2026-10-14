@@ -67,7 +67,8 @@
                          emacsvox-aural-menu-voices emacsvox-capitalization
                          emacsvox-interaction emacsvox-aural-menu-line-cues
                          emacsvox-output-settings emacsvox-settings-buffer
-                         emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations)))
+                         emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations
+                         emacsvox-settings-integrations--comint)))
       (user-error "Open the Emacsvox menu first"))
     (oref prefix scope)))
 

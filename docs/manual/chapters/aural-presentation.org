@@ -134,11 +134,23 @@ Home to the same menu entry. Each editor keeps its own Save and Apply actions.
 
 Use =C-e H j= for integration speech settings, or =C-e H . j= from current-buffer
 settings. =s= invokes the existing local Agent Shell session-level chooser or
-EAT/comint autospeak control. =c= opens the source integration's Customize group;
-=a= chooses among installed Agent Shell, EAT, Org, Notmuch, and EWW integrations.
-Customize retains its own Apply, Save, and Reset controls, and =q= returns to the
-menu. Comint autospeak is deliberately local. Integrations without an inventoried
-group remain reachable through major-mode settings and advanced Customize.
+EAT/comint autospeak control. =c= opens the source integration's settings;
+=a= chooses among Shell/comint and installed Agent Shell, EAT, Org, Notmuch,
+and EWW integrations. Cancel the chooser to return to its menu entry.
+
+From a shell or Comint buffer, =C-e H j c= opens a focused Transient. =s= toggles
+automatic output speech; =b= toggles background monitoring, which needs automatic
+speech enabled to read output while you are elsewhere. Arrows announce the
+current values and Enter activates the selected control. Both changes affect
+only the captured buffer and last for that buffer's lifetime; there is no Save
+action. =q= returns to the entry you opened it from. You can also find these
+controls with =C-e H /= by searching for =comint= or =monitoring=.
+
+Choosing Shell/comint from another kind of buffer explains where to open the
+controls and leaves them unavailable. Other integration entries currently open
+Customize, with its own Apply, Save, and Reset controls; =q= returns to the menu.
+Integrations without an inventoried entry remain reachable through major-mode
+settings and advanced Customize.
 
 The named-voice editor's =m= tuning menu now works for shared and individual
 fallback adjustments. =f= selects an existing fallback, =h= returns to shared

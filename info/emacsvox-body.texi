@@ -2999,11 +2999,23 @@ Home to the same menu entry. Each editor keeps its own Save and Apply actions.
 
 Use @code{C-e H j} for integration speech settings@comma{} or @code{C-e H . j} from current-buffer
 settings. @code{s} invokes the existing local Agent Shell session-level chooser or
-EAT/comint autospeak control. @code{c} opens the source integration's Customize group;
-@code{a} chooses among installed Agent Shell@comma{} EAT@comma{} Org@comma{} Notmuch@comma{} and EWW integrations.
-Customize retains its own Apply@comma{} Save@comma{} and Reset controls@comma{} and @code{q} returns to the
-menu. Comint autospeak is deliberately local. Integrations without an inventoried
-group remain reachable through major-mode settings and advanced Customize.
+EAT/comint autospeak control. @code{c} opens the source integration's settings;
+@code{a} chooses among Shell/comint and installed Agent Shell@comma{} EAT@comma{} Org@comma{} Notmuch@comma{}
+and EWW integrations. Cancel the chooser to return to its menu entry.
+
+From a shell or Comint buffer@comma{} @code{C-e H j c} opens a focused Transient. @code{s} toggles
+automatic output speech; @code{b} toggles background monitoring@comma{} which needs automatic
+speech enabled to read output while you are elsewhere. Arrows announce the
+current values and Enter activates the selected control. Both changes affect
+only the captured buffer and last for that buffer's lifetime; there is no Save
+action. @code{q} returns to the entry you opened it from. You can also find these
+controls with @code{C-e H /} by searching for @code{comint} or @code{monitoring}.
+
+Choosing Shell/comint from another kind of buffer explains where to open the
+controls and leaves them unavailable. Other integration entries currently open
+Customize@comma{} with its own Apply@comma{} Save@comma{} and Reset controls; @code{q} returns to the menu.
+Integrations without an inventoried entry remain reachable through major-mode
+settings and advanced Customize.
 
 The named-voice editor's @code{m} tuning menu now works for shared and individual
 fallback adjustments. @code{f} selects an existing fallback@comma{} @code{h} returns to shared

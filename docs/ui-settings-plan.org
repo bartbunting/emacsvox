@@ -331,13 +331,14 @@ entry and an all-integrations route. Check effective keymaps before new keys.
 
 Direction recorded on 2026-10-15: each listed integration should open a focused
 Transient rather than using Customize as its primary settings screen. Include
-ordinary shell/comint, which currently has a local autospeak action but no
-catalogue entry. Keep current-buffer access and the all-integrations chooser.
-This is planned work; the existing routes still open Customize.
+ordinary shell/comint alongside the existing integrations. Keep current-buffer
+access and the all-integrations chooser.
+Shell/comint now has a focused menu; the other listed routes still open Customize.
 
 Deliver and listen to one integration at a time. Proposed control groupings:
 
-- [ ] Shell/comint: local automatic speech and background output monitoring.
+- [X] Shell/comint: local automatic speech and background output monitoring
+  implemented; listening acceptance pending.
 - [ ] EAT: foreground speech, background monitoring, prompt feedback and detail.
 - [ ] Agent Shell: session speech level, foreground/background defaults,
   thoughts/tool/permission feedback and reading limits.
@@ -362,6 +363,33 @@ Acceptance for each slice: find a control by arrows and search, hear its current
 value and scope, change it, return to the captured buffer, and verify saving or
 session-only behavior as appropriate. Check entry from the source buffer and
 from the all-integrations chooser, including cancellation and return focus.
+
+Shell/comint implementation checkpoint, 2026-10-15:
+
+- =C-e H j c= and the all-integrations chooser open the same focused menu.
+  =s= toggles automatic output speech; =b= toggles background monitoring.
+  Both call the existing local commands with no prefix and never save defaults.
+  Monitoring retains its existing protocol synchronization and needs automatic
+  speech enabled to read background output.
+- =C-e H /= finds both controls by their Shell/comint labels and selects without
+  activating. Menu labels show current values and explain the temporary buffer
+  scope. Outside Comint, the chooser explains which buffer is needed and keeps
+  the controls unavailable. Unsupported current-buffer settings point to =a=.
+- =q= restores the originating entry; cancelling the integration chooser also
+  restores its entry. Existing Customize routes remain available for the other
+  integrations.
+- Automated verification: 25 graphical settings/workflow tests passed from
+  source, then 25 with compiled code and installed Transient/Vertico, and 25
+  with compiled code and bundled Transient; no skips. Coverage includes spoken
+  values, arrows and Enter, both entry routes, search without activation,
+  cancellation, return focus, source ownership, unchanged defaults, protocol
+  synchronization, unavailable controls and existing Customize return.
+  Loaded paths were checked in fresh Emacs processes. Incremental bytecode,
+  bytecode preflight and manual regeneration passed.
+- Listening remains pending in a fresh normal profile: hear both values, toggle
+  automatic speech, enable monitoring and switch away while shell output arrives,
+  disable monitoring and compare, then check =q= and the chooser return. Confirm
+  that another shell retains its own settings and no startup default is saved.
 
 ** Saved setups and drafts
 

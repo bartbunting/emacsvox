@@ -140,6 +140,133 @@
     (should (eq (oref transient--prefix command) 'emacsvox-settings-buffer))
     (should-not (file-exists-p custom-file))))
 
+(ert-deftest emacsvox-settings-integrations-comint-menu-navigation ()
+  "Arrows speak current values; Enter changes only the captured shell buffer."
+  (emacsvox-test--with-settings
+    (require 'emacsvox-comint)
+    (let ((autospeak-default (default-value 'emacsvox-comint-autospeak))
+          (monitor-default (default-value 'emacsvox-comint-output-monitor))
+          (other (generate-new-buffer " *other-comint*"))
+          spoken)
+      (unwind-protect
+          (progn
+            (with-current-buffer other
+              (comint-mode)
+              (setq-local emacsvox-comint-autospeak nil
+                          emacsvox-comint-output-monitor nil))
+            (with-current-buffer source
+              (shell-mode)
+              (setq-local emacsvox-comint-autospeak nil
+                          emacsvox-comint-output-monitor nil))
+            (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                       (lambda (text &rest _) (when (stringp text) (push text spoken)))))
+              (execute-kbd-macro (kbd ". j c"))
+              (should (eq (oref transient--prefix command)
+                          'emacsvox-settings-integrations--comint))
+              (should (seq-some (lambda (text) (string-match-p "this buffer, temporary" text)) spoken))
+              (should-not (buffer-local-value 'emacsvox-comint-autospeak source))
+              (with-selected-window transient--window
+                (transient--goto-button
+                 (transient-suffix-object 'emacsvox-settings-integrations--comint-autospeak)))
+              (setq spoken nil)
+              (execute-kbd-macro (kbd "<down>"))
+              (should (string-match-p "Background monitoring.*off.*b" (car spoken)))
+              (should-not (buffer-local-value 'emacsvox-comint-output-monitor source))
+              (execute-kbd-macro (kbd "RET"))
+              (should (buffer-local-value 'emacsvox-comint-output-monitor source))
+              (should-not (buffer-local-value 'emacsvox-comint-autospeak source))
+              (execute-kbd-macro (kbd "<up>"))
+              (should (string-match-p "Automatic output speech: off.*s" (car spoken)))
+              (execute-kbd-macro (kbd "RET"))
+              (should (buffer-local-value 'emacsvox-comint-autospeak source))
+              (execute-kbd-macro (kbd "<down>"))
+              (should (string-match-p "Background monitoring.*on.*b" (car spoken))))
+            (should (eq autospeak-default (default-value 'emacsvox-comint-autospeak)))
+            (should (eq monitor-default (default-value 'emacsvox-comint-output-monitor)))
+            (should-not (buffer-local-value 'emacsvox-comint-autospeak other))
+            (should-not (buffer-local-value 'emacsvox-comint-output-monitor other))
+            (should-not (file-exists-p custom-file))
+            (execute-kbd-macro (kbd "q"))
+            (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations))
+            (with-selected-window transient--window
+              (should (equal (oref (button-get (button-at (point)) 'button-data) key) "c")))
+            (execute-kbd-macro (kbd "q q q"))
+            (should (eq (current-buffer) source))
+            (should (= (point) 3)))
+        (kill-buffer other)))))
+
+(ert-deftest emacsvox-settings-integrations-comint-chooser-and-cancel ()
+  "The chooser preserves the source and returns to its entry, including cancel."
+  (emacsvox-test--with-settings
+    (require 'emacsvox-comint)
+    (with-current-buffer source
+      (comint-mode)
+      (setq-local emacsvox-comint-autospeak nil emacsvox-comint-output-monitor nil))
+    (execute-kbd-macro (kbd "j a S h e l l / c o m i n t RET"))
+    (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--comint))
+    (should-not (buffer-local-value 'emacsvox-comint-output-monitor source))
+    (let ((current-prefix-arg '(4))
+          (before (default-value 'emacsvox-comint-output-monitor))
+          (tts-speaker-process (make-pipe-process :name "comint-menu-test" :noquery t))
+          synced)
+      (unwind-protect
+          (cl-letf (((symbol-function 'tts--protocol-sync)
+                     (lambda () (setq synced (current-buffer)))))
+            (emacsvox-settings-integrations--comint-monitor)
+            (should (eq synced source))
+            (should (eq before (default-value 'emacsvox-comint-output-monitor))))
+        (delete-process tts-speaker-process)))
+    (should (buffer-local-value 'emacsvox-comint-output-monitor source))
+    (execute-kbd-macro (kbd "q"))
+    (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations))
+    (with-selected-window transient--window
+      (should (equal (oref (button-get (button-at (point)) 'button-data) key) "a")))
+    (condition-case nil (execute-kbd-macro (kbd "a C-g")) (quit nil))
+    (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations))
+    (with-selected-window transient--window
+      (should (equal (oref (button-get (button-at (point)) 'button-data) key) "a")))
+    (should-not (file-exists-p custom-file))))
+
+(ert-deftest emacsvox-settings-integrations-comint-unavailable ()
+  "Discovery outside Comint explains the missing source without changing it."
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "j"))
+    (should (string-match-p "use a to choose" (emacsvox-settings-integrations--current-label)))
+    (execute-kbd-macro (kbd "a S h e l l / c o m i n t RET"))
+    (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--comint))
+    (let ((text (emacsvox-transient--choice-text
+                 (transient-suffix-object 'emacsvox-settings-integrations--comint-autospeak))))
+      (should (string-match-p "open from a shell or Comint buffer" text))
+      (should (string-match-p "Unavailable" text)))
+    (should-error (emacsvox-settings-integrations--comint-autospeak) :type 'user-error)
+    (should-error (emacsvox-settings-integrations--comint-monitor) :type 'user-error)
+    (should-not (local-variable-p 'emacsvox-comint-autospeak source))
+    (should-not (local-variable-p 'emacsvox-comint-output-monitor source))
+    (execute-kbd-macro (kbd "q q q"))
+    (should (eq (current-buffer) source))
+    (should-not (file-exists-p custom-file))))
+
+(ert-deftest emacsvox-settings-integrations-comint-search ()
+  "Search selects a shell control without activating it and preserves its source."
+  (emacsvox-test--with-settings
+    (require 'emacsvox-comint)
+    (with-current-buffer source
+      (comint-mode)
+      (setq-local emacsvox-comint-autospeak nil emacsvox-comint-output-monitor nil))
+    (execute-kbd-macro (kbd "/ m o n i t o r i n g RET"))
+    (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--comint))
+    (with-selected-window transient--window
+      (should (equal (oref (button-get (button-at (point)) 'button-data) key) "b")))
+    (should-not (buffer-local-value 'emacsvox-comint-output-monitor source))
+    (execute-kbd-macro (kbd "RET"))
+    (should (buffer-local-value 'emacsvox-comint-output-monitor source))
+    (should-not (buffer-local-value 'emacsvox-comint-autospeak source))
+    (execute-kbd-macro (kbd "q"))
+    (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+    (with-selected-window transient--window
+      (should (equal (oref (button-get (button-at (point)) 'button-data) key) "/")))
+    (should-not (file-exists-p custom-file))))
+
 (ert-deftest emacsvox-settings-integrations-all-and-unavailable-control ()
   "All integrations is usable outside an integration; unrelated controls refuse."
   (emacsvox-test--with-settings
