@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1656 commands and 233 options.
+This chapter documents a total of 1657 commands and 233 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -18499,6 +18499,22 @@ Refresh the snapshot while keeping the selected setting and column.
 Discover actual integration options and invoke existing source controls.
 
 @subsection Emacsvox-Settings-Integrations Commands
+
+@subsubsection emacsvox-settings-for-buffer
+@deffn {Command} emacsvox-settings-for-buffer
+@table @kbd
+@item C-e S
+@kindex C-e S
+@end table
+
+@findex emacsvox-settings-for-buffer
+
+@format
+Open Emacsvox settings for the current buffer.
+Use its focused integration menu when available, otherwise general buffer
+settings.  Changes retain the scope shown by each control.
+@end format
+@end deffn
 
 @subsubsection emacsvox-settings-integrations
 @deffn {Command} emacsvox-settings-integrations

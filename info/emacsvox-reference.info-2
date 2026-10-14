@@ -6946,7 +6946,17 @@ Discover actual integration options and invoke existing source controls.
 2.229.1 Emacsvox-Settings-Integrations Commands
 -----------------------------------------------
 
-2.229.1.1 emacsvox-settings-integrations
+2.229.1.1 emacsvox-settings-for-buffer
+......................................
+
+ -- Command: emacsvox-settings-for-buffer
+     ‘C-e S’
+
+     Open Emacsvox settings for the current buffer.
+     Use its focused integration menu when available, otherwise general buffer
+     settings.  Changes retain the scope shown by each control.
+
+2.229.1.2 emacsvox-settings-integrations
 ........................................
 
  -- Command: emacsvox-settings-integrations
@@ -9904,13 +9914,3 @@ provides commands that speak the current hunk.  These are bound in
  -- Command: emacsvox-vdiff-speak-this-hunk
 
      Speak VDiff hunk under point.
-
-
-File: emacsvox-reference.info,  Node: emacsvox-version,  Next: emacsvox-vertico,  Prev: emacsvox-vdiff,  Up: Emacsvox Commands And Options
-
-2.261 emacsvox-version
-======================
-
-Read the canonical release identifier from the repository-level VERSION
-file.  Reading it when this module loads keeps source and byte-code
-users on the same value without generating a second version source.

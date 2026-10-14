@@ -35,12 +35,26 @@
 @item A  emacsvox-appt-repeat-announcement
 @item B  emacsvox-speak-buffer-interactively
 @item E  emacsvox-aural-explain-presentation
+@item C  emacsvox-customize
+@item !  emacsvox-speak-run-shell-command
+@item $  flyspell-mode
+@item &  emacsvox-wizards-shell-command-on-current-file
+@item (  amixer
+@item )  emacsvox-sounds-select-theme
+@item ,  emacsvox-buffer-select
+@item .  emacsvox-buffer-select
+@item 1  emacsvox-speak-this-window
+@item 2  emacsvox-speak-other-window
+@item 3  amixer-volume-adjust
+@item 4  amixer-volume-adjust
+@item ;  emacsvox-multimedia
 @item H  emacsvox-aural-menu
 @item L  emacsvox-speak-line-interactively
 @item M  emacsvox-speak-minor-mode-line
 @item N  emacsvox-view-emacsvox-news
 @item P  emacsvox-speak-paragraph-interactively
 @item R  emacsvox-speak-rectangle
+@item S  emacsvox-settings-for-buffer
 @item T  emacsvox-view-emacsvox-tips
 @item V  emacsvox-speak-version
 @item W  emacsvox-select-window-by-name
@@ -70,19 +84,6 @@
 @item u  emacsvox-url-template-fetch
 @item w  emacsvox-speak-word
 @item |  emacsvox-speak-line-set-column-filter
-@item C  emacsvox-customize
-@item !  emacsvox-speak-run-shell-command
-@item $  flyspell-mode
-@item &  emacsvox-wizards-shell-command-on-current-file
-@item (  amixer
-@item )  emacsvox-sounds-select-theme
-@item ,  emacsvox-buffer-select
-@item .  emacsvox-buffer-select
-@item 1  emacsvox-speak-this-window
-@item 2  emacsvox-speak-other-window
-@item 3  amixer-volume-adjust
-@item 4  amixer-volume-adjust
-@item ;  emacsvox-multimedia
 @end table
 
 @node Emacsvox Keybindings On emacsvox-tts-submap

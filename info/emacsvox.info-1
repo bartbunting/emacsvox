@@ -3052,6 +3052,12 @@ source integration's settings; ‘a’ chooses among Shell/comint and
 installed Agent Shell, EAT, Org, Notmuch, and EWW integrations.  Cancel
 the chooser to return to its menu entry.
 
+   Use ‘C-e S’ for direct access to the current buffer's focused
+Emacsvox settings.  When no focused integration menu is available, it
+opens general buffer settings.  The buffer is captured on entry, and ‘q’
+closes the directly opened menu.  ‘C-e H’ remains the general entry;
+‘C-e H .’ always opens general buffer settings.
+
    From a shell or Comint buffer, ‘C-e H j c’ opens a focused Transient.
 ‘s’ toggles automatic output speech; ‘b’ toggles background monitoring,
 which needs automatic speech enabled to read output while you are

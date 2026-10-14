@@ -337,6 +337,7 @@ Shell/comint and EAT now have focused menus; the other listed routes still open
 Customize.
 
 Deliver and listen to one integration at a time. Proposed control groupings:
+Implementation may continue in separate commits before listening acceptance.
 
 - [X] Shell/comint: local automatic speech and background output monitoring
   implemented; listening accepted on 2026-10-15, commit =7592c191d=.
@@ -347,6 +348,18 @@ Deliver and listen to one integration at a time. Proposed control groupings:
 - [ ] Org: table feedback and links to its existing structured settings.
 - [ ] EWW: automatic speech and image handling.
 - [ ] Notmuch: spoken fields, status cues and reading limits.
+
+Contextual shortcut checkpoint, 2026-10-15:
+
+- =C-e S= opens the captured buffer's focused integration menu, falling back to
+  general buffer settings until that integration has a focused menu. =q= closes
+  the direct entry. =C-e H= and =C-e H .= retain their existing meanings.
+- Graphical source checks cover the actual binding, buffer ownership, fallback,
+  closing without a parent menu, and no implicit save. Listening remains pending.
+- Verification: 32 graphical settings tests passed from source and compiled
+  code. The required full rebuild, bytecode preflight and public-reference/manual
+  generation passed. Agent Shell's six binding and prompt-editing regressions
+  passed with both installed and pinned dependencies; no new overlap appeared.
 
 Use toggles, choices, shifted-arrow numeric adjustments and exact entry where
 appropriate. Preserve each existing command's lifecycle and buffer/session/global

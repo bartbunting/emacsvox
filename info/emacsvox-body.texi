@@ -3003,6 +3003,11 @@ EAT/comint autospeak control. @code{c} opens the source integration's settings;
 @code{a} chooses among Shell/comint and installed Agent Shell@comma{} EAT@comma{} Org@comma{} Notmuch@comma{}
 and EWW integrations. Cancel the chooser to return to its menu entry.
 
+Use @code{C-e S} for direct access to the current buffer's focused Emacsvox settings.
+When no focused integration menu is available@comma{} it opens general buffer settings.
+The buffer is captured on entry@comma{} and @code{q} closes the directly opened menu.
+@code{C-e H} remains the general entry; @code{C-e H .} always opens general buffer settings.
+
 From a shell or Comint buffer@comma{} @code{C-e H j c} opens a focused Transient. @code{s} toggles
 automatic output speech; @code{b} toggles background monitoring@comma{} which needs automatic
 speech enabled to read output while you are elsewhere. Arrows announce the

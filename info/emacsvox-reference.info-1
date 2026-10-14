@@ -91,12 +91,26 @@ File: emacsvox-reference.info,  Node: Emacsvox Keybindings On emacsvox-keymap,  
 ‘A emacsvox-appt-repeat-announcement’
 ‘B emacsvox-speak-buffer-interactively’
 ‘E emacsvox-aural-explain-presentation’
+‘C emacsvox-customize’
+‘! emacsvox-speak-run-shell-command’
+‘$ flyspell-mode’
+‘& emacsvox-wizards-shell-command-on-current-file’
+‘( amixer’
+‘) emacsvox-sounds-select-theme’
+‘, emacsvox-buffer-select’
+‘. emacsvox-buffer-select’
+‘1 emacsvox-speak-this-window’
+‘2 emacsvox-speak-other-window’
+‘3 amixer-volume-adjust’
+‘4 amixer-volume-adjust’
+‘; emacsvox-multimedia’
 ‘H emacsvox-aural-menu’
 ‘L emacsvox-speak-line-interactively’
 ‘M emacsvox-speak-minor-mode-line’
 ‘N emacsvox-view-emacsvox-news’
 ‘P emacsvox-speak-paragraph-interactively’
 ‘R emacsvox-speak-rectangle’
+‘S emacsvox-settings-for-buffer’
 ‘T emacsvox-view-emacsvox-tips’
 ‘V emacsvox-speak-version’
 ‘W emacsvox-select-window-by-name’
@@ -126,19 +140,6 @@ File: emacsvox-reference.info,  Node: Emacsvox Keybindings On emacsvox-keymap,  
 ‘u emacsvox-url-template-fetch’
 ‘w emacsvox-speak-word’
 ‘| emacsvox-speak-line-set-column-filter’
-‘C emacsvox-customize’
-‘! emacsvox-speak-run-shell-command’
-‘$ flyspell-mode’
-‘& emacsvox-wizards-shell-command-on-current-file’
-‘( amixer’
-‘) emacsvox-sounds-select-theme’
-‘, emacsvox-buffer-select’
-‘. emacsvox-buffer-select’
-‘1 emacsvox-speak-this-window’
-‘2 emacsvox-speak-other-window’
-‘3 amixer-volume-adjust’
-‘4 amixer-volume-adjust’
-‘; emacsvox-multimedia’
 
 
 File: emacsvox-reference.info,  Node: Emacsvox Keybindings On emacsvox-tts-submap,  Next: Emacsvox Keybindings On emacsvox-hyper-keymap,  Prev: Emacsvox Keybindings On emacsvox-keymap,  Up: Emacsvox Keymaps
@@ -419,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1656 commands and 233 options.
+   This chapter documents a total of 1657 commands and 233 options.
 
 * Menu:
 

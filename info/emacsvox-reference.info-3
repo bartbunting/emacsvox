@@ -12,6 +12,16 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: emacsvox-reference.info,  Node: emacsvox-version,  Next: emacsvox-vertico,  Prev: emacsvox-vdiff,  Up: Emacsvox Commands And Options
+
+2.261 emacsvox-version
+======================
+
+Read the canonical release identifier from the repository-level VERSION
+file.  Reading it when this module loads keeps source and byte-code
+users on the same value without generating a second version source.
+
+
 File: emacsvox-reference.info,  Node: emacsvox-vertico,  Next: emacsvox-view,  Prev: emacsvox-version,  Up: Emacsvox Commands And Options
 
 2.262 emacsvox-vertico
@@ -5108,6 +5118,8 @@ File: emacsvox-reference.info,  Node: Key Index,  Next: Function Index,  Prev: R
 * C-e R:                                 emacsvox-speak.     (line  799)
 * C-e r:                                 emacsvox-speak.     (line  811)
 * C-e RET:                               emacsvox-websearch. (line   47)
+* C-e S:                                 emacsvox-settings-integrations.
+                                                             (line   16)
 * C-e s:                                 tts-speak.          (line  291)
 * C-e SPC:                               emacsvox-speak.     (line  966)
 * C-e t:                                 emacsvox-speak.     (line  910)
@@ -8634,10 +8646,14 @@ Function Index
                                                              (line   15)
 * emacsvox-settings-feedback <1>:        emacsvox-settings-workflows.
                                                              (line   16)
-* emacsvox-settings-integrations:        emacsvox-settings-integrations.
+* emacsvox-settings-for-buffer:          emacsvox-settings-integrations.
                                                              (line   14)
+* emacsvox-settings-for-buffer <1>:      emacsvox-settings-integrations.
+                                                             (line   17)
+* emacsvox-settings-integrations:        emacsvox-settings-integrations.
+                                                             (line   24)
 * emacsvox-settings-integrations <1>:    emacsvox-settings-integrations.
-                                                             (line   15)
+                                                             (line   25)
 * emacsvox-settings-presentation:        emacsvox-settings-workflows.
                                                              (line   22)
 * emacsvox-settings-presentation <1>:    emacsvox-settings-workflows.

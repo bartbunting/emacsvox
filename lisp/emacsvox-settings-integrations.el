@@ -30,6 +30,26 @@
 (declare-function emacsvox-eat--control-buffer "emacsvox-eat-core" ())
 (declare-function emacsvox-eat--terminal-buffer-p "emacsvox-eat-core" ())
 
+(defconst emacsvox-settings-integrations--menus
+  '((comint . emacsvox-settings-integrations--comint)
+    (eat . emacsvox-settings-integrations--eat))
+  "Focused Transient prefixes for converted integrations.")
+
+;;;###autoload
+(defun emacsvox-settings-for-buffer ()
+  "Open Emacsvox settings for the current buffer.
+Use its focused integration menu when available, otherwise general buffer
+settings.  Changes retain the scope shown by each control."
+  (interactive)
+  (let* ((context (emacsvox-aural-menu--capture nil))
+         (kind (let ((transient--prefix
+                      (transient-prefix :command 'emacsvox-settings-integrations
+                                        :scope context)))
+                 (emacsvox-settings-integrations--kind)))
+         (menu (alist-get kind emacsvox-settings-integrations--menus)))
+    (setq transient--stack nil)
+    (transient-setup (or menu 'emacsvox-settings-buffer) nil nil :scope context)))
+
 (defconst emacsvox-settings-integrations--catalogue
   '((comint "Shell/comint" comint emacsvox-comint nil)
     (agent "Agent Shell" agent-shell emacsvox-agent-shell emacsvox-agent-shell)
@@ -59,10 +79,9 @@ A nil group denotes a focused menu with buffer-only controls.")
     (unless (locate-library (symbol-name (nth 2 entry)))
       (user-error "%s is not installed" (nth 1 entry)))
     (require (nth 3 entry))
-    (if (memq kind '(comint eat))
+    (if-let* ((menu (alist-get kind emacsvox-settings-integrations--menus)))
         (transient-setup
-         (if (eq kind 'comint) 'emacsvox-settings-integrations--comint
-           'emacsvox-settings-integrations--eat) nil nil
+         menu nil nil
          :scope (plist-put (copy-sequence (emacsvox-aural-menu--context))
                            :integration-return suffix))
       (emacsvox-settings--custom (nth 4 entry) suffix))))

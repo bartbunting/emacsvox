@@ -11,6 +11,25 @@
 (require 'emacsvox-aural-voice-editor-tests)
 (require 'emacsvox-aural-change-feedback-tests)
 
+(ert-deftest emacsvox-settings-context-shortcut-and-return ()
+  "The real prefix binding captures the current buffer and q closes its menu."
+  (require 'emacsvox-keymap)
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "C-q"))
+    (should (eq (lookup-key emacsvox-keymap (kbd "S")) 'emacsvox-settings-for-buffer))
+    (dolist (mode '(text-mode comint-mode))
+      (with-current-buffer source (funcall mode))
+      (execute-kbd-macro (kbd "C-e S"))
+      (should (eq (oref transient--prefix command)
+                  (if (eq mode 'comint-mode) 'emacsvox-settings-integrations--comint
+                    'emacsvox-settings-buffer)))
+      (should (eq (emacsvox-aural-menu--source (emacsvox-aural-menu--context)) source))
+      (execute-kbd-macro (kbd "q"))
+      (should-not transient--prefix)
+      (should-not transient--stack)
+      (should (eq (current-buffer) source)))
+    (should-not (file-exists-p custom-file))))
+
 (ert-deftest emacsvox-settings-workflows-feedback-draft-return ()
   "A guided draft previews without saving and returns to its exact menu entry."
   (emacsvox-test--with-settings
