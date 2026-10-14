@@ -866,8 +866,39 @@ Only generated headings qualify; recorded text is never interpreted as markup."
   "Cycle a heading, or move to the next visible action."
   (interactive)
   (if (outline-on-heading-p t)
-      (call-interactively #'outline-cycle)
+      (emacsvox-aural-feedback-details--outline-cycle)
     (emacsvox-aural-feedback-details--outline-button)))
+
+(defun emacsvox-aural-feedback-details--outline-visibility ()
+  "Return the current Outline heading's visibility, or nil on other lines."
+  (when (and (bound-and-true-p emacsvox-aural-feedback-outline-mode)
+             (outline-on-heading-p t))
+    (if (eq (outline--cycle-state) 'hide-all) 'folded 'expanded)))
+
+(defun emacsvox-aural-feedback-details--outline-cycle (&optional whole)
+  "Cycle the heading, or WHOLE report, and announce its resulting state."
+  (let ((emacsvox-speak-messages nil))
+    (if whole (outline-cycle-buffer) (outline-cycle)))
+  (emacsvox-aural-ui--speak-control
+   (buffer-substring (line-beginning-position) (line-end-position))
+   (emacsvox-aural-feedback-details--outline-visibility) 'state-change))
+
+(defun emacsvox-aural-feedback-details--outline-cycle-buffer ()
+  "Cycle the report and announce the current heading's resulting state."
+  (interactive)
+  (emacsvox-aural-feedback-details--outline-cycle t))
+
+(defun emacsvox-aural-feedback-details--outline-next-heading (&optional previous)
+  "Move to and read the next visible heading, or the PREVIOUS one."
+  (interactive)
+  (if previous (outline-previous-visible-heading 1)
+    (outline-next-visible-heading 1))
+  (emacsvox-aural-feedback-details-speak-line))
+
+(defun emacsvox-aural-feedback-details--outline-previous-heading ()
+  "Move to and read the previous visible heading."
+  (interactive)
+  (emacsvox-aural-feedback-details--outline-next-heading t))
 
 (defun emacsvox-aural-feedback-details--outline-button ()
   "Move to and speak the next visible report action."
@@ -893,15 +924,15 @@ Only generated headings qualify; recorded text is never interpreted as markup."
   (if (button-at (point))
       (emacsvox-aural-feedback-details-open)
     (if (outline-on-heading-p t)
-        (call-interactively #'outline-cycle)
+        (emacsvox-aural-feedback-details--outline-cycle)
       (user-error "Move to a heading or action first"))))
 
 (defvar emacsvox-aural-feedback-outline-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "n") #'outline-next-visible-heading)
-    (define-key map (kbd "p") #'outline-previous-visible-heading)
+    (define-key map (kbd "n") #'emacsvox-aural-feedback-details--outline-next-heading)
+    (define-key map (kbd "p") #'emacsvox-aural-feedback-details--outline-previous-heading)
     (define-key map (kbd "TAB") #'emacsvox-aural-feedback-details--outline-tab)
-    (define-key map (kbd "<backtab>") #'outline-cycle-buffer)
+    (define-key map (kbd "<backtab>") #'emacsvox-aural-feedback-details--outline-cycle-buffer)
     (define-key map (kbd "RET") #'emacsvox-aural-feedback-details--outline-open)
     (define-key map (kbd "M-n") #'emacsvox-aural-feedback-details--outline-button)
     map)
@@ -947,7 +978,9 @@ the next visible action.  Press o to compare with the original report."
         (progn
           (require 'emacsvox-speak)
           (emacsvox-speak-line))
-      (emacsvox-aural-ui--speak-control text))))
+      (if-let* ((visibility (emacsvox-aural-feedback-details--outline-visibility)))
+          (emacsvox-aural-ui--speak-control text visibility)
+        (emacsvox-aural-ui--speak-control text)))))
 
 (defun emacsvox-aural-feedback-details-next-line (&optional previous)
   "Move one line and read it; PREVIOUS reverses direction."

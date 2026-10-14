@@ -1043,6 +1043,46 @@
      (should (button-at (point)))
      (should-not (string-match-p "This is recorded text" (buffer-string))))))
 
+(ert-deftest emacsvox-aural-feedback-outline-cues-current-visibility ()
+  "Report keys submit one state cue with speech for folding and heading entry."
+  (emacsvox-test--with-feedback-report
+   (emacsvox-aural-register-workflow-provider)
+   (emacsvox-aural-feedback-outline-mode 1)
+   (emacsvox-test--feedback-field "Subject")
+   (let (submissions extra-cues)
+     (cl-letf (((symbol-function 'tts-speak)
+                (lambda (text)
+                  (push (emacsvox-aural-prepare-text text) submissions)))
+               ((symbol-function 'emacsvox-icon)
+                (lambda (cue) (push cue extra-cues))))
+       (cl-labels
+           ((check (key visibility occasion)
+              (setq submissions nil extra-cues nil)
+              (call-interactively (key-binding (kbd key)))
+              (should (= (length submissions) 1))
+              (should-not extra-cues)
+              (let ((plan (emacsvox-aural-concrete-plan-at 0 (car submissions))))
+                (should (eq (plist-get (emacsvox-aural-concrete-plan-facts plan)
+                                       :visibility) visibility))
+                (should (eq (plist-get (emacsvox-aural-concrete-plan-context plan)
+                                       :occasion) occasion))
+                (should (equal (mapcar #'emacsvox-aural-concrete-action-cue
+                                       (emacsvox-aural-concrete-plan-before plan))
+                               (list (if (eq visibility 'folded)
+                                         'close-object 'open-object)))))))
+         (check "TAB" 'expanded 'state-change)
+         (should-not (invisible-p (line-end-position)))
+         (check "RET" 'folded 'state-change)
+         (should (invisible-p (line-end-position)))
+         (check "n" 'folded 'navigation)
+         (check "p" 'folded 'navigation)
+         (check "<down>" 'folded 'navigation)
+         (check "<up>" 'folded 'navigation)
+         ;; An external Outline command also changes the state read on entry.
+         (outline-show-subtree)
+         (check "n" 'folded 'navigation)
+         (check "p" 'expanded 'navigation))))))
+
 (ert-deftest emacsvox-aural-feedback-outline-refresh-preserves-folds-and-actions ()
   "Refreshing and reopening retain Outline visibility and exact action markers."
   (emacsvox-test--with-feedback-report
@@ -1080,6 +1120,7 @@
   "Real keys skip folded text and keep a returning draft action visible."
   (skip-unless (display-graphic-p))
   (emacsvox-test--with-feedback-report
+   (emacsvox-aural-register-workflow-provider)
    (execute-kbd-macro (kbd "o"))
    (should emacsvox-aural-feedback-outline-mode)
    (emacsvox-test--feedback-field "Subject")
@@ -1089,6 +1130,17 @@
      (should (> (point) heading))
      (execute-kbd-macro (kbd "<up>"))
      (should (= (line-beginning-position) heading))
+     (execute-kbd-macro (kbd "TAB"))
+     (let (prepared)
+       (cl-letf (((symbol-function 'tts-speak)
+                  (lambda (text) (setq prepared (emacsvox-aural-prepare-text text)))))
+         (execute-kbd-macro (kbd "TAB")))
+       (redisplay t)
+       (should (invisible-p (1+ (line-end-position))))
+       (should (equal (mapcar #'emacsvox-aural-concrete-action-cue
+                              (emacsvox-aural-concrete-plan-before
+                               (emacsvox-aural-concrete-plan-at 0 prepared)))
+                      '(close-object))))
      (execute-kbd-macro (kbd "TAB"))
      (forward-line 1)
      (redisplay t)
