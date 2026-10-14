@@ -1183,7 +1183,7 @@
 (ert-deftest emacsvox-transient-setup-uses-emacs-31-settings ()
   "Transient setup uses the current Emacs 31 menu setting names."
   (should transient-enable-menu-navigation)
-  (should (= transient-show-menu 1)))
+  (should (eq transient-show-menu t)))
 
 (ert-deftest emacsvox-transient-face-inventory-is-current ()
   "Every current Transient face should have an explicit voice."

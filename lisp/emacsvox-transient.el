@@ -52,12 +52,12 @@
 ;; but use these only after reading the transient info documentations.
 ;; @itemize
 ;; @item transient-force-single-column: t
-;; @item  transient-show-menu:  1
+;; @item transient-show-menu: t
 ;; @item transient-enable-menu-navigation:  t
 ;; @end itemize
 ;; 
-;; this pops up the transient buffer after a short delay  and lets
-;; you move through the buttons with the    up/down arrows. 
+;; This displays the menu immediately and lets you move through its
+;; buttons with the up/down arrows.
 ;; @subsection Browsing Contents Of transient--show
 ;; 
 ;; When executing a command defined via Transient --- e.g. command
@@ -1022,7 +1022,7 @@ DIRECTION is positive for forward movement, negative for backward movement."
   (setq transient-enable-menu-navigation t
         transient-force-single-column t
         transient-semantic-coloring t
-        transient-show-menu 1))
+        transient-show-menu t))
 (emacsvox-transient-setup)
 
 (provide 'emacsvox-transient)
