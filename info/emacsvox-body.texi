@@ -2952,9 +2952,11 @@ descriptions are on by default. Value adjustments still give brief feedback.
 Press @kbd{S} to save the navigation style@comma{} presentation order@comma{} and descriptions
 preference through Customize.
 
-Press @kbd{C-e H /} to find an Emacsvox setting by name. Search opens its menu
-and selects the matching control without changing its value; Enter activates
-or edits it. The captured source and current settings scope follow the search.
+Press @kbd{C-e H /} to find an Emacsvox setting by name@comma{} ignoring capitalization.
+Type @kbd{cap} and use completion to choose @emph{Capital-letter beep}@comma{} for example.
+Enter accepts the choice@comma{} opens its menu@comma{} and selects the matching control
+without changing its value. Press Enter again to activate or edit the control.
+The captured source and current settings scope follow the search.
 @kbd{q} returns to the menu where you searched@comma{} and cancelling completion keeps
 that menu open.
 

@@ -34,6 +34,39 @@
       (should (eq (oref transient--prefix command) 'emacsvox-aural-menu)))
     (should-not (file-exists-p custom-file))))
 
+(ert-deftest emacsvox-settings-search-capitalization-insensitive ()
+  "Lowercase prefixes match labels and typed casing preserves the destination."
+  (let ((completion-ignore-case nil) opened)
+    (cl-letf (((symbol-function 'completing-read)
+               (lambda (_prompt collection &rest _)
+                 (let ((matches (all-completions "cap" collection)))
+                   (should (member "Capital-letter beep" matches))
+                   (should (member "Capitalization indication and camel case" matches)))
+                 "capital-letter beep"))
+              ((symbol-function 'emacsvox-settings--open)
+               (lambda (entry) (setq opened entry))))
+      (emacsvox-settings-search))
+    (should (equal (car opened) "Capital-letter beep"))
+    (should-not completion-ignore-case)))
+
+(ert-deftest emacsvox-settings-menu-search-partial-name-and-mixed-case ()
+  "Complete a lowercase prefix or accept mixed case without activating a control."
+  (emacsvox-test--with-settings
+    (let ((completion-ignore-case nil)
+          (completion-styles '(basic))
+          (completion-category-overrides nil))
+      (dolist (input (list (vconcat "cap" (kbd "TAB") "-letter beep" (kbd "RET"))
+                           (vconcat "cApItAl-LeTtEr BeEp" (kbd "RET"))))
+        (execute-kbd-macro (vconcat (kbd "/") input))
+        (should (eq (oref transient--prefix command) 'emacsvox-capitalization))
+        (with-selected-window transient--window
+          (should (equal (oref (button-get (button-at (point)) 'button-data) key) "l")))
+        (should (zerop (hash-table-count emacsvox-capitalization--drafts)))
+        (should-not (file-exists-p custom-file))
+        (execute-kbd-macro (kbd "q"))
+        (should (eq (oref transient--prefix command) 'emacsvox-aural-menu)))
+      (should-not completion-ignore-case))))
+
 (ert-deftest emacsvox-settings-menu-search-preserves-source-and-scope ()
   "Search edits the captured source and returns without moving source point."
   (emacsvox-test--with-settings

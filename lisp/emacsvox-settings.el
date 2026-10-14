@@ -77,10 +77,12 @@
 (defun emacsvox-settings-search ()
   "Find a focused setting and select its control without activating it."
   (interactive)
-  (emacsvox-settings--open
-   (or (assoc (completing-read "Emacsvox setting: " emacsvox-settings--destinations nil t)
-              emacsvox-settings--destinations)
-       (user-error "Choose a setting"))))
+  (let ((completion-ignore-case t))
+    (emacsvox-settings--open
+     (or (assoc-string
+          (completing-read "Emacsvox setting: " emacsvox-settings--destinations nil t)
+          emacsvox-settings--destinations t)
+         (user-error "Choose a setting")))))
 ;;;###autoload
 (defun emacsvox-settings-search-actions ()
   "Search the existing Home action catalogue; Home q returns to this menu."

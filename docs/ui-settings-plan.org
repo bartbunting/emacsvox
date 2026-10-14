@@ -710,16 +710,23 @@ verification of subsequently changed code.
 
 - 2026-10-15: Listening feedback finds partial-name settings search unclear.
   =C-e H /= uses ordinary completion over fixed labels, then opens and focuses
-  a control without activating it. Existing regression tests enter complete
-  labels; they do not establish discoverability or spoken candidate selection
-  for =cap=. Check case handling, candidate announcements, and the distinction
-  between choosing a destination and activating its control before acceptance.
+  a control without activating it. Search now ignores capitalization for both
+  completion and accepting a typed name, without changing completion elsewhere.
+  A regression reproduced lowercase =cap= failing before the fix. Seven focused
+  checks pass from source and current byte-code in fresh graphical Emacs using
+  installed Transient, including partial completion, mixed-case acceptance,
+  focus, cancellation, return, and no activation or saving on selection.
+  Incremental compilation and byte-code preflight passed; the manual explains
+  the two Enter actions. Candidate announcements and discoverability still need
+  listening in a fresh normal profile.
 - 2026-10-15: Aural Doctor still checks =C-e H= against =emacsvox-aural=,
   and its binding repair restores that old Home command. Its =h= key also opens
-  old Home. Doctor itself opens =*Aural Doctor*=; the reported route back to
-  old Home is not yet reproduced. Correct the stale check/repair in the
-  diagnostics slice and cover it with regression tests before offering repair
-  from the new menu. Do not infer that merely opening Doctor changes bindings.
+  old Home. An isolated graphical probe with source and compiled settings code
+  confirmed that action search opens =*Aural Doctor*=, then =q= returns to Home
+  and a second =q= restores Transient. The entry link works; the current route
+  retains Home as an intermediate return step. Correct the stale check/repair
+  and add direct menu return in the diagnostics slice, with regression coverage.
+  Merely opening Doctor does not change bindings. Doctor is unchanged here.
 - 2026-10-14: Arkadiusz's navigation feedback motivates an additional
   =by-movement= announcement option: section arrows speak only the destination
   section, while item arrows speak only the item, including continuous section
