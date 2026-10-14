@@ -25,11 +25,14 @@ Listening checkpoint, 2026-10-15: the nine tasks covering rate/punctuation
 persistence, typing/interaction, indentation and line/boundary cues,
 movement-based announcements, the full voice workflow, notification/spatial
 output, host pronunciation editing, feedback/rules, and setups/drafts/changed
-settings are accepted. Integration discovery is the remaining reported listening
-issue: Customize did not open from scratch, Magit or shell. The entry used and
-the separate all-integrations route need checking. This checkpoint supersedes
-earlier open listening statuses for those nine tasks; source-audit gaps,
-cross-search consistency, and minimum-version verification remain separate work.
+settings are accepted. The integration chooser also worked on the follow-up
+test via =C-e H j a= and Org tables. That resolves the reported inability to open
+Customize through the chooser; it does not establish listening acceptance for
+every installed integration. Replacing these Customize entry points with focused
+Transient menus is now planned below. This checkpoint supersedes earlier open
+listening statuses for the nine tasks and the reported chooser issue;
+source-audit gaps, cross-search consistency, and minimum-version verification
+remain separate work.
 
 - Accepted and committed: linked entry menus, indentation, Outline feedback,
   concise speech, section navigation, and shifted-arrow volume adjustment.
@@ -195,8 +198,9 @@ Implemented and committed in six slices, =3f246446f= through =51bf15972=.
 Automated evidence is in the six-slice checkpoint below. These are menu and
 workflow connections; dedicated editors retain their existing editing models.
 Listening accepted on 2026-10-15 for explanation, editing, preview, explicit
-persistence, voice tuning, setups/drafts and return. Integration discovery
-remains open after the Customize report in the current baseline.
+persistence, voice tuning, setups/drafts and return. The reported integration
+chooser issue is resolved by listening; other integration paths and the planned
+Transient conversion still need their own acceptance.
 
 ** 5. Evaluate the complete settings interface
 
@@ -322,6 +326,42 @@ Inventory settings relevant to Agent Shell, terminal/comint buffers, Org,
 browsers, mail, and other integrations as they are encountered. Record the
 actual command or option before proposing a new control. Offer a contextual
 entry and an all-integrations route. Check effective keymaps before new keys.
+
+*** Planned: Transient menus for integration settings
+
+Direction recorded on 2026-10-15: each listed integration should open a focused
+Transient rather than using Customize as its primary settings screen. Include
+ordinary shell/comint, which currently has a local autospeak action but no
+catalogue entry. Keep current-buffer access and the all-integrations chooser.
+This is planned work; the existing routes still open Customize.
+
+Deliver and listen to one integration at a time. Proposed control groupings:
+
+- [ ] Shell/comint: local automatic speech and background output monitoring.
+- [ ] EAT: foreground speech, background monitoring, prompt feedback and detail.
+- [ ] Agent Shell: session speech level, foreground/background defaults,
+  thoughts/tool/permission feedback and reading limits.
+- [ ] Org: table feedback and links to its existing structured settings.
+- [ ] EWW: automatic speech and image handling.
+- [ ] Notmuch: spoken fields, status cues and reading limits.
+
+Use toggles, choices, shifted-arrow numeric adjustments and exact entry where
+appropriate. Preserve each existing command's lifecycle and buffer/session/global
+scope. Saving ordinary defaults can still use Customize's persistence functions
+without opening its screen; do not add Save for session-only state. Opening or
+returning must not apply or save changes implicitly.
+
+Link lists such as field layouts and rules to suitable dedicated editors from
+the Transient. Inspect those workflows before choosing their editing interface;
+this direction does not require forcing structured data into a long menu.
+Keep advanced Customize available for options outside the focused controls.
+For buffers without integration-specific controls, explain that and offer the
+integration chooser rather than implying a working current-buffer entry.
+
+Acceptance for each slice: find a control by arrows and search, hear its current
+value and scope, change it, return to the captured buffer, and verify saving or
+session-only behavior as appropriate. Check entry from the source buffer and
+from the all-integrations chooser, including cancellation and return focus.
 
 ** Saved setups and drafts
 
@@ -773,13 +813,15 @@ verification of subsequently changed code.
   =j c= is unavailable for scratch, Magit and ordinary shell/comint: none has
   an entry in the current Customize catalogue. Comint has only the =j s= local
   autospeak control. =j a= is the separate chooser for supported integrations
-  from any source buffer. Confirm which entry was used before treating the
-  report as a failure of that chooser. The unsupported-buffer route needs to
+  from any source buffer. The follow-up test of =C-e H j a= and Org tables
+  succeeded, resolving the reported chooser issue. The unsupported-buffer route needs to
   make the alternative clear; no new integration group is implied by this report.
   Three focused checks passed in fresh graphical Emacs with current compiled
   code, installed Transient and Vertico, and Emacsvox completion advice. They
   cover the all-integrations chooser, Org Customize return, and local comint
-  control; speech delivery was stubbed. Integration listening remains open.
+  control; speech delivery was stubbed. The confirmed chooser route has listening
+  acceptance; other integration paths remain to be tried. Focused Transient
+  menus for integrations are now planned in the integration inventory above.
 - 2026-10-15: Settings search now matches anywhere in labels and a small alias
   catalogue, ignoring case independently of the surrounding completion styles.
   =cap= finds the indication/camel-case entry and both beep controls;
