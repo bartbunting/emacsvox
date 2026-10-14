@@ -6912,6 +6912,13 @@ semantics.
 
      Explain and edit current or recent feedback, preserving source context.
 
+2.228.1.2 emacsvox-settings-presentation
+........................................
+
+ -- Command: emacsvox-settings-presentation
+
+     Manage presentation features and explicitly scoped rule drafts.
+
 
 File: emacsvox-reference.info,  Node: emacsvox-setup,  Next: emacsvox-sgml-mode,  Prev: emacsvox-settings-workflows,  Up: Emacsvox Commands And Options
 

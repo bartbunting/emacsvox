@@ -556,3 +556,9 @@ verification of subsequently changed code.
   editors. Graphical regression verifies draft preview without persistence,
   exact menu return, and stale-source refusal. Fifty-seven source checks passed.
   Listening acceptance remains open.
+
+- Presentation and rule editing is linked at =C-e H r=. Scope is explicit before
+  opening an editor; its existing preview, validation, save, and discard behavior
+  remains authoritative. Global visual-face presentation has a separate explicit
+  Customize save. Contextual feedback committed as =3f246446f=; its 57 source and
+  compiled graphical checks, build, documentation, and header gates passed.

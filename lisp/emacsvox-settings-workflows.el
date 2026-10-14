@@ -84,5 +84,62 @@
   (interactive)
   (transient-setup 'emacsvox-settings-feedback nil nil :scope (emacsvox-aural-menu--context)))
 
+(defun emacsvox-settings-workflows--rules (scope suffix)
+  "Edit rules in SCOPE for the captured source, returning to SUFFIX."
+  (emacsvox-settings-workflows--open
+   'emacsvox-aural-editor
+   (lambda () (interactive) (emacsvox-edit-aural-rules scope nil (current-buffer)))
+   suffix))
+(defun emacsvox-settings-workflows--personal ()
+  "Edit personal rules with an explicit persistent save." (interactive)
+  (emacsvox-settings-workflows--rules 'personal 'emacsvox-settings-workflows--personal))
+(defun emacsvox-settings-workflows--session ()
+  "Edit session rules without writing startup defaults." (interactive)
+  (emacsvox-settings-workflows--rules 'session 'emacsvox-settings-workflows--session))
+(defun emacsvox-settings-workflows--buffer ()
+  "Edit rules for the captured buffer." (interactive)
+  (emacsvox-settings-workflows--rules 'buffer 'emacsvox-settings-workflows--buffer))
+(defun emacsvox-settings-workflows--features ()
+  "Manage built-in and personal Presentation Options." (interactive)
+  (emacsvox-settings-workflows--open 'emacsvox-aural-feature-fragments
+   #'emacsvox-aural-list-feature-fragments 'emacsvox-settings-workflows--features))
+(defun emacsvox-settings-workflows--face-label ()
+  "Describe global visual-face presentation."
+  (format "Visual-face presentation: %s"
+          (if emacsvox-aural-face-presentation-enabled "on" "off")))
+(defun emacsvox-settings-workflows--face ()
+  "Toggle global face presentation through its change lifecycle." (interactive)
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (emacsvox-aural-toggle-face-presentation)
+  (emacsvox-transient--submit-text
+   (emacsvox-settings-workflows--face-label)
+   (emacsvox-transient--menu-facts 'presentation 'command-menu-value-changed)
+   'state-change 'select-object))
+(defun emacsvox-settings-workflows--save-face ()
+  "Save only visual-face presentation as a startup default." (interactive)
+  (customize-save-variable 'emacsvox-aural-face-presentation-enabled
+                           emacsvox-aural-face-presentation-enabled)
+  (emacsvox-transient--submit-text
+   "Visual-face presentation default saved"
+   (emacsvox-transient--menu-facts 'presentation 'command-menu-value-changed)
+   'state-change 'save-object))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-presentation ()
+  "Manage presentation features and explicitly scoped rule drafts."
+  ["Presentation (global)"
+   ("f" "Presentation Options: activate, copy, edit" emacsvox-settings-workflows--features :transient transient--do-suspend)
+   ("v" (lambda () (emacsvox-settings-workflows--face-label)) emacsvox-settings-workflows--face :transient t)
+   ("w" "Save visual-face default" emacsvox-settings-workflows--save-face :transient t)]
+  ["Rule editors: save inside the editor"
+   ("p" "Personal rules (persistent)" emacsvox-settings-workflows--personal :transient transient--do-suspend)
+   ("s" "Session rules (temporary)" emacsvox-settings-workflows--session :transient transient--do-suspend)
+   ("b" "Captured buffer rules (temporary)" emacsvox-settings-workflows--buffer :transient transient--do-suspend)]
+  ["Finish"
+   ("q" "Back" transient-quit-one)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-presentation nil nil :scope (emacsvox-aural-menu--context)))
+
 (provide 'emacsvox-settings-workflows)
 ;;; emacsvox-settings-workflows.el ends here

@@ -44,5 +44,36 @@
     (execute-kbd-macro (kbd "f"))
     (with-current-buffer source (erase-buffer) (insert "replacement"))
     (should-error (emacsvox-settings-workflows--change) :type 'user-error)))
+(ert-deftest emacsvox-settings-workflows-rule-scopes-and-return ()
+  "Each rule route owns its advertised scope and returns to its exact entry."
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "r"))
+    (dolist (entry '(("p" personal emacsvox-settings-workflows--personal)
+                     ("s" session emacsvox-settings-workflows--session)
+                     ("b" buffer emacsvox-settings-workflows--buffer)))
+      (execute-kbd-macro (kbd (car entry)))
+      (should (derived-mode-p 'emacsvox-aural-scheme-editor-mode))
+      (should (eq emacsvox-aural-editor-scope (cadr entry)))
+      (should (eq emacsvox-aural-editor-target source))
+      (execute-kbd-macro (kbd "q"))
+      (should (eq (oref transient--prefix command) 'emacsvox-settings-presentation))
+      (with-selected-window transient--window
+        (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                    (nth 2 entry)))))
+    (should-not (file-exists-p custom-file))))
+
+(ert-deftest emacsvox-settings-workflows-face-save-is-explicit ()
+  "Face feedback changes immediately; only the explicit save writes Customize."
+  (emacsvox-test--with-settings
+    (let ((emacsvox-aural-face-presentation-enabled t))
+      (execute-kbd-macro (kbd "r v"))
+      (should-not emacsvox-aural-face-presentation-enabled)
+      (should-not (file-exists-p custom-file))
+      (execute-kbd-macro (kbd "w"))
+      (should (file-exists-p custom-file))
+      (with-temp-buffer
+        (insert-file-contents custom-file)
+        (should (search-forward "emacsvox-aural-face-presentation-enabled nil" nil t))))))
+
 (provide 'emacsvox-settings-workflows-tests)
 ;;; emacsvox-settings-workflows-tests.el ends here

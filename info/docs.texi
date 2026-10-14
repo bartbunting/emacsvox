@@ -72,7 +72,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1650 commands and 233 options.
+This chapter documents a total of 1651 commands and 233 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -18459,6 +18459,15 @@ Link focused menus to existing editors, retaining their persistence semantics.
 
 @format
 Explain and edit current or recent feedback, preserving source context.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-presentation
+@deffn {Command} emacsvox-settings-presentation
+@findex emacsvox-settings-presentation
+
+@format
+Manage presentation features and explicitly scoped rule drafts.
 @end format
 @end deffn
 

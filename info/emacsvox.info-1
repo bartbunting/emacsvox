@@ -3024,6 +3024,12 @@ available through unfinished drafts; the rule editor retains its
 existing discard prompt when you leave a modified rule list.  Replaced
 source items are rejected.
 
+   Use ‘C-e H r’ for Presentation Options and personal, session, or
+captured-buffer rule editors.  Their existing validation, preview, save,
+and discard prompts stay in the editor.  The menu also toggles global
+visual-face presentation; ‘w’ saves only that toggle through Customize.
+Voice Lock remains independent.
+
    Speech settings opens for the current buffer.  Press ‘g’ there to
 switch to global defaults, or start with ‘C-u C-e H’.  Indentation
 shares this scope with its parent menus, including changes made with ‘g’

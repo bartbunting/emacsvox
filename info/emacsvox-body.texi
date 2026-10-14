@@ -2978,6 +2978,11 @@ Returning from an editor restores its menu entry. Guided drafts remain available
 through unfinished drafts; the rule editor retains its existing discard prompt
 when you leave a modified rule list. Replaced source items are rejected.
 
+Use @code{C-e H r} for Presentation Options and personal@comma{} session@comma{} or captured-buffer
+rule editors. Their existing validation@comma{} preview@comma{} save@comma{} and discard prompts stay
+in the editor. The menu also toggles global visual-face presentation; @code{w} saves
+only that toggle through Customize. Voice Lock remains independent.
+
 Speech settings opens for the current buffer. Press @kbd{g} there to switch to
 global defaults@comma{} or start with @kbd{C-u C-e H}. Indentation shares this scope with
 its parent menus@comma{} including changes made with @kbd{g} inside Indentation.
