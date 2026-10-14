@@ -500,6 +500,35 @@ Agent Shell implementation checkpoint, 2026-10-15:
   cancellation, feedback choices, numeric adjustment/exact entry, save/restart
   and return from shell and viewport.
 
+Agent Shell choice-list iteration, 2026-10-15:
+
+- Foreground/background speech, thought feedback and tool-output detail open
+  explained choice lists. The current value is selected on entry. Arrows browse
+  without applying; Enter applies once and returns; =q= cancels. Global controls
+  retain their explicit Save action and background cancellation lifecycle.
+- Session speech uses the same menu interaction, including Auto. Each level
+  explains what it reads or suppresses. It still changes only the captured shell
+  session, including from its viewport, through the existing cancellation path.
+  Session confirmations interrupt older main speech and are excluded from Save.
+- Choice Help explains the selected value, scope, saving and relevant speech
+  policies. Toggles and numeric controls have useful effect descriptions rather
+  than repeating their names. This is also recorded as a standing writing rule
+  in =AGENTS.md=: every settings item and choice needs an explanation, with
+  concise arrow feedback and fuller Help where needed.
+- Verification: all 43 graphical settings tests passed from source and compiled
+  code with installed and bundled Transient; no skips. Coverage includes each
+  choice, spoken explanations and Help, return/cancel, session/viewport ownership,
+  queued-speech cancellation, interruptible confirmations and explicit saving.
+  The incremental build and bytecode preflight passed. Fresh sessions verified
+  the compiled menu paths and readable command documentation.
+- Listening accepted on 2026-10-15 in a fresh test Emacs: the five choice lists,
+  explanations, arrow browsing, apply/cancel, Help and return, and closing
+  feedback passed. This acceptance is separate from the automated checks above;
+  it does not establish save/restart acceptance for every global setting.
+- The maintained Agent Shell guide now describes the choice lists and spoken
+  Help. Manual generation, bytecode preflight and the documentation release gate
+  passed for the accepted slice.
+
 Org implementation checkpoint, 2026-10-15:
 
 - Direct, current-integration, chooser and search routes open a focused table

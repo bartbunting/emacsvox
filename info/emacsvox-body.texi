@@ -6847,11 +6847,17 @@ shared background default.
 speech; use a prefix argument to restore @code{auto}.
 
 Press @code{C-e S} in a shell or its viewport for focused Emacsvox settings. The same
-menu is available through @code{C-e H j c} and the integration chooser. @code{s} selects
-the temporary session override. @code{f} and @code{b} cycle foreground and background
-defaults; @code{t} and @code{o} cycle thought and tool-output feedback; @code{p}@comma{} @code{c} and @code{l}
-toggle permission speech@comma{} tool-call announcements and processing cues. Thought
-and tool content still depend on the effective speech level.
+menu is available through @code{C-e H j c} and the integration chooser. @code{s} opens
+choices for the temporary session override. @code{f} and @code{b} open foreground and
+background defaults; @code{t} and @code{o} open thought and tool-output choices. Each
+list starts on the current value and explains what the choices do. Browse with
+arrows@comma{} press Enter to apply and return@comma{} or @code{q} to cancel. Press @code{?} followed by
+a choice's key for spoken Help about its effect and scope; @code{q} returns from
+Help. @code{? ?} opens the menu overview.
+
+The @code{p}@comma{} @code{c} and @code{l} controls toggle permission speech@comma{} tool-call announcements
+and processing cues. Thought and tool content still depend on the effective
+speech level.
 
 The @code{a}@comma{} @code{n} and @code{k} controls set automatic-content@comma{} line-navigation and
 block-navigation character limits. Enter reads an exact positive integer or

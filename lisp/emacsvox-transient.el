@@ -1055,6 +1055,7 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                      emacsvox-settings-integrations--eat
                          emacsvox-settings-integrations--eat-choice
                          emacsvox-settings-integrations--agent
+                         emacsvox-settings-integrations--choice
                          emacsvox-settings-integrations--org
                          emacsvox-settings-integrations--eww
                          emacsvox-settings-integrations--notmuch)))

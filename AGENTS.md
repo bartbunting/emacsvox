@@ -37,6 +37,11 @@
   entry or when crossing sections, rather than repeating them before each
   item. Speak the key itself without a "shortcut" label. Repeated adjustments
   should announce the new value promptly and interrupt obsolete main speech.
+- Give every settings-menu item and choice a useful explanation of its effect.
+  State scope and important dependencies or exceptions. Keep arrow feedback
+  concise, and provide fuller Help where needed; repeating the label or saying
+  "Change this setting" is not an explanation. Prefer browsable lists for
+  multi-option choices, showing the current value without applying on navigation.
 - Apply these rules to documentation, including ADRs and reports, code comments,
   commit messages, and PR descriptions. Use concise, plain language that reads
   naturally through speech. State the behaviour, decision, and reason directly.

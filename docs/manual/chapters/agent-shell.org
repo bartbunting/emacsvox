@@ -165,11 +165,17 @@ shared background default.
 speech; use a prefix argument to restore =auto=.
 
 Press =C-e S= in a shell or its viewport for focused Emacsvox settings. The same
-menu is available through =C-e H j c= and the integration chooser. =s= selects
-the temporary session override. =f= and =b= cycle foreground and background
-defaults; =t= and =o= cycle thought and tool-output feedback; =p=, =c= and =l=
-toggle permission speech, tool-call announcements and processing cues. Thought
-and tool content still depend on the effective speech level.
+menu is available through =C-e H j c= and the integration chooser. =s= opens
+choices for the temporary session override. =f= and =b= open foreground and
+background defaults; =t= and =o= open thought and tool-output choices. Each
+list starts on the current value and explains what the choices do. Browse with
+arrows, press Enter to apply and return, or =q= to cancel. Press =?= followed by
+a choice's key for spoken Help about its effect and scope; =q= returns from
+Help. =? ?= opens the menu overview.
+
+The =p=, =c= and =l= controls toggle permission speech, tool-call announcements
+and processing cues. Thought and tool content still depend on the effective
+speech level.
 
 The =a=, =n= and =k= controls set automatic-content, line-navigation and
 block-navigation character limits. Enter reads an exact positive integer or

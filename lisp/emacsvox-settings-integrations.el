@@ -28,6 +28,7 @@
 ;;; Code:
 (require 'emacsvox-settings)
 (declare-function emacsvox-agent-shell--session-buffer "emacsvox-agent-shell" (&optional buffer))
+(declare-function emacsvox-agent-shell--set-session-speech-level "emacsvox-agent-shell" (shell-buffer level))
 (declare-function emacsvox-agent-shell-select-speech-level "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--cancel-background-pending-speech "emacsvox-agent-shell" ())
 (declare-function emacsvox-eat--control-buffer "emacsvox-eat-core" ())
@@ -483,12 +484,18 @@ Numeric controls accept positive integers or none.")
                       (t (user-error "Enter a positive integer or none"))))))))
     (when (and (not choices) value (<= value 0))
       (user-error "Enter a positive integer or none"))
+    (emacsvox-settings-integrations--set-option entry value)))
+(defun emacsvox-settings-integrations--set-option (entry value)
+  "Apply ENTRY's global VALUE with its existing lifecycle and speech feedback."
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (let ((option (nth 2 entry)))
     (customize-set-variable option value)
     ;; Preserve the lifecycle used by the existing background-level command.
     (when (and (eq option 'emacsvox-agent-shell-background-speech-level)
                (memq value '(notify quiet)))
       (emacsvox-agent-shell--cancel-background-pending-speech))
-    (emacsvox-settings-integrations--say (emacsvox-settings-integrations--label command))))
+    (emacsvox-settings-integrations--say
+     (emacsvox-settings-integrations--label (car entry)))))
 (defun emacsvox-settings-integrations--adjust (direction)
   "Adjust the selected numeric integration control in DIRECTION."
   (let* ((command (with-selected-window (emacsvox-transient--navigation-window)
@@ -530,6 +537,162 @@ Numeric controls accept positive integers or none.")
    (or (plist-get (emacsvox-aural-menu--context) :integration-return)
        'emacsvox-settings-search)))
 
+(defun emacsvox-settings-integrations--choice-entry-for (command)
+  "Return COMMAND's choice control with concise explanations of its values."
+  (let* ((session (eq command 'emacsvox-settings-integrations--agent-session))
+         (entry (if session
+                    (list command 'emacsvox-agent-shell 'emacsvox-agent-shell-speech-level
+                          "Session speech" nil)
+                  (copy-tree (emacsvox-settings-integrations--option command))))
+         (levels '((full . "Full: responses and configured thought, plan and tool feedback")
+                   (response . "Responses: responses and completion feedback")
+                   (notify . "Notifications: completion only")
+                   (quiet . "Quiet: suppress routine feedback; permissions and errors remain separate"))))
+    (setf (nth 4 entry)
+          (if session
+              (cons '(auto . "Auto: follow foreground and background defaults") levels)
+            (pcase (nth 2 entry)
+              ((or 'emacsvox-agent-shell-foreground-speech-level
+                   'emacsvox-agent-shell-background-speech-level) levels)
+              ('emacsvox-agent-shell-speak-thought-process
+               '((icon . "Cue: a sound without reading thoughts")
+                 (speak . "Speak: read thought content") (nil . "Silent: no thought feedback")))
+              ('emacsvox-agent-shell-tool-output-verbosity
+               '((summary . "Summary: tool status and title")
+                 (status . "Status cues: sounds when tools start and finish")
+                 (full . "Full: read tool output within the reading limits")))
+              (_ (nth 4 entry)))))
+    entry))
+(defun emacsvox-settings-integrations--choice-entry ()
+  "Return the control whose choices are open."
+  (emacsvox-settings-integrations--choice-entry-for
+   (plist-get (emacsvox-aural-menu--context) :integration-choice)))
+(defun emacsvox-settings-integrations--choice-value (entry)
+  "Return ENTRY's current value in its session or global scope."
+  (if (eq (car entry) 'emacsvox-settings-integrations--agent-session)
+      (buffer-local-value (nth 2 entry) (emacsvox-settings-integrations--agent-source))
+    (default-value (nth 2 entry))))
+(defun emacsvox-settings-integrations--choice-label (index)
+  "Describe choice INDEX and mark the current value."
+  (let* ((entry (emacsvox-settings-integrations--choice-entry))
+         (choice (nth index (nth 4 entry))))
+    (concat (cdr choice)
+            (when (equal (car choice) (emacsvox-settings-integrations--choice-value entry))
+              ", selected"))))
+(defun emacsvox-settings-integrations--choice-fourth-p ()
+  "Whether the current control has a fourth choice."
+  (nth 3 (nth 4 (emacsvox-settings-integrations--choice-entry))))
+(defun emacsvox-settings-integrations--choice-fifth-p ()
+  "Whether the current control has a fifth choice."
+  (nth 4 (nth 4 (emacsvox-settings-integrations--choice-entry))))
+(defun emacsvox-settings-integrations--choice-heading ()
+  "Describe the current choice scope."
+  (let ((entry (emacsvox-settings-integrations--choice-entry)))
+    (concat (nth 3 entry)
+            (if (eq (car entry) 'emacsvox-settings-integrations--agent-session)
+                " (this session, temporary)" " (global default)"))))
+(defun emacsvox-settings-integrations--choose (command)
+  "Open COMMAND's choices without applying or saving a value."
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (let* ((entry (emacsvox-settings-integrations--choice-entry-for command))
+         (index (or (seq-position (nth 4 entry) (emacsvox-settings-integrations--choice-value entry)
+                                 (lambda (choice value) (equal (car choice) value))) 0)))
+    (transient-setup
+     'emacsvox-settings-integrations--choice nil nil
+     :scope (plist-put (copy-sequence (emacsvox-aural-menu--context)) :integration-choice command))
+    (transient--show)
+    (with-selected-window transient--window
+      (transient--goto-button
+       (cl-find (nth index '(emacsvox-settings-integrations--choice-first
+                            emacsvox-settings-integrations--choice-second
+                            emacsvox-settings-integrations--choice-third
+                            emacsvox-settings-integrations--choice-fourth
+                            emacsvox-settings-integrations--choice-fifth))
+                transient--suffixes :key (lambda (item) (oref item command)))))
+    (emacsvox-transient--speak-button)))
+(defun emacsvox-settings-integrations--choice-back ()
+  "Cancel and return to the originating control."
+  (interactive)
+  (emacsvox-settings-integrations--return
+   (car (emacsvox-settings-integrations--choice-entry))))
+(defun emacsvox-settings-integrations--choice-apply (index)
+  "Apply choice INDEX and return to the originating control."
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (let* ((entry (emacsvox-settings-integrations--choice-entry))
+         (value (car (nth index (nth 4 entry)))))
+    (emacsvox-settings-integrations--return (car entry))
+    (if (eq (car entry) 'emacsvox-settings-integrations--agent-session)
+        (let ((emacsvox-aural-submission-lane 'main)
+              (emacsvox-aural-submission-delivery-policy 'replaceable)
+              (emacsvox-aural-submission-replacement-key 'speaker)
+              (emacsvox-aural-submission-interruption-policy 'lane))
+          (emacsvox-agent-shell--set-session-speech-level
+           (emacsvox-settings-integrations--agent-source) value))
+      (emacsvox-settings-integrations--set-option entry value))))
+(defun emacsvox-settings-integrations--choice-help (object)
+  "Explain choice OBJECT and its scope without applying it."
+  (let* ((entry (emacsvox-settings-integrations--choice-entry))
+         (choice (nth (1- (string-to-number (oref object key))) (nth 4 entry))))
+    (with-help-window (help-buffer)
+      (princ (emacsvox-settings-integrations--choice-heading))
+      (princ "\n\n")
+      (princ (cdr choice))
+      (princ "\n\n")
+      (princ (if (eq (car entry) 'emacsvox-settings-integrations--agent-session)
+                 "Selecting this value changes only the captured session. Auto follows the foreground and background defaults."
+               "Selecting this value changes the global default. Use w in the parent menu to save it for future sessions."))
+      (princ "\n\n")
+      (princ (if (memq (nth 2 entry) '(emacsvox-agent-shell-speak-thought-process
+                                     emacsvox-agent-shell-tool-output-verbosity))
+                 "The session speech level must allow this kind of feedback."
+               "Permissions and errors remain controlled separately.")))
+    (pop-to-buffer (help-buffer))
+    (emacsvox-transient--submit-text
+     (emacsvox-aural-source-substring (point-min) (point-max))
+     (emacsvox-transient--menu-facts 'help 'command-menu-suspended)
+     'inspection 'help)))
+(defun emacsvox-settings-integrations--choice-first ()
+  "Apply this choice." (interactive)
+  (emacsvox-settings-integrations--choice-apply 0))
+(defun emacsvox-settings-integrations--choice-second ()
+  "Apply this choice." (interactive)
+  (emacsvox-settings-integrations--choice-apply 1))
+(defun emacsvox-settings-integrations--choice-third ()
+  "Apply this choice." (interactive)
+  (emacsvox-settings-integrations--choice-apply 2))
+(defun emacsvox-settings-integrations--choice-fourth ()
+  "Apply this choice." (interactive)
+  (emacsvox-settings-integrations--choice-apply 3))
+(defun emacsvox-settings-integrations--choice-fifth ()
+  "Apply this choice." (interactive)
+  (emacsvox-settings-integrations--choice-apply 4))
+(transient-define-prefix emacsvox-settings-integrations--choice ()
+  "Choose with arrows and Enter; q cancels."
+  [:description emacsvox-settings-integrations--choice-heading
+   ("1" (lambda () (emacsvox-settings-integrations--choice-label 0))
+    emacsvox-settings-integrations--choice-first
+    :show-help emacsvox-settings-integrations--choice-help :transient transient--do-replace)
+   ("2" (lambda () (emacsvox-settings-integrations--choice-label 1))
+    emacsvox-settings-integrations--choice-second
+    :show-help emacsvox-settings-integrations--choice-help :transient transient--do-replace)
+   ("3" (lambda () (emacsvox-settings-integrations--choice-label 2))
+    emacsvox-settings-integrations--choice-third
+    :show-help emacsvox-settings-integrations--choice-help :transient transient--do-replace)
+   ("4" (lambda () (emacsvox-settings-integrations--choice-label 3))
+    emacsvox-settings-integrations--choice-fourth
+    :show-help emacsvox-settings-integrations--choice-help
+    :if emacsvox-settings-integrations--choice-fourth-p :transient transient--do-replace)
+   ("5" (lambda () (emacsvox-settings-integrations--choice-label 4))
+    emacsvox-settings-integrations--choice-fifth
+    :show-help emacsvox-settings-integrations--choice-help
+    :if emacsvox-settings-integrations--choice-fifth-p :transient transient--do-replace)]
+  ["Finish"
+   ("q" "Cancel" emacsvox-settings-integrations--choice-back :transient transient--do-replace)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-integrations--choice nil nil
+                   :scope (emacsvox-aural-menu--context)))
+
 (defun emacsvox-settings-integrations--agent-source ()
   "Resolve the captured Agent Shell session or viewport without creating one."
   (require 'emacsvox-agent-shell)
@@ -546,58 +709,62 @@ Numeric controls accept positive integers or none.")
                                   (emacsvox-settings-integrations--agent-source)))
     "Session speech: open from Agent Shell or its viewport"))
 (defun emacsvox-settings-integrations--agent-session ()
-  "Choose speech for the captured session through its existing lifecycle."
+  "Override automatic speech for this session; Auto follows focus defaults."
   (interactive)
-  (with-current-buffer (emacsvox-settings-integrations--agent-source)
-    (call-interactively #'emacsvox-agent-shell-select-speech-level)))
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--agent-session))
 (defun emacsvox-settings-integrations--agent-save ()
-  "Save displayed Agent Shell defaults, excluding the session override."
+  "Save these global defaults for future sessions; exclude the session override."
   (interactive)
   (emacsvox-settings-integrations--save-options 'emacsvox-agent-shell))
 (defun emacsvox-settings-integrations--agent-custom ()
-  "Open advanced Agent Shell settings and return here."
+  "Edit additional Agent Shell options in Customize, with its own Save action."
   (interactive)
   (require 'emacsvox-agent-shell)
   (emacsvox-settings--custom 'emacsvox-agent-shell 'emacsvox-settings-integrations--agent-custom))
 
 (defun emacsvox-settings-integrations--agent-foreground ()
-  "Change the global foreground speech." (interactive)
-  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-foreground))
+  "Choose automatic feedback for focused sessions using Auto." (interactive)
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--agent-foreground))
 
 (defun emacsvox-settings-integrations--agent-background ()
-  "Change the global background speech." (interactive)
-  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-background))
+  "Choose automatic feedback for unfocused sessions using Auto." (interactive)
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--agent-background))
 
 (defun emacsvox-settings-integrations--agent-thoughts ()
-  "Change the global thought feedback." (interactive)
-  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-thoughts))
+  "Choose thought speech or cues when the session speech level allows thoughts." (interactive)
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--agent-thoughts))
 
 (defun emacsvox-settings-integrations--agent-tools ()
-  "Change the global tool output." (interactive)
-  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-tools))
+  "Choose tool feedback when the session speech level allows tool output." (interactive)
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--agent-tools))
 
 (defun emacsvox-settings-integrations--agent-permissions ()
-  "Change the global speak permission requests." (interactive)
+  "Speak permission requests as soon as they arrive." (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-permissions))
 
 (defun emacsvox-settings-integrations--agent-calls ()
-  "Change the global announce tool calls." (interactive)
+  "Announce tool calls when the session speech level allows tool feedback." (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-calls))
 
 (defun emacsvox-settings-integrations--agent-processing ()
-  "Change the global processing lifecycle cues." (interactive)
+  "Signal processing start and completion, subject to the session speech level." (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-processing))
 
 (defun emacsvox-settings-integrations--agent-automatic-limit ()
-  "Change the global automatic content limit." (interactive)
+  "Limit automatic speech length; explicit response inspection stays complete.
+Enter a positive character count or none for complete automatic content.
+Provider-controlled permission fields and tool labels remain concise." (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-automatic-limit))
 
 (defun emacsvox-settings-integrations--agent-line-limit ()
-  "Change the global line navigation limit." (interactive)
+  "Limit long-line navigation speech and announce the omitted count.
+Enter a positive character count or none to use the core long-line policy.
+Explicit response and block-reading commands remain complete." (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-line-limit))
 
 (defun emacsvox-settings-integrations--agent-block-limit ()
-  "Change the global block navigation limit." (interactive)
+  "Limit the body read after block navigation; block labels stay concise.
+Enter a positive character count or none for the complete body." (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-block-limit))
 
 (transient-define-prefix emacsvox-settings-integrations--agent ()
@@ -605,16 +772,16 @@ Numeric controls accept positive integers or none.")
   ["Captured session (temporary)"
    ("s" (lambda () (emacsvox-settings-integrations--agent-session-label))
     emacsvox-settings-integrations--agent-session
-    :inapt-if-not emacsvox-settings-integrations--agent-p :transient t)]
+    :inapt-if-not emacsvox-settings-integrations--agent-p :transient transient--do-suspend)]
   ["Global speech defaults; w saves"
    ("f" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-foreground))
-    emacsvox-settings-integrations--agent-foreground :transient t)
+    emacsvox-settings-integrations--agent-foreground :transient transient--do-suspend)
    ("b" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-background))
-    emacsvox-settings-integrations--agent-background :transient t)
+    emacsvox-settings-integrations--agent-background :transient transient--do-suspend)
    ("t" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-thoughts))
-    emacsvox-settings-integrations--agent-thoughts :transient t)
+    emacsvox-settings-integrations--agent-thoughts :transient transient--do-suspend)
    ("o" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-tools))
-    emacsvox-settings-integrations--agent-tools :transient t)
+    emacsvox-settings-integrations--agent-tools :transient transient--do-suspend)
    ("p" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-permissions))
     emacsvox-settings-integrations--agent-permissions :transient t)
    ("c" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-calls))
