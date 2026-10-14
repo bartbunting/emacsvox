@@ -119,8 +119,10 @@ effective settings, and diagnostic evidence.
   in a new normal Emacsvox session.
 - [X] Commit the accepted controls and persistence in reviewable slices.
 - [X] Batch their user documentation and generated references at that checkpoint.
-- [ ] Reconcile the Home action map with this inventory, including commands
-  exposed only by shortcuts, Help, or search.
+- [X] Reconcile the Home action map with this inventory, including commands
+  exposed only by shortcuts, Help, or search. Source audit completed on
+  2026-10-15; the coverage audit below records all 26 named actions and aliases.
+  Broader settings coverage and interaction acceptance remain in milestone 5.
 
 Done when accepted behaviour, restart persistence, documentation, and commits
 agree. Existing passing checks remain reusable for unchanged code.
@@ -129,7 +131,10 @@ agree. Existing passing checks remain reusable for unchanged code.
 
 - [X] Accept the prototype linking voice/engine browsing, preferred engine,
   palettes, and workbench. Accepted on 2026-10-14.
-- [ ] Preserve selection and filters across audition, editing, and return.
+- [ ] Accept selection, filters, sorting, and sample-text retention across the
+  complete audition/edit/return task. Retention is already implemented with
+  focused workbench/editor regression coverage; this is an end-to-end review,
+  not a claim that those mechanisms still need to be written.
 - [ ] Listen to the focused named-voice tuner prototype, including bounds,
   exact entry, adapter default, and manual preview.
 - [X] Support edited preview and original-versus-edited comparison with the
@@ -153,24 +158,34 @@ revisited without losing the source context or an unfinished experiment.
   settings. Keep restart requirements explicit.
 - [X] Link the punctuation pronunciation editor as well as level selection.
 - [X] Add action/settings search and access to settings relevant to this buffer.
-  Implemented; integration-specific menus and complete listening tasks remain open.
+  Implemented; integration discovery now covers the initial package inventory.
+  Further integrations and complete listening tasks remain open.
 
 Done when common reading, coding, and notification adjustments are discoverable
 without knowing their variable names, and their previews and persistence work.
 
 ** 4. Connect richer editing and management
 
-- [ ] Complete contextual feedback changes, recent feedback, remapping, and
-  explanations of the effective result.
-- [ ] Expose presentation features, saved rules, buffer rules, and their scope.
-- [ ] Connect profiles, retained drafts, inheritance/reset, and import/export.
-- [ ] Add relevant settings for individual integrations.
-- [ ] Extend voice tuning to fallback choices and qualified native controls.
-- [ ] Add a changed-settings view, distinguishing current values, saved
-  defaults, and drafts rather than treating them as one persistence system.
+- [X] Connect contextual feedback changes, recent feedback, remapping, and
+  effective explanations at =C-e H f=.
+- [X] Expose presentation features and personal/session/buffer rule editors
+  with explicit scope at =C-e H r=.
+- [X] Connect profiles, retained drafts, inheritance/reset, and palette
+  import/export at =C-e H p=.
+- [X] Add initial integration discovery at =C-e H j= and =C-e H . j=:
+  Agent Shell, EAT/comint, Org, Notmuch, and EWW. Most advanced options retain
+  Customize routes; further packages remain an inventory task.
+- [X] Extend the voice editor's =m= menu to fallback choices and link qualified
+  native controls through the existing editor.
+- [X] Add a changed-settings view at =C-e H d=, separating current values,
+  saved defaults, and retained drafts. Coverage is limited to loaded options
+  and in-memory drafts; disk/host reconciliation is deferred.
 
-Done when real work can flow from an observed behaviour to its explanation,
-edit, preview, explicit persistence, and return to the original task.
+Implemented and committed in six slices, =3f246446f= through =51bf15972=.
+Automated evidence is in the six-slice checkpoint below. These are menu and
+workflow connections; dedicated editors retain their existing editing models.
+Listening acceptance remains open for the complete explanation, edit, preview,
+explicit persistence, and return task.
 
 ** 5. Evaluate the complete settings interface
 
@@ -181,6 +196,8 @@ edit, preview, explicit persistence, and return to the original task.
 - [ ] Run end-to-end listening tasks and compare with the existing Home.
 - [ ] Run applicable integration checks, a real Magit navigation check for
   shared Transient changes, and verification on the minimum supported Emacs.
+  The last combined graphical run covered installed Magit on Emacs 31.0.90;
+  listening and Emacs 30.2 compatibility acceptance remain open.
 - [ ] Batch final documentation and record durable design decisions in ADRs.
 
 Done when the replacement is usable across the agreed tasks and remaining
@@ -202,6 +219,9 @@ through an existing rule rather than a dedicated option.
 - Indentation enablement, spoken/tone presentation, timing, and tone parameters.
 - Character pronunciation, character-rate scale, Unicode handling, repeated
   character handling, and delayed phonetic feedback where supported.
+- Emacs pronunciation dictionaries: define/edit entries, enable/disable their
+  use, refresh, load, and explicitly save their own dictionary file. These are
+  separate from host punctuation pronunciations and Customize defaults.
 
 Rate, level/profile selection, policy reset, and saving are current prototypes.
 The initial indentation path is accepted. Pitch-tone tuning is implemented for
@@ -280,8 +300,10 @@ which require a restart. Link cue editing to a concrete preview and explanation.
 - Saved, session, and current-buffer rules; precedence, disable/remove, and reset.
 - Feedback-history retention and inclusion of interface presentations.
 
-The Outline report is implemented. Complete the surrounding editing paths and
-show why a rule or contextual adjustment wins over another value.
+The Outline report and surrounding editing links are implemented. Review the
+complete task of explaining why a rule or contextual adjustment wins, changing
+it, and returning to the source. The coverage audit below records the remaining
+focused-menu gaps for training, history policy, and the combined rule overview.
 
 ** Integrations
 
@@ -378,14 +400,134 @@ authorization to rewrite all editors at once.
 Persistence remains owned by existing subsystems. Ordinary defaults use
 Customize; capitalization cues use personal aural rules; voices, palettes,
 and other structured objects use their existing stores; punctuation definitions
-are saved on the Omnivox host. Unsaved drafts remain session state. A future
-Changed settings view should explain scope, saved state, and any apply/restart
-boundary across these stores rather than assume a single save operation.
+are saved on the Omnivox host. Emacs pronunciation dictionaries use their own
+file. Unsaved drafts remain session state. The implemented Changed settings view
+separates loaded options and retained drafts and identifies storage boundaries.
+Comparing those stores with disk or live host state remains deferred.
 
-The punctuation connection should open its existing character/pronunciation
-table from level/profile selection, preserve drafts on return, and keep saving
-separate from the explicit speech-worker restart. It does not replace that
-table with one Transient item per character.
+The punctuation connection opens the existing character/pronunciation table
+from level/profile selection and preserves drafts on return. Saving and the
+explicit speech-worker restart remain separate. The table remains the editor
+for individual characters.
+
+* Coverage audit, 2026-10-15
+
+This is a source audit of the current interface, not new listening acceptance.
+Checked [[file:../lisp/emacsvox-aural-home.el][Home entries, activation, shortcuts and Help]],
+[[file:../lisp/emacsvox-settings.el][settings/action search]], the [[file:../lisp/emacsvox-aural-menu.el][root and reading/output menus]],
+[[file:../lisp/emacsvox-settings-workflows.el][workflow links]], and [[file:../lisp/emacsvox-settings-integrations.el][integration discovery]].
+Every one of Home's 26 named actions is available through =C-e H a= action
+search, including collapsed and shortcut-only actions. This establishes a
+route in source; it does not establish every child view's return behavior.
+The =C-e H /= focused-setting search has a separate catalogue.
+
+** Home action routes
+
+Keys below follow =C-e H=. A Home/search route is retained coverage; a focused
+menu gap means the action has no direct control in the new focused menus.
+
+| Home action ID | Current route | Coverage or remaining review |
+|----------------+---------------+------------------------------|
+| change-feedback | =f c= | Guided draft |
+| browse-voices | =v b= | Voice/engine browser |
+| speech-engine | =v e=; =v S= saves | Existing engine preference commands |
+| speech-rate | =s r= | Scoped rate control |
+| punctuation | =s p e= | Host pronunciation editor; level/profile controls alongside |
+| output-volumes | =o=; =o n= for routing | Focused controls; advanced output options remain in Customize |
+| notification-log | =o n h= | History snapshot; Home retains the original notification viewer |
+| return-source | =h C-c C-o=; action search | Explicit jump to the captured item; distinct from simply closing menus |
+| drafts | =p d=, then Enter | Home's retained-editor chooser |
+| explain | =x= or =f x= | Effective feedback details |
+| remap | =f v= | Named-voice mapping draft |
+| tune-voice | =h T=; action search | Focused-menu gap for tuning the named voice used at point |
+| remap-earcon | =f e= | Scoped cue-remapping draft |
+| overrides | =h O=; action search | Combined rule overview; =r= currently opens individual rule layers |
+| recent-feedback | =f h= | Frozen feedback review and editing |
+| profiles | =p p= | Profile manager |
+| voices | =v p= or =p v= | Palette manager and its native editing/exchange commands |
+| voice-workbench | =v w= | Existing workbench |
+| features | =r f= | Presentation Options manager |
+| buffer-rules | =r b= | Captured-buffer rule editor |
+| semantics | Action search: Semantic vocabulary; Home Help link | Retain as a reference view |
+| sounds | =o p= | Sound-pack browser and editor |
+| spatial | Action search: Spatial capabilities | Capability explanation lacks a focused-menu link |
+| spatial-settings | =o n=; Home offers Customize | Focused spatial controls plus advanced settings |
+| training | =h t= | Session toggle; its searchable row explains the setting |
+| diagnostics | =h D=; action search: Aural Doctor | Diagnostics lack a focused-menu link |
+
+Home's =engine-modules= shortcut dispatches to Browse voices; =I= remains an
+alias for that browser. The legacy =notifications= activation branch opens
+output Customize, while =notification-log= opens history. Neither alias adds
+a missing named action. Home's refresh, group expansion, help, and source-return
+commands remain local interface operations.
+
+** Settings beyond the Home catalogue
+
+- History policy is already reachable inside =f h=: =L= invokes
+  =emacsvox-aural-set-history-limit= and =i= invokes
+  =emacsvox-aural-toggle-interface-history-recording=. They change session state;
+  Customize owns saved defaults. Lowering the limit immediately discards excess
+  history. A focused route must state that effect and keep saving explicit.
+- =r v= controls visual-face presentation. =voice-lock-mode= and
+  =global-voice-lock-mode= are separate existing commands in the speech keymap;
+  the new presentation menu does not yet expose them. Preserve their scope and
+  lifecycle if links are added.
+- Emacs pronunciation dictionaries are missing from both new search catalogues.
+  [[file:../lisp/emacsvox-pronounce.el][emacsvox-pronounce-dispatch]] already offers define/edit, load, refresh, save,
+  and toggle actions; =emacsvox-pronounce-edit-pronunciations= is the editor.
+  =emacsvox-pronounce-save-dictionaries= writes the dictionary file selected from
+  =emacsvox-pronounce-dictionaries-file=. Link this workflow separately from
+  =omnivox-punctuation= and audit the editor's return/save behavior first.
+- [[file:../lisp/tts-speak.el][tts-set-character-scale]] supports local/global character-rate changes;
+  =tts-add-cleanup-pattern= edits =tts-cleanup-repeats=. Both remain direct
+  commands without a new focused search route. Their variables are not ordinary
+  Customize defaults; establish persistence before adding any Save control.
+- =tts-speech-rate-base= and =tts-speech-rate-step= configure predefined rates;
+  they are not the shifted-arrow menu's adjustment step. Unicode replacements,
+  name transformations, and untouched charsets already have Customize options.
+  Record explicit advanced routes before considering new controls.
+- Duration-coded indentation still uses fixed constants. Configurable duration
+  coding remains a separate design decision; pitch-tone duration is implemented.
+- Integration discovery covers the initial Agent Shell, EAT/comint, Org,
+  Notmuch, and EWW inventory. Package presence gates Customize entries; further
+  package coverage and dedicated integration controls remain separate work.
+- Changed settings covers loaded Emacsvox/TTS/Omnivox Custom options and known
+  retained drafts, with additional runtime rate/session rows. Dictionary stores,
+  unloaded options, arbitrary non-Custom toggles, and disk/host comparisons are
+  outside that snapshot. Broader coverage needs an explicit ownership inventory.
+
+** Next proposed slices
+
+1. Diagnostics and recovery discovery. Link Aural Doctor, spatial capabilities,
+   and =tts-show-diagnostics= from a focused menu. Reuse existing recovery
+   commands, keeping restart or repair an explicit action. Acceptance: inspect
+   a finding and return to the same entry without an implicit state change.
+2. Presentation discovery gaps. Link the combined rule overview and tuning the
+   named voice used at point; expose training and history policy with their
+   actual scopes. Review Voice Lock separately from face presentation.
+   Acceptance: explain a heading, find the responsible rule/voice, change or
+   restore it, and verify source return and persistence boundaries.
+3. Reading and dictionary discovery. Add an explicitly separate route to Emacs
+   pronunciation dictionaries and classify character-scale, repeat cleanup,
+   predefined-rate, and Unicode settings as focused or advanced controls.
+   Acceptance: edit one dictionary entry and demonstrate which store saves it;
+   opening the workflow must not write or restart speech.
+4. Complete the voice browsing acceptance task before choosing further UI edits.
+   Existing workbench/editor tests already cover filtered search, sorting, and
+   return focus. Verify filters, row, column, sample text, draft, and source
+   through audition, tuning, compare, save, and return on the normal host.
+   Make a small regression-backed fix for each observed failure.
+5. Improve one dedicated editor at a time using listening findings. Audit its
+   existing maps, modified state, undo, help, and finish/cancel behavior before
+   changing conventions. Prioritize the editor that obstructs the complete task;
+   no broad conversion is implied by this queue.
+6. Finish milestone 5 acceptance: cover remaining inventoried routes, compare
+   against Home, verify Emacs 30.2 in a separate checkout, and record settled
+   documentation/design decisions. Home retirement remains a separate decision.
+
+The next implementation candidate is diagnostics discovery. Listening can run
+alongside these scoped discovery changes and determines later editor priorities.
+No additional implementation or new listening result is recorded by this audit.
 
 * Acceptance tasks and development cycle
 
