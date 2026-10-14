@@ -658,6 +658,8 @@ ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
        " Shift left and right: adjust volume. Space: preview.")
      (when (eq command 'emacsvox-aural-menu-sounds)
        " Shift left and right: adjust volume.")
+     (when (eq command 'emacsvox-aural-menu-speech)
+       " Shift left and right: adjust rate.")
      (if (eq (lookup-key transient--transient-map (kbd "RET"))
              #'transient-push-button)
          " Enter: activate. Control G: close. "
@@ -1024,7 +1026,7 @@ DIRECTION is positive for forward movement, negative for backward movement."
              (memq (oref transient--prefix command)
                    '(emacsvox-aural-menu emacsvox-aural-menu-speech
                      emacsvox-aural-menu-navigation emacsvox-aural-menu-sounds
-                     emacsvox-indentation)))
+                     emacsvox-aural-menu-punctuation emacsvox-indentation)))
     (keymap-set map "RET" #'transient-push-button)
     (keymap-set map "<return>" #'transient-push-button))
   map)

@@ -46,7 +46,7 @@
     (unless (and prefix
                  (memq (oref prefix command)
                        '(emacsvox-aural-menu emacsvox-aural-menu-speech
-                         emacsvox-aural-menu-sounds)))
+                         emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation)))
       (user-error "Open the Emacsvox menu first"))
     (oref prefix scope)))
 
@@ -247,6 +247,174 @@
    ("q" "Back (keep changes)" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)])
 
+(defun emacsvox-aural-menu--rate-value ()
+  "Return the rate in the selected settings scope as a number."
+  (let* ((context (emacsvox-aural-menu--context))
+         (source (emacsvox-aural-menu--source context))
+         (value (if (cdr (plist-get context :settings))
+                    (default-value 'tts-speech-rate)
+                  (buffer-local-value 'tts-speech-rate source))))
+    (when (and (stringp value)
+               (string-match-p "\\`[0-9]+\\(?:\\.[0-9]+\\)?\\'" value))
+      (setq value (string-to-number value)))
+    (unless (numberp value)
+      (user-error "The current speech rate is not numeric"))
+    value))
+
+(defun emacsvox-aural-menu--rate (&optional direction)
+  "Set speech rate, or adjust it by DIRECTION times the configured step.
+Global scope changes the default and current buffer for this session."
+  (interactive)
+  (let* ((context (emacsvox-aural-menu--context))
+         (source (emacsvox-aural-menu--source context))
+         (global (cdr (plist-get context :settings))))
+    (with-current-buffer source
+      (unless (process-live-p tts-speaker-process)
+        (user-error "Start speech before changing its rate"))
+      (let* ((omnivox (tts--omnivox-program-p))
+             (current (emacsvox-aural-menu--rate-value))
+             (value (if direction
+                        (max 0 (+ current (* direction tts-speech-rate-step)))
+                      (emacsvox-aural-menu--read-number
+                       (if omnivox "Speech rate (0 to 100): " "Speech rate: ") current))))
+        (when (and direction omnivox) (setq value (min 100 value)))
+        (unless (and (numberp value) (>= value 0) (or (not omnivox) (<= value 100)))
+          (user-error (if omnivox "Speech rate must be from 0 to 100"
+                        "Speech rate must be non-negative")))
+        (tts-set-rate value global)
+        (emacsvox-transient--submit-text
+         (format "%s" value)
+         (emacsvox-transient--item-facts
+          'value 'speech-rate 'command-menu-value-changed '(selected))
+         'state-change 'select-object)))))
+
+(defun emacsvox-aural-menu--adjust-rate (direction)
+  "Adjust the focused rate control in DIRECTION."
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (let ((object
+         (with-selected-window (emacsvox-transient--navigation-window)
+           (when-let* ((button (button-at (point))))
+             (button-get button 'button-data)))))
+    (if (and (eieio-object-p object)
+             (eq (oref object command) 'emacsvox-aural-menu--rate))
+        (emacsvox-aural-menu--rate direction)
+      (emacsvox-transient--submit-text
+       "Not adjustable. Enter activates; left and right change sections."
+       (emacsvox-transient--item-facts 'command 'adjust 'operation-failed)
+       'state-change 'warn-user))))
+
+(defun emacsvox-aural-menu--rate-decrease ()
+  "Lower the selected speech rate by the configured step."
+  (interactive)
+  (emacsvox-aural-menu--adjust-rate -1))
+
+(defun emacsvox-aural-menu--rate-increase ()
+  "Raise the selected speech rate by the configured step."
+  (interactive)
+  (emacsvox-aural-menu--adjust-rate 1))
+
+(defun emacsvox-aural-menu--punctuation-value ()
+  "Return punctuation in the selected scope, including automatic policy."
+  (let* ((context (emacsvox-aural-menu--context))
+         (source (emacsvox-aural-menu--source context)))
+    (if (cdr (plist-get context :settings))
+        (default-value 'tts-punctuation-mode)
+      (with-current-buffer source
+        (plist-get (tts-punctuation-mode-state) :mode)))))
+
+(defun emacsvox-aural-menu--punctuation-label ()
+  "Describe punctuation and its policy in the selected scope."
+  (let* ((context (emacsvox-aural-menu--context))
+         (source (emacsvox-aural-menu--source context)))
+    (with-current-buffer source
+      (if (cdr (plist-get context :settings))
+          (format "Punctuation: %s, global default"
+                  (omnivox-punctuation-profiles--describe (default-value 'tts-punctuation-mode)))
+        (tts--punctuation-mode-description)))))
+
+(defun emacsvox-aural-menu--punctuation-choice (mode label)
+  "Describe punctuation MODE with LABEL and its selected state."
+  (if (equal mode (emacsvox-aural-menu--punctuation-value))
+      (propertize (concat label " (selected)")
+                  emacsvox-aural-facts-property '(:states (selected)))
+    label))
+
+(defun emacsvox-aural-menu--set-punctuation (mode)
+  "Apply punctuation MODE through the existing setter in the selected scope."
+  (let* ((context (emacsvox-aural-menu--context))
+         (source (emacsvox-aural-menu--source context))
+         (global (cdr (plist-get context :settings))))
+    (with-current-buffer source
+      (tts-set-punctuations mode global)
+      (emacsvox-transient--submit-text
+       (concat (omnivox-punctuation-profiles--describe mode)
+               (if global ", global default and current buffer" ", buffer override"))
+       (emacsvox-transient--item-facts
+        'value 'punctuation 'command-menu-value-changed '(selected))
+       'state-change 'select-object))))
+
+(defun emacsvox-aural-menu--choose-punctuation ()
+  "Choose a built-in punctuation level or an available named profile."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (emacsvox-aural-menu--set-punctuation (omnivox-punctuation-profiles--read))))
+
+(defun emacsvox-aural-menu--local-scope-p ()
+  "Return non-nil when settings target the current buffer."
+  (not (cdr (plist-get (emacsvox-aural-menu--context) :settings))))
+
+(defun emacsvox-aural-menu--reset-punctuation ()
+  "Restore automatic punctuation policy for the source buffer."
+  (interactive)
+  (unless (emacsvox-aural-menu--local-scope-p)
+    (user-error "Choose current buffer scope to restore automatic punctuation"))
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (tts-reset-punctuation-mode)
+    (emacsvox-transient--submit-text
+     (tts--punctuation-mode-description)
+     (emacsvox-transient--item-facts
+      'value 'punctuation 'command-menu-value-changed '(selected))
+     'state-change 'select-object)))
+
+(transient-define-prefix emacsvox-aural-menu-punctuation (&optional global)
+  "Choose punctuation for this buffer or the session's global default.
+Global changes also apply to the source buffer.  Nothing is saved on disk."
+  :refresh-suffixes t
+  ["Scope"
+   ("g" (lambda () (concat "Scope: " (emacsvox-aural-menu--scope-label)))
+    emacsvox-aural-menu--toggle-scope :transient t)]
+  ["Punctuation"
+   ("n" (lambda () (emacsvox-aural-menu--punctuation-choice 'none "None"))
+    (lambda () "Speak no punctuation." (interactive)
+      (emacsvox-aural-menu--set-punctuation 'none)) :transient t)
+   ("s" (lambda () (emacsvox-aural-menu--punctuation-choice 'some "Some"))
+    (lambda () "Speak selected punctuation." (interactive)
+      (emacsvox-aural-menu--set-punctuation 'some)) :transient t)
+   ("a" (lambda () (emacsvox-aural-menu--punctuation-choice 'all "All"))
+    (lambda () "Speak all punctuation." (interactive)
+      (emacsvox-aural-menu--set-punctuation 'all)) :transient t)
+   ("p" (lambda ()
+          (let ((mode (emacsvox-aural-menu--punctuation-value)))
+            (if (omnivox-punctuation-profiles--mode-p mode)
+                (emacsvox-aural-menu--punctuation-choice
+                 mode (format "Profile: %s" (cadr mode)))
+              "Choose level or named profile")))
+    emacsvox-aural-menu--choose-punctuation :transient t)
+   ("r" "Restore automatic policy" emacsvox-aural-menu--reset-punctuation
+    :if emacsvox-aural-menu--local-scope-p :transient t)]
+  ["Finish"
+   ("q" "Back (keep changes)" transient-quit-one)
+   ("C-q" "Close all menus" transient-quit-all)]
+  (interactive "P")
+  (let* ((prefix (or transient--prefix transient-current-prefix))
+         (context (if (and prefix
+                           (memq (oref prefix command)
+                                 '(emacsvox-aural-menu-speech emacsvox-aural-menu-punctuation)))
+                      (oref prefix scope)
+                    (emacsvox-aural-menu--capture global))))
+    (emacsvox-aural-menu--source context)
+    (transient-setup 'emacsvox-aural-menu-punctuation nil nil :scope context)))
+
 ;;;###autoload
 (transient-define-prefix emacsvox-aural-menu-speech (&optional global)
   "Choose speech settings for the source buffer or global defaults.
@@ -258,6 +426,10 @@ When opened from the Emacsvox menu, share its selected scope."
     emacsvox-aural-menu--toggle-scope :transient t)
    ("i" (lambda () (emacsvox-aural-menu--indentation-label))
     emacsvox-aural-menu--indentation :transient transient--do-stack)
+   ("r" (lambda () (format "Rate: %s" (emacsvox-aural-menu--rate-value)))
+    emacsvox-aural-menu--rate :transient t)
+   ("p" (lambda () (emacsvox-aural-menu--punctuation-label))
+    emacsvox-aural-menu-punctuation :transient transient--do-stack)
    ("n" "Menu navigation (global)" emacsvox-aural-menu-navigation
     :transient transient--do-stack)]
   ["Finish"
@@ -291,7 +463,8 @@ When opened from the Emacsvox menu, share its selected scope."
   (let* ((source (emacsvox-aural-menu--source (emacsvox-aural-menu--context)))
          (value (if delta
                     (max 0 (min 100 (+ (default-value symbol) delta)))
-                  (emacsvox-aural-menu--read-output-volume symbol))))
+                  (emacsvox-aural-menu--read-number
+                   "Global volume (0 to 100): " (default-value symbol)))))
     (tts--validate-output-volume value)
     (customize-set-variable symbol value)
     (with-current-buffer source
@@ -301,15 +474,15 @@ When opened from the Emacsvox menu, share its selected scope."
         'value symbol 'command-menu-value-changed '(selected))
        'state-change 'select-object))))
 
-(defun emacsvox-aural-menu--read-output-volume (symbol)
-  "Read SYMBOL's volume and retain the selected control after the prompt."
+(defun emacsvox-aural-menu--read-number (prompt value)
+  "Read a number with PROMPT and default VALUE, retaining menu focus."
   (let ((prefix transient--prefix)
         (focus (when (window-live-p transient--window)
                  (with-selected-window transient--window
                    (when-let* ((button (button-at (point))))
                      (button-get button 'button-data))))))
     (unwind-protect
-        (read-number "Global volume (0 to 100): " (default-value symbol))
+        (read-number prompt value)
       ;; Transient can destroy its popup while the minibuffer is active.
       (when (and focus prefix (eq transient--prefix prefix))
         (transient--show)
@@ -368,11 +541,15 @@ When opened from the Emacsvox menu, share its selected scope."
   (emacsvox-aural-menu--adjust-output 5))
 
 (defun emacsvox-aural-menu--output-bindings (map)
-  "Add shifted-arrow adjustment to MAP only for Sounds and output."
-  (when (and transient-enable-menu-navigation transient--prefix
-             (eq (oref transient--prefix command) 'emacsvox-aural-menu-sounds))
-    (keymap-set map "S-<left>" #'emacsvox-aural-menu--output-decrease)
-    (keymap-set map "S-<right>" #'emacsvox-aural-menu--output-increase))
+  "Add shifted-arrow adjustment to MAP for output volumes or speech rate."
+  (when (and transient-enable-menu-navigation transient--prefix)
+    (pcase (oref transient--prefix command)
+      ('emacsvox-aural-menu-sounds
+       (keymap-set map "S-<left>" #'emacsvox-aural-menu--output-decrease)
+       (keymap-set map "S-<right>" #'emacsvox-aural-menu--output-increase))
+      ('emacsvox-aural-menu-speech
+       (keymap-set map "S-<left>" #'emacsvox-aural-menu--rate-decrease)
+       (keymap-set map "S-<right>" #'emacsvox-aural-menu--rate-increase))))
   map)
 
 (advice-add 'transient--make-transient-map :filter-return
@@ -380,6 +557,10 @@ When opened from the Emacsvox menu, share its selected scope."
 (define-key transient-predicate-map [emacsvox-aural-menu--output-decrease]
             #'transient--do-stay)
 (define-key transient-predicate-map [emacsvox-aural-menu--output-increase]
+            #'transient--do-stay)
+(define-key transient-predicate-map [emacsvox-aural-menu--rate-decrease]
+            #'transient--do-stay)
+(define-key transient-predicate-map [emacsvox-aural-menu--rate-increase]
             #'transient--do-stay)
 
 (defun emacsvox-aural-menu--save-output ()
