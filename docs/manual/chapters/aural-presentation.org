@@ -169,9 +169,11 @@ Agent Shell also has a focused menu for session speech, global feedback defaults
 and reading limits; =w= saves only its displayed global defaults. See
 [[info:emacsvox#Agent Shell][Agent Shell]] for its controls.
 
-Org opens a table-feedback Transient: =c= cycles cell, header, and combined
-feedback; =w= saves that global default. =t= opens Org's structured table options
-in Customize and =A= opens advanced Emacsvox Org settings. Both return with =q=.
+Org opens a table-feedback Transient: =c= opens explained choices for cell,
+header, and combined feedback; =w= saves that global default. Column headers
+come from the first row, and row headers from the first column. Buffer-local
+settings take precedence. =t= opens Org's structured table options in Customize
+and =A= opens advanced Emacsvox Org settings. Both return with =q=.
 
 EWW opens a focused menu: =s= toggles section-navigation autospeak and =i=
 toggles image suppression for subsequent rendering. It also updates the shared
@@ -179,11 +181,16 @@ SHR image default, preserving buffer-local overrides. It does not reload the
 current page. =w= saves the two Emacsvox defaults and =A= opens advanced settings.
 
 Notmuch opens the same focused menu from its welcome, search, message and tree
-views. =c= cycles adaptive, count-only, cue-only and silent successful-search
-feedback; failures remain audible. =f= and =b= set per-field character and UTF-8
-byte limits; =t= and =B= set total limits. Shift-left/right adjusts the selected
+views. =c= opens explained choices for adaptive, count-only, cue-only and silent
+successful-search feedback; failures remain audible. =f= and =b= set per-field
+character and UTF-8 byte limits; =t= and =B= set total limits. Shift-left/right adjusts the selected
 limit by 100; Enter accepts an exact positive integer or =none= to disable that
 limit. Other limits still apply. =w= saves these five displayed global defaults.
+
+In both choice lists, the current global value is selected on entry. Arrows
+browse without applying, Enter applies and returns, and =q= cancels. Press =?=
+followed by a choice's key for spoken Help about its effect and scope. Return
+with =q=; the browsed choice remains selected, so Enter still targets that item.
 
 In Notmuch, =s= and =m= open ordered search/message field lists; =i= and =I=
 open their status-tag and fallback-cue maps. These Customize editors preserve

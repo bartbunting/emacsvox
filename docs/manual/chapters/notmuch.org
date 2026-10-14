@@ -336,8 +336,14 @@ archive command.
 
 #+cindex: automatic speech limits, Notmuch
 
-Run ~M-x customize-group RET emacsvox-notmuch RET~ to change Notmuch speech
-without altering Notmuch's own database or display.
+Press =C-e S= in a Notmuch buffer for focused speech settings. =c= opens
+explained search-completion choices: arrows browse, Enter applies and returns,
+and =q= cancels. Press =?= followed by a choice's key for spoken Help; =q=
+returns to the browsed choice. =w= in the parent menu saves completion and
+reading defaults for future sessions.
+
+Run ~M-x customize-group RET emacsvox-notmuch RET~ for the full set of speech
+options, without altering Notmuch's own database or display.
 
 #+attr_texinfo: :indic code :compact t
 - emacsvox-notmuch-search-result-fields ::

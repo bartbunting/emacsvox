@@ -3034,9 +3034,11 @@ Agent Shell also has a focused menu for session speech@comma{} global feedback d
 and reading limits; @code{w} saves only its displayed global defaults. See
 @ref{Agent Shell,Agent Shell,,emacsvox,} for its controls.
 
-Org opens a table-feedback Transient: @code{c} cycles cell@comma{} header@comma{} and combined
-feedback; @code{w} saves that global default. @code{t} opens Org's structured table options
-in Customize and @code{A} opens advanced Emacsvox Org settings. Both return with @code{q}.
+Org opens a table-feedback Transient: @code{c} opens explained choices for cell@comma{}
+header@comma{} and combined feedback; @code{w} saves that global default. Column headers
+come from the first row@comma{} and row headers from the first column. Buffer-local
+settings take precedence. @code{t} opens Org's structured table options in Customize
+and @code{A} opens advanced Emacsvox Org settings. Both return with @code{q}.
 
 EWW opens a focused menu: @code{s} toggles section-navigation autospeak and @code{i}
 toggles image suppression for subsequent rendering. It also updates the shared
@@ -3044,11 +3046,16 @@ SHR image default@comma{} preserving buffer-local overrides. It does not reload 
 current page. @code{w} saves the two Emacsvox defaults and @code{A} opens advanced settings.
 
 Notmuch opens the same focused menu from its welcome@comma{} search@comma{} message and tree
-views. @code{c} cycles adaptive@comma{} count-only@comma{} cue-only and silent successful-search
-feedback; failures remain audible. @code{f} and @code{b} set per-field character and UTF-8
-byte limits; @code{t} and @code{B} set total limits. Shift-left/right adjusts the selected
+views. @code{c} opens explained choices for adaptive@comma{} count-only@comma{} cue-only and silent
+successful-search feedback; failures remain audible. @code{f} and @code{b} set per-field
+character and UTF-8 byte limits; @code{t} and @code{B} set total limits. Shift-left/right adjusts the selected
 limit by 100; Enter accepts an exact positive integer or @code{none} to disable that
 limit. Other limits still apply. @code{w} saves these five displayed global defaults.
+
+In both choice lists@comma{} the current global value is selected on entry. Arrows
+browse without applying@comma{} Enter applies and returns@comma{} and @code{q} cancels. Press @code{?}
+followed by a choice's key for spoken Help about its effect and scope. Return
+with @code{q}; the browsed choice remains selected@comma{} so Enter still targets that item.
 
 In Notmuch@comma{} @code{s} and @code{m} open ordered search/message field lists; @code{i} and @code{I}
 open their status-tag and fallback-cue maps. These Customize editors preserve
@@ -6575,8 +6582,14 @@ archive command.
 
 @cindex automatic speech limits, Notmuch
 
-Run @kbd{M-x customize-group @key{RET} emacsvox-notmuch @key{RET}} to change Notmuch speech
-without altering Notmuch's own database or display.
+Press @code{C-e S} in a Notmuch buffer for focused speech settings. @code{c} opens
+explained search-completion choices: arrows browse@comma{} Enter applies and returns@comma{}
+and @code{q} cancels. Press @code{?} followed by a choice's key for spoken Help; @code{q}
+returns to the browsed choice. @code{w} in the parent menu saves completion and
+reading defaults for future sessions.
+
+Run @kbd{M-x customize-group @key{RET} emacsvox-notmuch @key{RET}} for the full set of speech
+options@comma{} without altering Notmuch's own database or display.
 
 @table @code
 @item emacsvox-notmuch-search-result-fields

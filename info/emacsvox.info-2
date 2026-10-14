@@ -768,8 +768,15 @@ nested tag or archive command.
 9.6 Choose fields, status, and privacy
 ======================================
 
-Run ‘M-x customize-group <RET> emacsvox-notmuch <RET>’ to change Notmuch
-speech without altering Notmuch's own database or display.
+Press ‘C-e S’ in a Notmuch buffer for focused speech settings.  ‘c’
+opens explained search-completion choices: arrows browse, Enter applies
+and returns, and ‘q’ cancels.  Press ‘?’ followed by a choice's key for
+spoken Help; ‘q’ returns to the browsed choice.  ‘w’ in the parent menu
+saves completion and reading defaults for future sessions.
+
+   Run ‘M-x customize-group <RET> emacsvox-notmuch <RET>’ for the full
+set of speech options, without altering Notmuch's own database or
+display.
 
 ‘emacsvox-notmuch-search-result-fields’
      Defaults to ‘(authors subject date count tags)’.  Remove ‘subject’
@@ -4207,7 +4214,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line  14)
 * Aural Doctor:                          Presentation Troubleshooting.
                                                               (line   6)
-* Aural history, mail privacy:           Notmuch Mail.        (line 307)
+* Aural history, mail privacy:           Notmuch Mail.        (line 314)
 * Aural Home:                            Aural Home.          (line   6)
 * Aural Presentation:                    Aural Presentation.  (line   6)
 * automatic speech limits, Notmuch:      Notmuch Mail.        (line 253)
@@ -4216,7 +4223,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * buffer cycling:                        Desktop Objects.     (line  36)
 * buffers:                               Desktop Objects.     (line   6)
 * buffers <1>:                           Desktop Management.  (line   6)
-* byte-code, Notmuch integration:        Notmuch Mail.        (line 354)
+* byte-code, Notmuch integration:        Notmuch Mail.        (line 361)
 * character echo:                        Controlling Echo.    (line   6)
 * character mode, Term:                  Term Input Modes.    (line   6)
 * clipboard security, EAT:               EAT Terminal Access. (line 385)
@@ -4259,7 +4266,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * mail search, Notmuch:                  Notmuch Mail.        (line   6)
 * major modes:                           Object Oriented Desktop.
                                                               (line   6)
-* message composition, Notmuch:          Notmuch Mail.        (line 325)
+* message composition, Notmuch:          Notmuch Mail.        (line 332)
 * messaging:                             Messaging.           (line   6)
 * MIME parts, Notmuch:                   Notmuch Mail.        (line 153)
 * minor modes:                           Object Oriented Desktop.
@@ -4270,7 +4277,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Notmuch mail:                          Notmuch Mail.        (line   6)
 * Notmuch Search:                        Notmuch Mail.        (line 108)
 * Notmuch Show:                          Notmuch Mail.        (line 153)
-* Notmuch Tree support:                  Notmuch Mail.        (line 325)
+* Notmuch Tree support:                  Notmuch Mail.        (line 332)
 * OCR:                                   Desktop Applications.
                                                               (line  38)
 * Online Help:                           Using Online Help.   (line   6)
@@ -4338,7 +4345,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * terminal screen review:                EAT Terminal Access. (line 203)
 * Transient menus:                       Development Environment.
                                                               (line  36)
-* troubleshooting, Notmuch:              Notmuch Mail.        (line 354)
+* troubleshooting, Notmuch:              Notmuch Mail.        (line 361)
 * TTS:                                   Speech System.       (line   6)
 * voice adjustments:                     Editing Named Voices.
                                                               (line   6)

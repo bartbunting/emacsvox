@@ -796,8 +796,9 @@
          (goto-char (point-min)) (search-forward "5"))
        (execute-kbd-macro (kbd "C-q C-e S"))
        (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--org))
-       (dolist (expected '("Count" "Apples" "Count 5" "Apples 5" "Apples Count 5" "5"))
-         (execute-kbd-macro (kbd "c"))
+       (cl-loop for expected in '("5" "Count" "Apples" "Count 5" "Apples 5" "Apples Count 5")
+                for index from 1 do
+         (execute-kbd-macro (vconcat (kbd "c") (number-to-string index)))
          (let (spoken)
            (cl-letf (((symbol-function 'emacsvox-aural-submit)
                       (lambda (text &rest _) (setq spoken (substring-no-properties text)))))
@@ -811,7 +812,7 @@
        (with-selected-window transient--window
          (should (equal (oref (button-get (button-at (point)) 'button-data) key) "t")))
        (should-not (file-exists-p custom-file))
-       (execute-kbd-macro (kbd "c w q"))
+       (execute-kbd-macro (kbd "c 2 w q"))
        (should-not transient--prefix)
        (should (eq (current-buffer) source))
        (should (file-exists-p custom-file))
@@ -819,6 +820,82 @@
        (load custom-file nil t)
        (should (eq (default-value 'emacsvox-org-table-after-movement-function)
                    'emacsvox-org-table-speak-column-header))))))
+
+(ert-deftest emacsvox-settings-integrations-org-and-notmuch-choice-help ()
+  "Choice browsing and Help preserve defaults and local overrides until applying."
+  (skip-unless (require 'notmuch nil t))
+  (dolist (case '((emacsvox-org org-mode emacsvox-settings-integrations--org
+                  emacsvox-org-table-after-movement-function
+                  emacsvox-org-table-speak-current-element
+                  emacsvox-org-table-speak-column-header
+                  emacsvox-org-table-speak-both-headers-and-element
+                  6 "Both headers and cell: read row, column, then cell"
+                  "Buffer-local settings take precedence")
+                 (emacsvox-notmuch notmuch-search-mode emacsvox-settings-integrations--notmuch
+                  emacsvox-notmuch-search-completion-style adaptive summary silent
+                  4 "Silent: suppress successful completion feedback"
+                  "Failures remain audible in every style")))
+    (emacsvox-test--integration-defaults (nth 0 case)
+     (lambda ()
+       (emacsvox-test--with-settings
+         (let ((option (nth 3 case)) (initial (nth 4 case))
+               (second (nth 5 case)) (last (nth 6 case))
+               (count (nth 7 case)) spoken)
+           (set-default option initial)
+           (with-current-buffer source
+             (setq major-mode (nth 1 case))
+             (set (make-local-variable option) last))
+           (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                      (lambda (text &rest args) (push (cons text args) spoken))))
+             (execute-kbd-macro (kbd "C-q C-e S c"))
+             (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--choice))
+             (should (string-match-p "selected" (caar spoken)))
+             (with-selected-window transient--window
+               (should (equal (oref (button-get (button-at (point)) 'button-data) key) "1"))
+               (should (= (how-many "^ +[1-6] " (point-min) (point-max)) count)))
+             (execute-kbd-macro (kbd "<down> q"))
+             (should (eq (default-value option) initial))
+             (should (eq (oref transient--prefix command) (nth 2 case)))
+             (execute-kbd-macro (kbd "c <down> RET"))
+             (should (eq (default-value option) second))
+             (should (eq (buffer-local-value option source) last))
+             (should (eq (plist-get (cdar spoken) :interruption-policy) 'lane))
+             (should (eq (plist-get (cdar spoken) :delivery-policy) 'replaceable))
+             (with-selected-window transient--window
+               (should (equal (oref (button-get (button-at (point)) 'button-data) key) "c")))
+             (execute-kbd-macro (kbd "c"))
+             (should (string-match-p "selected" (caar spoken)))
+             (with-selected-window transient--window
+               (should (equal (oref (button-get (button-at (point)) 'button-data) key) "2")))
+             ;; Browse to the last choice, including Org's sixth row, without applying.
+             (dotimes (_ (- count 2)) (execute-kbd-macro (kbd "<down>")))
+             (should (string-match-p (nth 8 case) (caar spoken)))
+             (should (eq (default-value option) second))
+             ;; Asking about another key must still restore the browsed choice.
+             (execute-kbd-macro (kbd "? 1"))
+             (should (derived-mode-p 'help-mode))
+             (should (string-match-p (nth 9 case) (caar spoken)))
+             (should (string-match-p "global default" (caar spoken)))
+             (should (string-match-p "Use w" (caar spoken)))
+             (should-not (string-match-p "Permissions and errors" (caar spoken)))
+             (execute-kbd-macro (kbd "q"))
+             (should (string-match-p (nth 8 case) (caar spoken)))
+             (with-selected-window transient--window
+               (should (equal (oref (button-get (button-at (point)) 'button-data) key)
+                              (number-to-string count))))
+             (execute-kbd-macro (kbd "RET"))
+             (should (eq (default-value option) last))
+             (should (eq (oref transient--prefix command) (nth 2 case)))
+             (should (eq (buffer-local-value option source) last))
+             (should-not (file-exists-p custom-file))
+             (execute-kbd-macro (kbd "c"))
+             (should (string-match-p "selected" (caar spoken)))
+             (with-selected-window transient--window
+               (should (equal (oref (button-get (button-at (point)) 'button-data) key)
+                              (number-to-string count))))
+             (execute-kbd-macro (kbd "q q"))
+             (should-not transient--prefix)
+             (should (eq (current-buffer) source)))))))))
 
 (ert-deftest emacsvox-settings-integrations-eww-rendering-and-save ()
   "Image changes affect subsequent rendering without reloading or losing overrides."
@@ -883,8 +960,9 @@
          (should-not transient--prefix)
          (should (eq (current-buffer) source)))
        (execute-kbd-macro (kbd "C-e S"))
-       (dolist (expected '(summary cue silent adaptive))
-         (execute-kbd-macro (kbd "c"))
+       (cl-loop for expected in '(adaptive summary cue silent)
+                for index from 1 do
+         (execute-kbd-macro (vconcat (kbd "c") (number-to-string index)))
          (should (eq (default-value 'emacsvox-notmuch-search-completion-style) expected)))
        (with-selected-window transient--window
          (transient--goto-button (transient-suffix-object 'emacsvox-settings-integrations--notmuch-field-characters)))
@@ -902,7 +980,7 @@
        (cl-letf (((symbol-function 'read-string) (lambda (&rest _) "-1")))
          (should-error (emacsvox-settings-integrations--notmuch-total-bytes) :type 'user-error))
        (should-not (file-exists-p custom-file))
-       (execute-kbd-macro (kbd "c w q"))
+       (execute-kbd-macro (kbd "c 2 w q"))
        (set-default 'emacsvox-notmuch-search-completion-style 'silent)
        (set-default 'emacsvox-notmuch-automatic-field-character-limit 1)
        (load custom-file nil t)

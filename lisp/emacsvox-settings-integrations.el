@@ -561,6 +561,18 @@ Numeric controls accept positive integers or none.")
                '((summary . "Summary: tool status and title")
                  (status . "Status cues: sounds when tools start and finish")
                  (full . "Full: read tool output within the reading limits")))
+              ('emacsvox-org-table-after-movement-function
+               '((emacsvox-org-table-speak-current-element . "Cell: read the cell contents")
+                 (emacsvox-org-table-speak-column-header . "Column header: read the heading only")
+                 (emacsvox-org-table-speak-row-header . "Row header: read the first column only")
+                 (emacsvox-org-table-speak-column-header-and-element . "Column and cell: read the heading then the cell")
+                 (emacsvox-org-table-speak-row-header-and-element . "Row and cell: read the first column then the cell")
+                 (emacsvox-org-table-speak-both-headers-and-element . "Both headers and cell: read row, column, then cell")))
+              ('emacsvox-notmuch-search-completion-style
+               '((adaptive . "Adaptive: read a result in an untouched focused search; otherwise count only")
+                 (summary . "Count only: announce the number of results")
+                 (cue . "Cue only: signal successful completion with a sound")
+                 (silent . "Silent: suppress successful completion feedback; failures remain audible")))
               (_ (nth 4 entry)))))
     entry))
 (defun emacsvox-settings-integrations--choice-entry ()
@@ -585,6 +597,9 @@ Numeric controls accept positive integers or none.")
 (defun emacsvox-settings-integrations--choice-fifth-p ()
   "Whether the current control has a fifth choice."
   (nth 4 (nth 4 (emacsvox-settings-integrations--choice-entry))))
+(defun emacsvox-settings-integrations--choice-sixth-p ()
+  "Whether the current control has a sixth choice."
+  (nth 5 (nth 4 (emacsvox-settings-integrations--choice-entry))))
 (defun emacsvox-settings-integrations--choice-heading ()
   "Describe the current choice scope."
   (let ((entry (emacsvox-settings-integrations--choice-entry)))
@@ -607,7 +622,8 @@ Numeric controls accept positive integers or none.")
                             emacsvox-settings-integrations--choice-second
                             emacsvox-settings-integrations--choice-third
                             emacsvox-settings-integrations--choice-fourth
-                            emacsvox-settings-integrations--choice-fifth))
+                            emacsvox-settings-integrations--choice-fifth
+                            emacsvox-settings-integrations--choice-sixth))
                 transient--suffixes :key (lambda (item) (oref item command)))))
     (emacsvox-transient--speak-button)))
 (defun emacsvox-settings-integrations--choice-back ()
@@ -633,6 +649,14 @@ Numeric controls accept positive integers or none.")
   "Explain choice OBJECT and its scope without applying it."
   (let* ((entry (emacsvox-settings-integrations--choice-entry))
          (choice (nth (1- (string-to-number (oref object key))) (nth 4 entry))))
+    ;; Help recreates the menu on return.  Retain the browsed button, which
+    ;; can differ from both the current value and the key requested for Help.
+    (with-selected-window transient--window
+      (when-let* ((button (button-at (point)))
+                 (suffix (button-get button 'button-data)))
+        (oset transient--prefix scope
+              (plist-put (oref transient--prefix scope)
+                         :integration-choice-help-key (oref suffix key)))))
     (with-help-window (help-buffer)
       (princ (emacsvox-settings-integrations--choice-heading))
       (princ "\n\n")
@@ -642,15 +666,33 @@ Numeric controls accept positive integers or none.")
                  "Selecting this value changes only the captured session. Auto follows the foreground and background defaults."
                "Selecting this value changes the global default. Use w in the parent menu to save it for future sessions."))
       (princ "\n\n")
-      (princ (if (memq (nth 2 entry) '(emacsvox-agent-shell-speak-thought-process
-                                     emacsvox-agent-shell-tool-output-verbosity))
-                 "The session speech level must allow this kind of feedback."
-               "Permissions and errors remain controlled separately.")))
+      (princ
+       (pcase (nth 2 entry)
+         ('emacsvox-org-table-after-movement-function
+          "This controls speech after moving between Org table cells. Column headers come from the first row; row headers come from the first column. Buffer-local settings take precedence over this global default.")
+         ('emacsvox-notmuch-search-completion-style
+          "This controls successful asynchronous searches. Adaptive can read the selected result while results arrive, then announce the final count. After another command or leaving the search, it announces only a count. Counts normally use the notification stream; refresh feedback uses the primary stream and can be interrupted. Failures remain audible in every style.")
+         ((or 'emacsvox-agent-shell-speak-thought-process
+              'emacsvox-agent-shell-tool-output-verbosity)
+          "The session speech level must allow this kind of feedback.")
+         (_ "Permissions and errors remain controlled separately."))))
     (pop-to-buffer (help-buffer))
     (emacsvox-transient--submit-text
      (emacsvox-aural-source-substring (point-min) (point-max))
      (emacsvox-transient--menu-facts 'help 'command-menu-suspended)
      'inspection 'help)))
+(defun emacsvox-settings-integrations--choice-restore-help-focus (&rest _)
+  "Restore the browsed choice once after returning from its Help."
+  (when (and transient--prefix (window-live-p transient--window)
+             (eq (oref transient--prefix command) 'emacsvox-settings-integrations--choice))
+    (when-let* ((key (plist-get (oref transient--prefix scope) :integration-choice-help-key)))
+      (oset transient--prefix scope
+            (plist-put (oref transient--prefix scope) :integration-choice-help-key nil))
+      (with-selected-window transient--window
+        (transient--goto-button
+         (cl-find key transient--suffixes :key (lambda (item) (oref item key)) :test #'equal))))))
+(advice-add 'transient--show :after
+            #'emacsvox-settings-integrations--choice-restore-help-focus)
 (defun emacsvox-settings-integrations--choice-first ()
   "Apply this choice." (interactive)
   (emacsvox-settings-integrations--choice-apply 0))
@@ -666,6 +708,9 @@ Numeric controls accept positive integers or none.")
 (defun emacsvox-settings-integrations--choice-fifth ()
   "Apply this choice." (interactive)
   (emacsvox-settings-integrations--choice-apply 4))
+(defun emacsvox-settings-integrations--choice-sixth ()
+  "Apply this choice." (interactive)
+  (emacsvox-settings-integrations--choice-apply 5))
 (transient-define-prefix emacsvox-settings-integrations--choice ()
   "Choose with arrows and Enter; q cancels."
   [:description emacsvox-settings-integrations--choice-heading
@@ -685,7 +730,11 @@ Numeric controls accept positive integers or none.")
    ("5" (lambda () (emacsvox-settings-integrations--choice-label 4))
     emacsvox-settings-integrations--choice-fifth
     :show-help emacsvox-settings-integrations--choice-help
-    :if emacsvox-settings-integrations--choice-fifth-p :transient transient--do-replace)]
+    :if emacsvox-settings-integrations--choice-fifth-p :transient transient--do-replace)
+   ("6" (lambda () (emacsvox-settings-integrations--choice-label 5))
+    emacsvox-settings-integrations--choice-sixth
+    :show-help emacsvox-settings-integrations--choice-help
+    :if emacsvox-settings-integrations--choice-sixth-p :transient transient--do-replace)]
   ["Finish"
    ("q" "Cancel" emacsvox-settings-integrations--choice-back :transient transient--do-replace)
    ("C-q" "Close menus" transient-quit-all)]
@@ -806,20 +855,21 @@ Enter a positive character count or none for the complete body." (interactive)
   (transient-setup 'emacsvox-settings-integrations--agent nil nil :scope (emacsvox-aural-menu--context)))
 
 (defun emacsvox-settings-integrations--org-feedback ()
-  "Cycle the global Org table movement feedback."
+  "Choose what to read after moving between Org table cells.
+Change the global default; buffer-local settings still take precedence."
   (interactive)
-  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--org-feedback))
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--org-feedback))
 (defun emacsvox-settings-integrations--org-save ()
-  "Save the displayed Org feedback default."
+  "Save global table feedback for future sessions; preserve local overrides."
   (interactive)
   (emacsvox-settings-integrations--save-options 'emacsvox-org))
 (defun emacsvox-settings-integrations--org-tables ()
-  "Open Org's structured table settings and return to this entry."
+  "Edit Org table layout and behavior in Customize, with its own Save action."
   (interactive)
   (require 'org-table)
   (emacsvox-settings--custom 'org-table 'emacsvox-settings-integrations--org-tables))
 (defun emacsvox-settings-integrations--org-custom ()
-  "Open advanced Emacsvox Org settings and return here."
+  "Edit additional Org speech options in Customize, with its own Save action."
   (interactive)
   (require 'emacsvox-org)
   (emacsvox-settings--custom 'emacsvox-org 'emacsvox-settings-integrations--org-custom))
@@ -827,7 +877,7 @@ Enter a positive character count or none for the complete body." (interactive)
   "Choose Org table feedback and reach its structured settings."
   ["Org table feedback (global); w saves"
    ("c" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--org-feedback))
-    emacsvox-settings-integrations--org-feedback :transient t)
+    emacsvox-settings-integrations--org-feedback :transient transient--do-suspend)
    ("w" "Save table feedback default" emacsvox-settings-integrations--org-save :transient t)]
   ["Structured and advanced settings"
    ("t" "Org table options (Customize)" emacsvox-settings-integrations--org-tables :transient transient--do-suspend)
@@ -882,62 +932,73 @@ Enter a positive character count or none for the complete body." (interactive)
          (local-set-key (kbd "q") #'emacsvox-settings--custom-quit))
        buffer)) command))
 (defun emacsvox-settings-integrations--notmuch-completion ()
-  "Change the global Notmuch search completion."
+  "Choose feedback for successful Notmuch searches; failures remain audible."
   (interactive)
-  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-completion))
+  (emacsvox-settings-integrations--choose 'emacsvox-settings-integrations--notmuch-completion))
 (defun emacsvox-settings-integrations--notmuch-field-characters ()
-  "Change the global Notmuch per-field characters."
+  "Limit characters read from each automatic mail field.
+Enter a positive count or none; total presentation limits still apply."
   (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-field-characters))
 (defun emacsvox-settings-integrations--notmuch-field-bytes ()
-  "Change the global Notmuch per-field utf-8 bytes."
+  "Limit UTF-8 bytes prepared and read from each automatic mail field.
+Enter a positive count or none; total presentation limits still apply."
   (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-field-bytes))
 (defun emacsvox-settings-integrations--notmuch-total-characters ()
-  "Change the global Notmuch total characters."
+  "Limit characters in automatic mail feedback, including truncation notices.
+Enter a positive count or none; the byte limit still applies."
   (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-total-characters))
 (defun emacsvox-settings-integrations--notmuch-total-bytes ()
-  "Change the global Notmuch total utf-8 bytes."
+  "Limit UTF-8 bytes in automatic mail feedback, including truncation notices.
+Enter a positive count or none; the character limit still applies."
   (interactive)
   (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-total-bytes))
 (defun emacsvox-settings-integrations--notmuch-search-fields ()
-  "Edit Notmuch spoken search fields (ordered list) and return here."
+  "Choose which search-result fields are spoken and their order.
+The structured editor has its own Apply and Save actions."
   (interactive)
   (require 'emacsvox-notmuch)
   (emacsvox-settings-integrations--custom-option
    'emacsvox-notmuch-search-result-fields 'emacsvox-settings-integrations--notmuch-search-fields))
 (defun emacsvox-settings-integrations--notmuch-show-fields ()
-  "Edit Notmuch spoken message fields (ordered list) and return here."
+  "Choose which message fields are spoken and their order.
+The structured editor has its own Apply and Save actions."
   (interactive)
   (require 'emacsvox-notmuch)
   (emacsvox-settings-integrations--custom-option
    'emacsvox-notmuch-show-message-fields 'emacsvox-settings-integrations--notmuch-show-fields))
 (defun emacsvox-settings-integrations--notmuch-search-icons ()
-  "Edit Notmuch search status tags and fallback cues and return here."
+  "Map search status tags to fallback sounds or silence instead of spoken tags.
+Semantic status cues take precedence when enabled.
+This editor has its own Save action."
   (interactive)
   (require 'emacsvox-notmuch)
   (emacsvox-settings-integrations--custom-option
    'emacsvox-notmuch-search-status-icons 'emacsvox-settings-integrations--notmuch-search-icons))
 (defun emacsvox-settings-integrations--notmuch-show-icons ()
-  "Edit Notmuch message status tags and fallback cues and return here."
+  "Map message status tags to fallback sounds or silence instead of spoken tags.
+Semantic status cues take precedence when enabled.
+This editor has its own Save action."
   (interactive)
   (require 'emacsvox-notmuch)
   (emacsvox-settings-integrations--custom-option
    'emacsvox-notmuch-show-status-icons 'emacsvox-settings-integrations--notmuch-show-icons))
 (defun emacsvox-settings-integrations--notmuch-presentation ()
-  "Open Presentation Options for semantic mail status cues."
+  "Configure semantic mail status sounds in Presentation Options."
   (interactive)
   (require 'emacsvox-aural-feature-fragments)
   (emacsvox-aural-menu--open-browser
    #'emacsvox-aural-list-feature-fragments
    'emacsvox-settings-integrations--notmuch-presentation))
 (defun emacsvox-settings-integrations--notmuch-save ()
-  "Save displayed Notmuch completion and reading defaults."
+  "Save completion and reading defaults for future sessions.
+Structured field and status editors have their own Save actions."
   (interactive)
   (emacsvox-settings-integrations--save-options 'emacsvox-notmuch))
 (defun emacsvox-settings-integrations--notmuch-custom ()
-  "Open advanced Notmuch speech settings and return here."
+  "Edit additional mail speech options in Customize, with its own Save action."
   (interactive)
   (require 'emacsvox-notmuch)
   (emacsvox-settings--custom 'emacsvox-notmuch 'emacsvox-settings-integrations--notmuch-custom))
@@ -945,7 +1006,7 @@ Enter a positive character count or none for the complete body." (interactive)
   "Control mail feedback and open its structured field and cue editors."
   ["Notmuch defaults (global); w saves"
    ("c" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-completion))
-    emacsvox-settings-integrations--notmuch-completion :transient t)
+    emacsvox-settings-integrations--notmuch-completion :transient transient--do-suspend)
    ("f" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-field-characters))
     emacsvox-settings-integrations--notmuch-field-characters :transient t)
    ("b" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-field-bytes))

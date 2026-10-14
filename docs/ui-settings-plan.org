@@ -578,6 +578,36 @@ Notmuch implementation checkpoint, 2026-10-15:
 - Listening remains pending for completion feedback, limit adjustments, actual
   field reading, cue ownership, editor return and persistence after restart.
 
+Org and Notmuch choice-list iteration, 2026-10-15:
+
+- Org table feedback and Notmuch search completion now open explained choice
+  lists from =c=. The current global value is selected on entry. Arrows browse
+  without changing it; Enter applies once and returns; =q= cancels. Org exposes
+  all six cell/header combinations; Notmuch retains its four completion styles.
+  Defaults, buffer-local overrides and explicit =w= saving are unchanged.
+- Choice Help describes scope and dependencies: Org uses the first row and
+  first column for headers, and local overrides still take precedence. Notmuch
+  explains adaptive focus/interaction behavior, notification versus refresh
+  speech, and audible failures even when successful completion is silent.
+  The surrounding controls also have useful effect descriptions.
+- A graphical regression exposed Help returning to the current value instead
+  of the browsed choice. The shared integration choice menu now retains that
+  choice through Help, so Enter still targets the browsed item. The restoration
+  is limited to this menu and consumed once on redisplay; Agent Shell shares it.
+- All 44 graphical settings tests passed from source and compiled code, including
+  installed and bundled Transient, with no skips. They cover all Org spoken
+  cell/header outputs, Notmuch choices, navigation without applying, Help speech
+  and focus restoration, local overrides and explicit save/reload. Six focused
+  Notmuch completion tests passed for adaptive focus/interaction, counts, cues,
+  silence, refresh interruption and audible failures. Incremental compilation
+  and bytecode preflight passed; fresh processes verified compiled menu paths.
+- Listening accepted on 2026-10-15 for the explained choices and Help-return
+  interaction. This acceptance is separate from the automated checks above;
+  it does not establish save/restart acceptance for every global setting.
+- The maintained manual now describes both choice lists, scope, spoken Help
+  and restored selection. Manual generation, bytecode preflight and the
+  documentation release gate passed for the accepted slice.
+
 ** Saved setups and drafts
 
 - Presentation profiles and what each profile captures or leaves independent.
