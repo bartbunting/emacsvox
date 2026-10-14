@@ -305,6 +305,24 @@
         (should (eq (emacsvox-aural-resource-spatialization resource 'accent)
                     (nth 2 entry)))))))
 
+(ert-deftest emacsvox-aural-resources-personal-pack-inherits-bundled-accent ()
+  "A personal pack can inherit Accent during initial resource discovery."
+  (emacsvox-test--with-resource-directory
+    (emacsvox-test--with-empty-resource-packs
+      (let* ((personal (expand-file-name "bart" root))
+             (emacsvox-aural-personal-sound-packs-directory root)
+             (emacsvox-aural-resource-pack-discovery-roots nil)
+             (emacsvox-aural--resource-pack-discovery-registry
+              emacsvox-aural-resource-pack-registry))
+        (make-directory personal)
+        (with-temp-file (expand-file-name "emacsvox-sound-pack.el" personal)
+          (insert "(:schema-version 1 :parent accent :profiles (legacy-complete))"))
+        (emacsvox-aural-register-bundled-resources emacsvox-test--sounds-directory)
+        (emacsvox-aural-refresh-discovered-resource-packs)
+        (dolist (cue '(button repeat-start shutdown))
+          (should (equal (emacsvox-aural-resolve-cue cue 'bart)
+                         (emacsvox-aural-resolve-cue cue 'accent))))))))
+
 (ert-deftest emacsvox-aural-resources-personal-accent-overrides-bundled-copy ()
   "A personal Accent pack wins; removing it restores the bundled pack."
   (emacsvox-test--with-resource-directory
