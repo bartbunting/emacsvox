@@ -212,6 +212,7 @@
   (require 'emacsvox-line-cues-tests)
   (require 'emacsvox-output-settings-tests)
   (require 'emacsvox-punctuation-menu-tests)
+  (require 'emacsvox-settings-tests)
   (require 'emacsvox-arc-tests)
   (require 'emacsvox-tar-tests)
   (require 'emacsvox-sh-script-tests)

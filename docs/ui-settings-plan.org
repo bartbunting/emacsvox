@@ -144,12 +144,16 @@ revisited without losing the source context or an unfinished experiment.
 - [X] Accept Capitalization and its separate capital-letter and all-caps cue
   editors. Accepted on 2026-10-14; save/reload and bundled reset also have
   automated coverage.
-- [ ] Add typing echo, phonetic feedback, point indication, and spoken detail.
-- [ ] Complete indentation and line/boundary cue controls from the inventory.
-- [ ] Extend Sounds and output with notification routing/history and spatial
+- [X] Add typing echo, phonetic feedback, point indication, and spoken messages.
+  Implemented; listening acceptance and further spoken-detail inventory remain open.
+- [X] Complete indentation pitch tuning and the inventoried line/boundary cues.
+  Implemented; listening acceptance remains open. Duration-coded indentation
+  constants and integration-specific boundary semantics remain separate work.
+- [X] Extend Sounds and output with notification routing/history and spatial
   settings. Keep restart requirements explicit.
-- [ ] Link the punctuation pronunciation editor as well as level selection.
-- [ ] Add action/settings search and access to settings relevant to this buffer.
+- [X] Link the punctuation pronunciation editor as well as level selection.
+- [X] Add action/settings search and access to settings relevant to this buffer.
+  Implemented; integration-specific menus and complete listening tasks remain open.
 
 Done when common reading, coding, and notification adjustments are discoverable
 without knowing their variable names, and their previews and persistence work.
@@ -524,3 +528,22 @@ verification of subsequently changed code.
   Sixty-one source checks passed, including two graphical editor/menu checks;
   the optional native-service round trip was skipped because its test program
   was not configured. Listening and a real host save/restart remain open.
+
+- Pronunciation linking committed as =dfa0a4400=. Sixty-one compiled graphical
+  and editor checks passed; compilation, preflight, and documentation gate passed.
+- Settings discovery is implemented: =C-e H /= finds and focuses a control,
+  =C-e H a= searches the maintained Home action catalogue, and =C-e H .= opens
+  current-buffer settings. Search does not activate the selected setting. Scope,
+  source position, cancellation, parent return, and the source mode's actual
+  Customize group have graphical coverage. Linked Customize buffers retain
+  their own Apply/Save commands; =q= finishes normally and returns to the menu.
+  The existing root Close section stays in its original position. Specialized
+  integration menus and a comprehensive changed-settings view remain later work.
+  The combined source run passed 139 tests. Fresh graphical Emacs loaded the
+  repository's compiled modules and passed 139 tests with installed Transient
+  (including Magit) and 138 with bundled Transient, with no skips in those
+  selected runs. The optional punctuation native-service round trip remains
+  excluded after its earlier environment skip. Incremental compilation,
+  byte-code preflight, generated documentation review, and header checks passed.
+  All five slices are implemented; listening acceptance, real notification
+  routing after restart, and real host pronunciation save/restart remain open.

@@ -2952,6 +2952,23 @@ descriptions are on by default. Value adjustments still give brief feedback.
 Press @kbd{S} to save the navigation style@comma{} presentation order@comma{} and descriptions
 preference through Customize.
 
+Press @kbd{C-e H /} to find an Emacsvox setting by name. Search opens its menu
+and selects the matching control without changing its value; Enter activates
+or edits it. The captured source and current settings scope follow the search.
+@kbd{q} returns to the menu where you searched@comma{} and cancelling completion keeps
+that menu open.
+
+Press @kbd{C-e H a} to search the existing Home action catalogue@comma{} including actions
+inside collapsed groups. Child views use their normal return paths; @kbd{q} from
+Home returns to the originating menu. Press @kbd{C-e H .} for settings relevant to
+the captured buffer: speech@comma{} indentation@comma{} typing/point feedback@comma{} capitalization@comma{}
+and its major mode's Customize group when available. This entry starts with
+buffer scope without changing the parent's scope. @kbd{A} opens the advanced
+Emacsvox Customize group. In these linked Customize buffers@comma{} @kbd{q} finishes
+Customize normally and returns to the menu; use Customize's own Apply and Save
+commands. Integration-specific controls remain accessible through existing
+commands and advanced settings while their focused menus are developed.
+
 Speech settings opens for the current buffer. Press @kbd{g} there to switch to
 global defaults@comma{} or start with @kbd{C-u C-e H}. Indentation shares this scope with
 its parent menus@comma{} including changes made with @kbd{g} inside Indentation.

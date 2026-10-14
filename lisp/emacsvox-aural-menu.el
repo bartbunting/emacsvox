@@ -38,6 +38,9 @@
 
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
+(autoload 'emacsvox-settings-search "emacsvox-settings" nil t)
+(autoload 'emacsvox-settings-search-actions "emacsvox-settings" nil t)
+(autoload 'emacsvox-settings-buffer "emacsvox-settings" nil t)
 (autoload 'emacsvox-output-settings "emacsvox-output-settings" nil t)
 (autoload 'omnivox-punctuation "omnivox-punctuation" nil t)
 (autoload 'emacsvox-line-cues-edit "emacsvox-line-cues" nil t)
@@ -58,7 +61,7 @@
                          emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation
                          emacsvox-aural-menu-voices emacsvox-capitalization
                          emacsvox-interaction emacsvox-aural-menu-line-cues
-                         emacsvox-output-settings)))
+                         emacsvox-output-settings emacsvox-settings-buffer)))
       (user-error "Open the Emacsvox menu first"))
     (oref prefix scope)))
 
@@ -804,7 +807,10 @@ The source item is captured on entry; Aural Home offers all other actions."
    ("o" "Sounds and output (global)" emacsvox-aural-menu-sounds)
    ("v" "Voices and engines" emacsvox-aural-menu-voices)
    ("x" "Feedback for this item" emacsvox-aural-menu--feedback)
-   ("h" "Aural Home (all actions)" emacsvox-aural-menu--home)]
+   ("h" "Aural Home (all actions)" emacsvox-aural-menu--home)
+   ("/" "Find an Emacsvox setting" emacsvox-settings-search :transient transient--do-stack)
+   ("a" "Search all Home actions" emacsvox-settings-search-actions :transient transient--do-suspend)
+   ("." "Settings for this buffer" emacsvox-settings-buffer :transient transient--do-stack)]
   ["Finish"
    ("q" "Close" transient-quit-one)]
   (interactive "P")
