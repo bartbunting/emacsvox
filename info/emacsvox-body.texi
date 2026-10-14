@@ -2949,6 +2949,20 @@ adjust it by five percentage points. Plain left/right still changes sections.
 @kbd{@key{RET}} edits the value directly@comma{} and @kbd{@key{SPC}} previews the indentation settings.
 Other items give brief guidance when you try to adjust them with shifted arrows.
 
+In Speech settings@comma{} select @emph{Rate} and use Shift-left/right to adjust it by
+the configured rate step. @kbd{@key{RET}} or @kbd{r} enters an exact value. Speech must be
+running; Omnivox uses a 0 to 100 scale. Global changes also update the current
+buffer. Press @kbd{p} for punctuation: @kbd{n} selects none@comma{} @kbd{s} some@comma{} @kbd{a} all@comma{} and @kbd{p}
+offers built-in levels and available named profiles. In current-buffer scope@comma{}
+@kbd{r} restores automatic punctuation policy. @kbd{q} returns to Speech settings.
+
+Press @kbd{S} in Speech settings to save the displayed rate and punctuation as
+defaults across restarts. The rate uses the current backend's startup option.
+Inside Punctuation@comma{} @kbd{S} saves only the displayed punctuation choice. Saving
+from current-buffer scope promotes those displayed values to defaults.
+Mode-specific punctuation policies and explicit buffer overrides still take
+precedence over the saved punctuation default.
+
 Press @kbd{C-e H o} for @emph{Sounds and output}. Main tones and earcons@comma{} plus separate
 notification speech@comma{} tones@comma{} and earcons@comma{} each have a global volume control.
 Shift-left/right adjusts the selected volume by five percentage points;

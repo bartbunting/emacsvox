@@ -9,8 +9,10 @@ the =C-e H= Aural Home menu with a Transient. The first implementation adds
 the linked indentation path, Feedback for this item, and a route to the
 existing Home. The tuning prototype now uses Shift-left/right to adjust
 indentation tone volume. Sounds and output adds the five existing global
-volume controls and the sound-pack browser. The remaining action coverage
-is still to carry out.
+volume controls and the sound-pack browser. Speech settings now includes
+rate, punctuation, and explicit default saving. The remaining action coverage
+and broader settings work are tracked in the
+[[file:../ui-settings-plan.org][living settings and voice interface plan]].
 
 The aim is to make settings and actions easier to discover through familiar
 Emacs interactions, with concise speech and direct shortcuts. Feedback from
@@ -51,11 +53,9 @@ ordinary commands available through =M-x=.
 - Show current values and selected choices in menu descriptions.
 - Use toggles and selectors for suitable settings. Obtain dynamic choices,
   such as available voices, from the existing data sources.
-- Keep tuning menus open while values are adjusted and previewed. Explore
-  up/down to select controls, left/right to adjust values, and separate keys
-  for section navigation. The existing Transient speech support is new and
-  can change; its current bindings are a baseline to compare, not a fixed
-  constraint. Check shared changes with Magit as well as Emacsvox menus.
+- Keep tuning menus open while values are adjusted and previewed. Up/down
+  selects controls, plain left/right changes sections, and Shift-left/right
+  adjusts values. Check shared changes with Magit as well as Emacsvox menus.
 - Provide clear speech for the selected control, changed value, and preview.
   Test rapid changes so stale previews do not obscure the current value.
 - Make local and global scope explicit where the underlying setting supports
@@ -325,10 +325,10 @@ percentage points within 0 to 100. Other items give brief guidance without
 changing their values. Enter edits Volume directly; Space previews the current
 indentation settings. Existing +/- shortcuts remain available for comparison.
 
-The temporary menu map overrides Emacsvox's shifted-arrow whitespace movement
-and source-mode bindings such as Org's shifted arrows only while Indentation
-is active. Numeric input prompts and the source buffer keep their normal
-bindings. Parent menus and third-party Transients retain their existing maps.
+Temporary menu maps override shifted-arrow movement only in menus with
+adjustable controls. Numeric input prompts and the source buffer keep their
+normal bindings. Speech settings adjusts rate; Indentation and Sounds and
+output adjust volume. Third-party Transients retain their existing maps.
 
 Volume remains global in either settings scope. Adjustments use the existing
 Customize setter and replaceable main-lane percentage announcement. Saving
@@ -352,3 +352,22 @@ directly clears that continuation and retains ordinary dismissal behaviour.
 The focused menu, shared interface, and sound-pack checks passed 39 tests
 with compiled code in fresh graphical Emacs sessions using bundled and
 installed Transient. Listening confirmed the browser return path.
+
+* Speech rate and punctuation
+
+Speech settings applies rate through the existing live speech setter, using
+the selected buffer/global scope and configured step. Omnivox adjustments
+are bounded to 0 through 100. Exact input restores focus to the selected
+control. Punctuation exposes built-in levels, negotiated named profiles, and
+reset to the automatic buffer policy. Scope remains shared with parent menus.
+
+Explicit Save persists the displayed rate through the selected adapter's
+startup option and punctuation through Customize. Saving punctuation alone
+leaves the saved rate unchanged. Mode policies and buffer overrides retain
+their precedence. Opening, adjusting, and closing menus do not save defaults.
+
+Twenty-five focused checks passed with compiled code in fresh graphical
+Emacs using bundled and installed Transient. A separate Emacs startup loaded
+the saved rate and named punctuation profile before adapter setup and verified
+that both survived initialization. These checks capture speech and do not
+establish listening acceptance in a normal profile.

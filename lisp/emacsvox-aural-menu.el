@@ -376,9 +376,57 @@ Global scope changes the default and current buffer for this session."
       'value 'punctuation 'command-menu-value-changed '(selected))
      'state-change 'select-object)))
 
+(defun emacsvox-aural-menu--rate-default-option ()
+  "Return the startup rate option for the configured speech backend."
+  ;; Match the adapter selection in `voice-setup'.
+  (let* ((backend (cond ((string-match "outloud" tts-program) 'outloud)
+                        ((string-match "dtk" tts-program) 'dectalk)
+                        ((string-match "swiftmac" tts-program) 'swiftmac)
+                        ((string-match "mac\\'" tts-program) 'mac)
+                        ((string-match "espeak\\'" tts-program) 'espeak)
+                        ((tts--omnivox-program-p) 'omnivox)
+                        (t 'plain)))
+         (option (intern (format "%s-default-speech-rate" backend))))
+    (require (intern (format "%s-voices" backend)))
+    (unless (custom-variable-p option)
+      (user-error "This speech backend has no customizable startup rate"))
+    option))
+
+(defun emacsvox-aural-menu--save-speech ()
+  "Save the displayed rate and punctuation as defaults across restarts.
+Save rate through the backend's startup option.  Punctuation mode policies
+and explicit buffer overrides still take precedence over its saved default."
+  (interactive)
+  (let* ((source (emacsvox-aural-menu--source (emacsvox-aural-menu--context)))
+         (rate (emacsvox-aural-menu--rate-value))
+         (punctuation (emacsvox-aural-menu--punctuation-value))
+         (option (with-current-buffer source (emacsvox-aural-menu--rate-default-option))))
+    (customize-save-variable option rate)
+    (set-default 'tts-speech-rate rate)
+    (customize-save-variable 'tts-punctuation-mode punctuation)
+    (with-current-buffer source
+      (emacsvox-transient--submit-text
+       "Saved rate and punctuation defaults. Punctuation mode policies still apply."
+       (emacsvox-transient--menu-facts 'save-speech 'operation-completed)
+       'state-change 'save-object))))
+
+(defun emacsvox-aural-menu--save-punctuation ()
+  "Save the displayed punctuation as the default across restarts.
+Mode policies and explicit buffer overrides still take precedence."
+  (interactive)
+  (let ((source (emacsvox-aural-menu--source (emacsvox-aural-menu--context)))
+        (punctuation (emacsvox-aural-menu--punctuation-value)))
+    (customize-save-variable 'tts-punctuation-mode punctuation)
+    (with-current-buffer source
+      (emacsvox-transient--submit-text
+       "Saved punctuation default. Mode policies still apply."
+       (emacsvox-transient--menu-facts 'save-punctuation 'operation-completed)
+       'state-change 'save-object))))
+
 (transient-define-prefix emacsvox-aural-menu-punctuation (&optional global)
   "Choose punctuation for this buffer or the session's global default.
-Global changes also apply to the source buffer.  Nothing is saved on disk."
+Global changes also apply to the source buffer.  S saves the displayed choice
+as the default across restarts; mode policies still take precedence."
   :refresh-suffixes t
   ["Scope"
    ("g" (lambda () (concat "Scope: " (emacsvox-aural-menu--scope-label)))
@@ -402,7 +450,8 @@ Global changes also apply to the source buffer.  Nothing is saved on disk."
     emacsvox-aural-menu--choose-punctuation :transient t)
    ("r" "Restore automatic policy" emacsvox-aural-menu--reset-punctuation
     :if emacsvox-aural-menu--local-scope-p :transient t)]
-  ["Finish"
+  ["Save and finish"
+   ("S" "Save punctuation as default" emacsvox-aural-menu--save-punctuation :transient t)
    ("q" "Back (keep changes)" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)]
   (interactive "P")
@@ -432,7 +481,8 @@ When opened from the Emacsvox menu, share its selected scope."
     emacsvox-aural-menu-punctuation :transient transient--do-stack)
    ("n" "Menu navigation (global)" emacsvox-aural-menu-navigation
     :transient transient--do-stack)]
-  ["Finish"
+  ["Save and finish"
+   ("S" "Save rate and punctuation as defaults" emacsvox-aural-menu--save-speech :transient t)
    ("q" "Back (keep changes)" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)]
   (interactive "P")

@@ -5618,14 +5618,18 @@ Function Index
                                                              (line   25)
 * emacsvox-aural-menu-navigation <1>:    emacsvox-aural-menu.
                                                              (line   26)
-* emacsvox-aural-menu-sounds:            emacsvox-aural-menu.
+* emacsvox-aural-menu-punctuation:       emacsvox-aural-menu.
                                                              (line   32)
-* emacsvox-aural-menu-sounds <1>:        emacsvox-aural-menu.
+* emacsvox-aural-menu-punctuation <1>:   emacsvox-aural-menu.
                                                              (line   33)
-* emacsvox-aural-menu-speech:            emacsvox-aural-menu.
+* emacsvox-aural-menu-sounds:            emacsvox-aural-menu.
                                                              (line   41)
-* emacsvox-aural-menu-speech <1>:        emacsvox-aural-menu.
+* emacsvox-aural-menu-sounds <1>:        emacsvox-aural-menu.
                                                              (line   42)
+* emacsvox-aural-menu-speech:            emacsvox-aural-menu.
+                                                             (line   50)
+* emacsvox-aural-menu-speech <1>:        emacsvox-aural-menu.
+                                                             (line   51)
 * emacsvox-aural-overrides-clear-filter: emacsvox-aural-overrides.
                                                              (line   26)
 * emacsvox-aural-overrides-clear-filter <1>: emacsvox-aural-overrides.

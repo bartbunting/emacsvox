@@ -16,7 +16,7 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 Indirect:
 emacsvox.info-1: 384
-emacsvox.info-2: 307473
+emacsvox.info-2: 308423
 
 Tag Table:
 (Indirect)
@@ -60,86 +60,86 @@ Node: Object Oriented Desktop136678
 Node: Context-Sensitive Interaction137809
 Node: Aural Presentation140962
 Node: Aural Home143856
-Node: Presentation Model155095
-Node: Presentation Modalities158602
-Node: Explaining Presentation160317
-Node: Adjusting Presentation171835
-Node: Heading Voice Walkthrough173374
-Node: Guided Feedback Changes176030
-Node: Choosing A Voice For An Item181147
-Node: Managing Feedback Rules183225
-Node: Presentation Options185198
-Node: Voices And Routing186161
-Node: Personal Palette Walkthrough192662
-Node: Palette Inheritance Walkthrough195585
-Node: Renaming Voices And Palettes198422
-Node: Editing Named Voices200127
-Node: Voice Adjustments208741
-Node: Voice Fallbacks213358
-Node: Voices In Context219637
-Node: Emoji Speech Names222754
-Node: Installed Voices And Engines227721
-Node: Physical Voice Experiments235647
-Node: Keeping A Voice Experiment238664
-Node: Speech Engine Preferences241248
-Ref: Edit Saved Engine Configuration241453
-Ref: Choose The Shared Preferred Engine243185
-Node: Sounds And Space244921
-Node: Sound Pack Walkthrough247176
-Node: Changing One Sound248831
-Node: Changing Tones250400
-Node: Spatial Presentation Controls252212
-Node: Personal Sound Packs253763
-Node: Aural Speech Output255016
-Node: Presentation Profiles258544
-Node: Presentation Profile Walkthrough260970
-Node: Saving And Startup263465
-Node: Sharing Voice Palettes264697
-Node: Presentation Troubleshooting266305
-Node: Recovering Aural Changes270380
-Node: Voice Lock271991
-Node: Using Online Help275653
-Node: Emacs Packages279950
-Node: Document Authoring281410
-Node: Structured Editing281982
-Node: Browsing Structure283098
-Node: Web Browsing292664
-Node: Messaging293579
-Node: Editing Code294089
-Node: Development Environment294608
-Node: Desktop Management297766
-Node: Personal Information Management298268
-Node: Desktop Applications298800
-Node: Notmuch Mail307473
-Ref: Notmuch fields and privacy318137
-Node: Agent Shell323869
-Node: EAT Terminal Access346150
-Node: Running Terminal Based Applications367026
-Node: Starting Term368001
-Node: Term Input Modes368928
-Node: Term Speech Feedback370094
-Node: Reviewing The Term Screen371288
-Node: Term Help And Recovery373189
-Node: Emacsvox Keyboard Commands374108
-Node: Copyright376461
-Node: Acknowledgments377050
-Node: Developer Guide378076
-Node: Documentation Maintenance379240
-Node: Speech Server Protocols384655
-Ref: Testing A Direct Legacy Server392770
-Ref: Commands That Queue Output393329
-Ref: Commands That Set State397167
-Node: Integration Maintenance399761
-Ref: Background startup ownership and failure recovery410677
-Ref: Supported Emacs versions413830
-Ref: Native Windows builds416509
-Ref: Offline Windows development bundle418782
-Ref: Public Windows installer previews427835
-Ref: Remote preview validation430899
-Ref: Internal ownership and renderer tests452523
-Ref: Upstream contract layers456103
-Node: Authoring Sound Packs486270
-Node: Concept Index489541
+Node: Presentation Model156045
+Node: Presentation Modalities159552
+Node: Explaining Presentation161267
+Node: Adjusting Presentation172785
+Node: Heading Voice Walkthrough174324
+Node: Guided Feedback Changes176980
+Node: Choosing A Voice For An Item182097
+Node: Managing Feedback Rules184175
+Node: Presentation Options186148
+Node: Voices And Routing187111
+Node: Personal Palette Walkthrough193612
+Node: Palette Inheritance Walkthrough196535
+Node: Renaming Voices And Palettes199372
+Node: Editing Named Voices201077
+Node: Voice Adjustments209691
+Node: Voice Fallbacks214308
+Node: Voices In Context220587
+Node: Emoji Speech Names223704
+Node: Installed Voices And Engines228671
+Node: Physical Voice Experiments236597
+Node: Keeping A Voice Experiment239614
+Node: Speech Engine Preferences242198
+Ref: Edit Saved Engine Configuration242403
+Ref: Choose The Shared Preferred Engine244135
+Node: Sounds And Space245871
+Node: Sound Pack Walkthrough248126
+Node: Changing One Sound249781
+Node: Changing Tones251350
+Node: Spatial Presentation Controls253162
+Node: Personal Sound Packs254713
+Node: Aural Speech Output255966
+Node: Presentation Profiles259494
+Node: Presentation Profile Walkthrough261920
+Node: Saving And Startup264415
+Node: Sharing Voice Palettes265647
+Node: Presentation Troubleshooting267255
+Node: Recovering Aural Changes271330
+Node: Voice Lock272941
+Node: Using Online Help276603
+Node: Emacs Packages280900
+Node: Document Authoring282360
+Node: Structured Editing282932
+Node: Browsing Structure284048
+Node: Web Browsing293614
+Node: Messaging294529
+Node: Editing Code295039
+Node: Development Environment295558
+Node: Desktop Management298716
+Node: Personal Information Management299218
+Node: Desktop Applications299750
+Node: Notmuch Mail308423
+Ref: Notmuch fields and privacy319087
+Node: Agent Shell324819
+Node: EAT Terminal Access347100
+Node: Running Terminal Based Applications367976
+Node: Starting Term368951
+Node: Term Input Modes369878
+Node: Term Speech Feedback371044
+Node: Reviewing The Term Screen372238
+Node: Term Help And Recovery374139
+Node: Emacsvox Keyboard Commands375058
+Node: Copyright377411
+Node: Acknowledgments378000
+Node: Developer Guide379026
+Node: Documentation Maintenance380190
+Node: Speech Server Protocols385605
+Ref: Testing A Direct Legacy Server393720
+Ref: Commands That Queue Output394279
+Ref: Commands That Set State398117
+Node: Integration Maintenance400711
+Ref: Background startup ownership and failure recovery411627
+Ref: Supported Emacs versions414780
+Ref: Native Windows builds417459
+Ref: Offline Windows development bundle419732
+Ref: Public Windows installer previews428785
+Ref: Remote preview validation431849
+Ref: Internal ownership and renderer tests453473
+Ref: Upstream contract layers457053
+Node: Authoring Sound Packs487220
+Node: Concept Index490491
 
 End Tag Table
 

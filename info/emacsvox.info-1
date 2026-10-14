@@ -2993,6 +2993,22 @@ edits the value directly, and ‘<SPC>’ previews the indentation settings.
 Other items give brief guidance when you try to adjust them with shifted
 arrows.
 
+   In Speech settings, select _Rate_ and use Shift-left/right to adjust
+it by the configured rate step.  ‘<RET>’ or ‘r’ enters an exact value.
+Speech must be running; Omnivox uses a 0 to 100 scale.  Global changes
+also update the current buffer.  Press ‘p’ for punctuation: ‘n’ selects
+none, ‘s’ some, ‘a’ all, and ‘p’ offers built-in levels and available
+named profiles.  In current-buffer scope, ‘r’ restores automatic
+punctuation policy.  ‘q’ returns to Speech settings.
+
+   Press ‘S’ in Speech settings to save the displayed rate and
+punctuation as defaults across restarts.  The rate uses the current
+backend's startup option.  Inside Punctuation, ‘S’ saves only the
+displayed punctuation choice.  Saving from current-buffer scope promotes
+those displayed values to defaults.  Mode-specific punctuation policies
+and explicit buffer overrides still take precedence over the saved
+punctuation default.
+
    Press ‘C-e H o’ for _Sounds and output_.  Main tones and earcons,
 plus separate notification speech, tones, and earcons, each have a
 global volume control.  Shift-left/right adjusts the selected volume by

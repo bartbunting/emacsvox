@@ -818,5 +818,89 @@
                    (should (= (point) 3)))
                (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))))
 
+(ert-deftest emacsvox-aural-menu-speech-save-uses-displayed-global-values ()
+  "Saving global scope must not promote different buffer overrides."
+  (emacsvox-test--with-aural-menu
+    (emacsvox-test--call-with-speech-settings
+     (lambda ()
+       (let (saved)
+         (setq-local tts-speech-rate 72 tts-punctuation-mode-override 'none)
+         (setcdr (plist-get context :settings) t)
+         (cl-letf (((symbol-function 'customize-save-variable)
+                    (lambda (symbol value &rest _) (push (cons symbol value) saved))))
+           (emacsvox-aural-menu--save-speech))
+         (should (equal (reverse saved)
+                        '((omnivox-default-speech-rate . 60) (tts-punctuation-mode . some))))
+         (should (= tts-speech-rate 72))
+         (should (eq tts-punctuation-mode-override 'none)))))))
+
+(ert-deftest emacsvox-aural-menu-speech-graphical-save-survives-startup ()
+  "Explicit Save persists the startup rate and named punctuation across Emacs runs."
+  (skip-unless (display-graphic-p))
+  (require 'omnivox-voices)
+  (let* ((custom-file (make-temp-file "emacsvox-speech-custom-" nil ".el"))
+         (user-init-file custom-file)
+         (symbols '(omnivox-default-speech-rate tts-punctuation-mode))
+         (defaults (mapcar (lambda (symbol) (cons symbol (default-value symbol))) symbols))
+         (properties (mapcar (lambda (symbol) (cons symbol (copy-tree (symbol-plist symbol)))) symbols)))
+    (unwind-protect
+        (save-window-excursion
+          (emacsvox-test--with-aural-menu
+            (emacsvox-test--call-with-speech-settings
+             (lambda ()
+               (switch-to-buffer source)
+               (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+               (let ((transient--prefix nil) (transient-show-menu t))
+                 (unwind-protect
+                     (progn
+                       (execute-kbd-macro (kbd "<f8> s r 7 2 RET p n q"))
+                       (should (zerop (file-attribute-size (file-attributes custom-file))))
+                       (execute-kbd-macro (kbd "S"))
+                       (should (= (default-value 'tts-speech-rate) 72))
+                       (should (= omnivox-default-speech-rate 72))
+                       (should (eq (default-value 'tts-punctuation-mode) 'none))
+                       (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-speech))
+                       (execute-kbd-macro (kbd "p"))
+                       (cl-letf (((symbol-function 'omnivox-punctuation-profiles--read)
+                                  (lambda () '(profile "coding" all))))
+                         (execute-kbd-macro (kbd "p")))
+                       (execute-kbd-macro (kbd "S q q q"))
+                       (should (= omnivox-default-speech-rate 72))
+                       (should (equal (default-value 'tts-punctuation-mode) '(profile "coding" all)))
+                       (should-not transient--prefix)
+                       ;; Load Custom before the libraries, as an init file can.
+                       ;; Adapter setup must not overwrite the saved rate.
+                       (with-temp-buffer
+                         (let ((status
+                                (call-process
+                                 (expand-file-name invocation-name invocation-directory)
+                                 nil (current-buffer) nil "-Q" "--batch"
+                                 "--eval" (prin1-to-string `(load ,custom-file nil t))
+                                 "-L" emacsvox-lisp-directory
+                                 "-l" "emacsvox-preamble.el"
+                                 "--eval"
+                                 (prin1-to-string
+                                  '(progn
+                                     (require 'omnivox-voices)
+                                     (cl-letf (((symbol-function 'omnivox--negotiate-processes) #'ignore)
+                                               ((symbol-function 'omnivox--send-state-command) #'ignore))
+                                       (omnivox-configure-tts))
+                                     (unless (= (default-value 'tts-speech-rate) 72)
+                                       (error "Saved rate did not survive startup"))
+                                     (with-temp-buffer
+                                       (let ((tts-punctuation-mode-policy-alist nil))
+                                         (unless (equal (plist-get (tts-punctuation-mode-state) :mode)
+                                                        '(profile "coding" all))
+                                           (error "Saved punctuation did not survive startup")))
+                                       (let ((tts-punctuation-mode-policy-alist '((fundamental-mode . some))))
+                                         (unless (eq (plist-get (tts-punctuation-mode-state) :mode) 'some)
+                                           (error "Saving replaced automatic punctuation policy")))))))))
+                           (ert-info ((buffer-string)) (should (equal status 0))))))
+                   (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))
+      (dolist (entry defaults) (set-default (car entry) (cdr entry)))
+      (dolist (entry properties) (setplist (car entry) (cdr entry)))
+      (when (get-file-buffer custom-file) (kill-buffer (get-file-buffer custom-file)))
+      (delete-file custom-file))))
+
 (provide 'emacsvox-aural-menu-tests)
 ;;; emacsvox-aural-menu-tests.el ends here
