@@ -34,6 +34,7 @@
   '(("Edit current and recent feedback" emacsvox-settings-workflows emacsvox-settings-feedback "c")
     ("Presentation features and scoped rules" emacsvox-settings-workflows emacsvox-settings-presentation "f")
     ("Saved setups, profiles and drafts" emacsvox-settings-workflows emacsvox-settings-setups "p")
+    ("Integration speech settings" emacsvox-settings-integrations emacsvox-settings-integrations "a")
     ("Speech rate" emacsvox-aural-menu emacsvox-aural-menu-speech "r")
     ("Punctuation levels and profiles" emacsvox-aural-menu emacsvox-aural-menu-punctuation "p")
     ("Punctuation pronunciations" emacsvox-aural-menu emacsvox-aural-menu-punctuation "e")
@@ -145,6 +146,7 @@
    ("i" "Indentation" emacsvox-settings--indentation :transient transient--do-stack)
    ("t" "Typing, point, and interaction" emacsvox-settings--interaction :transient transient--do-stack)
    ("c" "Capitalization" emacsvox-settings--capitalization :transient transient--do-stack)
+   ("j" "Integration speech settings" emacsvox-settings-integrations :transient transient--do-stack)
    ("m" "Major-mode settings (Customize)" emacsvox-settings--mode :inapt-if-not emacsvox-settings--mode-group :transient transient--do-suspend)]
   ["Discover more"
    ("/" "Find an Emacsvox setting" emacsvox-settings-search :transient transient--do-stack)

@@ -38,6 +38,7 @@
 
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
+(autoload 'emacsvox-settings-integrations "emacsvox-settings-integrations" nil t)
 (autoload 'emacsvox-settings-setups "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-presentation "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-feedback "emacsvox-settings-workflows" nil t)
@@ -65,7 +66,7 @@
                          emacsvox-aural-menu-voices emacsvox-capitalization
                          emacsvox-interaction emacsvox-aural-menu-line-cues
                          emacsvox-output-settings emacsvox-settings-buffer
-                         emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups)))
+                         emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations)))
       (user-error "Open the Emacsvox menu first"))
     (oref prefix scope)))
 
@@ -810,6 +811,7 @@ The source item is captured on entry; Aural Home offers all other actions."
     emacsvox-aural-menu-speech)
    ("o" "Sounds and output (global)" emacsvox-aural-menu-sounds)
    ("v" "Voices and engines" emacsvox-aural-menu-voices)
+   ("j" "Integration settings" emacsvox-settings-integrations :transient transient--do-stack)
    ("p" "Saved setups and drafts" emacsvox-settings-setups :transient transient--do-stack)
    ("r" "Presentation and rules" emacsvox-settings-presentation :transient transient--do-stack)
    ("f" "Edit current or recent feedback" emacsvox-settings-feedback :transient transient--do-stack)

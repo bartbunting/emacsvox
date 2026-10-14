@@ -6,6 +6,7 @@
 ;;; Code:
 (require 'emacsvox-settings-tests)
 (require 'emacsvox-settings-workflows)
+(require 'emacsvox-settings-integrations)
 (require 'emacsvox-aural-change-feedback-tests)
 
 (ert-deftest emacsvox-settings-workflows-feedback-draft-return ()
@@ -108,6 +109,46 @@
     (with-selected-window transient--window
       (should (eq (oref (button-get (button-at (point)) 'button-data) command)
                   'emacsvox-settings-workflows--drafts)))))
+
+(ert-deftest emacsvox-settings-integrations-comint-is-local ()
+  "The terminal control uses the captured buffer and cannot save a global default."
+  (emacsvox-test--with-settings
+    (require 'emacsvox-comint)
+    (let ((before (default-value 'emacsvox-comint-autospeak)))
+      (with-current-buffer source (comint-mode) (setq-local emacsvox-comint-autospeak nil))
+      (execute-kbd-macro (kbd "j s"))
+      (should (buffer-local-value 'emacsvox-comint-autospeak source))
+      (should (eq before (default-value 'emacsvox-comint-autospeak)))
+      (should-not (file-exists-p custom-file))
+      (execute-kbd-macro (kbd "q q"))
+      (should (eq (current-buffer) source)))))
+
+(ert-deftest emacsvox-settings-integrations-customize-and-context ()
+  "Integration discovery uses the actual source and returns from its Custom group."
+  (emacsvox-test--with-settings
+    (require 'org)
+    (with-current-buffer source (org-mode))
+    (execute-kbd-macro (kbd ". j"))
+    (should (eq (emacsvox-settings-integrations--kind) 'org))
+    (execute-kbd-macro (kbd "c"))
+    (should (derived-mode-p 'Custom-mode))
+    (should (save-excursion (goto-char (point-min))
+                           (search-forward "Table After Movement Function" nil t)))
+    (execute-kbd-macro (kbd "q q"))
+    (should (eq (oref transient--prefix command) 'emacsvox-settings-buffer))
+    (should-not (file-exists-p custom-file))))
+
+(ert-deftest emacsvox-settings-integrations-all-and-unavailable-control ()
+  "All integrations is usable outside an integration; unrelated controls refuse."
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "j"))
+    (should-not (emacsvox-settings-integrations--control-p))
+    (should-error (emacsvox-settings-integrations--control) :type 'user-error)
+    (execute-kbd-macro (kbd "a O r g SPC t a b l e s RET"))
+    (should (derived-mode-p 'Custom-mode))
+    (execute-kbd-macro (kbd "q"))
+    (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations))
+    (should-not (file-exists-p custom-file))))
 
 (provide 'emacsvox-settings-workflows-tests)
 ;;; emacsvox-settings-workflows-tests.el ends here
