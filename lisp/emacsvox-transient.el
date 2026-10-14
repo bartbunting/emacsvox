@@ -938,7 +938,8 @@ DIRECTION is positive for forward movement, negative for backward movement."
                    (object-of-class-p object 'transient-infix)) 'value 'command)
           'focus-button 'focus-entered (when selected '(selected)))
          'navigation
-         (cond (section-change 'section)
+         (cond (wrap 'repeat-start)
+               (section-change 'section)
                ((memq toggle '(on off)) toggle)
                (selected 'select-object)))))))
 

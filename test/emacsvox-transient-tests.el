@@ -594,7 +594,11 @@
             :command-menu-item-kind command
             :command-menu-action focus-button
             :events (focus-entered))))
-        (should-not (plist-get (cdar submissions) :compatibility-actions))))))
+        (should
+         (equal
+          (mapcar #'emacsvox-aural-compatibility-action-value
+                  (plist-get (cdar submissions) :compatibility-actions))
+          '(repeat-start)))))))
 
 (transient-define-prefix emacsvox-test--navigation-menu ()
   "Choose a test action."
@@ -656,11 +660,11 @@
                 (execute-kbd-macro (kbd "<down>"))
                 (should (equal (car selections)
                                "First action. a. Actions. 1 of 2 sections."))
-                (should (equal (car cues) '(section)))
+                (should (equal (car cues) '(repeat-start)))
                 (execute-kbd-macro (kbd "<up>"))
                 (should (equal (car selections)
                                "Third action. c. Other actions. 2 of 2 sections."))
-                (should (equal (car cues) '(section))))
+                (should (equal (car cues) '(repeat-start))))
             (when transient--prefix
               (execute-kbd-macro (kbd "C-g")))))))))
 
@@ -675,9 +679,13 @@
         (local-set-key (kbd "<f8>") #'emacsvox-test--navigation-menu)
         (let ((emacsvox-transient-navigation-style style)
               (transient-show-menu 0)
-              speech boundaries)
+              speech cues boundaries)
           (cl-letf (((symbol-function 'emacsvox-aural-submit)
-                     (lambda (text &rest _) (push text speech)))
+                     (lambda (text &rest args)
+                       (push text speech)
+                       (push (mapcar #'emacsvox-aural-compatibility-action-value
+                                     (plist-get args :compatibility-actions))
+                             cues)))
                     ((symbol-function 'emacsvox-aural-submit-actions)
                      (lambda (&rest args)
                        (push (mapcar #'emacsvox-aural-compatibility-action-value
@@ -690,12 +698,14 @@
                   (transient--show)
                   (execute-kbd-macro (kbd "<down> <down>"))
                   (should (equal (car speech) "Second action. b."))
+                  (should-not (car cues))
                   (setq speech nil boundaries nil)
                   (execute-kbd-macro (kbd "<down>"))
                   (if (eq style 'section-stop)
                       (progn (should-not speech)
                              (should (equal boundaries '((warn-user)))))
                     (should (equal speech '("First action. a.")))
+                    (should (equal (car cues) '(repeat-start)))
                     (should-not boundaries))
                   (execute-kbd-macro (kbd "<up> <up>"))
                   (should (string-prefix-p "First action" (car speech)))
@@ -704,7 +714,8 @@
                   (if (eq style 'section-stop)
                       (progn (should-not speech)
                              (should (equal boundaries '((warn-user)))))
-                    (should (equal speech '("Second action. b."))))
+                    (should (equal speech '("Second action. b.")))
+                    (should (equal (car cues) '(repeat-start))))
                   (execute-kbd-macro (kbd "<right> <down>"))
                   (should (string-prefix-p "Third action" (car speech)))
                   (setq speech nil boundaries nil)
@@ -713,6 +724,7 @@
                       (progn (should-not speech)
                              (should (equal boundaries '((warn-user)))))
                     (should (equal speech '("Third action. c.")))
+                    (should (equal (car cues) '(repeat-start)))
                     (should-not boundaries))
                   (execute-kbd-macro (kbd "<left> <down> C-u 9 <down>"))
                   (should (string-prefix-p "Second action" (car speech)))
