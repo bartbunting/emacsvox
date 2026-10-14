@@ -22004,10 +22004,13 @@ section-wrap
 
 @defvar {User Option} emacsvox-transient-section-announcement-order
 @verbatim
-Order of the item and section announcement when entering a section.
+How Transient navigation announces items and sections.
 Item first speaks the item, then the section name and position.  Section
-first speaks the section name and position before the item.  This setting
-applies globally and does not affect movement within a section.
+first speaks the section name and position before the item.  By movement
+speaks only the section for section navigation and only the item for item
+navigation, even across sections.  Section navigation still selects the
+first item; a zero-count item movement reads it without moving.
+This setting applies globally, including Magit, and does not change navigation.
 @end verbatim
 
 Default Value:

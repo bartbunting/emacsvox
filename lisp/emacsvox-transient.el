@@ -91,12 +91,16 @@ move between sections in every style.  This setting applies globally."
   :group 'emacsvox)
 
 (defcustom emacsvox-transient-section-announcement-order 'item-first
-  "Order of the item and section announcement when entering a section.
+  "How Transient navigation announces items and sections.
 Item first speaks the item, then the section name and position.  Section
-first speaks the section name and position before the item.  This setting
-applies globally and does not affect movement within a section."
+first speaks the section name and position before the item.  By movement
+speaks only the section for section navigation and only the item for item
+navigation, even across sections.  Section navigation still selects the
+first item; a zero-count item movement reads it without moving.
+This setting applies globally, including Magit, and does not change navigation."
   :type '(choice (const :tag "Item first" item-first)
-                 (const :tag "Section first" section-first))
+                 (const :tag "Section first" section-first)
+                 (const :tag "By movement: sections or items" by-movement))
   :group 'emacsvox)
 
 (defcustom emacsvox-transient-verbose-descriptions t
@@ -835,7 +839,7 @@ When non-nil, preserve compatibility ICON."
     'personality 'voice-annotate)))
 
 (defun emacsvox-transient--move-section (backward)
-  "Present the first item in the next section, or previous when BACKWARD."
+  "Select the first item in the next section, or previous when BACKWARD."
   (with-selected-window (emacsvox-transient--navigation-window)
     (let* ((action (if backward 'previous-section 'next-section))
            (previous (point))
@@ -857,7 +861,9 @@ When non-nil, preserve compatibility ICON."
             (if (and button (< (button-start button) end))
                 (progn
                   (goto-char (button-start button))
-                  (emacsvox-transient--speak-button previous))
+                  (emacsvox-transient--speak-button
+                   previous nil
+                   (eq emacsvox-transient-section-announcement-order 'by-movement)))
               (emacsvox-transient--submit-text
                (emacsvox-transient--section-text section sections)
                (emacsvox-transient--item-facts 'section action 'focus-entered)
@@ -956,9 +962,10 @@ When non-nil, preserve compatibility ICON."
                  (plist-get (get-text-property 0 emacsvox-aural-facts-property text)
                             :states)))))
 
-(defun emacsvox-transient--speak-button (&optional previous direction)
+(defun emacsvox-transient--speak-button (&optional previous direction section-only)
   "Present the current button, noting section changes and wraps from PREVIOUS.
-DIRECTION is positive for forward movement, negative for backward movement."
+DIRECTION is positive for forward movement, negative for backward movement.
+SECTION-ONLY speaks its section while retaining the button's facts and cues."
   (with-selected-window (emacsvox-transient--navigation-window)
     (when-let* ((button (button-at (point)))
                 (start (button-start button))
@@ -980,12 +987,16 @@ DIRECTION is positive for forward movement, negative for backward movement."
                    (or (not (equal section old-section))
                        (and wrap (eq emacsvox-transient-navigation-style 'continuous))))))
         (emacsvox-transient--submit-text
-         (if section-change
-             (let ((heading (emacsvox-transient--section-text section sections)))
-               (if (eq emacsvox-transient-section-announcement-order 'section-first)
-                   (concat heading " " choice)
-                 (concat choice " " heading)))
-           choice)
+         (cond
+          ((and section-only section)
+           (emacsvox-transient--section-text section sections))
+          ((and section-change
+                (not (eq emacsvox-transient-section-announcement-order 'by-movement)))
+           (let ((heading (emacsvox-transient--section-text section sections)))
+             (if (eq emacsvox-transient-section-announcement-order 'section-first)
+                 (concat heading " " choice)
+               (concat choice " " heading))))
+          (t choice))
          (emacsvox-transient--item-facts
           (if (and (eieio-object-p object)
                    (object-of-class-p object 'transient-infix)) 'value 'command)

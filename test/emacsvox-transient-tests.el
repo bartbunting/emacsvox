@@ -881,6 +881,100 @@
   ["Options" ("-n" "Dry run" "--dry-run")]
   ["Actions" ("a" "Test action" ignore)])
 
+(ert-deftest emacsvox-transient-by-movement-keeps-navigation-and-cues ()
+  "Section speech omits items; item speech omits sections in every style."
+  (skip-unless (display-graphic-p))
+  (dolist (style '(continuous section-wrap section-stop))
+    (save-window-excursion
+      (with-temp-buffer
+        (switch-to-buffer (current-buffer))
+        (local-set-key (kbd "<f8>") #'emacsvox-test--navigation-menu)
+        (let ((emacsvox-transient-navigation-style style)
+              (emacsvox-transient-section-announcement-order 'by-movement)
+              (emacsvox-transient-verbose-descriptions nil)
+              (transient-show-menu 0) speech cues boundary)
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest args)
+                       (push text speech)
+                       (push (mapcar #'emacsvox-aural-compatibility-action-value
+                                     (plist-get args :compatibility-actions)) cues)
+                       (should (eq (plist-get args :lane) 'main))
+                       (should (eq (plist-get args :delivery-policy) 'replaceable))
+                       (should (eq (plist-get args :interruption-policy) 'lane))))
+                    ((symbol-function 'emacsvox-aural-submit-actions)
+                     (lambda (&rest _) (setq boundary t))))
+            (unwind-protect
+                (progn
+                  (execute-kbd-macro (kbd "<f8>"))
+                  (transient--show)
+                  (execute-kbd-macro (kbd "<down>"))
+                  (should (equal (car speech) "First action. a."))
+                  (setq speech nil cues nil)
+                  (execute-kbd-macro (kbd "<right>"))
+                  (should (equal speech '("Other actions. 2 of 2 sections.")))
+                  (should (equal cues '((section))))
+                  (let ((position (window-point transient--window)))
+                    (execute-kbd-macro (kbd "C-u 0 <down>"))
+                    (should (= position (window-point transient--window)))
+                    (should (equal (car speech) "Third action. c.")))
+                  (execute-kbd-macro (kbd "<left>"))
+                  (should (equal (car speech) "Actions. 1 of 2 sections."))
+                  (execute-kbd-macro (kbd "<down>"))
+                  (should (equal (car speech) "Second action. b."))
+                  (setq speech nil boundary nil)
+                  (execute-kbd-macro (kbd "<down>"))
+                  (pcase style
+                    ('continuous
+                     (should (equal speech '("Third action. c.")))
+                     (should (equal (car cues) '(section)))
+                     (execute-kbd-macro (kbd "<down>"))
+                     (should (equal (car speech) "First action. a."))
+                     (should (equal (car cues) '(repeat-start)))
+                     (execute-kbd-macro (kbd "<up>"))
+                     (should (equal (car speech) "Third action. c."))
+                     (should (equal (car cues) '(repeat-start)))
+                     (execute-kbd-macro (kbd "<up>"))
+                     (should (equal (car speech) "Second action. b."))
+                     (should (equal (car cues) '(section))))
+                    ('section-wrap
+                     (should (equal speech '("First action. a.")))
+                     (should (equal (car cues) '(repeat-start))))
+                    ('section-stop (should-not speech) (should boundary)))
+                  (execute-kbd-macro (kbd "<right>"))
+                  (with-selected-window transient--window
+                    (should (equal (oref (button-get (button-at (point)) 'button-data) key) "c")))
+                  ;; Activation still targets the selected first item.
+                  (execute-kbd-macro (kbd "C-j"))
+                  (should-not transient--prefix)
+                  (should (equal (buffer-string) "")))
+              (when transient--prefix (execute-kbd-macro (kbd "C-g"))))))))))
+
+(ert-deftest emacsvox-transient-by-movement-retains-infix-values ()
+  "Item-only speech retains the actual switch value, key, and selection cue."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (with-temp-buffer
+      (switch-to-buffer (current-buffer))
+      (local-set-key (kbd "<f8>") #'emacsvox-test--feedback-menu)
+      (let ((emacsvox-transient-section-announcement-order 'by-movement)
+            (emacsvox-transient-verbose-descriptions nil)
+            (transient-show-menu 0) speech cues)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest args)
+                     (push text speech)
+                     (push (mapcar #'emacsvox-aural-compatibility-action-value
+                                   (plist-get args :compatibility-actions)) cues))))
+          (unwind-protect
+              (progn
+                (execute-kbd-macro (kbd "<f8>"))
+                (transient--show)
+                (execute-kbd-macro (kbd "<down>"))
+                (should (equal (car speech) "Dry run, off. minus n."))
+                (execute-kbd-macro (kbd "- n C-u 0 <down>"))
+                (should (equal (car speech) "Dry run, on. minus n."))
+                (should (equal (car cues) '(select-object))))
+            (when transient--prefix (execute-kbd-macro (kbd "C-g")))))))))
+
 (ert-deftest emacsvox-transient-invalid-map-preserves-emergency-feedback ()
   "An inconsistent menu keeps upstream diagnostics and return behavior."
   (let ((transient--transient-map nil)

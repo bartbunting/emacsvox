@@ -366,6 +366,30 @@ verification of subsequently changed code.
 
 ** Findings queue
 
+- 2026-10-14: Arkadiusz's navigation feedback motivates an additional
+  =by-movement= announcement option: section arrows speak only the destination
+  section, while item arrows speak only the item, including continuous section
+  crossings. Select it with =C-e H s n m= and save through Customize with =S=.
+  The existing item-first default, other modes, navigation, selection, semantic
+  facts, and cues are unchanged. Speech remains interruptible. Implemented and
+  automatically checked; listening acceptance remains open.
+  Source checks passed 110 tests. Fresh graphical Emacs checks of compiled code
+  passed 110 with installed Transient (including real Magit navigation) and 109
+  with bundled Transient, with no skips. These cover all three navigation styles,
+  section crossing/wrapping cues, switch values, Enter activation, and Customize
+  saving. Incremental compilation and byte-code preflight passed. The manual
+  now explains selection, saving, and the first-item discovery caveat.
+  The isolated commit slice passed 106 graphical checks, a fresh byte-code
+  rebuild, and the documentation review gate; generated references are current.
+- Interaction caveat: section arrows still select the first item. Section-only
+  speech therefore leaves Emacsvox menus' Enter targeting an unspoken item, and
+  the next Down advances to the second item. =C-u 0 <down>= reads the selection
+  without moving in all three styles, including a one-item section with stopping
+  navigation. Magit's existing activation bindings are preserved. The first-item
+  discovery and activation experience still needs listening feedback. Changing
+  landing or first-Down behaviour is a separate decision, outside this
+  announcement-only change.
+
 - 2026-10-14: The full voice editor defaults to automatic samples. The focused
   tuner starts with explicit previews while preserving that editor preference.
 - 2026-10-14: Keep physical experiments and per-fallback/native controls in

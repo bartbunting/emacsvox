@@ -2761,5 +2761,67 @@
           (should (equal emacsvox-magit--git-results [1 nil])))
       (delete-process process))))
 
+(ert-deftest emacsvox-magit-transient-by-movement-navigation ()
+  "A real Magit menu uses section-only and item-only speech in all styles."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-transient)
+  (let ((directory (make-temp-file "emacsvox-magit-menu-" t)))
+    (unwind-protect
+        (save-window-excursion
+          (should (zerop (call-process "git" nil nil nil "-C" directory "init" "-q")))
+          (let ((default-directory (file-name-as-directory directory))
+                (emacsvox-speak-messages nil)
+                (emacsvox-transient-section-announcement-order 'by-movement)
+                (emacsvox-transient-verbose-descriptions nil)
+                (transient-show-menu 0) speech cues)
+            (cl-letf (((symbol-function 'tts-speak) #'ignore)
+                      ((symbol-function 'tts-stop) #'ignore)
+                      ((symbol-function 'emacsvox-icon) #'ignore)
+                      ((symbol-function 'emacsvox-aural-submit-actions) #'ignore)
+                      ((symbol-function 'emacsvox-aural-submit)
+                       (lambda (text &rest args)
+                         (push text speech)
+                         (push (mapcar #'emacsvox-aural-compatibility-action-value
+                                       (plist-get args :compatibility-actions)) cues))))
+              (magit-status-setup-buffer directory)
+              (local-set-key (kbd "<f8>") #'magit-dispatch)
+              (dolist (style '(continuous section-wrap section-stop))
+                (let ((emacsvox-transient-navigation-style style))
+                  (unwind-protect
+                      (progn
+                        (execute-kbd-macro (kbd "<f8>"))
+                        (transient--show)
+                        (let ((bindings (mapcar #'key-binding
+                                                (mapcar #'kbd '("RET" "<return>" "C-j" "M-RET")))))
+                          (execute-kbd-macro (kbd "<down> <right>"))
+                          (should (equal bindings (mapcar #'key-binding
+                                                        (mapcar #'kbd '("RET" "<return>" "C-j" "M-RET"))))))
+                        (let ((position (window-point transient--window)) heading choice command)
+                          (with-selected-window transient--window
+                            (let* ((sections (emacsvox-transient--sections))
+                                   (section (emacsvox-transient--section-at (point) sections))
+                                   (button (button-at (point)))
+                                   (object (button-get button 'button-data)))
+                              (setq heading (emacsvox-transient--section-text section sections)
+                                    choice (emacsvox-transient--choice-text object)
+                                    command (oref object command))))
+                          (should (equal (car speech) heading))
+                          (should (equal (car cues) '(section)))
+                          (should (commandp command))
+                          (execute-kbd-macro (kbd "C-u 0 <down>"))
+                          (should (= position (window-point transient--window)))
+                          (should (equal (car speech) choice))
+                          (with-selected-window transient--window
+                            (should (eq command (oref (button-get (button-at (point)) 'button-data) command)))))
+                        (execute-kbd-macro (kbd "<left>"))
+                        (should (string-match-p "1 of [0-9]+ sections" (car speech))))
+                    (when transient--prefix (execute-kbd-macro (kbd "C-g")))))))))
+      (dolist (buffer (buffer-list))
+        (when (and (buffer-live-p buffer)
+                   (string-prefix-p (file-name-as-directory directory)
+                                    (buffer-local-value 'default-directory buffer)))
+          (kill-buffer buffer)))
+      (delete-directory directory t))))
+
 (provide 'emacsvox-magit-tests)
 ;;; emacsvox-magit-tests.el ends here

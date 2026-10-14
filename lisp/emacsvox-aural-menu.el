@@ -239,6 +239,10 @@
    ("n" (lambda () (emacsvox-aural-menu--section-order-choice 'section-first "Section first"))
     (lambda () "Speak the section name and position before the item when changing sections."
       (interactive) (emacsvox-aural-menu--set-section-order 'section-first "Section first")) :transient t)
+   ("m" (lambda () (emacsvox-aural-menu--section-order-choice 'by-movement "By movement: sections or items"))
+    (lambda () "Speak sections with section arrows and items with item arrows.
+Section arrows still select the first item."
+      (interactive) (emacsvox-aural-menu--set-section-order 'by-movement "By movement: sections or items")) :transient t)
    ("v" (lambda ()
           (propertize
            (if emacsvox-transient-verbose-descriptions
