@@ -34,7 +34,7 @@
     (org "Org tables" org emacsvox-org emacsvox-org)
     (notmuch "Notmuch mail" notmuch emacsvox-notmuch emacsvox-notmuch)
     (eww "EWW browser" eww emacsvox-eww emacsvox-eww))
-  "Integration identifier, label, package library, speech feature, and Custom group.")
+  "Integration ID, label, package library, speech feature, and Custom group.")
 (defun emacsvox-settings-integrations--kind ()
   "Identify the integration belonging to the captured buffer."
   (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))

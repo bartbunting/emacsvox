@@ -133,7 +133,7 @@
         (unwind-protect
             (progn
               (execute-kbd-macro (kbd "m"))
-              (should (string-match-p "alternate" (emacsvox-aural-voice-menu--title)))
+              (should (string-match-p "choice 2" (emacsvox-aural-voice-menu--title)))
               (with-selected-window transient--window
                 (transient--goto-button (transient-suffix-object 'emacsvox-aural-voice-menu--pitch)))
               (emacsvox-aural-voice-menu--edit 'average-pitch nil t)

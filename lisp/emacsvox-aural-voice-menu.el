@@ -71,7 +71,7 @@ With INSPECT, only read editor state; do not disturb menu rendering."
               (transient--goto-button focus))))))))
 
 (defun emacsvox-aural-voice-menu--label (dimension)
-  "Describe the selected scope's DIMENSION, including changes and advertised support."
+  "Describe DIMENSION in the selected scope, with changes and support."
   (emacsvox-aural-voice-menu--call
    (lambda ()
      (let ((snapshot (emacsvox-aural-voice-editor--working)))
@@ -90,7 +90,12 @@ With INSPECT, only read editor state; do not disturb menu rendering."
              (emacsvox-aural-voice-editor--get :voice)
              (emacsvox-aural-voice-editor--get :palette)
              (if-let* ((row (emacsvox-aural-voice-editor--tuning-row)))
-                 (format "choice %s, %s" (plist-get row :id)
+                 (format "choice %s, %s"
+                         (1+ (cl-position (plist-get row :id)
+                                          (emacsvox-aural-voice-editing--rows
+                                           (emacsvox-aural-voice-editor--working))
+                                          :key (lambda (item) (plist-get item :id))
+                                          :test #'equal))
                          (emacsvox-aural-voice-workbench--selector-description (plist-get row :selector)))
                "shared tuning")
              (plist-get (emacsvox-aural-voice-drafts--status

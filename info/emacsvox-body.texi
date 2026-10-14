@@ -2966,8 +2966,7 @@ and its major mode's Customize group when available. This entry starts with
 buffer scope without changing the parent's scope. @kbd{A} opens the advanced
 Emacsvox Customize group. In these linked Customize buffers@comma{} @kbd{q} finishes
 Customize normally and returns to the menu; use Customize's own Apply and Save
-commands. Integration-specific controls remain accessible through existing
-commands and advanced settings while their focused menus are developed.
+commands. Integration speech settings are described below.
 
 Press @kbd{C-e H f} for current and recent feedback editing. @kbd{x} explains the
 captured item's effective presentation; @kbd{c} opens a guided voice@comma{} cue@comma{} or tone
@@ -3007,6 +3006,19 @@ for the adapter default@comma{} and zero is an explicit adjustment. Play and Com
 use that selected scope. @code{e} opens the existing engine-specific editor@comma{} which
 waits for a qualified runtime catalogue before allowing changes. Its @code{q} returns
 to the common editor; @code{m} reopens focused tuning with the same draft and scope.
+
+Use @code{C-e H d} to review changed settings and retained drafts. The read-only table
+separates the captured buffer's current value@comma{} the current global default@comma{} and
+the saved startup value known to Customize. It includes loaded Emacsvox@comma{} TTS@comma{}
+and Omnivox options that are saved@comma{} locally overridden@comma{} or differ from their
+standard value. Saved expressions are shown as recorded by Customize. Enter
+reads the complete row with its scopes; @code{g} refreshes and @code{q} returns.
+
+Unfinished editor and cue drafts appear separately. Voice@comma{} rule@comma{} and host
+pronunciation stores retain their own save/apply rules. This snapshot does not
+reread disk files@comma{} query the speech host@comma{} prove that a saved setting is active@comma{}
+or include options from integrations that have not loaded. Return to the owning
+settings menu or editor to change a value@comma{} save it@comma{} or apply a required restart.
 
 Speech settings opens for the current buffer. Press @kbd{g} there to switch to
 global defaults@comma{} or start with @kbd{C-u C-e H}. Indentation shares this scope with

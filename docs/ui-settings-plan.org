@@ -585,3 +585,33 @@ verification of subsequently changed code.
   passed 64 source and compiled graphical checks and the build/documentation
   gates. Actual voice sound and native-engine availability still need listening
   and runtime acceptance on the normal speech host.
+
+- Changed settings is available at =C-e H d= and from current-buffer/saved-setup
+  settings. It distinguishes local values, current global defaults, Customize's
+  known saved values, and retained editor/cue drafts. It is a read-only snapshot
+  of loaded options, not a disk/host reconciliation or a combined Save action.
+  Voice tuning passed 114 source and compiled graphical/protocol checks, including
+  native qualification. Its discovery-timer fixture is isolated from unrelated
+  GUI timers so combined tests can exercise real graphical navigation reliably.
+
+- Final automated verification passed: 279 graphical regression checks with
+  source preferred, 279 in a fresh Emacs using current byte-code and installed
+  Transient (including Magit), and 278 with bundled Transient. Those selected
+  runs had no skips. Loaded paths were checked for the new settings modules,
+  voice editor, and Transient. The optional native punctuation service round
+  trip remains excluded because its test program is unconfigured. Incremental
+  compilation and byte-code preflight passed; generated manuals are updated.
+
+- All six workflow slices are implemented. Existing editors retain their editing
+  models and storage ownership. Remaining migration work includes further editor
+  interaction improvements, diagnostics/recovery links, and integration inventory
+  beyond Agent Shell, EAT/comint, Org, Notmuch, and EWW. The changed-settings view
+  covers loaded options and retained drafts; disk/host reconciliation remains
+  outside its scope.
+
+- Listening acceptance remains open. Start a fresh normal Emacsvox profile and
+  try =C-e H f=, =r=, =p=, =j=, and =d=, plus =m= in a named-voice editor.
+  Check return focus, concise speech, draft resumption, fallback selection,
+  shared/default/zero distinctions, and Play/Compare. Native engine controls
+  still need the normal host's live catalogue and listening checks. Automated
+  preview requests and mocked runtime replies do not establish acoustic results.

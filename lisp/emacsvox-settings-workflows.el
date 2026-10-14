@@ -27,6 +27,12 @@
 ;; Link focused menus to existing editors, retaining their persistence semantics.
 ;;; Code:
 (require 'emacsvox-aural-menu)
+(declare-function emacsvox-aural-feedback-outline-mode "emacsvox-aural-feedback-details" (&optional arg))
+(declare-function emacsvox-aural-change-feedback--remap-at-point "emacsvox-aural-change-feedback" ())
+(declare-function emacsvox-aural-remap-earcon-at-point "emacsvox-aural-tools" (&optional record))
+(declare-function emacsvox-edit-aural-rules "emacsvox-aural-editor" (scope &optional fragment source-buffer))
+(declare-function emacsvox-aural-home--goto "emacsvox-aural-home" (id))
+(declare-function emacsvox-aural-home-speak-current "emacsvox-aural-home" (&optional include-context))
 
 (defun emacsvox-settings-workflows--open (feature command suffix &optional at-item)
   "Open COMMAND from FEATURE, returning to SUFFIX; optionally use captured AT-ITEM."
@@ -170,6 +176,7 @@
    ("p" "Presentation profiles: inspect, create, activate" emacsvox-settings-workflows--profiles :transient transient--do-suspend)
    ("v" "Palettes: inheritance, reset, import and export" emacsvox-settings-workflows--palettes :transient transient--do-suspend)]
   ["Unfinished work"
+   ("c" "Changed settings, saved defaults and drafts" emacsvox-settings-changes :transient transient--do-suspend)
    ("d" "Resume drafts (Home chooser)" emacsvox-settings-workflows--drafts :transient transient--do-suspend)]
   ["Finish"
    ("q" "Back" transient-quit-one)

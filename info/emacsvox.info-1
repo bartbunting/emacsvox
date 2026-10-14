@@ -3009,9 +3009,7 @@ group when available.  This entry starts with buffer scope without
 changing the parent's scope.  ‘A’ opens the advanced Emacsvox Customize
 group.  In these linked Customize buffers, ‘q’ finishes Customize
 normally and returns to the menu; use Customize's own Apply and Save
-commands.  Integration-specific controls remain accessible through
-existing commands and advanced settings while their focused menus are
-developed.
+commands.  Integration speech settings are described below.
 
    Press ‘C-e H f’ for current and recent feedback editing.  ‘x’
 explains the captured item's effective presentation; ‘c’ opens a guided
@@ -3058,6 +3056,21 @@ an explicit adjustment.  Play and Compare use that selected scope.  ‘e’
 opens the existing engine-specific editor, which waits for a qualified
 runtime catalogue before allowing changes.  Its ‘q’ returns to the
 common editor; ‘m’ reopens focused tuning with the same draft and scope.
+
+   Use ‘C-e H d’ to review changed settings and retained drafts.  The
+read-only table separates the captured buffer's current value, the
+current global default, and the saved startup value known to Customize.
+It includes loaded Emacsvox, TTS, and Omnivox options that are saved,
+locally overridden, or differ from their standard value.  Saved
+expressions are shown as recorded by Customize.  Enter reads the
+complete row with its scopes; ‘g’ refreshes and ‘q’ returns.
+
+   Unfinished editor and cue drafts appear separately.  Voice, rule, and
+host pronunciation stores retain their own save/apply rules.  This
+snapshot does not reread disk files, query the speech host, prove that a
+saved setting is active, or include options from integrations that have
+not loaded.  Return to the owning settings menu or editor to change a
+value, save it, or apply a required restart.
 
    Speech settings opens for the current buffer.  Press ‘g’ there to
 switch to global defaults, or start with ‘C-u C-e H’.  Indentation

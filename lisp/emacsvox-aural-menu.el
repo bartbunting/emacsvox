@@ -38,6 +38,7 @@
 
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
+(autoload 'emacsvox-settings-changes "emacsvox-settings-changes" nil t)
 (autoload 'emacsvox-settings-integrations "emacsvox-settings-integrations" nil t)
 (autoload 'emacsvox-settings-setups "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-presentation "emacsvox-settings-workflows" nil t)
@@ -811,6 +812,7 @@ The source item is captured on entry; Aural Home offers all other actions."
     emacsvox-aural-menu-speech)
    ("o" "Sounds and output (global)" emacsvox-aural-menu-sounds)
    ("v" "Voices and engines" emacsvox-aural-menu-voices)
+   ("d" "Changed settings and drafts" emacsvox-settings-changes :transient transient--do-suspend)
    ("j" "Integration settings" emacsvox-settings-integrations :transient transient--do-stack)
    ("p" "Saved setups and drafts" emacsvox-settings-setups :transient transient--do-stack)
    ("r" "Presentation and rules" emacsvox-settings-presentation :transient transient--do-stack)
