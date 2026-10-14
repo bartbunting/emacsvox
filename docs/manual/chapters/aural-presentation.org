@@ -64,8 +64,15 @@ Left/right moves between sections in every style. Changes apply immediately
 to all Transient menus, independently of the current-buffer settings scope.
 Wrap within section is the default. In the Presentation section, choose ~i~
 for Item first or ~n~ for Section first. Item first is the default; Section
-first speaks the section name and position before the item. Press ~S~ to save
-both the navigation style and presentation order through Customize.
+first speaks the section name and position before the item.
+
+Press ~v~ to toggle Detailed descriptions. When enabled, menu items retain
+their labels and values and add a short command explanation. This applies
+globally, including Magit; commands without documentation keep their labels,
+and Transient's native infix controls keep their usual descriptions. Detailed
+descriptions are on by default. Value adjustments still give brief feedback.
+Press ~S~ to save the navigation style, presentation order, and descriptions
+preference through Customize.
 
 Speech settings opens for the current buffer. Press ~g~ there to switch to
 global defaults, or start with ~C-u C-e H~. Indentation shares this scope with

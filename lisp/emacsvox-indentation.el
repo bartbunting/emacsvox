@@ -85,7 +85,7 @@
         '(pitch-tone duration-tone spoken-pitch-tone spoken-duration-tone)))
 
 (defun emacsvox-indentation--scope ()
-  "Switch between current-buffer settings and global defaults."
+  "Choose whether subsequent changes affect this buffer or global defaults."
   (interactive)
   (let ((state (emacsvox-indentation--state)))
     (setcdr state (not (cdr state)))
@@ -93,7 +93,7 @@
      (if (cdr state) "Editing global defaults" "Editing current buffer"))))
 
 (defun emacsvox-indentation--toggle ()
-  "Toggle indentation feedback in the selected scope."
+  "Turn indentation feedback on or off for this buffer or global defaults."
   (interactive)
   (let ((enabled (not (emacsvox-indentation--value 'emacsvox-audio-indentation))))
     (emacsvox-indentation--set 'emacsvox-audio-indentation enabled
@@ -103,7 +103,7 @@
                                (if enabled 'on 'off)))))
 
 (defun emacsvox-indentation--preview ()
-  "Preview four-column indentation using the settings shown in the menu."
+  "Hear a four-column sample using these settings, even when feedback is off."
   (interactive)
   (let ((presentation (emacsvox-indentation--value 'emacsvox-indentation-presentation))
         (timing (emacsvox-indentation--value 'emacsvox-indentation-tone-timing)))
@@ -114,7 +114,8 @@
         (emacsvox-speak--preview-indentation-presentation)))))
 
 (defun emacsvox-indentation--volume (&optional delta)
-  "Set global tone volume, or adjust it by DELTA percentage points."
+  "Enter a volume from 0 to 100 for all main-stream tones.
+When called from Lisp, adjust by DELTA percentage points if non-nil."
   (interactive)
   (emacsvox-indentation--source)
   (let ((value (if delta
@@ -126,7 +127,8 @@
     (emacsvox-indentation--say (format "%d percent" value))))
 
 (defun emacsvox-indentation--save ()
-  "Save global indentation defaults and main-stream tone volume."
+  "Keep global indentation settings and tone volume across restarts.
+Switch to Global defaults before saving; buffer-local choices are not saved."
   (interactive)
   (emacsvox-indentation--source)
   (unless (cdr (emacsvox-indentation--state))
@@ -164,31 +166,42 @@ affects all main-stream Omnivox tones, independently of the selected scope."
     emacsvox-indentation--toggle :transient t)]
   ["Presentation"
    ("s" (lambda () (emacsvox-indentation--choice 'emacsvox-indentation-presentation 'spoken "Spoken column"))
-    (lambda () (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'spoken "Spoken column")) :transient t)
+    (lambda () "Speak the indentation column number."
+      (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'spoken "Spoken column")) :transient t)
    ("p" (lambda () (emacsvox-indentation--choice 'emacsvox-indentation-presentation 'pitch-tone "Pitch tone"))
-    (lambda () (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'pitch-tone "Pitch tone")) :transient t)
+    (lambda () "Use a higher pitch for deeper indentation, with a fixed tone duration."
+      (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'pitch-tone "Pitch tone")) :transient t)
    ("d" (lambda () (emacsvox-indentation--choice 'emacsvox-indentation-presentation 'duration-tone "Duration tone"))
-    (lambda () (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'duration-tone "Duration tone")) :transient t)
+    (lambda () "Use a longer tone for deeper indentation, with a fixed pitch."
+      (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'duration-tone "Duration tone")) :transient t)
    ("P" (lambda () (emacsvox-indentation--choice 'emacsvox-indentation-presentation 'spoken-pitch-tone "Spoken column and pitch tone"))
-    (lambda () (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'spoken-pitch-tone "Spoken column and pitch tone")) :transient t)
+    (lambda () "Speak the column number and use a higher pitch for deeper indentation."
+      (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'spoken-pitch-tone "Spoken column and pitch tone")) :transient t)
    ("D" (lambda () (emacsvox-indentation--choice 'emacsvox-indentation-presentation 'spoken-duration-tone "Spoken column and duration tone"))
-    (lambda () (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'spoken-duration-tone "Spoken column and duration tone")) :transient t)
+    (lambda () "Speak the column number and use a longer tone for deeper indentation."
+      (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'spoken-duration-tone "Spoken column and duration tone")) :transient t)
    ("c" (lambda () (emacsvox-indentation--choice 'emacsvox-indentation-presentation 'custom "Personal rules"))
-    (lambda () (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'custom "Personal rules")) :transient t)
+    (lambda () "Use your aural rules to present indentation instead of a built-in style."
+      (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'custom "Personal rules")) :transient t)
    ("n" (lambda () (emacsvox-indentation--choice 'emacsvox-indentation-presentation 'none "No indication"))
-    (lambda () (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'none "No indication")) :transient t)]
+    (lambda () "Suppress the built-in spoken column and indentation tone."
+      (interactive) (emacsvox-indentation--set 'emacsvox-indentation-presentation 'none "No indication")) :transient t)]
   ["Tone timing"
    ("b" (lambda () (emacsvox-indentation--choice 'emacsvox-indentation-tone-timing 'insert "Before speech"))
-    (lambda () (interactive) (emacsvox-indentation--set 'emacsvox-indentation-tone-timing 'insert "Tone before speech"))
+    (lambda () "Finish the indentation tone before speaking the line."
+      (interactive) (emacsvox-indentation--set 'emacsvox-indentation-tone-timing 'insert "Tone before speech"))
     :inapt-if-not emacsvox-indentation--tonal-p :transient t)
    ("a" (lambda () (emacsvox-indentation--choice 'emacsvox-indentation-tone-timing 'overlay "Alongside speech"))
-    (lambda () (interactive) (emacsvox-indentation--set 'emacsvox-indentation-tone-timing 'overlay "Tone alongside speech"))
+    (lambda () "Play the indentation tone at the same time as the line is spoken."
+      (interactive) (emacsvox-indentation--set 'emacsvox-indentation-tone-timing 'overlay "Tone alongside speech"))
     :inapt-if-not emacsvox-indentation--tonal-p :transient t)]
   ["All main-stream tones (global)"
    ("v" (lambda () (format "Volume: %d percent" (default-value 'tts-main-tone-volume)))
     emacsvox-indentation--volume :transient t)
-   ("-" "Volume down 5 percent" (lambda () (interactive) (emacsvox-indentation--volume -5)) :transient t)
-   ("+" "Volume up 5 percent" (lambda () (interactive) (emacsvox-indentation--volume 5)) :transient t)]
+   ("-" "Volume down 5 percent" (lambda () "Lower all main-stream tones by five percentage points; speech volume stays unchanged."
+      (interactive) (emacsvox-indentation--volume -5)) :transient t)
+   ("+" "Volume up 5 percent" (lambda () "Raise all main-stream tones by five percentage points; speech volume stays unchanged."
+      (interactive) (emacsvox-indentation--volume 5)) :transient t)]
   ["Try and finish"
    ("SPC" "Preview four-column indentation" emacsvox-indentation--preview :transient t)
    ("S" "Save global defaults and volume" emacsvox-indentation--save

@@ -99,6 +99,27 @@ applies globally and does not affect movement within a section."
                  (const :tag "Section first" section-first))
   :group 'emacsvox)
 
+(defcustom emacsvox-transient-verbose-descriptions t
+  "Whether Transient items include their command documentation summaries.
+When enabled, retain each label and value and add the first line of the
+command's docstring.  This applies to all Transient menus, including Magit.
+Items without command documentation keep their labels; Transient's native
+infix controls keep their usual descriptions."
+  :type 'boolean
+  :group 'emacsvox)
+
+(defun emacsvox--advice-transient-format-description-around (original object)
+  "Format OBJECT with ORIGINAL, optionally adding command summaries."
+  (let ((transient--docsp (or emacsvox-transient-verbose-descriptions
+                             transient--docsp))
+        (transient-show-docstring-format
+         (if emacsvox-transient-verbose-descriptions "%c. %s"
+           transient-show-docstring-format)))
+    (funcall original object)))
+
+(advice-add 'transient-format-description :around
+            #'emacsvox--advice-transient-format-description-around)
+
 ;;; Map Faces:
 
 (defconst emacsvox-transient--face-voice-map
@@ -351,7 +372,7 @@ Section context is announced when navigation enters a section."
          label
          (when (and description infix)
            (concat ", " (emacsvox-transient--infix-state object)))
-         ". "
+         (if (string-suffix-p "." label) " " ". ")
          (when (oref object inapt) "Unavailable. ")
          (emacsvox-transient--key-text (oref object key)) ".")))))
 

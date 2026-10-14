@@ -2922,8 +2922,15 @@ Left/right moves between sections in every style. Changes apply immediately
 to all Transient menus@comma{} independently of the current-buffer settings scope.
 Wrap within section is the default. In the Presentation section@comma{} choose @kbd{i}
 for Item first or @kbd{n} for Section first. Item first is the default; Section
-first speaks the section name and position before the item. Press @kbd{S} to save
-both the navigation style and presentation order through Customize.
+first speaks the section name and position before the item.
+
+Press @kbd{v} to toggle Detailed descriptions. When enabled@comma{} menu items retain
+their labels and values and add a short command explanation. This applies
+globally@comma{} including Magit; commands without documentation keep their labels@comma{}
+and Transient's native infix controls keep their usual descriptions. Detailed
+descriptions are on by default. Value adjustments still give brief feedback.
+Press @kbd{S} to save the navigation style@comma{} presentation order@comma{} and descriptions
+preference through Customize.
 
 Speech settings opens for the current buffer. Press @kbd{g} there to switch to
 global defaults@comma{} or start with @kbd{C-u C-e H}. Indentation shares this scope with

@@ -71,7 +71,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1634 commands and 231 options.
+This chapter documents a total of 1634 commands and 232 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -3699,7 +3699,7 @@ The source item is captured on entry; Aural Home offers all other actions.
 @findex emacsvox-aural-menu-navigation
 
 @format
-Choose navigation for all Transient menus; Left and Right change sections.
+Choose arrow navigation, announcement order, and descriptions for all menus.
 @end format
 @end deffn
 
@@ -21803,12 +21803,12 @@ I use the following customizations via .custom, adjust to taste,
 but use these only after reading the transient info documentations.
 @itemize
 @item transient-force-single-column: t
-@item  transient-show-menu:  1
+@item transient-show-menu: t
 @item transient-enable-menu-navigation:  t
 @end itemize
 
-this pops up the transient buffer after a short delay  and lets
-you move through the buttons with the    up/down arrows.
+This displays the menu immediately and lets you move through its
+buttons with the up/down arrows.
 @subsection Browsing Contents Of transient--show
 
 When executing a command defined via Transient --- e.g. command
@@ -21885,6 +21885,24 @@ Default Value:
 @verbatim
 
 item-first
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-transient-verbose-descriptions
+@verbatim
+Whether Transient items include their command documentation summaries.
+When enabled, retain each label and value and add the first line of the
+command’s docstring.  This applies to all Transient menus, including Magit.
+Items without command documentation keep their labels; Transient’s native
+infix controls keep their usual descriptions.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
 
 @end verbatim
 

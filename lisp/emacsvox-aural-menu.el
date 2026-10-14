@@ -84,7 +84,7 @@
           (call-interactively command))))))
 
 (defun emacsvox-aural-menu--feedback ()
-  "Open Feedback Details for the captured item."
+  "Inspect how the source item was spoken; q returns to this menu."
   (interactive)
   (let ((context (emacsvox-aural-menu--context)))
     (emacsvox-aural-menu--call-at-item #'emacsvox-explain-aural-presentation)
@@ -103,7 +103,7 @@
     t))
 
 (defun emacsvox-aural-menu--home ()
-  "Open all Aural Home actions at the captured item."
+  "Open Aural Home for all voice, sound, rule, and feedback tools."
   (interactive)
   (emacsvox-aural-menu--call-at-item #'emacsvox-aural))
 
@@ -113,7 +113,7 @@
       "Global defaults" "Current buffer"))
 
 (defun emacsvox-aural-menu--toggle-scope ()
-  "Switch settings scope without changing any settings."
+  "Choose whether subsequent changes affect this buffer or global defaults."
   (interactive)
   (let* ((context (emacsvox-aural-menu--context))
          (source (emacsvox-aural-menu--source context))
@@ -141,7 +141,7 @@
              (symbol-name (funcall value 'emacsvox-indentation-presentation))))))
 
 (defun emacsvox-aural-menu--indentation ()
-  "Open Indentation with the source and scope shared by its parent."
+  "Choose spoken indentation or tones, their timing, and tone volume."
   (interactive)
   (let* ((context (emacsvox-aural-menu--context))
          (source (emacsvox-aural-menu--source context)))
@@ -165,12 +165,14 @@
    'state-change 'select-object))
 
 (defun emacsvox-aural-menu--save-navigation ()
-  "Save global navigation style and section announcement order through Customize."
+  "Keep navigation, announcement order, and description preferences across restarts."
   (interactive)
   (customize-save-variable 'emacsvox-transient-navigation-style
                            emacsvox-transient-navigation-style)
   (customize-save-variable 'emacsvox-transient-section-announcement-order
                            emacsvox-transient-section-announcement-order)
+  (customize-save-variable 'emacsvox-transient-verbose-descriptions
+                           emacsvox-transient-verbose-descriptions)
   (emacsvox-transient--submit-text
    "Saved menu defaults"
    (emacsvox-transient--menu-facts 'save-navigation 'operation-completed)
@@ -192,21 +194,48 @@
     'value 'section-announcement-order 'command-menu-value-changed '(selected))
    'state-change 'select-object))
 
+(defun emacsvox-aural-menu--toggle-descriptions ()
+  "Include command explanations in all Transient menus, including Magit."
+  (interactive)
+  (customize-set-variable 'emacsvox-transient-verbose-descriptions
+                          (not emacsvox-transient-verbose-descriptions))
+  (emacsvox-transient--submit-text
+   (if emacsvox-transient-verbose-descriptions
+       "Detailed descriptions on" "Detailed descriptions off")
+   (emacsvox-transient--item-facts
+    'value 'verbose-descriptions 'command-menu-value-changed
+    (when emacsvox-transient-verbose-descriptions '(selected)))
+   'state-change (if emacsvox-transient-verbose-descriptions 'on 'off)))
+
 (transient-define-prefix emacsvox-aural-menu-navigation ()
-  "Choose navigation for all Transient menus; Left and Right change sections."
+  "Choose arrow navigation, announcement order, and descriptions for all menus."
   :refresh-suffixes t
   ["Navigation style (global)"
    ("c" (lambda () (emacsvox-aural-menu--navigation-choice 'continuous "Continuous"))
-    (lambda () (interactive) (emacsvox-aural-menu--set-navigation 'continuous "Continuous")) :transient t)
+    (lambda () "Move up/down across sections and wrap around the whole menu."
+      (interactive) (emacsvox-aural-menu--set-navigation 'continuous "Continuous")) :transient t)
    ("w" (lambda () (emacsvox-aural-menu--navigation-choice 'section-wrap "Wrap within section"))
-    (lambda () (interactive) (emacsvox-aural-menu--set-navigation 'section-wrap "Wrap within section")) :transient t)
+    (lambda () "Cycle up/down within this section; use left/right to change sections."
+      (interactive) (emacsvox-aural-menu--set-navigation 'section-wrap "Wrap within section")) :transient t)
    ("s" (lambda () (emacsvox-aural-menu--navigation-choice 'section-stop "Stop at section edges"))
-    (lambda () (interactive) (emacsvox-aural-menu--set-navigation 'section-stop "Stop at section edges")) :transient t)]
+    (lambda () "Stop up/down at section edges; use left/right to change sections."
+      (interactive) (emacsvox-aural-menu--set-navigation 'section-stop "Stop at section edges")) :transient t)]
   ["Presentation (global)"
    ("i" (lambda () (emacsvox-aural-menu--section-order-choice 'item-first "Item first"))
-    (lambda () (interactive) (emacsvox-aural-menu--set-section-order 'item-first "Item first")) :transient t)
+    (lambda () "Speak the item before the section name and position when changing sections."
+      (interactive) (emacsvox-aural-menu--set-section-order 'item-first "Item first")) :transient t)
    ("n" (lambda () (emacsvox-aural-menu--section-order-choice 'section-first "Section first"))
-    (lambda () (interactive) (emacsvox-aural-menu--set-section-order 'section-first "Section first")) :transient t)]
+    (lambda () "Speak the section name and position before the item when changing sections."
+      (interactive) (emacsvox-aural-menu--set-section-order 'section-first "Section first")) :transient t)
+   ("v" (lambda ()
+          (propertize
+           (if emacsvox-transient-verbose-descriptions
+               "Detailed descriptions: on" "Detailed descriptions: off")
+           'emacsvox-transient-toggle-state
+           (if emacsvox-transient-verbose-descriptions 'on 'off)
+           emacsvox-aural-facts-property
+           (when emacsvox-transient-verbose-descriptions '(:states (selected)))))
+    emacsvox-aural-menu--toggle-descriptions :transient t)]
   ["Save and finish"
    ("S" "Save as default" emacsvox-aural-menu--save-navigation :transient t)
    ("q" "Back (keep changes)" transient-quit-one)

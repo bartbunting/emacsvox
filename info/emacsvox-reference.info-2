@@ -8971,11 +8971,11 @@ available commands can be very long.
 I use the following customizations via .custom, adjust to taste, but use
 these only after reading the transient info documentations.
    • transient-force-single-column: t
-   • transient-show-menu: 1
+   • transient-show-menu: t
    • transient-enable-menu-navigation: t
 
-   this pops up the transient buffer after a short delay and lets you
-move through the buttons with the up/down arrows.
+   This displays the menu immediately and lets you move through its
+buttons with the up/down arrows.
 
 2.247.3 Browsing Contents Of transient-show
 -------------------------------------------
@@ -9039,6 +9039,18 @@ transient; Pressing ‘C-q’ quits the transient.
      Default Value:
 
      item-first
+
+
+ -- Variable: User Option emacsvox-transient-verbose-descriptions
+     Whether Transient items include their command documentation summaries.
+     When enabled, retain each label and value and add the first line of the
+     command’s docstring.  This applies to all Transient menus, including Magit.
+     Items without command documentation keep their labels; Transient’s native
+     infix controls keep their usual descriptions.
+
+     Default Value:
+
+     t
 
 
 

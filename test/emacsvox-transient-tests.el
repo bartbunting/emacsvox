@@ -19,6 +19,8 @@
 (defconst emacsvox-test--transient-advice
   '((transient-toggle-common :after
                              emacsvox--advice-transient-toggle-common-after)
+    (transient-format-description :around
+                                  emacsvox--advice-transient-format-description-around)
     (transient-resume :around
                       emacsvox--advice-transient-resume-around)
     (transient-quit-all :after
@@ -616,7 +618,8 @@
       (switch-to-buffer (current-buffer))
       (use-local-map (make-sparse-keymap))
       (local-set-key (kbd "<f8>") #'emacsvox-test--navigation-menu)
-      (let ((emacsvox-transient-navigation-style 'continuous)
+      (let ((emacsvox-transient-verbose-descriptions nil)
+            (emacsvox-transient-navigation-style 'continuous)
             (transient-show-menu 0)
             (emacsvox-transient--announced-prefix nil)
             (emacsvox-transient--announced-stack nil)
@@ -677,7 +680,8 @@
         (switch-to-buffer (current-buffer))
         (use-local-map (make-sparse-keymap))
         (local-set-key (kbd "<f8>") #'emacsvox-test--navigation-menu)
-        (let ((emacsvox-transient-navigation-style style)
+        (let ((emacsvox-transient-verbose-descriptions nil)
+              (emacsvox-transient-navigation-style style)
               (transient-show-menu 0)
               speech cues boundaries)
           (cl-letf (((symbol-function 'emacsvox-aural-submit)
@@ -740,7 +744,8 @@
       (switch-to-buffer (current-buffer))
       (use-local-map (make-sparse-keymap))
       (local-set-key (kbd "<f8>") #'emacsvox-test--navigation-menu)
-      (let ((transient-show-menu 0)
+      (let ((emacsvox-transient-verbose-descriptions nil)
+            (transient-show-menu 0)
             (emacsvox-transient-section-announcement-order 'item-first)
             speech cues)
         (cl-letf (((symbol-function 'emacsvox-aural-submit)
@@ -808,7 +813,8 @@
 
 (ert-deftest emacsvox-transient-choice-text-distinguishes-state-and-shortcut ()
   "Switches, entered values, and destinations have self-contained spoken labels."
-  (let ((switch (transient-switch :command 'ignore :key "-n"
+  (let ((emacsvox-transient-verbose-descriptions nil)
+        (switch (transient-switch :command 'ignore :key "-n"
                                   :description "Dry run" :argument "--dry-run"))
         (option (transient-option :command 'ignore :key "-L"
                                   :description "Limit" :argument "--limit="))
@@ -828,6 +834,31 @@
                    "origin/master. u."))
     (oset destination inapt t)
     (should (string-match-p "Unavailable" (emacsvox-transient--choice-text destination)))))
+
+(ert-deftest emacsvox-transient-detailed-descriptions-preserve-label-and-state ()
+  "Global detail adds native documentation without losing labels or choice facts."
+  (let* ((emacsvox-transient-verbose-descriptions t)
+         (transient--docsp nil)
+         (transient-show-docstring-format "%s")
+         (object (transient-suffix
+                  :command 'ignore :key "x"
+                  :description (propertize "Choice (selected)"
+                                          emacsvox-aural-facts-property
+                                          '(:states (selected)))))
+         (text (emacsvox-transient--choice-text object)))
+    (should (string-prefix-p "Choice (selected). Ignore ARGUMENTS" text))
+    (should (string-suffix-p ". x." text))
+    (should (emacsvox-transient--choice-selected-p object text))
+    (should-not transient--docsp)
+    (should (equal transient-show-docstring-format "%s"))
+    (let ((emacsvox-transient-verbose-descriptions nil))
+      (should (equal (emacsvox-transient--choice-text object)
+                     "Choice (selected). x.")))
+    (oset object command 'emacsvox-test--undocumented-action)
+    (cl-letf (((symbol-function 'emacsvox-test--undocumented-action)
+               (lambda () (interactive))))
+      (should (equal (emacsvox-transient--choice-text object)
+                     "Choice (selected). x.")))))
 
 (ert-deftest emacsvox-transient-key-text-preserves-case-and-prefixes ()
   "Speech differentiates uppercase shortcuts and modifier sequences."
