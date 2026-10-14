@@ -141,5 +141,41 @@
   (interactive)
   (transient-setup 'emacsvox-settings-presentation nil nil :scope (emacsvox-aural-menu--context)))
 
+(defun emacsvox-settings-workflows--profiles ()
+  "Manage saved presentation profiles using their existing activation rules."
+  (interactive)
+  (emacsvox-settings-workflows--open 'emacsvox-aural-profiles
+   #'emacsvox-aural-list-profiles 'emacsvox-settings-workflows--profiles))
+(defun emacsvox-settings-workflows--palettes ()
+  "Manage palette inheritance, reset, import, portable export, and full backup."
+  (interactive)
+  (emacsvox-settings-workflows--open 'emacsvox-aural-voice-palettes
+   #'emacsvox-aural-list-voice-palettes 'emacsvox-settings-workflows--palettes))
+(defun emacsvox-settings-workflows--drafts ()
+  "Open Home at retained drafts, preserving its established editor return paths."
+  (interactive)
+  (emacsvox-settings-workflows--open 'emacsvox-aural-home
+   (lambda ()
+     (interactive)
+     (emacsvox-aural)
+     (with-current-buffer "*Emacsvox Aural*"
+       (emacsvox-aural-home--goto 'drafts)
+       (emacsvox-aural-home-speak-current)))
+   'emacsvox-settings-workflows--drafts t))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-setups ()
+  "Manage saved setups and retained drafts in their owning editors."
+  ["Saved setups: activation and startup are separate"
+   ("p" "Presentation profiles: inspect, create, activate" emacsvox-settings-workflows--profiles :transient transient--do-suspend)
+   ("v" "Palettes: inheritance, reset, import and export" emacsvox-settings-workflows--palettes :transient transient--do-suspend)]
+  ["Unfinished work"
+   ("d" "Resume drafts (Home chooser)" emacsvox-settings-workflows--drafts :transient transient--do-suspend)]
+  ["Finish"
+   ("q" "Back" transient-quit-one)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-setups nil nil :scope (emacsvox-aural-menu--context)))
+
 (provide 'emacsvox-settings-workflows)
 ;;; emacsvox-settings-workflows.el ends here

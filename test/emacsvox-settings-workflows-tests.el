@@ -75,5 +75,39 @@
         (insert-file-contents custom-file)
         (should (search-forward "emacsvox-aural-face-presentation-enabled nil" nil t))))))
 
+(ert-deftest emacsvox-settings-workflows-setups-return-without-activation ()
+  "Opening profile and palette managers changes no setup or persistent data."
+  (emacsvox-test--with-settings
+    (let ((before (emacsvox-aural-read-user-data)))
+      (execute-kbd-macro (kbd "p p"))
+      (should (derived-mode-p 'emacsvox-aural-profiles-mode))
+      (execute-kbd-macro (kbd "q"))
+      (should (eq (oref transient--prefix command) 'emacsvox-settings-setups))
+      (execute-kbd-macro (kbd "v"))
+      (should (derived-mode-p 'emacsvox-aural-voice-palettes-mode))
+      (should (eq (key-binding (kbd "i")) 'emacsvox-aural-voice-palettes-import))
+      (should (eq (key-binding (kbd "w")) 'emacsvox-aural-voice-palettes-export))
+      (should (eq (key-binding (kbd "W")) 'emacsvox-aural-voice-palettes-backup))
+      (should (eq (key-binding (kbd "R")) 'emacsvox-aural-voice-palettes-reset-entry))
+      (execute-kbd-macro (kbd "q"))
+      (with-selected-window transient--window
+        (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                    'emacsvox-settings-workflows--palettes)))
+      (should (equal before (emacsvox-aural-read-user-data)))
+      (should-not (file-exists-p custom-file)))))
+
+(ert-deftest emacsvox-settings-workflows-draft-home-return ()
+  "The draft route opens the actual Home row and returns to Saved setups."
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "p d"))
+    (should (derived-mode-p 'emacsvox-aural-home-mode))
+    (should (eq (tabulated-list-get-id) 'drafts))
+    (should (eq (emacsvox-aural-inspection-source-buffer) source))
+    (execute-kbd-macro (kbd "q"))
+    (should (eq (oref transient--prefix command) 'emacsvox-settings-setups))
+    (with-selected-window transient--window
+      (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                  'emacsvox-settings-workflows--drafts)))))
+
 (provide 'emacsvox-settings-workflows-tests)
 ;;; emacsvox-settings-workflows-tests.el ends here

@@ -6919,6 +6919,13 @@ semantics.
 
      Manage presentation features and explicitly scoped rule drafts.
 
+2.228.1.3 emacsvox-settings-setups
+..................................
+
+ -- Command: emacsvox-settings-setups
+
+     Manage saved setups and retained drafts in their owning editors.
+
 
 File: emacsvox-reference.info,  Node: emacsvox-setup,  Next: emacsvox-sgml-mode,  Prev: emacsvox-settings-workflows,  Up: Emacsvox Commands And Options
 

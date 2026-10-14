@@ -562,3 +562,10 @@ verification of subsequently changed code.
   remains authoritative. Global visual-face presentation has a separate explicit
   Customize save. Contextual feedback committed as =3f246446f=; its 57 source and
   compiled graphical checks, build, documentation, and header gates passed.
+
+- Saved setups is linked at =C-e H p=: profile inspection and activation,
+  palette inheritance/reset and exchange, and the existing retained-draft
+  chooser in Home. Portable export and full local backup remain distinct;
+  importing does not activate a palette. Tests cover manager ownership, exact
+  return, and opening without persistence. Presentation/rules passed 59 source
+  and compiled graphical checks plus build and documentation gates.

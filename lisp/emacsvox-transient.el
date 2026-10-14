@@ -1050,7 +1050,7 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                      emacsvox-capitalization emacsvox-capitalization-cue
                      emacsvox-interaction emacsvox-indentation-tone
                      emacsvox-aural-menu-line-cues emacsvox-line-cues-edit
-                     emacsvox-output-settings emacsvox-settings-buffer emacsvox-settings-feedback emacsvox-settings-presentation)))
+                     emacsvox-output-settings emacsvox-settings-buffer emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups)))
     (keymap-set map "RET" #'transient-push-button)
     (keymap-set map "<return>" #'transient-push-button))
   map)

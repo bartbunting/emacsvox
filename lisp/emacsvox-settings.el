@@ -33,6 +33,7 @@
 (defconst emacsvox-settings--destinations
   '(("Edit current and recent feedback" emacsvox-settings-workflows emacsvox-settings-feedback "c")
     ("Presentation features and scoped rules" emacsvox-settings-workflows emacsvox-settings-presentation "f")
+    ("Saved setups, profiles and drafts" emacsvox-settings-workflows emacsvox-settings-setups "p")
     ("Speech rate" emacsvox-aural-menu emacsvox-aural-menu-speech "r")
     ("Punctuation levels and profiles" emacsvox-aural-menu emacsvox-aural-menu-punctuation "p")
     ("Punctuation pronunciations" emacsvox-aural-menu emacsvox-aural-menu-punctuation "e")

@@ -2983,6 +2983,14 @@ rule editors. Their existing validation@comma{} preview@comma{} save@comma{} and
 in the editor. The menu also toggles global visual-face presentation; @code{w} saves
 only that toggle through Customize. Voice Lock remains independent.
 
+Use @code{C-e H p} for saved presentation profiles@comma{} voice palettes@comma{} and unfinished
+changes. Profile inspection explains what a setup captures before activation.
+The palette manager retains its inheritance and reset commands: @code{w} exports
+portable voices@comma{} @code{W} makes a full local backup@comma{} and @code{i} imports an independent
+palette. Import does not activate it. The drafts entry opens Home on Resume
+unfinished changes; press Enter to choose a retained editor. Return through
+Home to the same menu entry. Each editor keeps its own Save and Apply actions.
+
 Speech settings opens for the current buffer. Press @kbd{g} there to switch to
 global defaults@comma{} or start with @kbd{C-u C-e H}. Indentation shares this scope with
 its parent menus@comma{} including changes made with @kbd{g} inside Indentation.
