@@ -34,7 +34,8 @@
 (declare-function emacsvox-eat--terminal-buffer-p "emacsvox-eat-core" ())
 
 (defconst emacsvox-settings-integrations--menus
-  '((eww . emacsvox-settings-integrations--eww)
+  '((notmuch . emacsvox-settings-integrations--notmuch)
+    (eww . emacsvox-settings-integrations--eww)
     (org . emacsvox-settings-integrations--org)
     (agent . emacsvox-settings-integrations--agent)
     (comint . emacsvox-settings-integrations--comint)
@@ -76,7 +77,7 @@ A nil group denotes a focused menu with buffer-only controls.")
                     (emacsvox-eat--terminal-buffer-p))) 'eat)
           ((derived-mode-p 'comint-mode) 'comint)
           ((derived-mode-p 'org-mode) 'org)
-          ((derived-mode-p 'notmuch-search-mode 'notmuch-show-mode 'notmuch-tree-mode) 'notmuch)
+          ((derived-mode-p 'notmuch-hello-mode 'notmuch-search-mode 'notmuch-show-mode 'notmuch-tree-mode) 'notmuch)
           ((derived-mode-p 'eww-mode) 'eww))))
 (defun emacsvox-settings-integrations--open (kind suffix)
   "Open KIND's focused menu or Custom group, returning to SUFFIX."
@@ -303,7 +304,17 @@ A nil group denotes a focused menu with buffer-only controls.")
                    :scope (emacsvox-aural-menu--context)))
 
 (defconst emacsvox-settings-integrations--options
-  '((emacsvox-settings-integrations--eww-autospeak emacsvox-eww
+  '((emacsvox-settings-integrations--notmuch-completion emacsvox-notmuch
+     emacsvox-notmuch-search-completion-style "Search completion" ((adaptive . "adaptive") (summary . "count only") (cue . "cue only") (silent . "silent")))
+    (emacsvox-settings-integrations--notmuch-field-characters emacsvox-notmuch
+     emacsvox-notmuch-automatic-field-character-limit "Per-field characters" nil 100 "no character limit")
+    (emacsvox-settings-integrations--notmuch-field-bytes emacsvox-notmuch
+     emacsvox-notmuch-automatic-field-byte-limit "Per-field UTF-8 bytes" nil 100 "no byte limit")
+    (emacsvox-settings-integrations--notmuch-total-characters emacsvox-notmuch
+     emacsvox-notmuch-automatic-total-character-limit "Total characters" nil 100 "no character limit")
+    (emacsvox-settings-integrations--notmuch-total-bytes emacsvox-notmuch
+     emacsvox-notmuch-automatic-total-byte-limit "Total UTF-8 bytes" nil 100 "no byte limit")
+    (emacsvox-settings-integrations--eww-autospeak emacsvox-eww
      emacsvox-eww-autospeak "Section navigation autospeak" ((t . "on") (nil . "off")))
     (emacsvox-settings-integrations--eww-images emacsvox-eww
      emacsvox-eww-inhibit-images "Suppress images (next rendering)" ((t . "on") (nil . "off")))
@@ -340,7 +351,8 @@ A nil group denotes a focused menu with buffer-only controls.")
     (emacsvox-settings-integrations--agent-block-limit emacsvox-agent-shell
      emacsvox-agent-shell-block-navigation-max-characters "Block navigation characters" nil 100 "complete body"))
   "Global controls: command, feature, option, label, choices, step and nil label.
-Choices are value/label pairs. Numeric controls accept positive integers or none.")
+Choices are value/label pairs.
+Numeric controls accept positive integers or none.")
 (defun emacsvox-settings-integrations--option (command)
   "Return the global control owned by COMMAND, loading its option definitions."
   (let ((entry (assq command emacsvox-settings-integrations--options)))
@@ -607,6 +619,103 @@ Choices are value/label pairs. Numeric controls accept positive integers or none
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)
   (transient-setup 'emacsvox-settings-integrations--eww nil nil :scope (emacsvox-aural-menu--context)))
+
+(defun emacsvox-settings-integrations--custom-option (option command)
+  "Open the structured OPTION editor and return to menu COMMAND."
+  (emacsvox-aural-menu--open-browser
+   (lambda ()
+     (customize-option option)
+     (let ((buffer (window-buffer (selected-window))))
+       (with-current-buffer buffer
+         (use-local-map (copy-keymap (current-local-map)))
+         (local-set-key (kbd "q") #'emacsvox-settings--custom-quit))
+       buffer)) command))
+(defun emacsvox-settings-integrations--notmuch-completion ()
+  "Change the global Notmuch search completion."
+  (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-completion))
+(defun emacsvox-settings-integrations--notmuch-field-characters ()
+  "Change the global Notmuch per-field characters."
+  (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-field-characters))
+(defun emacsvox-settings-integrations--notmuch-field-bytes ()
+  "Change the global Notmuch per-field utf-8 bytes."
+  (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-field-bytes))
+(defun emacsvox-settings-integrations--notmuch-total-characters ()
+  "Change the global Notmuch total characters."
+  (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-total-characters))
+(defun emacsvox-settings-integrations--notmuch-total-bytes ()
+  "Change the global Notmuch total utf-8 bytes."
+  (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--notmuch-total-bytes))
+(defun emacsvox-settings-integrations--notmuch-search-fields ()
+  "Edit Notmuch spoken search fields (ordered list) and return here."
+  (interactive)
+  (require 'emacsvox-notmuch)
+  (emacsvox-settings-integrations--custom-option
+   'emacsvox-notmuch-search-result-fields 'emacsvox-settings-integrations--notmuch-search-fields))
+(defun emacsvox-settings-integrations--notmuch-show-fields ()
+  "Edit Notmuch spoken message fields (ordered list) and return here."
+  (interactive)
+  (require 'emacsvox-notmuch)
+  (emacsvox-settings-integrations--custom-option
+   'emacsvox-notmuch-show-message-fields 'emacsvox-settings-integrations--notmuch-show-fields))
+(defun emacsvox-settings-integrations--notmuch-search-icons ()
+  "Edit Notmuch search status tags and fallback cues and return here."
+  (interactive)
+  (require 'emacsvox-notmuch)
+  (emacsvox-settings-integrations--custom-option
+   'emacsvox-notmuch-search-status-icons 'emacsvox-settings-integrations--notmuch-search-icons))
+(defun emacsvox-settings-integrations--notmuch-show-icons ()
+  "Edit Notmuch message status tags and fallback cues and return here."
+  (interactive)
+  (require 'emacsvox-notmuch)
+  (emacsvox-settings-integrations--custom-option
+   'emacsvox-notmuch-show-status-icons 'emacsvox-settings-integrations--notmuch-show-icons))
+(defun emacsvox-settings-integrations--notmuch-presentation ()
+  "Open Presentation Options for semantic mail status cues."
+  (interactive)
+  (require 'emacsvox-aural-feature-fragments)
+  (emacsvox-aural-menu--open-browser
+   #'emacsvox-aural-list-feature-fragments
+   'emacsvox-settings-integrations--notmuch-presentation))
+(defun emacsvox-settings-integrations--notmuch-save ()
+  "Save displayed Notmuch completion and reading defaults."
+  (interactive)
+  (emacsvox-settings-integrations--save-options 'emacsvox-notmuch))
+(defun emacsvox-settings-integrations--notmuch-custom ()
+  "Open advanced Notmuch speech settings and return here."
+  (interactive)
+  (require 'emacsvox-notmuch)
+  (emacsvox-settings--custom 'emacsvox-notmuch 'emacsvox-settings-integrations--notmuch-custom))
+(transient-define-prefix emacsvox-settings-integrations--notmuch ()
+  "Control mail feedback and open its structured field and cue editors."
+  ["Notmuch defaults (global); w saves"
+   ("c" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-completion))
+    emacsvox-settings-integrations--notmuch-completion :transient t)
+   ("f" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-field-characters))
+    emacsvox-settings-integrations--notmuch-field-characters :transient t)
+   ("b" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-field-bytes))
+    emacsvox-settings-integrations--notmuch-field-bytes :transient t)
+   ("t" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-total-characters))
+    emacsvox-settings-integrations--notmuch-total-characters :transient t)
+   ("B" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-total-bytes))
+    emacsvox-settings-integrations--notmuch-total-bytes :transient t)
+   ("w" "Save completion and reading defaults" emacsvox-settings-integrations--notmuch-save :transient t)]
+  ["Structured editors; use their own Save"
+   ("s" "Spoken search fields (ordered list)" emacsvox-settings-integrations--notmuch-search-fields :transient transient--do-suspend)
+   ("m" "Spoken message fields (ordered list)" emacsvox-settings-integrations--notmuch-show-fields :transient transient--do-suspend)
+   ("i" "Search status tags and fallback cues" emacsvox-settings-integrations--notmuch-search-icons :transient transient--do-suspend)
+   ("I" "Message status tags and fallback cues" emacsvox-settings-integrations--notmuch-show-icons :transient transient--do-suspend)
+   ("p" "Presentation Options: semantic status cues" emacsvox-settings-integrations--notmuch-presentation :transient transient--do-suspend)]
+  ["Finish"
+   ("A" "Advanced Notmuch settings (Customize)" emacsvox-settings-integrations--notmuch-custom :transient transient--do-suspend)
+   ("q" "Back" emacsvox-settings-integrations--back :transient transient--do-replace)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-integrations--notmuch nil nil :scope (emacsvox-aural-menu--context)))
 
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-integrations ()

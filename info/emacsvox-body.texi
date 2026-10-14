@@ -3041,8 +3041,20 @@ toggles image suppression for subsequent rendering. It also updates the shared
 SHR image default@comma{} preserving buffer-local overrides. It does not reload the
 current page. @code{w} saves the two Emacsvox defaults and @code{A} opens advanced settings.
 
-Other integration entries currently open Customize@comma{} with its own Apply@comma{} Save@comma{}
-and Reset controls; @code{q} returns to the menu.
+Notmuch opens the same focused menu from its welcome@comma{} search@comma{} message and tree
+views. @code{c} cycles adaptive@comma{} count-only@comma{} cue-only and silent successful-search
+feedback; failures remain audible. @code{f} and @code{b} set per-field character and UTF-8
+byte limits; @code{t} and @code{B} set total limits. Shift-left/right adjusts the selected
+limit by 100; Enter accepts an exact positive integer or @code{none} to disable that
+limit. Other limits still apply. @code{w} saves these five displayed global defaults.
+
+In Notmuch@comma{} @code{s} and @code{m} open ordered search/message field lists; @code{i} and @code{I}
+open their status-tag and fallback-cue maps. These Customize editors preserve
+custom formatter functions and use their own Apply@comma{} Save and Reset actions.
+@code{p} opens Presentation Options: when @code{mail-message-status-cues} is enabled@comma{}
+its rules own the standard status cues while the maps still suppress spoken
+status tags. @code{A} opens advanced settings@comma{} including field separators. Return
+from each editor with @code{q}. Opening or returning does not save changes.
 Integrations without an inventoried entry remain reachable through major-mode
 settings and advanced Customize.
 

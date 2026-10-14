@@ -72,7 +72,8 @@
                          emacsvox-settings-integrations--eat
                          emacsvox-settings-integrations--agent
                          emacsvox-settings-integrations--org
-                         emacsvox-settings-integrations--eww)))
+                         emacsvox-settings-integrations--eww
+                         emacsvox-settings-integrations--notmuch)))
       (user-error "Open the Emacsvox menu first"))
     (oref prefix scope)))
 

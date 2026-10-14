@@ -3097,8 +3097,22 @@ updates the shared SHR image default, preserving buffer-local overrides.
 It does not reload the current page.  ‘w’ saves the two Emacsvox
 defaults and ‘A’ opens advanced settings.
 
-   Other integration entries currently open Customize, with its own
-Apply, Save, and Reset controls; ‘q’ returns to the menu.  Integrations
+   Notmuch opens the same focused menu from its welcome, search, message
+and tree views.  ‘c’ cycles adaptive, count-only, cue-only and silent
+successful-search feedback; failures remain audible.  ‘f’ and ‘b’ set
+per-field character and UTF-8 byte limits; ‘t’ and ‘B’ set total limits.
+Shift-left/right adjusts the selected limit by 100; Enter accepts an
+exact positive integer or ‘none’ to disable that limit.  Other limits
+still apply.  ‘w’ saves these five displayed global defaults.
+
+   In Notmuch, ‘s’ and ‘m’ open ordered search/message field lists; ‘i’
+and ‘I’ open their status-tag and fallback-cue maps.  These Customize
+editors preserve custom formatter functions and use their own Apply,
+Save and Reset actions.  ‘p’ opens Presentation Options: when
+‘mail-message-status-cues’ is enabled, its rules own the standard status
+cues while the maps still suppress spoken status tags.  ‘A’ opens
+advanced settings, including field separators.  Return from each editor
+with ‘q’.  Opening or returning does not save changes.  Integrations
 without an inventoried entry remain reachable through major-mode
 settings and advanced Customize.
 

@@ -333,8 +333,8 @@ Direction recorded on 2026-10-15: each listed integration should open a focused
 Transient rather than using Customize as its primary settings screen. Include
 ordinary shell/comint alongside the existing integrations. Keep current-buffer
 access and the all-integrations chooser.
-Shell/comint, EAT, Agent Shell, Org and EWW now have focused menus; the other listed
-routes still open Customize.
+Shell/comint, EAT, Agent Shell, Org, EWW and Notmuch now have focused menus.
+Structured and advanced editors retain their existing Customize routes.
 
 Deliver and listen to one integration at a time. Proposed control groupings:
 Implementation may continue in separate commits before listening acceptance.
@@ -350,7 +350,8 @@ Implementation may continue in separate commits before listening acceptance.
   implemented; listening acceptance pending.
 - [X] EWW: section-navigation speech and image handling implemented; listening
   acceptance pending.
-- [ ] Notmuch: spoken fields, status cues and reading limits.
+- [X] Notmuch: completion feedback, reading limits, spoken-field and status-cue
+  editor links implemented; listening acceptance pending.
 
 Contextual shortcut checkpoint, 2026-10-15:
 
@@ -489,6 +490,27 @@ EWW implementation checkpoint, 2026-10-15:
   no implicit page reload, explicit save/reload, search and return. Incremental
   compilation, bytecode preflight and manual regeneration passed.
   Listening and save/restart acceptance remain open.
+
+Notmuch implementation checkpoint, 2026-10-15:
+
+- The focused menu is available from welcome, search, message and tree views,
+  the integration chooser and settings search. Completion feedback cycles through
+  all four existing styles. Four reading limits support shifted arrows, exact
+  positive integers and =none=. =w= saves only these five global defaults.
+- Ordered field lists and status-tag/fallback-cue maps link to targeted Customize
+  editors with exact return. Their ordering and custom functions are preserved;
+  they retain their own save actions. Presentation Options is linked because its
+  enabled mail-status rules own the standard cues ahead of the fallback maps.
+  Advanced Customize retains separators and internal MIME traversal limits.
+- Verification: 39 graphical settings tests passed from source and compiled
+  code with installed Transient, then 39 with bundled Transient, with no skips.
+  Fresh processes verified the loaded menu bytecode paths. All 129 Notmuch
+  integration tests and two focused EWW speech/image tests passed. Coverage
+  includes spoken values, exact/numeric adjustments, explicit save/reload, all
+  four mail view identities, structured value preservation and editor returns.
+  Incremental compilation, bytecode preflight and manual regeneration passed.
+- Listening remains pending for completion feedback, limit adjustments, actual
+  field reading, cue ownership, editor return and persistence after restart.
 
 ** Saved setups and drafts
 
@@ -746,11 +768,10 @@ Important interaction and ownership findings:
 
 *** Integration coverage beyond the initial catalogue
 
-The five catalogue entries are Agent Shell, EAT, Org, Notmuch, and EWW.
-Comint has a local autospeak action but no entry in that catalogue. EAT's
-background-monitor setting is reachable through its linked Customize group;
-Comint's separate monitor command is not exposed there. Vterm and eterm are
-not recognized by the new contextual integration selector.
+Updated on 2026-10-15: the six catalogue entries are Shell/comint, Agent Shell,
+EAT, Org, Notmuch and EWW, all with focused Transients. Comint and EAT expose
+background monitoring directly. Vterm and eterm are not yet recognized by the
+contextual integration selector.
 
 | Integration or workflow | Concrete settings or commands | Proposed treatment |
 |-------------------------+-------------------------------+--------------------|
