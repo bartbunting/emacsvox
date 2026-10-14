@@ -408,6 +408,27 @@ Emacsvox reports only the unread burst count, never the terminal's identity or
 output.  Cursor movement, style changes, repaint, resize, and process generation
 changes do not count as background output.
 
+Use =C-e H j c= from an EAT terminal or its frozen review to open the terminal
+settings menu. You can also choose EAT terminals through =C-e H j a=, or find
+individual controls with =C-e H /=.
+
+- =s= toggles automatic foreground speech.
+- =b= toggles background cues and unread counts, independently of foreground
+  speech. It does not read background output.
+- =p= cycles prompt feedback: ready cue, read prompt, or silent. Prompt feedback
+  requires EAT shell integration and obeys foreground autospeak.
+- =d= cycles terse, normal, and verbose automatic feedback.
+
+Arrows announce current values; Enter changes the selected control. Changes
+affect only the captured terminal, including an active EAT terminal embedded in
+Eshell. From frozen review, the values belong to its source terminal. =q= returns
+to the originating menu entry.
+
+Press =w= to save all four displayed values as defaults through Customize.
+Other terminals with local overrides keep those overrides; terminals without
+them inherit the new defaults. Adjusting a control alone does not save it.
+=A= opens advanced EAT Customize settings; =q= returns to the EAT menu.
+
 ** Shell Integration And Command Status
 :PROPERTIES:
 :TEXINFO_NODE: no

@@ -279,6 +279,190 @@
     (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations))
     (should-not (file-exists-p custom-file))))
 
+(ert-deftest emacsvox-settings-integrations-eat-local-controls ()
+  "EAT controls speak their values and preserve local lifecycle and independence."
+  (skip-unless (require 'eat nil t))
+  (require 'emacsvox-eat)
+  (emacsvox-test--with-settings
+    (with-current-buffer source
+      (eat-mode)
+      (setq-local emacsvox-eat-autospeak t
+                  emacsvox-eat-monitor-background-output nil
+                  emacsvox-eat-prompt-feedback 'earcon
+                  emacsvox-eat-verbosity 'normal))
+    (let ((defaults (mapcar #'default-value emacsvox-settings-integrations--eat-options))
+          (discard (symbol-function 'emacsvox-eat--discard-automatic-feedback))
+          discarded spoken)
+      (cl-letf (((symbol-function 'emacsvox-eat--discard-automatic-feedback)
+                 (lambda () (push (current-buffer) discarded) (funcall discard)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest _) (when (stringp text) (push text spoken)))))
+        (execute-kbd-macro (kbd ". j c"))
+        (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--eat))
+        (should (seq-some (lambda (text) (string-match-p "captured terminal, local changes" text)) spoken))
+        (with-selected-window transient--window
+          (transient--goto-button
+           (transient-suffix-object 'emacsvox-settings-integrations--eat-autospeak)))
+        (setq discarded nil)
+        (execute-kbd-macro (kbd "RET"))
+        (should (memq source discarded))
+        (should-not (buffer-local-value 'emacsvox-eat-autospeak source))
+        (execute-kbd-macro (kbd "<down>"))
+        (should (string-match-p "Background cues and unread count: off.*b" (car spoken)))
+        (execute-kbd-macro (kbd "RET"))
+        (should (buffer-local-value 'emacsvox-eat-monitor-background-output source))
+        (with-current-buffer source (setq emacsvox-eat--unread-output-count 3))
+        (execute-kbd-macro (kbd "b"))
+        (should (zerop (buffer-local-value 'emacsvox-eat--unread-output-count source)))
+        (execute-kbd-macro (kbd "<down>"))
+        (should (string-match-p "Prompt feedback.*ready cue.*p" (car spoken)))
+        (execute-kbd-macro (kbd "RET"))
+        (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback source) 'text))
+        (execute-kbd-macro (kbd "p"))
+        (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback source) 'silent))
+        (execute-kbd-macro (kbd "p"))
+        (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback source) 'earcon))
+        (execute-kbd-macro (kbd "<down>"))
+        (should (string-match-p "Automatic feedback detail: normal.*d" (car spoken)))
+        (execute-kbd-macro (kbd "RET"))
+        (should (eq (buffer-local-value 'emacsvox-eat-verbosity source) 'verbose)))
+      (should (equal defaults (mapcar #'default-value emacsvox-settings-integrations--eat-options)))
+      (should-not (file-exists-p custom-file))
+      (execute-kbd-macro (kbd "q"))
+      (with-selected-window transient--window
+        (should (equal (oref (button-get (button-at (point)) 'button-data) key) "c")))
+      (execute-kbd-macro (kbd "q q q"))
+      (should (eq (current-buffer) source)))))
+
+(ert-deftest emacsvox-settings-integrations-eat-save-is-explicit ()
+  "Only Save persists the terminal's four choices, retaining other local overrides."
+  (skip-unless (require 'eat nil t))
+  (require 'emacsvox-eat)
+  (emacsvox-test--with-settings
+    (let* ((options emacsvox-settings-integrations--eat-options)
+           (defaults (mapcar (lambda (option) (cons option (default-value option))) options))
+           (properties (mapcar (lambda (option) (cons option (copy-tree (symbol-plist option)))) options))
+           (other (generate-new-buffer " *other-eat-settings*")))
+      (unwind-protect
+          (progn
+            (with-current-buffer source
+              (eat-mode)
+              (setq-local emacsvox-eat-autospeak nil
+                          emacsvox-eat-monitor-background-output t
+                          emacsvox-eat-prompt-feedback 'text
+                          emacsvox-eat-verbosity 'verbose))
+            (with-current-buffer other
+              (eat-mode)
+              (setq-local emacsvox-eat-autospeak t
+                          emacsvox-eat-monitor-background-output nil
+                          emacsvox-eat-prompt-feedback 'silent
+                          emacsvox-eat-verbosity 'terse))
+            (execute-kbd-macro (kbd "j a E A T SPC t e r m i n a l s RET"))
+            (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--eat))
+            (should-not (file-exists-p custom-file))
+            (execute-kbd-macro (kbd "w"))
+            (should (equal (mapcar #'default-value options) '(nil t text verbose)))
+            (should (equal (mapcar (lambda (option) (buffer-local-value option other)) options)
+                           '(t nil silent terse)))
+            (should (file-exists-p custom-file))
+            ;; Reload the saved defaults after replacing them, as on startup.
+            (dolist (entry defaults) (set-default (car entry) (cdr entry)))
+            (load custom-file nil t)
+            (should (equal (mapcar #'default-value options) '(nil t text verbose)))
+            (execute-kbd-macro (kbd "q"))
+            (with-selected-window transient--window
+              (should (equal (oref (button-get (button-at (point)) 'button-data) key) "a"))))
+        (kill-buffer other)
+        (dolist (entry defaults) (set-default (car entry) (cdr entry)))
+        (dolist (entry properties) (setplist (car entry) (cdr entry)))))))
+
+(ert-deftest emacsvox-settings-integrations-eat-review-and-stale-source ()
+  "Frozen review controls the terminal; stale sources cannot change review values."
+  (skip-unless (require 'eat nil t))
+  (require 'emacsvox-eat)
+  (emacsvox-test--with-settings
+    (let ((terminal (generate-new-buffer " *eat-settings-source*")))
+      (unwind-protect
+          (progn
+            (with-current-buffer terminal
+              (eat-mode)
+              (setq-local emacsvox-eat-autospeak t
+                          emacsvox-eat-prompt-feedback 'earcon))
+            (with-current-buffer source
+              (emacsvox-eat-review-mode)
+              (setq-local emacsvox-eat-review--source-buffer terminal))
+            (execute-kbd-macro (kbd "j c s p"))
+            (should-not (buffer-local-value 'emacsvox-eat-autospeak terminal))
+            (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback terminal) 'text))
+            (should-not (local-variable-p 'emacsvox-eat-prompt-feedback source))
+            (kill-buffer terminal)
+            (should-not (emacsvox-settings-integrations--eat-p))
+            (should-error (emacsvox-settings-integrations--eat-prompt) :type 'user-error)
+            (should-error (emacsvox-settings-integrations--eat-save) :type 'user-error)
+            (execute-kbd-macro (kbd "q q q"))
+            (should (eq (current-buffer) source))
+            (should-not (file-exists-p custom-file)))
+        (when (buffer-live-p terminal) (kill-buffer terminal))))))
+
+(ert-deftest emacsvox-settings-integrations-eat-search-and-advanced ()
+  "Search selects without acting; advanced Customize returns to the EAT entry."
+  (skip-unless (require 'eat nil t))
+  (require 'emacsvox-eat)
+  (emacsvox-test--with-settings
+    (with-current-buffer source
+      (eat-mode)
+      (setq-local emacsvox-eat-prompt-feedback 'earcon))
+    (execute-kbd-macro (kbd "/ E A T SPC p r o m p t RET"))
+    (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--eat))
+    (with-selected-window transient--window
+      (should (equal (oref (button-get (button-at (point)) 'button-data) key) "p")))
+    (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback source) 'earcon))
+    (execute-kbd-macro (kbd "A"))
+    (should (derived-mode-p 'Custom-mode))
+    (execute-kbd-macro (kbd "q"))
+    (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--eat))
+    (with-selected-window transient--window
+      (should (equal (oref (button-get (button-at (point)) 'button-data) key) "A")))
+    (execute-kbd-macro (kbd "q"))
+    (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+    (should-not (file-exists-p custom-file))))
+
+(ert-deftest emacsvox-settings-integrations-eat-unavailable ()
+  "Outside EAT, local controls and Save explain the required terminal context."
+  (skip-unless (require 'eat nil t))
+  (require 'emacsvox-eat)
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "j a E A T SPC t e r m i n a l s RET"))
+    (should-not (emacsvox-settings-integrations--eat-p))
+    (let ((text (emacsvox-transient--choice-text
+                 (transient-suffix-object 'emacsvox-settings-integrations--eat-autospeak))))
+      (should (string-match-p "open from a live EAT terminal or its review" text))
+      (should (string-match-p "Unavailable" text)))
+    (should-error (emacsvox-settings-integrations--eat-autospeak) :type 'user-error)
+    (should-error (emacsvox-settings-integrations--eat-save) :type 'user-error)
+    (should-not (file-exists-p custom-file))))
+
+(ert-deftest emacsvox-settings-integrations-eat-embedded-eshell ()
+  "An active Eshell EAT terminal gets the same local controls."
+  (skip-unless (require 'eat nil t))
+  (require 'emacsvox-eat)
+  (emacsvox-test--with-settings
+    (with-current-buffer source
+      (setq major-mode 'eshell-mode)
+      (setq-local eat-terminal (eat-term-make source (point-min))
+                  emacsvox-eat-autospeak t))
+    (unwind-protect
+        (progn
+          (execute-kbd-macro (kbd "j c s"))
+          (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--eat))
+          (should-not (buffer-local-value 'emacsvox-eat-autospeak source))
+          (with-current-buffer source (eat-term-delete eat-terminal))
+          (should-not (emacsvox-settings-integrations--eat-p))
+          (should-error (emacsvox-settings-integrations--eat-autospeak) :type 'user-error)
+          (should-not (file-exists-p custom-file)))
+      (with-current-buffer source
+        (when (eat-term-live-p eat-terminal) (eat-term-delete eat-terminal))))))
+
 (ert-deftest emacsvox-settings-changes-separates-local-default-saved-and-draft ()
   "The snapshot distinguishes three option values and an unsaved cue without writes."
   (emacsvox-test--with-settings

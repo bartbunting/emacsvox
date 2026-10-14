@@ -333,13 +333,15 @@ Direction recorded on 2026-10-15: each listed integration should open a focused
 Transient rather than using Customize as its primary settings screen. Include
 ordinary shell/comint alongside the existing integrations. Keep current-buffer
 access and the all-integrations chooser.
-Shell/comint now has a focused menu; the other listed routes still open Customize.
+Shell/comint and EAT now have focused menus; the other listed routes still open
+Customize.
 
 Deliver and listen to one integration at a time. Proposed control groupings:
 
 - [X] Shell/comint: local automatic speech and background output monitoring
+  implemented; listening accepted on 2026-10-15, commit =7592c191d=.
+- [X] EAT: foreground speech, background monitoring, prompt feedback and detail
   implemented; listening acceptance pending.
-- [ ] EAT: foreground speech, background monitoring, prompt feedback and detail.
 - [ ] Agent Shell: session speech level, foreground/background defaults,
   thoughts/tool/permission feedback and reading limits.
 - [ ] Org: table feedback and links to its existing structured settings.
@@ -386,10 +388,41 @@ Shell/comint implementation checkpoint, 2026-10-15:
   synchronization, unavailable controls and existing Customize return.
   Loaded paths were checked in fresh Emacs processes. Incremental bytecode,
   bytecode preflight and manual regeneration passed.
-- Listening remains pending in a fresh normal profile: hear both values, toggle
-  automatic speech, enable monitoring and switch away while shell output arrives,
-  disable monitoring and compare, then check =q= and the chooser return. Confirm
-  that another shell retains its own settings and no startup default is saved.
+- Listening accepted on 2026-10-15 following the fresh-profile handoff for
+  =7592c191d=.
+
+EAT implementation checkpoint, 2026-10-15:
+
+- =C-e H j c= and the all-integrations chooser open the same EAT Transient.
+  =s= toggles automatic foreground speech; =b= toggles background cues and unread
+  counts. Background monitoring stays independent of foreground speech and
+  never reads background terminal content. Existing lifecycle commands discard
+  pending automatic feedback and clear monitoring state as before.
+- =p= cycles ready cue, read prompt and silent; this requires EAT shell
+  integration and obeys foreground autospeak. =d= cycles terse, normal and
+  verbose automatic feedback through the existing command. All four changes
+  target the captured terminal, including from its frozen review or an active
+  Eshell-embedded EAT terminal. Unavailable or stale sources cannot be changed.
+- =w= explicitly saves these four terminal values through Customize. Other
+  terminals with local overrides retain them; terminals without overrides inherit
+  the new defaults. Opening, adjusting and returning never save implicitly.
+  =A= retains advanced Customize access and returns to its menu entry with =q=.
+- =C-e H /= finds all four controls and selects without activating. =q= returns
+  to the originating current-buffer, chooser or search entry.
+- Automated source verification: 31 graphical settings/workflow tests and 15
+  focused EAT lifecycle/prompt/monitoring tests passed, with no skips. New tests
+  cover spoken values, arrows and Enter, independent local changes, explicit
+  save/reload, other-terminal overrides, frozen review, stale sources, embedded
+  Eshell, search and Customize return.
+- Compiled verification: 31 graphical tests passed with installed Transient and
+  Vertico, and 31 with bundled Transient, with no skips. Both used installed EAT
+  0.9.4 from =~/.emacs.d/elpa/eat-0.9.4/=; loaded menu and integration bytecode
+  paths were checked in fresh Emacs processes. Incremental compilation, bytecode
+  preflight and manual regeneration passed.
+- Listening remains pending in a fresh normal profile: try all four controls,
+  compare prompt cues/text/silence with shell integration, hear background cues
+  and the unread count on return, and verify that =w= survives a restart. Check
+  menu return from the terminal and frozen review.
 
 ** Saved setups and drafts
 

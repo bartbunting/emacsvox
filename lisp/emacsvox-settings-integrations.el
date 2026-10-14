@@ -27,11 +27,13 @@
 ;; Discover actual integration options and invoke existing source controls.
 ;;; Code:
 (require 'emacsvox-settings)
+(declare-function emacsvox-eat--control-buffer "emacsvox-eat-core" ())
+(declare-function emacsvox-eat--terminal-buffer-p "emacsvox-eat-core" ())
 
 (defconst emacsvox-settings-integrations--catalogue
   '((comint "Shell/comint" comint emacsvox-comint nil)
     (agent "Agent Shell" agent-shell emacsvox-agent-shell emacsvox-agent-shell)
-    (eat "EAT terminals" eat emacsvox-eat-core emacsvox-eat)
+    (eat "EAT terminals" eat emacsvox-eat emacsvox-eat)
     (org "Org tables" org emacsvox-org emacsvox-org)
     (notmuch "Notmuch mail" notmuch emacsvox-notmuch emacsvox-notmuch)
     (eww "EWW browser" eww emacsvox-eww emacsvox-eww))
@@ -42,7 +44,10 @@ A nil group denotes a focused menu with buffer-only controls.")
   (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
     (cond ((derived-mode-p 'agent-shell-mode 'agent-shell-viewport-view-mode
                            'agent-shell-viewport-edit-mode) 'agent)
-          ((derived-mode-p 'eat-mode 'emacsvox-eat-review-mode) 'eat)
+          ((or (derived-mode-p 'eat-mode 'emacsvox-eat-review-mode)
+               (and (bound-and-true-p eat-terminal)
+                    (fboundp 'emacsvox-eat--terminal-buffer-p)
+                    (emacsvox-eat--terminal-buffer-p))) 'eat)
           ((derived-mode-p 'comint-mode) 'comint)
           ((derived-mode-p 'org-mode) 'org)
           ((derived-mode-p 'notmuch-search-mode 'notmuch-show-mode 'notmuch-tree-mode) 'notmuch)
@@ -54,9 +59,10 @@ A nil group denotes a focused menu with buffer-only controls.")
     (unless (locate-library (symbol-name (nth 2 entry)))
       (user-error "%s is not installed" (nth 1 entry)))
     (require (nth 3 entry))
-    (if (eq kind 'comint)
+    (if (memq kind '(comint eat))
         (transient-setup
-         'emacsvox-settings-integrations--comint nil nil
+         (if (eq kind 'comint) 'emacsvox-settings-integrations--comint
+           'emacsvox-settings-integrations--eat) nil nil
          :scope (plist-put (copy-sequence (emacsvox-aural-menu--context))
                            :integration-return suffix))
       (emacsvox-settings--custom (nth 4 entry) suffix))))
@@ -165,6 +171,110 @@ A nil group denotes a focused menu with buffer-only controls.")
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)
   (transient-setup 'emacsvox-settings-integrations--comint nil nil
+                   :scope (emacsvox-aural-menu--context)))
+
+(defconst emacsvox-settings-integrations--eat-options
+  '(emacsvox-eat-autospeak emacsvox-eat-monitor-background-output
+    emacsvox-eat-prompt-feedback emacsvox-eat-verbosity)
+  "Terminal options saved only by the EAT menu's explicit Save action.")
+(defun emacsvox-settings-integrations--eat-source ()
+  "Return the terminal owned by the captured EAT buffer or frozen review."
+  (require 'emacsvox-eat)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (emacsvox-eat--control-buffer)))
+(defun emacsvox-settings-integrations--eat-p ()
+  "Whether the captured source still owns an EAT terminal."
+  (and (eq (emacsvox-settings-integrations--kind) 'eat)
+       (condition-case nil (emacsvox-settings-integrations--eat-source)
+         (user-error nil))))
+(defun emacsvox-settings-integrations--eat-label (variable label)
+  "Describe terminal VARIABLE with LABEL, including its current value."
+  (if (not (emacsvox-settings-integrations--eat-p))
+      (concat label ": open from a live EAT terminal or its review")
+    (let ((value (buffer-local-value variable (emacsvox-settings-integrations--eat-source))))
+      (format "%s: %s" label
+              (pcase value
+                ('t "on") ('nil "off") ('earcon "ready cue")
+                ('text "read prompt") (_ value))))))
+(defun emacsvox-settings-integrations--eat-call (command)
+  "Run the existing local EAT COMMAND in the captured terminal."
+  (with-current-buffer (emacsvox-settings-integrations--eat-source)
+    (let ((current-prefix-arg nil)) (call-interactively command))))
+(defun emacsvox-settings-integrations--eat-autospeak ()
+  "Toggle captured-terminal foreground speech through its existing lifecycle."
+  (interactive)
+  (emacsvox-settings-integrations--eat-call 'emacsvox-eat-toggle-autospeak))
+(defun emacsvox-settings-integrations--eat-monitor ()
+  "Toggle captured-terminal background cues through their existing lifecycle."
+  (interactive)
+  (emacsvox-settings-integrations--eat-call 'emacsvox-eat-toggle-background-monitoring))
+(defun emacsvox-settings-integrations--eat-detail ()
+  "Cycle automatic feedback detail for the captured terminal."
+  (interactive)
+  (emacsvox-settings-integrations--eat-call 'emacsvox-eat-cycle-verbosity))
+(defun emacsvox-settings-integrations--eat-prompt ()
+  "Cycle ready cue, prompt text and silence for the captured terminal."
+  (interactive)
+  (with-current-buffer (emacsvox-settings-integrations--eat-source)
+    (set (make-local-variable 'emacsvox-eat-prompt-feedback)
+         (pcase (symbol-value 'emacsvox-eat-prompt-feedback)
+           ('earcon 'text) ('text 'silent) (_ 'earcon))))
+  (emacsvox-transient--submit-text
+   (emacsvox-settings-integrations--eat-label 'emacsvox-eat-prompt-feedback "Prompt feedback")
+   (emacsvox-transient--menu-facts 'eat-prompt 'command-menu-value-changed)
+   'state-change 'select-object))
+(defun emacsvox-settings-integrations--eat-save ()
+  "Save these four terminal values as defaults through Customize."
+  (interactive)
+  (let* ((source (emacsvox-settings-integrations--eat-source))
+         (values (mapcar (lambda (option) (cons option (buffer-local-value option source)))
+                         emacsvox-settings-integrations--eat-options)))
+    (dolist (entry values) (customize-save-variable (car entry) (cdr entry))))
+  (emacsvox-transient--submit-text
+   "Saved four EAT defaults; terminals without local overrides inherit them"
+   (emacsvox-transient--menu-facts 'eat-defaults 'command-menu-value-changed)
+   'state-change 'save-object))
+(defun emacsvox-settings-integrations--eat-custom ()
+  "Open advanced EAT Customize options, returning to this menu."
+  (interactive)
+  (require 'emacsvox-eat)
+  (emacsvox-settings--custom 'emacsvox-eat 'emacsvox-settings-integrations--eat-custom))
+(defun emacsvox-settings-integrations--eat-back ()
+  "Return from EAT settings to the originating menu entry."
+  (interactive)
+  (emacsvox-settings-integrations--return
+   (or (plist-get (emacsvox-aural-menu--context) :integration-return)
+       'emacsvox-settings-search)))
+
+(transient-define-prefix emacsvox-settings-integrations--eat ()
+  "Control the captured EAT terminal, saving defaults only on request."
+  ["EAT: captured terminal, local changes"
+   ("s" (lambda () (emacsvox-settings-integrations--eat-label
+                    'emacsvox-eat-autospeak "Automatic foreground speech"))
+    emacsvox-settings-integrations--eat-autospeak
+    :inapt-if-not emacsvox-settings-integrations--eat-p :transient t)
+   ("b" (lambda () (emacsvox-settings-integrations--eat-label
+                    'emacsvox-eat-monitor-background-output "Background cues and unread count"))
+    emacsvox-settings-integrations--eat-monitor
+    :inapt-if-not emacsvox-settings-integrations--eat-p :transient t)
+   ("p" (lambda () (emacsvox-settings-integrations--eat-label
+                    'emacsvox-eat-prompt-feedback "Prompt feedback (shell integration)"))
+    emacsvox-settings-integrations--eat-prompt
+    :inapt-if-not emacsvox-settings-integrations--eat-p :transient t)
+   ("d" (lambda () (emacsvox-settings-integrations--eat-label
+                    'emacsvox-eat-verbosity "Automatic feedback detail"))
+    emacsvox-settings-integrations--eat-detail
+    :inapt-if-not emacsvox-settings-integrations--eat-p :transient t)]
+  ["Defaults and advanced settings"
+   ("w" "Save these four values as defaults" emacsvox-settings-integrations--eat-save
+    :inapt-if-not emacsvox-settings-integrations--eat-p :transient t)
+   ("A" "Advanced EAT settings (Customize)" emacsvox-settings-integrations--eat-custom
+    :transient transient--do-suspend)]
+  ["Finish"
+   ("q" "Back" emacsvox-settings-integrations--eat-back :transient transient--do-replace)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-integrations--eat nil nil
                    :scope (emacsvox-aural-menu--context)))
 
 ;;;###autoload

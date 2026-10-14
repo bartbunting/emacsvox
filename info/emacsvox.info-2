@@ -1436,6 +1436,29 @@ terminal's identity or output.  Cursor movement, style changes, repaint,
 resize, and process generation changes do not count as background
 output.
 
+   Use ‘C-e H j c’ from an EAT terminal or its frozen review to open the
+terminal settings menu.  You can also choose EAT terminals through ‘C-e
+H j a’, or find individual controls with ‘C-e H /’.
+
+   • ‘s’ toggles automatic foreground speech.
+   • ‘b’ toggles background cues and unread counts, independently of
+     foreground speech.  It does not read background output.
+   • ‘p’ cycles prompt feedback: ready cue, read prompt, or silent.
+     Prompt feedback requires EAT shell integration and obeys foreground
+     autospeak.
+   • ‘d’ cycles terse, normal, and verbose automatic feedback.
+
+   Arrows announce current values; Enter changes the selected control.
+Changes affect only the captured terminal, including an active EAT
+terminal embedded in Eshell.  From frozen review, the values belong to
+its source terminal.  ‘q’ returns to the originating menu entry.
+
+   Press ‘w’ to save all four displayed values as defaults through
+Customize.  Other terminals with local overrides keep those overrides;
+terminals without them inherit the new defaults.  Adjusting a control
+alone does not save it.  ‘A’ opens advanced EAT Customize settings; ‘q’
+returns to the EAT menu.
+
 11.6 Shell Integration And Command Status
 =========================================
 
@@ -3944,7 +3967,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 
 * acss-default:                          Voices And Routing.  (line   6)
 * Agent Shell:                           Agent Shell.         (line   6)
-* alternate screen, EAT:                 EAT Terminal Access. (line 393)
+* alternate screen, EAT:                 EAT Terminal Access. (line 416)
 * applications:                          Emacs Packages.      (line   6)
 * archiving, Notmuch:                    Notmuch Mail.        (line 225)
 * artificial intelligence agents:        Agent Shell.         (line   6)
@@ -3967,13 +3990,13 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * byte-code, Notmuch integration:        Notmuch Mail.        (line 354)
 * character echo:                        Controlling Echo.    (line   6)
 * character mode, Term:                  Term Input Modes.    (line   6)
-* clipboard security, EAT:               EAT Terminal Access. (line 357)
+* clipboard security, EAT:               EAT Terminal Access. (line 380)
 * completion candidates, terminal:       EAT Terminal Access. (line 167)
 * completion, EAT:                       EAT Terminal Access. (line  21)
 * Context-Sensitive Interaction:         Context-Sensitive Interaction.
                                                               (line   6)
 * Corfu, EAT:                            EAT Terminal Access. (line  21)
-* curses applications, EAT:              EAT Terminal Access. (line 393)
+* curses applications, EAT:              EAT Terminal Access. (line 416)
 * desktop navigation:                    Context-Sensitive Interaction.
                                                               (line  42)
 * development tools:                     Development Environment.
@@ -3982,11 +4005,11 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * EAT automatic speech:                  EAT Terminal Access. (line  68)
 * EAT input modes:                       EAT Terminal Access. (line  21)
 * EAT review commands:                   EAT Terminal Access. (line 203)
-* EAT shell integration:                 EAT Terminal Access. (line 304)
+* EAT shell integration:                 EAT Terminal Access. (line 327)
 * EAT terminal emulator:                 EAT Terminal Access. (line   6)
 * Emacs Keyboard Commands:               Emacsvox Keyboard Commands.
                                                               (line   6)
-* Eshell, EAT accessibility:             EAT Terminal Access. (line 416)
+* Eshell, EAT accessibility:             EAT Terminal Access. (line 439)
 * Eterm, Emacsvox module name:           Running Terminal Based Applications.
                                                               (line   6)
 * EWW:                                   Web Browsing.        (line   6)
@@ -4022,13 +4045,13 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * OCR:                                   Desktop Applications.
                                                               (line  38)
 * Online Help:                           Using Online Help.   (line   6)
-* OSC 52, EAT:                           EAT Terminal Access. (line 357)
+* OSC 52, EAT:                           EAT Terminal Access. (line 380)
 * Outline mode:                          Structured Editing.  (line   6)
 * packages, speech support:              Emacs Packages.      (line   6)
 * PaddleOCR:                             Desktop Applications.
                                                               (line  38)
 * palette inheritance:                   Voices And Routing.  (line   6)
-* password input, EAT:                   EAT Terminal Access. (line 332)
+* password input, EAT:                   EAT Terminal Access. (line 355)
 * PDF, converting to text:               Desktop Applications.
                                                               (line  38)
 * personal information management:       Personal Information Management.
@@ -4044,7 +4067,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * privacy, Notmuch speech:               Notmuch Mail.        (line 253)
 * programming:                           Editing Code.        (line   6)
-* remote terminal trust:                 EAT Terminal Access. (line 357)
+* remote terminal trust:                 EAT Terminal Access. (line 380)
 * review mode, Term:                     Reviewing The Term Screen.
                                                               (line   6)
 * review pointer, Term:                  Reviewing The Term Screen.
@@ -4056,7 +4079,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * search results, asynchronous rendering: Notmuch Mail.       (line  64)
 * searching:                             Context-Sensitive Interaction.
                                                               (line  56)
-* shell command status:                  EAT Terminal Access. (line 304)
+* shell command status:                  EAT Terminal Access. (line 327)
 * sound packs:                           Sounds And Space.    (line   6)
 * spatial presentation:                  Sounds And Space.    (line   6)
 * speech access, terminal:               EAT Terminal Access. (line   6)
@@ -4082,7 +4105,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * terminal applications:                 Running Terminal Based Applications.
                                                               (line   6)
 * terminal output, speech policy:        EAT Terminal Access. (line  68)
-* terminal privacy:                      EAT Terminal Access. (line 332)
+* terminal privacy:                      EAT Terminal Access. (line 355)
 * terminal screen review:                EAT Terminal Access. (line 203)
 * Transient menus:                       Development Environment.
                                                               (line  36)

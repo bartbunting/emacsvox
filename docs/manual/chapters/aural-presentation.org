@@ -147,8 +147,19 @@ action. =q= returns to the entry you opened it from. You can also find these
 controls with =C-e H /= by searching for =comint= or =monitoring=.
 
 Choosing Shell/comint from another kind of buffer explains where to open the
-controls and leaves them unavailable. Other integration entries currently open
-Customize, with its own Apply, Save, and Reset controls; =q= returns to the menu.
+controls and leaves them unavailable.
+
+From EAT, =C-e H j c= opens its terminal settings: =s= toggles foreground speech,
+=b= toggles background cues and unread counts, =p= cycles prompt feedback, and
+=d= cycles automatic feedback detail. These changes are local to the captured
+terminal, including when opened from its frozen review. =w= explicitly saves
+the four values as defaults; other terminals without local overrides inherit
+them. =A= opens advanced EAT Customize settings, and =q= returns to the menu.
+Search with =C-e H /= also finds each EAT control. See
+[[info:emacsvox#EAT Terminal Access][EAT Terminal Access]] for prompt requirements and feedback policies.
+
+Other integration entries currently open Customize, with its own Apply, Save,
+and Reset controls; =q= returns to the menu.
 Integrations without an inventoried entry remain reachable through major-mode
 settings and advanced Customize.
 
