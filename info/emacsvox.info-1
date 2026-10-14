@@ -3054,9 +3054,10 @@ the chooser to return to its menu entry.
 
    Use ‘C-e S’ for direct access to the current buffer's focused
 Emacsvox settings.  When no focused integration menu is available, it
-opens general buffer settings.  The buffer is captured on entry, and ‘q’
-closes the directly opened menu.  ‘C-e H’ remains the general entry;
-‘C-e H .’ always opens general buffer settings.
+opens general buffer settings.  The buffer is captured on entry.  ‘q’
+closes the directly opened menu and announces the restored buffer and
+mode with a close earcon.  ‘C-e H’ remains the general entry; ‘C-e H .’
+always opens general buffer settings.
 
    From a shell or Comint buffer, ‘C-e H j c’ opens a focused Transient.
 ‘s’ toggles automatic output speech; ‘b’ toggles background monitoring,
@@ -3072,14 +3073,15 @@ open the controls and leaves them unavailable.
 
    From EAT, ‘C-e H j c’ opens its terminal settings: ‘s’ toggles
 foreground speech, ‘b’ toggles background cues and unread counts, ‘p’
-cycles prompt feedback, and ‘d’ cycles automatic feedback detail.  These
-changes are local to the captured terminal, including when opened from
-its frozen review.  ‘w’ explicitly saves the four values as defaults;
-other terminals without local overrides inherit them.  ‘A’ opens
-advanced EAT Customize settings, and ‘q’ returns to the menu.  Search
-with ‘C-e H /’ also finds each EAT control.  See *note EAT Terminal
-Access: (emacsvox)EAT Terminal Access. for prompt requirements and
-feedback policies.
+opens prompt-feedback choices, and ‘d’ opens automatic-feedback detail
+choices.  Each list starts on the current value: arrows browse, Enter
+applies and returns, and ‘q’ cancels.  Changes are local to the captured
+terminal, including when opened from its frozen review.  ‘w’ explicitly
+saves the four values as defaults; other terminals without local
+overrides inherit them.  ‘A’ opens advanced EAT Customize settings, and
+‘q’ returns to the menu.  Search with ‘C-e H /’ also finds each EAT
+control.  See *note EAT Terminal Access: (emacsvox)EAT Terminal Access.
+for prompt requirements and feedback policies.
 
    Agent Shell also has a focused menu for session speech, global
 feedback defaults and reading limits; ‘w’ saves only its displayed
@@ -5873,26 +5875,3 @@ the mode exposes useful faces, and adds mode-specific feedback where an
 integration exists.  Open or create the document in its normal Emacs
 mode, then use ‘C-h m’ to discover that mode's workflow.  For outlines
 and templates, see *note Structured Editing: Structured Editing.
-
-
-File: emacsvox.info,  Node: Structured Editing,  Next: Browsing Structure,  Prev: Document Authoring,  Up: Emacs Packages
-
-8.2 Structured Editing And Templates
-====================================
-
-Emacsvox has maintained integrations for the built-in Outline and Tempo
-libraries.  In Outline mode, heading navigation speaks the reached
-heading and visibility commands announce what was hidden or exposed.
-Start a dedicated outline with ‘M-x outline-mode’, or enable
-‘outline-minor-mode’ in a suitable document.  See *note
-emacsvox-outline: (emacsvox-reference)emacsvox-outline. in _Emacsvox
-Reference Manual_ for the Emacsvox integration and *note Outline Mode:
-(emacs)Outline Mode. in _The GNU Emacs Manual_ for the underlying
-editor.
-
-   Tempo supplies template fields for modes and packages that use it.
-Emacsvox speaks inserted text and the line reached when moving between
-template marks.  The package that supplied a template also provides its
-insertion commands; use that package's mode help, together with *note
-emacsvox-tempo: (emacsvox-reference)emacsvox-tempo. in _Emacsvox
-Reference Manual_.

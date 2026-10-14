@@ -3005,7 +3005,8 @@ and EWW integrations. Cancel the chooser to return to its menu entry.
 
 Use @code{C-e S} for direct access to the current buffer's focused Emacsvox settings.
 When no focused integration menu is available@comma{} it opens general buffer settings.
-The buffer is captured on entry@comma{} and @code{q} closes the directly opened menu.
+The buffer is captured on entry. @code{q} closes the directly opened menu and
+announces the restored buffer and mode with a close earcon.
 @code{C-e H} remains the general entry; @code{C-e H .} always opens general buffer settings.
 
 From a shell or Comint buffer@comma{} @code{C-e H j c} opens a focused Transient. @code{s} toggles
@@ -3020,8 +3021,9 @@ Choosing Shell/comint from another kind of buffer explains where to open the
 controls and leaves them unavailable.
 
 From EAT@comma{} @code{C-e H j c} opens its terminal settings: @code{s} toggles foreground speech@comma{}
-@code{b} toggles background cues and unread counts@comma{} @code{p} cycles prompt feedback@comma{} and
-@code{d} cycles automatic feedback detail. These changes are local to the captured
+@code{b} toggles background cues and unread counts@comma{} @code{p} opens prompt-feedback choices@comma{}
+and @code{d} opens automatic-feedback detail choices. Each list starts on the current
+value: arrows browse@comma{} Enter applies and returns@comma{} and @code{q} cancels. Changes are local to the captured
 terminal@comma{} including when opened from its frozen review. @code{w} explicitly saves
 the four values as defaults; other terminals without local overrides inherit
 them. @code{A} opens advanced EAT Customize settings@comma{} and @code{q} returns to the menu.
@@ -7503,8 +7505,8 @@ Emacsvox reports only the unread burst count@comma{} never the terminal's identi
 output.  Cursor movement@comma{} style changes@comma{} repaint@comma{} resize@comma{} and process generation
 changes do not count as background output.
 
-Use @code{C-e H j c} from an EAT terminal or its frozen review to open the terminal
-settings menu. You can also choose EAT terminals through @code{C-e H j a}@comma{} or find
+Use @code{C-e S} or @code{C-e H j c} from an EAT terminal or its frozen review to open the
+terminal settings menu. You can also choose EAT terminals through @code{C-e H j a}@comma{} or find
 individual controls with @code{C-e H /}.
 
 @itemize
@@ -7514,16 +7516,20 @@ individual controls with @code{C-e H /}.
 @code{b} toggles background cues and unread counts@comma{} independently of foreground
 speech. It does not read background output.
 @item
-@code{p} cycles prompt feedback: ready cue@comma{} read prompt@comma{} or silent. Prompt feedback
+@code{p} opens prompt-feedback choices: ready cue@comma{} read prompt@comma{} or silent. Feedback
 requires EAT shell integration and obeys foreground autospeak.
 @item
-@code{d} cycles terse@comma{} normal@comma{} and verbose automatic feedback.
+@code{d} opens terse@comma{} normal@comma{} and verbose automatic-feedback choices.
 @end itemize
 
-Arrows announce current values; Enter changes the selected control. Changes
+Arrows announce current values; Enter activates the selected control. The prompt
+and detail lists start on the current choice. Arrows browse without changing it;
+Enter applies and returns to the original control@comma{} while @code{q} cancels.
+Confirmations interrupt older main speech. Changes
 affect only the captured terminal@comma{} including an active EAT terminal embedded in
 Eshell. From frozen review@comma{} the values belong to its source terminal. @code{q} returns
-to the originating menu entry.
+to the originating menu entry. When opened directly with @code{C-e S}@comma{} @code{q} closes the
+menu and announces the restored buffer and mode with a close earcon.
 
 Press @code{w} to save all four displayed values as defaults through Customize.
 Other terminals with local overrides keep those overrides; terminals without

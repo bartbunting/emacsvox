@@ -140,7 +140,8 @@ and EWW integrations. Cancel the chooser to return to its menu entry.
 
 Use =C-e S= for direct access to the current buffer's focused Emacsvox settings.
 When no focused integration menu is available, it opens general buffer settings.
-The buffer is captured on entry, and =q= closes the directly opened menu.
+The buffer is captured on entry. =q= closes the directly opened menu and
+announces the restored buffer and mode with a close earcon.
 =C-e H= remains the general entry; =C-e H .= always opens general buffer settings.
 
 From a shell or Comint buffer, =C-e H j c= opens a focused Transient. =s= toggles
@@ -155,8 +156,9 @@ Choosing Shell/comint from another kind of buffer explains where to open the
 controls and leaves them unavailable.
 
 From EAT, =C-e H j c= opens its terminal settings: =s= toggles foreground speech,
-=b= toggles background cues and unread counts, =p= cycles prompt feedback, and
-=d= cycles automatic feedback detail. These changes are local to the captured
+=b= toggles background cues and unread counts, =p= opens prompt-feedback choices,
+and =d= opens automatic-feedback detail choices. Each list starts on the current
+value: arrows browse, Enter applies and returns, and =q= cancels. Changes are local to the captured
 terminal, including when opened from its frozen review. =w= explicitly saves
 the four values as defaults; other terminals without local overrides inherit
 them. =A= opens advanced EAT Customize settings, and =q= returns to the menu.

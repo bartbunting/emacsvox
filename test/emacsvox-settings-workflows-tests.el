@@ -30,6 +30,50 @@
       (should (eq (current-buffer) source)))
     (should-not (file-exists-p custom-file))))
 
+(ert-deftest emacsvox-settings-context-close-announces-source ()
+  "Direct exits announce the restored buffer once; nested Back stays in the menu."
+  (skip-unless (require 'eat nil t))
+  (require 'emacsvox-eat)
+  (require 'org)
+  (emacsvox-test--with-settings
+   (execute-kbd-macro (kbd "C-q"))
+   (let (closed)
+     (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                (lambda (text &rest args)
+                  (when (memq 'command-menu-closed
+                              (plist-get (plist-get args :facts) :events))
+                    (push (cons text args) closed)))))
+       (dolist (mode '(text-mode comint-mode eat-mode org-mode))
+         (with-current-buffer source (funcall mode))
+         (dolist (key '("q" "C-g" "C-q"))
+           (ert-info ((format "Mode %S, exit %s" mode key))
+             (execute-kbd-macro (kbd "C-e S"))
+             (setq closed nil)
+             (execute-kbd-macro (kbd key))
+             (should-not transient--prefix)
+             (should (eq (current-buffer) source))
+             (should (= (length closed) 1))
+             (should (string-prefix-p (buffer-name source) (caar closed)))
+             (let ((args (cdar closed)))
+               (should (eq (plist-get args :interruption-policy) 'lane))
+               (should (equal
+                        (mapcar #'emacsvox-aural-compatibility-action-value
+                                (plist-get args :compatibility-actions))
+                        '(close-object)))))))
+       (with-current-buffer source (eat-mode))
+       (execute-kbd-macro (kbd "C-e S p"))
+       (setq closed nil)
+       (execute-kbd-macro (kbd "q"))
+       (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--eat))
+       (should-not closed)
+       (execute-kbd-macro (kbd "q"))
+       (should (= (length closed) 1))
+       (execute-kbd-macro (kbd "C-e H j c"))
+       (setq closed nil)
+       (execute-kbd-macro (kbd "q"))
+       (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations))
+       (should-not closed)))))
+
 (ert-deftest emacsvox-settings-workflows-feedback-draft-return ()
   "A guided draft previews without saving and returns to its exact menu entry."
   (emacsvox-test--with-settings
@@ -336,15 +380,32 @@
         (execute-kbd-macro (kbd "<down>"))
         (should (string-match-p "Prompt feedback.*ready cue.*p" (car spoken)))
         (execute-kbd-macro (kbd "RET"))
+        (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--eat-choice))
+        (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback source) 'earcon))
+        (should (string-match-p "Ready cue, selected" (car spoken)))
+        (execute-kbd-macro (kbd "<down>"))
+        (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback source) 'earcon))
+        (execute-kbd-macro (kbd "RET"))
         (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback source) 'text))
-        (execute-kbd-macro (kbd "p"))
+        (should (string-match-p "Prompt feedback: read prompt" (car spoken)))
+        (with-selected-window transient--window
+          (should (equal (oref (button-get (button-at (point)) 'button-data) key) "p")))
+        (execute-kbd-macro (kbd "p <down> q"))
+        (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback source) 'text))
+        (execute-kbd-macro (kbd "p 3"))
         (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback source) 'silent))
-        (execute-kbd-macro (kbd "p"))
+        (execute-kbd-macro (kbd "p 1"))
         (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback source) 'earcon))
         (execute-kbd-macro (kbd "<down>"))
         (should (string-match-p "Automatic feedback detail: normal.*d" (car spoken)))
         (execute-kbd-macro (kbd "RET"))
-        (should (eq (buffer-local-value 'emacsvox-eat-verbosity source) 'verbose)))
+        (should (eq (buffer-local-value 'emacsvox-eat-verbosity source) 'normal))
+        (should (string-match-p "Normal:.*selected" (car spoken)))
+        (execute-kbd-macro (kbd "<down> RET"))
+        (should (eq (buffer-local-value 'emacsvox-eat-verbosity source) 'verbose))
+        (should (string-match-p "Automatic feedback detail: verbose" (car spoken)))
+        (execute-kbd-macro (kbd "d 1 d 2"))
+        (should (eq (buffer-local-value 'emacsvox-eat-verbosity source) 'normal)))
       (should (equal defaults (mapcar #'default-value emacsvox-settings-integrations--eat-options)))
       (should-not (file-exists-p custom-file))
       (execute-kbd-macro (kbd "q"))
@@ -352,6 +413,35 @@
         (should (equal (oref (button-get (button-at (point)) 'button-data) key) "c")))
       (execute-kbd-macro (kbd "q q q"))
       (should (eq (current-buffer) source)))))
+
+(ert-deftest emacsvox-settings-integrations-eat-confirmations-interrupt ()
+  "Each Enter confirmation replaces main speech on its first activation."
+  (skip-unless (require 'eat nil t))
+  (require 'emacsvox-eat)
+  (let ((submit (symbol-function 'emacsvox-aural-submit)))
+    (emacsvox-test--with-settings
+     (with-current-buffer source
+       (eat-mode)
+       (setq-local emacsvox-eat-autospeak t
+                   emacsvox-eat-monitor-background-output nil))
+     (execute-kbd-macro (kbd "j c"))
+     (let (submissions)
+       ;; Keep real policy normalization, intercept only before rendering/audio.
+       (cl-letf (((symbol-function 'emacsvox-aural-submit) submit)
+                 ((symbol-function 'emacsvox-aural--submit-content)
+                  (lambda (text _actions)
+                    (when (eq emacsvox-aural-submission-occasion 'state-change)
+                      (push (list text emacsvox-aural-submission-lane
+                                  emacsvox-aural-submission-delivery-policy
+                                  emacsvox-aural-submission-replacement-key
+                                  emacsvox-aural-submission-interruption-policy)
+                            submissions))
+                    nil)))
+         (dolist (key '("s" "b" "p 2" "d 3"))
+           (setq submissions nil)
+           (execute-kbd-macro (kbd key))
+           (should (= (length submissions) 1))
+           (should (equal (cdar submissions) '(main replaceable speaker lane)))))))))
 
 (ert-deftest emacsvox-settings-integrations-eat-save-is-explicit ()
   "Only Save persists the terminal's four choices, retaining other local overrides."
@@ -410,7 +500,7 @@
             (with-current-buffer source
               (emacsvox-eat-review-mode)
               (setq-local emacsvox-eat-review--source-buffer terminal))
-            (execute-kbd-macro (kbd "j c s p"))
+            (execute-kbd-macro (kbd "j c s p 2"))
             (should-not (buffer-local-value 'emacsvox-eat-autospeak terminal))
             (should (eq (buffer-local-value 'emacsvox-eat-prompt-feedback terminal) 'text))
             (should-not (local-variable-p 'emacsvox-eat-prompt-feedback source))

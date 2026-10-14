@@ -342,7 +342,7 @@ Implementation may continue in separate commits before listening acceptance.
 - [X] Shell/comint: local automatic speech and background output monitoring
   implemented; listening accepted on 2026-10-15, commit =7592c191d=.
 - [X] EAT: foreground speech, background monitoring, prompt feedback and detail
-  implemented; listening acceptance pending.
+  implemented; menu listening accepted on 2026-10-15.
 - [X] Agent Shell: session speech level, foreground/background defaults,
   thoughts/tool/permission feedback and reading limits implemented; listening
   acceptance pending.
@@ -436,10 +436,47 @@ EAT implementation checkpoint, 2026-10-15:
   0.9.4 from =~/.emacs.d/elpa/eat-0.9.4/=; loaded menu and integration bytecode
   paths were checked in fresh Emacs processes. Incremental compilation, bytecode
   preflight and manual regeneration passed.
-- Listening remains pending in a fresh normal profile: try all four controls,
-  compare prompt cues/text/silence with shell integration, hear background cues
-  and the unread count on return, and verify that =w= survives a restart. Check
-  menu return from the terminal and frozen review.
+- The listening checkpoint below supersedes the original menu acceptance tasks.
+  Persistence has automated save/reload coverage; a real save/restart remains a
+  separate acceptance check unless explicitly confirmed.
+
+EAT listening iteration, 2026-10-15:
+
+- Prompt feedback and automatic output detail now open three-choice Transients.
+  The current value is selected on entry. Arrows browse without applying; Enter
+  applies once and returns to the original control. =q= cancels. Values remain
+  terminal-local until the existing explicit Save action is used.
+- EAT menu toggle confirmations now replace and interrupt older main speech.
+  Existing terminal lifecycle commands still clear pending feedback and monitor
+  state. Choice confirmations use concise Transient speech. The normal terminal
+  commands outside the settings menu retain their existing delivery policies.
+- Evidence: test session =20261014T223223Z-2874343= submitted verbosity changes
+  as ordered state-change feedback. Submissions 150/151 mapped to main-process
+  dispatches 165/166; Omnivox process 2874660 queued them behind existing audio.
+  The first completed while the second had waited about 1.6 seconds to start.
+  This supports the reported interruption problem; menu listening is now accepted.
+- The same test session recorded =Cannot open doc string file= for
+  =emacsvox-settings-integrations.elc=. Replacing compiled files during an open
+  session is a plausible cause, not a confirmed diagnosis. Keep this finding
+  open if it recurs in a fresh Emacs started after compilation has finished.
+- Verification: 40 graphical settings tests passed from source, then 40 from
+  compiled code with installed Transient and 40 with bundled Transient; no skips.
+  Tests cover opening on the current choice, browsing without applying, Enter,
+  cancellation, parent focus, review-buffer ownership and actual normalized
+  interruption policies. Incremental compilation and bytecode preflight passed;
+  fresh graphical sessions read the changed commands' compiled docstrings.
+- Direct =C-e S= exit feedback: the integration-specific Back action previously
+  closed silently when no parent menu existed. It now announces the restored
+  buffer and mode with the standard =close-object= earcon, using interruptible
+  speech. Nested Back still restores its parent without an exit announcement.
+  A graphical regression reproduces the old silence and checks =q=, =C-g= and
+  =C-q= for fallback, Comint, EAT and Org menus, plus nested choice/menu return.
+  All 41 graphical settings tests passed from source and compiled code with
+  installed and bundled Transient; incremental build and preflight passed.
+- Listening accepted on 2026-10-15 for the EAT menu and direct-menu exit
+  feedback. Choice navigation, interruption and return speech/cue behaviour
+  are accepted. The intermittent docstring finding remains recorded above.
+  The maintained manual now describes the accepted choices and return feedback.
 
 Agent Shell implementation checkpoint, 2026-10-15:
 

@@ -1053,6 +1053,7 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                      emacsvox-output-settings emacsvox-settings-buffer emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations
                      emacsvox-settings-integrations--comint
                      emacsvox-settings-integrations--eat
+                         emacsvox-settings-integrations--eat-choice
                          emacsvox-settings-integrations--agent
                          emacsvox-settings-integrations--org
                          emacsvox-settings-integrations--eww
