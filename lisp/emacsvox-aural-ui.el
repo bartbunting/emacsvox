@@ -806,15 +806,17 @@ When KILL is non-nil, kill the interface buffer as `quit-window' would."
     (setq emacsvox-aural-ui--return-function nil)
     (prog1
         (quit-window kill)
-      (unless (and return-function (funcall return-function))
-        (let ((emacsvox-aural-submission-facts facts)
-              (emacsvox-aural-submission-context context)
-              (emacsvox-aural-submission-module 'aural-tools)
-              (emacsvox-aural-submission-occasion 'state-change))
-          (emacsvox-aural-ui--speak-feedback
-           (concat (emacsvox-aural-ui--destination-description)
-                   (when warning (concat " " warning)))
-           'close-object 'aural-interface-closed))))))
+      (let ((returned (and return-function (funcall return-function))))
+        (when (or warning (not returned))
+          (let ((emacsvox-aural-submission-facts facts)
+                (emacsvox-aural-submission-context context)
+                (emacsvox-aural-submission-module 'aural-tools)
+                (emacsvox-aural-submission-occasion 'state-change))
+            (emacsvox-aural-ui--speak-feedback
+             (if returned warning
+               (concat (emacsvox-aural-ui--destination-description)
+                       (when warning (concat " " warning))))
+             'close-object 'aural-interface-closed)))))))
 
 (defvar emacsvox-aural-interface-mode-map
   (let ((map (make-sparse-keymap)))

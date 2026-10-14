@@ -1026,7 +1026,8 @@ DIRECTION is positive for forward movement, negative for backward movement."
              (memq (oref transient--prefix command)
                    '(emacsvox-aural-menu emacsvox-aural-menu-speech
                      emacsvox-aural-menu-navigation emacsvox-aural-menu-sounds
-                     emacsvox-aural-menu-punctuation emacsvox-indentation)))
+                     emacsvox-aural-menu-punctuation emacsvox-aural-menu-voices
+                     emacsvox-indentation)))
     (keymap-set map "RET" #'transient-push-button)
     (keymap-set map "<return>" #'transient-push-button))
   map)

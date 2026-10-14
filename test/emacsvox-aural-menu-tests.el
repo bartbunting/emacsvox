@@ -9,6 +9,7 @@
 (require 'ert)
 (require 'emacsvox-aural-menu)
 (require 'emacsvox-indentation-tests)
+(require 'emacsvox-aural-voice-workbench-tests)
 
 (defmacro emacsvox-test--with-aural-menu (&rest body)
   "Run BODY with an isolated source and captured menu context."
@@ -901,6 +902,125 @@
       (dolist (entry properties) (setplist (car entry) (cdr entry)))
       (when (get-file-buffer custom-file) (kill-buffer (get-file-buffer custom-file)))
       (delete-file custom-file))))
+
+(ert-deftest emacsvox-aural-menu-voices-graphical-workbench-return-and-drafts ()
+  "Nested voice browsing returns to its menu and keeps drafts and filters."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (emacsvox-test--with-voice-workbench
+      (emacsvox-test--with-aural-menu
+        (switch-to-buffer source)
+        (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+        (let ((transient--prefix nil) (transient-show-menu 0) spoken)
+          (unwind-protect
+              (cl-letf (((symbol-function 'emacsvox-aural-voice-workbench--library-start) #'ignore)
+                        ((symbol-function 'emacsvox-aural-ui--speak-feedback)
+                         (lambda (text &rest _) (push text spoken))))
+                (execute-kbd-macro (kbd "C-u <f8> v b"))
+                (should-not transient--prefix)
+                (should (eq emacsvox-aural-voice-workbench-view 'engines))
+                (should (eq (emacsvox-aural-inspection-source-buffer) source))
+                (emacsvox-aural-ui-goto-row "winrt")
+                (setq emacsvox-aural-voice-workbench-filter '(:language "en-US"))
+                (emacsvox-aural-voice-workbench--stage
+                 "Change a route"
+                 (lambda ()
+                   (setf (plist-get emacsvox-aural-voice-workbench-staged-profile :summary)
+                         "menu draft")))
+                (execute-kbd-macro (kbd "v q"))
+                (should (eq emacsvox-aural-voice-workbench-view 'engines))
+                (should (equal (tabulated-list-get-id) "winrt"))
+                (execute-kbd-macro (kbd "q"))
+                (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-voices))
+                (should (cl-some (lambda (text) (string-match-p "Engine policy changes remain staged" text)) spoken))
+                (with-selected-window transient--window
+                  (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                              'emacsvox-aural-menu--browse-voices)))
+                ;; Resume retains view, selection, filter, and unfinished policy.
+                (execute-kbd-macro (kbd "w"))
+                (should (equal (tabulated-list-get-id) "winrt"))
+                (should (equal emacsvox-aural-voice-workbench-filter '(:language "en-US")))
+                (should (equal (plist-get emacsvox-aural-voice-workbench-staged-profile :summary) "menu draft"))
+                (execute-kbd-macro (kbd "q q"))
+                (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+                (should (cdr (plist-get (emacsvox-aural-menu--context) :settings)))
+                (execute-kbd-macro (kbd "q"))
+                (should (eq (current-buffer) source))
+                (should (= (point) 3))
+                (should (equal (buffer-string) "first item\nsecond item\n"))
+                ;; Direct entry must discard a still-pending menu return.
+                (execute-kbd-macro (kbd "<f8> v b"))
+                (switch-to-buffer source)
+                (emacsvox-aural-voice-workbench)
+                (should-not emacsvox-aural-ui--return-function)
+                (execute-kbd-macro (kbd "q"))
+                (should-not transient--prefix))
+            (when transient--prefix (execute-kbd-macro (kbd "C-q")))
+            (when (get-buffer "*Aural Voice Workbench*")
+              (kill-buffer "*Aural Voice Workbench*"))))))))
+
+(ert-deftest emacsvox-aural-menu-voices-graphical-palettes-return-and-direct-entry ()
+  "Palette browsing returns to its focused menu item; direct entry clears it."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-aural-voice-palettes)
+  (save-window-excursion
+    (emacsvox-test--with-voice-workbench
+      (emacsvox-test--with-aural-menu
+        (switch-to-buffer source)
+        (local-set-key (kbd "<f8>") #'emacsvox-aural-menu-voices)
+        (let ((transient--prefix nil) (transient-show-menu 0) selected)
+          (unwind-protect
+              (progn
+                (execute-kbd-macro (kbd "<f8> p"))
+                (should (derived-mode-p 'emacsvox-aural-voice-palettes-mode))
+                (should (eq (emacsvox-aural-inspection-source-buffer) source))
+                (setq selected (tabulated-list-get-id))
+                (execute-kbd-macro (kbd "q"))
+                (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-voices))
+                (with-selected-window transient--window
+                  (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                              'emacsvox-aural-menu--voice-palettes)))
+                ;; Enter reopens the selected browser, preserving its selected row.
+                (execute-kbd-macro (kbd "RET"))
+                (should (derived-mode-p 'emacsvox-aural-voice-palettes-mode))
+                (should (equal (tabulated-list-get-id) selected))
+                (switch-to-buffer source)
+                (emacsvox-aural-list-voice-palettes)
+                (should-not emacsvox-aural-ui--return-function)
+                (execute-kbd-macro (kbd "q"))
+                (should-not transient--prefix)
+                (should (eq (current-buffer) source))
+                (should (= (point) 3)))
+            (when transient--prefix (execute-kbd-macro (kbd "C-q")))
+            (when (get-buffer "*Aural Voice Palettes*")
+              (kill-buffer "*Aural Voice Palettes*"))))))))
+
+(ert-deftest emacsvox-aural-menu-voices-graphical-engine-save-is-explicit ()
+  "Global speech scope cannot silently turn a session preference into a save."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (emacsvox-test--with-voice-workbench
+      (emacsvox-test--with-aural-menu
+        (switch-to-buffer source)
+        (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+        (let ((transient--prefix nil) (transient-show-menu t) session saved)
+          (unwind-protect
+              (cl-letf (((symbol-function 'emacsvox-aural-prefer-engine-for-session)
+                         (lambda (engine &optional _) (setq session engine)))
+                        ((symbol-function 'emacsvox-aural-commit-routing-profile-data)
+                         (lambda (profile &rest _) (setq saved profile))))
+                (execute-kbd-macro (kbd "C-u <f8> v e W TAB RET"))
+                (should (window-live-p transient--window))
+                (should (equal session "winrt"))
+                (should-not saved)
+                (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-voices))
+                (execute-kbd-macro (kbd "S W TAB RET"))
+                (should (equal (plist-get saved :engine-order) '("winrt" "eloquence")))
+                (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-voices))
+                (execute-kbd-macro (kbd "C-q"))
+                (should-not transient--stack)
+                (should (eq (current-buffer) source)))
+            (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))
 
 (provide 'emacsvox-aural-menu-tests)
 ;;; emacsvox-aural-menu-tests.el ends here

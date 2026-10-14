@@ -38,6 +38,10 @@
 
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
 (autoload 'emacsvox-aural-list-sound-packs "emacsvox-aural-sound-packs" nil t)
+(autoload 'emacsvox-aural-list-voice-palettes "emacsvox-aural-voice-palettes" nil t)
+(autoload 'emacsvox-aural-voice-workbench "emacsvox-aural-voice-workbench" nil t)
+(autoload 'emacsvox-aural-prefer-engine "emacsvox-aural-voice-workbench" nil t)
+(autoload 'emacsvox-aural-restore-saved-engine-order "emacsvox-aural-voice-workbench" nil t)
 (autoload 'emacsvox-explain-aural-presentation "emacsvox-aural-explanation" nil t)
 
 (defun emacsvox-aural-menu--context ()
@@ -46,7 +50,8 @@
     (unless (and prefix
                  (memq (oref prefix command)
                        '(emacsvox-aural-menu emacsvox-aural-menu-speech
-                         emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation)))
+                         emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation
+                         emacsvox-aural-menu-voices)))
       (user-error "Open the Emacsvox menu first"))
     (oref prefix scope)))
 
@@ -624,14 +629,13 @@ When opened from the Emacsvox menu, share its selected scope."
    (emacsvox-transient--menu-facts 'save-output 'operation-completed)
    'state-change 'save-object))
 
-(defun emacsvox-aural-menu--sound-packs ()
-  "Open the sound-pack browser; q returns to Sounds and output."
-  (interactive)
+(defun emacsvox-aural-menu--open-browser (open command)
+  "Call OPEN in the source and return from its buffer to menu COMMAND."
   (let* ((context (emacsvox-aural-menu--context))
          (source (emacsvox-aural-menu--source context))
          (stack (copy-sequence transient--stack)))
     (with-current-buffer source
-      (with-current-buffer (call-interactively #'emacsvox-aural-list-sound-packs)
+      (with-current-buffer (funcall open)
         (setq-local emacsvox-aural-ui--return-function
                     (lambda ()
                       (when (buffer-live-p source)
@@ -642,8 +646,76 @@ When opened from the Emacsvox menu, share its selected scope."
                         (transient--show)
                         (with-selected-window transient--window
                           (transient--goto-button
-                           (transient-suffix-object 'emacsvox-aural-menu--sound-packs)))
+                           (transient-suffix-object command)))
                         t)))))))
+
+(defun emacsvox-aural-menu--sound-packs ()
+  "Open the sound-pack browser; q returns to Sounds and output."
+  (interactive)
+  (emacsvox-aural-menu--open-browser
+   #'emacsvox-aural-list-sound-packs 'emacsvox-aural-menu--sound-packs))
+
+(defun emacsvox-aural-menu--browse-voices ()
+  "Browse engines and their voices; q returns through the browser parents."
+  (interactive)
+  (emacsvox-aural-menu--open-browser
+   (lambda () (emacsvox-aural-voice-workbench 'engines))
+   'emacsvox-aural-menu--browse-voices))
+
+(defun emacsvox-aural-menu--voice-palettes ()
+  "Open voice palettes; q returns to Voices and engines."
+  (interactive)
+  (emacsvox-aural-menu--open-browser
+   #'emacsvox-aural-list-voice-palettes 'emacsvox-aural-menu--voice-palettes))
+
+(defun emacsvox-aural-menu--voice-workbench ()
+  "Resume the Voice Workbench; q returns to Voices and engines."
+  (interactive)
+  (emacsvox-aural-menu--open-browser
+   #'emacsvox-aural-voice-workbench 'emacsvox-aural-menu--voice-workbench))
+
+(defun emacsvox-aural-menu--prefer-engine (&optional save)
+  "Choose a global engine preference, persisting it only with SAVE."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (let ((current-prefix-arg (and save '(4))))
+      (call-interactively #'emacsvox-aural-prefer-engine))))
+
+(defun emacsvox-aural-menu--save-preferred-engine ()
+  "Choose and explicitly save a global engine preference."
+  (interactive)
+  (emacsvox-aural-menu--prefer-engine t))
+
+(defun emacsvox-aural-menu--restore-engine-order ()
+  "Restore the saved or initial global engine order."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (call-interactively #'emacsvox-aural-restore-saved-engine-order)))
+
+(transient-define-prefix emacsvox-aural-menu-voices ()
+  "Browse voices and palettes or choose a global engine preference.
+Browser quit commands return here after unwinding their own child views.
+Engine preferences last for this session unless explicitly saved."
+  ["Voices and engines"
+   ("b" "Browse voices and engines" emacsvox-aural-menu--browse-voices :transient transient--do-suspend)
+   ("p" "Voice palettes" emacsvox-aural-menu--voice-palettes :transient transient--do-suspend)
+   ("w" "Resume Voice Workbench" emacsvox-aural-menu--voice-workbench :transient transient--do-suspend)]
+  ["Engine preference (global)"
+   ("e" "Choose preferred engine for this session" emacsvox-aural-menu--prefer-engine :transient t)
+   ("S" "Choose and save preferred engine" emacsvox-aural-menu--save-preferred-engine :transient t)
+   ("r" "Restore saved or initial engine order" emacsvox-aural-menu--restore-engine-order :transient t)]
+  ["Finish"
+   ("q" "Back" transient-quit-one)
+   ("C-q" "Close all menus" transient-quit-all)]
+  (interactive)
+  (let* ((prefix (or transient--prefix transient-current-prefix))
+         (context (if (and prefix
+                           (memq (oref prefix command)
+                                 '(emacsvox-aural-menu emacsvox-aural-menu-voices)))
+                      (oref prefix scope)
+                    (emacsvox-aural-menu--capture nil))))
+    (emacsvox-aural-menu--source context)
+    (transient-setup 'emacsvox-aural-menu-voices nil nil :scope context)))
 
 (transient-define-prefix emacsvox-aural-menu-sounds ()
   "Adjust global output volumes or browse sound packs.
@@ -688,6 +760,7 @@ The source item is captured on entry; Aural Home offers all other actions."
    ("s" (lambda () (concat "Speech settings: " (emacsvox-aural-menu--scope-label)))
     emacsvox-aural-menu-speech)
    ("o" "Sounds and output (global)" emacsvox-aural-menu-sounds)
+   ("v" "Voices and engines" emacsvox-aural-menu-voices)
    ("x" "Feedback for this item" emacsvox-aural-menu--feedback)
    ("h" "Aural Home (all actions)" emacsvox-aural-menu--home)]
   ["Finish"

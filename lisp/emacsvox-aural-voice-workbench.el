@@ -2939,6 +2939,7 @@ when they remain unsaved."
     (with-current-buffer buffer
       (unless (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
         (emacsvox-aural-voice-workbench-mode))
+      (setq-local emacsvox-aural-ui--return-function nil)
       (emacsvox-aural-inspection-attach-source source)
       (when view (setq emacsvox-aural-voice-workbench-view view))
       (emacsvox-aural-voice-workbench-refresh))

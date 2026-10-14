@@ -2139,6 +2139,7 @@ When SPEAK is non-nil, include the selected row's full description."
     (with-current-buffer buffer
       (unless (derived-mode-p 'emacsvox-aural-voice-palettes-mode)
         (emacsvox-aural-voice-palettes-mode))
+      (setq-local emacsvox-aural-ui--return-function nil)
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-voice-palettes-refresh
        (or palette (tabulated-list-get-id) (emacsvox-aural-voice-palettes--active-id))))
