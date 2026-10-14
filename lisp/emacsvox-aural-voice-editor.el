@@ -471,7 +471,7 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
       (emacsvox-aural-voice-editor--button 'engine-controls "Engine-specific settings"
                                             #'emacsvox-aural-voice-engine-controls-open))
     (insert (if tuning "\nIndividual fallback adjustments\n" "\nShared adjustments\n"))
-    (when (and voice (not tuning))
+    (when (and voice (or (not tuning) row))
       (emacsvox-aural-voice-editor--button
        'tuning-menu "Focused tuning menu (m)" #'emacsvox-aural-voice-menu))
     (when tuning

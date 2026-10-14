@@ -577,3 +577,11 @@ verification of subsequently changed code.
   incremental inventory, not a claim that every package has a focused menu.
   Saved setups passed 61 source and compiled graphical checks and the build
   and documentation gates. Listening on all new routes remains open.
+
+- Focused voice tuning now supports stable per-fallback choices as well as shared
+  values. Inherit, explicit adapter default, and zero remain distinct. Preview
+  uses the selected choice; native controls open the existing qualified async
+  editor. No storage or protocol changes are introduced. Integration discovery
+  passed 64 source and compiled graphical checks and the build/documentation
+  gates. Actual voice sound and native-engine availability still need listening
+  and runtime acceptance on the normal speech host.

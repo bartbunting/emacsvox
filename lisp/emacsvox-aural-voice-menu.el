@@ -37,7 +37,7 @@
     (emacsvox-aural-voice-menu--pitch . average-pitch)
     (emacsvox-aural-voice-menu--range . pitch-range)
     (emacsvox-aural-voice-menu--gain . gain))
-  "Numeric commands and their shared draft dimensions.")
+  "Numeric commands and their draft dimensions.")
 
 (defun emacsvox-aural-voice-menu--call (function &optional inspect)
   "Call FUNCTION in the captured editor, retaining its field and menu focus.
@@ -46,7 +46,8 @@ With INSPECT, only read editor state; do not disturb menu rendering."
          (scope (and prefix (eq (oref prefix command) 'emacsvox-aural-voice-menu)
                      (oref prefix scope)))
          (buffer (car scope))
-         (context (cdr scope))
+         (context (nth 1 scope))
+         (choice (nth 2 scope))
          (focus (when (and (not inspect) (window-live-p transient--window))
                   (with-selected-window transient--window
                     (when-let* ((button (button-at (point))))
@@ -55,9 +56,10 @@ With INSPECT, only read editor state; do not disturb menu rendering."
     (with-current-buffer buffer
       (unless (and (eq context emacsvox-aural-voice-editor--context)
                    (emacsvox-aural-voice-editor--get :voice)
-                   (not (emacsvox-aural-voice-editor--get :tuning-choice))
+                   (equal choice (emacsvox-aural-voice-editor--get :tuning-choice))
+                   (or (null choice) (emacsvox-aural-voice-editor--tuning-row))
                    (not (emacsvox-aural-voice-editor--get :engine-controls)))
-        (user-error "Voice editing scope changed; reopen the shared tuning menu"))
+        (user-error "Voice editing scope changed; reopen the tuning menu"))
       (let ((field (get-text-property (point) 'voice-field)))
         (unwind-protect (funcall function)
           (unless inspect (emacsvox-aural-voice-editor--locate field))
@@ -69,22 +71,28 @@ With INSPECT, only read editor state; do not disturb menu rendering."
               (transient--goto-button focus))))))))
 
 (defun emacsvox-aural-voice-menu--label (dimension)
-  "Describe shared DIMENSION, including changes and advertised support."
+  "Describe the selected scope's DIMENSION, including changes and advertised support."
   (emacsvox-aural-voice-menu--call
    (lambda ()
      (let ((snapshot (emacsvox-aural-voice-editor--working)))
        (emacsvox-aural-voice-editor--adjustment-text
         dimension (emacsvox-aural-voice-editor--tuning-style
                    snapshot (emacsvox-aural-voice-editor--get :palette))
-        (plist-get snapshot :selectors)))) t))
+        (if (emacsvox-aural-voice-editor--get :tuning-choice)
+            (list (plist-get (emacsvox-aural-voice-editor--tuning-row) :selector))
+          (plist-get snapshot :selectors))))) t))
 
 (defun emacsvox-aural-voice-menu--title ()
   "Name the draft, owning palette, scope, and save state."
   (emacsvox-aural-voice-menu--call
    (lambda ()
-     (format "%s in %s: shared tuning; %s"
+     (format "%s in %s: %s; %s"
              (emacsvox-aural-voice-editor--get :voice)
              (emacsvox-aural-voice-editor--get :palette)
+             (if-let* ((row (emacsvox-aural-voice-editor--tuning-row)))
+                 (format "choice %s, %s" (plist-get row :id)
+                         (emacsvox-aural-voice-workbench--selector-description (plist-get row :selector)))
+               "shared tuning")
              (plist-get (emacsvox-aural-voice-drafts--status
                          (emacsvox-aural-voice-editor--draft)) :label))) t))
 
@@ -126,16 +134,16 @@ With INSPECT, only read editor state; do not disturb menu rendering."
           'state-change 'select-object))))))
 
 (defun emacsvox-aural-voice-menu--rate ()
-  "Edit the shared relative rate." (interactive)
+  "Edit the selected scope's relative rate." (interactive)
   (emacsvox-aural-voice-menu--edit 'rate-offset))
 (defun emacsvox-aural-voice-menu--pitch ()
-  "Edit the shared pitch." (interactive)
+  "Edit the selected scope's pitch." (interactive)
   (emacsvox-aural-voice-menu--edit 'average-pitch))
 (defun emacsvox-aural-voice-menu--range ()
-  "Edit the shared pitch range." (interactive)
+  "Edit the selected scope's pitch range." (interactive)
   (emacsvox-aural-voice-menu--edit 'pitch-range))
 (defun emacsvox-aural-voice-menu--gain ()
-  "Edit the shared output gain." (interactive)
+  "Edit the selected scope's output gain." (interactive)
   (emacsvox-aural-voice-menu--edit 'gain))
 
 (defun emacsvox-aural-voice-menu--selected-dimension (&optional noerror)
@@ -167,10 +175,10 @@ With INSPECT, only read editor state; do not disturb menu rendering."
                               choices))))))))
     (emacsvox-aural-voice-menu--edit dimension nil t)))
 (defun emacsvox-aural-voice-menu--play ()
-  "Preview the edited base voice privately." (interactive)
+  "Preview the selected voice scope privately." (interactive)
   (emacsvox-aural-voice-menu--call #'emacsvox-aural-voice-editor-play))
 (defun emacsvox-aural-voice-menu--compare ()
-  "Compare original and edited base voices with the same text." (interactive)
+  "Compare the selected scope before and after editing with the same text." (interactive)
   (emacsvox-aural-voice-menu--call #'emacsvox-aural-voice-editor-compare))
 (defun emacsvox-aural-voice-menu--stop ()
   "Stop this editor's sample." (interactive)
@@ -196,6 +204,52 @@ With INSPECT, only read editor state; do not disturb menu rendering."
   "Save without selecting the palette." (interactive)
   (emacsvox-aural-voice-menu--call #'emacsvox-aural-voice-editor-save-to-collection))
 
+(defun emacsvox-aural-voice-menu--scope (choice)
+  "Switch the same draft to CHOICE, or shared settings for nil."
+  (emacsvox-aural-voice-editor--customize choice)
+  (oset (or transient--prefix transient-current-prefix) scope
+        (list (current-buffer) emacsvox-aural-voice-editor--context choice)))
+(defun emacsvox-aural-voice-menu--fallback ()
+  "Choose one stable fallback row without changing its voice or order."
+  (interactive)
+  (emacsvox-aural-voice-menu--call
+   (lambda ()
+     (emacsvox-aural-voice-menu--scope
+      (emacsvox-aural-voice-editor--read-choice
+       (emacsvox-aural-voice-editor--working) "Customize fallback: "
+       (emacsvox-aural-voice-editor--get :tuning-choice))))))
+(defun emacsvox-aural-voice-menu--shared ()
+  "Return to shared tuning without losing individual fallback adjustments."
+  (interactive)
+  (emacsvox-aural-voice-menu--call (lambda () (emacsvox-aural-voice-menu--scope nil))))
+(defun emacsvox-aural-voice-menu--fallback-p ()
+  "Whether this menu is editing one fallback row."
+  (emacsvox-aural-voice-menu--call
+   (lambda () (emacsvox-aural-voice-editor--get :tuning-choice)) t))
+(defun emacsvox-aural-voice-menu--inherit ()
+  "Restore the selected fallback adjustment's shared value."
+  (interactive)
+  (let ((dimension (emacsvox-aural-voice-menu--selected-dimension)))
+    (emacsvox-aural-voice-menu--call
+     (lambda ()
+       (let ((automatic (emacsvox-aural-voice-editor--get :automatic-sample)))
+         (emacsvox-aural-voice-editor-stop)
+         (unwind-protect
+             (progn
+               (emacsvox-aural-voice-editor--put :automatic-sample nil)
+               (cl-letf (((symbol-function 'emacsvox-aural-voice-editor-speak) #'ignore))
+                 (emacsvox-aural-voice-editor--set-choice dimension 'inherit nil)))
+           (emacsvox-aural-voice-editor--put :automatic-sample automatic))
+         (emacsvox-transient--submit-text
+          (concat "Use shared value. " (emacsvox-aural-voice-menu--label dimension))
+          (emacsvox-transient--menu-facts 'voice-inherit 'command-menu-value-changed)
+          'state-change 'select-object))))))
+(defun emacsvox-aural-voice-menu--native ()
+  "Open qualified engine controls in the same editor, retaining its draft."
+  (interactive)
+  (require 'emacsvox-aural-voice-engine-controls)
+  (emacsvox-aural-voice-menu--call #'emacsvox-aural-voice-engine-controls-open t))
+
 (defun emacsvox-aural-voice-menu--bindings (map)
   "Add shifted-arrow adjustments to this voice menu's MAP."
   (when (and transient--prefix
@@ -209,7 +263,7 @@ With INSPECT, only read editor state; do not disturb menu rendering."
 
 ;;;###autoload
 (transient-define-prefix emacsvox-aural-voice-menu ()
-  "Tune this named voice's shared draft; preview and save explicitly."
+  "Tune shared or individual fallback values; preview and save explicitly."
   :refresh-suffixes t
   [:description emacsvox-aural-voice-menu--title
    ("r" (lambda () (emacsvox-aural-voice-menu--label 'rate-offset)) emacsvox-aural-voice-menu--rate :transient t)
@@ -217,11 +271,16 @@ With INSPECT, only read editor state; do not disturb menu rendering."
    ("g" (lambda () (emacsvox-aural-voice-menu--label 'pitch-range)) emacsvox-aural-voice-menu--range :transient t)
    ("v" (lambda () (emacsvox-aural-voice-menu--label 'gain)) emacsvox-aural-voice-menu--gain :transient t)
    ("d" "Adapter default for selected adjustment" emacsvox-aural-voice-menu--default :transient t)]
-  ["Listen to the base voice"
+  ["Listen to the selected voice scope"
    ("P" "Play edited" emacsvox-aural-voice-menu--play :transient t)
    ("B" "Compare original and edited" emacsvox-aural-voice-menu--compare :transient t)
    ("S" "Stop sample" emacsvox-aural-voice-menu--stop :transient t)
    ("T" "Sample text" emacsvox-aural-voice-menu--text :transient t)]
+  ["Tuning scope"
+   ("f" "Choose a fallback to customize" emacsvox-aural-voice-menu--fallback :transient t)
+   ("h" "Shared settings" emacsvox-aural-voice-menu--shared :transient t)
+   ("i" "Use shared value for selected adjustment" emacsvox-aural-voice-menu--inherit :inapt-if-not emacsvox-aural-voice-menu--fallback-p :transient t)
+   ("e" "Qualified engine controls (full editor)" emacsvox-aural-voice-menu--native)]
   ["Save and return"
    ("u" "Undo last change" emacsvox-aural-voice-menu--undo :transient t)
    ("w" "Save and apply" emacsvox-aural-voice-menu--save :transient t)
@@ -230,12 +289,13 @@ With INSPECT, only read editor state; do not disturb menu rendering."
   (interactive)
   (unless (and (derived-mode-p 'emacsvox-aural-voice-editor-mode)
                (emacsvox-aural-voice-editor--get :voice)
-               (not (emacsvox-aural-voice-editor--get :tuning-choice))
+               (or (not (emacsvox-aural-voice-editor--get :tuning-choice))
+                   (emacsvox-aural-voice-editor--tuning-row))
                (not (emacsvox-aural-voice-editor--get :engine-controls)))
-    (user-error "Open a named voice's shared editor first"))
+    (user-error "Open a named voice's shared or fallback editor first"))
   (let ((buffer (current-buffer)) (context emacsvox-aural-voice-editor--context) cleanup)
     (emacsvox-aural-voice-editor-stop)
-    (transient-setup 'emacsvox-aural-voice-menu nil nil :scope (cons buffer context))
+    (transient-setup 'emacsvox-aural-voice-menu nil nil :scope (list buffer context (emacsvox-aural-voice-editor--get :tuning-choice)))
     (setq cleanup
           (lambda ()
             (remove-hook 'transient-exit-hook cleanup)

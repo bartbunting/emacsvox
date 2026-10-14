@@ -5832,7 +5832,7 @@ paths.
 
  -- Command: emacsvox-aural-voice-menu
 
-     Tune this named voice’s shared draft; preview and save explicitly.
+     Tune shared or individual fallback values; preview and save explicitly.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-voice-palettes,  Next: emacsvox-aural-voice-runtime,  Prev: emacsvox-aural-voice-menu,  Up: Emacsvox Commands And Options

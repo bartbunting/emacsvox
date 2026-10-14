@@ -6380,7 +6380,7 @@ Preview and saving use the editor's existing ownership and recovery paths.
 @findex emacsvox-aural-voice-menu
 
 @format
-Tune this named voice’s shared draft; preview and save explicitly.
+Tune shared or individual fallback values; preview and save explicitly.
 @end format
 @end deffn
 
@@ -25466,6 +25466,7 @@ Browse URL with specified XSL style.
 @end table
 
 @findex emacsvox-xslt-view-atom-file
+
 @format
 View Atom file.
 

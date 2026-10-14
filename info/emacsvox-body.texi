@@ -2999,6 +2999,15 @@ Customize retains its own Apply@comma{} Save@comma{} and Reset controls@comma{} 
 menu. Comint autospeak is deliberately local. Integrations without an inventoried
 group remain reachable through major-mode settings and advanced Customize.
 
+The named-voice editor's @code{m} tuning menu now works for shared and individual
+fallback adjustments. @code{f} selects an existing fallback@comma{} @code{h} returns to shared
+settings@comma{} and the title identifies the scope. Shift-left/right adjusts the
+focused value. For an individual fallback@comma{} @code{i} uses the shared value@comma{} @code{d} asks
+for the adapter default@comma{} and zero is an explicit adjustment. Play and Compare
+use that selected scope. @code{e} opens the existing engine-specific editor@comma{} which
+waits for a qualified runtime catalogue before allowing changes. Its @code{q} returns
+to the common editor; @code{m} reopens focused tuning with the same draft and scope.
+
 Speech settings opens for the current buffer. Press @kbd{g} there to switch to
 global defaults@comma{} or start with @kbd{C-u C-e H}. Indentation shares this scope with
 its parent menus@comma{} including changes made with @kbd{g} inside Indentation.
