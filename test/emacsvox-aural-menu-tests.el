@@ -330,6 +330,8 @@
               (execute-kbd-macro (kbd "x"))
               (setq details (current-buffer))
               (should (derived-mode-p 'emacsvox-aural-feedback-details-mode))
+              (should emacsvox-aural-feedback-outline-mode)
+              (should outline-minor-mode)
               (should-not transient--prefix)
               (should-not transient--stack)
               (should (equal observed (list source 3)))

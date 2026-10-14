@@ -86,6 +86,20 @@ closes the menu. Opening Feedback Details directly keeps its usual return
 destination. A changed or deleted source item must be selected again by
 reopening the menu. If the source buffer has closed, the menu cannot resume.
 
+On the UI experiments branch, ~C-e H x~ opens an Outline version of Feedback
+Details. It is read-only, with a visible summary and initially folded fields.
+Press ~TAB~ on a heading to cycle its visibility, ~Shift-TAB~ to cycle the
+whole report, and ~n~ or ~p~ to move between visible headings. Standard Outline
+minor-mode commands are available under ~C-c @~, including ~C-c @ C-u~ for
+the parent heading. Arrows read visible lines. ~RET~ folds a heading or
+activates an action; ~TAB~ away from a heading and ~M-n~ move to the next
+visible action. Playback and editing use the existing report commands.
+
+Press ~o~ to compare Outline with the original report. Refreshing draft status
+with ~g~ preserves folds and position, and returning from an editor preserves
+its action button. The report continues to describe the captured feedback.
+New reports opened directly use the original layout; ~o~ switches their style.
+
 For menu Help, press ~?~ followed by a choice's key, or ~? ?~ for help on
 the current menu. ~q~ in Help resumes that menu, including its parent menus.
 The original Aural Home

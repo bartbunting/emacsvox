@@ -33,6 +33,9 @@
 (require 'emacsvox-indentation)
 (require 'emacsvox-aural-inspection)
 
+(declare-function emacsvox-aural-feedback-outline-mode
+                  "emacsvox-aural-feedback-details" (&optional arg))
+
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
 (autoload 'emacsvox-explain-aural-presentation "emacsvox-aural-explanation" nil t)
 
@@ -90,6 +93,7 @@
     (emacsvox-aural-menu--call-at-item #'emacsvox-explain-aural-presentation)
     (with-current-buffer (window-buffer (selected-window))
       (when (derived-mode-p 'emacsvox-aural-feedback-details-mode)
+        (emacsvox-aural-feedback-outline-mode 1)
         (setq-local emacsvox-aural-ui--help-return-function
                     (lambda () (emacsvox-aural-menu--return-from-feedback context)))))))
 

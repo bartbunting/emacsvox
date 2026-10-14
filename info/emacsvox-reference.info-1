@@ -419,7 +419,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1634 commands and 232 options.
+   This chapter documents a total of 1635 commands and 233 options.
 
 * Menu:
 
@@ -3063,6 +3063,7 @@ planner with private rule layers and captured source context.
      g		emacsvox-aural-feedback-details-update-draft-status
      h		emacsvox-aural
      n		emacsvox-aural-feedback-details-next-heading
+     o		emacsvox-aural-feedback-details-switch-view
      p		emacsvox-aural-feedback-details-previous-heading
      q		emacsvox-aural-ui-help-quit
      r		emacsvox-aural-feedback-details-choose-voice
@@ -3168,6 +3169,46 @@ planner with private rule layers and captured source context.
  -- Command: emacsvox-aural-feedback-details-toggle
 
      Expand or collapse the selected field, including its voice spans.
+
+2.26.1.16 emacsvox-aural-feedback-outline-mode
+..............................................
+
+ -- Command: emacsvox-aural-feedback-outline-mode (&optional arg)
+
+     Review Feedback Details with standard Outline navigation and folding.
+
+     TAB cycles a heading; n and p move between visible headings.  M-n moves to
+     the next visible action.  Press o to compare with the original report.
+
+     This is a minor mode.  If called interactively, toggle the
+     ‘Emacsvox-Aural-Feedback-Outline mode’ mode.  If the prefix argument is
+     positive, enable the mode, and if it is zero or negative, disable the
+     mode.
+
+     If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+     mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+     if ARG is a negative number.
+
+     To check whether the minor mode is enabled in the current buffer,
+     evaluate the variable ‘emacsvox-aural-feedback-outline-mode’.
+
+     The mode’s hook is called both when the mode is enabled and when it is
+     disabled.
+
+     (fn &optional ARG)
+
+2.26.2 emacsvox-aural-feedback-details Options
+----------------------------------------------
+
+ -- Variable: User Option emacsvox-aural-feedback-outline-mode-hook
+     Hook run after entering or leaving ‘emacsvox-aural-feedback-outline-mode’.
+     No problems result if this variable is not bound.
+     ‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+
+     Default Value:
+
+     nil
+
 
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-history,  Next: emacsvox-aural-home,  Prev: emacsvox-aural-feedback-details,  Up: Emacsvox Commands And Options

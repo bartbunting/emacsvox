@@ -33,6 +33,7 @@
 ;;; Code:
 
 (require 'button)
+(require 'outline)
 (require 'pp)
 (require 'emacsvox-aural-recent-feedback)
 (require 'emacsvox-aural-planner)
@@ -70,6 +71,12 @@
   "Separate debug buffer for this report's frozen snapshot.")
 (defvar-local emacsvox-aural-feedback-details--drafts nil
   "Alist from lists of run indices to live guided editor buffers.")
+
+(defvar emacsvox-aural-feedback-outline-mode)
+(defvar emacsvox-aural-feedback-details--outline-level 1
+  "Heading depth while rendering the Outline report.")
+(defvar-local emacsvox-aural-feedback-details--outline-rendered nil
+  "Whether this frozen report already has its complete Outline contents.")
 
 (defun emacsvox-aural-feedback-details--pending-field-p (indices)
   "Return non-nil when a field in INDICES has an unapplied linked draft."
@@ -426,8 +433,12 @@ The existing sound override editor owns its separate unsaved rule draft."
 
 (defun emacsvox-aural-feedback-details--heading (text)
   "Insert a navigable heading containing TEXT."
-  (insert (propertize (concat text "\n") 'face 'bold
-                      'emacsvox-aural-feedback-heading t)))
+  (let ((start (point)))
+    (insert (propertize (concat text "\n") 'face 'bold
+                       'emacsvox-aural-feedback-heading t))
+    (when (bound-and-true-p emacsvox-aural-feedback-outline-mode)
+      (put-text-property start (point) 'emacsvox-aural-feedback-outline-level
+                         emacsvox-aural-feedback-details--outline-level))))
 
 (defun emacsvox-aural-feedback-details--insert-content (indices)
   "Insert the recorded content at INDICES with its frozen voices."
@@ -474,6 +485,7 @@ The existing sound override editor owns its separate unsaved rule draft."
 (defun emacsvox-aural-feedback-details--insert-spans (indices)
   "Insert a folded section for the individual voice spans in INDICES."
   (let ((start (point))
+        (emacsvox-aural-feedback-details--outline-level 3)
         (expanded (member indices emacsvox-aural-feedback-details--expanded-spans)))
     (emacsvox-aural-feedback-details--heading
      (emacsvox-aural-ui--expansion-text
@@ -485,7 +497,8 @@ The existing sound override editor owns its separate unsaved rule draft."
     (put-text-property start (point) 'emacsvox-aural-feedback-span-section indices)
     (when expanded
       (cl-loop for index in indices for number from 1 do
-               (let ((span-start (point)))
+               (let ((span-start (point))
+                     (emacsvox-aural-feedback-details--outline-level 4))
                  (emacsvox-aural-feedback-details--heading
                   (format "  Span %d. Voice: %s" number
                           (emacsvox-aural-recent-feedback--voice
@@ -587,6 +600,8 @@ The existing sound override editor owns its separate unsaved rule draft."
 (defun emacsvox-aural-feedback-details--insert-speech-action (plan action phase)
   "Insert playback and voice controls for PLAN's spoken ACTION in PHASE."
   (let ((start (point))
+        (emacsvox-aural-feedback-details--outline-level
+         (1+ emacsvox-aural-feedback-details--outline-level))
         (target (emacsvox-aural-feedback-details--named-voice
                  plan (emacsvox-aural-concrete-action-voice-request action))))
     (emacsvox-aural-feedback-details--heading
@@ -690,7 +705,7 @@ The existing sound override editor owns its separate unsaved rule draft."
        emacsvox-aural-feedback-details--debug-buffer
        (lambda () (emacsvox-aural-ui-speak "Debug details. Raw troubleshooting data; q returns."))))))
 
-(defun emacsvox-aural-feedback-details--render (&optional selected-target)
+(defun emacsvox-aural-feedback-details--render-classic (&optional selected-target)
   "Render the report, preserving SELECTED-TARGET or the field at point."
   (let ((inhibit-read-only t)
         (target (or selected-target (get-text-property (point) 'emacsvox-aural-feedback-target)))
@@ -725,6 +740,7 @@ The existing sound override editor owns its separate unsaved rule draft."
     (emacsvox-aural-feedback-details--heading "Fields in playback order")
     (dolist (indices (emacsvox-aural-feedback-details--groups record))
       (let ((start (point))
+            (emacsvox-aural-feedback-details--outline-level 2)
             (expanded (member indices emacsvox-aural-feedback-details--expanded)))
         (emacsvox-aural-feedback-details--heading
          (concat (emacsvox-aural-ui--expansion-text
@@ -773,7 +789,10 @@ The existing sound override editor owns its separate unsaved rule draft."
       (make-text-button start (1- (point)) 'follow-link t
                         'action (lambda (_) (emacsvox-aural-feedback-details-debug))))
     (insert "Open the raw snapshot in a separate buffer for troubleshooting.\n")
-    (insert "\nRET expands sections or activates actions. n/p headings; arrows read lines; TAB actions.\nO play field or spoken label; P play all; C change field; r choose voice; R sound overrides.\nOn a spoken label, C or r edits its named palette voice.\nV preview all changes; S stop; g update draft status; q return.\n")
+    (insert (if (bound-and-true-p emacsvox-aural-feedback-outline-mode)
+                "\nTAB folds headings or moves to the next visible action; Shift-TAB cycles the outline.\nn/p visible headings; RET folds headings or activates actions; arrows read visible lines.\n"
+              "\nRET expands sections or activates actions. n/p headings; arrows read lines; TAB actions.\n"))
+    (insert "O play field or spoken label; P play all; C change field; r choose voice; R sound overrides.\nOn a spoken label, C or r edits its named palette voice.\nV preview all changes; S stop; g update draft status; o switch report style; q return.\n")
     (goto-char (point-min))
     (when-let* ((position
                  (when target (cl-loop for pos = (point-min) then (next-single-property-change
@@ -783,6 +802,142 @@ The existing sound override editor owns its separate unsaved rule draft."
                                         return pos))))
       (goto-char position))
     (set-buffer-modified-p nil)))
+
+(defun emacsvox-aural-feedback-details--outline-search
+    (&optional bound move backward looking-at)
+  "Find a report heading for Outline using BOUND, MOVE, BACKWARD and LOOKING-AT.
+Only generated headings qualify; recorded text is never interpreted as markup."
+  (if looking-at
+      (and (bolp)
+           (get-text-property (point) 'emacsvox-aural-feedback-outline-level)
+           (looking-at ".+"))
+    (let ((origin (point)) found)
+      (while (and (not found)
+                  (funcall (if backward #'re-search-backward #'re-search-forward)
+                           "^.+" bound t))
+        (setq found (get-text-property (match-beginning 0)
+                                      'emacsvox-aural-feedback-outline-level)))
+      (unless found
+        (goto-char (if move (or bound (if backward (point-min) (point-max)))
+                     origin)))
+      found)))
+
+(defun emacsvox-aural-feedback-details--outline-depth ()
+  "Return the depth of the generated heading at point."
+  (or (get-text-property (point) 'emacsvox-aural-feedback-outline-level) 1))
+
+(defun emacsvox-aural-feedback-details--render (&optional selected-target)
+  "Render the report, retaining SELECTED-TARGET and existing Outline folds."
+  (if (not (bound-and-true-p emacsvox-aural-feedback-outline-mode))
+      (emacsvox-aural-feedback-details--render-classic selected-target)
+    (if emacsvox-aural-feedback-details--outline-rendered
+        ;; The record is frozen.  Only draft labels can change, so keep the
+        ;; text, folds, point, and editors' return markers intact.
+        (emacsvox-aural-feedback-details--update-draft-status)
+      (let* ((groups (emacsvox-aural-feedback-details--groups
+                      emacsvox-aural-feedback-details--record))
+             (emacsvox-aural-feedback-details--expanded groups)
+             (emacsvox-aural-feedback-details--expanded-spans groups)
+             (inhibit-read-only t))
+        (emacsvox-aural-feedback-details--render-classic selected-target)
+        (save-excursion
+          (goto-char (point-min))
+          (while (not (eobp))
+            (when (get-text-property (point) 'emacsvox-aural-feedback-outline-level)
+              ;; Outline owns folding.  Remove the old toggle buttons and
+              ;; their fixed expanded-state metadata, retaining action links.
+              (unless (get-text-property (point) 'emacsvox-aural-feedback-speech-action)
+                (when (get-text-property (point) 'emacsvox-aural-feedback-target)
+                  (remove-text-properties
+                   (line-beginning-position) (line-end-position)
+                   '(button nil category nil action nil follow-link nil mouse-face nil
+                            keymap nil help-echo nil))))
+              (remove-text-properties
+               (line-beginning-position) (line-end-position)
+               '(emacsvox-aural-facts nil))
+              (when (= 2 (emacsvox-aural-feedback-details--outline-depth))
+                (outline-hide-subtree)))
+            (forward-line 1)))
+        (while (invisible-p (point)) (outline-up-heading 1 t))
+        (setq emacsvox-aural-feedback-details--outline-rendered t)
+        (set-buffer-modified-p nil)))))
+
+(defun emacsvox-aural-feedback-details--outline-tab ()
+  "Cycle a heading, or move to the next visible action."
+  (interactive)
+  (if (outline-on-heading-p t)
+      (call-interactively #'outline-cycle)
+    (emacsvox-aural-feedback-details--outline-button)))
+
+(defun emacsvox-aural-feedback-details--outline-button ()
+  "Move to and speak the next visible report action."
+  (interactive)
+  (let ((origin (point)) first found done)
+    (while (not done)
+      (let ((button (or (next-button (point))
+                        (next-button (point-min) t))))
+        (unless button (user-error "No actions in this report"))
+        (if (equal (button-start button) first)
+            (setq done t)
+          (unless first (setq first (button-start button)))
+          (goto-char (button-start button))
+          (unless (invisible-p (point)) (setq found button done t)))))
+    (if found
+        (emacsvox-aural-ui--speak-control (button-label found))
+      (goto-char origin)
+      (user-error "No visible actions in this report"))))
+
+(defun emacsvox-aural-feedback-details--outline-open ()
+  "Activate an action button, or cycle the heading at point."
+  (interactive)
+  (if (button-at (point))
+      (emacsvox-aural-feedback-details-open)
+    (if (outline-on-heading-p t)
+        (call-interactively #'outline-cycle)
+      (user-error "Move to a heading or action first"))))
+
+(defvar emacsvox-aural-feedback-outline-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "n") #'outline-next-visible-heading)
+    (define-key map (kbd "p") #'outline-previous-visible-heading)
+    (define-key map (kbd "TAB") #'emacsvox-aural-feedback-details--outline-tab)
+    (define-key map (kbd "<backtab>") #'outline-cycle-buffer)
+    (define-key map (kbd "RET") #'emacsvox-aural-feedback-details--outline-open)
+    (define-key map (kbd "M-n") #'emacsvox-aural-feedback-details--outline-button)
+    map)
+  "Navigation for the experimental Outline feedback report.")
+
+(define-minor-mode emacsvox-aural-feedback-outline-mode
+  "Review Feedback Details with standard Outline navigation and folding.
+TAB cycles a heading; n and p move between visible headings.  M-n moves to
+the next visible action.  Press o to compare with the original report."
+  :lighter " Outline"
+  (unless (derived-mode-p 'emacsvox-aural-feedback-details-mode)
+    (setq emacsvox-aural-feedback-outline-mode nil)
+    (user-error "Open Feedback Details first"))
+  (if emacsvox-aural-feedback-outline-mode
+      (progn
+        (require 'emacsvox-outline)
+        (setq-local outline-search-function #'emacsvox-aural-feedback-details--outline-search)
+        (setq-local outline-level #'emacsvox-aural-feedback-details--outline-depth)
+        ;; Our map handles TAB on headings and action buttons consistently.
+        (setq-local outline-minor-mode-cycle nil)
+        (setq-local outline-minor-mode-use-buttons nil)
+        (setq-local line-move-ignore-invisible t)
+        (outline-minor-mode 1))
+    (outline-show-all)
+    (outline-minor-mode -1))
+  (unless emacsvox-aural-feedback-outline-mode
+    (setq emacsvox-aural-feedback-details--outline-rendered nil))
+  (emacsvox-aural-feedback-details--render))
+
+(defun emacsvox-aural-feedback-details--switch-view ()
+  "Switch between Outline and the original report for comparison."
+  (interactive)
+  (emacsvox-aural-feedback-outline-mode
+   (if emacsvox-aural-feedback-outline-mode -1 1))
+  (emacsvox-aural-ui-speak
+   (if emacsvox-aural-feedback-outline-mode "Outline report" "Original report")))
 
 (defun emacsvox-aural-feedback-details-speak-line ()
   "Read the current report line, retaining recorded content voices."
@@ -797,7 +952,9 @@ The existing sound override editor owns its separate unsaved rule draft."
 (defun emacsvox-aural-feedback-details-next-line (&optional previous)
   "Move one line and read it; PREVIOUS reverses direction."
   (interactive)
-  (forward-line (if previous -1 1))
+  (if (bound-and-true-p emacsvox-aural-feedback-outline-mode)
+      (line-move (if previous -1 1) t)
+    (forward-line (if previous -1 1)))
   (emacsvox-aural-feedback-details-speak-line))
 
 (defun emacsvox-aural-feedback-details-previous-line ()
@@ -876,6 +1033,7 @@ The existing sound override editor owns its separate unsaved rule draft."
                    ("r" . emacsvox-aural-feedback-details--choose-voice)
                    ("R" . emacsvox-aural-feedback-details--change-sound)
                    ("g" . emacsvox-aural-feedback-details--update-draft-status)
+                   ("o" . emacsvox-aural-feedback-details--switch-view)
                    ("V" . emacsvox-aural-feedback-details-preview)
                    ("h" . emacsvox-aural)
                    ("q" . emacsvox-aural-ui-help-quit)))

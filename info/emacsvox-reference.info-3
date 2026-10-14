@@ -5417,53 +5417,57 @@ Function Index
 * emacsvox-aural-feedback-details-mode <1>: emacsvox-aural-feedback-details.
                                                              (line   32)
 * emacsvox-aural-feedback-details-next-button: emacsvox-aural-feedback-details.
-                                                             (line   67)
+                                                             (line   68)
 * emacsvox-aural-feedback-details-next-button <1>: emacsvox-aural-feedback-details.
-                                                             (line   69)
+                                                             (line   70)
 * emacsvox-aural-feedback-details-next-heading: emacsvox-aural-feedback-details.
-                                                             (line   77)
+                                                             (line   78)
 * emacsvox-aural-feedback-details-next-heading <1>: emacsvox-aural-feedback-details.
-                                                             (line   79)
+                                                             (line   80)
 * emacsvox-aural-feedback-details-next-line: emacsvox-aural-feedback-details.
-                                                             (line   87)
+                                                             (line   88)
 * emacsvox-aural-feedback-details-next-line <1>: emacsvox-aural-feedback-details.
-                                                             (line   89)
+                                                             (line   90)
 * emacsvox-aural-feedback-details-open:  emacsvox-aural-feedback-details.
-                                                             (line   97)
-* emacsvox-aural-feedback-details-open <1>: emacsvox-aural-feedback-details.
                                                              (line   98)
+* emacsvox-aural-feedback-details-open <1>: emacsvox-aural-feedback-details.
+                                                             (line   99)
 * emacsvox-aural-feedback-details-play:  emacsvox-aural-feedback-details.
-                                                             (line  104)
-* emacsvox-aural-feedback-details-play <1>: emacsvox-aural-feedback-details.
                                                              (line  105)
+* emacsvox-aural-feedback-details-play <1>: emacsvox-aural-feedback-details.
+                                                             (line  106)
 * emacsvox-aural-feedback-details-play-field: emacsvox-aural-feedback-details.
-                                                             (line  113)
-* emacsvox-aural-feedback-details-play-field <1>: emacsvox-aural-feedback-details.
                                                              (line  114)
+* emacsvox-aural-feedback-details-play-field <1>: emacsvox-aural-feedback-details.
+                                                             (line  115)
 * emacsvox-aural-feedback-details-preview: emacsvox-aural-feedback-details.
-                                                             (line  120)
-* emacsvox-aural-feedback-details-preview <1>: emacsvox-aural-feedback-details.
                                                              (line  121)
+* emacsvox-aural-feedback-details-preview <1>: emacsvox-aural-feedback-details.
+                                                             (line  122)
 * emacsvox-aural-feedback-details-previous-button: emacsvox-aural-feedback-details.
-                                                             (line  129)
-* emacsvox-aural-feedback-details-previous-button <1>: emacsvox-aural-feedback-details.
                                                              (line  130)
+* emacsvox-aural-feedback-details-previous-button <1>: emacsvox-aural-feedback-details.
+                                                             (line  131)
 * emacsvox-aural-feedback-details-previous-heading: emacsvox-aural-feedback-details.
-                                                             (line  136)
-* emacsvox-aural-feedback-details-previous-heading <1>: emacsvox-aural-feedback-details.
                                                              (line  137)
+* emacsvox-aural-feedback-details-previous-heading <1>: emacsvox-aural-feedback-details.
+                                                             (line  138)
 * emacsvox-aural-feedback-details-previous-line: emacsvox-aural-feedback-details.
-                                                             (line  143)
-* emacsvox-aural-feedback-details-previous-line <1>: emacsvox-aural-feedback-details.
                                                              (line  144)
+* emacsvox-aural-feedback-details-previous-line <1>: emacsvox-aural-feedback-details.
+                                                             (line  145)
 * emacsvox-aural-feedback-details-speak-line: emacsvox-aural-feedback-details.
-                                                             (line  150)
-* emacsvox-aural-feedback-details-speak-line <1>: emacsvox-aural-feedback-details.
                                                              (line  151)
+* emacsvox-aural-feedback-details-speak-line <1>: emacsvox-aural-feedback-details.
+                                                             (line  152)
 * emacsvox-aural-feedback-details-toggle: emacsvox-aural-feedback-details.
-                                                             (line  157)
-* emacsvox-aural-feedback-details-toggle <1>: emacsvox-aural-feedback-details.
                                                              (line  158)
+* emacsvox-aural-feedback-details-toggle <1>: emacsvox-aural-feedback-details.
+                                                             (line  159)
+* emacsvox-aural-feedback-outline-mode:  emacsvox-aural-feedback-details.
+                                                             (line  165)
+* emacsvox-aural-feedback-outline-mode <1>: emacsvox-aural-feedback-details.
+                                                             (line  166)
 * emacsvox-aural-home-activate:          emacsvox-aural-home.
                                                              (line   24)
 * emacsvox-aural-home-activate <1>:      emacsvox-aural-home.
