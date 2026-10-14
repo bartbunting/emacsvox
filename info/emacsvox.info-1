@@ -2994,13 +2994,19 @@ adjustments still give brief feedback.  Press ‘S’ to save the navigation
 style, presentation order, and descriptions preference through
 Customize.
 
-   Press ‘C-e H /’ to find an Emacsvox setting by name, ignoring
-capitalization.  Type ‘cap’ and use completion to choose _Capital-letter
-beep_, for example.  Enter accepts the choice, opens its menu, and
-selects the matching control without changing its value.  Press Enter
-again to activate or edit the control.  The captured source and current
-settings scope follow the search.  ‘q’ returns to the menu where you
-searched, and cancelling completion keeps that menu open.
+   Press ‘C-e H /’ to find an Emacsvox setting by any part of its name,
+ignoring capitalization.  Type ‘cap’ to find _Capitalization indication
+and camel case_, _Capital-letter beep_, and _All-caps beep_.  The
+aliases ‘caps beep’ and ‘allcaps’ find both beep controls and just
+_All-caps beep_, respectively.  Each result appears once under its
+normal name.  Use completion to choose a result; ambiguous text does not
+choose one automatically.  These matching rules apply to this search
+without changing completion elsewhere in Emacs.  Enter accepts the
+choice, opens its menu, and selects the matching control without
+changing its value.  Press Enter again to activate or edit the control.
+The captured source and current settings scope follow the search.  ‘q’
+returns to the menu where you searched, and cancelling completion keeps
+that menu open.
 
    Press ‘C-e H a’ to search the existing Home action catalogue,
 including actions inside collapsed groups.  Child views use their normal

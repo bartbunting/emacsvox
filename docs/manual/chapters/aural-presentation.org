@@ -87,8 +87,13 @@ descriptions are on by default. Value adjustments still give brief feedback.
 Press ~S~ to save the navigation style, presentation order, and descriptions
 preference through Customize.
 
-Press ~C-e H /~ to find an Emacsvox setting by name, ignoring capitalization.
-Type ~cap~ and use completion to choose /Capital-letter beep/, for example.
+Press ~C-e H /~ to find an Emacsvox setting by any part of its name, ignoring
+capitalization. Type ~cap~ to find /Capitalization indication and camel case/,
+/Capital-letter beep/, and /All-caps beep/. The aliases ~caps beep~ and
+~allcaps~ find both beep controls and just /All-caps beep/, respectively.
+Each result appears once under its normal name. Use completion to choose a
+result; ambiguous text does not choose one automatically. These matching rules
+apply to this search without changing completion elsewhere in Emacs.
 Enter accepts the choice, opens its menu, and selects the matching control
 without changing its value. Press Enter again to activate or edit the control.
 The captured source and current settings scope follow the search.

@@ -708,12 +708,28 @@ verification of subsequently changed code.
 
 ** Findings queue
 
+- 2026-10-15: Settings search now matches anywhere in labels and a small alias
+  catalogue, ignoring case independently of the surrounding completion styles.
+  =cap= finds the indication/camel-case entry and both beep controls;
+  =caps beep= finds both beeps; =allcaps=, =allcaps beep=, and =all caps= find
+  All-caps beep. Results retain their normal names without duplicate alias
+  rows. Ambiguous queries retain the prompt until a destination is chosen.
+  Matching rules are local to this search; the existing completion frontend
+  and other prompts retain their configuration. Selection still focuses a
+  control without activating it or writing settings.
+  Nine focused checks passed from source and compiled code in fresh graphical
+  Emacs with installed Transient, with no skips. They cover substring/alias
+  matching, mixed case, ambiguity, literal punctuation, completion isolation,
+  real keyboard selection, source/scope, cancellation, and return. Incremental
+  compilation and byte-code preflight passed. The manual includes examples;
+  candidate speech and practical discoverability remain open for listening in
+  a fresh normal profile.
 - 2026-10-15: Listening feedback finds partial-name settings search unclear.
   =C-e H /= uses ordinary completion over fixed labels, then opens and focuses
   a control without activating it. Search now ignores capitalization for both
   completion and accepting a typed name, without changing completion elsewhere.
   A regression reproduced lowercase =cap= failing before the fix. Seven focused
-  checks pass from source and current byte-code in fresh graphical Emacs using
+  checks passed for that case-only change from source and byte-code in fresh graphical Emacs using
   installed Transient, including partial completion, mixed-case acceptance,
   focus, cancellation, return, and no activation or saving on selection.
   Incremental compilation and byte-code preflight passed; the manual explains

@@ -49,13 +49,50 @@
     (should (equal (car opened) "Capital-letter beep"))
     (should-not completion-ignore-case)))
 
+(ert-deftest emacsvox-settings-search-substrings-and-aliases ()
+  "Search labels and aliases consistently without duplicate or arbitrary choices."
+  (let ((completion-ignore-case nil)
+        (completion-styles '(basic))
+        (completion-category-defaults '((emacsvox-settings (styles basic))))
+        (completion-category-overrides '((emacsvox-settings (styles basic))))
+        opened)
+    (cl-letf (((symbol-function 'completing-read)
+               (lambda (_prompt table &rest _)
+                 (dolist (case '(("cap" "Capitalization indication and camel case"
+                                  "Capital-letter beep" "All-caps beep")
+                                 ("CAPS BEEP" "Capital-letter beep" "All-caps beep")
+                                 ("allcaps" "All-caps beep")
+                                 ("allcaps beep" "All-caps beep")
+                                 ("all caps" "All-caps beep")
+                                 ("pitch and" "Indentation pitch and duration")
+                                 ("[")))
+                   (let ((matches (completion-all-completions
+                                   (car case) table nil (length (car case)))))
+                     ;; Completion styles append the replacement base position.
+                     (when matches (setcdr (last matches) nil))
+                     (should (equal (sort matches #'string-lessp)
+                                    (sort (copy-sequence (cdr case)) #'string-lessp)))))
+                 (should (equal (completion-try-completion "cap" table nil 3)
+                                '("cap" . 3)))
+                 (should (equal (completion-try-completion "allcaps" table nil 7)
+                                '("All-caps beep" . 13)))
+                 "All-caps beep"))
+              ((symbol-function 'emacsvox-settings--open)
+               (lambda (entry) (setq opened entry))))
+      (emacsvox-settings-search))
+    (should (equal (car opened) "All-caps beep"))
+    (should (equal completion-styles '(basic)))
+    (should (equal completion-category-defaults '((emacsvox-settings (styles basic)))))
+    (should (equal completion-category-overrides '((emacsvox-settings (styles basic)))))
+    (should-not completion-ignore-case)))
+
 (ert-deftest emacsvox-settings-menu-search-partial-name-and-mixed-case ()
   "Complete a lowercase prefix or accept mixed case without activating a control."
   (emacsvox-test--with-settings
     (let ((completion-ignore-case nil)
           (completion-styles '(basic))
           (completion-category-overrides nil))
-      (dolist (input (list (vconcat "cap" (kbd "TAB") "-letter beep" (kbd "RET"))
+      (dolist (input (list (vconcat "capital-l" (kbd "TAB RET"))
                            (vconcat "cApItAl-LeTtEr BeEp" (kbd "RET"))))
         (execute-kbd-macro (vconcat (kbd "/") input))
         (should (eq (oref transient--prefix command) 'emacsvox-capitalization))
@@ -66,6 +103,28 @@
         (execute-kbd-macro (kbd "q"))
         (should (eq (oref transient--prefix command) 'emacsvox-aural-menu)))
       (should-not completion-ignore-case))))
+
+(ert-deftest emacsvox-settings-menu-search-alias-and-substring-selection ()
+  "Real completion accepts an alias or inner words and focuses without activation."
+  (emacsvox-test--with-settings
+    (let ((completion-styles '(basic)))
+      ;; Both ambiguous searches must remain in the prompt until a choice is made.
+      (execute-kbd-macro
+       (vconcat (kbd "/") "cap" (kbd "TAB C-a C-k")
+                "caps beep" (kbd "TAB C-a C-k") "ALLCAPS" (kbd "TAB RET")))
+      (should (eq (oref transient--prefix command) 'emacsvox-capitalization))
+      (with-selected-window transient--window
+        (should (equal (oref (button-get (button-at (point)) 'button-data) key) "a")))
+      (should (zerop (hash-table-count emacsvox-capitalization--drafts)))
+      (execute-kbd-macro (kbd "q"))
+      (execute-kbd-macro (vconcat (kbd "/") "pitch and" (kbd "TAB RET")))
+      (should (eq (oref transient--prefix command) 'emacsvox-indentation-tone))
+      (with-selected-window transient--window
+        (should (equal (oref (button-get (button-at (point)) 'button-data) key) "b")))
+      (should-not (file-exists-p custom-file))
+      (execute-kbd-macro (kbd "q"))
+      (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+      (should (equal completion-styles '(basic))))))
 
 (ert-deftest emacsvox-settings-menu-search-preserves-source-and-scope ()
   "Search edits the captured source and returns without moving source point."

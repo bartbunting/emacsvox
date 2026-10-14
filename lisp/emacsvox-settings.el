@@ -59,6 +59,36 @@
     ("Voices and engines" emacsvox-aural-menu emacsvox-aural-menu-voices "b")
     ("Voice palettes" emacsvox-aural-menu emacsvox-aural-menu-voices "p"))
   "Search labels, defining features, destination prefixes, and selected keys.")
+
+(defconst emacsvox-settings--search-aliases
+  '(("Capital-letter beep" "caps beep" "capital beep")
+    ("All-caps beep" "allcaps beep" "all caps beep" "caps beep"))
+  "Additional search terms for settings, displayed under their original labels.")
+
+(defun emacsvox-settings--search-matches (string table predicate)
+  "Return labels in TABLE matching STRING or an alias, respecting PREDICATE."
+  (let ((case-fold-search t)
+        (pattern (regexp-quote string)))
+    (cl-remove-if-not
+     (lambda (label)
+       (cl-some (lambda (term) (string-match-p pattern term))
+                (cons label (cdr (assoc label emacsvox-settings--search-aliases)))))
+     (all-completions "" table predicate))))
+
+(defun emacsvox-settings--search-all (string table predicate _point)
+  "Complete STRING against settings labels and aliases in TABLE with PREDICATE."
+  (let ((matches (emacsvox-settings--search-matches string table predicate)))
+    (when matches (nconc matches 0))))
+
+(defun emacsvox-settings--search-try (string table predicate point)
+  "Complete a unique setting in TABLE, keeping ambiguous STRING at POINT."
+  (let ((matches (emacsvox-settings--search-matches string table predicate)))
+    (cond
+     ((null matches) nil)
+     ((test-completion string matches) t)
+     ((null (cdr matches)) (cons (car matches) (length (car matches))))
+     (t (cons string point)))))
+
 (defun emacsvox-settings--open (entry)
   "Open settings ENTRY with the current captured source and scope."
   (let* ((context (emacsvox-aural-menu--context))
@@ -77,7 +107,15 @@
 (defun emacsvox-settings-search ()
   "Find a focused setting and select its control without activating it."
   (interactive)
-  (let ((completion-ignore-case t))
+  (let ((completion-ignore-case t)
+        ;; Keep the completion frontend, but give this search consistent matching.
+        (completion-styles '(emacsvox-settings))
+        (completion-category-defaults nil)
+        (completion-category-overrides nil)
+        (completion-styles-alist
+         (cons '(emacsvox-settings emacsvox-settings--search-try
+                 emacsvox-settings--search-all "Find settings by label or alias.")
+               completion-styles-alist)))
     (emacsvox-settings--open
      (or (assoc-string
           (completing-read "Emacsvox setting: " emacsvox-settings--destinations nil t)

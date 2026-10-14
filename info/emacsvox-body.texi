@@ -2952,8 +2952,13 @@ descriptions are on by default. Value adjustments still give brief feedback.
 Press @kbd{S} to save the navigation style@comma{} presentation order@comma{} and descriptions
 preference through Customize.
 
-Press @kbd{C-e H /} to find an Emacsvox setting by name@comma{} ignoring capitalization.
-Type @kbd{cap} and use completion to choose @emph{Capital-letter beep}@comma{} for example.
+Press @kbd{C-e H /} to find an Emacsvox setting by any part of its name@comma{} ignoring
+capitalization. Type @kbd{cap} to find @emph{Capitalization indication and camel case}@comma{}
+@emph{Capital-letter beep}@comma{} and @emph{All-caps beep}. The aliases @kbd{caps beep} and
+@kbd{allcaps} find both beep controls and just @emph{All-caps beep}@comma{} respectively.
+Each result appears once under its normal name. Use completion to choose a
+result; ambiguous text does not choose one automatically. These matching rules
+apply to this search without changing completion elsewhere in Emacs.
 Enter accepts the choice@comma{} opens its menu@comma{} and selects the matching control
 without changing its value. Press Enter again to activate or edit the control.
 The captured source and current settings scope follow the search.
