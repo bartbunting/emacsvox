@@ -25,6 +25,11 @@
 - Use `rg` and bounded reads. Parallelize independent inspections; serialize
   edits, compilation, generated-file updates, and checks that consume their
   results. Do not silently fix unrelated findings.
+- For UI and settings work, maintain the living plan in
+  [docs/ui-settings-plan.org](docs/ui-settings-plan.org). Add newly discovered
+  settings, cues, missing actions, and interaction issues to its inventory or
+  findings queue. Keep proposed work, implementation, listening acceptance,
+  and commits distinct; update it at meaningful findings and checkpoints.
 
 ## Writing style
 

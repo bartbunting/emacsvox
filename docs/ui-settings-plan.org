@@ -1,0 +1,336 @@
+#+title: Emacsvox Settings and Voice Interface Plan
+#+date: 2026-10-14
+#+startup: overview
+
+* Purpose and status
+
+Living delivery plan for the =ui-experiments= branch, agreed on 2026-10-14.
+Extend the Transient proof of concept into a discoverable settings interface
+covering everyday feedback, voices, sounds, rules, integrations, and recovery.
+Record new settings and interaction findings here as they are discovered.
+
+This is an internal plan. Proposed menu layouts and controls are not claims
+that those interfaces already exist. Inventory status describes coverage in
+the new interface; many underlying commands and editors already work.
+
+The [[file:developer/ui-experiments.org][UI experiments record]] retains the earlier research and implementation
+history. This document owns the forward plan and settings inventory. Keep the
+existing Aural Home available for comparison and access to uncovered actions.
+Planning an item does not authorize unrelated refactors, dependency changes,
+personal configuration changes, or publication.
+
+** Current baseline
+
+- Accepted and committed: linked entry menus, indentation, Outline feedback,
+  concise speech, section navigation, and shifted-arrow volume adjustment.
+- Accepted and committed: Sounds and output, its five global volume controls,
+  and return from the sound-pack browser to the suspended menu.
+  Commits: =0269cd163= and =50a39ebd1=.
+- Committed: rate adjustment, punctuation choices
+  and named profiles, automatic-policy reset, and explicit default saving.
+  Twenty-five focused checks passed with compiled code in fresh graphical
+  Emacs using both bundled and installed Transient. A separate Emacs startup
+  restored the saved Omnivox rate and named punctuation profile. Listening
+  acceptance remains open. Documentation and its review gate passed.
+  Commits: =abd1cc504= (controls) and =b0005102f= (default saving).
+- Testing route: a new normal Emacsvox session loading current byte-code.
+
+* Interaction contract
+
+Use focused Transient menus for actions and repeated adjustments. Use
+searchable, sortable lists for inventories such as voices, palettes, rules,
+and sound packs. Use expandable Outline details for explanations, inheritance,
+effective settings, and diagnostic evidence.
+
+- Up/down selects items. Plain left/right changes menu sections.
+- Shift-left/right adjusts a selected numeric control. Enter activates a
+  choice or edits an exact value. Announce bounds and unavailable controls.
+- Announce menu and section names on entry or section changes. Repeated
+  adjustments speak the new value promptly and replace obsolete feedback.
+- Show effective values, available choices, scope, and where a value comes
+  from: a buffer override, mode policy, global default, palette, or engine.
+- Offer only scopes the underlying setting supports. Explain when a global
+  operation also changes the originating buffer.
+- Make saving, applying, selecting a palette, and restarting speech distinct
+  actions. Menu entry and preview must not silently persist changes.
+- Provide representative previews and a reliable stop action. Audit existing
+  keys before assigning preview, stop, or save keys in another interface.
+- Return to the originating menu or list with its selection, filters, source
+  context, and draft intact. Preserve existing editor decisions about keeping
+  or discarding unsaved work. Whole-stack exit remains available.
+- Validate the captured source item before contextual edits. Handle changed
+  text, closed buffers, unavailable voices, and missing capabilities clearly.
+- Explain what Reset restores: an inherited value, a mode policy, a standard
+  value, or an engine default.
+
+* Delivery milestones
+
+** 1. Finish the current foundation
+
+- [ ] Listen to rate and punctuation controls, save defaults, and verify them
+  in a new normal Emacsvox session.
+- [X] Commit the accepted controls and persistence in reviewable slices.
+- [X] Batch their user documentation and generated references at that checkpoint.
+- [ ] Reconcile the Home action map with this inventory, including commands
+  exposed only by shortcuts, Help, or search.
+
+Done when accepted behaviour, restart persistence, documentation, and commits
+agree. Existing passing checks remain reusable for unchanged code.
+
+** 2. Complete the first voice workflow
+
+- [ ] Link voice/engine browsing, preferred engine, palettes, and workbench.
+- [ ] Preserve selection and filters across audition, editing, and return.
+- [ ] Prototype a focused tuner for one named voice using common controls.
+- [ ] Support edited preview and original-versus-edited comparison with the
+  same sample text, followed by explicit save/apply or draft retention.
+
+Done when a voice can be found, auditioned, adjusted, compared, saved, and
+revisited without losing the source context or an unfinished experiment.
+
+** 3. Cover everyday settings and cues
+
+- [ ] Add Capitalization, including separate capital-letter and all-caps cues.
+- [ ] Add typing echo, phonetic feedback, point indication, and spoken detail.
+- [ ] Complete indentation and line/boundary cue controls from the inventory.
+- [ ] Extend Sounds and output with notification routing/history and spatial
+  settings. Keep restart requirements explicit.
+- [ ] Link the punctuation pronunciation editor as well as level selection.
+- [ ] Add action/settings search and access to settings relevant to this buffer.
+
+Done when common reading, coding, and notification adjustments are discoverable
+without knowing their variable names, and their previews and persistence work.
+
+** 4. Connect richer editing and management
+
+- [ ] Complete contextual feedback changes, recent feedback, remapping, and
+  explanations of the effective result.
+- [ ] Expose presentation features, saved rules, buffer rules, and their scope.
+- [ ] Connect profiles, retained drafts, inheritance/reset, and import/export.
+- [ ] Add relevant settings for individual integrations.
+- [ ] Extend voice tuning to fallback choices and qualified native controls.
+- [ ] Add a changed-settings view, distinguishing current values, saved
+  defaults, and drafts rather than treating them as one persistence system.
+
+Done when real work can flow from an observed behaviour to its explanation,
+edit, preview, explicit persistence, and return to the original task.
+
+** 5. Evaluate the complete settings interface
+
+- [ ] Review every inventoried action for a menu, search, or advanced-settings
+  route. Keep uncovered or deliberately deferred items explicit.
+- [ ] Review grouping, shortcuts, Help, current-value announcements, and all
+  return paths, including cancelled prompts and retained drafts.
+- [ ] Run end-to-end listening tasks and compare with the existing Home.
+- [ ] Run applicable integration checks, a real Magit navigation check for
+  shared Transient changes, and verification on the minimum supported Emacs.
+- [ ] Batch final documentation and record durable design decisions in ADRs.
+
+Done when the replacement is usable across the agreed tasks and remaining
+limitations are named. Retiring existing interfaces is a separate decision.
+
+* Settings inventory
+
+This is the initial inventory, not an exhaustive list of Emacsvox options.
+Audit commands, keymaps, cue resources, presentation rules, and existing
+editors as well as =defcustom= declarations. A setting may be implemented
+through an existing rule rather than a dedicated option.
+
+** Speech and reading
+
+- Rate, adjustment step, current-buffer/global scope, and backend startup rate.
+- Punctuation level, named profile, automatic mode policy, and saved fallback.
+- Full punctuation pronunciation editor, including its apply/restart boundary.
+- Capitalization indication, presentation, and camel-case splitting.
+- Indentation enablement, spoken/tone presentation, timing, and tone parameters.
+- Character pronunciation, character-rate scale, Unicode handling, repeated
+  character handling, and delayed phonetic feedback where supported.
+
+Rate, level/profile selection, policy reset, and saving are current prototypes.
+The initial indentation path is accepted; its remaining controls need inventory.
+
+*** Capitalization: explicit next everyday-settings slice
+
+- [ ] Expose indication on/off through the existing =tts-caps= behaviour.
+- [ ] Expose spoken, tone, spoken-and-tone, custom-rule, and none presentations.
+- [ ] Add a named Capital-letter beep entry with preview and pitch/duration
+  tuning through the existing cue/rule model.
+- [ ] Add a separate All-caps beep entry with its own preview and tuning.
+- [ ] Keep camel-case splitting independent of capitalization indication.
+- [ ] Preview representative text such as "Capital camelCase NASA".
+- [ ] Explain scope, persistence, cue overrides, and restoring the original cue.
+
+Confirmed resources: =capital-letter-tone= and =capital-all-caps-tone= in
+[[file:../lisp/emacsvox-aural-resources.el][aural resources]], with distinct capitalization rules in
+[[file:../lisp/emacsvox-aural-schemes.el][aural schemes]]. Separate tuning is proposed UI work; the distinct cues
+already exist. Do not confuse a cue adjustment with shared main-tone volume.
+
+** Typing and interaction
+
+- Typing echo choices and their current scope.
+- Point indication and character/phonetic feedback.
+- Spoken messages, navigation detail, and relevant interaction feedback toggles.
+- Menu navigation style, section-announcement order, and detailed descriptions.
+
+The menu presentation controls already exist. Inventory the remaining controls
+and retain existing direct keyboard commands.
+
+** Sounds, output, and notifications
+
+- Main tone and earcon volumes; separate notification speech, tone, and earcon
+  volumes. These controls and explicit saving are accepted.
+- Sound-pack browsing, activation, validation, and personal-pack maintenance.
+- Individual cues, including capitalization, blank lines, line decoration,
+  separators, unspeakable lines, boundaries, and point indication.
+- Notification output selection, separate/main output behaviour, and history.
+- Spatial speech/cues, output mode, separation, and remapping where supported.
+
+Record which controls affect Omnivox audio versus external sound players, and
+which require a restart. Link cue editing to a concrete preview and explanation.
+
+** Voices and engines
+
+- Installed physical voices: engine, language, availability, filters, sorting,
+  audition, and engine details.
+- Named palette voices: effective definition, owner/inheritance, physical
+  choices, shared tuning, and contextual use.
+- Preferred engine and its existing session/save semantics.
+- Common and per-fallback tuning, qualified engine-native controls, and preview.
+- Palette selection, copying, inheritance, reset, rename, import, and export.
+- Engine settings, downloads, enablement, availability, and explicit recovery.
+
+** Presentation and rules
+
+- Feedback for the captured item and recent feedback history.
+- Guided feedback changes, named-voice assignment, voice editing, and earcon
+  remapping with clear scope and effect.
+- Voice Lock/face presentation, optional features, and training explanations.
+- Saved, session, and current-buffer rules; precedence, disable/remove, and reset.
+- Feedback-history retention and inclusion of interface presentations.
+
+The Outline report is implemented. Complete the surrounding editing paths and
+show why a rule or contextual adjustment wins over another value.
+
+** Integrations
+
+Inventory settings relevant to Agent Shell, terminal/comint buffers, Org,
+browsers, mail, and other integrations as they are encountered. Record the
+actual command or option before proposing a new control. Offer a contextual
+entry and an all-integrations route. Check effective keymaps before new keys.
+
+** Saved setups and drafts
+
+- Presentation profiles and what each profile captures or leaves independent.
+- Saved defaults, active palette, and engine configuration ownership.
+- Retained voice, rule, routing, and punctuation drafts.
+- Import/export, backup, inherited defaults, and standard-value restoration.
+
+Show the effect of switching a setup. Keep each existing storage service and
+its save/apply behaviour; do not imply one Save command covers all data types.
+
+** Diagnostics and recovery
+
+- Actual speech backend, loaded paths/versions, output state, and capabilities.
+- Aural Doctor, spatial capability explanations, and unavailable features.
+- Relevant logs and existing stop, restart, and recovery commands.
+- Links from a diagnostic finding to the affected setting or recovery action.
+
+Opening a settings or diagnostic menu must not implicitly download components,
+restart speech, or change the active configuration.
+
+* Longer-term voice experience
+
+** Listing and discovery
+
+Keep clearly labelled views for physical voices and named palette voices.
+Preserve filters, sort order, selected row, preview text, and originating buffer
+across editing and return. Show useful availability and inheritance information
+without repeating an entire engine or palette description on each movement.
+
+** Common tuning
+
+Begin with a small set of supported controls such as rate, pitch, pitch range,
+and volume. Use the agreed arrows and exact-value editing. Preview the draft
+and compare original/edited versions with the same sample and rate context.
+An optional automatic-preview experiment must replace obsolete previews and
+remain easy to stop; manual preview remains the initial acceptance path.
+
+** Drafts, ownership, and saving
+
+Retain drafts when returning to a browser. Explain whether an edit changes a
+named voice wherever it is used or changes one contextual presentation rule.
+Offer the existing save/apply, save-to-collection, experiment destination,
+reset, and discard behaviours. Use private previews rather than temporarily
+publishing the draft as a live voice.
+
+** Fallback and native controls
+
+Expose shared tuning first, then individual fallback adjustments and advanced
+engine controls. Obtain controls, types, bounds, and qualified defaults from
+the engine catalogue. Distinguish Follow shared/common settings, Set value,
+and Engine voice default. Reordering choices must retain their adjustments.
+
+Explain the physical voice that actually spoke, any fallback or degraded
+capability, and the contextual settings that affected the result. Preserve the
+accepted shared, choice, then context precedence. Relevant contracts are
+[[file:adr/0016-complete-voice-preview.org][complete private preview]], [[file:adr/0017-per-fallback-voice-tuning.org][per-fallback tuning]],
+[[file:adr/0018-unified-voice-palette-model.org][palette ownership and inheritance]], [[file:adr/0022-engine-described-voice-parameters.org][engine-described parameters]],
+and [[file:adr/0026-palette-default-reading-voice.org][the palette default reading voice]]. Read all applicable ADRs before
+implementation; these links are not a substitute for the repository rule.
+
+* Acceptance tasks and development cycle
+
+Use complete tasks as milestones:
+
+- Find an installed voice, audition it, tune a named draft, compare, save,
+  and return to the source item.
+- Distinguish a single capital from an all-caps word, tune each cue, and
+  verify the chosen presentation after saving and restarting.
+- Make coding punctuation more detailed while retaining the prose policy.
+- Reduce notification sounds and verify which output changed.
+- Change feedback for one heading, explain the winning rule, then restore it.
+- Leave an unfinished draft, return later, and resume without losing edits.
+- Find a setting by name or from the current buffer without knowing its key.
+
+Implement one usable path at a time. Run affected tests and real graphical
+checks where focus, layout, or keymaps matter. Build incrementally and verify
+actual loaded paths before listening in a fresh normal Emacsvox session.
+Commit accepted behaviour in small slices. Batch user documentation, generated
+references, and broader checks at accepted milestones or before review.
+Expand checks when shared behaviour changes or a failure warrants investigation.
+
+* Maintaining this plan
+
+When a new setting, cue, missing action, or awkward interaction is found:
+
+1. Add it to the appropriate inventory section, or the findings queue below
+   if its destination is still unclear. Name the concrete behaviour.
+2. Record its existing command, option, cue, or editor when known; otherwise
+   mark that investigation as open. Avoid inventing an underlying setting.
+3. Record applicable scope, persistence, preview, and capability constraints.
+4. Assign a milestone and a small acceptance task. Distinguish proposed,
+   implemented, automatically checked, listening-accepted, and committed work.
+5. Update this document when findings or milestones change. Keep test evidence
+   concise and date completed checkpoints; do not turn it into a command log.
+
+Plan-only discoveries can be recorded without regenerating the public manual.
+The repository's documentation review gate still applies at review checkpoints.
+Keep durable decisions in ADRs and accepted usage in the user manual when the
+behaviour settles. Preserve earlier evidence without treating it as current
+verification of subsequently changed code.
+
+** Findings queue
+
+- 2026-10-14: Returning from the voice workbench to a suspended menu must
+  still announce staged engine-policy changes. Cover this in milestone 2.
+
+- 2026-10-14: Caps beep and all-caps beep need distinct discoverable entries.
+  Confirmed existing cue resources; assigned to milestone 3 above.
+- 2026-10-14: Punctuation-level selection does not cover the existing
+  pronunciation editor. Retain both routes; assigned to milestone 3.
+- 2026-10-14: Inventory must include non-Customize toggles and rule-owned cues.
+  Complete the audit during milestone 1 and extend it as integrations are visited.
+- Open: determine which remaining settings need a dedicated preview, which
+  have useful scope choices, and which remain best served by Customize.
+- Open: audit preview, stop, and save keys across existing voice and sound
+  editors before applying common menu conventions to those interfaces.
