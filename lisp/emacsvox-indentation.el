@@ -54,13 +54,15 @@
     (buffer-local-value symbol (emacsvox-indentation--source))))
 
 (defun emacsvox-indentation--say (text)
-  "Speak menu feedback TEXT once."
+  "Speak menu feedback TEXT, interrupting previous main speech."
   (with-current-buffer (emacsvox-indentation--source)
-    (emacsvox-transient--submit-text
-     text
-     (emacsvox-transient--item-facts
-      'value 'indentation 'command-menu-value-changed '(selected))
-     'state-change 'select-object)))
+    (let ((toggle (get-text-property 0 'emacsvox-transient-toggle-state text)))
+      (emacsvox-transient--submit-text
+       text
+       (emacsvox-transient--item-facts
+        'value 'indentation 'command-menu-value-changed
+        (unless (eq toggle 'off) '(selected)))
+       'state-change (or toggle 'select-object)))))
 
 (defun emacsvox-indentation--set (symbol value label)
   "Set SYMBOL to VALUE in the selected scope and announce LABEL."
@@ -72,8 +74,10 @@
 
 (defun emacsvox-indentation--choice (symbol value label)
   "Describe LABEL, marking it selected when SYMBOL equals VALUE."
-  (concat label (when (eq (emacsvox-indentation--value symbol) value)
-                  " (selected)")))
+  (if (eq (emacsvox-indentation--value symbol) value)
+      (propertize (concat label " (selected)")
+                  emacsvox-aural-facts-property '(:states (selected)))
+    label))
 
 (defun emacsvox-indentation--tonal-p ()
   "Return non-nil when the selected presentation includes a built-in tone."
@@ -93,7 +97,10 @@
   (interactive)
   (let ((enabled (not (emacsvox-indentation--value 'emacsvox-audio-indentation))))
     (emacsvox-indentation--set 'emacsvox-audio-indentation enabled
-                              (if enabled "Indentation on" "Indentation off"))))
+                              (propertize
+                               (if enabled "Indentation on" "Indentation off")
+                               'emacsvox-transient-toggle-state
+                               (if enabled 'on 'off)))))
 
 (defun emacsvox-indentation--preview ()
   "Preview four-column indentation using the settings shown in the menu."
@@ -116,7 +123,7 @@
                               (default-value 'tts-main-tone-volume)))))
     (tts--validate-output-volume value)
     (customize-set-variable 'tts-main-tone-volume value)
-    (emacsvox-indentation--say (format "Global tone volume %d percent" value))))
+    (emacsvox-indentation--say (format "%d percent" value))))
 
 (defun emacsvox-indentation--save ()
   "Save global indentation defaults and main-stream tone volume."
@@ -128,6 +135,13 @@
                    emacsvox-indentation-tone-timing tts-main-tone-volume))
     (customize-save-variable symbol (default-value symbol)))
   (emacsvox-indentation--say "Saved global indentation defaults and tone volume"))
+
+(defun emacsvox-indentation--setup (state)
+  "Open Indentation with STATE containing a source buffer and global flag.
+Linked menus may share STATE so changes of scope survive parent navigation."
+  (unless (buffer-live-p (car state))
+    (user-error "The indentation source buffer has been closed"))
+  (transient-setup 'emacsvox-indentation nil nil :scope state))
 
 ;;;###autoload
 (transient-define-prefix emacsvox-indentation (&optional global)
@@ -141,8 +155,12 @@ affects all main-stream Omnivox tones, independently of the selected scope."
    ("g" (lambda () (if (cdr (emacsvox-indentation--state))
                        "Scope: Global defaults" "Scope: Current buffer"))
     emacsvox-indentation--scope :transient t)
-   ("e" (lambda () (if (emacsvox-indentation--value 'emacsvox-audio-indentation)
-                       "Indentation: on" "Indentation: off"))
+   ("e" (lambda ()
+          (let ((enabled (emacsvox-indentation--value 'emacsvox-audio-indentation)))
+            (propertize
+             (if enabled "Indentation: on" "Indentation: off")
+             'emacsvox-transient-toggle-state (if enabled 'on 'off)
+             emacsvox-aural-facts-property (when enabled '(:states (selected))))))
     emacsvox-indentation--toggle :transient t)]
   ["Presentation"
    ("s" (lambda () (emacsvox-indentation--choice 'emacsvox-indentation-presentation 'spoken "Spoken column"))
@@ -177,8 +195,7 @@ affects all main-stream Omnivox tones, independently of the selected scope."
     :inapt-if-not (lambda () (cdr (emacsvox-indentation--state))) :transient t)
    ("q" "Close (keep changes)" transient-quit-one)]
   (interactive "P")
-  (transient-setup 'emacsvox-indentation nil nil
-                   :scope (cons (current-buffer) (and global t))))
+  (emacsvox-indentation--setup (cons (current-buffer) (and global t))))
 
 (provide 'emacsvox-indentation)
 ;;; emacsvox-indentation.el ends here

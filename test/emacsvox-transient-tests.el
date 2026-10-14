@@ -87,7 +87,7 @@
                (lambda (scope) (push scope stops))))
       (emacsvox--advice-transient-save-after)
       (emacsvox--advice-transient-set-after))
-    (should (equal stops '(all)))
+    (should-not stops)
     (should (= (length submissions) 1))
     (should
      (equal
@@ -518,7 +518,7 @@
                 ((symbol-function 'tts-stop)
                  (lambda (scope) (push scope stops))))
         (emacsvox--advice-transient-quit-all-after))
-      (should (equal stops '(all)))
+      (should-not stops)
       (should (= (length submissions) 1))
       (should
        (equal
@@ -565,7 +565,8 @@
       (goto-char (point-min))
       (set-window-buffer (selected-window) (current-buffer))
       (set-window-point (selected-window) (point))
-      (let ((transient--window (selected-window))
+      (let ((emacsvox-transient-navigation-style 'continuous)
+            (transient--window (selected-window))
             (ems--interactive-fn-name 'transient-forward-button)
             (calls 0)
             submissions)
@@ -585,15 +586,15 @@
         (should
          (equal
           (caar submissions)
-          "Beginning of menu. Choice"))
+          "Choice"))
         (should
          (equal
           (plist-get (cdar submissions) :facts)
           '(:role command-menu-item
             :command-menu-item-kind command
             :command-menu-action focus-button
-            :events (focus-entered)
-            :states (selected))))))))
+            :events (focus-entered))))
+        (should-not (plist-get (cdar submissions) :compatibility-actions))))))
 
 (transient-define-prefix emacsvox-test--navigation-menu ()
   "Choose a test action."
@@ -611,39 +612,113 @@
       (switch-to-buffer (current-buffer))
       (use-local-map (make-sparse-keymap))
       (local-set-key (kbd "<f8>") #'emacsvox-test--navigation-menu)
-      (let ((transient-show-menu 0)
+      (let ((emacsvox-transient-navigation-style 'continuous)
+            (transient-show-menu 0)
             (emacsvox-transient--announced-prefix nil)
             (emacsvox-transient--announced-stack nil)
-            selections)
+            selections cues)
         (cl-letf (((symbol-function 'emacsvox-aural-submit)
                    (lambda (content &rest arguments)
                      (when (eq (plist-get (plist-get arguments :facts)
                                          :command-menu-action)
                                'focus-button)
-                       (push (substring-no-properties content) selections))))
+                       (push content selections)
+                       (push (mapcar #'emacsvox-aural-compatibility-action-value
+                                     (plist-get arguments :compatibility-actions))
+                             cues))))
                   ((symbol-function 'emacsvox-aural-submit-actions) #'ignore)
                   ((symbol-function 'tts-stop) #'ignore))
           (unwind-protect
               (progn
                 (execute-kbd-macro (kbd "<f8>"))
                 (transient--show)
+                (should-not (lookup-key transient--transient-map (kbd "RET")))
+                (should-not (lookup-key transient--transient-map (kbd "<return>")))
                 (execute-kbd-macro (kbd "<down> <down> <up>"))
                 (should (= (length selections) 3))
                 (should (string-match-p "First action" (nth 0 selections)))
-                (should (string-match-p "Shortcut a\\." (nth 0 selections)))
+                (should (string-suffix-p ". a." (nth 0 selections)))
                 (should (string-match-p "Second action" (nth 1 selections)))
-                (should (string-match-p "Shortcut b\\." (nth 1 selections)))
+                (should (string-suffix-p ". b." (nth 1 selections)))
                 (should (string-match-p "First action" (nth 2 selections)))
                 (execute-kbd-macro (kbd "<down> <down>"))
-                (should (string-match-p "Other actions" (car selections)))
+                (should (equal (car selections)
+                               "Third action. c. Other actions. 2 of 2 sections."))
+                (let* ((text (car selections))
+                       (count-start (string-match "2 of 2 sections" text)))
+                  (should (eq (get-text-property count-start 'personality text)
+                              'voice-annotate))
+                  (should-not (get-text-property 0 'personality text))
+                  (should-not (get-text-property
+                               (string-match "Other actions" text) 'personality text)))
+                (should (equal (car cues) '(section)))
+                (should-not (cadr cues))
                 (execute-kbd-macro (kbd "<down>"))
-                (should (string-match-p "Beginning of menu" (car selections)))
-                (should (string-match-p "First action" (car selections)))
+                (should (equal (car selections)
+                               "First action. a. Actions. 1 of 2 sections."))
+                (should (equal (car cues) '(section)))
                 (execute-kbd-macro (kbd "<up>"))
-                (should (string-match-p "End of menu" (car selections)))
-                (should (string-match-p "Third action" (car selections))))
+                (should (equal (car selections)
+                               "Third action. c. Other actions. 2 of 2 sections."))
+                (should (equal (car cues) '(section))))
             (when transient--prefix
               (execute-kbd-macro (kbd "C-g")))))))))
+
+(ert-deftest emacsvox-transient-section-styles-constrain-real-arrow-navigation ()
+  "Section styles wrap or stop locally; section arrows remain available."
+  (skip-unless (display-graphic-p))
+  (dolist (style '(section-wrap section-stop))
+    (save-window-excursion
+      (with-temp-buffer
+        (switch-to-buffer (current-buffer))
+        (use-local-map (make-sparse-keymap))
+        (local-set-key (kbd "<f8>") #'emacsvox-test--navigation-menu)
+        (let ((emacsvox-transient-navigation-style style)
+              (transient-show-menu 0)
+              speech boundaries)
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest _) (push text speech)))
+                    ((symbol-function 'emacsvox-aural-submit-actions)
+                     (lambda (&rest args)
+                       (push (mapcar #'emacsvox-aural-compatibility-action-value
+                                     (plist-get args :compatibility-actions))
+                             boundaries)))
+                    ((symbol-function 'tts-stop) #'ignore))
+            (unwind-protect
+                (progn
+                  (execute-kbd-macro (kbd "<f8>"))
+                  (transient--show)
+                  (execute-kbd-macro (kbd "<down> <down>"))
+                  (should (equal (car speech) "Second action. b."))
+                  (setq speech nil boundaries nil)
+                  (execute-kbd-macro (kbd "<down>"))
+                  (if (eq style 'section-stop)
+                      (progn (should-not speech)
+                             (should (equal boundaries '((warn-user)))))
+                    (should (equal speech '("First action. a.")))
+                    (should-not boundaries))
+                  (execute-kbd-macro (kbd "<up> <up>"))
+                  (should (string-prefix-p "First action" (car speech)))
+                  (setq speech nil boundaries nil)
+                  (execute-kbd-macro (kbd "<up>"))
+                  (if (eq style 'section-stop)
+                      (progn (should-not speech)
+                             (should (equal boundaries '((warn-user)))))
+                    (should (equal speech '("Second action. b."))))
+                  (execute-kbd-macro (kbd "<right> <down>"))
+                  (should (string-prefix-p "Third action" (car speech)))
+                  (setq speech nil boundaries nil)
+                  (execute-kbd-macro (kbd "<down>"))
+                  (if (eq style 'section-stop)
+                      (progn (should-not speech)
+                             (should (equal boundaries '((warn-user)))))
+                    (should (equal speech '("Third action. c.")))
+                    (should-not boundaries))
+                  (execute-kbd-macro (kbd "<left> <down> C-u 9 <down>"))
+                  (should (string-prefix-p "Second action" (car speech)))
+                  (execute-kbd-macro (kbd "C-u 9 <up>"))
+                  (should (string-prefix-p "First action" (car speech))))
+              (when transient--prefix (execute-kbd-macro (kbd "C-g"))))))))))
 
 (ert-deftest emacsvox-transient-button-lisp-calls-remain-silent ()
   "A matching command name alone does not turn a Lisp call into navigation."
@@ -668,17 +743,17 @@
         (destination (transient-suffix :command 'ignore :key "u"
                                        :description "origin/master")))
     (should (equal (emacsvox-transient--choice-text switch)
-                   "Dry run, off. Shortcut minus n."))
+                   "Dry run, off. minus n."))
     (oset switch value "--dry-run")
     (should (equal (emacsvox-transient--choice-text switch)
-                   "Dry run, on. Shortcut minus n."))
+                   "Dry run, on. minus n."))
     (should (equal (emacsvox-transient--choice-text option)
-                   "Limit, not set. Shortcut minus capital L."))
+                   "Limit, not set. minus capital L."))
     (oset option value "5")
     (should (equal (emacsvox-transient--choice-text option)
-                   "Limit, 5. Shortcut minus capital L."))
+                   "Limit, 5. minus capital L."))
     (should (equal (emacsvox-transient--choice-text destination "Push master to")
-                   "Push master to origin/master. Shortcut u."))
+                   "origin/master. u."))
     (oset destination inapt t)
     (should (string-match-p "Unavailable" (emacsvox-transient--choice-text destination)))))
 
@@ -696,7 +771,7 @@
       (should
        (equal (emacsvox-transient--choice-text
                object "Configure master" " u branch.master.merge refs/heads/master\n   branch.master.remote origin")
-              "branch.master.merge refs/heads/master\n   branch.master.remote origin. Shortcut u.")))))
+              "branch.master.merge refs/heads/master\n   branch.master.remote origin. u.")))))
 
 (transient-define-prefix emacsvox-test--feedback-menu ()
   "Choose a test option."
@@ -783,15 +858,17 @@
                      (push (cons content arguments) submissions))))
           (emacsvox-transient-next-section))
         (should (= (length submissions) 1))
-        (should (equal (caar submissions) "Options. Section 1 of 1."))
+        (should (equal (caar submissions) "Options. 1 of 1 section."))
         (should
          (equal
           (plist-get (cdar submissions) :facts)
           '(:role command-menu-item
             :command-menu-item-kind section
             :command-menu-action next-section
-            :events (focus-entered)
-            :states (selected))))))))
+            :events (focus-entered))))
+        (should (eq (emacsvox-aural-compatibility-action-value
+                     (car (plist-get (cdar submissions) :compatibility-actions)))
+                    'section))))))
 
 (ert-deftest emacsvox-transient-section-navigation-keeps-mixed-face-heading-whole ()
   "Different formatting within a heading does not create extra section stops."
@@ -813,10 +890,10 @@
           (emacsvox-transient-previous-section)
           (emacsvox-transient-previous-section))
         (should (equal (nreverse spoken)
-                       '("Push master to. Section 2 of 3."
-                         "Configure. Section 3 of 3."
-                         "Push master to. Section 2 of 3."
-                         "Arguments. Section 1 of 3.")))))))
+                       '("Push master to. 2 of 3 sections."
+                         "Configure. 3 of 3 sections."
+                         "Push master to. 2 of 3 sections."
+                         "Arguments. 1 of 3 sections.")))))))
 
 (ert-deftest emacsvox-transient-section-boundary-is-presented ()
   "Section navigation provides semantic failure feedback at a boundary."
@@ -856,6 +933,43 @@
      (equal
       (lookup-key transient-sticky-map (kbd "M-n"))
       sticky-next))))
+
+(ert-deftest emacsvox-transient-feedback-interrupts-main-speech ()
+  "Navigation and state changes replace old feedback on the main lane."
+  (with-temp-buffer
+    (let ((emacsvox-use-icons nil))
+      (cl-letf (((symbol-function 'tts-speak) #'ignore))
+        (dolist (occasion '(navigation state-change))
+          (let ((submission
+                 (emacsvox-transient--submit-text
+                  "Editing global defaults"
+                  (emacsvox-transient--item-facts
+                   'value 'settings-scope
+                   (if (eq occasion 'navigation) 'focus-entered
+                     'command-menu-value-changed))
+                  occasion)))
+            (should (eq (emacsvox-aural-submission-lane submission) 'main))
+            (should (eq (emacsvox-aural-submission-delivery-policy submission)
+                        'replaceable))
+            (should (eq (emacsvox-aural-submission-replacement-key submission)
+                        'speaker))
+            (should (eq (emacsvox-aural-submission-interruption-policy submission)
+                        'lane))))))))
+
+(ert-deftest emacsvox-transient-action-feedback-interrupts-main-speech ()
+  "Cue-only menu feedback has the same delivery policy as spoken feedback."
+  (let (delivery)
+    (cl-letf (((symbol-function 'emacsvox-aural--submit-actions)
+               (lambda (&rest _)
+                 (setq delivery
+                       (list emacsvox-aural-submission-lane
+                             emacsvox-aural-submission-delivery-policy
+                             emacsvox-aural-submission-replacement-key
+                             emacsvox-aural-submission-interruption-policy)))))
+      (emacsvox-transient--submit-actions
+       (emacsvox-transient--menu-facts 'toggle-common 'command-menu-value-changed)
+       'state-change 'on))
+    (should (equal delivery '(main replaceable speaker lane)))))
 
 (ert-deftest emacsvox-transient-native-submission-honors-presentation-controls ()
   "Menu content independently honors cue, face-policy, and Voice Lock controls."
@@ -961,7 +1075,7 @@
                          (lambda (content &rest _)
                            (push content submissions))))
                 (emacsvox-transient-next-section))
-              (should (equal submissions '("Browse section. Section 1 of 1.")))
+              (should (equal submissions '("Browse section. 1 of 1 section.")))
               (should (eq (window-buffer (selected-window))
                           (current-buffer)))))
         (kill-buffer menu-buffer)))))

@@ -98,6 +98,33 @@
       (should-error (emacsvox-indentation--volume) :type 'user-error))
     (should (= (default-value 'tts-main-tone-volume) 100))))
 
+(ert-deftest emacsvox-indentation-menu-feedback-replaces-main-speech ()
+  "Volume, scope, and enable changes interrupt previous main feedback."
+  (let ((submit (symbol-function 'emacsvox-aural-submit)))
+    (emacsvox-test--with-indentation-menu
+      (let (submissions)
+        (cl-letf (((symbol-function 'tts-speak) #'ignore)
+                  ((symbol-function 'emacsvox-aural-submit)
+                   (lambda (&rest args)
+                     (push (apply submit args) submissions))))
+          (emacsvox-indentation--volume -5)
+          (emacsvox-indentation--volume -5)
+          (emacsvox-indentation--volume 5)
+          (emacsvox-indentation--scope)
+          (emacsvox-indentation--toggle))
+        (should (equal (mapcar #'emacsvox-aural-submission-content
+                              (reverse submissions))
+                       '("45 percent" "40 percent" "45 percent"
+                         "Editing global defaults" "Indentation on")))
+        (dolist (submission submissions)
+          (should (eq (emacsvox-aural-submission-lane submission) 'main))
+          (should (eq (emacsvox-aural-submission-delivery-policy submission)
+                      'replaceable))
+          (should (eq (emacsvox-aural-submission-replacement-key submission)
+                      'speaker))
+          (should (eq (emacsvox-aural-submission-interruption-policy submission)
+                      'lane)))))))
+
 (ert-deftest emacsvox-indentation-menu-save-does-not-promote-local-settings ()
   "Saving persists global values, never the source buffer's local overrides."
   (emacsvox-test--with-indentation-menu
@@ -197,6 +224,64 @@
                 (should (eq (default-value 'emacsvox-indentation-presentation) 'duration-tone))
                 (should (eq (buffer-local-value 'emacsvox-indentation-presentation source) 'spoken))
                 (should (= (point) 4)))
+            (when transient--prefix (execute-kbd-macro (kbd "C-g")))))))))
+
+(ert-deftest emacsvox-indentation-menu-navigation-cues-follow-active-choice ()
+  "Movement cues distinguish section changes and the current scoped choice."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (emacsvox-test--with-indentation-menu
+      (switch-to-buffer source)
+      (use-local-map (make-sparse-keymap))
+      (local-set-key (kbd "<f8>") #'emacsvox-indentation)
+      (let ((emacsvox-transient-navigation-style 'continuous)
+            (transient--prefix nil)
+            (transient-show-menu 0)
+            selections cues toggles)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (content &rest arguments)
+                     (when (eq (plist-get (plist-get arguments :facts)
+                                         :command-menu-action)
+                               'focus-button)
+                       (push (substring-no-properties content) selections)
+                       (push (mapcar #'emacsvox-aural-compatibility-action-value
+                                     (plist-get arguments :compatibility-actions))
+                             cues))
+                     (when (member (substring-no-properties content)
+                                   '("Indentation on" "Indentation off"))
+                       (push (mapcar #'emacsvox-aural-compatibility-action-value
+                                     (plist-get arguments :compatibility-actions))
+                             toggles)))))
+          (unwind-protect
+              (progn
+                (execute-kbd-macro (kbd "<f8>"))
+                (transient--show)
+                (execute-kbd-macro (kbd "<down> <down>"))
+                (should (equal (car selections) "Indentation: off. e."))
+                (should (equal (car cues) '(off)))
+                (execute-kbd-macro (kbd "e <up> <down>"))
+                (should (equal (car selections) "Indentation: on. e."))
+                (should (equal (car cues) '(on)))
+                (should (equal (car toggles) '(on)))
+                (execute-kbd-macro (kbd "e <up> <down>"))
+                (should (equal (car selections) "Indentation: off. e."))
+                (should (equal (car cues) '(off)))
+                (should (equal (car toggles) '(off)))
+                (execute-kbd-macro (kbd "<down>"))
+                (should (equal (car selections)
+                               "Spoken column (selected). s. Presentation. 2 of 5 sections."))
+                (should (equal (car cues) '(section)))
+                (execute-kbd-macro (kbd "<down>"))
+                (should (equal (car selections) "Pitch tone. p."))
+                (should-not (car cues))
+                (execute-kbd-macro (kbd "<up>"))
+                (should (equal (car cues) '(select-object)))
+                (execute-kbd-macro (kbd "p <down>"))
+                (should (equal (car selections) "Pitch tone (selected). p."))
+                (should (equal (car cues) '(select-object)))
+                (execute-kbd-macro (kbd "g <up> <down>"))
+                (should (equal (car selections) "Pitch tone. p."))
+                (should-not (car cues)))
             (when transient--prefix (execute-kbd-macro (kbd "C-g")))))))))
 
 (provide 'emacsvox-indentation-tests)
