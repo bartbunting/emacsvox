@@ -209,6 +209,7 @@
   (require 'emacsvox-aural-menu-tests)
   (require 'emacsvox-capitalization-tests)
   (require 'emacsvox-interaction-tests)
+  (require 'emacsvox-line-cues-tests)
   (require 'emacsvox-arc-tests)
   (require 'emacsvox-tar-tests)
   (require 'emacsvox-sh-script-tests)

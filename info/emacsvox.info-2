@@ -14,6 +14,25 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Structure,  Up: Emacs Packages
+
+8.4 Web Browsing With EWW
+=========================
+
+EWW is the built-in browser supported for current Emacsvox.  Run ‘M-x
+eww <RET>’, enter a URL or search words, and press ‘<RET>’.  Emacsvox
+speaks EWW navigation and rendering feedback and adds commands for
+moving by HTML structure and filtering the displayed DOM.  In an EWW
+buffer, use ‘C-h m’ for the live workflow and ‘C-h b’ for its effective
+keys.  See *note EWW: (emacs)EWW. in _The GNU Emacs Manual_ for browser
+operation and *note emacsvox-eww: (emacsvox-reference)emacsvox-eww. in
+_Emacsvox Reference Manual_ for the speech integration.
+
+   The former Emacs/W3 and w3m survey is historical.  Do not install
+either one on the strength of the Heritage manual; use EWW unless a
+separately maintained integration says otherwise.
+
+
 File: emacsvox.info,  Node: Messaging,  Next: Editing Code,  Prev: Web Browsing,  Up: Emacs Packages
 
 8.5 Messaging

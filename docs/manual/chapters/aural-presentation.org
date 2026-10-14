@@ -153,6 +153,19 @@ presentation rules may override the saved cue. Finish any unsaved personal-rule
 editor before saving a cue; if its saved rules changed elsewhere, discard the
 draft and reopen it.
 
+Press ~C-e H o c~ for /Line and boundary cues/. Choose blank, whitespace-only,
+separator, decorated, or unspeakable line feedback to tune its pitch and
+integer duration. Shift-left/right adjusts by 25 Hz or 5 milliseconds;
+~RET~ enters an exact value. Boundary and warning, and large movement, instead
+choose replacement earcons. These replacements affect every use of that named
+earcon, including warnings outside navigation.
+
+Each cue retains a global preview draft. Space previews only the cue; ~s~ stops.
+~n~ silences it in the draft, ~r~ restores the bundled cue, and ~D~ discards
+unsaved edits. ~S~ saves through personal rules, preserving unrelated rules;
+other presentation rules may still override it. ~q~ returns with the draft
+intact. This changes cue output, not which lines count as separators or decoration.
+
 Press ~C-e H o~ for /Sounds and output/. Main tones and earcons, plus separate
 notification speech, tones, and earcons, each have a global volume control.
 Shift-left/right adjusts the selected volume by five percentage points;

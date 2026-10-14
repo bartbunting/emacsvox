@@ -3018,6 +3018,19 @@ presentation rules may override the saved cue. Finish any unsaved personal-rule
 editor before saving a cue; if its saved rules changed elsewhere@comma{} discard the
 draft and reopen it.
 
+Press @kbd{C-e H o c} for @emph{Line and boundary cues}. Choose blank@comma{} whitespace-only@comma{}
+separator@comma{} decorated@comma{} or unspeakable line feedback to tune its pitch and
+integer duration. Shift-left/right adjusts by 25 Hz or 5 milliseconds;
+@kbd{@key{RET}} enters an exact value. Boundary and warning@comma{} and large movement@comma{} instead
+choose replacement earcons. These replacements affect every use of that named
+earcon@comma{} including warnings outside navigation.
+
+Each cue retains a global preview draft. Space previews only the cue; @kbd{s} stops.
+@kbd{n} silences it in the draft@comma{} @kbd{r} restores the bundled cue@comma{} and @kbd{D} discards
+unsaved edits. @kbd{S} saves through personal rules@comma{} preserving unrelated rules;
+other presentation rules may still override it. @kbd{q} returns with the draft
+intact. This changes cue output@comma{} not which lines count as separators or decoration.
+
 Press @kbd{C-e H o} for @emph{Sounds and output}. Main tones and earcons@comma{} plus separate
 notification speech@comma{} tones@comma{} and earcons@comma{} each have a global volume control.
 Shift-left/right adjusts the selected volume by five percentage points;

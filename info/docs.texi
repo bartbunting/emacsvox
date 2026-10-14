@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 311 loaded; 0 intentionally omitted.
+@c Modules: 312 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -36,35 +36,35 @@
 @c Loaded: emacsvox-helpful.elc emacsvox-hide-lines.elc emacsvox-hide.elc emacsvox-hideshow.elc emacsvox-hydra.elc
 @c Loaded: emacsvox-ibuffer.elc emacsvox-ido.elc emacsvox-iedit.elc emacsvox-indentation.elc emacsvox-info.elc
 @c Loaded: emacsvox-interaction.elc emacsvox-ispell.elc emacsvox-ivy.elc emacsvox-journalctl.elc emacsvox-js2.elc
-@c Loaded: emacsvox-keymap.elc emacsvox-kmacro.elc emacsvox-librivox.elc emacsvox-lispy.elc emacsvox-lua.elc
-@c Loaded: emacsvox-m-player.elc emacsvox-magit.elc emacsvox-make-mode.elc emacsvox-man.elc emacsvox-marginalia.elc
-@c Loaded: emacsvox-markdown.elc emacsvox-maths.elc emacsvox-message.elc emacsvox-mines.elc emacsvox-mu4e.elc
-@c Loaded: emacsvox-multiple-cursors.elc emacsvox-net-utils.elc emacsvox-newsticker.elc emacsvox-nm.elc emacsvox-notmuch.elc
-@c Loaded: emacsvox-nov.elc emacsvox-nxml.elc emacsvox-ocr.elc emacsvox-omnivox-components.elc emacsvox-org-srs.elc
-@c Loaded: emacsvox-org.elc emacsvox-orgalist.elc emacsvox-outline.elc emacsvox-package.elc emacsvox-perl.elc
-@c Loaded: emacsvox-pipewire.elc emacsvox-popup.elc emacsvox-preamble.elc emacsvox-proced.elc emacsvox-project.elc
-@c Loaded: emacsvox-projectile.elc emacsvox-pronounce.elc emacsvox-py.elc emacsvox-pydoc.elc emacsvox-python.elc
-@c Loaded: emacsvox-racket.elc emacsvox-re-builder.elc emacsvox-reftex.elc emacsvox-related.elc emacsvox-rg.elc
-@c Loaded: emacsvox-rmail.elc emacsvox-rpm-spec.elc emacsvox-rst.elc emacsvox-ruby.elc emacsvox-rust-mode.elc
-@c Loaded: emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc emacsvox-setup.elc emacsvox-sgml-mode.elc
-@c Loaded: emacsvox-sh-script.elc emacsvox-slime.elc emacsvox-smartparens.elc emacsvox-solitaire.elc emacsvox-sounds.elc
-@c Loaded: emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-sql.elc emacsvox-sudoku.elc emacsvox-supercite.elc
-@c Loaded: emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-reader.elc emacsvox-table-ui.elc emacsvox-table.elc
-@c Loaded: emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc emacsvox-tempo.elc
-@c Loaded: emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-transient.elc emacsvox-treesit.elc
-@c Loaded: emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc
-@c Loaded: emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc
-@c Loaded: emacsvox-webspace.elc emacsvox-welcome.elc emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc
-@c Loaded: emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc
-@c Loaded: emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc
-@c Loaded: g-utils.elc gm-nnir.elc gmaps.elc gweb.elc ladspa.elc
-@c Loaded: light.elc mac-voices.elc omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc
-@c Loaded: omnivox-engine-configuration.elc omnivox-engine-settings.elc omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc
-@c Loaded: omnivox-native-codec.elc omnivox-parameters-codec.elc omnivox-parameters.elc omnivox-preview.elc omnivox-punctuation-profiles.elc
-@c Loaded: omnivox-punctuation.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc pip.elc
-@c Loaded: plain-voices.elc soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc
-@c Loaded: tetris.elc tts-queue-state.elc tts-speak.elc voice-defs.elc voice-setup.elc
-@c Loaded: xbacklight.elc
+@c Loaded: emacsvox-keymap.elc emacsvox-kmacro.elc emacsvox-librivox.elc emacsvox-line-cues.elc emacsvox-lispy.elc
+@c Loaded: emacsvox-lua.elc emacsvox-m-player.elc emacsvox-magit.elc emacsvox-make-mode.elc emacsvox-man.elc
+@c Loaded: emacsvox-marginalia.elc emacsvox-markdown.elc emacsvox-maths.elc emacsvox-message.elc emacsvox-mines.elc
+@c Loaded: emacsvox-mu4e.elc emacsvox-multiple-cursors.elc emacsvox-net-utils.elc emacsvox-newsticker.elc emacsvox-nm.elc
+@c Loaded: emacsvox-notmuch.elc emacsvox-nov.elc emacsvox-nxml.elc emacsvox-ocr.elc emacsvox-omnivox-components.elc
+@c Loaded: emacsvox-org-srs.elc emacsvox-org.elc emacsvox-orgalist.elc emacsvox-outline.elc emacsvox-package.elc
+@c Loaded: emacsvox-perl.elc emacsvox-pipewire.elc emacsvox-popup.elc emacsvox-preamble.elc emacsvox-proced.elc
+@c Loaded: emacsvox-project.elc emacsvox-projectile.elc emacsvox-pronounce.elc emacsvox-py.elc emacsvox-pydoc.elc
+@c Loaded: emacsvox-python.elc emacsvox-racket.elc emacsvox-re-builder.elc emacsvox-reftex.elc emacsvox-related.elc
+@c Loaded: emacsvox-rg.elc emacsvox-rmail.elc emacsvox-rpm-spec.elc emacsvox-rst.elc emacsvox-ruby.elc
+@c Loaded: emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc emacsvox-setup.elc
+@c Loaded: emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-slime.elc emacsvox-smartparens.elc emacsvox-solitaire.elc
+@c Loaded: emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-sql.elc emacsvox-sudoku.elc
+@c Loaded: emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-reader.elc emacsvox-table-ui.elc
+@c Loaded: emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc
+@c Loaded: emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-transient.elc
+@c Loaded: emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc
+@c Loaded: emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc
+@c Loaded: emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-welcome.elc emacsvox-which-key.elc emacsvox-widget.elc
+@c Loaded: emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc
+@c Loaded: emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc
+@c Loaded: espeak-voices.elc g-utils.elc gm-nnir.elc gmaps.elc gweb.elc
+@c Loaded: ladspa.elc light.elc mac-voices.elc omaps.elc omnivox-catalogue.elc
+@c Loaded: omnivox-choice-codec.elc omnivox-engine-configuration.elc omnivox-engine-settings.elc omnivox-espeak-variants.elc omnivox-library-apply.elc
+@c Loaded: omnivox-library.elc omnivox-native-codec.elc omnivox-parameters-codec.elc omnivox-parameters.elc omnivox-preview.elc
+@c Loaded: omnivox-punctuation-profiles.elc omnivox-punctuation.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc
+@c Loaded: pip.elc plain-voices.elc soundscape.elc sox-gen.elc sox.elc
+@c Loaded: swiftmac-voices.elc tetris.elc tts-queue-state.elc tts-speak.elc voice-defs.elc
+@c Loaded: voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -72,7 +72,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1643 commands and 233 options.
+This chapter documents a total of 1645 commands and 233 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -249,6 +249,7 @@ This chapter documents a total of 1643 commands and 233 options.
 * emacsvox-keymap:: Setup   keybindings.
 * emacsvox-kmacro:: Speech-enable KMacros.
 * emacsvox-librivox:: LIBRIVOX API client.
+* emacsvox-line-cues:: Line and boundary cue drafts.
 * emacsvox-lispy:: Speech-enable LISPY.
 * emacsvox-lua:: Speech-enable LUA.
 * emacsvox-m-player:: Media Player.
@@ -3743,6 +3744,15 @@ submenus and delegate settings and feedback to their existing commands.
 Choose Emacsvox speech settings or inspect feedback for this item.
 With prefix GLOBAL, start speech settings with global defaults.
 The source item is captured on entry; Aural Home offers all other actions.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-menu-line-cues
+@deffn {Command} emacsvox-aural-menu-line-cues
+@findex emacsvox-aural-menu-line-cues
+
+@format
+Choose a global line tone or boundary earcon to preview and edit.
 @end format
 @end deffn
 
@@ -14699,6 +14709,22 @@ Default Value:
 @end verbatim
 
 @end defvar
+
+@node emacsvox-line-cues
+@section emacsvox-line-cues
+
+Retain preview drafts and save only owned overrides in personal rules.
+
+@subsection Emacsvox-Line-Cues Commands
+
+@subsubsection emacsvox-line-cues-edit
+@deffn {Command} emacsvox-line-cues-edit  (arg1)
+@findex emacsvox-line-cues-edit
+
+@format
+Edit a retained global line or boundary cue draft of KIND.
+@end format
+@end deffn
 
 @node emacsvox-lispy
 @section emacsvox-lispy

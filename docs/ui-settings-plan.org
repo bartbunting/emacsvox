@@ -489,3 +489,15 @@ verification of subsequently changed code.
   have useful scope choices, and which remain best served by Customize.
 - Open: audit preview, stop, and save keys across existing voice and sound
   editors before applying common menu conventions to those interfaces.
+
+** Five-slice delivery checkpoint, 2026-10-14
+
+- Interaction controls committed as =c51ea23f4=; indentation tuning and the
+  documentation checkpoint committed as =25ff6d126=. Listening remains open.
+- Line and boundary cues are implemented at =C-e H o c=. Five line-tone kinds
+  have retained pitch/duration drafts; warning and large-movement earcons have
+  replacement drafts. Preview, silence, bundled reset, discard, and explicit
+  personal-rule saving preserve unrelated rules. Boundary earcon changes affect
+  all uses of the named cue; labels state this scope. Fifty focused source
+  checks passed, including graphical return, actual resolved output, save/reload,
+  silence/reset, and conflicting-save protection. Listening remains open.

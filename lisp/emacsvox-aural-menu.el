@@ -38,6 +38,7 @@
 
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
+(autoload 'emacsvox-line-cues-edit "emacsvox-line-cues" nil t)
 (autoload 'emacsvox-interaction "emacsvox-interaction" nil t)
 (autoload 'emacsvox-aural-list-sound-packs "emacsvox-aural-sound-packs" nil t)
 (autoload 'emacsvox-aural-list-voice-palettes "emacsvox-aural-voice-palettes" nil t)
@@ -54,7 +55,7 @@
                        '(emacsvox-aural-menu emacsvox-aural-menu-speech
                          emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation
                          emacsvox-aural-menu-voices emacsvox-capitalization
-                         emacsvox-interaction)))
+                         emacsvox-interaction emacsvox-aural-menu-line-cues)))
       (user-error "Open the Emacsvox menu first"))
     (oref prefix scope)))
 
@@ -726,6 +727,23 @@ Engine preferences last for this session unless explicitly saved."
     (emacsvox-aural-menu--source context)
     (transient-setup 'emacsvox-aural-menu-voices nil nil :scope context)))
 
+(transient-define-prefix emacsvox-aural-menu-line-cues ()
+  "Choose a global line tone or boundary earcon to preview and edit."
+  ["Line tones"
+   ("b" "Blank line" (lambda () "Edit the blank line cue." (interactive) (emacsvox-line-cues-edit 'empty)) :transient transient--do-stack)
+   ("w" "Whitespace-only line" (lambda () "Edit the whitespace-only line cue." (interactive) (emacsvox-line-cues-edit 'whitespace-only)) :transient transient--do-stack)
+   ("s" "Separator line" (lambda () "Edit the separator line cue." (interactive) (emacsvox-line-cues-edit 'separator)) :transient transient--do-stack)
+   ("d" "Decorated line" (lambda () "Edit the decorated line cue." (interactive) (emacsvox-line-cues-edit 'decorative)) :transient transient--do-stack)
+   ("u" "Unspeakable line" (lambda () "Edit the unspeakable line cue." (interactive) (emacsvox-line-cues-edit 'unspeakable)) :transient transient--do-stack)]
+  ["Boundary earcons (all uses of these cues)"
+   ("e" "Boundary and warning" (lambda () "Edit the warning cue." (interactive) (emacsvox-line-cues-edit 'warn-user)) :transient transient--do-stack)
+   ("m" "Large movement" (lambda () "Edit the large movement cue." (interactive) (emacsvox-line-cues-edit 'large-movement)) :transient transient--do-stack)]
+  ["Finish"
+   ("q" "Back" transient-quit-one)
+   ("C-q" "Close all menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-aural-menu-line-cues nil nil :scope (emacsvox-aural-menu--context)))
+
 (transient-define-prefix emacsvox-aural-menu-sounds ()
   "Adjust global output volumes or browse sound packs.
 Shift left and right adjust the selected volume by five percentage points.
@@ -743,7 +761,8 @@ Enter sets an exact value.  Save explicitly to retain volumes across restarts."
     emacsvox-aural-menu--notification-tones :transient t)
    ("E" (lambda () (emacsvox-aural-menu--output-label 'emacsvox-aural-menu--notification-earcons))
     emacsvox-aural-menu--notification-earcons :transient t)]
-  ["Sound packs"
+  ["Cues and sound packs"
+   ("c" "Line and boundary cues" emacsvox-aural-menu-line-cues :transient transient--do-stack)
    ("p" "Browse sound packs" emacsvox-aural-menu--sound-packs :transient transient--do-suspend)]
   ["Save and finish"
    ("S" "Save output volumes" emacsvox-aural-menu--save-output :transient t)

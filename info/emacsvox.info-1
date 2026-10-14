@@ -3067,6 +3067,21 @@ spoken labels.  Other presentation rules may override the saved cue.
 Finish any unsaved personal-rule editor before saving a cue; if its
 saved rules changed elsewhere, discard the draft and reopen it.
 
+   Press ‘C-e H o c’ for _Line and boundary cues_.  Choose blank,
+whitespace-only, separator, decorated, or unspeakable line feedback to
+tune its pitch and integer duration.  Shift-left/right adjusts by 25 Hz
+or 5 milliseconds; ‘<RET>’ enters an exact value.  Boundary and warning,
+and large movement, instead choose replacement earcons.  These
+replacements affect every use of that named earcon, including warnings
+outside navigation.
+
+   Each cue retains a global preview draft.  Space previews only the
+cue; ‘s’ stops.  ‘n’ silences it in the draft, ‘r’ restores the bundled
+cue, and ‘D’ discards unsaved edits.  ‘S’ saves through personal rules,
+preserving unrelated rules; other presentation rules may still override
+it.  ‘q’ returns with the draft intact.  This changes cue output, not
+which lines count as separators or decoration.
+
    Press ‘C-e H o’ for _Sounds and output_.  Main tones and earcons,
 plus separate notification speech, tones, and earcons, each have a
 global volume control.  Shift-left/right adjusts the selected volume by
@@ -5889,22 +5904,3 @@ the third column.  ‘M-l’ and ‘M-s’ load and save filters.  Filters are
 explicit inspections; shared row movement always reads the whole row.
 Sorting preserves filters and shared speech preferences.  Use ‘C-h m’
 for the full browser key map.
-
-
-File: emacsvox.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Structure,  Up: Emacs Packages
-
-8.4 Web Browsing With EWW
-=========================
-
-EWW is the built-in browser supported for current Emacsvox.  Run ‘M-x
-eww <RET>’, enter a URL or search words, and press ‘<RET>’.  Emacsvox
-speaks EWW navigation and rendering feedback and adds commands for
-moving by HTML structure and filtering the displayed DOM.  In an EWW
-buffer, use ‘C-h m’ for the live workflow and ‘C-h b’ for its effective
-keys.  See *note EWW: (emacs)EWW. in _The GNU Emacs Manual_ for browser
-operation and *note emacsvox-eww: (emacsvox-reference)emacsvox-eww. in
-_Emacsvox Reference Manual_ for the speech integration.
-
-   The former Emacs/W3 and w3m survey is historical.  Do not install
-either one on the strength of the Heritage manual; use EWW unless a
-separately maintained integration says otherwise.
