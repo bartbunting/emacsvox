@@ -28,6 +28,10 @@
 
 ## Writing style
 
+- Keep spoken menu feedback concise. Announce menu and section titles on
+  entry or when crossing sections, rather than repeating them before each
+  item. Speak the key itself without a "shortcut" label. Repeated adjustments
+  should announce the new value promptly and interrupt obsolete main speech.
 - Apply these rules to documentation, including ADRs and reports, code comments,
   commit messages, and PR descriptions. Use concise, plain language that reads
   naturally through speech. State the behaviour, decision, and reason directly.
@@ -87,6 +91,15 @@
 
 ## Lisp builds and verification
 
+- During rapid iteration, test source changes with the affected tests first.
+  For ordinary function edits, run the incremental `make bytecode` when the
+  edit settles; do not run a full rebuild for each small change. Reserve
+  `make bytecode-rebuild` for the cases listed below. Reuse checks that still
+  cover the unchanged code and environment.
+- Batch documentation generation after the text settles. Code-only fixes
+  that do not change public documentation do not need documentation
+  regeneration. Keep the final non-mutating documentation review gate and
+  the fresh-Emacs verification required below.
 - Use the Emacs selected by the ignored `local.mk` and run `make check-emacs`
   before diagnosing compiler failures. Emacsvox requires Emacs 30.2 or newer;
   never compile it with an older system `emacs`. Keep compatibility builds
