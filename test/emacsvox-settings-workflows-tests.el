@@ -482,6 +482,94 @@
       (with-current-buffer source
         (when (eat-term-live-p eat-terminal) (eat-term-delete eat-terminal))))))
 
+(defun emacsvox-test--integration-defaults (feature function)
+  "Call FUNCTION with FEATURE's global defaults and Customize metadata isolated."
+  (require feature)
+  (let* ((options (mapcar (lambda (entry) (nth 2 entry))
+                         (seq-filter (lambda (entry) (eq (nth 1 entry) feature))
+                                     emacsvox-settings-integrations--options)))
+         (defaults (mapcar (lambda (option) (cons option (default-value option))) options))
+         (properties (mapcar (lambda (option) (cons option (copy-tree (symbol-plist option)))) options)))
+    (unwind-protect (funcall function)
+      (dolist (entry defaults) (set-default (car entry) (cdr entry)))
+      (dolist (entry properties) (setplist (car entry) (cdr entry))))))
+
+(ert-deftest emacsvox-settings-integrations-agent-session-and-defaults ()
+  "Session overrides use the existing lifecycle and stay out of saved defaults."
+  (skip-unless (require 'agent-shell nil t))
+  (emacsvox-test--integration-defaults 'emacsvox-agent-shell
+   (lambda ()
+     (emacsvox-test--with-settings
+       (with-current-buffer source
+         (setq major-mode 'agent-shell-mode)
+         (setq-local emacsvox-agent-shell-speech-level 'auto))
+       (execute-kbd-macro (kbd "j c s q u i e t RET"))
+       (should (eq (buffer-local-value 'emacsvox-agent-shell-speech-level source) 'quiet))
+       (should-not (file-exists-p custom-file))
+       (let (cancelled)
+         (set-default 'emacsvox-agent-shell-background-speech-level 'response)
+         (cl-letf (((symbol-function 'emacsvox-agent-shell--cancel-background-pending-speech)
+                    (lambda () (setq cancelled t))))
+           (execute-kbd-macro (kbd "b")))
+         (should cancelled)
+         (should (eq (default-value 'emacsvox-agent-shell-background-speech-level) 'notify)))
+       (execute-kbd-macro (kbd "w"))
+       (should (file-exists-p custom-file))
+       (with-temp-buffer
+         (insert-file-contents custom-file)
+         (should (search-forward "emacsvox-agent-shell-background-speech-level" nil t))
+         (goto-char (point-min))
+         (should-not (search-forward "emacsvox-agent-shell-speech-level" nil t)))
+       (execute-kbd-macro (kbd "q"))
+       (with-selected-window transient--window
+         (should (equal (oref (button-get (button-at (point)) 'button-data) key) "c")))))))
+
+(ert-deftest emacsvox-settings-integrations-agent-limits-and-search ()
+  "Search focuses a limit; shifted arrows and exact input preserve selection."
+  (skip-unless (require 'agent-shell nil t))
+  (emacsvox-test--integration-defaults 'emacsvox-agent-shell
+   (lambda ()
+     (emacsvox-test--with-settings
+       (set-default 'emacsvox-agent-shell-automatic-content-max-characters 2000)
+       (execute-kbd-macro (kbd "/ A g e n t SPC a u t o m a t i c RET"))
+       (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--agent))
+       (should (= (default-value 'emacsvox-agent-shell-automatic-content-max-characters) 2000))
+       (let (spoken)
+         (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                    (lambda (text &rest _) (when (stringp text) (push text spoken)))))
+           (execute-kbd-macro (kbd "S-<right>"))
+           (should (string-match-p "Automatic content characters: 2100" (car spoken)))))
+       (execute-kbd-macro (kbd "RET C-a C-k 3 0 0 RET S-<left>"))
+       (should (= (default-value 'emacsvox-agent-shell-automatic-content-max-characters) 200))
+       (execute-kbd-macro (kbd "RET C-a C-k n o n e RET"))
+       (should-not (default-value 'emacsvox-agent-shell-automatic-content-max-characters))
+       (cl-letf (((symbol-function 'read-string) (lambda (&rest _) "0")))
+         (should-error (emacsvox-settings-integrations--agent-automatic-limit) :type 'user-error))
+       (should-not (default-value 'emacsvox-agent-shell-automatic-content-max-characters))
+       (should-not (file-exists-p custom-file))))))
+
+(ert-deftest emacsvox-settings-integrations-agent-direct-viewport ()
+  "The direct shortcut controls the viewport's session and returns to the viewport."
+  (skip-unless (require 'agent-shell nil t))
+  (require 'emacsvox-agent-shell)
+  (require 'emacsvox-keymap)
+  (emacsvox-test--with-settings
+    (let ((shell (generate-new-buffer " *settings-agent-session*")))
+      (unwind-protect
+          (progn
+            (with-current-buffer shell
+              (setq major-mode 'agent-shell-mode)
+              (setq-local emacsvox-agent-shell-speech-level 'auto))
+            (with-current-buffer source (setq major-mode 'agent-shell-viewport-view-mode))
+            (cl-letf (((symbol-function 'agent-shell-shell-buffer) (lambda (&rest _) shell)))
+              (execute-kbd-macro (kbd "C-q C-e S s q u i e t RET"))
+              (should (eq (buffer-local-value 'emacsvox-agent-shell-speech-level shell) 'quiet))
+              (should-not (local-variable-p 'emacsvox-agent-shell-speech-level source))
+              (execute-kbd-macro (kbd "q"))
+              (should-not transient--prefix)
+              (should (eq (current-buffer) source))))
+        (kill-buffer shell)))))
+
 (ert-deftest emacsvox-settings-changes-separates-local-default-saved-and-draft ()
   "The snapshot distinguishes three option values and an unsaved cue without writes."
   (emacsvox-test--with-settings

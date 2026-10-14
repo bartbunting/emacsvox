@@ -843,6 +843,23 @@ the shared background default.  ‘M-x
 emacsvox-agent-shell-cycle-speech-level’ cycles toward less routine
 speech; use a prefix argument to restore ‘auto’.
 
+   Press ‘C-e S’ in a shell or its viewport for focused Emacsvox
+settings.  The same menu is available through ‘C-e H j c’ and the
+integration chooser.  ‘s’ selects the temporary session override.  ‘f’
+and ‘b’ cycle foreground and background defaults; ‘t’ and ‘o’ cycle
+thought and tool-output feedback; ‘p’, ‘c’ and ‘l’ toggle permission
+speech, tool-call announcements and processing cues.  Thought and tool
+content still depend on the effective speech level.
+
+   The ‘a’, ‘n’ and ‘k’ controls set automatic-content, line-navigation
+and block-navigation character limits.  Enter reads an exact positive
+integer or ‘none’; Shift-left/right adjusts by 100.  For line
+navigation, ‘none’ restores the core long-line policy.  For the other
+limits it allows complete content.  ‘w’ saves the displayed global
+defaults through Customize, excluding the session override.  ‘A’ opens
+advanced settings; ‘q’ returns.  From the direct ‘C-e S’ entry, ‘q’
+closes the menu and leaves you in the captured buffer.
+
    Thought content defaults to an icon under
 ‘emacsvox-agent-shell-speak-thought-process’.  Tool feedback is
 separately controlled by ‘emacsvox-agent-shell-speak-tool-calls’ and

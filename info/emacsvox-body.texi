@@ -3028,6 +3028,10 @@ them. @code{A} opens advanced EAT Customize settings@comma{} and @code{q} return
 Search with @code{C-e H /} also finds each EAT control. See
 @ref{EAT Terminal Access,EAT Terminal Access,,emacsvox,} for prompt requirements and feedback policies.
 
+Agent Shell also has a focused menu for session speech@comma{} global feedback defaults
+and reading limits; @code{w} saves only its displayed global defaults. See
+@ref{Agent Shell,Agent Shell,,emacsvox,} for its controls.
+
 Other integration entries currently open Customize@comma{} with its own Apply@comma{} Save@comma{}
 and Reset controls; @code{q} returns to the menu.
 Integrations without an inventoried entry remain reachable through major-mode
@@ -6818,6 +6822,21 @@ session's level@comma{} including @code{auto}.  Press @kbd{C-c C-S-q} to run
 shared background default.
 @kbd{M-x emacsvox-agent-shell-cycle-speech-level} cycles toward less routine
 speech; use a prefix argument to restore @code{auto}.
+
+Press @code{C-e S} in a shell or its viewport for focused Emacsvox settings. The same
+menu is available through @code{C-e H j c} and the integration chooser. @code{s} selects
+the temporary session override. @code{f} and @code{b} cycle foreground and background
+defaults; @code{t} and @code{o} cycle thought and tool-output feedback; @code{p}@comma{} @code{c} and @code{l}
+toggle permission speech@comma{} tool-call announcements and processing cues. Thought
+and tool content still depend on the effective speech level.
+
+The @code{a}@comma{} @code{n} and @code{k} controls set automatic-content@comma{} line-navigation and
+block-navigation character limits. Enter reads an exact positive integer or
+@code{none}; Shift-left/right adjusts by 100. For line navigation@comma{} @code{none} restores
+the core long-line policy. For the other limits it allows complete content.
+@code{w} saves the displayed global defaults through Customize@comma{} excluding the
+session override. @code{A} opens advanced settings; @code{q} returns. From the direct
+@code{C-e S} entry@comma{} @code{q} closes the menu and leaves you in the captured buffer.
 
 Thought content defaults to an icon under
 @code{emacsvox-agent-shell-speak-thought-process}.  Tool feedback is separately

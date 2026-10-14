@@ -27,11 +27,15 @@
 ;; Discover actual integration options and invoke existing source controls.
 ;;; Code:
 (require 'emacsvox-settings)
+(declare-function emacsvox-agent-shell--session-buffer "emacsvox-agent-shell" (&optional buffer))
+(declare-function emacsvox-agent-shell-select-speech-level "emacsvox-agent-shell" ())
+(declare-function emacsvox-agent-shell--cancel-background-pending-speech "emacsvox-agent-shell" ())
 (declare-function emacsvox-eat--control-buffer "emacsvox-eat-core" ())
 (declare-function emacsvox-eat--terminal-buffer-p "emacsvox-eat-core" ())
 
 (defconst emacsvox-settings-integrations--menus
-  '((comint . emacsvox-settings-integrations--comint)
+  '((agent . emacsvox-settings-integrations--agent)
+    (comint . emacsvox-settings-integrations--comint)
     (eat . emacsvox-settings-integrations--eat))
   "Focused Transient prefixes for converted integrations.")
 
@@ -295,6 +299,234 @@ A nil group denotes a focused menu with buffer-only controls.")
   (interactive)
   (transient-setup 'emacsvox-settings-integrations--eat nil nil
                    :scope (emacsvox-aural-menu--context)))
+
+(defconst emacsvox-settings-integrations--options
+  '((emacsvox-settings-integrations--agent-foreground emacsvox-agent-shell
+     emacsvox-agent-shell-foreground-speech-level "Foreground speech"
+     ((full . "full") (response . "responses") (notify . "notifications") (quiet . "quiet")))
+    (emacsvox-settings-integrations--agent-background emacsvox-agent-shell
+     emacsvox-agent-shell-background-speech-level "Background speech"
+     ((full . "full") (response . "responses") (notify . "notifications") (quiet . "quiet")))
+    (emacsvox-settings-integrations--agent-thoughts emacsvox-agent-shell
+     emacsvox-agent-shell-speak-thought-process "Thought feedback"
+     ((icon . "cue") (speak . "speak") (nil . "silent")))
+    (emacsvox-settings-integrations--agent-tools emacsvox-agent-shell
+     emacsvox-agent-shell-tool-output-verbosity "Tool output"
+     ((summary . "summary") (status . "status cues") (full . "full")))
+    (emacsvox-settings-integrations--agent-permissions emacsvox-agent-shell
+     emacsvox-agent-shell-speak-permissions "Speak permission requests" ((t . "on") (nil . "off")))
+    (emacsvox-settings-integrations--agent-calls emacsvox-agent-shell
+     emacsvox-agent-shell-speak-tool-calls "Announce tool calls" ((t . "on") (nil . "off")))
+    (emacsvox-settings-integrations--agent-processing emacsvox-agent-shell
+     emacsvox-agent-shell-signal-processing "Processing lifecycle cues" ((t . "on") (nil . "off")))
+    (emacsvox-settings-integrations--agent-automatic-limit emacsvox-agent-shell
+     emacsvox-agent-shell-automatic-content-max-characters "Automatic content characters" nil 100 "complete content")
+    (emacsvox-settings-integrations--agent-line-limit emacsvox-agent-shell
+     emacsvox-agent-shell-line-speech-max-characters "Line navigation characters" nil 100 "core long-line policy")
+    (emacsvox-settings-integrations--agent-block-limit emacsvox-agent-shell
+     emacsvox-agent-shell-block-navigation-max-characters "Block navigation characters" nil 100 "complete body"))
+  "Global controls: command, feature, option, label, choices, step and nil label.
+Choices are value/label pairs. Numeric controls accept positive integers or none.")
+(defun emacsvox-settings-integrations--option (command)
+  "Return the global control owned by COMMAND, loading its option definitions."
+  (let ((entry (assq command emacsvox-settings-integrations--options)))
+    (unless entry (user-error "Select a settings control first"))
+    (require (nth 1 entry))
+    entry))
+(defun emacsvox-settings-integrations--label (command)
+  "Describe COMMAND's global default, preserving custom values."
+  (let* ((entry (emacsvox-settings-integrations--option command))
+         (value (default-value (nth 2 entry))))
+    (format "%s: %s" (nth 3 entry)
+            (or (cdr (assoc value (nth 4 entry)))
+                (and (null value) (nth 6 entry))
+                (format "%s" value)))))
+(defun emacsvox-settings-integrations--say (text)
+  "Speak interruptible settings feedback TEXT."
+  (emacsvox-transient--submit-text text
+   (emacsvox-transient--menu-facts 'integration-setting 'command-menu-value-changed)
+   'state-change 'select-object))
+(defun emacsvox-settings-integrations--read-limit (prompt initial)
+  "Read a limit with PROMPT and INITIAL, retaining the selected control."
+  (let ((prefix transient--prefix)
+        (focus (when (window-live-p transient--window)
+                 (with-selected-window transient--window
+                   (get-text-property (point) 'button-data)))))
+    (unwind-protect (read-string prompt initial)
+      (when (and focus prefix (eq prefix transient--prefix))
+        (transient--show)
+        (with-selected-window transient--window (transient--goto-button focus))))))
+(defun emacsvox-settings-integrations--edit (command &optional delta)
+  "Change COMMAND's global option, optionally adjusting its number by DELTA."
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (let* ((entry (emacsvox-settings-integrations--option command))
+         (option (nth 2 entry)) (old (default-value option))
+         (choices (nth 4 entry))
+         (value
+          (if choices
+              (car (or (cadr (member (assoc old choices) choices)) (car choices)))
+            (if delta (max 1 (+ (or old 0) (* delta (nth 5 entry))))
+              (let ((input (emacsvox-settings-integrations--read-limit (format "%s (positive integer or none): " (nth 3 entry))
+                                        (if old (number-to-string old) "none"))))
+                (cond ((equal (downcase (string-trim input)) "none") nil)
+                      ((string-match-p "\\`[0-9]+\\'" input) (string-to-number input))
+                      (t (user-error "Enter a positive integer or none"))))))))
+    (when (and (not choices) value (<= value 0))
+      (user-error "Enter a positive integer or none"))
+    (customize-set-variable option value)
+    ;; Preserve the lifecycle used by the existing background-level command.
+    (when (and (eq option 'emacsvox-agent-shell-background-speech-level)
+               (memq value '(notify quiet)))
+      (emacsvox-agent-shell--cancel-background-pending-speech))
+    (emacsvox-settings-integrations--say (emacsvox-settings-integrations--label command))))
+(defun emacsvox-settings-integrations--adjust (direction)
+  "Adjust the selected numeric integration control in DIRECTION."
+  (let* ((command (with-selected-window (emacsvox-transient--navigation-window)
+                    (when-let* ((button (button-at (point))))
+                      (oref (button-get button 'button-data) command))))
+         (entry (assq command emacsvox-settings-integrations--options)))
+    (unless (nth 5 entry) (user-error "Select a numeric control first"))
+    (emacsvox-settings-integrations--edit command direction)))
+(defun emacsvox-settings-integrations--decrease ()
+  "Decrease the selected integration limit." (interactive)
+  (emacsvox-settings-integrations--adjust -1))
+(defun emacsvox-settings-integrations--increase ()
+  "Increase the selected integration limit." (interactive)
+  (emacsvox-settings-integrations--adjust 1))
+(defun emacsvox-settings-integrations--number-bindings (map)
+  "Add shifted-arrow adjustment to focused integration MAP."
+  (when (and transient--prefix
+             (memq (oref transient--prefix command)
+                   '(emacsvox-settings-integrations--agent emacsvox-settings-integrations--notmuch)))
+    (keymap-set map "S-<left>" #'emacsvox-settings-integrations--decrease)
+    (keymap-set map "S-<right>" #'emacsvox-settings-integrations--increase))
+  map)
+(advice-add 'transient--make-transient-map :filter-return
+            #'emacsvox-settings-integrations--number-bindings)
+(define-key transient-predicate-map [emacsvox-settings-integrations--decrease] #'transient--do-stay)
+(define-key transient-predicate-map [emacsvox-settings-integrations--increase] #'transient--do-stay)
+(defun emacsvox-settings-integrations--save-options (feature)
+  "Save FEATURE's displayed global controls through Customize."
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (require feature)
+  (dolist (entry emacsvox-settings-integrations--options)
+    (when (eq feature (nth 1 entry))
+      (customize-save-variable (nth 2 entry) (default-value (nth 2 entry)))))
+  (emacsvox-settings-integrations--say "Saved displayed global defaults"))
+(defun emacsvox-settings-integrations--back ()
+  "Return to the originating integration entry, or close a direct menu."
+  (interactive)
+  (emacsvox-settings-integrations--return
+   (or (plist-get (emacsvox-aural-menu--context) :integration-return)
+       'emacsvox-settings-search)))
+
+(defun emacsvox-settings-integrations--agent-source ()
+  "Resolve the captured Agent Shell session or viewport without creating one."
+  (require 'emacsvox-agent-shell)
+  (emacsvox-agent-shell--session-buffer
+   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))))
+(defun emacsvox-settings-integrations--agent-p ()
+  "Whether the captured buffer owns an Agent Shell session."
+  (condition-case nil (emacsvox-settings-integrations--agent-source) (user-error nil)))
+(defun emacsvox-settings-integrations--agent-session-label ()
+  "Describe the current session override, separate from global defaults."
+  (if (emacsvox-settings-integrations--agent-p)
+      (format "Session speech: %s"
+              (buffer-local-value 'emacsvox-agent-shell-speech-level
+                                  (emacsvox-settings-integrations--agent-source)))
+    "Session speech: open from Agent Shell or its viewport"))
+(defun emacsvox-settings-integrations--agent-session ()
+  "Choose speech for the captured session through its existing lifecycle."
+  (interactive)
+  (with-current-buffer (emacsvox-settings-integrations--agent-source)
+    (call-interactively #'emacsvox-agent-shell-select-speech-level)))
+(defun emacsvox-settings-integrations--agent-save ()
+  "Save displayed Agent Shell defaults, excluding the session override."
+  (interactive)
+  (emacsvox-settings-integrations--save-options 'emacsvox-agent-shell))
+(defun emacsvox-settings-integrations--agent-custom ()
+  "Open advanced Agent Shell settings and return here."
+  (interactive)
+  (require 'emacsvox-agent-shell)
+  (emacsvox-settings--custom 'emacsvox-agent-shell 'emacsvox-settings-integrations--agent-custom))
+
+(defun emacsvox-settings-integrations--agent-foreground ()
+  "Change the global foreground speech." (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-foreground))
+
+(defun emacsvox-settings-integrations--agent-background ()
+  "Change the global background speech." (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-background))
+
+(defun emacsvox-settings-integrations--agent-thoughts ()
+  "Change the global thought feedback." (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-thoughts))
+
+(defun emacsvox-settings-integrations--agent-tools ()
+  "Change the global tool output." (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-tools))
+
+(defun emacsvox-settings-integrations--agent-permissions ()
+  "Change the global speak permission requests." (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-permissions))
+
+(defun emacsvox-settings-integrations--agent-calls ()
+  "Change the global announce tool calls." (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-calls))
+
+(defun emacsvox-settings-integrations--agent-processing ()
+  "Change the global processing lifecycle cues." (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-processing))
+
+(defun emacsvox-settings-integrations--agent-automatic-limit ()
+  "Change the global automatic content limit." (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-automatic-limit))
+
+(defun emacsvox-settings-integrations--agent-line-limit ()
+  "Change the global line navigation limit." (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-line-limit))
+
+(defun emacsvox-settings-integrations--agent-block-limit ()
+  "Change the global block navigation limit." (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--agent-block-limit))
+
+(transient-define-prefix emacsvox-settings-integrations--agent ()
+  "Control Agent Shell speech, separating session overrides and global defaults."
+  ["Captured session (temporary)"
+   ("s" (lambda () (emacsvox-settings-integrations--agent-session-label))
+    emacsvox-settings-integrations--agent-session
+    :inapt-if-not emacsvox-settings-integrations--agent-p :transient t)]
+  ["Global speech defaults; w saves"
+   ("f" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-foreground))
+    emacsvox-settings-integrations--agent-foreground :transient t)
+   ("b" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-background))
+    emacsvox-settings-integrations--agent-background :transient t)
+   ("t" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-thoughts))
+    emacsvox-settings-integrations--agent-thoughts :transient t)
+   ("o" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-tools))
+    emacsvox-settings-integrations--agent-tools :transient t)
+   ("p" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-permissions))
+    emacsvox-settings-integrations--agent-permissions :transient t)
+   ("c" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-calls))
+    emacsvox-settings-integrations--agent-calls :transient t)
+   ("l" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-processing))
+    emacsvox-settings-integrations--agent-processing :transient t)
+  ]
+  ["Global reading limits: Enter exact value; Shift-arrows adjust"
+   ("a" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-automatic-limit))
+    emacsvox-settings-integrations--agent-automatic-limit :transient t)
+   ("n" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-line-limit))
+    emacsvox-settings-integrations--agent-line-limit :transient t)
+   ("k" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-block-limit))
+    emacsvox-settings-integrations--agent-block-limit :transient t)
+  ]
+  ["Save and finish"
+   ("w" "Save displayed global defaults" emacsvox-settings-integrations--agent-save :transient t)
+   ("A" "Advanced Agent Shell settings (Customize)" emacsvox-settings-integrations--agent-custom :transient transient--do-suspend)
+   ("q" "Back" emacsvox-settings-integrations--back :transient transient--do-replace)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-integrations--agent nil nil :scope (emacsvox-aural-menu--context)))
 
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-integrations ()

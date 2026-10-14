@@ -163,6 +163,10 @@ them. =A= opens advanced EAT Customize settings, and =q= returns to the menu.
 Search with =C-e H /= also finds each EAT control. See
 [[info:emacsvox#EAT Terminal Access][EAT Terminal Access]] for prompt requirements and feedback policies.
 
+Agent Shell also has a focused menu for session speech, global feedback defaults
+and reading limits; =w= saves only its displayed global defaults. See
+[[info:emacsvox#Agent Shell][Agent Shell]] for its controls.
+
 Other integration entries currently open Customize, with its own Apply, Save,
 and Reset controls; =q= returns to the menu.
 Integrations without an inventoried entry remain reachable through major-mode

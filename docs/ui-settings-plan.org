@@ -333,8 +333,8 @@ Direction recorded on 2026-10-15: each listed integration should open a focused
 Transient rather than using Customize as its primary settings screen. Include
 ordinary shell/comint alongside the existing integrations. Keep current-buffer
 access and the all-integrations chooser.
-Shell/comint and EAT now have focused menus; the other listed routes still open
-Customize.
+Shell/comint, EAT and Agent Shell now have focused menus; the other listed routes
+still open Customize.
 
 Deliver and listen to one integration at a time. Proposed control groupings:
 Implementation may continue in separate commits before listening acceptance.
@@ -343,8 +343,9 @@ Implementation may continue in separate commits before listening acceptance.
   implemented; listening accepted on 2026-10-15, commit =7592c191d=.
 - [X] EAT: foreground speech, background monitoring, prompt feedback and detail
   implemented; listening acceptance pending.
-- [ ] Agent Shell: session speech level, foreground/background defaults,
-  thoughts/tool/permission feedback and reading limits.
+- [X] Agent Shell: session speech level, foreground/background defaults,
+  thoughts/tool/permission feedback and reading limits implemented; listening
+  acceptance pending.
 - [ ] Org: table feedback and links to its existing structured settings.
 - [ ] EWW: automatic speech and image handling.
 - [ ] Notmuch: spoken fields, status cues and reading limits.
@@ -436,6 +437,28 @@ EAT implementation checkpoint, 2026-10-15:
   compare prompt cues/text/silence with shell integration, hear background cues
   and the unread count on return, and verify that =w= survives a restart. Check
   menu return from the terminal and frozen review.
+
+Agent Shell implementation checkpoint, 2026-10-15:
+
+- Direct =C-e S=, current-integration and chooser routes share a focused menu.
+  Session speech uses its existing chooser and cancellation lifecycle, including
+  from viewports; only global controls are saved by =w=. Background defaults
+  preserve cancellation of queued speech for automatic background sessions.
+- Global thought, tool, permission, lifecycle and reading-limit controls retain
+  the existing options. Exact entry accepts positive integers or =none=;
+  Shift-arrows adjust the selected limit by 100 and retain focus. Search selects
+  each control without changing it. Advanced Customize remains linked.
+- Source verification: 35 graphical settings tests passed. Binding overlap and
+  prompt/table/viewport checks cover installed Agent Shell =20261013.250=
+  (commit =956a0be6=) and pinned =0.86.1= (commit =137b574f=), with Shell Maker
+  commit =dcc05a8c=. The new prefix shortcut does not displace a navigation key.
+- Compiled verification: 35 graphical tests passed; all ten binding and speech
+  lifecycle checks passed against both installed and pinned packages. Incremental
+  bytecode, preflight and manual regeneration passed. No listening acceptance is
+  inferred from these checks.
+- Listening remains pending: compare session and global changes, background
+  cancellation, feedback choices, numeric adjustment/exact entry, save/restart
+  and return from shell and viewport.
 
 ** Saved setups and drafts
 
