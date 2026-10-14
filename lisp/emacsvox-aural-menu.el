@@ -39,6 +39,7 @@
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
 (autoload 'emacsvox-output-settings "emacsvox-output-settings" nil t)
+(autoload 'omnivox-punctuation "omnivox-punctuation" nil t)
 (autoload 'emacsvox-line-cues-edit "emacsvox-line-cues" nil t)
 (autoload 'emacsvox-interaction "emacsvox-interaction" nil t)
 (autoload 'emacsvox-aural-list-sound-packs "emacsvox-aural-sound-packs" nil t)
@@ -438,6 +439,15 @@ Mode policies and explicit buffer overrides still take precedence."
        (emacsvox-transient--menu-facts 'save-punctuation 'operation-completed)
        'state-change 'save-object))))
 
+(defun emacsvox-aural-menu--pronunciations ()
+  "Open pronunciation drafts; q returns to the punctuation menu."
+  (interactive)
+  (emacsvox-aural-menu--open-browser
+   (lambda ()
+     (omnivox-punctuation)
+     (get-buffer "*Omnivox Punctuation*"))
+   'emacsvox-aural-menu--pronunciations))
+
 (transient-define-prefix emacsvox-aural-menu-punctuation (&optional global)
   "Choose punctuation for this buffer or the session's global default.
 Global changes also apply to the source buffer.  S saves the displayed choice
@@ -466,6 +476,7 @@ as the default across restarts; mode policies still take precedence."
    ("r" "Restore automatic policy" emacsvox-aural-menu--reset-punctuation
     :if emacsvox-aural-menu--local-scope-p :transient t)]
   ["Save and finish"
+   ("e" "Edit pronunciations (separate Save and Restart)" emacsvox-aural-menu--pronunciations :transient transient--do-suspend)
    ("S" "Save punctuation as default" emacsvox-aural-menu--save-punctuation :transient t)
    ("q" "Back (keep changes)" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)]

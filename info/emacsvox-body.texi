@@ -2977,6 +2977,11 @@ running; Omnivox uses a 0 to 100 scale. Global changes also update the current
 buffer. Press @kbd{p} for punctuation: @kbd{n} selects none@comma{} @kbd{s} some@comma{} @kbd{a} all@comma{} and @kbd{p}
 offers built-in levels and available named profiles. In current-buffer scope@comma{}
 @kbd{r} restores automatic punctuation policy. @kbd{q} returns to Speech settings.
+Press @kbd{e} in Punctuation for the pronunciation editor. Its @kbd{q} returns to the
+same menu item@comma{} keeping unfinished drafts and the selected character. Reopening
+resumes that draft. The editor's @kbd{s} saves pronunciation overrides on the speech
+host; @kbd{r} explicitly restarts speech after confirmation. The menu's @kbd{S} still
+saves only the selected punctuation level/profile through Customize.
 
 Press @kbd{S} in Speech settings to save the displayed rate and punctuation as
 defaults across restarts. The rate uses the current backend's startup option.

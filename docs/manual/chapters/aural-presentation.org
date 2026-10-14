@@ -112,6 +112,11 @@ running; Omnivox uses a 0 to 100 scale. Global changes also update the current
 buffer. Press ~p~ for punctuation: ~n~ selects none, ~s~ some, ~a~ all, and ~p~
 offers built-in levels and available named profiles. In current-buffer scope,
 ~r~ restores automatic punctuation policy. ~q~ returns to Speech settings.
+Press ~e~ in Punctuation for the pronunciation editor. Its ~q~ returns to the
+same menu item, keeping unfinished drafts and the selected character. Reopening
+resumes that draft. The editor's ~s~ saves pronunciation overrides on the speech
+host; ~r~ explicitly restarts speech after confirmation. The menu's ~S~ still
+saves only the selected punctuation level/profile through Customize.
 
 Press ~S~ in Speech settings to save the displayed rate and punctuation as
 defaults across restarts. The rate uses the current backend's startup option.

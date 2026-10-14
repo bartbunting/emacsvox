@@ -515,3 +515,12 @@ verification of subsequently changed code.
   Fifty-three focused source and compiled graphical checks passed. Compilation,
   byte-code preflight, documentation review, and header checks passed. Automated
   restart tests use a stub; they do not establish actual hardware routing.
+
+- Notification and spatial controls committed as =0597fe553=.
+- Pronunciation editing is linked at =C-e H s p e=. Return and Help preserve the
+  draft and editor row; returning focuses the same menu entry. Direct reopening
+  updates the parent rather than retaining a stale menu callback. Saving host
+  pronunciations, restarting speech, and saving a level/profile remain separate.
+  Sixty-one source checks passed, including two graphical editor/menu checks;
+  the optional native-service round trip was skipped because its test program
+  was not configured. Listening and a real host save/restart remain open.
