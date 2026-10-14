@@ -644,7 +644,7 @@
                (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))))
 
 (ert-deftest emacsvox-aural-menu-output-graphical-browser-keeps-source ()
-  "The existing browser opens after menu exit and retains the source buffer."
+  "Browser quit restores Sounds and output, its parent, and the source."
   (skip-unless (display-graphic-p))
   (require 'emacsvox-aural-sound-packs)
   (save-window-excursion
@@ -654,14 +654,30 @@
       (let ((transient--prefix nil) (transient-show-menu 0))
         (unwind-protect
             (progn
-              (execute-kbd-macro (kbd "<f8> o p"))
+              (execute-kbd-macro (kbd "C-u <f8> o p"))
               (should-not transient--prefix)
-              (should-not transient--stack)
               (should (derived-mode-p 'emacsvox-aural-sound-packs-mode))
               (should (eq (emacsvox-aural-inspection-source-buffer) source))
               (execute-kbd-macro (kbd "q"))
+              (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-sounds))
+              (should (cdr (plist-get (emacsvox-aural-menu--context) :settings)))
+              (with-selected-window transient--window
+                (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                            'emacsvox-aural-menu--sound-packs)))
+              (should-not (buffer-local-value 'emacsvox-aural-ui--return-function
+                                             (get-buffer "*Aural Sound Packs*")))
+              (execute-kbd-macro (kbd "q"))
+              (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+              (should (equal (emacsvox-aural-menu--scope-label) "Global defaults"))
+              (execute-kbd-macro (kbd "q"))
+              (should-not transient--prefix)
               (should (eq (current-buffer) source))
-              (should (= (point) 3)))
+              (should (= (point) 3))
+              ;; Reusing the browser outside a menu must not reopen a menu.
+              (call-interactively #'emacsvox-aural-list-sound-packs)
+              (execute-kbd-macro (kbd "q"))
+              (should-not transient--prefix)
+              (should (eq (current-buffer) source)))
           (when transient--prefix (execute-kbd-macro (kbd "C-q")))
           (when (get-buffer "*Aural Sound Packs*")
             (kill-buffer "*Aural Sound Packs*")))))))

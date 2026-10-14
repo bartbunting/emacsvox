@@ -2993,6 +2993,20 @@ edits the value directly, and ‘<SPC>’ previews the indentation settings.
 Other items give brief guidance when you try to adjust them with shifted
 arrows.
 
+   Press ‘C-e H o’ for _Sounds and output_.  Main tones and earcons,
+plus separate notification speech, tones, and earcons, each have a
+global volume control.  Shift-left/right adjusts the selected volume by
+five percentage points; ‘<RET>’ enters an exact value from 0 to 100.
+Changes apply immediately through the existing audio settings.  Press
+‘S’ to save these volumes across restarts.  Notification controls affect
+the separate notification output.  Earcon volumes affect sounds played
+by Omnivox.
+
+   Press ‘p’ there to browse sound packs.  In the browser, ‘q’ returns
+to _Sounds and output_ with the same settings scope.  Another ‘q’
+returns to the main menu.  Opening the browser directly keeps its usual
+quit destination.
+
    The menu captures the source item for ‘x’ and ‘h’.  In Feedback
 Details, ‘q’ returns to the menu with the same item and settings scope;
 another ‘q’ closes the menu.  Opening Feedback Details directly keeps

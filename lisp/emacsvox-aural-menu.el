@@ -394,10 +394,25 @@ When opened from the Emacsvox menu, share its selected scope."
    'state-change 'save-object))
 
 (defun emacsvox-aural-menu--sound-packs ()
-  "Open the sound-pack browser to preview or choose a pack."
+  "Open the sound-pack browser; q returns to Sounds and output."
   (interactive)
-  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
-    (call-interactively #'emacsvox-aural-list-sound-packs)))
+  (let* ((context (emacsvox-aural-menu--context))
+         (source (emacsvox-aural-menu--source context))
+         (stack (copy-sequence transient--stack)))
+    (with-current-buffer source
+      (with-current-buffer (call-interactively #'emacsvox-aural-list-sound-packs)
+        (setq-local emacsvox-aural-ui--return-function
+                    (lambda ()
+                      (when (buffer-live-p source)
+                        (pop-to-buffer source)
+                        ;; Own the saved stack even if another menu was opened.
+                        (setq transient--stack (copy-sequence stack))
+                        (transient--stack-pop)
+                        (transient--show)
+                        (with-selected-window transient--window
+                          (transient--goto-button
+                           (transient-suffix-object 'emacsvox-aural-menu--sound-packs)))
+                        t)))))))
 
 (transient-define-prefix emacsvox-aural-menu-sounds ()
   "Adjust global output volumes or browse sound packs.
@@ -417,7 +432,7 @@ Enter sets an exact value.  Save explicitly to retain volumes across restarts."
    ("E" (lambda () (emacsvox-aural-menu--output-label 'emacsvox-aural-menu--notification-earcons))
     emacsvox-aural-menu--notification-earcons :transient t)]
   ["Sound packs"
-   ("p" "Browse sound packs" emacsvox-aural-menu--sound-packs :transient transient--do-exit)]
+   ("p" "Browse sound packs" emacsvox-aural-menu--sound-packs :transient transient--do-suspend)]
   ["Save and finish"
    ("S" "Save output volumes" emacsvox-aural-menu--save-output :transient t)
    ("q" "Back (keep changes)" transient-quit-one)

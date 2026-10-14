@@ -933,6 +933,7 @@ PATH protects completion from invalid inheritance cycles."
     (with-current-buffer buffer
       (unless (derived-mode-p 'emacsvox-aural-sound-packs-mode)
         (emacsvox-aural-sound-packs-mode))
+      (setq emacsvox-aural-ui--return-function nil)
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-sound-packs-refresh
        (or pack (tabulated-list-get-id) emacsvox-sounds-current-pack)))

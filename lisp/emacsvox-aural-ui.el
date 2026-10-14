@@ -101,6 +101,10 @@ When nil, movement speaks the current titled cell.")
 (defvar-local emacsvox-aural-ui-dismiss-warning-function nil
   "Optional function returning a warning to speak after this interface hides.")
 
+(defvar-local emacsvox-aural-ui--return-function nil
+  "One-shot continuation after dismissing this interface.
+A non-nil result means the continuation announced the destination.")
+
 (defvar-local emacsvox-aural-ui-action-filter nil
   "Optional predicate deciding whether a command applies to the current row.")
 
@@ -796,18 +800,21 @@ When KILL is non-nil, kill the interface buffer as `quit-window' would."
               (funcall emacsvox-aural-ui-dismiss-warning-function)))
         (facts
          '(:role aural-interface :events (aural-interface-closed)))
+        (return-function emacsvox-aural-ui--return-function)
         (context
          (emacsvox-aural-capture-context 'aural-tools 'state-change)))
+    (setq emacsvox-aural-ui--return-function nil)
     (prog1
         (quit-window kill)
-      (let ((emacsvox-aural-submission-facts facts)
-            (emacsvox-aural-submission-context context)
-            (emacsvox-aural-submission-module 'aural-tools)
-            (emacsvox-aural-submission-occasion 'state-change))
-        (emacsvox-aural-ui--speak-feedback
-         (concat (emacsvox-aural-ui--destination-description)
-                 (when warning (concat " " warning)))
-         'close-object 'aural-interface-closed)))))
+      (unless (and return-function (funcall return-function))
+        (let ((emacsvox-aural-submission-facts facts)
+              (emacsvox-aural-submission-context context)
+              (emacsvox-aural-submission-module 'aural-tools)
+              (emacsvox-aural-submission-occasion 'state-change))
+          (emacsvox-aural-ui--speak-feedback
+           (concat (emacsvox-aural-ui--destination-description)
+                   (when warning (concat " " warning)))
+           'close-object 'aural-interface-closed))))))
 
 (defvar emacsvox-aural-interface-mode-map
   (let ((map (make-sparse-keymap)))

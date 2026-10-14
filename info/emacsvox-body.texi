@@ -2949,6 +2949,18 @@ adjust it by five percentage points. Plain left/right still changes sections.
 @kbd{@key{RET}} edits the value directly@comma{} and @kbd{@key{SPC}} previews the indentation settings.
 Other items give brief guidance when you try to adjust them with shifted arrows.
 
+Press @kbd{C-e H o} for @emph{Sounds and output}. Main tones and earcons@comma{} plus separate
+notification speech@comma{} tones@comma{} and earcons@comma{} each have a global volume control.
+Shift-left/right adjusts the selected volume by five percentage points;
+@kbd{@key{RET}} enters an exact value from 0 to 100. Changes apply immediately through
+the existing audio settings. Press @kbd{S} to save these volumes across restarts.
+Notification controls affect the separate notification output. Earcon volumes
+affect sounds played by Omnivox.
+
+Press @kbd{p} there to browse sound packs. In the browser@comma{} @kbd{q} returns to @emph{Sounds
+and output} with the same settings scope. Another @kbd{q} returns to the main
+menu. Opening the browser directly keeps its usual quit destination.
+
 The menu captures the source item for @kbd{x} and @kbd{h}. In Feedback Details@comma{}
 @kbd{q} returns to the menu with the same item and settings scope; another @kbd{q}
 closes the menu. Opening Feedback Details directly keeps its usual return

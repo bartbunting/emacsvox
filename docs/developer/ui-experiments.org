@@ -8,7 +8,9 @@ Proposal for the =ui-experiments= branch. The first experiment is to replace
 the =C-e H= Aural Home menu with a Transient. The first implementation adds
 the linked indentation path, Feedback for this item, and a route to the
 existing Home. The tuning prototype now uses Shift-left/right to adjust
-indentation tone volume. The remaining action coverage is still to carry out.
+indentation tone volume. Sounds and output adds the five existing global
+volume controls and the sound-pack browser. The remaining action coverage
+is still to carry out.
 
 The aim is to make settings and actions easier to discover through familiar
 Emacs interactions, with concise speech and direct shortcuts. Feedback from
@@ -331,5 +333,22 @@ bindings. Parent menus and third-party Transients retain their existing maps.
 Volume remains global in either settings scope. Adjustments use the existing
 Customize setter and replaceable main-lane percentage announcement. Saving
 remains explicit; opening, adjusting, previewing, and closing the menu do not
-write personal settings files. Live listening is needed to assess repeated
-adjustments and previews before extending the pattern to other controls.
+write personal settings files. Listening checks accepted the shifted-arrow
+adjustment and Sounds and output interactions on 2026-10-14.
+
+* Sounds and output
+
+=C-e H o= opens the five global output volume controls. Shift-left/right
+adjusts the selected control by five percentage points; Enter reads an exact
+value and restores focus to that control. Existing Customize setters apply
+the change to the appropriate output. =S= explicitly saves all five volumes.
+
+=p= suspends the menu stack and opens the existing sound-pack browser. Its
+=q= restores Sounds and output with Browse sound packs selected. The next
+=q= returns to the main menu with its captured source and scope. A one-shot
+buffer-local continuation owns the suspended stack; opening the browser
+directly clears that continuation and retains ordinary dismissal behaviour.
+
+The focused menu, shared interface, and sound-pack checks passed 39 tests
+with compiled code in fresh graphical Emacs sessions using bundled and
+installed Transient. Listening confirmed the browser return path.

@@ -71,7 +71,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1635 commands and 233 options.
+This chapter documents a total of 1636 commands and 233 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -3748,6 +3748,17 @@ The source item is captured on entry; Aural Home offers all other actions.
 
 @format
 Choose arrow navigation, announcement order, and descriptions for all menus.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-menu-sounds
+@deffn {Command} emacsvox-aural-menu-sounds
+@findex emacsvox-aural-menu-sounds
+
+@format
+Adjust global output volumes or browse sound packs.
+Shift left and right adjust the selected volume by five percentage points.
+Enter sets an exact value.  Save explicitly to retain volumes across restarts.
 @end format
 @end deffn
 
