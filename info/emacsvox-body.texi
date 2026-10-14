@@ -2962,6 +2962,15 @@ adjust it by five percentage points. Plain left/right still changes sections.
 @kbd{@key{RET}} edits the value directly@comma{} and @kbd{@key{SPC}} previews the indentation settings.
 Other items give brief guidance when you try to adjust them with shifted arrows.
 
+Press @kbd{t} in Indentation for pitch-tone settings. Choose base pitch@comma{} rise per
+column@comma{} maximum pitch@comma{} or requested duration; Shift-left/right adjusts and
+@kbd{@key{RET}} enters an exact value. Space previews four-column pitch feedback without
+changing the selected presentation or enabling indentation. @kbd{s} stops speech.
+Short durations show the effective blank-line tone minimum. @kbd{R} restores the
+four bundled values in the displayed scope. Global changes preserve local
+overrides; @kbd{S} saves global indentation defaults and tone volume through
+Customize. @kbd{q} returns with changes intact.
+
 In Speech settings@comma{} select @emph{Rate} and use Shift-left/right to adjust it by
 the configured rate step. @kbd{@key{RET}} or @kbd{r} enters an exact value. Speech must be
 running; Omnivox uses a 0 to 100 scale. Global changes also update the current
@@ -2982,6 +2991,17 @@ camel-case splitting independently with @kbd{c}. These controls share the
 buffer/global scope selected by @kbd{g}. Space reads a short sample using the
 displayed settings. @kbd{S} saves those three reading settings as startup defaults;
 buffer overrides still apply.
+
+Press @kbd{C-e H s t} for @emph{Typing and interaction}. Character@comma{} word@comma{} and completed-line
+echo@comma{} point indication and presentation@comma{} and spoken messages share the
+buffer/global scope. Global changes also update the originating buffer.
+Delayed phonetics after character navigation and its delay are global.
+Shift-left/right adjusts the selected delay by 0.1 seconds; @kbd{@key{RET}} enters an
+exact value of at least 0.1 seconds. Space previews the captured source line
+with the displayed point settings; @kbd{P} speaks its character's phonetic name
+immediately@comma{} and @kbd{s} stops. @kbd{S} explicitly saves the displayed settings through
+Customize@comma{} promoting buffer choices to startup defaults. Closing retains
+session changes without saving.
 
 Press @kbd{l} for the capital-letter beep or @kbd{a} for the all-caps beep. Each editor
 keeps a separate global draft. Select pitch or duration@comma{} use Shift-left/right

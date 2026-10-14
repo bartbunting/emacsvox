@@ -660,6 +660,8 @@ ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
      " Up and down: options. Left and right: sections."
      (when (eq command 'emacsvox-indentation)
        " Shift left and right: adjust volume. Space: preview.")
+     (when (eq command 'emacsvox-indentation-tone)
+       " Shift left and right: adjust. Space: preview pitch tone.")
      (when (eq command 'emacsvox-aural-menu-sounds)
        " Shift left and right: adjust volume.")
      (when (eq command 'emacsvox-aural-menu-speech)
@@ -1046,7 +1048,7 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                      emacsvox-aural-menu-punctuation emacsvox-aural-menu-voices
                      emacsvox-aural-voice-menu emacsvox-indentation
                      emacsvox-capitalization emacsvox-capitalization-cue
-                     emacsvox-interaction)))
+                     emacsvox-interaction emacsvox-indentation-tone)))
     (keymap-set map "RET" #'transient-push-button)
     (keymap-set map "<return>" #'transient-push-button))
   map)

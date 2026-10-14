@@ -419,7 +419,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1641 commands and 233 options.
+   This chapter documents a total of 1643 commands and 233 options.
 
 * Menu:
 
@@ -589,6 +589,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-iedit:: Speech-enable IEDIT.
 * emacsvox-indentation:: Indentation feedback menu.
 * emacsvox-info:: Speech enable Info -.
+* emacsvox-interaction:: Typing and interaction settings.
 * emacsvox-ispell:: Speech enable Ispell.
 * emacsvox-ivy:: Speech-enable IVY.
 * emacsvox-journalctl:: JOURNALCTL.

@@ -36,7 +36,8 @@
 (defun emacsvox-indentation--state ()
   "Return the active menu's source buffer and global scope flag."
   (let ((prefix (or transient--prefix transient-current-prefix)))
-    (unless (and prefix (eq (oref prefix command) 'emacsvox-indentation))
+    (unless (and prefix (memq (oref prefix command)
+                              '(emacsvox-indentation emacsvox-indentation-tone)))
       (user-error "Open the indentation menu first"))
     (oref prefix scope)))
 
@@ -102,16 +103,116 @@
                                'emacsvox-transient-toggle-state
                                (if enabled 'on 'off)))))
 
-(defun emacsvox-indentation--preview ()
-  "Hear a four-column sample using these settings, even when feedback is off."
+(defun emacsvox-indentation--preview (&optional pitch-tone)
+  "Hear four columns with these settings, even when feedback is off.
+With PITCH-TONE, preview rising pitch even if another presentation is selected."
   (interactive)
   (let ((presentation (emacsvox-indentation--value 'emacsvox-indentation-presentation))
-        (timing (emacsvox-indentation--value 'emacsvox-indentation-tone-timing)))
+        (timing (emacsvox-indentation--value 'emacsvox-indentation-tone-timing))
+        (base (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-base))
+        (rise (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-semitones-per-column))
+        (maximum (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-maximum))
+        (duration (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-duration)))
     (with-current-buffer (emacsvox-indentation--source)
       (let ((emacsvox-audio-indentation t)
-            (emacsvox-indentation-presentation presentation)
-            (emacsvox-indentation-tone-timing timing))
+            (emacsvox-indentation-presentation
+             (if (and pitch-tone (not (memq presentation '(pitch-tone spoken-pitch-tone))))
+                 'pitch-tone presentation))
+            (emacsvox-indentation-tone-timing timing)
+            (emacsvox-indentation-pitch-tone-base base)
+            (emacsvox-indentation-pitch-tone-semitones-per-column rise)
+            (emacsvox-indentation-pitch-tone-maximum maximum)
+            (emacsvox-indentation-pitch-tone-duration duration))
         (emacsvox-speak--preview-indentation-presentation)))))
+
+(defconst emacsvox-indentation--tone-controls
+  '((emacsvox-indentation--base emacsvox-indentation-pitch-tone-base "Base pitch" "Hz" 25 1)
+    (emacsvox-indentation--rise emacsvox-indentation-pitch-tone-semitones-per-column "Rise per column" "semitones" 0.25 0)
+    (emacsvox-indentation--maximum emacsvox-indentation-pitch-tone-maximum "Maximum pitch" "Hz" 100 1)
+    (emacsvox-indentation--duration emacsvox-indentation-pitch-tone-duration "Requested duration" "milliseconds" 10 0))
+  "Pitch-tone controls: command, option, label, units, step, and lower bound.")
+
+(defun emacsvox-indentation--tone-label (command)
+  "Describe pitch-tone COMMAND and any duration floor."
+  (let* ((control (assq command emacsvox-indentation--tone-controls))
+         (value (emacsvox-indentation--value (nth 1 control)))
+         (floor (emacsvox-speak--blank-line-tone-duration)))
+    (concat (format "%s: %s %s" (nth 2 control) value (nth 3 control))
+            (when (and (eq command 'emacsvox-indentation--duration) (< value floor))
+              (format "; effective %s milliseconds" floor)))))
+
+(defun emacsvox-indentation--tone-edit (command &optional direction)
+  "Edit pitch-tone COMMAND exactly, or step it in DIRECTION."
+  (let* ((control (assq command emacsvox-indentation--tone-controls))
+         (symbol (nth 1 control))
+         (current (emacsvox-indentation--value symbol))
+         (minimum (nth 5 control))
+         (maximum (when (eq command 'emacsvox-indentation--base)
+                    (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-maximum)))
+         (minimum (if (eq command 'emacsvox-indentation--maximum)
+                      (emacsvox-indentation--value 'emacsvox-indentation-pitch-tone-base)
+                    minimum))
+         (value
+          (if direction
+              (let ((next (max minimum (+ current (* direction (nth 4 control))))))
+                (if maximum (min maximum next) next))
+            ;; Select the edited control before prompting so arrows work on return.
+            (let ((prefix transient--prefix)
+                  (suffix (cl-find command transient--suffixes
+                                   :key (lambda (item) (oref item command)))))
+              (unwind-protect
+                  (read-number (format "%s in %s: " (nth 2 control) (nth 3 control)) current)
+                (when (and suffix prefix (eq transient--prefix prefix))
+                  (transient--show)
+                  (with-selected-window transient--window
+                    (transient--goto-button suffix))))))))
+    (unless (and (numberp value) (= (- value value) 0)
+                 (>= value minimum) (or (null maximum) (<= value maximum))
+                 (or (not (eq command 'emacsvox-indentation--duration)) (integerp value)))
+      (user-error "%s must be finite, at least %s%s%s"
+                  (nth 2 control) minimum
+                  (if maximum (format ", at most %s" maximum) "")
+                  (if (eq command 'emacsvox-indentation--duration) ", and an integer" "")))
+    (emacsvox-indentation--set
+     symbol value
+     (concat (when (and direction (= current value))
+               (if (> direction 0) "Maximum. " "Minimum. "))
+             (format "%s %s" value (nth 3 control))
+             (when (and (eq command 'emacsvox-indentation--duration)
+                        (< value (emacsvox-speak--blank-line-tone-duration)))
+               (format "; effective %s milliseconds" (emacsvox-speak--blank-line-tone-duration)))))))
+
+(defun emacsvox-indentation--base ()
+  "Set the first column's pitch." (interactive)
+  (emacsvox-indentation--tone-edit 'emacsvox-indentation--base))
+(defun emacsvox-indentation--rise ()
+  "Set pitch rise per additional column." (interactive)
+  (emacsvox-indentation--tone-edit 'emacsvox-indentation--rise))
+(defun emacsvox-indentation--maximum ()
+  "Set the pitch ceiling." (interactive)
+  (emacsvox-indentation--tone-edit 'emacsvox-indentation--maximum))
+(defun emacsvox-indentation--duration ()
+  "Set requested pitch-tone duration." (interactive)
+  (emacsvox-indentation--tone-edit 'emacsvox-indentation--duration))
+
+(defun emacsvox-indentation--tone-reset ()
+  "Restore the four bundled pitch-tone values in the displayed scope."
+  (interactive)
+  (with-current-buffer (emacsvox-indentation--source)
+    (dolist (control emacsvox-indentation--tone-controls)
+      (let* ((symbol (nth 1 control))
+             (value (eval (car (get symbol 'standard-value)) t)))
+        (if (cdr (emacsvox-indentation--state)) (set-default symbol value)
+          (set (make-local-variable symbol) value)))))
+  (emacsvox-indentation--say "Restored bundled pitch-tone settings. Not saved."))
+
+(defun emacsvox-indentation--tone-preview ()
+  "Preview four columns as a pitch tone without changing the chosen presentation."
+  (interactive)
+  (emacsvox-indentation--preview t))
+
+(defun emacsvox-indentation--stop ()
+  "Stop the indentation preview." (interactive) (tts-stop))
 
 (defun emacsvox-indentation--volume (&optional delta)
   "Enter a volume from 0 to 100 for all main-stream tones.
@@ -127,34 +228,39 @@ When called from Lisp, adjust by DELTA percentage points if non-nil."
     (emacsvox-indentation--say (format "%d percent" value))))
 
 (defun emacsvox-indentation--adjust (delta)
-  "Adjust the selected Volume control by DELTA percentage points."
+  "Adjust Volume by DELTA, or a pitch-tone control by one step in its direction."
   (emacsvox-indentation--source)
   (let ((object
          (with-selected-window (emacsvox-transient--navigation-window)
            (when-let* ((button (button-at (point))))
              (button-get button 'button-data)))))
-    (if (and (eieio-object-p object)
-             (eq (oref object command) 'emacsvox-indentation--volume))
-        (emacsvox-indentation--volume delta)
-      (emacsvox-transient--submit-text
+    (cond
+     ((and (eieio-object-p object)
+           (eq (oref object command) 'emacsvox-indentation--volume))
+      (emacsvox-indentation--volume delta))
+     ((and (eieio-object-p object)
+           (assq (oref object command) emacsvox-indentation--tone-controls))
+      (emacsvox-indentation--tone-edit (oref object command) (if (> delta 0) 1 -1)))
+     (t (emacsvox-transient--submit-text
        "Not adjustable. Enter activates; left and right change sections."
        (emacsvox-transient--item-facts 'command 'adjust 'operation-failed)
-       'state-change 'warn-user))))
+       'state-change 'warn-user)))))
 
 (defun emacsvox-indentation--decrease ()
-  "Lower the selected Volume control by five percentage points."
+  "Lower the selected numeric control by one step."
   (interactive)
   (emacsvox-indentation--adjust -5))
 
 (defun emacsvox-indentation--increase ()
-  "Raise the selected Volume control by five percentage points."
+  "Raise the selected numeric control by one step."
   (interactive)
   (emacsvox-indentation--adjust 5))
 
 (defun emacsvox-indentation--navigation-bindings (map)
   "Add shifted-arrow adjustment to MAP only for Indentation."
   (when (and transient-enable-menu-navigation transient--prefix
-             (eq (oref transient--prefix command) 'emacsvox-indentation))
+             (memq (oref transient--prefix command)
+                   '(emacsvox-indentation emacsvox-indentation-tone)))
     (keymap-set map "S-<left>" #'emacsvox-indentation--decrease)
     (keymap-set map "S-<right>" #'emacsvox-indentation--increase))
   map)
@@ -174,7 +280,11 @@ Switch to Global defaults before saving; buffer-local choices are not saved."
   (unless (cdr (emacsvox-indentation--state))
     (user-error "Switch to Global defaults before saving"))
   (dolist (symbol '(emacsvox-audio-indentation emacsvox-indentation-presentation
-                   emacsvox-indentation-tone-timing tts-main-tone-volume))
+                   emacsvox-indentation-tone-timing tts-main-tone-volume
+                   emacsvox-indentation-pitch-tone-base
+                   emacsvox-indentation-pitch-tone-semitones-per-column
+                   emacsvox-indentation-pitch-tone-maximum
+                   emacsvox-indentation-pitch-tone-duration))
     (customize-save-variable symbol (default-value symbol)))
   (emacsvox-indentation--say "Saved global indentation defaults and tone volume"))
 
@@ -184,6 +294,28 @@ Linked menus may share STATE so changes of scope survive parent navigation."
   (unless (buffer-live-p (car state))
     (user-error "The indentation source buffer has been closed"))
   (transient-setup 'emacsvox-indentation nil nil :scope state))
+
+(transient-define-prefix emacsvox-indentation-tone ()
+  "Tune rising-pitch indentation tones in the selected scope."
+  :refresh-suffixes t
+  ["Pitch-tone settings"
+   ("g" (lambda () (if (cdr (emacsvox-indentation--state)) "Scope: Global defaults" "Scope: Current buffer")) emacsvox-indentation--scope :transient t)
+   ("b" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--base)) emacsvox-indentation--base :transient t)
+   ("r" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--rise)) emacsvox-indentation--rise :transient t)
+   ("m" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--maximum)) emacsvox-indentation--maximum :transient t)
+   ("d" (lambda () (emacsvox-indentation--tone-label 'emacsvox-indentation--duration)) emacsvox-indentation--duration :transient t)]
+  ["Try and finish"
+   ("SPC" "Preview four-column pitch tone" emacsvox-indentation--tone-preview :transient t)
+   ("s" "Stop preview" emacsvox-indentation--stop :transient t)
+   ("R" "Restore bundled pitch-tone settings" emacsvox-indentation--tone-reset :transient t)
+   ("S" "Save global indentation defaults and volume" emacsvox-indentation--save
+    :inapt-if-not (lambda () (cdr (emacsvox-indentation--state))) :transient t)
+   ("q" "Back (keep changes)" transient-quit-one)
+   ("C-q" "Close all menus" transient-quit-all)]
+  (interactive)
+  (let ((state (emacsvox-indentation--state)))
+    (emacsvox-indentation--source)
+    (transient-setup 'emacsvox-indentation-tone nil nil :scope state)))
 
 ;;;###autoload
 (transient-define-prefix emacsvox-indentation (&optional global)
@@ -236,7 +368,8 @@ adjusts Volume by five percentage points.  Space previews the indentation settin
    ("a" (lambda () (emacsvox-indentation--choice 'emacsvox-indentation-tone-timing 'overlay "Alongside speech"))
     (lambda () "Play the indentation tone at the same time as the line is spoken."
       (interactive) (emacsvox-indentation--set 'emacsvox-indentation-tone-timing 'overlay "Tone alongside speech"))
-    :inapt-if-not emacsvox-indentation--tonal-p :transient t)]
+    :inapt-if-not emacsvox-indentation--tonal-p :transient t)
+   ("t" "Pitch-tone settings" emacsvox-indentation-tone :transient transient--do-stack)]
   ["All main-stream tones (global)"
    ("v" (lambda () (format "Volume: %d percent" (default-value 'tts-main-tone-volume)))
     emacsvox-indentation--volume :transient t)

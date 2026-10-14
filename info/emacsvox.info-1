@@ -3006,6 +3006,16 @@ edits the value directly, and ‘<SPC>’ previews the indentation settings.
 Other items give brief guidance when you try to adjust them with shifted
 arrows.
 
+   Press ‘t’ in Indentation for pitch-tone settings.  Choose base pitch,
+rise per column, maximum pitch, or requested duration; Shift-left/right
+adjusts and ‘<RET>’ enters an exact value.  Space previews four-column
+pitch feedback without changing the selected presentation or enabling
+indentation.  ‘s’ stops speech.  Short durations show the effective
+blank-line tone minimum.  ‘R’ restores the four bundled values in the
+displayed scope.  Global changes preserve local overrides; ‘S’ saves
+global indentation defaults and tone volume through Customize.  ‘q’
+returns with changes intact.
+
    In Speech settings, select _Rate_ and use Shift-left/right to adjust
 it by the configured rate step.  ‘<RET>’ or ‘r’ enters an exact value.
 Speech must be running; Omnivox uses a 0 to 100 scale.  Global changes
@@ -3028,6 +3038,18 @@ choose spoken, tone, combined, personal-rule, or no presentation with
 controls share the buffer/global scope selected by ‘g’.  Space reads a
 short sample using the displayed settings.  ‘S’ saves those three
 reading settings as startup defaults; buffer overrides still apply.
+
+   Press ‘C-e H s t’ for _Typing and interaction_.  Character, word, and
+completed-line echo, point indication and presentation, and spoken
+messages share the buffer/global scope.  Global changes also update the
+originating buffer.  Delayed phonetics after character navigation and
+its delay are global.  Shift-left/right adjusts the selected delay by
+0.1 seconds; ‘<RET>’ enters an exact value of at least 0.1 seconds.
+Space previews the captured source line with the displayed point
+settings; ‘P’ speaks its character's phonetic name immediately, and ‘s’
+stops.  ‘S’ explicitly saves the displayed settings through Customize,
+promoting buffer choices to startup defaults.  Closing retains session
+changes without saving.
 
    Press ‘l’ for the capital-letter beep or ‘a’ for the all-caps beep.
 Each editor keeps a separate global draft.  Select pitch or duration,
@@ -5886,91 +5908,3 @@ _Emacsvox Reference Manual_ for the speech integration.
    The former Emacs/W3 and w3m survey is historical.  Do not install
 either one on the strength of the Heritage manual; use EWW unless a
 separately maintained integration says otherwise.
-
-
-File: emacsvox.info,  Node: Messaging,  Next: Editing Code,  Prev: Web Browsing,  Up: Emacs Packages
-
-8.5 Messaging
-=============
-
-Emacsvox integrates with several Emacs mail and messaging modes.  The
-curated workflow for indexed mail search, asynchronous results, thread
-reading, attachments, and privacy controls is *note Notmuch Mail:
-Notmuch Mail.  For another client, start with its own manual and ‘C-h
-m’; use the generated reference to find an Emacsvox module with the same
-package or mode name.
-
-
-File: emacsvox.info,  Node: Editing Code,  Next: Development Environment,  Prev: Messaging,  Up: Emacs Packages
-
-8.6 Editing Code
-================
-
-Programming modes provide language-aware movement, indentation,
-compilation, and navigation.  Emacsvox speaks those operations and uses
-voice-lock to distinguish faces such as comments, strings, warnings, and
-language constructs.  Use ‘C-h m’ in the source buffer for the language
-mode, and search the generated reference for an integration named after
-that mode.
-
-
-File: emacsvox.info,  Node: Development Environment,  Next: Desktop Management,  Prev: Editing Code,  Up: Emacs Packages
-
-8.7 Development Environment
-===========================
-
-Emacs can combine compilation, diagnostics, project navigation, version
-control, debuggers, and language servers into a development environment.
-Emacsvox supplies speech feedback to many of those components, but their
-own manuals remain authoritative for setup and operation.  Verify each
-component individually with its mode help before combining it into a
-larger workflow.
-
-8.7.1 Magit
------------
-
-Magit navigation speaks the reached section or line.  Empty and
-whitespace-only lines use the normal line tones.  Commit hashes are
-silent by default; changing the voice assigned to the ‘magit-hash’ face
-changes this consistently for both navigation and explicit reading.
-Moving the section highlight preserves that choice.
-
-   After successful staging or unstaging in a Magit view, speech reads
-the line or section where point lands after the refresh.  Failures are
-still reported explicitly.  Staging and unstaging from an ordinary file
-buffer still confirm the outcome.  Branch checkout, branch and remote
-renaming, remote removal, and stash creation also announce their
-results.  Repository-list fetching reports partial failures when some
-repositories fail.  Background process completion uses the notification
-lane, while entering status and navigating use the main speech lane.
-
-   Section visibility commands describe the resulting collapsed,
-expanded, or partly expanded state.  Copying a heading without a value
-says there is nothing to copy; it does not repeat an older kill-ring
-entry as a new copy.
-
-   Magit uses Transient menus for actions such as Push, Fetch, Commit,
-and Branch.  When a menu opens, Emacsvox speaks a short introduction and
-navigation guidance.  The automatic shortcut list stays visible without
-being read on the notification stream.  The same navigation applies to
-other packages using Transient.
-
-   • Up and Down move through options.  Each option speaks its
-     description, current state where applicable, and shortcut.  For
-     example: "Dry run, off.  Shortcut minus n."  Capital letters are
-     named explicitly.
-   • Left and Right move between sections.  A section announcement
-     includes the complete heading and its position, such as "Push
-     master to.  Section 2 of 4."  Moving through options also announces
-     section changes and wrapping at either end of the menu.
-   • ‘C-j’ or ‘M-<RET>’ activates the selected option.  You can also
-     type its shortcut.  Changing an option speaks the resulting value
-     once.
-   • ‘?’ followed by an option's shortcut opens its help.
-   • ‘C-g’ closes the current menu or leaves its help mode.  ‘q’ is not
-     a universal quit key in Transient menus.  An unavailable key gives
-     brief recovery guidance on the main speech stream.
-
-   Navigation only selects an option.  Activating an action can perform
-a Git operation, while activating a switch changes an argument for the
-next action.  Listen to the description before activating it.

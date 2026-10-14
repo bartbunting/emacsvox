@@ -69,6 +69,19 @@ personal configuration changes, or publication.
   Listening accepted; the manual and generated references cover these controls.
   The documentation review gate passed. Controls commit: =a0dd8e350=.
 - Testing route: a new normal Emacsvox session loading current byte-code.
+- Implemented and committed: =C-e H s t= opens Typing and interaction.
+  Controls commit: =c51ea23f4=. Listening acceptance remains open.
+  Character, word, and completed-line echo, point indication/presentation,
+  and spoken messages share buffer/global scope. Delayed phonetics and its
+  delay are global. Changes apply immediately; Save persists displayed values
+  through Customize. Source-line and immediate phonetic-name previews retain
+  the captured source location. Fifty-three focused checks passed from source
+  and compiled code in fresh graphical Emacs, with both bundled and installed
+  Transient checked after compilation. A separate Emacs startup restored the
+  saved interaction values. Incremental compilation, byte-code preflight, and
+  header checks passed. Listening acceptance remains open; the manual covers
+  these controls. Capitalization and interaction tests are registered in the unit runner;
+  their graphical cases require a graphical session.
 
 * Interaction contract
 
@@ -187,7 +200,11 @@ through an existing rule rather than a dedicated option.
   character handling, and delayed phonetic feedback where supported.
 
 Rate, level/profile selection, policy reset, and saving are current prototypes.
-The initial indentation path is accepted; its remaining controls need inventory.
+The initial indentation path is accepted. Pitch-tone tuning is implemented for
+listening at =C-e H s i t=: base pitch, rise per column, maximum pitch, and
+requested duration. The effective duration retains the blank-line tone minimum.
+Duration-coded indentation uses fixed constants rather than Customize options;
+making those adjustable remains a separate design decision.
 
 *** Capitalization: accepted on 2026-10-14
 
@@ -217,8 +234,14 @@ Do not confuse a cue adjustment with shared main-tone volume.
 - Spoken messages, navigation detail, and relevant interaction feedback toggles.
 - Menu navigation style, section-announcement order, and detailed descriptions.
 
-The menu presentation controls already exist. Inventory the remaining controls
-and retain existing direct keyboard commands.
+The menu presentation controls already exist. The new interaction prototype
+covers the echo, point, message, and delayed-phonetic settings above; existing
+direct commands remain available. Delayed phonetics applies to character
+navigation, not typing. Its menu adjusts by 0.1 seconds and accepts exact
+values of at least 0.1 seconds; it cancels pending announcements through the
+existing mode and Customize setter. It does not change the engine's rate.
+
+Inventory other spoken-detail controls as integrations are visited.
 
 ** Sounds, output, and notifications
 
@@ -323,6 +346,43 @@ accepted shared, choice, then context precedence. Relevant contracts are
 and [[file:adr/0026-palette-default-reading-voice.org][the palette default reading voice]]. Read all applicable ADRs before
 implementation; these links are not a substitute for the repository rule.
 
+* Longer-term editor improvements
+
+Menu coverage and editor conversion are separate checkpoints. Give every
+inventoried action a discoverable route first. Keep dedicated buffers for
+voice, palette, sound, punctuation, and rule inventories rather than expanding
+them into long Transient menus. Audit all existing Home actions before claiming
+complete coverage; retiring Aural Home remains a separate decision.
+
+After connecting each editor, evaluate its ordinary Emacs editing behaviour:
+
+- Use searchable, sortable lists and preserve selection, filters, and return
+  context. Use foldable Outline sections for structured details.
+- Provide a clear major mode, standard movement and help, an accurate modified
+  indicator, and undo appropriate to that editor's draft model.
+- Audit existing bindings before adopting familiar save, finish, and cancel
+  conventions. Saving, applying, previewing, and restarting must remain
+  distinct when they have different effects.
+- Retain unfinished drafts on ordinary return. Make destructive discard
+  explicit and keep the existing save-failure recovery behaviour.
+- Keep rare settings reachable through Customize or their specialist editor;
+  record each deliberate exception to a focused menu.
+
+These are proposed follow-on slices, not a completed conversion or an
+authorization to rewrite all editors at once.
+
+Persistence remains owned by existing subsystems. Ordinary defaults use
+Customize; capitalization cues use personal aural rules; voices, palettes,
+and other structured objects use their existing stores; punctuation definitions
+are saved on the Omnivox host. Unsaved drafts remain session state. A future
+Changed settings view should explain scope, saved state, and any apply/restart
+boundary across these stores rather than assume a single save operation.
+
+The punctuation connection should open its existing character/pronunciation
+table from level/profile selection, preserve drafts on return, and keep saving
+separate from the explicit speech-worker restart. It does not replace that
+table with one Transient item per character.
+
 * Acceptance tasks and development cycle
 
 Use complete tasks as milestones:
@@ -389,6 +449,25 @@ verification of subsequently changed code.
   discovery and activation experience still needs listening feedback. Changing
   landing or first-Down behaviour is a separate decision, outside this
   announcement-only change.
+- 2026-10-14: Indentation pitch tuning is ready for listening at =C-e H s i t=.
+  Shift-left/right adjusts the selected numeric control; Enter or its letter
+  enters an exact value and retains focus. Space previews four-column pitch
+  feedback without changing the chosen presentation or enablement; =s= stops.
+  =R= restores the four bundled values in the displayed scope without saving.
+  Scope is shared with the parent menus. Global changes preserve local overrides;
+  =S= saves global indentation defaults and tone volume through Customize.
+  The preview uses displayed parameters, including global values when the
+  source has local overrides. Short requested durations show the effective
+  blank-line tone minimum.
+  Forty-seven focused checks passed from source and compiled code in fresh
+  graphical Emacs; compiled checks covered installed and bundled Transient,
+  with no skips. Coverage includes bounds, preview facts, interruptible feedback,
+  exact-entry focus, shifted arrows, parent return, and saved startup values.
+  Incremental compilation and byte-code preflight passed. Listening acceptance
+  remains open, especially useful step sizes and the preview's duration floor.
+  The manual and generated references cover these controls; their review gate
+  passed. A broader compiled graphical check passed 114 tests, including
+  interaction and Magit. Line and boundary cue controls remain separate.
 
 - 2026-10-14: The full voice editor defaults to automatic samples. The focused
   tuner starts with explicit previews while preserving that editor preference.

@@ -13,7 +13,11 @@
   "Run BODY with isolated defaults and an indentation source buffer."
   (declare (indent 0) (debug t))
   `(let* ((symbols '(emacsvox-audio-indentation emacsvox-indentation-presentation
-                    emacsvox-indentation-tone-timing tts-main-tone-volume))
+                    emacsvox-indentation-tone-timing tts-main-tone-volume
+                    emacsvox-indentation-pitch-tone-base
+                    emacsvox-indentation-pitch-tone-semitones-per-column
+                    emacsvox-indentation-pitch-tone-maximum
+                    emacsvox-indentation-pitch-tone-duration))
           (defaults (mapcar (lambda (symbol) (cons symbol (default-value symbol))) symbols))
           (properties (mapcar (lambda (symbol) (cons symbol (copy-tree (symbol-plist symbol)))) symbols))
           (native-comp-enable-subr-trampolines nil))
@@ -23,6 +27,10 @@
            (set-default 'emacsvox-indentation-presentation 'spoken)
            (set-default 'emacsvox-indentation-tone-timing 'overlay)
            (set-default 'tts-main-tone-volume 50)
+           (set-default 'emacsvox-indentation-pitch-tone-base 250.0)
+           (set-default 'emacsvox-indentation-pitch-tone-semitones-per-column 1.0)
+           (set-default 'emacsvox-indentation-pitch-tone-maximum 2000.0)
+           (set-default 'emacsvox-indentation-pitch-tone-duration 150)
            (with-temp-buffer
              (setq-local emacsvox-indentation-presentation 'spoken)
              (setq-local emacsvox-indentation-tone-timing 'overlay)
@@ -140,7 +148,11 @@
                      '((emacsvox-audio-indentation)
                        (emacsvox-indentation-presentation . spoken)
                        (emacsvox-indentation-tone-timing . overlay)
-                       (tts-main-tone-volume . 50)))))
+                       (tts-main-tone-volume . 50)
+                       (emacsvox-indentation-pitch-tone-base . 250.0)
+                       (emacsvox-indentation-pitch-tone-semitones-per-column . 1.0)
+                       (emacsvox-indentation-pitch-tone-maximum . 2000.0)
+                       (emacsvox-indentation-pitch-tone-duration . 150)))))
     (should (eq emacsvox-indentation-presentation 'pitch-tone))))
 
 (ert-deftest emacsvox-indentation-menu-saved-defaults-reload ()
@@ -395,6 +407,143 @@
               (should-not (lookup-key transient--transient-map (kbd "S-<left>")))
               (should-not (lookup-key transient--transient-map (kbd "S-<right>"))))
           (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))
+
+(ert-deftest emacsvox-indentation-menu-tone-preview-scope-and-duration ()
+  "Pitch previews use displayed parameters without changing feedback choices."
+  (emacsvox-test--with-indentation-menu
+    (setq-local emacsvox-indentation-pitch-tone-base 400.0
+                emacsvox-indentation-pitch-tone-semitones-per-column 12.0
+                emacsvox-indentation-pitch-tone-maximum 800.0
+                emacsvox-indentation-pitch-tone-duration 300)
+    (let (text)
+      (cl-letf (((symbol-function 'tts-speak) (lambda (value) (setq text value))))
+        (emacsvox-indentation--tone-preview)
+        (let ((facts (get-text-property 4 emacsvox-aural-facts-property text)))
+          (should (= (plist-get facts :indentation-tone-pitch) 800.0))
+          (should (= (plist-get facts :indentation-tone-duration) 300)))
+        (emacsvox-indentation--scope)
+        (set-default 'emacsvox-indentation-pitch-tone-duration 10)
+        (emacsvox-indentation--tone-preview)
+        (let ((facts (get-text-property 4 emacsvox-aural-facts-property text)))
+          (should (eq (plist-get facts :indentation-presentation) 'pitch-tone))
+          (should (< (abs (- (plist-get facts :indentation-tone-pitch)
+                            (* 250.0 (expt 2.0 (/ 3.0 12.0))))) 0.001))
+          (should (= (plist-get facts :indentation-tone-duration)
+                     (emacsvox-speak--blank-line-tone-duration))))))
+    (should (string-match-p "effective .* milliseconds"
+                            (emacsvox-indentation--tone-label 'emacsvox-indentation--duration)))
+    (should-not emacsvox-audio-indentation)
+    (should (eq emacsvox-indentation-presentation 'spoken))
+    (should (= emacsvox-indentation-pitch-tone-base 400.0))
+    (should (= emacsvox-indentation-pitch-tone-duration 300))))
+
+(ert-deftest emacsvox-indentation-menu-tone-bounds-and-reset ()
+  "Invalid entries preserve values; bounded steps and reset respect scope."
+  (emacsvox-test--with-indentation-menu
+    (dolist (case '((emacsvox-indentation--base 0 2001 1.0e+INF 0.0e+NaN)
+                    (emacsvox-indentation--rise -1 1.0e+INF 0.0e+NaN)
+                    (emacsvox-indentation--maximum 249 1.0e+INF 0.0e+NaN)
+                    (emacsvox-indentation--duration -1 1.5 1.0e+INF 0.0e+NaN)))
+      (dolist (invalid (cdr case))
+        (cl-letf (((symbol-function 'read-number) (lambda (&rest _) invalid)))
+          (should-error (funcall (car case)) :type 'user-error))))
+    (should (= emacsvox-indentation-pitch-tone-base 250.0))
+    (should (= emacsvox-indentation-pitch-tone-maximum 2000.0))
+    (setq-local emacsvox-indentation-pitch-tone-base 1990.0)
+    (emacsvox-indentation--tone-edit 'emacsvox-indentation--base 1)
+    (should (= emacsvox-indentation-pitch-tone-base 2000.0))
+    (let (said)
+      (cl-letf (((symbol-function 'emacsvox-indentation--say)
+                 (lambda (text) (setq said text))))
+        (emacsvox-indentation--tone-edit 'emacsvox-indentation--base 1))
+      (should (equal said "Maximum. 2000.0 Hz")))
+    (emacsvox-indentation--scope)
+    (emacsvox-indentation--tone-edit 'emacsvox-indentation--base 1)
+    (should (= (default-value 'emacsvox-indentation-pitch-tone-base) 275.0))
+    (emacsvox-indentation--tone-reset)
+    (should (= (default-value 'emacsvox-indentation-pitch-tone-base) 250.0))
+    (should (= emacsvox-indentation-pitch-tone-base 2000.0))
+    (emacsvox-indentation--scope)
+    (emacsvox-indentation--tone-reset)
+    (should (= emacsvox-indentation-pitch-tone-base 250.0))))
+
+(ert-deftest emacsvox-indentation-menu-tone-defaults-survive-startup ()
+  "Explicit Save restores pitch parameters before Emacsvox loads."
+  (emacsvox-test--with-indentation-menu
+    (let* ((custom-file (make-temp-file "indentation-tone-custom-" nil ".el"))
+           (user-init-file custom-file))
+      (unwind-protect
+          (progn
+            (setq-local emacsvox-indentation-pitch-tone-base 999.0)
+            (emacsvox-indentation--scope)
+            (dolist (command '(emacsvox-indentation--base emacsvox-indentation--rise
+                               emacsvox-indentation--maximum emacsvox-indentation--duration))
+              (emacsvox-indentation--tone-edit command 1))
+            (should (zerop (file-attribute-size (file-attributes custom-file))))
+            (emacsvox-indentation--save)
+            (with-temp-buffer
+              (should (zerop
+                       (call-process
+                        (expand-file-name invocation-name invocation-directory) nil t nil
+                        "-Q" "--batch" "--eval" (format "(load %S nil t)" custom-file)
+                        "-L" emacsvox-lisp-directory "-l" "emacsvox-preamble" "-l" "emacsvox-speak"
+                        "--eval"
+                        "(prin1 (mapcar #'default-value '(emacsvox-indentation-pitch-tone-base emacsvox-indentation-pitch-tone-semitones-per-column emacsvox-indentation-pitch-tone-maximum emacsvox-indentation-pitch-tone-duration)))")))
+              (should (string-match-p "(275.0 1.25 2100.0 160)" (buffer-string))))
+            (should (= emacsvox-indentation-pitch-tone-base 999.0)))
+        (delete-file custom-file)))))
+
+(ert-deftest emacsvox-indentation-menu-graphical-tone-controls-and-return ()
+  "Pitch controls retain focus, interrupt speech, and return through the stack."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-aural-menu)
+  (save-window-excursion
+    (emacsvox-test--with-indentation-menu
+      (switch-to-buffer source)
+      (insert "source text")
+      (goto-char 4)
+      (use-local-map (make-sparse-keymap))
+      (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+      (let ((transient--prefix nil) (transient--stack nil) (transient-show-menu t)
+            submissions preview stopped)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest args) (push (cons text args) submissions)))
+                  ((symbol-function 'tts-speak) (lambda (text) (setq preview text)))
+                  ((symbol-function 'tts-stop) (lambda (&rest _) (setq stopped t))))
+          (unwind-protect
+              (progn
+                (execute-kbd-macro (kbd "<f8> s i t b 3 0 0 RET S-<right>"))
+                (should (eq (oref transient--prefix command) 'emacsvox-indentation-tone))
+                (should (= (buffer-local-value 'emacsvox-indentation-pitch-tone-base source) 325))
+                (setq submissions nil)
+                (execute-kbd-macro (kbd "S-<left> S-<right>"))
+                (should (equal (mapcar #'car (reverse submissions)) '("300 Hz" "325 Hz")))
+                (dolist (entry submissions)
+                  (should (eq (plist-get (cdr entry) :delivery-policy) 'replaceable))
+                  (should (eq (plist-get (cdr entry) :interruption-policy) 'lane)))
+                (execute-kbd-macro (kbd "RET 3 5 0 RET <down> S-<right>"))
+                (should (= (buffer-local-value 'emacsvox-indentation-pitch-tone-base source) 350))
+                (should (= (buffer-local-value 'emacsvox-indentation-pitch-tone-semitones-per-column source) 1.25))
+                (execute-kbd-macro (kbd "m 9 0 0 RET d 1 0 RET"))
+                (should (= (buffer-local-value 'emacsvox-indentation-pitch-tone-maximum source) 900))
+                (execute-kbd-macro (kbd "<right> RET"))
+                (should preview)
+                (should (= (buffer-local-value 'emacsvox-indentation-pitch-tone-duration source) 10))
+                (setq stopped nil)
+                (execute-kbd-macro (kbd "s"))
+                (should stopped)
+                (execute-kbd-macro (kbd "g b 5 0 0 RET q"))
+                (should (eq (oref transient--prefix command) 'emacsvox-indentation))
+                (should (cdr (emacsvox-indentation--state)))
+                (should (= (default-value 'emacsvox-indentation-pitch-tone-base) 500))
+                (should (= (buffer-local-value 'emacsvox-indentation-pitch-tone-base source) 350))
+                (execute-kbd-macro (kbd "q"))
+                (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-speech))
+                (should (cdr (plist-get (emacsvox-aural-menu--context) :settings)))
+                (execute-kbd-macro (kbd "C-q"))
+                (should (eq (current-buffer) source))
+                (should (= (point) 4)))
+            (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))
 
 (provide 'emacsvox-indentation-tests)
 ;;; emacsvox-indentation-tests.el ends here

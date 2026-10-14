@@ -97,6 +97,15 @@ adjust it by five percentage points. Plain left/right still changes sections.
 ~RET~ edits the value directly, and ~SPC~ previews the indentation settings.
 Other items give brief guidance when you try to adjust them with shifted arrows.
 
+Press ~t~ in Indentation for pitch-tone settings. Choose base pitch, rise per
+column, maximum pitch, or requested duration; Shift-left/right adjusts and
+~RET~ enters an exact value. Space previews four-column pitch feedback without
+changing the selected presentation or enabling indentation. ~s~ stops speech.
+Short durations show the effective blank-line tone minimum. ~R~ restores the
+four bundled values in the displayed scope. Global changes preserve local
+overrides; ~S~ saves global indentation defaults and tone volume through
+Customize. ~q~ returns with changes intact.
+
 In Speech settings, select /Rate/ and use Shift-left/right to adjust it by
 the configured rate step. ~RET~ or ~r~ enters an exact value. Speech must be
 running; Omnivox uses a 0 to 100 scale. Global changes also update the current
@@ -117,6 +126,17 @@ camel-case splitting independently with ~c~. These controls share the
 buffer/global scope selected by ~g~. Space reads a short sample using the
 displayed settings. ~S~ saves those three reading settings as startup defaults;
 buffer overrides still apply.
+
+Press ~C-e H s t~ for /Typing and interaction/. Character, word, and completed-line
+echo, point indication and presentation, and spoken messages share the
+buffer/global scope. Global changes also update the originating buffer.
+Delayed phonetics after character navigation and its delay are global.
+Shift-left/right adjusts the selected delay by 0.1 seconds; ~RET~ enters an
+exact value of at least 0.1 seconds. Space previews the captured source line
+with the displayed point settings; ~P~ speaks its character's phonetic name
+immediately, and ~s~ stops. ~S~ explicitly saves the displayed settings through
+Customize, promoting buffer choices to startup defaults. Closing retains
+session changes without saving.
 
 Press ~l~ for the capital-letter beep or ~a~ for the all-caps beep. Each editor
 keeps a separate global draft. Select pitch or duration, use Shift-left/right
