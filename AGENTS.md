@@ -91,6 +91,24 @@
 
 ## Lisp builds and verification
 
+- Establish how the current change will be tried: a fresh normal Emacsvox
+  profile, a fresh test Emacs explicitly loading source, or a supported narrow
+  reload in an existing session. Use the conversation and configuration first;
+  ask only when the route is unclear or changes. Keep the agreed route across
+  follow-ups instead of asking before every iteration.
+- During interaction experiments, distinguish a prototype handed back for
+  listening from a change ready to commit or review. Run checks directly
+  relevant to each small change and prepare it for the agreed testing route.
+  Defer documentation edits, generated manuals, and broader verification until
+  the behaviour settles or before committing or presenting the change for
+  review. State what remains unchecked; do not describe a prototype handoff
+  as fully verified. Shared changes or failures can require broader checks
+  during iteration.
+- A fresh normal profile still loads byte-code: complete the incremental build
+  and preflight below before handing it back for a restart. A fresh source-test
+  session can skip compilation when it explicitly loads the affected source;
+  verify the actual loaded paths. Reloading an existing session must follow the
+  live-session rules below. Do not infer source loading merely from a restart.
 - During rapid iteration, test source changes with the affected tests first.
   For ordinary function edits, run the incremental `make bytecode` when the
   edit settles; do not run a full rebuild for each small change. Reserve
