@@ -168,7 +168,7 @@ tone and speech.  You can then skip to the last step in
 After the core installation works, optional speech engines are available from
 ~M-x emacsvox-omnivox-manage-components RET~. The same engine list
 is /Browse voices/ in Aural Home, opened with
-~C-e H~ and then ~I~. Select an engine and press
+~C-e H h~ and then ~I~. Select an engine and press
 ~RET~ for details. It distinguishes engines
 already included in the core, downloadable engines, and bridges that still
 need a user-supplied runtime. Choose /Install engine/ to confirm,

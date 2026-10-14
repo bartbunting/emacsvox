@@ -35,7 +35,7 @@
 @item A  emacsvox-appt-repeat-announcement
 @item B  emacsvox-speak-buffer-interactively
 @item E  emacsvox-aural-explain-presentation
-@item H  emacsvox-aural
+@item H  emacsvox-aural-menu
 @item L  emacsvox-speak-line-interactively
 @item M  emacsvox-speak-minor-mode-line
 @item N  emacsvox-view-emacsvox-news

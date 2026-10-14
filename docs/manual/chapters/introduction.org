@@ -70,9 +70,10 @@ Emacsvox combines several kinds of feedback:
   completing an action; and
 - pauses and spatial cues that help separate related information.
 
-You can adjust this presentation gradually.  Aural Home, opened with
-~C-e H~, brings voices, sound packs, profiles, and other presentation
-options together.  You do not need to configure it before beginning.  See
+You can adjust this presentation gradually.  ~C-e H~ opens the experimental
+Emacsvox menu; press ~s~ for Speech settings or ~h~ for Aural Home, which brings
+voices, sound packs, profiles, and other presentation options together.
+You do not need to configure it before beginning.  See
 [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] when you want to understand or change what you hear.
 
 Emacsvox sends speech through a speech server.  New GNU/Linux, macOS, and WSL2

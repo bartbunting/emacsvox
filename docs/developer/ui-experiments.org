@@ -1,0 +1,316 @@
+#+title: Native Emacs UI Experiments
+#+date: 2026-10-14
+#+startup: content
+
+* Status and purpose
+
+Proposal for the =ui-experiments= branch. The first experiment is to replace
+the =C-e H= Aural Home menu with a Transient. The first implementation adds
+the linked indentation path, Feedback for this item, and a route to the
+existing Home. The remaining action coverage and alternative adjustment
+bindings are experiments still to carry out.
+
+The aim is to make settings and actions easier to discover through familiar
+Emacs interactions, with concise speech and direct shortcuts. Feedback from
+this experiment will determine whether more Emacsvox interfaces should use
+Transient.
+
+* First target: C-e H
+
+Use Transient for the top-level menu itself. Group related actions and use
+submenus where they make the choices easier to understand. Support navigation
+through the menu as well as direct shortcut keys.
+
+Build the interface from linked Transients. For example, =C-e H= opens the
+main menu, /Speech settings/ opens a focused Transient, and its /Indentation/
+entry opens the existing indentation Transient. Keep =C-e d I= as a direct
+route to that same menu. Each focused menu can also be opened independently;
+reuse it wherever the same settings are relevant.
+
+Keep the originating buffer and applicable settings scope through these
+transitions. Provide predictable navigation back to the parent menu and a
+way to leave the menu sequence. Verify that returning to a parent refreshes
+its displayed values. Exact grouping and keys remain part of the experiment.
+
+Start by mapping the actions in
+[[file:../../lisp/emacsvox-aural-home.el][Aural Home]] to the proposed menu. These include voices and engines,
+speech settings, feedback inspection and changes, presentation profiles,
+sound packs, and diagnostics. Reuse the existing commands and preserve their
+source-buffer and source-item context.
+
+The first prototype should rebind =C-e H= on this branch while opening
+existing editors and review buffers. Keep the current Aural Home available
+through =M-x emacsvox-aural= during testing. Its implementation and the =h=
+return command in existing editors remain available for comparison. Keep
+ordinary commands available through =M-x=.
+
+* Settings and tuning
+
+- Show current values and selected choices in menu descriptions.
+- Use toggles and selectors for suitable settings. Obtain dynamic choices,
+  such as available voices, from the existing data sources.
+- Keep tuning menus open while values are adjusted and previewed. Explore
+  up/down to select controls, left/right to adjust values, and separate keys
+  for section navigation. The existing Transient speech support is new and
+  can change; its current bindings are a baseline to compare, not a fixed
+  constraint. Check shared changes with Magit as well as Emacsvox menus.
+- Provide clear speech for the selected control, changed value, and preview.
+  Test rapid changes so stale previews do not obscure the current value.
+- Make local and global scope explicit where the underlying setting supports
+  both. The indentation menu is the starting example, not a requirement to
+  add both scopes to every setting.
+- Use Customize to save settings that are Emacs options. Preserve existing
+  save, apply, and draft behaviour for voices, profiles, and other managed
+  data; opening a menu must not silently save changes.
+
+* Implementation steps
+
+1. Inventory the current menu actions, shortcuts, context requirements, and
+   persistence behaviour. Read all accepted ADRs before implementation.
+2. Propose a compact top-level Transient and map every existing action to an
+   entry or submenu. Identify shortcut conflicts and changes explicitly.
+3. Implement the entry menu and a Speech settings submenu using the existing
+   Transient speech support. Link the existing indentation menu from it.
+   Verify direct entry, parent navigation, refreshed values, and commands
+   acting on the originating buffer or item.
+4. Prototype one focused tuning interaction, then evaluate its navigation,
+   previews, scope, and saving before extending the pattern.
+5. Compare the prototype with the current interface and gather feedback.
+   Record accepted architectural decisions in an ADR and document adopted
+   behaviour in the user manual.
+
+* Evaluation and open questions
+
+Can you find an unfamiliar action without knowing its shortcut? Can you use
+known shortcuts quickly? Are the current value, scope, and effect of saving
+clear? Does speech make menu navigation and repeated adjustments easy to
+follow? Does closing or reopening a menu preserve the expected source context?
+
+Check keyboard operation and speech in a real graphical Emacs, including
+entering and leaving submenus, changed or unavailable dynamic choices, and
+returning to the source buffer. Automated checks should cover context,
+settings, and key behaviour; listening feedback is also needed.
+
+Ask whether people like this style of interaction, whether it feels natural
+in Emacs, and which other interfaces would benefit. The exact grouping,
+shortcuts, adjustment keys, and next tuning target remain open.
+
+Org or outline buffers remain a separate possibility for detailed feedback
+and other structured information. They are not the proposed replacement for
+the =C-e H= menu in this experiment.
+
+* Research findings: 2026-10-14
+
+** Existing action coverage
+
+[[file:../../lisp/emacsvox-aural-home.el][Aural Home]] defines 26 named actions, six task groups, and a Browse voices
+alias named =engine-modules=. The table maps every action to a candidate
+destination. These groupings are proposed; the existing direct shortcuts
+should be retained where practical and any reassignment reviewed explicitly.
+A dash means there is no action-specific Home shortcut; search or row
+activation supplies access.
+
+| Existing action ID | Home shortcut | Candidate destination |
+|--------------------+---------------+-----------------------|
+| change-feedback | c | Feedback |
+| explain | x | Feedback |
+| recent-feedback | H | Feedback |
+| remap | r | Feedback |
+| tune-voice | T | Feedback |
+| remap-earcon | R | Feedback |
+| overrides | O | Feedback |
+| buffer-rules | - | Feedback |
+| features | - | Feedback |
+| training | t (toggle) | Feedback |
+| semantics | - | Feedback help |
+| browse-voices | I (engine-modules alias) | Voices and engines |
+| voices | V | Voices and engines |
+| voice-workbench | W | Voices and engines |
+| speech-engine | - | Voices and engines |
+| speech-rate | - | Speech settings |
+| punctuation | - | Speech settings |
+| output-volumes | - | Sounds and output |
+| sounds | - | Sounds and output |
+| spatial-settings | - | Sounds and output |
+| notification-log | - | Sounds and output |
+| profiles | P | Saved setups and drafts |
+| drafts | - | Saved setups and drafts |
+| diagnostics | D | Troubleshooting |
+| spatial | - | Troubleshooting |
+| return-source | C-c C-o | Main menu |
+
+Preserve access to action search (=/=) and help as well. The first new path
+adds Indentation under Speech settings; it is not an existing Home row.
+Keep large or changing voice inventories in the existing searchable browser
+initially, rather than assigning a menu key to every voice. Opening a menu
+should not download voices, restart workers, or run release checks.
+
+** Linked menus and source context
+
+Transient supports calling a prefix command from another prefix and retaining
+the parent on a stack. In the tested versions, =q= bound to
+=transient-quit-one= returns from Indentation to Speech settings; =C-g= also
+quits one level, and =C-q= closes the whole stack. A normal action can exit
+the entire sequence or return to its parent according to its definition.
+Use explicit behaviour for actions that open editors so a restored parent
+menu does not unexpectedly cover the editor.
+
+See the upstream [[https://docs.magit.vc/transient/Transient-State.html][Transient state]] and
+[[https://docs.magit.vc/transient/Defining-Transients.html][prefix definition]] documentation. Dynamic descriptions refreshed correctly
+when returning from Indentation to its parent in the graphical probe.
+
+Scope is not inherited automatically. A parent opened with a global flag did
+not pass it to the child. Transient's =scope= slot carries application data;
+it does not itself mean buffer-local or global settings. Pass the source
+context and any applicable settings scope deliberately. The existing
+indentation menu stores a source buffer and global flag in its own scope.
+
+[[file:../../lisp/emacsvox-aural-inspection.el][Inspection context]] also includes a marker and a guard for the captured
+source item. Merely calling Home helpers from the ordinary source buffer
+would use its current point instead of the captured location. The prototype
+needs an adapter that preserves the marker and guard, rejects a dead or
+changed source, and passes that context to existing editors. Do not rely on
+the last globally remembered source when navigating nested menus.
+
+** Navigation and speech
+
+The existing [[file:../../lisp/emacsvox-transient.el][Transient integration]] uses up/down for choices, left/right for
+sections, and =C-j= to activate. It forces a single column and announces
+menu openings, values, unavailable choices, section changes, and shortcuts.
+It already distinguishes redisplay from a newly opened menu.
+
+Two disposable graphical prototypes worked:
+
+1. Existing navigation with =+= and =-= for repeated tone-volume changes.
+2. Up/down selects a control; left/right adjusts the selected numeric value;
+   =M-n= and =M-p= move between sections. Non-adjustable choices give a short
+   explanation instead of changing a value.
+
+The second prototype changed only temporary maps in an isolated Emacs. It
+shows feasibility, not an accepted binding design. A shared implementation
+should identify adjustable controls explicitly, including their step, bounds,
+setter, and preview operation. Update the spoken navigation hint to match
+the chosen bindings. Decide whether ordinary command menus keep section
+arrows or adopt another consistent convention, then check real Magit menus.
+
+Both prototypes refreshed values and emitted one captured value announcement
+per adjustment. This does not establish audible preview timing or cancellation
+under rapid changes. Those need a listening trial with the actual speech
+backend before selecting the interaction.
+
+** Persistence and preview boundaries
+
+| Control | Existing behaviour to preserve |
+|---------+--------------------------------|
+| Indentation | Immediate local changes or global defaults; explicit Customize save for defaults and tone volume. |
+| Output volumes | Global Customize options with setters that update the appropriate live speech process. |
+| Speech rate | Existing command requires a live speaker; prefix changes the default and current local value. |
+| Preferred engine | Global session preference; prefix explicitly saves in the active routing profile. |
+| Named voice tuning | Existing editor owns drafts, private previews, and palette saving. |
+| Presentation profiles | Existing manager distinguishes current values, saved snapshots, and explicit restore/write actions. |
+| Punctuation and engine settings | Existing editors retain their own saving, apply, and restart rules. |
+
+Transient's own Save command saves its argument values; it is not a generic
+Customize save for Emacsvox settings. Use clearly labelled application save
+commands and do not promise one save operation for all these data types.
+Likewise, a prefix argument does not mean global scope for every existing
+command: for the preferred engine it means save.
+
+Keep voice-preview and storage contracts in
+[[file:../adr/0016-complete-voice-preview.org][ADR 0016]], [[file:../adr/0017-per-fallback-voice-tuning.org][ADR 0017]], and
+[[file:../adr/0018-unified-voice-palette-model.org][ADR 0018]]. Native parameter bounds and choices come from the engine catalogue
+under [[file:../adr/0022-engine-described-voice-parameters.org][ADR 0022]]. A new menu must not turn a private draft preview into an
+implicit live voice change.
+
+** Checks and limits
+
+The read-only session check identified Emacs PID 1178 using
+=transient-20261001.1359=, revision =3ad7c3540402=, and the source version of
+=emacsvox-transient.el=. The selected Emacs toolchain is 31.0.90; its bundled
+Transient is 0.13.3. Both were tested in separate graphical Emacs processes
+under Xvfb, with no changes loaded into the running session.
+
+The final probes passed 60 tests on bundled Transient and 61 on the installed
+package, with no skips. These include the existing Transient and indentation
+suites, inspection context tests, three Home marker/context tests, and five
+new disposable interaction probes. The installed-package run also opened
+Magit's push menu and checked navigation without invoking a push. This
+establishes its existing navigation baseline; an adopted change to shared
+bindings still needs a new Magit check.
+
+The probes verified the linked-menu path, direct indentation entry, parent
+return, whole-stack exit, refreshed values, unavailable timing choices,
+source-buffer preservation, explicit scope requirements, and numeric arrow
+adjustment. Existing Home tests verified marker movement and rejection of a
+replaced source item. A Transient-to-contextual-editor adapter remains to be
+implemented and tested.
+
+The disposable script is =/tmp/emacsvox-ui-menu-probe.el=; logs are
+=/tmp/emacsvox-ui-menu-bundled.log= and
+=/tmp/emacsvox-ui-menu-installed.log=. Relevant modules were loaded from
+source. These checks do not validate the interrupted byte-code build, live
+audio, every third-party Transient, or the Emacs 30.2 minimum.
+
+** Recommended first implementation
+
+Rebind =C-e H= to an experimental prefix on this branch, retaining
+=M-x emacsvox-aural=. Add Speech settings with a link to the existing
+Indentation menu and keep =C-e d I= working directly. Add Feedback for this
+item as the first source-sensitive action, preserving its marker and guard.
+Keep an obvious route to the existing Home for the remaining actions.
+
+Use that small path to compare the two adjustment styles through speech.
+Then extend the menu coverage table incrementally. No runtime bindings,
+shared Transient support, or live settings changed during this research.
+
+* First implementation: linked entry menus
+
+=C-e H= now invokes =emacsvox-aural-menu=. Its first three destinations are
+=s= Speech settings, =x= Feedback for this item, and =h= Aural Home with all
+existing actions. =C-e H s i= opens the existing Indentation Transient;
+=C-e d I= still opens it directly. =M-x emacsvox-aural-menu-speech= also opens
+Speech settings directly. =M-x emacsvox-aural= retains the original Home.
+
+The entry and speech menus share their source context and settings scope.
+=C-u C-e H= starts with global defaults. =g= in Speech settings or Indentation
+changes the shared scope without modifying values. Returning to a parent
+refreshes its labels. =q= or =C-g= returns one level; =C-q= closes the stack.
+The existing +/- volume controls and section-navigation arrows are retained
+for this first comparison. Alternative arrow tuning is still a separate step.
+Volume adjustments speak just the percentage. Their submissions replace
+pending main speech and interrupt current main speech, so rapid adjustments
+do not queue announcements of obsolete values. The menu retains the full
+control description for navigation.
+
+Contextual actions validate the captured marker and source-item guard, run
+at that location, and restore the source cursor and narrowing. Feedback
+Details owns a return continuation that restores the menu over its live
+source buffer, retaining the captured item and settings scope. Reopening
+the report directly clears this continuation. Its existing draft, preview,
+and saving behaviour is unchanged. Transient Help keeps its native return
+path; its temporary suspension does not open the Emacsvox menu browser.
+The menu delegates its complete fallback to Aural Home; existing editors'
+=h= commands continue returning there.
+
+The new code is [[file:../../lisp/emacsvox-aural-menu.el][emacsvox-aural-menu.el]], with
+[[file:../../test/emacsvox-aural-menu-tests.el][context and graphical regression tests]]. The indentation setup helper
+allows linked parents to share its source/scope pair. No global Transient
+bindings or personal settings are changed by loading the prototype.
+
+All Transient feedback now uses replaceable, interruptible main-lane
+submissions, including scope toggles and other state changes. The shared
+policy also handles cue-only feedback. Item announcements retain their key
+without the repeated word "shortcut" or the section name. Section names
+are spoken when navigation enters a section. Volume adjustments retain
+their concise percentage announcement.
+
+Verification used Emacs 31.0.90. All 67 menu, indentation, Transient, and
+keymap tests passed in fresh graphical sessions with both bundled Transient
+0.13.3 and installed Transient 20261001.1359. The menu and indentation code
+used current byte-code. Core checks passed 971 tests, with 17 graphical or
+native-service tests skipped in batch. The wider focused suite passed 236
+tests and skipped ten graphical tests; its disabled-rule inventory test
+failed identically in a clean archive of the starting commit. That existing
+failure remains outside this experiment. Header, byte-code, and documentation
+checks passed. Live listening remains to be checked; graphical tests capture
+speech submissions rather than playing audio.

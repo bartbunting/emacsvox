@@ -459,7 +459,7 @@ From a running Emacsvox session, open:
 M-x emacsvox-omnivox-manage-components RET
 #+end_example
 
-You can also press ~C-e H~ for Aural Home and then
+You can also press ~C-e H h~ for Aural Home and then
 ~I~, or choose /Browse voices/. These routes open the same
 engine list. Opening speaks the selected engine using the current speech
 inventory, without waiting for file checks or fresh discovery. Optional engines

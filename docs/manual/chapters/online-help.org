@@ -98,7 +98,9 @@ follow cross-references, or keep a help buffer for later.
 - ~C-e N~ =emacsvox-view-emacsvox-news= opens versioned project news,
   while ~C-e T~ =emacsvox-view-emacsvox-tips= opens productivity tips.
 
-- ~C-e H~ =emacsvox-aural= opens Aural Home for presentation options.
+- ~C-e H~ =emacsvox-aural-menu= opens the experimental Emacsvox menu.
+  Press ~s~ then ~i~ for Indentation, ~x~ for Feedback for this item, or
+  ~h~ for all Aural Home actions. ~M-x emacsvox-aural~ opens Aural Home directly.
 
 - ~C-e E~ =emacsvox-aural-explain-presentation= explains why the
   object at point received its voices, sounds, and other auditory actions.

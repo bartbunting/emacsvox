@@ -364,7 +364,9 @@ default.
 
   Press ~v~ to enter tone volume from 0 to 100, or ~-~ and ~+~ to change it
   in steps of five. Volume always affects all main-stream Omnivox tones,
-  even while editing current-buffer settings.
+  even while editing current-buffer settings. Each adjustment speaks just
+  the percentage and interrupts previous main-stream speech, so repeated
+  presses announce the latest value without queuing older values.
 
   Changes take effect immediately. ~SPC~ previews four-column indentation
   with the settings shown, even when feedback is off. ~q~ closes the menu
