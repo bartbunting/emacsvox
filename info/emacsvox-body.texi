@@ -1029,8 +1029,15 @@ defaults affect buffers without their own choices; existing local settings
 stay in place. A prefix argument opens the menu in Global defaults scope.
 Press @kbd{e} to toggle indentation feedback in the selected scope.
 
-Press @kbd{v} to enter tone volume from 0 to 100@comma{} or @kbd{-} and @kbd{+} to change it
-in steps of five. Volume always affects all main-stream Omnivox tones@comma{}
+Up/down selects a control@comma{} and left/right moves between sections. On the
+@emph{Volume} control@comma{} Shift-left/right lowers or raises the value in steps of
+five@comma{} bounded from 0 to 100. On other items@comma{} shifted arrows give brief
+guidance; @kbd{@key{RET}} activates the selected item. These shifted-arrow bindings
+apply only while navigating the Indentation menu. Input prompts and the
+source buffer retain their normal bindings.
+
+Press @kbd{v} or activate @emph{Volume} to enter a number directly. The @kbd{-} and @kbd{+}
+shortcuts also remain available. Volume always affects all main-stream Omnivox tones@comma{}
 even while editing current-buffer settings. Each adjustment speaks just
 the percentage and interrupts previous main-stream speech@comma{} so repeated
 presses announce the latest value without queuing older values.
@@ -2937,6 +2944,10 @@ global defaults@comma{} or start with @kbd{C-u C-e H}. Indentation shares this s
 its parent menus@comma{} including changes made with @kbd{g} inside Indentation.
 @kbd{C-e d I} still opens Indentation directly. Saving global indentation defaults
 uses its @kbd{S} command through Customize; opening or closing a menu saves nothing.
+In Indentation@comma{} select @emph{Volume} with the arrows and use Shift-left/right to
+adjust it by five percentage points. Plain left/right still changes sections.
+@kbd{@key{RET}} edits the value directly@comma{} and @kbd{@key{SPC}} previews the indentation settings.
+Other items give brief guidance when you try to adjust them with shifted arrows.
 
 The menu captures the source item for @kbd{x} and @kbd{h}. In Feedback Details@comma{}
 @kbd{q} returns to the menu with the same item and settings scope; another @kbd{q}

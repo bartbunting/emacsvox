@@ -79,6 +79,10 @@ global defaults, or start with ~C-u C-e H~. Indentation shares this scope with
 its parent menus, including changes made with ~g~ inside Indentation.
 ~C-e d I~ still opens Indentation directly. Saving global indentation defaults
 uses its ~S~ command through Customize; opening or closing a menu saves nothing.
+In Indentation, select /Volume/ with the arrows and use Shift-left/right to
+adjust it by five percentage points. Plain left/right still changes sections.
+~RET~ edits the value directly, and ~SPC~ previews the indentation settings.
+Other items give brief guidance when you try to adjust them with shifted arrows.
 
 The menu captures the source item for ~x~ and ~h~. In Feedback Details,
 ~q~ returns to the menu with the same item and settings scope; another ~q~

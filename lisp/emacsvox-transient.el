@@ -654,6 +654,8 @@ ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
          (car (split-string purpose "\n"))
        "Command menu.")
      " Up and down: options. Left and right: sections."
+     (when (eq command 'emacsvox-indentation)
+       " Shift left and right: adjust volume. Space: preview.")
      (if (eq (lookup-key transient--transient-map (kbd "RET"))
              #'transient-push-button)
          " Enter: activate. Control G: close. "

@@ -2768,6 +2768,8 @@ Transient.
      closing the menu keeps them.  Global changes preserve buffer-local choices.
      Save defaults explicitly to retain them across sessions.  Tone volume always
      affects all main-stream Omnivox tones, independently of the selected scope.
+     Up/down selects a control; left/right changes sections.  Shift-left/right
+     adjusts Volume by five percentage points.  Space previews the indentation settings.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-info,  Next: emacsvox-ispell,  Prev: emacsvox-indentation,  Up: Emacsvox Commands And Options

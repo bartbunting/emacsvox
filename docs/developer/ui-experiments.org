@@ -7,8 +7,8 @@
 Proposal for the =ui-experiments= branch. The first experiment is to replace
 the =C-e H= Aural Home menu with a Transient. The first implementation adds
 the linked indentation path, Feedback for this item, and a route to the
-existing Home. The remaining action coverage and alternative adjustment
-bindings are experiments still to carry out.
+existing Home. The tuning prototype now uses Shift-left/right to adjust
+indentation tone volume. The remaining action coverage is still to carry out.
 
 The aim is to make settings and actions easier to discover through familiar
 Emacs interactions, with concise speech and direct shortcuts. Feedback from
@@ -314,3 +314,22 @@ failed identically in a clean archive of the starting commit. That existing
 failure remains outside this experiment. Header, byte-code, and documentation
 checks passed. Live listening remains to be checked; graphical tests capture
 speech submissions rather than playing audio.
+
+* Focused tuning: shifted arrows
+
+The Indentation menu retains up/down item navigation and left/right section
+navigation. Shift-left/right adjusts the selected Volume control by five
+percentage points within 0 to 100. Other items give brief guidance without
+changing their values. Enter edits Volume directly; Space previews the current
+indentation settings. Existing +/- shortcuts remain available for comparison.
+
+The temporary menu map overrides Emacsvox's shifted-arrow whitespace movement
+and source-mode bindings such as Org's shifted arrows only while Indentation
+is active. Numeric input prompts and the source buffer keep their normal
+bindings. Parent menus and third-party Transients retain their existing maps.
+
+Volume remains global in either settings scope. Adjustments use the existing
+Customize setter and replaceable main-lane percentage announcement. Saving
+remains explicit; opening, adjusting, previewing, and closing the menu do not
+write personal settings files. Live listening is needed to assess repeated
+adjustments and previews before extending the pattern to other controls.

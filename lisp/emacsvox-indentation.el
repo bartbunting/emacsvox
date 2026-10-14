@@ -126,6 +126,46 @@ When called from Lisp, adjust by DELTA percentage points if non-nil."
     (customize-set-variable 'tts-main-tone-volume value)
     (emacsvox-indentation--say (format "%d percent" value))))
 
+(defun emacsvox-indentation--adjust (delta)
+  "Adjust the selected Volume control by DELTA percentage points."
+  (emacsvox-indentation--source)
+  (let ((object
+         (with-selected-window (emacsvox-transient--navigation-window)
+           (when-let* ((button (button-at (point))))
+             (button-get button 'button-data)))))
+    (if (and (eieio-object-p object)
+             (eq (oref object command) 'emacsvox-indentation--volume))
+        (emacsvox-indentation--volume delta)
+      (emacsvox-transient--submit-text
+       "Not adjustable. Enter activates; left and right change sections."
+       (emacsvox-transient--item-facts 'command 'adjust 'operation-failed)
+       'state-change 'warn-user))))
+
+(defun emacsvox-indentation--decrease ()
+  "Lower the selected Volume control by five percentage points."
+  (interactive)
+  (emacsvox-indentation--adjust -5))
+
+(defun emacsvox-indentation--increase ()
+  "Raise the selected Volume control by five percentage points."
+  (interactive)
+  (emacsvox-indentation--adjust 5))
+
+(defun emacsvox-indentation--navigation-bindings (map)
+  "Add shifted-arrow adjustment to MAP only for Indentation."
+  (when (and transient-enable-menu-navigation transient--prefix
+             (eq (oref transient--prefix command) 'emacsvox-indentation))
+    (keymap-set map "S-<left>" #'emacsvox-indentation--decrease)
+    (keymap-set map "S-<right>" #'emacsvox-indentation--increase))
+  map)
+
+(advice-add 'transient--make-transient-map :filter-return
+            #'emacsvox-indentation--navigation-bindings)
+(define-key transient-predicate-map [emacsvox-indentation--decrease]
+            #'transient--do-stay)
+(define-key transient-predicate-map [emacsvox-indentation--increase]
+            #'transient--do-stay)
+
 (defun emacsvox-indentation--save ()
   "Keep global indentation settings and tone volume across restarts.
 Switch to Global defaults before saving; buffer-local choices are not saved."
@@ -151,7 +191,9 @@ Linked menus may share STATE so changes of scope survive parent navigation."
 With prefix GLOBAL, start with global defaults.  Changes apply immediately;
 closing the menu keeps them.  Global changes preserve buffer-local choices.
 Save defaults explicitly to retain them across sessions.  Tone volume always
-affects all main-stream Omnivox tones, independently of the selected scope."
+affects all main-stream Omnivox tones, independently of the selected scope.
+Up/down selects a control; left/right changes sections.  Shift-left/right
+adjusts Volume by five percentage points.  Space previews the indentation settings."
   :refresh-suffixes t
   ["Scope and feedback"
    ("g" (lambda () (if (cdr (emacsvox-indentation--state))

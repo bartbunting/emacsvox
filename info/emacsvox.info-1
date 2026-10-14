@@ -1058,12 +1058,20 @@ the global default.
      Global defaults scope.  Press ‘e’ to toggle indentation feedback in
      the selected scope.
 
-     Press ‘v’ to enter tone volume from 0 to 100, or ‘-’ and ‘+’ to
-     change it in steps of five.  Volume always affects all main-stream
-     Omnivox tones, even while editing current-buffer settings.  Each
-     adjustment speaks just the percentage and interrupts previous
-     main-stream speech, so repeated presses announce the latest value
-     without queuing older values.
+     Up/down selects a control, and left/right moves between sections.
+     On the _Volume_ control, Shift-left/right lowers or raises the
+     value in steps of five, bounded from 0 to 100.  On other items,
+     shifted arrows give brief guidance; ‘<RET>’ activates the selected
+     item.  These shifted-arrow bindings apply only while navigating the
+     Indentation menu.  Input prompts and the source buffer retain their
+     normal bindings.
+
+     Press ‘v’ or activate _Volume_ to enter a number directly.  The ‘-’
+     and ‘+’ shortcuts also remain available.  Volume always affects all
+     main-stream Omnivox tones, even while editing current-buffer
+     settings.  Each adjustment speaks just the percentage and
+     interrupts previous main-stream speech, so repeated presses
+     announce the latest value without queuing older values.
 
      Changes take effect immediately.  ‘<SPC>’ previews four-column
      indentation with the settings shown, even when feedback is off.
@@ -2978,7 +2986,12 @@ switch to global defaults, or start with ‘C-u C-e H’.  Indentation
 shares this scope with its parent menus, including changes made with ‘g’
 inside Indentation.  ‘C-e d I’ still opens Indentation directly.  Saving
 global indentation defaults uses its ‘S’ command through Customize;
-opening or closing a menu saves nothing.
+opening or closing a menu saves nothing.  In Indentation, select
+_Volume_ with the arrows and use Shift-left/right to adjust it by five
+percentage points.  Plain left/right still changes sections.  ‘<RET>’
+edits the value directly, and ‘<SPC>’ previews the indentation settings.
+Other items give brief guidance when you try to adjust them with shifted
+arrows.
 
    The menu captures the source item for ‘x’ and ‘h’.  In Feedback
 Details, ‘q’ returns to the menu with the same item and settings scope;

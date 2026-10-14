@@ -362,8 +362,15 @@ default.
   stay in place. A prefix argument opens the menu in Global defaults scope.
   Press ~e~ to toggle indentation feedback in the selected scope.
 
-  Press ~v~ to enter tone volume from 0 to 100, or ~-~ and ~+~ to change it
-  in steps of five. Volume always affects all main-stream Omnivox tones,
+  Up/down selects a control, and left/right moves between sections. On the
+  /Volume/ control, Shift-left/right lowers or raises the value in steps of
+  five, bounded from 0 to 100. On other items, shifted arrows give brief
+  guidance; ~RET~ activates the selected item. These shifted-arrow bindings
+  apply only while navigating the Indentation menu. Input prompts and the
+  source buffer retain their normal bindings.
+
+  Press ~v~ or activate /Volume/ to enter a number directly. The ~-~ and ~+~
+  shortcuts also remain available. Volume always affects all main-stream Omnivox tones,
   even while editing current-buffer settings. Each adjustment speaks just
   the percentage and interrupts previous main-stream speech, so repeated
   presses announce the latest value without queuing older values.
