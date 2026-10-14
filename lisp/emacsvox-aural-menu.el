@@ -70,7 +70,8 @@
                          emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations
                          emacsvox-settings-integrations--comint
                          emacsvox-settings-integrations--eat
-                         emacsvox-settings-integrations--agent)))
+                         emacsvox-settings-integrations--agent
+                         emacsvox-settings-integrations--org)))
       (user-error "Open the Emacsvox menu first"))
     (oref prefix scope)))
 

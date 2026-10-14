@@ -34,7 +34,8 @@
 (declare-function emacsvox-eat--terminal-buffer-p "emacsvox-eat-core" ())
 
 (defconst emacsvox-settings-integrations--menus
-  '((agent . emacsvox-settings-integrations--agent)
+  '((org . emacsvox-settings-integrations--org)
+    (agent . emacsvox-settings-integrations--agent)
     (comint . emacsvox-settings-integrations--comint)
     (eat . emacsvox-settings-integrations--eat))
   "Focused Transient prefixes for converted integrations.")
@@ -301,7 +302,15 @@ A nil group denotes a focused menu with buffer-only controls.")
                    :scope (emacsvox-aural-menu--context)))
 
 (defconst emacsvox-settings-integrations--options
-  '((emacsvox-settings-integrations--agent-foreground emacsvox-agent-shell
+   '((emacsvox-settings-integrations--org-feedback emacsvox-org
+     emacsvox-org-table-after-movement-function "After moving in a table"
+     ((emacsvox-org-table-speak-current-element . "cell")
+      (emacsvox-org-table-speak-column-header . "column header")
+      (emacsvox-org-table-speak-row-header . "row header")
+      (emacsvox-org-table-speak-column-header-and-element . "column header and cell")
+      (emacsvox-org-table-speak-row-header-and-element . "row header and cell")
+      (emacsvox-org-table-speak-both-headers-and-element . "both headers and cell")))
+    (emacsvox-settings-integrations--agent-foreground emacsvox-agent-shell
      emacsvox-agent-shell-foreground-speech-level "Foreground speech"
      ((full . "full") (response . "responses") (notify . "notifications") (quiet . "quiet")))
     (emacsvox-settings-integrations--agent-background emacsvox-agent-shell
@@ -527,6 +536,38 @@ Choices are value/label pairs. Numeric controls accept positive integers or none
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)
   (transient-setup 'emacsvox-settings-integrations--agent nil nil :scope (emacsvox-aural-menu--context)))
+
+(defun emacsvox-settings-integrations--org-feedback ()
+  "Cycle the global Org table movement feedback."
+  (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--org-feedback))
+(defun emacsvox-settings-integrations--org-save ()
+  "Save the displayed Org feedback default."
+  (interactive)
+  (emacsvox-settings-integrations--save-options 'emacsvox-org))
+(defun emacsvox-settings-integrations--org-tables ()
+  "Open Org's structured table settings and return to this entry."
+  (interactive)
+  (require 'org-table)
+  (emacsvox-settings--custom 'org-table 'emacsvox-settings-integrations--org-tables))
+(defun emacsvox-settings-integrations--org-custom ()
+  "Open advanced Emacsvox Org settings and return here."
+  (interactive)
+  (require 'emacsvox-org)
+  (emacsvox-settings--custom 'emacsvox-org 'emacsvox-settings-integrations--org-custom))
+(transient-define-prefix emacsvox-settings-integrations--org ()
+  "Choose Org table feedback and reach its structured settings."
+  ["Org table feedback (global); w saves"
+   ("c" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--org-feedback))
+    emacsvox-settings-integrations--org-feedback :transient t)
+   ("w" "Save table feedback default" emacsvox-settings-integrations--org-save :transient t)]
+  ["Structured and advanced settings"
+   ("t" "Org table options (Customize)" emacsvox-settings-integrations--org-tables :transient transient--do-suspend)
+   ("A" "Advanced Emacsvox Org settings (Customize)" emacsvox-settings-integrations--org-custom :transient transient--do-suspend)
+   ("q" "Back" emacsvox-settings-integrations--back :transient transient--do-replace)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-integrations--org nil nil :scope (emacsvox-aural-menu--context)))
 
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-integrations ()

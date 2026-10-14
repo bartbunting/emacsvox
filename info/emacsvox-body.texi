@@ -3032,6 +3032,10 @@ Agent Shell also has a focused menu for session speech@comma{} global feedback d
 and reading limits; @code{w} saves only its displayed global defaults. See
 @ref{Agent Shell,Agent Shell,,emacsvox,} for its controls.
 
+Org opens a table-feedback Transient: @code{c} cycles cell@comma{} header@comma{} and combined
+feedback; @code{w} saves that global default. @code{t} opens Org's structured table options
+in Customize and @code{A} opens advanced Emacsvox Org settings. Both return with @code{q}.
+
 Other integration entries currently open Customize@comma{} with its own Apply@comma{} Save@comma{}
 and Reset controls; @code{q} returns to the menu.
 Integrations without an inventoried entry remain reachable through major-mode

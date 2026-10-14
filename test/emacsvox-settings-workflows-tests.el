@@ -151,11 +151,11 @@
     (with-current-buffer source (org-mode))
     (execute-kbd-macro (kbd ". j"))
     (should (eq (emacsvox-settings-integrations--kind) 'org))
-    (execute-kbd-macro (kbd "c"))
+    (execute-kbd-macro (kbd "c A"))
     (should (derived-mode-p 'Custom-mode))
     (should (save-excursion (goto-char (point-min))
                            (search-forward "Table After Movement Function" nil t)))
-    (execute-kbd-macro (kbd "q q"))
+    (execute-kbd-macro (kbd "q q q"))
     (should (eq (oref transient--prefix command) 'emacsvox-settings-buffer))
     (should-not (file-exists-p custom-file))))
 
@@ -292,9 +292,9 @@
     (execute-kbd-macro (kbd "j"))
     (should-not (emacsvox-settings-integrations--control-p))
     (should-error (emacsvox-settings-integrations--control) :type 'user-error)
-    (execute-kbd-macro (kbd "a O r g SPC t a b l e s RET"))
+    (execute-kbd-macro (kbd "a O r g SPC t a b l e s RET A"))
     (should (derived-mode-p 'Custom-mode))
-    (execute-kbd-macro (kbd "q"))
+    (execute-kbd-macro (kbd "q q"))
     (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations))
     (should-not (file-exists-p custom-file))))
 
@@ -569,6 +569,44 @@
               (should-not transient--prefix)
               (should (eq (current-buffer) source))))
         (kill-buffer shell)))))
+
+(ert-deftest emacsvox-settings-integrations-org-feedback-and-editors ()
+  "Each table choice changes real spoken output; editors return without saving."
+  (emacsvox-test--integration-defaults 'emacsvox-org
+   (lambda ()
+     (emacsvox-test--with-settings
+       (set-default 'emacsvox-org-table-after-movement-function
+                    'emacsvox-org-table-speak-current-element)
+       (with-current-buffer source
+         (org-mode)
+         (erase-buffer)
+         (insert "| Name | Count |\n|------+-------|\n| Apples | 5 |\n")
+         (goto-char (point-min)) (search-forward "5"))
+       (execute-kbd-macro (kbd "C-q C-e S"))
+       (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--org))
+       (dolist (expected '("Count" "Apples" "Count 5" "Apples 5" "Apples Count 5" "5"))
+         (execute-kbd-macro (kbd "c"))
+         (let (spoken)
+           (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                      (lambda (text &rest _) (setq spoken (substring-no-properties text)))))
+             (with-current-buffer source (emacsvox-org--present-table-after-movement)))
+           (should (equal spoken expected))))
+       (should-not (file-exists-p custom-file))
+       (execute-kbd-macro (kbd "t"))
+       (should (derived-mode-p 'Custom-mode))
+       (execute-kbd-macro (kbd "q"))
+       (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--org))
+       (with-selected-window transient--window
+         (should (equal (oref (button-get (button-at (point)) 'button-data) key) "t")))
+       (should-not (file-exists-p custom-file))
+       (execute-kbd-macro (kbd "c w q"))
+       (should-not transient--prefix)
+       (should (eq (current-buffer) source))
+       (should (file-exists-p custom-file))
+       (set-default 'emacsvox-org-table-after-movement-function 'emacsvox-org-table-speak-current-element)
+       (load custom-file nil t)
+       (should (eq (default-value 'emacsvox-org-table-after-movement-function)
+                   'emacsvox-org-table-speak-column-header))))))
 
 (ert-deftest emacsvox-settings-changes-separates-local-default-saved-and-draft ()
   "The snapshot distinguishes three option values and an unsaved cue without writes."

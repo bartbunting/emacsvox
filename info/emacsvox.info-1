@@ -3086,6 +3086,11 @@ feedback defaults and reading limits; ‘w’ saves only its displayed
 global defaults.  See *note Agent Shell: (emacsvox)Agent Shell. for its
 controls.
 
+   Org opens a table-feedback Transient: ‘c’ cycles cell, header, and
+combined feedback; ‘w’ saves that global default.  ‘t’ opens Org's
+structured table options in Customize and ‘A’ opens advanced Emacsvox
+Org settings.  Both return with ‘q’.
+
    Other integration entries currently open Customize, with its own
 Apply, Save, and Reset controls; ‘q’ returns to the menu.  Integrations
 without an inventoried entry remain reachable through major-mode

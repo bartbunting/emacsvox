@@ -52,6 +52,7 @@
     ("Agent automatic content limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "a")
     ("Agent line navigation limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "n")
     ("Agent block navigation limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "k")
+    ("Org table movement feedback" emacsvox-settings-integrations emacsvox-settings-integrations--org "c")
     ("Changed settings, saved defaults and drafts" emacsvox-settings-workflows emacsvox-settings-setups "c")
     ("Speech rate" emacsvox-aural-menu emacsvox-aural-menu-speech "r")
     ("Punctuation levels and profiles" emacsvox-aural-menu emacsvox-aural-menu-punctuation "p")
