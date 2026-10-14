@@ -496,20 +496,153 @@ commands remain local interface operations.
   unloaded options, arbitrary non-Custom toggles, and disk/host comparisons are
   outside that snapshot. Broader coverage needs an explicit ownership inventory.
 
+** Repository-wide settings audit, 2026-10-15
+
+Expanded the inventory beyond Home by scanning all 321 tracked Lisp files for
+Custom declarations and setting/toggle commands, then tracing the core speech
+keymaps and candidate gaps against the menus, search catalogues, and linked
+editors. The scan found 221 distinct literal =defcustom= names. This is a
+source-inventory count, not a count of missing controls or all runtime options:
+generated voice settings, minor modes, and ordinary variables also carry state.
+Optional integrations were inspected in source, not loaded into a live profile.
+
+=C-e H /= searches a curated setting catalogue, and =C-e H a= searches Home
+actions. Neither searches every Emacsvox command or option. =C-e H . A= opens
+the Emacsvox Customize group; it is an advanced route, not an inventory loader
+for every optional module. =C-e H . m= opens the source major mode's group,
+which need not contain that mode's Emacsvox speech settings. Group membership
+must be checked before claiming an option is covered by either route.
+
+*** Core controls without focused menu entries
+
+These are proposed additions or advanced links. Existing commands remain
+available through =M-x= and, where present, the speech keymap. A command's
+global default is not necessarily a saved startup value.
+
+| Area | Existing command or option | Coverage and proposed treatment |
+|------+----------------------------+---------------------------------|
+| Earcon enablement | =emacsvox-toggle-icons=; =emacsvox-use-icons= | Add an output entry. Buffer-local switch with a global-default prefix; not the earcon volume or pack selector, and not a Custom option. |
+| Quiet speech | =tts-toggle-quiet=; =tts-quiet= | Add a scoped reading control with an accessible way to restore speech. Buffer-local/global-default session state; stopping current speech is a separate action. |
+| Nonprinting text | =tts-toggle-speak-nonprinting-chars=; =tts-toggle-strip-octals= | Missing reading controls. Existing local/global switches are ordinary variables; retain their interaction and do not invent a Customize save. |
+| Speech chunking | =tts-toggle-splitting-on-white-space=; =tts-set-chunk-separator-syntax= | Advanced reading commands acting on buffer-local separator syntax. Keep distinct from tracked-reading chunk limits. |
+| Column filtering | =emacsvox-speak-line-set-column-filter=; =emacsvox-toggle-speak-line-invert-filter= | Missing reading workflow. Uses its own filter store; see persistence caveat below. |
+| Automatic punctuation policy | =tts-punctuation-mode-policy-alist= | Level/profile and return-to-policy controls exist; editing the mode-to-policy list needs an advanced Customize link. |
+| Message filtering and tooltips | =emacsvox-speak-messages-filter=; =emacsvox-speak-tooltips= | The message on/off control does not cover exclusions or tooltip speech. Add interaction discovery; use the filter's Custom setter. |
+| Emoji speech | =emacsvox-emoji-naming-enabled=; =emacsvox-emoji-custom-names= | Add reading discovery for the emoji group, including approved sequences and maximum count. Customize owns these defaults. |
+| Table speech | =emacsvox-table-reader-titles=; =emacsvox-table-reader-data-position= | Link general table preferences. Agent Shell and Org have separate controls; their integration links do not replace this group. |
+| Voice contrast and preview labels | =omnivox-average-pitch-contrast=; =emacsvox-aural-preview-label-verbosity= | Advanced voice/preview options, distinct from tuning one voice or choosing sample text. The contrast setter updates logical voices. |
+| Startup feedback | =emacsvox-speak-ready-message=; =emacsvox-welcome-show-at-startup= | Add advanced interaction discovery; keep the routing timeout separate from announcement enablement. |
+| Mail and background output | =emacsvox-toggle-mail-alert=; =emacsvox-toggle-comint-output-monitor= | Missing context-sensitive controls. Mail spool/interval are Custom options; the two switches are local/global-default session state. |
+| Diagnostic logging | =emacsvox-aural-toggle-diagnostic-logging=; =tts-hide-diagnostic-buffers= | Extend the diagnostics slice with logging and advanced retention options. Diagnostic-buffer naming changes apply after speech restart. |
+| Speech server and language | =tts-select-server=; =tts-set-language=; =tts-set-next-language=; =tts-set-previous-language= | Capability-sensitive discovery only. Server selection restarts speech; legacy language commands refuse Omnivox, whose voice workbench already owns language routing. |
+
+Evidence: [[file:../lisp/emacsvox-keymap.el][speech keymaps]], [[file:../lisp/tts-speak.el][TTS commands and ownership]],
+[[file:../lisp/emacsvox-speak.el][reading, filters and mail]], [[file:../lisp/emacsvox-sounds.el][earcon switch]],
+[[file:../lisp/emacsvox-advice.el][messages and tooltips]], [[file:../lisp/emacsvox-emoji.el][emoji options]],
+[[file:../lisp/emacsvox-table-reader.el][general table reading]], and [[file:../lisp/emacsvox-comint.el][background output]].
+
+The earlier character-scale, repeat-cleanup, Unicode, predefined-rate,
+dictionary, Voice Lock, training, and history findings remain part of this
+inventory. Additional reading options suited to advanced discovery include
+=emacsvox-tracked-reading-max-chars=, =emacsvox-speak-time-format=,
+=emacsvox-speak-time-brief-format=, and =emacsvox-buffer-select-help=.
+The dictionary workflow also has smiley/XML namespace options and date
+pronunciation helpers in [[file:../lisp/emacsvox-wizards.el][the wizards module]].
+
+Important interaction and ownership findings:
+
+- Column filtering loads =emacsvox-speak-filter-persistent-store= and installs
+  an exit hook to persist its filter table. The existing command remembers
+  filters by file or mode. A menu cannot promise that closing without Save
+  discards these edits; explain the existing persistence before linking it.
+- Outside supported terminal buffers,
+  =emacsvox-toggle-inaudible-or-comint-autospeak= invokes
+  =voice-setup-toggle-silence-personality=. This is another presentation
+  discovery gap, separate from quiet mode and from terminal foreground speech.
+- The existing server chooser changes =tts-program= and initializes speech.
+  It is not the Omnivox engine-preference control already in =C-e H v=.
+  A discovery menu must not run it merely by opening or moving to its row.
+- Quiet and earcon controls affect feedback used to navigate these menus.
+  Listening must check restoration and source-buffer scope before accepting
+  these entries. Source inspection alone does not establish usable feedback.
+
+*** Integration coverage beyond the initial catalogue
+
+The five catalogue entries are Agent Shell, EAT, Org, Notmuch, and EWW.
+Comint has a local autospeak action but no entry in that catalogue. EAT's
+background-monitor setting is reachable through its linked Customize group;
+Comint's separate monitor command is not exposed there. Vterm and eterm are
+not recognized by the new contextual integration selector.
+
+| Integration or workflow | Concrete settings or commands | Proposed treatment |
+|-------------------------+-------------------------------+--------------------|
+| EWW | =emacsvox-eww-inhibit-images= | Catalogue coverage is partial: this option belongs to =emacsvox=, while the EWW entry opens =emacsvox-eww=. Add explicit discovery. |
+| Markdown and Info | =emacsvox-markdown-auto-reading-mode=; =emacsvox-info-select-node-speak-chunk= | Add reading-integration links; do not assume their upstream mode groups contain these options. |
+| Gnus and ERC | =emacsvox-gnus-punctuation-mode=; =emacsvox-gnus-large-article=; =emacsvox-erc-ignore-notices=; =emacsvox-erc-toggle-room-monitor= | Add integration discovery, including ERC participant and personal-monitor controls. |
+| Spelling and review | =emacsvox-ispell-max-choices=; =emacsvox-flyspell-correct=; =emacsvox-org-srs-use-command-confirmation=; =emacsvox-org-srs-announce-pending-count= | Link actual speech options when the corresponding package is available. |
+| Terminal review | =emacsvox-toggle-eterm-autospeak=; =emacsvox-eterm-toggle-focus-window=; =emacsvox-eterm-toggle-filter-window=; =emacsvox-eterm-toggle-pointer-mode= | Inventory as contextual terminal controls; preserve their existing interaction model. |
+| Popup help | =emacsvox-which-key-toggle-auto-speak=; =emacsvox-hydra-toggle-talkative= | Missing session controls. Hydra changes the upstream =hydra-is-helpful= variable; it is not an Emacsvox Custom default. |
+| OCR | =emacsvox-ocr-customize=; =emacsvox-ocr-engine= | Link the existing configuration workflow, including scanning and PaddleOCR options; do not make a root entry for every engine parameter. |
+| Media, books and feeds | =emacsvox-m-player-customize=; =emacsvox-empv-custom-filters=; =emacsvox-epub-library-directory=; =emacsvox-feeds= | Specialist discovery candidates, alongside Bookshare, LibriVox, webspace and web-extraction settings. Keep playback/search commands in their own interfaces. |
+
+*** Advanced configuration and deliberate scope boundaries
+
+Prefer explicit advanced links for the following families. Their absence from
+a short everyday menu does not require converting each option into a suffix.
+
+- Sound resource directories and overlay enablement, including
+  =emacsvox-aural-disabled-resource-overlays=; external-player configuration
+  through =emacsvox-play-program=. The existing sound-pack editor remains the
+  route for pack contents and activation.
+- [[file:../lisp/omnivox-engine-settings.el][Engine runtime/model paths]],
+  [[file:../lisp/omnivox-remote.el][remote host, connection and token-file options]],
+  [[file:../lisp/emacsvox-windows-speech.el][Windows launcher/audio defaults]], and component installation policy.
+  These are separate from runtime notification routing and spatial rendering.
+  Keep engine ordering, fallback choices, palettes, and native parameters in
+  their already linked workbench/editors; avoid duplicate owners.
+- Voice fallback policy, transport/negotiation timeouts, unsupported-volume
+  policy, diagnostic retention, and store locations. These need discoverable
+  Customize or specialist routes, not ordinary adjustment arrows.
+- Keymap profile options in [[file:../lisp/emacsvox-keymap.el][the keymap module]], hooks, shell/project helpers,
+  network/service configuration, and startup loading such as
+  =emacsvox-pip-enable=. Selecting an advanced group must not implicitly
+  change bindings, initialize another service, or install components.
+- System mixer, soundscape, and SoX options belong to their respective audio
+  workflows; system volume is distinct from Emacsvox's five output volumes.
+  Application paths, credentials, caches, media libraries, and web/API options
+  remain specialist configuration rather than speech-tuning controls.
+
+Ordinary reading/navigation, search, playback, OCR execution, application
+launching, and buffer editing commands are not settings-migration omissions
+merely because they have no =C-e H= entry. A universal command launcher is
+outside this plan. This audit does not claim to exercise every application
+keymap or every runtime-generated option.
+
+Changed settings is also narrower than this inventory: its option scan uses
+the =emacsvox-=, =tts-=, and =omnivox-= prefixes. Other backend startup-rate
+options, generated voice-font settings, mixer/soundscape settings, ordinary
+variables, unloaded modules, and separate stores are not a complete part of
+that snapshot. Do not use its row count as a migration-completeness measure.
+
 ** Next proposed slices
 
 1. Diagnostics and recovery discovery. Link Aural Doctor, spatial capabilities,
-   and =tts-show-diagnostics= from a focused menu. Reuse existing recovery
+   and =tts-show-diagnostics= from a focused menu, with logging and advanced
+   diagnostic options. Reuse existing recovery
    commands, keeping restart or repair an explicit action. Acceptance: inspect
    a finding and return to the same entry without an implicit state change.
 2. Presentation discovery gaps. Link the combined rule overview and tuning the
    named voice used at point; expose training and history policy with their
-   actual scopes. Review Voice Lock separately from face presentation.
+   actual scopes. Review Voice Lock and silence-at-point separately from face
+   presentation; include earcon enablement and preview-label discovery.
    Acceptance: explain a heading, find the responsible rule/voice, change or
    restore it, and verify source return and persistence boundaries.
 3. Reading and dictionary discovery. Add an explicitly separate route to Emacs
    pronunciation dictionaries and classify character-scale, repeat cleanup,
-   predefined-rate, and Unicode settings as focused or advanced controls.
+   predefined-rate, Unicode, emoji, quiet/nonprinting speech, column filtering,
+   chunking, and punctuation-policy settings as focused or advanced controls.
+   Deliver these in small sub-slices; this is now a workstream rather than one
+   small patch. Include general table preferences and interaction exclusions.
    Acceptance: edit one dictionary entry and demonstrate which store saves it;
    opening the workflow must not write or restart speech.
 4. Complete the voice browsing acceptance task before choosing further UI edits.
@@ -521,13 +654,16 @@ commands remain local interface operations.
    existing maps, modified state, undo, help, and finish/cancel behavior before
    changing conventions. Prioritize the editor that obstructs the complete task;
    no broad conversion is implied by this queue.
-6. Finish milestone 5 acceptance: cover remaining inventoried routes, compare
+6. Expand integration and advanced discovery using the repository-wide inventory
+   above, then finish milestone 5 acceptance: cover remaining inventoried routes, compare
    against Home, verify Emacs 30.2 in a separate checkout, and record settled
    documentation/design decisions. Home retirement remains a separate decision.
 
 The next implementation candidate is diagnostics discovery. Listening can run
 alongside these scoped discovery changes and determines later editor priorities.
-No additional implementation or new listening result is recorded by this audit.
+The repository-wide audit adds work to this queue; six headings no longer imply
+six small patches or a fixed completion estimate. No additional implementation
+or new listening result is recorded by this audit.
 
 * Acceptance tasks and development cycle
 
