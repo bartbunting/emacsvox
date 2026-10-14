@@ -207,6 +207,8 @@
   (require 'emacsvox-transient-tests)
   (require 'emacsvox-indentation-tests)
   (require 'emacsvox-aural-menu-tests)
+  (require 'emacsvox-capitalization-tests)
+  (require 'emacsvox-interaction-tests)
   (require 'emacsvox-arc-tests)
   (require 'emacsvox-tar-tests)
   (require 'emacsvox-sh-script-tests)

@@ -38,6 +38,7 @@
 
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
+(autoload 'emacsvox-interaction "emacsvox-interaction" nil t)
 (autoload 'emacsvox-aural-list-sound-packs "emacsvox-aural-sound-packs" nil t)
 (autoload 'emacsvox-aural-list-voice-palettes "emacsvox-aural-voice-palettes" nil t)
 (autoload 'emacsvox-aural-voice-workbench "emacsvox-aural-voice-workbench" nil t)
@@ -52,7 +53,8 @@
                  (memq (oref prefix command)
                        '(emacsvox-aural-menu emacsvox-aural-menu-speech
                          emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation
-                         emacsvox-aural-menu-voices emacsvox-capitalization)))
+                         emacsvox-aural-menu-voices emacsvox-capitalization
+                         emacsvox-interaction)))
       (user-error "Open the Emacsvox menu first"))
     (oref prefix scope)))
 
@@ -490,6 +492,7 @@ When opened from the Emacsvox menu, share its selected scope."
    ("p" (lambda () (emacsvox-aural-menu--punctuation-label))
     emacsvox-aural-menu-punctuation :transient transient--do-stack)
    ("c" "Capitalization" emacsvox-capitalization :transient transient--do-stack)
+   ("t" "Typing and interaction" emacsvox-interaction :transient transient--do-stack)
    ("n" "Menu navigation (global)" emacsvox-aural-menu-navigation
     :transient transient--do-stack)]
   ["Save and finish"

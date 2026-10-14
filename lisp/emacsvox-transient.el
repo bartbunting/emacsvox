@@ -668,6 +668,8 @@ ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
        " Shift left and right: adjust. Capital P: preview. Capital S: stop.")
      (when (eq command 'emacsvox-capitalization-cue)
        " Shift left and right: adjust draft. Space: preview beep.")
+     (when (eq command 'emacsvox-interaction)
+       " Shift left and right: adjust phonetic delay. Space: preview source line.")
      (if (eq (lookup-key transient--transient-map (kbd "RET"))
              #'transient-push-button)
          " Enter: activate. Control G: close. "
@@ -1043,7 +1045,8 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                      emacsvox-aural-menu-navigation emacsvox-aural-menu-sounds
                      emacsvox-aural-menu-punctuation emacsvox-aural-menu-voices
                      emacsvox-aural-voice-menu emacsvox-indentation
-                     emacsvox-capitalization emacsvox-capitalization-cue)))
+                     emacsvox-capitalization emacsvox-capitalization-cue
+                     emacsvox-interaction)))
     (keymap-set map "RET" #'transient-push-button)
     (keymap-set map "<return>" #'transient-push-button))
   map)
