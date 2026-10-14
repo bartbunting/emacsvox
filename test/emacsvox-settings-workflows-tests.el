@@ -608,6 +608,51 @@
        (should (eq (default-value 'emacsvox-org-table-after-movement-function)
                    'emacsvox-org-table-speak-column-header))))))
 
+(ert-deftest emacsvox-settings-integrations-eww-rendering-and-save ()
+  "Image changes affect subsequent rendering without reloading or losing overrides."
+  (require 'shr)
+  (let ((old-shr (default-value 'shr-inhibit-images)))
+    (unwind-protect
+        (emacsvox-test--integration-defaults 'emacsvox-eww
+         (lambda ()
+           (emacsvox-test--with-settings
+             (set-default 'emacsvox-eww-autospeak t)
+             (set-default 'emacsvox-eww-inhibit-images nil)
+             (set-default 'shr-inhibit-images nil)
+             (with-current-buffer source
+               (eww-mode)
+               (setq-local shr-inhibit-images 'local-override))
+             (cl-letf (((symbol-function 'eww-reload)
+                        (lambda (&rest _) (ert-fail "Settings must not reload a page"))))
+               (execute-kbd-macro (kbd "C-q C-e S"))
+               (should (eq (oref transient--prefix command) 'emacsvox-settings-integrations--eww))
+               (execute-kbd-macro (kbd "s i"))
+               (should-not (default-value 'emacsvox-eww-autospeak))
+               (should (default-value 'emacsvox-eww-inhibit-images))
+               (should (default-value 'shr-inhibit-images))
+               (should (eq (buffer-local-value 'shr-inhibit-images source) 'local-override))
+               (let (displayed)
+                 (emacsvox--advice-eww-display-image-around (lambda (_) (setq displayed t)) source)
+                 (should-not displayed)
+                 (execute-kbd-macro (kbd "i"))
+                 (emacsvox--advice-eww-display-image-around (lambda (_) (setq displayed t)) source)
+                 (should displayed))
+               (should-not (file-exists-p custom-file))
+               (execute-kbd-macro (kbd "A"))
+               (should (derived-mode-p 'Custom-mode))
+               (execute-kbd-macro (kbd "q"))
+               (with-selected-window transient--window
+                 (should (equal (oref (button-get (button-at (point)) 'button-data) key) "A")))
+               (execute-kbd-macro (kbd "i w q"))
+               (should-not transient--prefix)
+               (should (eq (current-buffer) source))
+               (set-default 'emacsvox-eww-autospeak t)
+               (set-default 'emacsvox-eww-inhibit-images nil)
+               (load custom-file nil t)
+               (should-not (default-value 'emacsvox-eww-autospeak))
+               (should (default-value 'emacsvox-eww-inhibit-images))))))
+      (set-default 'shr-inhibit-images old-shr))))
+
 (ert-deftest emacsvox-settings-changes-separates-local-default-saved-and-draft ()
   "The snapshot distinguishes three option values and an unsaved cue without writes."
   (emacsvox-test--with-settings

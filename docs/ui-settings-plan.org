@@ -333,7 +333,7 @@ Direction recorded on 2026-10-15: each listed integration should open a focused
 Transient rather than using Customize as its primary settings screen. Include
 ordinary shell/comint alongside the existing integrations. Keep current-buffer
 access and the all-integrations chooser.
-Shell/comint, EAT, Agent Shell and Org now have focused menus; the other listed
+Shell/comint, EAT, Agent Shell, Org and EWW now have focused menus; the other listed
 routes still open Customize.
 
 Deliver and listen to one integration at a time. Proposed control groupings:
@@ -348,7 +348,8 @@ Implementation may continue in separate commits before listening acceptance.
   acceptance pending.
 - [X] Org: table feedback and links to its existing structured settings
   implemented; listening acceptance pending.
-- [ ] EWW: automatic speech and image handling.
+- [X] EWW: section-navigation speech and image handling implemented; listening
+  acceptance pending.
 - [ ] Notmuch: spoken fields, status cues and reading limits.
 
 Contextual shortcut checkpoint, 2026-10-15:
@@ -475,6 +476,19 @@ Org implementation checkpoint, 2026-10-15:
   the direct shortcut, both Customize returns, explicit save/reload and existing
   integration workflows. Listening remains pending for navigation, spoken table
   feedback, save/restart and editor return.
+
+EWW implementation checkpoint, 2026-10-15:
+
+- Direct, chooser, current-integration and search routes open its focused menu.
+  =s= toggles section-navigation autospeak; =i= toggles image suppression and
+  synchronizes the shared SHR default for subsequent rendering. Local overrides
+  are preserved; the current page is not reloaded.
+- =w= saves only the two displayed Emacsvox defaults. =A= retains advanced
+  Customize with exact return. All 37 graphical settings tests passed from source
+  and compiled code; they cover rendering inhibition, unchanged local overrides,
+  no implicit page reload, explicit save/reload, search and return. Incremental
+  compilation, bytecode preflight and manual regeneration passed.
+  Listening and save/restart acceptance remain open.
 
 ** Saved setups and drafts
 
@@ -740,7 +754,7 @@ not recognized by the new contextual integration selector.
 
 | Integration or workflow | Concrete settings or commands | Proposed treatment |
 |-------------------------+-------------------------------+--------------------|
-| EWW | =emacsvox-eww-inhibit-images= | Catalogue coverage is partial: this option belongs to =emacsvox=, while the EWW entry opens =emacsvox-eww=. Add explicit discovery. |
+| EWW | =emacsvox-eww-inhibit-images= | Resolved on 2026-10-15: exposed directly in the EWW Transient and settings search despite its different Customize group. |
 | Markdown and Info | =emacsvox-markdown-auto-reading-mode=; =emacsvox-info-select-node-speak-chunk= | Add reading-integration links; do not assume their upstream mode groups contain these options. |
 | Gnus and ERC | =emacsvox-gnus-punctuation-mode=; =emacsvox-gnus-large-article=; =emacsvox-erc-ignore-notices=; =emacsvox-erc-toggle-room-monitor= | Add integration discovery, including ERC participant and personal-monitor controls. |
 | Spelling and review | =emacsvox-ispell-max-choices=; =emacsvox-flyspell-correct=; =emacsvox-org-srs-use-command-confirmation=; =emacsvox-org-srs-announce-pending-count= | Link actual speech options when the corresponding package is available. |

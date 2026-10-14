@@ -52,6 +52,8 @@
     ("Agent automatic content limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "a")
     ("Agent line navigation limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "n")
     ("Agent block navigation limit" emacsvox-settings-integrations emacsvox-settings-integrations--agent "k")
+    ("EWW section navigation autospeak" emacsvox-settings-integrations emacsvox-settings-integrations--eww "s")
+    ("EWW suppress images" emacsvox-settings-integrations emacsvox-settings-integrations--eww "i")
     ("Org table movement feedback" emacsvox-settings-integrations emacsvox-settings-integrations--org "c")
     ("Changed settings, saved defaults and drafts" emacsvox-settings-workflows emacsvox-settings-setups "c")
     ("Speech rate" emacsvox-aural-menu emacsvox-aural-menu-speech "r")

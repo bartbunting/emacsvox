@@ -34,7 +34,8 @@
 (declare-function emacsvox-eat--terminal-buffer-p "emacsvox-eat-core" ())
 
 (defconst emacsvox-settings-integrations--menus
-  '((org . emacsvox-settings-integrations--org)
+  '((eww . emacsvox-settings-integrations--eww)
+    (org . emacsvox-settings-integrations--org)
     (agent . emacsvox-settings-integrations--agent)
     (comint . emacsvox-settings-integrations--comint)
     (eat . emacsvox-settings-integrations--eat))
@@ -302,7 +303,11 @@ A nil group denotes a focused menu with buffer-only controls.")
                    :scope (emacsvox-aural-menu--context)))
 
 (defconst emacsvox-settings-integrations--options
-   '((emacsvox-settings-integrations--org-feedback emacsvox-org
+  '((emacsvox-settings-integrations--eww-autospeak emacsvox-eww
+     emacsvox-eww-autospeak "Section navigation autospeak" ((t . "on") (nil . "off")))
+    (emacsvox-settings-integrations--eww-images emacsvox-eww
+     emacsvox-eww-inhibit-images "Suppress images (next rendering)" ((t . "on") (nil . "off")))
+    (emacsvox-settings-integrations--org-feedback emacsvox-org
      emacsvox-org-table-after-movement-function "After moving in a table"
      ((emacsvox-org-table-speak-current-element . "cell")
       (emacsvox-org-table-speak-column-header . "column header")
@@ -568,6 +573,40 @@ Choices are value/label pairs. Numeric controls accept positive integers or none
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)
   (transient-setup 'emacsvox-settings-integrations--org nil nil :scope (emacsvox-aural-menu--context)))
+
+(defun emacsvox-settings-integrations--eww-autospeak ()
+  "Toggle global automatic speech during EWW section navigation."
+  (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--eww-autospeak))
+(defun emacsvox-settings-integrations--eww-images ()
+  "Toggle image suppression and apply it to subsequent SHR rendering."
+  (interactive)
+  (emacsvox-settings-integrations--edit 'emacsvox-settings-integrations--eww-images)
+  ;; Match EWW speech setup without reloading a page or replacing local overrides.
+  (set-default 'shr-inhibit-images (default-value 'emacsvox-eww-inhibit-images)))
+(defun emacsvox-settings-integrations--eww-save ()
+  "Save displayed EWW defaults through Customize."
+  (interactive)
+  (emacsvox-settings-integrations--save-options 'emacsvox-eww))
+(defun emacsvox-settings-integrations--eww-custom ()
+  "Open advanced EWW speech settings and return here."
+  (interactive)
+  (require 'emacsvox-eww)
+  (emacsvox-settings--custom 'emacsvox-eww 'emacsvox-settings-integrations--eww-custom))
+(transient-define-prefix emacsvox-settings-integrations--eww ()
+  "Control EWW automatic speech and image handling."
+  ["EWW defaults (global); w saves"
+   ("s" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--eww-autospeak))
+    emacsvox-settings-integrations--eww-autospeak :transient t)
+   ("i" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--eww-images))
+    emacsvox-settings-integrations--eww-images :transient t)
+   ("w" "Save displayed EWW defaults" emacsvox-settings-integrations--eww-save :transient t)]
+  ["Finish"
+   ("A" "Advanced EWW settings (Customize)" emacsvox-settings-integrations--eww-custom :transient transient--do-suspend)
+   ("q" "Back" emacsvox-settings-integrations--back :transient transient--do-replace)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-integrations--eww nil nil :scope (emacsvox-aural-menu--context)))
 
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-integrations ()

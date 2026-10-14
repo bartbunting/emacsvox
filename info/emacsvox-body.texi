@@ -3036,6 +3036,11 @@ Org opens a table-feedback Transient: @code{c} cycles cell@comma{} header@comma{
 feedback; @code{w} saves that global default. @code{t} opens Org's structured table options
 in Customize and @code{A} opens advanced Emacsvox Org settings. Both return with @code{q}.
 
+EWW opens a focused menu: @code{s} toggles section-navigation autospeak and @code{i}
+toggles image suppression for subsequent rendering. It also updates the shared
+SHR image default@comma{} preserving buffer-local overrides. It does not reload the
+current page. @code{w} saves the two Emacsvox defaults and @code{A} opens advanced settings.
+
 Other integration entries currently open Customize@comma{} with its own Apply@comma{} Save@comma{}
 and Reset controls; @code{q} returns to the menu.
 Integrations without an inventoried entry remain reachable through major-mode

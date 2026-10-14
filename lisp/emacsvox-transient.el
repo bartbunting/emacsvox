@@ -1054,7 +1054,8 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                      emacsvox-settings-integrations--comint
                      emacsvox-settings-integrations--eat
                          emacsvox-settings-integrations--agent
-                         emacsvox-settings-integrations--org)))
+                         emacsvox-settings-integrations--org
+                         emacsvox-settings-integrations--eww)))
     (keymap-set map "RET" #'transient-push-button)
     (keymap-set map "<return>" #'transient-push-button))
   map)
