@@ -1,0 +1,13 @@
+#+title: Accent sound pack
+
+Accent, customised by Bart Bunting, builds on the =3d= pack inherited from
+Emacspeak, whose principal original author is T. V. Raman.
+
+This directory contains Bart's 17 replacement recordings. The other 38 cues
+come from the bundled =3d= pack through inheritance. The replacements are
+mono; inherited recordings retain the 3d pack's spatial metadata.
+
+Use =M-x emacsvox-sounds-select-theme RET accent RET= to select this pack.
+You can preview its cues in =M-x emacsvox-aural-list-sound-packs=.
+A personal pack at =~/.emacsvox/sounds/packs/accent/= takes precedence over
+this bundled copy.
