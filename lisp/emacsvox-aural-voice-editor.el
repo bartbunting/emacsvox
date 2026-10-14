@@ -50,6 +50,8 @@
 (declare-function omnivox-parameters--cached "omnivox-parameters" (process engine voice))
 (autoload 'emacsvox-aural-voice-context-open "emacsvox-aural-voice-context"
   "Inspect this voice draft in a captured source context." t)
+(autoload 'emacsvox-aural-voice-menu "emacsvox-aural-voice-menu"
+  "Open focused shared tuning for this named voice." t)
 (autoload 'emacsvox-aural-voice-engine-controls-open "emacsvox-aural-voice-engine-controls"
   "Edit engine controls for one physical choice." t)
 (declare-function emacsvox-aural-voice-engine-controls--render "emacsvox-aural-voice-engine-controls" ())
@@ -469,6 +471,9 @@ NEW prepares an explicit neutral voice, rejecting existing or reserved names."
       (emacsvox-aural-voice-editor--button 'engine-controls "Engine-specific settings"
                                             #'emacsvox-aural-voice-engine-controls-open))
     (insert (if tuning "\nIndividual fallback adjustments\n" "\nShared adjustments\n"))
+    (when (and voice (not tuning))
+      (emacsvox-aural-voice-editor--button
+       'tuning-menu "Focused tuning menu (m)" #'emacsvox-aural-voice-menu))
     (when tuning
       (emacsvox-aural-voice-editor--button
        'tuning-scope
@@ -1178,6 +1183,7 @@ SOURCE optionally supplies the return buffer for the destination editor."
                     ("B" . emacsvox-aural-voice-editor-compare) ("S" . emacsvox-aural-voice-editor-stop)
                     ("T" . emacsvox-aural-voice-editor-text) ("u" . emacsvox-aural-voice-editor-undo)
                     ("d" . emacsvox-aural-voice-editor-default)
+                    ("m" . emacsvox-aural-voice-menu)
                     ("i" . emacsvox-aural-voice-editor--inherit)
                     ("w" . emacsvox-aural-voice-editor-save) ("C-c C-c" . emacsvox-aural-voice-editor-save)
                     ("h" . emacsvox-aural-home)
