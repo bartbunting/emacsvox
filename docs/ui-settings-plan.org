@@ -501,3 +501,17 @@ verification of subsequently changed code.
   all uses of the named cue; labels state this scope. Fifty focused source
   checks passed, including graphical return, actual resolved output, save/reload,
   silence/reset, and conflicting-save protection. Listening remains open.
+
+- Line and boundary controls committed as =b3236460c=. Fifty focused compiled
+  checks passed; compilation, documentation review, and headers passed.
+- Notification and spatial settings are implemented at =C-e H o n=. Routing
+  changes apply on explicit speech restart; Save is separate. The active-output
+  preview does not claim to audition a pending route. History is a snapshot with
+  menu return. Spatial enablement, speech/cue switches, mono/automatic output,
+  mapping, and bounded separation use existing global Customize options.
+  Left/right cue previews compile through existing spatial policy. Listening on
+  actual output hardware, notification routing after restart, and stereo
+  capabilities remain acceptance tasks.
+  Fifty-three focused source and compiled graphical checks passed. Compilation,
+  byte-code preflight, documentation review, and header checks passed. Automated
+  restart tests use a stub; they do not establish actual hardware routing.

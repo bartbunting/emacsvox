@@ -3039,6 +3039,22 @@ the existing audio settings. Press @kbd{S} to save these volumes across restarts
 Notification controls affect the separate notification output. Earcon volumes
 affect sounds played by Omnivox.
 
+Press @kbd{n} in Sounds and output for @emph{Notifications and spatial output}. @kbd{r}
+chooses the notification route for the next speech restart: automatic@comma{} left@comma{}
+right@comma{} both@comma{} main output@comma{} or another device. The choice does not restart speech.
+@kbd{N} previews the currently active output@comma{} which may still use the old route.
+@kbd{R} explicitly restarts speech after confirmation. @kbd{h} opens a snapshot of
+notification history; @kbd{q} returns to the menu.
+
+Spatial controls apply immediately: enable presentation@comma{} speech and cues
+independently@comma{} choose automatic or mono output@comma{} change direction mapping@comma{} and
+limit separation from 0 to 1. Shift-left/right adjusts selected separation by
+0.1; Enter sets an exact value. Space previews left then right cue requests;
+mono output or limited backend capabilities may center them. @kbd{x} stops previews.
+@kbd{S} saves routing and spatial defaults through Customize without restarting.
+These controls are global and keep output-volume saving separate.
+
+
 Press @kbd{p} there to browse sound packs. In the browser@comma{} @kbd{q} returns to @emph{Sounds
 and output} with the same settings scope. Another @kbd{q} returns to the main
 menu. Opening the browser directly keeps its usual quit destination.

@@ -38,6 +38,7 @@
 
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
+(autoload 'emacsvox-output-settings "emacsvox-output-settings" nil t)
 (autoload 'emacsvox-line-cues-edit "emacsvox-line-cues" nil t)
 (autoload 'emacsvox-interaction "emacsvox-interaction" nil t)
 (autoload 'emacsvox-aural-list-sound-packs "emacsvox-aural-sound-packs" nil t)
@@ -55,7 +56,8 @@
                        '(emacsvox-aural-menu emacsvox-aural-menu-speech
                          emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation
                          emacsvox-aural-menu-voices emacsvox-capitalization
-                         emacsvox-interaction emacsvox-aural-menu-line-cues)))
+                         emacsvox-interaction emacsvox-aural-menu-line-cues
+                         emacsvox-output-settings)))
       (user-error "Open the Emacsvox menu first"))
     (oref prefix scope)))
 
@@ -762,6 +764,7 @@ Enter sets an exact value.  Save explicitly to retain volumes across restarts."
    ("E" (lambda () (emacsvox-aural-menu--output-label 'emacsvox-aural-menu--notification-earcons))
     emacsvox-aural-menu--notification-earcons :transient t)]
   ["Cues and sound packs"
+   ("n" "Notifications and spatial output" emacsvox-output-settings :transient transient--do-stack)
    ("c" "Line and boundary cues" emacsvox-aural-menu-line-cues :transient transient--do-stack)
    ("p" "Browse sound packs" emacsvox-aural-menu--sound-packs :transient transient--do-suspend)]
   ["Save and finish"
