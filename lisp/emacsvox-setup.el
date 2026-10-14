@@ -54,6 +54,7 @@
     "emacsvox-loaddefs.el"
     "emacsvox-keymap.el"
     "emacsvox-indentation.el"
+    "emacsvox-aural-menu.el"
     "emacsvox-welcome.el"
     "tts-speak.el"
     "tts-queue-state.el"

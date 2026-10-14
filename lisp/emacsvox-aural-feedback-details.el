@@ -901,6 +901,8 @@ The existing sound override editor owns its separate unsaved rule draft."
       (setq emacsvox-aural-ui-help-origin-buffer origin
             emacsvox-aural-ui-help-origin-window window
             emacsvox-aural-ui-help-origin-position position)
+      ;; Reopening a report establishes a new return destination.
+      (setq emacsvox-aural-ui--help-return-function nil)
       (emacsvox-aural-feedback-details--render))
     (let ((emacsvox-aural--history-recording-inhibited t))
       (emacsvox-aural-ui--pop-to-buffer

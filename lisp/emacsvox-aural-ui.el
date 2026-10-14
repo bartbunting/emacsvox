@@ -205,12 +205,18 @@ When nil, movement speaks the current titled cell.")
   (emacsvox-aural-ui-help-quit)
   (emacsvox-aural-ui-actions))
 
+(defvar-local emacsvox-aural-ui--help-return-function nil
+  "Optional continuation after returning to the originating buffer.
+A non-nil result means the continuation announced the destination.")
+
 (defun emacsvox-aural-ui-help-quit ()
   "Quit Help and restore its originating aural interface and position."
   (interactive)
   (let ((origin-buffer emacsvox-aural-ui-help-origin-buffer)
         (origin-window emacsvox-aural-ui-help-origin-window)
-        (origin-position emacsvox-aural-ui-help-origin-position))
+        (origin-position emacsvox-aural-ui-help-origin-position)
+        (return-function emacsvox-aural-ui--help-return-function))
+    (setq emacsvox-aural-ui--help-return-function nil)
     (quit-window)
     (cond
      ((and (window-live-p origin-window)
@@ -229,9 +235,10 @@ When nil, movement speaks the current titled cell.")
         (goto-char origin-position))))
     (when (markerp origin-position)
       (set-marker origin-position nil))
-    (emacsvox-aural-ui--speak-feedback
-     (emacsvox-aural-ui--destination-description) 'close-object
-     'aural-interface-closed)))
+    (unless (and return-function (funcall return-function))
+      (emacsvox-aural-ui--speak-feedback
+       (emacsvox-aural-ui--destination-description) 'close-object
+       'aural-interface-closed))))
 
 (defun emacsvox-aural-ui-display-help (producer)
   "Display Help from PRODUCER and remember the exact aural origin.

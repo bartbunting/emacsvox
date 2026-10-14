@@ -224,7 +224,7 @@
    ("C-w" emacsvox-speak-window-information)
    ("C-x" emacsvox-speak-header-line)
    ("L" emacsvox-speak-line-interactively)
-   ("H" emacsvox-aural)
+   ("H" emacsvox-aural-menu)
    ("M" emacsvox-speak-minor-mode-line)
    ("M-%" emacsvox-goto-percent)
    ("M-;" emacsvox-eww-play-media-at-point)

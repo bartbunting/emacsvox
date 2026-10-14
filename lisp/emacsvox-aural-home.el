@@ -645,7 +645,7 @@
       "g refresh\n"
       "C-c C-o return to the captured source item\n"
       "? display and speak this help\n"
-      "C-e H opens this home from any ordinary buffer\n"
+      "C-e H h opens this home from any ordinary buffer\n"
       "C-e E explains presentation from any ordinary buffer\n"
       "To review or change feedback, move to the item, open C-e H, then press x.\n"
       "c, r, T, and R remain direct shortcuts and searchable actions.\n"

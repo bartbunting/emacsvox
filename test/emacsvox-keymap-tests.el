@@ -184,7 +184,7 @@
   (should
    (eq
     (lookup-key emacsvox-keymap (kbd "H"))
-    'emacsvox-aural))
+    'emacsvox-aural-menu))
   (should
    (eq
     (lookup-key emacsvox-keymap (kbd "E"))
@@ -192,7 +192,7 @@
   (should
    (eq
     (key-binding (kbd "C-e H"))
-    'emacsvox-aural))
+    'emacsvox-aural-menu))
   (should
    (eq
     (key-binding (kbd "C-e E"))
@@ -209,7 +209,8 @@
          ("C-j" . tts-set-chunk-separator-syntax)
          ("C" . emacsvox-set-capitalization-presentation)
          ("D" . emacsvox-aural-toggle-diagnostic-logging)
-         ("I" . emacsvox-set-indentation-presentation)
+         ("I" . emacsvox-indentation)
+         ("T" . emacsvox-set-indentation-tone-timing)
          ("d" . tts-select-server)
          ("e" . emacsvox-aural-prefer-engine)
          ("L" . tts-local-server)
