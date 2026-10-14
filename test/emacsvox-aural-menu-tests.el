@@ -548,5 +548,123 @@
                 (should (string-prefix-p "Choose speech settings" (car spoken))))
             (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))
 
+(defun emacsvox-test--call-with-output-volumes (function)
+  "Call FUNCTION with isolated output volumes set to 50 percent."
+  (let ((saved (mapcar (lambda (entry)
+                        (let ((symbol (car entry)))
+                          (list symbol (default-value symbol)
+                                (copy-tree (symbol-plist symbol)))))
+                      tts--output-volume-settings)))
+    (unwind-protect
+        (progn
+          (dolist (entry saved) (set-default (car entry) 50))
+          (funcall function))
+      (dolist (entry saved)
+        (set-default (car entry) (nth 1 entry))
+        (setplist (car entry) (nth 2 entry))))))
+
+(ert-deftest emacsvox-aural-menu-output-bounds-validation-and-explicit-save ()
+  "Volume edits are global, bounded, and persist only on explicit Save."
+  (emacsvox-test--with-aural-menu
+    (emacsvox-test--call-with-output-volumes
+     (lambda ()
+       (let (saved spoken)
+         (cl-letf (((symbol-function 'customize-save-variable)
+                    (lambda (symbol value &rest _) (push (cons symbol value) saved)))
+                   ((symbol-function 'emacsvox-aural-submit)
+                    (lambda (text &rest _) (push text spoken))))
+           ;; Global controls remain usable after the captured text changes.
+           (erase-buffer)
+           (dolist (entry tts--output-volume-settings)
+             (let ((symbol (car entry)))
+               (emacsvox-aural-menu--output-volume symbol -55)
+               (should (= (default-value symbol) 0))
+               (emacsvox-aural-menu--output-volume symbol 105)
+               (should (= (default-value symbol) 100))
+               (cl-letf (((symbol-function 'read-number) (lambda (&rest _) 37)))
+                 (emacsvox-aural-menu--output-volume symbol))
+               (should (= (default-value symbol) 37))
+               (should (equal (car spoken) "37 percent"))
+               (cl-letf (((symbol-function 'read-number) (lambda (&rest _) 101)))
+                 (should-error (emacsvox-aural-menu--output-volume symbol) :type 'user-error))
+               (should (= (default-value symbol) 37))))
+           (should-not saved)
+           (emacsvox-aural-menu--save-output)
+           (should (equal (nreverse saved)
+                          (mapcar (lambda (entry) (cons (car entry) 37))
+                                  tts--output-volume-settings)))
+           (kill-buffer source)
+           (should-error (emacsvox-aural-menu--output-volume 'tts-main-tone-volume -5)
+                         :type 'user-error)))))))
+
+(ert-deftest emacsvox-aural-menu-output-graphical-adjust-and-return ()
+  "Shift adjusts the focused volume; plain arrows move sections; q returns."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (emacsvox-test--with-aural-menu
+      (emacsvox-test--call-with-output-volumes
+       (lambda ()
+         (switch-to-buffer source)
+         (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+         (let ((transient--prefix nil) (transient-show-menu 0) spoken)
+           (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                      (lambda (text &rest _) (push text spoken))))
+             (unwind-protect
+                 (progn
+                   (execute-kbd-macro (kbd "C-u <f8> o"))
+                   (transient--show)
+                   (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-sounds))
+                   (should (eq (plist-get (emacsvox-aural-menu--context) :source) source))
+                   (should (cdr (plist-get (emacsvox-aural-menu--context) :settings)))
+                   (should (string-match-p "Shift left and right: adjust volume"
+                                           (emacsvox-transient--opening-text)))
+                   (execute-kbd-macro (kbd "<down>"))
+                   (setq spoken nil)
+                   (execute-kbd-macro (kbd "S-<left> S-<left> S-<right>"))
+                   (should (= tts-main-tone-volume 45))
+                   (should (equal (reverse spoken) '("45 percent" "40 percent" "45 percent")))
+                   (with-current-buffer (window-buffer transient--window)
+                     (should (string-match-p "Tones: 45 percent" (buffer-string))))
+                   (execute-kbd-macro (kbd "RET RET"))
+                   (execute-kbd-macro (kbd "<down> S-<left>"))
+                   (should (= tts-main-earcon-volume 45))
+                   (execute-kbd-macro (kbd "<right> S-<left> <down> S-<left> <down> S-<left>"))
+                   (should (= tts-notification-speech-volume 45))
+                   (should (= tts-notification-tone-volume 45))
+                   (should (= tts-notification-earcon-volume 45))
+                   (execute-kbd-macro (kbd "<right> S-<left>"))
+                   (should (string-prefix-p "Not adjustable" (car spoken)))
+                   (execute-kbd-macro (kbd "q"))
+                   (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+                   (should (equal (emacsvox-aural-menu--scope-label) "Global defaults"))
+                   (should-not (lookup-key transient--transient-map (kbd "S-<left>")))
+                   (execute-kbd-macro (kbd "q"))
+                   (should (eq (current-buffer) source))
+                   (should (= (point) 3)))
+               (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))))
+
+(ert-deftest emacsvox-aural-menu-output-graphical-browser-keeps-source ()
+  "The existing browser opens after menu exit and retains the source buffer."
+  (skip-unless (display-graphic-p))
+  (require 'emacsvox-aural-sound-packs)
+  (save-window-excursion
+    (emacsvox-test--with-aural-menu
+      (switch-to-buffer source)
+      (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+      (let ((transient--prefix nil) (transient-show-menu 0))
+        (unwind-protect
+            (progn
+              (execute-kbd-macro (kbd "<f8> o p"))
+              (should-not transient--prefix)
+              (should-not transient--stack)
+              (should (derived-mode-p 'emacsvox-aural-sound-packs-mode))
+              (should (eq (emacsvox-aural-inspection-source-buffer) source))
+              (execute-kbd-macro (kbd "q"))
+              (should (eq (current-buffer) source))
+              (should (= (point) 3)))
+          (when transient--prefix (execute-kbd-macro (kbd "C-q")))
+          (when (get-buffer "*Aural Sound Packs*")
+            (kill-buffer "*Aural Sound Packs*")))))))
+
 (provide 'emacsvox-aural-menu-tests)
 ;;; emacsvox-aural-menu-tests.el ends here

@@ -37,14 +37,16 @@
                   "emacsvox-aural-feedback-details" (&optional arg))
 
 (autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
+(autoload 'emacsvox-aural-list-sound-packs "emacsvox-aural-sound-packs" nil t)
 (autoload 'emacsvox-explain-aural-presentation "emacsvox-aural-explanation" nil t)
 
 (defun emacsvox-aural-menu--context ()
-  "Return the context owned by the current entry or speech menu."
+  "Return the context owned by the current source-aware menu."
   (let ((prefix (or transient--prefix transient-current-prefix)))
     (unless (and prefix
                  (memq (oref prefix command)
-                       '(emacsvox-aural-menu emacsvox-aural-menu-speech)))
+                       '(emacsvox-aural-menu emacsvox-aural-menu-speech
+                         emacsvox-aural-menu-sounds)))
       (user-error "Open the Emacsvox menu first"))
     (oref prefix scope)))
 
@@ -271,6 +273,165 @@ When opened from the Emacsvox menu, share its selected scope."
     (emacsvox-aural-menu--source context)
     (transient-setup 'emacsvox-aural-menu-speech nil nil :scope context)))
 
+(defconst emacsvox-aural-menu--output-controls
+  '((emacsvox-aural-menu--main-tones tts-main-tone-volume "Tones")
+    (emacsvox-aural-menu--main-earcons tts-main-earcon-volume "Earcons")
+    (emacsvox-aural-menu--notification-speech tts-notification-speech-volume "Speech")
+    (emacsvox-aural-menu--notification-tones tts-notification-tone-volume "Tones")
+    (emacsvox-aural-menu--notification-earcons tts-notification-earcon-volume "Earcons"))
+  "Output commands, global volume options, and labels.")
+
+(defun emacsvox-aural-menu--output-label (command)
+  "Describe COMMAND's current output volume."
+  (let ((control (assq command emacsvox-aural-menu--output-controls)))
+    (format "%s: %d percent" (nth 2 control) (default-value (nth 1 control)))))
+
+(defun emacsvox-aural-menu--output-volume (symbol &optional delta)
+  "Set global output option SYMBOL, or adjust it by DELTA percentage points."
+  (let* ((source (emacsvox-aural-menu--source (emacsvox-aural-menu--context)))
+         (value (if delta
+                    (max 0 (min 100 (+ (default-value symbol) delta)))
+                  (emacsvox-aural-menu--read-output-volume symbol))))
+    (tts--validate-output-volume value)
+    (customize-set-variable symbol value)
+    (with-current-buffer source
+      (emacsvox-transient--submit-text
+       (format "%d percent" value)
+       (emacsvox-transient--item-facts
+        'value symbol 'command-menu-value-changed '(selected))
+       'state-change 'select-object))))
+
+(defun emacsvox-aural-menu--read-output-volume (symbol)
+  "Read SYMBOL's volume and retain the selected control after the prompt."
+  (let ((prefix transient--prefix)
+        (focus (when (window-live-p transient--window)
+                 (with-selected-window transient--window
+                   (when-let* ((button (button-at (point))))
+                     (button-get button 'button-data))))))
+    (unwind-protect
+        (read-number "Global volume (0 to 100): " (default-value symbol))
+      ;; Transient can destroy its popup while the minibuffer is active.
+      (when (and focus prefix (eq transient--prefix prefix))
+        (transient--show)
+        (with-selected-window transient--window
+          (transient--goto-button focus))))))
+
+(defun emacsvox-aural-menu--main-tones ()
+  "Set the volume of main-stream tones, including indentation tones."
+  (interactive)
+  (emacsvox-aural-menu--output-volume 'tts-main-tone-volume))
+
+(defun emacsvox-aural-menu--main-earcons ()
+  "Set the volume of main-stream earcons played by Omnivox."
+  (interactive)
+  (emacsvox-aural-menu--output-volume 'tts-main-earcon-volume))
+
+(defun emacsvox-aural-menu--notification-speech ()
+  "Set speech volume on the separate Omnivox notification output."
+  (interactive)
+  (emacsvox-aural-menu--output-volume 'tts-notification-speech-volume))
+
+(defun emacsvox-aural-menu--notification-tones ()
+  "Set tone volume on the separate Omnivox notification output."
+  (interactive)
+  (emacsvox-aural-menu--output-volume 'tts-notification-tone-volume))
+
+(defun emacsvox-aural-menu--notification-earcons ()
+  "Set earcon volume on the separate Omnivox notification output."
+  (interactive)
+  (emacsvox-aural-menu--output-volume 'tts-notification-earcon-volume))
+
+(defun emacsvox-aural-menu--adjust-output (delta)
+  "Adjust the selected output control by DELTA percentage points."
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (let* ((object
+          (with-selected-window (emacsvox-transient--navigation-window)
+            (when-let* ((button (button-at (point))))
+              (button-get button 'button-data))))
+         (control (and (eieio-object-p object)
+                       (assq (oref object command) emacsvox-aural-menu--output-controls))))
+    (if control
+        (emacsvox-aural-menu--output-volume (nth 1 control) delta)
+      (emacsvox-transient--submit-text
+       "Not adjustable. Enter activates; left and right change sections."
+       (emacsvox-transient--item-facts 'command 'adjust 'operation-failed)
+       'state-change 'warn-user))))
+
+(defun emacsvox-aural-menu--output-decrease ()
+  "Lower the selected output volume by five percentage points."
+  (interactive)
+  (emacsvox-aural-menu--adjust-output -5))
+
+(defun emacsvox-aural-menu--output-increase ()
+  "Raise the selected output volume by five percentage points."
+  (interactive)
+  (emacsvox-aural-menu--adjust-output 5))
+
+(defun emacsvox-aural-menu--output-bindings (map)
+  "Add shifted-arrow adjustment to MAP only for Sounds and output."
+  (when (and transient-enable-menu-navigation transient--prefix
+             (eq (oref transient--prefix command) 'emacsvox-aural-menu-sounds))
+    (keymap-set map "S-<left>" #'emacsvox-aural-menu--output-decrease)
+    (keymap-set map "S-<right>" #'emacsvox-aural-menu--output-increase))
+  map)
+
+(advice-add 'transient--make-transient-map :filter-return
+            #'emacsvox-aural-menu--output-bindings)
+(define-key transient-predicate-map [emacsvox-aural-menu--output-decrease]
+            #'transient--do-stay)
+(define-key transient-predicate-map [emacsvox-aural-menu--output-increase]
+            #'transient--do-stay)
+
+(defun emacsvox-aural-menu--save-output ()
+  "Keep all five output volumes across restarts."
+  (interactive)
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (dolist (control emacsvox-aural-menu--output-controls)
+    (customize-save-variable (nth 1 control) (default-value (nth 1 control))))
+  (emacsvox-transient--submit-text
+   "Saved output volumes"
+   (emacsvox-transient--menu-facts 'save-output 'operation-completed)
+   'state-change 'save-object))
+
+(defun emacsvox-aural-menu--sound-packs ()
+  "Open the sound-pack browser to preview or choose a pack."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (call-interactively #'emacsvox-aural-list-sound-packs)))
+
+(transient-define-prefix emacsvox-aural-menu-sounds ()
+  "Adjust global output volumes or browse sound packs.
+Shift left and right adjust the selected volume by five percentage points.
+Enter sets an exact value.  Save explicitly to retain volumes across restarts."
+  :refresh-suffixes t
+  ["Main output (global)"
+   ("t" (lambda () (emacsvox-aural-menu--output-label 'emacsvox-aural-menu--main-tones))
+    emacsvox-aural-menu--main-tones :transient t)
+   ("e" (lambda () (emacsvox-aural-menu--output-label 'emacsvox-aural-menu--main-earcons))
+    emacsvox-aural-menu--main-earcons :transient t)]
+  ["Separate notifications (global)"
+   ("s" (lambda () (emacsvox-aural-menu--output-label 'emacsvox-aural-menu--notification-speech))
+    emacsvox-aural-menu--notification-speech :transient t)
+   ("T" (lambda () (emacsvox-aural-menu--output-label 'emacsvox-aural-menu--notification-tones))
+    emacsvox-aural-menu--notification-tones :transient t)
+   ("E" (lambda () (emacsvox-aural-menu--output-label 'emacsvox-aural-menu--notification-earcons))
+    emacsvox-aural-menu--notification-earcons :transient t)]
+  ["Sound packs"
+   ("p" "Browse sound packs" emacsvox-aural-menu--sound-packs :transient transient--do-exit)]
+  ["Save and finish"
+   ("S" "Save output volumes" emacsvox-aural-menu--save-output :transient t)
+   ("q" "Back (keep changes)" transient-quit-one)
+   ("C-q" "Close all menus" transient-quit-all)]
+  (interactive)
+  (let* ((prefix (or transient--prefix transient-current-prefix))
+         (context (if (and prefix
+                           (memq (oref prefix command)
+                                 '(emacsvox-aural-menu emacsvox-aural-menu-sounds)))
+                      (oref prefix scope)
+                    (emacsvox-aural-menu--capture nil))))
+    (emacsvox-aural-menu--source context)
+    (transient-setup 'emacsvox-aural-menu-sounds nil nil :scope context)))
+
 ;;;###autoload
 (transient-define-prefix emacsvox-aural-menu (&optional global)
   "Choose Emacsvox speech settings or inspect feedback for this item.
@@ -280,6 +441,7 @@ The source item is captured on entry; Aural Home offers all other actions."
   ["Emacsvox"
    ("s" (lambda () (concat "Speech settings: " (emacsvox-aural-menu--scope-label)))
     emacsvox-aural-menu-speech)
+   ("o" "Sounds and output (global)" emacsvox-aural-menu-sounds)
    ("x" "Feedback for this item" emacsvox-aural-menu--feedback)
    ("h" "Aural Home (all actions)" emacsvox-aural-menu--home)]
   ["Finish"
