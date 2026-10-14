@@ -769,9 +769,12 @@ verification of subsequently changed code.
   Emacs with installed Transient, with no skips. They cover substring/alias
   matching, mixed case, ambiguity, literal punctuation, completion isolation,
   real keyboard selection, source/scope, cancellation, and return. Incremental
-  compilation and byte-code preflight passed. The manual includes examples;
-  candidate speech and practical discoverability remain open for listening in
-  a fresh normal profile.
+  compilation and byte-code preflight passed. The manual includes examples.
+  Listening accepted on 2026-10-15 in the test Emacs: =pitch= announces its
+  single Indentation pitch and duration result; =cap= supports Up/Down
+  navigation among the three matches and Enter selection. With one match,
+  arrows have no other result to select. This acceptance covers these search
+  interactions; consistency across other searches remains an open decision.
 - 2026-10-15: Listening feedback finds partial-name settings search unclear.
   =C-e H /= uses ordinary completion over fixed labels, then opens and focuses
   a control without activating it. Search now ignores capitalization for both
@@ -781,8 +784,8 @@ verification of subsequently changed code.
   installed Transient, including partial completion, mixed-case acceptance,
   focus, cancellation, return, and no activation or saving on selection.
   Incremental compilation and byte-code preflight passed; the manual explains
-  the two Enter actions. Candidate announcements and discoverability still need
-  listening in a fresh normal profile.
+  the two Enter actions. Later substring-search listening acceptance is recorded
+  above.
 - 2026-10-15: Aural Doctor still checks =C-e H= against =emacsvox-aural=,
   and its binding repair restores that old Home command. Its =h= key also opens
   old Home. An isolated graphical probe with source and compiled settings code
