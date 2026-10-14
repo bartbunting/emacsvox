@@ -624,6 +624,54 @@ options, generated voice-font settings, mixer/soundscape settings, ordinary
 variables, unloaded modules, and separate stores are not a complete part of
 that snapshot. Do not use its row count as a migration-completeness measure.
 
+** Outstanding decision: consistent search matching
+
+Open as of 2026-10-15. Decide whether searches across the settings menus and
+linked editors should share case-insensitive matching anywhere in a label,
+including inside words, or continue to follow their individual rules and your
+Emacs completion configuration. Only the focused settings search has adopted
+the new matching and alias behavior; no wider conversion is agreed here.
+
+Current source inventory:
+
+| Search | Location and implementation | Current matching |
+|--------+-----------------------------+------------------|
+| Find a setting | =C-e H /=; =emacsvox-settings-search= | Case-insensitive substring matching over labels and a small alias catalogue. Results retain canonical labels without duplicates. Matching styles are local to this prompt. |
+| Find a Home action | =C-e H a= or =/= in old Home; =emacsvox-aural-home-search= | Ordinary completion over action names, including collapsed actions. Matching depends on completion configuration; no local substring or case policy. |
+| Find a physical voice | =/= in the physical-voice browser; =emacsvox-aural-voice-workbench-find-voice= | Locally requests substring/basic completion and ignores case. Searches voice names, engine IDs, languages and voice IDs, within the current engine and explicit filters. |
+| Choose a physical voice | Physical voice field in the editor; =emacsvox-aural-voice-editor--pick= | Ordinary completion over voice names and engine/voice identifiers. Matching depends on completion configuration. |
+| Choose a comparison voice | Compare with B and its Search all engines choice; =emacsvox-aural-voice-workbench-compare= | Ordinary completion. The second prompt broadens the inventory beyond current filters; it does not introduce different matching rules. |
+| Find engine controls | =/= or Search controls in native engine controls; =emacsvox-aural-voice-engine-controls-search= | Literal, case-insensitive substring filtering of labels, identifiers and help across collapsed groups. Empty input clears the filter. |
+| Find available voices | =/= in the download catalogue; =omnivox-catalogue-search= | Literal, case-insensitive substring filtering of voice names, language codes and language names within the selected engine. Empty input clears the search and restores the retained browsing scope. |
+
+Other selection prompts also let you type to find a choice. These currently
+use ordinary completion rather than a shared Emacsvox matching policy:
+
+- Integration selection at =C-e H j a=, implemented by
+  =emacsvox-settings-integrations--all=.
+- Palette/profile and sound-pack choices in
+  [[file:../lisp/emacsvox-aural-voice-palettes.el][palette management]], [[file:../lisp/emacsvox-aural-profiles.el][profiles]], and
+  [[file:../lisp/emacsvox-aural-sound-packs.el][sound-pack management]].
+- Named voices, cues, tones, criteria and other rule choices in the
+  [[file:../lisp/emacsvox-aural-editor.el][rule editor]] and [[file:../lisp/emacsvox-aural-change-feedback.el][guided feedback editor]].
+- Retained-draft choices in [[file:../lisp/emacsvox-aural-home.el][Home]] and draft/review choices in
+  [[file:../lisp/emacsvox-aural-voice-bulk.el][bulk voice editing]].
+
+Keep attribute filters distinct from free-text searches. The voice workbench's
+=F= selects engine, language, gender, quality, health or availability values;
+its =Q= selects a predefined view. The overrides view filters by scope, module
+and semantic role. Their choice prompts use completion, but the resulting
+filters select attributes rather than arbitrary substrings of row text.
+
+Before implementation, decide which searches and selection prompts share the
+policy, which retain configured completion styles, and where aliases are useful.
+Also settle ambiguity and selection behavior: finding/focusing a setting,
+choosing a voice, running a Home action, and filtering a list have different
+effects. Consistent matching must not silently make those effects identical.
+Then add focused regression coverage and listening tasks for candidate speech,
+partial-word matching, cancellation, scope and return. This inventory records
+source behavior; it is not listening acceptance of all these paths.
+
 ** Next proposed slices
 
 1. Diagnostics and recovery discovery. Link Aural Doctor, spatial capabilities,
