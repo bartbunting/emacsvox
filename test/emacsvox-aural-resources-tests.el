@@ -296,6 +296,7 @@
     (should (member "accent" (emacsvox-aural-resource-pack-candidates 'sound)))
     (dolist (entry '((button "accent" neutral)
                      (section "accent" neutral)
+                     (repeat-start "accent" neutral)
                      (select-object "3d" pre-spatialized)
                      (shutdown "3d" pre-spatialized)))
       (let ((resource (emacsvox-aural-resolve-cue (car entry) 'accent)))

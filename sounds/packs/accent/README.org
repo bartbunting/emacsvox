@@ -3,9 +3,21 @@
 Accent, customised by Bart Bunting, builds on the =3d= pack inherited from
 Emacspeak, whose principal original author is T. V. Raman.
 
-This directory contains Bart's 17 replacement recordings. The other 38 cues
+This directory contains 18 replacement recordings. The other 37 cues
 come from the bundled =3d= pack through inheritance. The replacements are
 mono; inherited recordings retain the 3d pack's spatial metadata.
+
+The =repeat-start= cue uses =mechanical-clack-01.ogg= for menu wrapping.
+
+The =recordings/= directory preserves four original sound files:
+
+- =mechanical-clack-01.ogg= supplies =repeat-start=.
+- =soft-impact-01.ogg= supplies =section=.
+- =double-knock-01.ogg= and =soft-impact-02.ogg= are available for future cue
+  assignments.
+
+Only the files directly in this pack directory are assigned to cues; the
+original recordings are not separate entries in the cue picker.
 
 Use =M-x emacsvox-sounds-select-theme RET accent RET= to select this pack.
 You can preview its cues in =M-x emacsvox-aural-list-sound-packs=.
