@@ -110,6 +110,41 @@ Press ~p~ there to browse sound packs. In the browser, ~q~ returns to /Sounds
 and output/ with the same settings scope. Another ~q~ returns to the main
 menu. Opening the browser directly keeps its usual quit destination.
 
+Press ~C-e H v~ for /Voices and engines/. Press ~b~ to browse engines and
+their voices, ~p~ for voice palettes, or ~w~ to resume the Voice Workbench.
+Browser ~q~ commands unwind their child views, then return to this menu with
+the originating item selected. Workbench filters, selection, and staged edits
+are retained; returning still announces any unsaved engine-policy changes.
+Opening a browser directly keeps its ordinary return destination.
+
+Engine preference is global. Press ~e~ to choose a preferred engine for this
+session, ~S~ to choose and save one, or ~r~ to restore the saved or initial
+engine order. These actions retain the existing engine availability and
+unsaved-policy checks. The speech-settings scope does not change their save
+behaviour.
+
+For focused named-voice tuning, open voice palettes with ~C-e H v p~, select
+a palette, press ~e~, choose a voice, then press ~m~ in its shared editor.
+The menu edits the same retained draft as the full editor. Up/down selects
+controls; plain left/right changes sections. Shift-left/right adjusts relative
+rate, pitch, pitch range, or gain by one control unit. ~RET~ enters an exact
+value. ~d~ restores the selected adjustment to its adapter default, or asks
+which adjustment to reset. Zero is an explicit value, not a reset.
+
+Press ~P~ to preview the edited base voice, ~B~ to compare original and edited
+versions with the same sample, ~S~ to stop, or ~T~ to change the sample text.
+Previews are private and exclude contextual presentation rules. Adjustments
+announce their values without automatic samples in this menu; the full
+editor's automatic-sample preference is retained. ~u~ undoes the last draft
+change. Physical experiments, individual fallback adjustments, and engine
+controls remain available in the full editor.
+
+Press ~w~ to save and apply, or ~c~ to save to the collection without selecting
+the palette. The existing destination prompts, inheritance rules, and save
+recovery apply. ~q~ stops the sample and returns to the editor with the draft
+intact. Leaving the editor still offers its usual keep, discard, or continue
+choices for unsaved changes.
+
 The menu captures the source item for ~x~ and ~h~. In Feedback Details,
 ~q~ returns to the menu with the same item and settings scope; another ~q~
 closes the menu. Opening Feedback Details directly keeps its usual return

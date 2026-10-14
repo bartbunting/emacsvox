@@ -33,6 +33,29 @@ personal configuration changes, or publication.
   restored the saved Omnivox rate and named punctuation profile. Listening
   acceptance remains open. Documentation and its review gate passed.
   Commits: =abd1cc504= (controls) and =b0005102f= (default saving).
+- Accepted and committed on 2026-10-14: Voices and engines under =C-e H v=.
+  Links to
+  engine/voice browsing, palettes, and the existing workbench retain their
+  menu return. Session preference, explicit saved preference, and restoring
+  saved or initial engine order use the existing engine commands. Returning
+  from the workbench retains drafts and announces unsaved engine policy.
+  Fifty-one focused checks passed from source and compiled code in fresh
+  graphical Emacs; compiled checks covered bundled and installed Transient.
+  Incremental compilation and byte-code preflight passed.
+  Commit: =f14750661=. The manual and generated references cover this workflow.
+- Implemented and committed: =m= in a named voice's shared editor opens
+  focused tuning.
+  Relative rate, pitch, pitch range, and gain use shifted-arrow adjustments
+  and exact entry. Private play/compare, sample text, undo, adapter default,
+  save/apply, and save-to-collection reuse the retained editor draft. This menu
+  previews explicitly without changing the full editor's automatic-sample
+  preference. Returning to the editor keeps the draft and stops its sample.
+  Fifty-seven tuner/editor checks passed from source and compiled code in
+  fresh graphical Emacs, including both bundled and installed Transient.
+  Incremental compilation, byte-code preflight, and header checks passed.
+  Commit: =10d636b17=. The manual and generated references cover this workflow;
+  the documentation review gate passed on 2026-10-14. A complete tuner
+  listening-and-restart task remains open.
 - Testing route: a new normal Emacsvox session loading current byte-code.
 
 * Interaction contract
@@ -79,11 +102,14 @@ agree. Existing passing checks remain reusable for unchanged code.
 
 ** 2. Complete the first voice workflow
 
-- [ ] Link voice/engine browsing, preferred engine, palettes, and workbench.
+- [X] Accept the prototype linking voice/engine browsing, preferred engine,
+  palettes, and workbench. Accepted on 2026-10-14.
 - [ ] Preserve selection and filters across audition, editing, and return.
-- [ ] Prototype a focused tuner for one named voice using common controls.
-- [ ] Support edited preview and original-versus-edited comparison with the
+- [ ] Listen to the focused named-voice tuner prototype, including bounds,
+  exact entry, adapter default, and manual preview.
+- [X] Support edited preview and original-versus-edited comparison with the
   same sample text, followed by explicit save/apply or draft retention.
+  Implemented and checked automatically; the listening task above remains open.
 
 Done when a voice can be found, auditioned, adjusted, compared, saved, and
 revisited without losing the source context or an unfinished experiment.
@@ -321,8 +347,15 @@ verification of subsequently changed code.
 
 ** Findings queue
 
+- 2026-10-14: The full voice editor defaults to automatic samples. The focused
+  tuner starts with explicit previews while preserving that editor preference.
+- 2026-10-14: Keep physical experiments and per-fallback/native controls in
+  the full editor for now. The first focused tuner owns shared named-voice
+  adjustments only and rejects a changed editing scope.
+
 - 2026-10-14: Returning from the voice workbench to a suspended menu must
-  still announce staged engine-policy changes. Cover this in milestone 2.
+  still announce staged engine-policy changes. Implemented in the milestone 2
+  prototype; verify the warning during listening.
 
 - 2026-10-14: Caps beep and all-caps beep need distinct discoverable entries.
   Confirmed existing cue resources; assigned to milestone 3 above.

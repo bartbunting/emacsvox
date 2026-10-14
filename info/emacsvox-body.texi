@@ -2975,6 +2975,41 @@ Press @kbd{p} there to browse sound packs. In the browser@comma{} @kbd{q} return
 and output} with the same settings scope. Another @kbd{q} returns to the main
 menu. Opening the browser directly keeps its usual quit destination.
 
+Press @kbd{C-e H v} for @emph{Voices and engines}. Press @kbd{b} to browse engines and
+their voices@comma{} @kbd{p} for voice palettes@comma{} or @kbd{w} to resume the Voice Workbench.
+Browser @kbd{q} commands unwind their child views@comma{} then return to this menu with
+the originating item selected. Workbench filters@comma{} selection@comma{} and staged edits
+are retained; returning still announces any unsaved engine-policy changes.
+Opening a browser directly keeps its ordinary return destination.
+
+Engine preference is global. Press @kbd{e} to choose a preferred engine for this
+session@comma{} @kbd{S} to choose and save one@comma{} or @kbd{r} to restore the saved or initial
+engine order. These actions retain the existing engine availability and
+unsaved-policy checks. The speech-settings scope does not change their save
+behaviour.
+
+For focused named-voice tuning@comma{} open voice palettes with @kbd{C-e H v p}@comma{} select
+a palette@comma{} press @kbd{e}@comma{} choose a voice@comma{} then press @kbd{m} in its shared editor.
+The menu edits the same retained draft as the full editor. Up/down selects
+controls; plain left/right changes sections. Shift-left/right adjusts relative
+rate@comma{} pitch@comma{} pitch range@comma{} or gain by one control unit. @kbd{@key{RET}} enters an exact
+value. @kbd{d} restores the selected adjustment to its adapter default@comma{} or asks
+which adjustment to reset. Zero is an explicit value@comma{} not a reset.
+
+Press @kbd{P} to preview the edited base voice@comma{} @kbd{B} to compare original and edited
+versions with the same sample@comma{} @kbd{S} to stop@comma{} or @kbd{T} to change the sample text.
+Previews are private and exclude contextual presentation rules. Adjustments
+announce their values without automatic samples in this menu; the full
+editor's automatic-sample preference is retained. @kbd{u} undoes the last draft
+change. Physical experiments@comma{} individual fallback adjustments@comma{} and engine
+controls remain available in the full editor.
+
+Press @kbd{w} to save and apply@comma{} or @kbd{c} to save to the collection without selecting
+the palette. The existing destination prompts@comma{} inheritance rules@comma{} and save
+recovery apply. @kbd{q} stops the sample and returns to the editor with the draft
+intact. Leaving the editor still offers its usual keep@comma{} discard@comma{} or continue
+choices for unsaved changes.
+
 The menu captures the source item for @kbd{x} and @kbd{h}. In Feedback Details@comma{}
 @kbd{q} returns to the menu with the same item and settings scope; another @kbd{q}
 closes the menu. Opening Feedback Details directly keeps its usual return

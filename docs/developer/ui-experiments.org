@@ -371,3 +371,36 @@ Emacs using bundled and installed Transient. A separate Emacs startup loaded
 the saved rate and named punctuation profile before adapter setup and verified
 that both survived initialization. These checks capture speech and do not
 establish listening acceptance in a normal profile.
+
+* Voice browsing and shared tuning
+
+=C-e H v= links the existing engine/voice browser, palette manager, and Voice
+Workbench. Browser exits restore the suspended menu and focused suffix after
+unwinding child views. Direct entry clears the menu continuation. Shared
+interface dismissal preserves staged-policy warnings even when the return
+continuation announces the destination. Engine preference has separate
+session, save, and restore actions, independent of the speech-settings scope.
+
+The named-voice editor's =m= command opens a focused shared-tuning menu.
+[[file:../../lisp/emacsvox-aural-voice-menu.el][emacsvox-aural-voice-menu.el]] owns menu focus and concise adjustment feedback;
+the common editor still owns the draft, private preview, comparison, and save
+coordinator. Every operation checks the captured editor and context identity
+and rejects a changed fallback or engine-controls scope. Relative rate, pitch,
+pitch range, and gain use the existing field metadata and validation.
+
+Shifted arrows adjust and Enter reads an exact value. Plain arrows retain
+section navigation. Pure label reads leave menu rendering untouched; actions
+preserve the editor field and restore popup focus after minibuffer prompts.
+The menu suppresses automatic samples only during its own adjustment, then
+restores the editor preference. Explicit preview and comparison use the same
+private paths and sample text as the editor. Leaving the menu stops its owned
+sample, removes the temporary exit hook, and retains the draft.
+
+The browser and shared-interface checks passed 51 tests; the tuner and editor
+checks passed 57 tests. Both sets used current compiled code in fresh graphical
+Emacs 31.0.90 with bundled and installed Transient. They cover return paths,
+retained filters and drafts, explicit saving, adjustment bounds, cancelled
+input, changed-scope rejection, comparison, and preview stopping. Browser
+interaction was accepted on 2026-10-14. The automated tuner checks capture
+speech and preview requests; a complete listening and restart task remains
+open in the [[file:../ui-settings-plan.org][living plan]].

@@ -3023,6 +3023,44 @@ to _Sounds and output_ with the same settings scope.  Another ‘q’
 returns to the main menu.  Opening the browser directly keeps its usual
 quit destination.
 
+   Press ‘C-e H v’ for _Voices and engines_.  Press ‘b’ to browse
+engines and their voices, ‘p’ for voice palettes, or ‘w’ to resume the
+Voice Workbench.  Browser ‘q’ commands unwind their child views, then
+return to this menu with the originating item selected.  Workbench
+filters, selection, and staged edits are retained; returning still
+announces any unsaved engine-policy changes.  Opening a browser directly
+keeps its ordinary return destination.
+
+   Engine preference is global.  Press ‘e’ to choose a preferred engine
+for this session, ‘S’ to choose and save one, or ‘r’ to restore the
+saved or initial engine order.  These actions retain the existing engine
+availability and unsaved-policy checks.  The speech-settings scope does
+not change their save behaviour.
+
+   For focused named-voice tuning, open voice palettes with ‘C-e H v p’,
+select a palette, press ‘e’, choose a voice, then press ‘m’ in its
+shared editor.  The menu edits the same retained draft as the full
+editor.  Up/down selects controls; plain left/right changes sections.
+Shift-left/right adjusts relative rate, pitch, pitch range, or gain by
+one control unit.  ‘<RET>’ enters an exact value.  ‘d’ restores the
+selected adjustment to its adapter default, or asks which adjustment to
+reset.  Zero is an explicit value, not a reset.
+
+   Press ‘P’ to preview the edited base voice, ‘B’ to compare original
+and edited versions with the same sample, ‘S’ to stop, or ‘T’ to change
+the sample text.  Previews are private and exclude contextual
+presentation rules.  Adjustments announce their values without automatic
+samples in this menu; the full editor's automatic-sample preference is
+retained.  ‘u’ undoes the last draft change.  Physical experiments,
+individual fallback adjustments, and engine controls remain available in
+the full editor.
+
+   Press ‘w’ to save and apply, or ‘c’ to save to the collection without
+selecting the palette.  The existing destination prompts, inheritance
+rules, and save recovery apply.  ‘q’ stops the sample and returns to the
+editor with the draft intact.  Leaving the editor still offers its usual
+keep, discard, or continue choices for unsaved changes.
+
    The menu captures the source item for ‘x’ and ‘h’.  In Feedback
 Details, ‘q’ returns to the menu with the same item and settings scope;
 another ‘q’ closes the menu.  Opening Feedback Details directly keeps
@@ -5900,197 +5938,3 @@ other packages using Transient.
    Navigation only selects an option.  Activating an action can perform
 a Git operation, while activating a switch changes an argument for the
 next action.  Listen to the description before activating it.
-
-
-File: emacsvox.info,  Node: Desktop Management,  Next: Personal Information Management,  Prev: Development Environment,  Up: Emacs Packages
-
-8.8 Desktop Management
-======================
-
-Emacs buffers, windows, frames, and tabs provide the workspace.  Their
-standard commands receive speech feedback, and the active help describes
-any additional mode-specific bindings.  Use ‘C-x b’ to select a buffer
-and ‘C-h m’ in specialized buffer-list or tab interfaces to learn their
-local commands.
-
-
-File: emacsvox.info,  Node: Personal Information Management,  Next: Desktop Applications,  Prev: Desktop Management,  Up: Emacs Packages
-
-8.9 Personal Information Management
-===================================
-
-Calendar, Org, and related packages define their data formats and
-workflows.  Emacsvox integrations present navigation, state changes, and
-structured content when those modes are active.  Begin with the
-application's own manual and live mode help, then consult its matching
-Emacsvox module in the generated reference.
-
-
-File: emacsvox.info,  Node: Desktop Applications,  Prev: Personal Information Management,  Up: Emacs Packages
-
-8.10 Desktop Applications
-=========================
-
-8.10.1 Terminal Applications
-----------------------------
-
-For a new full-terminal workflow, use *note EAT Terminal Access: EAT
-Terminal Access.  When a built-in terminal with no additional package is
-preferable, use *note Running Terminal Based Applications: Running
-Terminal Based Applications.  For ordinary line-oriented shell commands,
-‘M-x shell’ is usually the simplest route.
-
-   In WSL Shell buffers, command-name completion skips Windows drive
-directories by default.  Scanning large directories such as
-‘C:\Windows\System32’ can otherwise pause Emacs for many seconds.
-Windows programs still run by name, and explicit filename completion,
-including paths under ‘/mnt/c/’, remains available.  To include Windows
-command names in completion again, use ‘M-x customize-option <RET>
-emacsvox-shell-complete-windows-commands <RET>’ and enable the option.
-This setting leaves native Windows and remote Shell buffers unchanged.
-
-8.10.2 Forms Mode
------------------
-
-The built-in Forms library presents records from a structured text file
-one at a time.  Emacsvox speaks field values, record movement, searches,
-and status changes while Forms mode is active.  Forms requires a format
-specification; see *note Forms Mode: (emacs)Forms Mode. in _The GNU
-Emacs Manual_ for setup and operation, and *note emacsvox-forms:
-(emacsvox-reference)emacsvox-forms. in _Emacsvox Reference Manual_ for
-the speech integration.
-
-8.10.3 OCR And PDF-To-Text With PaddleOCR
------------------------------------------
-
-Emacsvox uses PaddleOCR PP-StructureV3 to turn an image or PDF into
-UTF-8 Markdown text.  PP-StructureV3 recovers document reading order and
-represents recognized tables as Markdown or embedded HTML, so keep the
-‘.md’ output when table structure matters.  Markdown is plain text and
-can instead be named ‘.txt’ when its lightweight markup is acceptable.
-
-   The supported baseline below is CPU-only x86-64 WSL2 or GNU/Linux.
-Paddle's Linux wheel requires an AVX-capable x86-64 processor and Python
-3.9 through 3.13.  In particular, do not use Ubuntu 26.04's Python 3.14
-for this environment.  The commands install a separate Python 3.13 so
-that they do not alter Emacsvox, system Python, or another project's
-packages.  The initial installation uses about 1.7 GB.  The first
-complete PP-StructureV3 run downloads approximately another 1.8 GB of
-models; later runs reuse that cache.
-
-   Follow the official uv installation guide
-(https://docs.astral.sh/uv/getting-started/installation/) if command
-‘uv’ is not already available, then create the isolated environment:
-
-     uv python install 3.13
-     uv venv --python 3.13 --seed \
-       "$HOME/.local/share/emacsvox/paddleocr-venv"
-
-   Install the tested CPU runtime and the PaddleOCR ‘all’ variant.  The
-‘all’ extra includes the document-parsing dependencies needed by
-PP-StructureV3, including table and formula support.
-
-     "$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
-       paddlepaddle==3.3.0 \
-       -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
-     "$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
-       'paddleocr[all]==3.7.0'
-
-   From the Emacsvox checkout, verify that the launcher finds both
-packages:
-
-     ./bin/emacsvox-paddleocr --check
-
-   With the Debian package, use the installed launcher instead:
-
-     /usr/share/emacsvox/bin/emacsvox-paddleocr --check
-
-   Use that installed path in the image-recognition examples below as
-well.
-
-   The expected line names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the
-CPU device.  A warning that ‘ccache’ is absent is harmless for normal
-inference.  oneDNN, formerly called MKL-DNN, is Paddle's optional
-optimized CPU execution backend; it is not an OCR model.  The launcher
-deliberately leaves it disabled because the stable PaddlePaddle 3.3.0
-CPU runtime has an upstream PIR-to-oneDNN conversion defect
-(https://github.com/PaddlePaddle/Paddle/issues/77340).  In the tested
-pipeline the defect aborts initialization when PP-StructureV3 reaches
-its formula model, but the model itself is not at fault.  With oneDNN
-disabled, Paddle uses its standard CPU kernels and every recognition
-feature remains enabled, including tables and formulas.  The trade-off
-is speed, not recognition capability.
-
-   To recognize one image at the shell, redirect the clean Markdown
-result to a file.  Paddle downloads its models on the first real command
-and writes progress messages to standard error without mixing them into
-the recognized text.
-
-     ./bin/emacsvox-paddleocr "/path/to/page.png" > page.md
-
-   PDF input uses the same command.  Paddle renders and recognizes every
-page, then joins the pages in reading order:
-
-     ./bin/emacsvox-paddleocr "/path/to/scanned-document.pdf" > document.md
-
-   This route is intended for scanned or image-only PDFs.  For a
-born-digital PDF that already has a trustworthy text layer, extracting
-that layer is faster and usually more exact than OCR.  OCR quality still
-depends on scan quality; 300-DPI, upright, high-contrast source pages
-are a good starting point.  A large PDF can take substantial CPU time
-because table, layout, formula, orientation, and unwarping models are
-all active by default.
-
-   Within Emacsvox, press ‘C-e C-o’ or run ‘M-x emacsvox-ocr <RET>’.  In
-the OCR buffer:
-
-   • Press ‘o’, choose an image or PDF, and wait for the completion cue.
-     OCR runs asynchronously, and the result appears as a new page in
-     the buffer.
-   • Press ‘<SPC>’ to read the current result, ‘s’ to save it, or ‘w’ to
-     save the complete OCR buffer.  Press ‘[’ and ‘]’ to move between
-     results.
-   • Press ‘d’ to open the per-user OCR directory.  Engine progress and
-     errors are kept separately in buffer ‘*Emacsvox OCR Errors*’.
-
-   For ordinary use inside Emacs, customize OCR in Emacs rather than
-setting shell environment variables.  Run ‘M-x customize-group <RET>
-emacsvox-ocr <RET>’.  The bundled adapter has typed options for its
-normal choices:
-
-   • ‘emacsvox-ocr-paddleocr-python’ selects an exact Python executable
-     when the default isolated environment is not appropriate.  Leave it
-     at ‘nil’ for the installation path used above.
-   • ‘emacsvox-ocr-paddleocr-language’ and
-     ‘emacsvox-ocr-paddleocr-device’ select the recognition language and
-     Paddle device.
-   • ‘emacsvox-ocr-paddleocr-use-table-recognition’ and
-     ‘emacsvox-ocr-paddleocr-use-formula-recognition’ control the
-     structural models.  Both are enabled by default.
-   • ‘emacsvox-ocr-paddleocr-use-document-orientation’,
-     ‘emacsvox-ocr-paddleocr-use-document-unwarping’, and
-     ‘emacsvox-ocr-paddleocr-use-text-line-orientation’ control image
-     correction.
-   • ‘emacsvox-ocr-paddleocr-enable-mkldnn’ enables oneDNN/MKL-DNN
-     acceleration.  It does not enable or disable any OCR model.  Keep
-     it disabled for the tested PaddlePaddle 3.3.0 CPU setup on WSL.
-
-   The PaddleOCR options apply only while ‘emacsvox-ocr-engine’ names
-the bundled adapter.  Selecting a different engine preserves the generic
-engine interface.  ‘emacsvox-ocr-engine-options’ remains an advanced
-list of literal arguments; for the bundled adapter it follows, and can
-override, the typed options.
-
-   The environment variables are retained for direct shell or automation
-use of ‘bin/emacsvox-paddleocr’, not as the primary Emacs configuration
-interface.  ‘EMACSVOX_PADDLEOCR_VENV’ changes the launcher's environment
-directory, ‘EMACSVOX_PADDLEOCR_PYTHON’ selects an exact Python
-executable, and ‘EMACSVOX_PADDLEOCR_LANGUAGE’ or
-‘EMACSVOX_PADDLEOCR_DEVICE’ changes the standalone defaults.  See
-‘./bin/emacsvox-paddleocr --help’ for command-line switches.
-
-   The direct SANE scanner-acquisition commands are retained for
-compatibility but are not part of this tested WSL baseline.  It is
-usually simpler to scan with a Windows application and choose the
-resulting image or PDF with ‘o’.  Scanner configuration is independent
-of PaddleOCR.
