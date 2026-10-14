@@ -708,6 +708,18 @@ verification of subsequently changed code.
 
 ** Findings queue
 
+- 2026-10-15: Listening feedback finds partial-name settings search unclear.
+  =C-e H /= uses ordinary completion over fixed labels, then opens and focuses
+  a control without activating it. Existing regression tests enter complete
+  labels; they do not establish discoverability or spoken candidate selection
+  for =cap=. Check case handling, candidate announcements, and the distinction
+  between choosing a destination and activating its control before acceptance.
+- 2026-10-15: Aural Doctor still checks =C-e H= against =emacsvox-aural=,
+  and its binding repair restores that old Home command. Its =h= key also opens
+  old Home. Doctor itself opens =*Aural Doctor*=; the reported route back to
+  old Home is not yet reproduced. Correct the stale check/repair in the
+  diagnostics slice and cover it with regression tests before offering repair
+  from the new menu. Do not infer that merely opening Doctor changes bindings.
 - 2026-10-14: Arkadiusz's navigation feedback motivates an additional
   =by-movement= announcement option: section arrows speak only the destination
   section, while item arrows speak only the item, including continuous section
