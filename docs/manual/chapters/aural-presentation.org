@@ -98,6 +98,28 @@ from current-buffer scope promotes those displayed values to defaults.
 Mode-specific punctuation policies and explicit buffer overrides still take
 precedence over the saved punctuation default.
 
+Press ~C-e H s c~ for /Capitalization/. Toggle indication with ~i~, choose
+spoken, tone, combined, personal-rule, or no presentation with ~p~, and toggle
+camel-case splitting independently with ~c~. These controls share the
+buffer/global scope selected by ~g~. Space reads a short sample using the
+displayed settings. ~S~ saves those three reading settings as startup defaults;
+buffer overrides still apply.
+
+Press ~l~ for the capital-letter beep or ~a~ for the all-caps beep. Each editor
+keeps a separate global draft. Select pitch or duration, use Shift-left/right
+to adjust by 25 Hz or 5 milliseconds, or press ~RET~ for an exact value.
+Space previews just the beep; ~s~ stops it. Adjusting and previewing do not
+change your reading settings or enable capitalization indication.
+
+In a beep editor, ~S~ saves that cue globally for tone and combined
+presentations. ~r~ puts the bundled cue into the draft; save to remove this
+menu's override. ~D~ discards edits and rereads the saved cue. ~q~ returns and
+~C-q~ closes the menus, retaining unsaved drafts for this Emacs session.
+Saving preserves unrelated personal rules and spoken labels. Other
+presentation rules may override the saved cue. Finish any unsaved personal-rule
+editor before saving a cue; if its saved rules changed elsewhere, discard the
+draft and reopen it.
+
 Press ~C-e H o~ for /Sounds and output/. Main tones and earcons, plus separate
 notification speech, tones, and earcons, each have a global volume control.
 Shift-left/right adjusts the selected volume by five percentage points;

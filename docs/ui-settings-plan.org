@@ -56,6 +56,18 @@ personal configuration changes, or publication.
   Commit: =10d636b17=. The manual and generated references cover this workflow;
   the documentation review gate passed on 2026-10-14. A complete tuner
   listening-and-restart task remains open.
+- Accepted and committed on 2026-10-14: =C-e H s c= opens Capitalization. Indication,
+  presentation, and camel-case splitting share the buffer/global scope. Separate
+  capital-letter and all-caps beep menus retain global preview drafts with
+  shifted-arrow pitch/duration adjustment, exact entry, preview/stop, discard,
+  and explicit save. Cue saves use personal rules; restoring a bundled cue
+  removes only this menu's override. Reading defaults save separately through
+  Customize. Thirty-seven focused checks passed from source and compiled code
+  in fresh graphical Emacs; compiled checks covered bundled and installed
+  Transient. Saved reading defaults also survived a separate Emacs startup.
+  Incremental compilation, byte-code preflight, and header checks passed.
+  Listening accepted; the manual and generated references cover these controls.
+  The documentation review gate passed. Controls commit: =a0dd8e350=.
 - Testing route: a new normal Emacsvox session loading current byte-code.
 
 * Interaction contract
@@ -116,7 +128,9 @@ revisited without losing the source context or an unfinished experiment.
 
 ** 3. Cover everyday settings and cues
 
-- [ ] Add Capitalization, including separate capital-letter and all-caps cues.
+- [X] Accept Capitalization and its separate capital-letter and all-caps cue
+  editors. Accepted on 2026-10-14; save/reload and bundled reset also have
+  automated coverage.
 - [ ] Add typing echo, phonetic feedback, point indication, and spoken detail.
 - [ ] Complete indentation and line/boundary cue controls from the inventory.
 - [ ] Extend Sounds and output with notification routing/history and spatial
@@ -175,21 +189,26 @@ through an existing rule rather than a dedicated option.
 Rate, level/profile selection, policy reset, and saving are current prototypes.
 The initial indentation path is accepted; its remaining controls need inventory.
 
-*** Capitalization: explicit next everyday-settings slice
+*** Capitalization: accepted on 2026-10-14
 
-- [ ] Expose indication on/off through the existing =tts-caps= behaviour.
-- [ ] Expose spoken, tone, spoken-and-tone, custom-rule, and none presentations.
-- [ ] Add a named Capital-letter beep entry with preview and pitch/duration
+- [X] Expose indication on/off through the existing =tts-caps= behaviour.
+- [X] Expose spoken, tone, spoken-and-tone, custom-rule, and none presentations.
+- [X] Add a named Capital-letter beep entry with preview and pitch/duration
   tuning through the existing cue/rule model.
-- [ ] Add a separate All-caps beep entry with its own preview and tuning.
-- [ ] Keep camel-case splitting independent of capitalization indication.
-- [ ] Preview representative text such as "Capital camelCase NASA".
-- [ ] Explain scope, persistence, cue overrides, and restoring the original cue.
+- [X] Add a separate All-caps beep entry with its own preview and tuning.
+- [X] Keep camel-case splitting independent of capitalization indication.
+- [X] Preview representative text such as "Capital camelCase NASA".
+- [X] Label scope, separate saving, preview drafts, and restoring the bundled cue.
+  The manual covers the reading settings and separate cue drafts.
 
 Confirmed resources: =capital-letter-tone= and =capital-all-caps-tone= in
 [[file:../lisp/emacsvox-aural-resources.el][aural resources]], with distinct capitalization rules in
-[[file:../lisp/emacsvox-aural-schemes.el][aural schemes]]. Separate tuning is proposed UI work; the distinct cues
-already exist. Do not confuse a cue adjustment with shared main-tone volume.
+[[file:../lisp/emacsvox-aural-schemes.el][aural schemes]]. Cue tuning uses two personal override rules per kind, one
+for tone presentation and one for spoken-and-tone. It preserves spoken labels
+and unrelated rules. Other presentation rules may override these changes.
+Drafts persist for this session; adjusting or closing the menu writes nothing.
+Conflicting saved changes or a dirty personal-rule editor block cue saving.
+Do not confuse a cue adjustment with shared main-tone volume.
 
 ** Typing and interaction
 
