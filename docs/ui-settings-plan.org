@@ -547,3 +547,12 @@ verification of subsequently changed code.
   byte-code preflight, generated documentation review, and header checks passed.
   All five slices are implemented; listening acceptance, real notification
   routing after restart, and real host pronunciation save/restart remain open.
+
+** Six workflow slices, 2026-10-15
+
+- Contextual feedback is linked at =C-e H f=: effective explanations, guided
+  voice/cue/tone changes, voice mapping, scoped cue remapping, and recent frozen
+  feedback. Existing preview/apply/save and draft semantics remain in their
+  editors. Graphical regression verifies draft preview without persistence,
+  exact menu return, and stale-source refusal. Fifty-seven source checks passed.
+  Listening acceptance remains open.

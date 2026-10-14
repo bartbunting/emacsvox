@@ -31,7 +31,8 @@
 (declare-function emacsvox-aural-home-search "emacsvox-aural-home" ())
 
 (defconst emacsvox-settings--destinations
-  '(("Speech rate" emacsvox-aural-menu emacsvox-aural-menu-speech "r")
+  '(("Edit current and recent feedback" emacsvox-settings-workflows emacsvox-settings-feedback "c")
+    ("Speech rate" emacsvox-aural-menu emacsvox-aural-menu-speech "r")
     ("Punctuation levels and profiles" emacsvox-aural-menu emacsvox-aural-menu-punctuation "p")
     ("Punctuation pronunciations" emacsvox-aural-menu emacsvox-aural-menu-punctuation "e")
     ("Indentation presentation" emacsvox-indentation emacsvox-indentation "p")
@@ -89,7 +90,7 @@
   (emacsvox-aural-home-search))
 (defun emacsvox-settings--speech ()
   "Open speech settings for this buffer." (interactive)
-  (emacsvox-settings--open (car emacsvox-settings--destinations)))
+  (emacsvox-settings--open (assoc "Speech rate" emacsvox-settings--destinations)))
 (defun emacsvox-settings--indentation ()
   "Open indentation for this buffer." (interactive)
   (emacsvox-settings--open (assoc "Indentation presentation" emacsvox-settings--destinations)))

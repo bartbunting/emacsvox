@@ -419,7 +419,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1649 commands and 233 options.
+   This chapter documents a total of 1650 commands and 233 options.
 
 * Menu:
 
@@ -650,6 +650,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-sdcv:: Speech-enable SDCV.
 * emacsvox-ses:: Speech-enable ses.
 * emacsvox-settings:: Settings discovery.
+* emacsvox-settings-workflows:: Linked editing workflows.
 * emacsvox-setup:: Setup Emacsvox -.
 * emacsvox-sgml-mode:: Speech enable SGML.
 * emacsvox-sh-script:: Speech enable script.

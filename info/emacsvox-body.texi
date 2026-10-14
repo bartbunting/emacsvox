@@ -2969,6 +2969,15 @@ Customize normally and returns to the menu; use Customize's own Apply and Save
 commands. Integration-specific controls remain accessible through existing
 commands and advanced settings while their focused menus are developed.
 
+Press @kbd{C-e H f} for current and recent feedback editing. @kbd{x} explains the
+captured item's effective presentation; @kbd{c} opens a guided voice@comma{} cue@comma{} or tone
+draft@comma{} @kbd{v} prepares a voice mapping@comma{} and @kbd{e} prepares a cue remap. The existing
+editors retain their preview@comma{} matching criteria@comma{} scope@comma{} and explicit Apply/Save
+steps. @kbd{h} opens recent feedback@comma{} where changes use the selected frozen record.
+Returning from an editor restores its menu entry. Guided drafts remain available
+through unfinished drafts; the rule editor retains its existing discard prompt
+when you leave a modified rule list. Replaced source items are rejected.
+
 Speech settings opens for the current buffer. Press @kbd{g} there to switch to
 global defaults@comma{} or start with @kbd{C-u C-e H}. Indentation shares this scope with
 its parent menus@comma{} including changes made with @kbd{g} inside Indentation.
