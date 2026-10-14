@@ -90,6 +90,15 @@ move between sections in every style.  This setting applies globally."
                  (const :tag "Stop at section edges" section-stop))
   :group 'emacsvox)
 
+(defcustom emacsvox-transient-section-announcement-order 'item-first
+  "Order of the item and section announcement when entering a section.
+Item first speaks the item, then the section name and position.  Section
+first speaks the section name and position before the item.  This setting
+applies globally and does not affect movement within a section."
+  :type '(choice (const :tag "Item first" item-first)
+                 (const :tag "Section first" section-first))
+  :group 'emacsvox)
+
 ;;; Map Faces:
 
 (defconst emacsvox-transient--face-voice-map
@@ -795,9 +804,10 @@ When non-nil, preserve compatibility ICON."
     'personality 'voice-annotate)))
 
 (defun emacsvox-transient--move-section (backward)
-  "Move to and present the next section, or previous when BACKWARD."
+  "Present the first item in the next section, or previous when BACKWARD."
   (with-selected-window (emacsvox-transient--navigation-window)
     (let* ((action (if backward 'previous-section 'next-section))
+           (previous (point))
            (sections (emacsvox-transient--sections))
            (position (or (car (emacsvox-transient--section-at (point) sections))
                          (line-beginning-position)))
@@ -806,12 +816,21 @@ When non-nil, preserve compatibility ICON."
                                        (> (car range) position)))
                      (if backward (reverse sections) sections))))
       (if section
-          (progn
+          (let ((end (or (car (cadr (member section sections))) (point-max)))
+                button)
             (goto-char (car section))
-            (emacsvox-transient--submit-text
-             (emacsvox-transient--section-text section sections)
-             (emacsvox-transient--item-facts 'section action 'focus-entered)
-             'navigation 'section))
+            (setq button (next-button (point) t))
+            (while (and button (< (button-start button) end)
+                        (button-get button 'skip))
+              (setq button (next-button (button-end button) t)))
+            (if (and button (< (button-start button) end))
+                (progn
+                  (goto-char (button-start button))
+                  (emacsvox-transient--speak-button previous))
+              (emacsvox-transient--submit-text
+               (emacsvox-transient--section-text section sections)
+               (emacsvox-transient--item-facts 'section action 'focus-entered)
+               'navigation 'section)))
         (emacsvox-transient--submit-text
          (cond ((null sections) "No sections in this menu.")
                (backward "First section.")
@@ -909,7 +928,7 @@ When non-nil, preserve compatibility ICON."
 (defun emacsvox-transient--speak-button (&optional previous direction)
   "Present the current button, noting section changes and wraps from PREVIOUS.
 DIRECTION is positive for forward movement, negative for backward movement."
-  (with-selected-window transient--window
+  (with-selected-window (emacsvox-transient--navigation-window)
     (when-let* ((button (button-at (point)))
                 (start (button-start button))
                 (end (button-end button)))
@@ -930,9 +949,12 @@ DIRECTION is positive for forward movement, negative for backward movement."
                    (or (not (equal section old-section))
                        (and wrap (eq emacsvox-transient-navigation-style 'continuous))))))
         (emacsvox-transient--submit-text
-         (concat choice
-                 (when section-change
-                   (concat " " (emacsvox-transient--section-text section sections))))
+         (if section-change
+             (let ((heading (emacsvox-transient--section-text section sections)))
+               (if (eq emacsvox-transient-section-announcement-order 'section-first)
+                   (concat heading " " choice)
+                 (concat choice " " heading)))
+           choice)
          (emacsvox-transient--item-facts
           (if (and (eieio-object-p object)
                    (object-of-class-p object 'transient-infix)) 'value 'command)

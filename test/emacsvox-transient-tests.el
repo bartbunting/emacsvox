@@ -716,7 +716,7 @@
                              (should (equal boundaries '((warn-user)))))
                     (should (equal speech '("Second action. b.")))
                     (should (equal (car cues) '(repeat-start))))
-                  (execute-kbd-macro (kbd "<right> <down>"))
+                  (execute-kbd-macro (kbd "<right>"))
                   (should (string-prefix-p "Third action" (car speech)))
                   (setq speech nil boundaries nil)
                   (execute-kbd-macro (kbd "<down>"))
@@ -726,11 +726,71 @@
                     (should (equal speech '("Third action. c.")))
                     (should (equal (car cues) '(repeat-start)))
                     (should-not boundaries))
-                  (execute-kbd-macro (kbd "<left> <down> C-u 9 <down>"))
+                  (execute-kbd-macro (kbd "<left> C-u 9 <down>"))
                   (should (string-prefix-p "Second action" (car speech)))
                   (execute-kbd-macro (kbd "C-u 9 <up>"))
                   (should (string-prefix-p "First action" (car speech))))
               (when transient--prefix (execute-kbd-macro (kbd "C-g"))))))))))
+
+(ert-deftest emacsvox-transient-section-arrows-land-on-and-speak-item ()
+  "Section arrows focus a button and announce it with its section once."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (with-temp-buffer
+      (switch-to-buffer (current-buffer))
+      (use-local-map (make-sparse-keymap))
+      (local-set-key (kbd "<f8>") #'emacsvox-test--navigation-menu)
+      (let ((transient-show-menu 0)
+            (emacsvox-transient-section-announcement-order 'item-first)
+            speech cues)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest args)
+                     (push text speech)
+                     (push (mapcar #'emacsvox-aural-compatibility-action-value
+                                   (plist-get args :compatibility-actions))
+                           cues)))
+                  ((symbol-function 'emacsvox-aural-submit-actions) #'ignore))
+          (unwind-protect
+              (progn
+                (execute-kbd-macro (kbd "<f8>"))
+                (transient--show)
+                (execute-kbd-macro (kbd "<down>"))
+                (setq speech nil cues nil)
+                (execute-kbd-macro (kbd "<right>"))
+                (should (equal speech '("Third action. c. Other actions. 2 of 2 sections.")))
+                (should (equal cues '((section))))
+                (with-selected-window transient--window
+                  (should (button-at (point))))
+                (setq speech nil cues nil)
+                (execute-kbd-macro (kbd "<left>"))
+                (should (equal speech '("First action. a. Actions. 1 of 2 sections.")))
+                (should (equal cues '((section))))
+                (with-selected-window transient--window
+                  (should (button-at (point))))
+                (setq emacsvox-transient-section-announcement-order 'section-first
+                      speech nil cues nil)
+                (execute-kbd-macro (kbd "<right>"))
+                (should (equal speech '("Other actions. 2 of 2 sections. Third action. c.")))
+                (should (equal cues '((section))))
+                (should (eq (get-text-property
+                             (string-match "2 of 2 sections" (car speech))
+                             'personality (car speech))
+                            'voice-annotate))
+                (setq speech nil cues nil)
+                (execute-kbd-macro (kbd "<left>"))
+                (should (equal speech '("Actions. 1 of 2 sections. First action. a.")))
+                (should (equal cues '((section))))
+                (execute-kbd-macro (kbd "<down>"))
+                (should (equal (car speech) "Second action. b."))
+                (should-not (car cues))
+                (let ((emacsvox-transient-navigation-style 'continuous))
+                  (execute-kbd-macro (kbd "<down>"))
+                  (should (equal (car speech)
+                                 "Other actions. 2 of 2 sections. Third action. c."))
+                  (should (equal (car cues) '(section))))
+                (execute-kbd-macro (kbd "C-j"))
+                (should-not transient--prefix))
+            (when transient--prefix (execute-kbd-macro (kbd "C-g")))))))))
 
 (ert-deftest emacsvox-transient-button-lisp-calls-remain-silent ()
   "A matching command name alone does not turn a Lisp call into navigation."
@@ -881,6 +941,34 @@
         (should (eq (emacsvox-aural-compatibility-action-value
                      (car (plist-get (cdar submissions) :compatibility-actions)))
                     'section))))))
+
+(ert-deftest emacsvox-transient-section-navigation-skips-buttons-within-bounds ()
+  "Skip excluded buttons without crossing an empty section into the next one."
+  (save-window-excursion
+    (with-temp-buffer
+      (insert "Menu\n" (propertize "Options" 'face 'transient-heading) "\n")
+      (insert-text-button "Unavailable" 'skip t)
+      (insert "\n")
+      (let ((destination (point)))
+        (insert-text-button "Choice" 'action #'ignore)
+        (insert "\n" (propertize "Empty" 'face 'transient-heading) "\n")
+        (insert-text-button "Skipped" 'skip t)
+        (insert "\n" (propertize "Later" 'face 'transient-heading) "\n")
+        (insert-text-button "Later choice" 'action #'ignore)
+        (goto-char (point-min))
+        (set-window-buffer (selected-window) (current-buffer))
+        (let ((transient--window (selected-window))
+              (emacsvox-transient-section-announcement-order 'item-first)
+              speech)
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest _) (push text speech))))
+            (emacsvox-transient-next-section)
+            (should (= (window-point transient--window) destination))
+            (should (equal speech '("Choice Options. 1 of 3 sections.")))
+            (emacsvox-transient-next-section)
+            (should (equal (car speech) "Empty. 2 of 3 sections."))
+            (with-selected-window transient--window
+              (should-not (button-at (point))))))))))
 
 (ert-deftest emacsvox-transient-section-navigation-keeps-mixed-face-heading-whole ()
   "Different formatting within a heading does not create extra section stops."

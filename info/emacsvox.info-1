@@ -2950,15 +2950,20 @@ the menu sequence.  Changes already made remain in effect.  Menu
 feedback interrupts previous main-stream speech, including when you
 toggle scope or change a setting.  Item announcements include the key
 without repeating the word "shortcut" or the section name.  Section
-names are spoken when you enter a section.
+names are spoken when you enter a section.  Left/right lands on and
+speaks its first selectable item, together with the section name and
+position.
 
    Press ‘C-e H s n’ for Menu navigation.  Choose ‘c’ for Continuous,
 which crosses sections and wraps around the whole menu; ‘w’ to wrap
 within the current section; or ‘s’ to stop at section edges with a
 boundary earcon.  Left/right moves between sections in every style.
 Changes apply immediately to all Transient menus, independently of the
-current-buffer settings scope.  Press ‘S’ to save the choice through
-Customize.  Wrap within section is the default.
+current-buffer settings scope.  Wrap within section is the default.  In
+the Presentation section, choose ‘i’ for Item first or ‘n’ for Section
+first.  Item first is the default; Section first speaks the section name
+and position before the item.  Press ‘S’ to save both the navigation
+style and presentation order through Customize.
 
    Speech settings opens for the current buffer.  Press ‘g’ there to
 switch to global defaults, or start with ‘C-u C-e H’.  Indentation

@@ -184,7 +184,9 @@
   "Navigation choices apply immediately and save independently of scope."
   (skip-unless (display-graphic-p))
   (let* ((original-style emacsvox-transient-navigation-style)
+         (original-order emacsvox-transient-section-announcement-order)
          (properties (copy-tree (symbol-plist 'emacsvox-transient-navigation-style)))
+         (order-properties (copy-tree (symbol-plist 'emacsvox-transient-section-announcement-order)))
          (custom-file (make-temp-file "emacsvox-navigation-custom-"))
          (user-init-file custom-file))
     (unwind-protect
@@ -192,6 +194,7 @@
           (emacsvox-test--with-aural-menu
             (switch-to-buffer source)
             (setq emacsvox-transient-navigation-style 'continuous)
+            (setq emacsvox-transient-section-announcement-order 'item-first)
             (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
             (let ((transient--prefix nil) (transient-show-menu 0))
               (unwind-protect
@@ -203,13 +206,21 @@
                     (should (eq emacsvox-transient-navigation-style 'section-wrap))
                     (with-current-buffer (window-buffer transient--window)
                       (should (string-match-p "Wrap within section (selected)" (buffer-string))))
-                    (execute-kbd-macro (kbd "s S q"))
+                    (execute-kbd-macro (kbd "n"))
+                    (should (eq emacsvox-transient-section-announcement-order 'section-first))
+                    (with-current-buffer (window-buffer transient--window)
+                      (should (string-match-p "Section first (selected)" (buffer-string))))
+                    (execute-kbd-macro (kbd "i"))
+                    (should (eq emacsvox-transient-section-announcement-order 'item-first))
+                    (execute-kbd-macro (kbd "s n S q"))
                     (should (eq emacsvox-transient-navigation-style 'section-stop))
                     (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-speech))
                     (should (equal (emacsvox-aural-menu--scope-label) "Current buffer"))
                     (setq emacsvox-transient-navigation-style 'continuous)
+                    (setq emacsvox-transient-section-announcement-order 'item-first)
                     (load custom-file nil t)
                     (should (eq emacsvox-transient-navigation-style 'section-stop))
+                    (should (eq emacsvox-transient-section-announcement-order 'section-first))
                     (execute-kbd-macro (kbd "n c q q q"))
                     (should (eq emacsvox-transient-navigation-style 'continuous))
                     (should-not transient--prefix)
@@ -217,7 +228,9 @@
                     (should (= (point) 3)))
                 (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))
       (setq emacsvox-transient-navigation-style original-style)
+      (setq emacsvox-transient-section-announcement-order original-order)
       (setplist 'emacsvox-transient-navigation-style properties)
+      (setplist 'emacsvox-transient-section-announcement-order order-properties)
       (delete-file custom-file))))
 
 (ert-deftest emacsvox-aural-menu-graphical-feedback-opens-real-details ()
@@ -319,7 +332,7 @@
           (unwind-protect
               (progn
                 (dolist (keys '("q" "C-g" "s i C-q"
-                                "<right> <down> C-j"))
+                                "<right> C-j"))
                   (execute-kbd-macro (kbd "<f8>"))
                   (transient--show)
                   (setq closures nil)

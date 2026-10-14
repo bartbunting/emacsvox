@@ -2912,14 +2912,18 @@ You can also press its shortcut directly. @kbd{q} or @kbd{C-g} goes back one men
 Menu feedback interrupts previous main-stream speech@comma{} including when you
 toggle scope or change a setting. Item announcements include the key without
 repeating the word "shortcut" or the section name. Section names are spoken
-when you enter a section.
+when you enter a section. Left/right lands on and speaks its first selectable
+item@comma{} together with the section name and position.
 
 Press @kbd{C-e H s n} for Menu navigation. Choose @kbd{c} for Continuous@comma{} which
 crosses sections and wraps around the whole menu; @kbd{w} to wrap within the
 current section; or @kbd{s} to stop at section edges with a boundary earcon.
 Left/right moves between sections in every style. Changes apply immediately
 to all Transient menus@comma{} independently of the current-buffer settings scope.
-Press @kbd{S} to save the choice through Customize. Wrap within section is the default.
+Wrap within section is the default. In the Presentation section@comma{} choose @kbd{i}
+for Item first or @kbd{n} for Section first. Item first is the default; Section
+first speaks the section name and position before the item. Press @kbd{S} to save
+both the navigation style and presentation order through Customize.
 
 Speech settings opens for the current buffer. Press @kbd{g} there to switch to
 global defaults@comma{} or start with @kbd{C-u C-e H}. Indentation shares this scope with

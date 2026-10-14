@@ -165,14 +165,32 @@
    'state-change 'select-object))
 
 (defun emacsvox-aural-menu--save-navigation ()
-  "Save the current global menu navigation style through Customize."
+  "Save global navigation style and section announcement order through Customize."
   (interactive)
   (customize-save-variable 'emacsvox-transient-navigation-style
                            emacsvox-transient-navigation-style)
+  (customize-save-variable 'emacsvox-transient-section-announcement-order
+                           emacsvox-transient-section-announcement-order)
   (emacsvox-transient--submit-text
-   "Saved navigation default"
+   "Saved menu defaults"
    (emacsvox-transient--menu-facts 'save-navigation 'operation-completed)
    'state-change 'save-object))
+
+(defun emacsvox-aural-menu--section-order-choice (order label)
+  "Describe section announcement ORDER with LABEL and its selected state."
+  (if (eq emacsvox-transient-section-announcement-order order)
+      (propertize (concat label " (selected)")
+                  emacsvox-aural-facts-property '(:states (selected)))
+    label))
+
+(defun emacsvox-aural-menu--set-section-order (order label)
+  "Activate section announcement ORDER and announce LABEL."
+  (customize-set-variable 'emacsvox-transient-section-announcement-order order)
+  (emacsvox-transient--submit-text
+   label
+   (emacsvox-transient--item-facts
+    'value 'section-announcement-order 'command-menu-value-changed '(selected))
+   'state-change 'select-object))
 
 (transient-define-prefix emacsvox-aural-menu-navigation ()
   "Choose navigation for all Transient menus; Left and Right change sections."
@@ -184,6 +202,11 @@
     (lambda () (interactive) (emacsvox-aural-menu--set-navigation 'section-wrap "Wrap within section")) :transient t)
    ("s" (lambda () (emacsvox-aural-menu--navigation-choice 'section-stop "Stop at section edges"))
     (lambda () (interactive) (emacsvox-aural-menu--set-navigation 'section-stop "Stop at section edges")) :transient t)]
+  ["Presentation (global)"
+   ("i" (lambda () (emacsvox-aural-menu--section-order-choice 'item-first "Item first"))
+    (lambda () (interactive) (emacsvox-aural-menu--set-section-order 'item-first "Item first")) :transient t)
+   ("n" (lambda () (emacsvox-aural-menu--section-order-choice 'section-first "Section first"))
+    (lambda () (interactive) (emacsvox-aural-menu--set-section-order 'section-first "Section first")) :transient t)]
   ["Save and finish"
    ("S" "Save as default" emacsvox-aural-menu--save-navigation :transient t)
    ("q" "Back (keep changes)" transient-quit-one)

@@ -9030,6 +9030,17 @@ transient; Pressing ‘C-q’ quits the transient.
      section-wrap
 
 
+ -- Variable: User Option emacsvox-transient-section-announcement-order
+     Order of the item and section announcement when entering a section.
+     Item first speaks the item, then the section name and position.  Section
+     first speaks the section name and position before the item.  This setting
+     applies globally and does not affect movement within a section.
+
+     Default Value:
+
+     item-first
+
+
 
 File: emacsvox-reference.info,  Node: emacsvox-treesit,  Next: emacsvox-typo,  Prev: emacsvox-transient,  Up: Emacsvox Commands And Options
 

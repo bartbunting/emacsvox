@@ -71,7 +71,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1634 commands and 230 options.
+This chapter documents a total of 1634 commands and 231 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -21868,6 +21868,23 @@ Default Value:
 @verbatim
 
 section-wrap
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-transient-section-announcement-order
+@verbatim
+Order of the item and section announcement when entering a section.
+Item first speaks the item, then the section name and position.  Section
+first speaks the section name and position before the item.  This setting
+applies globally and does not affect movement within a section.
+@end verbatim
+
+Default Value:
+@verbatim
+
+item-first
 
 @end verbatim
 
