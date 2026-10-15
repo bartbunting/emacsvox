@@ -84,6 +84,12 @@ class DebianPackageTests(unittest.TestCase):
     def test_source_startup_and_offline_resources(self):
         expression = '''(progn
           (load (expand-file-name "lisp/emacsvox-loaddefs.el" emacsvox-directory))
+          (dolist (command '(emacsvox-aural-menu emacsvox-aural-menu-speech
+                             emacsvox-settings-buffer emacsvox-settings-diagnostics))
+            (unless (and (commandp command) (autoloadp (symbol-function command)))
+              (error "Packaged menu is not an interactive autoload: %s" command)))
+          (when (or (featurep 'transient) (featurep 'emacsvox-aural-menu))
+            (error "Loading packaged autoloads eagerly loaded menus"))
           (require 'eww) (require 'emacsvox-eww)
           (require 'emacsvox-ocr)
           (unless (file-executable-p emacsvox-ocr-engine)

@@ -123,6 +123,8 @@ def package(root, destination, emacs, release=False):
                                      "sounds/packs/chimes/open-object.ogg"}:
             if not (runtime / name).is_file():
                 raise RuntimeError(f"required package input missing: {name}")
+        # Register Transient's autoload expansion before scanning menu macros,
+        # as the normal build does.  Do not load menu modules during generation.
         # Generate in the staging tree with no personal packages and never copy
         # ignored checkout autoloads or byte-code into a distribution.
         private_home = work / "home"
@@ -131,7 +133,7 @@ def package(root, destination, emacs, release=False):
                        "SOURCE_DATE_EPOCH": identity["source_epoch"],
                        "EMACSVOX_DEB_LISP": str(runtime / "lisp")}
         subprocess.run([emacs, "-Q", "--batch", "--eval",
-                        '(progn (require \'loaddefs-gen) '
+                        '(progn (require \'loaddefs-gen) (require \'transient) '
                         '(let ((dir (getenv "EMACSVOX_DEB_LISP"))) '
                         '(loaddefs-generate dir (expand-file-name "emacsvox-loaddefs.el" dir))))'],
                        env=environment, cwd=work, check=True)
