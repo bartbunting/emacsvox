@@ -44,6 +44,15 @@ personal configuration changes, or publication.
   editor return, order preservation, and explicit-save checks. Listening
   acceptance remains open.
 
+- Voice-tuning organisation, 2026-10-15: scope comes before adjustments, then
+  Preview, Save, and Finish. Adapter defaults, inheritance, and Undo stay with
+  adjustments. Preview wording is consistent within the menu; =S= still stops
+  preview and =w= still saves and applies. Collection saving and draft retention
+  keep their existing meanings. Source and compiled graphical checks cover
+  scope-first navigation, private preview, both saves, stop, and cancellation.
+  The cancellation test now cancels the actual minibuffer, covering compiled
+  editor calls as well as source. Listening acceptance remains open.
+
 - Submenu return, 2026-10-15: ordinary Emacsvox submenu return now restores the
   invoking entry before announcing the parent. Shortcut entry, nested menus,
   and delayed display retain the correct target for Enter. Closing the menu

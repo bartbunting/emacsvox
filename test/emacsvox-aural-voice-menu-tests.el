@@ -31,7 +31,14 @@
 (ert-deftest emacsvox-aural-voice-menu-graphical-adjust-reset-and-retain ()
   "Shift adjusts, plain arrows navigate, and leaving retains the same draft."
   (emacsvox-test--with-voice-menu
-    (execute-kbd-macro (kbd "<down> <down>"))
+    ;; Scope comes first; section movement reaches adjustments without applying.
+    (execute-kbd-macro (kbd "<down>"))
+    (with-selected-window transient--window
+      (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                  'emacsvox-aural-voice-menu--fallback)))
+    (should (equal before (emacsvox-aural-read-user-data)))
+    (should-not requests)
+    (execute-kbd-macro (kbd "<right> <down>"))
     (let (announced)
       (cl-letf (((symbol-function 'emacsvox-aural-submit)
                  (lambda (text &rest _) (push text announced))))
@@ -111,7 +118,7 @@
   "Cancelled entry preserves values; a changed editor scope cannot be edited."
   (emacsvox-test--with-voice-menu
     (let ((original (emacsvox-aural-voice-editor--working)) cancelled)
-      (cl-letf (((symbol-function 'read-string) (lambda (&rest _) (signal 'quit nil))))
+      (minibuffer-with-setup-hook (lambda () (signal 'quit nil))
         (condition-case nil (emacsvox-aural-voice-menu--pitch) (quit (setq cancelled t))))
       (should cancelled)
       (should (equal original (emacsvox-aural-voice-editor--working)))

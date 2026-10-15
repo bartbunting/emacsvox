@@ -271,25 +271,26 @@ With INSPECT, only read editor state; do not disturb menu rendering."
   "Tune shared or individual fallback values; preview and save explicitly."
   :refresh-suffixes t
   [:description emacsvox-aural-voice-menu--title
+   ("f" "Choose a fallback to customize" emacsvox-aural-voice-menu--fallback :transient t)
+   ("h" "Shared settings" emacsvox-aural-voice-menu--shared :transient t)
+   ("e" "Qualified engine controls (full editor)" emacsvox-aural-voice-menu--native)]
+  ["Adjust the selected voice scope"
    ("r" (lambda () (emacsvox-aural-voice-menu--label 'rate-offset)) emacsvox-aural-voice-menu--rate :transient t)
    ("p" (lambda () (emacsvox-aural-voice-menu--label 'average-pitch)) emacsvox-aural-voice-menu--pitch :transient t)
    ("g" (lambda () (emacsvox-aural-voice-menu--label 'pitch-range)) emacsvox-aural-voice-menu--range :transient t)
    ("v" (lambda () (emacsvox-aural-voice-menu--label 'gain)) emacsvox-aural-voice-menu--gain :transient t)
-   ("d" "Adapter default for selected adjustment" emacsvox-aural-voice-menu--default :transient t)]
-  ["Listen to the selected voice scope"
-   ("P" "Play edited" emacsvox-aural-voice-menu--play :transient t)
-   ("B" "Compare original and edited" emacsvox-aural-voice-menu--compare :transient t)
-   ("S" "Stop sample" emacsvox-aural-voice-menu--stop :transient t)
-   ("T" "Sample text" emacsvox-aural-voice-menu--text :transient t)]
-  ["Tuning scope"
-   ("f" "Choose a fallback to customize" emacsvox-aural-voice-menu--fallback :transient t)
-   ("h" "Shared settings" emacsvox-aural-voice-menu--shared :transient t)
+   ("d" "Adapter default for selected adjustment" emacsvox-aural-voice-menu--default :transient t)
    ("i" "Use shared value for selected adjustment" emacsvox-aural-voice-menu--inherit :inapt-if-not emacsvox-aural-voice-menu--fallback-p :transient t)
-   ("e" "Qualified engine controls (full editor)" emacsvox-aural-voice-menu--native)]
-  ["Save and return"
-   ("u" "Undo last change" emacsvox-aural-voice-menu--undo :transient t)
+   ("u" "Undo last change" emacsvox-aural-voice-menu--undo :transient t)]
+  ["Preview the selected voice scope"
+   ("P" "Preview edited voice" emacsvox-aural-voice-menu--play :transient t)
+   ("B" "Compare original and edited" emacsvox-aural-voice-menu--compare :transient t)
+   ("S" "Stop preview" emacsvox-aural-voice-menu--stop :transient t)
+   ("T" "Preview text" emacsvox-aural-voice-menu--text :transient t)]
+  ["Save"
    ("w" "Save and apply" emacsvox-aural-voice-menu--save :transient t)
-   ("c" "Save to collection without selecting" emacsvox-aural-voice-menu--collection :transient t)
+   ("c" "Save to collection without selecting" emacsvox-aural-voice-menu--collection :transient t)]
+  ["Finish"
    ("q" "Back to editor (keep draft)" transient-quit-one)]
   (interactive)
   (unless (and (derived-mode-p 'emacsvox-aural-voice-editor-mode)
