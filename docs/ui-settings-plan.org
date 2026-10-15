@@ -1323,6 +1323,12 @@ Emacs 30.2 matrix and normal-host listening remain outstanding.
 
 ** Deferred listening for the four presentation and dictionary slices
 
+Speech Save wording clarification: the label and Help now state that other
+settings are saved in their own menus. The action still saves only rate and
+punctuation; submenu saving and persistence are unchanged. Five focused speech
+checks passed from source and compiled code in fresh graphical Emacs. Build,
+byte-code preflight and the documentation gate passed. Listening remains deferred.
+
 Use a fresh normal Emacsvox profile after the final build:
 
 1. At =C-e H f H=, read Help, adjust the history limit, toggle interface

@@ -426,6 +426,7 @@ Global scope changes the default and current buffer for this session."
 
 (defun emacsvox-aural-menu--save-speech ()
   "Save the displayed rate and punctuation as defaults across restarts.
+Other settings are saved in their own menus.
 Save rate through the backend's startup option.  Punctuation mode policies
 and explicit buffer overrides still take precedence over its saved default."
   (interactive)
@@ -530,7 +531,8 @@ When opened from the Emacsvox menu, share its selected scope."
    ("n" "Menu navigation (global)" emacsvox-aural-menu-navigation
     :transient transient--do-stack)]
   ["Save and finish"
-   ("S" "Save rate and punctuation as defaults" emacsvox-aural-menu--save-speech :transient t)
+   ("S" "Save rate and punctuation as defaults. Other settings are saved in their own menus."
+    emacsvox-aural-menu--save-speech :transient t)
    ("q" "Back (keep changes)" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)]
   (interactive "P")
