@@ -1065,14 +1065,14 @@ Retirement listening checklist:
 5. =C-e H r=: review combined rules and vocabulary; toggle training on and off.
    Confirm explanations are useful and the session scope is clear.
 
-Listening accepted on 2026-10-15, except plain Enter in the diagnostics menu.
-That prefix was missing from the settings Enter-binding list; Meta-Enter and
-letter shortcuts worked. The focused correction adds the missing prefix and
-regression coverage for both Enter events, arrow selection, and report return.
+Listening accepted on 2026-10-15, including the corrected plain Enter activation
+in the diagnostics menu. That prefix was missing from the settings Enter-binding
+list; Meta-Enter and letter shortcuts worked. Commit =e24e0b172= adds the missing
+prefix and regression coverage for both Enter events, arrow selection, and
+report return.
 All five diagnostics checks pass with source and with current byte-code in
 fresh graphical Emacs sessions using installed and bundled Transient.
-The corrected Enter interaction still needs listening confirmation. Final
-Emacs 30.2 retirement qualification remains open.
+Final Emacs 30.2 retirement qualification remains open.
 The new routes do not require removing or converting the dedicated editors.
 Broader inventory expansion and search policy outside these two menu searches
 remain separate workstreams.
