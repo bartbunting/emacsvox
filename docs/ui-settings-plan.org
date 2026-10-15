@@ -31,8 +31,9 @@ source and compiled code with Transient 0.13.8; byte-code preflight and the
 documentation release gate pass.
 Read-only probes of the two running Emacs sessions found older loaded Enter
 binding functions: one omits Feedback and History, while the other omits
-History. Neither session was reloaded or otherwise repaired. Retry in a newly
-started normal profile; acceptance of this reported interaction remains open.
+History. Neither session was reloaded or otherwise repaired. Listening accepted
+on 2026-10-15 after starting a fresh normal profile: Enter opens History limits
+and recording. This closes the reported interaction issue.
 
 Listening checkpoint, 2026-10-15: acceptance results cover items 1--6 and
 8--12 of the pre-merge listening checklist. No failures were reported:
