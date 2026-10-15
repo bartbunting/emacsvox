@@ -185,7 +185,14 @@
                  emacsvox-settings--search-all "Find settings by label or alias.")
                completion-styles-alist)))
     (emacsvox-settings--open
-     (or (assoc-string (completing-read prompt entries nil t) entries t)
+     (or (assoc-string
+          (minibuffer-with-setup-hook
+              (lambda ()
+                ;; Preserve the frontend's other bindings and shared maps.
+                (use-local-map (copy-keymap (current-local-map)))
+                (local-set-key (kbd "SPC") #'self-insert-command))
+            (completing-read prompt entries nil t))
+          entries t)
          (user-error "Choose a destination")))))
 
 ;;;###autoload

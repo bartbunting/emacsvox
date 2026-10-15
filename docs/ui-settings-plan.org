@@ -22,6 +22,18 @@ personal configuration changes, or publication.
 
 ** Current baseline
 
+- Literal search spaces, 2026-10-15: Space now inserts text in both menu
+  searches; Tab completes and Enter keeps its selection/activation distinction.
+  A graphical regression reproduced =all caps = changing to =All-caps = before
+  the fix. All 59 settings/workflow checks pass from source and compiled code
+  in fresh graphical Emacs, covering literal input, typed aliases, completion,
+  cancellation, source return, and unrelated-prompt isolation. Two additional
+  checks pass with installed Vertico in both runs. Incremental compilation and
+  byte-code preflight pass. The manual is regenerated and the documentation
+  release gate passes. Listening acceptance remains open: try
+  =C-e H /= with =all caps beep= and =C-e H a= with =Recent aural feedback=,
+  checking Space, Tab, Enter, and cancellation in a fresh normal profile.
+
 - Menu organisation follow-up, 2026-10-15: Speech starts with scope, then
   rate, punctuation, capitalization, indentation, and typing. =C-e H n=
   opens navigation preferences directly; =C-e H s n= remains available.
@@ -1034,13 +1046,13 @@ including inside words, or continue to follow their individual rules and your
 Emacs completion configuration. Both menu searches use local substring matching
 and aliases; no wider conversion is agreed here.
 
-An additional input decision remains open after the menu-organisation pass:
-Emacs's default completion frontend can treat Space as word completion. Typing
-a multiword alias such as =Recent aural feedback= can therefore complete the
-canonical label before the query is finished. Literal inserted or pasted
-queries match correctly. Decide whether these prompts should make Space insert
-a space, and how that should interact with configured completion frontends.
-The organisation pass preserves existing completion keymaps.
+Input decision accepted on 2026-10-15: Space inserts a literal space in
+=C-e H /= and =C-e H a=; Tab remains available for completion. This prevents
+multiword queries and aliases from expanding before typing is finished.
+The implementation copies the active minibuffer map for each search, retaining
+its other bindings and leaving shared maps and unrelated prompts untouched.
+Substring matching, aliases, and the two-Enter selection flow are retained.
+The broader matching-policy decision remains open.
 
 Current source inventory:
 
@@ -1243,7 +1255,8 @@ remains open for this pass. In a fresh normal Emacsvox profile:
    result is clear, selecting it only focuses its action, and another Enter
    opens it. The manual should give its opening cue and speech; =q= should
    return to its selected menu entry. Also try the older action names using
-   your completion frontend and report any early completion at spaces.
+   your completion frontend. Space should now insert literally; Tab should
+   complete, and Enter should select before a second Enter activates.
 
 Changing the established Save and Stop keys remains a separate decision.
 

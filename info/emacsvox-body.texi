@@ -2128,7 +2128,9 @@ navigate its menus and editors.
 
 Press @kbd{C-e H /} to find a setting by part of its name. The search is
 case-insensitive and includes supported aliases. For example@comma{} @code{cap} finds
-capitalisation controls. Completion lets you choose a result; accepting it
+capitalisation controls. Space inserts a literal space@comma{} so you can type a
+multiword query such as @code{all caps beep}; @kbd{@key{TAB}} completes it. Completion lets
+you choose a result; accepting it
 opens the appropriate menu and selects the control without changing its
 value. Press @kbd{@key{RET}} again to activate or edit it. Cancelling completion
 leaves the originating menu open.
@@ -2155,7 +2157,8 @@ or a retained draft as the same thing.
 
 Use @kbd{C-e H a} to find an action such as browsing voices@comma{} inspecting
 diagnostics@comma{} or reading the manual. It uses the same partial-name matching and
-two-Enter selection as settings search. Alternative names lead to one displayed
+two-Enter selection as settings search@comma{} including literal spaces and @kbd{@key{TAB}}
+completion. Alternative names lead to one displayed
 result for each action: for example@comma{} @code{Feedback for this item} finds
 @emph{Explain this item}@comma{} and @code{Recent aural feedback} finds @emph{Recent feedback}.
 Editors opened from these menus retain their own Help@comma{}

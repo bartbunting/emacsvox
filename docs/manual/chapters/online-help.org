@@ -60,7 +60,9 @@ navigate its menus and editors.
 
 Press ~C-e H /~ to find a setting by part of its name. The search is
 case-insensitive and includes supported aliases. For example, =cap= finds
-capitalisation controls. Completion lets you choose a result; accepting it
+capitalisation controls. Space inserts a literal space, so you can type a
+multiword query such as =all caps beep=; ~TAB~ completes it. Completion lets
+you choose a result; accepting it
 opens the appropriate menu and selects the control without changing its
 value. Press ~RET~ again to activate or edit it. Cancelling completion
 leaves the originating menu open.
@@ -87,7 +89,8 @@ or a retained draft as the same thing.
 
 Use ~C-e H a~ to find an action such as browsing voices, inspecting
 diagnostics, or reading the manual. It uses the same partial-name matching and
-two-Enter selection as settings search. Alternative names lead to one displayed
+two-Enter selection as settings search, including literal spaces and ~TAB~
+completion. Alternative names lead to one displayed
 result for each action: for example, =Feedback for this item= finds
 /Explain this item/, and =Recent aural feedback= finds /Recent feedback/.
 Editors opened from these menus retain their own Help,

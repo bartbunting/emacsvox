@@ -207,10 +207,7 @@
     (dolist (case '(("Feedback for this item" emacsvox-settings-feedback "x")
                     ("Recent aural feedback" emacsvox-settings-feedback "h")
                     ("MANUAL" emacsvox-aural-menu "i")))
-      ;; Insert the whole query as pasted text: SPC can complete a word in
-      ;; Emacs's default completion frontend before the query is fully typed.
-      (minibuffer-with-setup-hook (lambda () (insert (car case)))
-        (execute-kbd-macro (kbd "a RET")))
+      (execute-kbd-macro (vconcat (kbd "a") (car case) (kbd "RET")))
       (should (eq (oref transient--prefix command) (nth 1 case)))
       (with-selected-window transient--window
         (should (equal (oref (button-get (button-at (point)) 'button-data) key)
@@ -225,6 +222,41 @@
     (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
     (should (eq (emacsvox-aural-menu--source (emacsvox-aural-menu--context)) source))
     (should-not (file-exists-p custom-file))))
+
+(ert-deftest emacsvox-settings-search-literal-spaces-and-prompt-isolation ()
+  "Space preserves typed queries in both searches and leaves other prompts alone."
+  (emacsvox-test--with-settings
+    (let ((original-map minibuffer-local-must-match-map)
+          (original-space (lookup-key minibuffer-local-must-match-map (kbd "SPC"))))
+      (dolist (case '(("/" "all caps " "All-caps beep")
+                      ("a" "Feedback for " "Explain this item")))
+        (let (typed)
+          (minibuffer-with-setup-hook
+              (lambda ()
+                (use-local-map (copy-keymap (current-local-map)))
+                (local-set-key
+                 (kbd "<f9>")
+                 (lambda () (interactive)
+                   (setq typed (minibuffer-contents-no-properties))
+                   (delete-minibuffer-contents)
+                   (insert (nth 2 case))
+                   (exit-minibuffer))))
+            (execute-kbd-macro (vconcat (kbd (car case)) (cadr case) (kbd "<f9>"))))
+          (should (equal typed (cadr case)))
+          (execute-kbd-macro (kbd "q"))
+          (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))))
+      (should (eq original-map minibuffer-local-must-match-map))
+      (should (equal original-space (lookup-key original-map (kbd "SPC"))))
+      (let (ordinary-space)
+        (minibuffer-with-setup-hook
+            (lambda ()
+              (setq ordinary-space (key-binding (kbd "SPC")))
+              (signal 'quit nil))
+          (condition-case nil
+              (completing-read "Unrelated prompt: " '("one two") nil t)
+            (quit nil)))
+        (should (equal ordinary-space original-space)))
+      (should-not (file-exists-p custom-file)))))
 
 (ert-deftest emacsvox-settings-return-source-restores-captured-position ()
   "The explicit source action leaves all menus and restores the captured point."
