@@ -1051,6 +1051,7 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                      emacsvox-interaction emacsvox-indentation-tone
                      emacsvox-aural-menu-line-cues emacsvox-line-cues-edit
                      emacsvox-output-settings emacsvox-settings-buffer emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations
+                     emacsvox-settings-diagnostics
                      emacsvox-settings-integrations--comint
                      emacsvox-settings-integrations--eat
                          emacsvox-settings-integrations--eat-choice

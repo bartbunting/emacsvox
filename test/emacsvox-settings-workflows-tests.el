@@ -67,6 +67,26 @@
       (should (eq (current-buffer) source))
       (should (= (point) 3)))))
 
+(ert-deftest emacsvox-settings-diagnostics-enter-activation ()
+  "Both Enter events open the selected report and q restores its selection."
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "D"))
+    (dolist (key '("RET" "<return>"))
+      (with-selected-window transient--window
+        (transient--goto-button
+         (transient-suffix-object 'emacsvox-settings-workflows--doctor)))
+      (execute-kbd-macro (kbd key))
+      (should (derived-mode-p 'emacsvox-aural-doctor-mode))
+      (execute-kbd-macro (kbd "q <down>"))
+      (execute-kbd-macro (kbd key))
+      (should (derived-mode-p 'help-mode))
+      (execute-kbd-macro (kbd "q"))
+      (should (eq (oref transient--prefix command) 'emacsvox-settings-diagnostics))
+      (with-selected-window transient--window
+        (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                    'emacsvox-settings-workflows--spatial)))
+      (execute-kbd-macro (kbd "<up>")))))
+
 (ert-deftest emacsvox-settings-diagnostics-help-does-not-capture-later-help ()
   "Reusing the report's Help buffer preserves Transient's normal Help return."
   (emacsvox-test--with-settings
