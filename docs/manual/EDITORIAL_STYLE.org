@@ -1,0 +1,219 @@
+#+title: Emacsvox Manual Editorial Standard
+#+subtitle: Editorial requirements for maintained documentation
+#+language: en
+#+startup: content
+
+* Purpose and scope
+
+This guide governs hand-maintained Emacsvox user-manual prose under
+=docs/manual/chapters/=. Its general principles also apply to developer prose
+under =docs/developer/=, subject to that audience's greater technical detail.
+It does not replace =AGENTS.md=, accepted architecture decision records, the
+Org authoring conventions, or the generated command reference. Historical
+Emacspeak documentation is not to be silently rewritten to match this style.
+
+The manual has two equal responsibilities: teach users to work confidently in
+the audio desktop and provide accurate information when they return to solve
+a specific problem. Technical completeness is essential, but it does not
+justify a disconnected catalogue of facts.
+
+* The voice of the manual
+
+Write as a knowledgeable technical author explaining an established system.
+The style is direct, calm, precise, and approachable. It should resemble the
+GNU Emacs manuals in accuracy, the Calc manual in teaching, and the Magit
+manual in task-oriented explanation. It is not promotional copy, a chat
+exchange, release notes, or a transcript of development decisions.
+
+- Address the reader as "you" in instructions. Name Emacsvox, Emacs, Omnivox,
+  and third-party applications when the distinction matters.
+- Prefer concrete subjects and active verbs: "Emacsvox speaks the selected
+  row" rather than "Audible feedback is provided."
+- Prefer present tense for supported behaviour. State requirements and
+  limitations directly; qualify uncertain, optional, or platform-dependent
+  behaviour precisely.
+- Write paragraphs that develop one idea. Vary sentence length naturally.
+  Short sentences are useful for commands and warnings, but do not fragment
+  every explanation into disconnected statements.
+- Avoid filler and enthusiasm: "seamlessly", "powerful", "robust",
+  "comprehensive", "effortlessly", "simply", "just", and similar language
+  should not appear unless it conveys a necessary, verifiable distinction.
+- Avoid formulaic chapter announcements ("In this section, we will explore")
+  and repeated reassurances ("You do not need to ...") where a direct
+  explanation is clearer.
+- Do not add a concluding summary to every subsection. End when the subject
+  is complete or lead naturally into the next task.
+- Prefer consistent sentence-case display headings when substantially
+  revising a chapter. Respect existing Info node names, and do not mass-rename
+  headings solely to satisfy a style preference.
+- Use Australian English for maintained explanatory
+  prose. Keep each revised chapter internally consistent; avoid piecemeal
+  spelling changes across unrelated chapters. Preserve literal commands,
+  Lisp symbols, file paths, UI actions, product names, quotations, and
+  historical material unchanged.
+
+* Organise information for the reader
+
+** Give each chapter a purpose
+
+Before a substantive edit, identify the chapter's intended reader, what that
+reader should know on entry, what they should be able to do on exit, and the
+chapter's role in the wider manual.
+
+Typical progression: establish the concept; show a first successful task;
+explain ordinary operations; introduce important variations and settings;
+cover exceptional behaviour and recovery; link to the exhaustive reference.
+This is a guide to sequence, not a mandatory set of identically named
+headings. A reference-heavy chapter may need a different arrangement.
+
+** Give each topic one primary home
+
+Explain a concept once in the chapter that owns it. Elsewhere, give only the
+context needed for the current task and a descriptive cross-reference. Do not
+repeat generic pointers to the generated keymap in every subsection.
+
+Use these chapter responsibilities when selecting a home for material:
+
+- =introduction.org=: the promise and conceptual identity of the audio desktop,
+  where to begin, and orientation to the manual.
+- =installation.org=: the shortest supported route to first speech, first
+  verification, immediate recovery, and persistent startup.
+- =basic-usage.org=: essential reading, editing, speech control, and help.
+- =audio-desktop.org=: the Emacs objects and navigation concepts that connect
+  tasks across applications.
+- =speech-backends.org=: supported server/platform combinations, installation
+  alternatives, backend configuration, compatibility, and diagnostics.
+- =aural-presentation.org=: how information is presented, why it sounds as it
+  does, and how to preview, adjust, save, or reverse feedback changes.
+- =online-help.org=: finding the relevant help and reference while working.
+- =applications.org=: a curated entry point for supported integrations and
+  their common interaction model; avoid duplicating third-party manuals.
+- Application-specific chapters such as =notmuch.org= and =agent-shell.org=:
+  realistic tasks and the Emacsvox-specific auditory behaviour of each
+  integration; link to the upstream application's manual for its general use.
+- =docs/developer/=: source architecture, integration contracts, protocols,
+  focused tests, and publication mechanics, consistent with ADR 0004.
+
+If a topic appears in more than one place, decide which chapter owns the full
+explanation before drafting. Reorganise existing prose instead of adding a
+third explanation.
+
+** Integrate; do not accumulate
+
+An AI-assisted documentation change must not consist solely of attaching new
+paragraphs to the first matching heading. Check the whole chapter outline and
+nearby content. Place the new information where it advances the reader's
+understanding, then revise the transition into and out of it. Move or replace
+existing text when that improves continuity. Do not retain redundant material
+merely because it was already present.
+
+A long chapter can be appropriate, but added length needs an editorial reason.
+Prefer clear subtopics and useful Info navigation to a single continuously
+expanding section.
+
+* Describe Emacsvox's auditory behaviour precisely
+
+For an interactive task, give the reader enough information to understand:
+
+1. The starting context or precondition.
+2. The action or keystroke to use, and any change to point, buffer, mode, or
+   application state.
+3. The feedback: what is spoken automatically, what a voice or sound means,
+   and what must be requested explicitly.
+4. Relevant timing, interruption, asynchronous, or privacy behaviour.
+5. How to verify success, undo the change, or recover from failure.
+
+These facts may be integrated into prose and a short procedure. Do not force
+five repetitive headings into every small topic. Where a procedure is useful,
+provide steps that a reader can reproduce. Use a temporary buffer or reversible
+example for experiments that change settings.
+
+Do not invent precise spoken strings. Verify literal announcements in source
+or tests; otherwise describe their meaning without quotation marks. Never
+claim Emacsvox performs an operation actually owned by Emacs or an upstream
+package. Distinguish defaults from personal configuration and guaranteed
+behaviour from conditional behaviour.
+
+* Preserve detail while improving flow
+
+When reorganising an existing chapter, preserve all verified requirements,
+keystrokes, commands, options, defaults, scopes, version conditions, security
+constraints, privacy guarantees, observable feedback, failure behaviour, and
+recovery instructions. A shorter revision is not an improvement if it silently
+loses one of these facts.
+
+Move fine detail to a named subsection when it distracts from the primary
+explanation. Use a precise cross-reference if the information already lives
+elsewhere. Keep the exhaustive API inventory in the generated reference;
+user chapters should explain when and why to use the relevant interface.
+
+* Workflow for an AI-assisted documentation change
+
+** Before editing
+
+- Read =AGENTS.md=, applicable accepted ADRs, this guide, and the canonical
+  Org authoring instructions.
+- Read the current chapter as a whole for substantive changes, including its
+  heading hierarchy. Inspect adjacent chapters and the owning code/tests when
+  behaviour crosses chapter boundaries.
+- State the chapter's purpose in one sentence. Record the new facts to add,
+  the existing sections they affect, and any duplication or misplaced material.
+- For a substantial change, present an editorial plan: proposed placement,
+  sections to rewrite or move, and technical facts that must remain unchanged.
+  Ask for review before broad rearrangement when the scope is not authorised.
+  A spelling fix or other small mechanical correction does not need a plan.
+
+** While editing
+
+- Rewrite the smallest coherent unit, not necessarily the fewest lines.
+  Often this means the surrounding subsection or chapter introduction as well
+  as the requested passage.
+- Connect the new passage to the preceding and following sections. Introduce
+  concepts before using them; avoid sudden changes of audience or depth.
+- Do not narrate the change history or say a feature is "new" unless a version
+  comparison is important to the reader.
+- Maintain Org headings, indexes, link targets, and stable Info node names.
+  Treat intentional node changes as navigation-compatibility changes.
+
+** Editorial review — separate from technical verification
+
+Read the resulting chapter from beginning to end, not just the diff. Check:
+
+- Can the reader follow the progression without already knowing the feature?
+- Does every subsection earn its place? Are closely related facts together?
+- Are introductions, repeated reference pointers, and caveats duplicated?
+- Does every paragraph follow naturally from the preceding paragraph?
+- Is the level of technical detail appropriate for the current audience?
+- Would the prose make sense when heard linearly through a screen reader?
+- Are task steps reproducible and observed speech behaviours correctly
+  described?
+- Have all necessary technical facts from the prior wording been retained or
+  deliberately relocated?
+- Do the chapter's opening, headings, cross-references, and closing still
+  describe its actual content?
+
+Read dense or awkward passages aloud where practical. Automated "AI writing"
+detectors are not acceptance tests; use these observable editorial criteria.
+
+** Verification and reporting
+
+Check behavioural claims against source and tests; check keys and command names
+against the current implementation or live Emacs help. Run the project's
+normal documentation preview and release checks at the appropriate stages,
+following =docs/manual/README.org= and =AGENTS.md=. Do not edit generated
+Texinfo/Info manually or publish without the repository's explicit approval.
+
+Report separately: (1) factual changes, (2) moved or consolidated prose,
+(3) intentional omissions, (4) Info node or cross-reference changes, and
+(5) verification performed. The objective is not merely a clean export; it is
+an accurate chapter that reads as though it had one editor.
+
+* Exemplary material
+
+Use =docs/manual/chapters/introduction.org= as a model of introductory
+restraint; =docs/manual/chapters/aural-presentation.org=, subsection
+"Walkthrough: Change Headings In One Buffer", as a model of a safe, verifiable
+exercise; and the task-oriented parts of =docs/manual/chapters/notmuch.org= as
+examples of detailed auditory behaviour. These are examples, not templates to
+copy mechanically. If a chapter is disjointed, improve the structure rather
+than reproducing that weakness as a precedent.
