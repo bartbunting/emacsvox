@@ -108,7 +108,9 @@ your navigation as you work through it. For a separate key-learning exercise,
 you press. Leave that loop with ~C-g~.
 
 Press ~C-e H i~ to read the offline Emacsvox manual from the settings menu.
-It opens at the top in Info, retaining Info's navigation and index lookup.
+It opens at the top in Info, plays the opening cue, and reads the first screen
+or the whole node according to your Info speech setting. Info's navigation and
+index lookup remain available.
 Press ~q~ to return to the menu with /Read the manual/ selected and the same
 source buffer and settings scope. ~C-e C-i~ opens the manual directly.
 

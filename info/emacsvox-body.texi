@@ -2067,7 +2067,9 @@ your navigation as you work through it. For a separate key-learning exercise@com
 you press. Leave that loop with @kbd{C-g}.
 
 Press @kbd{C-e H i} to read the offline Emacsvox manual from the settings menu.
-It opens at the top in Info@comma{} retaining Info's navigation and index lookup.
+It opens at the top in Info@comma{} plays the opening cue@comma{} and reads the first screen
+or the whole node according to your Info speech setting. Info's navigation and
+index lookup remain available.
 Press @kbd{q} to return to the menu with @emph{Read the manual} selected and the same
 source buffer and settings scope. @kbd{C-e C-i} opens the manual directly.
 

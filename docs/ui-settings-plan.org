@@ -29,8 +29,14 @@ personal configuration changes, or publication.
   =C-e C-i=. All 25 focused menu tests passed from source and in a fresh
   graphical Emacs loading compiled code, including repeated Enter activation,
   Info navigation, and exact menu return. Incremental compilation and byte-code
-  preflight passed. Listening acceptance remains open for entry speech and
-  menu return.
+  preflight passed. Listening accepted opening, navigation, and menu return;
+  opening feedback was absent. The direct call bypassed Info's interactive
+  speech advice. Entry now uses the same interactive dispatch as =C-e C-i=,
+  preserving the opening cue and configured first-screen or whole-node speech.
+  The fix passed 26 menu tests from source and compiled code in fresh graphical
+  Emacs, plus all seven Info advice tests. Regression coverage checks one cue
+  and one speech request on entry and reopening under both reading policies.
+  Listening acceptance of the entry-feedback fix remains open.
 
 Listening checkpoint, 2026-10-15: the nine tasks covering rate/punctuation
 persistence, typing/interaction, indentation and line/boundary cues,

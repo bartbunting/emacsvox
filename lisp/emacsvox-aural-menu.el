@@ -699,9 +699,10 @@ settings, and returning retains the captured source and settings scope."
    (lambda ()
      (let ((source (current-buffer)))
        ;; Keep other manual visits and the shared Info keymap untouched.
-       (info (format "(%s)Top"
-                     (expand-file-name "emacsvox.info" emacsvox-info-directory))
-             "*Emacsvox Settings Manual*")
+       (funcall-interactively
+        #'info (format "(%s)Top"
+                       (expand-file-name "emacsvox.info" emacsvox-info-directory))
+        "*Emacsvox Settings Manual*")
        (emacsvox-aural-ui-register-interface source)
        (use-local-map (copy-keymap (current-local-map)))
        (local-set-key (kbd "q") #'emacsvox-aural-quit)
