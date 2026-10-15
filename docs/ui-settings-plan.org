@@ -1580,7 +1580,13 @@ verification of subsequently changed code.
   are implemented. Both new formats now reach playback through the same
   renderer, advertised together as =rich_tones_v1=. Automated tests cover
   matching standalone and timeline sound, gain, routing, multipart framing and
-  replacement. Full Windows development staging is the next build gate.
+  replacement. The Linux workspace passes 1,187 tests, with two existing
+  qualification/stress tests ignored; formatting, Clippy and documentation
+  checks pass. Full Windows development staging passes for build
+  =a4b085773844514f=, from Omnivox commit =a04e91e=. A fresh native Windows
+  process through the normal launcher confirms capability negotiation and
+  standalone, direct-timeline and multipart-timeline execution using null
+  audio output. This is automated verification, not listening acceptance.
   Next are worker-local client negotiation, old-worker degradation and
   individual spelling gain. New sounds and their relative loudness still
   need listening acceptance; no live session has been changed.
