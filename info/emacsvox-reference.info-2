@@ -6984,14 +6984,23 @@ semantics.
      Inspect speech and presentation; only explicit actions change settings.
      Doctor offers individual repairs.  Logging includes complete spoken text.
 
-2.230.1.2 emacsvox-settings-feedback
+2.230.1.2 emacsvox-settings-dictionaries
+........................................
+
+ -- Command: emacsvox-settings-dictionaries
+
+     Manage Emacs pronunciation dictionaries for words and phrases.
+     These dictionaries have their own Save file, separate from Customize and
+     Omnivox punctuation.  Opening the menu changes nothing.
+
+2.230.1.3 emacsvox-settings-feedback
 ....................................
 
  -- Command: emacsvox-settings-feedback
 
      Explain and edit current or recent feedback, preserving source context.
 
-2.230.1.3 emacsvox-settings-history
+2.230.1.4 emacsvox-settings-history
 ...................................
 
  -- Command: emacsvox-settings-history
@@ -6999,14 +7008,14 @@ semantics.
      Manage retained feedback globally; lowering the limit deletes old records.
      Changes apply immediately.  Save defaults separately through Customize.
 
-2.230.1.4 emacsvox-settings-presentation
+2.230.1.5 emacsvox-settings-presentation
 ........................................
 
  -- Command: emacsvox-settings-presentation
 
      Manage presentation features and explicitly scoped rule drafts.
 
-2.230.1.5 emacsvox-settings-preview-labels
+2.230.1.6 emacsvox-settings-preview-labels
 ..........................................
 
  -- Command: emacsvox-settings-preview-labels
@@ -7014,14 +7023,14 @@ semantics.
      Choose physical voice comparison labels; navigation changes nothing.
      Enter applies the selected policy and returns.  Cancel retains the old policy.
 
-2.230.1.6 emacsvox-settings-setups
+2.230.1.7 emacsvox-settings-setups
 ..................................
 
  -- Command: emacsvox-settings-setups
 
      Manage saved setups and retained drafts in their owning editors.
 
-2.230.1.7 emacsvox-settings-switches
+2.230.1.8 emacsvox-settings-switches
 ....................................
 
  -- Command: emacsvox-settings-switches
@@ -7030,13 +7039,27 @@ semantics.
      Only global Voice Lock has a Customize save here.  Other switches last for the
      session or buffer; Help explains which presentation each switch affects.
 
-2.230.1.8 emacsvox-settings-voice-presentation
+2.230.1.9 emacsvox-settings-voice-presentation
 ..............................................
 
  -- Command: emacsvox-settings-voice-presentation
 
      Set comparison labels and overall Omnivox pitch contrast globally.
      Changes apply now; Save defaults explicitly to keep them across restarts.
+
+2.230.2 emacsvox-settings-workflows Options
+-------------------------------------------
+
+ -- Variable: User Option
+          emacsvox-settings-workflows--dictionary-return-mode-hook
+     Hook run after entering or leaving ‘emacsvox-settings-workflows--dictionary-return-mode’.
+     No problems result if this variable is not bound.
+     ‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+
+     Default Value:
+
+     nil
+
 
 
 File: emacsvox-reference.info,  Node: emacsvox-setup,  Next: emacsvox-sgml-mode,  Prev: emacsvox-settings-workflows,  Up: Emacsvox Commands And Options

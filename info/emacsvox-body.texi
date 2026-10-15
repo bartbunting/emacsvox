@@ -212,6 +212,106 @@ which keys to hold together@comma{} when to release them@comma{} and how to ente
 by name. The reading routes below assume that notation@comma{} not prior experience
 with Emacs.
 
+@menu
+* Answer a prompt and return to your work: Answering Emacs Prompts.  Know where to type, how completion helps, and when a command has finished.
+* Choose a reading route: Manual Reading Routes.  Choose sequential lessons, everyday tasks or a specific reference answer.
+* Find an answer in Info and return: Finding Help In Info.  Use the index and task links, retrace a lookup and return to work.
+* Recognise the document you are reading: Manual Editions And Formats.  Distinguish current guidance, generated reference, heritage and published formats.
+@end menu
+
+@node Answering Emacs Prompts
+@section Answer a prompt and return to your work
+
+@cindex minibuffer
+@cindex prompts, answering
+@cindex completion, first use
+@cindex where to type
+
+A command may ask for a file@comma{} a buffer@comma{} a search term or another value. Emacs
+reads that answer in the @emph{minibuffer}@comma{} a temporary input area separate from
+your document. While the prompt is active@comma{} ordinary typing answers the prompt;
+it does not add words to the document. Emacsvox speaks prompts and completion
+feedback according to your settings.
+
+For example@comma{} @kbd{M-x} asks for a command name. Type @code{describe-mode}@comma{} including
+its hyphen@comma{} then press @kbd{@key{RET}} to run it. Do not type the prompt label or the
+letters @code{M-x}. A command may then ask another question: after choosing @code{eww}@comma{}
+for example@comma{} its next prompt asks for a web address or search words. Answer
+one prompt at a time rather than pasting the whole printed instruction.
+
+Completion helps you enter an existing name. Type a distinctive beginning@comma{}
+then press @kbd{@key{TAB}}. Emacs may extend the text or offer several candidates.
+With several matches@comma{} type more of the name; you can always type the complete
+name and press @kbd{@key{RET}}. Completion interfaces differ between configurations@comma{}
+so the guides do not assume that Down Arrow accepts the first suggestion.
+Opening a new file permits a name that does not yet exist; selecting an
+installed command normally requires a recognised name.
+
+@kbd{@key{RET}} submits the current answer@comma{} including any text already in the prompt.
+An empty answer may accept a displayed default. Read that default before
+accepting it. For a yes/no question@comma{} use the response requested: some prompts
+accept @kbd{y} or @kbd{n}@comma{} while others require @code{yes} or @code{no} followed by @kbd{@key{RET}}.
+
+Use @kbd{C-g} to abandon an unfinished ordinary prompt. If you have already
+submitted it and the command has acted@comma{} cancellation does not undo the result.
+Likewise@comma{} quitting a settings menu does not undo an adjustment made there.
+Follow the recovery instructions for the operation you actually performed.
+
+After the prompt finishes@comma{} notice which buffer has been selected. An open-file
+command selects a document; Help may appear in another window; a save normally
+leaves you in the document. Press @kbd{C-e m} to identify the current buffer and
+mode before editing. Finish or cancel an active prompt before switching buffers
+with @kbd{C-x b}; otherwise its answer is still unfinished. See
+@ref{Using Online Help, , Using Online Help} for entering and leaving a Help window.
+
+@menu
+* Interpret filenames and examples: Filenames And Example Commands.  Resolve paths in the right environment and distinguish input from instructions.
+@end menu
+
+@node Filenames And Example Commands
+@subsection Interpret filenames and examples
+
+@cindex filenames, entering
+@cindex paths, examples
+@cindex shell commands, where to run
+@cindex WSL, document paths
+
+A @emph{path} identifies a file's location as well as its name. A file prompt often
+starts with a directory already filled in. Append a filename to use that
+directory@comma{} or replace the editable answer with a complete path. In an ordinary
+file minibuffer@comma{} @kbd{C-a C-k} removes the current editable answer: Control-a goes
+to its beginning and Control-k removes the text that follows. This edits the
+answer@comma{} not a file. Then type the intended path and press @kbd{@key{RET}}.
+
+The examples use @code{~/} for the home directory understood by the running Emacs.
+For example@comma{} @code{~/evox-notes.org} names @code{evox-notes.org} in that home directory.
+In WSL this normally means the Linux home@comma{} not Windows Documents. A Windows
+C-drive path is normally reached through @code{/mnt/c/} in WSL; native Windows Emacs
+uses its own Windows paths. Use a directory that exists and is writable in the
+environment running Emacs. A speech server running on another host does not
+change where ordinary Emacs document files are stored.
+
+A relative name is resolved against the directory in the prompt@comma{} which may
+change with the selected buffer. Do not assume it means the repository root
+or the folder used in an earlier task. When an instruction says "from the
+checkout"@comma{} it explicitly means that source directory. Replace placeholders
+such as @code{/path/to/document.txt} with real names; do not create those directories
+merely to copy the example literally. In Emacs file prompts@comma{} type spaces in
+names normally rather than adding shell quotes around the whole path.
+
+Keyboard sequences invoke Emacs commands. A shell example belongs at a shell
+or terminal prompt in the environment named by the instructions@comma{} not after
+@kbd{M-x}. Lisp configuration belongs in the specified Emacs configuration file;
+it is not ordinary document text or a shell command. A displayed command's
+output is something to check@comma{} not another command to enter. Read the sentence
+introducing each example to establish which of these contexts it uses.
+
+When practising@comma{} choose unused names. If a proposed name already contains work@comma{}
+cancel and substitute another name consistently. An overwrite warning is not a
+routine confirmation to accept. Opening@comma{} copying@comma{} saving and deleting have
+different effects; the following task guides explain the effect before the step.
+
+@node Manual Reading Routes
 @section Choose a reading route
 
 After @ref{Installation,Installation,,emacsvox,} gives you speech@comma{} work through @ref{Guided Tutorial,Learn the audio desktop,,emacsvox,} for
@@ -231,6 +331,11 @@ prepare its disposable buffer before experimenting. Then read
 @ref{Aural Presentation,Aural Presentation,,emacsvox,} for application meaning@comma{} voices@comma{} sounds@comma{} and settings@comma{}
 and choose an application guide for your work.
 
+For independent everyday tasks@comma{} use @ref{Working With Files, , Work with files and directories}@comma{}
+@ref{Writing An Org Document, , Write a note with headings}@comma{} or @ref{Web Browsing, , Web browsing with EWW}. These guides
+explain real files and pages; they do not require completing the tutorial or
+changing your voice configuration.
+
 For one question@comma{} go directly to @ref{Finding Tasks, , Find a task}@comma{} use Info's index@comma{} or search
 the manual text. When something is not working@comma{} @ref{Finding Problem Tasks, , Something is wrong} starts
 with symptoms rather than the names of settings. @ref{Speech Backends,Speech Backends,,emacsvox,} contains alternative installation and backend
@@ -238,6 +343,7 @@ configuration procedures; it is not required reading between your first
 speaking session and everyday editing. The final Developer Guide is for
 changing and maintaining Emacsvox@comma{} not for ordinary use.
 
+@node Finding Help In Info
 @section Find an answer in Info and return
 
 Info is Emacs's manual reader. A @emph{node} is one navigable topic@comma{} which can have
@@ -298,6 +404,7 @@ For the full reader tutorial and search behaviour@comma{} see the @ref{Top,Info 
 If a key behaves differently in your session@comma{} @kbd{C-h k} followed by that key
 explains its effective binding without invoking it.
 
+@node Manual Editions And Formats
 @section Recognise the document you are reading
 
 This user manual explains tasks@comma{} feedback@comma{} and recovery. The generated
@@ -2967,6 +3074,13 @@ Change the bounded history limit for this session.
 Include or exclude feedback from Aural interfaces themselves.
 @end table
 
+To change the same policy from a menu@comma{} open @kbd{C-e H f H}. Select @emph{Retained
+records} and use @kbd{@key{RET}} for an exact nonnegative limit@comma{} or Shift-left/right to
+adjust by one. Lowering the limit immediately discards the oldest excess
+records; zero clears and disables history. Increasing it cannot restore those
+records. The menu's @kbd{i} toggles interface recording@comma{} and @kbd{w} saves both defaults
+through Customize. Retained feedback itself is never saved by this action.
+
 Aural interface feedback is excluded by default so it does not displace the
 feedback being investigated. This includes their prompts@comma{} completion choices@comma{}
 and opening/closing sounds. Ordinary completion elsewhere remains eligible.
@@ -3799,10 +3913,17 @@ the physical voice or changing duration/markers. Preview it in Voice Palettes
 or Workbench before assignment. Adapters without post-synthesis filtering keep
 the style but cannot apply those filters.
 
-@code{omnivox-average-pitch-contrast} defaults to @code{0.5} for gentler distinctions.
-@code{1.0} restores historical contrast and @code{0} neutralises average pitch; values
-through @code{2.0} are accepted. Changing it refreshes logical-voice registration
-for previews@comma{} structured speech@comma{} and legacy inline voices alike.
+For overall Omnivox pitch contrast (@code{omnivox-average-pitch-contrast})@comma{} open
+@kbd{C-e H v o} and select @emph{Omnivox pitch contrast}. Shift-left/right adjusts by @code{0.1}; @kbd{@key{RET}} enters an exact
+value from zero to two. The default @code{0.5} gives gentler distinctions@comma{} @code{1.0}
+restores historical contrast@comma{} and zero neutralises average pitch. This scales
+all average-pitch levels without changing individual named-voice definitions;
+other backends are unaffected.
+
+Changes refresh logical-voice registration for subsequent previews@comma{} structured
+speech and legacy inline voices. Compare familiar content@comma{} then restore the
+previous value if needed. The menu's @kbd{w} saves both contrast and comparison
+labels through Customize; it does not save a voice or palette.
 
 @node Voice Fallbacks
 @subsection Choose And Tune Fallback Voices
@@ -4135,11 +4256,19 @@ rows. @kbd{B} uses the selected voice as A and asks for B; @emph{Search all engi
 can compare outside current filters. Both use one sentence. @kbd{T} edits it@comma{}
 @kbd{F} filters@comma{} @kbd{C} clears filters@comma{} and @kbd{R} refreshes inventory.
 
-@code{emacsvox-aural-preview-label-verbosity} selects names@comma{} short letters/numbers@comma{}
-or no labels. Labels and samples form one sequence: @kbd{S} or foreground navigation
-cancels remaining playback. Exact-preview failure is reported rather than
-accepting a substitute as the requested voice. Capabilities describe adapter
-claims@comma{} not a listening test of every parameter.
+Use @kbd{C-e H v o l} to choose comparison labels: engine and voice names@comma{}
+letters or sequence numbers@comma{} or no labels. The option is
+@code{emacsvox-aural-preview-label-verbosity}. The list starts on the current
+choice. Arrows browse without applying; @kbd{@key{RET}} applies and returns@comma{} while @kbd{q}
+cancels. This global option changes labels@comma{} leaving sample text and order
+intact. With no labels@comma{} the sequence no longer identifies its voices aloud.
+Press @kbd{w} in Voice presentation to save labels and pitch contrast through
+Customize.
+
+Labels and samples form one sequence: @kbd{S} or foreground navigation cancels
+remaining playback. Exact-preview failure is reported rather than accepting
+a substitute as the requested voice. Capabilities describe adapter claims@comma{}
+not a listening test of every parameter.
 
 @node Physical Voice Experiments
 @subsection Experiment With An Installed Voice
@@ -4283,6 +4412,14 @@ For unconfirmed application@comma{} see
 Rules request cues by semantic name. Sound packs map names to audio assets
 and can inherit missing cues. This lets you change the sound of a family of
 cues without rewriting rules. For one event@comma{} use its feedback rule instead.
+
+To enable or disable earcons in the captured buffer@comma{} use @kbd{C-e H r l e}.
+In that submenu@comma{} @kbd{E} changes the global default for buffers without a local
+override; @kbd{i} removes the source buffer's override so it follows that default.
+Speech remains available when earcons are off@comma{} but menu cues also disappear
+where the off setting applies. These switches last for the session or buffer
+and have no Customize Save action. Toggle again or restore inheritance to
+reverse an experiment.
 
 @kbd{C-e H o p} opens @emph{Sound Packs}. Its @kbd{q} returns to @emph{Sounds and output} with
 the same settings scope@comma{} and another @kbd{q} returns to the main menu. Directly
@@ -4487,7 +4624,7 @@ none@comma{} @kbd{s} for some or @kbd{a} for all punctuation. That menu's @kbd{p
 built-in levels and available named profiles. In buffer scope@comma{} @kbd{r} restores
 automatic mode policy. Press @kbd{q} to return to Speech settings.
 
-The punctuation menu's @kbd{e} opens the separate pronunciation editor. In that
+The punctuation menu's @kbd{e} opens the Omnivox pronunciation editor. In that
 editor@comma{} lowercase @kbd{s} saves overrides on the speech host and lowercase @kbd{r}
 restarts speech after confirmation. Its @kbd{q} returns to the same punctuation
 menu item@comma{} retaining the draft and selected character for reopening.
@@ -4502,6 +4639,45 @@ displayed choices to defaults. Mode punctuation policy and explicit buffer
 settings still override the saved punctuation default.
 
 @enumerate
+@item
+@anchor{Use Emacs word and phrase dictionaries}Use Emacs word and phrase dictionaries
+
+
+For word or phrase substitutions managed by Emacs@comma{} open @kbd{C-e H s p d}.
+This menu is separate from the Omnivox pronunciation editor on @kbd{e}. Its
+dictionaries are stored in an Emacs dictionary file@comma{} not Customize or the
+speech host@comma{} and changes need no speech restart. Opening the menu writes
+nothing and leaves the source's pronunciation table unchanged.
+
+Press @kbd{d} to define an entry at the captured source item. Choose buffer@comma{} file@comma{}
+directory or major-mode scope@comma{} then enter the term and spoken replacement.
+The existing prompt can load saved dictionaries first. Buffer entries last
+only in that buffer's current pronunciation table. Other scopes update the
+in-memory dictionary collection and need a separate @kbd{w} Save to persist.
+
+Use @kbd{e} to choose an existing dictionary and open its widget editor. @kbd{@key{TAB}}
+moves between fields and buttons; @kbd{@key{RET}} activates them. Field edits update
+the in-memory collection. Its Save button writes dictionaries to a chosen
+file. Return with @kbd{C-c C-c} from anywhere@comma{} or @kbd{q} outside editable fields;
+inside a field@comma{} @kbd{q} inserts text. Returning retains edits without saving or
+rolling them back@comma{} and reopening resumes the same editor buffer.
+
+Back in the menu@comma{} @kbd{r} rebuilds and enables the captured source's table from
+its dictionaries. This replaces temporary buffer-only entries. @kbd{t} turns
+substitution off or composes the table again when turning it on; turning off
+also loses buffer-only entries. Changes to file@comma{} directory and mode entries
+remain in the collection. To reverse an entry change@comma{} edit it back and refresh
+the source; save again if you changed the saved dictionary.
+
+Finish and close existing widget editors before loading replacements: their
+retained fields are not reloaded. The menu's @kbd{l} loads a dictionary file into
+the collection; refresh the source afterward to use those entries. @kbd{w} saves file@comma{} directory and mode dictionaries@comma{}
+excluding buffer-only entries. Both actions prompt for a file; Load offers
+@code{emacsvox-pronounce-dictionaries-file}@comma{} while Save offers its basename in the
+Emacsvox user directory. Saving elsewhere does not change the configured
+startup file. Use @kbd{?} followed by an item's key
+for its scope and effects before applying it.
+
 @item
 @anchor{Adjust indentation feedback}Adjust indentation feedback
 
@@ -5205,7 +5381,7 @@ Faces are visual style labels that Emacsvox can use without requiring sight.
 @tab emacsvox-aural-toggle-face-presentation or Aural Doctor
 @item Voice Lock
 @tab Historical buffer face/personality mapping
-@tab C-e d v locally; C-e d C-v globally
+@tab C-e H r l v locally; C-e H r l V globally
 @end multitable
 
 To identify Voice Lock's contribution:
@@ -5223,7 +5399,17 @@ Explain with @kbd{C-e E} to inspect Voice Lock/face state and contributing rules
 Turning it off removes only that compatibility contribution. Semantic
 presentation@comma{} explicit face rules@comma{} cues@comma{} tones@comma{} and spoken status remain.
 The global command updates existing and new buffers; a mode can still opt out
-on startup. Buffer-local Voice Lock is not captured in Presentation Profiles.
+on startup. The same controls are available at @kbd{C-e H r l v} for the captured
+buffer and capital @kbd{V} for global policy. That submenu's @kbd{w} saves only global
+Voice Lock through Customize. Buffer-local Voice Lock is not captured in
+Presentation Profiles.
+
+To silence or restore the personality or mapped face at the captured item@comma{}
+choose @kbd{s} in that submenu. This uses the existing local suppression command;
+it can affect other text using that mapping in the same buffer. It does not
+retune the named voice@comma{} and a globally inaudible mapping cannot be restored
+there. The change lasts for the buffer and is not saved. Close and reopen the
+menu from the intended item if its captured source has changed.
 
 For new changes@comma{} prefer explanation@comma{} settings menus@comma{} palettes@comma{} and Workbench.
 Legacy named voices can still use @code{-settings} options such as @code{voice-monotone-settings}. Customise
@@ -5266,15 +5452,21 @@ has a complete task guide. The generated
 public commands and options. Consult both that reference and the application's
 manual when diagnosing a problem.
 
+The everyday guides below cover opening and copying files@comma{} writing and reviewing
+notes@comma{} and reading web pages. They use existing speech settings. Start with
+@ref{Answering Emacs Prompts, , Answer a prompt and return to your work} if filename entry@comma{} completion or
+switching from the manual to a working buffer is unfamiliar.
+
 Earlier surveys of W3@comma{} Dismal@comma{} and scanner/OCR setup remain in the
 @ref{Emacs Packages,Historical Application Survey,,emacsvox-heritage,} in @emph{Emacspeak Heritage}. They describe their
 original period and are not current installation instructions.
 
 @menu
-* Document Authoring::
+* Work with files and directories: Working With Files.  Open a document, save a separate working copy and find it again in Dired.
+* Writing and reviewing documents: Document Authoring.  Create a note, navigate its structure and verify changes before saving.
 * Structured Editing::
 * Browsing Structure::
-* Web Browsing::
+* Reading web pages with EWW: Web Browsing.  Open pages, read their structure, follow links and recover your place.
 * Messaging::
 * Editing Code::
 * Development Environment::
@@ -5283,16 +5475,285 @@ original period and are not current installation instructions.
 * Desktop Applications::
 @end menu
 
+@node Working With Files
+@section Work with files and directories
+
+@cindex files, everyday work
+@cindex directories, browsing
+@cindex buffer versus file
+
+A file is stored on disk. Visiting it in Emacs opens a @emph{buffer} containing its
+working text; editing changes that buffer until you save. Switching to another
+buffer leaves the work open. Closing a buffer does not delete its file.
+
+These tasks use ordinary text files and existing writable directories. They
+do not convert Word documents or PDFs into text. Start with speech working and
+finish any open menu or prompt. @ref{Answering Emacs Prompts, , Answer a prompt and return to your work}
+explains filename entry and the distinction between Emacs and shell input.
+
+@menu
+* Open a document and check its identity: Opening A Document.  Visit the intended text file and distinguish a new file from an existing one.
+* Save a separate working copy: Saving A Working Copy.  Preserve the original saved file and make later saves go to the intended copy.
+* Find and inspect files with Dired: Browsing Files With Dired.  Navigate filenames, request metadata and return without changing files.
+@end menu
+
+@node Opening A Document
+@subsection Open a document and check its identity
+
+@enumerate
+@item
+Press @kbd{C-x C-f}. At the file prompt@comma{} choose the existing text file you
+want to read. Complete or type its path@comma{} then press @kbd{@key{RET}}. Emacs selects
+the file's buffer; use @kbd{C-e m} to hear its name and mode.
+@item
+Press @kbd{M-<}@comma{} then @kbd{C-e l} to read its first line. Check that the content
+is what you expected before editing. A missing filename can instead open
+an empty buffer for a new file. Opening that buffer alone has not created
+a saved document: check the name rather than assuming your text was lost.
+@item
+If you need to confirm the full destination@comma{} use
+@kbd{C-h v buffer-file-name @key{RET}}. This Help shows the pathname visited by the
+source buffer; @code{nil} means that buffer is not visiting a file. Read Help
+as described in @ref{Using Online Help, , Using Online Help}@comma{} then return to the document by
+its buffer name with @kbd{C-x b}. Do not edit while Help is selected.
+@end enumerate
+
+For reading without accidental text edits@comma{} use @kbd{C-x C-r} in place of
+@kbd{C-x C-f}. That opens the file read-only. A read-only buffer is different from
+a document with unsaved changes; do not remove the protection merely to make
+an unfamiliar command work.
+
+When you follow this task from Info or HTML@comma{} leave the manual available and
+switch to the document before trying its editing commands. In Emacs@comma{} @kbd{C-x b}
+selects an existing buffer by name; @kbd{C-x C-f} selects a file by its path.
+Those are different questions even when the buffer and file have similar names.
+
+To close a document buffer@comma{} use @kbd{C-x k} and check the name and any unsaved-work
+prompt. That is not a file deletion. Unlike a Dired or Help buffer@comma{} an ordinary
+text buffer does not use @kbd{q} to quit: typing it normally inserts a letter.
+
+@node Saving A Working Copy
+@subsection Save a separate working copy
+
+Use this route before editing a document whose original you want to preserve.
+It writes the current buffer text@comma{} including unsaved edits@comma{} to a new filename
+and makes that new file the buffer's saving destination.
+
+@enumerate
+@item
+Select the source document and check its identity. Press @kbd{C-x C-w}@comma{}
+replace the proposed filename with an unused path such as
+@code{~/evox-notes-copy.txt}@comma{} and press @kbd{@key{RET}}. Keep the appropriate extension
+for the document@comma{} for example @code{.org} for Org notes. Cancel an unexpected
+overwrite prompt and choose another name.
+@item
+Read the save result and check the new destination with
+@kbd{C-h v buffer-file-name @key{RET}} when necessary. A permission or write error
+is not a completed save. Keep the buffer open while correcting the problem;
+do not discard the only copy of unsaved text.
+@item
+Return to that document@comma{} make the intended changes@comma{} and press @kbd{C-x C-s}.
+This saves to the new destination. The old saved file remains at its old
+path. You can open it separately with @kbd{C-x C-f} to compare it with the copy.
+@end enumerate
+
+@kbd{C-x C-w} does not keep the buffer attached to both files. After it succeeds@comma{}
+later @kbd{C-x C-s} saves update the new file. The old file retains its previously
+saved content@comma{} not any unsaved changes that were written only to the copy.
+Changing the filename is also not a format converter: naming plain text with
+@code{.docx} does not create a Word document.
+
+To duplicate the last saved file while leaving the working buffer's destination
+unchanged@comma{} use @kbd{M-x copy-file @key{RET}} instead. Answer its source and destination
+prompts with paths. It copies the file on disk@comma{} not unsaved buffer edits@comma{} and
+does not switch you into the new copy. Open the destination separately to work
+on it. See @ref{Save Commands,Save commands,,emacs,} and @ref{Copying and Naming,Copying and naming files,,emacs,} in the GNU Emacs
+Manual for other saving and copying operations.
+
+If Emacs reports that another program changed the original@comma{} do not force a
+save or revert simply to clear the warning. Keep your buffer@comma{} preserve its
+text under an unused filename if needed@comma{} and compare the versions before
+deciding which changes to keep. @ref{Simultaneous Editing,Simultaneous editing,,emacs,} explains that conflict.
+
+@node Browsing Files With Dired
+@subsection Find and inspect files with Dired
+
+@cindex Dired
+@cindex file size, hearing
+@cindex file modification time
+@findex dired
+@findex emacsvox-dired-speak-file-size
+@findex emacsvox-dired-speak-file-modification-time
+
+Dired is Emacs's directory browser. Its ordinary listing is not document text:
+letters such as @kbd{n}@comma{} @kbd{p} and @kbd{q} invoke commands rather than being inserted.
+Emacsvox normally speaks filenames as you move@comma{} leaving detailed metadata for
+inspection on request. Voices and cues can distinguish directories@comma{} links and
+marked entries according to your presentation settings.
+
+@enumerate
+@item
+Press @kbd{C-x d}@comma{} enter an existing directory such as @code{~/}@comma{} and press @kbd{@key{RET}}.
+In the Dired buffer@comma{} press comma@comma{} @kbd{@comma{}}@comma{} to hear the listing header.
+@item
+Move with @kbd{n} and @kbd{p} to the next or previous entry. To reach a known name
+in a long listing@comma{} use @kbd{C-s}@comma{} type part of the filename@comma{} and press @kbd{@key{RET}}
+to finish searching. Check the filename you reached before acting on it.
+@item
+On an ordinary file@comma{} press @kbd{z} to hear its size@comma{} lowercase @kbd{c} for its
+modification time@comma{} and @kbd{/} for permissions. These inspect the selected
+entry without opening it. Uppercase @kbd{C} is Dired's Copy command@comma{} not a
+second way to hear the time. Size inspection on a directory instead uses
+the external @code{du} program and may take longer or be unavailable; file-type
+inspection with apostrophe@comma{} @kbd{'}@comma{} similarly requires the @code{file} program.
+@item
+Press @kbd{@key{RET}} on the file to visit it in Emacs. On a directory@comma{} @kbd{@key{RET}} opens
+that directory's listing. Opening announces the destination; @kbd{C-e m} lets
+you check the resulting buffer and mode. Use @kbd{@key{RET}} here@comma{} not @kbd{C-j}:
+Emacsvox assigns @kbd{C-j} and Control-Enter to a separate@comma{} file-type-aware
+opener which may preview or play a file instead of visiting its text.
+@item
+To return from the document@comma{} use @kbd{C-x b} and select the directory buffer.
+In Dired@comma{} @kbd{^} goes to the parent directory and @kbd{g} refreshes the listing
+from disk. Refreshing Dired does not save or discard an open document's
+edits. Press @kbd{q} in Dired to leave the listing; your files remain on disk.
+@end enumerate
+
+Looking at a file is not the same as marking it for an operation. @kbd{m} marks
+an entry and then moves to the next; its action cue precedes the newly selected
+filename. @kbd{u} unmarks an entry and also advances. If you are inspecting a
+listing with existing marks@comma{} leave them alone. Dired operations can apply to
+marked files rather than the row you are hearing.
+
+This guide does not require deletion@comma{} renaming@comma{} changing permissions or running
+commands on files. In particular@comma{} @kbd{d} flags deletion and @kbd{x} executes flagged
+deletions; do not use either as a way to close a listing. Cancellation after a
+file operation and ordinary text undo are not promises of filesystem recovery.
+Use @ref{Dired,Dired,,emacs,} in the GNU Emacs Manual before performing those operations@comma{} and
+@ref{emacsvox-dired,emacsvox-dired,,emacsvox-reference,} for the complete speech-command reference.
+
 @node Document Authoring
 @section Document Authoring
 
 @cindex document authoring
 
-Open or create a document in its normal Emacs mode. The major mode provides
-format-specific editing commands; Emacsvox speaks movement and edits@comma{} applies
-Voice Lock where useful faces are available@comma{} and adds integration-specific
-feedback. Use @kbd{C-h m} for the mode's workflow. Outlines and template fields
-are covered next; table reading is described under @ref{Browsing Structure, , Browsing Structure}.
+Open or create a document in its normal Emacs mode. The mode supplies the
+format's editing commands; Emacsvox presents movement@comma{} edits and structure
+through speech. Voice Lock can distinguish useful faces supplied by the mode.
+The following task writes a small Org note@comma{} then reviews it without relying
+on visual formatting. Org comes with Emacs; no mail account or additional
+speech engine is required.
+
+For copying an existing document before editing@comma{} use
+@ref{Saving A Working Copy, , Save a separate working copy}. Outlines and template fields are covered
+under @ref{Structured Editing, , Structured editing and templates}@comma{} and tables under
+@ref{Reading Markdown And Org Tables, , Reading Markdown and Org tables}.
+
+@menu
+* Write a note with headings: Writing An Org Document.  Create a real text file and organise a short note with Org headings.
+* Review structure and correct text: Reviewing An Org Document.  Read headings, reveal their contents, search and verify an edit before saving.
+@end menu
+
+@node Writing An Org Document
+@subsection Write a note with headings
+
+@cindex notes, writing
+@cindex documents, creating
+@cindex Org, writing a document
+
+Unlike the tutorial's disposable buffer@comma{} this task creates a file you can
+return to. Use an unused name and a writable directory. The name
+@code{~/evox-notes.org} is an example@comma{} not a file the package supplies.
+
+@enumerate
+@item
+Press @kbd{C-x C-f}@comma{} enter @code{~/evox-notes.org} and press @kbd{@key{RET}}. If it already
+contains work@comma{} choose another name before typing. The @code{.org} extension
+normally selects Org mode; check with @kbd{C-e m}. If a personal configuration
+selected another mode@comma{} run @kbd{M-x org-mode @key{RET}} in this new note.
+@item
+Type or insert the following text in the document buffer@comma{} not in the
+minibuffer or the manual. Start each heading at the beginning of its line.
+One asterisk and a space introduce the main heading; two asterisks and a
+space introduce a heading beneath it.
+
+@example
+* Project notes
+The draft is ready for review.
+** Questions
+Check the delivery date.
+** Decisions
+Keep a separate review copy.
+@end example
+
+@item
+Press @kbd{M-<} and read with @kbd{C-n} and @kbd{C-e l}. Verify the heading words
+and body text. Org heading feedback can identify structure without reading
+every leading asterisk; exact character inspection remains available.
+@item
+Press @kbd{C-x C-s} and read the save result. That writes this Org text to
+the selected file. It does not export a formatted document or change speech
+settings. Keep the file open for the following review@comma{} or reopen it later
+with @kbd{C-x C-f} and its path.
+@end enumerate
+
+Choose your own heading titles when writing real notes. Org stores the title
+and body as plain text@comma{} so the structure remains in the file even when parts
+of it are folded in the current view. Do not delete a folded heading to try
+to reveal its body: folding is a visibility operation@comma{} not missing content.
+
+@node Reviewing An Org Document
+@subsection Review structure and correct text
+
+Start in the Org document@comma{} not in an Info example. Use @kbd{C-e m} to check the
+selected buffer. If the note was reopened with content folded@comma{} first press
+@kbd{M-<}@comma{} then @kbd{C-u C-u C-u @key{TAB}}: Control-u three times@comma{} followed by Tab.
+This shows all content without rewriting it. See
+@ref{Global and local cycling,Global and local cycling,,org,} in the Org manual.
+
+At the first heading@comma{} @kbd{C-c C-n} moves to the next visible heading and
+@kbd{C-c C-p} to the previous one. In the example@comma{} these let you review Questions
+and Decisions without reading every paragraph. Emacsvox announces the heading
+you reach. Use @kbd{C-e l} to repeat it and @kbd{C-n} to begin reading its body.
+
+On a heading@comma{} @kbd{@key{TAB}} cycles that subtree's visibility. Listen to the state
+feedback before moving into it. This is different from Tab in a table or at a
+completion prompt. The show-all sequence above provides a known starting view
+if the current folds become confusing. @ref{Motion,Motion,,org,} documents the other heading
+commands@comma{} while @ref{Browsing Structure, , Browsing Structure} explains the speech detail for Org headings.
+
+For a focused text correction in the example:
+
+@enumerate
+@item
+Press @kbd{M-<}@comma{} then @kbd{C-s}@comma{} type @code{ready} and press @kbd{@key{RET}} to finish the
+search. Search moves point; the subsequent typing will occur there@comma{} not
+in a separate search box. Press @kbd{C-e l} to confirm the sentence.
+@item
+Point is immediately after @code{ready}. Press @kbd{M-b} to move to its beginning@comma{}
+then @kbd{M-d} to remove that word. Type @code{prepared}. The surrounding text
+should now read @code{The draft is prepared for review.}.
+@item
+Read the whole line again before saving. If the edit is wrong@comma{} use @kbd{C-/}
+once and inspect the result. Removing the old word and inserting the new
+one can be separate undo steps; undo only as far as the intended state.
+Do not repeat undo blindly through earlier work.
+@item
+Press @kbd{C-x C-s} only when the text is correct. Switch to another buffer
+and back with @kbd{C-x b} to continue working; leaving the note does not
+require closing its buffer.
+@end enumerate
+
+If a search fails@comma{} check the text and the starting position. @kbd{@key{RET}} ends the
+search at its current position; @kbd{C-g} can remove a failing suffix before
+aborting the search@comma{} so listen for whether it is still active. Finish or cancel
+search before issuing editing commands. Keep the desired note selected when
+saving: a browser page@comma{} Help buffer and document do not share Save semantics.
+
+An edit made after a successful save needs another save to replace that file's
+contents. Undo also changes the buffer; it does not by itself restore the file
+on disk. For a separate review version@comma{} use @ref{Saving A Working Copy, , Save a separate working copy} rather
+than renaming the buffer and assuming that changed its destination.
 
 @node Structured Editing
 @section Structured Editing And Templates
@@ -5462,8 +5923,8 @@ and @kbd{C-b~/~C-f} move by character; @kbd{C-p~/~C-n} move by logical row.
 @kbd{.} gives coordinates and @kbd{=} dimensions. The first row supplies column
 titles and is announced separately from data rows.
 @item
-@kbd{w} or @kbd{k k} copies the cell@comma{} @kbd{k r} the row with tabs between cells@comma{}
-and @kbd{k c} the column with newlines between cells. @kbd{K} copies the whole
+@kbd{w} or @kbd{k k} copies the cell@comma{} @kbd{k r} copies the row with tabs between cells@comma{}
+and @kbd{k c} copies the column with newlines between cells. @kbd{K} copies the whole
 table to the clipboard used by @code{emacsvox-table-paste-from-clipboard}.
 @item
 @kbd{a} changes column titles@comma{} row titles@comma{} or data order for this view using
@@ -5494,23 +5955,162 @@ speech preferences. Use @kbd{C-h m} for the full browser key map.
 @cindex Web browsing
 @findex eww
 
-EWW is the built-in browser supported for current Emacsvox. Run
-@kbd{M-x eww @key{RET}}@comma{} enter a URL or search words@comma{} and press @kbd{@key{RET}}. Emacsvox speaks
-navigation and rendering feedback and adds HTML-structure movement and
-filtering of the displayed DOM@. Consult @ref{EWW,EWW,,emacs,} in @emph{The GNU Emacs Manual} for
-browser operation and @ref{emacsvox-eww,emacsvox-eww,,emacsvox-reference,} in the @emph{Emacsvox Reference Manual}
-for speech support.
+EWW is Emacs's built-in text-oriented web browser. Emacsvox adds speech and
+navigation using the page's HTML structure. These commands act on the rendered
+page@comma{} not on the manual you are reading now. Start with a speaking session and
+use a public page for practice; a site requiring JavaScript may need your
+ordinary external browser instead.
 
-From an EWW buffer@comma{} @kbd{C-e S} opens its focused settings. @kbd{s} toggles
-section-navigation autospeak. @kbd{i} changes image suppression for subsequent
-rendering and the shared SHR image default@comma{} preserving buffer-local overrides;
-it does not reload the current page. @kbd{w} saves the two Emacsvox defaults@comma{}
-@kbd{A} opens advanced settings@comma{} and @kbd{q} returns. These are presentation choices@comma{}
-not a replacement for EWW's browser preferences.
+The keys below include Emacsvox's EWW bindings@comma{} which differ from unmodified
+EWW@. In particular@comma{} lowercase @kbd{b} moves to the previous link@comma{} lowercase @kbd{s}
+requests a readable view@comma{} and @kbd{?} is not the settings menu's Help key. Use
+@kbd{C-h m} or @kbd{C-h k} to inspect the running buffer. The upstream
+@ref{EWW,EWW guide,,emacs,} and @ref{emacsvox-eww,emacsvox-eww,,emacsvox-reference,} reference cover the rest of the interface.
+
+@menu
+* Open a page and establish your place: Opening A Web Page.  Enter an address, wait for rendering and identify the selected browser buffer.
+* Read by heading@comma{} paragraph or search: Navigating A Web Page.  Use HTML structure when it is present and text search when it is not.
+* Follow a link and return to the article: Following Web Links.  Inspect a link, follow it and distinguish browser history from buffer selection.
+* Recover a cluttered or incomplete page: Recovering A Web Page.  Restore a reading view, handle missing content and keep browser settings distinct.
+@end menu
+
+@node Opening A Web Page
+@subsection Open a page and establish your place
+
+@cindex web page, opening
+@cindex EWW, buffer names
+
+@enumerate
+@item
+Run @kbd{M-x eww @key{RET}}. At its next prompt@comma{} enter a web address@comma{} for example
+@code{https://www.gnu.org/software/emacs/}@comma{} and press @kbd{@key{RET}}. Text that EWW does
+not recognise as an address is sent to its configured search service;
+do not enter private document text as a practice search.
+@item
+Wait for loading and rendering to finish before navigating the page.
+An opening cue means the command started@comma{} not that the server returned the
+expected article. Read the page title and any error or login message.
+Emacsvox normally names the buffer after the page title@comma{} so do not assume
+the buffer is called @code{*eww*}. Press @kbd{C-e m} to identify it.
+@item
+Press @kbd{M-<} and use @kbd{C-n} or @kbd{C-e l} to read. Keep the browser buffer's
+name in mind when switching to notes or Help. @kbd{C-x b} returns to that
+existing buffer; running @code{eww} again starts another browsing operation.
+@end enumerate
+
+To request a separate browser buffer instead of reusing the default one@comma{}
+start with @kbd{C-u M-x eww @key{RET}}. This is an intentional use of the prefix
+argument explained in @ref{Emacs Key Notation, , Read the key instructions}. It lets you keep the earlier
+page available while opening another. A title can change after navigation;
+check the new buffer name before using it in a later switch.
+
+@node Navigating A Web Page
+@subsection Read by heading@comma{} paragraph or search
+
+@cindex web headings
+@cindex web page, finding text
+
+In the EWW page buffer@comma{} period@comma{} @kbd{.}@comma{} moves to the next supported heading and
+comma@comma{} @kbd{@comma{}}@comma{} to the previous one. @kbd{1} through @kbd{4} find the next heading at the
+corresponding level; @kbd{M-1} through @kbd{M-4} go backwards. These are HTML heading
+levels@comma{} not numbered paragraphs. A page without suitable heading markup
+cannot be navigated as though that structure existed.
+
+Use @kbd{]} and @kbd{[} to move between paragraphs. @kbd{M-@key{SPC}} requests the contents of
+the current HTML element. Section-navigation autospeak can read more than a
+heading or a line@comma{} depending on your setting; use explicit line or element
+reading when you want to control the amount. Stop current speech with @kbd{C-e s}
+without disabling later feedback.
+
+For known words@comma{} press @kbd{C-s}@comma{} type the text@comma{} and press @kbd{@key{RET}} to finish at
+the match. Repeat @kbd{C-s} while searching to find another occurrence. This is
+Control-s@comma{} not the unmodified @kbd{s} key used for a readable view. Search covers
+the current rendered buffer; it does not submit a web search or find text
+that was never loaded into the page.
+
+Use the original page when checking whether information is genuinely absent.
+A readable or filtered view can omit menus@comma{} tables or other useful material.
+The recovery procedure below explains restoring the page without treating a
+filter as an edit to the website.
+
+@node Following Web Links
+@subsection Follow a link and return to the article
+
+@cindex web links, inspecting
+@cindex web history, going back
+@cindex EWW, bookmarks
+
+Use lowercase @kbd{f} to reach the next link and lowercase @kbd{b} for the previous
+one. Emacsvox presents link navigation; @kbd{C-e l} reads its surrounding line.
+The link's label is not necessarily its destination address.
+
+On a link@comma{} @kbd{k} copies its address to Emacs's kill ring@comma{} the text store used by
+@kbd{C-y}. To inspect that address as text@comma{} press @kbd{C-x b}@comma{} enter an unused buffer
+name such as @code{evox-web-address}@comma{} and press @kbd{@key{RET}}. If that name already contains
+work@comma{} choose another. Run @kbd{M-x text-mode @key{RET}}@comma{} press @kbd{C-y} to insert the
+address@comma{} then @kbd{C-e l} to read it. Return to the browser by name with @kbd{C-x b}.
+This temporary buffer need not be saved. Do not paste into an important document
+or a web form merely to inspect a URL@.
+
+To copy the page's own address regardless of point@comma{} use
+@kbd{M-x eww-copy-page-url @key{RET}} instead. Emacsvox's @kbd{k} is context-sensitive and
+means the link address when on a link.
+
+Press @kbd{@key{RET}} on the intended link to follow it. After the new page loads@comma{}
+press lowercase @kbd{l} to go back in that EWW buffer's history and @kbd{r} to go
+forward again. Emacsvox announces URL navigation through the page header.
+Check your position with line reading; if necessary@comma{} search for a distinctive
+phrase from the article. History is limited and a page can change@comma{} so do not
+assume the exact passage is always restored.
+
+To follow a link in a separate buffer@comma{} use @kbd{M-@key{RET}}. Return to the original
+page with @kbd{C-x b}; that is a buffer change rather than a history step in the
+new buffer. Use @kbd{q} in an ordinary EWW page to leave its view. Uppercase @kbd{Q}
+is Emacsvox's buffer-killing command and is not required for this task.
+
+To keep a website for a future session@comma{} run @kbd{M-x eww-add-bookmark @key{RET}} on the
+wanted page. @kbd{M-x eww-list-bookmarks @key{RET}} opens the saved list; select a
+bookmark and press @kbd{@key{RET}} to visit it. These are website bookmarks@comma{} not the
+Emacsvox ebook-position marks on @kbd{m}@comma{} and they do not promise to preserve an
+exact reading position on a changing page.
+
+@node Recovering A Web Page
+@subsection Recover a cluttered or incomplete page
+
+@cindex EWW, readable view
+@cindex web page, missing content
+
+In a page buffer@comma{} lowercase @kbd{s} runs EWW's readable-view command. It tries to
+isolate the main text; it is not the same action as @kbd{s} inside the focused
+settings menu. To return from the filtered view@comma{} run
+@kbd{M-x emacsvox-eww-restore @key{RET}}. This restores the retained canonical view
+rather than changing the site. The command is also on @kbd{@key{DEL}}@comma{} but its name
+avoids differences in how keyboards report Backspace and Delete.
+
+If the retained view is unavailable or you need fresh content@comma{} @kbd{g} reloads
+the current address. Reloading makes a new request and can lose form input or
+change the page and reading position. Save needed notes and finish or abandon
+forms deliberately before reloading. Search for a known phrase afterwards
+rather than assuming the old screen position still identifies the passage.
+
+For content that requires JavaScript or another unsupported browser feature@comma{}
+use @kbd{M-x eww-browse-with-external-browser @key{RET}} to hand the page to the configured
+external browser. The external browser and any screen reader then provide
+its controls; Emacsvox's EWW keys do not operate there. Browser configuration@comma{}
+login state and downloaded-content handling can differ. A failed or inaccessible
+website is not in itself a reason to change speech engines or reset voices.
+
+For speech preferences@comma{} open @kbd{C-e S} from EWW@. In that focused menu@comma{} @kbd{s}
+toggles section-navigation autospeak and @kbd{i} changes image suppression for
+subsequent rendering. The latter also changes the shared SHR image default
+while preserving buffer-local overrides; it does not reload the current page.
+Lowercase @kbd{w} saves those two Emacsvox defaults@comma{} @kbd{A} opens advanced settings@comma{}
+and @kbd{q} returns. These are presentation choices@comma{} not EWW's site or account
+preferences. Returning does not undo changes you have already made.
 
 The Emacs/W3 and w3m survey is historical. Do not install either on the strength
 of the Heritage manual; use EWW unless a separately maintained integration says
-otherwise.
+otherwise. The GNU Emacs Manual's @ref{EWW,EWW,,emacs,} entry provides its general introduction.
 
 @node Messaging
 @section Messaging
@@ -8763,7 +9363,7 @@ use @ref{Emacsvox Terminology, , Terms used in this manual}.
 * Read and navigate: Finding Reading Tasks.  Recover speech, read text, find commands, and move between tasks.
 * Change voices and sounds: Finding Voice Tasks.  Choose reading voices, preview changes, and adjust individual cues.
 * Keep@comma{} inspect@comma{} or reverse settings: Finding Settings Tasks.  Understand persistence, retained drafts, notifications, and recovery.
-* Work in an application: Finding Application Tasks.  Find mail privacy, terminal review, and agent-response instructions.
+* Work in an application: Finding Application Tasks.  Find file, document, web, mail, terminal and agent tasks.
 * Something is wrong: Finding Problem Tasks.  Start with a symptom and inspect the cause before changing more settings.
 @end menu
 
@@ -8782,6 +9382,9 @@ use @ref{Emacsvox Terminology, , Terms used in this manual}.
 @item
 @ref{Emacs Key Notation,Understand the keyboard instructions,,emacsvox,}: learn modifiers@comma{} separate steps@comma{}
 uppercase letters and command names before using a shortcut.
+@item
+@ref{Answering Emacs Prompts, , Know where to type an answer}: distinguish minibuffer prompts@comma{}
+completion@comma{} document text and command examples.
 @item
 @ref{Recovering From No Speech,Get speech working again,,emacsvox,}: start with the no-speech recovery procedure
 before changing presentation rules or voices.
@@ -8873,6 +9476,12 @@ notifications play and distinguish selecting a route from restarting it.
 @node Finding Application Tasks
 @section Work in an application
 
+@cindex open a file
+@cindex save a copy
+@cindex find a file again
+@cindex write a note
+@cindex read a web page
+@cindex web link, go back
 @cindex mail, limit automatic speech
 @cindex terminal completion, finding help
 @cindex terminal output, review
@@ -8881,6 +9490,29 @@ notifications play and distinguish selecting a route from restarting it.
 @cindex code, copy from an agent response
 
 @itemize
+@item
+@ref{Opening A Document, , Open the right file}: check the buffer and full pathname before editing.
+@item
+@ref{Saving A Working Copy, , Keep the original and work on a copy}: distinguish current buffer text
+from the last saved file@comma{} and check where later saves will go.
+@item
+@ref{Browsing Files With Dired, , Find a file and hear its details}: browse names@comma{} inspect size or date@comma{}
+and return without deleting or moving files.
+@item
+@ref{Writing An Org Document, , Write a note I can reopen later}: create a real Org file rather than
+leaving the text in a disposable buffer.
+@item
+@ref{Reviewing An Org Document, , Review a document and correct a word}: reveal headings and body text@comma{}
+inspect a small edit@comma{} and save the intended version.
+@item
+@ref{Opening A Web Page, , Read a web page}: enter an address and identify the rendered browser
+buffer before using navigation keys.
+@item
+@ref{Navigating A Web Page, , Find information within a page}: use its HTML structure or search the
+loaded text@comma{} without submitting a new web search.
+@item
+@ref{Following Web Links, , Follow a link and get back}: distinguish browser history@comma{} separate
+buffers and saved website bookmarks.
 @item
 @ref{Notmuch Speech And Privacy,Limit the mail details spoken automatically,,emacsvox,}: choose fields@comma{} bounds@comma{} and
 completion feedback. Explicit full-detail reading bypasses automatic bounds.
@@ -8942,6 +9574,9 @@ unfinished work while checking stream acknowledgements or a timeout.
 @item
 @ref{Returning From Settings,I cannot get back to what I was reading,,emacsvox,}: leave the current editor using
 its own return action@comma{} then use the menu's captured-source return.
+@item
+@ref{Recovering A Web Page, , A web page is cluttered or missing content}: restore its reading view@comma{}
+distinguish a fresh request from history@comma{} or use an external browser.
 @item
 @ref{Reporting Speech Problems,I need to report an unresolved problem,,emacsvox,}: collect a reproducible example
 and a reviewed diagnostic report without exposing private speech or paths.

@@ -43,6 +43,7 @@
 (autoload 'emacsvox-settings-presentation "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-diagnostics "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-voice-presentation "emacsvox-settings-workflows" nil t)
+(autoload 'emacsvox-settings-dictionaries "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-feedback "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-search "emacsvox-settings" nil t)
 (autoload 'emacsvox-settings-search-actions "emacsvox-settings" nil t)
@@ -68,7 +69,7 @@
                          emacsvox-aural-menu-voices emacsvox-capitalization
                          emacsvox-interaction emacsvox-aural-menu-line-cues
                          emacsvox-output-settings emacsvox-settings-buffer
-                         emacsvox-settings-history emacsvox-settings-switches
+                         emacsvox-settings-dictionaries emacsvox-settings-history emacsvox-settings-switches
                          emacsvox-settings-voice-presentation emacsvox-settings-preview-labels
                          emacsvox-settings-diagnostics emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations
                          emacsvox-settings-integrations--comint
@@ -491,7 +492,8 @@ as the default across restarts; mode policies still take precedence."
    ("r" "Restore automatic policy" emacsvox-aural-menu--reset-punctuation
     :if emacsvox-aural-menu--local-scope-p :transient t)]
   ["Pronunciation editing"
-   ("e" "Edit pronunciations (separate Save and Restart)" emacsvox-aural-menu--pronunciations :transient transient--do-suspend)]
+   ("e" "Edit Omnivox pronunciations (Save and Restart)" emacsvox-aural-menu--pronunciations :transient transient--do-suspend)
+   ("d" "Emacs word and phrase dictionaries" emacsvox-settings-dictionaries :transient transient--do-stack)]
   ["Save and finish"
    ("S" "Save punctuation as default" emacsvox-aural-menu--save-punctuation :transient t)
    ("q" "Back (keep changes)" transient-quit-one)

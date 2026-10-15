@@ -30,7 +30,9 @@
 (require 'cus-edit)
 
 (defconst emacsvox-settings--destinations
-  '(("Voice comparison labels" emacsvox-settings-workflows emacsvox-settings-voice-presentation "l")
+  '(("Emacs pronunciation dictionaries" emacsvox-settings-workflows emacsvox-settings-dictionaries "d")
+    ("Pronunciation substitution in source buffer" emacsvox-settings-workflows emacsvox-settings-dictionaries "t")
+    ("Voice comparison labels" emacsvox-settings-workflows emacsvox-settings-voice-presentation "l")
     ("Omnivox average pitch contrast" emacsvox-settings-workflows emacsvox-settings-voice-presentation "p")
     ("Voice Lock in source buffer" emacsvox-settings-workflows emacsvox-settings-switches "v")
     ("Global Voice Lock" emacsvox-settings-workflows emacsvox-settings-switches "V")
@@ -122,6 +124,8 @@
     ("Edit the named voice used here" emacsvox-settings-workflows emacsvox-settings-feedback "t")
     ("Change a sound for this item" emacsvox-settings-workflows emacsvox-settings-feedback "e")
     ("Your feedback rules" emacsvox-settings-workflows emacsvox-settings-presentation "o")
+    ("Define an Emacs pronunciation" emacsvox-settings-workflows emacsvox-settings-dictionaries "d")
+    ("Edit Emacs dictionaries" emacsvox-settings-workflows emacsvox-settings-dictionaries "e")
     ("Choose voice comparison labels" emacsvox-settings-workflows emacsvox-settings-voice-presentation "l")
     ("Adjust overall pitch contrast" emacsvox-settings-workflows emacsvox-settings-voice-presentation "p")
     ("Silence or restore mapped voice here" emacsvox-settings-workflows emacsvox-settings-switches "s")

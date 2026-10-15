@@ -28,6 +28,7 @@
 ;;; Code:
 (require 'emacsvox-aural-menu)
 (require 'emacsvox-aural-history)
+(require 'emacsvox-pronounce)
 (defvar omnivox-average-pitch-contrast)
 (defvar emacsvox-aural-preview-label-verbosity)
 (declare-function emacsvox-aural-set-history-limit "emacsvox-aural-recent-feedback" (limit))
@@ -120,9 +121,11 @@ separate and saves the limit, never the retained spoken text."
                  (emacsvox-aural-menu--read-number
                   "History limit (lowering removes old entries; 0 clears): "
                   emacsvox-aural-presentation-history-limit))))
-    (cl-letf (((symbol-function 'emacsvox-aural-tools--speak-history-setting)
-               #'emacsvox-settings-workflows--history-say))
-      (emacsvox-aural-set-history-limit value))))
+    (cl-letf (((symbol-function 'emacsvox-aural-tools--speak-history-setting) #'ignore))
+      (emacsvox-aural-set-history-limit value))
+    (emacsvox-settings-workflows--history-say
+     (if (zerop value) "History disabled; retained records cleared"
+       (format "History limit: %d" value)))))
 
 (defun emacsvox-settings-workflows--history-interface ()
   "Toggle recording of Aural interface presentations globally.
@@ -505,6 +508,148 @@ session or buffer; Help explains which presentation each switch affects."
   (interactive)
   (require 'emacsvox-aural-compatibility-voice)
   (transient-setup 'emacsvox-settings-switches nil nil :scope (emacsvox-aural-menu--context)))
+
+(define-minor-mode emacsvox-settings-workflows--dictionary-return-mode
+  "Return from a linked dictionary editor without taking letters from fields."
+  :lighter nil
+  :keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c") #'emacsvox-settings-workflows--dictionary-return)
+    (define-key map (kbd "q")
+                '(menu-item "Return to pronunciation settings" emacsvox-settings-workflows--dictionary-return
+                            :filter (lambda (command) (unless (widget-field-at (point)) command))))
+    map))
+
+(defun emacsvox-settings-workflows--dictionary-return ()
+  "Return to pronunciation settings, retaining in-memory dictionary edits.
+This neither saves dictionaries nor rolls back edits.  C-c C-c works inside
+fields too; q remains literal text in editable fields."
+  (interactive)
+  (let ((editor (current-buffer))
+        (return emacsvox-aural-ui--return-function))
+    (unless (and return (funcall return))
+      (user-error "The menu's source buffer is no longer available"))
+    (with-current-buffer editor
+      (emacsvox-settings-workflows--dictionary-return-mode -1)
+      (setq emacsvox-aural-ui--return-function nil))))
+
+(defun emacsvox-settings-workflows--dictionary-edit ()
+  "Edit an existing Emacs pronunciation dictionary using its widget editor.
+Choose a file, directory or mode dictionary.  Fields update the in-memory
+collection; Save writes dictionaries to their own file, not Customize or the
+Omnivox host.  Return with C-c C-c, or q outside fields, retaining edits.
+Reopen to resume the buffer; Refresh applies entries to the captured source.
+Opening alone neither enables source pronunciations nor writes a file."
+  (interactive)
+  (require 'wid-edit)
+  (let* ((context (emacsvox-aural-menu--context))
+         (source (emacsvox-aural-menu--source context))
+         opened)
+    (emacsvox-aural-menu--open-browser
+     (lambda ()
+       (when (zerop (hash-table-count emacsvox-pronounce-dictionaries))
+         (user-error "No dictionaries to edit; define an entry or load a dictionary first"))
+       (let* ((keys (mapcar #'symbol-name (hash-table-keys emacsvox-pronounce-dictionaries)))
+              (key (completing-read "Edit Emacs dictionary: " keys nil t))
+              (existing (get-buffer (format "*Dict: %s" key))))
+         (if existing
+             (pop-to-buffer existing)
+           ;; The legacy opener enables source pronunciations as a side effect.
+           ;; Inspection through settings must preserve the captured buffer.
+           (let ((emacsvox-pronounce-table emacsvox-pronounce-table))
+             (emacsvox-pronounce-edit-pronunciations key)))
+         (setq opened (current-buffer))
+         (emacsvox-aural-ui-register-interface source)
+         (setq-local emacsvox-aural-ui-source-position (plist-get context :position)
+                     emacsvox-aural-ui-source-guard (plist-get context :guard))
+         (emacsvox-settings-workflows--dictionary-return-mode 1)
+         opened))
+     'emacsvox-settings-workflows--dictionary-edit)
+    (with-current-buffer opened
+      (emacsvox-settings-workflows--say
+       "Emacs dictionary editor. Tab moves fields. Save writes dictionaries. Control C Control C returns; q returns outside fields."
+       'open-object))))
+
+(defun emacsvox-settings-workflows--dictionary-define ()
+  "Define a pronunciation at the captured source, choosing its scope.
+Buffer entries are temporary.  File, directory and mode entries update the
+in-memory dictionaries and need a separate Save to the Emacs dictionary file.
+The existing prompt can load saved dictionaries first; no speech restart is
+needed.  The captured item must still be valid."
+  (interactive)
+  (emacsvox-aural-menu--call-at-item #'emacsvox-pronounce-define-pronunciation)
+  (emacsvox-settings-workflows--say
+   "Pronunciation defined. Save file, directory, or mode dictionaries separately."))
+
+(defun emacsvox-settings-workflows--dictionary-load ()
+  "Load an Emacs dictionary file into the in-memory collection.
+This reads the existing Lisp dictionary format, separate from host punctuation.
+Refresh the captured buffer afterward to use the loaded entries.  Finish and
+close existing widget editors first: their retained fields are not reloaded.
+Loading neither writes dictionaries nor restarts speech."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (unless (eq t (call-interactively #'emacsvox-pronounce-load-dictionaries))
+      (user-error "Dictionary load did not complete; check the file and reported error")))
+  (emacsvox-settings-workflows--say "Emacs dictionaries loaded. Refresh the source to use them."))
+
+(defun emacsvox-settings-workflows--dictionary-refresh ()
+  "Rebuild and enable the captured buffer's pronunciation table.
+This uses its file, directory and mode dictionaries, replacing temporary
+buffer-only entries.  It neither saves dictionaries nor restarts speech."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (emacsvox-pronounce-refresh-pronunciations))
+  (emacsvox-settings-workflows--say "Source pronunciations refreshed from dictionaries"))
+
+(defun emacsvox-settings-workflows--dictionary-toggle ()
+  "Toggle pronunciation substitution in the captured buffer.
+Turning on composes the table from applicable dictionaries; turning off clears
+it, including temporary buffer-only entries.  An empty table has no effect.
+This switch is temporary and is not saved with dictionaries."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (emacsvox-pronounce-toggle-dictionaries))
+  (emacsvox-settings-workflows--say (emacsvox-settings-workflows--dictionary-label)))
+
+(defun emacsvox-settings-workflows--dictionary-label ()
+  "Describe pronunciation substitution in the captured source."
+  (format "Source pronunciations: %s"
+          (if (buffer-local-value 'emacsvox-pronounce-table
+               (emacsvox-aural-menu--source (emacsvox-aural-menu--context)))
+              "on" "off")))
+
+(defun emacsvox-settings-workflows--dictionary-save ()
+  "Save file, directory and mode dictionaries to an Emacs dictionary file.
+Choose the file explicitly; its configured basename is offered in the Emacsvox
+user directory.  Buffer-only entries are not included.  This is separate from Customize and
+host punctuation saving, and requires no speech restart."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (call-interactively #'emacsvox-pronounce-save-dictionaries))
+  (emacsvox-settings-workflows--say "Emacs pronunciation dictionaries saved" 'save-object))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-dictionaries ()
+  "Manage Emacs pronunciation dictionaries for words and phrases.
+These dictionaries have their own Save file, separate from Customize and
+Omnivox punctuation.  Opening the menu changes nothing."
+  :refresh-suffixes t
+  ["Define and edit"
+   ("d" "Define pronunciation with explicit scope" emacsvox-settings-workflows--dictionary-define :transient t)
+   ("e" "Edit existing dictionary (widget fields)" emacsvox-settings-workflows--dictionary-edit :transient transient--do-suspend)]
+  ["Captured buffer"
+   ("t" (lambda () (emacsvox-settings-workflows--dictionary-label))
+    emacsvox-settings-workflows--dictionary-toggle :transient t)
+   ("r" "Refresh from dictionaries (replaces buffer-only entries)" emacsvox-settings-workflows--dictionary-refresh :transient t)]
+  ["Dictionary files"
+   ("l" "Load dictionaries from file" emacsvox-settings-workflows--dictionary-load :transient t)
+   ("w" "Save dictionaries to file" emacsvox-settings-workflows--dictionary-save :transient t)]
+  ["Finish"
+   ("q" "Back" transient-quit-one)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-dictionaries nil nil :scope (emacsvox-aural-menu--context)))
 
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-presentation ()

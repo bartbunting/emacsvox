@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1662 commands and 233 options.
+This chapter documents a total of 1663 commands and 234 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -18544,6 +18544,17 @@ Doctor offers individual repairs.  Logging includes complete spoken text.
 @end format
 @end deffn
 
+@subsubsection emacsvox-settings-dictionaries
+@deffn {Command} emacsvox-settings-dictionaries
+@findex emacsvox-settings-dictionaries
+
+@format
+Manage Emacs pronunciation dictionaries for words and phrases.
+These dictionaries have their own Save file, separate from Customize and
+Omnivox punctuation.  Opening the menu changes nothing.
+@end format
+@end deffn
+
 @subsubsection emacsvox-settings-feedback
 @deffn {Command} emacsvox-settings-feedback
 @findex emacsvox-settings-feedback
@@ -18611,6 +18622,24 @@ Set comparison labels and overall Omnivox pitch contrast globally.
 Changes apply now; Save defaults explicitly to keep them across restarts.
 @end format
 @end deffn
+
+@subsection emacsvox-settings-workflows Options
+
+@defvar {User Option} emacsvox-settings-workflows--dictionary-return-mode-hook
+@verbatim
+Hook run after entering or leaving ‘emacsvox-settings-workflows--dictionary-return-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
 
 @node emacsvox-setup
 @section emacsvox-setup

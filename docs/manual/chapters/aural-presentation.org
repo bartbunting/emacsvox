@@ -527,6 +527,13 @@ with the engine and physical voice recorded for the original delivery.
 - L :: Change the bounded history limit for this session.
 - i :: Include or exclude feedback from Aural interfaces themselves.
 
+To change the same policy from a menu, open ~C-e H f H~. Select /Retained
+records/ and use ~RET~ for an exact nonnegative limit, or Shift-left/right to
+adjust by one. Lowering the limit immediately discards the oldest excess
+records; zero clears and disables history. Increasing it cannot restore those
+records. The menu's ~i~ toggles interface recording, and ~w~ saves both defaults
+through Customize. Retained feedback itself is never saved by this action.
+
 Aural interface feedback is excluded by default so it does not displace the
 feedback being investigated. This includes their prompts, completion choices,
 and opening/closing sounds. Ordinary completion elsewhere remains eligible.
@@ -1323,10 +1330,17 @@ the physical voice or changing duration/markers. Preview it in Voice Palettes
 or Workbench before assignment. Adapters without post-synthesis filtering keep
 the style but cannot apply those filters.
 
-=omnivox-average-pitch-contrast= defaults to =0.5= for gentler distinctions.
-=1.0= restores historical contrast and =0= neutralises average pitch; values
-through =2.0= are accepted. Changing it refreshes logical-voice registration
-for previews, structured speech, and legacy inline voices alike.
+For overall Omnivox pitch contrast (=omnivox-average-pitch-contrast=), open
+~C-e H v o~ and select /Omnivox pitch contrast/. Shift-left/right adjusts by =0.1=; ~RET~ enters an exact
+value from zero to two. The default =0.5= gives gentler distinctions, =1.0=
+restores historical contrast, and zero neutralises average pitch. This scales
+all average-pitch levels without changing individual named-voice definitions;
+other backends are unaffected.
+
+Changes refresh logical-voice registration for subsequent previews, structured
+speech and legacy inline voices. Compare familiar content, then restore the
+previous value if needed. The menu's ~w~ saves both contrast and comparison
+labels through Customize; it does not save a voice or palette.
 
 *** Choose And Tune Fallback Voices
 :PROPERTIES:
@@ -1666,11 +1680,19 @@ rows. ~B~ uses the selected voice as A and asks for B; /Search all engines/
 can compare outside current filters. Both use one sentence. ~T~ edits it,
 ~F~ filters, ~C~ clears filters, and ~R~ refreshes inventory.
 
-=emacsvox-aural-preview-label-verbosity= selects names, short letters/numbers,
-or no labels. Labels and samples form one sequence: ~S~ or foreground navigation
-cancels remaining playback. Exact-preview failure is reported rather than
-accepting a substitute as the requested voice. Capabilities describe adapter
-claims, not a listening test of every parameter.
+Use ~C-e H v o l~ to choose comparison labels: engine and voice names,
+letters or sequence numbers, or no labels. The option is
+=emacsvox-aural-preview-label-verbosity=. The list starts on the current
+choice. Arrows browse without applying; ~RET~ applies and returns, while ~q~
+cancels. This global option changes labels, leaving sample text and order
+intact. With no labels, the sequence no longer identifies its voices aloud.
+Press ~w~ in Voice presentation to save labels and pitch contrast through
+Customize.
+
+Labels and samples form one sequence: ~S~ or foreground navigation cancels
+remaining playback. Exact-preview failure is reported rather than accepting
+a substitute as the requested voice. Capabilities describe adapter claims,
+not a listening test of every parameter.
 
 *** Experiment With An Installed Voice
 :PROPERTIES:
@@ -1811,6 +1833,14 @@ For unconfirmed application, see
 Rules request cues by semantic name. Sound packs map names to audio assets
 and can inherit missing cues. This lets you change the sound of a family of
 cues without rewriting rules. For one event, use its feedback rule instead.
+
+To enable or disable earcons in the captured buffer, use ~C-e H r l e~.
+In that submenu, ~E~ changes the global default for buffers without a local
+override; ~i~ removes the source buffer's override so it follows that default.
+Speech remains available when earcons are off, but menu cues also disappear
+where the off setting applies. These switches last for the session or buffer
+and have no Customize Save action. Toggle again or restore inheritance to
+reverse an experiment.
 
 ~C-e H o p~ opens /Sound Packs/. Its ~q~ returns to /Sounds and output/ with
 the same settings scope, and another ~q~ returns to the main menu. Directly
@@ -2003,7 +2033,7 @@ none, ~s~ for some or ~a~ for all punctuation. That menu's ~p~ offers the
 built-in levels and available named profiles. In buffer scope, ~r~ restores
 automatic mode policy. Press ~q~ to return to Speech settings.
 
-The punctuation menu's ~e~ opens the separate pronunciation editor. In that
+The punctuation menu's ~e~ opens the Omnivox pronunciation editor. In that
 editor, lowercase ~s~ saves overrides on the speech host and lowercase ~r~
 restarts speech after confirmation. Its ~q~ returns to the same punctuation
 menu item, retaining the draft and selected character for reopening.
@@ -2016,6 +2046,46 @@ editor's host-side draft.
 Rate uses the backend's startup option. Saving from buffer scope promotes those
 displayed choices to defaults. Mode punctuation policy and explicit buffer
 settings still override the saved punctuation default.
+
+**** Use Emacs word and phrase dictionaries
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+For word or phrase substitutions managed by Emacs, open ~C-e H s p d~.
+This menu is separate from the Omnivox pronunciation editor on ~e~. Its
+dictionaries are stored in an Emacs dictionary file, not Customize or the
+speech host, and changes need no speech restart. Opening the menu writes
+nothing and leaves the source's pronunciation table unchanged.
+
+Press ~d~ to define an entry at the captured source item. Choose buffer, file,
+directory or major-mode scope, then enter the term and spoken replacement.
+The existing prompt can load saved dictionaries first. Buffer entries last
+only in that buffer's current pronunciation table. Other scopes update the
+in-memory dictionary collection and need a separate ~w~ Save to persist.
+
+Use ~e~ to choose an existing dictionary and open its widget editor. ~TAB~
+moves between fields and buttons; ~RET~ activates them. Field edits update
+the in-memory collection. Its Save button writes dictionaries to a chosen
+file. Return with ~C-c C-c~ from anywhere, or ~q~ outside editable fields;
+inside a field, ~q~ inserts text. Returning retains edits without saving or
+rolling them back, and reopening resumes the same editor buffer.
+
+Back in the menu, ~r~ rebuilds and enables the captured source's table from
+its dictionaries. This replaces temporary buffer-only entries. ~t~ turns
+substitution off or composes the table again when turning it on; turning off
+also loses buffer-only entries. Changes to file, directory and mode entries
+remain in the collection. To reverse an entry change, edit it back and refresh
+the source; save again if you changed the saved dictionary.
+
+Finish and close existing widget editors before loading replacements: their
+retained fields are not reloaded. The menu's ~l~ loads a dictionary file into
+the collection; refresh the source afterward to use those entries. ~w~ saves file, directory and mode dictionaries,
+excluding buffer-only entries. Both actions prompt for a file; Load offers
+=emacsvox-pronounce-dictionaries-file=, while Save offers its basename in the
+Emacsvox user directory. Saving elsewhere does not change the configured
+startup file. Use ~?~ followed by an item's key
+for its scope and effects before applying it.
 
 **** Adjust indentation feedback
 :PROPERTIES:
@@ -2712,7 +2782,7 @@ Faces are visual style labels that Emacsvox can use without requiring sight.
 | Policy | What it controls | How to inspect or change it |
 | Semantic presentation | Integration roles, events, states, and attributes | Explain, Presentation Options, and feedback rules |
 | Explicit face presentation | Rules deliberately matching an Emacs face | emacsvox-aural-toggle-face-presentation or Aural Doctor |
-| Voice Lock | Historical buffer face/personality mapping | C-e d v locally; C-e d C-v globally |
+| Voice Lock | Historical buffer face/personality mapping | C-e H r l v locally; C-e H r l V globally |
 
 To identify Voice Lock's contribution:
 
@@ -2724,7 +2794,17 @@ To identify Voice Lock's contribution:
 Turning it off removes only that compatibility contribution. Semantic
 presentation, explicit face rules, cues, tones, and spoken status remain.
 The global command updates existing and new buffers; a mode can still opt out
-on startup. Buffer-local Voice Lock is not captured in Presentation Profiles.
+on startup. The same controls are available at ~C-e H r l v~ for the captured
+buffer and capital ~V~ for global policy. That submenu's ~w~ saves only global
+Voice Lock through Customize. Buffer-local Voice Lock is not captured in
+Presentation Profiles.
+
+To silence or restore the personality or mapped face at the captured item,
+choose ~s~ in that submenu. This uses the existing local suppression command;
+it can affect other text using that mapping in the same buffer. It does not
+retune the named voice, and a globally inaudible mapping cannot be restored
+there. The change lasts for the buffer and is not saved. Close and reopen the
+menu from the intended item if its captured source has changed.
 
 For new changes, prefer explanation, settings menus, palettes, and Workbench.
 Legacy named voices can still use =-settings= options such as =voice-monotone-settings=. Customise

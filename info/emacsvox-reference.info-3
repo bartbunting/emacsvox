@@ -8686,46 +8686,50 @@ Function Index
                                                              (line   15)
 * emacsvox-settings-diagnostics <1>:     emacsvox-settings-workflows.
                                                              (line   16)
-* emacsvox-settings-feedback:            emacsvox-settings-workflows.
+* emacsvox-settings-dictionaries:        emacsvox-settings-workflows.
                                                              (line   23)
-* emacsvox-settings-feedback <1>:        emacsvox-settings-workflows.
+* emacsvox-settings-dictionaries <1>:    emacsvox-settings-workflows.
                                                              (line   24)
+* emacsvox-settings-feedback:            emacsvox-settings-workflows.
+                                                             (line   32)
+* emacsvox-settings-feedback <1>:        emacsvox-settings-workflows.
+                                                             (line   33)
 * emacsvox-settings-for-buffer:          emacsvox-settings-integrations.
                                                              (line   14)
 * emacsvox-settings-for-buffer <1>:      emacsvox-settings-integrations.
                                                              (line   17)
 * emacsvox-settings-history:             emacsvox-settings-workflows.
-                                                             (line   30)
+                                                             (line   39)
 * emacsvox-settings-history <1>:         emacsvox-settings-workflows.
-                                                             (line   31)
+                                                             (line   40)
 * emacsvox-settings-integrations:        emacsvox-settings-integrations.
                                                              (line   24)
 * emacsvox-settings-integrations <1>:    emacsvox-settings-integrations.
                                                              (line   25)
 * emacsvox-settings-presentation:        emacsvox-settings-workflows.
-                                                             (line   38)
+                                                             (line   47)
 * emacsvox-settings-presentation <1>:    emacsvox-settings-workflows.
-                                                             (line   39)
+                                                             (line   48)
 * emacsvox-settings-preview-labels:      emacsvox-settings-workflows.
-                                                             (line   45)
+                                                             (line   54)
 * emacsvox-settings-preview-labels <1>:  emacsvox-settings-workflows.
-                                                             (line   46)
+                                                             (line   55)
 * emacsvox-settings-search:              emacsvox-settings.  (line   21)
 * emacsvox-settings-search <1>:          emacsvox-settings.  (line   22)
 * emacsvox-settings-search-actions:      emacsvox-settings.  (line   28)
 * emacsvox-settings-search-actions <1>:  emacsvox-settings.  (line   29)
 * emacsvox-settings-setups:              emacsvox-settings-workflows.
-                                                             (line   53)
+                                                             (line   62)
 * emacsvox-settings-setups <1>:          emacsvox-settings-workflows.
-                                                             (line   54)
+                                                             (line   63)
 * emacsvox-settings-switches:            emacsvox-settings-workflows.
-                                                             (line   60)
-* emacsvox-settings-switches <1>:        emacsvox-settings-workflows.
-                                                             (line   61)
-* emacsvox-settings-voice-presentation:  emacsvox-settings-workflows.
                                                              (line   69)
-* emacsvox-settings-voice-presentation <1>: emacsvox-settings-workflows.
+* emacsvox-settings-switches <1>:        emacsvox-settings-workflows.
                                                              (line   70)
+* emacsvox-settings-voice-presentation:  emacsvox-settings-workflows.
+                                                             (line   78)
+* emacsvox-settings-voice-presentation <1>: emacsvox-settings-workflows.
+                                                             (line   79)
 * emacsvox-shell-command:                emacsvox-speak.     (line  291)
 * emacsvox-shell-command <1>:            emacsvox-speak.     (line  292)
 * emacsvox-show-property-at-point:       emacsvox-wizards.   (line  148)

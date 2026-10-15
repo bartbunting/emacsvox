@@ -882,17 +882,16 @@ commands remain local interface operations.
   =emacsvox-aural-set-history-limit= and =i= invokes
   =emacsvox-aural-toggle-interface-history-recording=. They change session state;
   Customize owns saved defaults. Lowering the limit immediately discards excess
-  history. A focused route must state that effect and keep saving explicit.
-- =r v= controls visual-face presentation. =voice-lock-mode= and
-  =global-voice-lock-mode= are separate existing commands in the speech keymap;
-  the new presentation menu does not yet expose them. Preserve their scope and
-  lifecycle if links are added.
-- Emacs pronunciation dictionaries are missing from both new search catalogues.
-  [[file:../lisp/emacsvox-pronounce.el][emacsvox-pronounce-dispatch]] already offers define/edit, load, refresh, save,
-  and toggle actions; =emacsvox-pronounce-edit-pronunciations= is the editor.
-  =emacsvox-pronounce-save-dictionaries= writes the dictionary file selected from
-  =emacsvox-pronounce-dictionaries-file=. Link this workflow separately from
-  =omnivox-punctuation= and audit the editor's return/save behavior first.
+  history. The focused route =f H= now states that effect and saves explicitly.
+- =r v= controls visual-face presentation. =r l= now exposes source-local and
+  global Voice Lock separately, preserving their lifecycle. It also links local
+  silence and source/default earcon enablement; only global Voice Lock has a
+  Customize Save in that submenu.
+- Emacs pronunciation dictionaries now appear in both search catalogues and
+  at =s p d=. Define/edit/load/refresh/save/toggle retain their existing store
+  ownership. The widget editor has exact menu return while keeping letters
+  editable and retaining in-memory changes. Template definitions, collection
+  clearing and pronunciation emphasis remain in the original dispatcher.
 - [[file:../lisp/tts-speak.el][tts-set-character-scale]] supports local/global character-rate changes;
   =tts-add-cleanup-pattern= edits =tts-cleanup-repeats=. Both remain direct
   commands without a new focused search route. Their variables are not ordinary
@@ -928,15 +927,15 @@ for every optional module. =C-e H . m= opens the source major mode's group,
 which need not contain that mode's Emacsvox speech settings. Group membership
 must be checked before claiming an option is covered by either route.
 
-*** Core controls without focused menu entries
+*** Core-control audit and current coverage
 
-These are proposed additions or advanced links. Existing commands remain
+This inventory includes delivered routes and proposed additions. Existing commands remain
 available through =M-x= and, where present, the speech keymap. A command's
 global default is not necessarily a saved startup value.
 
 | Area | Existing command or option | Coverage and proposed treatment |
 |------+----------------------------+---------------------------------|
-| Earcon enablement | =emacsvox-toggle-icons=; =emacsvox-use-icons= | Add an output entry. Buffer-local switch with a global-default prefix; not the earcon volume or pack selector, and not a Custom option. |
+| Earcon enablement | =emacsvox-toggle-icons=; =emacsvox-use-icons= | Delivered at =r l=: source, inherit and global-default controls. Separate from volume/pack selection; no Customize save. |
 | Quiet speech | =tts-toggle-quiet=; =tts-quiet= | Add a scoped reading control with an accessible way to restore speech. Buffer-local/global-default session state; stopping current speech is a separate action. |
 | Nonprinting text | =tts-toggle-speak-nonprinting-chars=; =tts-toggle-strip-octals= | Missing reading controls. Existing local/global switches are ordinary variables; retain their interaction and do not invent a Customize save. |
 | Speech chunking | =tts-toggle-splitting-on-white-space=; =tts-set-chunk-separator-syntax= | Advanced reading commands acting on buffer-local separator syntax. Keep distinct from tracked-reading chunk limits. |
@@ -945,7 +944,7 @@ global default is not necessarily a saved startup value.
 | Message filtering and tooltips | =emacsvox-speak-messages-filter=; =emacsvox-speak-tooltips= | The message on/off control does not cover exclusions or tooltip speech. Add interaction discovery; use the filter's Custom setter. |
 | Emoji speech | =emacsvox-emoji-naming-enabled=; =emacsvox-emoji-custom-names= | Add reading discovery for the emoji group, including approved sequences and maximum count. Customize owns these defaults. |
 | Table speech | =emacsvox-table-reader-titles=; =emacsvox-table-reader-data-position= | Link general table preferences. Agent Shell and Org have separate controls; their integration links do not replace this group. |
-| Voice contrast and preview labels | =omnivox-average-pitch-contrast=; =emacsvox-aural-preview-label-verbosity= | Advanced voice/preview options, distinct from tuning one voice or choosing sample text. The contrast setter updates logical voices. |
+| Voice contrast and preview labels | =omnivox-average-pitch-contrast=; =emacsvox-aural-preview-label-verbosity= | Delivered at =v o=: browsable labels and numeric global contrast, with explicit Customize Save. Distinct from tuning one voice; the contrast setter updates logical voices. |
 | Startup feedback | =emacsvox-speak-ready-message=; =emacsvox-welcome-show-at-startup= | Add advanced interaction discovery; keep the routing timeout separate from announcement enablement. |
 | Mail and background output | =emacsvox-toggle-mail-alert=; =emacsvox-toggle-comint-output-monitor= | Missing context-sensitive controls. Mail spool/interval are Custom options; the two switches are local/global-default session state. |
 | Diagnostic logging | =emacsvox-aural-toggle-diagnostic-logging=; =tts-hide-diagnostic-buffers= | Extend the diagnostics slice with logging and advanced retention options. Diagnostic-buffer naming changes apply after speech restart. |
@@ -972,8 +971,8 @@ Important interaction and ownership findings:
   discards these edits; explain the existing persistence before linking it.
 - Outside supported terminal buffers,
   =emacsvox-toggle-inaudible-or-comint-autospeak= invokes
-  =voice-setup-toggle-silence-personality=. This is another presentation
-  discovery gap, separate from quiet mode and from terminal foreground speech.
+  =voice-setup-toggle-silence-personality=. This now has captured-source
+  discovery at =r l s=, separate from quiet mode and terminal foreground speech.
 - The existing server chooser changes =tts-program= and initializes speech.
   It is not the Omnivox engine-preference control already in =C-e H v=.
   A discovery menu must not run it merely by opening or moving to its row.
@@ -1262,9 +1261,11 @@ Changing the established Save and Stop keys remains a separate decision.
 
 ** Presentation and dictionary slices, 2026-10-15
 
-Implementation proceeds in four commits: history policy, presentation switches,
-voice presentation options, then Emacs pronunciation dictionaries. Listening is
-deferred until all four are ready in a fresh normal Emacsvox profile.
+All four slices are implemented: history policy, presentation switches, voice
+presentation options, and Emacs pronunciation dictionaries. History is committed
+as =45cb34b26=, switches as =8ff91f294=, and voice presentation as =37ee83430=.
+The dictionary commit includes the batched user guide and final verification.
+Listening remains deferred; use a fresh normal Emacsvox profile.
 
 - History policy is available at =C-e H f H= and through settings/action search.
   Enter sets an exact nonnegative limit; Shift-arrows adjust by one. Lowering
@@ -1274,7 +1275,7 @@ deferred until all four are ready in a fresh normal Emacsvox profile.
   All 61 focused settings checks passed in fresh graphical Emacs with compiled
   code; the two new history checks also passed from source. Compilation,
   byte-code preflight, generated reference and documentation gate passed.
-  User-guide updates are batched with the fourth slice; listening remains open.
+  User-guide updates are included with the fourth slice; listening remains open.
 
 - Presentation switches are at =C-e H r l= and in search. Voice Lock exposes
   source-local and global lifecycle commands, with a separate Save for the
@@ -1284,7 +1285,7 @@ deferred until all four are ready in a fresh normal Emacsvox profile.
   session state and are not presented as Customize options. All three new
   graphical checks passed from source and all 64 settings checks passed with
   compiled code. Build, preflight, generated reference and documentation gate
-  passed. Listening and user-guide updates remain deferred.
+  passed. The fourth slice includes user-guide updates; listening remains open.
 
 - Voice presentation is at =C-e H v o= and in both searches. Comparison labels
   use an explicit three-choice list; arrows are inert and Enter returns to the
@@ -1295,42 +1296,77 @@ deferred until all four are ready in a fresh normal Emacsvox profile.
   with compiled code. Compilation, byte-code preflight, generated reference and
   documentation gate passed. Listening remains deferred.
 
+- Emacs word and phrase dictionaries are linked at =C-e H s p d= and in both
+  searches. Define retains explicit buffer/file/directory/mode scope. Edit
+  opens or resumes the existing widget buffer; fields keep literal letters,
+  =C-c C-c= returns anywhere, and =q= returns outside fields. Opening preserves
+  source pronunciation enablement. Save writes the existing dictionary format,
+  not Customize or Omnivox host data. Load and source Refresh remain separate.
+  Refresh and toggling off replace/remove temporary buffer-only entries; Help
+  states this existing behaviour. Close retained widget editors before loading
+  replacements; their fields are not reloaded. All 69 settings checks passed
+  from source. History adjustment feedback was also shortened to the new limit.
+
+Final automated checkpoint: 154 graphical menu/settings/Transient/Magit/voice
+checks passed in fresh Emacs 31.0.90 with current compiled files and installed
+Transient 0.13.8. All 69 settings checks also passed with compiled files and
+pinned Transient 0.13.3; actual loaded paths and versions were verified. Neither
+run skipped tests. Ten focused regressions cover the four slices, including
+widget field typing, retained edits, exact return, scope, validation and saving.
+
+A concurrent documentation merge required a full byte-code rebuild. Its broken
+Org-heading cross-reference was repaired separately in =11c156f30=. The rebuild,
+final incremental build, byte-code preflight, Org preview, generated reference,
+manual update and non-mutating documentation gate all passed. Generated manuals
+include both the merged documentation and this guide update. The separate
+Emacs 30.2 matrix and normal-host listening remain outstanding.
+
+** Deferred listening for the four presentation and dictionary slices
+
+Use a fresh normal Emacsvox profile after the final build:
+
+1. At =C-e H f H=, read Help, adjust the history limit, toggle interface
+   recording, and save only if wanted. Check concise, interruptible feedback
+   and return to the selected History item. Reducing the limit loses entries.
+2. At =C-e H r l=, compare source/global Voice Lock and earcon settings, restore
+   inheritance, and silence/restore a mapped item. Check speech remains usable
+   with earcons off and scope is clear. Global Voice Lock is the only Save here.
+3. At =C-e H v o=, browse label choices and cancel, then choose each and compare
+   physical voices. Adjust pitch contrast and restore the previous value.
+   Check sound, interruption and save/restart behaviour on the normal host.
+4. At =C-e H s p d=, define a temporary entry, then a mode entry. Edit fields,
+   type q, return with =C-c C-c=, reopen and save to a test dictionary file.
+   Load and refresh the source, verify pronunciation, then restore the entry.
+   Check that Emacs dictionaries and Omnivox pronunciation saving stay distinct.
+
+Automated checks exercise text, requests, scopes, files and graphical interaction.
+They do not establish listening acceptance or the acoustic effect of pitch changes.
+
 ** Next proposed slices
 
-Diagnostics, named-voice tuning, the combined rule overview, training controls,
-direct action discovery, and Home menu retirement are delivered above. The
-remaining work is:
+History controls, scoped presentation switches, voice presentation options and
+Emacs dictionary discovery are implemented above. Remaining work is:
 
-1. Audit remaining presentation discovery gaps: history policy, Voice Lock,
-   silence-at-point, earcon enablement, and preview labels. Separate these from
-   the delivered face/rule tuning routes and confirm their actual scopes before
-   adding controls. Acceptance: find the responsible setting, change or restore
-   it, and verify source return and persistence boundaries.
-2. Reading and dictionary discovery. Add an explicitly separate route to Emacs
-   pronunciation dictionaries and classify character-scale, repeat cleanup,
-   predefined-rate, Unicode, emoji, quiet/nonprinting speech, column filtering,
-   chunking, and punctuation-policy settings as focused or advanced controls.
-   Deliver these in small sub-slices; this is now a workstream rather than one
-   small patch. Include general table preferences and interaction exclusions.
-   Acceptance: edit one dictionary entry and demonstrate which store saves it;
-   opening the workflow must not write or restart speech.
-3. Decide the shared search policy using the inventory above. Settings and
-   action searches already use case-insensitive substrings; voice pickers and
-   other selection prompts still need a decision. Preserve each prompt's
-   distinction between focusing, selecting, filtering, and activating.
-4. Improve the named-voice editor and its browser using the existing major modes,
-   then apply useful conventions to one other editor at a time. Follow the
-   longer-term editor improvements section above; a concrete interaction problem
-   can change the order. Repeat affected listening tasks after changes.
-5. Expand integration and advanced discovery using the repository-wide inventory
-   above, then finish the remaining milestone 5 tasks. Cover outstanding routes
-   and verify supported Transient versions with Emacs 30.2 in a separate checkout.
-   Preserve the accepted Home retirement and explicit save/apply boundaries.
+1. Reading discovery: classify character-scale, repeat cleanup, predefined-rate,
+   Unicode, emoji, quiet/nonprinting speech, column filtering, chunking and
+   punctuation-policy settings as focused or advanced controls. Include general
+   table preferences and interaction exclusions. Dictionary template definitions,
+   collection clearing and pronunciation emphasis remain in the existing
+   dispatcher; they are not new focused controls in this slice.
+2. Decide shared search policy using the inventory above. Settings and action
+   searches use case-insensitive substrings and literal spaces; voice pickers
+   and other prompts still need a decision. Preserve each prompt's distinction
+   between focusing, selecting, filtering and activating.
+3. Improve the named-voice editor and browser using their existing major modes,
+   then apply useful conventions to another editor. The dictionary widget editor
+   now has a return link but retains its immediate in-memory editing model;
+   a dedicated draft/Apply model remains future work.
+4. Expand integration and advanced discovery, then finish remaining milestone 5
+   tasks. Verify supported Transient versions with Emacs 30.2 in a separate
+   checkout. Preserve Home retirement and explicit save/apply boundaries.
 
-Listening findings can change editor priorities. The broader audit remains a set
-of workstreams rather than five small patches or a fixed completion estimate.
-The accepted voice workflow is not a prerequisite waiting to be completed.
-This updated queue records no additional listening acceptance.
+Listening findings can change editor priorities. These remain workstreams,
+not a fixed completion estimate. This checkpoint adds no listening acceptance.
 
 * Acceptance tasks and development cycle
 

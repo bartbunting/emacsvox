@@ -312,7 +312,116 @@ Emacs notation is unfamiliar.  It explains which keys to hold together,
 when to release them, and how to enter a command by name.  The reading
 routes below assume that notation, not prior experience with Emacs.
 
-2.1 Choose a reading route
+* Menu:
+
+* Answer a prompt and return to your work: Answering Emacs Prompts.  Know where to type, how completion helps, and when a command has finished.
+* Choose a reading route: Manual Reading Routes.  Choose sequential lessons, everyday tasks or a specific reference answer.
+* Find an answer in Info and return: Finding Help In Info.  Use the index and task links, retrace a lookup and return to work.
+* Recognise the document you are reading: Manual Editions And Formats.  Distinguish current guidance, generated reference, heritage and published formats.
+
+
+File: emacsvox.info,  Node: Answering Emacs Prompts,  Next: Manual Reading Routes,  Up: Using This Manual
+
+2.1 Answer a prompt and return to your work
+===========================================
+
+A command may ask for a file, a buffer, a search term or another value.
+Emacs reads that answer in the _minibuffer_, a temporary input area
+separate from your document.  While the prompt is active, ordinary
+typing answers the prompt; it does not add words to the document.
+Emacsvox speaks prompts and completion feedback according to your
+settings.
+
+   For example, ‘M-x’ asks for a command name.  Type ‘describe-mode’,
+including its hyphen, then press ‘<RET>’ to run it.  Do not type the
+prompt label or the letters ‘M-x’.  A command may then ask another
+question: after choosing ‘eww’, for example, its next prompt asks for a
+web address or search words.  Answer one prompt at a time rather than
+pasting the whole printed instruction.
+
+   Completion helps you enter an existing name.  Type a distinctive
+beginning, then press ‘<TAB>’.  Emacs may extend the text or offer
+several candidates.  With several matches, type more of the name; you
+can always type the complete name and press ‘<RET>’.  Completion
+interfaces differ between configurations, so the guides do not assume
+that Down Arrow accepts the first suggestion.  Opening a new file
+permits a name that does not yet exist; selecting an installed command
+normally requires a recognised name.
+
+   ‘<RET>’ submits the current answer, including any text already in the
+prompt.  An empty answer may accept a displayed default.  Read that
+default before accepting it.  For a yes/no question, use the response
+requested: some prompts accept ‘y’ or ‘n’, while others require ‘yes’ or
+‘no’ followed by ‘<RET>’.
+
+   Use ‘C-g’ to abandon an unfinished ordinary prompt.  If you have
+already submitted it and the command has acted, cancellation does not
+undo the result.  Likewise, quitting a settings menu does not undo an
+adjustment made there.  Follow the recovery instructions for the
+operation you actually performed.
+
+   After the prompt finishes, notice which buffer has been selected.  An
+open-file command selects a document; Help may appear in another window;
+a save normally leaves you in the document.  Press ‘C-e m’ to identify
+the current buffer and mode before editing.  Finish or cancel an active
+prompt before switching buffers with ‘C-x b’; otherwise its answer is
+still unfinished.  See *note Using Online Help: Using Online Help. for
+entering and leaving a Help window.
+
+* Menu:
+
+* Interpret filenames and examples: Filenames And Example Commands.  Resolve paths in the right environment and distinguish input from instructions.
+
+
+File: emacsvox.info,  Node: Filenames And Example Commands,  Up: Answering Emacs Prompts
+
+2.1.1 Interpret filenames and examples
+--------------------------------------
+
+A _path_ identifies a file's location as well as its name.  A file
+prompt often starts with a directory already filled in.  Append a
+filename to use that directory, or replace the editable answer with a
+complete path.  In an ordinary file minibuffer, ‘C-a C-k’ removes the
+current editable answer: Control-a goes to its beginning and Control-k
+removes the text that follows.  This edits the answer, not a file.  Then
+type the intended path and press ‘<RET>’.
+
+   The examples use ‘~/’ for the home directory understood by the
+running Emacs.  For example, ‘~/evox-notes.org’ names ‘evox-notes.org’
+in that home directory.  In WSL this normally means the Linux home, not
+Windows Documents.  A Windows C-drive path is normally reached through
+‘/mnt/c/’ in WSL; native Windows Emacs uses its own Windows paths.  Use
+a directory that exists and is writable in the environment running
+Emacs.  A speech server running on another host does not change where
+ordinary Emacs document files are stored.
+
+   A relative name is resolved against the directory in the prompt,
+which may change with the selected buffer.  Do not assume it means the
+repository root or the folder used in an earlier task.  When an
+instruction says "from the checkout", it explicitly means that source
+directory.  Replace placeholders such as ‘/path/to/document.txt’ with
+real names; do not create those directories merely to copy the example
+literally.  In Emacs file prompts, type spaces in names normally rather
+than adding shell quotes around the whole path.
+
+   Keyboard sequences invoke Emacs commands.  A shell example belongs at
+a shell or terminal prompt in the environment named by the instructions,
+not after ‘M-x’.  Lisp configuration belongs in the specified Emacs
+configuration file; it is not ordinary document text or a shell command.
+A displayed command's output is something to check, not another command
+to enter.  Read the sentence introducing each example to establish which
+of these contexts it uses.
+
+   When practising, choose unused names.  If a proposed name already
+contains work, cancel and substitute another name consistently.  An
+overwrite warning is not a routine confirmation to accept.  Opening,
+copying, saving and deleting have different effects; the following task
+guides explain the effect before the step.
+
+
+File: emacsvox.info,  Node: Manual Reading Routes,  Next: Finding Help In Info,  Prev: Answering Emacs Prompts,  Up: Using This Manual
+
+2.2 Choose a reading route
 ==========================
 
 After *note Installation: (emacsvox)Installation. gives you speech, work
@@ -339,6 +448,12 @@ Aural Presentation: (emacsvox)Aural Presentation. for application
 meaning, voices, sounds, and settings, and choose an application guide
 for your work.
 
+   For independent everyday tasks, use *note Work with files and
+directories: Working With Files., *note Write a note with headings:
+Writing An Org Document., or *note Web browsing with EWW: Web Browsing.
+These guides explain real files and pages; they do not require
+completing the tutorial or changing your voice configuration.
+
    For one question, go directly to *note Find a task: Finding Tasks.,
 use Info's index, or search the manual text.  When something is not
 working, *note Something is wrong: Finding Problem Tasks. starts with
@@ -348,7 +463,10 @@ configuration procedures; it is not required reading between your first
 speaking session and everyday editing.  The final Developer Guide is for
 changing and maintaining Emacsvox, not for ordinary use.
 
-2.2 Find an answer in Info and return
+
+File: emacsvox.info,  Node: Finding Help In Info,  Next: Manual Editions And Formats,  Prev: Manual Reading Routes,  Up: Using This Manual
+
+2.3 Find an answer in Info and return
 =====================================
 
 Info is Emacs's manual reader.  A _node_ is one navigable topic, which
@@ -407,7 +525,10 @@ manual: (info)Top.  If a key behaves differently in your session, ‘C-h
 k’ followed by that key explains its effective binding without invoking
 it.
 
-2.3 Recognise the document you are reading
+
+File: emacsvox.info,  Node: Manual Editions And Formats,  Prev: Finding Help In Info,  Up: Using This Manual
+
+2.4 Recognise the document you are reading
 ==========================================
 
 This user manual explains tasks, feedback, and recovery.  The generated
@@ -3133,6 +3254,14 @@ original delivery.
 ‘i’
      Include or exclude feedback from Aural interfaces themselves.
 
+   To change the same policy from a menu, open ‘C-e H f H’.  Select
+_Retained records_ and use ‘<RET>’ for an exact nonnegative limit, or
+Shift-left/right to adjust by one.  Lowering the limit immediately
+discards the oldest excess records; zero clears and disables history.
+Increasing it cannot restore those records.  The menu's ‘i’ toggles
+interface recording, and ‘w’ saves both defaults through Customize.
+Retained feedback itself is never saved by this action.
+
    Aural interface feedback is excluded by default so it does not
 displace the feedback being investigated.  This includes their prompts,
 completion choices, and opening/closing sounds.  Ordinary completion
@@ -4009,11 +4138,19 @@ Preview it in Voice Palettes or Workbench before assignment.  Adapters
 without post-synthesis filtering keep the style but cannot apply those
 filters.
 
-   ‘omnivox-average-pitch-contrast’ defaults to ‘0.5’ for gentler
-distinctions.  ‘1.0’ restores historical contrast and ‘0’ neutralises
-average pitch; values through ‘2.0’ are accepted.  Changing it refreshes
-logical-voice registration for previews, structured speech, and legacy
-inline voices alike.
+   For overall Omnivox pitch contrast
+(‘omnivox-average-pitch-contrast’), open ‘C-e H v o’ and select _Omnivox
+pitch contrast_.  Shift-left/right adjusts by ‘0.1’; ‘<RET>’ enters an
+exact value from zero to two.  The default ‘0.5’ gives gentler
+distinctions, ‘1.0’ restores historical contrast, and zero neutralises
+average pitch.  This scales all average-pitch levels without changing
+individual named-voice definitions; other backends are unaffected.
+
+   Changes refresh logical-voice registration for subsequent previews,
+structured speech and legacy inline voices.  Compare familiar content,
+then restore the previous value if needed.  The menu's ‘w’ saves both
+contrast and comparison labels through Customize; it does not save a
+voice or palette.
 
 
 File: emacsvox.info,  Node: Voice Fallbacks,  Next: Voices In Context,  Prev: Voice Adjustments,  Up: Editing Named Voices
@@ -4374,12 +4511,19 @@ _Search all engines_ can compare outside current filters.  Both use one
 sentence.  ‘T’ edits it, ‘F’ filters, ‘C’ clears filters, and ‘R’
 refreshes inventory.
 
-   ‘emacsvox-aural-preview-label-verbosity’ selects names, short
-letters/numbers, or no labels.  Labels and samples form one sequence:
-‘S’ or foreground navigation cancels remaining playback.  Exact-preview
-failure is reported rather than accepting a substitute as the requested
-voice.  Capabilities describe adapter claims, not a listening test of
-every parameter.
+   Use ‘C-e H v o l’ to choose comparison labels: engine and voice
+names, letters or sequence numbers, or no labels.  The option is
+‘emacsvox-aural-preview-label-verbosity’.  The list starts on the
+current choice.  Arrows browse without applying; ‘<RET>’ applies and
+returns, while ‘q’ cancels.  This global option changes labels, leaving
+sample text and order intact.  With no labels, the sequence no longer
+identifies its voices aloud.  Press ‘w’ in Voice presentation to save
+labels and pitch contrast through Customize.
+
+   Labels and samples form one sequence: ‘S’ or foreground navigation
+cancels remaining playback.  Exact-preview failure is reported rather
+than accepting a substitute as the requested voice.  Capabilities
+describe adapter claims, not a listening test of every parameter.
 
 
 File: emacsvox.info,  Node: Physical Voice Experiments,  Next: Keeping A Voice Experiment,  Up: Installed Voices And Engines
@@ -4531,6 +4675,14 @@ Rules request cues by semantic name.  Sound packs map names to audio
 assets and can inherit missing cues.  This lets you change the sound of
 a family of cues without rewriting rules.  For one event, use its
 feedback rule instead.
+
+   To enable or disable earcons in the captured buffer, use ‘C-e H r l
+e’.  In that submenu, ‘E’ changes the global default for buffers without
+a local override; ‘i’ removes the source buffer's override so it follows
+that default.  Speech remains available when earcons are off, but menu
+cues also disappear where the off setting applies.  These switches last
+for the session or buffer and have no Customize Save action.  Toggle
+again or restore inheritance to reverse an experiment.
 
    ‘C-e H o p’ opens _Sound Packs_.  Its ‘q’ returns to _Sounds and
 output_ with the same settings scope, and another ‘q’ returns to the
@@ -4759,7 +4911,7 @@ offers the built-in levels and available named profiles.  In buffer
 scope, ‘r’ restores automatic mode policy.  Press ‘q’ to return to
 Speech settings.
 
-   The punctuation menu's ‘e’ opens the separate pronunciation editor.
+   The punctuation menu's ‘e’ opens the Omnivox pronunciation editor.
 In that editor, lowercase ‘s’ saves overrides on the speech host and
 lowercase ‘r’ restarts speech after confirmation.  Its ‘q’ returns to
 the same punctuation menu item, retaining the draft and selected
@@ -4775,7 +4927,50 @@ buffer scope promotes those displayed choices to defaults.  Mode
 punctuation policy and explicit buffer settings still override the saved
 punctuation default.
 
-  1. Adjust indentation feedback
+  1. Use Emacs word and phrase dictionaries
+
+     For word or phrase substitutions managed by Emacs, open ‘C-e H s p
+     d’.  This menu is separate from the Omnivox pronunciation editor on
+     ‘e’.  Its dictionaries are stored in an Emacs dictionary file, not
+     Customize or the speech host, and changes need no speech restart.
+     Opening the menu writes nothing and leaves the source's
+     pronunciation table unchanged.
+
+     Press ‘d’ to define an entry at the captured source item.  Choose
+     buffer, file, directory or major-mode scope, then enter the term
+     and spoken replacement.  The existing prompt can load saved
+     dictionaries first.  Buffer entries last only in that buffer's
+     current pronunciation table.  Other scopes update the in-memory
+     dictionary collection and need a separate ‘w’ Save to persist.
+
+     Use ‘e’ to choose an existing dictionary and open its widget
+     editor.  ‘<TAB>’ moves between fields and buttons; ‘<RET>’
+     activates them.  Field edits update the in-memory collection.  Its
+     Save button writes dictionaries to a chosen file.  Return with ‘C-c
+     C-c’ from anywhere, or ‘q’ outside editable fields; inside a field,
+     ‘q’ inserts text.  Returning retains edits without saving or
+     rolling them back, and reopening resumes the same editor buffer.
+
+     Back in the menu, ‘r’ rebuilds and enables the captured source's
+     table from its dictionaries.  This replaces temporary buffer-only
+     entries.  ‘t’ turns substitution off or composes the table again
+     when turning it on; turning off also loses buffer-only entries.
+     Changes to file, directory and mode entries remain in the
+     collection.  To reverse an entry change, edit it back and refresh
+     the source; save again if you changed the saved dictionary.
+
+     Finish and close existing widget editors before loading
+     replacements: their retained fields are not reloaded.  The menu's
+     ‘l’ loads a dictionary file into the collection; refresh the source
+     afterward to use those entries.  ‘w’ saves file, directory and mode
+     dictionaries, excluding buffer-only entries.  Both actions prompt
+     for a file; Load offers ‘emacsvox-pronounce-dictionaries-file’,
+     while Save offers its basename in the Emacsvox user directory.
+     Saving elsewhere does not change the configured startup file.  Use
+     ‘?’ followed by an item's key for its scope and effects before
+     applying it.
+
+  2. Adjust indentation feedback
 
      Open ‘C-e H s i’ or directly ‘C-e d I’.  In global-default scope,
      ‘S’ saves indentation defaults and tone volume through Customize.
@@ -4793,7 +4988,7 @@ punctuation default.
      ‘S’ saves global defaults and tone volume.  ‘q’ retains live
      changes.
 
-  2. Set capitalisation feedback and its beeps
+  3. Set capitalisation feedback and its beeps
 
      ‘C-e H s c’ opens _Capitalization_.  ‘i’ toggles indication, ‘p’
      chooses spoken, tone, combined, personal-rule, or no presentation,
@@ -4817,7 +5012,7 @@ punctuation default.
      If saved rules changed elsewhere, discard the cue draft and reopen
      it.
 
-  3. Choose typing and point feedback
+  4. Choose typing and point feedback
 
      ‘C-e H s t’ opens _Typing and interaction_.  Character, word,
      completed-line echo, point indication/presentation, and spoken
@@ -5500,8 +5695,8 @@ presentation         states, and attributes         Presentation
                                                     feedback rules
 Explicit face        Rules deliberately matching    emacsvox-aural-toggle-face-presentation
 presentation         an Emacs face                  or Aural Doctor
-Voice Lock           Historical buffer              C-e d v locally; C-e
-                     face/personality mapping       d C-v globally
+Voice Lock           Historical buffer              C-e H r l v locally;
+                     face/personality mapping       C-e H r l V globally
 
    To identify Voice Lock's contribution:
 
@@ -5514,8 +5709,18 @@ Voice Lock           Historical buffer              C-e d v locally; C-e
    Turning it off removes only that compatibility contribution.
 Semantic presentation, explicit face rules, cues, tones, and spoken
 status remain.  The global command updates existing and new buffers; a
-mode can still opt out on startup.  Buffer-local Voice Lock is not
-captured in Presentation Profiles.
+mode can still opt out on startup.  The same controls are available at
+‘C-e H r l v’ for the captured buffer and capital ‘V’ for global policy.
+That submenu's ‘w’ saves only global Voice Lock through Customize.
+Buffer-local Voice Lock is not captured in Presentation Profiles.
+
+   To silence or restore the personality or mapped face at the captured
+item, choose ‘s’ in that submenu.  This uses the existing local
+suppression command; it can affect other text using that mapping in the
+same buffer.  It does not retune the named voice, and a globally
+inaudible mapping cannot be restored there.  The change lasts for the
+buffer and is not saved.  Close and reopen the menu from the intended
+item if its captured source has changed.
 
    For new changes, prefer explanation, settings menus, palettes, and
 Workbench.  Legacy named voices can still use ‘-settings’ options such
@@ -5566,6 +5771,12 @@ in the _Emacsvox Reference Manual_ records public commands and options.
 Consult both that reference and the application's manual when diagnosing
 a problem.
 
+   The everyday guides below cover opening and copying files, writing
+and reviewing notes, and reading web pages.  They use existing speech
+settings.  Start with *note Answer a prompt and return to your work:
+Answering Emacs Prompts. if filename entry, completion or switching from
+the manual to a working buffer is unfamiliar.
+
    Earlier surveys of W3, Dismal, and scanner/OCR setup remain in the
 *note Historical Application Survey: (emacsvox-heritage)Emacs Packages.
 in _Emacspeak Heritage_.  They describe their original period and are
@@ -5573,10 +5784,11 @@ not current installation instructions.
 
 * Menu:
 
-* Document Authoring::
+* Work with files and directories: Working With Files.  Open a document, save a separate working copy and find it again in Dired.
+* Writing and reviewing documents: Document Authoring.  Create a note, navigate its structure and verify changes before saving.
 * Structured Editing::
 * Browsing Structure::
-* Web Browsing::
+* Reading web pages with EWW: Web Browsing.  Open pages, read their structure, follow links and recover your place.
 * Messaging::
 * Editing Code::
 * Development Environment::
@@ -5585,541 +5797,232 @@ not current installation instructions.
 * Desktop Applications::
 
 
-File: emacsvox.info,  Node: Document Authoring,  Next: Structured Editing,  Up: Emacs Packages
+File: emacsvox.info,  Node: Working With Files,  Next: Document Authoring,  Up: Emacs Packages
 
-9.1 Document Authoring
-======================
+9.1 Work with files and directories
+===================================
 
-Open or create a document in its normal Emacs mode.  The major mode
-provides format-specific editing commands; Emacsvox speaks movement and
-edits, applies Voice Lock where useful faces are available, and adds
-integration-specific feedback.  Use ‘C-h m’ for the mode's workflow.
-Outlines and template fields are covered next; table reading is
-described under *note Browsing Structure: Browsing Structure.
+A file is stored on disk.  Visiting it in Emacs opens a _buffer_
+containing its working text; editing changes that buffer until you save.
+Switching to another buffer leaves the work open.  Closing a buffer does
+not delete its file.
 
-
-File: emacsvox.info,  Node: Structured Editing,  Next: Browsing Structure,  Prev: Document Authoring,  Up: Emacs Packages
-
-9.2 Structured Editing And Templates
-====================================
-
-In Outline mode, heading navigation speaks the heading you reach and
-visibility commands announce what was hidden or exposed.  Start a
-dedicated outline with ‘M-x outline-mode’, or enable
-‘outline-minor-mode’ in a suitable document.  See *note Outline Mode:
-(emacs)Outline Mode. in _The GNU Emacs Manual_ for the editor and *note
-emacsvox-outline: (emacsvox-reference)emacsvox-outline. in the _Emacsvox
-Reference Manual_ for its speech support.
-
-   Tempo supplies template fields for modes and packages that use it.
-Emacsvox speaks inserted text and the line reached when moving between
-template marks.  The package supplying the template also supplies its
-insertion commands.  Consult that package's mode help and *note
-emacsvox-tempo: (emacsvox-reference)emacsvox-tempo. in the _Emacsvox
-Reference Manual_.
-
-
-File: emacsvox.info,  Node: Browsing Structure,  Next: Web Browsing,  Prev: Structured Editing,  Up: Emacs Packages
-
-9.3 Browsing Structure
-======================
-
-Use the active mode's structure when it matches the task: Info has nodes
-and menus, Outline has headings and visibility, and EWW exposes HTML
-headings, links, lists, tables, and other document elements.  The
-following sections explain Emacsvox's reading of headings, tables, and
-application lists.  These reading controls are distinct from commands
-that edit the underlying content.
+   These tasks use ordinary text files and existing writable
+directories.  They do not convert Word documents or PDFs into text.
+Start with speech working and finish any open menu or prompt.  *note
+Answer a prompt and return to your work: Answering Emacs Prompts.
+explains filename entry and the distinction between Emacs and shell
+input.
 
 * Menu:
 
-* Reading Markdown and Org tables: Reading Markdown And Org Tables.  Read cells, rows and columns without editing the source table.
-
-9.3.1 Reading Org headings
---------------------------
-
-Reading a whole Org heading omits its leading stars at punctuation
-levels ‘some’ and ‘none’.  Heading voices and the optional heading-level
-announcement still identify the structure.  At ‘all’ punctuation, the
-stars are counted, for example, "3 star" before a level-three heading.
-An empty heading is spoken as "Empty heading" when its stars are
-omitted.
-
-   Word reading and partial-line reading count the stars actually
-selected.  Starting at the second star of a level-three heading
-therefore says "2 star".  Word movement includes the star count when it
-reaches the first heading word, in either direction, without changing
-the usual cursor position.  Moving through the remaining title words
-does not repeat that count or heading-level announcement.  Character
-reading and spelling retain the individual stars.  Collapsed headings
-have a collapse cue at every level; the large-movement cue belongs to
-Org structure navigation.
-
-   Counts preserve the configured character name without adding a plural
-ending.  At ‘all’ punctuation, the speech server names ‘*’, so an active
-Omnivox pronunciation of "asterisk" produces "3 asterisk".  Saved
-punctuation-editor changes take effect after restarting speech.
-Explicit word and partial-line reads at ‘some’ or ‘none’ use
-‘tts-character-to-speech-table’, the Emacs table also used for character
-reading.
+* Open a document and check its identity: Opening A Document.  Visit the intended text file and distinguish a new file from an existing one.
+* Save a separate working copy: Saving A Working Copy.  Preserve the original saved file and make later saves go to the intended copy.
+* Find and inspect files with Dired: Browsing Files With Dired.  Navigate filenames, request metadata and return without changing files.
 
 
-File: emacsvox.info,  Node: Reading Markdown And Org Tables,  Up: Browsing Structure
+File: emacsvox.info,  Node: Opening A Document,  Next: Saving A Working Copy,  Up: Working With Files
 
-9.3.2 Reading Markdown and Org tables
--------------------------------------
+9.1.1 Open a document and check its identity
+--------------------------------------------
 
-In a Markdown or Org table, press a Control-Meta arrow to enter table
-reading and move immediately.  Left/right moves by cell; up/down moves
-by logical row.  The first movement announces table reading and the
-destination together.  Outside supported tables, these arrows retain
-their existing bindings, including inside code examples.
+  1. Press ‘C-x C-f’.  At the file prompt, choose the existing text file
+     you want to read.  Complete or type its path, then press ‘<RET>’.
+     Emacs selects the file's buffer; use ‘C-e m’ to hear its name and
+     mode.
+  2. Press ‘M-<’, then ‘C-e l’ to read its first line.  Check that the
+     content is what you expected before editing.  A missing filename
+     can instead open an empty buffer for a new file.  Opening that
+     buffer alone has not created a saved document: check the name
+     rather than assuming your text was lost.
+  3. If you need to confirm the full destination, use ‘C-h v
+     buffer-file-name <RET>’.  This Help shows the pathname visited by
+     the source buffer; ‘nil’ means that buffer is not visiting a file.
+     Read Help as described in *note Using Online Help: Using Online
+     Help., then return to the document by its buffer name with ‘C-x b’.
+     Do not edit while Help is selected.
 
-   ‘C-e C-t C-r’ enters without moving when the default speech prefix is
-used.  It announces the dimensions and current cell.  Press ‘q’ or the
-same command to restore ordinary editing keys.  From prose, ‘C-e C-t ]’
-and ‘C-e C-t [’ find and enter the next or previous table.  Inside table
-reading, ‘t’ and ‘T’ do the same; code examples are skipped.
+   For reading without accidental text edits, use ‘C-x C-r’ in place of
+‘C-x C-f’.  That opens the file read-only.  A read-only buffer is
+different from a document with unsaved changes; do not remove the
+protection merely to make an unfamiliar command work.
 
-   While table reading is active:
+   When you follow this task from Info or HTML, leave the manual
+available and switch to the document before trying its editing commands.
+In Emacs, ‘C-x b’ selects an existing buffer by name; ‘C-x C-f’ selects
+a file by its path.  Those are different questions even when the buffer
+and file have similar names.
 
-   • Up/down and Control-Meta-up/down move by logical row, retain the
-     column, and read the complete destination row.
-   • Control-Meta-left/right moves between cells.  Plain left/right
-     retains character movement.  ‘<TAB>’ and ‘S-<TAB>’ move between
-     cells without editing; ‘<RET>’ or ‘<SPC>’ reads the current cell.
-   • ‘r’ reads the row and ‘c’ the column.  ‘.’ announces coordinates
-     and ‘=’ gives dimensions.
-   • ‘a’ changes column titles, row titles, or data/title order for this
-     buffer.  The ‘emacsvox-table-reader’ customisation group sets
-     defaults.
-   • ‘w’ or ‘k k’ copies the cell, ‘k r’ copies the row with tabs
-     between cells, and ‘k c’ copies the column with newlines between
-     cells.
-   • Meta-up/down leaves directly for preceding/following prose.
-     Up/down also leaves across a vertical table edge when content
-     exists beyond it; otherwise point stays in the table.
-
-   A horizontal edge or a missing cell in a shorter row leaves point
-unchanged and announces the boundary.  Separators are skipped.  A
-separator immediately after the first row identifies column titles;
-otherwise that row is data.  Coordinates distinguish the header from
-one-based data rows.  Empty cells are spoken as “blank.” Wrapping never
-shortens a logical cell's speech or copy.
-
-   Reading does not align tables, create rows, or evaluate Org formulas.
-Copies use cell values: ordinary links become their labels and inline
-code becomes its literal text.  Use the host mode to copy exact markup
-or formulas.  This reader covers simple pipe tables; HTML spans, nested
-tables, and spreadsheet-specific structures have separate interfaces.
-
-   Leaving restores ordinary mode keys.  Other editing commands retain
-their normal meaning, and an edit ends the reading context.  Org's
-table-editing feedback and Markdown's markup-stripping speech option
-remain independent.  Agent Shell has automatic contextual table entry
-and its own preferences.  In Agent Shell, Control-Meta-up/down reads the
-destination _cell_, whereas plain up/down reads the destination _row_.
-Do not assume identical spoken units merely because the keys are
-similar; see *note Agent Shell: Agent Shell.
-
-9.3.3 Reading application lists
--------------------------------
-
-In an application built on Tabulated List mode, use a Control-Meta arrow
-or ‘C-e C-t C-r’ to enter shared reading.  Ordinary application
-navigation stays unchanged until you enter.  Within reading, up/down
-reads complete logical rows, Control-Meta-left/right reads cells, and
-plain left/right inspects characters.  ‘q’ leaves reading and restores
-the application's usual navigation.
-
-   Application actions take precedence over other shared reader keys.
-Opening, refreshing, sorting, searching, and editing keep their
-commands, including ‘<RET>’ on a button.  When a shared key is occupied,
-use ‘M-x emacsvox-table-reader-speak-cell’, ‘M-x
-emacsvox-table-reader-speak-row’, ‘M-x
-emacsvox-table-reader-speak-column’, ‘M-x
-emacsvox-table-reader-speak-context’, or ‘M-x
-emacsvox-table-reader-speak-dimensions’.  The matching
-‘emacsvox-table-reader-copy-cell’, ‘emacsvox-table-reader-copy-row’ and
-‘emacsvox-table-reader-copy-column’ commands copy logical values.
-
-   Speech and copies use complete entry text even when a displayed
-column is truncated.  Column headings come from the application, not the
-first item.  Coordinates count visible data rows; hidden rows are
-excluded and empty cells say “blank.” Movement stops at the first or
-last row.  A refresh ends reading; enter again to inspect the refreshed
-list.  Custom table printers, image-only cells, and duplicate column
-names are not supported by this reader.
-
-9.3.4 Browsing CSV data
------------------------
-
-Use ‘emacsvox-table-find-csv-file’ to open a CSV file in the table
-browser, or ‘emacsvox-table-view-csv-buffer’ for the current buffer's
-CSV data.  Quoted commas, doubled quotation marks, and multiline fields
-remain single logical cells.  Blank records outside quoted fields are
-skipped; empty fields remain cells.  Empty input or malformed quoting
-produces an error before creating a view.
-
-   Browsing preserves source text.  If the file is already open, the
-view uses that buffer's current contents, including unsaved edits,
-without replacing the source buffer.  Shared table controls are active
-immediately:
-
-   • Up/down and Control-Meta-up/down move by logical row and read the
-     whole row.
-   • Control-Meta-left/right and ‘<TAB>~/~S-<TAB>’ move by cell.  Plain
-     left/right and ‘C-b~/~C-f’ move by character; ‘C-p~/~C-n’ move by
-     logical row.
-   • ‘<RET>’ or ‘<SPC>’ reads the cell; ‘r’ reads the row and ‘c’ the
-     column.
-   • ‘.’ gives coordinates and ‘=’ dimensions.  The first row supplies
-     column titles and is announced separately from data rows.
-   • ‘w’ or ‘k k’ copies the cell, ‘k r’ the row with tabs between
-     cells, and ‘k c’ the column with newlines between cells.  ‘K’
-     copies the whole table to the clipboard used by
-     ‘emacsvox-table-paste-from-clipboard’.
-   • ‘a’ changes column titles, row titles, or data order for this view
-     using shared reader preferences.  ‘q’ closes the view.
-
-   These replace the old browser cell-arrow, header-reading,
-automatic-speech, and single-key table-copy bindings.  The old local
-aliases ‘b’, ‘n’, ‘p’, ‘A’, ‘B’, ‘E’, and ‘T’ are removed; speech-prefix
-table commands remain available.
-
-   Search with ‘s’, ‘R’ for a row, ‘C’ for a column, or ‘h’ for headers.
-‘#’ sorts on the current column and ‘M-<~/~M->’ jumps to the top or
-bottom.  At an edge, movement announces the boundary and leaves point in
-place.
-
-   Filters remain on ‘f’ for a row and ‘g’ for a column; a prefix
-argument requests a new filter.  Filter indexes and the ‘j’ jump prompt
-retain zero-based model coordinates, including the header, although
-spoken coordinates count data rows and columns from one.  For example,
-the row filter ‘(0 "value" 2)’ reads the first column, “value”, and the
-third column.  ‘M-l’ and ‘M-s’ load and save filters.  Filters are
-explicit inspections; shared row movement always reads the whole row.
-Sorting preserves filters and speech preferences.  Use ‘C-h m’ for the
-full browser key map.
+   To close a document buffer, use ‘C-x k’ and check the name and any
+unsaved-work prompt.  That is not a file deletion.  Unlike a Dired or
+Help buffer, an ordinary text buffer does not use ‘q’ to quit: typing it
+normally inserts a letter.
 
 
-File: emacsvox.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Structure,  Up: Emacs Packages
+File: emacsvox.info,  Node: Saving A Working Copy,  Next: Browsing Files With Dired,  Prev: Opening A Document,  Up: Working With Files
 
-9.4 Web Browsing With EWW
-=========================
+9.1.2 Save a separate working copy
+----------------------------------
 
-EWW is the built-in browser supported for current Emacsvox.  Run ‘M-x
-eww <RET>’, enter a URL or search words, and press ‘<RET>’.  Emacsvox
-speaks navigation and rendering feedback and adds HTML-structure
-movement and filtering of the displayed DOM.  Consult *note EWW:
-(emacs)EWW. in _The GNU Emacs Manual_ for browser operation and *note
-emacsvox-eww: (emacsvox-reference)emacsvox-eww. in the _Emacsvox
-Reference Manual_ for speech support.
+Use this route before editing a document whose original you want to
+preserve.  It writes the current buffer text, including unsaved edits,
+to a new filename and makes that new file the buffer's saving
+destination.
 
-   From an EWW buffer, ‘C-e S’ opens its focused settings.  ‘s’ toggles
-section-navigation autospeak.  ‘i’ changes image suppression for
-subsequent rendering and the shared SHR image default, preserving
-buffer-local overrides; it does not reload the current page.  ‘w’ saves
-the two Emacsvox defaults, ‘A’ opens advanced settings, and ‘q’ returns.
-These are presentation choices, not a replacement for EWW's browser
-preferences.
+  1. Select the source document and check its identity.  Press ‘C-x
+     C-w’, replace the proposed filename with an unused path such as
+     ‘~/evox-notes-copy.txt’, and press ‘<RET>’.  Keep the appropriate
+     extension for the document, for example ‘.org’ for Org notes.
+     Cancel an unexpected overwrite prompt and choose another name.
+  2. Read the save result and check the new destination with ‘C-h v
+     buffer-file-name <RET>’ when necessary.  A permission or write
+     error is not a completed save.  Keep the buffer open while
+     correcting the problem; do not discard the only copy of unsaved
+     text.
+  3. Return to that document, make the intended changes, and press ‘C-x
+     C-s’.  This saves to the new destination.  The old saved file
+     remains at its old path.  You can open it separately with ‘C-x C-f’
+     to compare it with the copy.
 
-   The Emacs/W3 and w3m survey is historical.  Do not install either on
-the strength of the Heritage manual; use EWW unless a separately
-maintained integration says otherwise.
+   ‘C-x C-w’ does not keep the buffer attached to both files.  After it
+succeeds, later ‘C-x C-s’ saves update the new file.  The old file
+retains its previously saved content, not any unsaved changes that were
+written only to the copy.  Changing the filename is also not a format
+converter: naming plain text with ‘.docx’ does not create a Word
+document.
 
-
-File: emacsvox.info,  Node: Messaging,  Next: Editing Code,  Prev: Web Browsing,  Up: Emacs Packages
+   To duplicate the last saved file while leaving the working buffer's
+destination unchanged, use ‘M-x copy-file <RET>’ instead.  Answer its
+source and destination prompts with paths.  It copies the file on disk,
+not unsaved buffer edits, and does not switch you into the new copy.
+Open the destination separately to work on it.  See *note Save commands:
+(emacs)Save Commands. and *note Copying and naming files: (emacs)Copying
+and Naming. in the GNU Emacs Manual for other saving and copying
+operations.
 
-9.5 Messaging
-=============
-
-For indexed mail search, asynchronous results, threads, attachments, and
-privacy controls, follow *note Notmuch Mail: Notmuch Mail.  For another
-mail or messaging client, start with its own manual and mode help, then
-find the corresponding Emacsvox module in the generated reference.  The
-presence of a module is not a substitute for configuring the underlying
-account or service.
-
-
-File: emacsvox.info,  Node: Editing Code,  Next: Development Environment,  Prev: Messaging,  Up: Emacs Packages
-
-9.6 Editing Code
-================
-
-Programming modes provide language-aware movement, indentation,
-compilation, and navigation.  Emacsvox speaks these operations and uses
-Voice Lock to distinguish comments, strings, warnings, and language
-constructs where the mode exposes them.  Use the language mode's help
-for editing commands and its named integration in the generated
-reference for speech details.
+   If Emacs reports that another program changed the original, do not
+force a save or revert simply to clear the warning.  Keep your buffer,
+preserve its text under an unused filename if needed, and compare the
+versions before deciding which changes to keep.  *note Simultaneous
+editing: (emacs)Simultaneous Editing. explains that conflict.
 
 
-File: emacsvox.info,  Node: Development Environment,  Next: Desktop Management,  Prev: Editing Code,  Up: Emacs Packages
+File: emacsvox.info,  Node: Browsing Files With Dired,  Prev: Saving A Working Copy,  Up: Working With Files
 
-9.7 Development Environment
-===========================
+9.1.3 Find and inspect files with Dired
+---------------------------------------
 
-Compilation, diagnostics, project navigation, version control,
-debuggers, and language servers can share the Emacs workspace.
-Configure each through its own manual and verify its operation before
-combining it with other components.  Emacsvox supplies speech to many of
-them; their underlying operations remain owned by those tools.  *note
-Agent Shell: Agent Shell. provides the separate guide to AI-agent
-sessions and their permission, feedback, and review controls.
+Dired is Emacs's directory browser.  Its ordinary listing is not
+document text: letters such as ‘n’, ‘p’ and ‘q’ invoke commands rather
+than being inserted.  Emacsvox normally speaks filenames as you move,
+leaving detailed metadata for inspection on request.  Voices and cues
+can distinguish directories, links and marked entries according to your
+presentation settings.
 
-9.7.1 Magit
------------
+  1. Press ‘C-x d’, enter an existing directory such as ‘~/’, and press
+     ‘<RET>’.  In the Dired buffer, press comma, ‘,’, to hear the
+     listing header.
+  2. Move with ‘n’ and ‘p’ to the next or previous entry.  To reach a
+     known name in a long listing, use ‘C-s’, type part of the filename,
+     and press ‘<RET>’ to finish searching.  Check the filename you
+     reached before acting on it.
+  3. On an ordinary file, press ‘z’ to hear its size, lowercase ‘c’ for
+     its modification time, and ‘/’ for permissions.  These inspect the
+     selected entry without opening it.  Uppercase ‘C’ is Dired's Copy
+     command, not a second way to hear the time.  Size inspection on a
+     directory instead uses the external ‘du’ program and may take
+     longer or be unavailable; file-type inspection with apostrophe,
+     ‘'’, similarly requires the ‘file’ program.
+  4. Press ‘<RET>’ on the file to visit it in Emacs.  On a directory,
+     ‘<RET>’ opens that directory's listing.  Opening announces the
+     destination; ‘C-e m’ lets you check the resulting buffer and mode.
+     Use ‘<RET>’ here, not ‘C-j’: Emacsvox assigns ‘C-j’ and
+     Control-Enter to a separate, file-type-aware opener which may
+     preview or play a file instead of visiting its text.
+  5. To return from the document, use ‘C-x b’ and select the directory
+     buffer.  In Dired, ‘^’ goes to the parent directory and ‘g’
+     refreshes the listing from disk.  Refreshing Dired does not save or
+     discard an open document's edits.  Press ‘q’ in Dired to leave the
+     listing; your files remain on disk.
 
-Magit navigation speaks the section or line you reach.  Empty and
-whitespace-only lines use the normal line tones.  Commit hashes are
-silent by default; changing the voice assigned to ‘magit-hash’ affects
-navigation and explicit reading consistently.  Moving the section
-highlight preserves that choice.
+   Looking at a file is not the same as marking it for an operation.
+‘m’ marks an entry and then moves to the next; its action cue precedes
+the newly selected filename.  ‘u’ unmarks an entry and also advances.
+If you are inspecting a listing with existing marks, leave them alone.
+Dired operations can apply to marked files rather than the row you are
+hearing.
 
-   After successful staging or unstaging in a Magit view, speech reads
-where point lands after the refresh.  Failures remain explicit.  Staging
-and unstaging from an ordinary file buffer still confirm their outcome.
-Branch checkout, branch and remote renaming, remote removal, and stash
-creation announce results.  Repository-list fetching reports partial
-failures.  Background completion uses the notification stream; entering
-status and navigating use the main stream.
-
-   Visibility commands describe collapsed, expanded, or partly expanded
-sections.  Copying a heading without a value reports that there is
-nothing to copy rather than presenting an old kill-ring entry as a new
-copy.
-
-   Magit uses Transient menus for Push, Fetch, Commit, Branch, and other
-actions.  Opening one speaks a short introduction and navigation
-guidance.  Its automatic shortcut list remains visible without being
-read on the notification stream.
-
-   Up/down browses items and left/right moves between sections.  The
-shared navigation preferences apply to Magit as well as Emacsvox menus:
-wrapping within a section is the default, and continuous navigation or
-stopping at section edges can be selected.  Announcement order can be
-item first, section first, or dependent on the movement.  Detailed
-command descriptions are enabled by default; value adjustments still
-give brief feedback.  Configure these choices through ‘C-e H s n’, as
-described in *note Getting started with settings menus: (emacsvox)Aural
-Home.
-
-   An item announcement identifies its key, relevant value, and
-description; capital keys are named explicitly.  Section announcements
-include the heading and position according to the selected policy.  Do
-not expect the same section-name repetition after changing that policy.
-
-   Use ‘C-j’ or ‘M-<RET>’ to activate a selected Magit item, or type its
-shortcut.  ‘?’ followed by the shortcut opens Help.  ‘C-g’ closes the
-current menu or leaves its help mode.  Unlike Emacsvox's own settings
-menus, ‘q’ is not a universal quit key in Transient applications.  An
-unavailable key gives brief recovery guidance on the main stream.
-
-   Browsing only selects an item.  Activating an action can perform a
-Git operation, while activating a switch changes an argument for the
-next action.  Listen to the description before activation.
+   This guide does not require deletion, renaming, changing permissions
+or running commands on files.  In particular, ‘d’ flags deletion and ‘x’
+executes flagged deletions; do not use either as a way to close a
+listing.  Cancellation after a file operation and ordinary text undo are
+not promises of filesystem recovery.  Use *note Dired: (emacs)Dired. in
+the GNU Emacs Manual before performing those operations, and *note
+emacsvox-dired: (emacsvox-reference)emacsvox-dired. for the complete
+speech-command reference.
 
 
-File: emacsvox.info,  Node: Desktop Management,  Next: Personal Information Management,  Prev: Development Environment,  Up: Emacs Packages
+File: emacsvox.info,  Node: Document Authoring,  Next: Structured Editing,  Prev: Working With Files,  Up: Emacs Packages
 
-9.8 Desktop Management
+9.2 Document Authoring
 ======================
 
-Buffers, windows, frames, and tabs organise the workspace.  ‘C-x b’
-selects a buffer; specialised buffer-list and tab interfaces provide
-their own mode help.  *note Audio Desktop: Audio Desktop. explains the
-common navigation model so it need not be learnt again for each
-application.
+Open or create a document in its normal Emacs mode.  The mode supplies
+the format's editing commands; Emacsvox presents movement, edits and
+structure through speech.  Voice Lock can distinguish useful faces
+supplied by the mode.  The following task writes a small Org note, then
+reviews it without relying on visual formatting.  Org comes with Emacs;
+no mail account or additional speech engine is required.
+
+   For copying an existing document before editing, use *note Save a
+separate working copy: Saving A Working Copy.  Outlines and template
+fields are covered under *note Structured editing and templates:
+Structured Editing., and tables under *note Reading Markdown and Org
+tables: Reading Markdown And Org Tables.
+
+* Menu:
+
+* Write a note with headings: Writing An Org Document.  Create a real text file and organise a short note with Org headings.
+* Review structure and correct text: Reviewing An Org Document.  Read headings, reveal their contents, search and verify an edit before saving.
 
 
-File: emacsvox.info,  Node: Personal Information Management,  Next: Desktop Applications,  Prev: Desktop Management,  Up: Emacs Packages
+File: emacsvox.info,  Node: Writing An Org Document,  Next: Reviewing An Org Document,  Up: Document Authoring
 
-9.9 Personal Information Management
-===================================
+9.2.1 Write a note with headings
+--------------------------------
 
-Calendar, Org, and related packages define their data formats and
-workflows.  Emacsvox presents navigation, state changes, and structured
-content when those modes are active.  Begin with the application's
-manual and live help, then consult its matching integration in the
-generated reference.
+Unlike the tutorial's disposable buffer, this task creates a file you
+can return to.  Use an unused name and a writable directory.  The name
+‘~/evox-notes.org’ is an example, not a file the package supplies.
 
-   Org's focused menu at ‘C-e S’ includes its table-editing feedback
-choices.  Those are separate from the shared reading mode above: the
-focused menu's global default does not replace an existing buffer-local
-choice, and the shared reader retains its own title and speaking
-preferences.
+  1. Press ‘C-x C-f’, enter ‘~/evox-notes.org’ and press ‘<RET>’.  If it
+     already contains work, choose another name before typing.  The
+     ‘.org’ extension normally selects Org mode; check with ‘C-e m’.  If
+     a personal configuration selected another mode, run ‘M-x org-mode
+     <RET>’ in this new note.
+  2. Type or insert the following text in the document buffer, not in
+     the minibuffer or the manual.  Start each heading at the beginning
+     of its line.  One asterisk and a space introduce the main heading;
+     two asterisks and a space introduce a heading beneath it.
 
-
-File: emacsvox.info,  Node: Desktop Applications,  Prev: Personal Information Management,  Up: Emacs Packages
+          * Project notes
+          The draft is ready for review.
+          ** Questions
+          Check the delivery date.
+          ** Decisions
+          Keep a separate review copy.
 
-9.10 Desktop Applications
-=========================
+  3. Press ‘M-<’ and read with ‘C-n’ and ‘C-e l’.  Verify the heading
+     words and body text.  Org heading feedback can identify structure
+     without reading every leading asterisk; exact character inspection
+     remains available.
+  4. Press ‘C-x C-s’ and read the save result.  That writes this Org
+     text to the selected file.  It does not export a formatted document
+     or change speech settings.  Keep the file open for the following
+     review, or reopen it later with ‘C-x C-f’ and its path.
 
-9.10.1 Terminal Applications
-----------------------------
-
-Use ‘M-x shell’ for ordinary line-oriented shell commands.  For a full
-terminal, follow *note EAT Terminal Access: EAT Terminal Access., or use
-built-in *note Term: Running Terminal Based Applications. when no
-additional package is wanted.  Their input, review, and asynchronous
-feedback models differ; choose the appropriate chapter rather than
-transferring terminal keys from one application to another.
-
-   In Shell/comint, ‘C-e S’ opens focused speech settings.  ‘s’ toggles
-automatic output speech and ‘b’ toggles background monitoring.
-Background reading needs automatic speech enabled.  Both settings affect
-the captured buffer for its lifetime; this menu has no Save action.  ‘q’
-returns to the originating entry or closes a directly opened focused
-menu.
-
-   In WSL Shell buffers, command-name completion skips Windows drive
-directories by default.  Scanning large directories such as
-‘C:\Windows\System32’ can otherwise pause Emacs.  Windows programs still
-run by name, and explicit filename completion, including ‘/mnt/c/’
-paths, remains available.  To include Windows command names again, use
-‘M-x customize-option <RET> emacsvox-shell-complete-windows-commands
-<RET>’.  This option does not change native Windows or remote Shell
-buffers.
-
-9.10.2 Forms Mode
------------------
-
-Forms presents records from a structured text file one at a time.
-Emacsvox speaks fields, record movement, searches, and state changes.
-Forms requires a format specification; see *note Forms Mode:
-(emacs)Forms Mode. in _The GNU Emacs Manual_ for setup and *note
-emacsvox-forms: (emacsvox-reference)emacsvox-forms. in the _Emacsvox
-Reference Manual_ for speech.
-
-9.10.3 OCR And PDF-To-Text With PaddleOCR
------------------------------------------
-
-Emacsvox uses PaddleOCR PP-StructureV3 to turn an image or PDF into
-UTF-8 Markdown text.  It recovers reading order and represents
-recognised tables as Markdown or embedded HTML.  Keep ‘.md’ output when
-structure matters; Markdown is plain text and can be named ‘.txt’ when
-its lightweight markup is acceptable.
-
-   This route is intended for scanned or image-only PDFs.  For a
-born-digital PDF with a trustworthy text layer, extracting that layer is
-faster and usually more exact than OCR.  Recognition still depends on
-scan quality; upright, high-contrast pages at 300 DPI are a useful
-starting point.
-
-  1. Prepare the isolated OCR environment
-
-     The supported baseline is CPU-only x86-64 WSL2 or GNU/Linux.
-     Paddle's Linux wheel requires an AVX-capable x86-64 processor and
-     Python 3.9 through 3.13.  Do not use Ubuntu 26.04's Python 3.14 for
-     this environment.  The commands below install Python 3.13
-     separately without altering Emacsvox, system Python, or another
-     project's packages.  Installation uses about 1.7 GB; the first
-     complete PP-StructureV3 run downloads approximately another 1.8 GB
-     of models, cached for later runs.
-
-     Follow the uv installation guide
-     (https://docs.astral.sh/uv/getting-started/installation/) if ‘uv’
-     is unavailable, then create the environment:
-
-          uv python install 3.13
-          uv venv --python 3.13 --seed \
-            "$HOME/.local/share/emacsvox/paddleocr-venv"
-
-     Install the tested CPU runtime and PaddleOCR's ‘all’ variant, which
-     includes the document-parsing, table, and formula dependencies:
-
-          "$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
-            paddlepaddle==3.3.0 \
-            -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
-          "$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
-            'paddleocr[all]==3.7.0'
-
-     From the checkout, verify that the launcher finds both packages:
-
-          ./bin/emacsvox-paddleocr --check
-
-     For a Debian installation, use the installed launcher, here and in
-     the recognition commands below:
-
-          /usr/share/emacsvox/bin/emacsvox-paddleocr --check
-
-     The expected report names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and
-     the CPU device.  A missing ‘ccache’ warning is harmless for normal
-     inference.
-
-     oneDNN, formerly MKL-DNN, is an optional CPU execution backend, not
-     an OCR model.  The launcher leaves it disabled because PaddlePaddle
-     3.3.0 has an upstream PIR-to-oneDNN conversion defect
-     (https://github.com/PaddlePaddle/Paddle/issues/77340).  In the
-     tested pipeline this aborts initialisation at the formula model,
-     although that model is not itself at fault.  Standard CPU kernels
-     keep every recognition feature enabled, including tables and
-     formulas.  The trade-off is speed, not capability.
-
-  2. Recognise and read a document
-
-     For one image, redirect the clean Markdown result to a file.  Model
-     downloads and progress go to standard error, not the recognised
-     text:
-
-          ./bin/emacsvox-paddleocr "/path/to/page.png" > page.md
-
-     PDF input uses the same command.  Paddle renders and recognises
-     every page, then joins them in reading order:
-
-          ./bin/emacsvox-paddleocr "/path/to/scanned-document.pdf" > document.md
-
-     A large PDF can require substantial CPU time: table, layout,
-     formula, orientation, and unwarping models are all active by
-     default.
-
-     Inside Emacsvox, press ‘C-e C-o’ or run ‘M-x emacsvox-ocr <RET>’.
-     In the OCR buffer, ‘o’ selects an image or PDF.  Recognition runs
-     asynchronously and adds its result as a new page when complete.
-     Listen for the completion cue, then use ‘<SPC>’ to read the current
-     result, ‘s’ to save it, or ‘w’ to save the whole OCR buffer.  ‘[’
-     and ‘]’ move between results.  ‘d’ opens the per-user OCR
-     directory.  Progress and errors are retained separately in
-     ‘*Emacsvox OCR Errors*’.
-
-  3. Configure recognition and diagnose the adapter
-
-     Use ‘M-x customize-group <RET> emacsvox-ocr <RET>’ for ordinary
-     Emacs configuration rather than shell environment variables.  The
-     bundled adapter provides typed options:
-
-        • ‘emacsvox-ocr-paddleocr-python’ selects an exact Python
-          executable; ‘nil’ uses the isolated installation above.
-        • ‘emacsvox-ocr-paddleocr-language’ and
-          ‘emacsvox-ocr-paddleocr-device’ choose recognition language
-          and device.
-        • ‘emacsvox-ocr-paddleocr-use-table-recognition’ and
-          ‘emacsvox-ocr-paddleocr-use-formula-recognition’ control the
-          structural models; both default to enabled.
-        • ‘emacsvox-ocr-paddleocr-use-document-orientation’,
-          ‘emacsvox-ocr-paddleocr-use-document-unwarping’, and
-          ‘emacsvox-ocr-paddleocr-use-text-line-orientation’ control
-          image correction.
-        • ‘emacsvox-ocr-paddleocr-enable-mkldnn’ enables oneDNN/MKL-DNN
-          acceleration, not an OCR model.  Keep it disabled for the
-          tested PaddlePaddle 3.3.0 CPU setup on WSL.
-
-     These options apply only when ‘emacsvox-ocr-engine’ names the
-     bundled adapter.  A different engine retains the generic interface.
-     ‘emacsvox-ocr-engine-options’ is an advanced list of literal
-     arguments; for the bundled adapter it follows, and can override,
-     the typed options.
-
-     For standalone shell or automation use, ‘EMACSVOX_PADDLEOCR_VENV’
-     changes the environment directory, ‘EMACSVOX_PADDLEOCR_PYTHON’
-     selects an executable, and ‘EMACSVOX_PADDLEOCR_LANGUAGE’ or
-     ‘EMACSVOX_PADDLEOCR_DEVICE’ changes defaults.  See
-     ‘./bin/emacsvox-paddleocr --help’ for switches.  These environment
-     settings are not the primary Emacs configuration interface.
-
-     Direct SANE scanner-acquisition commands remain for compatibility
-     but are not part of this tested WSL baseline.  Scan with a Windows
-     application and select the resulting image or PDF with ‘o’ when
-     that is the available acquisition route.  Scanner configuration is
-     independent of PaddleOCR.
+   Choose your own heading titles when writing real notes.  Org stores
+the title and body as plain text, so the structure remains in the file
+even when parts of it are folded in the current view.  Do not delete a
+folded heading to try to reveal its body: folding is a visibility
+operation, not missing content.
