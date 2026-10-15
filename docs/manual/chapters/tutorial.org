@@ -211,8 +211,8 @@ when a package or personal binding differs from this manual. A buffer and a
 window are different: switching buffers chooses content, while ~C-x o~
 selects another window. A changed layout does not mean a buffer was closed.
 You do not have to recreate a split to finish this exercise: returning by
-buffer name is enough. [[*Read And Leave A Help Window][Read and leave a Help window]] explains ordinary Help
-and the distinct return route used by settings-menu Help.
+buffer name is enough. [[*Find Help While You Work][Find help while you work]] explains how to read and leave
+ordinary Help and the distinct return route used by settings-menu Help.
 
 *** Try it
 :PROPERTIES:

@@ -57,12 +57,14 @@ of its latest menu organisation remains pending. Emacs 30.2 verification of
 the latest changes, branch CI and final merge review remain separate work.
 No new automated verification is implied by these listening results.
 
-Documentation verification at this checkpoint: =make docs-release-check=
-passes the byte-code preflight but fails Org-to-Info export. The tutorial's
-link to =Read And Leave A Help Window= resolves to a heading without an Info
-node. Repair the cross-reference in the newer manual edits and rerun the
-documentation gate before merge. This failure is separate from listening
-acceptance; no Lisp or generated manuals changed in this checkpoint.
+Documentation follow-up, 2026-10-15: the tutorial's link to =Read And Leave A
+Help Window= targeted a heading without an Info node and blocked export.
+It now targets the containing =Using Online Help= node. Org preview, manual
+regeneration and =make docs-release-check= pass, including byte-code preflight
+and the unchanged Info node inventory. A fresh batch Emacs followed the
+tutorial link, found the Help subsection and returned through Info history.
+Regenerated manuals also include the recent committed documentation edits.
+This resolves the documentation blocker; it adds no listening acceptance.
 
 - Literal search spaces, 2026-10-15: Space now inserts text in both menu
   searches; Tab completes and Enter keeps its selection/activation distinction.
