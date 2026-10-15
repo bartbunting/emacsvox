@@ -245,6 +245,12 @@
 
 ## Documentation
 
+- Follow `docs/manual/EDITORIAL_STYLE.org` for maintained manual prose.
+  Read the complete affected chapter and related chapters before substantive
+  changes. Integrate new information into the narrative, revise surrounding
+  passages, and consolidate repeated explanations rather than appending notes.
+  After editing, review the chapter for technical accuracy, audible behaviour,
+  continuity, and stable Info navigation and links.
 - Reports and internal notes do not require an Emacsvox build. The maintained
   manual source is `docs/manual/emacsvox.org`, its included user chapters under
   `docs/manual/chapters/`, and its final developer guide under

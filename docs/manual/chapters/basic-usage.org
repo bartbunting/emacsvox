@@ -5,55 +5,55 @@
 :DESCRIPTION: Learn the essentials in a speaking Emacsvox session.
 :END:
 
-Now that Emacsvox is speaking, this chapter helps you become comfortable with
-the essential keys and feedback.  It begins with a short guided session, then
-introduces the reading and speech controls you are most likely to need.
+Once Emacsvox is speaking, you can read, edit, and navigate with ordinary
+Emacs commands. Emacsvox announces their results, while explicit speech
+commands let you examine text without moving. Start with the short practice
+session below, then use the rest of this chapter for everyday speech controls.
+[[*Work With The Audio Desktop][Audio Desktop]] explains how these habits carry over to other Emacs applications.
 
 ** Key Notation And Emacs Words
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Emacs documentation writes ~C-~ for the Control key and ~M-~ for the
-Meta key, which is usually Alt or Option.  For example, ~C-n~ means
-hold Control and press ~n~.  A sequence such as ~C-e l~ means press
-~C-e~, release it, and then press ~l~.
+Emacs documentation uses ~C-~ for Control and ~M-~ for Meta, usually the
+Alt or Option key. To enter ~C-n~, hold Control and press ~n~. For
+~C-e l~, press ~C-e~, release the keys, then press ~l~. Each
+part of a sequence is a separate keystroke.
 
-~M-x~ prompts for an Emacs command by name, and ~RET~ means the
-Return or Enter key.  A /buffer/ is the Emacs workspace containing text or an
-application.  /Point/ is the current editing position—the place affected by
-movement and editing commands.
+~M-x~ lets you run a command by name, and ~RET~ means Return or Enter. A
+/buffer/ holds text or an application view; /point/ is the position affected
+by movement and editing. These terms are used throughout the manual.
 
-If Emacs itself is new to you, ~C-h t~ opens its interactive tutorial.
-You can return to this chapter whenever the tutorial refers to buffers, point,
-windows, or key sequences.
+If you are new to Emacs, ~C-h t~ opens its interactive tutorial. You can
+follow it with Emacsvox and return here to learn the speech commands.
 
 ** Your First Few Minutes
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Try these actions in the clean session started during installation:
+Try these commands in the speaking session started during installation:
 
-1. Press ~C-n~ and ~C-p~ to move down and up by one line.  Emacsvox
+1. Press ~C-n~ to move down one line and ~C-p~ to move back up. Emacsvox
    speaks the line you reach.
 
-1. Press ~C-e l~ to hear the current line without moving.
+1. Press ~C-e l~ to hear the current line without moving point.
 
-1. Press ~C-e s~ whenever you want to stop speech immediately.
+1. Press ~C-e s~ to stop speech immediately. Later commands still speak.
 
-1. Press ~C-h k~ followed by any key to hear what that key does.
+1. Press ~C-h k~, followed by any key, to find out what it does.
 
-1. Press ~C-h m~ to hear about the modes and commands available in the
+1. Press ~C-h m~ to discover the modes and commands available in the
    current buffer.
 
 1. Press ~C-h C-e~ to open the Emacsvox overview.
 
-These commands are enough to begin exploring safely.  The rest of this chapter
-adds reading controls and speech settings as you need them.  The generated
-[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/ records the complete default keymaps, while live
-help remains authoritative when a package or personal configuration changes a
-binding.
+These commands let you explore without memorising a long key list. The keys
+in this manual are defaults: use ~C-h k~ if a key behaves differently in
+your session. The generated
+[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in the /Emacsvox Reference Manual/ lists all default
+bindings; live help reflects your installed packages and customisations.
 
 ** Emacsvox Overview
 :PROPERTIES:
@@ -62,22 +62,20 @@ binding.
 :DESCRIPTION: Understand the main kinds of Emacsvox feedback.
 :END:
 
-Emacsvox adds spoken feedback to Emacs editing and to applications that run
-inside Emacs.  Movement speaks the corresponding character, word, line, or
-larger unit.  Commands announce useful results and state changes, while
-application integrations present structures such as messages, search results,
-tables, source code, and Web pages.
+Emacsvox speaks text as you move through it and announces useful results of
+commands. Applications can also present information in meaningful units:
+messages, search results, tables, source code, and Web pages each have their
+own structure.
 
-Changes in voice, short auditory icons, and tones make structure and familiar
-events recognizable without inserting extra words.  Pronunciation dictionaries
-can also correct names and technical terms globally or for one mode or file.
-You do not need to configure these systems before beginning; first notice what
-the active mode presents automatically.
+Not all feedback has to be spoken as words. Voice changes can distinguish
+headings, links, comments, and other kinds of text; auditory icons and tones
+can mark events or state changes. Pronunciation dictionaries can correct
+names and technical terms globally or for a particular mode or file. Notice
+these distinctions during normal reading before changing their settings.
 
-For an everyday Voice Lock experiment, see [[*Hear Structure With Voice Lock][Hear Structure With Voice Lock]].
-When you want to understand or change voices, sounds, pronunciation, or other
-presentation choices, continue with [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]].  The generated
-reference remains the exact inventory of their commands and options.
+You can compare structural voices in [[*Hear Structure With Voice Lock][Hear Structure With Voice Lock]]. For a fuller
+explanation of speech, sounds, and pronunciation choices, see
+[[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]].
 
 ** Using Emacs Buffers
 :PROPERTIES:
@@ -86,36 +84,32 @@ reference remains the exact inventory of their commands and options.
 :DESCRIPTION: Understand feedback while editing and completing text.
 :END:
 
-As you type, character echo can speak individual characters and word echo can
-speak a word when you finish it.  Completion interfaces announce candidates,
-the inserted completion, and the item currently selected.  Prompts and error
-messages are spoken through the same Emacs feedback that appears on screen.
+Much of the feedback you need while editing happens automatically. Depending
+on your echo settings, Emacsvox can speak individual characters as you type
+or a word when you finish it. Completion announces candidates, the inserted
+completion, and the currently selected item. Prompts and error messages are
+also spoken.
 
-Most everyday feedback happens automatically.  Emacsvox also provides three
-useful groups of explicit commands:
+Other information is available on request. The everyday commands fall into
+three useful groups:
 
-- Reading commands speak a character, word, line, region, or larger portion of
-  a buffer without requiring you to move first.  Their names usually begin
-  with =emacsvox-speak-=, and their default keys use the main ~C-e~
-  prefix.[fn::The prefix is inherited from Emacspeak, where C-e was mnemonic
-  for the project name.]
+- Reading commands speak a character, word, line, region, or larger part of a
+  buffer without requiring you to move. Their names usually begin with
+  =emacsvox-speak-= and their default keys use ~C-e~.[fn::The prefix is
+  inherited from Emacspeak, where C-e was mnemonic for the project name.]
 
-- Speech-system commands change settings such as rate, punctuation, and echo.
-  Their names usually begin with =tts-=, and many are grouped under
-  ~C-e d~.[fn::Historically, d was mnemonic for DECtalk; the prefix now
-  contains engine-independent speech controls.]
+- Speech-system commands adjust settings such as rate, punctuation, and echo.
+  Their names usually begin with =tts-= and many use ~C-e d~.[fn::The
+  letter d originally referred to DECtalk; the prefix now contains
+  engine-independent controls.]
 
-- Help commands describe the active modes, available keys, and Emacsvox
-  integrations in the buffer where you are working.
+- Help commands explain the active modes, available keys, and integrations
+  in the buffer where you are working.
 
-To move among buffers with the same major mode, use ~C-e n~
-and ~C-e p~, then repeat with just ~n~ or
-~p~.  See [[*Buffers Hold Your Work][Desktop Objects]] for examples and the
-other buffer-selection controls.
-
-The following sections introduce a practical starter set.  Use live Help or
-the generated reference when you need the complete commands for a particular
-application.
+Buffers remain available as you move between tasks. For example, ~C-e n~
+and ~C-e p~ cycle among buffers with the same major mode; repeat with
+~n~ or ~p~. [[*Buffers Hold Your Work][Audio Desktop]] explains buffer selection and the other
+navigation controls in context.
 
 ** Reading And Navigating
 :PROPERTIES:
@@ -124,15 +118,10 @@ application.
 :DESCRIPTION: Reading chunks of information.
 :END:
 
-Ordinary Emacs movement speaks the text crossed by point: moving by a
-character, word, line, or paragraph presents the corresponding unit.
-The commands below let you inspect useful units without first moving.
-They use the default ~C-e~ prefix.
-
-This is deliberately a starter set, not a second complete key reference.
-If a binding below differs in your session, use ~C-h k~ on that key
-and check your customizations.  The complete generated defaults are in the
-[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/.
+Ordinary Emacs movement speaks the character, word, line, or larger unit you
+reach. To inspect text without first moving point, use the explicit reading
+commands below. They share the default ~C-e~ prefix, but differ in how
+much text they speak.
 
 # basic-usage-live-keys-begin
 #+attr_texinfo: :indic kbd :compact t
@@ -225,6 +214,11 @@ text before or after point.  Use ~C-h k~ on a command before relying
 on those variants, because their exact argument behavior is documented
 with the command.
 
+*** Hear Phonetic Names After A Pause
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 #+findex: emacsvox-delayed-phonetic-mode
 #+vindex: emacsvox-delayed-phonetic-delay
 
@@ -256,14 +250,11 @@ reading do not trigger delayed descriptions.
 
 #+cindex: speech settings
 
-Start with the controls in this section when speech is too fast, too detailed,
-or inappropriate for the current task.  Most settings apply only to the current
-buffer.  Press ~C-u~ before a command when its help says that a prefix
-argument changes the default for all buffers.
-
-The generated
-[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/ contains the complete speech keymap, including specialist
-server and text-chunking controls.
+Speech settings let you choose how much feedback to hear while you work.
+Typing echo, rate, punctuation, and other controls can be adjusted
+independently. Most commands in this section affect the current buffer; when a
+command also has a global prefix form, its help explains the difference.
+Use ~C-h k~ before applying a prefix argument to an unfamiliar setting.
 
 *** Choose Typing Echo
 :PROPERTIES:
@@ -351,38 +342,8 @@ default.
   rule, or no added indication.
 - C-e d i / C-e d I ::
 
-  Toggle indentation feedback with the lowercase key.  The uppercase key opens
-  the Indentation menu. Choose spoken columns with ~s~, pitch tones with ~p~,
-  or duration tones with ~d~. Capital ~P~ and ~D~ combine speech and tones.
-  Choose ~b~ for tones before speech or ~a~ for tones alongside speech.
-  Timing choices are unavailable for presentations without built-in tones.
-
-  Press ~g~ to switch between /Current buffer/ and /Global defaults/. Global
-  defaults affect buffers without their own choices; existing local settings
-  stay in place. A prefix argument opens the menu in Global defaults scope.
-  Press ~e~ to toggle indentation feedback in the selected scope.
-
-  Up/down selects a control, and left/right moves between sections. On the
-  /Volume/ control, Shift-left/right lowers or raises the value in steps of
-  five, bounded from 0 to 100. On other items, shifted arrows give brief
-  guidance; ~RET~ activates the selected item. These shifted-arrow bindings
-  apply only while navigating the Indentation menu. Input prompts and the
-  source buffer retain their normal bindings.
-
-  Press ~v~ or activate /Volume/ to enter a number directly. The ~-~ and ~+~
-  shortcuts also remain available. Volume always affects all main-stream Omnivox tones,
-  even while editing current-buffer settings. Each adjustment speaks just
-  the percentage and interrupts previous main-stream speech, so repeated
-  presses announce the latest value without queuing older values.
-
-  Changes take effect immediately. ~SPC~ previews four-column indentation
-  with the settings shown, even when feedback is off. ~q~ closes the menu
-  and keeps your changes. In Global defaults scope, ~S~ saves indentation
-  defaults and tone volume across sessions. Closing without saving leaves
-  the defaults changed only for this session.
-
-  You can still choose a presentation directly with
-  ~M-x emacsvox-set-indentation-presentation~.
+  Toggle indentation feedback with the lowercase key. The uppercase key
+  opens the Indentation menu, described after this command list.
 - C-e d T ::
 
   Choose and preview whether indentation tones play /Alongside speech/ (the
@@ -393,14 +354,61 @@ default.
   indentation feedback.  Backends without overlay support play tones before
   speech for either setting.
 
+**** Use The Indentation Menu
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The Indentation menu controls how columns, tones, and speech represent
+indentation. It also provides scope, volume, preview, and saving controls.
+
+Toggle indentation feedback with the lowercase key.  The uppercase key opens
+the Indentation menu. Choose spoken columns with ~s~, pitch tones with ~p~,
+or duration tones with ~d~. Capital ~P~ and ~D~ combine speech and tones.
+Choose ~b~ for tones before speech or ~a~ for tones alongside speech.
+Timing choices are unavailable for presentations without built-in tones.
+
+Press ~g~ to switch between /Current buffer/ and /Global defaults/. Global
+defaults affect buffers without their own choices; existing local settings
+stay in place. A prefix argument opens the menu in Global defaults scope.
+Press ~e~ to toggle indentation feedback in the selected scope.
+
+Up/down selects a control, and left/right moves between sections. On the
+/Volume/ control, Shift-left/right lowers or raises the value in steps of
+five, bounded from 0 to 100. On other items, shifted arrows give brief
+guidance; ~RET~ activates the selected item. These shifted-arrow bindings
+apply only while navigating the Indentation menu. Input prompts and the
+source buffer retain their normal bindings.
+
+Press ~v~ or activate /Volume/ to enter a number directly. The ~-~ and ~+~
+shortcuts also remain available. Volume always affects all main-stream Omnivox tones,
+even while editing current-buffer settings. Each adjustment speaks just
+the percentage and interrupts previous main-stream speech, so repeated
+presses announce the latest value without queuing older values.
+
+Changes take effect immediately. ~SPC~ previews four-column indentation
+with the settings shown, even when feedback is off. ~q~ closes the menu
+and keeps your changes. In Global defaults scope, ~S~ saves indentation
+defaults and tone volume across sessions. Closing without saving leaves
+the defaults changed only for this session.
+
+You can still choose a presentation directly with
+~M-x emacsvox-set-indentation-presentation~.
+
 Character-rate scaling, text chunking, engine-specific controls, and reusable
 presentation profiles are intentionally outside this starter chapter.  Use
 live help for the current speech keymap and see [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] when
 you want a complete presentation setup rather than a temporary buffer change.
 
-*Review punctuation pronunciations.* With a supporting local Omnivox host,
-run ~M-x omnivox-punctuation~, or choose /Punctuation/ under /Voices and speech/
-in Aural Home. This editor shows saved host settings and an unsaved draft;
+*** Edit Punctuation Pronunciations
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The punctuation level controls how much punctuation is spoken. To change how
+individual characters are pronounced, use the punctuation editor on a
+supporting local Omnivox host. Run ~M-x omnivox-punctuation~ or choose
+/Punctuation/ under /Voices and speech/ in Aural Home. This editor shows saved host settings and an unsaved draft;
 running speech may still use an earlier configuration. It requires the updated
 bundled local launcher and Omnivox's punctuation-editor capability. Older hosts
 report that an update is needed. Remote and native-direct configuration editing
@@ -430,6 +438,11 @@ apostrophes in Org prose, set both /APOSTROPHE/, U+0027, and
 This also names apostrophes inside contractions. Omnivox 1.15.0 names straight,
 curly and modifier apostrophes at /all/ by default, without a configuration file.
 
+**** Save And Activate Changes
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 A save rejects changes if the file or selected target differs from the version
 you reviewed. Your draft is retained so you can review the conflict. Saving
 preserves other settings. With a host supporting named profiles, saving uses
@@ -437,6 +450,11 @@ Omnivox configuration version 4; Omnivox 1.16.0 and earlier cannot read that
 version. The older built-in-only editor service uses version 3, which requires
 Omnivox 1.15.0 or newer. Do not save a file shared with an executable that cannot
 read its format. Named profiles are currently unreleased.
+
+**** Work With Named Profiles
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 Named profiles are available with the updated Omnivox host. In the punctuation
 editor, ~N~ creates a profile inheriting =none=, =some= or =all=. Use a lowercase
@@ -521,10 +539,9 @@ other reusable presentation behavior.
 :DESCRIPTION: Ask about the current buffer, position, and Emacs state.
 :END:
 
-Use these commands when you need context without moving point.  They repeat the
-last message, identify the current buffer and modes, or report your position.
-Less common status commands are listed in the
-[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/.
+Use these commands when you want to find out where you are without moving
+point. They repeat the last message, identify the buffer and modes, or
+report your position in the current buffer.
 
 # basic-usage-live-keys-begin
 #+attr_texinfo: :indic kbd :compact t

@@ -7,17 +7,16 @@
 
 #+cindex: Audio Desktop
 
-The /audio desktop/ is the Emacsvox working environment.  It is not a
-separate program or a spoken copy of a graphical desktop.  Emacs keeps each
-document, application, and result in a buffer; its modes understand the kind
-of information in that buffer; and Emacsvox presents that context through
-speech, voice changes, sounds, and structured navigation.
+Emacs uses buffers for documents, application views, search results, and other
+work. Each buffer has modes that understand its content. Emacsvox uses that
+information to present text and state changes through speech, voices, sounds,
+and structured navigation. Together, these form the /audio desktop/: the same
+Emacs environment, experienced through its commands and auditory feedback
+rather than through a separate graphical desktop.
 
-You can begin without learning a new desktop model.  Open a file or application
-normally, use ~C-e m~ to hear the current buffer and mode, and press
-~C-h m~ to discover what that buffer can do.  The rest of this chapter
-explains why the same approach works for text, Web pages, mail, shells, source
-code, and many other tasks.
+A useful habit is to press ~C-e m~ to hear the current buffer and mode, then
+~C-h m~ to discover the commands available there. This approach works in
+files, Web pages, mail, shells, and other Emacs applications.
 
 ** Buffers Hold Your Work
 :PROPERTIES:
@@ -28,13 +27,13 @@ code, and many other tasks.
 
 #+cindex: buffers
 
-A buffer is Emacs's working view of one piece of information.  A buffer might
-contain a file you are editing, an Info manual, a directory listing, a Web
-page, a mail search, a shell session, or a temporary Help result.  Some buffers
-are connected to files; many useful application buffers are not.
+A buffer holds the content or application view you are working with. It might
+contain a file, an Info manual, a Dired listing, a Web page, mail search
+results, a shell session, or Help text. Some buffers visit files; others exist
+only within the Emacs session.
 
-The mode line identifies the selected buffer and its major mode.  Press
-~C-e m~ whenever you want to hear it.  Common buffer commands include:
+The mode line identifies the selected buffer and its major mode. Press
+~C-e m~ to hear it. These are the main ways to change buffers:
 
 #+attr_texinfo: :indic kbd :compact t
 - C-x b ::
@@ -52,9 +51,9 @@ The mode line identifies the selected buffer and its major mode.  Press
   Close a buffer that you no longer need.  Emacs asks before discarding
   unsaved file changes.
 
-Moving to another buffer changes the selected work object without closing the
-one you left.  This makes it practical to keep a document, its reference
-material, a shell, and related application results available together.
+Switching buffers does not close the one you left. You can work on a document,
+consult Help or a reference, visit a shell, and return to the document without
+reopening it.
 
 *** Cycle Between Buffers of the Same Kind
 :PROPERTIES:
@@ -67,10 +66,9 @@ material, a shell, and related application results available together.
 #+kindex: C-e .
 #+kindex: C-e ,
 
-When several buffers contain the same kind of work, cycling lets you move
-among them without remembering their names or opening a buffer list.  This is
-useful when comparing Org notes, reviewing several directories in Dired, or
-moving between source files.
+When several buffers use the same major mode, you can cycle among them
+without recalling their names. This is useful for comparing Org notes,
+visiting several Dired directories, or moving between source files.
 
 Press ~C-e n~ to select the next buffer with the same major
 mode, or ~C-e p~ to select the previous one.  For example, from
@@ -110,21 +108,16 @@ performs its normal action.  To choose a particular buffer by name, use
 
 #+cindex: minor modes
 
-Every buffer has one major mode that provides its main editing or application
-behavior.  A source buffer uses a programming-language mode, Dired uses a mode
-for directories, EWW uses one for Web pages, and Org uses one for structured
-notes and documents.  Minor modes add optional behavior alongside the major
-mode.
+Each buffer has one major mode responsible for its principal editing or
+application commands. Programming-language modes work with source code,
+Dired with directories, EWW with Web pages, and Org with structured notes.
+Minor modes add optional behaviour without replacing the major mode.
 
-This context is what makes Emacs efficient: a movement command can move by a
-sentence in prose, a heading in an outline, an item in a list, or another
-meaningful unit supplied by the active mode.  Emacsvox speaks the result of the
-operation and can use the same context to announce state changes.
-
-You do not need to predict which commands every mode provides.  Press
-~C-h m~ in the buffer you are using, then ~C-h k~ followed by a key
-when you want a fuller explanation.  [[*Find Help While You Work][Using Online Help]] provides a
-short practical guide to these discovery commands.
+The active mode determines which structures Emacs can navigate. In prose you
+might move by sentence; in Org by heading; in a list by item. Emacsvox speaks
+the result and can announce relevant state changes. To discover the mode's
+commands, press ~C-h m~, then ~C-h k~ followed by a key for more detail.
+[[*Find Help While You Work][Using Online Help]] explains these help commands.
 
 ** Hear And Navigate The Current Context
 :PROPERTIES:
@@ -135,10 +128,10 @@ short practical guide to these discovery commands.
 
 #+cindex: Context-Sensitive Interaction
 
-Emacsvox uses information already exposed by Emacs and the active application.
-That produces more useful feedback than reading every visible character in the
-same way.  You can hear what an object means, move using its structure, and ask
-for detail only when you need it.
+Because Emacsvox has access to Emacs modes and application state, it can
+announce the kind of object you have reached rather than treating everything
+as undifferentiated text. Use the active mode's navigation for the structure
+you are working with, and request more spoken detail as needed.
 
 *** Hear Structure Without Extra Words
 :PROPERTIES:
@@ -169,10 +162,10 @@ For example, Info moves among nodes and menu entries, Org and Outline move
 among headings, Dired moves among files, programming modes understand
 definitions and diagnostics, and EWW exposes links and document structure.
 
-Begin with ~C-h m~.  It describes the commands available in the
-running buffer, including personal customizations and installed packages.
-[[*Browsing Structure][Browsing Structure]] points to maintained guides for several common
-types of content.
+The mode's Help, available through ~C-h m~, describes its navigation
+commands, including those supplied by installed packages and your
+customisations. [[*Browsing Structure][Browsing Structure]] points to guides for common kinds of structured
+content.
 
 *** Move Between Tasks Without Losing Your Place
 :PROPERTIES:
