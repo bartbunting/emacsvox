@@ -736,7 +736,7 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
   (gnus-summary-catchup-and-exit t t)
   (emacsvox-gnus--present-feedback
    (emacsvox-gnus-group-facts 'catch-up 'mail-view-closed)
-   'state-change 'close-object #'emacsvox-speak-line))
+   'navigation 'close-object #'emacsvox-speak-line))
 
 (cl-loop
  for target in

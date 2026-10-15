@@ -268,6 +268,7 @@ Operational semantic contract version: =1=.
 | =indentation-presentation= | =attribute= | =core= | =spoken=, =duration-tone=, =pitch-tone=, =spoken-duration-tone=, =spoken-pitch-tone=, =custom= | - | - | - | - | - | =before= | - | The user-requested presentation for line indentation |
 | =indentation-tone-duration= | =attribute= | =core= | =integer= | - | - | - | - | - | =before= | - | Computed indentation tone duration in milliseconds |
 | =indentation-tone-pitch= | =attribute= | =core= | =number= | - | - | - | - | - | =before= | - | Computed indentation tone pitch in hertz |
+| =indentation-tone-timing= | =attribute= | =core= | =overlay=, =insert= | - | - | - | - | - | =before= | - | Whether the indentation tone plays alongside or before speech |
 | =learning-answer-revealed= | =event= | =org-srs= | - | =learning-item= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A learning item's answer was revealed |
 | =learning-cloze-updated= | =event= | =org-srs= | - | =learning-item= | - | - | - | =edit=, =state-change=, =notification= | =before=, =content=, =after= | - | The cloze items in an Org entry were updated |
 | =learning-item= | =role= | =org-srs= | - | - | - | - | - | =navigation=, =state-change=, =notification=, =inspection=, =edit= | =before=, =content=, =after= | - | A question and answer reviewed through spaced repetition |
@@ -292,7 +293,7 @@ Operational semantic contract version: =1=.
 | =mail-action-kind= | =attribute= | =core= | =open=, =close=, =compose=, =select=, =unsubscribe=, =catch-up=, =restore=, =list=, =customize=, =toggle-topic=, =show=, =hide=, =scroll=, =activate=, =modify=, =save=, =archive=, =tag=, =search=, =refresh= | - | - | - | - | - | - | - | The mail-reader operation whose feedback is being presented |
 | =mail-group= | =role= | =gnus= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A mail or news group containing messages |
 | =mail-view= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A mail reader group, summary, article, compose, or server view |
-| =mail-view-closed= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A mail reader view was closed, buried, or left |
+| =mail-view-closed= | =event= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A mail reader view was closed, buried, or left |
 | =mail-view-kind= | =attribute= | =core= | =group=, =summary=, =article=, =compose=, =server=, =search=, =thread=, =topic=, =other= | =mail-view= | - | - | - | - | - | - | The kind of mail-reader view being presented |
 | =mail-view-opened= | =event= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A mail reader view was opened or selected |
 | =markdown-code-block= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | A fenced Markdown source-code block |
@@ -410,7 +411,7 @@ Operational semantic contract version: =1=.
 
 | Identifier | Provided By | Parent | Sound Pack | Voice Palette | Rules | Intent |
 |------------+-------------+--------+------------+---------------+-------+--------|
-| =default= | Emacsvox core | - | =chimes= | =acss-default= | =34= | Compatibility-preserving Emacsvox presentation |
+| =default= | Emacsvox core | - | =chimes= | =acss-default= | =38= | Compatibility-preserving Emacsvox presentation |
 
 * Built-in Presentation Options
 
