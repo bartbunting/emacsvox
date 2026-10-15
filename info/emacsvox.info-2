@@ -14,6 +14,90 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Presentation Profiles,  Next: Presentation Troubleshooting,  Prev: Aural Speech Output,  Up: Aural Presentation
+
+8.12 Save, Switch, And Share Your Setup
+=======================================
+
+A Presentation Profile records enabled options and their order, sound
+pack, voice palette, and portable spatial settings.  It switches a
+coordinated setup for focused work, leisure reading, or different audio
+environments.  It is not an Emacs startup configuration profile or a
+backup of every setting.
+
+   ‘C-e H p p’ opens profiles.  The parent ‘C-e H p’ also links palettes
+and unfinished drafts; each editor retains its own Save/Apply actions.
+Palette ‘w’ exports portable voices, ‘W’ backs up full local choices,
+and ‘i’ imports an independent palette without activation.  See *note
+Export, Back Up, and Import Palettes: (emacsvox)Sharing Voice Palettes.
+
+  1. Configure the live options, sound pack, voice palette, and spatial
+     choices.
+  2. Open ‘C-e H p p’ and inspect the fields to be captured.
+  3. ‘N’ saves the live selection as a new named profile.
+  4. Later, ‘a’ applies the selected profile's saved values.
+  5. To update it from deliberately changed live settings, use ‘w’.  To
+     discard live differences instead, apply with ‘a’ and review
+     confirmation.
+
+   Only one profile is selected at a time.  _Active_ means its saved
+values match the live configuration.  _Diverged_ means it is still
+selected, but one or more live values now differ from its saved values.
+That status is not a warning about an unsaved editor draft.
+
+   Applying a profile also saves its selection for future sessions.
+This differs from activating an individual palette, which selects it
+only for this session.
+
+   Profiles reference palettes and sound packs by name, not private
+copies.  Editing a shared palette affects every profile using it.
+Profiles exclude engine policy, speech rate, notification output, rules
+themselves, buffer-local Voice Lock, and current-buffer rules.  Those
+remain in their owning settings or rule stores.
+
+* Menu:
+
+* Walkthrough Switch Reading And Working Setups: Presentation Profile Walkthrough.  Save two selections, switch between them, and understand shared resources.
+* Choose what persists: Saving And Startup.  Distinguish previews, drafts, saved resources, activation, and startup.
+* Export, Back Up, And Import Palettes: Sharing Voice Palettes.  Share portable voices or retain local choices in a backup.
+
+
+File: emacsvox.info,  Node: Presentation Profile Walkthrough,  Next: Saving And Startup,  Up: Presentation Profiles
+
+8.12.1 Walkthrough: Switch Reading And Working Setups
+-----------------------------------------------------
+
+Use unused names and note the selected profile first.
+
+  1. Open ‘C-e H p p’.  For a restore point, ‘N’ saves ‘before-demo’
+     with a short purpose and selects it.  This captures resource/option
+     choices, not rule, resource-definition, or engine backups.
+  2. Use ‘C-e H v p’ and ‘C-e H o p’ to activate your reading palette
+     and sound pack.  Choose Presentation Options at ‘C-e H r f’ and
+     spatial settings at ‘C-e H o n’.  Return through each view's own
+     navigation before opening the next.  In profiles, save
+     ‘reading-setup-demo’ with ‘N’.
+  3. Choose a different palette or pack and save ‘working-setup-demo’.
+     ‘<RET>’ describes each profile's saved fields.
+  4. Apply the reading profile with ‘a’ and repeat familiar feedback.
+     Inspect active resources in their managers, then apply the working
+     profile to compare.
+  5. Change a live option without updating the profile.  _Diverged_
+     indicates the difference.  ‘a’ restores saved values and ‘w’
+     replaces them with current choices; read confirmation before
+     discarding either intention.
+  6. Finish on the profile wanted at startup, because applying saves its
+     selection too.  Restore the original or ‘before-demo’ when
+     finished.  Delete unwanted demo profiles with ‘d’ only after
+     selecting the retained one.
+
+   If both profiles use ‘reading-demo’, edits to that palette affect
+both.  For independent voices, Copy Palette and select different
+resources.  A profile's Copy action copies selections only.  To change
+startup palette while preserving other profile fields, use ‘U’ in Voice
+Palettes rather than recapturing everything.
+
+
 File: emacsvox.info,  Node: Saving And Startup,  Next: Sharing Voice Palettes,  Prev: Presentation Profile Walkthrough,  Up: Presentation Profiles
 
 8.12.2 Choose What Persists

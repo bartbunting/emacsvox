@@ -5380,13 +5380,13 @@ the flagged word. Voice feedback uses the existing spelling face mappings.
 Tone and earcon feedback also report errors detected while editing. Opening
 a mail reply checks and highlights inserted text without a burst of cues.
 
-Use @kbd{m} to choose tone timing. @emph{Before speech}@comma{} the default@comma{} finishes each
-tone before its flagged word and adds a pause for the tone. @emph{Alongside speech}
-plays the tone while the word is spoken without inserting that pause. Arrows
-browse without changing the setting; @kbd{@key{RET}} applies and returns to Timing.
-@kbd{q} cancels the choice. Timing applies globally and leaves voice and earcon
-feedback unchanged. Compare it with @kbd{@key{SPC}} or by reading flagged text: a
-tone-only preview or editing cue has no accompanying speech to overlap.
+Use @kbd{m} to choose tone timing. @emph{Alongside speech} is the default: it plays
+the tone while the word is spoken without adding a tone pause. @emph{Before speech}
+finishes each tone before its flagged word@comma{} adding a pause. Previously saved
+choices remain in effect. Arrows browse without changing the setting; @kbd{@key{RET}}
+applies and returns to Timing@comma{} while @kbd{q} cancels. Timing leaves voice and
+earcon feedback unchanged. Compare it with @kbd{@key{SPC}} or by reading flagged text:
+a tone-only preview or editing cue has no accompanying speech to overlap.
 
 Select @kbd{p} for pitch@comma{} @kbd{d} for duration@comma{} or @kbd{l} for spelling tone volume.
 @kbd{@key{RET}} enters an exact value; Shift-left/right adjusts by 25 Hz@comma{} 5 milliseconds@comma{}
@@ -5394,19 +5394,73 @@ or 5 percentage points. Spelling tone volume ranges from 0 to 100 percent:
 zero silences the tone@comma{} and the default of 100 preserves its original level.
 @kbd{V} changes the shared volume of all main-stream tones@comma{} including indentation
 and spelling. The shared volume still scales the spelling tone after its
-individual adjustment.
+individual adjustment; it is also available in Sounds and output.
 
-@kbd{b} previews the tone alone@comma{} even when tone feedback is off. @kbd{@key{SPC}} reads a
-sample containing one flagged word with the selected combination. Individual
-volume requires an Omnivox worker with richer-tone support. With an older
-worker@comma{} a volume below 100 omits the tone while retaining speech and earcons;
-the feedback explanation records the omission. A preview reports missing
-support instead of playing at the wrong volume. Your setting remains intact.
-Use an updated worker or restore 100 to hear the tone again.
-
-Changes take effect in the current session; @kbd{S} saves the spelling settings@comma{}
-including individual volume@comma{} and the shared tone volume through Customize.
+These controls change the current session immediately. @kbd{b} previews the tone
+alone@comma{} even when tone feedback is off. @kbd{@key{SPC}} reads a sample containing one
+flagged word with the selected combination. @kbd{S} saves the spelling settings@comma{}
+including tone timing and shape@comma{} and the shared tone volume through Customize.
 @kbd{q} returns and @kbd{C-q} closes the menus without saving.
+
+@enumerate
+@item
+@anchor{Edit the complete spelling tone}Edit the complete spelling tone
+
+
+Press capital @kbd{E} in Spelling feedback@comma{} or use @kbd{C-e H s f E}@comma{} for a private
+draft of the complete tone. The title identifies its global spelling scope.
+This editor adds waveform and envelope controls to pitch@comma{} duration@comma{} individual
+volume and timing. Changes here affect only the draft until you apply it.
+
+Use arrows to navigate and Shift-left/right to adjust the selected number.
+@kbd{@key{RET}} enters an exact number or opens a choice list. In a list@comma{} arrows browse@comma{}
+@kbd{@key{RET}} selects and returns@comma{} and @kbd{q} cancels. @kbd{?} followed by an item's key
+explains its effect and units. Choose @kbd{w} for waveform: sine is a smooth pure
+tone@comma{} triangle adds a softer harmonic character@comma{} and square sounds brighter.
+Their perceived loudness can differ; compare at a comfortable individual volume.
+
+Choose @kbd{e} for the envelope@comma{} which describes how loudness changes over the
+life of the tone. @emph{Classic} uses the original short fades. @emph{ADSR} uses four
+controls@comma{} with times in milliseconds and sustain in percent of peak level:
+
+@itemize
+@item
+@kbd{a}@comma{} Attack: time to rise from silence to peak level.
+@item
+@kbd{c}@comma{} Decay: time to fall from peak to the sustain level.
+@item
+@kbd{s}@comma{} Sustain: the level held for the remaining time@comma{} rather than a duration.
+@item
+@kbd{r}@comma{} Release: time to fade from sustain to silence.
+@end itemize
+
+Total duration includes the whole envelope. If attack@comma{} decay and release
+would exceed it@comma{} they shorten proportionally and leave no sustain hold.
+Zero skips a timed stage; endpoint smoothing still limits clicks. Classic
+ignores these four controls@comma{} retaining their values while this draft remains
+open. The initial waveform is sine with Classic fades.
+
+Press @kbd{b} to hear the draft tone alone@comma{} or @kbd{@key{SPC}} to hear it with the spelling
+sample. Both privately enable the tone even if live spelling tones are off;
+the sentence otherwise uses current feedback settings. @kbd{S} stops the preview
+immediately@comma{} without waiting for release. Navigation also interrupts playback.
+Previews neither apply nor save the draft.
+
+Use @kbd{A} to apply the draft for this session. Capital @kbd{W} saves and applies
+its tone defaults through Customize. These actions leave voice@comma{} earcon@comma{} tone
+enablement and shared volume unchanged. @kbd{R} resets only the draft to factory
+defaults for preview and deliberate application. @kbd{q} returns to Spelling
+feedback and discards unapplied edits; applied and saved changes remain.
+Reopening starts from the current tone. To reverse an applied adjustment@comma{}
+edit it back and apply again@comma{} saving too if you changed the saved defaults.
+
+Individual volume below 100@comma{} harmonic waveforms and ADSR require an Omnivox
+worker with richer-tone support. Older workers omit an unsupported tone while
+retaining speech and earcons@comma{} and the feedback explanation records the omission.
+A preview reports missing support instead of playing an inaccurate substitute.
+Your settings remain intact. Use an updated worker@comma{} or restore volume 100@comma{}
+sine and Classic to hear the tone on an older worker.
+@end enumerate
 
 @item
 @anchor{Choose typing and point feedback}Choose typing and point feedback

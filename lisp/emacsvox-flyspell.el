@@ -86,7 +86,7 @@ This changes reading feedback, not Flyspell highlighting or checking."
   "Duration of the spelling tone in milliseconds."
   :type '(number :tag "Milliseconds") :group 'emacsvox-flyspell)
 
-(defcustom emacsvox-flyspell-tone-timing 'insert
+(defcustom emacsvox-flyspell-tone-timing 'overlay
   "When to play spelling tones during reading.
 `insert' finishes each tone before its flagged word, adding a pause.
 `overlay' plays alongside the word without inserting a pause for the tone.
@@ -108,6 +108,18 @@ retaining speech and earcons.  Preview reports missing support."
            (user-error "Spelling tone volume must be an integer from 0 to 100"))
          (set-default symbol value)))
 
+(defcustom emacsvox-flyspell-tone-shape '(:waveform sine)
+  "Waveform and optional ADSR envelope of the spelling tone.
+Waveform is sine, triangle or square.  Omit the envelope for Classic fades.
+ADSR contains :attack-ms, :decay-ms, :sustain-level and :release-ms.
+Times are integer milliseconds from 0 to 60000; sustain is from 0 to 1.
+Total duration stays fixed: oversized stages are shortened proportionally.
+Non-Classic shapes require richer-tone support.  Older workers omit the tone;
+explicit previews report missing support.  Speech and earcons remain usable."
+  :type 'sexp :group 'emacsvox-flyspell
+  :set (lambda (symbol value)
+         (set-default symbol (emacsvox-aural--validate-tone-shape value))))
+
 (defvar-local emacsvox-flyspell--read-errors nil
   "Flagged source ranges captured for reading during this command.")
 
@@ -125,6 +137,7 @@ retaining speech and earcons.  Preview reports missing support."
         :spelling-tone-pitch emacsvox-flyspell-tone-pitch
         :spelling-tone-duration emacsvox-flyspell-tone-duration
         :spelling-tone-timing emacsvox-flyspell-tone-timing
+        :spelling-tone-shape (copy-tree emacsvox-flyspell-tone-shape)
         :spelling-tone-volume (/ emacsvox-flyspell-tone-volume 100.0)))
 
 (defun emacsvox-flyspell--capture (original start end &optional buffer)

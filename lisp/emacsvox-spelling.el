@@ -30,12 +30,13 @@
 ;;; Code:
 (require 'emacsvox-aural-menu)
 (require 'emacsvox-flyspell)
+(require 'emacsvox-tone-editor)
 
 (defconst emacsvox-spelling--options
   '(emacsvox-flyspell-use-voice emacsvox-flyspell-use-tone
     emacsvox-flyspell-use-earcon emacsvox-flyspell-tone-pitch
     emacsvox-flyspell-tone-duration emacsvox-flyspell-tone-volume
-    emacsvox-flyspell-tone-timing)
+    emacsvox-flyspell-tone-timing emacsvox-flyspell-tone-shape)
   "Global spelling feedback options saved by this menu.")
 
 (defun emacsvox-spelling--say (text)
@@ -156,7 +157,8 @@ Read the spelling sample to compare timing; a tone alone cannot demonstrate it."
   (when emacsvox-flyspell-use-tone
     (let ((emacsvox-aural--exact-tone-preview t))
       (emacsvox-aural--tone-volume-deliverable-p
-       (/ emacsvox-flyspell-tone-volume 100.0)))))
+       (/ emacsvox-flyspell-tone-volume 100.0))
+      (emacsvox-aural--tone-shape-deliverable-p emacsvox-flyspell-tone-shape))))
 
 (defun emacsvox-spelling--sample ()
   "Return sample text with one flagged word for private preview."
@@ -183,6 +185,58 @@ Preview does not change Flyspell, edit your text, or save settings."
       (emacsvox-aural-submit-actions
        :facts (emacsvox-flyspell--facts) :module 'flyspell :occasion 'inspection
        :lane 'main :interruption-policy 'lane))))
+
+(defconst emacsvox-spelling--tone-fields
+  '((:pitch . emacsvox-flyspell-tone-pitch)
+    (:duration . emacsvox-flyspell-tone-duration)
+    (:volume . emacsvox-flyspell-tone-volume)
+    (:timing . emacsvox-flyspell-tone-timing))
+  "Spelling options represented by the common tone editor.")
+
+(defun emacsvox-spelling--tone-data (&optional factory)
+  "Read current spelling tone settings, or FACTORY defaults."
+  (let ((read (if factory (lambda (symbol) (eval (car (get symbol 'standard-value)) t))
+                #'default-value)) data)
+    (dolist (field emacsvox-spelling--tone-fields)
+      (setq data (plist-put data (car field) (funcall read (cdr field)))))
+    (let* ((shape (funcall read 'emacsvox-flyspell-tone-shape))
+           (envelope (plist-get shape :envelope)))
+      (append data (list :waveform (plist-get shape :waveform)
+                         :envelope (if envelope 'adsr 'classic)
+                         :attack (or (plist-get envelope :attack-ms) 5)
+                         :decay (or (plist-get envelope :decay-ms) 10)
+                         :sustain (* 100 (or (plist-get envelope :sustain-level) 0.6))
+                         :release (or (plist-get envelope :release-ms) 10))))))
+
+(defun emacsvox-spelling--apply-tone (data save)
+  "Apply tone DATA globally; SAVE also persists only these tone options."
+  (dolist (field emacsvox-spelling--tone-fields)
+    (if save (customize-save-variable (cdr field) (plist-get data (car field)))
+      (set-default (cdr field) (plist-get data (car field)))))
+  (let ((shape (emacsvox-tone-editor--shape data)))
+    (if save (customize-save-variable 'emacsvox-flyspell-tone-shape shape)
+      (set-default 'emacsvox-flyspell-tone-shape shape))))
+
+(defun emacsvox-spelling--preview-draft (data sample)
+  "Preview private tone DATA, with a spelling SAMPLE when non-nil."
+  (cl-progv (append (mapcar #'cdr emacsvox-spelling--tone-fields)
+                    '(emacsvox-flyspell-tone-shape emacsvox-flyspell-use-tone))
+      (append (mapcar (lambda (field) (plist-get data (car field))) emacsvox-spelling--tone-fields)
+              (list (emacsvox-tone-editor--shape data) t))
+    (if sample (emacsvox-spelling--preview) (emacsvox-spelling--preview-tone))))
+
+(defun emacsvox-spelling--edit-tone ()
+  "Edit a private draft of the global spelling tone, including waveform and envelope.
+Preview changes neither live feedback nor saved defaults.  Apply changes the
+session; Save and apply also persists tone defaults.  Back discards unapplied
+edits.  Voice, earcons and the shared tone volume are outside this editor."
+  (interactive)
+  (emacsvox-tone-editor--open
+   (emacsvox-aural-menu--context)
+   (list :label "Spelling tone (global draft)"
+         :read #'emacsvox-spelling--tone-data
+         :apply #'emacsvox-spelling--apply-tone
+         :preview #'emacsvox-spelling--preview-draft)))
 
 (defun emacsvox-spelling--save ()
   "Save spelling controls, individual tone volume and shared main-tone volume.
@@ -234,6 +288,7 @@ this tone; Shared tone volume scales all main-stream tones."
    ("t" (lambda () (emacsvox-spelling--label 'emacsvox-flyspell-use-tone "Tone")) emacsvox-spelling--tone :transient t)
    ("e" (lambda () (emacsvox-spelling--label 'emacsvox-flyspell-use-earcon "Earcon")) emacsvox-spelling--earcon :transient t)]
   ["Tone adjustment (Shift arrows adjust selected control)"
+   ("E" "Edit complete tone" emacsvox-spelling--edit-tone :transient transient--do-stack)
    ("m" (lambda () (concat "Timing: " (emacsvox-spelling--timing-name)))
     emacsvox-spelling-timing :transient transient--do-stack)
    ("p" (lambda () (format "Pitch: %s Hz" emacsvox-flyspell-tone-pitch)) emacsvox-spelling--pitch :transient t)

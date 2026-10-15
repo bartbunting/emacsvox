@@ -1050,7 +1050,7 @@ contextual integration selector.
 | Markdown and Info | =emacsvox-markdown-auto-reading-mode=; =emacsvox-info-select-node-speak-chunk= | Add reading-integration links; do not assume their upstream mode groups contain these options. |
 | Gnus and ERC | =emacsvox-gnus-punctuation-mode=; =emacsvox-gnus-large-article=; =emacsvox-erc-ignore-notices=; =emacsvox-erc-toggle-room-monitor= | Add integration discovery, including ERC participant and personal-monitor controls. |
 | Spelling and review | =emacsvox-ispell-max-choices=; =emacsvox-flyspell-correct=; =emacsvox-org-srs-use-command-confirmation=; =emacsvox-org-srs-announce-pending-count= | Link actual speech options when the corresponding package is available. |
-| Spelling presentation | =emacsvox-flyspell-use-voice=; =emacsvox-flyspell-use-tone=; =emacsvox-flyspell-use-earcon=; =emacsvox-flyspell-tone-pitch=; =emacsvox-flyspell-tone-duration=; =emacsvox-flyspell-tone-volume=; =emacsvox-flyspell-tone-timing= | Implemented at =C-e H s f=: independent global feedback toggles, pitch/duration/individual-volume adjustments, before/alongside timing, tone and reading previews, explicit Save. Shared main-tone volume is labelled separately. Listening pending. |
+| Spelling presentation | =emacsvox-flyspell-use-voice=; =emacsvox-flyspell-use-tone=; =emacsvox-flyspell-use-earcon=; =emacsvox-flyspell-tone-pitch=; =emacsvox-flyspell-tone-duration=; =emacsvox-flyspell-tone-volume=; =emacsvox-flyspell-tone-timing=; =emacsvox-flyspell-tone-shape= | Implemented at =C-e H s f=: independent global feedback toggles, pitch/duration/individual-volume adjustments, before/alongside timing, tone and reading previews, explicit Save. The draft tone editor at =E= adds waveform and ADSR. Alongside timing passed listening and is the default; saved choices remain authoritative. Tone-editor listening is pending. |
 | Terminal review | =emacsvox-toggle-eterm-autospeak=; =emacsvox-eterm-toggle-focus-window=; =emacsvox-eterm-toggle-filter-window=; =emacsvox-eterm-toggle-pointer-mode= | Inventory as contextual terminal controls; preserve their existing interaction model. |
 | Popup help | =emacsvox-which-key-toggle-auto-speak=; =emacsvox-hydra-toggle-talkative= | Missing session controls. Hydra changes the upstream =hydra-is-helpful= variable; it is not an Emacsvox Custom default. |
 | OCR | =emacsvox-ocr-customize=; =emacsvox-ocr-engine= | Link the existing configuration workflow, including scanning and PaddleOCR options; do not make a root entry for every engine parameter. |
@@ -1646,24 +1646,49 @@ verification of subsequently changed code.
   select Alongside speech, read the same sentence, compare Before speech,
   check Help, cancellation and return focus, then save and restart if desired.
 
-- Next tone-editing slice: provide a reusable editor, starting from Spelling,
-  rather than adding a separate flat menu for every new tone parameter.
-  Keep the current pitch, duration, individual volume and timing controls;
-  add waveform (sine, triangle, square), Classic or ADSR envelope, and attack,
-  decay, sustain level and release. Explain each parameter and its units.
-  Preserve fixed total duration and explain proportional shortening when the
-  requested envelope stages exceed it. Keep Classic defaults unchanged.
-  First carry waveform and envelope through validated, frozen client actions,
-  saving, replay and explicit old-worker handling. Then build the editor on
-  that path, with arrows to navigate, Shift arrows to adjust, exact entry,
-  explanations for every choice, tone-only and contextual previews, Stop,
-  reset, and explicit Save. Keep shared main-tone volume in Output settings;
-  individual editors should identify their own cue and scope clearly.
-  Define draft, cancel and save behaviour before implementation so previews
-  cannot silently replace saved settings. Add named presets after the
-  parameter editor works, then reuse it for capitalization, indentation and
-  personal tone rules. Listening must assess envelope clarity, short tones,
-  interruption, speech masking and relative waveform loudness.
+- Tone-editor implementation checkpoint, 2026-10-16: Alongside speech passed
+  listening and is now the factory spelling timing default. Saved Before
+  speech choices remain authoritative. The reusable draft editor starts at
+  =C-e H s f E=. Waveform and envelope data are validated and frozen for
+  reading, editing, preview and replay. Personal rules containing shape use
+  schema 12; existing schemas and unshaped tones retain their contracts.
+  Shared tone support is committed as =43c750173=.
+  Draft adjustments and previews leave live settings alone; Apply changes
+  the session, Save and apply persists tone defaults through Customize, and
+  Back discards unapplied edits. Reset changes only the draft. All controls
+  and choices have Help. Automated checks pass: 698 shared source tests,
+  nine focused editor/spelling tests, three fresh graphical checks, a private
+  Customize save/restart, full byte-code rebuild plus incremental final build,
+  header validation and regenerated manual/reference review. Graphical checks
+  cover choice browsing, first-Enter activation, numeric adjustment, Help,
+  cancellation, discard, Apply, reset, search and return focus. Muted native
+  Windows checks pass Classic, triangle and square/ADSR in both timing modes,
+  standalone and timeline delivery on both workers after reconnect, using
+  runtime =a4b085773844514f= without rebuilding Omnivox. Historical speech
+  replay also passes there; source tests cover frozen tone-shape replay. No live session or
+  personal defaults were changed.
+  An expanded 814-test run passed 778 and skipped 35 graphical tests; the one
+  failure remains the previously recorded indentation-menu test-order cue
+  resolution issue. The affected three graphical checks passed separately.
+  Editor listening remains pending: compare waveforms and ADSR stages at a
+  comfortable individual volume; try a longer duration to hear the stages;
+  check tone/sample preview, Stop and navigation interruption, Back/discard,
+  Apply, Save and restore after restart. Automated completion is not listening
+  acceptance.
+
+- Tone-editor follow-up: the common draft editor is implemented for global
+  spelling feedback. Waveform (sine, triangle, square), Classic/ADSR envelope,
+  attack, decay, sustain and release join pitch, duration, volume and timing.
+  Fixed duration and proportional stage shortening follow the existing
+  Omnivox renderer. Opening and previewing write nothing. Apply changes the
+  session; Save and apply persists tone defaults; Back discards unapplied
+  edits. Reset affects only the draft. Shared volume stays outside this editor.
+  After listening acceptance, add named presets and reuse the editor for
+  capitalization, indentation and personal tone rules while preserving each
+  destination's scope and saving contract. Capitalization/line-cue retained
+  drafts and rule saving are not converted by this slice. Platform listening,
+  envelope clarity at short durations, interruption, speech masking and
+  relative waveform loudness remain separate qualification work.
 
 - 2026-10-15: The Transient dependency follow-up resolves the recorded build
   and packaging gaps. Commit =62c99ca83= adds all nine omitted menu modules to

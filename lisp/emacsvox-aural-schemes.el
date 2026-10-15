@@ -2023,21 +2023,23 @@ An existing file is copied to FILE~ before replacement."
              :anchor transition)))))
         (:id core-spelling-tone
          :match (:event spelling-error-located :spelling-tone t :spelling-tone-timing insert
-                 :requires (spelling-tone-pitch spelling-tone-duration spelling-tone-volume))
+                 :requires (spelling-tone-pitch spelling-tone-duration spelling-tone-volume spelling-tone-shape))
          :render
          (:before ((:id core-spelling-tone-action :kind tone
                     :pitch (:fact spelling-tone-pitch)
                     :duration (:fact spelling-tone-duration)
                     :volume (:fact spelling-tone-volume)
+                    :shape (:fact spelling-tone-shape)
                     :audio-mode insert :anchor run))))
         (:id core-spelling-tone-overlay
          :match (:event spelling-error-located :spelling-tone t :spelling-tone-timing overlay
-                 :requires (spelling-tone-pitch spelling-tone-duration spelling-tone-volume))
+                 :requires (spelling-tone-pitch spelling-tone-duration spelling-tone-volume spelling-tone-shape))
          :render
          (:before ((:id core-spelling-tone-action :kind tone
                     :pitch (:fact spelling-tone-pitch)
                     :duration (:fact spelling-tone-duration)
                     :volume (:fact spelling-tone-volume)
+                    :shape (:fact spelling-tone-shape)
                     :audio-mode overlay :anchor run))))
         (:id core-spelling-earcon
          :match (:event spelling-error-located :spelling-earcon t)

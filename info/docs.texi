@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 318 loaded; 0 intentionally omitted.
+@c Modules: 319 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -53,19 +53,19 @@
 @c Loaded: emacsvox-sudoku.elc emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-reader.elc
 @c Loaded: emacsvox-table-ui.elc emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc
 @c Loaded: emacsvox-tcl.elc emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc
-@c Loaded: emacsvox-transient.elc emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc
-@c Loaded: emacsvox-version.elc emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc
-@c Loaded: emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-welcome.elc emacsvox-which-key.elc
-@c Loaded: emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc
-@c Loaded: emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc
-@c Loaded: emacsvox.elc espeak-voices.elc g-utils.elc gm-nnir.elc gmaps.elc
-@c Loaded: gweb.elc ladspa.elc light.elc mac-voices.elc omaps.elc
-@c Loaded: omnivox-catalogue.elc omnivox-choice-codec.elc omnivox-engine-configuration.elc omnivox-engine-settings.elc omnivox-espeak-variants.elc
-@c Loaded: omnivox-library-apply.elc omnivox-library.elc omnivox-native-codec.elc omnivox-parameters-codec.elc omnivox-parameters.elc
-@c Loaded: omnivox-preview.elc omnivox-punctuation-profiles.elc omnivox-punctuation.elc omnivox-remote.elc omnivox-voices.elc
-@c Loaded: outloud-voices.elc pip.elc plain-voices.elc soundscape.elc sox-gen.elc
-@c Loaded: sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc tts-speak.elc
-@c Loaded: voice-defs.elc voice-setup.elc xbacklight.elc
+@c Loaded: emacsvox-tone-editor.elc emacsvox-transient.elc emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc
+@c Loaded: emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc
+@c Loaded: emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-welcome.elc
+@c Loaded: emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc
+@c Loaded: emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc
+@c Loaded: emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc gm-nnir.elc
+@c Loaded: gmaps.elc gweb.elc ladspa.elc light.elc mac-voices.elc
+@c Loaded: omaps.elc omnivox-catalogue.elc omnivox-choice-codec.elc omnivox-engine-configuration.elc omnivox-engine-settings.elc
+@c Loaded: omnivox-espeak-variants.elc omnivox-library-apply.elc omnivox-library.elc omnivox-native-codec.elc omnivox-parameters-codec.elc
+@c Loaded: omnivox-parameters.elc omnivox-preview.elc omnivox-punctuation-profiles.elc omnivox-punctuation.elc omnivox-remote.elc
+@c Loaded: omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc soundscape.elc
+@c Loaded: sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc
+@c Loaded: tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1665 commands and 241 options.
+This chapter documents a total of 1669 commands and 242 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -332,6 +332,7 @@ This chapter documents a total of 1665 commands and 241 options.
 * emacsvox-tetris:: Tetris.
 * emacsvox-texinfo:: Speech enable texinfo.
 * emacsvox-todo-mode:: speech-enable todo.
+* emacsvox-tone-editor:: Draft tone adjustments.
 * emacsvox-transient:: TRANSIENT.
 * emacsvox-treesit:: Speech-enable TREESIT.
 * emacsvox-typo:: Speech-enable TYPO.
@@ -13419,6 +13420,26 @@ Default Value:
 
 @end defvar
 
+@defvar {User Option} emacsvox-flyspell-tone-shape
+@verbatim
+Waveform and optional ADSR envelope of the spelling tone.
+Waveform is sine, triangle or square.  Omit the envelope for Classic fades.
+ADSR contains :attack-ms, :decay-ms, :sustain-level and :release-ms.
+Times are integer milliseconds from 0 to 60000; sustain is from 0 to 1.
+Total duration stays fixed: oversized stages are shortened proportionally.
+Non-Classic shapes require richer-tone support.  Older workers omit the tone;
+explicit previews report missing support.  Speech and earcons remain usable.
+@end verbatim
+
+Default Value:
+@verbatim
+
+(:waveform sine)
+
+@end verbatim
+
+@end defvar
+
 @defvar {User Option} emacsvox-flyspell-tone-timing
 @verbatim
 When to play spelling tones during reading.
@@ -13431,7 +13452,7 @@ feedback and tone-only previews have no accompanying speech to overlap.
 Default Value:
 @verbatim
 
-insert
+overlay
 
 @end verbatim
 
@@ -22346,6 +22367,55 @@ This module speech enables net-texinfo mode
 todo-mode (part of Emacs 21) provides todo-lists that can be
 integrated with the Emacs calendar.
 This module speech-enables todo-mode
+
+@node emacsvox-tone-editor
+@section emacsvox-tone-editor
+
+Shared draft interaction; cue providers own their settings and preview facts.
+
+@subsection Emacsvox-Tone-Editor Commands
+
+@subsubsection emacsvox-tone-editor
+@deffn {Command} emacsvox-tone-editor
+@findex emacsvox-tone-editor
+
+@format
+Edit a private tone draft.  Arrows navigate; Shift arrows adjust numbers.
+Enter sets an exact number or opens a choice list.  Preview leaves live settings
+unchanged. Apply changes the session; Save and apply persists tone defaults.
+Back discards unapplied edits. Shared main-tone volume belongs in Output settings.
+@end format
+@end deffn
+
+@subsubsection emacsvox-tone-editor-envelope
+@deffn {Command} emacsvox-tone-editor-envelope
+@findex emacsvox-tone-editor-envelope
+
+@format
+Choose draft envelope; arrows browse without applying a choice.
+Enter selects and returns. Cancel keeps the previous draft value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-tone-editor-timing
+@deffn {Command} emacsvox-tone-editor-timing
+@findex emacsvox-tone-editor-timing
+
+@format
+Choose draft timing; arrows browse without applying a choice.
+Enter selects and returns. Cancel keeps the previous draft value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-tone-editor-waveform
+@deffn {Command} emacsvox-tone-editor-waveform
+@findex emacsvox-tone-editor-waveform
+
+@format
+Choose draft waveform; arrows browse without applying a choice.
+Enter selects and returns. Cancel keeps the previous draft value.
+@end format
+@end deffn
 
 @node emacsvox-transient
 @section emacsvox-transient

@@ -105,7 +105,7 @@
         (should (= (cdr (assq 'emacsvox-flyspell-tone-volume saved)) 95))
         (should (= (cdr (assq 'tts-main-tone-volume saved)) 70))
         (should (eq (cdr (assq 'emacsvox-flyspell-tone-timing saved)) 'overlay))
-        (should (= (length saved) 8))))))
+        (should (= (length saved) 9))))))
 
 (ert-deftest emacsvox-spelling-volume-input-bounds-and-feedback ()
   (emacsvox-test--with-aural-menu
@@ -235,6 +235,148 @@
               (execute-kbd-macro (kbd "q"))
               (execute-kbd-macro (kbd "q"))
               (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-speech)))
+          (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))
+
+
+(defmacro emacsvox-tone-test--with-draft (&rest body)
+  "Run BODY with a private spelling draft and source context."
+  (declare (indent 0) (debug t))
+  `(emacsvox-test--with-aural-menu
+     (let* ((emacsvox-flyspell-tone-pitch 880)
+            (emacsvox-flyspell-tone-duration 40)
+            (emacsvox-flyspell-tone-volume 35)
+            (emacsvox-flyspell-tone-timing 'overlay)
+            (emacsvox-flyspell-tone-shape '(:waveform sine))
+            (provider (list :label "Spelling tone (global draft)"
+                            :read #'emacsvox-spelling--tone-data
+                            :apply #'emacsvox-spelling--apply-tone
+                            :preview #'emacsvox-spelling--preview-draft))
+            (state (list :provider provider :draft (emacsvox-spelling--tone-data)))
+            (transient--prefix
+             (transient-prefix :command 'emacsvox-tone-editor
+                               :scope (append (list :tone-editor state) context))))
+       ,@body)))
+
+(ert-deftest emacsvox-tone-editor-draft-preview-apply-and-save ()
+  (emacsvox-tone-test--with-draft
+    (let (sample tone heard saved)
+      (cl-letf (((symbol-function 'emacsvox-tone-editor--say) (lambda (text) (push text heard)))
+                ((symbol-function 'emacsvox-spelling--preview)
+                 (lambda () (setq sample (list emacsvox-flyspell-tone-pitch emacsvox-flyspell-tone-shape
+                                                emacsvox-flyspell-use-tone))))
+                ((symbol-function 'emacsvox-spelling--preview-tone)
+                 (lambda () (setq tone emacsvox-flyspell-tone-shape)))
+                ((symbol-function 'customize-save-variable)
+                 (lambda (symbol value &rest _) (push (cons symbol value) saved))))
+        (emacsvox-tone-editor--number :pitch 1)
+        (should (equal heard '("905 Hz")))
+        (emacsvox-tone-editor--put :waveform 'triangle)
+        (emacsvox-tone-editor--put :envelope 'adsr)
+        (emacsvox-tone-editor--sample)
+        (emacsvox-tone-editor--tone)
+        (should (= (car sample) 905))
+        (should (nth 2 sample))
+        (should (equal (cadr sample) tone))
+        (should (= emacsvox-flyspell-tone-pitch 880))
+        (should (equal emacsvox-flyspell-tone-shape '(:waveform sine)))
+        (should-not saved)
+        (emacsvox-tone-editor--apply)
+        (should (= emacsvox-flyspell-tone-pitch 905))
+        (should (equal emacsvox-flyspell-tone-shape tone))
+        (emacsvox-tone-editor--save)
+        (should (= (length saved) 5))
+        (should (equal (cdr (assq 'emacsvox-flyspell-tone-shape saved)) tone))
+        (should-not (assq 'tts-main-tone-volume saved))
+        (emacsvox-tone-editor--reset)
+        (should (eq (emacsvox-tone-editor--get :timing) 'overlay))
+        (should (eq (emacsvox-tone-editor--get :waveform) 'sine))
+        (should (equal emacsvox-flyspell-tone-shape tone))))))
+
+(ert-deftest emacsvox-tone-editor-invalid-input-does-not-change-draft ()
+  (emacsvox-tone-test--with-draft
+    (let ((original (copy-tree (plist-get state :draft))))
+      (dolist (value '(nil -1 60001 1.5 0.0e+NaN))
+        (cl-letf (((symbol-function 'emacsvox-aural-menu--read-number) (lambda (&rest _) value)))
+          (should-error (emacsvox-tone-editor--attack))
+          (should (equal (plist-get state :draft) original)))))))
+
+(ert-deftest emacsvox-tone-editor-reading-editing-and-preview-use-shape ()
+  (omnivox-native-runtime-test--with-speech
+    (omnivox-rich-tone-test--enable speaker)
+    (process-put speaker omnivox--choice-registration-property nil)
+    (omnivox-native-runtime-test--register)
+    (let ((emacsvox-flyspell-tone-shape (copy-tree omnivox-rich-tone-test--shape))
+          (emacsvox-flyspell-use-tone t) (emacsvox-flyspell-use-earcon nil)
+          (emacsvox-flyspell-tone-volume 100) (emacsvox-flyspell-tone-timing 'overlay))
+      (with-temp-buffer
+        (insert "wrong word")
+        (let ((transient--prefix (transient-prefix :command 'emacsvox-spelling
+                                                      :scope (emacsvox-aural-menu--capture nil)))
+              (emacsvox-use-icons t))
+          (setq writes nil)
+          (emacsvox-spelling--preview)
+          (let* ((document (omnivox-choice-consumer-test--timeline (car writes)))
+                 (tone (seq-find (lambda (a) (equal (plist-get a :type) "tone")) (plist-get document :actions))))
+            (should (equal (plist-get tone :shape)
+                           '(:waveform "triangle" :envelope (:attack_ms 5 :decay_ms 10 :sustain_level 0.4 :release_ms 15)))))
+          (dolist (command (list #'emacsvox-spelling--preview-tone
+                                 (lambda () (emacsvox-flyspell--clear-read-errors)
+                                   (emacsvox-flyspell--incorrect 1 2 '("replacement")))))
+            (setq writes nil)
+            (funcall command)
+            (should (seq-some (lambda (write) (string-match-p "triangle adsr 5 10 0.4 15" (cdr write))) writes))))))))
+
+(ert-deftest emacsvox-tone-editor-graphical-draft-and-choice-navigation ()
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (emacsvox-test--with-aural-menu
+      (switch-to-buffer source)
+      (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+      (let ((transient--prefix nil) (transient-show-menu t)
+            (emacsvox-flyspell-tone-pitch 880)
+            (emacsvox-flyspell-tone-shape '(:waveform sine)))
+        (unwind-protect
+            (progn
+              (execute-kbd-macro (kbd "<f8> s f E"))
+              (should (eq (oref transient--prefix command) 'emacsvox-tone-editor))
+              (with-current-buffer transient--buffer
+                (should (string-match-p "Spelling tone (global draft)" (buffer-string))))
+              (with-selected-window transient--window
+                (transient--goto-button (transient-suffix-object 'emacsvox-tone-editor--pitch)))
+              (execute-kbd-macro (kbd "S-<right>"))
+              (should (= (emacsvox-tone-editor--get :pitch) 905))
+              (should (= emacsvox-flyspell-tone-pitch 880))
+              (cl-letf (((symbol-function 'emacsvox-aural-menu--read-number) (lambda (&rest _) 925)))
+                (execute-kbd-macro (kbd "RET")))
+              (should (= (emacsvox-tone-editor--get :pitch) 925))
+              (execute-kbd-macro (kbd "w <down>"))
+              (should (eq (emacsvox-tone-editor--get :waveform) 'sine))
+              (execute-kbd-macro (kbd "q"))
+              (with-selected-window transient--window
+                (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                            'emacsvox-tone-editor-waveform)))
+              (execute-kbd-macro (kbd "w <down> RET"))
+              (should (eq (emacsvox-tone-editor--get :waveform) 'triangle))
+              (should (equal emacsvox-flyspell-tone-shape '(:waveform sine)))
+              (execute-kbd-macro (kbd "e a"))
+              (should (eq (emacsvox-tone-editor--get :envelope) 'adsr))
+              (execute-kbd-macro (kbd "? a"))
+              (with-current-buffer "*Help*"
+                (should (string-match-p "rise from silence" (buffer-string))))
+              (execute-kbd-macro (kbd "q"))
+              (should (eq (oref transient--prefix command) 'emacsvox-tone-editor))
+              (execute-kbd-macro (kbd "q"))
+              (should (eq (oref transient--prefix command) 'emacsvox-spelling))
+              (with-selected-window transient--window
+                (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                            'emacsvox-spelling--edit-tone)))
+              (execute-kbd-macro (kbd "E"))
+              (should (= (emacsvox-tone-editor--get :pitch) 880))
+              (should (eq (emacsvox-tone-editor--get :waveform) 'sine))
+              (execute-kbd-macro (kbd "w r A q E"))
+              (should (eq (emacsvox-tone-editor--get :waveform) 'square))
+              (execute-kbd-macro (kbd "R q"))
+              (should (equal emacsvox-flyspell-tone-shape '(:waveform square))))
           (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))
 
 (provide 'emacsvox-spelling-tests)

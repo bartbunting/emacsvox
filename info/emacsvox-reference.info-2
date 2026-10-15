@@ -2601,6 +2601,20 @@ completion or an explicit IDO, Popup, or Helm interface.
      880
 
 
+ -- Variable: User Option emacsvox-flyspell-tone-shape
+     Waveform and optional ADSR envelope of the spelling tone.
+     Waveform is sine, triangle or square.  Omit the envelope for Classic fades.
+     ADSR contains :attack-ms, :decay-ms, :sustain-level and :release-ms.
+     Times are integer milliseconds from 0 to 60000; sustain is from 0 to 1.
+     Total duration stays fixed: oversized stages are shortened proportionally.
+     Non-Classic shapes require richer-tone support.  Older workers omit the tone;
+     explicit previews report missing support.  Speech and earcons remain usable.
+
+     Default Value:
+
+     (:waveform sine)
+
+
  -- Variable: User Option emacsvox-flyspell-tone-timing
      When to play spelling tones during reading.
      ‘insert’ finishes each tone before its flagged word, adding a pause.
@@ -2610,7 +2624,7 @@ completion or an explicit IDO, Popup, or Helm interface.
 
      Default Value:
 
-     insert
+     overlay
 
 
  -- Variable: User Option emacsvox-flyspell-tone-volume
@@ -9807,7 +9821,7 @@ File: emacsvox-reference.info,  Node: emacsvox-texinfo,  Next: emacsvox-todo-mod
 This module speech enables net-texinfo mode
 
 
-File: emacsvox-reference.info,  Node: emacsvox-todo-mode,  Next: emacsvox-transient,  Prev: emacsvox-texinfo,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-todo-mode,  Next: emacsvox-tone-editor,  Prev: emacsvox-texinfo,  Up: Emacsvox Commands And Options
 
 2.256 emacsvox-todo-mode
 ========================
@@ -9816,15 +9830,61 @@ todo-mode (part of Emacs 21) provides todo-lists that can be integrated
 with the Emacs calendar.  This module speech-enables todo-mode
 
 
-File: emacsvox-reference.info,  Node: emacsvox-transient,  Next: emacsvox-treesit,  Prev: emacsvox-todo-mode,  Up: Emacsvox Commands And Options
+File: emacsvox-reference.info,  Node: emacsvox-tone-editor,  Next: emacsvox-transient,  Prev: emacsvox-todo-mode,  Up: Emacsvox Commands And Options
 
-2.257 emacsvox-transient
+2.257 emacsvox-tone-editor
+==========================
+
+Shared draft interaction; cue providers own their settings and preview
+facts.
+
+2.257.1 Emacsvox-Tone-Editor Commands
+-------------------------------------
+
+2.257.1.1 emacsvox-tone-editor
+..............................
+
+ -- Command: emacsvox-tone-editor
+
+     Edit a private tone draft.  Arrows navigate; Shift arrows adjust numbers.
+     Enter sets an exact number or opens a choice list.  Preview leaves live settings
+     unchanged. Apply changes the session; Save and apply persists tone defaults.
+     Back discards unapplied edits. Shared main-tone volume belongs in Output settings.
+
+2.257.1.2 emacsvox-tone-editor-envelope
+.......................................
+
+ -- Command: emacsvox-tone-editor-envelope
+
+     Choose draft envelope; arrows browse without applying a choice.
+     Enter selects and returns. Cancel keeps the previous draft value.
+
+2.257.1.3 emacsvox-tone-editor-timing
+.....................................
+
+ -- Command: emacsvox-tone-editor-timing
+
+     Choose draft timing; arrows browse without applying a choice.
+     Enter selects and returns. Cancel keeps the previous draft value.
+
+2.257.1.4 emacsvox-tone-editor-waveform
+.......................................
+
+ -- Command: emacsvox-tone-editor-waveform
+
+     Choose draft waveform; arrows browse without applying a choice.
+     Enter selects and returns. Cancel keeps the previous draft value.
+
+
+File: emacsvox-reference.info,  Node: emacsvox-transient,  Next: emacsvox-treesit,  Prev: emacsvox-tone-editor,  Up: Emacsvox Commands And Options
+
+2.258 emacsvox-transient
 ========================
 
 TRANSIENT == Transient commands -- used by magit and friends.  This
 module speech-enables transient.
 
-2.257.1 Introduction
+2.258.1 Introduction
 --------------------
 
 Package Transient is similar to package Hydra in the sense that it can
@@ -9842,7 +9902,7 @@ displayed temporarily.  Note that without this functionality, learning
 complex packages like Magit would be difficult because the list of
 available commands can be very long.
 
-2.257.2 Recommended Customizations
+2.258.2 Recommended Customizations
 ----------------------------------
 
 I use the following customizations via .custom, adjust to taste, but use
@@ -9854,7 +9914,7 @@ these only after reading the transient info documentations.
    This displays the menu immediately and lets you move through its
 buttons with the up/down arrows.
 
-2.257.3 Browsing Contents Of transient-show
+2.258.3 Browsing Contents Of transient-show
 -------------------------------------------
 
 When executing a command defined via Transient -- e.g.  command
@@ -9864,10 +9924,10 @@ calls 2‘transient-suspend’.  Emacsvox now displays a
 recently displayed transient choices.  Pressing ‘r’ resumes the
 transient; Pressing ‘C-q’ quits the transient.
 
-2.257.4 Emacsvox-Transient Commands
+2.258.4 Emacsvox-Transient Commands
 -----------------------------------
 
-2.257.4.1 emacsvox-transient-mode
+2.258.4.1 emacsvox-transient-mode
 .................................
 
  -- Command: emacsvox-transient-mode
@@ -9878,21 +9938,21 @@ transient; Pressing ‘C-q’ quits the transient.
      run, this mode runs the hook ‘emacsvox-transient-mode-hook’, as the
      final or penultimate step during initialization.
 
-2.257.4.2 emacsvox-transient-next-section
+2.258.4.2 emacsvox-transient-next-section
 .........................................
 
  -- Command: emacsvox-transient-next-section
 
      Next transient section.
 
-2.257.4.3 emacsvox-transient-previous-section
+2.258.4.3 emacsvox-transient-previous-section
 .............................................
 
  -- Command: emacsvox-transient-previous-section
 
      Previous transient section.
 
-2.257.5 emacsvox-transient Options
+2.258.5 emacsvox-transient Options
 ----------------------------------
 
  -- Variable: User Option emacsvox-transient-navigation-style

@@ -2157,13 +2157,13 @@ the flagged word. Voice feedback uses the existing spelling face mappings.
 Tone and earcon feedback also report errors detected while editing. Opening
 a mail reply checks and highlights inserted text without a burst of cues.
 
-Use ~m~ to choose tone timing. /Before speech/, the default, finishes each
-tone before its flagged word and adds a pause for the tone. /Alongside speech/
-plays the tone while the word is spoken without inserting that pause. Arrows
-browse without changing the setting; ~RET~ applies and returns to Timing.
-~q~ cancels the choice. Timing applies globally and leaves voice and earcon
-feedback unchanged. Compare it with ~SPC~ or by reading flagged text: a
-tone-only preview or editing cue has no accompanying speech to overlap.
+Use ~m~ to choose tone timing. /Alongside speech/ is the default: it plays
+the tone while the word is spoken without adding a tone pause. /Before speech/
+finishes each tone before its flagged word, adding a pause. Previously saved
+choices remain in effect. Arrows browse without changing the setting; ~RET~
+applies and returns to Timing, while ~q~ cancels. Timing leaves voice and
+earcon feedback unchanged. Compare it with ~SPC~ or by reading flagged text:
+a tone-only preview or editing cue has no accompanying speech to overlap.
 
 Select ~p~ for pitch, ~d~ for duration, or ~l~ for spelling tone volume.
 ~RET~ enters an exact value; Shift-left/right adjusts by 25 Hz, 5 milliseconds,
@@ -2171,19 +2171,66 @@ or 5 percentage points. Spelling tone volume ranges from 0 to 100 percent:
 zero silences the tone, and the default of 100 preserves its original level.
 ~V~ changes the shared volume of all main-stream tones, including indentation
 and spelling. The shared volume still scales the spelling tone after its
-individual adjustment.
+individual adjustment; it is also available in Sounds and output.
 
-~b~ previews the tone alone, even when tone feedback is off. ~SPC~ reads a
-sample containing one flagged word with the selected combination. Individual
-volume requires an Omnivox worker with richer-tone support. With an older
-worker, a volume below 100 omits the tone while retaining speech and earcons;
-the feedback explanation records the omission. A preview reports missing
-support instead of playing at the wrong volume. Your setting remains intact.
-Use an updated worker or restore 100 to hear the tone again.
-
-Changes take effect in the current session; ~S~ saves the spelling settings,
-including individual volume, and the shared tone volume through Customize.
+These controls change the current session immediately. ~b~ previews the tone
+alone, even when tone feedback is off. ~SPC~ reads a sample containing one
+flagged word with the selected combination. ~S~ saves the spelling settings,
+including tone timing and shape, and the shared tone volume through Customize.
 ~q~ returns and ~C-q~ closes the menus without saving.
+
+***** Edit the complete spelling tone
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Press capital ~E~ in Spelling feedback, or use ~C-e H s f E~, for a private
+draft of the complete tone. The title identifies its global spelling scope.
+This editor adds waveform and envelope controls to pitch, duration, individual
+volume and timing. Changes here affect only the draft until you apply it.
+
+Use arrows to navigate and Shift-left/right to adjust the selected number.
+~RET~ enters an exact number or opens a choice list. In a list, arrows browse,
+~RET~ selects and returns, and ~q~ cancels. ~?~ followed by an item's key
+explains its effect and units. Choose ~w~ for waveform: sine is a smooth pure
+tone, triangle adds a softer harmonic character, and square sounds brighter.
+Their perceived loudness can differ; compare at a comfortable individual volume.
+
+Choose ~e~ for the envelope, which describes how loudness changes over the
+life of the tone. /Classic/ uses the original short fades. /ADSR/ uses four
+controls, with times in milliseconds and sustain in percent of peak level:
+
+- ~a~, Attack: time to rise from silence to peak level.
+- ~c~, Decay: time to fall from peak to the sustain level.
+- ~s~, Sustain: the level held for the remaining time, rather than a duration.
+- ~r~, Release: time to fade from sustain to silence.
+
+Total duration includes the whole envelope. If attack, decay and release
+would exceed it, they shorten proportionally and leave no sustain hold.
+Zero skips a timed stage; endpoint smoothing still limits clicks. Classic
+ignores these four controls, retaining their values while this draft remains
+open. The initial waveform is sine with Classic fades.
+
+Press ~b~ to hear the draft tone alone, or ~SPC~ to hear it with the spelling
+sample. Both privately enable the tone even if live spelling tones are off;
+the sentence otherwise uses current feedback settings. ~S~ stops the preview
+immediately, without waiting for release. Navigation also interrupts playback.
+Previews neither apply nor save the draft.
+
+Use ~A~ to apply the draft for this session. Capital ~W~ saves and applies
+its tone defaults through Customize. These actions leave voice, earcon, tone
+enablement and shared volume unchanged. ~R~ resets only the draft to factory
+defaults for preview and deliberate application. ~q~ returns to Spelling
+feedback and discards unapplied edits; applied and saved changes remain.
+Reopening starts from the current tone. To reverse an applied adjustment,
+edit it back and apply again, saving too if you changed the saved defaults.
+
+Individual volume below 100, harmonic waveforms and ADSR require an Omnivox
+worker with richer-tone support. Older workers omit an unsupported tone while
+retaining speech and earcons, and the feedback explanation records the omission.
+A preview reports missing support instead of playing an inaccurate substitute.
+Your settings remain intact. Use an updated worker, or restore volume 100,
+sine and Classic to hear the tone on an older worker.
 
 **** Choose typing and point feedback
 :PROPERTIES:

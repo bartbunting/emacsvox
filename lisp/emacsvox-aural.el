@@ -646,7 +646,8 @@ Registry validation rejects missing targets and alias cycles."
                    (spelling-earcon boolean "Play an earcon at a spelling error")
                    (spelling-tone-pitch number "Spelling tone pitch in hertz")
                    (spelling-tone-duration number "Spelling tone duration in milliseconds")
-                   (spelling-tone-volume number "Spelling tone gain from 0 to 1")))
+                   (spelling-tone-volume number "Spelling tone gain from 0 to 1")
+                   (spelling-tone-shape nil "Spelling waveform and envelope")))
     (unless (emacsvox-aural-semantic (car entry))
       (emacsvox-aural-register-semantic
        (car entry) :kind 'attribute :summary (nth 2 entry)

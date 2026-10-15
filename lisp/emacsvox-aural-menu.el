@@ -69,6 +69,8 @@
                          emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation
                          emacsvox-aural-menu-voices emacsvox-capitalization
                          emacsvox-interaction emacsvox-spelling emacsvox-spelling-timing
+                         emacsvox-tone-editor emacsvox-tone-editor-waveform
+                         emacsvox-tone-editor-envelope emacsvox-tone-editor-timing
                          emacsvox-aural-menu-line-cues
                          emacsvox-output-settings emacsvox-settings-buffer
                          emacsvox-settings-dictionaries emacsvox-settings-history emacsvox-settings-switches
