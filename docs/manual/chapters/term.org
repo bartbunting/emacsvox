@@ -6,20 +6,19 @@
 :END:
 
 #+cindex: Term mode
-
 #+cindex: terminal applications
-
 #+cindex: Eterm, Emacsvox module name
 
-Emacsvox speech-enables the built-in Emacs Term terminal emulator through the
-module named =emacsvox-eterm=.  The module name is inherited; users do not
-install a separate Eterm package.
+Term is the terminal emulator built into Emacs. Its Emacsvox integration is
+named =emacsvox-eterm= for historical reasons; no separate Eterm package is
+required. Use Term when avoiding an extra package matters or a particular
+application works better there.
 
-For a new full-terminal workflow, prefer [[*Speech Access To EAT][EAT Terminal Access]].  EAT has
-the richer current guide for bounded screen output, terminal-side completion,
-scrollback, alternate screens, and asynchronous rendering.  Use built-in Term
-when avoiding an additional package matters or an application specifically
-works better there.  For ordinary line-oriented shell commands, ~M-x shell~ is usually simpler than either terminal emulator.
+For a new full-terminal workflow, [[*Speech Access To EAT][EAT Terminal Access]] provides the richer
+current model for bounded output, terminal completion, scrollback, alternate
+screens, and asynchronous rendering. For ordinary line-oriented commands,
+~M-x shell~ is another option. These environments have different input and
+review keys; do not transfer a key sequence merely because both are terminals.
 
 ** Starting Term
 :PROPERTIES:
@@ -28,17 +27,15 @@ works better there.  For ordinary line-oriented shell commands, ~M-x shell~ is u
 
 #+findex: term
 
-Run ~M-x term RET~.  At the =Run program:= prompt, accept the
-proposed shell or enter another executable and press ~RET~.  Emacsvox
-currently makes the selected Term window fill the frame when =term= or
-=ansi-term= starts.  This changes only the window layout: it does not kill
-the buffers that were displayed in the other windows.
+Run ~M-x term RET~. At =Run program:=, accept the proposed shell or enter
+another executable and press ~RET~. Emacsvox makes the selected Term window
+fill the frame when =term= or =ansi-term= starts. This changes window layout,
+not the existence of buffers previously shown in other windows.
 
-Term handles terminal emulation, while the child program handles its prompts,
-input, and completion.  Emacsvox observes the rendered Term buffer and adds
-speech feedback and review commands.  See [[info:emacs#Term Mode][Term Mode]] in /The GNU Emacs Manual/ for the emulator itself and
-[[info:emacsvox-reference#emacsvox-eterm][emacsvox-eterm]] in /Emacsvox Reference Manual/ for the
-complete Emacsvox API inventory.
+Term emulates the terminal, the child program handles input and completion,
+and Emacsvox presents the rendered buffer. See [[info:emacs#Term Mode][Term Mode]] in /The GNU
+Emacs Manual/ for the emulator and [[info:emacsvox-reference#emacsvox-eterm][emacsvox-eterm]] in the /Emacsvox Reference
+Manual/ for the complete integration reference.
 
 ** Character And Line Input Modes
 :PROPERTIES:
@@ -47,33 +44,36 @@ complete Emacsvox API inventory.
 :END:
 
 #+cindex: character mode, Term
-
 #+cindex: line mode, Term
-
 #+findex: term-char-mode
-
 #+findex: term-line-mode
 
-Term starts in character mode.  Choose the mode according to who should receive
-your keys:
+Term starts in character mode. Choose according to who should receive the keys:
 
 #+attr_texinfo: :indic asis :compact t
 - Character mode ::
 
-  Most keys are sent immediately to the terminal program.  Use this for
-  full-screen or key-driven terminal applications.  Press ~C-c C-j~ to enter
-  line mode.  Because normal Emacs prefixes may belong to the child program, use
-  ~C-c C-h m~ for mode help and ~C-c M-x~ to run an Emacs command.
+  Most keys are sent immediately to the terminal program. This suits
+  full-screen or key-driven applications. ~C-c C-j~ enters line mode.
+  Normal Emacs prefixes may belong to the child, so use ~C-c C-h m~ for
+  mode help and ~C-c M-x~ to run an Emacs command.
 - Line mode ::
 
-  Normal Emacs editing commands edit the pending input.  ~RET~ sends that
-  input to the terminal program.  Use ~C-h m~ and other ordinary Emacs Help
-  keys directly.  Press ~C-c C-k~ to return to character mode.
+  Ordinary Emacs editing commands edit pending input; ~RET~ sends it to
+  the program. Emacs Help keys such as ~C-h m~ work directly.
+  ~C-c C-k~ returns to character mode.
 
-Emacsvox announces =Terminal line mode= or =Terminal character mode=
-after an interactive switch.  In either mode, ~C-t~ begins the Emacsvox
-Term review prefix.  To send a literal ~C-t~ to the child program in
-character mode, press ~C-t C-t~.
+An interactive switch announces =Terminal line mode= or
+=Terminal character mode=. In either mode, ~C-t~ introduces Term's Emacsvox
+review commands. Send a literal ~C-t~ to the child in character mode with
+~C-t C-t~.
+
+Use the input-mode escape before trying ordinary Emacs settings or Help keys
+that the child might otherwise receive. In line mode, ~C-e H~ opens the
+Emacsvox settings menu. Its general settings do not replace Term's own
+buffer-local automatic-speech control below. Likewise, ~q~ closes an Emacsvox
+menu or dedicated review only while that interface owns the keys; it is not
+a general command to leave a running terminal application.
 
 ** Automatic Speech Feedback
 :PROPERTIES:
@@ -82,27 +82,25 @@ character mode, press ~C-t C-t~.
 :END:
 
 #+cindex: automatic speech, Term
-
 #+vindex: emacsvox-eterm-autospeak
-
 #+findex: emacsvox-toggle-eterm-autospeak
 
-Automatic feedback is controlled by the buffer-local setting
-=emacsvox-eterm-autospeak=, which is on by default.  Toggle it for the
-current Term buffer with ~C-t C-q~.  The older spelling
+=emacsvox-eterm-autospeak= controls automatic feedback in the current buffer
+and defaults to enabled. ~C-t C-q~ toggles it. The older spelling
 =eterm-autospeak= is not an Emacsvox variable.
 
-The Term buffer must be displayed in a live window for output to be spoken
-automatically.  A hidden Term buffer can continue running without speaking.
-In line mode, Emacsvox reads the newly inserted output range without
-interrupting it for every character.  In character mode, it presents rendered
-cursor movement, characters, words, or the reached line according to how the
-screen changed; new terminal activity can stop earlier speech.
+A Term buffer must be displayed in a live window for automatic output speech.
+A hidden buffer can keep running silently. This displayed-window condition is
+not EAT's selected-buffer and keyboard-focus policy.
 
-This feedback is based on Term's rendered buffer and cursor coordinates.  It
-does not provide EAT's bounded screen transactions, terminal-completion model,
-or alternate-screen policy.  Use explicit review whenever automatic output is
-too brief or an application redraw is ambiguous.
+In line mode, speech reads newly inserted output as a range rather than
+interrupting it for every character. In character mode, rendered cursor and
+screen changes determine whether a character, word, movement, or reached line
+is presented. New terminal activity can stop earlier speech.
+
+This integration does not provide EAT's bounded screen transactions,
+completion model, or alternate-screen policy. When a redraw is ambiguous or
+an announcement too brief, use the explicit review commands.
 
 ** Reviewing The Term Screen
 :PROPERTIES:
@@ -110,53 +108,51 @@ too brief or an application redraw is ambiguous.
 :END:
 
 #+cindex: review pointer, Term
-
 #+cindex: review mode, Term
 
-The Emacsvox review pointer is independent of the terminal cursor, so reviewing
-old screen text does not send keys or move the child application.  These core
-commands keep the normal ~C-t~ prefix:
+The review pointer is independent of the terminal cursor. Moving it does not
+send keys or move the child application. It reviews the Term buffer, not the
+immutable snapshot used by EAT's frozen review. The normal prefix is ~C-t~:
 
 #+attr_texinfo: :indic kbd :compact t
 - C-t . ::
 
-  Move the review pointer to the terminal cursor and announce its coordinates.
+  Place the review pointer at the terminal cursor and announce its coordinates.
 - C-t p ::
 - C-t n ::
 
-  Move the review pointer to the previous or next line and speak it.  The Up and
-  Down arrow keys are equivalent after the ~C-t~ prefix.
-- C-t ~LEFT~ ::
-- C-t ~RIGHT~ ::
+  Move to the previous or next line and speak it. ~C-t <up>~ and
+  ~C-t <down>~ are equivalent.
+- C-t <left> ::
+- C-t <right> ::
 
-  Move the pointer by a character and speak the character reached.
+  Move by a character and speak the destination.
 - C-t M-b ::
 - C-t M-f ::
 
-  Move the pointer backward or forward by a word and speak it.
+  Move backward or forward by a word and speak it.
 - C-t l ::
 - C-t w ::
 - C-t c ::
 
-  Speak the line, word, or character at the review pointer without moving it.
-- C-t ~SPC~ ::
+  Read the line, word, or character at the review pointer without moving.
+- C-t SPC ::
 
-  Speak from the review pointer to the current end of the Term buffer.
+  Read from the pointer to the current end of the Term buffer.
 - C-t s ::
 
-  Prompt for text, search forward from the review pointer, and speak the matching
-  line.
+  Ask for text, search forward from the pointer, and read the matching line.
 
-In character mode, ~C-t q~ enters dedicated review mode.  The terminal
-stops receiving ordinary keys while this review keymap is active.  Use
-~p~, ~n~, the arrow keys, ~M-b~, ~M-f~, ~l~, ~w~,
-~c~, and ~s~ without the ~C-t~ prefix; press ~q~ to return to
-character mode.  To copy reviewed text, press ~m~ at one endpoint, move the
-pointer, and press ~y~ to copy the region to the kill ring.
+In character mode, ~C-t q~ enters dedicated review. Ordinary keys then stay
+in review rather than reaching the child. Use ~p~, ~n~, arrows, ~M-b~,
+~M-f~, ~l~, ~w~, ~c~, and ~s~ without the prefix. ~q~ returns to character
+mode. To copy text, set one endpoint with ~m~, move the pointer, then press
+~y~ to copy the region to the kill ring.
 
-The integration also supports named rectangular screen regions and focus or
-filter windows.  Those are advanced, coordinate-based facilities; inspect the
-live ~C-h m~ output and the generated module reference before using them.
+Named rectangular regions and focus/filter windows are advanced,
+coordinate-based facilities. Consult the live mode Help and generated
+reference before using them; remember the character-mode Help prefix when
+ordinary Emacs keys would otherwise reach the child.
 
 ** Help And Recovery
 :PROPERTIES:
@@ -164,16 +160,16 @@ live ~C-h m~ output and the generated module reference before using them.
 :ALT_TITLE: Term Help And Recovery
 :END:
 
-- If terminal output is visible but silent, press ~C-t C-q~ once and retry.
-   Automatic speech applies only while the Term buffer is displayed.
+For visible but silent output, inspect =emacsvox-eterm-autospeak= in the
+current buffer and ensure that buffer is displayed. Toggle with ~C-t C-q~
+when necessary, then test new output. An automatic-speech setting does not
+prove that the program has produced a new readable screen change.
 
-- If an Emacs command is being sent to the child program, remember that you are
-   probably in character mode.  Use ~C-c C-h m~, ~C-c M-x~, or switch to
-   line mode with ~C-c C-j~.
+If an Emacs command goes to the child, check the input mode. In character
+mode use ~C-c C-h m~, ~C-c M-x~, or switch to line mode with ~C-c C-j~.
+If dedicated review owns the keys, ~q~ returns to character mode first.
 
-- If review has drifted away from live output, press ~C-t .~.  If dedicated
-   review mode controls the keys, press ~q~ first to return to character mode.
-
-- If a full-screen application redraws in a way that Term cannot present
-   reliably, retry it in [[*Speech Access To EAT][EAT Terminal Access]] and use EAT's explicit review
-   commands.
+When review has moved away from current output, ~C-t .~ resynchronises the
+pointer. Leave dedicated review with ~q~ before using the normal prefix.
+For a full-screen redraw that Term cannot present reliably, try the workflow
+in [[*Speech Access To EAT][EAT Terminal Access]] and use that emulator's explicit review commands.
