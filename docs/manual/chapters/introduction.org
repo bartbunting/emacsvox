@@ -6,38 +6,36 @@
 
 #+cindex: Introduction
 
-Welcome to Emacsvox, a keyboard-driven spoken environment built on Emacs.  It
-helps you read and write text, browse the Web, use mail and messaging, work in
+Emacsvox is a keyboard-driven spoken environment built on Emacs. You can use
+it to read and write text, browse the Web, manage mail and messaging, work in
 shells, program, and explore structured information through speech and sound.
 
-Emacsvox requires Emacs 30.2 or newer and is derived from Emacspeak.  Emacspeak's
+Emacsvox requires Emacs 30.2 or newer and is derived from Emacspeak. Emacspeak's
 pioneering audio-desktop design and T. V. Raman's original work remain the
 foundation of this project.
 
-Emacsvox works inside Emacs rather than reading the screen as a grid of pixels.
-Because it can use commands, modes, text structure, and application state, it
-can announce what an action means and what changed.  Ordinary movement speaks
-the text crossed; different voices convey structure; auditory icons and tones
-mark events without interrupting you with unnecessary words.
+Emacsvox works with Emacs commands, modes, text structure, and application
+state rather than treating the screen as a grid of pixels. It can therefore
+announce what an action means and what changed. Movement speaks the relevant
+text; voices distinguish structure; auditory icons and tones mark events
+without adding words to everything you read.
 
 ** Where To Begin
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-- If Emacsvox is not installed yet, start with
-  [[*Getting Started: Installation and First Speech][Installation]].  It takes you from a source checkout to a clean
-  speaking session and includes a recovery path if speech does not start.
+Start with [[*Getting Started: Installation and First Speech][Installation]] if Emacsvox is not yet installed. It explains the
+supported installation routes, takes you to a clean speaking session, and
+provides recovery instructions when speech does not start. Once speech is
+working, continue with [[*Basic Usage][Basic Usage]] for reading, editing, and speech controls.
+[[*Work With The Audio Desktop][Audio Desktop]] then explains the buffers, modes, and navigation habits that
+connect these tasks across applications.
 
-- If Emacsvox is already speaking, continue with [[*Basic Usage][Basic Usage]] for a
-  short first-session guide and the essential reading commands.
-
-- If Emacs itself is new to you, ~C-h t~ opens the Emacs tutorial.
-  Emacsvox speaks the tutorial and the commands you use while following it.
-
-- In any Emacs buffer, ~C-h m~ describes the active modes and their
-  commands, while ~C-h k~ followed by a key explains that key.  See
-  [[*Find Help While You Work][Using Online Help]] when you want to explore further.
+If Emacs itself is new to you, ~C-h t~ opens its interactive tutorial.
+Emacsvox speaks the tutorial and your navigation while you follow it. At any
+point, ~C-h m~ describes the active modes and ~C-h k~ followed by a key
+explains its current command. [[*Find Help While You Work][Using Online Help]] shows how to explore further.
 
 ** The Welcome Screen
 :PROPERTIES:
@@ -45,55 +43,64 @@ mark events without interrupting you with unnecessary words.
 :END:
 
 At an idle startup, after speech is ready, Emacsvox offers a short welcome
-screen. It has actions to test speech, adjust rate and output volumes, choose
-voices and engines, open the tutorial or manual, and start normal use.
-Use ~TAB~ and ~S-TAB~ to choose actions,
-~RET~ to activate one, and ~q~ to return.
-Arrow keys read the instructions normally.
+screen. Its actions test speech, adjust rate and output volumes, choose voices
+and engines, open the tutorial or manual, and start normal use. Move between
+actions with ~TAB~ and ~S-TAB~, activate one with ~RET~, and use ~q~ to
+return. Arrow keys read the instructions normally.
 
-Toggle Show this welcome screen at startup to stop showing it automatically.
+Toggle /Show this welcome screen at startup/ to stop showing it automatically.
 The choice is saved in this Emacs profile and survives application upgrades.
-Open it again through Help's Emacsvox welcome entry, ~C-h W~,
-or ~M-x emacsvox-welcome~. Startup leaves explicitly opened
-files and sessions already in use alone.
+Open the screen again through Help's /Emacsvox welcome/ entry, ~C-h W~, or
+~M-x emacsvox-welcome~. Startup leaves explicitly opened files and sessions
+already in use alone.
 
 ** What You Will Hear
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Emacsvox combines several kinds of feedback:
+Emacsvox combines several forms of feedback. Speech reads text, prompts,
+results, and status. Voice changes make syntax and document structure audible.
+Short auditory icons and tones identify events such as opening a file or
+completing an action. Pauses and spatial cues help separate related information.
 
-- speech for text, prompts, results, and status;
-- voice changes that make syntax and document structure audible;
-- short auditory icons and tones for events such as opening a file or
-  completing an action; and
-- pauses and spatial cues that help separate related information.
+Begin with the supplied settings and adjust them as you learn what helps your
+work. From the buffer you are using, ~C-e H~ opens the experimental Emacsvox
+settings menu. Press ~s~ for speech controls, ~v~ for voices and engines, or
+~o~ for sounds and output. ~C-e S~ opens focused settings for the current
+integration, falling back to general buffer settings when no focused menu is
+available. To understand a particular item's feedback, leave point on it and
+press ~C-e E~.
 
-You can adjust this presentation gradually.  ~C-e H~ opens the experimental
-Emacsvox menu; press ~s~ for Speech settings or ~h~ for Aural Home, which brings
-voices, sound packs, profiles, and other presentation options together.
-You do not need to configure it before beginning.  See
-[[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] when you want to understand or change what you hear.
+In a settings menu, up/down selects an item, left/right changes sections, and
+~RET~ activates the selection. ~?~ followed by an item's key explains that
+item; ~? ?~ explains the menu. ~q~ returns one level and ~C-q~ closes the
+menu sequence. Leaving a menu does not reverse adjustments already applied.
+Settings and editors have distinct saving rules, explained alongside each task
+in [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]].
 
-Emacsvox sends speech through a speech server.  New GNU/Linux, macOS, and WSL2
+Aural Home remains available through ~C-e H h~ or ~M-x emacsvox-aural~ for
+comparison and workflows that still return through Home. It is a separate
+table-based interface, not another name for the settings menu. Follow the
+navigation instructions for the interface you opened.
+
+Emacsvox sends speech through a speech server. New GNU/Linux, macOS, and WSL2
 installations use Omnivox; established direct servers remain available for
-compatible existing setups.  The installation chapter introduces only what
-you need for first speech.  [[*Speech Backends][Speech Backends]] contains the platform and
-compatibility details.
+compatible existing setups. Installation introduces what you need for first
+speech. [[*Speech Backends][Speech Backends]] provides the platform and compatibility details.
 
 ** About This Manual
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-The maintained chapters provide the current Emacsvox setup and task guides.
+The maintained chapters teach current setup and everyday tasks. Each explains
+what you do, what feedback to expect, and how to inspect or recover the result.
 The separate generated reference records commands, options, and keymaps from
-the source, while the heritage manual preserves Emacspeak essays and
-application guides for their historical and design value.  Historical material
-may describe software or Web services from its original period.
+the source. The heritage manual preserves Emacspeak essays and application
+guides for their historical and design value; it is not a current setup guide.
 
 Rapidly changing features are also documented in =README.org=, =etc/NEWS=,
-and the generated Aural Presentation reference.  When a copied key binding
-differs from your running Emacs, prefer the live help shown by ~C-h m~ or
-~C-h k~.
+and the generated Aural Presentation reference. When a copied binding differs
+from your running Emacs, consult ~C-h k~, ~C-h m~, or ~C-h b~ for the
+commands and bindings available in that session.
