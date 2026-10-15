@@ -211,6 +211,8 @@ section name and position.
 
 For menu Help, press ~?~ followed by a choice's key, or ~? ?~ for help on
 the current menu. ~q~ in that Help resumes the menu, including its parent menus.
+Opening ~C-e H~ announces a short reminder of Help and the ~n~ navigation
+and speech settings. Moving between items does not repeat that reminder.
 
 ***** Choose navigation and announcement preferences
 :PROPERTIES:
@@ -225,8 +227,9 @@ to all Transient menus, independently of the current-buffer settings scope.
 Wrap within section is the default.
 
 In the Presentation section, choose ~i~ for Item first or ~n~ for Section
-first. Item first is the default; Section first speaks the section name and
-position before the item.
+first. Section first is the default: it speaks the section name and position
+before the item. Item first reverses that order. Previously saved preferences
+remain in effect.
 
 Choose ~m~ for /By movement: sections or items/. Left/right speaks only the
 destination section and its position. Up/down speaks only the item, key, and

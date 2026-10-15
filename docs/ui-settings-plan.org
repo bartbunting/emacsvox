@@ -1481,6 +1481,31 @@ verification of subsequently changed code.
 
 ** Findings queue
 
+- 2026-10-16: Menu discovery defaults now put the section heading and position
+  before the item. Detailed descriptions and wrapping within sections remain
+  enabled by default. Saved choices remain authoritative. Home entry adds a
+  short hint for question-mark help and =n= navigation/speech settings; ordinary
+  redisplay and item movement do not repeat it. This supersedes the earlier
+  item-first default. All 51 source graphical checks pass; 52 compiled graphical
+  checks pass, including a real Magit dispatch check of heading-first speech.
+  Incremental compilation and byte-code preflight pass. The shared personal
+  profile and three running sessions use section-first, detailed descriptions,
+  and section wrapping for listening. Restart for the Home hint. The manual
+  and generated reference describe the new default and entry hint; the
+  documentation release gate passes. Listening acceptance remains open,
+  including the separation issue below.
+
+- 2026-10-16: Listening after selecting section-first finds that menu titles,
+  headings, section counts, and items run together. The section heading retains
+  its face mapping to =voice-lighten=, and the count has explicit =voice-annotate=.
+  The opening purpose has no dedicated personality; ordinary item labels use
+  their description's styling or the normal voice. These parts are concatenated
+  with punctuation and spaces, without explicit pauses. The inspected live
+  profile has face presentation enabled and distinct heading/count mappings;
+  audible separation and final synthesis still need verification. Consider
+  short boundary pauses and a distinct menu-title style without slowing each
+  item movement. No speech behaviour changed during this inspection.
+
 - 2026-10-16: Opening a Notmuch reply produced six spelling cues. The speech
   log showed six separate sound requests; a synthetic reply with real Hunspell
   reproduced repeated checks of inserted sender names and the subject.
@@ -1537,6 +1562,19 @@ verification of subsequently changed code.
   Selectable waveforms and adjustable fades would need a separate backend
   extension. Prioritize existing per-tone gain before additional synthesis
   controls. No Omnivox source or protocol changes are included here.
+
+- 2026-10-16: The [[file:../../omnivox/docs/plans/richer-tones.md][Omnivox richer-tone plan]] records proposed delivery slices:
+  individual cue gain, a negotiated tone contract, waveform/envelope generation,
+  Emacsvox presets and editing, then platform and listening qualification.
+  Classic cues and defaults remain unchanged. Fixed total duration with
+  proportionally shortened envelope stages is selected for implementation.
+  Start with spelling, then capitalization and indentation. Client work must
+  cover standalone preview, timeline delivery, retained replay, explicit rule
+  saving and old-server behavior consistently. Patterns and more complex
+  synthesis remain later work. Implementation is authorized; the Omnivox plan
+  records the versioned contract and cancellation handoff. Standalone tone gain
+  is a prerequisite for consistent spelling editing and preview feedback.
+  Runtime implementation and listening acceptance remain outstanding.
 
 - 2026-10-15: The Transient dependency follow-up resolves the recorded build
   and packaging gaps. Commit =62c99ca83= adds all nine omitted menu modules to

@@ -449,6 +449,32 @@
           (should-not (string-match-p "Force with lease\\|More detail" spoken)))
         (should (string-match-p "Force with lease" emacsvox-transient-cache))))))
 
+(ert-deftest emacsvox-transient-home-hint-is-entry-only ()
+  "Home explains help and settings once, without adding hints to other menus."
+  (save-window-excursion
+    (with-temp-buffer
+      (insert "Everyday settings\n")
+      (set-window-buffer (selected-window) (current-buffer))
+      (let ((transient--window (selected-window))
+            (transient--prefix (transient-prefix :command 'emacsvox-aural-menu))
+            (emacsvox-transient--announced-prefix nil)
+            (emacsvox-transient--announced-stack nil)
+            submissions)
+        (cl-letf (((symbol-function 'documentation) (lambda (&rest _) "Home."))
+                  ((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (push text submissions))))
+          (emacsvox--advice-transient--show-after)
+          (emacsvox--advice-transient--show-after)
+          (should (= (length submissions) 1))
+          (should (string-match-p
+                   "Question mark for help; n for navigation and speech options"
+                   (car submissions)))
+          (setq transient--prefix (transient-prefix :command 'ignore))
+          (emacsvox--advice-transient--show-after)
+          (should (= (length submissions) 2))
+          (should-not (string-match-p "navigation and speech options"
+                                      (car submissions))))))))
+
 (ert-deftest emacsvox-transient-show-deduplicates-menu-redisplay ()
   "Redrawing one live menu refreshes the cache without repeating feedback."
   (save-window-excursion
@@ -715,7 +741,7 @@
                 (should (string-match-p "First action" (nth 2 selections)))
                 (execute-kbd-macro (kbd "<down> <down>"))
                 (should (equal (car selections)
-                               "Third action. c. Other actions. 2 of 2 sections."))
+                               "Other actions. 2 of 2 sections. Third action. c."))
                 (let* ((text (car selections))
                        (count-start (string-match "2 of 2 sections" text)))
                   (should (eq (get-text-property count-start 'personality text)
@@ -727,11 +753,11 @@
                 (should-not (cadr cues))
                 (execute-kbd-macro (kbd "<down>"))
                 (should (equal (car selections)
-                               "First action. a. Actions. 1 of 2 sections."))
+                               "Actions. 1 of 2 sections. First action. a."))
                 (should (equal (car cues) '(repeat-start)))
                 (execute-kbd-macro (kbd "<up>"))
                 (should (equal (car selections)
-                               "Third action. c. Other actions. 2 of 2 sections."))
+                               "Other actions. 2 of 2 sections. Third action. c."))
                 (should (equal (car cues) '(repeat-start))))
             (when transient--prefix
               (execute-kbd-macro (kbd "C-g")))))))))
@@ -786,7 +812,8 @@
                     (should (equal speech '("Second action. b.")))
                     (should (equal (car cues) '(repeat-start))))
                   (execute-kbd-macro (kbd "<right>"))
-                  (should (string-prefix-p "Third action" (car speech)))
+                  (should (equal (car speech)
+                                 "Other actions. 2 of 2 sections. Third action. c."))
                   (setq speech nil boundaries nil)
                   (execute-kbd-macro (kbd "<down>"))
                   (if (eq style 'section-stop)

@@ -124,7 +124,7 @@ move between sections in every style.  This setting applies globally."
                  (const :tag "Stop at section edges" section-stop))
   :group 'emacsvox)
 
-(defcustom emacsvox-transient-section-announcement-order 'item-first
+(defcustom emacsvox-transient-section-announcement-order 'section-first
   "How Transient navigation announces items and sections.
 Item first speaks the item, then the section name and position.  Section
 first speaks the section name and position before the item.  By movement
@@ -749,6 +749,8 @@ ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
          (car (split-string purpose "\n"))
        "Command menu.")
      " Up and down: options. Left and right: sections."
+     (when (eq command 'emacsvox-aural-menu)
+       " Question mark for help; n for navigation and speech options.")
      (when (eq command 'emacsvox-indentation)
        " Shift left and right: adjust volume. Space: preview.")
      (when (eq command 'emacsvox-indentation-tone)

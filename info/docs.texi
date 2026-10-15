@@ -22412,7 +22412,7 @@ This setting applies globally, including Magit, and does not change navigation.
 Default Value:
 @verbatim
 
-item-first
+section-first
 
 @end verbatim
 

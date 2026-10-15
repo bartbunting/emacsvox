@@ -3573,7 +3573,9 @@ later session.
 
      For menu Help, press ‘?’ followed by a choice's key, or ‘? ?’ for
      help on the current menu.  ‘q’ in that Help resumes the menu,
-     including its parent menus.
+     including its parent menus.  Opening ‘C-e H’ announces a short
+     reminder of Help and the ‘n’ navigation and speech settings.
+     Moving between items does not repeat that reminder.
 
        1. Choose navigation and announcement preferences
 
@@ -3586,8 +3588,10 @@ later session.
           settings scope.  Wrap within section is the default.
 
           In the Presentation section, choose ‘i’ for Item first or ‘n’
-          for Section first.  Item first is the default; Section first
-          speaks the section name and position before the item.
+          for Section first.  Section first is the default: it speaks
+          the section name and position before the item.  Item first
+          reverses that order.  Previously saved preferences remain in
+          effect.
 
           Choose ‘m’ for _By movement: sections or items_.  Left/right
           speaks only the destination section and its position.  Up/down
@@ -5979,81 +5983,3 @@ both.  For independent voices, Copy Palette and select different
 resources.  A profile's Copy action copies selections only.  To change
 startup palette while preserving other profile fields, use ‘U’ in Voice
 Palettes rather than recapturing everything.
-
-
-File: emacsvox.info,  Node: Saving And Startup,  Next: Sharing Voice Palettes,  Prev: Presentation Profile Walkthrough,  Up: Presentation Profiles
-
-8.12.2 Choose What Persists
----------------------------
-
-Decide what you want to keep before choosing a Save action.  _Scope_
-tells you where a value applies; _persistence_ tells you whether it
-survives a restart; _activation_ tells you whether it is in use now.
-These are separate questions.
-
-   A current-buffer value applies to the captured buffer.  A global
-default is live, but buffer overrides and mode policy can still take
-precedence.  Changing it does not automatically save it, and only the
-command's documented behaviour tells you whether existing buffers are
-updated too.  Saved startup settings are retained for later sessions.
-
-  1. Try a change or leave it unfinished
-
-     Preview an example to hear a proposal without saving or selecting
-     it.  Keep a retained draft when you intend to resume it during this
-     Emacs session.  *note Recover unfinished changes: Recovering Aural
-     Changes. explains how to return to its editor.  A draft is not a
-     backup: it is lost when Emacs exits, and discarding it does not
-     undo an earlier completed save.
-
-  2. Store a voice without changing today's setup
-
-     Use _Save to collection without selecting_ in the voice editor to
-     store a voice for later use without selecting its destination
-     palette.  The detailed *note voice-saving procedure:
-     voice-saving-procedure. explains the editor's result and
-     partial-save states.  This is appropriate for an alternative you
-     want to keep, not yet adopt.
-
-  3. Use a saved voice or setup now
-
-     _Save and apply_ stores a voice and selects its palette for this
-     session.  _Activate_ in the palette or sound-pack manager instead
-     selects an existing resource.  After applying, check the result and
-     repeat the original task.  Some host changes need a separate
-     confirmed speech restart, and a successful save does not establish
-     that both speech workers acknowledged the application.  See *note
-     An unconfirmed Apply result: Unconfirmed Speech Changes. when a
-     result is incomplete.
-
-  4. Start the next session with it
-
-     In Voice Palettes, _Use at Startup_ changes the palette in the
-     saved profile without applying that profile now.  A Presentation
-     Profile stores coordinated options, palette, sound pack and spatial
-     choices, not copies of their resources.  Applying a profile also
-     saves its selection for future sessions.  Use *note Presentation
-     Profiles: Presentation Profiles. to switch such a group of choices.
-
-     For an individual control, use its own documented Save action.
-     Speech settings saves the displayed rate and punctuation; Sounds
-     and output saves five volumes; a focused integration menu saves
-     only its documented defaults.  Linked editors retain their own
-     Save/Apply actions.  No one menu action saves all Emacsvox
-     settings.
-
-     Personal rules persist.  Session rules expire when Emacs exits, and
-     buffer rules expire with their buffer.  Saving a profile cannot
-     make temporary rules or drafts permanent.  If a choice disappeared
-     after restarting, follow *note the persistence checks: Settings
-     Lost After Restart. before recreating or overwriting it.
-
-  5. Share a palette or make a backup
-
-     Choose _Export_ for effective portable entries or _Full backup_
-     when palette ancestry and local voice choices matter.  Neither
-     includes engines, sound-pack audio or every Emacsvox setting.
-     Import creates an independent palette; it is not an overwrite or
-     automatic activation.  Follow *note Export, back up and import
-     palettes: Sharing Voice Palettes. for the exact contents and
-     checks.

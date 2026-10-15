@@ -9885,7 +9885,7 @@ transient; Pressing ‘C-q’ quits the transient.
 
      Default Value:
 
-     item-first
+     section-first
 
 
  -- Variable: User Option emacsvox-transient-verbose-descriptions
