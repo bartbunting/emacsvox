@@ -1008,9 +1008,16 @@ Structured field and status editors have their own Save actions."
   (emacsvox-settings--custom 'emacsvox-notmuch 'emacsvox-settings-integrations--notmuch-custom))
 (transient-define-prefix emacsvox-settings-integrations--notmuch ()
   "Control mail feedback and open its structured field and cue editors."
-  ["Notmuch defaults (global); w saves"
+  ["Spoken content: save inside each editor"
+   ("s" "Spoken search fields (ordered list)" emacsvox-settings-integrations--notmuch-search-fields :transient transient--do-suspend)
+   ("m" "Spoken message fields (ordered list)" emacsvox-settings-integrations--notmuch-show-fields :transient transient--do-suspend)]
+  ["Status feedback (global)"
    ("c" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-completion))
     emacsvox-settings-integrations--notmuch-completion :transient transient--do-suspend)
+   ("i" "Search status tags and fallback cues (separate Save)" emacsvox-settings-integrations--notmuch-search-icons :transient transient--do-suspend)
+   ("I" "Message status tags and fallback cues (separate Save)" emacsvox-settings-integrations--notmuch-show-icons :transient transient--do-suspend)
+   ("p" "Semantic status cues (Presentation Options; separate Save)" emacsvox-settings-integrations--notmuch-presentation :transient transient--do-suspend)]
+  ["Reading limits (global); w saves"
    ("f" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-field-characters))
     emacsvox-settings-integrations--notmuch-field-characters :transient t)
    ("b" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-field-bytes))
@@ -1018,16 +1025,11 @@ Structured field and status editors have their own Save actions."
    ("t" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-total-characters))
     emacsvox-settings-integrations--notmuch-total-characters :transient t)
    ("B" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--notmuch-total-bytes))
-    emacsvox-settings-integrations--notmuch-total-bytes :transient t)
-   ("w" "Save completion and reading defaults" emacsvox-settings-integrations--notmuch-save :transient t)]
-  ["Structured editors; use their own Save"
-   ("s" "Spoken search fields (ordered list)" emacsvox-settings-integrations--notmuch-search-fields :transient transient--do-suspend)
-   ("m" "Spoken message fields (ordered list)" emacsvox-settings-integrations--notmuch-show-fields :transient transient--do-suspend)
-   ("i" "Search status tags and fallback cues" emacsvox-settings-integrations--notmuch-search-icons :transient transient--do-suspend)
-   ("I" "Message status tags and fallback cues" emacsvox-settings-integrations--notmuch-show-icons :transient transient--do-suspend)
-   ("p" "Presentation Options: semantic status cues" emacsvox-settings-integrations--notmuch-presentation :transient transient--do-suspend)]
+    emacsvox-settings-integrations--notmuch-total-bytes :transient t)]
+  ["Defaults and advanced settings"
+   ("w" "Save completion and reading defaults" emacsvox-settings-integrations--notmuch-save :transient t)
+   ("A" "Advanced Notmuch settings (Customize)" emacsvox-settings-integrations--notmuch-custom :transient transient--do-suspend)]
   ["Finish"
-   ("A" "Advanced Notmuch settings (Customize)" emacsvox-settings-integrations--notmuch-custom :transient transient--do-suspend)
    ("q" "Back" emacsvox-settings-integrations--back :transient transient--do-replace)
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)

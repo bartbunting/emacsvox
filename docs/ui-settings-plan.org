@@ -37,6 +37,13 @@ personal configuration changes, or publication.
   checks cover spoken headings and selected actions in all navigation styles.
   Listening acceptance remains open.
 
+- Notmuch organisation, 2026-10-15: spoken content precedes status feedback,
+  reading limits, defaults and advanced settings, then Finish. Field and status
+  editors retain their own saving actions; =w= still saves only completion and
+  reading defaults. Section navigation is covered in all three styles alongside
+  editor return, order preservation, and explicit-save checks. Listening
+  acceptance remains open.
+
 - Submenu return, 2026-10-15: ordinary Emacsvox submenu return now restores the
   invoking entry before announcing the parent. Shortcut entry, nested menus,
   and delayed display retain the correct target for Enter. Closing the menu
