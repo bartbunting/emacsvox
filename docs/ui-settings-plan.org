@@ -22,6 +22,48 @@ personal configuration changes, or publication.
 
 ** Current baseline
 
+Listening checkpoint, 2026-10-15: acceptance results cover items 1--6 and
+8--12 of the pre-merge listening checklist. No failures were reported:
+
+- [X] Main and Speech grouping, first-item discovery, Enter's target, and
+  the clarification that other settings save in their own menus.
+- [X] Both navigation-preference routes, return with =q= and =C-g=, all three
+  navigation styles, and movement-based section/item announcements and cues.
+- [X] Literal spaces, case-insensitive and partial matching, cancellation,
+  and select-then-activate behaviour in settings and action searches.
+- [X] Manual opening feedback, Info navigation, return and reopening,
+  including entry through action search.
+- [X] Pronunciation, output-routing and rule grouping, with editor return.
+- [X] Integration menu scope, choice lists, Help and exit feedback in the
+  tested integrations, including the specific Notmuch ordering and editor-save
+  checks. This does not establish coverage of every installed integration.
+- [X] History adjustment, interface recording, saving explanations and return.
+- [X] Local/global Voice Lock, earcons, inheritance, mapped-item silence and
+  restoration, and the scope of Save.
+- [X] Comparison-label choices, cancellation, pitch-contrast adjustment and
+  audible results on the normal host.
+- [X] Emacs dictionaries: scope, field typing, retained edits, menu return,
+  separate file saving, loading, refresh and pronunciation.
+- [X] Saved-default restart checks as reported for history and voice
+  presentation; global Voice Lock saving was optional in this task and is
+  not separately confirmed.
+- [ ] Item 7, named-voice tuning organisation, preview/stop, save explanations
+  and retained draft: the checklist was included without a result.
+- [ ] Item 13, the revised manual walkthrough: no result was included.
+
+This checkpoint supersedes earlier open listening statuses for the accepted
+tasks above. Earlier named-voice workflow acceptance remains valid; acceptance
+of its latest menu organisation remains pending. Emacs 30.2 verification of
+the latest changes, branch CI and final merge review remain separate work.
+No new automated verification is implied by these listening results.
+
+Documentation verification at this checkpoint: =make docs-release-check=
+passes the byte-code preflight but fails Org-to-Info export. The tutorial's
+link to =Read And Leave A Help Window= resolves to a heading without an Info
+node. Repair the cross-reference in the newer manual edits and rerun the
+documentation gate before merge. This failure is separate from listening
+acceptance; no Lisp or generated manuals changed in this checkpoint.
+
 - Literal search spaces, 2026-10-15: Space now inserts text in both menu
   searches; Tab completes and Enter keeps its selection/activation distinction.
   A graphical regression reproduced =all caps = changing to =All-caps = before
@@ -1232,7 +1274,8 @@ remain separate workstreams.
 ** Menu-organisation listening checks
 
 Implementation and automated verification are complete. Listening acceptance
-remains open for this pass. In a fresh normal Emacsvox profile:
+is recorded in the latest baseline checkpoint: tasks 1--4 and 6 below passed;
+task 5, named-voice tuning, still needs a result. In a fresh normal Emacsvox profile:
 
 1. Browse =C-e H= and =C-e H s= with section and item arrows. Check the task
    order, concise announcements, first-item discovery, and Enter's target.
@@ -1321,13 +1364,18 @@ manual update and non-mutating documentation gate all passed. Generated manuals
 include both the merged documentation and this guide update. The separate
 Emacs 30.2 matrix and normal-host listening remain outstanding.
 
-** Deferred listening for the four presentation and dictionary slices
+** Listening for the four presentation and dictionary slices
+
+Accepted on 2026-10-15 for the four tasks below and the separate saved-default
+restart task, with optional global Voice Lock persistence not separately
+confirmed. See the latest baseline checkpoint for the reported scope.
 
 Speech Save wording clarification: the label and Help now state that other
 settings are saved in their own menus. The action still saves only rate and
 punctuation; submenu saving and persistence are unchanged. Five focused speech
 checks passed from source and compiled code in fresh graphical Emacs. Build,
-byte-code preflight and the documentation gate passed. Listening remains deferred.
+byte-code preflight and the documentation gate passed. Listening accepted the
+wording clarification on 2026-10-15.
 
 Use a fresh normal Emacsvox profile after the final build:
 
