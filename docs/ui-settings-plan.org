@@ -31,7 +31,7 @@ personal configuration changes, or publication.
   Emacs with source and compiled code using Transient 0.13.8, and from source
   with pinned Transient 0.13.3. Loaded paths and versions were verified.
   Incremental compilation and byte-code preflight pass.
-  Listening acceptance remains open for the restored item and its announcement.
+  Listening accepted on 2026-10-15 for the restored item and its announcement.
 
 - Menu organisation, 2026-10-15: the first slice groups =C-e H= into Everyday
   settings, This buffer and item, Rules and saved work, Find and get help, and
@@ -1179,8 +1179,6 @@ Complete the menu-organisation pass before expanding settings coverage:
   changes to established Save and Stop keys remain a separate decision.
 - Add the manual to action discovery and review duplicate search results,
   preserving useful aliases and cross-links.
-- Listen to submenu return after the separate focus fix above. Check =q= and
-  =C-g= after opening by arrows/Enter and by shortcut, including nested menus.
 
 Diagnostics, named-voice tuning, the combined rule overview, training controls,
 direct action discovery, and Home menu retirement are delivered above. The
