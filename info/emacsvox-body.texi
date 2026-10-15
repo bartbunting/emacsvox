@@ -21,15 +21,21 @@ without adding words to everything you read.
 
 Start with @ref{Installation, , Installation} if Emacsvox is not yet installed. It explains the
 supported installation routes@comma{} takes you to a clean speaking session@comma{} and
-provides recovery instructions when speech does not start. Once speech is
-working@comma{} continue with @ref{Basic Usage, , Basic Usage} for reading@comma{} editing@comma{} and speech controls.
-@ref{Audio Desktop, , Audio Desktop} then explains the buffers@comma{} modes@comma{} and navigation habits that
-connect these tasks across applications.
+provides recovery instructions when speech does not start. Once speech works@comma{}
+continue with @ref{Basic Usage, , Basic Usage}@comma{} @ref{Using Online Help, , Using Online Help}@comma{} and @ref{Audio Desktop, , Audio Desktop} for reading@comma{}
+editing@comma{} command discovery@comma{} and moving among tasks.
 
 If Emacs itself is new to you@comma{} @kbd{C-h t} opens its interactive tutorial.
 Emacsvox speaks the tutorial and your navigation while you follow it. At any
 point@comma{} @kbd{C-h m} describes the active modes and @kbd{C-h k} followed by a key
-explains its current command. @ref{Using Online Help, , Using Online Help} shows how to explore further.
+explains its current command.
+
+@ref{Using This Manual, , Using this manual} offers separate reading routes for new and experienced
+Emacs users@comma{} with a short exercise in finding a topic and returning to work.
+For one question@comma{} @ref{Finding Tasks, , Find a task} links everyday goals to their instructions.
+Use @ref{Emacsvox Terminology, , Terms used in this manual} when a name such as palette or profile is
+unfamiliar. Detailed backend configuration comes later; it is not a prerequisite
+for everyday use once speech works.
 
 @section The Welcome Screen
 
@@ -88,6 +94,122 @@ Rapidly changing features are also documented in @code{README.org}@comma{} @code
 and the generated Aural Presentation reference. When a copied binding differs
 from your running Emacs@comma{} consult @kbd{C-h k}@comma{} @kbd{C-h m}@comma{} or @kbd{C-h b} for the
 commands and bindings available in that session.
+
+@node Using This Manual
+@chapter Using this manual
+
+@cindex manual, using
+@cindex reading routes
+@cindex Info, finding a task
+
+You can read the early chapters in sequence or use this manual to answer a
+question while working. @ref{Finding Tasks, , Find a task} links everyday goals to their detailed
+instructions. @ref{Emacsvox Terminology, , Terms used in this manual} explains names such as palette@comma{}
+profile@comma{} scope@comma{} and draft without requiring you to study the whole settings
+system first.
+
+Key notation follows Emacs conventions: @kbd{C-} means Control@comma{} @kbd{M-} means Meta
+(usually Alt or Option)@comma{} and @kbd{@key{RET}} means Return or Enter. In @kbd{C-e H}@comma{} press
+Control-e@comma{} release it@comma{} then type capital H@. In a longer sequence@comma{} enter each
+following key separately. Uppercase and lowercase keys are different.
+
+@section Choose a reading route
+
+If Emacs is new to you@comma{} follow @ref{Installation,Installation,,emacsvox,} to obtain speech@comma{} then
+work through Emacs's tutorial with @kbd{C-h t}. Return to @ref{Basic Usage,Basic Usage,,emacsvox,} for
+speech commands. @ref{Using Online Help,Using Online Help,,emacsvox,} and @ref{Audio Desktop,Audio Desktop,,emacsvox,} explain how to find
+commands and move among tasks. You need not configure voices or additional
+engines before learning to read and edit.
+
+If you already use Emacs@comma{} start with @ref{Basic Usage,Basic Usage,,emacsvox,} once speech works.
+Keep your usual editing and mode commands. Then read
+@ref{Aural Presentation,Aural Presentation,,emacsvox,} for the relationship between application meaning@comma{}
+voices@comma{} sounds@comma{} and settings@comma{} and choose an application guide for your work.
+
+For one question@comma{} go directly to @ref{Finding Tasks, , Find a task}@comma{} use Info's index@comma{} or search
+the manual text. @ref{Speech Backends,Speech Backends,,emacsvox,} contains alternative installation and backend
+configuration procedures; it is not required reading between your first
+speaking session and everyday editing. The final Developer Guide is for
+changing and maintaining Emacsvox@comma{} not for ordinary use.
+
+@section Find an answer in Info and return
+
+Info is Emacs's manual reader. A @emph{node} is one navigable topic@comma{} which can have
+its own menu of subtopics. These instructions apply to the Info buffer@comma{} not
+to Emacsvox's settings menus.
+
+Try this lookup without changing your configuration:
+
+@enumerate
+@item
+From a working buffer@comma{} press @kbd{C-h i} to open Info@comma{} @kbd{d} for its directory@comma{}
+then @kbd{m}. Enter @code{Emacsvox} and press @kbd{@key{RET}} to open this manual.
+@item
+Press @kbd{i}@comma{} enter @code{ordinary reading voice}@comma{} and press @kbd{@key{RET}}. The index
+takes you to the voice-task links. Read with your ordinary speech commands.
+@item
+Use @kbd{@key{TAB}} to reach @emph{Change my ordinary reading voice} and press @kbd{@key{RET}}.
+You are now at the named-voice instructions. Reading them changes nothing;
+leave the editing commands for when you deliberately want to make a change.
+@item
+Press lowercase @kbd{l} to return to the task links. Another @kbd{l} returns to
+the topic you were reading before the index lookup. This follows your
+visiting history rather than the chapter order.
+@item
+Press @kbd{q} to leave Info. From an Aural interface's contextual manual link@comma{}
+@kbd{q} returns to that interface. If you opened other windows or switched
+buffers during the exercise@comma{} @kbd{C-x b} also lets you select your original
+working buffer by name.
+@end enumerate
+
+If the directory has no Emacsvox entry@comma{} the manual is not yet discoverable by
+that Emacs session; follow @ref{Installation,Installation,,emacsvox,} rather than guessing a file path.
+In an Aural editor@comma{} @kbd{C-c C-i} opens its relevant manual topic@comma{} and @kbd{i} in
+that editor's Help opens the same topic.
+
+The following Info commands are useful during later lookups:
+
+@table @kbd
+@item i
+Look up a subject in the manual's indexes. Use ordinary words@comma{} a
+command name@comma{} or a key sequence. @kbd{@comma{}} visits further matching entries.
+@item s
+Search the manual text@comma{} including other nodes. Enter the words and
+press @kbd{@key{RET}}; @kbd{s @key{RET}} continues the same search.
+@item TAB@comma{} S-TAB
+Move among links. @kbd{@key{RET}} follows the selected link.
+@item m
+Choose a subtopic from the current node's menu by name@comma{} with completion.
+@item u
+Go to the containing topic. This is different from @kbd{l}@comma{} which goes
+back to the topic you last visited.
+@item g
+Go to a node by its identifier. For example@comma{} enter @code{Finding Tasks}
+to return directly to the task finder.
+@end table
+
+For the full reader tutorial and search behaviour@comma{} see the @ref{Top,Info manual,,info,}.
+If a key behaves differently in your session@comma{} @kbd{C-h k} followed by that key
+explains its effective binding without invoking it.
+
+@section Recognise the document you are reading
+
+This user manual explains tasks@comma{} feedback@comma{} and recovery. The generated
+@emph{Emacsvox Reference Manual} lists commands@comma{} options@comma{} and keymaps from source.
+The heritage manual preserves historical Emacspeak material; it is not a
+current setup guide. A linked application's own manual remains authoritative
+for that application's general operations.
+
+Some stable Info identifiers predate their displayed headings. For example@comma{}
+@code{Aural Home} now identifies @emph{Getting started with settings menus}. This keeps
+old links and bookmarks valid; it does not make the retired Home menu entry
+part of the learning route.
+
+In HTML@comma{} use the contents@comma{} headings@comma{} and task links@comma{} then your browser's Back
+command to return from a link. The Info keys above are not browser commands.
+The published website and the manual installed with your checkout can describe
+different revisions; use documentation matching the Emacsvox you are running
+and live Help to check its commands.
 
 @node Installation
 @chapter Getting Started: Installation and First Speech
@@ -1245,1277 +1367,134 @@ Speak the current column.
 Announce the percentage into the buffer.
 @end table
 
-@node Speech Backends
-@chapter Speech Backends
+@node Using Online Help
+@chapter Find Help While You Work
 
-Emacsvox sends speech through a speech server. For a new installation@comma{}
-use @emph{Omnivox}. The server communicates with the engine that produces speech:
-normally eSpeak NG on GNU/Linux@comma{} AVSpeechSynthesizer on macOS@comma{} and WinRT
-SpeechSynthesizer on Windows.
+@cindex Online Help
 
-Follow @ref{Installation, , Installation} if you have not yet obtained speech. This chapter is for
-choosing a supported platform route@comma{} installing or configuring a different
-backend@comma{} and diagnosing problems. Omnivox's native build procedures@comma{} engine
-behaviour@comma{} and versioned protocols belong to
-@uref{https://github.com/bartbunting/omnivox, the Omnivox repository}.
+Emacs can explain the key you are about to use@comma{} the modes active in a buffer@comma{}
+and the commands and settings available in your session. This live help
+reflects installed packages and personal customisations. Use it to understand
+an unfamiliar command or resolve a difference between a manual and your
+running Emacs.
 
-The menu routes here describe @code{ui-experiments}. Release packages can provide
-an earlier interface; use the matching manual and keep a working installation
-available while testing the development branch.
+Most Emacs help commands begin with @kbd{C-h}. Press @kbd{C-h C-h} for
+@code{help-for-help} when you need to discover what can follow that prefix.
+Settings menus also have their own contextual Help@comma{} described below.
 
-@menu
-* Supported Platform Routes::    Choose the maintained route for this machine.
-* Install Omnivox From A Release Binary: Installing An Omnivox Release Binary.  Install Omnivox through Homebrew or a verified release archive.
-* Install An Omnivox Windows Release Under WSL2: Installing An Omnivox Windows Release Under WSL2.  Use the matching verified Windows archive without a build toolchain.
-* Installing Native Windows Emacsvox: Trying Native Windows Emacsvox.  Install and verify supported native Windows x64 Emacsvox.
-* Installing Omnivox From Source:: Build when a release archive does not match the host.
-* Building Omnivox For WSL2::    Stage the Windows runtime from WSL2.
-* Selecting And Checking Omnivox:: Prove speech before starting Emacsvox.
-* Compatibility Speech Servers:: Understand the retained direct adapters.
-* Backend Diagnostics And Responsibilities: Backend Diagnostics And Ownership.  Locate failures and authoritative detail.
-@end menu
+@section Ask About A Key@comma{} Command@comma{} Or Setting
 
-@node Supported Platform Routes
-@section Supported Platform Routes
-
-The following table describes Emacsvox support@comma{} not every platform that the
-Omnivox project can build. ``Host check required'' means that automated build
-and archive verification does not prove playback through your audio device;
-an audible @code{omnivox --check} on that machine remains the acceptance test.
-
-@multitable @columnfractions .18 .31 .51
-@headitem Emacs platform
-@tab Recommended route
-@tab Current support evidence
-@item GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime
-@tab Omnivox 1.17.0 release archive using eSpeak NG
-@tab The published archive is built and verified on Ubuntu 24.04. Compatible glibc@comma{} libstdc++@comma{} libgcc@comma{} and ALSA runtime libraries are required; the audible host check remains required.
-@item Other GNU/Linux systems
-@tab Source-built Omnivox using eSpeak NG
-@tab Use the source route for Linux ARM64@comma{} an older distribution ABI@comma{} or a host that cannot run the published x86-64 archive.
-@item macOS on Apple silicon
-@tab Omnivox through the official Homebrew tap@comma{} using AVSpeechSynthesizer
-@tab Native ARM64 tap checks cover installation@comma{} synthesis@comma{} reinstall@comma{} a packaging-revision upgrade@comma{} and removal; audible Emacs acceptance remains required.
-@item macOS on Intel
-@tab Omnivox through the official Homebrew tap@comma{} using AVSpeechSynthesizer
-@tab Native Intel tap checks cover installation@comma{} synthesis@comma{} reinstall@comma{} a packaging-revision upgrade@comma{} and removal; audible Emacs acceptance remains required.
-@item Emacs in WSL2 on x86-64 Windows
-@tab Omnivox 1.17.0 Windows x64 release archive using WinRT
-@tab The published archive is checksum-protected and release CI verifies its architecture@comma{} adjacent data@comma{} WinRT and eSpeak synthesis. The audible host check remains required.
-@item Emacs in WSL2 on Windows on ARM
-@tab Omnivox 1.17.0 Windows ARM64 release archive using WinRT
-@tab Release CI verifies the ARM64 archive@comma{} adjacent data@comma{} WinRT and eSpeak synthesis@comma{} and the guided installer selects it automatically. A complete WSL2 host and audible check remains required.
-@item Native Windows x64 Emacs 30.2 or newer
-@tab Guided PowerShell installation with Omnivox 1.17.0 using WinRT
-@tab Supported. Native installer@comma{} complete byte-code compilation@comma{} fresh-process verification@comma{} and two-lane speech checks cover this route. Confirm audible speech on the installed host. Native Windows ARM64 is not yet supported.
-@end multitable
-
-Use Homebrew on macOS@comma{} the guided installer under WSL2@comma{} or the matching release
-archive on GNU/Linux. Manual Mac archive installation remains available.
-A bare executable@comma{} repository tag@comma{} or unpackaged CI artifact is not a complete
-installation: keep the release's runtime data and notices beside the executable.
-Homebrew preserves that layout for you.
-
-Do not set @code{OMNIVOX_ENGINE} during initial setup. Its empty value selects
-the normal platform engine above. Engine routing and optional Piper@comma{}
-Eloquence@comma{} or DECtalk support are later customisations@comma{} not prerequisites for
-first speech.
-
-For Emacs running on a remote SSH host@comma{} see
-@ref{Remote workstation speech setup, , Remote Workstation Speech}.
-
-@subsection Version and capability requirements
-
-Omnivox 1.17.0 is the minimum supported release. It supplies named punctuation
-profiles@comma{} palette-aware character speech and editable engine configuration@comma{}
-alongside managed voice libraries@comma{} eSpeak variants@comma{} engine-specific voice
-controls@comma{} individual fallback tuning and complete voice previews. A newer
-compatible release may be used. The manual archive examples and guided
-installers pin the 1.17.0 core and matching optional engines exactly; the
-macOS Homebrew tap follows its maintained stable formula.
-
-Upgrade an existing Omnivox installation separately; updating Emacsvox does
-not replace the selected speech server. Voice-library management uses the
-bundled local management route. Remote and direct-native launches do not
-acquire the WSL launcher's file or release-management capabilities merely by
-connecting to an Omnivox worker. The individual procedures identify their
-required host and capabilities.
-
-@node Installing An Omnivox Release Binary
-@section Install Omnivox From A Release Binary
-
-@subsection macOS with Homebrew
-
-On macOS (formerly OS X)@comma{} install @uref{https://brew.sh, Homebrew} and follow its shell setup
-instructions. Then install Omnivox from the
-@uref{https://github.com/bartbunting/homebrew-omnivox, official Homebrew tap}:
-
-@example
-brew install bartbunting/omnivox/omnivox
-omnivox_program="$(brew --prefix omnivox)/bin/omnivox"
-"$omnivox_program" --version
-"$omnivox_program" --check
-"$omnivox_program" --list-voices
-@end example
-
-Homebrew selects the Apple silicon or Intel archive and verifies its checksum.
-The version must be 1.17.0 or newer@comma{} and the check must produce both a tone and
-spoken confirmation. Apple system speech and eSpeak are included. You do not
-need a Rust build or Omnivox source checkout. Install Emacs 30.2 or newer
-separately; this tap does not install Emacs or Emacsvox.
-
-To select this Homebrew installation persistently for Emacsvox@comma{} record the
-stable executable path:
-
-@example
-omnivox_config_home="$@{XDG_CONFIG_HOME:-$HOME/.config@}"
-omnivox_config_file="$@{EMACSVOX_OMNIVOX_CONFIG_FILE:-$omnivox_config_home/emacsvox/omnivox-program@}"
-mkdir -p "$(dirname "$omnivox_config_file")"
-printf '%s\n' "$omnivox_program" > "$omnivox_config_file"
-@end example
-
-This replaces any previous executable selection in that file. The path uses
-Homebrew's current-version link and continues to work after upgrades. Do not
-substitute a versioned @code{Cellar/omnivox/...} path. The bundled launcher reads
-this file even when Emacs does not inherit the shell's Homebrew @code{PATH}@comma{} as can
-happen when starting from Finder. An explicit @code{OMNIVOX_PROGRAM} override
-still takes precedence; remove or update an override selecting another
-installation. If using @code{EMACSVOX_OMNIVOX_CONFIG_FILE} or @code{XDG_CONFIG_HOME}@comma{}
-make sure the launching Emacs sees the same location.
-
-Emacsvox uses its bundled Lisp adapter. Do not load Homebrew's
-@code{libexec/omnivox-voices.el}@comma{} intended for upstream Emacspeak. Continue with
-@ref{Quick Installation, , Quick Installation} to compile Emacsvox@comma{} run @code{./bin/emacsvox --diagnose}
-and @code{./bin/emacsvox --check}@comma{} and start an isolated speaking session.
-Confirm the selected server and audible output on your Mac.
-
-To upgrade Omnivox later:
-
-@example
-brew update
-brew upgrade omnivox
-"$(brew --prefix omnivox)/bin/omnivox" --version
-"$(brew --prefix omnivox)/bin/omnivox" --check
-@end example
-
-Restart Emacsvox after upgrading so both speech processes use the new
-executable. Updating Emacsvox alone does not upgrade Homebrew's package.
-@code{brew uninstall omnivox} removes it; select another server before restarting
-Emacsvox because the saved executable path remains in your configuration.
-
-Optional Piper@comma{} Flite@comma{} and RuTTS companions and voice models are separate.
-The bundled RHVoice bridge still needs a compatible user-installed runtime
-and data; its presence does not establish macOS runtime support. Keep optional
-companions@comma{} downloaded voices@comma{} and configuration outside Homebrew's Cellar@comma{}
-and use explicit paths as described in the
-@uref{https://github.com/bartbunting/omnivox/blob/main/docs/README.md, Omnivox engine guides}. Companions must match core release and architecture.
-The WSL optional-engine installer is not a Homebrew package manager.
-
-The tap installs published binaries without adding Apple Developer ID signing
-or notarisation. If local policy refuses the verified binary@comma{} use
-@ref{Installing Omnivox From Source, , Installing Omnivox From Source}. Native tap checks cover WAV synthesis and
-package operations; they do not replace listening acceptance in Emacs or prove
-an upgrade between different upstream versions.
-
-@subsection Manual archive installation
-
-Use this route for GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime@comma{}
-macOS on Apple silicon@comma{} or macOS on Intel. The
-@uref{https://github.com/bartbunting/omnivox/releases/tag/v1.17.0, Omnivox 1.17.0 release} supplies:
-
-@multitable @columnfractions .28 .27 .45
-@headitem Host
-@tab Set @code{platform} to
-@tab Archive
-@item GNU/Linux x86-64
-@tab @code{linux-x64}
-@tab @code{omnivox-1.17.0-linux-x64.tar.gz}
-@item macOS Apple silicon
-@tab @code{macos-arm64}
-@tab @code{omnivox-1.17.0-macos-arm64.tar.gz}
-@item macOS Intel
-@tab @code{macos-x64}
-@tab @code{omnivox-1.17.0-macos-x64.tar.gz}
-@end multitable
-
-On a Mac@comma{} @code{uname -m} identifies @code{arm64} for Apple silicon or @code{x86_64} for Intel.
-Create a download directory@comma{} select the platform@comma{} and fetch the archive and
-published checksums:
-
-@example
-mkdir -p "$HOME/Downloads/omnivox-1.17.0"
-cd "$HOME/Downloads/omnivox-1.17.0"
-omnivox_version=1.17.0
-platform=linux-x64
-archive="omnivox-$@{omnivox_version@}-$@{platform@}.tar.gz"
-release_url="https://github.com/bartbunting/omnivox/releases/download/v$@{omnivox_version@}"
-curl -fLO "$release_url/$archive"
-curl -fLO "$release_url/sha256sums.txt"
-@end example
-
-Replace @code{linux-x64} with the appropriate Mac value when needed. Verify before
-extraction. On GNU/Linux:
-
-@example
-grep "  $archive$" sha256sums.txt | sha256sum --check -
-@end example
-
-On macOS:
-
-@example
-grep "  $archive$" sha256sums.txt | shasum -a 256 --check
-@end example
-
-The command must name the archive and report @code{OK}. Otherwise remove the
-download and do not run it. Extract the verified payload into a versioned
-directory@comma{} keeping every supplied directory beside the executable:
-
-@example
-install_dir="$HOME/.local/opt/omnivox-$@{omnivox_version@}"
-mkdir -p "$install_dir"
-tar -xzf "$archive" -C "$install_dir"
-chmod 755 "$install_dir/omnivox"
-export PATH="$install_dir:$PATH"
-@end example
-
-Add that @code{PATH} entry to the shell startup used to launch Emacs for subsequent
-sessions. The directory contains @code{omnivox}@comma{} @code{espeak-ng-data}@comma{}
-@code{third-party-licenses}@comma{} and @code{omnivox-voices.el}. Do not load or copy the last
-file into Emacsvox@comma{} which has its own adapter.
-
-Check the binary before starting Emacsvox:
-
-@example
-omnivox --version
-omnivox --check
-omnivox --list-voices
-@end example
-
-The version must be at least 1.17.0 and the check must produce tone and speech.
-Mac archives are neither code-signed nor notarised. If security policy refuses
-the verified binary@comma{} use the source route rather than weakening policy. On
-GNU/Linux@comma{} missing libraries or incompatible glibc also call for a source build.
-
-For WSL2@comma{} use @ref{Installing An Omnivox Windows Release Under WSL2, , Installing An Omnivox Windows Release Under WSL2}@comma{} which verifies
-a Windows archive without requiring a compiler or Docker.
-
-@node Installing An Omnivox Windows Release Under WSL2
-@section Install An Omnivox Windows Release Under WSL2
-
-This is the ordinary WSL2 route for x86-64 Windows and Windows on ARM@. From
-the Emacsvox checkout@comma{} first inspect without changing anything:
-
-@example
-./bin/emacsvox-wsl-install --check
-@end example
-
-The doctor detects Windows architecture@comma{} selects its Omnivox 1.17.0 archive@comma{}
-and reports Emacs and per-user paths. Missing Linux packages are reported with
-an @code{apt} command for you to review and run. Working @code{powershell.exe} and
-@code{wslpath} interoperation are required. Resolve prerequisites@comma{} then run:
-
-@example
-./bin/emacsvox-wsl-install
-@end example
-
-@code{etc/wsl-install.conf} pins the Omnivox version@comma{} release URL@comma{} x64/ARM64 archive
-names@comma{} and both SHA-256 hashes. The installer queries Windows architecture and
-verifies the matching published archive; it does not build Omnivox.
-
-The full payload is installed below the Windows user's @code{LocalAppData}. Its
-absolute WSL executable path is recorded in
-@code{$XDG_CONFIG_HOME/emacsvox/omnivox-program}@comma{} normally
-@code{~/.config/emacsvox/omnivox-program}. The installer does not invoke @code{sudo} or
-edit shell startup. It compiles Emacsvox@comma{} runs a non-audible launcher diagnostic@comma{}
-and finishes with the audible server check. Confirm both tone and speech.
-
-No Omnivox checkout@comma{} Docker@comma{} Rust@comma{} MinGW@comma{} Visual Studio@comma{} Windows .NET Framework@comma{}
-or optional/proprietary runtime is needed. WinRT speech is included in Windows.
-Use @code{./bin/emacsvox-wsl-install --no-audio-check} only for controlled/headless
-installation with a separate audible check later.
-
-@menu
-* Optional Omnivox Engines: Optional Omnivox Engine Modules.  Install, check, remove, and reinstall optional engines from Emacs.
-@end menu
-
-@subsection Manual Release Installation
-
-Use this equivalent manual procedure to inspect installer actions@comma{} work around
-a restriction@comma{} or repair one layer. It needs @code{curl}@comma{} @code{unzip}@comma{} @code{sha256sum}@comma{}
-@code{powershell.exe}@comma{} and @code{wslpath}. The example uses Windows x64. On Windows on
-ARM@comma{} use @code{windows-arm64} in the archive and installation directory and verify
-that archive's checksum.
-
-Download from WSL:
-
-@example
-mkdir -p "$HOME/Downloads/omnivox-1.17.0"
-cd "$HOME/Downloads/omnivox-1.17.0"
-omnivox_version=1.17.0
-archive="omnivox-$@{omnivox_version@}-windows-x64.zip"
-release_url="https://github.com/bartbunting/omnivox/releases/download/v$@{omnivox_version@}"
-curl -fLO "$release_url/$archive"
-curl -fLO "$release_url/sha256sums.txt"
-grep "  $archive$" sha256sums.txt | sha256sum --check -
-@end example
-
-The last command must name the archive and report @code{OK}. Otherwise remove it
-and do not run it. Install all files on the Windows filesystem:
-
-@example
-windows_local_app_data="$(powershell.exe -NoProfile -NonInteractive \
-  -Command '[Environment]::GetFolderPath("LocalApplicationData")' | tr -d '\r')"
-install_dir="$(wslpath -u "$windows_local_app_data")/Emacsvox/Omnivox/releases/$omnivox_version-windows-x64"
-mkdir -p "$install_dir"
-unzip -q -o "$archive" -d "$install_dir"
-chmod 755 "$install_dir/omnivox.exe"
-config_home=$@{XDG_CONFIG_HOME:-"$HOME/.config"@}
-mkdir -p "$config_home/emacsvox"
-printf '%s\n' "$install_dir/omnivox.exe" > \
-  "$config_home/emacsvox/omnivox-program"
-@end example
-
-Keep @code{omnivox.exe}@comma{} @code{espeak-ng-data}@comma{} and @code{third-party-licenses} together.
-Do not load the archive's @code{omnivox-voices.el}; Emacsvox supplies its adapter.
-This data-only file persists selection without shell initialisation. Respect
-@code{XDG_CONFIG_HOME} when set. @code{OMNIVOX_PROGRAM} remains an explicit temporary
-override with precedence over the file.
-
-Verify through the checkout's launcher:
-
-@example
-./servers/omnivox --version
-./servers/omnivox --list-voices
-./servers/omnivox --check
-@end example
-
-Confirm version 1.17.0 or newer@comma{} tone@comma{} and speech. Release CI verifies archive@comma{}
-x64 architecture@comma{} adjacent eSpeak data@comma{} discovery@comma{} and headless WinRT/eSpeak
-synthesis; only listening checks your audio path. The Windows archive is not
-code-signed. Do not weaken Windows security or local policy to install it.
-
-The generic 1.17.0 archive includes TGSpeechBox profiles/language data and a
-portable RHVoice helper. RHVoice's runtime and voice/language packages are
-separate. Optional Piper@comma{} Flite@comma{} and RuTTS companions are not required for
-WinRT; matching 1.17.0 companions are published separately.
-
-The clean source-build route verifies/stages the official Piper companion and
-builds RHVoice@comma{} Flite@comma{} and RuTTS from matching source. Piper models and the
-RHVoice runtime/data are not bundled by that build. A compatible local voice
-management service can separately download the reviewed voice packages below;
-this does not acquire the RHVoice runtime. Flite/RuTTS need no external runtime
-in the source-built bundle. Eloquence/DECtalk runtimes remain separately
-licensed and supplied.
-
-@node Optional Omnivox Engine Modules
-@subsection Optional Omnivox Engines
-
-The ordinary WSL2 archive is the core@comma{} not a claim that every supported engine
-is installed. Companion archives provide larger@comma{} experimental@comma{} or
-architecture-specific engines. Some require a separately supplied runtime or
-chosen voice data before they can speak.
-
-@enumerate
-@item
-@anchor{Inspect running engines}Inspect running engines
-
-
-Open @kbd{C-e H v b} to browse engines. The equivalent command is:
-
-@example
-M-x emacsvox-omnivox-manage-components RET
-@end example
-
-Opening uses the current
-speech inventory without waiting for file checks or fresh discovery. Optional
-engines missing from that inventory stay visible as @emph{not reported} so management
-controls remain reachable. @kbd{v} browses voices; @kbd{@key{RET}} opens details.
-
-Details begin with a short status and voice actions@comma{} with @emph{Browse voices}
-selected. Matching main/notification evidence is combined and problems remain
-near the top. @emph{Startup settings} and @emph{Diagnostics} start folded; @kbd{@key{RET}} toggles
-sections. Selection and folding are remembered per engine.
-
-@emph{Available} describes discovery from the current worker. An older check does
-not alone make it unavailable. @emph{Previously available} belongs to a stopped or
-replaced worker. Details announce the engine before requesting newer inventory
-in the background when its check is over five minutes old or belongs to another
-worker. File checks likewise run in the background where requested.
-@emph{Streams differ} identifies different availability@comma{} policy@comma{} health@comma{} or voice
-identities. A bridge's presence does not establish its runtime; @emph{Not checked}
-does not mean missing. Diagnostics shows each worker's paths@comma{} inventory time@comma{}
-runtime discovery@comma{} and health.
-
-@emph{Required runtime} appears near the top when native libraries are needed.
-Successful DECtalk discovery@comma{} for example@comma{} confirms DLL and dictionary loading.
-Matching worker evidence is combined@comma{} differences shown separately@comma{} and failures
-retain their reasons. Disabled does not mean missing@comma{} and retired-worker evidence
-does not establish current status. Opening/refreshing details uses worker
-discovery without invoking the separate release installer.
-
-@item
-@anchor{Browse voices and variants}Browse voices and variants
-
-
-@emph{Browse voices} combines reported voices and the installed library@comma{} including
-disabled downloads. This dedicated browser preserves Workbench's filters and
-staged edits. Languages have expandable headings with counts; @kbd{@key{RET}} toggles.
-A one-language list starts expanded and selection/folding are remembered.
-@kbd{@key{RET}} or @kbd{P} on a voice auditions an exact sample@comma{} @kbd{x} shows details@comma{} and @kbd{t}
-opens an unsaved experiment. Saving asks for a palette destination; browsing
-or previewing changes no palette. @kbd{q} returns to selected engine details.
-
-Library data loads asynchronously with quiet refresh. @emph{Installed} identifies
-library entries versus supplied voices. @emph{Enabled} is the desired selection
-for the next Apply. @emph{Active} describes eligibility on both streams@comma{} main only@comma{}
-notification only@comma{} or neither. @emph{Unknown} means missing/inconsistent evidence;
-@kbd{R} refreshes. Active does not measure model residency or prove listening.
-Samples use main speech; inactive downloads need enablement and Apply first.
-
-@emph{Voice variants} in eSpeak details lists the running worker's bundled variants.
-Choose a base with @kbd{b}@comma{} browse with arrows or @kbd{C-n~/~C-p}@comma{} and audition with
-@kbd{P} or @kbd{@key{RET}}. Sorting is alphabetical by displayed name@comma{} ignoring capitalisation.
-The older @kbd{p} preview key also remains. Variants require no download@comma{} enablement@comma{}
-saving@comma{} or speech restart.
-
-@kbd{u}@comma{} @emph{Use in palette}@comma{} asks for palette and named entry@comma{} then opens the voice
-editor with the variant preferred@comma{} retaining fallbacks and tuning. Preview with
-@kbd{P}@comma{} then @kbd{w} for Save and apply@comma{} or save to the collection without selecting.
-Editing a built-in creates a personal copy; @emph{Use at Startup} remains separate.
-For Max as ordinary reading@comma{} choose the English base with @kbd{b}@comma{} select @code{Max}@comma{}
-press @kbd{u}@comma{} and select the palette's @code{default}. Preview/save there. The same
-@code{default} is alongside @code{indent} and other entries in normal palette editing.
-
-@kbd{V} instead proposes the base/variant for every named voice. Create or update
-a personal palette@comma{} compare@comma{} then save; shared adjustments and existing fallback
-tuning survive. @ref{Editing Named Voices,Editing Named Voices,,emacsvox,} explains review and recovery. @kbd{q} returns to variants
-with selection retained; @kbd{v} opens the base browser. Saved references remain
-valid. Older workers lacking on-demand variants report the need for an update.
-
-@item
-@anchor{Install and activate voice packages}Install and activate voice packages
-
-
-Installing files@comma{} enabling a voice@comma{} and activating it are separate steps.
-@emph{Get more voices} in Piper@comma{} Flite@comma{} MBROLA@comma{} or RHVoice details opens the reviewed
-catalogue. Piper groups language@comma{} voice name@comma{} and quality; Flite offers AWB/RMS@.
-Single-quality voices appear directly under their language@comma{} with another group
-only for multiple qualities. @kbd{@key{RET}} opens a group/model and @kbd{q} returns.
-@kbd{/} searches all models by name or language beyond the current group.
-Details show size@comma{} source@comma{} terms@comma{} and storage. @kbd{s} shows/hides speakers sharing
-a model; it downloads once while individual speakers can be enabled separately.
-
-@kbd{i} installs asynchronously without speaking each progress update. Omnivox
-checks files and validates the voice before adding it disabled. In the catalogue@comma{}
-@kbd{e} toggles enablement@comma{} asking which speaker for a shared model@comma{} and @kbd{a} reviews
-Apply to both streams. Enablement alone does not restart. Model details also
-show these actions near installed/enabled status.
-
-Installation/Apply confirmations offer @code{yes} and @code{no} through completion:
-@kbd{y @key{TAB} @key{RET}} confirms@comma{} empty @kbd{@key{RET}} declines@comma{} and @kbd{C-g} cancels. @kbd{c} requests
-cancellation; wait for cleanup. The shipped catalogue contains reviewed@comma{} pinned@comma{}
-natively validated models. Unresolved terms or unsupported configurations are
-withheld; it is not a live catalogue of every upstream download.
-
-MBROLA offers US1@comma{} US2@comma{} and US3@comma{} with British English en1 included. Downloads
-need the updated separately configured development companion on Linux/Windows.
-Older hosts keep Piper/Flite catalogues and report missing MBROLA support.
-Each database carries its licence and README@. Initial installation retains
-en1 enabled unless explicitly disabled. Multiple enabled databases can serve
-different entries/streams; each request opens its selected database rather
-than keeping all enabled databases resident.
-
-RHVoice offers Alan (Scottish English)@comma{} BDL/CLB (American English)@comma{} and Ksp
-(Indian English)@comma{} requiring an updated host and separately installed compatible
-RHVoice runtime selected in engine settings. Each package contains its English
-data and upstream notices. Enable and Apply combines managed voices with external
-ones@comma{} including SLT@. A conflicting external copy is reported@comma{} not replaced.
-Removal affects the managed package@comma{} not external voices or the runtime.
-
-In @emph{Browse voices}@comma{} @kbd{+} changes desired enablement@comma{} and @kbd{a} reviews Apply.
-The operation checks both replacement workers@comma{} restarts main and notification
-speech@comma{} and verifies them before committing. Failure restores both previous
-configurations. Disabling preserves files and palette references. @emph{Enabled}
-changes immediately but @emph{Active} awaits Apply.
-
-After installation@comma{} @kbd{l} browses@comma{} @kbd{+} enables@comma{} and @kbd{a} reviews managed engines
-and both streams. Installation alone neither loads a voice nor changes speech.
-Downloads belong to you in Omnivox's per-user storage across executable upgrades.
-Failed/interrupted operations retain files for inspection; automatic resume
-and package updates are not provided. Uninstall cleanup has its separate
-explicit resume action below.
-
-@item
-@anchor{Remove or import managed voices}Remove or import managed voices
-
-
-Disable every speaker in a downloaded Piper@comma{} Flite@comma{} MBROLA@comma{} or RHVoice package
-and Apply before @kbd{C-c u} in its voice browser. Review voices@comma{} size@comma{} and retained
-palette references before confirming. Files still needed by other sessions
-remain. Built-in SLT/en1@comma{} imported originals@comma{} and engine runtimes cannot be
-removed here. @kbd{C-c U} reviews incomplete cleanup for explicit resumption.
-
-The voice browser's @kbd{d} opens downloads and @kbd{b} includes built-in Flite SLT@.
-@kbd{i} imports a completed native-validation operation by ID@comma{} initially disabled.
-Imported files remain at their validated paths and must stay there. This is
-an advanced import@comma{} not the catalogue installation or a file-selection wizard.
-@kbd{C-c r} shows the last Apply result@comma{} @kbd{R} refreshes@comma{} and @kbd{q} returns.
-
-Apply needs separate main/notification streams from the updated local host.
-Clear explicit Piper/Flite file overrides before applying those engines' library
-voices. Uncertain native cleanup or commit blocks another Apply and stays
-visible in its result.
-
-@item
-@anchor{Configure and check an engine}Configure and check an engine
-
-
-Under @emph{Startup settings}@comma{} @emph{Edit file settings} opens the bundled local launcher's
-engine option in Customize. Piper accepts one ONNX model and matching JSON;
-Eloquence/DECtalk accept runtime DLLs; Flite accepts external @code{.flitevox} files
-with individual @emph{Load file} switches. Use absolute paths as seen by Emacs;
-WSL converts them for the selected Windows executable. Keep companion files
-beside their runtime/model. Remote settings must be changed on the speech host.
-
-These are explicit overrides@comma{} not the complete installed-voice inventory.
-No manually selected files can still mean library voices or launcher defaults
-are available. A manual Flite file list overrides its installed library.
-
-@emph{Check configured engine} runs independent discovery using the local launcher's
-current configuration@comma{} limited to 30 seconds. It retains target@comma{} voices@comma{} and
-diagnostics but neither speaks a sample nor replaces live workers. A failed
-Flite file can leave built-in SLT usable; incomplete discovery reports fewer
-than the selected files plus SLT@. Duplicate external voice names are unsupported.
-
-File settings affect newly started workers. Save in Customize@comma{} then explicitly
-choose @emph{Restart local speech} to interrupt this session's two streams when ready.
-Refresh live voices afterward. Disabling a Flite file preserves data/references;
-new helpers omit it@comma{} while existing helpers keep it until restart. Built-in SLT
-stays loaded and each worker loads its own enabled external voices. These
-switches are not a general per-voice policy or memory measurement.
-
-@code{OMNIVOX_PIPER_MODEL}@comma{} @code{OMNIVOX_FLITE_VOICES}@comma{} runtime environment settings@comma{}
-and legacy @code{EMACSVOX_ECI_DLL=/=EMACSVOX_DECTALK_DLL} override file options and
-are identified in details. Clearing an option returns to discovery/defaults.
-Direct-native executable launches do not consume the bundled launcher's options.
-
-@item
-@anchor{Manage the installed Omnivox release}Manage the installed Omnivox release
-
-
-This manager changes versioned release files@comma{} not the running workers or a
-voice library's active configuration. On WSL@comma{} choose @emph{Manage installed release}
-and check @emph{Installation being managed} and @emph{Location}. That target can differ
-from a development build or remote speech server. @emph{Installed engine files}
-reports presence; @emph{Check release engine} tests runtime initialisation and
-voice discovery for that release.
-
-Release installation and removal keep current speech running and do not select
-another speech server. They do not automatically restart workers. A helper in
-use causes removal to fail visibly; close sessions using that release before
-retrying. This differs from the library's explicit Apply and the file editor's
-@emph{Restart local speech}. Legacy direct-operation restart preferences do not
-change the boundary of this explicit installed-release view.
-
-Use @emph{Install engine} and confirm to verify and install a version-matched
-component. Progress belongs to the release view while current-worker status
-stays separate. @emph{Refresh release files} runs a bounded asynchronous file check;
-@emph{Check release engine} discovers voices without auditioning. Refresh after a
-changed target before retrying. Completion gives a short notice without
-selecting another buffer; @emph{Read last result} opens retained complete output.
-
-Within details@comma{} @kbd{@key{TAB}~/~S-@key{TAB}} moves among actions and sections@comma{} @kbd{@key{RET}} activates
-or toggles@comma{} and arrows read visible fields. @kbd{q} returns to the selected engine
-row@comma{} @kbd{h} to Emacsvox settings@comma{} and @kbd{?} to Help. Selection and expansion survive
-background refresh. @emph{Refresh status} or @kbd{g} in current-worker details asynchronously
-requests both live inventories@comma{} not a release-file check.
-
-@emph{Uninstall engine} under @emph{Engine installation} removes only manager-installed
-Flite@comma{} RuTTS@comma{} Piper@comma{} or TGSpeechBox components. It does not remove the core@comma{}
-built-in engines@comma{} or runtime bridges. The whole managed component directory
-is removed: move any personal files elsewhere before confirming. External
-runtimes/models outside it are untouched and retain their supplier's removal
-procedure. Verified downloads remain cached; @emph{Install engine} reuses a valid
-cache for reinstallation.
-
-Operations are asynchronous. The view shows @emph{uninstalling} or @emph{testing} and
-refreshes on completion or failure. A failed listing retains its last records
-and the error while live discovery remains independently available. If a helper
-is locked@comma{} close the sessions using it and invoke the removal action again.
-An interrupted removal with only the expected helper left can resume; directories
-containing unrecognised files remain protected.
-
-@code{etc/omnivox-components.conf} pins names@comma{} sizes@comma{} and SHA-256 hashes to the
-installed core version. The WSL installer rejects mismatched cores@comma{} unsafe
-archive layout@comma{} missing source provenance@comma{} and helpers that fail staged
-discovery. Components are installed under the same versioned Windows
-@code{LocalAppData} release. It does not invoke @code{sudo} or edit shell startup.
-
-Component and data boundaries differ:
+Choose a help command according to what you already know:
 
 @itemize
 @item
-Flite includes compact English SLT without an external runtime.
+@kbd{C-h k} followed by a key runs @code{describe-key} and explains the command
+currently bound to that key.
 @item
-RuTTS includes compact Russian voices without an external runtime.
+@kbd{C-h f} runs @code{describe-function}. Enter a command or function name to
+read its documentation.
 @item
-Piper installs engine support; a usable voice also needs a reviewed ONNX
-model and model card@comma{} configured separately or through supported library
-management.
+@kbd{C-h v} runs @code{describe-variable}. Enter an option name to inspect its
+current value and documentation.
 @item
-TGSpeechBox is in the Windows x64/ARM64 core with multilingual formant voices@comma{}
-calibrated rate@comma{} and exact anchors for capitalisation/timed presentation.
-Matching standalone components allow reinstallation.
-@item
-RHVoice@comma{} Eloquence@comma{} and DECtalk bridges do not acquire their external runtimes.
-Supply compatible runtimes under their distribution/licensing terms.
-RHVoice's reviewed catalogue can separately download voice and language
-packages on a supporting local host@comma{} as described above. This is distinct
-from runtime acquisition and preserves external installations. Eloquence
-and DECtalk runtime@comma{} dictionary@comma{} and licence material remain user-supplied.
+@kbd{C-h w} runs @code{where-is} and reports the keys that invoke a command.
 @end itemize
 
-For terminal management@comma{} use @code{./bin/emacsvox-omnivox-components --list}@comma{} then@comma{}
-for example@comma{} @code{./bin/emacsvox-omnivox-components --install flite}. Multiple
-engines can follow @code{--install} or @code{--uninstall}.
-@code{./bin/emacsvox-omnivox-components --uninstall flite} removes the managed
-directory while retaining its archive. Restart deliberately when the running
-session needs newly installed configuration@comma{} and use @code{--test ENGINE} or the
-release view's @emph{Check release engine} to check that target. Direct release
-assets remain available for maintenance/recovery@comma{} but the manager is the
-ordinary component-selection route.
-@end enumerate
-
-@node Trying Native Windows Emacsvox
-@section Installing Native Windows Emacsvox
-
-Native Windows x64 is supported with Emacs 30.2 or newer. A development Setup
-executable supplies an installation wizard. Otherwise use the guided
-PowerShell installer from a Windows checkout. The advanced manual route
-requires an existing native Emacs. Neither Setup nor the guided installation
-requires WSL@comma{} Docker@comma{} Rust@comma{} or a system MSYS2 installation.
-
-@subsection Using a Windows Setup Build
-
-Run the development Setup executable to install @code{Emacsvox Windows} for your
-account. The wizard identifies Emacsvox and its included Emacs/Omnivox versions.
-No administrator privileges or network connection are required. A desktop
-shortcut is optional; a Start menu group is created unless disabled for an
-unattended installation. The final page explains startup/removal and offers
-Test speech for two announcements and Start Emacsvox. Finish runs selected
-actions and closes Setup.
-
-The default directory is @code{%LOCALAPPDATA%\Emacsvox\Desktop Dev}. Launch through
-Start or its shortcut. Rerun Setup to repair missing files or upgrade a
- development build@comma{} closing the Emacsvox using that installation first. Setup
-does not close it. Locally edited application files prevent replacement so
-they can be preserved.
-
-Windows Settings or the Start uninstall entry removes the application while
-retaining personal data by default. Optional cleanup separately lists sizes
-for logs/cache@comma{} this Emacs profile (including welcome preference)@comma{} and unused
-downloads in the shared Omnivox library. Leave choices unchecked for reinstallation.
-Shared palettes/settings outside the profile stay. Unattended removal always
-preserves personal data.
-
-Active voices@comma{} voices referenced by another profile@comma{} and files retained by a
-speech session stay with an explanation. Disable and Apply active downloads@comma{}
-then close the sessions using them before cleanup. Imported originals and
-system voices are never removed@comma{} and directory links are not followed.
-Development Setup builds are test artifacts; these instructions do not imply
-that a stable release installer includes this branch's interface.
-
-@subsection Guided Windows x64 Installation
-
-You need PowerShell 5.1 or newer@comma{} Git@comma{} network access@comma{} and working Windows audio
-with a speech voice. Put the checkout on a local Windows drive@comma{} not a WSL or
-network path. To follow this development manual@comma{} select its branch:
-
-@example
-git clone --branch ui-experiments https://github.com/bartbunting/emacsvox.git
-Set-Location emacsvox
-.\bin\emacsvox-install.ps1 -Role Desktop -Check
-.\bin\emacsvox-install.ps1 -Role Desktop
-@end example
-
-Skip cloning for an existing checkout and inspect its branch/local changes
-before updating it. The check reports selected Emacs and paths without downloads@comma{}
-configuration writes@comma{} or audio.
-
-The installer reuses native Emacs 30.2 or newer. For a checksum-verified complete
-GNU Emacs 31.1 Windows release@comma{} use:
-
-@example
-.\bin\emacsvox-install.ps1 -DownloadEmacs -Check
-.\bin\emacsvox-install.ps1 -DownloadEmacs
-@end example
-
-This includes runtime libraries without a compiler/MSYS2. Alternatively select
-a separately installed @uref{https://www.gnu.org/software/emacs/download.html, prebuilt Windows Emacs} with @code{-Emacs} and its
-@code{bin/emacs.exe}. @code{-BuildEmacs} explicitly builds 31.1 through a private MSYS2
-UCRT64 toolchain; it can require several gigabytes and substantial downloading.
-No source build begins without that choice. The installer then prepares the
-pinned Omnivox core and Emacsvox@comma{} reusing installed components and verified cache
-on later runs.
-
-@code{-Emacs "C:\path\to\Emacs\bin\emacs.exe"} selects an existing executable.
-Explicit @code{-Emacs}@comma{} environment @code{EMACS}@comma{} and @code{local.mk} must agree and require
-native 30.2 or newer. @code{-DownloadEmacs} and @code{-BuildEmacs} choose their managed
-Emacs instead of saved/PATH selections@comma{} reuse a matching complete installation@comma{}
-and cannot replace an explicit choice. Choose only one.
-
-Per-user defaults are:
-
-@itemize
-@item
-Emacs@comma{} Omnivox@comma{} isolated profile@comma{} and logs under @code{%LOCALAPPDATA%\Emacsvox\Native}.
-@item
-Private build tools under @code{%LOCALAPPDATA%\Emacsvox\Toolchains\msys2-20260611}.
-@item
-Verified archives under @code{%LOCALAPPDATA%\Emacsvox\Downloads}.
-@item
-Data-only @code{native-install.json} in the checkout@comma{} ignored by Git.
-@end itemize
-
-@code{-InstallRoot}@comma{} @code{-ToolchainRoot}@comma{} and @code{-CacheDirectory} choose other local
-paths. The MSYS2 tool path must have no spaces; set @code{-ToolchainRoot} if needed.
-Checkout and Emacs paths may contain spaces. Personal initialisation@comma{} system
-PATH@comma{} Windows services@comma{} and JAWS settings remain unchanged.
-
-@code{-Offline -CacheDirectory "C:\path\to\archives"} forbids downloads and verifies
-required cached archives before changes. Missing/damaged archives stop it.
-Offline supports prebuilt/existing Emacs@comma{} not @code{-BuildEmacs}. Read-only @code{-Check}
-reports the plan without testing cached archives or playing audio.
-
-Source archives are checksum-pinned. MSYS2 compiler packages use signed rolling
-repositories@comma{} and installed versions are recorded. Managed source builds disable
-Lisp native compilation and include runtime DLLs@comma{} so launch needs no MSYS2 on PATH@.
-
-The final test opens a temporary native Emacs@comma{} verifies both streams@comma{} speaks
-two announcements@comma{} and closes that test. Confirm both by listening. After
-@code{-NoAudioCheck}@comma{} perform the explicit check before acceptance:
-
-@example
-.\bin\emacsvox.ps1 -Diagnose
-.\bin\emacsvox.ps1 -Check
-.\bin\emacsvox.ps1
-@end example
-
-The last command opens the isolated desktop with Windows speech by default.
-@code{OMNIVOX_ENGINE} remains an explicit selection for separately configured
-engines. Native optional-engine installation@comma{} ARM64@comma{} and other native roles
-are not supplied by this guided installer.
-
-After source updates@comma{} rerun it before launching. It preserves source edits and
-refreshes compiled files. Missing/stale compilation stops launch with that
-instruction. Keep named build logs after failure. Inspect incomplete installations
-before moving or choosing another directory; unknown partial trees are not
-overwritten.
-
-Muting JAWS speech does not disable its shortcuts. If @kbd{M-<} or @kbd{M->} is
-intercepted@comma{} try @code{JAWSKey+3} before the key. Bart's @code{workstation-config}
-repository supplies the separate Emacs-specific JAWS override used on the
-test workstation.
-
-@subsection Manual Native Installation
-
-This route requires native Emacs 30.2 or newer already installed. It does not
-acquire Emacs or replace the guided x64 checks. Set @code{$Emacsvox} to the absolute
-checkout path and continue in one PowerShell window.
-
-@subsection Download And Verify Omnivox
-
-Set @code{$Platform} for the host. The normal Intel/AMD x64 example is:
-
-@example
-$Version = "1.17.0"
-$Platform = "windows-x64" # Use windows-arm64 only on Windows on ARM.
-$DownloadDir = Join-Path $env:USERPROFILE "Downloads\omnivox-$Version"
-$Archive = "omnivox-$Version-$Platform.zip"
-$ReleaseUrl = "https://github.com/bartbunting/omnivox/releases/download/v$Version"
-
-New-Item -ItemType Directory -Force $DownloadDir | Out-Null
-$ArchivePath = Join-Path $DownloadDir $Archive
-$ChecksumPath = Join-Path $DownloadDir "sha256sums.txt"
-Invoke-WebRequest -UseBasicParsing "$ReleaseUrl/$Archive" -OutFile $ArchivePath
-Invoke-WebRequest -UseBasicParsing "$ReleaseUrl/sha256sums.txt" -OutFile $ChecksumPath
-
-$Pattern = '\s+\*?' + [regex]::Escape($Archive) + '$'
-$ChecksumLine = Get-Content $ChecksumPath |
-  Where-Object @{ $_ -match $Pattern @} |
-  Select-Object -First 1
-if (-not $ChecksumLine) @{ throw "No published checksum for $Archive" @}
-$Expected = ($ChecksumLine -split '\s+')[0].ToLowerInvariant()
-$Actual = (Get-FileHash -Algorithm SHA256 $ArchivePath).Hash.ToLowerInvariant()
-if ($Actual -ne $Expected) @{ throw "Checksum mismatch for $Archive" @}
-Write-Host "Checksum OK: $Archive"
-@end example
-
-Do not extract/run unless the final line reports @code{Checksum OK}. This unsigned
-Windows release may be rejected by policy; stop rather than weakening security.
-The existence of an ARM64 Omnivox archive does not extend Emacsvox's supported
-native desktop beyond x64.
-
-@subsection Install And Check The Native Server
-
-In the same PowerShell@comma{} extract everything beneath per-user @code{LocalAppData}:
-
-@example
-$InstallDir = Join-Path $env:LOCALAPPDATA "Emacsvox\Omnivox\releases\$Version-$Platform"
-New-Item -ItemType Directory -Force $InstallDir | Out-Null
-Expand-Archive -LiteralPath $ArchivePath -DestinationPath $InstallDir -Force
-$Omnivox = Join-Path $InstallDir "omnivox.exe"
-
-foreach ($Required in @@(
-  $Omnivox@comma{}
-  (Join-Path $InstallDir "espeak-ng-data\phontab")@comma{}
-  (Join-Path $InstallDir "third-party-licenses\THIRD-PARTY-NOTICES.md")
-)) @{
-  if (-not (Test-Path -LiteralPath $Required -PathType Leaf)) @{
-    throw "Incomplete Omnivox installation: $Required"
-  @}
-@}
-
-& $Omnivox --version
-if ($LASTEXITCODE -ne 0) @{ throw "Omnivox version check failed" @}
-& $Omnivox --list-voices
-if ($LASTEXITCODE -ne 0) @{ throw "Omnivox voice discovery failed" @}
-& $Omnivox --check
-if ($LASTEXITCODE -ne 0) @{ throw "Omnivox audio check failed" @}
-@end example
-
-Require version 1.17.0 or newer@comma{} at least one Windows voice@comma{} and both tone and
-speech. Keep executable@comma{} @code{espeak-ng-data}@comma{} and @code{third-party-licenses} together.
-Do not copy/load @code{omnivox-voices.el} from the archive; that is the upstream
-Emacspeak adapter@comma{} not Emacsvox's bundled one.
-
-@subsection Start Native Emacsvox
-
-Keep the window so @code{$Omnivox} still identifies the verified binary. Set @code{$Emacs}
-to native @code{emacs.exe} and @code{$Emacsvox} if the checkout was not set above:
-
-@example
-$Emacs = "C:\path\to\emacs\bin\emacs.exe"
-# If not set above@comma{} uncomment and edit the next line:
-# $Emacsvox = "C:\path\to\emacsvox"
-
-& $Emacs --version
-if ($LASTEXITCODE -ne 0) @{ throw "Could not run native Emacs" @}
-$env:TTS_PROGRAM = $Omnivox
-& $Emacs -Q --no-splash --load "$Emacsvox\lisp\emacsvox-setup.el"
-@end example
-
-Require Emacs 30.2 or newer. Use @code{emacs.exe} instead of @code{runemacs.exe} for first
-launch so startup errors remain in PowerShell. Direct setup loading is intentional:
-@code{bin/emacsvox} is POSIX; @code{bin/emacsvox.ps1} is the guided native entry.
-
-@subsection Verify Speech And Report Problems
-
-Check the isolated native session:
-
-@enumerate
-@item
-Confirm the startup introduction/ready checkpoint is audible.
-@item
-@kbd{C-h v tts-program @key{RET}} should identify the verified executable's absolute path.
-@item
-@kbd{M-x tts-speak-version @key{RET}} speaks the version; @kbd{M-x omnivox-list-voices @key{RET}}
-displays Windows voices.
-@item
-@kbd{C-n~/~C-p} speak line movement@comma{} @kbd{C-e s} stops current speech@comma{} and
-@kbd{M-x tts-restart @key{RET}} restores it without process errors.
-@item
-Toggle icons twice with @kbd{M-x emacsvox-toggle-icons @key{RET}}. In a session
-starting with icons enabled@comma{} the second toggle restores them and plays an
-icon in addition to speech. Preserve the initial preference when testing a
-customised session.
-@end enumerate
-
-If direct @code{--check} fails@comma{} diagnose Omnivox/Windows audio first. If it passes
-but the server cannot be found in Emacs@comma{} confirm the same PowerShell's
-@code{$env:TTS_PROGRAM} is absolute and @code{Test-Path $env:TTS_PROGRAM} returns @code{True}.
-For a process that exits@comma{} retain PowerShell errors@comma{} @code{*Messages*}@comma{} Windows
-version/architecture@comma{} and full @code{emacs.exe --version} and @code{omnivox.exe --version}.
-
-After acceptance@comma{} put the same selection before setup in your init file:
-
-@lisp
-(setenv "TTS_PROGRAM"
-        "C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.17.0-windows-x64/omnivox.exe")
-(load-file "C:/path/to/emacsvox/lisp/emacsvox-setup.el")
-@end lisp
-
-Replace both paths. This deliberately starts with an absolute executable.
-Adding its directory to @code{exec-path} is optional until selecting @code{omnivox} by
-short name. Native desktop support remains x64; remote speech is a separate
-preview.
-
-@node Installing Omnivox From Source
-@section Installing Omnivox From Source
-
-On GNU/Linux/macOS@comma{} a source build needs network access for clone@comma{} toolchain@comma{}
-and locked dependencies. Prepare:
-
-@itemize
-@item
-@uref{https://rustup.rs/, rustup}@comma{} with the checked-in @code{rust-toolchain.toml} selecting Rust.
-@item
-Python 3@comma{} C/C++@comma{} CMake@comma{} and Clang/libclang for eSpeak NG and generated data.
-@item
-GNU/Linux @code{pkg-config} and ALSA development headers@comma{} commonly
-@code{libasound2-dev} on Debian/Ubuntu or @code{alsa-lib-devel} on Fedora.
-@item
-macOS Xcode command-line tools@comma{} installed with @code{xcode-select --install}.
-@end itemize
-
-Keep Omnivox beside Emacsvox@comma{} also matching the WSL layout:
-
-@example
-cd /path/containing/emacsvox
-git clone https://github.com/bartbunting/omnivox
-cd omnivox
-make build
-make install
-@end example
-
-@code{make build} runs the locked release build and stages matching eSpeak data and
-notices. @code{make install} installs binary/data normally under @code{~/.cargo/bin}.
-Set @code{OMNIVOX_INSTALL_BIN} only for another Cargo binary directory. A bare
-@code{cargo build} does not produce the complete installation payload.
-
-Make the installed directory visible on @code{PATH}. No proprietary runtime is
-needed for the recommended Linux/Mac route.
-
-@node Building Omnivox For WSL2
-@section Building Omnivox For WSL2
-
-This advanced path maintains the reproducible Windows bundle or optional
-engine integrations. Ordinary WSL2 installations should use the
-@ref{Installing An Omnivox Windows Release Under WSL2, , prebuilt Windows release}. This source target produces x86-64 Windows.
-
-Requirements are:
-
-@itemize
-@item
-WSL2 with working @code{powershell.exe} and @code{wslpath}@comma{} plus writable Windows
-@code{LocalAppData}.
-@item
-A Docker client/daemon supporting Linux/AMD64 containers@comma{} runnable by the
-WSL user without @code{sudo}. Docker Desktop's WSL integration is one option.
-@item
-Windows .NET Framework 4.7.2 or newer@comma{} not merely a modern @code{dotnet} SDK@.
-Visual Studio is unnecessary.
-@item
-@code{git}@comma{} GNU @code{make}@comma{} @code{curl}@comma{} @code{unzip}@comma{} @code{sha256sum}@comma{} and standard GNU utilities
-including @code{awk}@comma{} @code{cmp}@comma{} @code{find}@comma{} @code{readlink}@comma{} @code{sed}@comma{} @code{sort}@comma{} and @code{xargs}.
-@item
-Network for the initial Docker image@comma{} Rust dependencies@comma{} and two
-checksum-pinned NuGet packages. Subsequent builds reuse caches.
-@item
-Sibling @code{emacsvox} and @code{omnivox} checkouts@comma{} or explicit @code{OMNIVOX_DIR}.
-The clean release target requires the Omnivox source commit recorded for
-the pinned Piper companion in @code{servers/omnivox-release/toolchain.lock};
-mismatches fail rather than combining versions. The development route
-accepts current source by omitting Piper. Allow disk space for Docker@comma{}
-native/cross builds@comma{} and caches.
-@end itemize
-
-Rust@comma{} MinGW@comma{} CMake@comma{} Clang/libclang@comma{} eSpeak NG@comma{} Roslyn@comma{} Visual Studio@comma{} and .NET
-reference assemblies need not be installed in WSL; the controlled toolchain
-pins/builds them. Eloquence@comma{} DECtalk@comma{} and RHVoice runtime/data remain optional
-and unnecessary for WinRT@.
-
-Check prerequisites with:
-
-@example
-cd /path/to/emacsvox
-make verify-windows-omnivox-toolchain
-@end example
-
-The first run downloads pinned .NET compiler packages@comma{} builds the pinned Docker
-image@comma{} and checks exact Rust@comma{} MinGW@comma{} libclang@comma{} Roslyn@comma{} and Framework versions.
-It is not a read-only presence check. Failures identify missing host tools or
-unsupported Framework before the full build.
-
-With clean Emacsvox and sibling Omnivox tracked files@comma{} run:
-
-@example
-cd /path/to/emacsvox
-make windows-omnivox
-@end example
-
-This reproducible release path builds a pinned Windows-GNU executable and
-stages a content-addressed runtime under @code{servers/omnivox-bin}. When the Piper
-lock identifies the matching integrations@comma{} it includes the checksum-pinned
-Piper companion@comma{} RHVoice helper without runtime@comma{} Flite with CMU US SLT@comma{} and
-RuTTS with male/female Russian voices. It bundles no Piper model or RuLex.
-The payload is also copied to Windows-local storage to avoid WSL filesystem
-cost during discovery. It does not download Eloquence@comma{} DECtalk@comma{} or RHVoice
-runtimes or require them for WinRT@.
-
-The final live gate starts that exact runtime@comma{} discovers Flite SLT and both
-RuTTS voices@comma{} and requires nonempty WAV synthesis from each helper. Repeat
-without rebuilding using @code{make verify-windows-omnivox-live}.
-
-To register Piper@comma{} review its model/card and keep the adjacent @code{.onnx.json} or
-@code{.json}. Supply the absolute model path while staging:
-
-@example
-OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx make windows-omnivox
-@end example
-
-Model/configuration are copied to separate content-addressed Windows
-@code{LocalAppData} storage with recorded hashes@comma{} not bundled into the runtime.
-Omitting that variable installs the companion but leaves Piper unregistered.
-After staging@comma{} check with a fresh process:
-
-@example
-./servers/omnivox --engine piper --list-voices
-@end example
-
-Restart both speech processes or Emacs@comma{} then inspect running engines with
-@kbd{C-e H v b}. Piper requires the newly staged server and successfully loaded
-model/helper. The direct @kbd{C-e d e} preference chooser is not a read-only
-inventory command; use the browser to inspect without selecting a preference.
-
-For tracked development changes@comma{} use the route in
-@ref{Integration Maintenance, , Integration Maintenance} rather than bypassing the clean-release guard:
-
-@example
-OMNIVOX_RHVOICE_LIBRARY=/mnt/c/path/to/RHVoice.dll \
-  OMNIVOX_RHVOICE_DATA=/mnt/c/path/to/RHVoice/data \
-  make windows-omnivox-dev
-./servers/omnivox --engine flite --list-voices
-./servers/omnivox --engine rutts --list-voices
-@end example
-
-It builds current source@comma{} stages RHVoice's helper@comma{} Flite SLT@comma{} and RuTTS 6.3.3
-male/female voices@comma{} deliberately omitting the older pinned Piper companion.
-RuTTS needs no separate install; RuLex is excluded. RHVoice needs compatible
-@code{RHVoice.dll} and language/voice data. Supplied library/data variables are
-validated and Windows path pointers retained beside the local runtime; the
-launcher restores them for fresh sessions. Also set @code{OMNIVOX_RHVOICE_CONFIG}
-for a separate configuration directory. These external files are not copied
-into the payload. Omnivox's @code{docs/RHVOICE.md} and @code{docs/RUTTS.md} give validation
-details. Restart after restaging/changing inputs@comma{} then inspect with @kbd{C-e H v b}.
-
-Piper tests against newer committed Omnivox use @code{windows-omnivox-piper-dev}
-and a native Windows CI artifact. It requires the published SHA-256 and a
-reviewed external model@comma{} rejecting dirty or different source. See
-@ref{Integration Maintenance, , Integration Maintenance} for provenance and the complete command. This does
-not alter the reproducible release's pinned companion.
-
-@node Selecting And Checking Omnivox
-@section Selecting And Checking Omnivox
-
-Test the installed server outside Emacs on GNU/Linux/macOS:
-
-@example
-omnivox --version
-omnivox --check
-omnivox --list-voices
-@end example
-
-In WSL2@comma{} the launcher selects @code{OMNIVOX_PROGRAM} first@comma{} the per-user recorded
-installation next@comma{} then a content-addressed source runtime@comma{} then @code{omnivox} on
-@code{PATH}:
-
-@example
-./servers/omnivox --check
-@end example
-
-The check initialises engine/output and plays tone then speech. Its success
-message is conditional on hearing both. Exit zero alone is not audible
-acceptance.
-
-Select before loading Emacsvox:
-
-@example
-export TTS_PROGRAM=omnivox
-@end example
-
-An export affects that shell and children; a shell-startup entry persists it.
-On POSIX@comma{} @code{servers/omnivox} finds @code{omnivox} on @code{PATH}; @code{OMNIVOX_PROGRAM}
-can explicitly override it. The WSL per-user selection persists across shells
-and outranks staged source runtimes. Native Windows resolves @code{omnivox.exe}
-through @code{exec-path} or the absolute @code{TTS_PROGRAM}. Follow
-@ref{Trying Native Windows Emacsvox, , Installing Native Windows Emacsvox} for the supported native x64 route.
-
-In a running session@comma{} @kbd{M-x omnivox} temporarily selects that server.
-@kbd{M-x tts-speak-version} identifies the live adapter and @kbd{M-x tts-restart}
-restarts after a deliberate configuration change. The complete isolated start@comma{}
-expected speech@comma{} and recovery remain in @ref{Installation, , Installation}.
-
-@subsection Remote Workstation Speech (Preview)
-
-@anchor{Remote workstation speech setup}
-
-Emacs can run on an SSH host while Omnivox@comma{} installed voices@comma{} and playback stay
-on your workstation. This uses Omnivox 1.17.0's @code{--serve} and Emacsvox's remote
-transport. Remote access remains a preview feature.
-
-Create a private token on the workstation. The tool refuses to overwrite or
-print an existing token:
-
-@example
-mkdir -p "$HOME/.config/omnivox"
-python3 /path/to/omnivox/tools/create_remote_token.py \
-    "$HOME/.config/omnivox/remote-token"
-@end example
-
-Leave the installed server running in a terminal@comma{} with the matching Emacsvox
-sound-pack directory:
-
-@example
-omnivox --serve --token-file "$HOME/.config/omnivox/remote-token" \
-    --sound-root /path/to/emacsvox/sounds
-@end example
-
-For a Windows service through the WSL launcher@comma{} translate both paths:
-
-@example
-/path/to/emacsvox/servers/omnivox --serve \
-    --token-file "$(wslpath -w "$HOME/.config/omnivox/remote-token")" \
-    --sound-root "$(wslpath -w /path/to/emacsvox/sounds)"
-@end example
-
-In another workstation terminal@comma{} copy the token through verified SSH and open
-the reverse forward@comma{} replacing @code{user@@emacs-host}:
-
-@example
-ssh user@@emacs-host 'mkdir -p ~/.config/omnivox; chmod 700 ~/.config/omnivox'
-scp "$HOME/.config/omnivox/remote-token" user@@emacs-host:.config/omnivox/remote-token
-ssh user@@emacs-host 'chmod 600 ~/.config/omnivox/remote-token'
-ssh -o ExitOnForwardFailure=yes -o ServerAliveInterval=10 \
-    -o ServerAliveCountMax=2 \
-    -R 127.0.0.1:6417:127.0.0.1:6417 user@@emacs-host
-@end example
-
-When Omnivox runs on Windows@comma{} use Windows OpenSSH for the final connection:
-@code{ssh.exe} from WSL or @code{ssh} from PowerShell. It must reach Windows loopback;
-a WSL client under NAT reaches separate WSL loopback instead. Windows SSH uses
-its Windows keys and host-trust configuration.
-
-@ref{Installing Remote Emacsvox, , Installing Remote Emacsvox} provides the remote-only installation and isolated
-launcher. @code{--remote} configures transport before speech starts and needs no
-local Omnivox binary. For personal configuration@comma{} set before startup:
-
-@lisp
-(setq tts-program "omnivox"
-      omnivox-remote-host "127.0.0.1"
-      omnivox-remote-port 6417
-      omnivox-remote-token-file "~/.config/omnivox/remote-token")
-@end lisp
-
-@kbd{M-x omnivox-remote-connect} connects/retries@comma{} @kbd{M-x omnivox-remote-status}
-inspects@comma{} and @kbd{M-x omnivox-remote-disconnect} stops and suspends retries.
-Reconnection refreshes voices/routing and discards unfinished speech. Main and
-notification retain separate workers. Only one Emacs session owns a service
-at a time.
-
-If main connects but notification fails@comma{} main remains available while the
-missing connection retries. Recovery does not replace working main speech.
-@code{omnivox-remote-auto-reconnect} set to nil disables automatic retry; explicit
-disconnect suspends it until another connection. Status retains retry and error
-information.
-
-Keep service and forwarded endpoint on loopback; do not enable SSH
-@code{GatewayPorts}. SSH encrypts the transport and the token excludes other remote
-host users. To rotate@comma{} stop the service@comma{} replace both private token files@comma{} and
-restart. Typing @code{quit} or interrupting the service terminal stops workers.
-
-Inventory belongs to the workstation; install/manage engines there. Bundled
-icons resolve by pack-relative name. Personal sounds outside that directory
-and sound uploads are unsupported; no @code{--sound-root} means no file-based icons.
-For an occupied remote port@comma{} change the left side of @code{-R} and match
-@code{omnivox-remote-port}. Authentication failure indicates differing tokens or
-excessively broad file permissions; a busy service belongs to another connection.
-
-@node Compatibility Speech Servers
-@section Compatibility Speech Servers
-
-These retained direct servers support existing installations@comma{} not the recommended
-first setup or platform matrix:
-
-@table @code
-@item espeak
-Direct Linux Tcl server. @code{make espeak} needs Tclx at runtime@comma{} Tcl 8.6
-headers@comma{} eSpeak NG development libraries@comma{} and C++. Useful for compatibility
-testing; new installations should use Omnivox.
-@item swiftmac
-Direct Swift macOS server@comma{} needing Swift 5.9 or newer and @code{make swiftmac}.
-See @code{servers/mac-swiftmac/Readme.org} for this alternative to Omnivox's
-AVSpeechSynthesizer engine.
-@item mac
-Legacy Python/PyObjC server. The unset Darwin selector still names it as
-a compatibility default@comma{} not an initial-user route. It needs Foundation@comma{}
-AppKit@comma{} and PyObjCTools.
-@item outloud
-Direct Linux IBM TTS/Eloquence adapter with separately licensed compatible
-runtime. Emacsvox does not distribute it. Voxin availability is described
-at @uref{https://voxin.oralux.net}.
-@item dtk-soft
-Direct Software DECtalk adapter with separately installed runtime. See
-@code{servers/software-dtk/Readme.org}. Licensed runtimes are not distributed
-by Emacsvox.
-@end table
-
-The native Windows audio@comma{} standalone Eloquence@comma{} and standalone DECtalk bridges
-under @code{servers/} are advanced WSL compatibility paths. Piper is an optional
-Omnivox engine/model workflow@comma{} not a primary Emacsvox server.
-
-@node Backend Diagnostics And Ownership
-@section Backend Diagnostics And Responsibilities
-
-Local server messages/errors remain in diagnostics buffers@comma{} hidden from the
-ordinary buffer list by default. Use @kbd{C-e H D m} for main or @kbd{C-e H D n} for
-notification diagnostics@comma{} or @kbd{M-x tts-show-diagnostics} with @code{Speaker} or
-@code{Notify}. Missing local diagnostics are reported rather than invented.
-
-Set @code{tts-hide-diagnostic-buffers} to nil in Customize and restart speech to
-include them in the ordinary list. Existing diagnostics are retained; custom
-buffer switchers may show hidden buffers independently.
-
-Choose the diagnostic at the failed layer:
-
-@table @asis
-@item @code{omnivox} is not found
-In WSL@comma{} run @code{./bin/emacsvox-wsl-install --check} and inspect its saved path.
-On other POSIX systems check @code{PATH} or an absolute @code{OMNIVOX_PROGRAM}.
-Keep @code{espeak-ng-data} and @code{third-party-licenses} beside the executable.
-@item @code{omnivox --check} errors or is inaudible
-Diagnose below Emacsvox using Omnivox's
-@uref{https://github.com/bartbunting/omnivox/blob/main/README.md, build guide}@comma{}
-@uref{https://github.com/bartbunting/omnivox/blob/main/docs/STATUS.md, platform status}@comma{} and
-@uref{https://github.com/bartbunting/omnivox/blob/main/docs/guides/diagnostics.md, diagnostics guide}. Do not change Emacs configuration before tone/speech work.
-@item The check passes but Emacsvox is silent
-Confirm @code{TTS_PROGRAM} was @code{omnivox} before setup loaded@comma{} then use
-@kbd{M-x tts-speak-version}. Rerun the WSL installer check for a release
-installation. For development source staging@comma{} run
-@code{make verify-windows-omnivox-runtime} and restart after restaging.
-@item A process starts and later fails
-The POSIX/WSL launcher retains private bounded stderr logs at
-@code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} normally
-@code{~/.local/state/emacsvox/omnivox}. Spoken text is excluded unless
-@code{OMNIVOX_LOG_SYNTHESIS_TEXT} is explicitly enabled; that can expose
-passwords@comma{} mail@comma{} and documents.
-@item Speech works but is delayed
-@kbd{C-e d D} enables a private diagnostic log; reproduce one short presentation
-and toggle it off. Default @code{~/.emacsvox-aural-diagnostics.log} can be changed
-with @kbd{C-u C-e d D} when enabling. Records @code{dispatch-sent}@comma{}
-@code{mixer-source-observed}@comma{} and @code{playback-terminal-observed} share a dispatch ID@.
-Match it in Omnivox logs to separate submission@comma{} queueing@comma{} synthesis@comma{} and
-mixer-source delay. This Emacs log is off by default because submitted
-speech text is complete. A mixer observation is not physical output;
-device/hardware buffering can add delay. The diagnostics menu's @kbd{l} also
-exposes the explicit session logging control with its privacy warning.
-@end table
-
-Emacsvox owns selection@comma{} launcher@comma{} Windows staging@comma{} and its bundled Lisp adapter.
-Omnivox owns native builds@comma{} engines@comma{} CLI@comma{} runtime layout@comma{} and protocols.
-Backend-local READMEs document compatibility adapters and licensed runtimes.
-Use those owning references for versioned details instead of duplicating their
-contracts in first-installation instructions.
+For example@comma{} @kbd{C-h k C-e l} explains the current-line speaking key without
+running that command. If you know its command name but not its key@comma{} use
+@kbd{C-h w} and enter the name instead.
+
+@section Discover What The Current Buffer Can Do
+
+Start with @kbd{C-h m} after opening Dired@comma{} EWW@comma{} mail@comma{} a terminal@comma{} or another
+application. This runs @code{describe-mode} and explains the major mode@comma{} active
+minor modes@comma{} and their local commands. Use @kbd{C-h b} (@code{describe-bindings})
+when you need the effective key bindings after package maps and personal
+customisations have been applied.
+
+For Emacsvox settings that apply to the current task@comma{} press @kbd{C-e S}. It opens
+the integration's focused menu when one is available@comma{} otherwise general buffer
+settings. @kbd{C-e H .} always opens general buffer settings. The menu captures
+the buffer on entry@comma{} so its controls continue to refer to that task while you
+navigate its menus and editors.
+
+@subsection Find a setting and read its menu Help
+
+Press @kbd{C-e H /} to find a setting by part of its name. The search is
+case-insensitive and includes supported aliases. For example@comma{} @code{cap} finds
+capitalisation controls. Completion lets you choose a result; accepting it
+opens the appropriate menu and selects the control without changing its
+value. Press @kbd{@key{RET}} again to activate or edit it. Cancelling completion
+leaves the originating menu open.
+
+In a settings menu@comma{} up/down selects an item and left/right changes sections.
+@kbd{@key{RET}}@comma{} @kbd{M-@key{RET}}@comma{} or @kbd{C-j} activates the selected item; its displayed shortcut
+also works directly. Press @kbd{?} followed by an item's key to hear its effect
+and scope@comma{} or @kbd{? ?} for the menu overview. @kbd{q} in that Help returns to the
+menu with the selection retained.
+
+Within the menu itself@comma{} @kbd{q} or @kbd{C-g} goes back one level@comma{} while @kbd{C-q} closes
+the sequence. These navigation commands do not undo changes already applied.
+A linked editor keeps its own preview@comma{} saving@comma{} and discard rules. See
+@ref{Saving And Startup,Choose What Persists,,emacsvox,} before treating a saved default@comma{} a live adjustment@comma{}
+or a retained draft as the same thing.
+
+Use @kbd{C-e H a} to find an action such as browsing voices or inspecting
+diagnostics. It uses the same partial-name matching and two-Enter selection
+as settings search. Editors opened from these menus retain their own Help@comma{}
+preview@comma{} save@comma{} and return commands.
+
+@section Read And Leave A Help Window
+
+Ordinary Emacs Help usually appears in a separate @code{*Help*} window. Emacsvox
+speaks the most relevant initial result automatically. Press @kbd{C-e h}
+(@code{emacsvox-speak-help}) to hear the displayed help again.
+
+To explore the text directly@comma{} press @kbd{C-x o} to select its window and use
+ordinary reading and navigation commands. Press @kbd{q} in the Help buffer when
+finished. If the selected window is unclear@comma{} @kbd{C-e C-w} describes the window
+arrangement. Help opened by an Emacsvox settings menu uses the menu-return
+behaviour described above instead of requiring you to find the source window.
+
+@section Learn Interactively And Read Manuals
+
+@kbd{C-h t} opens the interactive Emacs tutorial. Emacsvox speaks its text and
+your navigation as you work through it. For a separate key-learning exercise@comma{}
+@kbd{C-h C-l} runs @code{emacsvox-learn-emacs}: it speaks the function of each key
+you press. Leave that loop with @kbd{C-g}.
+
+@kbd{C-h i} opens Info@comma{} the manual reader used by Emacs and Emacsvox. Press @kbd{d}
+for the Info directory@comma{} then @kbd{m} and enter @code{Emacsvox} to open this manual.
+@ref{Using This Manual, , Using this manual} provides an exercise in index lookup@comma{} following a link@comma{}
+and returning to your work. @ref{Finding Tasks, , Find a task} starts from an everyday goal@comma{} and
+@ref{Emacsvox Terminology, , Terms used in this manual} explains the names used in the procedures. The
+@ref{Top,Info manual,,info,} covers the reader's complete navigation and search commands.
+
+In an Aural interface@comma{} @kbd{C-c C-i} opens the relevant manual topic and @kbd{q} in
+Info returns to that interface. In the interface's own Help@comma{} @kbd{i} opens the
+same topic.
+
+@section Emacsvox-Specific Help
+
+Use @kbd{C-h C-e} (@code{emacsvox-describe-emacsvox}) for the Emacsvox overview.
+@kbd{C-e N} (@code{emacsvox-view-emacsvox-news}) opens project news@comma{} and @kbd{C-e T}
+(@code{emacsvox-view-emacsvox-tips}) opens productivity tips.
+
+For unexpected feedback@comma{} leave point on the item and press @kbd{C-e E} to
+explain its voices@comma{} sounds@comma{} and other presentation actions. @kbd{C-e H x} opens
+Feedback Details through the settings menu. Its report distinguishes retained
+output from a simulation; see @ref{Explaining Presentation,Understand Why Something Sounded That Way,,emacsvox,}.
+
+@kbd{C-e H D} opens diagnostics. Use @kbd{d} there for Aural Doctor@comma{} @kbd{s} for spatial
+capabilities@comma{} or @kbd{m} and @kbd{n} for retained main and notification diagnostics.
+These inspection routes do not imply that speech has been repaired. Run a
+repair or restart only when you deliberately choose that action. If there is
+no speech at all@comma{} begin with
+@ref{Recovering From No Speech,Recovering From No Speech,,emacsvox,} rather than presentation settings.
+
+The generated @ref{Emacsvox Keymaps,Emacsvox Keymaps,,emacsvox-reference,} in the @emph{Emacsvox Reference Manual} records
+default bindings. Return to @kbd{C-h k}@comma{} @kbd{C-h m}@comma{} and @kbd{C-h b} when a package or
+personal configuration changes those defaults.
 
 @node Audio Desktop
 @chapter Work With The Audio Desktop
@@ -2534,9 +1513,9 @@ A useful habit is to press @kbd{C-e m} to hear the current buffer and mode@comma
 files@comma{} Web pages@comma{} mail@comma{} shells@comma{} and other Emacs applications.
 
 @menu
-* Desktop Objects::              Understand and move between Emacs buffers.
-* Object Oriented Desktop::      Let major and minor modes interpret each kind of content.
-* Context-Sensitive Interaction:: Use aural structure, mode commands, buffers, and search.
+* Buffers hold your work: Desktop Objects.  Understand and move between Emacs buffers.
+* Let modes give each buffer its tools: Object Oriented Desktop.  Let major and minor modes interpret each kind of content.
+* Hear and navigate the current context: Context-Sensitive Interaction.  Use aural structure, mode commands, buffers, and search.
 @end menu
 
 @node Desktop Objects
@@ -5167,133 +4146,6 @@ The @ref{Integration Maintenance,Developer Guide,,emacsvox,} covers voice metada
 @ref{Emacsvox Commands And Options,Emacsvox Commands And Options,,emacsvox-reference,} records exact commands@comma{} options@comma{} and keymaps.
 These complement the tasks here rather than being prerequisites for them.
 
-@node Using Online Help
-@chapter Find Help While You Work
-
-@cindex Online Help
-
-Emacs can explain the key you are about to use@comma{} the modes active in a buffer@comma{}
-and the commands and settings available in your session. This live help
-reflects installed packages and personal customisations. Use it to understand
-an unfamiliar command or resolve a difference between a manual and your
-running Emacs.
-
-Most Emacs help commands begin with @kbd{C-h}. Press @kbd{C-h C-h} for
-@code{help-for-help} when you need to discover what can follow that prefix.
-Settings menus also have their own contextual Help@comma{} described below.
-
-@section Ask About A Key@comma{} Command@comma{} Or Setting
-
-Choose a help command according to what you already know:
-
-@itemize
-@item
-@kbd{C-h k} followed by a key runs @code{describe-key} and explains the command
-currently bound to that key.
-@item
-@kbd{C-h f} runs @code{describe-function}. Enter a command or function name to
-read its documentation.
-@item
-@kbd{C-h v} runs @code{describe-variable}. Enter an option name to inspect its
-current value and documentation.
-@item
-@kbd{C-h w} runs @code{where-is} and reports the keys that invoke a command.
-@end itemize
-
-For example@comma{} @kbd{C-h k C-e l} explains the current-line speaking key without
-running that command. If you know its command name but not its key@comma{} use
-@kbd{C-h w} and enter the name instead.
-
-@section Discover What The Current Buffer Can Do
-
-Start with @kbd{C-h m} after opening Dired@comma{} EWW@comma{} mail@comma{} a terminal@comma{} or another
-application. This runs @code{describe-mode} and explains the major mode@comma{} active
-minor modes@comma{} and their local commands. Use @kbd{C-h b} (@code{describe-bindings})
-when you need the effective key bindings after package maps and personal
-customisations have been applied.
-
-For Emacsvox settings that apply to the current task@comma{} press @kbd{C-e S}. It opens
-the integration's focused menu when one is available@comma{} otherwise general buffer
-settings. @kbd{C-e H .} always opens general buffer settings. The menu captures
-the buffer on entry@comma{} so its controls continue to refer to that task while you
-navigate its menus and editors.
-
-@subsection Find a setting and read its menu Help
-
-Press @kbd{C-e H /} to find a setting by part of its name. The search is
-case-insensitive and includes supported aliases. For example@comma{} @code{cap} finds
-capitalisation controls. Completion lets you choose a result; accepting it
-opens the appropriate menu and selects the control without changing its
-value. Press @kbd{@key{RET}} again to activate or edit it. Cancelling completion
-leaves the originating menu open.
-
-In a settings menu@comma{} up/down selects an item and left/right changes sections.
-@kbd{@key{RET}}@comma{} @kbd{M-@key{RET}}@comma{} or @kbd{C-j} activates the selected item; its displayed shortcut
-also works directly. Press @kbd{?} followed by an item's key to hear its effect
-and scope@comma{} or @kbd{? ?} for the menu overview. @kbd{q} in that Help returns to the
-menu with the selection retained.
-
-Within the menu itself@comma{} @kbd{q} or @kbd{C-g} goes back one level@comma{} while @kbd{C-q} closes
-the sequence. These navigation commands do not undo changes already applied.
-A linked editor keeps its own preview@comma{} saving@comma{} and discard rules. See
-@ref{Saving And Startup,Choose What Persists,,emacsvox,} before treating a saved default@comma{} a live adjustment@comma{}
-or a retained draft as the same thing.
-
-Use @kbd{C-e H a} to find an action such as browsing voices or inspecting
-diagnostics. It uses the same partial-name matching and two-Enter selection
-as settings search. Editors opened from these menus retain their own Help@comma{}
-preview@comma{} save@comma{} and return commands.
-
-@section Read And Leave A Help Window
-
-Ordinary Emacs Help usually appears in a separate @code{*Help*} window. Emacsvox
-speaks the most relevant initial result automatically. Press @kbd{C-e h}
-(@code{emacsvox-speak-help}) to hear the displayed help again.
-
-To explore the text directly@comma{} press @kbd{C-x o} to select its window and use
-ordinary reading and navigation commands. Press @kbd{q} in the Help buffer when
-finished. If the selected window is unclear@comma{} @kbd{C-e C-w} describes the window
-arrangement. Help opened by an Emacsvox settings menu uses the menu-return
-behaviour described above instead of requiring you to find the source window.
-
-@section Learn Interactively And Read Manuals
-
-@kbd{C-h t} opens the interactive Emacs tutorial. Emacsvox speaks its text and
-your navigation as you work through it. For a separate key-learning exercise@comma{}
-@kbd{C-h C-l} runs @code{emacsvox-learn-emacs}: it speaks the function of each key
-you press. Leave that loop with @kbd{C-g}.
-
-@kbd{C-h i} opens Info@comma{} the manual reader used by Emacs and Emacsvox. Press @kbd{d}
-for the Info directory@comma{} then @kbd{m} and enter @code{Emacsvox} to open this manual.
-The Emacs manual's Help and Info chapters explain searching manuals@comma{}
-following cross-references@comma{} and retaining help buffers for later use.
-
-In an Aural interface@comma{} @kbd{C-c C-i} opens the relevant manual topic and @kbd{q} in
-Info returns to that interface. In the interface's own Help@comma{} @kbd{i} opens the
-same topic.
-
-@section Emacsvox-Specific Help
-
-Use @kbd{C-h C-e} (@code{emacsvox-describe-emacsvox}) for the Emacsvox overview.
-@kbd{C-e N} (@code{emacsvox-view-emacsvox-news}) opens project news@comma{} and @kbd{C-e T}
-(@code{emacsvox-view-emacsvox-tips}) opens productivity tips.
-
-For unexpected feedback@comma{} leave point on the item and press @kbd{C-e E} to
-explain its voices@comma{} sounds@comma{} and other presentation actions. @kbd{C-e H x} opens
-Feedback Details through the settings menu. Its report distinguishes retained
-output from a simulation; see @ref{Explaining Presentation,Understand Why Something Sounded That Way,,emacsvox,}.
-
-@kbd{C-e H D} opens diagnostics. Use @kbd{d} there for Aural Doctor@comma{} @kbd{s} for spatial
-capabilities@comma{} or @kbd{m} and @kbd{n} for retained main and notification diagnostics.
-These inspection routes do not imply that speech has been repaired. Run a
-repair or restart only when you deliberately choose that action. If there is
-no speech at all@comma{} begin with
-@ref{Recovering From No Speech,Recovering From No Speech,,emacsvox,} rather than presentation settings.
-
-The generated @ref{Emacsvox Keymaps,Emacsvox Keymaps,,emacsvox-reference,} in the @emph{Emacsvox Reference Manual} records
-default bindings. Return to @kbd{C-h k}@comma{} @kbd{C-h m}@comma{} and @kbd{C-h b} when a package or
-personal configuration changes those defaults.
-
 @node Emacs Packages
 @chapter Applications And Integrations
 
@@ -5875,6 +4727,18 @@ which information is spoken automatically. The generated
 @ref{emacsvox-notmuch,emacsvox-notmuch,,emacsvox-reference,} section in the @emph{Emacsvox Reference Manual} provides the
 complete command and option reference.
 
+@menu
+* Start Notmuch: Starting Notmuch.  Open Hello or start a query with the speech integration loaded.
+* Use Hello and start a search: Notmuch Hello And Searches.  Choose a search and understand asynchronous results and refreshes.
+* Navigate and inspect Search results: Notmuch Search Results.  Read thread summaries, inspect full fields, and open a result.
+* Read a thread and its MIME parts: Notmuch Messages And Attachments.  Read messages, inspect attachments, and choose explicit MIME actions.
+* Change tags and archive state: Notmuch Tags And Archiving.  Hear the actual outcome of tag and archive commands.
+* Choose fields@comma{} status@comma{} and privacy: Notmuch Speech And Privacy.  Set spoken fields, automatic limits, completion policy, and privacy.
+* Know the support boundaries: Notmuch Support Boundaries.  Distinguish supported views, limited Tree support, and composition.
+* Troubleshoot the live integration: Notmuch Troubleshooting.  Check live keys, package identity, and the speech diagnostics.
+@end menu
+
+@node Starting Notmuch
 @section Start Notmuch
 
 @cindex starting Notmuch
@@ -5890,6 +4754,7 @@ Loading speech support does not alter mail@comma{} tags@comma{} files@comma{} or
 configuration. Notmuch owns database@comma{} tag@comma{} archive@comma{} attachment@comma{} and composition
 operations; Emacsvox presents the result of the action you invoke.
 
+@node Notmuch Hello And Searches
 @section Use Hello and start a search
 
 @cindex saved searches, Notmuch
@@ -5973,6 +4838,7 @@ a policy. @ref{Aural Speech Output,Speech Output And Notifications,,emacsvox,} e
 the refresh rules above are specific to this integration.
 @end enumerate
 
+@node Notmuch Search Results
 @section Navigate and inspect Search results
 
 @cindex Notmuch Search
@@ -6018,6 +4884,7 @@ Search defaults to authors@comma{} subject@comma{} relative date@comma{} matched
 counts@comma{} and ordinary tags. Status tags assigned auditory cues are not repeated
 as words. @ref{Notmuch fields and privacy, , Notmuch fields and privacy} explains omission and ordering of sensitive fields.
 
+@node Notmuch Messages And Attachments
 @section Read a thread and its MIME parts
 
 @cindex Notmuch Show
@@ -6084,6 +4951,7 @@ Viewing@comma{} saving@comma{} overwriting@comma{} or launching a MIME part is a
 operation. Navigation and detail inspection never open an attachment or an
 external viewer by themselves.
 
+@node Notmuch Tags And Archiving
 @section Change tags and archive state
 
 @cindex tags, Notmuch
@@ -6113,9 +4981,10 @@ Archive feedback distinguishes a real change@comma{} unchanged archive tags@comm
 unset @code{notmuch-archive-tags}. Movement wrappers combine the result instead of
 duplicating the feedback of nested tag or archive commands.
 
-@anchor{Notmuch fields and privacy}
-
+@node Notmuch Speech And Privacy
 @section Choose fields@comma{} status@comma{} and privacy
+
+@anchor{Notmuch fields and privacy}
 
 @cindex privacy, Notmuch speech
 @cindex fields, Notmuch speech
@@ -6212,6 +5081,7 @@ notification-stream completion may be retained by the notification subsystem.
 Choose @code{cue} or @code{silent} if even a generic thread count is unwanted. Review
 notification-device and logging settings separately from mail field choices.
 
+@node Notmuch Support Boundaries
 @section Know the support boundaries
 
 @cindex Notmuch Tree support
@@ -6240,6 +5110,7 @@ There is no independent Notmuch speech-disable or unload command. Its advice@com
 hooks@comma{} and Search arrow bindings remain installed for the Emacs session after
 loading. Repeated loading is idempotent and does not duplicate them.
 
+@node Notmuch Troubleshooting
 @section Troubleshoot the live integration
 
 @cindex troubleshooting, Notmuch
@@ -6277,6 +5148,19 @@ reviewing an answer@comma{} then explains speech choices and recovery. The gener
 @ref{emacsvox-agent-shell,emacsvox-agent-shell,,emacsvox-reference,} section in the @emph{Emacsvox Reference Manual} lists the
 complete Emacsvox command and option interfaces.
 
+@menu
+* Start and control a session: Starting An Agent Shell Session.  Write prompts, follow responses, steer work, and manage queued input.
+* Answer an agent's question: Answering Agent Questions.  Review and complete an optional structured question form.
+* Choose automatic speech and privacy: Agent Shell Speech And Privacy.  Choose session feedback, background disclosure, and automatic limits.
+* Respond to urgent permissions: Agent Shell Permissions.  Find and decide a permission request without confusing routine speech.
+* Inspect a response on demand: Reading Agent Responses.  Read a completed response in full or request a structural overview.
+* Navigate transcript blocks: Agent Shell Transcript Navigation.  Move among responses, prompts, headings, links, tools, and errors.
+* Read and copy source blocks: Agent Shell Source Blocks.  Read logical code, copy it, and open a change review.
+* Navigate and copy rendered tables: Agent Shell Tables.  Read table cells, rows, and columns, and understand local key conflicts.
+* Recover from interruption or failure: Agent Shell Recovery.  Interrupt work, inspect the previous response, and recover the session.
+@end menu
+
+@node Starting An Agent Shell Session
 @section Start and control a session
 
 Load Emacsvox and start Agent Shell with @kbd{M-x agent-shell}.  Emacsvox loads
@@ -6361,6 +5245,7 @@ When @code{agent-shell-show-cost-indicator} is enabled and the provider reports 
 positive cost@comma{} this includes the cumulative cost with Agent Shell's currency
 and rounding.  Brief announcements when entering a session stay concise.
 
+@node Answering Agent Questions
 @section Answer an agent's question
 
 Some providers ask you to complete a structured form rather than answer in
@@ -6386,6 +5271,7 @@ Missing required answers are reported without announcing successful submission.
 to the latest question@comma{} use @kbd{M-x agent-shell-elicitation-jump-to-latest-form}.
 The next-field and previous-field commands are also available through @kbd{M-x}.
 
+@node Agent Shell Speech And Privacy
 @section Choose automatic speech and privacy
 
 The focused session defaults to @code{response}: completed answers and routine
@@ -6466,6 +5352,7 @@ output lines longer than 32@comma{}768 characters@comma{} keeping their beginnin
 an omitted-character count. Full tool speech reads that notice; the removed
 middle is not available by reading the buffer.
 
+@node Agent Shell Permissions
 @section Respond to urgent permissions
 
 Permission requests are separate from routine speech levels because they can
@@ -6492,6 +5379,7 @@ chatter.  Lifecycle error announcements follow
 @code{emacsvox-agent-shell-signal-processing}; rendered error content remains
 available in the transcript even when routine response speech is quiet.
 
+@node Reading Agent Responses
 @section Inspect a response on demand
 
 These commands work from the shell and its associated viewports:
@@ -6511,6 +5399,7 @@ These commands remain usable at @code{notify} and @code{quiet}.  If no turn has
 completed@comma{} they say that no completed response is available rather than
 presenting a streaming partial or failed answer.
 
+@node Agent Shell Transcript Navigation
 @section Navigate transcript blocks
 
 Agent Shell responses contain semantic prompt@comma{} response@comma{} thought@comma{} activity@comma{}
@@ -6576,6 +5465,7 @@ After a successful typed jump@comma{} @kbd{]} and @kbd{[} repeat in that directi
 At an editable live prompt or viewport editor@comma{} bare brackets and navigation
 letters insert themselves instead of taking over prompt editing.
 
+@node Agent Shell Source Blocks
 @section Read and copy source blocks
 
 Use @kbd{k} or @kbd{K}@comma{} or typed block navigation@comma{} to
@@ -6604,6 +5494,7 @@ These interactions expose semantic events and attributes to Aural.  You can
 customize speech@comma{} voices@comma{} and earcons for steering outcomes@comma{} queue changes@comma{}
 list editing@comma{} setting changes@comma{} updated tool output@comma{} and change-review entry.
 
+@node Agent Shell Tables
 @section Navigate and copy rendered tables
 
 Agent Shell gives rendered Markdown tables their own navigation commands.
@@ -6707,6 +5598,7 @@ titles@comma{} row titles@comma{} or whether data is spoken before titles.
 Copy commands use logical cell values@comma{} excluding renderer padding and Markdown
 borders.  Wrapped cell contents remain complete.
 
+@node Agent Shell Recovery
 @section Recover from interruption or failure
 
 If a request is taking the wrong path@comma{} press @kbd{C-c C-c} and confirm the
@@ -6747,6 +5639,20 @@ feedback for current work and explicit review for content you need to examine
 again. @kbd{C-e S} opens focused EAT speech settings; those menu keys apply only
 while the menu is open@comma{} not to ordinary terminal input.
 
+@menu
+* Choose an input mode: EAT Input Modes.  Decide which keys reach Emacs and which reach the terminal program.
+* Understand automatic terminal feedback: EAT Automatic Feedback.  Follow output, prompts, editing results, and application-screen changes.
+* Hear terminal-side completion: EAT Terminal Completion.  Hear completed input and inspect retained candidate or help rows.
+* Review retained terminal output: EAT Screen Review.  Read retained state or inspect an immutable screen without sending input.
+* Adjust and save terminal feedback: EAT Feedback Preferences.  Choose verbosity, background monitoring, and focused speech defaults.
+* Follow shell prompts and command status: EAT Shell Integration.  Understand the Bash or Zsh integration and its remote-shell limits.
+* Enter passwords and protect sensitive content: EAT Passwords And Privacy.  Use protected password input and understand retained terminal data.
+* Control terminal access to the clipboard: EAT Clipboard Trust.  Review OSC 52 trust and the two terminal selection-control options.
+* Inspect full-screen applications and diagnose silence: EAT Full-screen Applications.  Use retained review and distinguish terminal rendering from speech.
+* Use EAT in Eshell: EAT In Eshell.  Understand embedded terminals and visual-command window return.
+@end menu
+
+@node EAT Input Modes
 @section Input Modes And Completion Responsibilities
 
 @cindex EAT input modes
@@ -6803,6 +5709,7 @@ The shell must have its own completion configuration. For example@comma{} comple
 often supplied by @code{bash-completion}. Emacsvox neither installs nor substitutes
 for those definitions.
 
+@node EAT Automatic Feedback
 @section Automatic Terminal Feedback
 
 @cindex EAT automatic speech
@@ -6911,6 +5818,7 @@ high-confidence transfer of selection-like styling@comma{} may be announced.
 Ambiguous repaints remain available to explicit review. Inverse video or a
 coloured row alone is not proof of an active item.
 
+@node EAT Terminal Completion
 @section Terminal-side Completion
 
 @cindex completion candidates, terminal
@@ -6940,6 +5848,7 @@ Use @kbd{C-e q c} to read the retained candidate/help layout@comma{} or open fro
 review with @kbd{C-e q r} and press @kbd{c}. This is useful for large or multi-column
 results and does not ask the terminal to complete again.
 
+@node EAT Screen Review
 @section Explicit Review Commands
 
 @cindex EAT review commands
@@ -7029,6 +5938,7 @@ Secure input@comma{} terminal reset or restart@comma{} killing the source@comma{
 mode also destroys its frozen review. These events bound the lifetime of
 copied terminal content.
 
+@node EAT Feedback Preferences
 @section Verbosity And Background Monitoring
 
 @vindex emacsvox-eat-verbosity
@@ -7086,6 +5996,7 @@ local overrides keep them; others inherit the new defaults. Adjustment alone
 does not save. @kbd{A} opens advanced EAT settings and @kbd{q} there returns to the
 focused menu.
 
+@node EAT Shell Integration
 @section Shell Integration And Command Status
 
 @cindex EAT shell integration
@@ -7119,6 +6030,7 @@ Status is not guessed from prompt characters. A remote shell or router usually
 does not provide this per-command integration. Its output and completion can
 still be accessible while individual exit status remains unavailable.
 
+@node EAT Passwords And Privacy
 @section Passwords And Sensitive Content
 
 @cindex password input, EAT
@@ -7143,6 +6055,7 @@ cells are redacted when captured. Verbose title and directory announcements can
 disclose host/path metadata. Background monitoring@comma{} by contrast@comma{} never reads
 content or terminal identity.
 
+@node EAT Clipboard Trust
 @section Terminal-Controlled Clipboard Trust
 
 @cindex clipboard security, EAT
@@ -7179,6 +6092,7 @@ an accessibility command: its contents are neither spoken nor retained as
 terminal screen text. Content-free paste announcements apply to explicit user
 paste commands@comma{} not these terminal-originated sequences.
 
+@node EAT Full-screen Applications
 @section Full-screen Applications And Limitations
 
 @cindex curses applications, EAT
@@ -7207,6 +6121,7 @@ terminfo can break cursor addressing and screen layout; speech classification
 cannot repair that. Consult EAT's manual when the terminal itself renders
 incorrectly.
 
+@node EAT In Eshell
 @section EAT In Eshell
 
 @cindex Eshell, EAT accessibility
@@ -7384,6 +6299,1278 @@ pointer. Leave dedicated review with @kbd{q} before using the normal prefix.
 For a full-screen redraw that Term cannot present reliably@comma{} try the workflow
 in @ref{EAT Terminal Access, , EAT Terminal Access} and use that emulator's explicit review commands.
 
+@node Speech Backends
+@chapter Speech Backends
+
+Emacsvox sends speech through a speech server. For a new installation@comma{}
+use @emph{Omnivox}. The server communicates with the engine that produces speech:
+normally eSpeak NG on GNU/Linux@comma{} AVSpeechSynthesizer on macOS@comma{} and WinRT
+SpeechSynthesizer on Windows.
+
+Follow @ref{Installation, , Installation} if you have not yet obtained speech. This chapter is for
+choosing a supported platform route@comma{} installing or configuring a different
+backend@comma{} and diagnosing problems. Omnivox's native build procedures@comma{} engine
+behaviour@comma{} and versioned protocols belong to
+@uref{https://github.com/bartbunting/omnivox, the Omnivox repository}.
+
+The menu routes here describe @code{ui-experiments}. Release packages can provide
+an earlier interface; use the matching manual and keep a working installation
+available while testing the development branch.
+
+@menu
+* Supported Platform Routes::    Choose the maintained route for this machine.
+* Install Omnivox From A Release Binary: Installing An Omnivox Release Binary.  Install Omnivox through Homebrew or a verified release archive.
+* Install An Omnivox Windows Release Under WSL2: Installing An Omnivox Windows Release Under WSL2.  Use the matching verified Windows archive without a build toolchain.
+* Installing Native Windows Emacsvox: Trying Native Windows Emacsvox.  Install and verify supported native Windows x64 Emacsvox.
+* Installing Omnivox From Source:: Build when a release archive does not match the host.
+* Building Omnivox For WSL2::    Stage the Windows runtime from WSL2.
+* Selecting And Checking Omnivox:: Prove speech before starting Emacsvox.
+* Compatibility Speech Servers:: Understand the retained direct adapters.
+* Backend Diagnostics And Responsibilities: Backend Diagnostics And Ownership.  Locate failures and authoritative detail.
+@end menu
+
+@node Supported Platform Routes
+@section Supported Platform Routes
+
+The following table describes Emacsvox support@comma{} not every platform that the
+Omnivox project can build. ``Host check required'' means that automated build
+and archive verification does not prove playback through your audio device;
+an audible @code{omnivox --check} on that machine remains the acceptance test.
+
+@multitable @columnfractions .18 .31 .51
+@headitem Emacs platform
+@tab Recommended route
+@tab Current support evidence
+@item GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime
+@tab Omnivox 1.17.0 release archive using eSpeak NG
+@tab The published archive is built and verified on Ubuntu 24.04. Compatible glibc@comma{} libstdc++@comma{} libgcc@comma{} and ALSA runtime libraries are required; the audible host check remains required.
+@item Other GNU/Linux systems
+@tab Source-built Omnivox using eSpeak NG
+@tab Use the source route for Linux ARM64@comma{} an older distribution ABI@comma{} or a host that cannot run the published x86-64 archive.
+@item macOS on Apple silicon
+@tab Omnivox through the official Homebrew tap@comma{} using AVSpeechSynthesizer
+@tab Native ARM64 tap checks cover installation@comma{} synthesis@comma{} reinstall@comma{} a packaging-revision upgrade@comma{} and removal; audible Emacs acceptance remains required.
+@item macOS on Intel
+@tab Omnivox through the official Homebrew tap@comma{} using AVSpeechSynthesizer
+@tab Native Intel tap checks cover installation@comma{} synthesis@comma{} reinstall@comma{} a packaging-revision upgrade@comma{} and removal; audible Emacs acceptance remains required.
+@item Emacs in WSL2 on x86-64 Windows
+@tab Omnivox 1.17.0 Windows x64 release archive using WinRT
+@tab The published archive is checksum-protected and release CI verifies its architecture@comma{} adjacent data@comma{} WinRT and eSpeak synthesis. The audible host check remains required.
+@item Emacs in WSL2 on Windows on ARM
+@tab Omnivox 1.17.0 Windows ARM64 release archive using WinRT
+@tab Release CI verifies the ARM64 archive@comma{} adjacent data@comma{} WinRT and eSpeak synthesis@comma{} and the guided installer selects it automatically. A complete WSL2 host and audible check remains required.
+@item Native Windows x64 Emacs 30.2 or newer
+@tab Guided PowerShell installation with Omnivox 1.17.0 using WinRT
+@tab Supported. Native installer@comma{} complete byte-code compilation@comma{} fresh-process verification@comma{} and two-lane speech checks cover this route. Confirm audible speech on the installed host. Native Windows ARM64 is not yet supported.
+@end multitable
+
+Use Homebrew on macOS@comma{} the guided installer under WSL2@comma{} or the matching release
+archive on GNU/Linux. Manual Mac archive installation remains available.
+A bare executable@comma{} repository tag@comma{} or unpackaged CI artifact is not a complete
+installation: keep the release's runtime data and notices beside the executable.
+Homebrew preserves that layout for you.
+
+Do not set @code{OMNIVOX_ENGINE} during initial setup. Its empty value selects
+the normal platform engine above. Engine routing and optional Piper@comma{}
+Eloquence@comma{} or DECtalk support are later customisations@comma{} not prerequisites for
+first speech.
+
+For Emacs running on a remote SSH host@comma{} see
+@ref{Remote workstation speech setup, , Remote Workstation Speech}.
+
+@subsection Version and capability requirements
+
+Omnivox 1.17.0 is the minimum supported release. It supplies named punctuation
+profiles@comma{} palette-aware character speech and editable engine configuration@comma{}
+alongside managed voice libraries@comma{} eSpeak variants@comma{} engine-specific voice
+controls@comma{} individual fallback tuning and complete voice previews. A newer
+compatible release may be used. The manual archive examples and guided
+installers pin the 1.17.0 core and matching optional engines exactly; the
+macOS Homebrew tap follows its maintained stable formula.
+
+Upgrade an existing Omnivox installation separately; updating Emacsvox does
+not replace the selected speech server. Voice-library management uses the
+bundled local management route. Remote and direct-native launches do not
+acquire the WSL launcher's file or release-management capabilities merely by
+connecting to an Omnivox worker. The individual procedures identify their
+required host and capabilities.
+
+@node Installing An Omnivox Release Binary
+@section Install Omnivox From A Release Binary
+
+@subsection macOS with Homebrew
+
+On macOS (formerly OS X)@comma{} install @uref{https://brew.sh, Homebrew} and follow its shell setup
+instructions. Then install Omnivox from the
+@uref{https://github.com/bartbunting/homebrew-omnivox, official Homebrew tap}:
+
+@example
+brew install bartbunting/omnivox/omnivox
+omnivox_program="$(brew --prefix omnivox)/bin/omnivox"
+"$omnivox_program" --version
+"$omnivox_program" --check
+"$omnivox_program" --list-voices
+@end example
+
+Homebrew selects the Apple silicon or Intel archive and verifies its checksum.
+The version must be 1.17.0 or newer@comma{} and the check must produce both a tone and
+spoken confirmation. Apple system speech and eSpeak are included. You do not
+need a Rust build or Omnivox source checkout. Install Emacs 30.2 or newer
+separately; this tap does not install Emacs or Emacsvox.
+
+To select this Homebrew installation persistently for Emacsvox@comma{} record the
+stable executable path:
+
+@example
+omnivox_config_home="$@{XDG_CONFIG_HOME:-$HOME/.config@}"
+omnivox_config_file="$@{EMACSVOX_OMNIVOX_CONFIG_FILE:-$omnivox_config_home/emacsvox/omnivox-program@}"
+mkdir -p "$(dirname "$omnivox_config_file")"
+printf '%s\n' "$omnivox_program" > "$omnivox_config_file"
+@end example
+
+This replaces any previous executable selection in that file. The path uses
+Homebrew's current-version link and continues to work after upgrades. Do not
+substitute a versioned @code{Cellar/omnivox/...} path. The bundled launcher reads
+this file even when Emacs does not inherit the shell's Homebrew @code{PATH}@comma{} as can
+happen when starting from Finder. An explicit @code{OMNIVOX_PROGRAM} override
+still takes precedence; remove or update an override selecting another
+installation. If using @code{EMACSVOX_OMNIVOX_CONFIG_FILE} or @code{XDG_CONFIG_HOME}@comma{}
+make sure the launching Emacs sees the same location.
+
+Emacsvox uses its bundled Lisp adapter. Do not load Homebrew's
+@code{libexec/omnivox-voices.el}@comma{} intended for upstream Emacspeak. Continue with
+@ref{Quick Installation, , Quick Installation} to compile Emacsvox@comma{} run @code{./bin/emacsvox --diagnose}
+and @code{./bin/emacsvox --check}@comma{} and start an isolated speaking session.
+Confirm the selected server and audible output on your Mac.
+
+To upgrade Omnivox later:
+
+@example
+brew update
+brew upgrade omnivox
+"$(brew --prefix omnivox)/bin/omnivox" --version
+"$(brew --prefix omnivox)/bin/omnivox" --check
+@end example
+
+Restart Emacsvox after upgrading so both speech processes use the new
+executable. Updating Emacsvox alone does not upgrade Homebrew's package.
+@code{brew uninstall omnivox} removes it; select another server before restarting
+Emacsvox because the saved executable path remains in your configuration.
+
+Optional Piper@comma{} Flite@comma{} and RuTTS companions and voice models are separate.
+The bundled RHVoice bridge still needs a compatible user-installed runtime
+and data; its presence does not establish macOS runtime support. Keep optional
+companions@comma{} downloaded voices@comma{} and configuration outside Homebrew's Cellar@comma{}
+and use explicit paths as described in the
+@uref{https://github.com/bartbunting/omnivox/blob/main/docs/README.md, Omnivox engine guides}. Companions must match core release and architecture.
+The WSL optional-engine installer is not a Homebrew package manager.
+
+The tap installs published binaries without adding Apple Developer ID signing
+or notarisation. If local policy refuses the verified binary@comma{} use
+@ref{Installing Omnivox From Source, , Installing Omnivox From Source}. Native tap checks cover WAV synthesis and
+package operations; they do not replace listening acceptance in Emacs or prove
+an upgrade between different upstream versions.
+
+@subsection Manual archive installation
+
+Use this route for GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime@comma{}
+macOS on Apple silicon@comma{} or macOS on Intel. The
+@uref{https://github.com/bartbunting/omnivox/releases/tag/v1.17.0, Omnivox 1.17.0 release} supplies:
+
+@multitable @columnfractions .28 .27 .45
+@headitem Host
+@tab Set @code{platform} to
+@tab Archive
+@item GNU/Linux x86-64
+@tab @code{linux-x64}
+@tab @code{omnivox-1.17.0-linux-x64.tar.gz}
+@item macOS Apple silicon
+@tab @code{macos-arm64}
+@tab @code{omnivox-1.17.0-macos-arm64.tar.gz}
+@item macOS Intel
+@tab @code{macos-x64}
+@tab @code{omnivox-1.17.0-macos-x64.tar.gz}
+@end multitable
+
+On a Mac@comma{} @code{uname -m} identifies @code{arm64} for Apple silicon or @code{x86_64} for Intel.
+Create a download directory@comma{} select the platform@comma{} and fetch the archive and
+published checksums:
+
+@example
+mkdir -p "$HOME/Downloads/omnivox-1.17.0"
+cd "$HOME/Downloads/omnivox-1.17.0"
+omnivox_version=1.17.0
+platform=linux-x64
+archive="omnivox-$@{omnivox_version@}-$@{platform@}.tar.gz"
+release_url="https://github.com/bartbunting/omnivox/releases/download/v$@{omnivox_version@}"
+curl -fLO "$release_url/$archive"
+curl -fLO "$release_url/sha256sums.txt"
+@end example
+
+Replace @code{linux-x64} with the appropriate Mac value when needed. Verify before
+extraction. On GNU/Linux:
+
+@example
+grep "  $archive$" sha256sums.txt | sha256sum --check -
+@end example
+
+On macOS:
+
+@example
+grep "  $archive$" sha256sums.txt | shasum -a 256 --check
+@end example
+
+The command must name the archive and report @code{OK}. Otherwise remove the
+download and do not run it. Extract the verified payload into a versioned
+directory@comma{} keeping every supplied directory beside the executable:
+
+@example
+install_dir="$HOME/.local/opt/omnivox-$@{omnivox_version@}"
+mkdir -p "$install_dir"
+tar -xzf "$archive" -C "$install_dir"
+chmod 755 "$install_dir/omnivox"
+export PATH="$install_dir:$PATH"
+@end example
+
+Add that @code{PATH} entry to the shell startup used to launch Emacs for subsequent
+sessions. The directory contains @code{omnivox}@comma{} @code{espeak-ng-data}@comma{}
+@code{third-party-licenses}@comma{} and @code{omnivox-voices.el}. Do not load or copy the last
+file into Emacsvox@comma{} which has its own adapter.
+
+Check the binary before starting Emacsvox:
+
+@example
+omnivox --version
+omnivox --check
+omnivox --list-voices
+@end example
+
+The version must be at least 1.17.0 and the check must produce tone and speech.
+Mac archives are neither code-signed nor notarised. If security policy refuses
+the verified binary@comma{} use the source route rather than weakening policy. On
+GNU/Linux@comma{} missing libraries or incompatible glibc also call for a source build.
+
+For WSL2@comma{} use @ref{Installing An Omnivox Windows Release Under WSL2, , Installing An Omnivox Windows Release Under WSL2}@comma{} which verifies
+a Windows archive without requiring a compiler or Docker.
+
+@node Installing An Omnivox Windows Release Under WSL2
+@section Install An Omnivox Windows Release Under WSL2
+
+This is the ordinary WSL2 route for x86-64 Windows and Windows on ARM@. From
+the Emacsvox checkout@comma{} first inspect without changing anything:
+
+@example
+./bin/emacsvox-wsl-install --check
+@end example
+
+The doctor detects Windows architecture@comma{} selects its Omnivox 1.17.0 archive@comma{}
+and reports Emacs and per-user paths. Missing Linux packages are reported with
+an @code{apt} command for you to review and run. Working @code{powershell.exe} and
+@code{wslpath} interoperation are required. Resolve prerequisites@comma{} then run:
+
+@example
+./bin/emacsvox-wsl-install
+@end example
+
+@code{etc/wsl-install.conf} pins the Omnivox version@comma{} release URL@comma{} x64/ARM64 archive
+names@comma{} and both SHA-256 hashes. The installer queries Windows architecture and
+verifies the matching published archive; it does not build Omnivox.
+
+The full payload is installed below the Windows user's @code{LocalAppData}. Its
+absolute WSL executable path is recorded in
+@code{$XDG_CONFIG_HOME/emacsvox/omnivox-program}@comma{} normally
+@code{~/.config/emacsvox/omnivox-program}. The installer does not invoke @code{sudo} or
+edit shell startup. It compiles Emacsvox@comma{} runs a non-audible launcher diagnostic@comma{}
+and finishes with the audible server check. Confirm both tone and speech.
+
+No Omnivox checkout@comma{} Docker@comma{} Rust@comma{} MinGW@comma{} Visual Studio@comma{} Windows .NET Framework@comma{}
+or optional/proprietary runtime is needed. WinRT speech is included in Windows.
+Use @code{./bin/emacsvox-wsl-install --no-audio-check} only for controlled/headless
+installation with a separate audible check later.
+
+@menu
+* Optional Omnivox Engines: Optional Omnivox Engine Modules.  Install, check, remove, and reinstall optional engines from Emacs.
+@end menu
+
+@subsection Manual Release Installation
+
+Use this equivalent manual procedure to inspect installer actions@comma{} work around
+a restriction@comma{} or repair one layer. It needs @code{curl}@comma{} @code{unzip}@comma{} @code{sha256sum}@comma{}
+@code{powershell.exe}@comma{} and @code{wslpath}. The example uses Windows x64. On Windows on
+ARM@comma{} use @code{windows-arm64} in the archive and installation directory and verify
+that archive's checksum.
+
+Download from WSL:
+
+@example
+mkdir -p "$HOME/Downloads/omnivox-1.17.0"
+cd "$HOME/Downloads/omnivox-1.17.0"
+omnivox_version=1.17.0
+archive="omnivox-$@{omnivox_version@}-windows-x64.zip"
+release_url="https://github.com/bartbunting/omnivox/releases/download/v$@{omnivox_version@}"
+curl -fLO "$release_url/$archive"
+curl -fLO "$release_url/sha256sums.txt"
+grep "  $archive$" sha256sums.txt | sha256sum --check -
+@end example
+
+The last command must name the archive and report @code{OK}. Otherwise remove it
+and do not run it. Install all files on the Windows filesystem:
+
+@example
+windows_local_app_data="$(powershell.exe -NoProfile -NonInteractive \
+  -Command '[Environment]::GetFolderPath("LocalApplicationData")' | tr -d '\r')"
+install_dir="$(wslpath -u "$windows_local_app_data")/Emacsvox/Omnivox/releases/$omnivox_version-windows-x64"
+mkdir -p "$install_dir"
+unzip -q -o "$archive" -d "$install_dir"
+chmod 755 "$install_dir/omnivox.exe"
+config_home=$@{XDG_CONFIG_HOME:-"$HOME/.config"@}
+mkdir -p "$config_home/emacsvox"
+printf '%s\n' "$install_dir/omnivox.exe" > \
+  "$config_home/emacsvox/omnivox-program"
+@end example
+
+Keep @code{omnivox.exe}@comma{} @code{espeak-ng-data}@comma{} and @code{third-party-licenses} together.
+Do not load the archive's @code{omnivox-voices.el}; Emacsvox supplies its adapter.
+This data-only file persists selection without shell initialisation. Respect
+@code{XDG_CONFIG_HOME} when set. @code{OMNIVOX_PROGRAM} remains an explicit temporary
+override with precedence over the file.
+
+Verify through the checkout's launcher:
+
+@example
+./servers/omnivox --version
+./servers/omnivox --list-voices
+./servers/omnivox --check
+@end example
+
+Confirm version 1.17.0 or newer@comma{} tone@comma{} and speech. Release CI verifies archive@comma{}
+x64 architecture@comma{} adjacent eSpeak data@comma{} discovery@comma{} and headless WinRT/eSpeak
+synthesis; only listening checks your audio path. The Windows archive is not
+code-signed. Do not weaken Windows security or local policy to install it.
+
+The generic 1.17.0 archive includes TGSpeechBox profiles/language data and a
+portable RHVoice helper. RHVoice's runtime and voice/language packages are
+separate. Optional Piper@comma{} Flite@comma{} and RuTTS companions are not required for
+WinRT; matching 1.17.0 companions are published separately.
+
+The clean source-build route verifies/stages the official Piper companion and
+builds RHVoice@comma{} Flite@comma{} and RuTTS from matching source. Piper models and the
+RHVoice runtime/data are not bundled by that build. A compatible local voice
+management service can separately download the reviewed voice packages below;
+this does not acquire the RHVoice runtime. Flite/RuTTS need no external runtime
+in the source-built bundle. Eloquence/DECtalk runtimes remain separately
+licensed and supplied.
+
+@node Optional Omnivox Engine Modules
+@subsection Optional Omnivox Engines
+
+The ordinary WSL2 archive is the core@comma{} not a claim that every supported engine
+is installed. Companion archives provide larger@comma{} experimental@comma{} or
+architecture-specific engines. Some require a separately supplied runtime or
+chosen voice data before they can speak.
+
+@enumerate
+@item
+@anchor{Inspect running engines}Inspect running engines
+
+
+Open @kbd{C-e H v b} to browse engines. The equivalent command is:
+
+@example
+M-x emacsvox-omnivox-manage-components RET
+@end example
+
+Opening uses the current
+speech inventory without waiting for file checks or fresh discovery. Optional
+engines missing from that inventory stay visible as @emph{not reported} so management
+controls remain reachable. @kbd{v} browses voices; @kbd{@key{RET}} opens details.
+
+Details begin with a short status and voice actions@comma{} with @emph{Browse voices}
+selected. Matching main/notification evidence is combined and problems remain
+near the top. @emph{Startup settings} and @emph{Diagnostics} start folded; @kbd{@key{RET}} toggles
+sections. Selection and folding are remembered per engine.
+
+@emph{Available} describes discovery from the current worker. An older check does
+not alone make it unavailable. @emph{Previously available} belongs to a stopped or
+replaced worker. Details announce the engine before requesting newer inventory
+in the background when its check is over five minutes old or belongs to another
+worker. File checks likewise run in the background where requested.
+@emph{Streams differ} identifies different availability@comma{} policy@comma{} health@comma{} or voice
+identities. A bridge's presence does not establish its runtime; @emph{Not checked}
+does not mean missing. Diagnostics shows each worker's paths@comma{} inventory time@comma{}
+runtime discovery@comma{} and health.
+
+@emph{Required runtime} appears near the top when native libraries are needed.
+Successful DECtalk discovery@comma{} for example@comma{} confirms DLL and dictionary loading.
+Matching worker evidence is combined@comma{} differences shown separately@comma{} and failures
+retain their reasons. Disabled does not mean missing@comma{} and retired-worker evidence
+does not establish current status. Opening/refreshing details uses worker
+discovery without invoking the separate release installer.
+
+@item
+@anchor{Browse voices and variants}Browse voices and variants
+
+
+@emph{Browse voices} combines reported voices and the installed library@comma{} including
+disabled downloads. This dedicated browser preserves Workbench's filters and
+staged edits. Languages have expandable headings with counts; @kbd{@key{RET}} toggles.
+A one-language list starts expanded and selection/folding are remembered.
+@kbd{@key{RET}} or @kbd{P} on a voice auditions an exact sample@comma{} @kbd{x} shows details@comma{} and @kbd{t}
+opens an unsaved experiment. Saving asks for a palette destination; browsing
+or previewing changes no palette. @kbd{q} returns to selected engine details.
+
+Library data loads asynchronously with quiet refresh. @emph{Installed} identifies
+library entries versus supplied voices. @emph{Enabled} is the desired selection
+for the next Apply. @emph{Active} describes eligibility on both streams@comma{} main only@comma{}
+notification only@comma{} or neither. @emph{Unknown} means missing/inconsistent evidence;
+@kbd{R} refreshes. Active does not measure model residency or prove listening.
+Samples use main speech; inactive downloads need enablement and Apply first.
+
+@emph{Voice variants} in eSpeak details lists the running worker's bundled variants.
+Choose a base with @kbd{b}@comma{} browse with arrows or @kbd{C-n~/~C-p}@comma{} and audition with
+@kbd{P} or @kbd{@key{RET}}. Sorting is alphabetical by displayed name@comma{} ignoring capitalisation.
+The older @kbd{p} preview key also remains. Variants require no download@comma{} enablement@comma{}
+saving@comma{} or speech restart.
+
+@kbd{u}@comma{} @emph{Use in palette}@comma{} asks for palette and named entry@comma{} then opens the voice
+editor with the variant preferred@comma{} retaining fallbacks and tuning. Preview with
+@kbd{P}@comma{} then @kbd{w} for Save and apply@comma{} or save to the collection without selecting.
+Editing a built-in creates a personal copy; @emph{Use at Startup} remains separate.
+For Max as ordinary reading@comma{} choose the English base with @kbd{b}@comma{} select @code{Max}@comma{}
+press @kbd{u}@comma{} and select the palette's @code{default}. Preview/save there. The same
+@code{default} is alongside @code{indent} and other entries in normal palette editing.
+
+@kbd{V} instead proposes the base/variant for every named voice. Create or update
+a personal palette@comma{} compare@comma{} then save; shared adjustments and existing fallback
+tuning survive. @ref{Editing Named Voices,Editing Named Voices,,emacsvox,} explains review and recovery. @kbd{q} returns to variants
+with selection retained; @kbd{v} opens the base browser. Saved references remain
+valid. Older workers lacking on-demand variants report the need for an update.
+
+@item
+@anchor{Install and activate voice packages}Install and activate voice packages
+
+
+Installing files@comma{} enabling a voice@comma{} and activating it are separate steps.
+@emph{Get more voices} in Piper@comma{} Flite@comma{} MBROLA@comma{} or RHVoice details opens the reviewed
+catalogue. Piper groups language@comma{} voice name@comma{} and quality; Flite offers AWB/RMS@.
+Single-quality voices appear directly under their language@comma{} with another group
+only for multiple qualities. @kbd{@key{RET}} opens a group/model and @kbd{q} returns.
+@kbd{/} searches all models by name or language beyond the current group.
+Details show size@comma{} source@comma{} terms@comma{} and storage. @kbd{s} shows/hides speakers sharing
+a model; it downloads once while individual speakers can be enabled separately.
+
+@kbd{i} installs asynchronously without speaking each progress update. Omnivox
+checks files and validates the voice before adding it disabled. In the catalogue@comma{}
+@kbd{e} toggles enablement@comma{} asking which speaker for a shared model@comma{} and @kbd{a} reviews
+Apply to both streams. Enablement alone does not restart. Model details also
+show these actions near installed/enabled status.
+
+Installation/Apply confirmations offer @code{yes} and @code{no} through completion:
+@kbd{y @key{TAB} @key{RET}} confirms@comma{} empty @kbd{@key{RET}} declines@comma{} and @kbd{C-g} cancels. @kbd{c} requests
+cancellation; wait for cleanup. The shipped catalogue contains reviewed@comma{} pinned@comma{}
+natively validated models. Unresolved terms or unsupported configurations are
+withheld; it is not a live catalogue of every upstream download.
+
+MBROLA offers US1@comma{} US2@comma{} and US3@comma{} with British English en1 included. Downloads
+need the updated separately configured development companion on Linux/Windows.
+Older hosts keep Piper/Flite catalogues and report missing MBROLA support.
+Each database carries its licence and README@. Initial installation retains
+en1 enabled unless explicitly disabled. Multiple enabled databases can serve
+different entries/streams; each request opens its selected database rather
+than keeping all enabled databases resident.
+
+RHVoice offers Alan (Scottish English)@comma{} BDL/CLB (American English)@comma{} and Ksp
+(Indian English)@comma{} requiring an updated host and separately installed compatible
+RHVoice runtime selected in engine settings. Each package contains its English
+data and upstream notices. Enable and Apply combines managed voices with external
+ones@comma{} including SLT@. A conflicting external copy is reported@comma{} not replaced.
+Removal affects the managed package@comma{} not external voices or the runtime.
+
+In @emph{Browse voices}@comma{} @kbd{+} changes desired enablement@comma{} and @kbd{a} reviews Apply.
+The operation checks both replacement workers@comma{} restarts main and notification
+speech@comma{} and verifies them before committing. Failure restores both previous
+configurations. Disabling preserves files and palette references. @emph{Enabled}
+changes immediately but @emph{Active} awaits Apply.
+
+After installation@comma{} @kbd{l} browses@comma{} @kbd{+} enables@comma{} and @kbd{a} reviews managed engines
+and both streams. Installation alone neither loads a voice nor changes speech.
+Downloads belong to you in Omnivox's per-user storage across executable upgrades.
+Failed/interrupted operations retain files for inspection; automatic resume
+and package updates are not provided. Uninstall cleanup has its separate
+explicit resume action below.
+
+@item
+@anchor{Remove or import managed voices}Remove or import managed voices
+
+
+Disable every speaker in a downloaded Piper@comma{} Flite@comma{} MBROLA@comma{} or RHVoice package
+and Apply before @kbd{C-c u} in its voice browser. Review voices@comma{} size@comma{} and retained
+palette references before confirming. Files still needed by other sessions
+remain. Built-in SLT/en1@comma{} imported originals@comma{} and engine runtimes cannot be
+removed here. @kbd{C-c U} reviews incomplete cleanup for explicit resumption.
+
+The voice browser's @kbd{d} opens downloads and @kbd{b} includes built-in Flite SLT@.
+@kbd{i} imports a completed native-validation operation by ID@comma{} initially disabled.
+Imported files remain at their validated paths and must stay there. This is
+an advanced import@comma{} not the catalogue installation or a file-selection wizard.
+@kbd{C-c r} shows the last Apply result@comma{} @kbd{R} refreshes@comma{} and @kbd{q} returns.
+
+Apply needs separate main/notification streams from the updated local host.
+Clear explicit Piper/Flite file overrides before applying those engines' library
+voices. Uncertain native cleanup or commit blocks another Apply and stays
+visible in its result.
+
+@item
+@anchor{Configure and check an engine}Configure and check an engine
+
+
+Under @emph{Startup settings}@comma{} @emph{Edit file settings} opens the bundled local launcher's
+engine option in Customize. Piper accepts one ONNX model and matching JSON;
+Eloquence/DECtalk accept runtime DLLs; Flite accepts external @code{.flitevox} files
+with individual @emph{Load file} switches. Use absolute paths as seen by Emacs;
+WSL converts them for the selected Windows executable. Keep companion files
+beside their runtime/model. Remote settings must be changed on the speech host.
+
+These are explicit overrides@comma{} not the complete installed-voice inventory.
+No manually selected files can still mean library voices or launcher defaults
+are available. A manual Flite file list overrides its installed library.
+
+@emph{Check configured engine} runs independent discovery using the local launcher's
+current configuration@comma{} limited to 30 seconds. It retains target@comma{} voices@comma{} and
+diagnostics but neither speaks a sample nor replaces live workers. A failed
+Flite file can leave built-in SLT usable; incomplete discovery reports fewer
+than the selected files plus SLT@. Duplicate external voice names are unsupported.
+
+File settings affect newly started workers. Save in Customize@comma{} then explicitly
+choose @emph{Restart local speech} to interrupt this session's two streams when ready.
+Refresh live voices afterward. Disabling a Flite file preserves data/references;
+new helpers omit it@comma{} while existing helpers keep it until restart. Built-in SLT
+stays loaded and each worker loads its own enabled external voices. These
+switches are not a general per-voice policy or memory measurement.
+
+@code{OMNIVOX_PIPER_MODEL}@comma{} @code{OMNIVOX_FLITE_VOICES}@comma{} runtime environment settings@comma{}
+and legacy @code{EMACSVOX_ECI_DLL=/=EMACSVOX_DECTALK_DLL} override file options and
+are identified in details. Clearing an option returns to discovery/defaults.
+Direct-native executable launches do not consume the bundled launcher's options.
+
+@item
+@anchor{Manage the installed Omnivox release}Manage the installed Omnivox release
+
+
+This manager changes versioned release files@comma{} not the running workers or a
+voice library's active configuration. On WSL@comma{} choose @emph{Manage installed release}
+and check @emph{Installation being managed} and @emph{Location}. That target can differ
+from a development build or remote speech server. @emph{Installed engine files}
+reports presence; @emph{Check release engine} tests runtime initialisation and
+voice discovery for that release.
+
+Release installation and removal keep current speech running and do not select
+another speech server. They do not automatically restart workers. A helper in
+use causes removal to fail visibly; close sessions using that release before
+retrying. This differs from the library's explicit Apply and the file editor's
+@emph{Restart local speech}. Legacy direct-operation restart preferences do not
+change the boundary of this explicit installed-release view.
+
+Use @emph{Install engine} and confirm to verify and install a version-matched
+component. Progress belongs to the release view while current-worker status
+stays separate. @emph{Refresh release files} runs a bounded asynchronous file check;
+@emph{Check release engine} discovers voices without auditioning. Refresh after a
+changed target before retrying. Completion gives a short notice without
+selecting another buffer; @emph{Read last result} opens retained complete output.
+
+Within details@comma{} @kbd{@key{TAB}~/~S-@key{TAB}} moves among actions and sections@comma{} @kbd{@key{RET}} activates
+or toggles@comma{} and arrows read visible fields. @kbd{q} returns to the selected engine
+row@comma{} @kbd{h} to Emacsvox settings@comma{} and @kbd{?} to Help. Selection and expansion survive
+background refresh. @emph{Refresh status} or @kbd{g} in current-worker details asynchronously
+requests both live inventories@comma{} not a release-file check.
+
+@emph{Uninstall engine} under @emph{Engine installation} removes only manager-installed
+Flite@comma{} RuTTS@comma{} Piper@comma{} or TGSpeechBox components. It does not remove the core@comma{}
+built-in engines@comma{} or runtime bridges. The whole managed component directory
+is removed: move any personal files elsewhere before confirming. External
+runtimes/models outside it are untouched and retain their supplier's removal
+procedure. Verified downloads remain cached; @emph{Install engine} reuses a valid
+cache for reinstallation.
+
+Operations are asynchronous. The view shows @emph{uninstalling} or @emph{testing} and
+refreshes on completion or failure. A failed listing retains its last records
+and the error while live discovery remains independently available. If a helper
+is locked@comma{} close the sessions using it and invoke the removal action again.
+An interrupted removal with only the expected helper left can resume; directories
+containing unrecognised files remain protected.
+
+@code{etc/omnivox-components.conf} pins names@comma{} sizes@comma{} and SHA-256 hashes to the
+installed core version. The WSL installer rejects mismatched cores@comma{} unsafe
+archive layout@comma{} missing source provenance@comma{} and helpers that fail staged
+discovery. Components are installed under the same versioned Windows
+@code{LocalAppData} release. It does not invoke @code{sudo} or edit shell startup.
+
+Component and data boundaries differ:
+
+@itemize
+@item
+Flite includes compact English SLT without an external runtime.
+@item
+RuTTS includes compact Russian voices without an external runtime.
+@item
+Piper installs engine support; a usable voice also needs a reviewed ONNX
+model and model card@comma{} configured separately or through supported library
+management.
+@item
+TGSpeechBox is in the Windows x64/ARM64 core with multilingual formant voices@comma{}
+calibrated rate@comma{} and exact anchors for capitalisation/timed presentation.
+Matching standalone components allow reinstallation.
+@item
+RHVoice@comma{} Eloquence@comma{} and DECtalk bridges do not acquire their external runtimes.
+Supply compatible runtimes under their distribution/licensing terms.
+RHVoice's reviewed catalogue can separately download voice and language
+packages on a supporting local host@comma{} as described above. This is distinct
+from runtime acquisition and preserves external installations. Eloquence
+and DECtalk runtime@comma{} dictionary@comma{} and licence material remain user-supplied.
+@end itemize
+
+For terminal management@comma{} use @code{./bin/emacsvox-omnivox-components --list}@comma{} then@comma{}
+for example@comma{} @code{./bin/emacsvox-omnivox-components --install flite}. Multiple
+engines can follow @code{--install} or @code{--uninstall}.
+@code{./bin/emacsvox-omnivox-components --uninstall flite} removes the managed
+directory while retaining its archive. Restart deliberately when the running
+session needs newly installed configuration@comma{} and use @code{--test ENGINE} or the
+release view's @emph{Check release engine} to check that target. Direct release
+assets remain available for maintenance/recovery@comma{} but the manager is the
+ordinary component-selection route.
+@end enumerate
+
+@node Trying Native Windows Emacsvox
+@section Installing Native Windows Emacsvox
+
+Native Windows x64 is supported with Emacs 30.2 or newer. A development Setup
+executable supplies an installation wizard. Otherwise use the guided
+PowerShell installer from a Windows checkout. The advanced manual route
+requires an existing native Emacs. Neither Setup nor the guided installation
+requires WSL@comma{} Docker@comma{} Rust@comma{} or a system MSYS2 installation.
+
+@subsection Using a Windows Setup Build
+
+Run the development Setup executable to install @code{Emacsvox Windows} for your
+account. The wizard identifies Emacsvox and its included Emacs/Omnivox versions.
+No administrator privileges or network connection are required. A desktop
+shortcut is optional; a Start menu group is created unless disabled for an
+unattended installation. The final page explains startup/removal and offers
+Test speech for two announcements and Start Emacsvox. Finish runs selected
+actions and closes Setup.
+
+The default directory is @code{%LOCALAPPDATA%\Emacsvox\Desktop Dev}. Launch through
+Start or its shortcut. Rerun Setup to repair missing files or upgrade a
+ development build@comma{} closing the Emacsvox using that installation first. Setup
+does not close it. Locally edited application files prevent replacement so
+they can be preserved.
+
+Windows Settings or the Start uninstall entry removes the application while
+retaining personal data by default. Optional cleanup separately lists sizes
+for logs/cache@comma{} this Emacs profile (including welcome preference)@comma{} and unused
+downloads in the shared Omnivox library. Leave choices unchecked for reinstallation.
+Shared palettes/settings outside the profile stay. Unattended removal always
+preserves personal data.
+
+Active voices@comma{} voices referenced by another profile@comma{} and files retained by a
+speech session stay with an explanation. Disable and Apply active downloads@comma{}
+then close the sessions using them before cleanup. Imported originals and
+system voices are never removed@comma{} and directory links are not followed.
+Development Setup builds are test artifacts; these instructions do not imply
+that a stable release installer includes this branch's interface.
+
+@subsection Guided Windows x64 Installation
+
+You need PowerShell 5.1 or newer@comma{} Git@comma{} network access@comma{} and working Windows audio
+with a speech voice. Put the checkout on a local Windows drive@comma{} not a WSL or
+network path. To follow this development manual@comma{} select its branch:
+
+@example
+git clone --branch ui-experiments https://github.com/bartbunting/emacsvox.git
+Set-Location emacsvox
+.\bin\emacsvox-install.ps1 -Role Desktop -Check
+.\bin\emacsvox-install.ps1 -Role Desktop
+@end example
+
+Skip cloning for an existing checkout and inspect its branch/local changes
+before updating it. The check reports selected Emacs and paths without downloads@comma{}
+configuration writes@comma{} or audio.
+
+The installer reuses native Emacs 30.2 or newer. For a checksum-verified complete
+GNU Emacs 31.1 Windows release@comma{} use:
+
+@example
+.\bin\emacsvox-install.ps1 -DownloadEmacs -Check
+.\bin\emacsvox-install.ps1 -DownloadEmacs
+@end example
+
+This includes runtime libraries without a compiler/MSYS2. Alternatively select
+a separately installed @uref{https://www.gnu.org/software/emacs/download.html, prebuilt Windows Emacs} with @code{-Emacs} and its
+@code{bin/emacs.exe}. @code{-BuildEmacs} explicitly builds 31.1 through a private MSYS2
+UCRT64 toolchain; it can require several gigabytes and substantial downloading.
+No source build begins without that choice. The installer then prepares the
+pinned Omnivox core and Emacsvox@comma{} reusing installed components and verified cache
+on later runs.
+
+@code{-Emacs "C:\path\to\Emacs\bin\emacs.exe"} selects an existing executable.
+Explicit @code{-Emacs}@comma{} environment @code{EMACS}@comma{} and @code{local.mk} must agree and require
+native 30.2 or newer. @code{-DownloadEmacs} and @code{-BuildEmacs} choose their managed
+Emacs instead of saved/PATH selections@comma{} reuse a matching complete installation@comma{}
+and cannot replace an explicit choice. Choose only one.
+
+Per-user defaults are:
+
+@itemize
+@item
+Emacs@comma{} Omnivox@comma{} isolated profile@comma{} and logs under @code{%LOCALAPPDATA%\Emacsvox\Native}.
+@item
+Private build tools under @code{%LOCALAPPDATA%\Emacsvox\Toolchains\msys2-20260611}.
+@item
+Verified archives under @code{%LOCALAPPDATA%\Emacsvox\Downloads}.
+@item
+Data-only @code{native-install.json} in the checkout@comma{} ignored by Git.
+@end itemize
+
+@code{-InstallRoot}@comma{} @code{-ToolchainRoot}@comma{} and @code{-CacheDirectory} choose other local
+paths. The MSYS2 tool path must have no spaces; set @code{-ToolchainRoot} if needed.
+Checkout and Emacs paths may contain spaces. Personal initialisation@comma{} system
+PATH@comma{} Windows services@comma{} and JAWS settings remain unchanged.
+
+@code{-Offline -CacheDirectory "C:\path\to\archives"} forbids downloads and verifies
+required cached archives before changes. Missing/damaged archives stop it.
+Offline supports prebuilt/existing Emacs@comma{} not @code{-BuildEmacs}. Read-only @code{-Check}
+reports the plan without testing cached archives or playing audio.
+
+Source archives are checksum-pinned. MSYS2 compiler packages use signed rolling
+repositories@comma{} and installed versions are recorded. Managed source builds disable
+Lisp native compilation and include runtime DLLs@comma{} so launch needs no MSYS2 on PATH@.
+
+The final test opens a temporary native Emacs@comma{} verifies both streams@comma{} speaks
+two announcements@comma{} and closes that test. Confirm both by listening. After
+@code{-NoAudioCheck}@comma{} perform the explicit check before acceptance:
+
+@example
+.\bin\emacsvox.ps1 -Diagnose
+.\bin\emacsvox.ps1 -Check
+.\bin\emacsvox.ps1
+@end example
+
+The last command opens the isolated desktop with Windows speech by default.
+@code{OMNIVOX_ENGINE} remains an explicit selection for separately configured
+engines. Native optional-engine installation@comma{} ARM64@comma{} and other native roles
+are not supplied by this guided installer.
+
+After source updates@comma{} rerun it before launching. It preserves source edits and
+refreshes compiled files. Missing/stale compilation stops launch with that
+instruction. Keep named build logs after failure. Inspect incomplete installations
+before moving or choosing another directory; unknown partial trees are not
+overwritten.
+
+Muting JAWS speech does not disable its shortcuts. If @kbd{M-<} or @kbd{M->} is
+intercepted@comma{} try @code{JAWSKey+3} before the key. Bart's @code{workstation-config}
+repository supplies the separate Emacs-specific JAWS override used on the
+test workstation.
+
+@subsection Manual Native Installation
+
+This route requires native Emacs 30.2 or newer already installed. It does not
+acquire Emacs or replace the guided x64 checks. Set @code{$Emacsvox} to the absolute
+checkout path and continue in one PowerShell window.
+
+@subsection Download And Verify Omnivox
+
+Set @code{$Platform} for the host. The normal Intel/AMD x64 example is:
+
+@example
+$Version = "1.17.0"
+$Platform = "windows-x64" # Use windows-arm64 only on Windows on ARM.
+$DownloadDir = Join-Path $env:USERPROFILE "Downloads\omnivox-$Version"
+$Archive = "omnivox-$Version-$Platform.zip"
+$ReleaseUrl = "https://github.com/bartbunting/omnivox/releases/download/v$Version"
+
+New-Item -ItemType Directory -Force $DownloadDir | Out-Null
+$ArchivePath = Join-Path $DownloadDir $Archive
+$ChecksumPath = Join-Path $DownloadDir "sha256sums.txt"
+Invoke-WebRequest -UseBasicParsing "$ReleaseUrl/$Archive" -OutFile $ArchivePath
+Invoke-WebRequest -UseBasicParsing "$ReleaseUrl/sha256sums.txt" -OutFile $ChecksumPath
+
+$Pattern = '\s+\*?' + [regex]::Escape($Archive) + '$'
+$ChecksumLine = Get-Content $ChecksumPath |
+  Where-Object @{ $_ -match $Pattern @} |
+  Select-Object -First 1
+if (-not $ChecksumLine) @{ throw "No published checksum for $Archive" @}
+$Expected = ($ChecksumLine -split '\s+')[0].ToLowerInvariant()
+$Actual = (Get-FileHash -Algorithm SHA256 $ArchivePath).Hash.ToLowerInvariant()
+if ($Actual -ne $Expected) @{ throw "Checksum mismatch for $Archive" @}
+Write-Host "Checksum OK: $Archive"
+@end example
+
+Do not extract/run unless the final line reports @code{Checksum OK}. This unsigned
+Windows release may be rejected by policy; stop rather than weakening security.
+The existence of an ARM64 Omnivox archive does not extend Emacsvox's supported
+native desktop beyond x64.
+
+@subsection Install And Check The Native Server
+
+In the same PowerShell@comma{} extract everything beneath per-user @code{LocalAppData}:
+
+@example
+$InstallDir = Join-Path $env:LOCALAPPDATA "Emacsvox\Omnivox\releases\$Version-$Platform"
+New-Item -ItemType Directory -Force $InstallDir | Out-Null
+Expand-Archive -LiteralPath $ArchivePath -DestinationPath $InstallDir -Force
+$Omnivox = Join-Path $InstallDir "omnivox.exe"
+
+foreach ($Required in @@(
+  $Omnivox@comma{}
+  (Join-Path $InstallDir "espeak-ng-data\phontab")@comma{}
+  (Join-Path $InstallDir "third-party-licenses\THIRD-PARTY-NOTICES.md")
+)) @{
+  if (-not (Test-Path -LiteralPath $Required -PathType Leaf)) @{
+    throw "Incomplete Omnivox installation: $Required"
+  @}
+@}
+
+& $Omnivox --version
+if ($LASTEXITCODE -ne 0) @{ throw "Omnivox version check failed" @}
+& $Omnivox --list-voices
+if ($LASTEXITCODE -ne 0) @{ throw "Omnivox voice discovery failed" @}
+& $Omnivox --check
+if ($LASTEXITCODE -ne 0) @{ throw "Omnivox audio check failed" @}
+@end example
+
+Require version 1.17.0 or newer@comma{} at least one Windows voice@comma{} and both tone and
+speech. Keep executable@comma{} @code{espeak-ng-data}@comma{} and @code{third-party-licenses} together.
+Do not copy/load @code{omnivox-voices.el} from the archive; that is the upstream
+Emacspeak adapter@comma{} not Emacsvox's bundled one.
+
+@subsection Start Native Emacsvox
+
+Keep the window so @code{$Omnivox} still identifies the verified binary. Set @code{$Emacs}
+to native @code{emacs.exe} and @code{$Emacsvox} if the checkout was not set above:
+
+@example
+$Emacs = "C:\path\to\emacs\bin\emacs.exe"
+# If not set above@comma{} uncomment and edit the next line:
+# $Emacsvox = "C:\path\to\emacsvox"
+
+& $Emacs --version
+if ($LASTEXITCODE -ne 0) @{ throw "Could not run native Emacs" @}
+$env:TTS_PROGRAM = $Omnivox
+& $Emacs -Q --no-splash --load "$Emacsvox\lisp\emacsvox-setup.el"
+@end example
+
+Require Emacs 30.2 or newer. Use @code{emacs.exe} instead of @code{runemacs.exe} for first
+launch so startup errors remain in PowerShell. Direct setup loading is intentional:
+@code{bin/emacsvox} is POSIX; @code{bin/emacsvox.ps1} is the guided native entry.
+
+@subsection Verify Speech And Report Problems
+
+Check the isolated native session:
+
+@enumerate
+@item
+Confirm the startup introduction/ready checkpoint is audible.
+@item
+@kbd{C-h v tts-program @key{RET}} should identify the verified executable's absolute path.
+@item
+@kbd{M-x tts-speak-version @key{RET}} speaks the version; @kbd{M-x omnivox-list-voices @key{RET}}
+displays Windows voices.
+@item
+@kbd{C-n~/~C-p} speak line movement@comma{} @kbd{C-e s} stops current speech@comma{} and
+@kbd{M-x tts-restart @key{RET}} restores it without process errors.
+@item
+Toggle icons twice with @kbd{M-x emacsvox-toggle-icons @key{RET}}. In a session
+starting with icons enabled@comma{} the second toggle restores them and plays an
+icon in addition to speech. Preserve the initial preference when testing a
+customised session.
+@end enumerate
+
+If direct @code{--check} fails@comma{} diagnose Omnivox/Windows audio first. If it passes
+but the server cannot be found in Emacs@comma{} confirm the same PowerShell's
+@code{$env:TTS_PROGRAM} is absolute and @code{Test-Path $env:TTS_PROGRAM} returns @code{True}.
+For a process that exits@comma{} retain PowerShell errors@comma{} @code{*Messages*}@comma{} Windows
+version/architecture@comma{} and full @code{emacs.exe --version} and @code{omnivox.exe --version}.
+
+After acceptance@comma{} put the same selection before setup in your init file:
+
+@lisp
+(setenv "TTS_PROGRAM"
+        "C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.17.0-windows-x64/omnivox.exe")
+(load-file "C:/path/to/emacsvox/lisp/emacsvox-setup.el")
+@end lisp
+
+Replace both paths. This deliberately starts with an absolute executable.
+Adding its directory to @code{exec-path} is optional until selecting @code{omnivox} by
+short name. Native desktop support remains x64; remote speech is a separate
+preview.
+
+@node Installing Omnivox From Source
+@section Installing Omnivox From Source
+
+On GNU/Linux/macOS@comma{} a source build needs network access for clone@comma{} toolchain@comma{}
+and locked dependencies. Prepare:
+
+@itemize
+@item
+@uref{https://rustup.rs/, rustup}@comma{} with the checked-in @code{rust-toolchain.toml} selecting Rust.
+@item
+Python 3@comma{} C/C++@comma{} CMake@comma{} and Clang/libclang for eSpeak NG and generated data.
+@item
+GNU/Linux @code{pkg-config} and ALSA development headers@comma{} commonly
+@code{libasound2-dev} on Debian/Ubuntu or @code{alsa-lib-devel} on Fedora.
+@item
+macOS Xcode command-line tools@comma{} installed with @code{xcode-select --install}.
+@end itemize
+
+Keep Omnivox beside Emacsvox@comma{} also matching the WSL layout:
+
+@example
+cd /path/containing/emacsvox
+git clone https://github.com/bartbunting/omnivox
+cd omnivox
+make build
+make install
+@end example
+
+@code{make build} runs the locked release build and stages matching eSpeak data and
+notices. @code{make install} installs binary/data normally under @code{~/.cargo/bin}.
+Set @code{OMNIVOX_INSTALL_BIN} only for another Cargo binary directory. A bare
+@code{cargo build} does not produce the complete installation payload.
+
+Make the installed directory visible on @code{PATH}. No proprietary runtime is
+needed for the recommended Linux/Mac route.
+
+@node Building Omnivox For WSL2
+@section Building Omnivox For WSL2
+
+This advanced path maintains the reproducible Windows bundle or optional
+engine integrations. Ordinary WSL2 installations should use the
+@ref{Installing An Omnivox Windows Release Under WSL2, , prebuilt Windows release}. This source target produces x86-64 Windows.
+
+Requirements are:
+
+@itemize
+@item
+WSL2 with working @code{powershell.exe} and @code{wslpath}@comma{} plus writable Windows
+@code{LocalAppData}.
+@item
+A Docker client/daemon supporting Linux/AMD64 containers@comma{} runnable by the
+WSL user without @code{sudo}. Docker Desktop's WSL integration is one option.
+@item
+Windows .NET Framework 4.7.2 or newer@comma{} not merely a modern @code{dotnet} SDK@.
+Visual Studio is unnecessary.
+@item
+@code{git}@comma{} GNU @code{make}@comma{} @code{curl}@comma{} @code{unzip}@comma{} @code{sha256sum}@comma{} and standard GNU utilities
+including @code{awk}@comma{} @code{cmp}@comma{} @code{find}@comma{} @code{readlink}@comma{} @code{sed}@comma{} @code{sort}@comma{} and @code{xargs}.
+@item
+Network for the initial Docker image@comma{} Rust dependencies@comma{} and two
+checksum-pinned NuGet packages. Subsequent builds reuse caches.
+@item
+Sibling @code{emacsvox} and @code{omnivox} checkouts@comma{} or explicit @code{OMNIVOX_DIR}.
+The clean release target requires the Omnivox source commit recorded for
+the pinned Piper companion in @code{servers/omnivox-release/toolchain.lock};
+mismatches fail rather than combining versions. The development route
+accepts current source by omitting Piper. Allow disk space for Docker@comma{}
+native/cross builds@comma{} and caches.
+@end itemize
+
+Rust@comma{} MinGW@comma{} CMake@comma{} Clang/libclang@comma{} eSpeak NG@comma{} Roslyn@comma{} Visual Studio@comma{} and .NET
+reference assemblies need not be installed in WSL; the controlled toolchain
+pins/builds them. Eloquence@comma{} DECtalk@comma{} and RHVoice runtime/data remain optional
+and unnecessary for WinRT@.
+
+Check prerequisites with:
+
+@example
+cd /path/to/emacsvox
+make verify-windows-omnivox-toolchain
+@end example
+
+The first run downloads pinned .NET compiler packages@comma{} builds the pinned Docker
+image@comma{} and checks exact Rust@comma{} MinGW@comma{} libclang@comma{} Roslyn@comma{} and Framework versions.
+It is not a read-only presence check. Failures identify missing host tools or
+unsupported Framework before the full build.
+
+With clean Emacsvox and sibling Omnivox tracked files@comma{} run:
+
+@example
+cd /path/to/emacsvox
+make windows-omnivox
+@end example
+
+This reproducible release path builds a pinned Windows-GNU executable and
+stages a content-addressed runtime under @code{servers/omnivox-bin}. When the Piper
+lock identifies the matching integrations@comma{} it includes the checksum-pinned
+Piper companion@comma{} RHVoice helper without runtime@comma{} Flite with CMU US SLT@comma{} and
+RuTTS with male/female Russian voices. It bundles no Piper model or RuLex.
+The payload is also copied to Windows-local storage to avoid WSL filesystem
+cost during discovery. It does not download Eloquence@comma{} DECtalk@comma{} or RHVoice
+runtimes or require them for WinRT@.
+
+The final live gate starts that exact runtime@comma{} discovers Flite SLT and both
+RuTTS voices@comma{} and requires nonempty WAV synthesis from each helper. Repeat
+without rebuilding using @code{make verify-windows-omnivox-live}.
+
+To register Piper@comma{} review its model/card and keep the adjacent @code{.onnx.json} or
+@code{.json}. Supply the absolute model path while staging:
+
+@example
+OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx make windows-omnivox
+@end example
+
+Model/configuration are copied to separate content-addressed Windows
+@code{LocalAppData} storage with recorded hashes@comma{} not bundled into the runtime.
+Omitting that variable installs the companion but leaves Piper unregistered.
+After staging@comma{} check with a fresh process:
+
+@example
+./servers/omnivox --engine piper --list-voices
+@end example
+
+Restart both speech processes or Emacs@comma{} then inspect running engines with
+@kbd{C-e H v b}. Piper requires the newly staged server and successfully loaded
+model/helper. The direct @kbd{C-e d e} preference chooser is not a read-only
+inventory command; use the browser to inspect without selecting a preference.
+
+For tracked development changes@comma{} use the route in
+@ref{Integration Maintenance, , Integration Maintenance} rather than bypassing the clean-release guard:
+
+@example
+OMNIVOX_RHVOICE_LIBRARY=/mnt/c/path/to/RHVoice.dll \
+  OMNIVOX_RHVOICE_DATA=/mnt/c/path/to/RHVoice/data \
+  make windows-omnivox-dev
+./servers/omnivox --engine flite --list-voices
+./servers/omnivox --engine rutts --list-voices
+@end example
+
+It builds current source@comma{} stages RHVoice's helper@comma{} Flite SLT@comma{} and RuTTS 6.3.3
+male/female voices@comma{} deliberately omitting the older pinned Piper companion.
+RuTTS needs no separate install; RuLex is excluded. RHVoice needs compatible
+@code{RHVoice.dll} and language/voice data. Supplied library/data variables are
+validated and Windows path pointers retained beside the local runtime; the
+launcher restores them for fresh sessions. Also set @code{OMNIVOX_RHVOICE_CONFIG}
+for a separate configuration directory. These external files are not copied
+into the payload. Omnivox's @code{docs/RHVOICE.md} and @code{docs/RUTTS.md} give validation
+details. Restart after restaging/changing inputs@comma{} then inspect with @kbd{C-e H v b}.
+
+Piper tests against newer committed Omnivox use @code{windows-omnivox-piper-dev}
+and a native Windows CI artifact. It requires the published SHA-256 and a
+reviewed external model@comma{} rejecting dirty or different source. See
+@ref{Integration Maintenance, , Integration Maintenance} for provenance and the complete command. This does
+not alter the reproducible release's pinned companion.
+
+@node Selecting And Checking Omnivox
+@section Selecting And Checking Omnivox
+
+Test the installed server outside Emacs on GNU/Linux/macOS:
+
+@example
+omnivox --version
+omnivox --check
+omnivox --list-voices
+@end example
+
+In WSL2@comma{} the launcher selects @code{OMNIVOX_PROGRAM} first@comma{} the per-user recorded
+installation next@comma{} then a content-addressed source runtime@comma{} then @code{omnivox} on
+@code{PATH}:
+
+@example
+./servers/omnivox --check
+@end example
+
+The check initialises engine/output and plays tone then speech. Its success
+message is conditional on hearing both. Exit zero alone is not audible
+acceptance.
+
+Select before loading Emacsvox:
+
+@example
+export TTS_PROGRAM=omnivox
+@end example
+
+An export affects that shell and children; a shell-startup entry persists it.
+On POSIX@comma{} @code{servers/omnivox} finds @code{omnivox} on @code{PATH}; @code{OMNIVOX_PROGRAM}
+can explicitly override it. The WSL per-user selection persists across shells
+and outranks staged source runtimes. Native Windows resolves @code{omnivox.exe}
+through @code{exec-path} or the absolute @code{TTS_PROGRAM}. Follow
+@ref{Trying Native Windows Emacsvox, , Installing Native Windows Emacsvox} for the supported native x64 route.
+
+In a running session@comma{} @kbd{M-x omnivox} temporarily selects that server.
+@kbd{M-x tts-speak-version} identifies the live adapter and @kbd{M-x tts-restart}
+restarts after a deliberate configuration change. The complete isolated start@comma{}
+expected speech@comma{} and recovery remain in @ref{Installation, , Installation}.
+
+@subsection Remote Workstation Speech (Preview)
+
+@anchor{Remote workstation speech setup}
+
+Emacs can run on an SSH host while Omnivox@comma{} installed voices@comma{} and playback stay
+on your workstation. This uses Omnivox 1.17.0's @code{--serve} and Emacsvox's remote
+transport. Remote access remains a preview feature.
+
+Create a private token on the workstation. The tool refuses to overwrite or
+print an existing token:
+
+@example
+mkdir -p "$HOME/.config/omnivox"
+python3 /path/to/omnivox/tools/create_remote_token.py \
+    "$HOME/.config/omnivox/remote-token"
+@end example
+
+Leave the installed server running in a terminal@comma{} with the matching Emacsvox
+sound-pack directory:
+
+@example
+omnivox --serve --token-file "$HOME/.config/omnivox/remote-token" \
+    --sound-root /path/to/emacsvox/sounds
+@end example
+
+For a Windows service through the WSL launcher@comma{} translate both paths:
+
+@example
+/path/to/emacsvox/servers/omnivox --serve \
+    --token-file "$(wslpath -w "$HOME/.config/omnivox/remote-token")" \
+    --sound-root "$(wslpath -w /path/to/emacsvox/sounds)"
+@end example
+
+In another workstation terminal@comma{} copy the token through verified SSH and open
+the reverse forward@comma{} replacing @code{user@@emacs-host}:
+
+@example
+ssh user@@emacs-host 'mkdir -p ~/.config/omnivox; chmod 700 ~/.config/omnivox'
+scp "$HOME/.config/omnivox/remote-token" user@@emacs-host:.config/omnivox/remote-token
+ssh user@@emacs-host 'chmod 600 ~/.config/omnivox/remote-token'
+ssh -o ExitOnForwardFailure=yes -o ServerAliveInterval=10 \
+    -o ServerAliveCountMax=2 \
+    -R 127.0.0.1:6417:127.0.0.1:6417 user@@emacs-host
+@end example
+
+When Omnivox runs on Windows@comma{} use Windows OpenSSH for the final connection:
+@code{ssh.exe} from WSL or @code{ssh} from PowerShell. It must reach Windows loopback;
+a WSL client under NAT reaches separate WSL loopback instead. Windows SSH uses
+its Windows keys and host-trust configuration.
+
+@ref{Installing Remote Emacsvox, , Installing Remote Emacsvox} provides the remote-only installation and isolated
+launcher. @code{--remote} configures transport before speech starts and needs no
+local Omnivox binary. For personal configuration@comma{} set before startup:
+
+@lisp
+(setq tts-program "omnivox"
+      omnivox-remote-host "127.0.0.1"
+      omnivox-remote-port 6417
+      omnivox-remote-token-file "~/.config/omnivox/remote-token")
+@end lisp
+
+@kbd{M-x omnivox-remote-connect} connects/retries@comma{} @kbd{M-x omnivox-remote-status}
+inspects@comma{} and @kbd{M-x omnivox-remote-disconnect} stops and suspends retries.
+Reconnection refreshes voices/routing and discards unfinished speech. Main and
+notification retain separate workers. Only one Emacs session owns a service
+at a time.
+
+If main connects but notification fails@comma{} main remains available while the
+missing connection retries. Recovery does not replace working main speech.
+@code{omnivox-remote-auto-reconnect} set to nil disables automatic retry; explicit
+disconnect suspends it until another connection. Status retains retry and error
+information.
+
+Keep service and forwarded endpoint on loopback; do not enable SSH
+@code{GatewayPorts}. SSH encrypts the transport and the token excludes other remote
+host users. To rotate@comma{} stop the service@comma{} replace both private token files@comma{} and
+restart. Typing @code{quit} or interrupting the service terminal stops workers.
+
+Inventory belongs to the workstation; install/manage engines there. Bundled
+icons resolve by pack-relative name. Personal sounds outside that directory
+and sound uploads are unsupported; no @code{--sound-root} means no file-based icons.
+For an occupied remote port@comma{} change the left side of @code{-R} and match
+@code{omnivox-remote-port}. Authentication failure indicates differing tokens or
+excessively broad file permissions; a busy service belongs to another connection.
+
+@node Compatibility Speech Servers
+@section Compatibility Speech Servers
+
+These retained direct servers support existing installations@comma{} not the recommended
+first setup or platform matrix:
+
+@table @code
+@item espeak
+Direct Linux Tcl server. @code{make espeak} needs Tclx at runtime@comma{} Tcl 8.6
+headers@comma{} eSpeak NG development libraries@comma{} and C++. Useful for compatibility
+testing; new installations should use Omnivox.
+@item swiftmac
+Direct Swift macOS server@comma{} needing Swift 5.9 or newer and @code{make swiftmac}.
+See @code{servers/mac-swiftmac/Readme.org} for this alternative to Omnivox's
+AVSpeechSynthesizer engine.
+@item mac
+Legacy Python/PyObjC server. The unset Darwin selector still names it as
+a compatibility default@comma{} not an initial-user route. It needs Foundation@comma{}
+AppKit@comma{} and PyObjCTools.
+@item outloud
+Direct Linux IBM TTS/Eloquence adapter with separately licensed compatible
+runtime. Emacsvox does not distribute it. Voxin availability is described
+at @uref{https://voxin.oralux.net}.
+@item dtk-soft
+Direct Software DECtalk adapter with separately installed runtime. See
+@code{servers/software-dtk/Readme.org}. Licensed runtimes are not distributed
+by Emacsvox.
+@end table
+
+The native Windows audio@comma{} standalone Eloquence@comma{} and standalone DECtalk bridges
+under @code{servers/} are advanced WSL compatibility paths. Piper is an optional
+Omnivox engine/model workflow@comma{} not a primary Emacsvox server.
+
+@node Backend Diagnostics And Ownership
+@section Backend Diagnostics And Responsibilities
+
+Local server messages/errors remain in diagnostics buffers@comma{} hidden from the
+ordinary buffer list by default. Use @kbd{C-e H D m} for main or @kbd{C-e H D n} for
+notification diagnostics@comma{} or @kbd{M-x tts-show-diagnostics} with @code{Speaker} or
+@code{Notify}. Missing local diagnostics are reported rather than invented.
+
+Set @code{tts-hide-diagnostic-buffers} to nil in Customize and restart speech to
+include them in the ordinary list. Existing diagnostics are retained; custom
+buffer switchers may show hidden buffers independently.
+
+Choose the diagnostic at the failed layer:
+
+@table @asis
+@item @code{omnivox} is not found
+In WSL@comma{} run @code{./bin/emacsvox-wsl-install --check} and inspect its saved path.
+On other POSIX systems check @code{PATH} or an absolute @code{OMNIVOX_PROGRAM}.
+Keep @code{espeak-ng-data} and @code{third-party-licenses} beside the executable.
+@item @code{omnivox --check} errors or is inaudible
+Diagnose below Emacsvox using Omnivox's
+@uref{https://github.com/bartbunting/omnivox/blob/main/README.md, build guide}@comma{}
+@uref{https://github.com/bartbunting/omnivox/blob/main/docs/STATUS.md, platform status}@comma{} and
+@uref{https://github.com/bartbunting/omnivox/blob/main/docs/guides/diagnostics.md, diagnostics guide}. Do not change Emacs configuration before tone/speech work.
+@item The check passes but Emacsvox is silent
+Confirm @code{TTS_PROGRAM} was @code{omnivox} before setup loaded@comma{} then use
+@kbd{M-x tts-speak-version}. Rerun the WSL installer check for a release
+installation. For development source staging@comma{} run
+@code{make verify-windows-omnivox-runtime} and restart after restaging.
+@item A process starts and later fails
+The POSIX/WSL launcher retains private bounded stderr logs at
+@code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} normally
+@code{~/.local/state/emacsvox/omnivox}. Spoken text is excluded unless
+@code{OMNIVOX_LOG_SYNTHESIS_TEXT} is explicitly enabled; that can expose
+passwords@comma{} mail@comma{} and documents.
+@item Speech works but is delayed
+@kbd{C-e d D} enables a private diagnostic log; reproduce one short presentation
+and toggle it off. Default @code{~/.emacsvox-aural-diagnostics.log} can be changed
+with @kbd{C-u C-e d D} when enabling. Records @code{dispatch-sent}@comma{}
+@code{mixer-source-observed}@comma{} and @code{playback-terminal-observed} share a dispatch ID@.
+Match it in Omnivox logs to separate submission@comma{} queueing@comma{} synthesis@comma{} and
+mixer-source delay. This Emacs log is off by default because submitted
+speech text is complete. A mixer observation is not physical output;
+device/hardware buffering can add delay. The diagnostics menu's @kbd{l} also
+exposes the explicit session logging control with its privacy warning.
+@end table
+
+Emacsvox owns selection@comma{} launcher@comma{} Windows staging@comma{} and its bundled Lisp adapter.
+Omnivox owns native builds@comma{} engines@comma{} CLI@comma{} runtime layout@comma{} and protocols.
+Backend-local READMEs document compatibility adapters and licensed runtimes.
+Use those owning references for versioned details instead of duplicating their
+contracts in first-installation instructions.
+
 @node Emacsvox Keyboard Commands
 @chapter Emacsvox Keyboard Commands.
 
@@ -7448,6 +7635,279 @@ When live Help differs from this manual@comma{} check personal configuration and
 installed package versions@comma{} then compare the generated defaults. For speech
 feedback problems rather than binding discovery@comma{} see
 @ref{Presentation Troubleshooting,Troubleshooting And Recovery,,emacsvox,}.
+
+@node Finding Tasks
+@chapter Find a task
+
+@cindex task finder
+@cindex how to
+
+Choose the result you want. Each link leads to the maintained procedure@comma{}
+including its conditions and recovery instructions. These links do not perform
+an action or change settings. For unfamiliar terms@comma{} use
+@ref{Emacsvox Terminology, , Terms used in this manual}.
+
+@menu
+* Read and navigate: Finding Reading Tasks.  Recover speech, read text, find commands, and move between tasks.
+* Change voices and sounds: Finding Voice Tasks.  Choose reading voices, preview changes, and adjust individual cues.
+* Keep@comma{} inspect@comma{} or reverse settings: Finding Settings Tasks.  Understand persistence, retained drafts, notifications, and recovery.
+* Work in an application: Finding Application Tasks.  Find mail privacy, terminal review, and agent-response instructions.
+@end menu
+
+@node Finding Reading Tasks
+@section Read and navigate
+
+@cindex lost speech
+@cindex talking, stop
+@cindex current line, read without moving
+@cindex documents, switching
+@cindex keys, discovering
+@cindex tables, finding reading instructions
+
+@itemize
+@item
+@ref{Recovering From No Speech,Get speech working again,,emacsvox,}: start with the no-speech recovery procedure
+before changing presentation rules or voices.
+@item
+@ref{Basic Usage,Stop current speech,,emacsvox,}: the first-session commands include stopping speech
+without disabling feedback from subsequent commands.
+@item
+@ref{Reading,Read the current line without moving,,emacsvox,}: compare explicit reading with the
+feedback produced by ordinary movement.
+@item
+@ref{Desktop Objects,Switch documents without closing my work,,emacsvox,}: choose a buffer by name or cycle
+among related buffers; window selection is a separate operation.
+@item
+@ref{Using Online Help,Find out what a key does,,emacsvox,}: inspect the binding in the current buffer rather
+than assuming a manual's default overrides your configuration.
+@item
+@ref{Browsing Structure,Read a table by row or column,,emacsvox,}: use the structured-content guide for
+Markdown and Org. @ref{Agent Shell Tables,Agent Shell tables,,emacsvox,} have their own contextual keys and
+spoken units.
+@end itemize
+
+@node Finding Voice Tasks
+@section Change voices and sounds
+
+@cindex ordinary reading voice
+@cindex headings, changing their voice
+@cindex voices, preview without saving
+@cindex speech engine, choosing
+@cindex voices, downloading
+@cindex unwanted sound
+
+@itemize
+@item
+@ref{Editing Named Voices,Change my ordinary reading voice,,emacsvox,}: work with the palette's @code{default} named
+voice. Preview@comma{} saving@comma{} live selection@comma{} and startup selection are distinct.
+@item
+@ref{Heading Voice Walkthrough,Change the voice used for headings,,emacsvox,}: practise with a temporary buffer rule
+before making a wider change.
+@item
+@ref{Aural Home,Try an installed voice without saving anything,,emacsvox,}: follow the listening
+exercise through the current settings menus and return to your source.
+@item
+@ref{Speech Engine Preferences,Choose a preferred speech engine,,emacsvox,}: change engine preference rather than
+assuming that a palette edit changes every engine-selection policy.
+@item
+@ref{Installed Voices And Engines,Find and install another voice,,emacsvox,}: distinguish availability@comma{} downloaded
+files@comma{} enablement@comma{} and application to the running speech workers.
+@item
+@ref{Changing One Sound,Replace or silence one unwanted sound,,emacsvox,}: target the cue you want to change
+rather than disabling all auditory icons.
+@end itemize
+
+@node Finding Settings Tasks
+@section Keep@comma{} inspect@comma{} or reverse settings
+
+@cindex settings, survive restart
+@cindex Save and Apply, difference
+@cindex draft, resume
+@cindex unexpected feedback
+@cindex undoing a temporary rule
+@cindex notifications, changing output
+
+@itemize
+@item
+@ref{Saving And Startup,Make a setting survive restarting Emacs,,emacsvox,}: identify which resource owns the
+setting and use its own saving or startup action.
+@item
+@ref{Saving And Startup,Understand why Save did not change what I hear,,emacsvox,}: compare stored data@comma{} live
+selection@comma{} buffer overrides@comma{} and worker application before saving again.
+@item
+@ref{Aural Home,Resume an unfinished edit,,emacsvox,}: use the retained-draft route to return to the
+original editor. A retained draft is not a saved setup.
+@item
+@ref{Explaining Presentation,Find out why an item sounded that way,,emacsvox,}: inspect the chosen voices@comma{} cues@comma{}
+and rules; distinguish recorded feedback from a simulation.
+@item
+@ref{Heading Voice Walkthrough,Undo a temporary feedback change,,emacsvox,}: the heading exercise includes checking
+its scope and removing the practice rule. For broader problems@comma{} use
+@ref{Recovering Aural Changes,presentation recovery,,emacsvox,}.
+@item
+@ref{Aural Speech Output,Adjust notifications without changing ordinary reading,,emacsvox,}: review output and
+routing controls together with any restart or privacy implications.
+@end itemize
+
+@node Finding Application Tasks
+@section Work in an application
+
+@cindex mail, limit automatic speech
+@cindex terminal completion, finding help
+@cindex terminal output, review
+@cindex passwords, terminal
+@cindex agent response, read in full
+@cindex code, copy from an agent response
+
+@itemize
+@item
+@ref{Notmuch Speech And Privacy,Limit the mail details spoken automatically,,emacsvox,}: choose fields@comma{} bounds@comma{} and
+completion feedback. Explicit full-detail reading bypasses automatic bounds.
+@item
+@ref{EAT Terminal Completion,Hear a terminal's completion candidates,,emacsvox,}: keep terminal-side completion
+separate from Emacs completion and inspect retained candidates when needed.
+@item
+@ref{EAT Screen Review,Review terminal output without sending input,,emacsvox,}: use EAT's frozen review for
+a retained screen. @ref{Reviewing The Term Screen,Term review,,emacsvox,} follows a different@comma{} live-buffer model.
+@item
+@ref{EAT Passwords And Privacy,Enter a terminal password safely,,emacsvox,}: use EAT's protected input operation and
+understand why ordinary no-echo input is not the same boundary.
+@item
+@ref{Reading Agent Responses,Read the last completed agent response in full,,emacsvox,}: explicitly inspect the
+successful response rather than changing the automatic speech policy.
+@item
+@ref{Agent Shell Source Blocks,Copy code from an agent response,,emacsvox,}: navigate to its source block and use
+the logical copy operation rather than selecting renderer padding.
+@end itemize
+
+For other applications@comma{} begin with @ref{Emacs Packages,Applications and Integrations,,emacsvox,} and the
+active buffer's mode Help.
+
+@node Emacsvox Terminology
+@chapter Terms used in this manual
+
+@cindex terminology
+@cindex glossary
+
+These definitions help you choose a procedure. They do not replace a control's
+specific scope@comma{} save@comma{} or recovery instructions. @ref{Finding Tasks, , Find a task} starts from what
+you want to accomplish rather than the names below.
+
+@section Your working context
+
+@cindex buffer, meaning
+@cindex point, meaning
+@cindex captured source
+@cindex scope, meaning
+
+@table @asis
+@item Buffer
+An Emacs object containing a document or application view. It is
+not necessarily a file@comma{} and switching buffers does not close the one you
+leave. A window displays a buffer. See @ref{Desktop Objects,Buffers hold your work,,emacsvox,}.
+@item Point
+The position in the current buffer at which movement and editing
+act. Explicit reading commands often let you inspect text without moving it.
+@item Mode
+The commands and behaviour associated with a buffer. Its major mode
+supplies its principal tools; minor modes add other behaviour. See
+@ref{Object Oriented Desktop,Let modes give each buffer its tools,,emacsvox,}.
+@item Captured source
+The buffer and position retained when a settings workflow
+starts. Contextual actions continue to refer to that source rather than
+whichever menu or editor is currently selected. A changed or closed source
+may need to be captured again. See @ref{Aural Home,Getting started with settings menus,,emacsvox,}.
+@item Scope
+Where a setting or rule applies@comma{} such as one buffer@comma{} a session@comma{}
+or global defaults. Scope is not the same as persistence: a global change
+need not be saved@comma{} and a saved resource need not be active. See
+@ref{Saving And Startup,Choose what persists,,emacsvox,}.
+@end table
+
+@section Voices and presentation resources
+
+@cindex physical voice, meaning
+@cindex named voice, meaning
+@cindex palette, meaning
+@cindex profile, meaning
+@cindex rule, meaning
+@cindex auditory icon, meaning
+
+@table @asis
+@item Physical voice
+A voice reported by a speech engine@comma{} such as an installed
+system voice or a downloaded model's voice. Installation alone does not
+prove that it is enabled@comma{} active@comma{} or audible. See
+@ref{Installed Voices And Engines,Installed voices and engines,,emacsvox,}.
+@item Named voice
+A presentation name such as @code{default} or @code{bolden}@comma{} resolved
+through a voice palette to physical choices and adjustments. Editing a
+shared named voice can affect several kinds of text that use it. See
+@ref{Editing Named Voices,Edit a named voice,,emacsvox,}.
+@item Voice palette
+A collection defining named voices@comma{} including their
+physical choices@comma{} fallbacks@comma{} and adjustments. Palettes can inherit values;
+editing one is different from changing an engine preference. See
+@ref{Voices And Routing,Voices and routing,,emacsvox,}.
+@item Presentation rule
+A match between application meaning or context and
+the feedback to produce@comma{} such as a voice@comma{} cue@comma{} or silence. A rule chooses
+presentation; it does not install a physical voice. See
+@ref{Managing Feedback Rules,Manage feedback rules,,emacsvox,}.
+@item Auditory icon or cue
+A short sound conveying an event or state. A sound
+pack supplies cues@comma{} while presentation rules determine when to use them.
+Tones can convey information without a recorded sound file. See
+@ref{Sounds And Space,Sounds and space,,emacsvox,}.
+@item Presentation profile
+A saved selection of presentation resources and
+options. It refers to resources rather than copying everything into a full
+configuration backup. Applying a profile also retains its selection for
+startup; individual palette operations have different rules. See
+@ref{Presentation Profiles,Presentation profiles,,emacsvox,}.
+@end table
+
+@section Changes and speech output
+
+@cindex preview, meaning
+@cindex retained draft, meaning
+@cindex Save, meaning
+@cindex Apply, meaning
+@cindex startup selection
+@cindex speech worker, meaning
+
+@table @asis
+@item Preview
+An audition or comparison of a proposed result. Previewing does
+not by itself save the draft or make it the ordinary live configuration.
+@item Retained draft
+An unfinished edit kept in the current Emacs session for
+return to its editor. Retaining it is not a promise of recovery after Emacs
+exits@comma{} and discarding it does not undo a save already completed.
+@item Save
+Record data in the store owned by that editor or setting. Read the
+action's label: @emph{Save and apply} and @emph{Save to collection without selecting}
+intentionally have different effects.
+@item Apply
+Put a chosen configuration into use. The operation may require
+confirmation@comma{} validation@comma{} or a worker restart. Its exact effect depends on
+the resource; it is not a universal synonym for saving.
+@item Startup selection
+The configuration to select when a later session
+starts. Selecting something for this session does not always select it for
+the next one. @ref{Saving And Startup,Choose what persists,,emacsvox,} compares these states and their owners.
+@item Speech server@comma{} engine@comma{} and worker
+Emacsvox talks to a speech server;
+the server uses engines to synthesise speech. The manual uses @emph{worker} for
+a running speech instance whose configuration and reported voices can
+differ from another instance or from installed files. See
+@ref{Speech Backends,Speech Backends,,emacsvox,}.
+@item Main and notification speech
+Separate output paths for foreground
+reading and other announcements. An integration decides which path to use
+for an event; their existence is not a guarantee that all background text
+is private. See @ref{Aural Speech Output,Speech output and notifications,,emacsvox,}.
+@end table
 
 @node Copyright
 @chapter Copyright

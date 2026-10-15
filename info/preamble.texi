@@ -19,12 +19,12 @@ The manual is divided into the following chapters:
 @menu
 Current-user path:
 * Welcome to Emacsvox: Introduction.
+* Using This Manual: Using This Manual.
 * Installation: Installation.
 * Basic Usage: Basic Usage.
-* Speech Backends: Speech Backends.
+* Using Online Help: Using Online Help.
 * Audio Desktop: Audio Desktop.
 * Aural Presentation: Aural Presentation.
-* Using Online Help: Using Online Help.
 
 Current workflows:
 * Applications And Integrations: Emacs Packages.
@@ -37,7 +37,10 @@ Exact generated reference:
 * Commands, Options, And Keys: (emacsvox-reference).
 
 Additional current material:
+* Speech Backends: Speech Backends.
 * Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
+* Find a Task: Finding Tasks.
+* Terms Used in This Manual: Emacsvox Terminology.
 
 Project information:
 * Copying: Copyright.
