@@ -30,6 +30,9 @@
 ;;; Code:
 
 (require 'loaddefs-gen)
+;; Register Transient's autoload macro expansion before scanning.  Otherwise
+;; loaddefs-gen may evaluate a whole menu module to discover the macro.
+(require 'transient)
 
 (defvar emacsvox-auto-autoloads-file
   (expand-file-name "emacsvox-loaddefs.el"
