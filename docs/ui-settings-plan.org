@@ -671,18 +671,31 @@ implementation; these links are not a substitute for the repository rule.
 
 * Longer-term editor improvements
 
-Menu coverage and editor conversion are separate checkpoints. Give every
-inventoried action a discoverable route first. Keep dedicated buffers for
-voice, palette, sound, punctuation, and rule inventories rather than expanding
-them into long Transient menus. Audit all existing Home actions before claiming
-complete coverage; retiring Aural Home remains a separate decision.
+Menu coverage and editor improvements are separate checkpoints. The Home menu
+entry is retired and its named actions have focused destinations. Keep dedicated
+buffers for voice, palette, sound, punctuation, and rule inventories, with
+Transient menus for actions and repeated adjustments.
+
+Retain the existing major-mode foundations:
+
+- =emacsvox-aural-voice-editor-mode= and the rule editor's
+  =emacsvox-aural-scheme-editor-mode= derive from
+  =emacsvox-aural-interface-mode=, which derives from =special-mode=.
+- Voice, palette, sound-pack, and pronunciation lists use dedicated modes
+  based on =emacsvox-aural-tabulated-mode= and =tabulated-list-mode=.
+
+No replacement major mode is selected. Improve the existing modes' editing
+conventions, state reporting, and speech. Start the editor workstream with the
+named-voice editor and its browser, unless a concrete problem in another editor
+has higher priority. Inspect existing bindings and draft behaviour before
+choosing changes; exact save, finish, and cancel bindings remain undecided.
 
 After connecting each editor, evaluate its ordinary Emacs editing behaviour:
 
 - Use searchable, sortable lists and preserve selection, filters, and return
   context. Use foldable Outline sections for structured details.
-- Provide a clear major mode, standard movement and help, an accurate modified
-  indicator, and undo appropriate to that editor's draft model.
+- Make the existing major mode's movement and Help predictable, report modified
+  state accurately, and provide undo appropriate to its draft model.
 - Audit existing bindings before adopting familiar save, finish, and cancel
   conventions. Saving, applying, previewing, and restarting must remain
   distinct when they have different effects.
@@ -693,6 +706,14 @@ After connecting each editor, evaluate its ordinary Emacs editing behaviour:
 
 These are proposed follow-on slices, not a completed conversion or an
 authorization to rewrite all editors at once.
+
+For each editor, implement and commit small fixes with focused regression
+coverage. Listening acceptance covers editing, undo, preview interruption,
+save or draft retention, leaving and returning, and recovery after a failed
+save. Preserve selection, filters, sample text, draft identity, and source
+context throughout. The complete voice workflow was accepted on 2026-10-15;
+repeat listening when an editor change warrants it, or as an optional confidence
+check, rather than treating that accepted milestone as unfinished.
 
 Persistence remains owned by existing subsystems. Ordinary defaults use
 Customize; capitalization cues use personal aural rules; voices, palettes,
@@ -1111,17 +1132,12 @@ Diagnostics, named-voice tuning, the combined rule overview, training controls,
 direct action discovery, and Home menu retirement are delivered above. The
 remaining work is:
 
-1. Complete the voice browsing listening task before choosing further editor
-   changes. Existing workbench/editor tests cover filtered search, sorting, and
-   return focus. Verify filters, row, column, sample text, draft, and source
-   through audition, tuning, compare, save, and return on the normal host.
-   Make a small regression-backed fix for each observed failure.
-2. Audit remaining presentation discovery gaps: history policy, Voice Lock,
+1. Audit remaining presentation discovery gaps: history policy, Voice Lock,
    silence-at-point, earcon enablement, and preview labels. Separate these from
    the delivered face/rule tuning routes and confirm their actual scopes before
    adding controls. Acceptance: find the responsible setting, change or restore
    it, and verify source return and persistence boundaries.
-3. Reading and dictionary discovery. Add an explicitly separate route to Emacs
+2. Reading and dictionary discovery. Add an explicitly separate route to Emacs
    pronunciation dictionaries and classify character-scale, repeat cleanup,
    predefined-rate, Unicode, emoji, quiet/nonprinting speech, column filtering,
    chunking, and punctuation-policy settings as focused or advanced controls.
@@ -1129,21 +1145,22 @@ remaining work is:
    small patch. Include general table preferences and interaction exclusions.
    Acceptance: edit one dictionary entry and demonstrate which store saves it;
    opening the workflow must not write or restart speech.
-4. Decide the shared search policy using the inventory above. Settings and
+3. Decide the shared search policy using the inventory above. Settings and
    action searches already use case-insensitive substrings; voice pickers and
    other selection prompts still need a decision. Preserve each prompt's
    distinction between focusing, selecting, filtering, and activating.
-5. Improve one dedicated editor at a time using listening findings. Audit its
-   existing maps, modified state, undo, help, and finish/cancel behavior before
-   changing conventions. Prioritize the editor that obstructs the complete task;
-   no broad conversion is implied by this queue.
-6. Expand integration and advanced discovery using the repository-wide inventory
+4. Improve the named-voice editor and its browser using the existing major modes,
+   then apply useful conventions to one other editor at a time. Follow the
+   longer-term editor improvements section above; a concrete interaction problem
+   can change the order. Repeat affected listening tasks after changes.
+5. Expand integration and advanced discovery using the repository-wide inventory
    above, then finish the remaining milestone 5 tasks. Cover outstanding routes
    and verify supported Transient versions with Emacs 30.2 in a separate checkout.
    Preserve the accepted Home retirement and explicit save/apply boundaries.
 
-Listening determines the next editor priority. The broader audit remains a set
-of workstreams rather than six small patches or a fixed completion estimate.
+Listening findings can change editor priorities. The broader audit remains a set
+of workstreams rather than five small patches or a fixed completion estimate.
+The accepted voice workflow is not a prerequisite waiting to be completed.
 This updated queue records no additional listening acceptance.
 
 * Acceptance tasks and development cycle
@@ -1209,7 +1226,8 @@ verification of subsequently changed code.
   Commit =982e17878= completes the pulled manual navigation update with the
   matching Info menu, external Info links, and generated artifacts. The full
   rebuild, byte-code preflight, and documentation gate pass. These automated
-  checks add no listening acceptance; voice browsing remains the next task.
+  checks add no listening acceptance and preserve the earlier voice-workflow
+  acceptance. Repeating that task is optional unless relevant behaviour changes.
 - 2026-10-15: Listening tasks 1 through 9 are accepted; see the current baseline
   and completed milestone checkboxes. Integration discovery remains open after
   Customize did not open from scratch, Magit and shell. Source inspection shows
