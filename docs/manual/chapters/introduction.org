@@ -80,7 +80,7 @@ Settings and editors have distinct saving rules, explained alongside each task
 in [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]].
 
 Aural Home remains available through ~C-e H h~ or ~M-x emacsvox-aural~ for
-comparison and workflows that still return through Home. It is a separate
+comparison and access to the same actions and editors. It is a separate
 table-based interface, not another name for the settings menu. Follow the
 navigation instructions for the interface you opened.
 

@@ -15,6 +15,10 @@ backend, and diagnosing problems. Omnivox's native build procedures, engine
 behaviour, and versioned protocols belong to
 [[https://github.com/bartbunting/omnivox][the Omnivox repository]].
 
+The menu routes here describe =ui-experiments=. Release packages can provide
+an earlier interface; use the matching manual and keep a working installation
+available while testing the development branch.
+
 ** Supported Platform Routes
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Supported Platform Routes
@@ -22,10 +26,9 @@ behaviour, and versioned protocols belong to
 :END:
 
 The following table describes Emacsvox support, not every platform that the
-Omnivox project can build.  ``Host check required'' means that automated build
-and archive verification does not prove playback through the user's audio
-device; an audible =omnivox --check= on that machine remains the acceptance
-test.
+Omnivox project can build. ``Host check required'' means that automated build
+and archive verification does not prove playback through your audio device;
+an audible =omnivox --check= on that machine remains the acceptance test.
 
 #+attr_texinfo: :columns .18 .31 .51
 | Emacs platform | Recommended route | Current support evidence |
@@ -34,19 +37,19 @@ test.
 | Other GNU/Linux systems | Source-built Omnivox using eSpeak NG | Use the source route for Linux ARM64, an older distribution ABI, or a host that cannot run the published x86-64 archive. |
 | macOS on Apple silicon | Omnivox through the official Homebrew tap, using AVSpeechSynthesizer | Native ARM64 tap checks cover installation, synthesis, reinstall, a packaging-revision upgrade, and removal; audible Emacs acceptance remains required. |
 | macOS on Intel | Omnivox through the official Homebrew tap, using AVSpeechSynthesizer | Native Intel tap checks cover installation, synthesis, reinstall, a packaging-revision upgrade, and removal; audible Emacs acceptance remains required. |
-| Emacs in WSL2 on x86-64 Windows | Omnivox 1.17.0 Windows x64 release archive using WinRT | The published archive is checksum-protected and release CI verifies its architecture, adjacent data, WinRT and eSpeak synthesis.  The audible host check remains required. |
-| Emacs in WSL2 on Windows on ARM | Omnivox 1.17.0 Windows ARM64 release archive using WinRT | Release CI verifies the ARM64 archive, adjacent data, WinRT and eSpeak synthesis, and the guided installer selects it automatically.  A complete WSL2 host and audible check remains required. |
+| Emacs in WSL2 on x86-64 Windows | Omnivox 1.17.0 Windows x64 release archive using WinRT | The published archive is checksum-protected and release CI verifies its architecture, adjacent data, WinRT and eSpeak synthesis. The audible host check remains required. |
+| Emacs in WSL2 on Windows on ARM | Omnivox 1.17.0 Windows ARM64 release archive using WinRT | Release CI verifies the ARM64 archive, adjacent data, WinRT and eSpeak synthesis, and the guided installer selects it automatically. A complete WSL2 host and audible check remains required. |
 | Native Windows x64 Emacs 30.2 or newer | Guided PowerShell installation with Omnivox 1.17.0 using WinRT | Supported. Native installer, complete byte-code compilation, fresh-process verification, and two-lane speech checks cover this route. Confirm audible speech on the installed host. Native Windows ARM64 is not yet supported. |
 
 Use Homebrew on macOS, the guided installer under WSL2, or the matching release
-archive on GNU/Linux.  Manual Mac archive installation remains available.
-A bare executable, a repository tag, or an unpackaged CI artifact is not a
-complete installation: keep the release's runtime data and notices beside the
-executable.  Homebrew preserves that layout for you.
+archive on GNU/Linux. Manual Mac archive installation remains available.
+A bare executable, repository tag, or unpackaged CI artifact is not a complete
+installation: keep the release's runtime data and notices beside the executable.
+Homebrew preserves that layout for you.
 
-Do not set =OMNIVOX_ENGINE= during initial setup.  Its empty value selects
-the normal platform engine above.  Engine routing and optional Piper,
-Eloquence, or DECtalk support are later customizations, not prerequisites for
+Do not set =OMNIVOX_ENGINE= during initial setup. Its empty value selects
+the normal platform engine above. Engine routing and optional Piper,
+Eloquence, or DECtalk support are later customisations, not prerequisites for
 first speech.
 
 For Emacs running on a remote SSH host, see
@@ -60,14 +63,17 @@ For Emacs running on a remote SSH host, see
 Omnivox 1.17.0 is the minimum supported release. It supplies named punctuation
 profiles, palette-aware character speech and editable engine configuration,
 alongside managed voice libraries, eSpeak variants, engine-specific voice
-controls, individual fallback tuning and complete voice previews. A newer compatible
-release may be used. The manual archive examples and guided installers pin the
-1.17.0 core and matching optional engines exactly; the macOS Homebrew tap follows
-its maintained stable formula. Upgrade an existing Omnivox
-installation separately; updating Emacsvox does not replace the selected speech
-server. Voice-library management currently uses the bundled WSL-to-Windows
-launcher; remote and direct native launches retain their existing limits.
+controls, individual fallback tuning and complete voice previews. A newer
+compatible release may be used. The manual archive examples and guided
+installers pin the 1.17.0 core and matching optional engines exactly; the
+macOS Homebrew tap follows its maintained stable formula.
 
+Upgrade an existing Omnivox installation separately; updating Emacsvox does
+not replace the selected speech server. Voice-library management uses the
+bundled local management route. Remote and direct-native launches do not
+acquire the WSL launcher's file or release-management capabilities merely by
+connecting to an Omnivox worker. The individual procedures identify their
+required host and capabilities.
 
 ** Install Omnivox From A Release Binary
 :PROPERTIES:
@@ -81,7 +87,7 @@ launcher; remote and direct native launches retain their existing limits.
 :END:
 
 On macOS (formerly OS X), install [[https://brew.sh][Homebrew]] and follow its shell setup
-instructions.  Then install Omnivox from the
+instructions. Then install Omnivox from the
 [[https://github.com/bartbunting/homebrew-omnivox][official Homebrew tap]]:
 
 #+begin_example
@@ -92,10 +98,10 @@ omnivox_program="$(brew --prefix omnivox)/bin/omnivox"
 "$omnivox_program" --list-voices
 #+end_example
 
-Homebrew selects the Apple Silicon or Intel archive and verifies its checksum.
+Homebrew selects the Apple silicon or Intel archive and verifies its checksum.
 The version must be 1.17.0 or newer, and the check must produce both a tone and
-spoken confirmation.  Apple system speech and eSpeak are included.  You do not
-need a Rust build or an Omnivox source checkout.  Install Emacs 30.2 or newer
+spoken confirmation. Apple system speech and eSpeak are included. You do not
+need a Rust build or Omnivox source checkout. Install Emacs 30.2 or newer
 separately; this tap does not install Emacs or Emacsvox.
 
 To select this Homebrew installation persistently for Emacsvox, record the
@@ -108,20 +114,20 @@ mkdir -p "$(dirname "$omnivox_config_file")"
 printf '%s\n' "$omnivox_program" > "$omnivox_config_file"
 #+end_example
 
-This replaces any previous executable selection in that file.  The path uses
-Homebrew's current-version link, so it continues to work after upgrades.  Do
-not substitute a versioned =Cellar/omnivox/...= path.  The bundled launcher reads
+This replaces any previous executable selection in that file. The path uses
+Homebrew's current-version link and continues to work after upgrades. Do not
+substitute a versioned =Cellar/omnivox/...= path. The bundled launcher reads
 this file even when Emacs does not inherit the shell's Homebrew =PATH=, as can
-happen when starting Emacs from Finder.  An explicit =OMNIVOX_PROGRAM= override
-still takes precedence; remove or update an old override if it selects another
-installation.  If you use =EMACSVOX_OMNIVOX_CONFIG_FILE= or =XDG_CONFIG_HOME=,
-make sure the launching Emacs session sees the same configuration location.
+happen when starting from Finder. An explicit =OMNIVOX_PROGRAM= override
+still takes precedence; remove or update an override selecting another
+installation. If using =EMACSVOX_OMNIVOX_CONFIG_FILE= or =XDG_CONFIG_HOME=,
+make sure the launching Emacs sees the same location.
 
-Emacsvox uses its own bundled Lisp adapter.  Do not load the Homebrew package's
-=libexec/omnivox-voices.el=, which is intended for upstream Emacspeak.  Continue
-with [[*Build And Start Emacsvox][Quick Installation]] to compile Emacsvox, run
-=./bin/emacsvox --diagnose= and =./bin/emacsvox --check=, and start an isolated
-speaking session.  Confirm the selected server and audible output on your Mac.
+Emacsvox uses its bundled Lisp adapter. Do not load Homebrew's
+=libexec/omnivox-voices.el=, intended for upstream Emacspeak. Continue with
+[[*Build And Start Emacsvox][Quick Installation]] to compile Emacsvox, run =./bin/emacsvox --diagnose=
+and =./bin/emacsvox --check=, and start an isolated speaking session.
+Confirm the selected server and audible output on your Mac.
 
 To upgrade Omnivox later:
 
@@ -132,24 +138,24 @@ brew upgrade omnivox
 "$(brew --prefix omnivox)/bin/omnivox" --check
 #+end_example
 
-Restart your Emacsvox session after upgrading so both speech processes use the
-new executable.  Updating Emacsvox alone does not upgrade the Homebrew package.
+Restart Emacsvox after upgrading so both speech processes use the new
+executable. Updating Emacsvox alone does not upgrade Homebrew's package.
 =brew uninstall omnivox= removes it; select another server before restarting
-Emacsvox, since the saved executable path remains in your configuration.
+Emacsvox because the saved executable path remains in your configuration.
 
 Optional Piper, Flite, and RuTTS companions and voice models are separate.
-The bundled RHVoice bridge still requires a compatible user-installed runtime
-and data; its presence does not establish macOS runtime support.  Keep optional
+The bundled RHVoice bridge still needs a compatible user-installed runtime
+and data; its presence does not establish macOS runtime support. Keep optional
 companions, downloaded voices, and configuration outside Homebrew's Cellar,
-and use their explicit paths as described in the
-[[https://github.com/bartbunting/omnivox/blob/main/docs/README.md][Omnivox engine guides]].  Companions must match the core release and architecture.
+and use explicit paths as described in the
+[[https://github.com/bartbunting/omnivox/blob/main/docs/README.md][Omnivox engine guides]]. Companions must match core release and architecture.
 The WSL optional-engine installer is not a Homebrew package manager.
 
-The tap installs the published binaries without adding Apple Developer ID
-signing or notarization.  If local security policy refuses the verified binary,
-use [[*Installing Omnivox From Source][Installing Omnivox From Source]].  Native tap checks cover
-WAV synthesis and package operations; they do not replace listening acceptance
-inside Emacs or prove an upgrade between different upstream versions.
+The tap installs published binaries without adding Apple Developer ID signing
+or notarisation. If local policy refuses the verified binary, use
+[[*Installing Omnivox From Source][Installing Omnivox From Source]]. Native tap checks cover WAV synthesis and
+package operations; they do not replace listening acceptance in Emacs or prove
+an upgrade between different upstream versions.
 
 *** Manual archive installation
 :PROPERTIES:
@@ -157,9 +163,8 @@ inside Emacs or prove an upgrade between different upstream versions.
 :END:
 
 Use this route for GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime,
-macOS on Apple silicon, or macOS on Intel.  The
-[[https://github.com/bartbunting/omnivox/releases/tag/v1.17.0][Omnivox 1.17.0 release]]
-provides these archive names:
+macOS on Apple silicon, or macOS on Intel. The
+[[https://github.com/bartbunting/omnivox/releases/tag/v1.17.0][Omnivox 1.17.0 release]] supplies:
 
 #+attr_texinfo: :columns .28 .27 .45
 | Host | Set =platform= to | Archive |
@@ -168,10 +173,9 @@ provides these archive names:
 | macOS Apple silicon | =macos-arm64= | =omnivox-1.17.0-macos-arm64.tar.gz= |
 | macOS Intel | =macos-x64= | =omnivox-1.17.0-macos-x64.tar.gz= |
 
-Run =uname -m= if the Mac architecture is uncertain: =arm64= identifies Apple
-silicon and =x86_64= identifies Intel.  Create a download directory, select the
-matching platform value, and fetch both the archive and published checksum
-file:
+On a Mac, =uname -m= identifies =arm64= for Apple silicon or =x86_64= for Intel.
+Create a download directory, select the platform, and fetch the archive and
+published checksums:
 
 #+begin_example
 mkdir -p "$HOME/Downloads/omnivox-1.17.0"
@@ -184,22 +188,22 @@ curl -fLO "$release_url/$archive"
 curl -fLO "$release_url/sha256sums.txt"
 #+end_example
 
-Replace =linux-x64= with the matching macOS value from the table.  Verify the
-selected archive before extracting it.  On GNU/Linux, run:
+Replace =linux-x64= with the appropriate Mac value when needed. Verify before
+extraction. On GNU/Linux:
 
 #+begin_example
 grep "  $archive$" sha256sums.txt | sha256sum --check -
 #+end_example
 
-On macOS, use its installed =shasum= command instead:
+On macOS:
 
 #+begin_example
 grep "  $archive$" sha256sums.txt | shasum -a 256 --check
 #+end_example
 
-The command must name the archive and report =OK=.  If it does not, remove the
-download and do not run it.  Extract the verified payload into a versioned
-directory and keep every supplied directory beside the executable:
+The command must name the archive and report =OK=. Otherwise remove the
+download and do not run it. Extract the verified payload into a versioned
+directory, keeping every supplied directory beside the executable:
 
 #+begin_example
 install_dir="$HOME/.local/opt/omnivox-${omnivox_version}"
@@ -209,13 +213,12 @@ chmod 755 "$install_dir/omnivox"
 export PATH="$install_dir:$PATH"
 #+end_example
 
-Add the same =PATH= entry to the shell startup file used to launch Emacs so it
-remains available in later sessions.  The extracted directory contains
-=omnivox=, =espeak-ng-data=, =third-party-licenses=, and
-=omnivox-voices.el=.  Emacsvox uses its own bundled Lisp adapter, so do not
-load or copy the release's =omnivox-voices.el= into Emacsvox.
+Add that =PATH= entry to the shell startup used to launch Emacs for subsequent
+sessions. The directory contains =omnivox=, =espeak-ng-data=,
+=third-party-licenses=, and =omnivox-voices.el=. Do not load or copy the last
+file into Emacsvox, which has its own adapter.
 
-Now prove the installed binary before starting Emacsvox:
+Check the binary before starting Emacsvox:
 
 #+begin_example
 omnivox --version
@@ -223,15 +226,13 @@ omnivox --check
 omnivox --list-voices
 #+end_example
 
-The version must report 1.17.0 or newer, and the check must produce both its
-tone and spoken confirmation.  The macOS archives are not code-signed or notarized; if
-local security policy refuses the verified binary, use the source route below
-rather than weakening that policy.  On GNU/Linux, a missing runtime library or
-incompatible glibc also means that the source route is the appropriate path.
+The version must be at least 1.17.0 and the check must produce tone and speech.
+Mac archives are neither code-signed nor notarised. If security policy refuses
+the verified binary, use the source route rather than weakening policy. On
+GNU/Linux, missing libraries or incompatible glibc also call for a source build.
 
-For Emacs running under WSL2, continue to
-[[*Install An Omnivox Windows Release Under WSL2][Installing An Omnivox Windows Release Under WSL2]].  That route
-uses the verified Windows archive without requiring a compiler or Docker.
+For WSL2, use [[*Install An Omnivox Windows Release Under WSL2][Installing An Omnivox Windows Release Under WSL2]], which verifies
+a Windows archive without requiring a compiler or Docker.
 
 ** Install An Omnivox Windows Release Under WSL2
 :PROPERTIES:
@@ -239,57 +240,50 @@ uses the verified Windows archive without requiring a compiler or Docker.
 :DESCRIPTION: Use the matching verified Windows archive without a build toolchain.
 :END:
 
-This is the recommended WSL2 route for ordinary use on x86-64 Windows and
-Windows on ARM.  From the Emacsvox checkout, inspect the planned installation
-without changing anything:
+This is the ordinary WSL2 route for x86-64 Windows and Windows on ARM. From
+the Emacsvox checkout, first inspect without changing anything:
 
 #+begin_example
 ./bin/emacsvox-wsl-install --check
 #+end_example
 
-The doctor detects the Windows architecture, chooses the matching Omnivox
-1.17.0 archive, and reports the Emacs and per-user paths it will use.  If Linux
-packages are missing, it prints one =apt= command for you to review and run.
-Working =powershell.exe= and =wslpath= interoperation are required.  After
-resolving any reported prerequisite, run:
+The doctor detects Windows architecture, selects its Omnivox 1.17.0 archive,
+and reports Emacs and per-user paths. Missing Linux packages are reported with
+an =apt= command for you to review and run. Working =powershell.exe= and
+=wslpath= interoperation are required. Resolve prerequisites, then run:
 
 #+begin_example
 ./bin/emacsvox-wsl-install
 #+end_example
 
-The release manifest =etc/wsl-install.conf= pins the Omnivox version, GitHub
-release URL, x64 and ARM64 archive names, and both SHA-256 hashes.  The installer
-asks Windows for its architecture, chooses that matching published archive, and
-verifies its pinned hash; it does not build Omnivox from source.
+=etc/wsl-install.conf= pins the Omnivox version, release URL, x64/ARM64 archive
+names, and both SHA-256 hashes. The installer queries Windows architecture and
+verifies the matching published archive; it does not build Omnivox.
 
-The installer downloads and checksum-verifies the appropriate Windows archive,
-installs the complete payload below the Windows user's =LocalAppData=, and
-records its absolute WSL path in
+The full payload is installed below the Windows user's =LocalAppData=. Its
+absolute WSL executable path is recorded in
 =$XDG_CONFIG_HOME/emacsvox/omnivox-program=, normally
-=~/.config/emacsvox/omnivox-program=.  It does not invoke =sudo= or edit a shell
-startup file.  It also compiles Emacsvox, runs the non-audible launcher
-diagnostic, and finishes with the audible speech-server check.  The normal
-acceptance condition is hearing both its tone and speech.
+=~/.config/emacsvox/omnivox-program=. The installer does not invoke =sudo= or
+edit shell startup. It compiles Emacsvox, runs a non-audible launcher diagnostic,
+and finishes with the audible server check. Confirm both tone and speech.
 
-This binary route does not need the Omnivox source checkout, Docker, Rust,
-MinGW, Visual Studio, Windows .NET Framework, or an optional/proprietary speech
-runtime.  WinRT speech is included in Windows.  Use
-=./bin/emacsvox-wsl-install --no-audio-check= only for a controlled or headless
-installation where a separate audible check will be performed later.
+No Omnivox checkout, Docker, Rust, MinGW, Visual Studio, Windows .NET Framework,
+or optional/proprietary runtime is needed. WinRT speech is included in Windows.
+Use =./bin/emacsvox-wsl-install --no-audio-check= only for controlled/headless
+installation with a separate audible check later.
 
 *** Manual Release Installation
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-The following procedure is the manual equivalent.  Use it when reviewing the
-installer's actions, working around a local restriction, or repairing one
-layer independently.  It needs =curl=, =unzip=, =sha256sum=, and working
-=powershell.exe= and =wslpath= interoperation.  The commands show Windows x64;
-on Windows on ARM, use =windows-arm64= in both the archive and versioned install
-directory and verify that archive's published checksum.
+Use this equivalent manual procedure to inspect installer actions, work around
+a restriction, or repair one layer. It needs =curl=, =unzip=, =sha256sum=,
+=powershell.exe=, and =wslpath=. The example uses Windows x64. On Windows on
+ARM, use =windows-arm64= in the archive and installation directory and verify
+that archive's checksum.
 
-Download the Windows x64 archive and the release checksum file in WSL:
+Download from WSL:
 
 #+begin_example
 mkdir -p "$HOME/Downloads/omnivox-1.17.0"
@@ -302,9 +296,8 @@ curl -fLO "$release_url/sha256sums.txt"
 grep "  $archive$" sha256sums.txt | sha256sum --check -
 #+end_example
 
-The final command must name the archive and report =OK=.  If it does not,
-remove the download and do not run it.  Install the complete archive in a
-versioned directory on the Windows filesystem:
+The last command must name the archive and report =OK=. Otherwise remove it
+and do not run it. Install all files on the Windows filesystem:
 
 #+begin_example
 windows_local_app_data="$(powershell.exe -NoProfile -NonInteractive \
@@ -319,16 +312,13 @@ printf '%s\n' "$install_dir/omnivox.exe" > \
   "$config_home/emacsvox/omnivox-program"
 #+end_example
 
-Keep =omnivox.exe=, =espeak-ng-data=, and =third-party-licenses= together in
-that directory.  Do not copy or load the archive's =omnivox-voices.el=;
-Emacsvox uses its bundled adapter.  The data-only configuration file makes the
-selection persistent without changing shell initialization.  Use
-=$XDG_CONFIG_HOME= instead of =~/.config= when it is set.  An explicit
-=OMNIVOX_PROGRAM= remains a temporary override and takes precedence over this
-file.
+Keep =omnivox.exe=, =espeak-ng-data=, and =third-party-licenses= together.
+Do not load the archive's =omnivox-voices.el=; Emacsvox supplies its adapter.
+This data-only file persists selection without shell initialisation. Respect
+=XDG_CONFIG_HOME= when set. =OMNIVOX_PROGRAM= remains an explicit temporary
+override with precedence over the file.
 
-From the Emacsvox checkout, verify the selected release and listen to its
-physical audio check:
+Verify through the checkout's launcher:
 
 #+begin_example
 ./servers/omnivox --version
@@ -336,24 +326,23 @@ physical audio check:
 ./servers/omnivox --check
 #+end_example
 
-The version must report 1.17.0 or newer.  The check must produce both its tone
-and spoken confirmation.  Release CI verifies the downloaded archive, Windows x64
-architecture, adjacent eSpeak data, voice discovery, and headless synthesis
-through both WinRT and eSpeak, but only this audible check proves the local
-audio path.  The Windows archive is not code-signed.  If Windows security or
-local policy refuses it, do not weaken that policy to complete the install.
+Confirm version 1.17.0 or newer, tone, and speech. Release CI verifies archive,
+x64 architecture, adjacent eSpeak data, discovery, and headless WinRT/eSpeak
+synthesis; only listening checks your audio path. The Windows archive is not
+code-signed. Do not weaken Windows security or local policy to install it.
 
-The generic Omnivox 1.17.0 archive includes TGSpeechBox with its profiles and
-language data, and the portable RHVoice helper. The RHVoice runtime, language
-data and voices remain separate.  It does not contain the optional
-Piper, Flite, or RuTTS companions; none is needed for normal WinRT speech.
-Omnivox 1.17.0 publishes separate matching companions for those engines.
-Emacsvox's clean source-build route below verifies and stages the official
-Piper companion and builds RHVoice, Flite, and RuTTS from the matching 1.17.0
-source.  A Piper voice model and the RHVoice runtime and voices remain separate
-user-supplied files.  Flite and RuTTS need no external runtime installation in
-the source-built bundle.  Eloquence and DECtalk remain separately licensed,
-user-supplied runtimes.
+The generic 1.17.0 archive includes TGSpeechBox profiles/language data and a
+portable RHVoice helper. RHVoice's runtime and voice/language packages are
+separate. Optional Piper, Flite, and RuTTS companions are not required for
+WinRT; matching 1.17.0 companions are published separately.
+
+The clean source-build route verifies/stages the official Piper companion and
+builds RHVoice, Flite, and RuTTS from matching source. Piper models and the
+RHVoice runtime/data are not bundled by that build. A compatible local voice
+management service can separately download the reviewed voice packages below;
+this does not acquire the RHVoice runtime. Flite/RuTTS need no external runtime
+in the source-built bundle. Eloquence/DECtalk runtimes remain separately
+licensed and supplied.
 
 *** Optional Omnivox Engines
 :PROPERTIES:
@@ -361,350 +350,278 @@ user-supplied runtimes.
 :DESCRIPTION: Install, check, remove, and reinstall optional engines from Emacs.
 :END:
 
-The ordinary WSL2 archive is the Omnivox core, not a claim that every supported
-engine is installed.  It keeps first speech small while matching companion
-archives provide engines that are larger, experimental, architecture-specific,
-or incomplete without separately chosen data.
-
-Some companions also need a separately supplied runtime or downloaded voice
-data; installing the Omnivox core alone does not make those voices available.
+The ordinary WSL2 archive is the core, not a claim that every supported engine
+is installed. Companion archives provide larger, experimental, or
+architecture-specific engines. Some require a separately supplied runtime or
+chosen voice data before they can speak.
 
 **** Inspect running engines
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-From a running Emacsvox session, open:
+Open ~C-e H v b~ to browse engines. The equivalent command is:
 
 #+begin_example
 M-x emacsvox-omnivox-manage-components RET
 #+end_example
 
-You can also press ~C-e H h~ for Aural Home and then
-~I~, or choose /Browse voices/. These routes open the same
-engine list. Opening speaks the selected engine using the current speech
-inventory, without waiting for file checks or fresh discovery. Optional engines
-absent from that inventory remain visible as /not reported/, so their installation
-controls are still reachable. Press ~v~ to browse an engine's
-voices directly, or ~RET~ for engine details.
-Details start with a short status summary and the voice actions, with /Browse
-voices/ selected. Matching main and notification status is combined. Problems
-remain visible near the top. /Startup settings/ and /Diagnostics/ start
-collapsed; press ~RET~ on a section to
-expand or collapse it. Each engine remembers its expanded sections and selection.
+Home's ~I~ or /Browse voices/ remains an alternative. Opening uses the current
+speech inventory without waiting for file checks or fresh discovery. Optional
+engines missing from that inventory stay visible as /not reported/ so management
+controls remain reachable. ~v~ browses voices; ~RET~ opens details.
 
-/Available/ describes discovery from the current running worker. An older check
-does not by itself make the engine unavailable. /Previously available/ means the
-evidence belongs to a stopped or replaced worker. Details announce the engine
-before requesting newer inventory in the background when its check is over five
-minutes old, or belongs to another worker. File checks also run in the background.
-/Streams differ/ means the workers report different availability, policy, health
-or voice identities. A bridge's presence alone never establishes that its runtime
-is usable. /Not checked/ is not a claim that the runtime is missing.
-/Diagnostics/ contains each stream's status, worker paths, inventory time,
+Details begin with a short status and voice actions, with /Browse voices/
+selected. Matching main/notification evidence is combined and problems remain
+near the top. /Startup settings/ and /Diagnostics/ start folded; ~RET~ toggles
+sections. Selection and folding are remembered per engine.
+
+/Available/ describes discovery from the current worker. An older check does
+not alone make it unavailable. /Previously available/ belongs to a stopped or
+replaced worker. Details announce the engine before requesting newer inventory
+in the background when its check is over five minutes old or belongs to another
+worker. File checks likewise run in the background where requested.
+/Streams differ/ identifies different availability, policy, health, or voice
+identities. A bridge's presence does not establish its runtime; /Not checked/
+does not mean missing. Diagnostics shows each worker's paths, inventory time,
 runtime discovery, and health.
 
-/Required runtime/ appears near the top for engines that need native libraries.
-For example, successful DECtalk discovery reports that its DLL and dictionary
-loaded. Matching main and notification evidence is combined; differences are
-shown separately. Missing files and load failures retain the worker's reason.
-A disabled engine does not imply missing files, and evidence from a replaced
-worker does not establish the new worker's runtime status. Opening or refreshing
-engine details uses speech-worker discovery without invoking the release installer.
+/Required runtime/ appears near the top when native libraries are needed.
+Successful DECtalk discovery, for example, confirms DLL and dictionary loading.
+Matching worker evidence is combined, differences shown separately, and failures
+retain their reasons. Disabled does not mean missing, and retired-worker evidence
+does not establish current status. Opening/refreshing details uses worker
+discovery without invoking the separate release installer.
 
 **** Browse voices and variants
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Browse voices reported by the running worker and audition eSpeak variants without changing saved settings.
+/Browse voices/ combines reported voices and the installed library, including
+disabled downloads. This dedicated browser preserves Workbench's filters and
+staged edits. Languages have expandable headings with counts; ~RET~ toggles.
+A one-language list starts expanded and selection/folding are remembered.
+~RET~ or ~P~ on a voice auditions an exact sample, ~x~ shows details, and ~t~
+opens an unsaved experiment. Saving asks for a palette destination; browsing
+or previewing changes no palette. ~q~ returns to selected engine details.
 
-- /Browse voices/ combines that engine's reported voices with its installed
-  library, including disabled downloads. This separate browser keeps the general Voice Workbench's filters and
-  staged edits intact. Languages form expandable headings with voice counts;
-  ~RET~ expands or collapses a heading. A single-language list
-  starts expanded, and the browser remembers groups and the selected voice.
-  On a voice, ~RET~ or ~P~ speaks an exact sample;
-  ~x~ shows details;
-  ~t~ opens the existing voice editor for an unsaved experiment.
-  Saving there asks for a palette destination. Browsing and auditioning do not
-  change a palette. ~q~ returns to the selected engine detail.
-  Library information loads in the background; the browser refreshes quietly.
-  /Installed/ distinguishes library entries from engine-supplied voices.
-  /Enabled/ is the desired selection for the next Apply. /Active/ reports
-  current eligibility on both streams, main only, notification only, or neither.
-  /Unknown/ means current worker evidence is missing or inconsistent; press
-  ~R~ to refresh. Active does not mean a model is resident in
-  memory, and is not a listening test. Samples use main speech; an inactive
-  downloaded voice must be enabled and applied before sampling.
+Library data loads asynchronously with quiet refresh. /Installed/ identifies
+library entries versus supplied voices. /Enabled/ is the desired selection
+for the next Apply. /Active/ describes eligibility on both streams, main only,
+notification only, or neither. /Unknown/ means missing/inconsistent evidence;
+~R~ refreshes. Active does not measure model residency or prove listening.
+Samples use main speech; inactive downloads need enablement and Apply first.
 
-- /Voice variants/ in eSpeak details lists the bundled variants reported by
-  the running speech worker. Choose a base voice with ~b~,
-  then use the arrow keys or ~C-n~ / ~C-p~ to
-  browse variants. The whole list is alphabetical by displayed name, ignoring
-  capitalization. Press ~P~ or ~RET~ to hear
-  the selected combination immediately. Variants need no enabling, settings
-  save, download or speech restart. The existing ~p~ preview
-  shortcut also remains available.
-  Press ~u~ for /Use in palette/, then choose a palette and
-  named voice. The voice editor adds the variant as its preferred choice,
-  retaining existing fallbacks and tuning. Press ~P~ to hear
-  it with the palette's settings, then ~w~ to /Save and apply/,
-  or choose /Save to collection without selecting/ to keep it for later.
-  Editing a built-in palette creates a personal copy. /Use at Startup/ in
-  Voice Palettes controls which palette is selected next time.
-  To use Max for ordinary reading, choose your English base with
-  ~b~, select =Max=, press ~u~, and choose
-  your palette followed by =default=. Preview and /Save and apply/ in the
-  editor. The same =default= entry is available alongside =indent= and the
-  other named voices when editing a palette directly.
-  To apply the selected base and variant to every named voice, press
-  ~V~ instead. Choose a new personal palette or update an
-  existing one, compare the proposed voices, then save. Shared adjustments
-  and existing fallback tuning are retained. See
-  [[info:emacsvox#Editing Named Voices][Editing Named Voices]] for the complete review and recovery workflow.
-  ~q~ returns to the variants list with its selection retained;
-  ~v~ opens the base-voice browser. Existing saved variant
-  references remain valid. An older Omnivox worker must be updated once to
-  provide on-demand variants; the screen reports missing support explicitly.
+/Voice variants/ in eSpeak details lists the running worker's bundled variants.
+Choose a base with ~b~, browse with arrows or ~C-n~/~C-p~, and audition with
+~P~ or ~RET~. Sorting is alphabetical by displayed name, ignoring capitalisation.
+The older ~p~ preview key also remains. Variants require no download, enablement,
+saving, or speech restart.
+
+~u~, /Use in palette/, asks for palette and named entry, then opens the voice
+editor with the variant preferred, retaining fallbacks and tuning. Preview with
+~P~, then ~w~ for Save and apply, or save to the collection without selecting.
+Editing a built-in creates a personal copy; /Use at Startup/ remains separate.
+For Max as ordinary reading, choose the English base with ~b~, select =Max=,
+press ~u~, and select the palette's =default=. Preview/save there. The same
+=default= is alongside =indent= and other entries in normal palette editing.
+
+~V~ instead proposes the base/variant for every named voice. Create or update
+a personal palette, compare, then save; shared adjustments and existing fallback
+tuning survive. [[info:emacsvox#Editing Named Voices][Editing Named Voices]] explains review and recovery. ~q~ returns to variants
+with selection retained; ~v~ opens the base browser. Saved references remain
+valid. Older workers lacking on-demand variants report the need for an update.
 
 **** Install and activate voice packages
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Installing a voice and making it active are separate steps. The download catalogue, library, and Apply workflow keep them distinct.
+Installing files, enabling a voice, and activating it are separate steps.
+/Get more voices/ in Piper, Flite, MBROLA, or RHVoice details opens the reviewed
+catalogue. Piper groups language, voice name, and quality; Flite offers AWB/RMS.
+Single-quality voices appear directly under their language, with another group
+only for multiple qualities. ~RET~ opens a group/model and ~q~ returns.
+~/~ searches all models by name or language beyond the current group.
+Details show size, source, terms, and storage. ~s~ shows/hides speakers sharing
+a model; it downloads once while individual speakers can be enabled separately.
 
-- /Get more voices/ in Piper, Flite, MBROLA or RHVoice details opens the reviewed download
-  catalogue. Piper is grouped by language, voice name and quality; Flite
-  offers AWB and RMS. Voices with one quality appear directly in their
-  language group; only voices with several qualities need another group.
-  Press ~RET~ to open a group or model,
-  and ~q~ to return. ~/~ searches all models
-  by name or language, including outside the current group. Model details
-  show download size, source, licence information and storage location.
-  ~s~ shows or hides the speakers sharing that model.
-  A model with several speakers downloads once; each speaker can be enabled
-  separately after installation. Press ~i~ to install.
-  The download runs in the background without speaking each progress update.
-  Omnivox checks each file and validates the voice before adding it disabled.
-  Stay in the catalogue and press ~e~ to enable or disable
-  the installed voice, then ~a~ to review and Apply to both
-  speech streams. For a shared model, ~e~ asks which speaker
-  to change. Enabling alone does not restart speech. These actions also appear
-  near the top of model details, alongside the installed and enabled status.
-  Installation and Apply confirmations offer =yes= and =no= through completion.
-  Type ~y TAB RET~ to confirm; an empty ~RET~
-  declines, and ~C-g~ cancels.
-  Press ~c~ to request cancellation and wait for cleanup.
-  The shipped collection contains reviewed, pinned models that passed native
-  validation. Models with unresolved terms or unsupported configurations are
-  withheld; the catalogue is not a live listing of every upstream download.
+~i~ installs asynchronously without speaking each progress update. Omnivox
+checks files and validates the voice before adding it disabled. In the catalogue,
+~e~ toggles enablement, asking which speaker for a shared model, and ~a~ reviews
+Apply to both streams. Enablement alone does not restart. Model details also
+show these actions near installed/enabled status.
 
-- MBROLA offers US1, US2 and US3; British English en1 is already included.
-  These downloads require the updated, separately configured development
-  companion on Linux or Windows. Older runtimes keep their Piper and Flite
-  catalogues and report that MBROLA downloads need an update. The individual
-  database licence and README accompany each download; review the terms in
-  its details. The first installation retains en1 as an enabled included
-  voice, unless it was explicitly disabled. Enable several MBROLA voices to
-  assign them to different palette choices or speech streams. Each request
-  opens its selected database; enabled databases do not all remain loaded.
+Installation/Apply confirmations offer =yes= and =no= through completion:
+~y TAB RET~ confirms, empty ~RET~ declines, and ~C-g~ cancels. ~c~ requests
+cancellation; wait for cleanup. The shipped catalogue contains reviewed, pinned,
+natively validated models. Unresolved terms or unsupported configurations are
+withheld; it is not a live catalogue of every upstream download.
 
-- RHVoice offers Alan (Scottish English), BDL and CLB (American English), and
-  Ksp (Indian English). These downloads require an updated Omnivox build and
-  a separately installed compatible RHVoice runtime, selected in engine
-  settings. Each voice includes its own English language data and upstream
-  notices. Review its terms before installing. Enable and Apply adds the
-  downloaded voice alongside your externally installed voices, including SLT.
-  A conflicting external installation of the same voice is reported rather
-  than replaced. Uninstallation removes only the managed package; it preserves
-  your external voices and RHVoice runtime.
+MBROLA offers US1, US2, and US3, with British English en1 included. Downloads
+need the updated separately configured development companion on Linux/Windows.
+Older hosts keep Piper/Flite catalogues and report missing MBROLA support.
+Each database carries its licence and README. Initial installation retains
+en1 enabled unless explicitly disabled. Multiple enabled databases can serve
+different entries/streams; each request opens its selected database rather
+than keeping all enabled databases resident.
 
-- In /Browse voices/, manage installed Piper and Flite voices on the
-  local speech host. Press ~+~ to enable or disable a voice in
-  the desired configuration, then ~a~ to review and Apply.
-  Apply checks both replacements, restarts main and notification speech, and
-  verifies both before committing. If a replacement fails, it restores both
-  previous configurations. Disabling keeps the files and saved palette
-  references. Changing /Enabled/ leaves /Active/ unchanged until Apply.
+RHVoice offers Alan (Scottish English), BDL/CLB (American English), and Ksp
+(Indian English), requiring an updated host and separately installed compatible
+RHVoice runtime selected in engine settings. Each package contains its English
+data and upstream notices. Enable and Apply combines managed voices with external
+ones, including SLT. A conflicting external copy is reported, not replaced.
+Removal affects the managed package, not external voices or the runtime.
 
-- After installation, press ~l~ to browse voices,
-  ~+~ to enable the voice, and ~a~ to review
-  Apply. Review covers the managed engines and both speech streams.
-  Installation alone does not load the voice or change speech.
-  Downloaded files belong to you and stay in Omnivox's per-user voice storage
-  across executable upgrades. Failed and interrupted operations retain files
-  for inspection; automatic resume and package updates are not provided yet.
+In /Browse voices/, ~+~ changes desired enablement, and ~a~ reviews Apply.
+The operation checks both replacement workers, restarts main and notification
+speech, and verifies them before committing. Failure restores both previous
+configurations. Disabling preserves files and palette references. /Enabled/
+changes immediately but /Active/ awaits Apply.
+
+After installation, ~l~ browses, ~+~ enables, and ~a~ reviews managed engines
+and both streams. Installation alone neither loads a voice nor changes speech.
+Downloads belong to you in Omnivox's per-user storage across executable upgrades.
+Failed/interrupted operations retain files for inspection; automatic resume
+and package updates are not provided. Uninstall cleanup has its separate
+explicit resume action below.
 
 **** Remove or import managed voices
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Review the effect on stored palettes before deleting a package or importing a voice outside the catalogue.
+Disable every speaker in a downloaded Piper, Flite, MBROLA, or RHVoice package
+and Apply before ~C-c u~ in its voice browser. Review voices, size, and retained
+palette references before confirming. Files still needed by other sessions
+remain. Built-in SLT/en1, imported originals, and engine runtimes cannot be
+removed here. ~C-c U~ reviews incomplete cleanup for explicit resumption.
 
-- To uninstall a downloaded Piper, Flite, MBROLA or RHVoice package, disable all its
-  speakers and Apply, then press ~C-c u~ in the voice browser.
-  Review its affected voices, size and retained palette references before
-  confirming. Files still needed by other sessions are retained. Built-in SLT
-  and MBROLA en1, imported files and engine runtimes cannot be removed here.
-  ~C-c U~ reviews incomplete cleanup for resumption.
+The voice browser's ~d~ opens downloads and ~b~ includes built-in Flite SLT.
+~i~ imports a completed native-validation operation by ID, initially disabled.
+Imported files remain at their validated paths and must stay there. This is
+an advanced import, not the catalogue installation or a file-selection wizard.
+~C-c r~ shows the last Apply result, ~R~ refreshes, and ~q~ returns.
 
-- In the voice browser, ~d~ opens the download catalogue and
-  ~b~ includes built-in Flite SLT explicitly.
-  ~i~ installs a completed native validation operation by its
-  identifier; imported voices initially remain disabled. Their files stay at
-  the validated paths and must remain there. This advanced import action is
-  separate from catalogue installation; a file-selection wizard is not yet
-  provided. ~C-c r~ shows the last Apply result,
-  ~R~ refreshes, and ~q~ returns to details.
-  Apply requires separate main and notification streams started with the
-  updated local Omnivox build. Explicit Piper or Flite file overrides must be
-  cleared before applying that engine's installed voices. An uncertain native
-  cleanup or commit blocks further Apply and remains visible in the result.
+Apply needs separate main/notification streams from the updated local host.
+Clear explicit Piper/Flite file overrides before applying those engines' library
+voices. Uncertain native cleanup or commit blocks another Apply and stays
+visible in its result.
 
 **** Configure and check an engine
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-File configuration and current-worker discovery are different. Review the configured paths before restarting speech.
+Under /Startup settings/, /Edit file settings/ opens the bundled local launcher's
+engine option in Customize. Piper accepts one ONNX model and matching JSON;
+Eloquence/DECtalk accept runtime DLLs; Flite accepts external =.flitevox= files
+with individual /Load file/ switches. Use absolute paths as seen by Emacs;
+WSL converts them for the selected Windows executable. Keep companion files
+beside their runtime/model. Remote settings must be changed on the speech host.
 
-- Under /Startup settings/, /Edit file settings/ for the bundled local Omnivox launcher opens the
-  selected engine's file option in Customize. Piper accepts one local ONNX
-  model with its matching JSON file. Eloquence and DECtalk accept their runtime
-  DLL paths. Flite accepts external =.flitevox= files, each with a /Load file/
-  switch. Use absolute paths as seen by Emacs; WSL converts them for the chosen
-  Windows executable. Keep required companion files beside their runtime or
-  model. Remote speech settings must be changed on the speech host.
-  These are manual overrides. Having no manual files selected does not mean
-  there are no downloaded voices: the installed voice library or launcher
-  defaults apply. A manual Flite file list overrides its installed library.
+These are explicit overrides, not the complete installed-voice inventory.
+No manually selected files can still mean library voices or launcher defaults
+are available. A manual Flite file list overrides its installed library.
 
-- /Check configured engine/ runs separate voice discovery using the local
-  launcher's current configuration, with a 30 second limit. It retains the
-  executable target, voice list and diagnostic output. It neither speaks a
-  sample nor replaces live workers. A failed Flite file can leave built-in SLT
-  usable; the check reports incomplete discovery when fewer than the selected
-  files plus SLT are found. Duplicate external voice names are not supported.
+/Check configured engine/ runs independent discovery using the local launcher's
+current configuration, limited to 30 seconds. It retains target, voices, and
+diagnostics but neither speaks a sample nor replaces live workers. A failed
+Flite file can leave built-in SLT usable; incomplete discovery reports fewer
+than the selected files plus SLT. Duplicate external voice names are unsupported.
 
-- File settings take effect in newly started workers. Save through Customize
-  to retain them, then explicitly choose /Restart local speech/ when ready;
-  this interrupts this session's main and notification speech. Refresh live
-  voices afterward to inspect both workers. Turning off a Flite file keeps its
-  data and palette references, but new helpers omit it. Existing helpers keep
-  it loaded until restarted. Built-in SLT remains loaded, and each speech
-  worker loads its own copy of enabled external voices. These file switches
-  do not provide a general per-voice policy or a memory measurement.
+File settings affect newly started workers. Save in Customize, then explicitly
+choose /Restart local speech/ to interrupt this session's two streams when ready.
+Refresh live voices afterward. Disabling a Flite file preserves data/references;
+new helpers omit it, while existing helpers keep it until restart. Built-in SLT
+stays loaded and each worker loads its own enabled external voices. These
+switches are not a general per-voice policy or memory measurement.
 
-- Explicit =OMNIVOX_PIPER_MODEL=, =OMNIVOX_FLITE_VOICES= and runtime environment
-  settings override these options; details identify such overrides. The
-  legacy =EMACSVOX_ECI_DLL= and =EMACSVOX_DECTALK_DLL= overrides also remain
-  effective. Clearing an option returns to existing discovery or launcher
-  defaults. Direct native executable launches do not consume the bundled
-  launcher's file options.
+=OMNIVOX_PIPER_MODEL=, =OMNIVOX_FLITE_VOICES=, runtime environment settings,
+and legacy =EMACSVOX_ECI_DLL=/=EMACSVOX_DECTALK_DLL= override file options and
+are identified in details. Clearing an option returns to discovery/defaults.
+Direct-native executable launches do not consume the bundled launcher's options.
 
 **** Manage the installed Omnivox release
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-The installed-release manager acts on its displayed release, which need not be the server currently providing speech.
+This manager changes versioned release files, not the running workers or a
+voice library's active configuration. On WSL, choose /Manage installed release/
+and check /Installation being managed/ and /Location/. That target can differ
+from a development build or remote speech server. /Installed engine files/
+reports presence; /Check release engine/ tests runtime initialisation and
+voice discovery for that release.
 
-On WSL, /Manage installed release/ explicitly opens the separate release
-installer. /Installation being managed/ and /Location/ identify the versioned
-release affected by its actions. This may differ from a development build or
-remote speech server. /Installed engine files/ reports file presence;
-/Check release engine/ tests runtime initialization and voice discovery for
-that release. Installation and removal keep current speech running and do not
-select a different speech server. If a helper is still in use, removal fails
-visibly; stop the sessions using that release before retrying. Press
-~q~ to return to the current engine with its selection retained.
+Release installation and removal keep current speech running and do not select
+another speech server. They do not automatically restart workers. A helper in
+use causes removal to fail visibly; close sessions using that release before
+retrying. This differs from the library's explicit Apply and the file editor's
+/Restart local speech/. Legacy direct-operation restart preferences do not
+change the boundary of this explicit installed-release view.
 
-- To refresh discovery, press ~g~ or use /Refresh status/ in
-  details. Both worker inventories are requested asynchronously.
+Use /Install engine/ and confirm to verify and install a version-matched
+component. Progress belongs to the release view while current-worker status
+stays separate. /Refresh release files/ runs a bounded asynchronous file check;
+/Check release engine/ discovers voices without auditioning. Refresh after a
+changed target before retrying. Completion gives a short notice without
+selecting another buffer; /Read last result/ opens retained complete output.
 
-- To install an engine, choose /Manage installed release/ and check the displayed
-  installation and location. If its files are available to download, activate
-  /Install engine/ with ~RET~,
-  then confirm. The manager verifies the version-matched download. The table
-  shows its operation in progress while the current engine's status stays separate.
+Within details, ~TAB~/~S-TAB~ moves among actions and sections, ~RET~ activates
+or toggles, and arrows read visible fields. ~q~ returns to the selected engine
+row, ~h~ to Emacsvox settings, and ~?~ to Help. Selection and expansion survive
+background refresh. /Refresh status/ or ~g~ in current-worker details asynchronously
+requests both live inventories, not a release-file check.
 
-- In the installed-release view, /Refresh release files/ runs a bounded background
-  file check. /Check release engine/ lists voices in that release without playing
-  a sample. A changed installation target requires refreshing before retrying.
-  Completion produces a short notice without selecting another buffer. The last
-  result remains in the release view; /Read last result/ opens its complete output.
+/Uninstall engine/ under /Engine installation/ removes only manager-installed
+Flite, RuTTS, Piper, or TGSpeechBox components. It does not remove the core,
+built-in engines, or runtime bridges. The whole managed component directory
+is removed: move any personal files elsewhere before confirming. External
+runtimes/models outside it are untouched and retain their supplier's removal
+procedure. Verified downloads remain cached; /Install engine/ reuses a valid
+cache for reinstallation.
 
-- In details, ~TAB~ moves to the next action or section;
-  ~S-TAB~ moves to the previous one.
-  ~RET~ activates an action or toggles a section.
-  Arrow keys read visible fields and values.
-  ~q~ returns to the selected engine row and
-  ~h~ opens Emacsvox settings, and ~?~ opens help.
-  Background refresh preserves selection and expanded sections.
+Operations are asynchronous. The view shows /uninstalling/ or /testing/ and
+refreshes on completion or failure. A failed listing retains its last records
+and the error while live discovery remains independently available. If a helper
+is locked, close the sessions using it and invoke the removal action again.
+An interrupted removal with only the expected helper left can resume; directories
+containing unrecognised files remain protected.
 
-- To remove an /installed/ engine, expand /Engine installation/, activate /Uninstall engine/, and confirm. This
-  is available only for Flite, RuTTS, Piper, and TGSpeechBox engines installed
-  by this manager.  It cannot remove the Omnivox core, built-in engines, or
-  runtime bridges.
+=etc/omnivox-components.conf= pins names, sizes, and SHA-256 hashes to the
+installed core version. The WSL installer rejects mismatched cores, unsafe
+archive layout, missing source provenance, and helpers that fail staged
+discovery. Components are installed under the same versioned Windows
+=LocalAppData= release. It does not invoke =sudo= or edit shell startup.
 
-Removal keeps the verified download in the local cache.  If you change your
-mind, open its details again and choose /Install engine/ to reinstall it.
-A valid cached download is reused.
+Component and data boundaries differ:
 
-The engine's whole managed directory is removed.  Move anything you placed
-inside that directory somewhere else before confirming.  User-supplied
-runtimes and models stored outside it are not touched; remove those separately
-using their supplier's instructions.  Before removal, the manager announces
-the operation and briefly stops its active Omnivox speech streams so Windows
-can release the engine helper.  It restores speech when removal finishes,
-including after an error.  After a successful installation, it also refreshes
-the table and restarts a running Omnivox server.  Operations run asynchronously
-so Emacs remains responsive.  The table shows /uninstalling/ during removal and
-/testing/ during a voice check.  Completion or failure refreshes the view. If the managed listing fails,
-its last known records remain with the error in details; live discovery remains
-available independently.
+- Flite includes compact English SLT without an external runtime.
+- RuTTS includes compact Russian voices without an external runtime.
+- Piper installs engine support; a usable voice also needs a reviewed ONNX
+  model and model card, configured separately or through supported library
+  management.
+- TGSpeechBox is in the Windows x64/ARM64 core with multilingual formant voices,
+  calibrated rate, and exact anchors for capitalisation/timed presentation.
+  Matching standalone components allow reinstallation.
+- RHVoice, Eloquence, and DECtalk bridges do not acquire their external runtimes.
+  Supply compatible runtimes under their distribution/licensing terms.
+  RHVoice's reviewed catalogue can separately download voice and language
+  packages on a supporting local host, as described above. This is distinct
+  from runtime acquisition and preserves external installations. Eloquence
+  and DECtalk runtime, dictionary, and licence material remain user-supplied.
 
-If a removal reports that its helper is still in use, close any other Emacsvox
-or Omnivox session using that release and press ~u~ again.  The
-manager safely recognizes an interrupted removal when the expected helper is
-the only file left; it continues to refuse directories containing unrecognized
-files.
-
-The manager reads =etc/omnivox-components.conf=.  Every archive name, byte size,
-and SHA-256 hash is pinned to the same Omnivox version as the installed core.
-The WSL2 installer rejects a mismatched core, an unsafe archive layout, missing
-source provenance, or a helper that cannot pass its staged voice-discovery
-check.  It then installs the engine below the same versioned Windows
-=LocalAppData= release directory.  It does not invoke =sudo= or edit shell
-startup files.
-
-The choices have different boundaries:
-
-- Flite includes its compact English SLT voice and needs no external runtime.
-- RuTTS includes its compact Russian voices and needs no external runtime.
-- Piper installs native engine support, but appears only after you separately
-  review and configure an ONNX voice model and its model card.
-- TGSpeechBox is included in the core on Windows x64 and ARM64. It supplies
-  multilingual formant voices, calibrated rate control and exact text anchors
-  for capitalization and timed presentation. Matching standalone modules are
-  available for reinstalling it.
-- RHVoice, Eloquence, and DECtalk use distributable bridges, but Emacsvox never
-  downloads their external runtimes, voices, dictionaries, or licence material.
-  Supply those only when you have the appropriate distribution and licence.
-
-For a terminal-only installation, run
-=./bin/emacsvox-omnivox-components --list= and then, for example,
-=./bin/emacsvox-omnivox-components --install flite=.  Multiple engine names may
-follow =--install= or =--uninstall=.  For example, use
-=./bin/emacsvox-omnivox-components --uninstall flite= to remove the managed
-Flite directory while retaining its cached archive.  Restart Omnivox after a
-terminal installation or removal, then use =--test ENGINE= or the Emacs
-manager's ~t~ command.  The direct Omnivox release assets remain
-available for maintainers and recovery, but the manager is the recommended way
-to select them.
+For terminal management, use =./bin/emacsvox-omnivox-components --list=, then,
+for example, =./bin/emacsvox-omnivox-components --install flite=. Multiple
+engines can follow =--install= or =--uninstall=.
+=./bin/emacsvox-omnivox-components --uninstall flite= removes the managed
+directory while retaining its archive. Restart deliberately when the running
+session needs newly installed configuration, and use =--test ENGINE= or the
+release view's /Check release engine/ to check that target. Direct release
+assets remain available for maintenance/recovery, but the manager is the
+ordinary component-selection route.
 
 ** Installing Native Windows Emacsvox
 :PROPERTIES:
@@ -712,125 +629,111 @@ to select them.
 :DESCRIPTION: Install and verify supported native Windows x64 Emacsvox.
 :END:
 
-Native Windows x64 is supported with Emacs 30.2 or newer. If you have a
-development Setup executable, use its installation wizard. Otherwise, the
-guided PowerShell installer prepares Emacsvox from a Windows checkout. An
-advanced manual route follows for an existing native Emacs installation.
-Neither Setup nor the guided installer requires WSL, Docker, Rust, or a system
-MSYS2 installation.
+Native Windows x64 is supported with Emacs 30.2 or newer. A development Setup
+executable supplies an installation wizard. Otherwise use the guided
+PowerShell installer from a Windows checkout. The advanced manual route
+requires an existing native Emacs. Neither Setup nor the guided installation
+requires WSL, Docker, Rust, or a system MSYS2 installation.
 
 *** Using a Windows Setup Build
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-If you have a development Setup executable, run it to install
-=Emacsvox Windows= for your Windows account. The wizard shows the Emacsvox
-version and the included Emacs and Omnivox versions. No administrator
-privileges or internet connection are needed.
-The wizard offers an optional desktop shortcut; it always creates a Start
-menu group unless shortcuts were disabled for an unattended installation.
-The final page confirms installation and explains how to start and uninstall.
-Choose Test speech for two short announcements, and Start Emacsvox if wanted.
-Finish runs your chosen actions and closes Setup.
+Run the development Setup executable to install =Emacsvox Windows= for your
+account. The wizard identifies Emacsvox and its included Emacs/Omnivox versions.
+No administrator privileges or network connection are required. A desktop
+shortcut is optional; a Start menu group is created unless disabled for an
+unattended installation. The final page explains startup/removal and offers
+Test speech for two announcements and Start Emacsvox. Finish runs selected
+actions and closes Setup.
 
-The default directory is =%LOCALAPPDATA%\Emacsvox\Desktop Dev=. Use the
-Start menu shortcut, or search Start for Emacsvox Windows, to launch afterward.
-A desktop shortcut is not required. Run Setup again to repair
-missing application files or install a newer development build. Close the
-Emacsvox using this installation first; Setup does not close it for you.
-Locally edited application files stop replacement so you can preserve them.
+The default directory is =%LOCALAPPDATA%\Emacsvox\Desktop Dev=. Launch through
+Start or its shortcut. Rerun Setup to repair missing files or upgrade a
+ development build, closing the Emacsvox using that installation first. Setup
+does not close it. Locally edited application files prevent replacement so
+they can be preserved.
 
-Use Windows Settings or the Start menu's uninstall entry to remove the
-application. Uninstall keeps personal data by default. Its optional cleanup
-screen shows data sizes and separate choices for this installation's logs and
-cached downloads, its Emacs profile (including the welcome preference), and unused
-downloaded voices in the shared Omnivox library. Leave them unchecked to keep
-your setup for reinstallation. Shared Emacsvox palettes and settings outside
-this profile are kept. Unattended uninstall always preserves personal data.
+Windows Settings or the Start uninstall entry removes the application while
+retaining personal data by default. Optional cleanup separately lists sizes
+for logs/cache, this Emacs profile (including welcome preference), and unused
+downloads in the shared Omnivox library. Leave choices unchecked for reinstallation.
+Shared palettes/settings outside the profile stay. Unattended removal always
+preserves personal data.
 
-Shared voices that are active, referenced by another profile or retained by a
-speech session are kept, with a reason in the cleanup results. To remove active
-downloads, first disable them and Apply in Browse voices, then close the speech
-sessions using them. Voice cleanup never deletes imported original files or system voices.
-Directory links are not followed during personal-data cleanup.
-Development Setup builds are local test artifacts; the public release
-installer is still being prepared.
+Active voices, voices referenced by another profile, and files retained by a
+speech session stay with an explanation. Disable and Apply active downloads,
+then close the sessions using them before cleanup. Imported originals and
+system voices are never removed, and directory links are not followed.
+Development Setup builds are test artifacts; these instructions do not imply
+that a stable release installer includes this branch's interface.
 
 *** Guided Windows x64 Installation
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-You need Windows PowerShell 5.1 or newer, Git for cloning, network access, and
-working Windows audio with an installed speech voice.  Put the checkout on a
-local Windows drive, rather than a WSL or network path.  From PowerShell:
+You need PowerShell 5.1 or newer, Git, network access, and working Windows audio
+with a speech voice. Put the checkout on a local Windows drive, not a WSL or
+network path. To follow this development manual, select its branch:
 
 #+begin_src powershell
-git clone https://github.com/bartbunting/emacsvox.git
+git clone --branch ui-experiments https://github.com/bartbunting/emacsvox.git
 Set-Location emacsvox
 .\bin\emacsvox-install.ps1 -Role Desktop -Check
 .\bin\emacsvox-install.ps1 -Role Desktop
 #+end_src
 
-Skip cloning if you already have a Windows checkout and change into it instead.
-The check reports the selected Emacs and planned paths without downloading,
-writing configuration, or playing audio.
+Skip cloning for an existing checkout and inspect its branch/local changes
+before updating it. The check reports selected Emacs and paths without downloads,
+configuration writes, or audio.
 
-The installer reuses native Emacs 30.2 or newer. To have it download and
-install the verified complete GNU Emacs 31.1 Windows release for you, use:
+The installer reuses native Emacs 30.2 or newer. For a checksum-verified complete
+GNU Emacs 31.1 Windows release, use:
 
 #+begin_src powershell
 .\bin\emacsvox-install.ps1 -DownloadEmacs -Check
 .\bin\emacsvox-install.ps1 -DownloadEmacs
 #+end_src
 
-This choice includes Emacs's runtime libraries and needs no compiler or
-MSYS2. You can also install a [[https://www.gnu.org/software/emacs/download.html][prebuilt Windows Emacs]] yourself and select its
-=bin/emacs.exe= with =-Emacs=. Alternatively, =-BuildEmacs= builds GNU Emacs
-31.1 using a private MSYS2 UCRT64 toolchain. No source build starts without
-that option; allow several gigabytes and time for its downloads and build.
-The installer then installs the pinned Omnivox core and prepares Emacsvox.
-Later runs reuse installed components and verified cached archives.
+This includes runtime libraries without a compiler/MSYS2. Alternatively select
+a separately installed [[https://www.gnu.org/software/emacs/download.html][prebuilt Windows Emacs]] with =-Emacs= and its
+=bin/emacs.exe=. =-BuildEmacs= explicitly builds 31.1 through a private MSYS2
+UCRT64 toolchain; it can require several gigabytes and substantial downloading.
+No source build begins without that choice. The installer then prepares the
+pinned Omnivox core and Emacsvox, reusing installed components and verified cache
+on later runs.
 
-To select an existing Emacs explicitly, add
-=-Emacs "C:\path\to\Emacs\bin\emacs.exe"=.  Explicit =-Emacs=, =EMACS= environment,
-and =local.mk= selections must agree and require native Emacs 30.2 or newer.
-=-DownloadEmacs= and =-BuildEmacs= select their respective managed Emacs
-instead of a saved or PATH selection. They reuse a complete matching
-installation when one exists and cannot replace an explicit selection.
-Choose only one of these options.
+=-Emacs "C:\path\to\Emacs\bin\emacs.exe"= selects an existing executable.
+Explicit =-Emacs=, environment =EMACS=, and =local.mk= must agree and require
+native 30.2 or newer. =-DownloadEmacs= and =-BuildEmacs= choose their managed
+Emacs instead of saved/PATH selections, reuse a matching complete installation,
+and cannot replace an explicit choice. Choose only one.
 
-Installation is per-user.  The defaults are:
+Per-user defaults are:
 
-- Emacs, Omnivox, the isolated profile, and logs below
-  =%LOCALAPPDATA%\Emacsvox\Native=.
-- Private build tools below =%LOCALAPPDATA%\Emacsvox\Toolchains\msys2-20260611=.
-- Verified archive cache below =%LOCALAPPDATA%\Emacsvox\Downloads=.
-- A data-only =native-install.json= in this checkout, ignored by Git.
+- Emacs, Omnivox, isolated profile, and logs under =%LOCALAPPDATA%\Emacsvox\Native=.
+- Private build tools under =%LOCALAPPDATA%\Emacsvox\Toolchains\msys2-20260611=.
+- Verified archives under =%LOCALAPPDATA%\Emacsvox\Downloads=.
+- Data-only =native-install.json= in the checkout, ignored by Git.
 
-=-InstallRoot=, =-ToolchainRoot=, and =-CacheDirectory= select other local
-Windows directories.  The MSYS2 build-tool path must not contain spaces;
-choose =-ToolchainRoot= if the default does.  Checkout and installed Emacs
-paths may contain spaces.  The installer leaves personal Emacs initialization,
-system PATH, Windows services, and JAWS settings alone.
+=-InstallRoot=, =-ToolchainRoot=, and =-CacheDirectory= choose other local
+paths. The MSYS2 tool path must have no spaces; set =-ToolchainRoot= if needed.
+Checkout and Emacs paths may contain spaces. Personal initialisation, system
+PATH, Windows services, and JAWS settings remain unchanged.
 
-For installation from an already prepared archive cache, add =-Offline= and
-=-CacheDirectory "C:\path\to\archives"=. This disables downloads and
-checks every required archive before changing the installation. Missing or
-damaged archives stop installation. Offline mode supports prebuilt or
-existing Emacs; it does not support =-BuildEmacs=. The read-only =-Check=
-command reports the plan without checking cached archives or playing audio.
+=-Offline -CacheDirectory "C:\path\to\archives"= forbids downloads and verifies
+required cached archives before changes. Missing/damaged archives stop it.
+Offline supports prebuilt/existing Emacs, not =-BuildEmacs=. Read-only =-Check=
+reports the plan without testing cached archives or playing audio.
 
-The source archives are checksum-pinned.  MSYS2 compiler packages come from
-its signed rolling repositories; their installed versions are recorded with
-the build.  Lisp native compilation is disabled in the managed source build.  The built
-Emacs includes its runtime DLLs, so launching it does not need MSYS2 on PATH.
+Source archives are checksum-pinned. MSYS2 compiler packages use signed rolling
+repositories, and installed versions are recorded. Managed source builds disable
+Lisp native compilation and include runtime DLLs, so launch needs no MSYS2 on PATH.
 
-The default final check opens a temporary native Emacs window, verifies both
-speech lanes, speaks two announcements, and closes that test window.  Confirm
-that you hear both announcements.  =-NoAudioCheck= skips this step when needed;
-run the explicit check before accepting speech:
+The final test opens a temporary native Emacs, verifies both streams, speaks
+two announcements, and closes that test. Confirm both by listening. After
+=-NoAudioCheck=, perform the explicit check before acceptance:
 
 #+begin_src powershell
 .\bin\emacsvox.ps1 -Diagnose
@@ -838,41 +741,37 @@ run the explicit check before accepting speech:
 .\bin\emacsvox.ps1
 #+end_src
 
-The last command opens the isolated native desktop.  It uses Windows speech
-by default.  An explicit =OMNIVOX_ENGINE= environment selection remains
-available for separately configured engines.  Native optional-engine
-installation, ARM64, and other native Windows roles are not provided by this
-guided installer.
+The last command opens the isolated desktop with Windows speech by default.
+=OMNIVOX_ENGINE= remains an explicit selection for separately configured
+engines. Native optional-engine installation, ARM64, and other native roles
+are not supplied by this guided installer.
 
-After pulling source changes, rerun the installer before launching.  It
-preserves source changes and refreshes the compiled files.  Missing or stale
-compiled files stop launch with instructions to rerun installation.  For a
-failed build, retain the logs under the reported build directory.  Inspect an
-incomplete installation before moving it aside or selecting a new directory;
-the installer does not overwrite an unknown partial tree.
+After source updates, rerun it before launching. It preserves source edits and
+refreshes compiled files. Missing/stale compilation stops launch with that
+instruction. Keep named build logs after failure. Inspect incomplete installations
+before moving or choosing another directory; unknown partial trees are not
+overwritten.
 
-JAWS speech muting does not disable its keyboard shortcuts.  If ~M-<~ or
-~M->~ is intercepted, test with =JAWSKey+3= before the shortcut.  Bart's
-=workstation-config= repository supplies the separately installed,
-Emacs-specific JAWS override used on the test workstation.
+Muting JAWS speech does not disable its shortcuts. If ~M-<~ or ~M->~ is
+intercepted, try =JAWSKey+3= before the key. Bart's =workstation-config=
+repository supplies the separate Emacs-specific JAWS override used on the
+test workstation.
 
 *** Manual Native Installation
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-The following manual procedure remains available for an already installed
-native Windows Emacs 30.2 or newer.  It does not acquire Emacs or replace the
-guided x64 checks above.  Set =$Emacsvox= to the checkout's absolute Windows
-path and continue in one PowerShell window.
+This route requires native Emacs 30.2 or newer already installed. It does not
+acquire Emacs or replace the guided x64 checks. Set =$Emacsvox= to the absolute
+checkout path and continue in one PowerShell window.
 
 *** Download And Verify Omnivox
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Set =$Platform= for the computer.  The example below uses the usual Intel or
-AMD Windows x64 archive:
+Set =$Platform= for the host. The normal Intel/AMD x64 example is:
 
 #+begin_src powershell
 $Version = "1.17.0"
@@ -898,17 +797,17 @@ if ($Actual -ne $Expected) { throw "Checksum mismatch for $Archive" }
 Write-Host "Checksum OK: $Archive"
 #+end_src
 
-Do not extract or run the archive unless the last line reports =Checksum OK=.
-The Windows release is not code-signed.  If Windows security or local policy
-refuses it, stop rather than weakening that policy.
+Do not extract/run unless the final line reports =Checksum OK=. This unsigned
+Windows release may be rejected by policy; stop rather than weakening security.
+The existence of an ARM64 Omnivox archive does not extend Emacsvox's supported
+native desktop beyond x64.
 
 *** Install And Check The Native Server
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Continue in the same PowerShell window.  Extract the complete release into a
-versioned directory below the current user's =LocalAppData=:
+In the same PowerShell, extract everything beneath per-user =LocalAppData=:
 
 #+begin_src powershell
 $InstallDir = Join-Path $env:LOCALAPPDATA "Emacsvox\Omnivox\releases\$Version-$Platform"
@@ -934,20 +833,18 @@ if ($LASTEXITCODE -ne 0) { throw "Omnivox voice discovery failed" }
 if ($LASTEXITCODE -ne 0) { throw "Omnivox audio check failed" }
 #+end_src
 
-The version must report 1.17.0 or newer, voice discovery must list at least one
-Windows voice, and the final check must produce both a tone and spoken confirmation.
-Keep =omnivox.exe=, =espeak-ng-data=, and =third-party-licenses= together.
-Do not copy or load the archive's =omnivox-voices.el=: it is the adapter for
-upstream Emacspeak, while Emacsvox supplies its own adapter.
+Require version 1.17.0 or newer, at least one Windows voice, and both tone and
+speech. Keep executable, =espeak-ng-data=, and =third-party-licenses= together.
+Do not copy/load =omnivox-voices.el= from the archive; that is the upstream
+Emacspeak adapter, not Emacsvox's bundled one.
 
 *** Start Native Emacsvox
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Keep the same PowerShell window so =$Omnivox= still identifies the verified
-executable.  Set =$Emacs= to the native =emacs.exe=.  If this window did not
-create the Emacsvox checkout above, also set =$Emacsvox= to that checkout:
+Keep the window so =$Omnivox= still identifies the verified binary. Set =$Emacs=
+to native =emacs.exe= and =$Emacsvox= if the checkout was not set above:
 
 #+begin_src powershell
 $Emacs = "C:\path\to\emacs\bin\emacs.exe"
@@ -960,49 +857,35 @@ $env:TTS_PROGRAM = $Omnivox
 & $Emacs -Q --no-splash --load "$Emacsvox\lisp\emacsvox-setup.el"
 #+end_src
 
-The Emacs version must be 30.2 or newer.  Use =emacs.exe=, rather than
-=runemacs.exe=, for this first launch so startup errors remain visible in the
-PowerShell window.  Loading =emacsvox-setup.el= directly is intentional: the
-repository's =bin/emacsvox= launcher is a POSIX shell script.  The guided
-native entry point is =bin/emacsvox.ps1=; this subsection describes the manual
-alternative.
+Require Emacs 30.2 or newer. Use =emacs.exe= instead of =runemacs.exe= for first
+launch so startup errors remain in PowerShell. Direct setup loading is intentional:
+=bin/emacsvox= is POSIX; =bin/emacsvox.ps1= is the guided native entry.
 
 *** Verify Speech And Report Problems
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Verify the installation with these checks:
+Check the isolated native session:
 
-1. Emacsvox speaks its startup introduction.
+1. Confirm the startup introduction/ready checkpoint is audible.
+2. ~C-h v tts-program RET~ should identify the verified executable's absolute path.
+3. ~M-x tts-speak-version RET~ speaks the version; ~M-x omnivox-list-voices RET~
+   displays Windows voices.
+4. ~C-n~/~C-p~ speak line movement, ~C-e s~ stops current speech, and
+   ~M-x tts-restart RET~ restores it without process errors.
+5. Toggle icons twice with ~M-x emacsvox-toggle-icons RET~. In a session
+   starting with icons enabled, the second toggle restores them and plays an
+   icon in addition to speech. Preserve the initial preference when testing a
+   customised session.
 
-2. ~C-h v tts-program RET~ displays the absolute path to the
-   verified =omnivox.exe=.
+If direct =--check= fails, diagnose Omnivox/Windows audio first. If it passes
+but the server cannot be found in Emacs, confirm the same PowerShell's
+=$env:TTS_PROGRAM= is absolute and =Test-Path $env:TTS_PROGRAM= returns =True=.
+For a process that exits, retain PowerShell errors, =*Messages*=, Windows
+version/architecture, and full =emacs.exe --version= and =omnivox.exe --version=.
 
-3. ~M-x tts-speak-version RET~ speaks the Omnivox version
-   response, and ~M-x omnivox-list-voices RET~ displays the
-   Windows voices.
-
-4. ~C-n~ and ~C-p~ speak ordinary line
-   movement, ~C-e s~ stops current speech, and
-   ~M-x tts-restart RET~ restores speech without a process
-   error.
-
-5. Type ~M-x emacsvox-toggle-icons RET~ twice.  The second
-   toggle, which turns icons back on, plays a short auditory icon in addition
-   to plain speech.
-
-If the direct =--check= fails, diagnose Omnivox or Windows audio before
-starting Emacs.  If it succeeds but Emacsvox reports that it cannot find the
-speech server, confirm in the same PowerShell window that
-=$env:TTS_PROGRAM= contains the absolute executable path and that
-=Test-Path $env:TTS_PROGRAM= returns =True=.  If the process starts and then
-exits, retain the PowerShell error, the Emacs =*Messages*= buffer, Windows
-version and architecture, the complete =emacs.exe --version= output, and
-=omnivox.exe --version= output.
-
-After successful verification, the same absolute selection can be placed before
-loading Emacsvox in the user's Emacs initialization file:
+After acceptance, put the same selection before setup in your init file:
 
 #+begin_src emacs-lisp
 (setenv "TTS_PROGRAM"
@@ -1010,11 +893,10 @@ loading Emacsvox in the user's Emacs initialization file:
 (load-file "C:/path/to/emacsvox/lisp/emacsvox-setup.el")
 #+end_src
 
-Replace both example paths.  This initial configuration deliberately uses an
-absolute executable path.  Adding the Omnivox directory to =exec-path= is
-optional and is needed only when later selecting it by the short name
-=omnivox=. Native Windows support covers the x64 desktop route above; remote
-workstation speech remains a separate preview feature.
+Replace both paths. This deliberately starts with an absolute executable.
+Adding its directory to =exec-path= is optional until selecting =omnivox= by
+short name. Native desktop support remains x64; remote speech is a separate
+preview.
 
 ** Installing Omnivox From Source
 :PROPERTIES:
@@ -1022,26 +904,16 @@ workstation speech remains a separate preview feature.
 :DESCRIPTION: Build when a release archive does not match the host.
 :END:
 
-Use this route on GNU/Linux and macOS.  It requires network access for the
-initial clone, Rust toolchain, and locked dependency downloads.
+On GNU/Linux/macOS, a source build needs network access for clone, toolchain,
+and locked dependencies. Prepare:
 
-Install these prerequisite classes before building:
+- [[https://rustup.rs/][rustup]], with the checked-in =rust-toolchain.toml= selecting Rust.
+- Python 3, C/C++, CMake, and Clang/libclang for eSpeak NG and generated data.
+- GNU/Linux =pkg-config= and ALSA development headers, commonly
+  =libasound2-dev= on Debian/Ubuntu or =alsa-lib-devel= on Fedora.
+- macOS Xcode command-line tools, installed with =xcode-select --install=.
 
-- [[https://rustup.rs/][rustup]]; the checked-in
-   =rust-toolchain.toml= selects the supported Rust release.
-
-- Python 3, a C and C++ toolchain, CMake, and Clang with libclang.  The supported
-   build wrapper uses these to build and stage eSpeak NG and its generated data.
-
-- On GNU/Linux, =pkg-config= and ALSA development headers.  The ALSA
-   package is commonly named =libasound2-dev= on Debian or Ubuntu and
-   =alsa-lib-devel= on Fedora.
-
-- On macOS, the Xcode command-line tools.  Install them with
-   =xcode-select --install= if they are absent.
-
-Keep the two repositories beside one another; this also matches the WSL2
-release layout:
+Keep Omnivox beside Emacsvox, also matching the WSL layout:
 
 #+begin_example
 cd /path/containing/emacsvox
@@ -1051,15 +923,13 @@ make build
 make install
 #+end_example
 
-=make build= performs the locked release build and stages the matching
-eSpeak data and third-party notices.  =make install= installs the
-binary and those adjacent directories, normally below =~/.cargo/bin=.
-Set =OMNIVOX_INSTALL_BIN= before =make install= only when the Cargo
-binary directory is elsewhere.  Do not use a bare =cargo build= as the
-installation procedure; it does not create the complete staged payload.
+=make build= runs the locked release build and stages matching eSpeak data and
+notices. =make install= installs binary/data normally under =~/.cargo/bin=.
+Set =OMNIVOX_INSTALL_BIN= only for another Cargo binary directory. A bare
+=cargo build= does not produce the complete installation payload.
 
-Make the install directory visible on =PATH= before continuing.  No
-proprietary speech runtime is needed for the recommended Linux or macOS path.
+Make the installed directory visible on =PATH=. No proprietary runtime is
+needed for the recommended Linux/Mac route.
 
 ** Building Omnivox For WSL2
 :PROPERTIES:
@@ -1067,119 +937,89 @@ proprietary speech runtime is needed for the recommended Linux or macOS path.
 :DESCRIPTION: Stage the Windows runtime from WSL2.
 :END:
 
-Use this advanced route when maintaining the reproducible Emacsvox Windows
-bundle or its optional engine integrations.  Ordinary WSL2 users should use
-the pre-built release in
-[[*Install An Omnivox Windows Release Under WSL2][Installing An Omnivox Windows Release Under WSL2]].  This target
-builds from source and currently produces an x86-64 Windows runtime.
+This advanced path maintains the reproducible Windows bundle or optional
+engine integrations. Ordinary WSL2 installations should use the
+[[*Install An Omnivox Windows Release Under WSL2][prebuilt Windows release]]. This source target produces x86-64 Windows.
 
-Before running it, install or configure all of the following:
+Requirements are:
 
-- A WSL2 distribution with Windows interoperation enabled.  Both
-  =powershell.exe= and =wslpath= must run directly from the WSL shell, and the
-  Windows user's =LocalAppData= directory must be writable.
+- WSL2 with working =powershell.exe= and =wslpath=, plus writable Windows
+  =LocalAppData=.
+- A Docker client/daemon supporting Linux/AMD64 containers, runnable by the
+  WSL user without =sudo=. Docker Desktop's WSL integration is one option.
+- Windows .NET Framework 4.7.2 or newer, not merely a modern =dotnet= SDK.
+  Visual Studio is unnecessary.
+- =git=, GNU =make=, =curl=, =unzip=, =sha256sum=, and standard GNU utilities
+  including =awk=, =cmp=, =find=, =readlink=, =sed=, =sort=, and =xargs=.
+- Network for the initial Docker image, Rust dependencies, and two
+  checksum-pinned NuGet packages. Subsequent builds reuse caches.
+- Sibling =emacsvox= and =omnivox= checkouts, or explicit =OMNIVOX_DIR=.
+  The clean release target requires the Omnivox source commit recorded for
+  the pinned Piper companion in =servers/omnivox-release/toolchain.lock=;
+  mismatches fail rather than combining versions. The development route
+  accepts current source by omitting Piper. Allow disk space for Docker,
+  native/cross builds, and caches.
 
-- A working Docker client and daemon with Linux/AMD64 container support.  The
-  current WSL user must be able to run =docker= without adding =sudo= because
-  the Make target invokes it directly.  Docker Desktop with WSL integration is
-  one way to provide this, but it is not the only possible Docker setup.
+Rust, MinGW, CMake, Clang/libclang, eSpeak NG, Roslyn, Visual Studio, and .NET
+reference assemblies need not be installed in WSL; the controlled toolchain
+pins/builds them. Eloquence, DECtalk, and RHVoice runtime/data remain optional
+and unnecessary for WinRT.
 
-- Windows .NET Framework 4.7.2 or newer.  This means the Windows-only
-  ``.NET Framework'', not merely a modern =dotnet= SDK.  Visual Studio is not
-  required.
-
-- In WSL, =git=, GNU =make=, =curl=, =unzip=, =sha256sum=, and the normal GNU
-  shell utilities supplied by a standard distribution.  The build also uses
-  commands such as =awk=, =cmp=, =find=, =readlink=, =sed=, =sort=, and
-  =xargs=.
-
-- Network access for the first Docker image build, Rust dependency download,
-  and two checksum-pinned NuGet packages.  Later builds reuse the local Docker,
-  Cargo, and .NET package caches.
-
-- Emacsvox and Omnivox Git checkouts.  By default they must be sibling
-  directories named =emacsvox= and =omnivox=, although maintainers can set
-  =OMNIVOX_DIR= to an alternate Omnivox checkout.  The Omnivox checkout must
-  be at the exact source commit recorded for the checksum-pinned Piper
-  companion in =servers/omnivox-release/toolchain.lock= when using the clean
-  release target.  The preparation target rejects a different revision instead
-  of combining unmatched native components.  The development target described
-  below accepts current source by omitting Piper.  Both checkouts need enough
-  free space for the Docker image, native and cross-compiled build products,
-  and caches.
-
-You do /not/ need to install Rust, MinGW, CMake, Clang, libclang, eSpeak NG,
-Roslyn, Visual Studio, or the .NET reference assemblies in WSL.  The target
-pins or builds those inside its controlled toolchain.  Eloquence and DECtalk
-runtimes and the RHVoice runtime and voice data are optional and are not needed
-for the normal Windows WinRT voice.
-
-The quickest prerequisite check is:
+Check prerequisites with:
 
 #+begin_example
 cd /path/to/emacsvox
 make verify-windows-omnivox-toolchain
 #+end_example
 
-This is more than a presence check: on its first run it downloads the pinned
-.NET compiler packages, builds the pinned Docker image, and verifies the exact
-Rust, MinGW, libclang, Roslyn, and .NET Framework versions.  A failure names the
-missing host command or unsupported framework before the full Omnivox build is
-attempted.
+The first run downloads pinned .NET compiler packages, builds the pinned Docker
+image, and checks exact Rust, MinGW, libclang, Roslyn, and Framework versions.
+It is not a read-only presence check. Failures identify missing host tools or
+unsupported Framework before the full build.
 
-Clone Omnivox beside Emacsvox as shown in the source-build section.  Then, from
-a clean Emacsvox checkout whose sibling Omnivox checkout also has no tracked
-changes, run:
+With clean Emacsvox and sibling Omnivox tracked files, run:
 
 #+begin_example
 cd /path/to/emacsvox
 make windows-omnivox
 #+end_example
 
-This is the reproducible release path.  It builds and verifies a pinned
-Windows-GNU executable and stages a content-addressed runtime beneath
-=servers/omnivox-bin=.  Once the Piper lock identifies an Omnivox revision that
-contains these integrations, the payload includes the matching,
-checksum-pinned Piper companion, the RHVoice helper without an RHVoice runtime,
-the Flite helper with its compiled CMU US SLT voice, and the RuTTS helper with
-its built-in male and female Russian voices.  It contains no Piper model and no
-RuLex component.  It also copies the runnable payload to a Windows-local
-directory so native voice and eSpeak data discovery do not pay the WSL
-filesystem cost.  Optional Eloquence, DECtalk, and RHVoice runtimes are not
-downloaded by this target or required for normal WinRT speech.
+This reproducible release path builds a pinned Windows-GNU executable and
+stages a content-addressed runtime under =servers/omnivox-bin=. When the Piper
+lock identifies the matching integrations, it includes the checksum-pinned
+Piper companion, RHVoice helper without runtime, Flite with CMU US SLT, and
+RuTTS with male/female Russian voices. It bundles no Piper model or RuLex.
+The payload is also copied to Windows-local storage to avoid WSL filesystem
+cost during discovery. It does not download Eloquence, DECtalk, or RHVoice
+runtimes or require them for WinRT.
 
-The build does not report success on file checks alone.  Its final live gate
-starts the exact Windows-local runtime, discovers Flite's SLT voice and both
-RuTTS voices, and requires each helper to synthesize a non-empty WAV.  Repeat
-that gate without rebuilding by running =make verify-windows-omnivox-live=.
+The final live gate starts that exact runtime, discovers Flite SLT and both
+RuTTS voices, and requires nonempty WAV synthesis from each helper. Repeat
+without rebuilding using =make verify-windows-omnivox-live=.
 
-To register Piper, review a model and its model card, keep its adjacent
-=.onnx.json= or =.json= configuration with it, and supply an absolute path
-while staging:
+To register Piper, review its model/card and keep the adjacent =.onnx.json= or
+=.json=. Supply the absolute model path while staging:
 
 #+begin_example
 OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx make windows-omnivox
 #+end_example
 
-The target copies the model and configuration into a separate,
-content-addressed directory below Windows =LocalAppData= and records their
-hashes without bundling them into the runtime.  Omitting
-=OMNIVOX_PIPER_MODEL= installs the companion but leaves Piper unregistered.
-After a configured build, start a fresh speech process and confirm that the
-physical voice is present:
+Model/configuration are copied to separate content-addressed Windows
+=LocalAppData= storage with recorded hashes, not bundled into the runtime.
+Omitting that variable installs the companion but leaves Piper unregistered.
+After staging, check with a fresh process:
 
 #+begin_example
 ./servers/omnivox --engine piper --list-voices
 #+end_example
 
-In Emacsvox, restart both speech processes or restart Emacs, then press
-~C-e d e~.  That command lists the engines reported by the live process, so
-Piper appears only after the newly staged server has started and successfully
-loaded its model and helper.
+Restart both speech processes or Emacs, then inspect running engines with
+~C-e H v b~. Piper requires the newly staged server and successfully loaded
+model/helper. The direct ~C-e d e~ preference chooser is not a read-only
+inventory command; use the browser to inspect without selecting a preference.
 
-Maintainers testing tracked changes should use the development route in
-[[*Integration Maintenance][Integration Maintenance]] rather than weakening the clean-release
-guard:
+For tracked development changes, use the route in
+[[*Integration Maintenance][Integration Maintenance]] rather than bypassing the clean-release guard:
 
 #+begin_example
 OMNIVOX_RHVOICE_LIBRARY=/mnt/c/path/to/RHVoice.dll \
@@ -1189,29 +1029,21 @@ OMNIVOX_RHVOICE_LIBRARY=/mnt/c/path/to/RHVoice.dll \
 ./servers/omnivox --engine rutts --list-voices
 #+end_example
 
-This route builds current Omnivox source, stages the RHVoice helper, Flite with
-its SLT voice, and RuTTS 6.3.3 with its built-in male and female Russian voices,
-and deliberately omits the older pinned Piper companion.  RuTTS needs no
-separate installation; RuLex is not included.  RHVoice appears only after
-installing a compatible Windows =RHVoice.dll= plus language and voice data.
-When its library and data variables are supplied to the development target,
-staging validates them and records Windows path pointers beside that local
-runtime; the launcher restores them for later fresh Emacsvox processes.  Also
-supply =OMNIVOX_RHVOICE_CONFIG= when the installation has a separate
-configuration directory.  The library, data, and configuration remain external
-and are not copied into the Omnivox payload.  Installation and validation
-instructions are in Omnivox's checkout under =docs/RHVOICE.md= and
-=docs/RUTTS.md=.  Restart both speech processes or Emacs after restaging or
-changing those inputs, then use ~C-e d e~ to inspect the engines reported by the
-new process.
+It builds current source, stages RHVoice's helper, Flite SLT, and RuTTS 6.3.3
+male/female voices, deliberately omitting the older pinned Piper companion.
+RuTTS needs no separate install; RuLex is excluded. RHVoice needs compatible
+=RHVoice.dll= and language/voice data. Supplied library/data variables are
+validated and Windows path pointers retained beside the local runtime; the
+launcher restores them for fresh sessions. Also set =OMNIVOX_RHVOICE_CONFIG=
+for a separate configuration directory. These external files are not copied
+into the payload. Omnivox's =docs/RHVOICE.md= and =docs/RUTTS.md= give validation
+details. Restart after restaging/changing inputs, then inspect with ~C-e H v b~.
 
-Piper testing from a newer committed Omnivox revision uses the separate
-=windows-omnivox-piper-dev= target and its native Windows CI artifact.  The
-target requires the archive's published SHA-256 and a reviewed external model,
-and rejects a dirty or different Omnivox checkout.  See
-[[*Integration Maintenance][Integration Maintenance]] for the complete command and
-provenance checks.  This development path does not change the companion pinned
-for reproducible releases.
+Piper tests against newer committed Omnivox use =windows-omnivox-piper-dev=
+and a native Windows CI artifact. It requires the published SHA-256 and a
+reviewed external model, rejecting dirty or different source. See
+[[*Integration Maintenance][Integration Maintenance]] for provenance and the complete command. This does
+not alter the reproducible release's pinned companion.
 
 ** Selecting And Checking Omnivox
 :PROPERTIES:
@@ -1219,8 +1051,7 @@ for reproducible releases.
 :DESCRIPTION: Prove speech before starting Emacsvox.
 :END:
 
-First test Omnivox without Emacs.  On GNU/Linux or macOS, run the installed
-binary:
+Test the installed server outside Emacs on GNU/Linux/macOS:
 
 #+begin_example
 omnivox --version
@@ -1228,45 +1059,35 @@ omnivox --check
 omnivox --list-voices
 #+end_example
 
-Under WSL2, test the Emacsvox launcher.  It selects an explicit
-=OMNIVOX_PROGRAM= first, then the per-user installation recorded by the guided
-installer, then a content-addressed source-built runtime, and finally an
-=omnivox= command on =PATH=:
+In WSL2, the launcher selects =OMNIVOX_PROGRAM= first, the per-user recorded
+installation next, then a content-addressed source runtime, then =omnivox= on
+=PATH=:
 
 #+begin_example
 ./servers/omnivox --check
 #+end_example
 
-The check initializes the selected engine and audio output, then plays a tone
-and speech.  Success ends with a message saying that everything is working if
-both were heard.  Do not continue merely because the command exited zero:
-hearing both signals is the backend acceptance condition.
+The check initialises engine/output and plays tone then speech. Its success
+message is conditional on hearing both. Exit zero alone is not audible
+acceptance.
 
-Next select the server before loading Emacsvox:
+Select before loading Emacsvox:
 
 #+begin_example
 export TTS_PROGRAM=omnivox
 #+end_example
 
-Make that setting visible in the shell used to launch Emacs.  An
-=export= affects only that shell and its children; placing it in a
-shell startup file makes the server choice persistent for later sessions.  On
-POSIX systems, Emacsvox's =servers/omnivox= launcher also finds an installed
-=omnivox= on =PATH=.  =OMNIVOX_PROGRAM= can name an absolute executable as an
-explicit override.  Under WSL2, the guided installer's data-only configuration
-file is persistent across launching shells and takes precedence over a
-source-built staged runtime.
-Native Windows Emacs resolves =omnivox.exe= directly through =exec-path=, or
-uses the absolute executable named by =TTS_PROGRAM=. For the supported x64
-installation procedure, see
-[[*Installing Native Windows Emacsvox][Installing Native Windows Emacsvox]].
+An export affects that shell and children; a shell-startup entry persists it.
+On POSIX, =servers/omnivox= finds =omnivox= on =PATH=; =OMNIVOX_PROGRAM=
+can explicitly override it. The WSL per-user selection persists across shells
+and outranks staged source runtimes. Native Windows resolves =omnivox.exe=
+through =exec-path= or the absolute =TTS_PROGRAM=. Follow
+[[*Installing Native Windows Emacsvox][Installing Native Windows Emacsvox]] for the supported native x64 route.
 
-Inside a running Emacsvox session, ~M-x omnivox~ selects the same server
-temporarily.  Use ~M-x tts-speak-version~ to identify the live adapter
-and ~M-x tts-restart~ after changing server configuration.  This backend
-contract stops at a proven speech server; the complete isolated Emacs start,
-expected startup speech, and no-speech recovery belong to the first-use
-procedure.
+In a running session, ~M-x omnivox~ temporarily selects that server.
+~M-x tts-speak-version~ identifies the live adapter and ~M-x tts-restart~
+restarts after a deliberate configuration change. The complete isolated start,
+expected speech, and recovery remain in [[*Getting Started: Installation and First Speech][Installation]].
 
 *** Remote Workstation Speech (Preview)
 :PROPERTIES:
@@ -1275,13 +1096,12 @@ procedure.
 
 <<Remote workstation speech setup>>
 
-Emacs can run on an SSH
-host while Omnivox, its installed voices, and playback remain on the computer
-you are using. This uses the =--serve= option included in Omnivox 1.17.0
-and the Emacsvox remote transport. Remote access remains a preview feature.
+Emacs can run on an SSH host while Omnivox, installed voices, and playback stay
+on your workstation. This uses Omnivox 1.17.0's =--serve= and Emacsvox's remote
+transport. Remote access remains a preview feature.
 
-On your workstation, create a private token once.  The creation tool refuses
-to overwrite an existing token or print its contents:
+Create a private token on the workstation. The tool refuses to overwrite or
+print an existing token:
 
 #+begin_example
 mkdir -p "$HOME/.config/omnivox"
@@ -1289,17 +1109,15 @@ python3 /path/to/omnivox/tools/create_remote_token.py \
     "$HOME/.config/omnivox/remote-token"
 #+end_example
 
-Start your installed Omnivox in a terminal and leave it running.  Give it the
-sound directory from the same Emacsvox sound-pack installation used by remote
-Emacs:
+Leave the installed server running in a terminal, with the matching Emacsvox
+sound-pack directory:
 
 #+begin_example
 omnivox --serve --token-file "$HOME/.config/omnivox/remote-token" \
     --sound-root /path/to/emacsvox/sounds
 #+end_example
 
-For a Windows service started through the WSL Emacsvox launcher, translate
-both paths for the Windows process:
+For a Windows service through the WSL launcher, translate both paths:
 
 #+begin_example
 /path/to/emacsvox/servers/omnivox --serve \
@@ -1307,9 +1125,8 @@ both paths for the Windows process:
     --sound-root "$(wslpath -w /path/to/emacsvox/sounds)"
 #+end_example
 
-In another workstation terminal, copy the token over your verified SSH
-connection and open the reverse forward.  Replace =user@emacs-host= with the
-machine where Emacs will run:
+In another workstation terminal, copy the token through verified SSH and open
+the reverse forward, replacing =user@emacs-host=:
 
 #+begin_example
 ssh user@emacs-host 'mkdir -p ~/.config/omnivox; chmod 700 ~/.config/omnivox'
@@ -1320,18 +1137,14 @@ ssh -o ExitOnForwardFailure=yes -o ServerAliveInterval=10 \
     -R 127.0.0.1:6417:127.0.0.1:6417 user@emacs-host
 #+end_example
 
-If Omnivox runs on Windows, open the final SSH connection with Windows
-OpenSSH (=ssh.exe= from WSL, or =ssh= from PowerShell).  Its forward must
-reach Windows loopback.  A WSL SSH client under NAT reaches WSL's separate
-loopback instead.  Windows OpenSSH uses your Windows SSH keys and host-trust
-configuration.
+When Omnivox runs on Windows, use Windows OpenSSH for the final connection:
+=ssh.exe= from WSL or =ssh= from PowerShell. It must reach Windows loopback;
+a WSL client under NAT reaches separate WSL loopback instead. Windows SSH uses
+its Windows keys and host-trust configuration.
 
-For a remote-only Linux installation and isolated launch commands, follow
-[[*Installing On A Remote Linux Host][Installing Remote Emacsvox]].  The =--remote= launcher supplies
-the connection options before initializing speech and needs no local Omnivox
-executable.
-
-For a personal Emacs configuration, set these options before starting Emacsvox:
+[[*Installing On A Remote Linux Host][Installing Remote Emacsvox]] provides the remote-only installation and isolated
+launcher. =--remote= configures transport before speech starts and needs no
+local Omnivox binary. For personal configuration, set before startup:
 
 #+begin_src emacs-lisp
 (setq tts-program "omnivox"
@@ -1340,34 +1153,29 @@ For a personal Emacs configuration, set these options before starting Emacsvox:
       omnivox-remote-token-file "~/.config/omnivox/remote-token")
 #+end_src
 
-Use ~M-x omnivox-remote-connect~ to connect or retry manually,
-~M-x omnivox-remote-status~ to inspect the connection, and
-~M-x omnivox-remote-disconnect~ to stop it and suspend retries.  After a lost
-connection, Emacsvox reconnects with fresh voice and routing information;
-unfinished speech is discarded.  Foreground and notification speech retain
-separate workers.  Only one Emacs session may own a service at a time.
+~M-x omnivox-remote-connect~ connects/retries, ~M-x omnivox-remote-status~
+inspects, and ~M-x omnivox-remote-disconnect~ stops and suspends retries.
+Reconnection refreshes voices/routing and discards unfinished speech. Main and
+notification retain separate workers. Only one Emacs session owns a service
+at a time.
 
-If startup connects main speech but the notification connection fails,
-Emacsvox keeps main speech available and retries the missing notification
-connection automatically.  Recovery does not replace the working main
-connection.  Set =omnivox-remote-auto-reconnect= to nil to disable automatic
-retries; an explicit disconnect also suspends them until you connect again.
-The status command reports the pending retry and latest connection error.
+If main connects but notification fails, main remains available while the
+missing connection retries. Recovery does not replace working main speech.
+=omnivox-remote-auto-reconnect= set to nil disables automatic retry; explicit
+disconnect suspends it until another connection. Status retains retry and error
+information.
 
-The service and forwarded endpoint must stay on loopback.  Do not enable SSH
-=GatewayPorts=.  SSH encrypts the connection; the private token also excludes
-other users on the remote host.  To rotate it, stop the service, replace both
-private token files, and restart.  Typing =quit= in the service terminal or
-interrupting it stops its workers.
+Keep service and forwarded endpoint on loopback; do not enable SSH
+=GatewayPorts=. SSH encrypts the transport and the token excludes other remote
+host users. To rotate, stop the service, replace both private token files, and
+restart. Typing =quit= or interrupting the service terminal stops workers.
 
-The voice inventory describes your workstation.  Install engines and use the
-engine installation manager on that workstation.  Bundled icons resolve there by
-pack-relative name; personal sounds outside the bundled sound directory and
-sound uploads are not supported in this first version.  Omitting
-=--sound-root= disables file-based icons.  If the remote port is occupied,
-choose another port on the left side of =-R= and set =omnivox-remote-port= to
-match.  An authentication failure means the token copies differ or their file
-permissions are too broad; a busy service still belongs to another connection.
+Inventory belongs to the workstation; install/manage engines there. Bundled
+icons resolve by pack-relative name. Personal sounds outside that directory
+and sound uploads are unsupported; no =--sound-root= means no file-based icons.
+For an occupied remote port, change the left side of =-R= and match
+=omnivox-remote-port=. Authentication failure indicates differing tokens or
+excessively broad file permissions; a busy service belongs to another connection.
 
 ** Compatibility Speech Servers
 :PROPERTIES:
@@ -1375,43 +1183,39 @@ permissions are too broad; a busy service still belongs to another connection.
 :DESCRIPTION: Understand the retained direct adapters.
 :END:
 
-Emacsvox retains direct speech servers for existing installations.  They are
-not the recommended first setup and are outside the initial-user platform
-matrix above:
+These retained direct servers support existing installations, not the recommended
+first setup or platform matrix:
 
 #+attr_texinfo: :indic code :compact t
 - espeak ::
 
-  The direct GNU/Linux Tcl server.  Building it with =make espeak=
-  requires Tclx at runtime, Tcl 8.6 development headers, eSpeak NG development
-  libraries, and a C++ compiler.  It remains useful for compatibility testing,
-  but new users should install Omnivox instead.
+  Direct Linux Tcl server. =make espeak= needs Tclx at runtime, Tcl 8.6
+  headers, eSpeak NG development libraries, and C++. Useful for compatibility
+  testing; new installations should use Omnivox.
 - swiftmac ::
 
-  The direct Swift macOS server.  It requires Swift 5.9 or newer and is built
-  with =make swiftmac=.  It remains a compatibility alternative to
-  Omnivox's AVSpeechSynthesizer engine; see
-  =servers/mac-swiftmac/Readme.org=.
+  Direct Swift macOS server, needing Swift 5.9 or newer and =make swiftmac=.
+  See =servers/mac-swiftmac/Readme.org= for this alternative to Omnivox's
+  AVSpeechSynthesizer engine.
 - mac ::
 
-  The legacy Python/PyObjC macOS server.  The unset runtime selector still names
-  it as a compatibility default on Darwin, but it is not the recommended or
-  documented initial-user route.  It depends on Foundation, AppKit, and
-  PyObjCTools availability.
+  Legacy Python/PyObjC server. The unset Darwin selector still names it as
+  a compatibility default, not an initial-user route. It needs Foundation,
+  AppKit, and PyObjCTools.
 - outloud ::
 
-  The direct GNU/Linux IBM TTS or Eloquence adapter.  It requires a separately
-  licensed compatible runtime, which Emacsvox does not distribute.  Voxin
-  availability is documented at [[https://voxin.oralux.net]].
+  Direct Linux IBM TTS/Eloquence adapter with separately licensed compatible
+  runtime. Emacsvox does not distribute it. Voxin availability is described
+  at [[https://voxin.oralux.net]].
 - dtk-soft ::
 
-  The direct Software DECtalk adapter.  Install its runtime separately and see
-  =servers/software-dtk/Readme.org=.  Emacsvox does not distribute licensed
-  speech runtimes.
+  Direct Software DECtalk adapter with separately installed runtime. See
+  =servers/software-dtk/Readme.org=. Licensed runtimes are not distributed
+  by Emacsvox.
 
 The native Windows audio, standalone Eloquence, and standalone DECtalk bridges
-under =servers/= are advanced WSL-specific compatibility paths.  Piper is
-an optional Omnivox engine and model workflow, not a primary Emacsvox server.
+under =servers/= are advanced WSL compatibility paths. Piper is an optional
+Omnivox engine/model workflow, not a primary Emacsvox server.
 
 ** Backend Diagnostics And Responsibilities
 :PROPERTIES:
@@ -1419,65 +1223,56 @@ an optional Omnivox engine and model workflow, not a primary Emacsvox server.
 :DESCRIPTION: Locate failures and authoritative detail.
 :END:
 
-Local speech-server messages and errors are retained in diagnostic buffers.
-These buffers are hidden from the standard buffer list by default.  Use
-~M-x tts-show-diagnostics~ and choose =Speaker= for main speech or =Notify=
-for notifications to inspect them.  The command reports when no local
-diagnostics are available.
+Local server messages/errors remain in diagnostics buffers, hidden from the
+ordinary buffer list by default. Use ~C-e H D m~ for main or ~C-e H D n~ for
+notification diagnostics, or ~M-x tts-show-diagnostics~ with =Speaker= or
+=Notify=. Missing local diagnostics are reported rather than invented.
 
-To include these buffers in the standard buffer list, customize
-=tts-hide-diagnostic-buffers= to =nil=, then run ~M-x tts-restart~.  Changing
-this setting preserves existing diagnostics.  Custom buffer switchers may
-list hidden buffers too.
+Set =tts-hide-diagnostic-buffers= to nil in Customize and restart speech to
+include them in the ordinary list. Existing diagnostics are retained; custom
+buffer switchers may show hidden buffers independently.
 
-Use the boundary at which speech failed to choose the next diagnostic:
+Choose the diagnostic at the failed layer:
 
 #+attr_texinfo: :indic asis :compact t
 - =omnivox= is not found ::
 
-  Under WSL2, run =./bin/emacsvox-wsl-install --check= and confirm its persistent
-  path.  On other POSIX systems, check =PATH=; an absolute =OMNIVOX_PROGRAM= can
-  identify the installed executable.  Keep its adjacent =espeak-ng-data= and
-  =third-party-licenses= directories with it.
-- =omnivox --check= reports an error or is inaudible ::
+  In WSL, run =./bin/emacsvox-wsl-install --check= and inspect its saved path.
+  On other POSIX systems check =PATH= or an absolute =OMNIVOX_PROGRAM=.
+  Keep =espeak-ng-data= and =third-party-licenses= beside the executable.
+- =omnivox --check= errors or is inaudible ::
 
-  The failure is below Emacsvox.  Consult Omnivox's
+  Diagnose below Emacsvox using Omnivox's
   [[https://github.com/bartbunting/omnivox/blob/main/README.md][build guide]],
-  [[https://github.com/bartbunting/omnivox/blob/main/docs/STATUS.md][platform status]],
-  and
-  [[https://github.com/bartbunting/omnivox/blob/main/docs/guides/diagnostics.md][diagnostics guide]].  Do not diagnose Emacs configuration until the tone and
-  speech check passes.
+  [[https://github.com/bartbunting/omnivox/blob/main/docs/STATUS.md][platform status]], and
+  [[https://github.com/bartbunting/omnivox/blob/main/docs/guides/diagnostics.md][diagnostics guide]]. Do not change Emacs configuration before tone/speech work.
 - The check passes but Emacsvox is silent ::
 
-  Confirm that =TTS_PROGRAM=omnivox= was present before Emacsvox loaded, then
-  use ~M-x tts-speak-version~.  Under WSL2 with a release binary, rerun
-  =./bin/emacsvox-wsl-install --check=.  For a source-built development
-  runtime, run =make verify-windows-omnivox-runtime= and restart the speech
-  process after restaging.
+  Confirm =TTS_PROGRAM= was =omnivox= before setup loaded, then use
+  ~M-x tts-speak-version~. Rerun the WSL installer check for a release
+  installation. For development source staging, run
+  =make verify-windows-omnivox-runtime= and restart after restaging.
 - A process starts and later fails ::
 
-  The Emacsvox POSIX/WSL launcher writes private, bounded stderr logs below
-  =$XDG_STATE_HOME/emacsvox/omnivox=, defaulting to
-  =~/.local/state/emacsvox/omnivox=.  Spoken text is excluded unless
-  =OMNIVOX_LOG_SYNTHESIS_TEXT= is explicitly enabled; enabling it can expose
-  passwords, messages, and document contents.
-- Speech works but feels delayed ::
+  The POSIX/WSL launcher retains private bounded stderr logs at
+  =$XDG_STATE_HOME/emacsvox/omnivox=, normally
+  =~/.local/state/emacsvox/omnivox=. Spoken text is excluded unless
+  =OMNIVOX_LOG_SYNTHESIS_TEXT= is explicitly enabled; that can expose
+  passwords, mail, and documents.
+- Speech works but is delayed ::
 
-  Press ~C-e d D~ to enable a private diagnostic log, then reproduce one short
-  presentation and press ~C-e d D~ again to disable logging.  The default file
-  is =~/.emacsvox-aural-diagnostics.log=; use ~C-u C-e d D~ when enabling to
-  choose another file.  Its =dispatch-sent=, =mixer-source-observed=, and
-  =playback-terminal-observed= records share an Omnivox dispatch ID.  Match
-  that ID in the ordinary Omnivox session log to separate Emacs submission,
-  server queueing, synthesis, and mixer-source delay.  The Emacs log is
-  disabled by default because its submission records include complete spoken
-  text.  A mixer-source observation is not physical audible output; device and
-  hardware buffers can add latency afterward.
+  ~C-e d D~ enables a private diagnostic log; reproduce one short presentation
+  and toggle it off. Default =~/.emacsvox-aural-diagnostics.log= can be changed
+  with ~C-u C-e d D~ when enabling. Records =dispatch-sent=,
+  =mixer-source-observed=, and =playback-terminal-observed= share a dispatch ID.
+  Match it in Omnivox logs to separate submission, queueing, synthesis, and
+  mixer-source delay. This Emacs log is off by default because submitted
+  speech text is complete. A mixer observation is not physical output;
+  device/hardware buffering can add delay. The diagnostics menu's ~l~ also
+  exposes the explicit session logging control with its privacy warning.
 
-Server selection, the POSIX/WSL launcher, Windows staging, and the bundled
-Lisp adapter are implemented and documented in Emacsvox.  Native builds,
-engines, the command line, runtime data layout, and protocol specifications
-are documented in the Omnivox repository.  Backend-local READMEs describe
-licensed runtimes and compatibility adapters.  Follow those sources for
-versioned details rather than copying their contracts into installation
-instructions.
+Emacsvox owns selection, launcher, Windows staging, and its bundled Lisp adapter.
+Omnivox owns native builds, engines, CLI, runtime layout, and protocols.
+Backend-local READMEs document compatibility adapters and licensed runtimes.
+Use those owning references for versioned details instead of duplicating their
+contracts in first-installation instructions.
