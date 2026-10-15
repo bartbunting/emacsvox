@@ -5,25 +5,27 @@
 :DESCRIPTION: Learn the essentials in a speaking Emacsvox session.
 :END:
 
-Once Emacsvox is speaking, you can read, edit, and navigate with ordinary
-Emacs commands. Emacsvox announces their results, while explicit speech
-commands let you examine text without moving. Start with the practice session,
-then use the rest of this chapter for everyday speech controls.
-[[*Work With The Audio Desktop][Audio Desktop]] explains how these habits carry over to other applications.
+Once Emacsvox is speaking, ordinary Emacs commands let you read, edit and
+navigate. Emacsvox announces their results. Short speech commands inspect
+text at your editing position, while tracked reading follows a longer passage.
+This chapter moves from those reading choices to selecting and editing text,
+then to everyday speech controls. [[*Work With The Audio Desktop][Audio Desktop]] explains how to keep several
+tasks available through buffers and windows.
 
 ** Key Notation And Emacs Words
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Emacs documentation uses ~C-~ for Control and ~M-~ for Meta, usually Alt or
-Option. To enter ~C-n~, hold Control and press ~n~. For ~C-e l~, press ~C-e~,
-release the keys, then press ~l~. Each part is a separate keystroke.
+Start with [[*Read the key instructions][Read the key instructions]] if the notation is unfamiliar. It explains
+modifiers, uppercase letters and successive keypresses before asking you to
+use them. [[*Answer a prompt and return to your work][Answer a prompt and return to your work]] covers command names,
+completion and filename questions.
 
-~M-x~ runs a command by name, and ~RET~ means Return or Enter. A /buffer/
-holds text or an application view; /point/ is the position affected by movement
-and editing. If Emacs is new to you, ~C-h t~ opens its interactive tutorial.
-Follow it with Emacsvox and return here for the speech controls.
+A /buffer/ holds text or an application view; /point/ is the position at which
+movement and editing act. The selection guide below introduces the mark and
+region when they are needed. For a separate introduction to Emacs editing,
+~C-h t~ opens its interactive tutorial.
 
 ** Your First Few Minutes
 :PROPERTIES:
@@ -81,9 +83,10 @@ and the selected item. Prompts and error messages are also spoken.
 
 Other information is requested explicitly:
 
-- Reading commands speak a character, word, line, region, or larger unit without
-  first moving. Names usually begin with =emacsvox-speak-= and default keys
-  use ~C-e~.[fn::The prefix comes from Emacspeak, where C-e was mnemonic for
+- Reading commands speak a character, word, line, region or larger unit.
+  Most inspections preserve point; tracked rest-of-buffer reading advances it.
+  Names usually begin with =emacsvox-speak-= and default keys use
+  ~C-e~.[fn::The prefix comes from Emacspeak, where C-e was mnemonic for
   the project name.]
 - Speech-system commands adjust rate, punctuation, echo, and related controls.
   Many use ~C-e d~ and names beginning =tts-=.[fn::The d originally referred
@@ -106,9 +109,14 @@ buffers with the same major mode; repeat with ~n~ or ~p~. See
 :DESCRIPTION: Reading chunks of information.
 :END:
 
-Ordinary movement speaks the character, word, line, or larger unit reached.
-The explicit commands below inspect text without first moving point. They
-share ~C-e~ but differ in how much text they speak.
+Choose the amount of text you need to hear. Use a line or paragraph for a
+local check, a selected region for exact editing boundaries, or ~C-e i~ for
+longer reading with a tracked position. Ordinary movement speaks what you
+reach; explicit inspection does not require that movement first.
+
+The default keys are collected here. The following two sections explain
+which preserve point, how to stop and start again, and the limits of large
+requests. These distinctions matter before you begin selecting text.
 
 # basic-usage-live-keys-begin
 #+attr_texinfo: :indic kbd :compact t
@@ -159,7 +167,8 @@ share ~C-e~ but differ in how much text they speak.
   #+kindex: C-e r
 
   =emacsvox-speak-region=
-  speaks the active region between point and mark.
+  speaks the region between point and mark. Establish and check the selection
+  before editing; large requests have the windowful limit explained below.
 - C-e i ::
 
   #+findex: emacsvox-speak-rest-of-buffer
@@ -167,7 +176,8 @@ share ~C-e~ but differ in how much text they speak.
   #+kindex: C-e i
 
   =emacsvox-speak-rest-of-buffer=
-  speaks from point to the end of the buffer.
+  reads from point towards the buffer end with chunk-based position tracking.
+  It requires a supporting server; see [[*Read from point, stop, and start again][Read from point, stop, and start again]].
 - C-e b ::
 
   #+findex: emacsvox-speak-buffer
@@ -175,7 +185,8 @@ share ~C-e~ but differ in how much text they speak.
   #+kindex: C-e b
 
   =emacsvox-speak-buffer=
-  speaks the whole current buffer.
+  reads the accessible buffer without tracking point through the speech.
+  Large requests fall back to windowful reading, as explained below.
 - C-e s ::
 
   #+findex: tts-stop
@@ -199,9 +210,108 @@ Many reading commands accept a prefix to limit speech before or after point.
 Use ~C-h k~ before relying on a variant; exact prefix behaviour belongs to
 that command's documentation.
 
+*** Read a short passage without moving point
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Reading Without Moving Point
+:DESCRIPTION: Inspect words, sentences and paragraphs while keeping your editing position.
+:END:
+
+#+cindex: reading without moving point
+#+cindex: proofreading, spoken text
+#+findex: emacsvox-speak-sentence
+
+Use ~C-e l~ to check the line containing the next edit, ~C-e w~ to hear its
+word, and ~C-e c~ to inspect its character. Repeating ~C-e w~ at the same
+position spells the word. These are reading commands, not movement commands.
+For a larger unit, ~C-e [~ reads the paragraph and
+~M-x emacsvox-speak-sentence RET~ reads the sentence around point.
+
+A positive prefix changes line, sentence or paragraph reading to start at
+point. For example, ~C-u C-e l~ reads the rest of the line; ~C-u C-e [~ reads
+the rest of the paragraph. ~C-u -1 C-e l~ reads from the line's beginning to
+point. Enter the minus sign and digit as part of the prefix argument, not as
+document text. The default form without a prefix reads the whole unit.
+
+Emacs determines sentences, paragraphs and pages from the mode and text.
+A page for ~C-e ]~ is an Emacs text page, not necessarily one screenful or a
+printed page. That command also sets a page mark: do not use it while
+preserving a selection for an edit. For more detail, see [[info:emacs#Sentences][Sentences]],
+[[info:emacs#Paragraphs][Paragraphs]] and [[info:emacs#Pages][Pages]] in the GNU Emacs Manual.
+
+For a bounded passage, set and inspect a region as described in
+[[*Select and check the text first][Select and check the text first]], then use ~C-e r~. A short region read
+preserves its endpoints and active selection. Speech follows pronunciation
+and presentation settings, so silence is not proof that the selected source
+contains no punctuation or whitespace. Inspect the boundaries before editing.
+
+Whole-buffer reading with ~C-e b~, or the untracked rest-of-buffer form
+~C-u C-e b~, is useful for short text. Neither supplies the interruption
+position tracking described next. With the current default size limit,
+buffer or region requests of 40,000 characters or more fall back to
+windowful reading rather than reading the entire request. That helper removes
+other windows and reads a screenful from point. Use smaller passages to retain
+your window arrangement, or tracked reading when the backend supports it.
+The limit is recorded in =ems--large-text-size=.
+
+These commands read the buffer's accessible text. In Info, that is the current
+node, not the entire manual; narrowing can also restrict a document. Folding,
+pronunciation and mode-specific presentation affect what you hear. Use the
+application's structural reader for tables, messages or other special views,
+and [[info:emacs#Narrowing][Narrowing]] in the GNU Emacs Manual for restricted editing views.
+
+*** Read from point, stop, and start again
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Reading From Point
+:DESCRIPTION: Use tracked reading and understand where interruption leaves point.
+:END:
+
+#+cindex: continuous reading
+#+cindex: read all from here
+#+cindex: stopping and restarting reading
+#+vindex: emacsvox-tracked-reading-max-chars
+
+~C-e i~ starts reading at point and continues towards the accessible end of
+the buffer. Unlike a line or paragraph inspection, it advances point as
+sentence-oriented chunks complete. This requires a speech server supporting
+tracked playback completion. An unsupported server reports that limitation;
+it does not silently provide equivalent position tracking.
+
+Try it in an ordinary prose buffer, with no selection you need to preserve:
+
+1. Find the passage you want and finish any search or prompt. Use ~C-a~ for
+   the beginning of its line and ~C-e l~ to check it. For the beginning of
+   the accessible buffer, use ~M-<~ instead.
+2. Press ~C-e i~ and listen without entering another command. The reading
+   position advances by chunks, not by each spoken word.
+3. Press ~C-e s~ to stop without moving to a different passage. Then use
+   ~C-e l~ to inspect the retained line before editing or moving.
+4. Press ~C-e i~ again to start from the retained position. Part of the
+   last chunk can be repeated; this is not an exact-word pause/resume control.
+
+Stopping retains the beginning of the current chunk, not necessarily the last
+word you heard. Another user command interrupts tracked reading before
+performing its own action. A movement command therefore also changes the
+retained position, and ordinary typing can insert text there. Use the explicit Stop command when you
+want to listen, stop, and decide what to do next. An existing active region
+would change as point advances, so use ~C-e r~, not ~C-e i~, to check a selection.
+
+Chunks prefer sentence boundaries and are bounded by
+=emacsvox-tracked-reading-max-chars=, currently 280 source characters. This is
+not a word count or an exact acoustic position. Completion reaches the saved
+end of the accessible text; failure or interruption ends the reading session.
+You can inspect the text and issue a new reading command without restarting
+Emacs. On a backend without tracked support, read paragraphs or short regions,
+or use the untracked buffer form with the size/layout limitations above.
+
+For movement to another starting point, see [[info:emacs#Moving Point][Moving point]] in the
+GNU Emacs Manual. The speech commands themselves belong to Emacsvox; their
+exact interfaces are in [[info:emacsvox-reference#emacsvox-speak][the core speech reference]].
+
 *** Hear Phonetic Names After A Pause
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Delayed Phonetic Reading
+:ALT_TITLE: Hear phonetic names after a pause
+:DESCRIPTION: Inspect characters with delayed phonetic names and cancel stale feedback.
 :END:
 
 #+findex: emacsvox-delayed-phonetic-mode
@@ -222,6 +332,343 @@ Further input, including the first key of a prefix, cancels the pending name.
 New speech, stopping speech, edited source text, or leaving its buffer/window
 also prevents stale feedback. Each pause produces at most one name. Typing,
 deletion, punctuation, and explicit phonetic reading do not trigger the delay.
+
+** Select, copy, and move text
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Editing Text With Speech
+:DESCRIPTION: Check a selection, copy or move it, and recover a mistaken edit.
+:END:
+
+#+cindex: editing through speech
+#+cindex: cut and paste
+
+Reading a passage is not the same as selecting it for an operation. These
+procedures make the affected text and destination explicit before changing
+anything. They apply to ordinary editable text, not terminal input, a settings
+editor or a table reader. Keep using the application's own instructions in
+those contexts.
+
+For practice, use ~C-x b~ to create an unused buffer named =evox-edit-source=,
+run ~M-x text-mode RET~, and insert the following text, including the blank
+lines and a final newline after the last sentence. Use another unused name
+if that buffer already contains work. No file or speech-setting save is needed.
+
+#+begin_example
+Keep the opening paragraph.
+
+Move this paragraph.
+
+Keep the closing paragraph.
+#+end_example
+
+Keep the manual open separately and return to this buffer before trying a
+step. [[*Answer a prompt and return to your work][Answer a prompt and return to your work]] explains command entry; the
+[[info:emacs#Killing][Killing and moving text]] chapter in the GNU Emacs Manual supplies the wider
+editing reference.
+
+*** Select and check the text first
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Selecting Text With Speech
+:DESCRIPTION: Set point and mark, hear the region, and check its newline boundary.
+:END:
+
+#+cindex: region, selecting and hearing
+#+cindex: mark, checking a selection
+#+cindex: newline, including in a selection
+#+kindex: C-SPC
+#+kindex: C-x C-x
+
+Point is the moving end of a selection; the mark holds its other end. The
+/region/ is the text between them, whichever comes first. This procedure uses
+Emacs's normal Transient Mark mode, not the Transient settings-menu package.
+Do not change either mode just because their names are similar.
+
+1. In the practice buffer, press ~M-<~, then ~C-n~ twice and ~C-a~. Check
+   with ~C-e l~ that you reached =Move this paragraph.=.
+2. Press ~C-SPC~: hold Control and press the space bar. This sets the mark
+   at the line's start. Release the keys, then press ~C-n~ once. Point is
+   now at the start of the following blank line.
+3. Press ~C-e r~ to hear the region. It contains the sentence and its
+   terminating newline. Reading this short selection does not move its ends
+   or deactivate it, so it remains ready for copying or cutting.
+4. Press ~C-b~ once to move point back before that newline. The sentence
+   is still selected, but its newline is not. ~C-e c~ can identify the
+   character at this boundary; the character at the region's end is excluded.
+   Press ~C-f~ to include the newline again.
+
+If the operating system intercepts ~C-SPC~, ~M-x set-mark-command RET~ is
+an alternative. Use a small selection and ordinary unshifted movement for this
+exercise. Shift-selection has different deactivation rules.
+
+~C-x C-x~ exchanges point and mark without changing the selected text.
+Emacsvox speaks the line at the new point with point indication. You can
+inspect that boundary, move it if necessary, and exchange again to return to
+the other end. Starting a new selection with ~C-SPC~ replaces the boundary;
+it is not the command for inspecting the old one.
+
+In the ordinary text buffer, ~C-g~ deactivates the selection without deleting
+text. It does not erase the saved mark. Some region commands can still use an
+inactive mark, so always establish a fresh, checked selection before cutting.
+Likewise, typing over selected text depends on Delete Selection mode; use the
+explicit operations below rather than assuming typing will replace it.
+
+More detail: [[info:emacs#Mark][The mark and the region]], [[info:emacs#Setting Mark][Setting the mark]],
+[[info:emacs#Using Region][Operating on the region]] and [[info:emacs#Shift Selection][Shift selection]] in the GNU Emacs Manual.
+
+*** Copy a passage into another buffer
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Copying Text Between Buffers
+:DESCRIPTION: Preserve the source and check what is inserted at the destination.
+:END:
+
+#+cindex: copying text between documents
+#+kindex: M-w
+#+kindex: C-y
+
+Emacs calls its remembered copied or cut text the /kill ring/. Copy with
+~M-w~ and insert with ~C-y~, called /yank/ in Emacs. The names do not imply
+that copying deletes anything.
+
+1. Select the middle sentence and its newline using the previous procedure.
+   Hear it with ~C-e r~, then press ~M-w~. Emacsvox reports the copy; the
+   source text stays in place and the mark is normally deactivated.
+2. Press ~C-x b~, choose an unused name such as =evox-edit-notes=, and run
+   ~M-x text-mode RET~. Check the buffer with ~C-e m~. Use an empty buffer
+   for this first copy, rather than inserting into an existing document.
+3. Press ~C-y~. Emacsvox speaks the inserted text. Point is after it and
+   the mark is at its beginning, normally inactive. Immediately press ~C-e r~
+   to hear that range again; do not set a new mark first.
+4. Return to =evox-edit-source= with ~C-x b~ and read the middle paragraph.
+   It is still there. The destination contains an independent text copy.
+
+For a real document, check the insertion point and deactivate any unrelated
+selection before pasting. A copied newline moves subsequent text to another
+line; a copied blank line can preserve paragraph separation. Inspect the
+surrounding text as well as the pasted passage before saving.
+
+During the transfer, ~C-e m~ and ~C-e l~ are useful checks. Avoid ~C-e f~
+for filename inspection and ~C-e a~ for message repetition at this point:
+those commands also put their result in the kill ring and can change the
+next paste. ~M-x emacsvox-speak-current-kill RET~ inspects the current entry
+without inserting it. Another application's clipboard copy can also change
+what ~C-y~ inserts.
+
+If the text goes to the wrong place, stop and use
+[[*Recover a text edit before saving][Recover a text edit before saving]] rather than pasting more copies.
+For the general commands, see [[info:emacs#Yanking][Yanking]] and [[info:emacs#Kill Ring][The kill ring]] in the GNU Emacs
+Manual. [[*Keep a reference and a draft in separate windows][Keep a reference and a draft in separate windows]] offers another way to
+manage the two working contexts.
+
+*** Move a paragraph without losing it
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Moving Text Safely
+:DESCRIPTION: Cut a checked passage, place it elsewhere, and verify both locations.
+:END:
+
+#+cindex: moving paragraphs
+#+cindex: cutting text
+#+kindex: C-w
+
+Cutting with ~C-w~ removes the region and stores it for yanking. Practise in
+the unchanged three-paragraph source above; copying in the previous task did
+not alter it. Do not overwrite an existing buffer to recreate the example.
+
+1. Select the middle sentence from its beginning. This time move down twice
+   after setting the mark, stopping at the beginning of =Keep the closing
+   paragraph.=. The region contains the middle paragraph and both following
+   newlines, but none of the closing paragraph. Check with ~C-e r~.
+2. Press ~C-w~. Emacsvox announces the cut. The source now contains the
+   opening and closing paragraphs, and point is where the removed passage
+   began. Inspect the remaining text without making another cut or copy.
+3. Press ~M->~ for the buffer end. With the example's final newline present,
+   press ~RET~ once to add a blank line after the closing paragraph. Press
+   ~C-y~ to insert the cut paragraph there.
+4. Read from the beginning using short passages. The order should be opening,
+   closing, then the moved paragraph, separated by blank lines. Check that
+   the middle paragraph appears only once.
+
+In other text, decide deliberately whether to move a following newline or
+blank line. Cutting only the visible words can leave an empty paragraph at
+the source and join words at the destination. For a transfer between files,
+verify both buffers before saving either: this is not one atomic file move.
+
+Consecutive kills can combine into one kill-ring entry. Avoid using another
+kill command to tidy the destination before yanking the passage; it can alter
+what you insert. ~C-k~, for example, kills to the line end and can remove the
+newline when used there. See [[info:emacs#Killing by Lines][Killing by lines]] and [[info:emacs#Appending Kills][Appending kills]] in the
+GNU Emacs Manual before using that faster editing pattern.
+
+*** Choose text copied earlier
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Choosing Earlier Copied Text
+:DESCRIPTION: Retrieve a previous kill-ring entry without confusing insertion and replacement.
+:END:
+
+#+cindex: paste an earlier copy
+#+cindex: kill ring, earlier entries
+#+kindex: M-y
+
+The kill ring keeps more than the latest passage. At the intended destination,
+~M-y~ after a non-yank command opens a chooser for earlier entries. Use
+completion or prompt history to inspect candidates, then ~RET~ to insert the
+chosen text. ~C-g~ cancels before insertion. These entries may contain private
+text; use a harmless example when practising or sharing your screen or audio.
+
+Immediately after ~C-y~, the same ~M-y~ instead replaces that insertion with
+an earlier entry. Further consecutive ~M-y~ commands cycle through earlier
+entries, and Emacsvox speaks each inserted candidate. Once you issue a separate
+reading or movement command, do not assume ~M-y~ will still replace the last
+paste: outside the yank sequence it opens the chooser for another insertion.
+
+To verify a candidate while cycling, listen to the automatic yank feedback.
+When you decide to keep it, inspect its surroundings normally. If you have
+already broken the sequence and want a different passage, undo the unwanted
+insertion, check the destination, and choose again. Repeated ~C-y~ inserts
+more copies; it is not an accept or preview command.
+
+More detail: [[info:emacs#Earlier Kills][Yanking earlier kills]] in the GNU Emacs Manual. Kill-ring
+history is useful recovery information, not a permanent backup of your work.
+
+*** Recover a text edit before saving
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Recovering Text Edits
+:DESCRIPTION: Undo deliberately in the right buffer and distinguish recovery from saving.
+:END:
+
+#+cindex: undo with speech
+#+cindex: pasted into the wrong place
+#+findex: undo-only
+
+Undo belongs to the selected buffer. Finish prompts and leave special menus,
+check the buffer with ~C-e m~, and press ~C-g~ in ordinary text to deactivate
+any selection before undoing across the buffer. An active region can limit
+undo to that region.
+
+Use ~M-x undo-only RET~ to undo one recorded change, then inspect with
+~C-e l~ or a freshly selected short region. Deactivate that inspection region
+before the next undo. Repeat only as far as necessary. Insertion and deletion
+can occupy separate undo records; a multi-step move can therefore need more
+than one correction.
+
+~C-/~ is the familiar undo key and works for an initial undo. However, an
+intervening reading or movement command breaks its undo sequence, and a later
+ordinary undo can redo what you just undid. =undo-only= avoids that reversal
+when you pause to inspect through speech. ~M-x undo-redo RET~ deliberately
+reapplies undone changes when the buffer's undo history permits it.
+
+For an accidental transfer between buffers, undo the insertion at the
+destination and the cut at the source separately, inspecting each. Copying
+needs no source undo because it left the source unchanged. Neither operation
+writes a file until you save. Correcting a saved edit changes the buffer again;
+save the verified correction explicitly if the file on disk must change too.
+Do not use Revert or close an unsaved buffer as a substitute for inspecting it.
+
+The GNU Emacs Manual's [[info:emacs#Undo][Undo]] section explains history, selective undo and
+limits. For file destinations and save failures, see
+[[*Save a separate working copy][Save a separate working copy]]. Text undo does not reverse a settings-menu
+save, a filesystem operation or an action already sent to a terminal.
+
+*** Exchange text with another application
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Copying Through The Clipboard
+:DESCRIPTION: Distinguish the Emacs kill ring from operating-system clipboard integration.
+:END:
+
+#+cindex: clipboard, exchanging text
+#+cindex: WSL, clipboard boundaries
+
+The kill ring is part of Emacs. The operating-system clipboard can connect it
+to other applications when the display session and configuration support that
+connection. Under normal graphical clipboard integration, ~M-w~ copies to both,
+and ~C-y~ can insert text copied more recently outside Emacs. That is why
+checking the pasted result matters even after checking the selection.
+
+Test the boundary with a short, non-confidential sentence in each direction:
+copy from Emacs and paste into a disposable external document, then copy a
+different sentence externally and paste into an empty Emacs buffer. Verify the
+actual text rather than assuming that success in one direction proves both.
+Native Windows Emacs, WSLg, terminal Emacs and remote sessions need not share
+identical clipboard behaviour. This guide does not install a bridge or change
+your clipboard configuration.
+
+If copying between Emacs buffers works but the external test fails, investigate
+that display/clipboard boundary rather than changing speech settings. Do not
+paste test commands into a live terminal. For the general integration and its
+options, see [[info:emacs#Clipboard][Using the clipboard]] and [[info:emacs#Primary Selection][Cut and paste with other window applications]]
+in the GNU Emacs Manual; a primary selection is not the same as the clipboard.
+
+** Find and replace text carefully
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Searching And Replacing Text
+:DESCRIPTION: Search deliberately and choose the scope before replacing occurrences.
+:END:
+
+#+cindex: searching, repeated matches
+#+cindex: isearch, finishing before editing
+
+~C-s~ searches forward and ~C-r~ searches backwards in the current buffer.
+Type the query, listen to the match feedback, and repeat the search key to
+reach another occurrence. Reverse direction with the other search key when
+you overshoot. Searching the current text does not send a web or mail query.
+
+When you find the occurrence you want, press ~RET~ to end the search before
+typing document text. Forward search leaves point after the match; backward
+search leaves it before the match. Check with ~C-e l~ before editing. With a
+failing search, ~C-g~ first backs out of the failed part; another ~C-g~ may be
+needed to abandon the search. Do not begin an edit while its prompt is active.
+
+For details of repetition, search history, case and failure recovery, use
+[[info:emacs#Incremental Search][Incremental search]] in the GNU Emacs Manual. Its rules describe the editor;
+Emacsvox adds spoken match context and search cues. The next procedure changes
+text, so it begins by establishing a narrower scope.
+
+*** Review replacements one at a time
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Reviewing Text Replacements
+:DESCRIPTION: Limit query replacement to a checked region and verify the changed text.
+:END:
+
+#+cindex: replacement, controlling scope
+#+findex: query-replace
+#+kindex: M-%
+
+Use a disposable Text-mode buffer for this example. Insert these three lines:
+
+#+begin_example
+The draft is ready.
+Keep this draft for comparison.
+The draft outside the selection must stay unchanged.
+#+end_example
+
+1. From the beginning, set the mark with ~C-SPC~ and move down two lines.
+   Point is at the third line's beginning. ~C-e r~ should read only the first
+   two lines. Keep this region active for the next command.
+2. Press ~M-%~ to start query replacement. At the first prompt enter =draft=
+   and press ~RET~; at the second enter =version= and press ~RET~. These are
+   answers to successive prompts, not text inserted into the document.
+3. Emacsvox reads the line containing the proposed match. Press ~y~ to replace
+   the first occurrence. At the second, press ~n~ to leave it unchanged.
+4. When the command finishes, read all three lines. Only the first should say
+   =version=. The second was skipped and the third was outside the selection.
+
+~M-x query-replace RET~ is an alternative when Meta-percent is difficult to
+enter. The active region limits the operation under normal Transient Mark
+mode; without it, ordinary forward query replacement works from point towards
+the accessible buffer end. Do not deactivate or replace the checked mark
+between selection and starting the command. For a full-document operation,
+first abandon unrelated selection and deliberately choose the starting point.
+
+At a replacement question, ~q~ or ~RET~ stops without changing further
+matches; earlier replacements remain. Comma, ~,~, replaces the current match
+and lets you review it before advancing. ~!~ replaces the remaining matches
+without more questions and is not needed for this guided task. Other editing
+keys can leave the replacement loop and then act on the document. Rely on the
+automatic match reading, or stop before issuing ordinary speech/editing keys.
+
+Check the result before saving. Use [[*Recover a text edit before saving][Recover a text edit before saving]] if the
+scope or replacement was wrong. [[info:emacs#Replace][Replacement commands]] and [[info:emacs#Query Replace][Query replace]] in the
+GNU Emacs Manual cover exact matching, case behaviour and the full set of
+answers. Regular-expression replacement is a different, more specialised task.
 
 ** Adjust Speech While You Work
 :PROPERTIES:
@@ -505,7 +952,8 @@ buffer/modes, or position.
 
   =emacsvox-speak-message-again=
 
-  Repeat the last Emacs message.
+  Repeat the last Emacs message and copy it to the kill ring. This can change
+  what the next yank inserts.
 - C-e m ::
 
   #+findex: emacsvox-speak-mode-line
@@ -523,7 +971,8 @@ buffer/modes, or position.
 
   =emacsvox-speak-buffer-filename=
 
-  Speak the file name, or default directory when no file is visited.
+  Speak the file name, or default directory when no file is visited, and copy
+  that location to the kill ring. Inspect it before copying text for a transfer.
 - C-e C-l ::
 
   #+findex: what-line

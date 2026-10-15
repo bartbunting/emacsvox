@@ -1,0 +1,133 @@
+#+title: Reading, editing and window workflows review, 15 October 2026
+#+language: en
+
+* Scope and placement
+
+This documentation pass starts from =ui-experiments= at
+=0b0aabd5b62f33b1ef61c1a84f2fb3d1721c8ace=. It expands Basic Usage from
+reading to selection-based editing before the speech-control reference, adds
+window workflows beside Audio Desktop's buffer guidance, and links those tasks
+from the task finder. The tutorial and application procedures remain unchanged.
+
+The branch advanced to =ddddff1aa289ba6fe3f6772e41ad29fa67e78845= during the
+pass. Its three intervening commits do not change the four edited files or
+the inspected core reading/editing implementations. Their menu, presentation,
+application and generated-document changes are preserved by using that newer
+commit as the parent. No Lisp, dependency, packaging or publication changes
+are part of this pass.
+
+* Reading and editing contracts
+
+=C-e i= is documented as tracked rest-of-buffer reading, not a synonym for
+ordinary buffer inspection. It requires tracked completion, advances point
+by sentence-oriented chunks, and stops before another user command executes.
+The retained position is a chunk boundary rather than an exact spoken word.
+Unsupported servers receive alternatives without a promise of equivalent
+tracking. The default 280-character bound is identified as source characters.
+
+Line, word, sentence, paragraph, page, region and buffer reading are explained
+by purpose. Important exceptions remain explicit: page reading sets a mark;
+large region/buffer requests use a windowful helper that removes other windows;
+and restricted/structured buffers do not represent a whole file or manual.
+Small region inspection preserves point, mark and activation in the inspected
+implementation. The 40,000-character default threshold is not a promise of
+unlimited whole-buffer speech.
+
+The editing tasks use small disposable Text-mode examples. They teach region
+endpoints and newline inclusion before copy or cut, preserve the source when
+copying, and check source and destination after a move. The kill-ring guide
+separates immediate yank-pop replacement from the chooser used after another
+command. Automatic yank feedback permits listening during a yank sequence;
+a separate reading command changes what a subsequent yank-pop does.
+
+Recovery uses undo-only when inspection interrupts undo. Ordinary undo can
+redo an earlier undo after a non-undo command, and an active region can limit
+recovery. Separate-buffer histories, completed file saves, clipboard contents
+and settings operations are not treated as one reversible transaction.
+Filename speech and message repetition disclose their kill-ring side effects.
+
+Query replacement first selects a checked region and then reviews each match.
+It distinguishes query input from document input and does not insert an
+ordinary speech command into the query loop. The existing match speech is
+used there; stopping the loop does not undo accepted replacements.
+
+The clipboard section gives a non-confidential two-way test rather than
+assuming identical native Windows, WSLg, terminal or remote behaviour. It
+neither installs a bridge nor changes operating-system or Emacs configuration.
+
+Window guidance distinguishes buffer, window and frame; display of the same
+buffer is not a copy. The reference/draft task checks each selected view and
+insertion point. Closing a window is distinct from killing its buffer. Help
+and large-reading windowful behaviour is disclosed so a collapsed layout is
+not mistaken for lost work.
+
+* Navigation and external detail
+
+Sixteen Info destinations are added, bringing the inventory from 181 to 197.
+All existing identifiers and their relative order remain. Delayed phonetics
+receives its own destination so it does not become part of the new tracked-
+reading node. The new window tasks sit between buffers and modes. The task
+finder has an editing group rather than copying the procedures.
+
+Contextual GNU Emacs manual references cover sentences, paragraphs, pages,
+narrowing, movement, mark/region, shift selection, killing, yanking, earlier
+kills, undo, clipboard, incremental search, replacement and windows. They use
+Info links for installed offline use and the existing export mapping for HTML.
+These explain general Emacs operations; the Emacsvox text retains its own
+speech, key-override and return qualifications. The key-notation primer is
+linked rather than rewritten in Basic Usage.
+
+* Verification performed
+
+The four complete baseline files were reconstructed locally and matched their
+Git blob hashes before edits. Source checks cover old-node order, unique new
+nodes, the 197-entry inventory, existing index entries and code blocks,
+property-drawer balance, whitespace, the live-key reference markers, new local
+heading links and internal Info targets. Original speech-control prose remains
+unchanged apart from the two reviewed status-command side-effect descriptions.
+The small sample's selection boundaries and paragraph-move result were checked
+with string operations; these are not an execution of Emacs key sequences.
+
+The full affected chapters were read and reviewed. The relevant implementation
+was inspected in =lisp/emacsvox-speak.el= and =lisp/emacsvox-advice.el=, including
+tracked completion and interruption, region activation, large-text fallback,
+windowful Help, copying/killing feedback, yank feedback and query replacement.
+General operations and linked topics were checked against the GNU Emacs
+manual, including the subtle undo and yank-pop sequence rules.
+
+* Remaining acceptance
+
+The editing environment has no Emacs executable or live speaking session.
+Org lint/export, effective-key tests, configured documentation gates and
+listening acceptance were not run. Existing generated files were preserved;
+they must be regenerated for these new sources. Earlier successful gates do
+not validate this pass.
+
+Use the configured toolchain and required byte-code preflight, then run:
+
+#+begin_example
+make docs-org-preview
+make docs-update
+make docs-release-check
+#+end_example
+
+Check all new nodes, local links and GNU Emacs references in Info and HTML,
+including returning to the originating topic. Confirm offline availability of
+the referenced Emacs manual and the displayed headings. Test reading on a
+tracked-capable backend and the unsupported path, chunk interruption, stopping
+before movement, and restarting from the retained boundary without a promise
+of word-exact synchronisation.
+
+In disposable text, verify that small region reading leaves activation intact,
+that newline inclusion matches the sample, and that copy/move/yank and scoped
+replacement affect exactly the intended text. Test separate reading between
+undo-only calls and between yank-pop calls. Check that filename/message reads
+can change the next paste, without using private clipboard content.
+
+Try reference/draft windows with two and more views, both same-buffer and
+separate-buffer cases, Help that consolidates the layout, and the large-request
+windowful fallback. Verify that removing a window preserves its buffer and
+unsaved edits. Record platform, configuration and auditory differences rather
+than inferring success from a saved value or source inspection.
+
+No website or tagged release is published by this work.

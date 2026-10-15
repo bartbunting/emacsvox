@@ -2,7 +2,7 @@
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Audio Desktop
 :ALT_TITLE: Work with the audio desktop
-:DESCRIPTION: Work with buffers, modes, structure, and search.
+:DESCRIPTION: Keep work in buffers and windows, navigate structure, and find text.
 :END:
 
 #+cindex: Audio Desktop
@@ -97,6 +97,105 @@ outside the temporary buffer-selection controls also ends cycling and
 performs its normal action.  To choose a particular buffer by name, use
 ~C-x b~.
 
+** Work with windows without losing your place
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Working With Windows
+:DESCRIPTION: Keep several views available while knowing where commands and edits will act.
+:END:
+
+#+cindex: windows, working through speech
+#+cindex: buffer versus window
+
+A buffer contains your work; a window is a view of a buffer. Emacs calls its
+outer application window a /frame/. A frame can contain several Emacs windows,
+but only one is selected for ordinary commands. You can work with those views
+by name and spoken context without needing to picture their arrangement.
+
+Switching buffers with ~C-x b~ changes the selected window's contents.
+Selecting another window with ~C-x o~ moves to that view instead. The final
+character is lowercase o, for "other", not the digit zero. Emacsvox announces
+the selected buffer and mode; ~C-e m~ repeats that context and ~C-e l~ checks
+the current line. ~C-e C-w~ describes the window arrangement.
+
+Two windows can show the same buffer at different positions. They are not
+independent document copies: edits in either change the same text, and the
+buffer has one mark. For two independent documents, select different buffers.
+The GNU Emacs Manual's [[info:emacs#Windows][Multiple windows]] section explains this model in detail.
+
+*** Keep a reference and a draft in separate windows
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Reference And Draft Windows
+:DESCRIPTION: Consult a reference, copy a passage and return to the intended draft.
+:END:
+
+Begin with an editable draft selected and a reference buffer already open.
+Finish prompts and leave settings editors first. For a safe first attempt,
+use the source and notes buffers from [[*Copy a passage into another buffer][Copy a passage into another buffer]].
+Keep their names available so that you can recover by buffer name at any time.
+
+1. In the draft, press ~C-x 4 b~, enter the reference buffer's name, and press
+   ~RET~. The digit 4 is a separate keypress. Emacs displays and selects the
+   reference in another window, creating or reusing a view according to its
+   display configuration. ~C-x 4 f~ does the equivalent for a file pathname.
+2. Check the selected buffer with ~C-e m~ and read a line or paragraph. Use
+   short inspections when you intend to retain point. Tracked reading with
+   ~C-e i~ moves the reference's reading position as explained in
+   [[*Read from point, stop, and start again][Read from point, stop, and start again]].
+3. Press ~C-x o~ to select the next window and identify it before typing.
+   With two ordinary windows this usually alternates between reference and
+   draft. With more windows, repeat until the intended draft is selected;
+   do not assume the next view must be the draft.
+4. To transfer text, return to the reference, select and check a short passage,
+   then copy with ~M-w~. Use ~C-x o~ to return to the draft, confirm its buffer
+   and insertion point, and press ~C-y~. The reference text remains unchanged.
+   Follow [[*Copy a passage into another buffer][Copy a passage into another buffer]] for kill-ring and newline checks.
+5. Return to the reference with ~C-x o~. Its position is where you last left
+   it, including movement made while selecting or reading. Inspect it rather
+   than assuming copying restored an earlier reading position.
+
+If window selection becomes confusing, ~C-x b~ and a known buffer name is
+always a useful recovery route from ordinary work. It can replace the current
+view rather than restore the old layout; the buffer's text remains available.
+
+Some speech commands intentionally change the layout. ~C-e h~ selects and
+reads Help using a windowful-reading helper, which removes other windows.
+Whole-buffer and region reading can use that helper for a large request too.
+A lost split therefore does not necessarily mean the reference was closed.
+Reopen the desired view with ~C-x 4 b~. For a short inspection without that
+helper, use line or paragraph reading as described under
+[[*Read a short passage without moving point][Read a short passage without moving point]].
+
+For the general display and selection commands, see [[info:emacs#Pop Up Window][Displaying in another window]]
+and [[info:emacs#Other Window][Using other windows]] in the GNU Emacs Manual. Emacsvox adds speech to the
+selection; it does not make the ordinary display rules identical in every setup.
+
+*** Close a window without closing the document
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Closing Windows Safely
+:DESCRIPTION: Simplify the layout without killing buffers or discarding unsaved text.
+:END:
+
+Finish active prompts, then select the view you want to remove and check its
+buffer with ~C-e m~. Press ~C-x 0~: Control-x, then the digit zero. This
+removes the selected window, not its buffer or file. Select the buffer again
+with ~C-x b~ when you need it.
+
+To keep only the selected view in the frame, use ~C-x 1~ instead. The other
+buffers remain available and unsaved text remains unsaved. These layout
+commands are neither file saving nor undo. If Emacs cannot remove the last
+ordinary window or a specially managed view, follow its explanation rather
+than closing Emacs to force the layout change.
+
+~C-x k~ has a different purpose: it kills a buffer, with any applicable
+unsaved-work prompt. ~C-x 4 0~ kills the buffer as well as its window; it is
+not a longer spelling of ~C-x 0~. Likewise, ~q~ belongs to the current mode:
+in a plain document it usually inserts a letter, while Help, Info and Dired
+have their own return commands.
+
+See [[info:emacs#Change Window][Deleting and rearranging windows]] in the GNU Emacs Manual for the full
+set of layout operations. Keep [[*Buffers Hold Your Work][Buffers hold your work]] as the reference for
+buffer selection and closing work itself.
+
 ** Let Modes Give Each Buffer Its Tools
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Object Oriented Desktop
@@ -174,10 +273,10 @@ content.
 
 #+cindex: desktop navigation
 
-Buffers keep different tasks available in one Emacs session.  Use
-~C-x b~ to return to a known buffer or ~C-x C-b~ to browse the
-current set.  Emacs windows can show more than one buffer at a time; if the
-selected window is unclear, ~C-e C-w~ describes the arrangement.
+Use ~C-x b~ to return to a known buffer or ~C-x C-b~ to browse the current
+set. For a reference and draft displayed together, follow
+[[*Keep a reference and a draft in separate windows][Keep a reference and a draft in separate windows]]. Select the intended view
+and inspect its buffer before editing; ~C-e C-w~ describes the arrangement.
 
 Applications often create several related buffers, such as a search result and
 an individual message.  Their mode help explains the commands for moving among
@@ -193,11 +292,13 @@ dialog that must be completed before doing anything else.
 
 #+cindex: finding
 
-In most text buffers, ~C-s~ searches forward incrementally and
-~C-r~ searches backward.  Type more text to narrow the match, repeat the
-search key to move to another match, and press ~C-g~ to cancel.  This same
-basic search is available in documents, Help, source code, and many application
-results.
+In most text buffers, ~C-s~ searches forward and ~C-r~ backwards. Type the
+query, repeat the key for another match, and finish with ~RET~ before typing
+an edit. In a failing search, ~C-g~ first backs out of the failed part; a
+second cancellation may be needed to leave it. This search works in documents,
+Help, source code and many application results. [[*Find and replace text carefully][Find and replace text carefully]]
+explains match positions and scoped replacement; [[info:emacs#Incremental Search][Incremental search]] in the
+GNU Emacs Manual provides the full search reference.
 
 Also look for the mode's semantic search and filtering commands.  A mail
 application can search message fields, Dired can narrow files, and a browser

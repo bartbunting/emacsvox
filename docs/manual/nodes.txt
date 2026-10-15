@@ -30,6 +30,18 @@ Basic Usage
 Overview
 Working
 Reading
+Reading Without Moving Point
+Reading From Point
+Delayed Phonetic Reading
+Editing Text With Speech
+Selecting Text With Speech
+Copying Text Between Buffers
+Moving Text Safely
+Choosing Earlier Copied Text
+Recovering Text Edits
+Copying Through The Clipboard
+Searching And Replacing Text
+Reviewing Text Replacements
 Speech System
 Controlling Echo
 Speech Output Control
@@ -39,6 +51,9 @@ Status Information
 Using Online Help
 Audio Desktop
 Desktop Objects
+Working With Windows
+Reference And Draft Windows
+Closing Windows Safely
 Object Oriented Desktop
 Context-Sensitive Interaction
 Aural Presentation
@@ -167,6 +182,7 @@ Backend Diagnostics And Ownership
 Emacsvox Keyboard Commands
 Finding Tasks
 Finding Reading Tasks
+Finding Editing Tasks
 Finding Voice Tasks
 Finding Settings Tasks
 Finding Application Tasks

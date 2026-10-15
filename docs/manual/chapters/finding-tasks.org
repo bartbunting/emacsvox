@@ -28,6 +28,9 @@ use [[*Terms used in this manual][Terms used in this manual]].
 #+cindex: keys, discovering
 #+cindex: keyboard instructions, understanding
 #+cindex: tables, finding reading instructions
+#+cindex: read continuously
+#+cindex: resume reading
+#+cindex: reference and draft windows
 
 - [[info:emacsvox#Emacs Key Notation][Understand the keyboard instructions]]: learn modifiers, separate steps,
   uppercase letters and command names before using a shortcut.
@@ -37,15 +40,48 @@ use [[*Terms used in this manual][Terms used in this manual]].
   before changing presentation rules or voices.
 - [[info:emacsvox#Basic Usage][Stop current speech]]: the first-session commands include stopping speech
   without disabling feedback from subsequent commands.
-- [[info:emacsvox#Reading][Read the current line without moving]]: compare explicit reading with the
-  feedback produced by ordinary movement.
+- [[*Read a short passage without moving point][Inspect a line, sentence or paragraph]]: choose the reading unit and
+  preserve the editing position, with the limits of large requests explained.
+- [[*Read from point, stop, and start again][Read from here and recover my place]]: use ~C-e i~ for supported tracked
+  reading and understand stopping, repeated chunks and backend limitations.
 - [[info:emacsvox#Desktop Objects][Switch documents without closing my work]]: choose a buffer by name or cycle
   among related buffers; window selection is a separate operation.
+- [[*Keep a reference and a draft in separate windows][Keep a reference beside my draft]]: select the intended view and move
+  between tasks without closing either document.
+- [[*Close a window without closing the document][Remove a window without losing the document]]: distinguish layout changes
+  from killing a buffer or saving a file.
 - [[info:emacsvox#Using Online Help][Find out what a key does]]: inspect the binding in the current buffer rather
   than assuming a manual's default overrides your configuration.
 - [[info:emacsvox#Reading Markdown And Org Tables][Read a table by row or column]]: use the shared table reader for
   Markdown and Org. [[info:emacsvox#Agent Shell Tables][Agent Shell tables]] have their own contextual keys and
   spoken units.
+
+** Edit and rearrange text
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Finding Editing Tasks
+:DESCRIPTION: Select, copy, move, replace and recover text through speech.
+:END:
+
+#+cindex: select text
+#+cindex: copy and paste
+#+cindex: move a paragraph
+#+cindex: paste an older copy
+#+cindex: undo, inspect between steps
+
+- [[*Select and check the text first][Hear exactly what I selected]]: establish point and mark and inspect the
+  newline boundary before an operation.
+- [[*Copy a passage into another buffer][Copy text into another document]]: keep the source intact and check the
+  insertion and kill-ring contents at the destination.
+- [[*Move a paragraph without losing it][Move a paragraph]]: cut a checked passage and verify both its old and new
+  positions, including blank lines.
+- [[*Choose text copied earlier][Paste something I copied earlier]]: distinguish the kill-ring chooser from
+  replacing the last yank with an earlier entry.
+- [[*Recover a text edit before saving][Undo and listen between corrections]]: use the right buffer's undo history
+  without accidentally redoing earlier undos.
+- [[*Exchange text with another application][Copy between Emacs and another application]]: test the clipboard boundary
+  without assuming that Windows, WSL and terminal sessions work identically.
+- [[*Review replacements one at a time][Replace only the occurrences I choose]]: limit the operation to a checked
+  region and review each proposed change before saving.
 
 ** Change voices and sounds
 :PROPERTIES:
@@ -174,6 +210,10 @@ unsaved draft and a failed application are different problems.
 
 - [[info:emacsvox#Recovering From No Speech][There is no speech at all]]: restore a working speech route before using
   tools that depend on spoken inspection.
+- [[*Read from point, stop, and start again][Reading restarted part of a sentence]]: distinguish chunk-based tracking
+  from exact-word pause/resume and inspect the retained position.
+- [[*Recover a text edit before saving][Text was pasted in the wrong place]]: undo in the affected buffer and
+  check the result before trying the transfer again.
 - [[info:emacsvox#Saved Voice Change Not Audible][I saved a voice, but it still sounds the same]]: check selection,
   matching rules, individual tuning and engine support in that order.
 - [[info:emacsvox#Settings Lost After Restart][My settings disappeared after restarting]]: distinguish temporary changes
