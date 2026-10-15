@@ -1,7 +1,7 @@
 * Speech Access To EAT
 :PROPERTIES:
 :TEXINFO_NODE_NAME: EAT Terminal Access
-:ALT_TITLE: EAT Terminal Access
+:ALT_TITLE: Speech access to EAT
 :DESCRIPTION: Use EAT with terminal-aware speech.
 :END:
 
@@ -27,7 +27,9 @@ while the menu is open, not to ordinary terminal input.
 
 ** Input Modes And Completion Responsibilities
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Input Modes
+:ALT_TITLE: Choose an input mode
+:DESCRIPTION: Decide which keys reach Emacs and which reach the terminal program.
 :END:
 
 #+cindex: EAT input modes
@@ -89,7 +91,9 @@ for those definitions.
 
 ** Automatic Terminal Feedback
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Automatic Feedback
+:ALT_TITLE: Understand automatic terminal feedback
+:DESCRIPTION: Follow output, prompts, editing results, and application-screen changes.
 :END:
 
 #+cindex: EAT automatic speech
@@ -212,7 +216,9 @@ coloured row alone is not proof of an active item.
 
 ** Terminal-side Completion
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Terminal Completion
+:ALT_TITLE: Hear terminal-side completion
+:DESCRIPTION: Hear completed input and inspect retained candidate or help rows.
 :END:
 
 #+cindex: completion candidates, terminal
@@ -244,7 +250,9 @@ results and does not ask the terminal to complete again.
 
 ** Explicit Review Commands
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Screen Review
+:ALT_TITLE: Review retained terminal output
+:DESCRIPTION: Read retained state or inspect an immutable screen without sending input.
 :END:
 
 #+cindex: EAT review commands
@@ -321,7 +329,9 @@ copied terminal content.
 
 ** Verbosity And Background Monitoring
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Feedback Preferences
+:ALT_TITLE: Adjust and save terminal feedback
+:DESCRIPTION: Choose verbosity, background monitoring, and focused speech defaults.
 :END:
 
 #+vindex: emacsvox-eat-verbosity
@@ -380,7 +390,9 @@ focused menu.
 
 ** Shell Integration And Command Status
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Shell Integration
+:ALT_TITLE: Follow shell prompts and command status
+:DESCRIPTION: Understand the Bash or Zsh integration and its remote-shell limits.
 :END:
 
 #+cindex: EAT shell integration
@@ -416,7 +428,9 @@ still be accessible while individual exit status remains unavailable.
 
 ** Passwords And Sensitive Content
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Passwords And Privacy
+:ALT_TITLE: Enter passwords and protect sensitive content
+:DESCRIPTION: Use protected password input and understand retained terminal data.
 :END:
 
 #+cindex: password input, EAT
@@ -443,7 +457,9 @@ content or terminal identity.
 
 ** Terminal-Controlled Clipboard Trust
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Clipboard Trust
+:ALT_TITLE: Control terminal access to the clipboard
+:DESCRIPTION: Review OSC 52 trust and the two terminal selection-control options.
 :END:
 
 #+cindex: clipboard security, EAT
@@ -482,7 +498,9 @@ paste commands, not these terminal-originated sequences.
 
 ** Full-screen Applications And Limitations
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT Full-screen Applications
+:ALT_TITLE: Inspect full-screen applications and diagnose silence
+:DESCRIPTION: Use retained review and distinguish terminal rendering from speech.
 :END:
 
 #+cindex: curses applications, EAT
@@ -513,7 +531,9 @@ incorrectly.
 
 ** EAT In Eshell
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: EAT In Eshell
+:ALT_TITLE: Use EAT in Eshell
+:DESCRIPTION: Understand embedded terminals and visual-command window return.
 :END:
 
 #+cindex: Eshell, EAT accessibility

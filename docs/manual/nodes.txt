@@ -1,4 +1,5 @@
 Introduction
+Using This Manual
 Installation
 Obtaining Emacsvox
 Installing Remote Emacsvox
@@ -18,17 +19,7 @@ Speech Output Control
 Miscellaneous
 Voice-lock
 Status Information
-Speech Backends
-Supported Platform Routes
-Installing An Omnivox Release Binary
-Installing An Omnivox Windows Release Under WSL2
-Optional Omnivox Engine Modules
-Trying Native Windows Emacsvox
-Installing Omnivox From Source
-Building Omnivox For WSL2
-Selecting And Checking Omnivox
-Compatibility Speech Servers
-Backend Diagnostics And Ownership
+Using Online Help
 Audio Desktop
 Desktop Objects
 Object Oriented Desktop
@@ -71,7 +62,6 @@ Sharing Voice Palettes
 Presentation Troubleshooting
 Recovering Aural Changes
 Voice Lock
-Using Online Help
 Emacs Packages
 Document Authoring
 Structured Editing
@@ -84,15 +74,59 @@ Desktop Management
 Personal Information Management
 Desktop Applications
 Notmuch Mail
+Starting Notmuch
+Notmuch Hello And Searches
+Notmuch Search Results
+Notmuch Messages And Attachments
+Notmuch Tags And Archiving
+Notmuch Speech And Privacy
+Notmuch Support Boundaries
+Notmuch Troubleshooting
 Agent Shell
+Starting An Agent Shell Session
+Answering Agent Questions
+Agent Shell Speech And Privacy
+Agent Shell Permissions
+Reading Agent Responses
+Agent Shell Transcript Navigation
+Agent Shell Source Blocks
+Agent Shell Tables
+Agent Shell Recovery
 EAT Terminal Access
+EAT Input Modes
+EAT Automatic Feedback
+EAT Terminal Completion
+EAT Screen Review
+EAT Feedback Preferences
+EAT Shell Integration
+EAT Passwords And Privacy
+EAT Clipboard Trust
+EAT Full-screen Applications
+EAT In Eshell
 Running Terminal Based Applications
 Starting Term
 Term Input Modes
 Term Speech Feedback
 Reviewing The Term Screen
 Term Help And Recovery
+Speech Backends
+Supported Platform Routes
+Installing An Omnivox Release Binary
+Installing An Omnivox Windows Release Under WSL2
+Optional Omnivox Engine Modules
+Trying Native Windows Emacsvox
+Installing Omnivox From Source
+Building Omnivox For WSL2
+Selecting And Checking Omnivox
+Compatibility Speech Servers
+Backend Diagnostics And Ownership
 Emacsvox Keyboard Commands
+Finding Tasks
+Finding Reading Tasks
+Finding Voice Tasks
+Finding Settings Tasks
+Finding Application Tasks
+Emacsvox Terminology
 Copyright
 Acknowledgments
 Developer Guide

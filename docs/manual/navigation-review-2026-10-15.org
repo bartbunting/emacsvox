@@ -1,0 +1,84 @@
+#+title: Manual navigation review, 15 October 2026
+#+language: en
+
+* Scope
+
+Navigation and findability changes on =ui-experiments=. The source baseline
+was =52bfa9f517c7ccfd95e08d155867eff89d80f8bd=. The changes were then layered
+onto =81bdcb04b7997a7d7bdce95c4858494356193f70=, preserving the concurrently
+committed Transient 0.13.3 requirement and its installation, code, test, and
+generated-document changes. None of its changed files overlaps this pass.
+
+This pass changes no dependency requirement, settings behaviour, release
+workflow, or published website. It adds no route through the retired Home
+menu entry.
+
+The master now puts Online Help and Audio Desktop after Basic Usage, with
+Speech Backends after the application guides. Using This Manual introduces
+reading routes and a reversible Info lookup exercise. Find a Task supplies 24
+plain-language goals with links rather than copies of procedures. Terminology
+explains the main objects, presentation resources, and change states.
+
+Application procedures remain in their existing source files. Major Notmuch,
+Agent Shell, and EAT sections gain named Info destinations and descriptive
+menu text. Audio Desktop's display titles now match its task-oriented headings.
+The existing Notmuch privacy anchor moves inside its owning section so it
+belongs to the new privacy node rather than the preceding archiving topic.
+
+* Navigation compatibility and source checks
+
+All 102 previously inventoried node identifiers are retained, including
+=Aural Home=. The new inventory contains 136 identifiers: seven for the new
+navigation and terminology material, and 27 application subtopics. Existing
+chapter reordering and new subtopics deliberately change sequential and parent
+navigation; retaining identifiers does not mean the old topology is identical.
+No generated files are edited by hand.
+
+The source-inventory check started with an exact blob-hash match to the fetched
+=nodes.txt=, checked uniqueness and preservation, and produced the revised
+ordering. The resulting inventory's blob hash matches the proposed repository
+file. A separate check used the exact task-finder blob and verified its 24
+unique task labels and all 28 internal Info links against that inventory;
+they refer to 25 distinct destinations. It found no retired menu-entry route.
+
+The Git diff was inspected separately. Agent Shell and EAT changes affect
+navigation properties only. Notmuch also relocates its existing privacy anchor.
+Their command lists, examples, and behavioural prose are unchanged.
+
+These source checks do not establish what the Org exporter emits. The normal
+documentation gates must validate the complete exported topology, indexes,
+cross-references, and generated artifacts.
+
+* Acceptance before publication
+
+With the project's configured Emacs and required byte-code preflight, run:
+
+#+begin_example
+make docs-org-preview
+make docs-update
+make docs-release-check
+#+end_example
+
+The editing environment could not obtain a local checkout through its network
+and did not have Emacs. These commands and live listening checks were not run
+there. Generated Texinfo and Info need regeneration for this pass; earlier
+successful checks do not validate these new nodes.
+
+Check the following in the regenerated manual:
+
+1. Follow the new-user reading route from Installation through Basic Usage,
+   Online Help, and Audio Desktop without being sent through Speech Backends.
+2. Complete the Info lookup exercise using =ordinary reading voice=, follow
+   its task link, retrace the visiting history, and return to the source.
+3. Follow every task link. Check a named voice, a saved setting, Notmuch
+   privacy, EAT frozen review, and the full Agent Shell response directly.
+4. Browse each application's new subtopic menu and use Next, Previous, and Up.
+   Confirm old bookmarks and contextual manual links still resolve, including
+   =Aural Home= under its current displayed title.
+5. Check the task labels, descriptions, tables, key notation, and glossary in
+   Info, HTML, and plain-text exports, including navigation through speech.
+6. Confirm the revised source, generated artifacts, and recorded toolchain
+   describe the same revision before any separately authorised publication.
+
+This record is internal review material, not an additional user-manual chapter.
+The larger progressive audio-desktop tutorial remains a separate writing task.

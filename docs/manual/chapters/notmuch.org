@@ -22,7 +22,9 @@ complete command and option reference.
 
 ** Start Notmuch
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Starting Notmuch
+:ALT_TITLE: Start Notmuch
+:DESCRIPTION: Open Hello or start a query with the speech integration loaded.
 :END:
 
 #+cindex: starting Notmuch
@@ -40,7 +42,9 @@ operations; Emacsvox presents the result of the action you invoke.
 
 ** Use Hello and start a search
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Notmuch Hello And Searches
+:ALT_TITLE: Use Hello and start a search
+:DESCRIPTION: Choose a search and understand asynchronous results and refreshes.
 :END:
 
 #+cindex: saved searches, Notmuch
@@ -134,7 +138,9 @@ the refresh rules above are specific to this integration.
 
 ** Navigate and inspect Search results
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Notmuch Search Results
+:ALT_TITLE: Navigate and inspect Search results
+:DESCRIPTION: Read thread summaries, inspect full fields, and open a result.
 :END:
 
 #+cindex: Notmuch Search
@@ -193,7 +199,9 @@ as words. [[Notmuch fields and privacy][Notmuch fields and privacy]] explains om
 
 ** Read a thread and its MIME parts
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Notmuch Messages And Attachments
+:ALT_TITLE: Read a thread and its MIME parts
+:DESCRIPTION: Read messages, inspect attachments, and choose explicit MIME actions.
 :END:
 
 #+cindex: Notmuch Show
@@ -277,7 +285,9 @@ external viewer by themselves.
 
 ** Change tags and archive state
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Notmuch Tags And Archiving
+:ALT_TITLE: Change tags and archive state
+:DESCRIPTION: Hear the actual outcome of tag and archive commands.
 :END:
 
 #+cindex: tags, Notmuch
@@ -311,12 +321,14 @@ Archive feedback distinguishes a real change, unchanged archive tags, and an
 unset =notmuch-archive-tags=. Movement wrappers combine the result instead of
 duplicating the feedback of nested tag or archive commands.
 
-<<Notmuch fields and privacy>>
-
 ** Choose fields, status, and privacy
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Notmuch Speech And Privacy
+:ALT_TITLE: Choose fields, status, and privacy
+:DESCRIPTION: Set spoken fields, automatic limits, completion policy, and privacy.
 :END:
+
+<<Notmuch fields and privacy>>
 
 #+cindex: privacy, Notmuch speech
 #+cindex: fields, Notmuch speech
@@ -430,7 +442,9 @@ notification-device and logging settings separately from mail field choices.
 
 ** Know the support boundaries
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Notmuch Support Boundaries
+:ALT_TITLE: Know the support boundaries
+:DESCRIPTION: Distinguish supported views, limited Tree support, and composition.
 :END:
 
 #+cindex: Notmuch Tree support
@@ -465,7 +479,9 @@ loading. Repeated loading is idempotent and does not duplicate them.
 
 ** Troubleshoot the live integration
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Notmuch Troubleshooting
+:ALT_TITLE: Troubleshoot the live integration
+:DESCRIPTION: Check live keys, package identity, and the speech diagnostics.
 :END:
 
 #+cindex: troubleshooting, Notmuch

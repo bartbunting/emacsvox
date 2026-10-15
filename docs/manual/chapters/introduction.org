@@ -27,15 +27,21 @@ without adding words to everything you read.
 
 Start with [[*Getting Started: Installation and First Speech][Installation]] if Emacsvox is not yet installed. It explains the
 supported installation routes, takes you to a clean speaking session, and
-provides recovery instructions when speech does not start. Once speech is
-working, continue with [[*Basic Usage][Basic Usage]] for reading, editing, and speech controls.
-[[*Work With The Audio Desktop][Audio Desktop]] then explains the buffers, modes, and navigation habits that
-connect these tasks across applications.
+provides recovery instructions when speech does not start. Once speech works,
+continue with [[*Basic Usage][Basic Usage]], [[*Find Help While You Work][Using Online Help]], and [[*Work With The Audio Desktop][Audio Desktop]] for reading,
+editing, command discovery, and moving among tasks.
 
 If Emacs itself is new to you, ~C-h t~ opens its interactive tutorial.
 Emacsvox speaks the tutorial and your navigation while you follow it. At any
 point, ~C-h m~ describes the active modes and ~C-h k~ followed by a key
-explains its current command. [[*Find Help While You Work][Using Online Help]] shows how to explore further.
+explains its current command.
+
+[[*Using this manual][Using this manual]] offers separate reading routes for new and experienced
+Emacs users, with a short exercise in finding a topic and returning to work.
+For one question, [[*Find a task][Find a task]] links everyday goals to their instructions.
+Use [[*Terms used in this manual][Terms used in this manual]] when a name such as palette or profile is
+unfamiliar. Detailed backend configuration comes later; it is not a prerequisite
+for everyday use once speech works.
 
 ** The Welcome Screen
 :PROPERTIES:

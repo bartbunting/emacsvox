@@ -1,0 +1,122 @@
+* Find a task
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Finding Tasks
+:DESCRIPTION: Find instructions by the result you want rather than a feature name.
+:END:
+
+#+cindex: task finder
+#+cindex: how to
+
+Choose the result you want. Each link leads to the maintained procedure,
+including its conditions and recovery instructions. These links do not perform
+an action or change settings. For unfamiliar terms, use
+[[*Terms used in this manual][Terms used in this manual]].
+
+** Read and navigate
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Finding Reading Tasks
+:DESCRIPTION: Recover speech, read text, find commands, and move between tasks.
+:END:
+
+#+cindex: lost speech
+#+cindex: talking, stop
+#+cindex: current line, read without moving
+#+cindex: documents, switching
+#+cindex: keys, discovering
+#+cindex: tables, finding reading instructions
+
+- [[info:emacsvox#Recovering From No Speech][Get speech working again]]: start with the no-speech recovery procedure
+  before changing presentation rules or voices.
+- [[info:emacsvox#Basic Usage][Stop current speech]]: the first-session commands include stopping speech
+  without disabling feedback from subsequent commands.
+- [[info:emacsvox#Reading][Read the current line without moving]]: compare explicit reading with the
+  feedback produced by ordinary movement.
+- [[info:emacsvox#Desktop Objects][Switch documents without closing my work]]: choose a buffer by name or cycle
+  among related buffers; window selection is a separate operation.
+- [[info:emacsvox#Using Online Help][Find out what a key does]]: inspect the binding in the current buffer rather
+  than assuming a manual's default overrides your configuration.
+- [[info:emacsvox#Browsing Structure][Read a table by row or column]]: use the structured-content guide for
+  Markdown and Org. [[info:emacsvox#Agent Shell Tables][Agent Shell tables]] have their own contextual keys and
+  spoken units.
+
+** Change voices and sounds
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Finding Voice Tasks
+:DESCRIPTION: Choose reading voices, preview changes, and adjust individual cues.
+:END:
+
+#+cindex: ordinary reading voice
+#+cindex: headings, changing their voice
+#+cindex: voices, preview without saving
+#+cindex: speech engine, choosing
+#+cindex: voices, downloading
+#+cindex: unwanted sound
+
+- [[info:emacsvox#Editing Named Voices][Change my ordinary reading voice]]: work with the palette's =default= named
+  voice. Preview, saving, live selection, and startup selection are distinct.
+- [[info:emacsvox#Heading Voice Walkthrough][Change the voice used for headings]]: practise with a temporary buffer rule
+  before making a wider change.
+- [[info:emacsvox#Aural Home][Try an installed voice without saving anything]]: follow the listening
+  exercise through the current settings menus and return to your source.
+- [[info:emacsvox#Speech Engine Preferences][Choose a preferred speech engine]]: change engine preference rather than
+  assuming that a palette edit changes every engine-selection policy.
+- [[info:emacsvox#Installed Voices And Engines][Find and install another voice]]: distinguish availability, downloaded
+  files, enablement, and application to the running speech workers.
+- [[info:emacsvox#Changing One Sound][Replace or silence one unwanted sound]]: target the cue you want to change
+  rather than disabling all auditory icons.
+
+** Keep, inspect, or reverse settings
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Finding Settings Tasks
+:DESCRIPTION: Understand persistence, retained drafts, notifications, and recovery.
+:END:
+
+#+cindex: settings, survive restart
+#+cindex: Save and Apply, difference
+#+cindex: draft, resume
+#+cindex: unexpected feedback
+#+cindex: undoing a temporary rule
+#+cindex: notifications, changing output
+
+- [[info:emacsvox#Saving And Startup][Make a setting survive restarting Emacs]]: identify which resource owns the
+  setting and use its own saving or startup action.
+- [[info:emacsvox#Saving And Startup][Understand why Save did not change what I hear]]: compare stored data, live
+  selection, buffer overrides, and worker application before saving again.
+- [[info:emacsvox#Aural Home][Resume an unfinished edit]]: use the retained-draft route to return to the
+  original editor. A retained draft is not a saved setup.
+- [[info:emacsvox#Explaining Presentation][Find out why an item sounded that way]]: inspect the chosen voices, cues,
+  and rules; distinguish recorded feedback from a simulation.
+- [[info:emacsvox#Heading Voice Walkthrough][Undo a temporary feedback change]]: the heading exercise includes checking
+  its scope and removing the practice rule. For broader problems, use
+  [[info:emacsvox#Recovering Aural Changes][presentation recovery]].
+- [[info:emacsvox#Aural Speech Output][Adjust notifications without changing ordinary reading]]: review output and
+  routing controls together with any restart or privacy implications.
+
+** Work in an application
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Finding Application Tasks
+:DESCRIPTION: Find mail privacy, terminal review, and agent-response instructions.
+:END:
+
+#+cindex: mail, limit automatic speech
+#+cindex: terminal completion, finding help
+#+cindex: terminal output, review
+#+cindex: passwords, terminal
+#+cindex: agent response, read in full
+#+cindex: code, copy from an agent response
+
+- [[info:emacsvox#Notmuch Speech And Privacy][Limit the mail details spoken automatically]]: choose fields, bounds, and
+  completion feedback. Explicit full-detail reading bypasses automatic bounds.
+- [[info:emacsvox#EAT Terminal Completion][Hear a terminal's completion candidates]]: keep terminal-side completion
+  separate from Emacs completion and inspect retained candidates when needed.
+- [[info:emacsvox#EAT Screen Review][Review terminal output without sending input]]: use EAT's frozen review for
+  a retained screen. [[info:emacsvox#Reviewing The Term Screen][Term review]] follows a different, live-buffer model.
+- [[info:emacsvox#EAT Passwords And Privacy][Enter a terminal password safely]]: use EAT's protected input operation and
+  understand why ordinary no-echo input is not the same boundary.
+- [[info:emacsvox#Reading Agent Responses][Read the last completed agent response in full]]: explicitly inspect the
+  successful response rather than changing the automatic speech policy.
+- [[info:emacsvox#Agent Shell Source Blocks][Copy code from an agent response]]: navigate to its source block and use
+  the logical copy operation rather than selecting renderer padding.
+
+For other applications, begin with [[info:emacsvox#Emacs Packages][Applications and Integrations]] and the
+active buffer's mode Help.

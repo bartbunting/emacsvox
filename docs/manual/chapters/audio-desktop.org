@@ -1,7 +1,7 @@
 * Work With The Audio Desktop
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Audio Desktop
-:ALT_TITLE: Audio Desktop
+:ALT_TITLE: Work with the audio desktop
 :DESCRIPTION: Work with buffers, modes, structure, and search.
 :END:
 
@@ -21,7 +21,7 @@ files, Web pages, mail, shells, and other Emacs applications.
 ** Buffers Hold Your Work
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Desktop Objects
-:ALT_TITLE: Desktop Objects
+:ALT_TITLE: Buffers hold your work
 :DESCRIPTION: Understand and move between Emacs buffers.
 :END:
 
@@ -100,7 +100,7 @@ performs its normal action.  To choose a particular buffer by name, use
 ** Let Modes Give Each Buffer Its Tools
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Object Oriented Desktop
-:ALT_TITLE: Object Oriented Desktop
+:ALT_TITLE: Let modes give each buffer its tools
 :DESCRIPTION: Let major and minor modes interpret each kind of content.
 :END:
 
@@ -122,7 +122,7 @@ commands, press ~C-h m~, then ~C-h k~ followed by a key for more detail.
 ** Hear And Navigate The Current Context
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Context-Sensitive Interaction
-:ALT_TITLE: Context-Sensitive Interaction
+:ALT_TITLE: Hear and navigate the current context
 :DESCRIPTION: Use aural structure, mode commands, buffers, and search.
 :END:
 

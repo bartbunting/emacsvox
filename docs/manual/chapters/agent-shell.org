@@ -21,7 +21,9 @@ complete Emacsvox command and option interfaces.
 
 ** Start and control a session
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Starting An Agent Shell Session
+:ALT_TITLE: Start and control a session
+:DESCRIPTION: Write prompts, follow responses, steer work, and manage queued input.
 :END:
 
 Load Emacsvox and start Agent Shell with ~M-x agent-shell~.  Emacsvox loads
@@ -120,7 +122,9 @@ and rounding.  Brief announcements when entering a session stay concise.
 
 ** Answer an agent's question
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Answering Agent Questions
+:ALT_TITLE: Answer an agent's question
+:DESCRIPTION: Review and complete an optional structured question form.
 :END:
 
 Some providers ask you to complete a structured form rather than answer in
@@ -148,7 +152,9 @@ The next-field and previous-field commands are also available through ~M-x~.
 
 ** Choose automatic speech and privacy
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Agent Shell Speech And Privacy
+:ALT_TITLE: Choose automatic speech and privacy
+:DESCRIPTION: Choose session feedback, background disclosure, and automatic limits.
 :END:
 
 The focused session defaults to =response=: completed answers and routine
@@ -241,7 +247,9 @@ middle is not available by reading the buffer.
 
 ** Respond to urgent permissions
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Agent Shell Permissions
+:ALT_TITLE: Respond to urgent permissions
+:DESCRIPTION: Find and decide a permission request without confusing routine speech.
 :END:
 
 Permission requests are separate from routine speech levels because they can
@@ -270,7 +278,9 @@ available in the transcript even when routine response speech is quiet.
 
 ** Inspect a response on demand
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Reading Agent Responses
+:ALT_TITLE: Inspect a response on demand
+:DESCRIPTION: Read a completed response in full or request a structural overview.
 :END:
 
 These commands work from the shell and its associated viewports:
@@ -293,7 +303,9 @@ presenting a streaming partial or failed answer.
 
 ** Navigate transcript blocks
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Agent Shell Transcript Navigation
+:ALT_TITLE: Navigate transcript blocks
+:DESCRIPTION: Move among responses, prompts, headings, links, tools, and errors.
 :END:
 
 Agent Shell responses contain semantic prompt, response, thought, activity,
@@ -370,7 +382,9 @@ letters insert themselves instead of taking over prompt editing.
 
 ** Read and copy source blocks
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Agent Shell Source Blocks
+:ALT_TITLE: Read and copy source blocks
+:DESCRIPTION: Read logical code, copy it, and open a change review.
 :END:
 
 Use ~k~ or ~K~, or typed block navigation, to
@@ -405,7 +419,9 @@ list editing, setting changes, updated tool output, and change-review entry.
 
 ** Navigate and copy rendered tables
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Agent Shell Tables
+:ALT_TITLE: Navigate and copy rendered tables
+:DESCRIPTION: Read table cells, rows, and columns, and understand local key conflicts.
 :END:
 
 Agent Shell gives rendered Markdown tables their own navigation commands.
@@ -536,7 +552,9 @@ borders.  Wrapped cell contents remain complete.
 
 ** Recover from interruption or failure
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Agent Shell Recovery
+:ALT_TITLE: Recover from interruption or failure
+:DESCRIPTION: Interrupt work, inspect the previous response, and recover the session.
 :END:
 
 If a request is taking the wrong path, press ~C-c C-c~ and confirm the
