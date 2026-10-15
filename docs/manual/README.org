@@ -4,16 +4,26 @@
 * Source layout
 
 [[file:emacsvox.org][emacsvox.org]] is the canonical master for the maintained
-Emacsvox user manual.  It supplies document metadata and includes the chapter
+Emacsvox user manual. It supplies document metadata and includes the chapter
 files below [[file:chapters/][chapters/]] and the final developer guide below
-[[file:../developer/][docs/developer/]].  Edit those Org files; do not edit the generated
-=info/emacsvox-body.texi= or =info/emacsvox.info= files directly.  ADR 0004
+[[file:../developer/][docs/developer/]]. Edit those Org files; do not edit the generated
+=info/emacsvox-body.texi= or =info/emacsvox.info= files directly. ADR 0004
 defines the audience boundary: user tasks and recovery stay in =chapters/=;
 protocols, integration contracts, source-level tests, and release mechanics
 belong in =docs/developer/=.
 
-The generated command/key reference and the historical heritage manuals remain
-Texinfo.  They do not benefit from hand conversion to Org.
+Follow [[file:EDITORIAL_STYLE.org][the editorial standard]] for maintained prose. Read the affected chapter
+and related material before changing it, integrate additions into its narrative,
+and review the finished chapter separately from technical verification.
+
+The [[file:editorial-review-2026-10-15.org][15 October 2026 editorial review]] records the settings-menu learning path,
+cross-chapter corrections, and outstanding validation for that revision batch.
+It is an internal review record, not part of the published user manual or a
+claim that later source changes have been tested. Base new instructions on the
+implementation in the branch being edited, not on another branch's manual.
+
+The generated command/key reference and historical manuals remain Texinfo.
+They do not benefit from hand conversion to Org.
 
 * Fast authoring loop
 
@@ -24,8 +34,8 @@ make docs-org-preview
 #+end_example
 
 This uses the Emacs selected by =local.mk=, runs Org lint, exports the complete
-manual, and builds Info plus a single-page HTML preview.  It does not load or
-compile Emacsvox.  Ignored output lives below =.docs-preview/org-manual/=.
+manual, and builds Info plus a single-page HTML preview. It does not load or
+compile Emacsvox. Ignored output lives below =.docs-preview/org-manual/=.
 
 When the text is ready, update the tracked export and Info artifact:
 
@@ -40,13 +50,14 @@ make docs-release-check
 #+end_example
 
 That gate independently exports Org, rejects a stale generated Texinfo body,
-checks the accepted Info-node inventory in [[file:nodes.txt][nodes.txt]], and runs the
-full documentation validation.  Public HTML continues through the separately
-reviewed =gh-pages= worktree.
+checks the accepted Info-node inventory in [[file:nodes.txt][nodes.txt]], and runs full
+documentation validation. Follow =AGENTS.md= for any required byte-code build
+and preflight before running a gate that consumes it. Public HTML continues
+through the separately reviewed =gh-pages= worktree.
 
 * Plain-text export
 
-To read the complete manual outside Emacs, export it as one UTF-8 text file:
+To read the complete manual outside Emacs, export one UTF-8 text file:
 
 #+begin_example
 make docs-org-text
@@ -54,9 +65,9 @@ make docs-org-text
 
 The file is written to =.docs-preview/org-manual/emacsvox.txt= unless
 =DOCS_ORG_TEXT= names another path. The manual uses ordinary Org markup;
-the standard Org ASCII backend retains keys, literals and link descriptions.
+the standard Org ASCII backend retains keys, literals, and link descriptions.
 Like the preview, this export does not load or compile Emacsvox. Its default
-output is ignored; choose an untracked destination when overriding the path.
+output is ignored; choose an untracked destination when overriding it.
 
 * Export conventions
 
@@ -69,10 +80,10 @@ output is ignored; choose an untracked destination when overriding the path.
   inline code are preferred over raw Texinfo.
 - Reserve code markup (~C-x C-f~, for example) for key sequences. The maintained
   Texinfo exporter writes =@kbd= and preserves named-key notation for ~RET~,
-  ~TAB~ and similar keys. Standard Org text and HTML exports retain the same
+  ~TAB~, and similar keys. Standard Org text and HTML exports retain the same
   key text without a special backend.
 - Use verbatim markup (=local.mk=, for example) for filenames, Lisp symbols,
-  shell commands and other literals. An Emacs command invocation such as
+  shell commands, and other literals. An Emacs invocation such as
   ~M-x term RET~ is a key sequence; a shell command is literal text.
 - Use Org heading links for sections in this manual and =info:= links with
   descriptions for other manuals. Keep stable =TEXINFO_NODE_NAME= properties
@@ -81,5 +92,4 @@ output is ignored; choose an untracked destination when overriding the path.
   for block-level compatibility material such as the Info index.
 
 Changing an accepted node name or removing a node is a navigation compatibility
-change: update =nodes.txt= deliberately and review inbound links before doing
-so.
+change: update =nodes.txt= deliberately and review inbound links before doing so.

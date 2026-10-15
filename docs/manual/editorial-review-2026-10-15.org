@@ -1,0 +1,197 @@
+#+title: Manual editorial review, 15 October 2026
+#+language: en
+#+startup: content
+
+* Scope and status
+
+This record covers the settings-menu learning path, cross-chapter consistency,
+and remaining practical-chapter editorial pass on =ui-experiments=. The source
+baseline was commit =968e394846d7825c9fcbaffb9a6d98fcdb9b625e=.
+
+The revisions are committed source prose, not a tested documentation release.
+No Lisp, executable, build workflow, published website, or release was changed.
+Generated Texinfo and Info files were not regenerated during this pass. Earlier
+recorded gate results predate these prose changes and do not validate them.
+
+The standards remain [[file:EDITORIAL_STYLE.org][the editorial guide]], [[file:README.org][the authoring instructions]],
+=AGENTS.md=, and the accepted ADRs. This review is not an additional set of
+product requirements or a replacement for those documents.
+
+* Chapters revised
+
+- [[file:chapters/introduction.org][Introduction]]: installation-to-reading progression; the settings menu as
+  primary entry; Home distinguished from menu navigation.
+- [[file:chapters/online-help.org][Online Help]]: live command Help, focused settings, search, menu Help,
+  cancellation, return, and read-only diagnostic entry points.
+- [[file:chapters/installation.org][Installation]]: platform/role choices, explicit development branch,
+  safe checkout updates, first-speech acceptance, and optional engines after
+  basic speech. The remote procedure now links to its actual section.
+- [[file:chapters/basic-usage.org][Basic Usage]]: direct keys alongside discoverable menus; common scope and
+  saving terminology; punctuation capability and format boundaries rather
+  than an unqualified unreleased-feature claim.
+- [[file:chapters/keyboard.org][Keyboard Commands]]: prefix hierarchy and menu entry points; local keys,
+  customised prefixes, and recovery-binding precedence.
+- [[file:chapters/aural-presentation.org][Aural Presentation]]: direct routes for the listening and configuration
+  walkthroughs; related explanations consolidated; source return, previews,
+  shared voices, rules, drafts, persistence, and worker application separated.
+- [[file:chapters/speech-backends.org][Speech Backends]]: menu-based engine discovery, branch-specific Windows
+  checkout, release-file operations versus voice activation, and RHVoice
+  package acquisition versus independently supplied runtimes.
+- [[file:chapters/applications.org][Applications and Integrations]]: common discovery model; explicit table
+  differences; Magit/Transient navigation distinctions; focused integration
+  settings; structured OCR setup, use, and diagnosis.
+- [[file:chapters/notmuch.org][Notmuch]]: search versus refresh, fields and limits, focused settings and
+  their saving boundaries, full inspection, limited Tree support, and privacy.
+- [[file:chapters/eat.org][EAT]]: input ownership, automatic output, completion, immutable review,
+  focused preferences, secure input, clipboard trust, and Eshell boundaries.
+- [[file:chapters/term.org][Term]]: character/line mode escapes, displayed-window speech eligibility,
+  live review pointer, and recovery without treating its keys as EAT keys.
+
+Audio Desktop and Agent Shell were used as adjacent conceptual and interaction
+references. Their previous editorial changes were not replaced in this pass.
+The separate generated reference and Heritage manual were not hand-edited.
+The proposed larger progressive tutorial was outside this pass.
+
+* Cross-chapter decisions and corrections
+
+** Primary interface and remaining Home dependencies
+
+=C-e H= is the general settings menu. =C-e S= opens a focused integration menu
+where available, otherwise general buffer settings. =C-e H .= always selects
+general buffer settings. Direct reading keys remain valid shortcuts rather
+than a second configuration system.
+
+The updated walkthroughs prefer implemented menu routes: =v b= for engines,
+=v p= for palettes, =o p= for sound packs, =p p= for profiles, =f c= for guided
+feedback changes, =f v= for voice remapping, =f t= for shared named-voice tuning,
+=f h= for recent feedback, =r o= for combined rules, and =r f= for options.
+These suffixes follow =C-e H=.
+
+Home is not claimed to be retired. Action search, the retained-editor chooser
+at =C-e H p d=, and certain editor/source-return paths still use it. Keeping
+those routes is deliberate. The current UI plan still requires listening
+acceptance and further implementation before removal.
+
+Keys are local to the interface. Menu =q=, editor =q=, terminal input, and a
+third-party Transient application's quit commands cannot be treated as one
+universal action. A walkthrough must finish the current child view before
+starting another menu from the intended source.
+
+** Scope, persistence, and observed effects
+
+Current-buffer state, live global defaults, and saved startup settings are
+separate. Some global commands update the source buffer while preserving other
+local overrides; each control's actual semantics remain authoritative.
+
+Preview does not save. Retaining a draft keeps it only in the Emacs session.
+Save records data; Apply may be a separate live action or require a confirmed
+worker restart. Saved data is not proof that both speech workers acknowledged
+it. Discarding an unsaved draft does not undo an earlier save.
+
+Presentation Profiles refer to resources rather than copying them. Applying
+one also saves its selection for future sessions, unlike session-only palette
+activation. Profiles do not capture speech rate, engine policy, notification
+output, the rules themselves, or buffer-local state. They are not general
+Emacs configuration profiles or full backups.
+
+Menu Save actions retain only their documented values: five output volumes,
+four focused EAT preferences, or Notmuch's four limits and completion policy,
+for example. Linked Customize or host editors have independent Save/Apply
+operations. No single settings-menu Save covers all Emacsvox data.
+
+** Application-specific differences
+
+Shared Markdown/Org table reading presents whole rows on vertical table
+movement. Agent Shell's Control-Meta vertical movement instead presents the
+destination cell; plain vertical arrows present its row. Similar keys do not
+guarantee identical spoken units.
+
+EAT requires foreground selection, keyboard focus where available, and live-
+cursor eligibility for automatic foreground output. Its background monitoring
+is independently enabled and content-free. Shell/comint background reading
+requires autospeak and can read output. Term's automatic speech instead depends
+on its buffer being displayed. EAT frozen review is immutable; Term's review
+pointer works with its live buffer.
+
+Notmuch explicit refresh uses interruptible main speech rather than the
+normal separate notification path of a new asynchronous search. Automatic mail
+limits do not constrain explicit full-detail inspection. Tree's availability
+of focused settings does not add unimplemented Tree navigation or formatting.
+
+** Backend ownership
+
+The contradictory automatic-restart promise in installed-release management
+was removed. The explicit release view retains current speech and changes its
+reported target's files, as required by
+[[file:../adr/0021-current-engine-details-and-explicit-release-management.org][ADR 0021]]. Library Apply and /Restart local speech/ remain distinct,
+explicit operations. A locked engine helper can still prevent file removal.
+
+The blanket statement that RHVoice voices are never downloaded was narrowed.
+The compatible local catalogue supports reviewed voice/language packages,
+while the RHVoice runtime and external installations remain independently
+supplied, as described by [[file:../adr/0023-managed-rhvoice-voices.org][ADR 0023]]. This is not permission to acquire
+proprietary runtimes or arbitrary upstream models.
+
+The preference chooser =C-e d e= is no longer described as a read-only engine
+inventory. The inventory instructions use =C-e H v b= instead.
+
+* Verification actually performed
+
+The affected source chapters were read and revised against the selected branch.
+The settings-workflow implementation, Transient navigation definitions, menu
+routes available in the branch, and relevant accepted backend decisions were
+inspected. Commits use the current file blob SHA and target =ui-experiments=.
+
+This is source review, not execution. No automated equivalence check proves
+that every qualifier survived the longer rewrites. Existing named Info targets
+were retained in the drafted source, but complete node topology, index output,
+anchor resolution, exporter behaviour, and accessible navigation still require
+the documentation gate. No claim is made that the revised examples have all
+been executed or listened to.
+
+The working environment had no suitable local Emacs and no usable network
+checkout. The following were not run:
+
+- Org lint or the full documentation preview.
+- Texinfo/Info regeneration and release validation.
+- Byte-code or integration test suites.
+- Graphical Emacs, keyboard-only, or listening acceptance.
+
+Do not treat the successful Git commits as substitutes for these checks.
+
+* Acceptance before publication
+
+Use a checkout with the project's configured Emacs/toolchain and preserve any
+uncommitted work. Inspect the branch and diff first. Follow =AGENTS.md= for
+required compilation/preflight before a gate that consumes byte-code.
+
+For the settled prose, run the existing authoring workflow:
+
+#+begin_example
+make docs-org-preview
+make docs-update
+make docs-release-check
+#+end_example
+
+Commit the generated artifacts with the validated source. Do not hand-edit
+Info/Texinfo to remove errors. Inspect cross-manual links, fuzzy heading links,
+the named remote-workstation anchor, all prior named nodes, and table/keyboard
+formatting. A heading or anchor failure must be fixed in Org and regenerated.
+
+Perform at least these representative live tasks before claiming acceptance:
+
+1. Start from an ordinary buffer, browse an installed voice through the new
+   menus, cancel a preview, and return to the source without saving.
+2. Change one temporary heading rule, compare it, verify matching scope, and
+   undo it. Test changed/killed source handling and editor-return paths.
+3. Save a voice without selecting, then apply it, then choose startup separately.
+   Retain/discard a draft and confirm the completed save is not undone.
+4. Compare global defaults and buffer overrides, including Notmuch's limited
+   Save, EAT's independent background monitoring, and Term's mode escapes.
+5. Inspect a release target without stopping current speech; test package
+   activation separately in a controlled session with recovery available.
+6. Navigate the assembled Info manual using headings, menus, cross-references,
+   indexes, and return actions, and listen to the revised learning sequence.
+
+Website publication and release tagging remain separate explicitly authorised
+operations. This review neither performs nor authorises them.
