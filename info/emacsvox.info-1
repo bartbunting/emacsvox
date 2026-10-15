@@ -136,11 +136,11 @@ separate related information.
 
    Begin with the supplied settings and adjust them as you learn what
 helps your work.  From the buffer you are using, ‘C-e H’ opens the
-experimental Emacsvox settings menu.  Press ‘s’ for speech controls, ‘v’
-for voices and engines, or ‘o’ for sounds and output.  ‘C-e S’ opens
-focused settings for the current integration, falling back to general
-buffer settings when no focused menu is available.  To understand a
-particular item's feedback, leave point on it and press ‘C-e E’.
+Emacsvox settings menu.  Press ‘s’ for speech controls, ‘v’ for voices
+and engines, or ‘o’ for sounds and output.  ‘C-e S’ opens focused
+settings for the current integration, falling back to general buffer
+settings when no focused menu is available.  To understand a particular
+item's feedback, leave point on it and press ‘C-e E’.
 
    In a settings menu, up/down selects an item, left/right changes
 sections, and ‘<RET>’ activates the selection.  ‘?’ followed by an
@@ -150,11 +150,10 @@ reverse adjustments already applied.  Settings and editors have distinct
 saving rules, explained alongside each task in *note Aural Presentation:
 Aural Presentation.
 
-   Aural Home remains available through ‘C-e H h’ or ‘M-x
-emacsvox-aural’ for comparison and access to the same actions and
-editors.  It is a separate table-based interface, not another name for
-the settings menu.  Follow the navigation instructions for the interface
-you opened.
+   Use ‘C-e H a’ to find an action, or ‘C-e H /’ to find a setting.
+Both select the matching menu control before you activate it.  Dedicated
+editors retain their own navigation, preview, and saving commands; ‘?’
+explains each view.
 
    Emacsvox sends speech through a speech server.  New GNU/Linux, macOS,
 and WSL2 installations use Omnivox; established direct servers remain
@@ -1108,8 +1107,7 @@ the current buffer unless their Help specifies a global prefix form.
 
      A punctuation level decides how much punctuation is spoken; the
      pronunciation editor changes how particular characters are read.
-     Open it with ‘C-e H s p e’ or ‘M-x omnivox-punctuation’.  Home's
-     _Punctuation_ remains an alternative.
+     Open it with ‘C-e H s p e’ or ‘M-x omnivox-punctuation’.
 
      This interface needs the bundled local launcher and the host's
      punctuation-editor capability.  Older hosts report that an update
@@ -1142,7 +1140,7 @@ the current buffer unless their Help specifies a global prefix form.
           Reread the saved file, asking before discarding edits.
      ‘q’
           Return while retaining the draft; reopening the editor resumes
-          it.  Home's unfinished-draft chooser also remains available.
+          it.  ‘C-e H p d’ also resumes retained drafts.
      ‘?’
           Read Help, including the selected host configuration path.
 
@@ -1680,11 +1678,10 @@ runtime or chosen voice data before they can speak.
 
           M-x emacsvox-omnivox-manage-components RET
 
-     Home's ‘I’ or _Browse voices_ remains an alternative.  Opening uses
-     the current speech inventory without waiting for file checks or
-     fresh discovery.  Optional engines missing from that inventory stay
-     visible as _not reported_ so management controls remain reachable.
-     ‘v’ browses voices; ‘<RET>’ opens details.
+     Opening uses the current speech inventory without waiting for file
+     checks or fresh discovery.  Optional engines missing from that
+     inventory stay visible as _not reported_ so management controls
+     remain reachable.  ‘v’ browses voices; ‘<RET>’ opens details.
 
      Details begin with a short status and voice actions, with _Browse
      voices_ selected.  Matching main/notification evidence is combined
@@ -2793,11 +2790,9 @@ capabilities available on your machine.
    Begin with the item you heard rather than editing configuration data
 by hand.  ‘C-e E’ explains its presentation.  ‘C-e H’ opens the settings
 menu, and ‘C-e S’ opens focused settings for the current task when
-available.  The walkthroughs below use these menu routes where they are
-implemented.  Aural Home remains available through ‘C-e H h’ as an
-alternative entry to the same actions and editors.  Its table navigation
-is different from the settings menus; the two names are not
-interchangeable.
+available.  The walkthroughs below use these menus to open dedicated
+editors for detailed changes.  ‘C-e H a’ finds an action and selects its
+control in the appropriate menu.
 
    Start with the listening exercise.  The following sections explain
 the presentation model, feedback rules, named voices, installed engines,
@@ -2808,7 +2803,7 @@ Help, ‘i’ opens the same topic.
 
 * Menu:
 
-* Getting started with settings menus: Aural Home.  Try a voice, navigate settings, and recognise the remaining Home routes.
+* Getting started with settings menus: Aural Home.  Try a voice, navigate settings menus, and return from editors.
 * Presentation Model::           Follow meaning from an Emacs application to audible output.
 * Explaining Presentation::      Explain current or recently queued feedback.
 * Adjusting Presentation::       Preview, scope, save, and undo presentation changes.
@@ -2825,8 +2820,8 @@ Help, ‘i’ opens the same topic.
 
 File: emacsvox.info,  Node: Aural Home,  Next: Presentation Model,  Up: Aural Presentation
 
-6.1 Getting Started With Aural Home
-===================================
+6.1 Getting Started With Settings Menus
+=======================================
 
 6.1.1 Listen without changing settings
 --------------------------------------
@@ -2856,12 +2851,12 @@ Speech.
 6.1.2 Choose an entry point and preserve your place
 ---------------------------------------------------
 
-The experimental Emacsvox menu, ‘C-e H’, groups settings by task.  ‘C-e
-S’ opens the current buffer's focused integration settings, or general
-buffer settings when no focused menu exists.  ‘C-e H .’ always opens
-general buffer settings.  A directly opened focused menu captures the
-buffer on entry; ‘q’ closes it and announces the restored buffer and
-mode with a close earcon.
+The Emacsvox menu, ‘C-e H’, groups settings by task.  ‘C-e S’ opens the
+current buffer's focused integration settings, or general buffer
+settings when no focused menu exists.  ‘C-e H .’ always opens general
+buffer settings.  A directly opened focused menu captures the buffer on
+entry; ‘q’ closes it and announces the restored buffer and mode with a
+close earcon.
 
    The menu captures the source item for contextual actions.  In
 Feedback Details, ‘q’ returns to the menu with the same item and
@@ -2874,12 +2869,13 @@ buffer has closed, the menu cannot resume.
 original source item.  Closing that menu returns to the editor without
 saving or discarding its draft.
 
-   Aural Home remains available with ‘C-e H h’ or ‘M-x emacsvox-aural’.
-Home remembers the source buffer and opening position for explanation
-and remapping; moving the source cursor while Home is open does not
-select a new target.  ‘C-c C-o’ in Home returns to that captured
-position.  To select another item, reopen Home from it in an ordinary
-buffer.
+   Moving the source cursor while a menu is open does not select a new
+target.  ‘C-e H b’ returns to the captured position.  To choose another
+item, reopen ‘C-e H’ from it in an ordinary buffer.
+
+   The former Aural Home table remains available through ‘M-x
+emacsvox-aural’ for existing configurations.  Its ‘C-e H h’ entry has
+been retired; the workflows below use the settings menus.
 
    A menu return and an editor return are different operations.  Use the
 editor's own ‘q’, ‘h’, or finish action before trying menu-navigation
@@ -2967,10 +2963,8 @@ completion keeps that menu open.
    Press ‘C-e H a’ to find an action such as _Browse voices_, _Your
 feedback rules_, or _Aural Doctor_.  It uses the same case-insensitive
 partial-name matching and two-Enter selection as settings search: choose
-the destination, then activate its control.  It covers all named Home
-actions without opening Home.  Child views return to their focused menu;
-another ‘q’ returns to the menu where you searched.  Within the retained
-Aural Home, ‘/’ still opens actions directly.
+the destination, then activate its control.  Child views return to their
+focused menu; another ‘q’ returns to the menu where you searched.
 
    Press ‘C-e H b’ to close menus and return to the captured source
 position, speaking its line.  A changed or deleted source item must be
@@ -2985,33 +2979,29 @@ Customize normally and returns to the menu; use Customize's own Apply
 and Save commands.  See *note Adjust an integration's speech settings:
 Integration speech settings. for application-specific controls.
 
-6.1.5 Navigate Aural Home and its editors
------------------------------------------
+6.1.5 Choose a task and navigate its editor
+-------------------------------------------
 
-The instructions here apply to the table-based Home, not the Transient
-menu.  The shared table controls also apply to the dedicated managers
-and editors.
+Choose a focused menu for your task:
 
-   Aural Home begins with six task groups in one spoken table.  Press
-‘<RET>’ or ‘<TAB>’ to expand or collapse a group.  Each action names a
-destination, reports its current status, and describes its purpose.  ‘/’
-searches all actions, including collapsed groups; the matching group
-opens with the destination selected.
+Menu           Destinations
+‘C-e H f’      Explain, change, or tune current feedback; review recent
+               feedback.
+‘C-e H v’      Voice palettes, installed voices and engines, and Voice
+               Workbench.
+‘C-e H s’      Rate, punctuation, indentation, capitalisation, and
+               interaction.
+‘C-e H o’      Sounds, output volumes, notifications, and spatial
+               controls.
+‘C-e H r’      Presentation Options, scoped rules, training, and
+               semantic vocabulary.
+‘C-e H p’      Profiles, palettes, changed settings, and retained
+               drafts.
+‘C-e H D’      Doctor, spatial capabilities, and speech diagnostics.
 
-Task group                Destinations
-Understand and change     Feedback for this item, Recent feedback, and
-feedback                  Return to source item.
-Voices and speech         Voice palettes, Browse voices, Preferred
-                          speech engine, Speech rate, Punctuation, and
-                          Voice Workbench.
-Sounds and output         Sound packs, Spatial settings, Audio output,
-                          and Review notifications.
-Optional feedback and     Presentation options, Your feedback rules,
-rules                     Current buffer rules, and Explain feedback as
-                          you navigate.
-Saved setups and          Presentation profiles and Resume unfinished
-unfinished changes        changes.
-Troubleshooting           Aural Doctor and Spatial capabilities.
+   Editors keep their own controls for detailed changes.  In an editor's
+table, ‘<RET>’ opens a selected destination, details, or expandable
+group.
 
    Expandable groups announce an open or close cue with their name when
 you reach or toggle them.  These cues follow the icon setting and sound
@@ -3020,7 +3010,7 @@ _Presentation Options_.  This adds "collapsed" or "expanded" after the
 control through the normal presentation rules.  Key instructions remain
 available in Help.
 
-   In Home and other Aural tables, the navigation controls are:
+   In table-based managers and editors, the navigation controls are:
 
 ‘n, p, down, up’
      Move by row, retaining and speaking the selected column.  In the
@@ -3038,8 +3028,7 @@ available in Help.
 ‘N’
      Create a new item where supported.
 ‘P’
-     Preview in managers and editors; Home retains its profiles
-     shortcut.
+     Preview in managers and editors.
 ‘S’
      Stop the preview and its remaining samples.
 ‘?’
@@ -3051,18 +3040,10 @@ available in Help.
      Go back or leave; an editor may first offer to retain or discard
      changes.
 
-   Home also provides direct keys for frequent routes: ‘x’ for Feedback
-Details, ‘O’ for your feedback rules, ‘H’ for recent feedback, ‘P’ for
-profiles, ‘V’ for voice palettes, ‘W’ for Voice Workbench, and ‘D’ for
-Aural Doctor.
-
    _Feedback for this item_ combines explanation, playback, and access
-to voice and sound changes.  Home's ‘c’, ‘r’, ‘T’, and ‘R’ open the
-guided change, voice-remapping, named-voice, and exact-cue editors.
-Search also accepts their existing action names, including _Explain this
-item_.  _Semantic vocabulary_ is available from Home's Help, search, and
-a change editor's matching criteria.  The direct settings-menu route to
-that vocabulary is ‘C-e H r h’.
+to voice and sound changes.  ‘C-e H f’ groups its editing routes.  ‘C-e
+H r h’ opens _Semantic vocabulary_; change editors also link it from
+matching criteria.
 
    The voice editor contains fields and buttons rather than table
 columns: left/right changes a numeric value, and ‘<RET>’ edits a field.
@@ -3085,8 +3066,7 @@ same voice in the voice editor likewise preserves its working settings.
 If a prepared remap's source item changes or disappears, Emacsvox asks
 you to prepare that change again before applying it.
 
-   The header identifies the captured source and the number of
-unfinished drafts.  _Resume unfinished changes_ visits the original rule
+   Press ‘C-e H p d’ to resume a retained draft in its original rule
 editor, voice editor, or Workbench engine settings.  The draft remains
 unsaved until accepted there.  Presentation Profiles capture options,
 palette, sound pack, and spatial settings.  Physical choices and
@@ -3243,8 +3223,7 @@ point.
 that baseline, not a recording of earlier sound.  It supports field
 review and draft previews but is never added to Recent Feedback.  A
 prefix argument with ‘C-e E’ selects a simulated occasion explicitly.
-‘q’ returns to the source, menu, or Home row from which the report was
-opened.
+‘q’ returns to the source or menu item from which the report was opened.
 
    Expand a field and choose _Edit named voice bolden_, or its reported
 voice name, to open the voice editor.  Multiple named voices receive
@@ -3256,13 +3235,12 @@ opening it does not save or apply anything.
 6.3.2 Inspect recent feedback
 -----------------------------
 
-Press ‘C-e H f h’ for recent feedback.  Aural Home's _Recent feedback_
-action and ‘H’ remain alternative entries.  Each row preserves one
-recorded presentation within the history's size limit.  Its Content
-column reads the preview with captured voice annotations, including
-changes within the entry; other columns and titles use the normal
-interface voice.  ‘P’ requests replay with the engine and physical voice
-recorded for the original delivery.
+Press ‘C-e H f h’ for recent feedback.  Each row preserves one recorded
+presentation within the history's size limit.  Its Content column reads
+the preview with captured voice annotations, including changes within
+the entry; other columns and titles use the normal interface voice.  ‘P’
+requests replay with the engine and physical voice recorded for the
+original delivery.
 
 ‘RET or e’
      Open Feedback Details for the selected presentation.
@@ -3438,7 +3416,7 @@ fields and drafts retained.
 session.  It adds concise semantic explanations after normal
 presentations, useful for learning an integration's vocabulary.  It is
 deliberately more verbose than normal use; turn it off when no longer
-needed.  Home retains the same training action.
+needed.
 
 
 File: emacsvox.info,  Node: Adjusting Presentation,  Next: Voices And Routing,  Prev: Explaining Presentation,  Up: Aural Presentation
@@ -3630,8 +3608,7 @@ File: emacsvox.info,  Node: Choosing A Voice For An Item,  Next: Managing Feedba
      _Voice_ chooses a voice, _Preview original_ plays the captured
      item, and _Preview change_ plays the draft.  ‘O~/~P’ provide the
      same previews; ‘S’ stops.  Previewing does not save or retune the
-     named voice.  Use ‘C-e H f e’ for an exact earcon remap; Home's ‘R’
-     remains an alternative entry.
+     named voice.  Use ‘C-e H f e’ for an exact earcon remap.
 
   3. Choose _How long_: personal persists across Emacs sessions, session
      lasts until Emacs exits, and buffer affects only the captured live
@@ -3915,8 +3892,7 @@ File: emacsvox.info,  Node: Editing Named Voices,  Next: Emoji Speech Names,  Pr
 Open a palette through ‘C-e H v p’, select a voice, and press ‘e’.  To
 tune the voice used by the captured source item, use ‘C-e H f t’.  This
 changes the shared named entry, not a rule for that one item.  ‘q’
-offers to retain unfinished work and returns to the menu.  Aural Home
-retains the same action.
+offers to retain unfinished work and returns to the menu.
 
    Saving an inherited voice creates a complete entry in the destination
 palette.  Editing a built-in palette requests a personal child.  Opening
@@ -4030,8 +4006,8 @@ measurements.
 
    ‘q’ returns to the originating row and column.  Keep, discard, or
 continue with unsaved work.  Retained drafts can be resumed through ‘C-e
-H p d’ and Home's chooser during this Emacs session only.  They do not
-survive restart, and leaving does not undo a completed save.
+H p d’ during this Emacs session only.  They do not survive restart, and
+leaving does not undo a completed save.
 
    _Save and apply_ selects the palette for this session.  ‘U’, _Use at
 Startup_ in Voice Palettes, retains its startup selection separately.
@@ -4380,7 +4356,7 @@ Filters, selection, and staged work survive; unsaved engine-policy
 changes are still announced.  A directly opened browser retains its
 ordinary return destination.
 
-   Workbench also remains available through Home's ‘W’.  Its views are:
+   The main Workbench views are:
 
 ‘e’
      Engines, for trying voices or inspecting availability.
@@ -4400,10 +4376,10 @@ use it to browse voices directly.  ‘<RET>’ or ‘P’ on a voice auditions,
 engine's details and list as appropriate before leaving Workbench.
 
    Filters set with ‘F’ and each view's row/column survive navigation
-through Home.  The browsed engine is a temporary limit, removed when
-switching to logical, style, or engine views, or pressing ‘v’ from a
-voice list.  Explicit filters remain; ‘C’ clears them to show voices
-across engines.  Direct view shortcuts remain available.
+through settings menus.  The browsed engine is a temporary limit,
+removed when switching to logical, style, or engine views, or pressing
+‘v’ from a voice list.  Explicit filters remain; ‘C’ clears them to show
+voices across engines.  Direct view shortcuts remain available.
 
 * Menu:
 
@@ -4656,8 +4632,7 @@ feedback rule instead.
 
    ‘C-e H o p’ opens _Sound Packs_.  Its ‘q’ returns to _Sounds and
 output_ with the same settings scope, and another ‘q’ returns to the
-main menu.  Directly opened browsers keep their usual returns; Home also
-retains _Sound packs_.
+main menu.  Directly opened browsers keep their usual returns.
 
 ‘P’
      Audition a representative cue without activating the pack.
@@ -4813,10 +4788,9 @@ demonstrate separation.
 
    For comparison, select mono and repeat the action; content remains
 audible.  Restore the original values afterward.  Save deliberately with
-‘S’ or capture spatial choices in a Presentation Profile.  Home's
-_Spatial settings_ remains an alternative Customize page using its own
-Apply/Save actions.  A voice's Pan effect and notification-device
-routing are separate from presentation placement.
+‘S’ or capture spatial choices in a Presentation Profile.  A voice's Pan
+effect and notification-device routing are separate from presentation
+placement.
 
 
 File: emacsvox.info,  Node: Personal Sound Packs,  Prev: Spatial Presentation Controls,  Up: Sounds And Space
@@ -4862,9 +4836,8 @@ Opening/closing alone saves nothing.
    Select _Rate_ and adjust with Shift-left/right by the configured
 step, or use ‘<RET>~/~r’ for an exact value.  Speech must be running;
 Omnivox uses 0–100.  Global rate changes also affect the current buffer.
-Home's rate action remains an alternative, with a prefix for global
-scope.  A named voice's relative rate modifies this base as described in
-*note Voice Adjustments: (emacsvox)Voice Adjustments.
+A named voice's relative rate modifies this base as described in *note
+Voice Adjustments: (emacsvox)Voice Adjustments.
 
    ‘p’ opens punctuation: ‘n’ none, ‘s’ some, ‘a’ all, and ‘p’ a choice
 of built-in levels and available named profiles.  In buffer scope, ‘r’
@@ -4965,11 +4938,10 @@ use their configured device or fall back to main speech.  In Lisp,
 ‘default’ or an empty string means main output; use descriptive labels
 for ordinary configuration.
 
-   Home's _Audio output_ remains a Customize alternative.  After
-changing its route, ‘C-e d C-n’ initialises the arrangement; Customize
-Save retains it for restart.  Home also offers notification history.
-Ordinary obsolete-main-speech cancellation is local to main; explicit
-‘tts-stop’ stops both streams.
+   After changing the route, ‘C-e d C-n’ also initialises the
+arrangement.  Use notification history to read an announcement you
+missed.  Ordinary obsolete-main-speech cancellation is local to main;
+explicit ‘tts-stop’ stops both streams.
 
 6.10.6 Adjust output volumes
 ----------------------------
@@ -4983,9 +4955,8 @@ messages.
    Shift-left/right adjusts the selected volume by five; ‘<RET>’ enters
 exactly.  Changes apply to subsequent audio without restarting; already
 prepared audio keeps its old level.  ‘S’ saves these five volumes, not
-routing or spatial settings.  Home's Audio output Customize page offers
-the same controls.  Replacement and reconnected Omnivox processes
-receive current levels.
+routing or spatial settings.  Replacement and reconnected Omnivox
+processes receive current levels.
 
    Independent notification levels need the separate process selected by
 Automatic, Left, Right, or Both channels.  Main-output routing/fallback
@@ -5252,12 +5223,11 @@ appears active                  status.
 Voice distinctions vanish in    Compare Voice Lock and explicit face
 some buffers                    presentation.
 
-   ‘C-e H D d’ opens Aural Doctor; Home retains its entry.  Doctor
-checks live bindings, loaded source/byte-code, compatibility baseline,
-options, profiles, personal data, resources, spatial fallback, and
-backend.  It neither starts speech nor changes settings automatically.
-A row offering a reviewed safe repair can be acted on explicitly with
-‘r’.
+   ‘C-e H D d’ opens Aural Doctor.  Doctor checks live bindings, loaded
+source/byte-code, compatibility baseline, options, profiles, personal
+data, resources, spatial fallback, and backend.  It neither starts
+speech nor changes settings automatically.  A row offering a reviewed
+safe repair can be acted on explicitly with ‘r’.
 
    From diagnostics, ‘s’ reports spatial capabilities/policy and ‘m~/~n’
 retained local main/notification output, reporting absent buffers where
@@ -5329,8 +5299,7 @@ the menu open.  Opening the draft preserves its source and working
 settings and saves nothing.  Finishing returns to the same menu item.
 Each editor retains its own save and leave choices: the voice editor
 offers Keep, Discard, or Continue editing; a rule editor can ask before
-discarding an unsaved draft.  Home's _Resume unfinished changes_ remains
-available during the comparison period.
+discarding an unsaved draft.
 
    In the common editor, ‘u’ undoes and ‘q’ offers keep, discard, or
 continue.  Guided feedback ‘q’ first goes up through components, then
@@ -5387,9 +5356,8 @@ mode can still opt out on startup.  Buffer-local Voice Lock is not
 captured in Presentation Profiles.
 
    For new changes, prefer explanation, settings menus, palettes, and
-Workbench.  Home remains a compatibility entry to the same editors.
-Legacy named voices can still use ‘-settings’ options such as
-‘voice-monotone-settings’.  Customise the option, not a generated
+Workbench.  Legacy named voices can still use ‘-settings’ options such
+as ‘voice-monotone-settings’.  Customise the option, not a generated
 ‘acss-...’ symbol.  Historical background is in *note Audio Formatting
 And Aural CSS: (emacsvox-heritage)Audio Formatting And Aural CSS. in
 _Emacspeak Heritage_.
@@ -5479,11 +5447,10 @@ discard rules.  See *note Choose What Persists: (emacsvox)Saving And
 Startup. before treating a saved default, a live adjustment, or a
 retained draft as the same thing.
 
-   The action search at ‘C-e H a’ selects an action in its focused menu;
-press ‘<RET>’ again to activate it.  Use it when you need an action
-rather than a setting.  Aural Home remains available at ‘C-e H h’ or
-‘M-x emacsvox-aural’; its tables and editors use their own Help and
-return keys.
+   Use ‘C-e H a’ to find an action such as browsing voices or inspecting
+diagnostics.  It uses the same partial-name matching and two-Enter
+selection as settings search.  Editors opened from these menus retain
+their own Help, preview, save, and return commands.
 
 7.3 Read And Leave A Help Window
 ================================
@@ -5900,8 +5867,8 @@ stopping at section edges can be selected.  Announcement order can be
 item first, section first, or dependent on the movement.  Detailed
 command descriptions are enabled by default; value adjustments still
 give brief feedback.  Configure these choices through ‘C-e H s n’, as
-described in *note Getting started with menus and Aural Home:
-(emacsvox)Aural Home.
+described in *note Getting started with settings menus: (emacsvox)Aural
+Home.
 
    An item announcement identifies its key, relevant value, and
 description; capital keys are named explicitly.  Section announcements
@@ -6121,3 +6088,389 @@ starting point.
      application and select the resulting image or PDF with ‘o’ when
      that is the available acquisition route.  Scanner configuration is
      independent of PaddleOCR.
+
+
+File: emacsvox.info,  Node: Notmuch Mail,  Next: Agent Shell,  Prev: Emacs Packages,  Up: Top
+
+9 Notmuch Mail
+**************
+
+Notmuch provides the mail index and Emacs interface.  Install compatible
+command-line and Emacs components, then configure the mail store and
+database using the Notmuch Emacs manual
+(https://notmuchmail.org/doc/latest/notmuch-emacs.html).  Emacsvox does
+not fetch or send mail, create the database, or replace Notmuch's
+commands.  It adds structured speech to Hello, Search, and Show; Tree
+has more limited support, described below.
+
+   Follow this chapter to search, read, and manage mail with speech,
+then adjust which information is spoken automatically.  The generated
+*note emacsvox-notmuch: (emacsvox-reference)emacsvox-notmuch. section in
+the _Emacsvox Reference Manual_ provides the complete command and option
+reference.
+
+9.1 Start Notmuch
+=================
+
+Run ‘M-x notmuch’ to open Hello.  With the standard Emacsvox global maps
+loaded, ‘C-' m’ runs ‘notmuch-search’ directly and asks for a query.
+Emacsvox loads its integration when Notmuch loads and marks new Hello,
+Search, Show, and Tree buffers with Notmuch semantic context.
+
+   Loading speech support does not alter mail, tags, files, or Notmuch
+configuration.  Notmuch owns database, tag, archive, attachment, and
+composition operations; Emacsvox presents the result of the action you
+invoke.
+
+9.2 Use Hello and start a search
+================================
+
+Moving among Hello widgets speaks each saved search's label and
+displayed message count, or identifies the button or link reached.  Use
+these common Hello commands:
+
+‘TAB’
+     ‘widget-forward’ reaches the next search, field, button, or link.
+‘<backtab>’
+     ‘widget-backward’ reaches the preceding widget.
+‘RET’
+     ‘widget-button-press’ activates the widget; on a saved search it
+     starts the query.
+‘j’
+     ‘notmuch-jump-search’ chooses a configured search.
+‘g’
+     ‘notmuch-refresh-this-buffer’ refreshes Hello.
+‘m’
+     ‘notmuch-mua-new-mail’ starts composition, handled by Message mode
+     and the separate ‘emacsvox-message’ integration.
+
+   Press ‘?’ in a Notmuch view or ‘C-h m’ for the bindings supplied by
+your installed Notmuch version.  A search can display its first result
+before all rows finish rendering, so an initial message announcement and
+a later count need not arrive together.
+
+9.2.1 Understand asynchronous search completion
+-----------------------------------------------
+
+The default ‘adaptive’ policy gives useful early feedback without
+rereading content after you have moved on.  For a search you start,
+other than a refresh, a progress cue is given while its buffer remains
+selected.  The first complete result can then be spoken while the search
+continues, using the same summary, voices, and status cues as thread
+navigation.  This never moves point or reads an empty row.
+
+   When the new search remains selected, you have issued no command in
+it, and no input is pending, the first result is spoken once on the main
+stream.  Completion reports the final thread count on the notification
+stream without repeating that result.  If completion occurs before an
+early result could be announced, it reports the count and result at
+point, or a zero-thread summary.
+
+   If you navigate, invoke another command, or leave before completion,
+the later announcement is only a generic count on the notification
+stream.  It does not reread the selected row or disclose the query,
+sender, recipients, subject, tags, or attachment metadata.  Killing the
+owning search buffer silently cancels that delivery.
+
+  1. Refresh an existing result
+
+     An explicit refresh differs from a new search.  It queues only the
+     generic count on the main stream, without interrupting speech
+     already playing.  Navigation can interrupt this announcement,
+     including after you leave the search buffer before the refresh
+     finishes.  Refresh completion never rereads the selected row.
+
+  2. Choose less automatic feedback
+
+     ‘summary’ gives a generic count and completion cue; ‘cue’ gives
+     only the cue; ‘silent’ suppresses successful completion.  These
+     policies use the same main-stream selection for refreshes.  Other
+     search summaries use the notification stream.  Failures remain
+     audible and generic with every policy; refresh failures also use
+     the main stream.  The deliberate global refresh-all command remains
+     silent.
+
+     Use the focused settings described under *note Notmuch fields and
+     privacy: Notmuch fields and privacy. to choose a policy.  *note
+     Speech Output And Notifications: (emacsvox)Aural Speech Output.
+     explains the general stream behaviour; the refresh rules above are
+     specific to this integration.
+
+9.3 Navigate and inspect Search results
+=======================================
+
+Thread movement reads configured semantic fields and status cues.  At a
+boundary, speech identifies the beginning or end instead of repeating
+the current row.  Emacsvox makes the arrow keys equivalent to Notmuch's
+next and previous thread commands.
+
+‘n’
+     Run ‘notmuch-search-next-thread’.
+‘<down>’
+     Also run ‘notmuch-search-next-thread’.
+‘p’
+     Run ‘notmuch-search-previous-thread’.
+‘<up>’
+     Also run ‘notmuch-search-previous-thread’.
+‘RET’
+     Run ‘notmuch-search-show-thread’.  Show lands on a useful visible
+     body line or leaf MIME part and presents the opened message.
+‘SPC’
+     Run ‘notmuch-search-scroll-up’.  This scrolls the viewport rather
+     than selecting a semantic thread.
+‘C-c C-p’
+     Run ‘emacsvox-notmuch-speak-search-details’ to read all configured
+     fields for the result at point without automatic content limits.
+‘+’
+     Run ‘notmuch-search-add-tag’.
+‘-’
+     Run ‘notmuch-search-remove-tag’.
+‘*’
+     Run ‘notmuch-search-tag-all’ for the selected results.
+‘a’
+     Run ‘notmuch-search-archive-thread’.
+‘g’
+     Run ‘notmuch-refresh-this-buffer’; completion follows the
+     interruptible refresh policy above.
+
+   Search defaults to authors, subject, relative date, matched and total
+message counts, and ordinary tags.  Status tags assigned auditory cues
+are not repeated as words.  *note Notmuch fields and privacy: Notmuch
+fields and privacy. explains omission and ordering of sensitive fields.
+
+9.4 Read a thread and its MIME parts
+====================================
+
+Opening a thread selects its newest unread message among the open
+messages matching the search.  If there is none, Notmuch's initial
+selection is retained.  Emacsvox speaks the selected message's summary
+and first visible body line, skipping hidden alternative bodies.  When
+no body text is visible, point falls back to a leaf MIME-part button
+where possible.  That button announces a bounded filename, content type,
+and size.
+
+   Line reading speaks a visible sender row even if the preceding
+message ends with folded quoted text; it does not unfold the quote.  In
+a short graphical window, Down advances through ordinary body text
+before speaking the next line, even when the current line is only partly
+visible.  Images or text taller than the window retain Emacs's partial
+scrolling.
+
+‘n’
+     Run ‘notmuch-show-next-open-message’.
+‘p’
+     Run ‘notmuch-show-previous-open-message’.
+‘N’
+     Run ‘notmuch-show-next-message’, including closed messages.
+‘P’
+     Run ‘notmuch-show-previous-message’, including closed messages.
+‘SPC’
+     Run ‘notmuch-show-advance-and-archive’.  Within a message, speech
+     reads the newly visible page; at a message transition it reads the
+     new message; at the thread end it reports the actual archive
+     outcome and destination.
+‘DEL’
+     Run ‘notmuch-show-rewind’ and read the resulting page or message.
+‘RET’
+     Run ‘notmuch-show-toggle-message’ and cue the resulting visibility.
+‘M-RET’
+     Run ‘notmuch-show-open-or-close-all’ to open every message and
+     report the state and total, for example "Opened all 5 messages."
+     ‘C-u M-<RET>’ closes every message and reports the corresponding
+     total.
+‘C-c C-p’
+     Run ‘emacsvox-notmuch-speak-show-position’ for the message ordinal,
+     total, and full configured details.  On a MIME-part button it
+     instead reads the complete part description, including its full
+     filename.
+‘TAB’
+     Run ‘notmuch-show-next-button’ and identify the button or MIME
+     part.
+‘<backtab>’
+     Run ‘notmuch-show-previous-button’ and identify the button or MIME
+     part.
+‘w’
+     Run ‘notmuch-show-save-attachments’.  Speech confirms when the
+     command returns, but Notmuch exposes no per-attachment result here.
+     The confirmation therefore cannot distinguish partial skips.
+‘. s’
+     Run ‘notmuch-show-save-part’ on the current MIME part.
+‘. v’
+     Run ‘notmuch-show-view-part’.
+‘. o’
+     Run ‘notmuch-show-interactively-view-part’ and choose an external
+     action.
+‘. m’
+     Run ‘notmuch-show-choose-mime-of-part’.
+
+   Viewing, saving, overwriting, or launching a MIME part is an explicit
+Notmuch operation.  Navigation and detail inspection never open an
+attachment or an external viewer by themselves.
+
+9.5 Change tags and archive state
+=================================
+
+Emacsvox compares displayed tags before and after an interactive change
+and reports actual additions and removals.  Adding an existing tag or
+removing an absent tag reports "Tags unchanged".  Errors and cancelled
+commands do not produce success feedback.
+
+   These Show commands receive result-aware feedback:
+
+‘+’
+     Run ‘notmuch-show-add-tag’ on the current message.
+‘-’
+     Run ‘notmuch-show-remove-tag’.
+‘*’
+     Run ‘notmuch-show-tag-all’ across the thread.
+‘a’
+     Run ‘notmuch-show-archive-message-then-next-or-next-thread’.
+‘A’
+     Run ‘notmuch-show-archive-thread-then-next’.
+
+   Archive feedback distinguishes a real change, unchanged archive tags,
+and an unset ‘notmuch-archive-tags’.  Movement wrappers combine the
+result instead of duplicating the feedback of nested tag or archive
+commands.
+
+9.6 Choose fields, status, and privacy
+======================================
+
+From a Notmuch buffer, press ‘C-e S’ for focused speech settings, or
+reach it through ‘C-e H j c’.  The same menu is available from Hello,
+Search, Show, and Tree.  Availability of settings in Tree does not add
+Tree-specific navigation or message formatting.
+
+   ‘c’ opens explained completion choices.  Arrows browse without
+applying, ‘<RET>’ applies and returns, and ‘q’ cancels.  ‘?’ followed by
+a choice's key opens spoken Help; ‘q’ returns to that browsed choice.
+In the parent menu, ‘f’ and ‘b’ control per-field character and UTF-8
+byte limits, while ‘t’ and ‘B’ control total limits.  Shift-left/right
+adjusts a selected limit by 100; ‘<RET>’ accepts an exact positive
+integer or ‘none’.  Disabling one limit leaves the others active.  ‘w’
+saves these four limits and completion policy as the five displayed
+global defaults, not every Notmuch option.
+
+   For ordered search/message fields, use ‘s’ and ‘m’.  ‘i’ and ‘I’ open
+the status-tag and fallback-cue maps.  These linked Customize editors
+retain custom formatter functions and use their own Apply, Save, and
+Reset actions.  Returning with ‘q’ does not save them.  ‘p’ opens
+Presentation Options and ‘A’ advanced settings, including separators.
+The full group is also available through ‘M-x customize-group <RET>
+emacsvox-notmuch <RET>’.  These speech settings do not alter Notmuch's
+database or its own display configuration.
+
+9.6.1 Choose the information in a spoken summary
+------------------------------------------------
+
+‘emacsvox-notmuch-search-result-fields’
+     Defaults to ‘(authors subject date count tags)’.  Remove sensitive
+     fields, reorder them, or add a formatter function.
+‘emacsvox-notmuch-show-message-fields’
+     Defaults to ‘(from date to cc tags attachments)’.  Show omits the
+     subject but includes To and Cc; remove ‘to’, ‘cc’, or other fields
+     when privacy requires it.
+‘emacsvox-notmuch-search-field-separator’
+‘emacsvox-notmuch-show-field-separator’
+     Set the text between configured fields.  Both default to comma and
+     space.
+‘emacsvox-notmuch-search-status-icons’
+‘emacsvox-notmuch-show-status-icons’
+     Map unread, replied, forwarded, flagged, and personal tags to cues
+     or silence.  Removing an entry makes that status available to
+     ordinary tag speech.  When ‘mail-message-status-cues’ is enabled in
+     Presentation Options, its rules own the shared semantic status
+     cues; the maps still suppress the corresponding spoken status tags.
+‘emacsvox-notmuch-search-completion-style’
+     Select ‘adaptive’, ‘summary’, ‘cue’, or ‘silent’ using the
+     completion behaviour described earlier.
+
+9.6.2 Understand limits and full inspection
+-------------------------------------------
+
+Mail-controlled text is bounded before automatic speech and Aural
+history.  Defaults are 256 characters and 1,024 UTF-8 bytes per field,
+then 1,000 characters and 4,096 bytes for the complete automatic
+presentation.
+
+‘emacsvox-notmuch-automatic-field-character-limit’
+‘emacsvox-notmuch-automatic-field-byte-limit’
+     Bound each automatic field before formatting and submission.
+‘emacsvox-notmuch-automatic-total-character-limit’
+‘emacsvox-notmuch-automatic-total-byte-limit’
+     Bound the final automatic Notmuch presentation.
+‘emacsvox-notmuch-mime-node-limit’
+‘emacsvox-notmuch-mime-depth-limit’
+     Default to 4,096 cons nodes and depth 64, limiting inspection of
+     malformed, cyclic, broad, or deeply nested MIME metadata.  An
+     incomplete scan reports a conservative attachment lower bound, not
+     a claim that no attachment exists.
+
+   A shortened Search or Show announcement explains what was omitted and
+points to ‘C-c C-p’ for full configured details.  A shortened Hello item
+points to ‘<RET>’.  Explicit Search and Show inspection deliberately
+bypasses automatic content limits; use it only when speaking the full
+configured fields is appropriate.  These limits are not a general
+privacy guarantee for every explicit command or another application's
+output.
+
+9.6.3 Understand retained and notification content
+--------------------------------------------------
+
+Main-stream Notmuch presentations can enter bounded Aural history.  By
+default, Emacsvox retains at most 20 presentations and 4,096 UTF-8 bytes
+of speech preview per record.  Records contain frozen data, source
+names, and positions, but never retain source buffers.  Inspect them
+through ‘C-e H f h’ or ‘M-x emacsvox-aural-list-recent-feedback’.  Set
+‘emacsvox-aural-presentation-history-limit’ to zero to disable this
+history.
+
+   Generic asynchronous completion contains no query or message
+metadata, but a notification-stream completion may be retained by the
+notification subsystem.  Choose ‘cue’ or ‘silent’ if even a generic
+thread count is unwanted.  Review notification-device and logging
+settings separately from mail field choices.
+
+9.7 Know the support boundaries
+===============================
+
+Hello
+     Widget navigation, view lifecycle, and searches have
+     Notmuch-specific feedback.
+Search
+     Results, asynchronous lifecycle, tags, archiving, opening, and
+     configured detail inspection have Notmuch-specific feedback.
+Show
+     Messages, MIME parts, pages, visibility, tags, archiving, and
+     explicit inspection have Notmuch-specific feedback.
+Tree
+     Receives ‘emacsvox-aural-module’ context only.  Core speech can
+     operate, but this module has no Tree-specific row formatter,
+     navigation, mutation, visibility, or asynchronous lifecycle.
+Composition
+     Standard Message mode owns composition.  Speech after new-mail,
+     reply, forward, or resume transitions belongs to
+     ‘emacsvox-message’, not the Notmuch integration.
+
+   There is no independent Notmuch speech-disable or unload command.
+Its advice, hooks, and Search arrow bindings remain installed for the
+Emacs session after loading.  Repeated loading is idempotent and does
+not duplicate them.
+
+9.8 Troubleshoot the live integration
+=====================================
+
+Use ‘?’ or ‘C-h m’ in the affected view to check its current keys and
+‘M-x notmuch-version’ to identify the package.  Consult Notmuch's own
+manual for its behaviour before treating a database or display problem
+as a speech problem.
+
+   For bindings, loaded source versus byte-code, presentation rules,
+sounds, or backend issues, open Aural Doctor through ‘C-e H D d’ or ‘M-x
+emacsvox-aural-doctor’.  Recent feedback at ‘C-e H f h’ or ‘M-x
+emacsvox-aural-list-recent-feedback’ shows the bounded presentation
+submitted for an action.  These diagnostics do not query or modify mail.
+
+   For source-level work, *note Integration Maintenance: Integration
+Maintenance. contains the build, test, renderer, and asynchronous
+lifecycle contracts.

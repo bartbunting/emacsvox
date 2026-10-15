@@ -366,7 +366,7 @@ Open ~C-e H v b~ to browse engines. The equivalent command is:
 M-x emacsvox-omnivox-manage-components RET
 #+end_example
 
-Home's ~I~ or /Browse voices/ remains an alternative. Opening uses the current
+Opening uses the current
 speech inventory without waiting for file checks or fresh discovery. Optional
 engines missing from that inventory stay visible as /not reported/ so management
 controls remain reachable. ~v~ browses voices; ~RET~ opens details.

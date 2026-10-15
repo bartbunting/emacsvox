@@ -67,26 +67,9 @@
       (should-not called)
       (kill-buffer source)
       (should-error (emacsvox-aural-menu--feedback) :type 'user-error)
-      (should-error (emacsvox-aural-menu--home) :type 'user-error)
       (should-error (emacsvox-aural-menu--indentation) :type 'user-error)
       (should-error (emacsvox-aural-menu--toggle-scope) :type 'user-error)
       (should-not (cdr (plist-get context :settings))))))
-
-(ert-deftest emacsvox-aural-menu-home-retains-item-after-source-moves ()
-  "The fallback Home retains the captured item and survives menu closure."
-  (require 'emacsvox-aural-home)
-  (save-window-excursion
-    (emacsvox-test--with-aural-menu
-      (goto-char 15)
-      (unwind-protect
-          (progn
-            (emacsvox-aural-menu--home)
-            (with-current-buffer "*Emacsvox Aural*"
-              (should (eq (emacsvox-aural-inspection-source-buffer) source))
-              (should (= (emacsvox-aural-inspection-call-in-source #'point) 3)))
-            (should (= (with-current-buffer source (point)) 15)))
-        (when (get-buffer "*Emacsvox Aural*")
-          (kill-buffer "*Emacsvox Aural*"))))))
 
 (ert-deftest emacsvox-aural-menu-graphical-links-scope-and-refresh ()
   "Submenus share scope and retain local settings while global values change."
@@ -301,7 +284,7 @@
                   (execute-kbd-macro (kbd "? p"))
                   (should (string-match-p "Use a higher pitch" (buffer-string)))
                   (execute-kbd-macro (kbd "q q q"))
-                  (check-items '("s" "x" "h" "q"))
+                  (check-items '("s" "x" "D" "q"))
                   (execute-kbd-macro (kbd "s n v"))
                   (should-not emacsvox-transient-verbose-descriptions)
                   (should (equal (car speech) "Detailed descriptions off"))
@@ -410,7 +393,7 @@
           (unwind-protect
               (progn
                 (dolist (keys '("q" "C-g" "s i C-q"
-                                "<right> C-j"))
+                                "<right> <down> C-j"))
                   (execute-kbd-macro (kbd "<f8>"))
                   (transient--show)
                   (setq closures nil)
@@ -453,7 +436,8 @@
                         (should buffer-read-only)
                         (should (string-match-p "Speech settings: Global defaults" (buffer-string)))
                         (should (string-match-p "Feedback for this item" (buffer-string)))
-                        (should (string-match-p "Aural Home (all actions)" (buffer-string))))
+                        (should (string-match-p "Diagnostics and recovery" (buffer-string)))
+                        (should-not (string-match-p "Aural Home" (buffer-string))))
                     (should (derived-mode-p 'help-mode)))
                   (should transient-resume-mode)
                   (execute-kbd-macro (kbd "q"))

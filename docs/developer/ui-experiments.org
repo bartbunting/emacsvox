@@ -4,7 +4,17 @@
 
 * Status and purpose
 
-Proposal for the =ui-experiments= branch. The first experiment is to replace
+The Transient settings workflows have passed listening acceptance. The
+=C-e H h= fallback is retired under
+[[file:../adr/0027-transient-settings-entry.org][ADR 0027]]. Emacs 30.2's bundled Transient exposed existing compatibility
+failures; the package requirement or compatibility work remains outstanding.
+Dedicated editors and =M-x emacsvox-aural= remain available.
+
+The sections below preserve the prototype's research and implementation history.
+Earlier Home routes and open listening checks describe those checkpoints; the
+[[file:../ui-settings-plan.org][living settings plan]] owns current status and remaining work.
+
+The original proposal for the =ui-experiments= branch was to replace
 the =C-e H= Aural Home menu with a Transient. The first implementation adds
 the linked indentation path, Feedback for this item, and a route to the
 existing Home. The tuning prototype now uses Shift-left/right to adjust

@@ -174,6 +174,10 @@
   "Every named Home action and alias has a passive focused-menu destination."
   (require 'emacsvox-aural-home)
   (emacsvox-test--with-settings
+    (should-not (seq-find (lambda (suffix) (equal (oref suffix key) "h"))
+                         transient--suffixes))
+    (with-selected-window transient--window
+      (should-not (string-match-p "Aural Home" (buffer-string))))
     (dolist (row (emacsvox-aural-home--all-entries))
       (should (assoc (aref (cadr row) 0) emacsvox-settings--actions)))
     (cl-letf (((symbol-function 'emacsvox-aural)

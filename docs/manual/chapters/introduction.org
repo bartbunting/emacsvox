@@ -65,7 +65,7 @@ Short auditory icons and tones identify events such as opening a file or
 completing an action. Pauses and spatial cues help separate related information.
 
 Begin with the supplied settings and adjust them as you learn what helps your
-work. From the buffer you are using, ~C-e H~ opens the experimental Emacsvox
+work. From the buffer you are using, ~C-e H~ opens the Emacsvox
 settings menu. Press ~s~ for speech controls, ~v~ for voices and engines, or
 ~o~ for sounds and output. ~C-e S~ opens focused settings for the current
 integration, falling back to general buffer settings when no focused menu is
@@ -79,10 +79,9 @@ menu sequence. Leaving a menu does not reverse adjustments already applied.
 Settings and editors have distinct saving rules, explained alongside each task
 in [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]].
 
-Aural Home remains available through ~C-e H h~ or ~M-x emacsvox-aural~ for
-comparison and access to the same actions and editors. It is a separate
-table-based interface, not another name for the settings menu. Follow the
-navigation instructions for the interface you opened.
+Use ~C-e H a~ to find an action, or ~C-e H /~ to find a setting. Both select
+the matching menu control before you activate it. Dedicated editors retain
+their own navigation, preview, and saving commands; ~?~ explains each view.
 
 Emacsvox sends speech through a speech server. New GNU/Linux, macOS, and WSL2
 installations use Omnivox; established direct servers remain available for

@@ -378,7 +378,7 @@ also available through live Help and the generated reference.
 
 A punctuation level decides how much punctuation is spoken; the pronunciation
 editor changes how particular characters are read. Open it with ~C-e H s p e~
-or ~M-x omnivox-punctuation~. Home's /Punctuation/ remains an alternative.
+or ~M-x omnivox-punctuation~.
 
 This interface needs the bundled local launcher and the host's punctuation-editor
 capability. Older hosts report that an update is required; remote and
@@ -397,7 +397,7 @@ The initial level is /some/.
 - s :: Save drafts on the host without restarting speech or altering unrelated configuration.
 - r :: Restart this session's main and notification workers with saved settings after confirmation; save or discard drafts first.
 - g :: Reread the saved file, asking before discarding edits.
-- q :: Return while retaining the draft; reopening the editor resumes it. Home's unfinished-draft chooser also remains available.
+- q :: Return while retaining the draft; reopening the editor resumes it. ~C-e H p d~ also resumes retained drafts.
 - ? :: Read Help, including the selected host configuration path.
 
 /Preserve character/ leaves pronunciation and pauses to the engine; it does

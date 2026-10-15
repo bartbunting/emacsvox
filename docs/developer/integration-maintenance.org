@@ -1469,7 +1469,7 @@ Default spatialization is =neutral=, =stereo=, or =pre-spatialized=. Use the
 last for recordings that already encode their intended spatial placement,
 so runtime balance does not position them a second time.
 
-Open Aural Home's /Sound packs/ and press ~g~ to rescan.
+Open /Sound packs/ with ~C-e H o p~ and press ~g~ to rescan.
 Inspect the new pack with ~RET~: the replacement should be
 native, while unchanged cues identify their parent or fallback provider.
 Audition individual cues with ~P~ and validate with

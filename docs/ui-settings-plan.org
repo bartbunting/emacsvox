@@ -14,8 +14,9 @@ that those interfaces already exist. Inventory status describes coverage in
 the new interface; many underlying commands and editors already work.
 
 The [[file:developer/ui-experiments.org][UI experiments record]] retains the earlier research and implementation
-history. This document owns the forward plan and settings inventory. Keep the
-existing Aural Home available for comparison and access to uncovered actions.
+history. This document owns the forward plan and settings inventory. The Home
+menu entry is retired after listening acceptance; the compatibility finding
+in the retirement checkpoint remains outstanding.
 Planning an item does not authorize unrelated refactors, dependency changes,
 personal configuration changes, or publication.
 
@@ -975,7 +976,7 @@ inventory. Dedicated voice, palette, rule, sound, and pronunciation editors
 remain supported buffers; retiring the Home menu does not require rewriting them.
 
 1. Diagnostics: a focused menu, corrected Doctor binding repair, reports,
-   logging, and direct return. Implemented at =C-e H D=; listening pending.
+   logging, and direct return. Implemented at =C-e H D=; listening accepted.
 2. Presentation gaps: tune the named voice at point, combined rule overview,
    training explanations, and semantic reference, with useful Help and direct return.
 3. Remove Home as an intermediate step for action search, retained drafts,
@@ -1072,7 +1073,26 @@ prefix and regression coverage for both Enter events, arrow selection, and
 report return.
 All five diagnostics checks pass with source and with current byte-code in
 fresh graphical Emacs sessions using installed and bundled Transient.
-Final Emacs 30.2 retirement qualification remains open.
+Final Emacs 30.2 retirement qualification found an existing Transient dependency
+gap. The bundled 0.7.2.2 loses context during suspended editor actions and fails
+navigation/search checks. A private build using Transient 0.13.8 passes those
+workflows; the remaining baseline failure was a stale Close-button fixture that
+selected the newly added source-return action. The fixture now navigates to
+Close explicitly. No runtime behaviour was changed to accommodate that test.
+
+Retirement removes the root h suffix and its private opener, checks
+that all former actions remain discoverable, and replaces Home-based manual
+instructions with focused routes. =M-x emacsvox-aural=, shared draft helpers,
+and dedicated editors remain. The =Aural Home= Info node identifier is retained.
+[[file:adr/0027-transient-settings-entry.org][ADR 0027]] records this boundary. An explicit newer Transient requirement or
+old-package compatibility work still needs a decision; this slice changes no
+dependency requirements.
+The retirement passes all 80 menu/settings checks in fresh compiled
+graphical sessions on Emacs 30.2 with Transient 0.13.8, and Emacs 31.0.90 with
+installed Transient 0.13.8 and bundled Transient 0.13.3. There are no skips in
+these runs. Separate byte-code builds and preflights pass; generated references,
+manuals, and the documentation release check pass. The failed bundled Emacs 30
+baseline remains a compatibility finding, not a passing configuration.
 The new routes do not require removing or converting the dedicated editors.
 Broader inventory expansion and search policy outside these two menu searches
 remain separate workstreams.

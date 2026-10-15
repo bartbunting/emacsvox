@@ -77,11 +77,10 @@ A linked editor keeps its own preview, saving, and discard rules. See
 [[info:emacsvox#Saving And Startup][Choose What Persists]] before treating a saved default, a live adjustment,
 or a retained draft as the same thing.
 
-The action search at ~C-e H a~ selects an action in its focused menu; press
-~RET~ again to activate it. Use it when you need an action rather than a
-setting. Aural Home remains
-available at ~C-e H h~ or ~M-x emacsvox-aural~; its tables and editors use
-their own Help and return keys.
+Use ~C-e H a~ to find an action such as browsing voices or inspecting
+diagnostics. It uses the same partial-name matching and two-Enter selection
+as settings search. Editors opened from these menus retain their own Help,
+preview, save, and return commands.
 
 ** Read And Leave A Help Window
 :PROPERTIES:

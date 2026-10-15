@@ -53,7 +53,7 @@ Short auditory icons and tones identify events such as opening a file or
 completing an action. Pauses and spatial cues help separate related information.
 
 Begin with the supplied settings and adjust them as you learn what helps your
-work. From the buffer you are using@comma{} @kbd{C-e H} opens the experimental Emacsvox
+work. From the buffer you are using@comma{} @kbd{C-e H} opens the Emacsvox
 settings menu. Press @kbd{s} for speech controls@comma{} @kbd{v} for voices and engines@comma{} or
 @kbd{o} for sounds and output. @kbd{C-e S} opens focused settings for the current
 integration@comma{} falling back to general buffer settings when no focused menu is
@@ -67,10 +67,9 @@ menu sequence. Leaving a menu does not reverse adjustments already applied.
 Settings and editors have distinct saving rules@comma{} explained alongside each task
 in @ref{Aural Presentation, , Aural Presentation}.
 
-Aural Home remains available through @kbd{C-e H h} or @kbd{M-x emacsvox-aural} for
-comparison and access to the same actions and editors. It is a separate
-table-based interface@comma{} not another name for the settings menu. Follow the
-navigation instructions for the interface you opened.
+Use @kbd{C-e H a} to find an action@comma{} or @kbd{C-e H /} to find a setting. Both select
+the matching menu control before you activate it. Dedicated editors retain
+their own navigation@comma{} preview@comma{} and saving commands; @kbd{?} explains each view.
 
 Emacsvox sends speech through a speech server. New GNU/Linux@comma{} macOS@comma{} and WSL2
 installations use Omnivox; established direct servers remain available for
@@ -1043,7 +1042,7 @@ also available through live Help and the generated reference.
 
 A punctuation level decides how much punctuation is spoken; the pronunciation
 editor changes how particular characters are read. Open it with @kbd{C-e H s p e}
-or @kbd{M-x omnivox-punctuation}. Home's @emph{Punctuation} remains an alternative.
+or @kbd{M-x omnivox-punctuation}.
 
 This interface needs the bundled local launcher and the host's punctuation-editor
 capability. Older hosts report that an update is required; remote and
@@ -1070,7 +1069,7 @@ Restart this session's main and notification workers with saved settings after c
 @item g
 Reread the saved file@comma{} asking before discarding edits.
 @item q
-Return while retaining the draft; reopening the editor resumes it. Home's unfinished-draft chooser also remains available.
+Return while retaining the draft; reopening the editor resumes it. @kbd{C-e H p d} also resumes retained drafts.
 @item ?
 Read Help@comma{} including the selected host configuration path.
 @end table
@@ -1596,7 +1595,7 @@ Open @kbd{C-e H v b} to browse engines. The equivalent command is:
 M-x emacsvox-omnivox-manage-components RET
 @end example
 
-Home's @kbd{I} or @emph{Browse voices} remains an alternative. Opening uses the current
+Opening uses the current
 speech inventory without waiting for file checks or fresh discovery. Optional
 engines missing from that inventory stay visible as @emph{not reported} so management
 controls remain reachable. @kbd{v} browses voices; @kbd{@key{RET}} opens details.
@@ -2680,10 +2679,9 @@ result using the voices and output capabilities available on your machine.
 Begin with the item you heard rather than editing configuration data by hand.
 @kbd{C-e E} explains its presentation. @kbd{C-e H} opens the settings menu@comma{} and
 @kbd{C-e S} opens focused settings for the current task when available. The
-walkthroughs below use these menu routes where they are implemented. Aural
-Home remains available through @kbd{C-e H h} as an alternative entry to the
-same actions and editors. Its table navigation is different
-from the settings menus; the two names are not interchangeable.
+walkthroughs below use these menus to open dedicated editors for detailed
+changes. @kbd{C-e H a} finds an action and selects its control in the appropriate
+menu.
 
 Start with the listening exercise. The following sections explain the
 presentation model@comma{} feedback rules@comma{} named voices@comma{} installed engines@comma{} sounds@comma{}
@@ -2692,7 +2690,7 @@ In an Aural interface@comma{} @kbd{C-c C-i} opens the relevant manual topic and 
 Info returns to the interface. In interface Help@comma{} @kbd{i} opens the same topic.
 
 @menu
-* Getting started with settings menus: Aural Home.  Try a voice, navigate settings, and recognise the remaining Home routes.
+* Getting started with settings menus: Aural Home.  Try a voice, navigate settings menus, and return from editors.
 * Presentation Model::           Follow meaning from an Emacs application to audible output.
 * Explaining Presentation::      Explain current or recently queued feedback.
 * Adjusting Presentation::       Preview, scope, save, and undo presentation changes.
@@ -2708,7 +2706,7 @@ Info returns to the interface. In interface Help@comma{} @kbd{i} opens the same 
 @end menu
 
 @node Aural Home
-@section Getting Started With Aural Home
+@section Getting Started With Settings Menus
 
 @cindex Aural Home
 
@@ -2739,7 +2737,7 @@ why. If speech itself is absent@comma{} begin with
 
 @subsection Choose an entry point and preserve your place
 
-The experimental Emacsvox menu@comma{} @kbd{C-e H}@comma{} groups settings by task. @kbd{C-e S}
+The Emacsvox menu@comma{} @kbd{C-e H}@comma{} groups settings by task. @kbd{C-e S}
 opens the current buffer's focused integration settings@comma{} or general buffer
 settings when no focused menu exists. @kbd{C-e H .} always opens general buffer
 settings. A directly opened focused menu captures the buffer on entry; @kbd{q}
@@ -2755,12 +2753,13 @@ Editor and manager @kbd{h} keys open the Transient settings menu with the origin
 source item. Closing that menu returns to the editor without saving or
 discarding its draft.
 
-Aural Home remains available with @kbd{C-e H h} or @kbd{M-x emacsvox-aural}.
-Home remembers the source buffer
-and opening position for explanation and remapping; moving the source cursor
-while Home is open does not select a new target. @kbd{C-c C-o} in Home returns to
-that captured position. To select another item@comma{} reopen Home from it in an
-ordinary buffer.
+Moving the source cursor while a menu is open does not select a new target.
+@kbd{C-e H b} returns to the captured position. To choose another item@comma{} reopen
+@kbd{C-e H} from it in an ordinary buffer.
+
+The former Aural Home table remains available through @kbd{M-x emacsvox-aural}
+for existing configurations. Its @kbd{C-e H h} entry has been retired; the
+workflows below use the settings menus.
 
 A menu return and an editor return are different operations. Use the editor's
 own @kbd{q}@comma{} @kbd{h}@comma{} or finish action before trying menu-navigation keys. Returning
@@ -2841,10 +2840,8 @@ to the menu where you searched@comma{} and cancelling completion keeps that menu
 Press @kbd{C-e H a} to find an action such as @emph{Browse voices}@comma{} @emph{Your feedback
 rules}@comma{} or @emph{Aural Doctor}. It uses the same case-insensitive partial-name
 matching and two-Enter selection as settings search: choose the destination@comma{}
-then activate its control. It covers all named Home actions without opening
-Home. Child views return to their focused menu; another @kbd{q} returns to the
-menu where you searched. Within the retained Aural Home@comma{} @kbd{/} still opens
-actions directly.
+then activate its control. Child views return to their focused menu; another
+@kbd{q} returns to the menu where you searched.
 
 Press @kbd{C-e H b} to close menus and return to the captured source position@comma{}
 speaking its line. A changed or deleted source item must be captured again.
@@ -2857,33 +2854,31 @@ In these linked Customize buffers@comma{} @kbd{q} finishes Customize normally an
 to the menu; use Customize's own Apply and Save commands. See
 @ref{Integration speech settings, , Adjust an integration's speech settings} for application-specific controls.
 
-@subsection Navigate Aural Home and its editors
+@subsection Choose a task and navigate its editor
 
-The instructions here apply to the table-based Home@comma{} not the Transient menu.
-The shared table controls also apply to the dedicated managers and editors.
+Choose a focused menu for your task:
 
-Aural Home begins with six task groups in one spoken table. Press @kbd{@key{RET}} or
-@kbd{@key{TAB}} to expand or collapse a group. Each action names a destination@comma{} reports
-its current status@comma{} and describes its purpose. @kbd{/} searches all actions@comma{}
-including collapsed groups; the matching group opens with the destination
-selected.
-
-@multitable @columnfractions 0.35 0.65
-@item Task group
+@multitable @columnfractions 0.20 0.80
+@item Menu
 @tab Destinations
-@item Understand and change feedback
-@tab Feedback for this item@comma{} Recent feedback@comma{} and Return to source item.
-@item Voices and speech
-@tab Voice palettes@comma{} Browse voices@comma{} Preferred speech engine@comma{} Speech rate@comma{} Punctuation@comma{} and Voice Workbench.
-@item Sounds and output
-@tab Sound packs@comma{} Spatial settings@comma{} Audio output@comma{} and Review notifications.
-@item Optional feedback and rules
-@tab Presentation options@comma{} Your feedback rules@comma{} Current buffer rules@comma{} and Explain feedback as you navigate.
-@item Saved setups and unfinished changes
-@tab Presentation profiles and Resume unfinished changes.
-@item Troubleshooting
-@tab Aural Doctor and Spatial capabilities.
+@item @kbd{C-e H f}
+@tab Explain@comma{} change@comma{} or tune current feedback; review recent feedback.
+@item @kbd{C-e H v}
+@tab Voice palettes@comma{} installed voices and engines@comma{} and Voice Workbench.
+@item @kbd{C-e H s}
+@tab Rate@comma{} punctuation@comma{} indentation@comma{} capitalisation@comma{} and interaction.
+@item @kbd{C-e H o}
+@tab Sounds@comma{} output volumes@comma{} notifications@comma{} and spatial controls.
+@item @kbd{C-e H r}
+@tab Presentation Options@comma{} scoped rules@comma{} training@comma{} and semantic vocabulary.
+@item @kbd{C-e H p}
+@tab Profiles@comma{} palettes@comma{} changed settings@comma{} and retained drafts.
+@item @kbd{C-e H D}
+@tab Doctor@comma{} spatial capabilities@comma{} and speech diagnostics.
 @end multitable
+
+Editors keep their own controls for detailed changes. In an editor's table@comma{}
+@kbd{@key{RET}} opens a selected destination@comma{} details@comma{} or expandable group.
 
 Expandable groups announce an open or close cue with their name when you
 reach or toggle them. These cues follow the icon setting and sound pack.
@@ -2891,7 +2886,7 @@ For spoken state words@comma{} enable @emph{aural-panel-state-labels} in @emph{P
 Options}. This adds ``collapsed'' or ``expanded'' after the control through
 the normal presentation rules. Key instructions remain available in Help.
 
-In Home and other Aural tables@comma{} the navigation controls are:
+In table-based managers and editors@comma{} the navigation controls are:
 
 @table @kbd
 @item n@comma{} p@comma{} down@comma{} up
@@ -2910,7 +2905,7 @@ Choose an applicable action by name.
 @item N
 Create a new item where supported.
 @item P
-Preview in managers and editors; Home retains its profiles shortcut.
+Preview in managers and editors.
 @item S
 Stop the preview and its remaining samples.
 @item ?
@@ -2921,16 +2916,9 @@ Open the settings menu from a manager or editor that provides this key.
 Go back or leave; an editor may first offer to retain or discard changes.
 @end table
 
-Home also provides direct keys for frequent routes: @kbd{x} for Feedback Details@comma{}
-@kbd{O} for your feedback rules@comma{} @kbd{H} for recent feedback@comma{} @kbd{P} for profiles@comma{} @kbd{V} for
-voice palettes@comma{} @kbd{W} for Voice Workbench@comma{} and @kbd{D} for Aural Doctor.
-
 @emph{Feedback for this item} combines explanation@comma{} playback@comma{} and access to voice
-and sound changes. Home's @kbd{c}@comma{} @kbd{r}@comma{} @kbd{T}@comma{} and @kbd{R} open the guided change@comma{}
-voice-remapping@comma{} named-voice@comma{} and exact-cue editors. Search also accepts their
-existing action names@comma{} including @emph{Explain this item}. @emph{Semantic vocabulary}
-is available from Home's Help@comma{} search@comma{} and a change editor's matching criteria.
-The direct settings-menu route to that vocabulary is @kbd{C-e H r h}.
+and sound changes. @kbd{C-e H f} groups its editing routes. @kbd{C-e H r h} opens
+@emph{Semantic vocabulary}; change editors also link it from matching criteria.
 
 The voice editor contains fields and buttons rather than table columns:
 left/right changes a numeric value@comma{} and @kbd{@key{RET}} edits a field. See
@@ -2952,9 +2940,9 @@ the voice editor likewise preserves its working settings. If a prepared remap's
 source item changes or disappears@comma{} Emacsvox asks you to prepare that change
 again before applying it.
 
-The header identifies the captured source and the number of unfinished drafts.
-@emph{Resume unfinished changes} visits the original rule editor@comma{} voice editor@comma{} or
-Workbench engine settings. The draft remains unsaved until accepted there.
+Press @kbd{C-e H p d} to resume a retained draft in its original rule editor@comma{}
+voice editor@comma{} or Workbench engine settings. The draft remains unsaved until
+accepted there.
 Presentation Profiles capture options@comma{} palette@comma{} sound pack@comma{} and spatial
 settings. Physical choices and adjustments belong to named palette voices;
 shared engine settings are saved separately. See
@@ -3116,8 +3104,8 @@ what the current rules would produce at point.
 A simulation uses captured text and context. @emph{Play simulation} plays that
 baseline@comma{} not a recording of earlier sound. It supports field review and draft
 previews but is never added to Recent Feedback. A prefix argument with @kbd{C-e E}
-selects a simulated occasion explicitly. @kbd{q} returns to the source@comma{} menu@comma{} or
-Home row from which the report was opened.
+selects a simulated occasion explicitly. @kbd{q} returns to the source or menu
+item from which the report was opened.
 
 Expand a field and choose @emph{Edit named voice bolden}@comma{} or its reported voice
 name@comma{} to open the voice editor. Multiple named voices receive separate links.
@@ -3127,8 +3115,7 @@ editor returns to the same link; opening it does not save or apply anything.
 
 @subsection Inspect recent feedback
 
-Press @kbd{C-e H f h} for recent feedback. Aural Home's @emph{Recent feedback} action
-and @kbd{H} remain alternative entries. Each row preserves one recorded
+Press @kbd{C-e H f h} for recent feedback. Each row preserves one recorded
 presentation within the history's size limit. Its Content column reads the
 preview with captured voice annotations@comma{} including changes within the entry;
 other columns and titles use the normal interface voice. @kbd{P} requests replay
@@ -3290,7 +3277,7 @@ retained.
 @kbd{C-e H r t} toggles @emph{Explain feedback as you navigate} for this session. It adds
 concise semantic explanations after normal presentations@comma{} useful for learning
 an integration's vocabulary. It is deliberately more verbose than normal use;
-turn it off when no longer needed. Home retains the same training action.
+turn it off when no longer needed.
 
 @node Adjusting Presentation
 @section Change Feedback And Manage Rules
@@ -3484,7 +3471,7 @@ In the remapping editor@comma{} move with @kbd{n~/~p} or arrows. @kbd{@key{RET}}
 chooses a voice@comma{} @emph{Preview original} plays the captured item@comma{} and @emph{Preview
 change} plays the draft. @kbd{O~/~P} provide the same previews; @kbd{S} stops.
 Previewing does not save or retune the named voice. Use @kbd{C-e H f e} for
-an exact earcon remap; Home's @kbd{R} remains an alternative entry.
+an exact earcon remap.
 
 @item
 Choose @emph{How long}: personal persists across Emacs sessions@comma{} session lasts
@@ -3758,7 +3745,7 @@ updates them.
 Open a palette through @kbd{C-e H v p}@comma{} select a voice@comma{} and press @kbd{e}. To tune
 the voice used by the captured source item@comma{} use @kbd{C-e H f t}. This changes the
 shared named entry@comma{} not a rule for that one item. @kbd{q} offers to retain unfinished
-work and returns to the menu. Aural Home retains the same action.
+work and returns to the menu.
 
 Saving an inherited voice creates a complete entry in the destination palette.
 Editing a built-in palette requests a personal child. Opening and previewing
@@ -3855,9 +3842,9 @@ without inferring a successful fallback from inventory or claiming exact native
 parameter measurements.
 
 @kbd{q} returns to the originating row and column. Keep@comma{} discard@comma{} or continue with
-unsaved work. Retained drafts can be resumed through @kbd{C-e H p d} and Home's
-chooser during this Emacs session only. They do not survive restart@comma{} and leaving
-does not undo a completed save.
+unsaved work. Retained drafts can be resumed through @kbd{C-e H p d} during
+this Emacs session only. They do not survive restart@comma{} and leaving does not
+undo a completed save.
 
 @emph{Save and apply} selects the palette for this session. @kbd{U}@comma{} @emph{Use at Startup}
 in Voice Palettes@comma{} retains its startup selection separately. Saving can involve
@@ -4183,7 +4170,7 @@ views and return to the originating menu item. Filters@comma{} selection@comma{}
 work survive; unsaved engine-policy changes are still announced. A directly
 opened browser retains its ordinary return destination.
 
-Workbench also remains available through Home's @kbd{W}. Its views are:
+The main Workbench views are:
 
 @table @kbd
 @item e
@@ -4203,8 +4190,8 @@ opens an experiment. @kbd{q} returns through the engine's details and list as
 appropriate before leaving Workbench.
 
 Filters set with @kbd{F} and each view's row/column survive navigation through
-Home. The browsed engine is a temporary limit@comma{} removed when switching to
-logical@comma{} style@comma{} or engine views@comma{} or pressing @kbd{v} from a voice list. Explicit
+settings menus. The browsed engine is a temporary limit@comma{} removed when switching
+to logical@comma{} style@comma{} or engine views@comma{} or pressing @kbd{v} from a voice list. Explicit
 filters remain; @kbd{C} clears them to show voices across engines. Direct view
 shortcuts remain available.
 
@@ -4441,7 +4428,7 @@ cues without rewriting rules. For one event@comma{} use its feedback rule instea
 
 @kbd{C-e H o p} opens @emph{Sound Packs}. Its @kbd{q} returns to @emph{Sounds and output} with
 the same settings scope@comma{} and another @kbd{q} returns to the main menu. Directly
-opened browsers keep their usual returns; Home also retains @emph{Sound packs}.
+opened browsers keep their usual returns.
 
 @table @kbd
 @item P
@@ -4589,9 +4576,7 @@ a placement request cannot demonstrate separation.
 
 For comparison@comma{} select mono and repeat the action; content remains audible.
 Restore the original values afterward. Save deliberately with @kbd{S} or capture
-spatial choices in a Presentation Profile. Home's @emph{Spatial settings} remains
-an alternative Customize page using its own Apply/Save actions. A voice's Pan
-effect and notification-device routing are separate from presentation placement.
+spatial choices in a Presentation Profile. A voice's Pan effect and notification-device routing are separate from presentation placement.
 
 @node Personal Sound Packs
 @subsection Inspect And Maintain A Personal Sound Pack
@@ -4627,8 +4612,7 @@ saves nothing.
 
 Select @emph{Rate} and adjust with Shift-left/right by the configured step@comma{} or use
 @kbd{@key{RET}~/~r} for an exact value. Speech must be running; Omnivox uses 0–100.
-Global rate changes also affect the current buffer. Home's rate action remains
-an alternative@comma{} with a prefix for global scope. A named voice's relative rate
+Global rate changes also affect the current buffer. A named voice's relative rate
 modifies this base as described in @ref{Voice Adjustments,Voice Adjustments,,emacsvox,}.
 
 @kbd{p} opens punctuation: @kbd{n} none@comma{} @kbd{s} some@comma{} @kbd{a} all@comma{} and @kbd{p} a choice of built-in
@@ -4721,10 +4705,10 @@ It is not a mute option. Other backends use their configured device or fall
 back to main speech. In Lisp@comma{} @code{default} or an empty string means main output;
 use descriptive labels for ordinary configuration.
 
-Home's @emph{Audio output} remains a Customize alternative. After changing its route@comma{}
-@kbd{C-e d C-n} initialises the arrangement; Customize Save retains it for restart.
-Home also offers notification history. Ordinary obsolete-main-speech cancellation
-is local to main; explicit @code{tts-stop} stops both streams.
+After changing the route@comma{} @kbd{C-e d C-n} also initialises the arrangement.
+Use notification history to read an announcement you missed. Ordinary
+obsolete-main-speech cancellation is local to main; explicit @code{tts-stop} stops
+both streams.
 
 @subsection Adjust output volumes
 
@@ -4736,7 +4720,7 @@ notification speech@comma{} tones@comma{} and earcons. Each is an integer percen
 Shift-left/right adjusts the selected volume by five; @kbd{@key{RET}} enters exactly.
 Changes apply to subsequent audio without restarting; already prepared audio
 keeps its old level. @kbd{S} saves these five volumes@comma{} not routing or spatial
-settings. Home's Audio output Customize page offers the same controls.
+settings.
 Replacement and reconnected Omnivox processes receive current levels.
 
 Independent notification levels need the separate process selected by Automatic@comma{}
@@ -5004,7 +4988,7 @@ Choose the first diagnostic according to the symptom:
 @tab Compare Voice Lock and explicit face presentation.
 @end multitable
 
-@kbd{C-e H D d} opens Aural Doctor; Home retains its entry. Doctor checks live
+@kbd{C-e H D d} opens Aural Doctor. Doctor checks live
 bindings@comma{} loaded source/byte-code@comma{} compatibility baseline@comma{} options@comma{} profiles@comma{}
 personal data@comma{} resources@comma{} spatial fallback@comma{} and backend. It neither starts
 speech nor changes settings automatically. A row offering a reviewed safe
@@ -5077,8 +5061,7 @@ When several drafts exist@comma{} choose one by name; cancelling keeps the menu 
 Opening the draft preserves its source and working settings and saves nothing.
 Finishing returns to the same menu item. Each editor retains its own save and
 leave choices: the voice editor offers Keep@comma{} Discard@comma{} or Continue editing;
-a rule editor can ask before discarding an unsaved draft. Home's @emph{Resume
-unfinished changes} remains available during the comparison period.
+a rule editor can ask before discarding an unsaved draft.
 
 In the common editor@comma{} @kbd{u} undoes and @kbd{q} offers keep@comma{} discard@comma{} or continue.
 Guided feedback @kbd{q} first goes up through components@comma{} then hides/retains the
@@ -5138,8 +5121,7 @@ The global command updates existing and new buffers; a mode can still opt out
 on startup. Buffer-local Voice Lock is not captured in Presentation Profiles.
 
 For new changes@comma{} prefer explanation@comma{} settings menus@comma{} palettes@comma{} and Workbench.
-Home remains a compatibility entry to the same editors. Legacy named voices
-can still use @code{-settings} options such as @code{voice-monotone-settings}. Customise
+Legacy named voices can still use @code{-settings} options such as @code{voice-monotone-settings}. Customise
 the option@comma{} not a generated @code{acss-...} symbol. Historical background is in
 @ref{Audio Formatting And Aural CSS,Audio Formatting And Aural CSS,,emacsvox-heritage,} in @emph{Emacspeak Heritage}.
 
@@ -5226,11 +5208,10 @@ A linked editor keeps its own preview@comma{} saving@comma{} and discard rules. 
 @ref{Saving And Startup,Choose What Persists,,emacsvox,} before treating a saved default@comma{} a live adjustment@comma{}
 or a retained draft as the same thing.
 
-The action search at @kbd{C-e H a} selects an action in its focused menu; press
-@kbd{@key{RET}} again to activate it. Use it when you need an action rather than a
-setting. Aural Home remains
-available at @kbd{C-e H h} or @kbd{M-x emacsvox-aural}; its tables and editors use
-their own Help and return keys.
+Use @kbd{C-e H a} to find an action such as browsing voices or inspecting
+diagnostics. It uses the same partial-name matching and two-Enter selection
+as settings search. Editors opened from these menus retain their own Help@comma{}
+preview@comma{} save@comma{} and return commands.
 
 @section Read And Leave A Help Window
 
@@ -5615,7 +5596,7 @@ section edges can be selected. Announcement order can be item first@comma{} sect
 first@comma{} or dependent on the movement. Detailed command descriptions are enabled
 by default; value adjustments still give brief feedback. Configure these
 choices through @kbd{C-e H s n}@comma{} as described in
-@ref{Aural Home,Getting started with menus and Aural Home,,emacsvox,}.
+@ref{Aural Home,Getting started with settings menus,,emacsvox,}.
 
 An item announcement identifies its key@comma{} relevant value@comma{} and description;
 capital keys are named explicitly. Section announcements include the heading
@@ -9466,7 +9447,7 @@ Default spatialization is @code{neutral}@comma{} @code{stereo}@comma{} or @code{
 last for recordings that already encode their intended spatial placement@comma{}
 so runtime balance does not position them a second time.
 
-Open Aural Home's @emph{Sound packs} and press @kbd{g} to rescan.
+Open @emph{Sound packs} with @kbd{C-e H o p} and press @kbd{g} to rescan.
 Inspect the new pack with @kbd{@key{RET}}: the replacement should be
 native@comma{} while unchanged cues identify their parent or fallback provider.
 Audition individual cues with @kbd{P} and validate with

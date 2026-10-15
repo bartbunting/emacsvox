@@ -36,7 +36,6 @@
 (declare-function emacsvox-aural-feedback-outline-mode
                   "emacsvox-aural-feedback-details" (&optional arg))
 
-(autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
 (autoload 'emacsvox-settings-changes "emacsvox-settings-changes" nil t)
 (autoload 'emacsvox-settings-integrations "emacsvox-settings-integrations" nil t)
@@ -137,11 +136,6 @@
     (transient-setup 'emacsvox-aural-menu nil nil :scope context)
     (transient--show)
     t))
-
-(defun emacsvox-aural-menu--home ()
-  "Open Aural Home for all voice, sound, rule, and feedback tools."
-  (interactive)
-  (emacsvox-aural-menu--call-at-item #'emacsvox-aural))
 
 (defun emacsvox-aural-menu--scope-label ()
   "Describe the selected settings scope."
@@ -848,7 +842,6 @@ The source item is captured on entry for contextual editing and return."
    ("f" "Edit current or recent feedback" emacsvox-settings-feedback :transient transient--do-stack)
    ("x" "Feedback for this item" emacsvox-aural-menu--feedback)
    ("D" "Diagnostics and recovery" emacsvox-settings-diagnostics :transient transient--do-stack)
-   ("h" "Aural Home (all actions)" emacsvox-aural-menu--home)
    ("/" "Find an Emacsvox setting" emacsvox-settings-search :transient transient--do-stack)
    ("a" "Find an action" emacsvox-settings-search-actions :transient transient--do-stack)
    ("." "Settings for this buffer" emacsvox-settings-buffer :transient transient--do-stack)]

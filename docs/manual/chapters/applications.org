@@ -337,7 +337,7 @@ section edges can be selected. Announcement order can be item first, section
 first, or dependent on the movement. Detailed command descriptions are enabled
 by default; value adjustments still give brief feedback. Configure these
 choices through ~C-e H s n~, as described in
-[[info:emacsvox#Aural Home][Getting started with menus and Aural Home]].
+[[info:emacsvox#Aural Home][Getting started with settings menus]].
 
 An item announcement identifies its key, relevant value, and description;
 capital keys are named explicitly. Section announcements include the heading
