@@ -1197,8 +1197,12 @@ verification of subsequently changed code.
   generation under Emacs 31 emits unexpanded Transient forms, and
   =emacsvox-setup-tracks-maintained-runtime-inventory= finds the voice-menu
   source missing from the startup inventory. Neither is introduced by the
-  dependency guard. The Emacs 30 compatibility run passes 300 of 302 cases,
-  with that inventory failure and one native-DOM comparison skipped.
+  dependency guard. The initial Emacs 30 compatibility run passed 300 of 302
+  cases, with that inventory failure and one native-DOM comparison skipped.
+  Startup inventory follow-up: all nine omitted menu modules now participate
+  in stale-bytecode detection. All 26 startup checks pass from source, and all
+  five setup checks pass with the compiled setup loaded in a fresh Emacs.
+  Incremental compilation and byte-code preflight pass; listening is unchanged.
 - 2026-10-15: Listening tasks 1 through 9 are accepted; see the current baseline
   and completed milestone checkboxes. Integration discovery remains open after
   Customize did not open from scratch, Magit and shell. Source inspection shows
