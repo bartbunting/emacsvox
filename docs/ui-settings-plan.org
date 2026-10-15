@@ -1050,7 +1050,7 @@ contextual integration selector.
 | Markdown and Info | =emacsvox-markdown-auto-reading-mode=; =emacsvox-info-select-node-speak-chunk= | Add reading-integration links; do not assume their upstream mode groups contain these options. |
 | Gnus and ERC | =emacsvox-gnus-punctuation-mode=; =emacsvox-gnus-large-article=; =emacsvox-erc-ignore-notices=; =emacsvox-erc-toggle-room-monitor= | Add integration discovery, including ERC participant and personal-monitor controls. |
 | Spelling and review | =emacsvox-ispell-max-choices=; =emacsvox-flyspell-correct=; =emacsvox-org-srs-use-command-confirmation=; =emacsvox-org-srs-announce-pending-count= | Link actual speech options when the corresponding package is available. |
-| Spelling presentation | =emacsvox-flyspell-use-voice=; =emacsvox-flyspell-use-tone=; =emacsvox-flyspell-use-earcon=; =emacsvox-flyspell-tone-pitch=; =emacsvox-flyspell-tone-duration=; =emacsvox-flyspell-tone-volume= | Implemented at =C-e H s f=: independent global feedback toggles, pitch/duration/individual-volume adjustments, tone and reading previews, explicit Save. Shared main-tone volume is labelled separately. Listening pending. |
+| Spelling presentation | =emacsvox-flyspell-use-voice=; =emacsvox-flyspell-use-tone=; =emacsvox-flyspell-use-earcon=; =emacsvox-flyspell-tone-pitch=; =emacsvox-flyspell-tone-duration=; =emacsvox-flyspell-tone-volume=; =emacsvox-flyspell-tone-timing= | Implemented at =C-e H s f=: independent global feedback toggles, pitch/duration/individual-volume adjustments, before/alongside timing, tone and reading previews, explicit Save. Shared main-tone volume is labelled separately. Listening pending. |
 | Terminal review | =emacsvox-toggle-eterm-autospeak=; =emacsvox-eterm-toggle-focus-window=; =emacsvox-eterm-toggle-filter-window=; =emacsvox-eterm-toggle-pointer-mode= | Inventory as contextual terminal controls; preserve their existing interaction model. |
 | Popup help | =emacsvox-which-key-toggle-auto-speak=; =emacsvox-hydra-toggle-talkative= | Missing session controls. Hydra changes the upstream =hydra-is-helpful= variable; it is not an Emacsvox Custom default. |
 | OCR | =emacsvox-ocr-customize=; =emacsvox-ocr-engine= | Link the existing configuration workflow, including scanning and PaddleOCR options; do not make a root entry for every engine parameter. |
@@ -1622,9 +1622,48 @@ verification of subsequently changed code.
   at 100, 50 and 0 percent; check a flagged word during reading and editing;
   confirm other main tones retain their level; check interruption, Help,
   return focus and saved volume after restart. Restore the original settings.
-  No live session has been changed. Next are waveform/envelope fields and
-  named spelling presets, then capitalization and indentation controls and
-  platform/listening qualification.
+  No live session has been changed. Next is the reusable tone editor described
+  below, followed by capitalization and indentation controls and platform
+  qualification.
+
+- 2026-10-16: Spelling volume adjustments passed listening. Reading several
+  flagged words sounds stop-start with inserted tones; the test session uses
+  85 ms tones, voice and earcon feedback off, and runtime =a4b085773844514f=.
+  A global Timing choice at =C-e H s f m= now offers Before speech and Alongside
+  speech, with explanations, browse-without-apply, Enter to select, and Cancel.
+  Before speech remains the default. Save includes timing through Customize;
+  settings search includes the control. The new overlay rule keeps the same
+  spelling action identity for existing action-specific overrides.
+  Automated verification passes seven focused source checks, 692 shared
+  regressions, and two fresh graphical checks covering timing, Help, cancellation,
+  return focus and spelling search routes. A fresh compiled Emacs restores the
+  saved timing. Muted native Windows checks complete both timing modes in
+  standalone and timeline delivery on both workers, after reconnect and in
+  replay. The selected runtime is reused without rebuilding Omnivox.
+  The default-rule inventory test now includes all three spelling rules,
+  resolving its outdated-count failure recorded above. The separate test-order
+  cue-resolution finding remains open. Listening for timing is pending:
+  select Alongside speech, read the same sentence, compare Before speech,
+  check Help, cancellation and return focus, then save and restart if desired.
+
+- Next tone-editing slice: provide a reusable editor, starting from Spelling,
+  rather than adding a separate flat menu for every new tone parameter.
+  Keep the current pitch, duration, individual volume and timing controls;
+  add waveform (sine, triangle, square), Classic or ADSR envelope, and attack,
+  decay, sustain level and release. Explain each parameter and its units.
+  Preserve fixed total duration and explain proportional shortening when the
+  requested envelope stages exceed it. Keep Classic defaults unchanged.
+  First carry waveform and envelope through validated, frozen client actions,
+  saving, replay and explicit old-worker handling. Then build the editor on
+  that path, with arrows to navigate, Shift arrows to adjust, exact entry,
+  explanations for every choice, tone-only and contextual previews, Stop,
+  reset, and explicit Save. Keep shared main-tone volume in Output settings;
+  individual editors should identify their own cue and scope clearly.
+  Define draft, cancel and save behaviour before implementation so previews
+  cannot silently replace saved settings. Add named presets after the
+  parameter editor works, then reuse it for capitalization, indentation and
+  personal tone rules. Listening must assess envelope clarity, short tones,
+  interruption, speech masking and relative waveform loudness.
 
 - 2026-10-15: The Transient dependency follow-up resolves the recorded build
   and packaging gaps. Commit =62c99ca83= adds all nine omitted menu modules to

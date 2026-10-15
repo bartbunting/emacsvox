@@ -83,6 +83,7 @@
           (emacsvox-flyspell-tone-pitch 880)
           (emacsvox-flyspell-tone-duration 40)
           (emacsvox-flyspell-tone-volume 100)
+          (emacsvox-flyspell-tone-timing 'overlay)
           (tts-main-tone-volume 70)
           heard saved)
       (cl-letf (((symbol-function 'emacsvox-spelling--say) #'ignore)
@@ -103,7 +104,8 @@
         (should (= (cdr (assq 'emacsvox-flyspell-tone-pitch saved)) 905))
         (should (= (cdr (assq 'emacsvox-flyspell-tone-volume saved)) 95))
         (should (= (cdr (assq 'tts-main-tone-volume saved)) 70))
-        (should (= (length saved) 7))))))
+        (should (eq (cdr (assq 'emacsvox-flyspell-tone-timing saved)) 'overlay))
+        (should (= (length saved) 8))))))
 
 (ert-deftest emacsvox-spelling-volume-input-bounds-and-feedback ()
   (emacsvox-test--with-aural-menu
@@ -139,36 +141,41 @@
           (emacsvox-spelling--preview)
           (should sent))))))
 
-(ert-deftest emacsvox-spelling-volume-is-identical-in-reading-editing-and-preview ()
+(ert-deftest emacsvox-spelling-volume-and-timing-match-reading-editing-and-preview ()
   (omnivox-native-runtime-test--with-speech
-    (omnivox-rich-tone-test--enable speaker)
-    (process-put speaker omnivox--choice-registration-property nil)
-    (omnivox-native-runtime-test--register)
-    (with-temp-buffer
-      (insert "misspelt word")
-      (let ((transient--prefix (transient-prefix :command 'emacsvox-spelling
-                                                :scope (emacsvox-aural-menu--capture nil)))
-            (emacsvox-use-icons t)
-            (emacsvox-flyspell-tone-pitch 880)
-            (emacsvox-flyspell-tone-duration 40)
-            (emacsvox-flyspell-tone-volume 35)
-            (emacsvox-flyspell-use-tone t)
-            (emacsvox-flyspell-use-earcon nil)
-            (emacsvox-flyspell--read-errors nil))
-        (setq writes nil)
-        (emacsvox-spelling--preview)
-        (let* ((document (omnivox-choice-consumer-test--timeline (car writes)))
-               (tone (seq-find (lambda (action) (equal (plist-get action :type) "tone"))
-                               (plist-get document :actions))))
-          (should (= (plist-get document :protocol_version) 6))
-          (should (= (plist-get tone :volume) 0.35)))
-        (dolist (action (list #'emacsvox-spelling--preview-tone
-                              (lambda () (emacsvox-flyspell--incorrect 1 5 '("word")))))
-          (setq writes nil)
-          (funcall action)
-          (should (seq-some (lambda (write)
-                              (string-match-p "emacsvox_tone 2 insert 880 40 0.35 sine classic" (cdr write)))
-                            writes)))))))
+   (omnivox-rich-tone-test--enable speaker)
+   (process-put speaker omnivox--choice-registration-property nil)
+   (omnivox-native-runtime-test--register)
+   (dolist (emacsvox-flyspell-tone-timing '(insert overlay))
+     (with-temp-buffer
+       (insert "misspelt word")
+       (let ((transient--prefix (transient-prefix :command 'emacsvox-spelling
+                                                  :scope (emacsvox-aural-menu--capture nil)))
+             (emacsvox-use-icons t)
+             (emacsvox-flyspell-tone-pitch 880)
+             (emacsvox-flyspell-tone-duration 40)
+             (emacsvox-flyspell-tone-volume 35)
+             (emacsvox-flyspell-use-tone t)
+             (emacsvox-flyspell-use-earcon nil)
+             (emacsvox-flyspell--read-errors nil))
+         (setq writes nil)
+         (emacsvox-spelling--preview)
+         (let* ((document (omnivox-choice-consumer-test--timeline (car writes)))
+                (tone (seq-find (lambda (action) (equal (plist-get action :type) "tone"))
+                                (plist-get document :actions))))
+           (should (= (plist-get document :protocol_version) 6))
+           (should (= (plist-get tone :volume) 0.35))
+           (should (equal (plist-get tone :mode) (symbol-name emacsvox-flyspell-tone-timing))))
+         (dolist (action (list #'emacsvox-spelling--preview-tone
+                               (lambda () (emacsvox-flyspell--incorrect 1 5 '("word")))))
+           (setq writes nil)
+           (funcall action)
+           (should (seq-some (lambda (write)
+                               (string-match-p
+                                (format "emacsvox_tone 2 %s 880 40 0.35 sine classic"
+                                        emacsvox-flyspell-tone-timing)
+                                (cdr write)))
+                             writes))))))))
 
 (ert-deftest emacsvox-spelling-menu-graphical-navigation ()
   "Enter from Speech settings, adjust focused pitch, and return to its item."
@@ -180,6 +187,7 @@
       (let ((transient--prefix nil) (transient-show-menu t)
             (emacsvox-flyspell-use-tone nil)
             (emacsvox-flyspell-tone-pitch 880)
+            (emacsvox-flyspell-tone-timing 'insert)
             (emacsvox-flyspell-tone-volume 100))
         (unwind-protect
             (progn
@@ -202,6 +210,29 @@
                 (execute-kbd-macro (kbd "RET")))
               (should (= emacsvox-flyspell-tone-volume 35))
               (should (string-match-p "shared" (documentation 'emacsvox-spelling--volume)))
+              (execute-kbd-macro (kbd "m <down>"))
+              (should (eq (oref transient--prefix command) 'emacsvox-spelling-timing))
+              (should (eq emacsvox-flyspell-tone-timing 'insert))
+              (execute-kbd-macro (kbd "q"))
+              (with-selected-window transient--window
+                (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                            'emacsvox-spelling-timing)))
+              (execute-kbd-macro (kbd "m <down> RET"))
+              (should (eq emacsvox-flyspell-tone-timing 'overlay))
+              (should (eq (oref transient--prefix command) 'emacsvox-spelling))
+              (with-selected-window transient--window
+                (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                            'emacsvox-spelling-timing)))
+              (execute-kbd-macro (kbd "m"))
+              (with-selected-window transient--window
+                (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                            'emacsvox-spelling--alongside)))
+              (execute-kbd-macro (kbd "? a"))
+              (with-current-buffer "*Help*"
+                (should (string-match-p "without inserting tone pauses" (buffer-string))))
+              (execute-kbd-macro (kbd "q"))
+              (should (eq (oref transient--prefix command) 'emacsvox-spelling-timing))
+              (execute-kbd-macro (kbd "q"))
               (execute-kbd-macro (kbd "q"))
               (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-speech)))
           (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))

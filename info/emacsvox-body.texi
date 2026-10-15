@@ -5380,6 +5380,14 @@ the flagged word. Voice feedback uses the existing spelling face mappings.
 Tone and earcon feedback also report errors detected while editing. Opening
 a mail reply checks and highlights inserted text without a burst of cues.
 
+Use @kbd{m} to choose tone timing. @emph{Before speech}@comma{} the default@comma{} finishes each
+tone before its flagged word and adds a pause for the tone. @emph{Alongside speech}
+plays the tone while the word is spoken without inserting that pause. Arrows
+browse without changing the setting; @kbd{@key{RET}} applies and returns to Timing.
+@kbd{q} cancels the choice. Timing applies globally and leaves voice and earcon
+feedback unchanged. Compare it with @kbd{@key{SPC}} or by reading flagged text: a
+tone-only preview or editing cue has no accompanying speech to overlap.
+
 Select @kbd{p} for pitch@comma{} @kbd{d} for duration@comma{} or @kbd{l} for spelling tone volume.
 @kbd{@key{RET}} enters an exact value; Shift-left/right adjusts by 25 Hz@comma{} 5 milliseconds@comma{}
 or 5 percentage points. Spelling tone volume ranges from 0 to 100 percent:

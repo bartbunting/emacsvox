@@ -651,6 +651,11 @@ Registry validation rejects missing targets and alias cycles."
       (emacsvox-aural-register-semantic
        (car entry) :kind 'attribute :summary (nth 2 entry)
        :value-type (nth 1 entry) :phases '(before))))
+  (unless (emacsvox-aural-semantic 'spelling-tone-timing)
+    (emacsvox-aural-register-semantic
+     'spelling-tone-timing :kind 'attribute
+     :summary "Whether spelling tones play before or alongside speech"
+     :value-type 'symbol :allowed-values '(insert overlay) :phases '(before)))
   (unless (emacsvox-aural-semantic 'capitalization-kind)
     (emacsvox-aural-register-semantic
      'capitalization-kind

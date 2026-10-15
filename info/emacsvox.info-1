@@ -5726,6 +5726,16 @@ punctuation default.
      errors detected while editing.  Opening a mail reply checks and
      highlights inserted text without a burst of cues.
 
+     Use ‘m’ to choose tone timing.  _Before speech_, the default,
+     finishes each tone before its flagged word and adds a pause for the
+     tone.  _Alongside speech_ plays the tone while the word is spoken
+     without inserting that pause.  Arrows browse without changing the
+     setting; ‘<RET>’ applies and returns to Timing.  ‘q’ cancels the
+     choice.  Timing applies globally and leaves voice and earcon
+     feedback unchanged.  Compare it with ‘<SPC>’ or by reading flagged
+     text: a tone-only preview or editing cue has no accompanying speech
+     to overlap.
+
      Select ‘p’ for pitch, ‘d’ for duration, or ‘l’ for spelling tone
      volume.  ‘<RET>’ enters an exact value; Shift-left/right adjusts by
      25 Hz, 5 milliseconds, or 5 percentage points.  Spelling tone

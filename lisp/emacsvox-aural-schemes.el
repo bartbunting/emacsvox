@@ -2009,7 +2009,7 @@ An existing file is copied to FILE~ before replacement."
              :audio-mode insert
              :anchor transition)))))
         (:id core-spelling-tone
-         :match (:event spelling-error-located :spelling-tone t
+         :match (:event spelling-error-located :spelling-tone t :spelling-tone-timing insert
                  :requires (spelling-tone-pitch spelling-tone-duration spelling-tone-volume))
          :render
          (:before ((:id core-spelling-tone-action :kind tone
@@ -2017,6 +2017,15 @@ An existing file is copied to FILE~ before replacement."
                     :duration (:fact spelling-tone-duration)
                     :volume (:fact spelling-tone-volume)
                     :audio-mode insert :anchor run))))
+        (:id core-spelling-tone-overlay
+         :match (:event spelling-error-located :spelling-tone t :spelling-tone-timing overlay
+                 :requires (spelling-tone-pitch spelling-tone-duration spelling-tone-volume))
+         :render
+         (:before ((:id core-spelling-tone-action :kind tone
+                    :pitch (:fact spelling-tone-pitch)
+                    :duration (:fact spelling-tone-duration)
+                    :volume (:fact spelling-tone-volume)
+                    :audio-mode overlay :anchor run))))
         (:id core-spelling-earcon
          :match (:event spelling-error-located :spelling-earcon t)
          :render

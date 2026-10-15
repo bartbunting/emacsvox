@@ -49,6 +49,9 @@
     core-indentation-pitch-tone-insert
     core-indentation-spoken-duration-tone-insert
     core-indentation-spoken-pitch-tone-insert
+    core-spelling-tone
+    core-spelling-tone-overlay
+    core-spelling-earcon
     core-capital-spoken
     core-all-caps-spoken
     core-capital-tone

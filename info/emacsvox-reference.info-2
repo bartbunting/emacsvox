@@ -2601,6 +2601,18 @@ completion or an explicit IDO, Popup, or Helm interface.
      880
 
 
+ -- Variable: User Option emacsvox-flyspell-tone-timing
+     When to play spelling tones during reading.
+     ‘insert’ finishes each tone before its flagged word, adding a pause.
+     ‘overlay’ plays alongside the word without inserting a pause for the tone.
+     This global setting does not change voice or earcon feedback.  Editing
+     feedback and tone-only previews have no accompanying speech to overlap.
+
+     Default Value:
+
+     insert
+
+
  -- Variable: User Option emacsvox-flyspell-tone-volume
      Spelling tone volume as a percentage from 0 to 100.
      Zero silences the tone; 100 preserves its original level.  The shared
@@ -8692,6 +8704,15 @@ defaults is explicit.
      tone and earcon also report errors detected while editing. Settings apply
      immediately; S saves across restarts. Spelling tone volume affects only
      this tone; Shared tone volume scales all main-stream tones.
+
+2.240.1.2 emacsvox-spelling-timing
+..................................
+
+ -- Command: emacsvox-spelling-timing
+
+     Choose global spelling tone timing; browsing does not change the setting.
+     Enter applies and returns. Cancel keeps the original choice.
+     Read the spelling sample to compare timing; a tone alone cannot demonstrate it.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-sql,  Next: emacsvox-sudoku,  Prev: emacsvox-spelling,  Up: Emacsvox Commands And Options

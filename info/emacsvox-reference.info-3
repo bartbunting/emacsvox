@@ -9031,6 +9031,8 @@ Function Index
 * emacsvox-speedbar-goto-speedbar <1>:   emacsvox-speedbar.  (line   27)
 * emacsvox-spelling:                     emacsvox-spelling.  (line   16)
 * emacsvox-spelling <1>:                 emacsvox-spelling.  (line   17)
+* emacsvox-spelling-timing:              emacsvox-spelling.  (line   28)
+* emacsvox-spelling-timing <1>:          emacsvox-spelling.  (line   29)
 * emacsvox-startup-status:               emacsvox.           (line   20)
 * emacsvox-startup-status <1>:           emacsvox.           (line   21)
 * emacsvox-submit-bug:                   emacsvox-speak.     (line 1006)

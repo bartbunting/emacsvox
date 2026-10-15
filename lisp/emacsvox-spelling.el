@@ -34,7 +34,8 @@
 (defconst emacsvox-spelling--options
   '(emacsvox-flyspell-use-voice emacsvox-flyspell-use-tone
     emacsvox-flyspell-use-earcon emacsvox-flyspell-tone-pitch
-    emacsvox-flyspell-tone-duration emacsvox-flyspell-tone-volume)
+    emacsvox-flyspell-tone-duration emacsvox-flyspell-tone-volume
+    emacsvox-flyspell-tone-timing)
   "Global spelling feedback options saved by this menu.")
 
 (defun emacsvox-spelling--say (text)
@@ -99,6 +100,56 @@ tones below 100; Preview explains missing support without changing settings."
   (interactive)
   (emacsvox-spelling--number 'emacsvox-flyspell-tone-volume
                              "Spelling tone volume" "percent" 0 100 5 direction t))
+
+(defun emacsvox-spelling--timing-name ()
+  "Describe the selected global spelling tone timing."
+  (if (eq emacsvox-flyspell-tone-timing 'overlay) "Alongside speech" "Before speech"))
+
+(defun emacsvox-spelling--timing-choice (value label)
+  "Describe timing VALUE with LABEL and its selection state."
+  (concat label (when (eq value emacsvox-flyspell-tone-timing) ", selected")))
+
+(defun emacsvox-spelling--apply-timing (value)
+  "Apply global timing VALUE and return to the spelling timing control."
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (set-default 'emacsvox-flyspell-tone-timing value)
+  (transient--stack-pop)
+  (transient--show)
+  (emacsvox-spelling--say (emacsvox-spelling--timing-name)))
+
+(defun emacsvox-spelling--before ()
+  "Finish each spelling tone before reading its flagged word, adding a pause.
+This applies globally for the session. Save in the spelling menu to keep it."
+  (interactive) (emacsvox-spelling--apply-timing 'insert))
+
+(defun emacsvox-spelling--alongside ()
+  "Play spelling tones alongside flagged words without inserting tone pauses.
+This applies globally for the session and leaves voice and earcons unchanged.
+Tone-only previews and editing cues have no accompanying speech to overlap.
+Save in the spelling menu to keep this choice across restarts."
+  (interactive) (emacsvox-spelling--apply-timing 'overlay))
+
+(transient-define-prefix emacsvox-spelling-timing ()
+  "Choose global spelling tone timing; browsing does not change the setting.
+Enter applies and returns. Cancel keeps the original choice.
+Read the spelling sample to compare timing; a tone alone cannot demonstrate it."
+  ["Spelling tone timing (global)"
+   ("b" (lambda () (emacsvox-spelling--timing-choice 'insert "Before speech"))
+    emacsvox-spelling--before :transient transient--do-replace)
+   ("a" (lambda () (emacsvox-spelling--timing-choice 'overlay "Alongside speech"))
+    emacsvox-spelling--alongside :transient transient--do-replace)]
+  ["Finish"
+   ("q" "Cancel" transient-quit-one)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-spelling-timing nil nil :scope (emacsvox-aural-menu--context))
+  (transient--show)
+  (with-selected-window transient--window
+    (transient--goto-button
+     (transient-suffix-object
+      (if (eq emacsvox-flyspell-tone-timing 'overlay)
+          'emacsvox-spelling--alongside 'emacsvox-spelling--before))))
+  (emacsvox-transient--speak-button))
 
 (defun emacsvox-spelling--check-preview ()
   "Require exact tone-volume support before submitting a spelling preview."
@@ -183,6 +234,8 @@ this tone; Shared tone volume scales all main-stream tones."
    ("t" (lambda () (emacsvox-spelling--label 'emacsvox-flyspell-use-tone "Tone")) emacsvox-spelling--tone :transient t)
    ("e" (lambda () (emacsvox-spelling--label 'emacsvox-flyspell-use-earcon "Earcon")) emacsvox-spelling--earcon :transient t)]
   ["Tone adjustment (Shift arrows adjust selected control)"
+   ("m" (lambda () (concat "Timing: " (emacsvox-spelling--timing-name)))
+    emacsvox-spelling-timing :transient transient--do-stack)
    ("p" (lambda () (format "Pitch: %s Hz" emacsvox-flyspell-tone-pitch)) emacsvox-spelling--pitch :transient t)
    ("d" (lambda () (format "Duration: %s milliseconds" emacsvox-flyspell-tone-duration)) emacsvox-spelling--duration :transient t)
    ("l" (lambda () (format "Spelling tone volume: %s percent" emacsvox-flyspell-tone-volume)) emacsvox-spelling--volume :transient t)

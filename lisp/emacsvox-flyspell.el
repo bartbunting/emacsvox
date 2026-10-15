@@ -86,6 +86,16 @@ This changes reading feedback, not Flyspell highlighting or checking."
   "Duration of the spelling tone in milliseconds."
   :type '(number :tag "Milliseconds") :group 'emacsvox-flyspell)
 
+(defcustom emacsvox-flyspell-tone-timing 'insert
+  "When to play spelling tones during reading.
+`insert' finishes each tone before its flagged word, adding a pause.
+`overlay' plays alongside the word without inserting a pause for the tone.
+This global setting does not change voice or earcon feedback.  Editing
+feedback and tone-only previews have no accompanying speech to overlap."
+  :type '(choice (const :tag "Before speech" insert)
+                 (const :tag "Alongside speech" overlay))
+  :group 'emacsvox-flyspell)
+
 (defcustom emacsvox-flyspell-tone-volume 100
   "Spelling tone volume as a percentage from 0 to 100.
 Zero silences the tone; 100 preserves its original level.  The shared
@@ -114,6 +124,7 @@ retaining speech and earcons.  Preview reports missing support."
         :spelling-earcon emacsvox-flyspell-use-earcon
         :spelling-tone-pitch emacsvox-flyspell-tone-pitch
         :spelling-tone-duration emacsvox-flyspell-tone-duration
+        :spelling-tone-timing emacsvox-flyspell-tone-timing
         :spelling-tone-volume (/ emacsvox-flyspell-tone-volume 100.0)))
 
 (defun emacsvox-flyspell--capture (original start end &optional buffer)

@@ -68,7 +68,8 @@
                        '(emacsvox-aural-menu emacsvox-aural-menu-speech
                          emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation
                          emacsvox-aural-menu-voices emacsvox-capitalization
-                         emacsvox-interaction emacsvox-spelling emacsvox-aural-menu-line-cues
+                         emacsvox-interaction emacsvox-spelling emacsvox-spelling-timing
+                         emacsvox-aural-menu-line-cues
                          emacsvox-output-settings emacsvox-settings-buffer
                          emacsvox-settings-dictionaries emacsvox-settings-history emacsvox-settings-switches
                          emacsvox-settings-voice-presentation emacsvox-settings-preview-labels

@@ -58,13 +58,13 @@
     (process-put process tts--marker-playback-events-property t)
     process))
 
-(defun omnivox-choice-acceptance--tone (timeline)
-  "Verify a quiet tone completes, with speech when TIMELINE is non-nil."
+(defun omnivox-choice-acceptance--tone (timeline &optional mode)
+  "Verify a quiet tone in MODE completes, with speech when TIMELINE is non-nil."
   (unless (= (omnivox--choice-registration-version
               (omnivox--choice-current-registration tts-speaker-process)) 6)
     (error "Richer-tone registration did not select timeline 6"))
   (let* ((action (emacsvox-aural--make-concrete-action
-                  :kind 'tone :pitch 880 :duration 40 :audio-mode 'insert
+                  :kind 'tone :pitch 880 :duration 40 :audio-mode (or mode 'insert)
                   :requested-volume 0.35 :volume-capability 'supported))
          (run (when timeline (omnivox-choice-timeline-test--run '(:preset bolden) nil)))
          result
@@ -81,8 +81,9 @@
            (tts--protocol-dispatch-tracked tts--tracked-completion-function)))))
     (omnivox-choice-acceptance--wait (lambda () result))
     (unless (eq result 'completed) (error "Tone dispatch ended %S" result))
-    (princ (format "worker=%s tone=%s gain=0.35 completed\n"
-                   (process-name tts-speaker-process) (if timeline "timeline6" "standalone2")))))
+    (princ (format "worker=%s tone=%s mode=%s gain=0.35 completed\n"
+                   (process-name tts-speaker-process) (if timeline "timeline6" "standalone2")
+                   (or mode 'insert)))))
 (let* ((tts-program "omnivox")
        (tts-speaker-process (omnivox-choice-acceptance--process "choice-live-main" 2001))
        (tts-notify-process (omnivox-choice-acceptance--process "choice-live-notify" 2002))
@@ -140,8 +141,9 @@
                                round (plist-get route :lane) identifier (plist-get route :choice-id) (plist-get route :registry-generation))))
               (unless (= 0 (process-get lane 'tts--dispatch-metadata-bytes)) (error "Retained metadata leaked"))
               (when (getenv "EMACSVOX_RICH_TONE_TEST")
-                (omnivox-choice-acceptance--tone nil)
-                (omnivox-choice-acceptance--tone t))))
+                (dolist (mode '(insert overlay))
+                  (omnivox-choice-acceptance--tone nil mode)
+                  (omnivox-choice-acceptance--tone t mode)))))
           (let* ((record (car emacsvox-aural-presentation-history))
                  (operation (emacsvox-aural-replay--play record)))
             (omnivox-choice-acceptance--wait
