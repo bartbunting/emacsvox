@@ -542,6 +542,75 @@
       '((original (t nil) "old.group")
         (icon close-object) stop speak-line)))))
 
+(ert-deftest emacsvox-gnus-summary-left-interrupts-subject-before-group ()
+  "Returning to groups stops the subject without stopping notifications."
+  (let* ((speaker (make-pipe-process :name "gnus-main-test" :noquery t))
+         (notification
+          (make-pipe-process :name "gnus-notification-test" :noquery t))
+         (tts-speaker-process speaker)
+         (tts-notify-process notification)
+         (tts-quiet nil)
+         (tts-stop-immediately t)
+         (tts-stopped-hook nil)
+         (tts--tracked-completion-function nil)
+         (tts--marker-event-function nil)
+         (tts-get-voice-command (lambda (_voice) ""))
+         (tts-handle-unicode nil)
+         (voice-lock-mode nil)
+         (emacsvox-use-icons nil)
+         (emacsvox-audio-indentation nil)
+         (emacsvox-pronounce-table nil)
+         (emacsvox-aural-presentation-history nil)
+         (emacsvox-aural--pending-deliveries
+          (make-hash-table :test #'equal))
+         writes callbacks)
+    (unwind-protect
+        (progn
+          (dolist (process (list speaker notification))
+            (process-put
+             process emacsvox-aural--structured-timeline-process-property 3)
+            (process-put process tts--tracked-playback-completion-property t))
+          (with-temp-buffer
+            (insert "  5: inbox\n")
+            (goto-char (point-min))
+            (cl-letf
+                (((symbol-function 'process-send-string)
+                  (lambda (process command)
+                    (push (list process command) writes)))
+                 ((symbol-function 'tts-voice-reset-code) (lambda () ""))
+                 ((symbol-function 'gnus-summary-catchup-and-exit)
+                  (lambda (quiet all)
+                    (should quiet)
+                    (should all))))
+              (tts-speak-tracked
+               "An unfinished message subject"
+               (lambda (_id status) (push (list 'subject status) callbacks)))
+              (let ((tts-speaker-process notification))
+                (tts-speak-tracked
+                 "An independent notification"
+                 (lambda (_id status)
+                   (push (list 'notification status) callbacks))))
+              (setq writes nil)
+              (call-interactively
+               #'emacsvox-gnus-summary-catchup-quietly-and-exit)
+              (tts--dispatch-drain speaker)
+              (tts--dispatch-drain notification)
+              (should (equal callbacks '((subject cancelled))))
+              (setq writes (nreverse writes))
+              (should (equal (car writes) (list speaker "s\n")))
+              (should (cl-every (lambda (write) (eq (car write) speaker))
+                                writes))
+              (let* ((wire (mapconcat #'cadr (cdr writes) ""))
+                     (_ (should
+                         (string-match
+                          "emacsvox_timeline {\\([^}]+\\)}" wire)))
+                     (payload
+                      (decode-coding-string
+                       (base64-decode-string (match-string 1 wire)) 'utf-8)))
+                (should (string-match-p "5: inbox" payload))))))
+      (dolist (process (list speaker notification))
+        (tts--retire-process process)))))
+
 (ert-deftest emacsvox-gnus-summary-thread-feedback-is-target-aware ()
   "Only matching interactive thread movement cues and speaks."
   (let ((ems--interactive-fn-name 'gnus-summary-down-thread)

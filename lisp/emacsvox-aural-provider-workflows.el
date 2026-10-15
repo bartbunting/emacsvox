@@ -220,7 +220,7 @@
      :kind event
      :summary "A mail reader view was closed, buried, or left"
      :owner core
-     :occasions (state-change)
+     :occasions (navigation state-change)
      :phases (before content after))
     (filesystem-entry
      :kind role

@@ -123,6 +123,43 @@
                         (commandp 'ev-added) (eq (ev-added) 'added))))
       (delete-directory root t))))
 
+(ert-deftest emacsvox-autoload-transient-prefix-stays-lazy ()
+  "Generate a command autoload without evaluating its Transient module."
+  (let* ((root (make-temp-file "emacsvox-transient-autoload-" t))
+         (emacs (expand-file-name invocation-name invocation-directory))
+         (index (expand-file-name "emacsvox-loaddefs.el" root))
+         (generator (expand-file-name "lisp/emacsvox-autoload.el"
+                                      emacsvox-autoload-tests--root)))
+    (unwind-protect
+        (progn
+          (with-temp-file (expand-file-name "fixture-menu.el" root)
+            (insert ";;; fixture-menu.el -*- lexical-binding: t; -*-\n"
+                    "(error \"Autoload generation evaluated the menu module\")\n"
+                    ";;;###autoload\n"
+                    "(transient-define-prefix emacsvox-test-lazy-menu ()\n"
+                    "  \"A lazy menu.\" [\"Finish\" (\"q\" \"Quit\" transient-quit-one)])\n"))
+          ;; Separate processes keep already loaded macros from masking the bug.
+          (dolist (arguments
+                   (list
+                    (list "--eval"
+                          (prin1-to-string
+                           `(setq emacsvox-lisp-directory ,root
+                                  emacsvox-auto-autoloads-file ,index))
+                          "-l" generator "-f" "emacsvox-auto-generate-autoloads")
+                    (list "-L" root "-l" index "--eval"
+                          (prin1-to-string
+                           '(progn
+                              (unless (and (commandp 'emacsvox-test-lazy-menu)
+                                           (autoloadp (symbol-function 'emacsvox-test-lazy-menu)))
+                                (error "Menu must remain an interactive autoload"))
+                              (when (featurep 'transient)
+                                (error "Loading the index must not load Transient")))))))
+            (with-temp-buffer
+              (unless (zerop (apply #'call-process emacs nil t nil
+                                   "-Q" "--batch" arguments))
+                (ert-fail (buffer-string))))))
+      (delete-directory root t))))
+
 (ert-deftest emacsvox-portable-configure-generates-loaddefs ()
   "The Emacs-only first-run command works without Make or the current directory."
   (let* ((root (make-temp-file "emacsvox-configure-" t))
