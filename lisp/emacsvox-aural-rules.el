@@ -959,7 +959,7 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
               ('cue '(:id :kind :cue :name :volume :space :anchor))
               ('pause '(:id :kind :duration :anchor))
               ('tone
-               '(:id :kind :tone :pitch :duration :audio-mode :anchor))
+               '(:id :kind :tone :pitch :duration :volume :audio-mode :anchor))
               (_ allowed)))
            (incompatible
             (cl-loop
@@ -1027,9 +1027,16 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
            (emacsvox-aural--rule-error
             "Tone action %S requires :tone or both :pitch and :duration"
             id))))))
-    (when (and volume (not (numberp volume)))
-      (emacsvox-aural--rule-error
-       "Action volume must be numeric for %S" id))
+    (if (eq kind 'tone)
+        (when (plist-member data :volume)
+          (let ((field (emacsvox-aural--numeric-action-expression-field
+                        volume :volume id nil)))
+            (when field (push field template-fields))
+            (unless (or field (and (numberp volume) (<= 0 volume 1)))
+              (emacsvox-aural--rule-error "Tone volume must be from 0 to 1 for %S" id))))
+      (when (and volume (not (numberp volume)))
+        (emacsvox-aural--rule-error
+         "Action volume must be numeric for %S" id)))
     (when (plist-member data :voice)
       (emacsvox-aural-validate-voice-value
        voice (format "Voice for action %S" id)))

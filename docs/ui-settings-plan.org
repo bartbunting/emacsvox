@@ -1587,9 +1587,15 @@ verification of subsequently changed code.
   process through the normal launcher confirms capability negotiation and
   standalone, direct-timeline and multipart-timeline execution using null
   audio output. This is automated verification, not listening acceptance.
-  Next are worker-local client negotiation, old-worker degradation and
-  individual spelling gain. New sounds and their relative loudness still
-  need listening acceptance; no live session has been changed.
+  Emacsvox now negotiates richer-tone support independently for each worker,
+  including replacement processes. Standalone and timeline tones carry the
+  same frozen gain; original replay retains it. An older worker omits a tone
+  with unsupported gain, preserves speech and records the reason. Exact
+  previews report missing support. Personal rules use schema 11 only when
+  they contain tone volume; older data stays at its existing schema. The
+  focused shared suites pass 692 tests. Individual spelling volume is next.
+  New sounds and their relative loudness still need listening acceptance;
+  no live session has been changed.
 
 - 2026-10-15: The Transient dependency follow-up resolves the recorded build
   and packaging gaps. Commit =62c99ca83= adds all nine omitted menu modules to

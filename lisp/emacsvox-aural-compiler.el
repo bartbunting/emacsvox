@@ -824,6 +824,26 @@ according to `emacsvox-aural-unsupported-volume-policy'."
        :policy 'degrade
        :reason 'unsupported-volume)))))
 
+(declare-function emacsvox-aural--tone-volume-supported-p "emacsvox-aural-transport" ())
+
+(defun emacsvox-aural--compile-tone-volume (action facts)
+  "Freeze ACTION's per-tone gain from FACTS and record missing support."
+  (let ((value (if (null (emacsvox-aural-action-volume action)) 1.0
+                 (emacsvox-aural--resolve-numeric-action-value
+                  action facts :volume (emacsvox-aural-action-volume action) nil))))
+    (unless (and (numberp value) (<= 0 value 1))
+      (emacsvox-aural--transport-error "Tone volume must resolve to a number from 0 to 1: %S" value))
+    (let ((supported (or (= value 1)
+                         (and (fboundp 'emacsvox-aural--tone-volume-supported-p)
+                              (emacsvox-aural--tone-volume-supported-p)))))
+      (list :requested value :capability (if supported 'supported 'unsupported)
+            :degradation
+            (unless supported
+              (list :action (emacsvox-aural-action-id action) :property 'volume
+                    :requested value :capability 'unsupported :policy 'omit
+                    :reason 'unsupported-tone-volume
+                    :message "Tone omitted: this worker lacks richer-tone support"))))))
+
 (defun emacsvox-aural--compile-concrete-action
     (action facts pack palette cue-target)
   "Compile ACTION with FACTS through PACK and PALETTE for CUE-TARGET."
@@ -832,8 +852,10 @@ according to `emacsvox-aural-unsupported-volume-policy'."
                   facts))
          (identity (list :action (emacsvox-aural-action-id action)))
          (volume
-          (emacsvox-aural--compile-volume
-           (emacsvox-aural-action-volume action) identity)))
+          (if (eq (emacsvox-aural-action-kind action) 'tone)
+              (emacsvox-aural--compile-tone-volume action facts)
+            (emacsvox-aural--compile-volume
+             (emacsvox-aural-action-volume action) identity))))
     (pcase (emacsvox-aural-action-kind action)
     ('cue
      (pcase-let*
@@ -938,6 +960,9 @@ according to `emacsvox-aural-unsupported-volume-policy'."
                 (emacsvox-aural-action-id action))
         :pitch pitch
         :duration duration
+        :requested-volume (plist-get volume :requested)
+        :volume-capability (plist-get volume :capability)
+        :volume-degradation (plist-get volume :degradation)
         :audio-mode (emacsvox-aural-action-audio-mode action)
         :force (and tone (emacsvox-aural-tone-force tone))
         :source (emacsvox-aural-action-source action)

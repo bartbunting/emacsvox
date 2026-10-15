@@ -336,8 +336,25 @@ server still produces the relevant protocol diagnostic."
      process emacsvox-aural--delivery-readiness-process-property)
     'pending)))
 
-(defun emacsvox-aural--protocol-presentation-tone (pitch duration mode)
-  "Queue a bounded PITCH/DURATION tone using presentation MODE.
+(defvar emacsvox-aural--exact-tone-preview nil
+  "Non-nil makes unsupported tone previews fail instead of omitting their cue.")
+
+(defun emacsvox-aural--tone-volume-supported-p ()
+  "Return non-nil when the selected worker supports standalone tone gain."
+  (and (processp tts-speaker-process)
+       (eql (process-get tts-speaker-process emacsvox-aural--presentation-tone-process-property) 2)))
+
+(defun emacsvox-aural--tone-volume-deliverable-p (gain)
+  "Validate GAIN and decide whether the selected worker can deliver it."
+  (unless (and (numberp gain) (<= 0 gain 1))
+    (emacsvox-aural--transport-error "Tone volume must be from 0 to 1: %S" gain))
+  (cond ((or (= gain 1) (emacsvox-aural--tone-volume-supported-p)) t)
+        (emacsvox-aural--exact-tone-preview
+         (user-error "This speech worker lacks richer-tone support; cannot preview tone volume"))))
+
+(defun emacsvox-aural--protocol-presentation-tone (pitch duration mode &optional gain)
+  "Queue a bounded PITCH/DURATION tone using MODE and per-tone GAIN.
+GAIN defaults to 1; unsupported non-default gain omits the cue.
 
 Use the explicit presentation-tone protocol when the speaker advertises it.
 Otherwise lower both modes to the legacy ordered tone command; this preserves
@@ -361,16 +378,18 @@ the tone and surrounding speech but cannot preserve overlay timing."
     (emacsvox-aural--transport-error
      "Presentation tone duration must be from 1 through %d ms: %S"
      emacsvox-aural--presentation-tone-max-duration-ms duration))
-  (let ((version (and (processp tts-speaker-process)
-                      (process-get tts-speaker-process
-                                   emacsvox-aural--presentation-tone-process-property))))
-    (if (memq version '(1 2))
-        (emacsvox-aural--delivery-send-typed
-         tts-speaker-process
-         (if (= version 2)
-             (format "emacsvox_tone 2 %s %s %d 1 sine classic\n" mode pitch duration)
-           (format "emacsvox_tone 1 %s %s %d\n" mode pitch duration)) 'queue)
-      (tts--protocol-tone (max 1 (round pitch)) duration))))
+  (setq gain (or gain 1.0))
+  (when (emacsvox-aural--tone-volume-deliverable-p gain)
+    (let ((version (and (processp tts-speaker-process)
+                        (process-get tts-speaker-process
+                                     emacsvox-aural--presentation-tone-process-property))))
+      (if (memq version '(1 2))
+          (emacsvox-aural--delivery-send-typed
+           tts-speaker-process
+           (if (= version 2)
+               (format "emacsvox_tone 2 %s %s %d %s sine classic\n" mode pitch duration gain)
+             (format "emacsvox_tone 1 %s %s %d\n" mode pitch duration)) 'queue)
+        (tts--protocol-tone (max 1 (round pitch)) duration)))))
 
 (defun emacsvox-aural--capture-record (kind value bytes)
   "Retain a bounded journal reference to VALUE of KIND, charging BYTES."
@@ -1474,23 +1493,26 @@ when the recorded plans have no speech span and require legacy lowering."
                   (emacsvox-aural-concrete-action-duration action))
                  semantic-value))
                ('tone
-                (add-wire-action
-                 wire-action-id position lifecycle
-                 (list
-                  :type "tone"
-                  :frequency_hz
-                  (float (emacsvox-aural-concrete-action-pitch action))
-                  :duration_ms
-                  (emacsvox-aural-concrete-action-duration action)
-                  :mode
-                  (symbol-name
-                   (or
-                    (emacsvox-aural-concrete-action-audio-mode action)
-                    'overlay))
-                  :volume 1.0
-                  :pan (emacsvox-aural--timeline-action-pan action)
-                  :effect_bus "dry")
-                 semantic-value))
+                (if (not (emacsvox-aural--tone-volume-deliverable-p
+                          (or (emacsvox-aural-concrete-action-requested-volume action) 1.0)))
+                    (setq modelled nil)
+                  (add-wire-action
+                   wire-action-id position lifecycle
+                   (list
+                    :type "tone"
+                    :frequency_hz
+                    (float (emacsvox-aural-concrete-action-pitch action))
+                    :duration_ms
+                    (emacsvox-aural-concrete-action-duration action)
+                    :mode
+                    (symbol-name
+                     (or
+                      (emacsvox-aural-concrete-action-audio-mode action)
+                      'overlay))
+                    :volume (or (emacsvox-aural-concrete-action-requested-volume action) 1.0)
+                    :pan (emacsvox-aural--timeline-action-pan action)
+                    :effect_bus "dry")
+                   semantic-value)))
                (_ (setq modelled nil)))
              (when modelled
                (let ((semantic-id (wire-id "semantic")))
@@ -2125,7 +2147,8 @@ the authoritative check after punctuation and split-cap preprocessing."
       (emacsvox-aural-concrete-action-duration action)
       (or
        (emacsvox-aural-concrete-action-audio-mode action)
-       'overlay)))
+       'overlay)
+      (emacsvox-aural-concrete-action-requested-volume action)))
     ('speech
      (let ((command
             (emacsvox-aural-concrete-action-voice-command action))

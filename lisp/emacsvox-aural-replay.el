@@ -328,6 +328,8 @@ fails before stopping or sending any audio."
                                    (eq phase (caddr speech-action))))
                       (cond
                        ((emacsvox-aural-replay--speech-p action) (speech id phase index))
+                       ((eq (plist-get (emacsvox-aural-concrete-action-volume-degradation action)
+                                       :policy) 'omit) nil)
                        ((not (eq (emacsvox-aural-concrete-action-kind action) 'speech))
                         (push (list 'action action (emacsvox-aural-concrete-plan-context plan)) steps)))))))
       (cl-loop for (plan text pause) in runs for index from 0 do
@@ -403,6 +405,7 @@ When SUPERSEDED, the replacement's guarded stop retires the private preview."
                      (when (eq owner process)
                        (emacsvox-aural-replay--receive operation ticket '(:status cancelled)))))
          (emacsvox-aural--history-recording-inhibited t)
+         (emacsvox-aural--exact-tone-preview t)
          (emacsvox-aural-submission-delivery-policy 'ordered)
          (emacsvox-aural-submission-controls-interruption nil)
          (identifier
@@ -484,10 +487,15 @@ When SUPERSEDED, the replacement's guarded stop retires the private preview."
          (steps (emacsvox-aural-replay--steps record indices speech-action)))
     (unless (and (processp process) (process-live-p process))
       (user-error "A live speech server is required for original playback"))
-    ;; Validate every captured speech entry before any cue or interruption.
+    ;; Validate captured speech and tones before any cue or interruption.
     (dolist (step steps)
       (when (eq (car step) 'speech)
-        (omnivox--preview-layered-request (cadr step) process)))
+        (omnivox--preview-layered-request (cadr step) process))
+      (when (and (eq (car step) 'action)
+                 (eq (emacsvox-aural-concrete-action-kind (cadr step)) 'tone))
+        (let ((emacsvox-aural--exact-tone-preview t))
+          (emacsvox-aural--tone-volume-deliverable-p
+           (or (emacsvox-aural-concrete-action-requested-volume (cadr step)) 1.0)))))
     (unless (and guard (eq process tts-speaker-process) (tts-queue--guard-valid-p guard))
       (user-error "Original playback needs an unchanged speech connection"))
     (let* ((previous (process-get process 'emacsvox-aural-replay))

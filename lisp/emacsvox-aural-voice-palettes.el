@@ -262,7 +262,8 @@ writing. Publish the registry only after the atomic write succeeds."
             (when new-data (push new-data palettes)))))
       (setq saved (plist-put (copy-tree saved) :voice-palettes palettes))
       (when (cl-some (lambda (palette) (eq (plist-get palette :schema-version) 4)) palettes)
-        (setq saved (plist-put saved :schema-version 10)))
+        (setq saved (plist-put saved :schema-version
+                                (max 10 (plist-get saved :schema-version)))))
       (emacsvox-aural--validate-user-data saved)
       (unless (equal fingerprint (emacsvox-aural-voice-drafts--file-id file))
         (user-error "Saved presentation settings changed while preparing; retry"))
