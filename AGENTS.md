@@ -276,6 +276,14 @@
 
 ## Omnivox builds and installers
 
+- During iteration, run affected source tests first and defer Windows staging
+  until the slice settles or native testing is needed. Lisp-only changes do
+  not require an Omnivox rebuild when the selected runtime already supports
+  them. Reuse passing checks for unchanged code and environment; run broader
+  checks when shared behaviour changes and complete applicable gates before
+  review. Batch documentation generation at meaningful checkpoints. Identify
+  the actual runtime used for testing and distinguish automated execution
+  checks from listening acceptance.
 - `make windows-omnivox` is the reproducible clean-release path. For local
   testing from dirty Emacsvox or Omnivox worktrees, use
   `make windows-omnivox-dev`; it records both tracked-diff hashes in provenance.
@@ -285,6 +293,16 @@
   reused payload identity, and rejects helper, protocol, dependency,
   toolchain, or companion changes. Use the full development target whenever
   that guard rejects reuse; release builds always use the clean full target.
+- Future optimization, not yet implemented: add a separate cached full
+  development build for changes that cannot use main-only staging. Currently
+  `windows-omnivox-dev` delegates to the clean release recipe, deleting its
+  build cache and rebuilding helpers. The development route should retain
+  compilation results, rebuild affected components, and invalidate reuse
+  when protocol, dependency, toolchain or companion inputs change. Preserve
+  source/diff provenance, payload verification and native smoke checks; test
+  cache invalidation before adopting it. Keep release builds clean and
+  reproducible. Until this route exists, follow the targets above without
+  bypassing their guards.
 - The ordinary WSL2 binary-install route is `bin/emacsvox-wsl-install`; its
   pinned inputs and hashes live in `etc/wsl-install.conf`. Treat both as release
   tooling, keep the installer per-user, and run its isolated x64/ARM64 tests
