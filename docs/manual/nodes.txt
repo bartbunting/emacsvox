@@ -180,6 +180,12 @@ Selecting And Checking Omnivox
 Compatibility Speech Servers
 Backend Diagnostics And Ownership
 Emacsvox Keyboard Commands
+Everyday Reading Commands
+Everyday Editing Commands
+Everyday Workspace Commands
+Everyday Help Commands
+Everyday Speech Commands
+Emacsvox Key Prefixes
 Finding Tasks
 Finding Reading Tasks
 Finding Editing Tasks
@@ -188,6 +194,10 @@ Finding Settings Tasks
 Finding Application Tasks
 Finding Problem Tasks
 Emacsvox Terminology
+Working Context Terms
+Editing Terms
+Presentation Resource Terms
+Speech And Settings Terms
 Copyright
 Acknowledgments
 Developer Guide

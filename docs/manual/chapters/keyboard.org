@@ -1,20 +1,228 @@
 * Emacsvox Keyboard Commands.
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Emacsvox Keyboard Commands
-:ALT_TITLE: Emacsvox Keyboard Commands
-:DESCRIPTION: Understand the Emacsvox key hierarchy.
+:ALT_TITLE: Everyday commands and key prefixes
+:DESCRIPTION: Recall everyday keys, check their conditions and follow detailed instructions.
 :END:
 
 #+cindex: Emacs Keyboard Commands
+#+cindex: everyday commands
+#+cindex: keyboard shortcuts
+#+cindex: command reference
 
-This chapter explains how speech prefixes, settings menus and application
-keys fit together. If the notation is unfamiliar, first read
-[[*Read the key instructions][Read the key instructions]]: a modifier is held for one keypress, while
-spaces separate successive steps. A capital letter is not a modifier name.
+Use this chapter to recall an everyday command and check its important
+conditions before acting. [[*Read the key instructions][Read the key instructions]] explains modifiers,
+capital letters and successive keypresses. [[info:emacsvox#Basic Usage][Basic Usage]] teaches the reading
+and editing workflows; the links beside each reminder lead to their details.
 
-Use [[*Basic Usage][Basic Usage]] for essential reading commands and
-[[*Find Help While You Work][Using Online Help]] to inspect a binding in your current buffer.
-The generated [[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] provides the full default inventory.
+These are default keys, used without a prefix argument unless one is shown.
+Application keymaps and personal bindings can change their meaning. A short
+reference cannot replace a terminal's or editor's own instructions. Use
+[[*Find Help While You Work][live Help]] in the affected buffer when a binding differs, and
+[[info:emacsvox-reference#Emacsvox Keymaps][the generated keymap reference]] for the full default inventory.
+
+** Reading reminders
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Everyday Reading Commands
+:DESCRIPTION: Choose a reading unit and check its effect on point and windows.
+:END:
+
+#+cindex: reading commands, quick reference
+#+cindex: read from here, command
+
+These commands apply to the selected buffer's accessible text. In Info that
+means the current node, not the whole manual. Use the application's own reader
+for a table, terminal or other specialised view.
+
+- Read from here (~C-e i~) :: Read towards the accessible buffer end with
+  tracked position. Requires a supporting speech server; point advances by
+  chunks, and another command stops reading before performing its action.
+  See [[info:emacsvox#Reading From Point][Stopping and restarting tracked reading]].
+- Stop current speech (~C-e s~) :: Stop main and notification speech without
+  disabling future feedback. During tracked reading this retains a chunk
+  boundary, not an exact spoken word. See [[info:emacsvox#Reading From Point][Where stopping leaves point]].
+- Repeat the current line (~C-e l~) :: Inspect the line without moving point.
+  ~C-u C-e l~ reads from point to the line's end. See
+  [[info:emacsvox#Reading Without Moving Point][Short reading and prefix variants]].
+- Read or spell the word (~C-e w~) :: Read the word at point; repeat at the
+  same position to spell it. See [[info:emacsvox#Reading Without Moving Point][Inspecting short passages]].
+- Inspect the character (~C-e c~) :: Read the character at point, using its
+  phonetic name where available. Point does not move. See
+  [[info:emacsvox#Reading][Character and word reading]].
+- Read the paragraph (~C-e [~) :: Read the paragraph around point without
+  moving it. The mode determines its boundaries. Sentence reading is also
+  available by name. See [[info:emacsvox#Reading Without Moving Point][Sentence and paragraph inspection]].
+- Read a checked selection (~C-e r~) :: Read between point and mark. A short
+  region read preserves its endpoints and activation; it does not establish a
+  new selection for you. See [[info:emacsvox#Selecting Text With Speech][Selecting and checking text]].
+- Read the buffer (~C-e b~) :: Read its accessible contents without tracked
+  interruption position. Requests of 40,000 characters or more fall back to
+  windowful reading at the current default limit, removing other windows.
+  The same limit applies to region reading. See
+  [[info:emacsvox#Reading Without Moving Point][Buffer-reading limits and alternatives]].
+
+Page reading and the complete reading-key list remain under
+[[info:emacsvox#Reading][Reading and navigating]]. Page reading changes the mark; it is not a
+substitute for inspecting an existing selection.
+
+** Editing reminders
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Everyday Editing Commands
+:DESCRIPTION: Select, copy, cut, paste and recover with the right scope.
+:END:
+
+#+cindex: editing commands, quick reference
+#+cindex: cut and paste, command reference
+
+Use these in ordinary text, after leaving any prompt or special reader. Check
+the buffer and the affected text first. [[info:emacsvox#Editing Terms][Selection and editing terms]]
+defines Emacs's names for copying, cutting and pasting.
+
+- Start a selection (~C-SPC~) :: Set the mark, then move point to its other
+  end. Extend it by moving rather than repeatedly setting the mark. See
+  [[info:emacsvox#Selecting Text With Speech][Selection boundaries and newline checks]].
+- Inspect the other end (~C-x C-x~) :: Exchange point and mark. The selected
+  text is unchanged until you move an endpoint. See
+  [[info:emacsvox#Selecting Text With Speech][Adjusting a checked selection]].
+- Copy (~M-w~) :: Copy the checked region to the kill ring without removing
+  the source text. See [[info:emacsvox#Copying Text Between Buffers][Copying into another buffer]].
+- Cut (~C-w~) :: Remove the checked region and retain it in the kill ring.
+  This edits the buffer, not the saved file. See
+  [[info:emacsvox#Moving Text Safely][Moving text and verifying both locations]].
+- Paste (~C-y~) :: Insert the current kill-ring entry at point; clipboard
+  integration can supply a more recent external copy instead. Point ends
+  after the inserted text. See [[info:emacsvox#Copying Text Between Buffers][Checking the destination and pasted text]].
+- Use an earlier copy (~M-y~) :: Immediately after a yank, replace that
+  insertion with an earlier entry. After a separate command, including a
+  reading command, choose an entry for another insertion instead. See
+  [[info:emacsvox#Choosing Earlier Copied Text][Earlier copies and yank sequencing]].
+- Undo while listening (~M-x undo-only RET~) :: Undo a change in the selected
+  buffer, inspect it, and repeat only as needed. Deactivate an unrelated
+  selection first. Unlike ordinary ~C-/~, this avoids undoing an earlier undo
+  after an intervening reading command. See
+  [[info:emacsvox#Recovering Text Edits][Undo, inspection and recovery limits]].
+- Find text (~C-s~ or ~C-r~) :: Search forwards or backwards. Finish with
+  ~RET~ before typing an edit; text entered during search changes the query.
+  See [[info:emacsvox#Searching And Replacing Text][Search direction and failure recovery]].
+- Review replacements (~M-%~) :: Query-replace in the checked active region,
+  or ordinarily from point onwards when no region is active. The replacement
+  questions have their own keys; stopping does not undo accepted changes.
+  See [[info:emacsvox#Reviewing Text Replacements][Scoped replacement and match-by-match decisions]].
+
+Copying is not a permanent backup. Message repetition and filename speech can
+also change the kill ring; [[info:emacsvox#Copying Text Between Buffers][the transfer guide]] explains how to inspect it
+without accidentally replacing the next paste.
+
+** Files, buffers and windows
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Everyday Workspace Commands
+:DESCRIPTION: Open and save documents without confusing buffers and views.
+:END:
+
+#+cindex: files and windows, quick reference
+#+cindex: close a view, command
+
+A buffer contains work; a window displays it. Identify the selected buffer with
+~C-e m~ before editing, saving or closing anything. For definitions, see
+[[info:emacsvox#Working Context Terms][Buffers, windows and frames]].
+
+- Open a file (~C-x C-f~) :: Visit a pathname, creating a new unsaved buffer
+  if the file does not exist. ~C-x C-r~ visits read-only instead. See
+  [[info:emacsvox#Opening A Document][Checking the document and its destination]].
+- Save the current file (~C-x C-s~) :: Write this buffer to its file; a new
+  buffer may need a filename. An error is not a completed save. See
+  [[info:emacsvox#Saving A Working Copy][Saving destinations and failure recovery]].
+- Save under another filename (~C-x C-w~) :: Write the current text, including
+  unsaved edits, and change where this buffer's later saves go. Cancel an
+  unexpected overwrite prompt. See [[info:emacsvox#Saving A Working Copy][Working copies versus copies of saved files]].
+- Switch to another buffer (~C-x b~) :: Select content by buffer name in the
+  current window. The buffer you leave stays available. See
+  [[info:emacsvox#Desktop Objects][Buffer selection]].
+- Display a reference (~C-x 4 b~) :: Display and select an existing buffer
+  in another window, creating or reusing a view. See
+  [[info:emacsvox#Reference And Draft Windows][Keeping a reference beside a draft]].
+- Select another window (~C-x o~) :: Select the next view; lowercase o is not
+  zero. With more than two windows, the next one need not be the draft. See
+  [[info:emacsvox#Working With Windows][Identifying the selected view]].
+- Remove a window (~C-x 0~) :: Remove this view, not its buffer. The last
+  ordinary window cannot be removed this way. ~C-x 1~ instead keeps only the
+  selected view. See [[info:emacsvox#Closing Windows Safely][Closing windows without losing documents]].
+- Close a buffer (~C-x k~) :: Kill the named buffer, checking any unsaved-work
+  prompt. This is not the same as removing its window or deleting its file.
+  See [[info:emacsvox#Opening A Document][Leaving document buffers safely]].
+
+** Help and orientation
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Everyday Help Commands
+:DESCRIPTION: Find commands and return to the intended working buffer.
+:END:
+
+#+cindex: Help commands, quick reference
+#+cindex: where am I, command
+
+Help can change the selected buffer and window arrangement. Before your next
+editing command, check that you have returned to the intended document.
+
+- Identify your context (~C-e m~) :: Speak the mode line, including the
+  current buffer and major mode. See [[info:emacsvox#Status Information][Position and status commands]].
+- Describe the windows (~C-e C-w~) :: Describe the current arrangement.
+  This does not select a different view. See
+  [[info:emacsvox#Working With Windows][Working with windows through speech]].
+- Explain a key (~C-h k~ followed by the key sequence) :: Describe its
+  effective binding without invoking it as the requested action. See
+  [[info:emacsvox#Using Online Help][Discovering a key, command or setting]].
+- Discover local commands (~C-h m~) :: Describe the current modes. ~C-h b~
+  lists effective bindings; invoke these from the application you are asking
+  about. See [[info:emacsvox#Using Online Help][Help for the current buffer]].
+- Read Help again (~C-e h~) :: Select and read Help using a windowful helper
+  that removes other windows without killing their buffers. Lowercase h is
+  different from capital H for settings. See
+  [[info:emacsvox#Using Online Help][Reading Help and returning to work]].
+- Open the manual (~C-e C-i~) :: Open this manual directly in Info. Use ~i~
+  in Info to look up a subject and ~l~ to retrace a link. See
+  [[info:emacsvox#Finding Help In Info][Manual lookup and return navigation]].
+
+~C-e f~ speaks a filename or default directory, and ~C-e a~ repeats a message.
+Both also put text in the kill ring and can affect the next paste. See
+[[info:emacsvox#Status Information][Status commands and their side effects]].
+
+** Speech and settings
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Everyday Speech Commands
+:DESCRIPTION: Find controls and distinguish navigation from undo and saving.
+:END:
+
+#+cindex: speech settings, command reference
+#+cindex: cancel versus undo
+
+These routes use the current settings interface. A live adjustment, a saved
+default and a retained draft are distinct; follow the linked scope and saving
+instructions before making a persistent change.
+
+- Open speech controls (~C-e H s~) :: Browse rate, punctuation and related
+  controls for the captured context. Inspect the displayed scope; global
+  defaults need not override local values. See [[info:emacsvox#Speech System][Speech controls and scope]].
+- Open settings for this task (~C-e S~) :: Use the integration's focused menu
+  when available, otherwise general buffer settings. ~C-e H .~ always opens
+  the latter. See [[info:emacsvox#Using Online Help][Finding the appropriate settings menu]].
+- Find a setting (~C-e H /~) :: Choose a matching name; accepting the search
+  selects its control without changing the value. Activate it separately.
+  See [[info:emacsvox#Finding Settings And Actions][Settings search and action search]].
+- Explain this item's feedback (~C-e E~) :: Inspect the presentation chosen
+  for the object at point. The report is not itself a repair. See
+  [[info:emacsvox#Explaining Presentation][Understanding voices, sounds and rules]].
+
+In an Emacsvox settings menu, ~q~ goes back and ~C-q~ closes the sequence.
+In an ordinary unfinished prompt, ~C-g~ cancels. None of these reverses an
+already applied change. Editors, tables and terminals have their own return
+commands; see [[info:emacsvox#Returning From Settings][Returning from settings]] and
+[[info:emacsvox#Recovering Aural Changes][Recovering an unfinished edit]].
+
+** How prefixes and menus fit together
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Emacsvox Key Prefixes
+:DESCRIPTION: Understand the speech prefix, menu entry and application overrides.
+:END:
 
 #+attr_texinfo: :indic kbd :compact t
 - C-e ::

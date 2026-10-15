@@ -1,0 +1,111 @@
+#+title: Command lookup and glossary review, 15 October 2026
+#+language: en
+
+* Scope and status
+
+This bounded documentation pass starts at =ui-experiments= commit
+=42e7ac8f9568dad6f5094094d6455d209240973f=. It changes the keyboard reference,
+glossary, task finder and node inventory. Source checks have passed; the
+configured Emacs export, Info/HTML reader checks and listening acceptance have
+not been run. It changes no application code, dependencies or test fixtures.
+
+The commit is based on the later branch head
+=bd579d10c3956883cd023800d51f8a496e7ca1ab=. Its two intervening commits change
+the tutorial, settings plan and generated manuals, not these edited files.
+Those changes are preserved. In particular, the Help-link repair showed that
+linking to its structural heading without an Info node blocks export; the new
+lookup links therefore use the existing =Using Online Help= node.
+
+* Editorial changes
+
+The keyboard chapter now starts with 35 reminders grouped by reading, editing,
+files and windows, Help, and speech settings. Each identifies a purpose, default
+key, consequential condition and link to the fuller procedure. The displayed
+chapter title is /Everyday commands and key prefixes/; its existing heading and
+Info identifier remain. The original prefix, customisation and binding-discovery
+material is retained after the reminders, not replaced by another cheat sheet.
+
+The reminders retain the distinctions established by the detailed guides:
+tracked reading moves point; short inspection generally does not; large buffer
+or region reads can change the window layout; a paste and an immediate yank-pop
+form a command sequence; undo-only supports inspection between corrections;
+Help selects its own view; and filename/message inspection changes the kill ring.
+Settings navigation does not undo applied changes. The generated reference
+remains the exhaustive inventory, and Basic Usage remains the procedure owner.
+
+The glossary adds windows, frames, read-only state, narrowing and selection-based
+editing vocabulary. Familiar copying, cutting and pasting terms lead to mark,
+region, kill, yank and kill ring. Transient Mark mode is distinguished from the
+settings-menu package. Existing voice, profile, scope and persistence definitions
+are preserved. Four glossary destinations prevent the editing definitions from
+absorbing later presentation material in Info navigation.
+
+The task finder retains existing routes. It adds ordinary index phrases for
+reading from here, earlier copies, undo while listening and closing a view, plus
+symptom routes for an unexpected filename/message paste and Help replacing
+split windows. The stop-speech link reaches the concise reading reference.
+It does not duplicate the procedures or reintroduce the retired Home entry.
+
+* Navigation and source checks
+
+Ten Info identifiers are added: five everyday command groups, one prefix topic
+and four glossary topics. The inventory grows from 197 to 207. All previous
+identifiers and their relative order remain; local Next, Previous and Up
+relationships intentionally change around the new topics.
+
+All four baseline files matched their Git blob hashes before editing. Checks
+cover unique nodes, retained headings and index entries, balanced property
+drawers, whitespace, existing code/example preservation and all 118 internal
+Info links in the three revised chapters. No new links to structural headings
+without Info nodes are introduced. The Help subsection was checked in its
+owning chapter; its containing named node is the exportable destination.
+All 35 reminders have an explanatory link. The original prefix material and
+the presentation glossary's definition bodies are unchanged.
+
+Six source-level lookup cases check that the phrase is indexed in the right
+task group and that the expected destination is linked there:
+
+- =read from here=: tracked reading.
+- =paste something I copied earlier=: earlier kill-ring entries.
+- =undo while listening=: text-edit recovery.
+- =close this view=: closing windows without killing documents.
+- =why did it paste a filename=: the transfer guide's kill-ring side effects.
+- =Help replaced my windows=: the ordinary Help return procedure.
+
+These are source-route checks, not claims that Info's index completion or a
+browser's search has been exercised. Reminders were reconciled with the current
+reading, editing and Help guides. The core speech source is still blob
+=f31fba8aff16efa1e6ffd1f210454093844e251c=, inspected in the preceding work.
+GNU Emacs documentation was cross-checked for mark/region, earlier kills and
+narrowing. Effective bindings and acoustic feedback were not tested here.
+
+* Remaining acceptance
+
+No Emacs executable was found in this editing environment; direct repository
+network access also failed. The connector provided versioned source access.
+No local checkout, user configuration or live Emacs session was changed.
+Generated Texinfo and Info are unchanged for this pass. No earlier build or
+source check is treated as validation of these newly edited chapters.
+
+Use the configured supported Emacs and the repository's required byte-code
+preflight, then run:
+
+#+begin_example
+make docs-org-preview
+make docs-update
+make docs-release-check
+#+end_example
+
+In the assembled Info manual, look up the six phrases above, follow their
+links and return with visiting history. Check the ten new nodes and the unchanged
+historical identifiers. In HTML, use headings, links and Back with keyboard
+and speech; verify that key notation remains intelligible inside description
+lists. Inspect the same commands in ordinary text, Help and a settings menu
+without assuming their context or return behaviour is interchangeable.
+
+This edit does not run or replace the five workflow tests from the preceding
+consistency pass. Their execution and listening acceptance remain separate
+from source-route checking. The intervening branch work reports passing the
+documentation gate after repairing the tutorial link, but that result covers
+the earlier sources rather than this pass.
+No website or tagged release is published by this work.

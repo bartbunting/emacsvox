@@ -10,6 +10,8 @@
 Choose the result you want. Each link leads to the procedure, its conditions
 and its recovery instructions; following a link changes no settings.
 [[*Something is wrong][Something is wrong]] starts from a symptom rather than an editor's name.
+For a key reminder rather than a worked procedure, use
+[[info:emacsvox#Emacsvox Keyboard Commands][Everyday commands and key prefixes]].
 
 If the keyboard instructions are unfamiliar, begin with
 [[*Read the key instructions][Read the key instructions]]. For terms such as palette, profile or draft,
@@ -31,6 +33,9 @@ use [[*Terms used in this manual][Terms used in this manual]].
 #+cindex: read continuously
 #+cindex: resume reading
 #+cindex: reference and draft windows
+#+cindex: read from here
+#+cindex: close this view
+#+cindex: close a window without losing my document
 
 - [[info:emacsvox#Emacs Key Notation][Understand the keyboard instructions]]: learn modifiers, separate steps,
   uppercase letters and command names before using a shortcut.
@@ -38,8 +43,8 @@ use [[*Terms used in this manual][Terms used in this manual]].
   completion, document text and command examples.
 - [[info:emacsvox#Recovering From No Speech][Get speech working again]]: start with the no-speech recovery procedure
   before changing presentation rules or voices.
-- [[info:emacsvox#Basic Usage][Stop current speech]]: the first-session commands include stopping speech
-  without disabling feedback from subsequent commands.
+- [[info:emacsvox#Everyday Reading Commands][Stop current speech]]: recall the stop key and its effect on tracked
+  reading without disabling feedback from subsequent commands.
 - [[*Read a short passage without moving point][Inspect a line, sentence or paragraph]]: choose the reading unit and
   preserve the editing position, with the limits of large requests explained.
 - [[*Read from point, stop, and start again][Read from here and recover my place]]: use ~C-e i~ for supported tracked
@@ -67,6 +72,8 @@ use [[*Terms used in this manual][Terms used in this manual]].
 #+cindex: move a paragraph
 #+cindex: paste an older copy
 #+cindex: undo, inspect between steps
+#+cindex: paste something I copied earlier
+#+cindex: undo while listening
 
 - [[*Select and check the text first][Hear exactly what I selected]]: establish point and mark and inspect the
   newline boundary before an operation.
@@ -171,8 +178,8 @@ use [[*Terms used in this manual][Terms used in this manual]].
   buffer before using navigation keys.
 - [[*Read by heading, paragraph or search][Find information within a page]]: use its HTML structure or search the
   loaded text, without submitting a new web search.
-- [[*Follow a link and return to the article][Follow a link and get back]]: distinguish browser history, separate
-  buffers and saved website bookmarks.
+- [[*Follow a link and return to the article][Follow a link and get back]]: distinguish browser history,
+  separate buffers and saved website bookmarks.
 - [[info:emacsvox#Notmuch Speech And Privacy][Limit the mail details spoken automatically]]: choose fields, bounds, and
   completion feedback. Explicit full-detail reading bypasses automatic bounds.
 - [[info:emacsvox#EAT Terminal Completion][Hear a terminal's completion candidates]]: keep terminal-side completion
@@ -203,6 +210,9 @@ active buffer's mode Help.
 #+cindex: go back, settings
 #+cindex: timeout, did anything change
 #+cindex: reporting a problem
+#+cindex: why did it paste a filename
+#+cindex: pasted a filename
+#+cindex: Help replaced my windows
 
 Start with the closest symptom. These routes preserve existing work and help
 you decide what to inspect before attempting a repair. A failed preview, an
@@ -214,6 +224,10 @@ unsaved draft and a failed application are different problems.
   from exact-word pause/resume and inspect the retained position.
 - [[*Recover a text edit before saving][Text was pasted in the wrong place]]: undo in the affected buffer and
   check the result before trying the transfer again.
+- [[info:emacsvox#Copying Text Between Buffers][A paste inserted a filename or message instead of my passage]]: inspect
+  which command changed the kill ring before choosing the earlier copy.
+- [[info:emacsvox#Using Online Help][Help replaced my other windows]]: check the selected buffer and restore
+  the desired views; a collapsed layout need not mean lost documents.
 - [[info:emacsvox#Saved Voice Change Not Audible][I saved a voice, but it still sounds the same]]: check selection,
   matching rules, individual tuning and engine support in that order.
 - [[info:emacsvox#Settings Lost After Restart][My settings disappeared after restarting]]: distinguish temporary changes
