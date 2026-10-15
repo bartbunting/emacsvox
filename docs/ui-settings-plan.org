@@ -713,8 +713,9 @@ Checked [[file:../lisp/emacsvox-aural-home.el][Home entries, activation, shortcu
 [[file:../lisp/emacsvox-settings.el][settings/action search]], the [[file:../lisp/emacsvox-aural-menu.el][root and reading/output menus]],
 [[file:../lisp/emacsvox-settings-workflows.el][workflow links]], and [[file:../lisp/emacsvox-settings-integrations.el][integration discovery]].
 Every one of Home's 26 named actions is available through =C-e H a= action
-search, including collapsed and shortcut-only actions. This establishes a
-route in source; it does not establish every child view's return behavior.
+search, including previously collapsed and shortcut-only actions. Search now
+focuses controls in the new menus without displaying Home. Child-view return
+and retained draft coverage are recorded in the retirement checkpoints.
 The =C-e H /= focused-setting search has a separate catalogue.
 
 ** Home action routes
@@ -731,8 +732,8 @@ menu gap means the action has no direct control in the new focused menus.
 | punctuation | =s p e= | Host pronunciation editor; level/profile controls alongside |
 | output-volumes | =o=; =o n= for routing | Focused controls; advanced output options remain in Customize |
 | notification-log | =o n h= | History snapshot; Home retains the original notification viewer |
-| return-source | =h C-c C-o=; action search | Explicit jump to the captured item; distinct from simply closing menus |
-| drafts | =p d=, then Enter | Home's retained-editor chooser |
+| return-source | =b=; action search | Explicit jump to the captured item; distinct from simply closing menus |
+| drafts | =p d= | Direct retained-editor chooser; Home is not displayed |
 | explain | =x= or =f x= | Effective feedback details |
 | remap | =f v= | Named-voice mapping draft |
 | tune-voice | =f t=; action search | Shared named-voice draft; direct return preserves unfinished work |
@@ -1014,6 +1015,27 @@ Presentation checkpoint:
   layout cases, and all 51 settings checks with bundled Transient. Incremental
   compilation, byte-code preflight, and the documentation gate pass. Listening
   remains pending; broader settings discovery remains in the queue.
+
+Direct discovery checkpoint:
+- =C-e H a= now focuses a destination in the new menus without opening Home.
+  All 26 named Home actions and both search aliases have routes. Like settings
+  search, matching is case-insensitive and accepts substrings; the first Enter
+  selects a destination and the second activates its control. This is an
+  intentional change from Home action search's immediate activation.
+- =C-e H p d= resumes the existing draft chooser directly. It reuses the current
+  draft registry/chooser helpers without displaying Home. Voice drafts preserve
+  their identity and return to the draft entry after Keep or Discard.
+- =C-e H b= explicitly closes menus and returns to the captured source position.
+- Cancelling a multi-draft chooser exposed a suspended-menu gap. The shared
+  opener now restores its menu on cancellation or a failed open.
+- All 54 source graphical settings checks pass. Fresh compiled checks pass all
+  107 settings/voice-editor cases with installed Transient and all 54 settings
+  cases with bundled Transient, without skips. Incremental compilation,
+  byte-code preflight, generated manuals/references, and the documentation gate
+  pass. Listening acceptance remains pending.
+- The retained Home menu, its own search, and editor h shortcuts remain available
+  for comparison. Removing those entry routes follows listening acceptance;
+  this checkpoint does not claim that Home implementation code was deleted.
 
 ** Next proposed slices
 

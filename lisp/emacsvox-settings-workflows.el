@@ -31,8 +31,7 @@
 (declare-function emacsvox-aural-change-feedback--remap-at-point "emacsvox-aural-change-feedback" ())
 (declare-function emacsvox-aural-remap-earcon-at-point "emacsvox-aural-tools" (&optional record))
 (declare-function emacsvox-edit-aural-rules "emacsvox-aural-editor" (scope &optional fragment source-buffer))
-(declare-function emacsvox-aural-home--goto "emacsvox-aural-home" (id))
-(declare-function emacsvox-aural-home-speak-current "emacsvox-aural-home" (&optional include-context))
+(declare-function emacsvox-aural-home-drafts "emacsvox-aural-home" ())
 
 (defun emacsvox-settings-workflows--open (feature command suffix &optional at-item)
   "Open COMMAND from FEATURE, returning to SUFFIX; optionally use captured AT-ITEM."
@@ -212,16 +211,12 @@ uses the existing training lifecycle, and does not save a startup default."
   (emacsvox-settings-workflows--open 'emacsvox-aural-voice-palettes
    #'emacsvox-aural-list-voice-palettes 'emacsvox-settings-workflows--palettes))
 (defun emacsvox-settings-workflows--drafts ()
-  "Open Home at retained drafts, preserving its established editor return paths."
+  "Resume an unfinished draft directly in its owning editor.
+Choose among retained drafts when more than one exists.  Opening writes nothing;
+the editor keeps its existing save, discard, and finish choices."
   (interactive)
   (emacsvox-settings-workflows--open 'emacsvox-aural-home
-   (lambda ()
-     (interactive)
-     (emacsvox-aural)
-     (with-current-buffer "*Emacsvox Aural*"
-       (emacsvox-aural-home--goto 'drafts)
-       (emacsvox-aural-home-speak-current)))
-   'emacsvox-settings-workflows--drafts t))
+   #'emacsvox-aural-home-drafts 'emacsvox-settings-workflows--drafts))
 
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-setups ()
@@ -231,7 +226,7 @@ uses the existing training lifecycle, and does not save a startup default."
    ("v" "Palettes: inheritance, reset, import and export" emacsvox-settings-workflows--palettes :transient transient--do-suspend)]
   ["Unfinished work"
    ("c" "Changed settings, saved defaults and drafts" emacsvox-settings-changes :transient transient--do-suspend)
-   ("d" "Resume drafts (Home chooser)" emacsvox-settings-workflows--drafts :transient transient--do-suspend)]
+   ("d" "Resume retained drafts" emacsvox-settings-workflows--drafts :transient transient--do-suspend)]
   ["Finish"
    ("q" "Back" transient-quit-one)
    ("C-q" "Close menus" transient-quit-all)]

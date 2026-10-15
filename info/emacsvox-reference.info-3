@@ -8628,8 +8628,8 @@ Function Index
 * emacsvox-set-indentation-tone-timing <1>: emacsvox-speak.  (line  265)
 * emacsvox-set-show-point-presentation:  emacsvox-speak.     (line  278)
 * emacsvox-set-show-point-presentation <1>: emacsvox-speak.  (line  280)
-* emacsvox-settings-buffer:              emacsvox-settings.  (line   15)
-* emacsvox-settings-buffer <1>:          emacsvox-settings.  (line   16)
+* emacsvox-settings-buffer:              emacsvox-settings.  (line   14)
+* emacsvox-settings-buffer <1>:          emacsvox-settings.  (line   15)
 * emacsvox-settings-changes:             emacsvox-settings-changes.
                                                              (line   15)
 * emacsvox-settings-changes <1>:         emacsvox-settings-changes.
@@ -8662,10 +8662,10 @@ Function Index
                                                              (line   30)
 * emacsvox-settings-presentation <1>:    emacsvox-settings-workflows.
                                                              (line   31)
-* emacsvox-settings-search:              emacsvox-settings.  (line   22)
-* emacsvox-settings-search <1>:          emacsvox-settings.  (line   23)
-* emacsvox-settings-search-actions:      emacsvox-settings.  (line   29)
-* emacsvox-settings-search-actions <1>:  emacsvox-settings.  (line   30)
+* emacsvox-settings-search:              emacsvox-settings.  (line   21)
+* emacsvox-settings-search <1>:          emacsvox-settings.  (line   22)
+* emacsvox-settings-search-actions:      emacsvox-settings.  (line   28)
+* emacsvox-settings-search-actions <1>:  emacsvox-settings.  (line   29)
 * emacsvox-settings-setups:              emacsvox-settings-workflows.
                                                              (line   37)
 * emacsvox-settings-setups <1>:          emacsvox-settings-workflows.

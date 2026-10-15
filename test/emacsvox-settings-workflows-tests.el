@@ -245,7 +245,17 @@
           (with-selected-window transient--window
             (should (eq (oref (button-get (button-at (point)) 'button-data) command)
                         'emacsvox-settings-workflows--tune)))
-          (should (emacsvox-aural-voice-drafts--dirty-fields draft)))
+          (should (emacsvox-aural-voice-drafts--dirty-fields draft))
+          (execute-kbd-macro (kbd "q p d"))
+          (should (derived-mode-p 'emacsvox-aural-voice-editor-mode))
+          (should (eq (emacsvox-aural-voice-editor--draft) draft))
+          (cl-letf (((symbol-function 'completing-read)
+                     (lambda (&rest _) "Keep draft and return")))
+            (execute-kbd-macro (kbd "q")))
+          (should (eq (oref transient--prefix command) 'emacsvox-settings-setups))
+          (with-selected-window transient--window
+            (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                        'emacsvox-settings-workflows--drafts))))
         (should (equal before (emacsvox-aural-read-user-data)))
         (should-not requests)))))
 
@@ -301,18 +311,31 @@
       (should (equal before (emacsvox-aural-read-user-data)))
       (should-not (file-exists-p custom-file)))))
 
-(ert-deftest emacsvox-settings-workflows-draft-home-return ()
-  "The draft route opens the actual Home row and returns to Saved setups."
+(ert-deftest emacsvox-settings-workflows-cancel-draft-chooser ()
+  "Cancelling a choice among retained drafts restores Saved setups unchanged."
   (emacsvox-test--with-settings
-    (execute-kbd-macro (kbd "p d"))
-    (should (derived-mode-p 'emacsvox-aural-home-mode))
-    (should (eq (tabulated-list-get-id) 'drafts))
-    (should (eq (emacsvox-aural-inspection-source-buffer) source))
-    (execute-kbd-macro (kbd "q"))
+    (let ((first (generate-new-buffer " *first retained draft*"))
+          (second (generate-new-buffer " *second retained draft*")))
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-aural-home--pending-drafts)
+                     (lambda () (list first second))))
+            (execute-kbd-macro (kbd "p"))
+            (condition-case nil (execute-kbd-macro (kbd "d C-g")) (quit nil))
+            (should (eq (oref transient--prefix command) 'emacsvox-settings-setups))
+            (should-not (get-buffer-window first))
+            (should-not (get-buffer-window second))
+            (should-not (file-exists-p custom-file)))
+        (kill-buffer first)
+        (kill-buffer second)))))
+
+(ert-deftest emacsvox-settings-workflows-no-drafts-keeps-menu ()
+  "An empty draft registry reports the absence without opening Home or saving."
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "p"))
+    (cl-letf (((symbol-function 'emacsvox-aural-home--pending-drafts) (lambda () nil)))
+      (should-error (emacsvox-settings-workflows--drafts) :type 'user-error))
     (should (eq (oref transient--prefix command) 'emacsvox-settings-setups))
-    (with-selected-window transient--window
-      (should (eq (oref (button-get (button-at (point)) 'button-data) command)
-                  'emacsvox-settings-workflows--drafts)))))
+    (should-not (file-exists-p custom-file))))
 
 (ert-deftest emacsvox-settings-integrations-comint-is-local ()
   "The terminal control uses the captured buffer and cannot save a global default."

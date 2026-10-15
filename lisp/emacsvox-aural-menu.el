@@ -671,24 +671,29 @@ When opened from the Emacsvox menu, share its selected scope."
    'state-change 'save-object))
 
 (defun emacsvox-aural-menu--open-browser (open command)
-  "Call OPEN in the source and return from its buffer to menu COMMAND."
+  "Call OPEN in the source and return from its buffer to menu COMMAND.
+Cancelled prompts and failed opens restore the suspended menu too."
   (let* ((context (emacsvox-aural-menu--context))
          (source (emacsvox-aural-menu--source context))
-         (stack (copy-sequence transient--stack)))
-    (with-current-buffer source
-      (with-current-buffer (funcall open)
-        (setq-local emacsvox-aural-ui--return-function
-                    (lambda ()
-                      (when (buffer-live-p source)
-                        (pop-to-buffer source)
-                        ;; Own the saved stack even if another menu was opened.
-                        (setq transient--stack (copy-sequence stack))
-                        (transient--stack-pop)
-                        (transient--show)
-                        (with-selected-window transient--window
-                          (transient--goto-button
-                           (transient-suffix-object command)))
-                        t)))))))
+         (stack (copy-sequence transient--stack))
+         (return
+          (lambda ()
+            (when (buffer-live-p source)
+              (pop-to-buffer source)
+              ;; Own the saved stack even if another menu was opened.
+              (setq transient--stack (copy-sequence stack))
+              (transient--stack-pop)
+              (transient--show)
+              (with-selected-window transient--window
+                (transient--goto-button (transient-suffix-object command)))
+              t))))
+    (condition-case failure
+        (with-current-buffer source
+          (with-current-buffer (funcall open)
+            (setq-local emacsvox-aural-ui--return-function return)))
+      ((quit error)
+       (unless transient--prefix (funcall return))
+       (signal (car failure) (cdr failure))))))
 
 (defun emacsvox-aural-menu--sound-packs ()
   "Open the sound-pack browser; q returns to Sounds and output."
@@ -810,11 +815,26 @@ Enter sets an exact value.  Save explicitly to retain volumes across restarts."
     (emacsvox-aural-menu--source context)
     (transient-setup 'emacsvox-aural-menu-sounds nil nil :scope context)))
 
+(defun emacsvox-aural-menu--return-source ()
+  "Close menus and return to the captured source item, speaking its line.
+The captured location must still exist.  This changes no settings or drafts."
+  (interactive)
+  (let* ((context (emacsvox-aural-menu--context))
+         (source (emacsvox-aural-menu--source context))
+         (position (plist-get context :position)))
+    (unless (and (markerp position) (eq (marker-buffer position) source))
+      (user-error "The captured source location is no longer available"))
+    (emacsvox-aural-inspection-check-source-guard (plist-get context :guard))
+    (pop-to-buffer source)
+    (when (or (< position (point-min)) (> position (point-max))) (widen))
+    (goto-char position)
+    (emacsvox-speak-line)))
+
 ;;;###autoload
 (transient-define-prefix emacsvox-aural-menu (&optional global)
   "Choose Emacsvox speech settings or inspect feedback for this item.
 With prefix GLOBAL, start speech settings with global defaults.
-The source item is captured on entry; Aural Home offers all other actions."
+The source item is captured on entry for contextual editing and return."
   :refresh-suffixes t
   ["Emacsvox"
    ("s" (lambda () (concat "Speech settings: " (emacsvox-aural-menu--scope-label)))
@@ -830,9 +850,10 @@ The source item is captured on entry; Aural Home offers all other actions."
    ("D" "Diagnostics and recovery" emacsvox-settings-diagnostics :transient transient--do-stack)
    ("h" "Aural Home (all actions)" emacsvox-aural-menu--home)
    ("/" "Find an Emacsvox setting" emacsvox-settings-search :transient transient--do-stack)
-   ("a" "Search all Home actions" emacsvox-settings-search-actions :transient transient--do-suspend)
+   ("a" "Find an action" emacsvox-settings-search-actions :transient transient--do-stack)
    ("." "Settings for this buffer" emacsvox-settings-buffer :transient transient--do-stack)]
   ["Finish"
+   ("b" "Return to captured source item" emacsvox-aural-menu--return-source :transient transient--do-exit)
    ("q" "Close" transient-quit-one)]
   (interactive "P")
   (transient-setup 'emacsvox-aural-menu nil nil

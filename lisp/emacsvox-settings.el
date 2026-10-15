@@ -24,11 +24,10 @@
 ;; along with Emacsvox.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Search focused settings or existing Home actions with captured source context.
+;; Search settings and action destinations with captured source context.
 ;;; Code:
 (require 'emacsvox-aural-menu)
 (require 'cus-edit)
-(declare-function emacsvox-aural-home-search "emacsvox-aural-home" ())
 
 (defconst emacsvox-settings--destinations
   '(("Aural Doctor and recovery" emacsvox-settings-workflows emacsvox-settings-diagnostics "d")
@@ -99,6 +98,37 @@
     ("Voice palettes" emacsvox-aural-menu emacsvox-aural-menu-voices "p"))
   "Search labels, defining features, destination prefixes, and selected keys.")
 
+(defconst emacsvox-settings--actions
+  '(("Change this feedback" emacsvox-settings-workflows emacsvox-settings-feedback "c")
+    ("Browse voices" emacsvox-aural-menu emacsvox-aural-menu-voices "b")
+    ("Preferred speech engine" emacsvox-aural-menu emacsvox-aural-menu-voices "e")
+    ("Speech rate" emacsvox-aural-menu emacsvox-aural-menu-speech "r")
+    ("Punctuation" emacsvox-aural-menu emacsvox-aural-menu-punctuation "e")
+    ("Audio output" emacsvox-aural-menu emacsvox-aural-menu-sounds "t")
+    ("Review notifications" emacsvox-output-settings emacsvox-output-settings "h")
+    ("Return to source item" emacsvox-aural-menu emacsvox-aural-menu "b")
+    ("Resume unfinished changes" emacsvox-settings-workflows emacsvox-settings-setups "d")
+    ("Feedback for this item" emacsvox-settings-workflows emacsvox-settings-feedback "x")
+    ("Choose a voice for this item" emacsvox-settings-workflows emacsvox-settings-feedback "v")
+    ("Edit the named voice used here" emacsvox-settings-workflows emacsvox-settings-feedback "t")
+    ("Change a sound for this item" emacsvox-settings-workflows emacsvox-settings-feedback "e")
+    ("Your feedback rules" emacsvox-settings-workflows emacsvox-settings-presentation "o")
+    ("Recent feedback" emacsvox-settings-workflows emacsvox-settings-feedback "h")
+    ("Presentation profiles" emacsvox-settings-workflows emacsvox-settings-setups "p")
+    ("Voice palettes" emacsvox-aural-menu emacsvox-aural-menu-voices "p")
+    ("Voice Workbench" emacsvox-aural-menu emacsvox-aural-menu-voices "w")
+    ("Presentation options" emacsvox-settings-workflows emacsvox-settings-presentation "f")
+    ("Current buffer rules" emacsvox-settings-workflows emacsvox-settings-presentation "b")
+    ("Semantic vocabulary" emacsvox-settings-workflows emacsvox-settings-presentation "h")
+    ("Sound packs" emacsvox-aural-menu emacsvox-aural-menu-sounds "p")
+    ("Spatial capabilities" emacsvox-settings-workflows emacsvox-settings-diagnostics "s")
+    ("Spatial settings" emacsvox-output-settings emacsvox-output-settings "d")
+    ("Explain feedback as you navigate" emacsvox-settings-workflows emacsvox-settings-presentation "t")
+    ("Aural Doctor" emacsvox-settings-workflows emacsvox-settings-diagnostics "d")
+    ("Explain this item" emacsvox-settings-workflows emacsvox-settings-feedback "x")
+    ("Recent aural feedback" emacsvox-settings-workflows emacsvox-settings-feedback "h"))
+  "Action labels and focused destinations, including the established search aliases.")
+
 (defconst emacsvox-settings--search-aliases
   '(("Capital-letter beep" "caps beep" "capital beep")
     ("All-caps beep" "allcaps beep" "all caps beep" "caps beep"))
@@ -142,12 +172,10 @@
       (transient--goto-button
        (cl-find (nth 3 entry) transient--suffixes
                 :key (lambda (suffix) (oref suffix key)) :test #'equal)))))
-;;;###autoload
-(defun emacsvox-settings-search ()
-  "Find a focused setting and select its control without activating it."
-  (interactive)
+(defun emacsvox-settings--find (prompt entries)
+  "Read a destination from ENTRIES with PROMPT, then focus its control."
   (let ((completion-ignore-case t)
-        ;; Keep the completion frontend, but give this search consistent matching.
+        ;; Keep the completion frontend, but give these searches consistent matching.
         (completion-styles '(emacsvox-settings))
         (completion-category-defaults nil)
         (completion-category-overrides nil)
@@ -156,21 +184,22 @@
                  emacsvox-settings--search-all "Find settings by label or alias.")
                completion-styles-alist)))
     (emacsvox-settings--open
-     (or (assoc-string
-          (completing-read "Emacsvox setting: " emacsvox-settings--destinations nil t)
-          emacsvox-settings--destinations t)
-         (user-error "Choose a setting")))))
+     (or (assoc-string (completing-read prompt entries nil t) entries t)
+         (user-error "Choose a destination")))))
+
+;;;###autoload
+(defun emacsvox-settings-search ()
+  "Find a focused setting and select its control without activating it."
+  (interactive)
+  (emacsvox-settings--find "Emacsvox setting: " emacsvox-settings--destinations))
+
 ;;;###autoload
 (defun emacsvox-settings-search-actions ()
-  "Search the existing Home action catalogue; Home q returns to this menu."
+  "Find an action and select its focused-menu control without activating it.
+Match partial names without case sensitivity.  RET accepts a search result;
+another RET activates its control.  q returns to the menu where you searched."
   (interactive)
-  (emacsvox-aural-menu--open-browser
-   (lambda ()
-     (emacsvox-aural-menu--call-at-item #'emacsvox-aural)
-     (get-buffer "*Emacsvox Aural*"))
-   'emacsvox-settings-search-actions)
-  (pop-to-buffer "*Emacsvox Aural*")
-  (emacsvox-aural-home-search))
+  (emacsvox-settings--find "Emacsvox action: " emacsvox-settings--actions))
 (defun emacsvox-settings--speech ()
   "Open speech settings for this buffer." (interactive)
   (emacsvox-settings--open (assoc "Speech rate" emacsvox-settings--destinations)))

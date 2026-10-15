@@ -3533,7 +3533,7 @@ submenus and delegate settings and feedback to their existing commands.
 
      Choose Emacsvox speech settings or inspect feedback for this item.
      With prefix GLOBAL, start speech settings with global defaults.
-     The source item is captured on entry; Aural Home offers all other actions.
+     The source item is captured on entry for contextual editing and return.
 
 2.30.1.2 emacsvox-aural-menu-line-cues
 ......................................

@@ -3749,7 +3749,7 @@ submenus and delegate settings and feedback to their existing commands.
 @format
 Choose Emacsvox speech settings or inspect feedback for this item.
 With prefix GLOBAL, start speech settings with global defaults.
-The source item is captured on entry; Aural Home offers all other actions.
+The source item is captured on entry for contextual editing and return.
 @end format
 @end deffn
 
@@ -18418,7 +18418,7 @@ Summarize current cell.
 @node emacsvox-settings
 @section emacsvox-settings
 
-Search focused settings or existing Home actions with captured source context.
+Search settings and action destinations with captured source context.
 
 @subsection Emacsvox-Settings Commands
 
@@ -18445,7 +18445,9 @@ Find a focused setting and select its control without activating it.
 @findex emacsvox-settings-search-actions
 
 @format
-Search the existing Home action catalogue; Home q returns to this menu.
+Find an action and select its focused-menu control without activating it.
+Match partial names without case sensitivity.  RET accepts a search result;
+another RET activates its control.  q returns to the menu where you searched.
 @end format
 @end deffn
 

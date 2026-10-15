@@ -152,22 +152,59 @@
     (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
     (should (cdr (plist-get (emacsvox-aural-menu--context) :settings)))))
 
-(ert-deftest emacsvox-settings-menu-home-action-search-and-return ()
-  "Home action search retains its captured item and its return to the menu."
+(ert-deftest emacsvox-settings-menu-action-search-and-return ()
+  "Partial action search focuses a control, then opens it without visiting Home."
   (emacsvox-test--with-settings
-    (execute-kbd-macro (kbd "a S o u n d SPC p a c k s RET"))
-    (should (derived-mode-p 'emacsvox-aural-sound-packs-mode))
-    (execute-kbd-macro (kbd "q"))
-    (should (derived-mode-p 'emacsvox-aural-home-mode))
-    (should (eq (emacsvox-aural-inspection-source-buffer) source))
-    (should (= emacsvox-aural-ui-source-position 3))
-    (execute-kbd-macro (kbd "q"))
-    (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))))
+    (cl-letf (((symbol-function 'emacsvox-aural)
+               (lambda () (interactive) (error "Unexpected Home entry"))))
+      (execute-kbd-macro (kbd "a p a c k s RET"))
+      (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-sounds))
+      (with-selected-window transient--window
+        (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                    'emacsvox-aural-menu--sound-packs)))
+      (execute-kbd-macro (kbd "RET"))
+      (should (derived-mode-p 'emacsvox-aural-sound-packs-mode))
+      (execute-kbd-macro (kbd "q"))
+      (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-sounds))
+      (should (eq (emacsvox-aural-menu--source (emacsvox-aural-menu--context)) source))
+      (execute-kbd-macro (kbd "q"))
+      (should (eq (oref transient--prefix command) 'emacsvox-aural-menu)))))
+
+(ert-deftest emacsvox-settings-actions-cover-home-without-activation ()
+  "Every named Home action and alias has a passive focused-menu destination."
+  (require 'emacsvox-aural-home)
+  (emacsvox-test--with-settings
+    (dolist (row (emacsvox-aural-home--all-entries))
+      (should (assoc (aref (cadr row) 0) emacsvox-settings--actions)))
+    (cl-letf (((symbol-function 'emacsvox-aural)
+               (lambda () (interactive) (error "Unexpected Home entry"))))
+      (dolist (entry emacsvox-settings--actions)
+        (execute-kbd-macro (vconcat (kbd "a") (car entry) (kbd "RET")))
+        (should (eq (oref transient--prefix command) (nth 2 entry)))
+        (with-selected-window transient--window
+          (should (equal (oref (button-get (button-at (point)) 'button-data) key)
+                         (nth 3 entry))))
+        (execute-kbd-macro (kbd "q"))
+        (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))))
+    (should-not (file-exists-p custom-file))))
+
+(ert-deftest emacsvox-settings-return-source-restores-captured-position ()
+  "The explicit source action leaves all menus and restores the captured point."
+  (emacsvox-test--with-settings
+    (with-current-buffer source (goto-char (point-max)))
+    (execute-kbd-macro (kbd "a R e t u r n SPC t o SPC s o u r c e RET"))
+    (execute-kbd-macro (kbd "RET"))
+    (should-not transient--prefix)
+    (should-not transient--stack)
+    (should (eq (current-buffer) source))
+    (should (= (point) 3))))
 
 (ert-deftest emacsvox-settings-menu-search-cancel-keeps-menu ()
   "Cancelling completion returns to the original menu without a mutation."
   (emacsvox-test--with-settings
-    (condition-case nil (execute-kbd-macro (kbd "/ C-g")) (quit nil))
+    (dolist (key '("/ C-g" "a C-g"))
+      (condition-case nil (execute-kbd-macro (kbd key)) (quit nil))
+      (should (eq (oref transient--prefix command) 'emacsvox-aural-menu)))
     (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
     (should (= (with-current-buffer source (point)) 3))
     (should-not (file-exists-p custom-file))))

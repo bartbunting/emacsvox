@@ -3091,7 +3091,7 @@ preference through Customize.
 
 Press @kbd{C-e H /} to find an Emacsvox setting by any part of its name@comma{} ignoring
 capitalisation. Type @kbd{cap} to find @emph{Capitalization indication and camel case}@comma{}
-@emph{Capital-letter beep}@comma{} and @emph{All-caps beep}. The aliases @kbd{caps beep} and
+@emph{Capital-letter beep}@comma{} @emph{All-caps beep}@comma{} and @emph{Spatial capabilities}. The aliases @kbd{caps beep} and
 @kbd{allcaps} find both beep controls and only @emph{All-caps beep}@comma{} respectively.
 Each result appears once under its normal name. Use completion to choose a
 result; ambiguous text does not choose one automatically. These matching rules
@@ -3102,10 +3102,16 @@ without changing its value. Press @kbd{@key{RET}} again to activate or edit the 
 The captured source and current settings scope follow the search. @kbd{q} returns
 to the menu where you searched@comma{} and cancelling completion keeps that menu open.
 
-Press @kbd{C-e H a} to search the Home action catalogue@comma{} including actions inside
-collapsed groups. Child views use their normal return paths; @kbd{q} from Home
-returns to the originating menu. This action search is distinct from the
-settings search on @kbd{C-e H /}. Within Aural Home itself@comma{} @kbd{/} searches actions.
+Press @kbd{C-e H a} to find an action such as @emph{Browse voices}@comma{} @emph{Your feedback
+rules}@comma{} or @emph{Aural Doctor}. It uses the same case-insensitive partial-name
+matching and two-Enter selection as settings search: choose the destination@comma{}
+then activate its control. It covers all named Home actions without opening
+Home. Child views return to their focused menu; another @kbd{q} returns to the
+menu where you searched. Within the retained Aural Home@comma{} @kbd{/} still opens
+actions directly.
+
+Press @kbd{C-e H b} to close menus and return to the captured source position@comma{}
+speaking its line. A changed or deleted source item must be captured again.
 
 Press @kbd{C-e H .} for settings relevant to the captured buffer: speech@comma{}
 indentation@comma{} typing/point feedback@comma{} capitalisation@comma{} and its major mode's
@@ -5701,11 +5707,13 @@ settings menu or editor to change a value@comma{} save it@comma{} or apply a req
 @node Recovering Aural Changes
 @subsection Recover Unfinished Changes
 
-Use @kbd{h} to leave a working editor through Home without losing it. Home's
-@emph{Resume unfinished changes} opens the original draft@comma{} including its source and
-working settings. From @kbd{C-e H p}@comma{} the drafts entry opens Home on @emph{Resume
-unfinished changes}; press @kbd{@key{RET}} to choose a retained editor. Return through
-Home to the same menu entry.
+Press @kbd{C-e H p d} to resume a retained draft directly in its owning editor.
+When several drafts exist@comma{} choose one by name; cancelling keeps the menu open.
+Opening the draft preserves its source and working settings and saves nothing.
+Finishing returns to the same menu item. Each editor retains its own save and
+leave choices: the voice editor offers Keep@comma{} Discard@comma{} or Continue editing;
+a rule editor can ask before discarding an unsaved draft. Home's @emph{Resume
+unfinished changes} remains available during the comparison period.
 
 In the common voice editor@comma{} @kbd{u} undoes and @kbd{q} offers to keep the draft@comma{}
 discard changes@comma{} or continue. Guided feedback @kbd{q} goes back one level@comma{} then

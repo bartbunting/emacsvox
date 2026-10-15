@@ -149,7 +149,7 @@ preference through Customize.
 
 Press ~C-e H /~ to find an Emacsvox setting by any part of its name, ignoring
 capitalisation. Type ~cap~ to find /Capitalization indication and camel case/,
-/Capital-letter beep/, and /All-caps beep/. The aliases ~caps beep~ and
+/Capital-letter beep/, /All-caps beep/, and /Spatial capabilities/. The aliases ~caps beep~ and
 ~allcaps~ find both beep controls and only /All-caps beep/, respectively.
 Each result appears once under its normal name. Use completion to choose a
 result; ambiguous text does not choose one automatically. These matching rules
@@ -160,10 +160,16 @@ without changing its value. Press ~RET~ again to activate or edit the control.
 The captured source and current settings scope follow the search. ~q~ returns
 to the menu where you searched, and cancelling completion keeps that menu open.
 
-Press ~C-e H a~ to search the Home action catalogue, including actions inside
-collapsed groups. Child views use their normal return paths; ~q~ from Home
-returns to the originating menu. This action search is distinct from the
-settings search on ~C-e H /~. Within Aural Home itself, ~/~ searches actions.
+Press ~C-e H a~ to find an action such as /Browse voices/, /Your feedback
+rules/, or /Aural Doctor/. It uses the same case-insensitive partial-name
+matching and two-Enter selection as settings search: choose the destination,
+then activate its control. It covers all named Home actions without opening
+Home. Child views return to their focused menu; another ~q~ returns to the
+menu where you searched. Within the retained Aural Home, ~/~ still opens
+actions directly.
+
+Press ~C-e H b~ to close menus and return to the captured source position,
+speaking its line. A changed or deleted source item must be captured again.
 
 Press ~C-e H .~ for settings relevant to the captured buffer: speech,
 indentation, typing/point feedback, capitalisation, and its major mode's
@@ -2666,11 +2672,13 @@ settings menu or editor to change a value, save it, or apply a required restart.
 :DESCRIPTION: Resume drafts and distinguish saved settings from confirmed application.
 :END:
 
-Use ~h~ to leave a working editor through Home without losing it. Home's
-/Resume unfinished changes/ opens the original draft, including its source and
-working settings. From ~C-e H p~, the drafts entry opens Home on /Resume
-unfinished changes/; press ~RET~ to choose a retained editor. Return through
-Home to the same menu entry.
+Press ~C-e H p d~ to resume a retained draft directly in its owning editor.
+When several drafts exist, choose one by name; cancelling keeps the menu open.
+Opening the draft preserves its source and working settings and saves nothing.
+Finishing returns to the same menu item. Each editor retains its own save and
+leave choices: the voice editor offers Keep, Discard, or Continue editing;
+a rule editor can ask before discarding an unsaved draft. Home's /Resume
+unfinished changes/ remains available during the comparison period.
 
 In the common voice editor, ~u~ undoes and ~q~ offers to keep the draft,
 discard changes, or continue. Guided feedback ~q~ goes back one level, then

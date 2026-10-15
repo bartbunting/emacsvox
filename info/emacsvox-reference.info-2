@@ -6866,8 +6866,7 @@ File: emacsvox-reference.info,  Node: emacsvox-settings,  Next: emacsvox-setting
 2.227 emacsvox-settings
 =======================
 
-Search focused settings or existing Home actions with captured source
-context.
+Search settings and action destinations with captured source context.
 
 2.227.1 Emacsvox-Settings Commands
 ----------------------------------
@@ -6891,7 +6890,9 @@ context.
 
  -- Command: emacsvox-settings-search-actions
 
-     Search the existing Home action catalogue; Home q returns to this menu.
+     Find an action and select its focused-menu control without activating it.
+     Match partial names without case sensitivity.  RET accepts a search result;
+     another RET activates its control.  q returns to the menu where you searched.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-settings-changes,  Next: emacsvox-settings-integrations,  Prev: emacsvox-settings,  Up: Emacsvox Commands And Options
