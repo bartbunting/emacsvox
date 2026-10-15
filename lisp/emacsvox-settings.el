@@ -260,7 +260,7 @@ another RET activates its control.  q returns to the menu where you searched."
    ("m" "Major-mode settings (Customize)" emacsvox-settings--mode :inapt-if-not emacsvox-settings--mode-group :transient transient--do-suspend)]
   ["Discover more"
    ("/" "Find an Emacsvox setting" emacsvox-settings-search :transient transient--do-stack)
-   ("a" "Search all Home actions" emacsvox-settings-search-actions :transient transient--do-suspend)
+   ("a" "Find an action" emacsvox-settings-search-actions :transient transient--do-suspend)
    ("A" "Advanced Emacsvox settings (Customize)" emacsvox-settings--advanced :transient transient--do-suspend)
    ("q" "Back" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)]

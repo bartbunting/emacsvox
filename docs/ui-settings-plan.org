@@ -22,6 +22,16 @@ personal configuration changes, or publication.
 
 ** Current baseline
 
+- Menu organisation, 2026-10-15: the first slice groups =C-e H= into Everyday
+  settings, This buffer and item, Rules and saved work, Find and get help, and
+  Finish. Existing shortcuts and actions are retained. The item explanation
+  reads "Explain this item"; buffer discovery uses "Find an action" rather
+  than the retired Home label. Section-arrow destinations deliberately change.
+  All 40 focused menu, discovery, and movement-announcement checks passed
+  from source and compiled code in fresh graphical Emacs. Incremental
+  compilation and byte-code preflight passed.
+  Listening acceptance of the new grouping remains open.
+
 - Implemented on 2026-10-15: =C-e H i= opens the offline manual at its top
   node in a separate Info buffer. Normal Info navigation and index lookup
   remain available; =q= restores the menu's manual selection, captured source,
@@ -1143,6 +1153,26 @@ Broader inventory expansion and search policy outside these two menu searches
 remain separate workstreams.
 
 ** Next proposed slices
+
+Complete the menu-organisation pass before expanding settings coverage:
+
+- Reorder Speech settings around scope, rate, punctuation, capitalization,
+  indentation, and typing. Consider a direct main-menu navigation-settings
+  entry while retaining =C-e H s n=.
+- Put pronunciation editing, notification routing, and the combined rule
+  overview under sections describing those tasks. Use a consistent Finish
+  section in integration menus.
+- Organise Notmuch around spoken content, status feedback, and reading limits.
+  Keep each editor's saving rules explicit.
+- Put voice-tuning scope before adjustments. Align preview and save wording;
+  changes to established Save and Stop keys remain a separate decision.
+- Add the manual to action discovery and review duplicate search results,
+  preserving useful aliases and cross-links.
+- Ordinary submenu return does not consistently restore the invoking item:
+  entering Buffer settings with Enter and returning with =q= leaves point at
+  the main-menu heading. A graphical probe reproduces this on the committed
+  layout before regrouping. Treat return selection as a separate interaction
+  fix; the grouping slice preserves existing submenu return behaviour.
 
 Diagnostics, named-voice tuning, the combined rule overview, training controls,
 direct action discovery, and Home menu retirement are delivered above. The

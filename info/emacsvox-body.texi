@@ -2030,7 +2030,10 @@ opens the appropriate menu and selects the control without changing its
 value. Press @kbd{@key{RET}} again to activate or edit it. Cancelling completion
 leaves the originating menu open.
 
-In a settings menu@comma{} up/down selects an item and left/right changes sections.
+The main menu groups its entries in this order: @emph{Everyday settings}@comma{}
+@emph{This buffer and item}@comma{} @emph{Rules and saved work}@comma{} @emph{Find and get help}@comma{} and
+@emph{Finish}. Use left/right to reach a group@comma{} then up/down to select an item.
+The same arrows navigate sections and items in the submenus.
 @kbd{@key{RET}}@comma{} @kbd{M-@key{RET}}@comma{} or @kbd{C-j} activates the selected item; its displayed shortcut
 also works directly. Press @kbd{?} followed by an item's key to hear its effect
 and scope@comma{} or @kbd{? ?} for the menu overview. @kbd{q} in that Help returns to the

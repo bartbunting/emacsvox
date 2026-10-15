@@ -393,7 +393,7 @@
           (unwind-protect
               (progn
                 (dolist (keys '("q" "C-g" "s i C-q"
-                                "<right> <down> C-j"))
+                                "<right> <right> <right> <right> <down> C-j"))
                   (execute-kbd-macro (kbd "<f8>"))
                   (transient--show)
                   (setq closures nil)
@@ -414,6 +414,52 @@
                 (should-not transient--prefix)
                 (should (= (length closures) 1)))
             (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))
+
+(ert-deftest emacsvox-aural-menu-graphical-task-sections ()
+  "Section arrows announce task groups and Enter opens the selected control."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (emacsvox-test--with-aural-menu
+      (switch-to-buffer source)
+      (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+      (dolist (style '(continuous section-wrap section-stop))
+        (let ((transient--prefix nil) (transient-show-menu t)
+              (emacsvox-transient-navigation-style style)
+              (emacsvox-transient-section-announcement-order 'by-movement)
+              (emacsvox-transient-verbose-descriptions nil)
+              speech)
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (text &rest _) (push text speech))))
+            (unwind-protect
+                (progn
+                  (execute-kbd-macro (kbd "C-u <f8>"))
+                  (transient--show)
+                  (dolist (section '(("This buffer and item" "." 2)
+                                     ("Rules and saved work" "r" 3)
+                                     ("Find and get help" "/" 4)
+                                     ("Finish" "b" 5)))
+                    (setq speech nil)
+                    (execute-kbd-macro (kbd "<right>"))
+                    (should (equal speech
+                                   (list (format "%s. %s of 5 sections."
+                                                 (car section) (nth 2 section)))))
+                    (with-selected-window transient--window
+                      (should (equal (oref (button-get (button-at (point)) 'button-data) key)
+                                     (cadr section)))))
+                  (execute-kbd-macro (kbd "<left> <left> <left> <left>"))
+                  (should (equal (car speech) "Everyday settings. 1 of 5 sections."))
+                  ;; Read the first item without moving, then activate it.
+                  (execute-kbd-macro (kbd "<right> C-u 0 <down>"))
+                  (should (equal (car speech) "Settings for this buffer. .."))
+                  (execute-kbd-macro (kbd "RET"))
+                  (should (eq (oref transient--prefix command) 'emacsvox-settings-buffer))
+                  (execute-kbd-macro (kbd "q"))
+                  (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+                  (should (cdr (plist-get (emacsvox-aural-menu--context) :settings)))
+                  (execute-kbd-macro (kbd "q"))
+                  (should (eq (current-buffer) source))
+                  (should (= (point) 3)))
+              (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))))
 
 (ert-deftest emacsvox-aural-menu-graphical-help-returns-to-menu ()
   "Menu overview and command help return with scope and parent menus intact."

@@ -2148,11 +2148,14 @@ accepting it opens the appropriate menu and selects the control without
 changing its value.  Press ‘<RET>’ again to activate or edit it.
 Cancelling completion leaves the originating menu open.
 
-   In a settings menu, up/down selects an item and left/right changes
-sections.  ‘<RET>’, ‘M-<RET>’, or ‘C-j’ activates the selected item; its
-displayed shortcut also works directly.  Press ‘?’ followed by an item's
-key to hear its effect and scope, or ‘? ?’ for the menu overview.  ‘q’
-in that Help returns to the menu with the selection retained.
+   The main menu groups its entries in this order: _Everyday settings_,
+_This buffer and item_, _Rules and saved work_, _Find and get help_, and
+_Finish_.  Use left/right to reach a group, then up/down to select an
+item.  The same arrows navigate sections and items in the submenus.
+‘<RET>’, ‘M-<RET>’, or ‘C-j’ activates the selected item; its displayed
+shortcut also works directly.  Press ‘?’ followed by an item's key to
+hear its effect and scope, or ‘? ?’ for the menu overview.  ‘q’ in that
+Help returns to the menu with the selection retained.
 
    Within the menu itself, ‘q’ or ‘C-g’ goes back one level, while ‘C-q’
 closes the sequence.  These navigation commands do not undo changes

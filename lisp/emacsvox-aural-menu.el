@@ -850,22 +850,25 @@ The captured location must still exist.  This changes no settings or drafts."
 With prefix GLOBAL, start speech settings with global defaults.
 The source item is captured on entry for contextual editing and return."
   :refresh-suffixes t
-  ["Emacsvox"
+  ["Everyday settings"
    ("s" (lambda () (concat "Speech settings: " (emacsvox-aural-menu--scope-label)))
     emacsvox-aural-menu-speech)
-   ("o" "Sounds and output (global)" emacsvox-aural-menu-sounds)
    ("v" "Voices and engines" emacsvox-aural-menu-voices)
-   ("d" "Changed settings and drafts" emacsvox-settings-changes :transient transient--do-suspend)
-   ("j" "Integration settings" emacsvox-settings-integrations :transient transient--do-stack)
-   ("p" "Saved setups and drafts" emacsvox-settings-setups :transient transient--do-stack)
+   ("o" "Sounds and output (global)" emacsvox-aural-menu-sounds)
+   ("j" "Integration settings" emacsvox-settings-integrations :transient transient--do-stack)]
+  ["This buffer and item"
+   ("." "Settings for this buffer" emacsvox-settings-buffer :transient transient--do-stack)
+   ("x" "Explain this item" emacsvox-aural-menu--feedback)
+   ("f" "Edit current or recent feedback" emacsvox-settings-feedback :transient transient--do-stack)]
+  ["Rules and saved work"
    ("r" "Presentation and rules" emacsvox-settings-presentation :transient transient--do-stack)
-   ("f" "Edit current or recent feedback" emacsvox-settings-feedback :transient transient--do-stack)
-   ("x" "Feedback for this item" emacsvox-aural-menu--feedback)
-   ("D" "Diagnostics and recovery" emacsvox-settings-diagnostics :transient transient--do-stack)
+   ("p" "Saved setups and drafts" emacsvox-settings-setups :transient transient--do-stack)
+   ("d" "Changed settings and drafts" emacsvox-settings-changes :transient transient--do-suspend)]
+  ["Find and get help"
    ("/" "Find an Emacsvox setting" emacsvox-settings-search :transient transient--do-stack)
    ("a" "Find an action" emacsvox-settings-search-actions :transient transient--do-stack)
-   ("." "Settings for this buffer" emacsvox-settings-buffer :transient transient--do-stack)
-   ("i" "Read the manual" emacsvox-aural-menu--manual :transient transient--do-suspend)]
+   ("i" "Read the manual" emacsvox-aural-menu--manual :transient transient--do-suspend)
+   ("D" "Diagnostics and recovery" emacsvox-settings-diagnostics :transient transient--do-stack)]
   ["Finish"
    ("b" "Return to captured source item" emacsvox-aural-menu--return-source :transient transient--do-exit)
    ("q" "Close" transient-quit-one)]
