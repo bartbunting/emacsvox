@@ -125,6 +125,7 @@
   (require 'emacsvox-tooltip-tests)
   (require 'emacsvox-formatting-tests)
   (require 'emacsvox-help-tests)
+  (require 'emacsvox-manual-workflow-tests)
   (require 'emacsvox-region-tests)
   (require 'emacsvox-eval-tests)
   (require 'emacsvox-narrowing-tests)

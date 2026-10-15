@@ -84,9 +84,9 @@ again. Do not use this reset procedure on other work.
 :END:
 
 Emacs calls the editing position /point/. Movement changes point and Emacsvox
-speaks what you reach. Explicit reading lets you inspect text without first
-moving. Learning that distinction makes it easier to recover when speech is
-interrupted or you are unsure where the next edit will occur.
+speaks what you reach. Short inspections, such as reading a line or character,
+leave point in place. Learning that distinction makes it easier to recover
+when speech is interrupted or you are unsure where the next edit will occur.
 
 1. In the practice buffer, press ~M-<~, then ~C-n~. You reach the line about
    the green notebook and hear its text.
@@ -99,6 +99,12 @@ interrupted or you are unsure where the next edit will occur.
 4. Press ~C-e b~ to start reading the buffer and ~C-e s~ to stop that speech.
    Then press ~C-e l~. It still works: stopping an utterance has not switched
    speech off or closed the document.
+
+This small-buffer exercise uses ~C-e b~, which leaves point in place.
+Tracked reading with ~C-e i~ is different: on a supporting speech server it
+advances point by chunks. Stopping leaves a chunk boundary, not necessarily
+the exact word last heard. See [[*Read from point, stop, and start again][Read from point, stop, and start again]]
+when you are ready for longer reading; it is not required for this exercise.
 
 The exact voice and pronunciation depend on your current settings. Check the
 text you reached, not whether your system sounds like someone else's.
@@ -135,11 +141,13 @@ small insertion, inspect it, and undo it before attempting a replacement.
    press ~RET~ to finish. Point is after =ready= and before its full stop.
 2. Type a space followed by =now=. ~C-e l~ should read the sentence with
    =ready now=. The other sentences are unchanged.
-3. Press ~C-/~ to undo and inspect the line again with ~C-e l~. Undo works in
-   editing groups, not necessarily one character at a time. Stop when the
-   sentence is back to =This sentence is ready.=; do not keep undoing into
-   the initial insertion of the example. ~M-x undo RET~ is an alternative
-   when your keyboard cannot send ~C-/~.
+3. In the practice document, press ~C-g~ to deactivate any selection, then
+   run ~M-x undo-only RET~. Read the line with ~C-e l~. If another undo is
+   needed, run =undo-only= again and inspect again. Undo works in editing
+   groups, not necessarily one character at a time. Stop when the sentence
+   is back to =This sentence is ready.=; do not undo the original example.
+   Use =undo-only= for this listen-between-steps pattern: after an intervening
+   reading command, ordinary ~C-/~ can redo an earlier undo instead.
 4. Search for =notebook= from the beginning and finish with ~RET~. Notice that
    searching and reading did not modify the document. You can return to any
    known phrase without counting lines.
@@ -165,7 +173,9 @@ continuing.
 Explain the difference between changing the query and changing the document.
 
 See [[tutorial-answer-2][Answers for lesson 2]]. Text undo is not a general undo command for settings
-menus; we will practise their recovery separately.
+menus; we will practise their recovery separately. For more on inspecting
+between undo steps, see [[info:emacsvox#Recovering Text Edits][Recover a text edit before saving]] and
+[[info:emacs#Undo][Undo]] in the GNU Emacs Manual.
 
 ** Lesson 3: get Help and return to your work
 :PROPERTIES:
@@ -182,21 +192,27 @@ inspect a command without running it.
    =I can return to my document by name.=.
 2. Use ~C-x b~ and your original practice buffer's name to return. Its text
    and position are still available. ~C-e m~ and ~C-e l~ confirm where you are.
-3. Press ~C-h k C-e l~. Emacs describes the current-line reading key; it does
-   not execute that key as the requested action. ~C-e h~ reads the displayed
-   Help again.
-4. To read Help directly, use ~C-x b~ and select its =*Help*= buffer from
-   completion. Navigate with ordinary reading commands, then press ~q~ to
-   leave Help. Use ~C-x b~ to select the practice buffer if other window or
-   buffer changes make the return destination unclear.
-5. Press ~C-h m~ in the practice buffer. This describes its modes and local
-   commands. Leave Help and return to the document by the same method.
+3. From the practice document, press ~C-h k C-e l~. Emacs describes the
+   current-line reading key instead of executing it as the requested action.
+   Spoken key Help selects the =*Help*= buffer and can remove other windows.
+   Your practice document is still open. ~C-e h~ reads Help again; it selects
+   Help rather than speaking it from the document's window.
+4. Press ~C-e m~ to check which buffer is selected. If it is =*Help*=, read
+   there directly; otherwise use ~C-x b~ to select =*Help*= by name. Do not
+   switch windows merely because Help appeared. Press ~q~ while in Help when
+   finished, then select the practice buffer with ~C-x b~ if necessary.
+   Check its name and line before editing.
+5. Press ~C-h m~ from the practice buffer, not from Help. It describes that
+   buffer's modes and commands. Mode Help need not select its text for you;
+   use the same check-and-select procedure to read it and return.
 
 The information comes from your running Emacs, so it is particularly useful
 when a package or personal binding differs from this manual. A buffer and a
 window are different: switching buffers chooses content, while ~C-x o~
-selects another window. You do not have to rearrange windows to finish this
-exercise.
+selects another window. A changed layout does not mean a buffer was closed.
+You do not have to recreate a split to finish this exercise: returning by
+buffer name is enough. [[*Read And Leave A Help Window][Read and leave a Help window]] explains ordinary Help
+and the distinct return route used by settings-menu Help.
 
 *** Try it
 :PROPERTIES:
@@ -466,8 +482,9 @@ to another buffer, or disable later speech commands.
 *2A.* ~M-< C-s green RET~ places point after green. ~M-DEL~ removes that
 word; typing =blue= supplies the replacement. Read the whole line to catch
 spacing or punctuation mistakes. Restore it with a search for blue followed
-by the same replacement procedure. Undo may also work, but verify each editing
-group rather than assuming a fixed number of undo commands.
+by the same replacement procedure. Alternatively, use =undo-only= and inspect
+after each step, as in the lesson. Deletion and insertion may need separate
+undos. Stop at the original line rather than assuming a fixed undo count.
 
 *2B.* Before ~RET~, the letters extend the search query. No document edit
 has occurred. Accept a successful search, then insert the text at point.
@@ -486,7 +503,8 @@ other buffer. ~C-e m~ and line reading distinguish them.
 *3B.* ~C-h k C-e s~ describes the effective binding. With the default maps,
 the command is =tts-stop=. ~C-h w tts-stop RET~ reports its keys in the
 current context. Help describes the binding; it does not invoke it as the
-requested action.
+requested action. If you need the keys available in the practice document,
+return there before using ~C-h w~. A Help buffer has its own local bindings.
 
 *** Answers: lesson 4
 :PROPERTIES:

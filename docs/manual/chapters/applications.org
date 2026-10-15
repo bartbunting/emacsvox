@@ -279,10 +279,13 @@ For a focused text correction in the example:
 2. Point is immediately after =ready=. Press ~M-b~ to move to its beginning,
    then ~M-d~ to remove that word. Type =prepared=. The surrounding text
    should now read =The draft is prepared for review.=.
-3. Read the whole line again before saving. If the edit is wrong, use ~C-/~
-   once and inspect the result. Removing the old word and inserting the new
-   one can be separate undo steps; undo only as far as the intended state.
-   Do not repeat undo blindly through earlier work.
+3. Read the whole line again before saving. If the edit is wrong, press
+   ~C-g~ in the document to deactivate any selection, then run
+   ~M-x undo-only RET~ and inspect the line. Repeat =undo-only= only as far
+   as needed; removing the old word and inserting the new one can be separate
+   steps. Unlike ordinary ~C-/~, =undo-only= does not redo an earlier undo
+   merely because you paused to read between corrections. See
+   [[info:emacsvox#Recovering Text Edits][Recover a text edit before saving]] for the full recovery procedure.
 4. Press ~C-x C-s~ only when the text is correct. Switch to another buffer
    and back with ~C-x b~ to continue working; leaving the note does not
    require closing its buffer.
@@ -508,7 +511,9 @@ ordinary external browser instead.
 The keys below include Emacsvox's EWW bindings, which differ from unmodified
 EWW. In particular, lowercase ~b~ moves to the previous link, lowercase ~s~
 requests a readable view, and ~?~ is not the settings menu's Help key. Use
-~C-h m~ or ~C-h k~ to inspect the running buffer. The upstream
+~C-h m~ or ~C-h k~ to inspect the running buffer. Help can select its own
+buffer and remove other windows. Return to the page with ~C-x b~ and check
+its name with ~C-e m~ before using the browser keys below. The upstream
 [[info:emacs#EWW][EWW guide]] and [[info:emacsvox-reference#emacsvox-eww][emacsvox-eww]] reference cover the rest of the interface.
 
 *** Open a page and establish your place
@@ -591,7 +596,10 @@ name such as =evox-web-address=, and press ~RET~. If that name already contains
 work, choose another. Run ~M-x text-mode RET~, press ~C-y~ to insert the
 address, then ~C-e l~ to read it. Return to the browser by name with ~C-x b~.
 This temporary buffer need not be saved. Do not paste into an important document
-or a web form merely to inspect a URL.
+or a web form merely to inspect a URL. Between copying and pasting, avoid
+~C-e a~ and ~C-e f~: repeating a message or reading a filename also adds text
+to the kill ring and can replace the address as the next paste. Check the
+pasted text; [[info:emacsvox#Choosing Earlier Copied Text][Choose text copied earlier]] explains retrieving an older entry.
 
 To copy the page's own address regardless of point, use
 ~M-x eww-copy-page-url RET~ instead. Emacsvox's ~k~ is context-sensitive and

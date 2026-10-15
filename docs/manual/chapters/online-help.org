@@ -22,7 +22,9 @@ Settings menus also have their own contextual Help, described below.
 :TEXINFO_NODE: no
 :END:
 
-Choose a help command according to what you already know:
+Begin in the buffer whose commands or settings you want to inspect. Help
+can select a different buffer, so return to your working buffer before asking
+about another local binding or value. Choose according to what you know:
 
 - ~C-h k~ followed by a key runs =describe-key= and explains the command
   currently bound to that key.
@@ -101,15 +103,31 @@ preview, save, and return commands.
 :TEXINFO_NODE: no
 :END:
 
-Ordinary Emacs Help usually appears in a separate =*Help*= window. Emacsvox
-speaks the most relevant initial result automatically. Press ~C-e h~
-(=emacsvox-speak-help=) to hear the displayed help again.
+Ordinary Emacs Help writes its explanation in =*Help*=. Some commands, such
+as ~C-h m~, can display that buffer without selecting it. Spoken descriptions
+such as key, function and variable Help use =emacsvox-speak-help=, also bound
+to ~C-e h~. This helper selects Help, removes other windows in the frame,
+and reads a windowful starting at Help's current point. It does not kill the
+buffers those windows displayed, and it does not necessarily read all of Help.
 
-To explore the text directly, press ~C-x o~ to select its window and use
-ordinary reading and navigation commands. Press ~q~ in the Help buffer when
-finished. If the selected window is unclear, ~C-e C-w~ describes the window
-arrangement. Help opened by an Emacsvox settings menu uses the menu-return
-behaviour described above instead of requiring you to find the source window.
+After requesting Help, press ~C-e m~ to check the selected buffer. If it is
+=*Help*=, read there directly. Otherwise, use ~C-x b~ and choose =*Help*=
+by name, or select its existing window deliberately. Do not automatically
+press ~C-x o~: Help may already be selected, or there may now be only one
+window. ~C-e C-w~ describes the arrangement when needed.
+
+Once in Help, use line or paragraph reading for a local check. ~C-e h~ repeats
+a windowful from the current Help position; ~M-<~ first returns to its beginning.
+For longer reading and its effect on point, see
+[[info:emacsvox#Reading][Reading and navigating]]. Press ~q~ while in Help to leave its view.
+Then check the selected buffer and use ~C-x b~ to return to your document
+before editing or requesting buffer-specific Help again. To restore a reference
+window, follow [[info:emacsvox#Reference And Draft Windows][Keep a reference and a draft in separate windows]].
+
+Help reached through an Emacsvox settings menu has the menu-return behaviour
+explained above. Use its ~q~ to return to the originating menu item, not the
+ordinary document-return procedure. Dedicated editors likewise keep their own
+Help and return commands.
 
 ** Learn Interactively And Read Manuals
 :PROPERTIES:
