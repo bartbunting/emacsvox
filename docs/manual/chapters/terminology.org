@@ -9,26 +9,53 @@
 
 These definitions help you choose a procedure. They do not replace a control's
 specific scope, save, or recovery instructions. [[*Find a task][Find a task]] starts from what
-you want to accomplish rather than the names below.
+you want to accomplish rather than the names below. For a key reminder, use
+[[info:emacsvox#Emacsvox Keyboard Commands][Everyday commands and key prefixes]].
+
+[[info:emacsvox#Working Context Terms][Working context]] covers buffers and views;
+[[info:emacsvox#Editing Terms][selection and editing]] covers mark, region, copying and recovery.
+[[info:emacsvox#Presentation Resource Terms][Presentation resources]] and [[info:emacsvox#Speech And Settings Terms][changes and speech output]] explain configuration.
 
 ** Your working context
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Working Context Terms
+:DESCRIPTION: Distinguish buffers, views, editing positions and restrictions.
 :END:
 
 #+cindex: buffer, meaning
 #+cindex: point, meaning
+#+cindex: window, meaning
+#+cindex: frame, meaning
+#+cindex: read-only, meaning
+#+cindex: narrowing, meaning
 #+cindex: captured source
 #+cindex: scope, meaning
 
 - Buffer :: An Emacs object containing a document or application view. It is
   not necessarily a file, and switching buffers does not close the one you
   leave. A window displays a buffer. See [[info:emacsvox#Desktop Objects][Buffers hold your work]].
-- Point :: The position in the current buffer at which movement and editing
-  act. Explicit reading commands often let you inspect text without moving it.
+- Window :: A view of a buffer inside an Emacs frame. Removing a window does
+  not kill its buffer. Two windows showing the same buffer are views of the
+  same text, not independent copies. See [[info:emacsvox#Working With Windows][Working with windows]].
+- Frame :: An outer Emacs application window, or the corresponding display in
+  a terminal session. It contains Emacs windows. Selecting another window
+  within a frame differs from switching applications in the operating system.
+  See [[info:emacsvox#Working With Windows][Windows and frames]].
+- Point :: The current editing position, between characters. Text is normally
+  inserted there. Short reading often leaves it unchanged; tracked reading
+  advances it. See [[info:emacsvox#Reading From Point][Reading position and interruption]].
 - Mode :: The commands and behaviour associated with a buffer. Its major mode
   supplies its principal tools; minor modes add other behaviour. See
   [[info:emacsvox#Object Oriented Desktop][Let modes give each buffer its tools]].
+- Read-only :: A buffer state that prevents ordinary text edits. It does not
+  mean the buffer has no unsaved changes, and making a buffer writable does
+  not grant permission to overwrite a protected file. Special applications
+  may still provide their own operations. See [[info:emacsvox#Opening A Document][Opening a document safely]].
+- Narrowing :: Restricting access to part of a buffer without deleting the
+  rest. Reading, movement and many editing commands stay within that portion;
+  widening removes the restriction. Ordinary file saving still saves the
+  entire buffer. See [[info:emacsvox#Reading Without Moving Point][Reading accessible text]] and
+  [[info:emacs#Narrowing][Narrowing]] in the GNU Emacs Manual.
 - Captured source :: The buffer and position retained when a settings workflow
   starts. Contextual actions continue to refer to that source rather than
   whichever menu or editor is currently selected. A changed or closed source
@@ -38,9 +65,64 @@ you want to accomplish rather than the names below.
   need not be saved, and a saved resource need not be active. See
   [[info:emacsvox#Saving And Startup][Choose what persists]].
 
+** Selection, copying and editing
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Editing Terms
+:DESCRIPTION: Translate selection, cut and paste into mark, region, kill and yank.
+:END:
+
+#+cindex: mark, meaning
+#+cindex: region, meaning
+#+cindex: selection, meaning
+#+cindex: active region, meaning
+#+cindex: Transient Mark mode, meaning
+#+cindex: copy, meaning
+#+cindex: cut, meaning
+#+cindex: kill, meaning
+#+cindex: paste, meaning
+#+cindex: yank, meaning
+#+cindex: kill ring, meaning
+#+cindex: clipboard, meaning
+#+cindex: undo, meaning
+
+- Mark :: A remembered position in a buffer. Point and mark delimit the
+  region, whichever comes first. The mark can remain after the selection is
+  deactivated; it is not copied text. See [[info:emacsvox#Selecting Text With Speech][Selecting and checking text]].
+- Region or selection :: The text between point and mark, including any
+  selected spaces and newlines. The character at its end is excluded. The
+  active region is the current selection; some commands can also use an
+  inactive mark. Establish a fresh region before cutting. See
+  [[info:emacsvox#Selecting Text With Speech][Selection boundaries and activation]].
+- Transient Mark mode :: Emacs's usual active-selection behaviour, used by
+  the editing examples. It is unrelated to the Transient package that supplies
+  settings menus. See [[info:emacsvox#Selecting Text With Speech][Using the region through speech]] and
+  [[info:emacs#Mark][The mark and the region]] in the GNU Emacs Manual.
+- Copy :: Store a passage in the kill ring while leaving its source text
+  unchanged. The destination becomes an independent text copy when you paste
+  it. See [[info:emacsvox#Copying Text Between Buffers][Copying between buffers]].
+- Kill or cut :: Remove text and keep it in the kill ring for later insertion.
+  Some deletion commands do not keep that copy. Killing a buffer is a different
+  operation: it closes the buffer rather than copying its contents. See
+  [[info:emacsvox#Moving Text Safely][Moving text safely]].
+- Yank or paste :: Insert text from the kill ring, or through configured
+  clipboard integration, at point. It changes the destination buffer, not
+  automatically its saved file. See [[info:emacsvox#Copying Text Between Buffers][Checking a paste]].
+- Kill ring :: Emacs's shared history of copied and cut text. It can contain
+  more than the latest passage, including text placed there by inspection
+  commands. It is not a permanent backup or the same store as the system
+  clipboard. See [[info:emacsvox#Choosing Earlier Copied Text][Choosing an earlier copy]].
+- Clipboard :: The operating system's text-transfer facility. Its connection
+  to Emacs depends on the display session and configuration; a new external
+  copy can affect the next paste. See [[info:emacsvox#Copying Through The Clipboard][Testing clipboard exchange]].
+- Undo :: Reverse recorded edits in the selected buffer. It does not reverse
+  a settings save or an action already sent to another application. When
+  listening between successive corrections, use the recovery guide's
+  =undo-only= procedure. See [[info:emacsvox#Recovering Text Edits][Undo and spoken inspection]].
+
 ** Voices and presentation resources
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Presentation Resource Terms
+:DESCRIPTION: Distinguish physical voices, named voices, palettes, rules and profiles.
 :END:
 
 #+cindex: physical voice, meaning
@@ -78,7 +160,8 @@ you want to accomplish rather than the names below.
 
 ** Changes and speech output
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Speech And Settings Terms
+:DESCRIPTION: Distinguish preview, drafts, saving, application and speech workers.
 :END:
 
 #+cindex: preview, meaning
