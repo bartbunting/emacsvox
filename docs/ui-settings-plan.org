@@ -29,6 +29,14 @@ personal configuration changes, or publication.
   Emacs. The remaining organisation slices are in progress. Final compilation,
   documentation checks, and listening acceptance are still pending.
 
+- Task headings and integration exits, 2026-10-15: pronunciation editing has
+  its own section; notification and spatial routing sit under Output routing;
+  the combined feedback-rule overview precedes the rule editors. Integration
+  menus end with Finish, separate from saving and advanced settings. Keys,
+  command Help, scopes, and save ownership are retained. Graphical section
+  checks cover spoken headings and selected actions in all navigation styles.
+  Listening acceptance remains open.
+
 - Submenu return, 2026-10-15: ordinary Emacsvox submenu return now restores the
   invoking entry before announcing the parent. Shortcut entry, nested menus,
   and delayed display retain the correct target for Enter. Closing the menu

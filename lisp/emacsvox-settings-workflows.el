@@ -186,14 +186,14 @@ uses the existing training lifecycle, and does not save a startup default."
    ("f" "Presentation Options: activate, copy, edit" emacsvox-settings-workflows--features :transient transient--do-suspend)
    ("v" (lambda () (emacsvox-settings-workflows--face-label)) emacsvox-settings-workflows--face :transient t)
    ("w" "Save visual-face default" emacsvox-settings-workflows--save-face :transient t)]
-  ["Inspect and learn"
+  ["Feedback rules: save inside each editor"
    ("o" "Combined feedback rules" emacsvox-settings-workflows--overrides :transient transient--do-suspend)
-   ("h" "Semantic vocabulary reference" emacsvox-settings-workflows--semantics :transient transient--do-suspend)
-   ("t" (lambda () (emacsvox-settings-workflows--training-label)) emacsvox-settings-workflows--training :transient t)]
-  ["Rule editors: save inside the editor"
    ("p" "Personal rules (persistent)" emacsvox-settings-workflows--personal :transient transient--do-suspend)
    ("s" "Session rules (temporary)" emacsvox-settings-workflows--session :transient transient--do-suspend)
    ("b" "Captured buffer rules (temporary)" emacsvox-settings-workflows--buffer :transient transient--do-suspend)]
+  ["Learn about feedback"
+   ("h" "Semantic vocabulary reference" emacsvox-settings-workflows--semantics :transient transient--do-suspend)
+   ("t" (lambda () (emacsvox-settings-workflows--training-label)) emacsvox-settings-workflows--training :transient t)]
   ["Finish"
    ("q" "Back" transient-quit-one)
    ("C-q" "Close menus" transient-quit-all)]

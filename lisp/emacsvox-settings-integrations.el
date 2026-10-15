@@ -846,9 +846,10 @@ Enter a positive character count or none for the complete body." (interactive)
    ("k" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--agent-block-limit))
     emacsvox-settings-integrations--agent-block-limit :transient t)
   ]
-  ["Save and finish"
+  ["Defaults and advanced settings"
    ("w" "Save displayed global defaults" emacsvox-settings-integrations--agent-save :transient t)
-   ("A" "Advanced Agent Shell settings (Customize)" emacsvox-settings-integrations--agent-custom :transient transient--do-suspend)
+   ("A" "Advanced Agent Shell settings (Customize)" emacsvox-settings-integrations--agent-custom :transient transient--do-suspend)]
+  ["Finish"
    ("q" "Back" emacsvox-settings-integrations--back :transient transient--do-replace)
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)
@@ -877,11 +878,13 @@ Change the global default; buffer-local settings still take precedence."
   "Choose Org table feedback and reach its structured settings."
   ["Org table feedback (global); w saves"
    ("c" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--org-feedback))
-    emacsvox-settings-integrations--org-feedback :transient transient--do-suspend)
-   ("w" "Save table feedback default" emacsvox-settings-integrations--org-save :transient t)]
+    emacsvox-settings-integrations--org-feedback :transient transient--do-suspend)]
   ["Structured and advanced settings"
    ("t" "Org table options (Customize)" emacsvox-settings-integrations--org-tables :transient transient--do-suspend)
-   ("A" "Advanced Emacsvox Org settings (Customize)" emacsvox-settings-integrations--org-custom :transient transient--do-suspend)
+   ("A" "Advanced Emacsvox Org settings (Customize)" emacsvox-settings-integrations--org-custom :transient transient--do-suspend)]
+  ["Save"
+   ("w" "Save table feedback default" emacsvox-settings-integrations--org-save :transient t)]
+  ["Finish"
    ("q" "Back" emacsvox-settings-integrations--back :transient transient--do-replace)
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)
@@ -912,10 +915,11 @@ Change the global default; buffer-local settings still take precedence."
    ("s" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--eww-autospeak))
     emacsvox-settings-integrations--eww-autospeak :transient t)
    ("i" (lambda () (emacsvox-settings-integrations--label 'emacsvox-settings-integrations--eww-images))
-    emacsvox-settings-integrations--eww-images :transient t)
-   ("w" "Save displayed EWW defaults" emacsvox-settings-integrations--eww-save :transient t)]
+    emacsvox-settings-integrations--eww-images :transient t)]
+  ["Defaults and advanced settings"
+   ("w" "Save displayed EWW defaults" emacsvox-settings-integrations--eww-save :transient t)
+   ("A" "Advanced EWW settings (Customize)" emacsvox-settings-integrations--eww-custom :transient transient--do-suspend)]
   ["Finish"
-   ("A" "Advanced EWW settings (Customize)" emacsvox-settings-integrations--eww-custom :transient transient--do-suspend)
    ("q" "Back" emacsvox-settings-integrations--back :transient transient--do-replace)
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)
@@ -1038,7 +1042,8 @@ Structured field and status editors have their own Save actions."
    ("c" (lambda () (emacsvox-settings-integrations--current-label)) emacsvox-settings-integrations--current
     :inapt-if-not emacsvox-settings-integrations--group-p :transient transient--do-suspend)]
   ["All integrations"
-   ("a" "Choose integration settings" emacsvox-settings-integrations--all :transient transient--do-suspend)
+   ("a" "Choose integration settings" emacsvox-settings-integrations--all :transient transient--do-suspend)]
+  ["Finish"
    ("q" "Back" transient-quit-one)
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)

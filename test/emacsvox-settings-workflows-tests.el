@@ -11,6 +11,30 @@
 (require 'emacsvox-aural-voice-editor-tests)
 (require 'emacsvox-aural-change-feedback-tests)
 
+(ert-deftest emacsvox-settings-workflows-task-section-targets ()
+  "Section arrows name their task and select its first action without applying."
+  (emacsvox-test--with-settings
+    (dolist (style '(continuous section-wrap section-stop))
+      (let ((emacsvox-transient-navigation-style style)
+            (emacsvox-transient-section-announcement-order 'by-movement)
+            speech)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (push text speech))))
+          (dolist (case '(("s p" 2 "Pronunciation editing" "e" emacsvox-aural-menu--pronunciations)
+                          ("o" 2 "Output routing" "n" emacsvox-output-settings)
+                          ("r" 1 "Feedback rules: save inside each editor" "o" emacsvox-settings-workflows--overrides)
+                          ("j" 2 "Finish" "q" transient-quit-one)))
+            (execute-kbd-macro (kbd (car case)))
+            (dotimes (_ (nth 1 case)) (execute-kbd-macro (kbd "<right>")))
+            (should (string-prefix-p (concat (nth 2 case) ".") (car speech)))
+            (with-selected-window transient--window
+              (let ((suffix (button-get (button-at (point)) 'button-data)))
+                (should (equal (oref suffix key) (nth 3 case)))
+                (should (eq (oref suffix command) (nth 4 case)))))
+            (should (eq (emacsvox-aural-menu--source (emacsvox-aural-menu--context)) source))
+            (should-not (file-exists-p custom-file))
+            (execute-kbd-macro (kbd "C-q <f8>"))))))))
+
 (ert-deftest emacsvox-settings-editors-open-settings-with-source ()
   "Editor h opens Transient with the captured item, never the old Home buffer."
   (emacsvox-test--with-settings

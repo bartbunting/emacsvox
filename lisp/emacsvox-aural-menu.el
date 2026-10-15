@@ -487,8 +487,9 @@ as the default across restarts; mode policies still take precedence."
     emacsvox-aural-menu--choose-punctuation :transient t)
    ("r" "Restore automatic policy" emacsvox-aural-menu--reset-punctuation
     :if emacsvox-aural-menu--local-scope-p :transient t)]
+  ["Pronunciation editing"
+   ("e" "Edit pronunciations (separate Save and Restart)" emacsvox-aural-menu--pronunciations :transient transient--do-suspend)]
   ["Save and finish"
-   ("e" "Edit pronunciations (separate Save and Restart)" emacsvox-aural-menu--pronunciations :transient transient--do-suspend)
    ("S" "Save punctuation as default" emacsvox-aural-menu--save-punctuation :transient t)
    ("q" "Back (keep changes)" transient-quit-one)
    ("C-q" "Close all menus" transient-quit-all)]
@@ -813,8 +814,9 @@ Enter sets an exact value.  Save explicitly to retain volumes across restarts."
     emacsvox-aural-menu--notification-tones :transient t)
    ("E" (lambda () (emacsvox-aural-menu--output-label 'emacsvox-aural-menu--notification-earcons))
     emacsvox-aural-menu--notification-earcons :transient t)]
+  ["Output routing"
+   ("n" "Notifications and spatial output" emacsvox-output-settings :transient transient--do-stack)]
   ["Cues and sound packs"
-   ("n" "Notifications and spatial output" emacsvox-output-settings :transient transient--do-stack)
    ("c" "Line and boundary cues" emacsvox-aural-menu-line-cues :transient transient--do-stack)
    ("p" "Browse sound packs" emacsvox-aural-menu--sound-packs :transient transient--do-suspend)]
   ["Save and finish"
