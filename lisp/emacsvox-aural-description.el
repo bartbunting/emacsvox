@@ -157,14 +157,18 @@
          (emacsvox-aural-concrete-action-duration action)))
        ('tone
         (format
-         "%s: %s tone %s at %s Hz for %s ms"
+         "%s: %s tone %s at %s Hz for %s ms%s"
          (emacsvox-aural-concrete-action-id action)
          (or
           (emacsvox-aural-concrete-action-audio-mode action)
           'overlay)
          (emacsvox-aural-concrete-action-tone action)
          (emacsvox-aural-concrete-action-pitch action)
-         (emacsvox-aural-concrete-action-duration action))))
+         (emacsvox-aural-concrete-action-duration action)
+         (if-let* ((shape (emacsvox-aural-concrete-action-shape action)))
+             (format ", %s waveform, %s envelope" (plist-get shape :waveform)
+                     (if (plist-get shape :envelope) "ADSR" "Classic"))
+           ""))))
      spatial
      volume
      (format ", %s anchored" anchor))))

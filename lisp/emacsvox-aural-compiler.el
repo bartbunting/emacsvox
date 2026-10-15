@@ -844,6 +844,14 @@ according to `emacsvox-aural-unsupported-volume-policy'."
                     :reason 'unsupported-tone-volume
                     :message "Tone omitted: this worker lacks richer-tone support"))))))
 
+(defun emacsvox-aural--compile-tone-shape (action facts)
+  "Resolve and freeze ACTION shape from FACTS."
+  (let ((shape (emacsvox-aural-action-shape action)))
+    (when (eq (car-safe shape) :fact)
+      (setq shape (plist-get facts (intern (format ":%s" (cadr shape))))))
+    (when (emacsvox-aural-action-shape action)
+      (emacsvox-aural--validate-tone-shape shape))))
+
 (defun emacsvox-aural--compile-concrete-action
     (action facts pack palette cue-target)
   "Compile ACTION with FACTS through PACK and PALETTE for CUE-TARGET."
@@ -939,7 +947,8 @@ according to `emacsvox-aural-unsupported-volume-policy'."
       :source (emacsvox-aural-action-source action)
       :anchor (emacsvox-aural-action-anchor action)))
     ('tone
-     (let* ((tone-id (emacsvox-aural-action-tone action))
+     (let* ((shape (emacsvox-aural--compile-tone-shape action facts))
+            (tone-id (emacsvox-aural-action-tone action))
             (tone (and tone-id (emacsvox-aural--resolve-tone tone-id)))
             (pitch
              (if tone
@@ -953,9 +962,18 @@ according to `emacsvox-aural-unsupported-volume-policy'."
                (emacsvox-aural--resolve-numeric-action-value
                 action facts :duration
                 (emacsvox-aural-action-duration action) nil))))
+       (unless (or (emacsvox-aural--classic-tone-shape-p shape) (<= pitch 20000))
+         (emacsvox-aural--transport-error "Shaped tone frequency must be at most 20000 Hz"))
        (emacsvox-aural--make-concrete-action
         :id (emacsvox-aural-action-id action)
         :kind 'tone
+        :shape shape
+        :shape-degradation
+        (unless (or (emacsvox-aural--classic-tone-shape-p shape)
+                    (emacsvox-aural--tone-volume-supported-p))
+          (list :action (emacsvox-aural-action-id action) :property 'shape
+                :requested (copy-tree shape) :policy 'omit :reason 'unsupported-tone-shape
+                :message "Tone omitted: this worker lacks richer-tone support"))
         :tone (if tone (emacsvox-aural-tone-id tone)
                 (emacsvox-aural-action-id action))
         :pitch pitch
@@ -993,6 +1011,8 @@ according to `emacsvox-aural-unsupported-volume-policy'."
           (setq
            degradations
            (append
+            (when-let* ((shape (emacsvox-aural-concrete-action-shape-degradation compiled)))
+              (list (copy-tree shape)))
             (when-let* ((volume
                          (emacsvox-aural-concrete-action-volume-degradation
                           compiled)))

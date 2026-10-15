@@ -330,6 +330,8 @@ fails before stopping or sending any audio."
                        ((emacsvox-aural-replay--speech-p action) (speech id phase index))
                        ((eq (plist-get (emacsvox-aural-concrete-action-volume-degradation action)
                                        :policy) 'omit) nil)
+                       ((eq (plist-get (emacsvox-aural-concrete-action-shape-degradation action)
+                                       :policy) 'omit) nil)
                        ((not (eq (emacsvox-aural-concrete-action-kind action) 'speech))
                         (push (list 'action action (emacsvox-aural-concrete-plan-context plan)) steps)))))))
       (cl-loop for (plan text pause) in runs for index from 0 do
@@ -495,7 +497,9 @@ When SUPERSEDED, the replacement's guarded stop retires the private preview."
                  (eq (emacsvox-aural-concrete-action-kind (cadr step)) 'tone))
         (let ((emacsvox-aural--exact-tone-preview t))
           (emacsvox-aural--tone-volume-deliverable-p
-           (or (emacsvox-aural-concrete-action-requested-volume (cadr step)) 1.0)))))
+           (or (emacsvox-aural-concrete-action-requested-volume (cadr step)) 1.0))
+          (emacsvox-aural--tone-shape-deliverable-p
+           (emacsvox-aural-concrete-action-shape (cadr step))))))
     (unless (and guard (eq process tts-speaker-process) (tts-queue--guard-valid-p guard))
       (user-error "Original playback needs an unchanged speech connection"))
     (let* ((previous (process-get process 'emacsvox-aural-replay))

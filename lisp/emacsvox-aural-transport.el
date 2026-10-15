@@ -352,9 +352,42 @@ server still produces the relevant protocol diagnostic."
         (emacsvox-aural--exact-tone-preview
          (user-error "This speech worker lacks richer-tone support; cannot preview tone volume"))))
 
-(defun emacsvox-aural--protocol-presentation-tone (pitch duration mode &optional gain)
+(defun emacsvox-aural--tone-shape-deliverable-p (shape &optional timeline-version)
+  "Validate SHAPE and decide whether this worker can deliver it.
+TIMELINE-VERSION, when non-nil, also checks the frozen timeline format."
+  (when shape (emacsvox-aural--validate-tone-shape shape))
+  (cond ((or (emacsvox-aural--classic-tone-shape-p shape)
+             (and (emacsvox-aural--tone-volume-supported-p)
+                  (or (null timeline-version) (eql timeline-version 6)))) t)
+        (emacsvox-aural--exact-tone-preview
+         (user-error "This speech worker lacks richer-tone support; cannot preview tone shape"))))
+
+(defun emacsvox-aural--tone-shape-wire (shape)
+  "Project validated SHAPE to the richer-tone timeline representation."
+  (when shape
+    (emacsvox-aural--validate-tone-shape shape)
+    (append (list :waveform (symbol-name (plist-get shape :waveform)))
+            (when-let* ((envelope (plist-get shape :envelope)))
+              (list :envelope
+                    (list :attack_ms (plist-get envelope :attack-ms)
+                          :decay_ms (plist-get envelope :decay-ms)
+                          :sustain_level (plist-get envelope :sustain-level)
+                          :release_ms (plist-get envelope :release-ms)))))))
+
+(defun emacsvox-aural--tone-shape-command (shape)
+  "Return validated SHAPE as standalone tone arguments."
+  (when shape (emacsvox-aural--validate-tone-shape shape))
+  (concat (symbol-name (or (plist-get shape :waveform) 'sine))
+          (if-let* ((envelope (plist-get shape :envelope)))
+              (format " adsr %s %s %s %s"
+                      (plist-get envelope :attack-ms) (plist-get envelope :decay-ms)
+                      (plist-get envelope :sustain-level) (plist-get envelope :release-ms))
+            " classic")))
+
+(defun emacsvox-aural--protocol-presentation-tone (pitch duration mode &optional gain shape)
   "Queue a bounded PITCH/DURATION tone using MODE and per-tone GAIN.
-GAIN defaults to 1; unsupported non-default gain omits the cue.
+GAIN defaults to 1; SHAPE defaults to sine with Classic fades.
+Unsupported non-default gain or shape omits the cue.
 
 Use the explicit presentation-tone protocol when the speaker advertises it.
 Otherwise lower both modes to the legacy ordered tone command; this preserves
@@ -379,7 +412,10 @@ the tone and surrounding speech but cannot preserve overlay timing."
      "Presentation tone duration must be from 1 through %d ms: %S"
      emacsvox-aural--presentation-tone-max-duration-ms duration))
   (setq gain (or gain 1.0))
-  (when (emacsvox-aural--tone-volume-deliverable-p gain)
+  (unless (or (emacsvox-aural--classic-tone-shape-p shape) (<= pitch 20000))
+    (emacsvox-aural--transport-error "Shaped tone frequency must be at most 20000 Hz"))
+  (when (and (emacsvox-aural--tone-volume-deliverable-p gain)
+             (emacsvox-aural--tone-shape-deliverable-p shape))
     (let ((version (and (processp tts-speaker-process)
                         (process-get tts-speaker-process
                                      emacsvox-aural--presentation-tone-process-property))))
@@ -387,7 +423,8 @@ the tone and surrounding speech but cannot preserve overlay timing."
           (emacsvox-aural--delivery-send-typed
            tts-speaker-process
            (if (= version 2)
-               (format "emacsvox_tone 2 %s %s %d %s sine classic\n" mode pitch duration gain)
+               (format "emacsvox_tone 2 %s %s %d %s %s\n" mode pitch duration gain
+                       (emacsvox-aural--tone-shape-command shape))
              (format "emacsvox_tone 1 %s %s %d\n" mode pitch duration)) 'queue)
         (tts--protocol-tone (max 1 (round pitch)) duration)))))
 
@@ -493,12 +530,19 @@ This checks framing eligibility only; it does not infer inline voice semantics."
             ((or "t" "emacsvox_tone")
              (when (and (equal name "emacsvox_tone") (equal (car fields) "2"))
                (setq fields
-                     (when (and (= (length fields) 7)
+                     (when (and (memq (length fields) '(7 11))
                                 (member (nth 1 fields) '("insert" "overlay"))
                                 (emacsvox-aural--legacy-frame-float-p (nth 4 fields))
                                 (<= 0 (string-to-number (nth 4 fields)) 1)
-                                (equal (nth 5 fields) "sine")
-                                (equal (nth 6 fields) "classic"))
+                                (member (nth 5 fields) '("sine" "triangle" "square"))
+                                (or (and (= (length fields) 7) (equal (nth 6 fields) "classic"))
+                                    (and (= (length fields) 11) (equal (nth 6 fields) "adsr")
+                                         (cl-every (lambda (s) (emacsvox-aural--legacy-frame-uint-p s 60000))
+                                                   (list (nth 7 fields) (nth 8 fields) (nth 10 fields)))
+                                         (emacsvox-aural--legacy-frame-float-p (nth 9 fields))
+                                         (<= 0 (string-to-number (nth 9 fields)) 1)))
+                                (or (and (equal (nth 5 fields) "sine") (equal (nth 6 fields) "classic"))
+                                    (<= (string-to-number (nth 2 fields)) 20000)))
                        (list "1" (nth 1 fields) (nth 2 fields) (nth 3 fields)))))
              (when (equal name "emacsvox_tone")
                (unless (and (equal (car fields) "1")
@@ -1493,12 +1537,22 @@ when the recorded plans have no speech span and require legacy lowering."
                   (emacsvox-aural-concrete-action-duration action))
                  semantic-value))
                ('tone
-                (if (not (emacsvox-aural--tone-volume-deliverable-p
-                          (or (emacsvox-aural-concrete-action-requested-volume action) 1.0)))
+                (if (not (and (emacsvox-aural--tone-volume-deliverable-p
+                               (or (emacsvox-aural-concrete-action-requested-volume action) 1.0))
+                              (emacsvox-aural--tone-shape-deliverable-p
+                               (emacsvox-aural-concrete-action-shape action)
+                               (if registration (omnivox--choice-registration-version registration)
+                                 emacsvox-aural--structured-timeline-version))))
                     (setq modelled nil)
                   (add-wire-action
                    wire-action-id position lifecycle
-                   (list
+                   (append
+                    (when (and (emacsvox-aural-concrete-action-shape action)
+                               (eql (if registration (omnivox--choice-registration-version registration)
+                                      emacsvox-aural--structured-timeline-version) 6))
+                      (list :shape (emacsvox-aural--tone-shape-wire
+                                    (emacsvox-aural-concrete-action-shape action))))
+                    (list
                     :type "tone"
                     :frequency_hz
                     (float (emacsvox-aural-concrete-action-pitch action))
@@ -1511,7 +1565,7 @@ when the recorded plans have no speech span and require legacy lowering."
                       'overlay))
                     :volume (or (emacsvox-aural-concrete-action-requested-volume action) 1.0)
                     :pan (emacsvox-aural--timeline-action-pan action)
-                    :effect_bus "dry")
+                    :effect_bus "dry"))
                    semantic-value)))
                (_ (setq modelled nil)))
              (when modelled
@@ -2148,7 +2202,8 @@ the authoritative check after punctuation and split-cap preprocessing."
       (or
        (emacsvox-aural-concrete-action-audio-mode action)
        'overlay)
-      (emacsvox-aural-concrete-action-requested-volume action)))
+      (emacsvox-aural-concrete-action-requested-volume action)
+      (emacsvox-aural-concrete-action-shape action)))
     ('speech
      (let ((command
             (emacsvox-aural-concrete-action-voice-command action))

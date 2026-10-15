@@ -60,7 +60,7 @@
   voice-request voice-style voice-provenance voice-capability
   voice-degradations
   requested-volume volume-capability volume-degradation tone pitch force
-  audio-mode)
+  audio-mode shape shape-degradation)
 
 (cl-defstruct
     (emacsvox-aural-concrete-content

@@ -239,5 +239,131 @@
     (should-not (seq-find (lambda (step) (eq (car step) 'action))
                           (emacsvox-aural-replay--steps record)))))
 
+
+(defconst omnivox-rich-tone-test--shape
+  '(:waveform triangle :envelope (:attack-ms 5 :decay-ms 10 :sustain-level 0.4 :release-ms 15)))
+
+(defun omnivox-rich-tone-test--shaped-action (shape &optional facts)
+  "Compile tone SHAPE using FACTS."
+  (emacsvox-aural--compile-concrete-action
+   (emacsvox-aural--compile-action
+    (list :id 'shaped :kind 'tone :pitch 880 :duration 40 :shape shape :audio-mode 'overlay)
+    'test 'before 0 'run) facts nil nil nil))
+
+(ert-deftest omnivox-rich-tone-shape-validation-and-freezing ()
+  (omnivox-test--with-choice-registration
+    (emacsvox-aural-enable-presentation-tone speaker 2)
+    (let* ((shape (copy-tree omnivox-rich-tone-test--shape))
+           (facts (list :spelling-tone-shape shape))
+           (action (omnivox-rich-tone-test--shaped-action '(:fact spelling-tone-shape) facts)))
+      (setf (plist-get (plist-get shape :envelope) :attack-ms) 60000)
+      (should (equal (emacsvox-aural-concrete-action-shape action) omnivox-rich-tone-test--shape)))
+    (dolist (shape '(nil (:waveform noise) (:waveform sine :waveform sine)
+                    (:waveform sine :extra 2) (:waveform sine :envelope nil)
+                    (:waveform sine :envelope (:attack-ms -1 :decay-ms 2 :sustain-level 0.5 :release-ms 3))
+                    (:waveform sine :envelope (:attack-ms 1.2 :decay-ms 2 :sustain-level 0.5 :release-ms 3))
+                    (:waveform sine :envelope (:attack-ms 1 :decay-ms 2 :sustain-level 0.0e+NaN :release-ms 3))
+                    (:waveform sine :envelope (:attack-ms 1 :decay-ms 2 :sustain-level 1.1 :release-ms 3))))
+      (should-error (omnivox-rich-tone-test--shaped-action shape))
+      (should-error (omnivox-rich-tone-test--shaped-action '(:fact spelling-tone-shape)
+                                                           (list :spelling-tone-shape shape))))))
+
+(ert-deftest omnivox-rich-tone-shape-reaches-both-delivery-paths ()
+  (omnivox-native-runtime-test--with-speech
+    (omnivox-rich-tone-test--enable speaker)
+    (process-put speaker omnivox--choice-registration-property nil)
+    (omnivox-native-runtime-test--register)
+    (dolist (waveform '(sine triangle square))
+      (dolist (adsr '(nil t))
+        (let* ((shape (append (list :waveform waveform)
+                              (when adsr (list :envelope (copy-tree (plist-get omnivox-rich-tone-test--shape :envelope))))))
+               (action (omnivox-rich-tone-test--shaped-action shape))
+               (run (omnivox-choice-timeline-test--run 'bolden nil)) commands)
+          (setf (emacsvox-aural-concrete-plan-before (car run)) (list action))
+          (let* ((document (car (emacsvox-aural--build-structured-timeline
+                                2 91 (list run) (omnivox--choice-current-registration speaker))))
+                 (tone (seq-find (lambda (a) (equal (plist-get a :type) "tone")) (plist-get document :actions))))
+            (should (equal (plist-get tone :shape)
+                           (append (list :waveform (symbol-name waveform))
+                                   (when adsr '(:envelope (:attack_ms 5 :decay_ms 10 :sustain_level 0.4 :release_ms 15)))))))
+          (cl-letf (((symbol-function 'emacsvox-aural--delivery-send-typed)
+                     (lambda (_ command _kind) (push command commands))))
+            (emacsvox-aural-queue-concrete-action action))
+          (should (equal (car commands) (format "emacsvox_tone 2 overlay 880 40 1.0 %s %s\n"
+                                                waveform (if adsr "adsr 5 10 0.4 15" "classic"))))
+          (should (emacsvox-aural--legacy-frame-command-p (string-trim (car commands)))))))))
+
+(ert-deftest omnivox-rich-tone-shape-old-worker-keeps-speech-and-diagnostic ()
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     `((:id shaped :match (:role heading)
+        :render (:before ((:id tone :kind tone :pitch 880 :duration 40
+                          :shape ,omnivox-rich-tone-test--shape))))))
+    (let* ((result (emacsvox-test--capture-native-timeline "Still speaking" :facts '(:role heading)))
+           (timeline (plist-get result :timeline))
+           (plan (emacsvox-aural-presentation-record-plan (car emacsvox-aural-presentation-history))))
+      (should (equal (plist-get (car (plist-get timeline :spans)) :text) "Still speaking"))
+      (should-not (seq-find (lambda (a) (equal (plist-get a :type) "tone")) (plist-get timeline :actions)))
+      (should (seq-find (lambda (d) (eq (plist-get d :reason) 'unsupported-tone-shape))
+                        (emacsvox-aural-concrete-plan-degradations plan)))
+      (let ((emacsvox-aural--exact-tone-preview t))
+        (should-error (emacsvox-aural-queue-concrete-action
+                       (car (emacsvox-aural-concrete-plan-before plan))) :type 'user-error)))))
+
+(ert-deftest omnivox-rich-tone-shape-storage-roundtrip ()
+  (emacsvox-test--with-transport-scheme
+    (setq emacsvox-aural-user-rules
+          `((:id shaped :match (:role heading)
+             :render (:before ((:id tone :kind tone :pitch 880 :duration 40
+                               :shape ,omnivox-rich-tone-test--shape))))))
+    (let ((data (emacsvox-aural-user-data)) (file (make-temp-file "tone-shape-")))
+      (unwind-protect
+          (progn
+            (should (= (plist-get data :schema-version) 12))
+            (emacsvox-aural--write-user-data data file)
+            (should (equal (emacsvox-aural-read-user-data file) data))
+            (dolist (version '(9 10 11))
+              (should-error (emacsvox-aural--validate-user-data
+                             (plist-put (copy-tree data) :schema-version version)))))
+        (delete-file file)))))
+
+(ert-deftest omnivox-rich-tone-shape-replay-is-frozen-and-capability-checked ()
+  (let* ((record (emacsvox-replay-test--record))
+         (plan (emacsvox-aural-presentation-record-plan record))
+         (action (emacsvox-aural--make-concrete-action
+                  :kind 'tone :pitch 880 :duration 40 :audio-mode 'overlay
+                  :shape (copy-tree omnivox-rich-tone-test--shape))))
+    (setf (emacsvox-aural-concrete-plan-before plan) (list action))
+    (emacsvox-test--with-complete-preview
+      (omnivox-preview-test--bundle speaker)
+      (should-error (emacsvox-aural-replay--play record) :type 'user-error)
+      (should-not writes)
+      (should (= stops 0))
+      (emacsvox-aural-enable-presentation-tone speaker 2)
+      (process-put speaker tts--tracked-playback-completion-property t)
+      (let ((operation (emacsvox-aural-replay--play record)))
+        (should (seq-some (lambda (write)
+                            (string-match-p "triangle adsr 5 10 0.4 15" write)) writes))
+        (tts-stop)
+        (should (emacsvox-aural-replay--operation-finished operation)))
+      (omnivox-preview-test--clean speaker))
+    (setf (emacsvox-aural-concrete-action-shape-degradation action) '(:policy omit))
+    (should-not (seq-find (lambda (step) (eq (car step) 'action))
+                          (emacsvox-aural-replay--steps record)))))
+
+(ert-deftest omnivox-rich-tone-shape-frequency-and-format-boundaries ()
+  (omnivox-test--with-choice-registration
+    (emacsvox-aural-enable-presentation-tone speaker 2)
+    (cl-letf (((symbol-function 'emacsvox-aural--delivery-send-typed) #'ignore))
+      (emacsvox-aural--protocol-presentation-tone 24000 40 'overlay 1 '(:waveform sine))
+      (emacsvox-aural--protocol-presentation-tone 20000 40 'overlay 1 '(:waveform triangle))
+      (should-error (emacsvox-aural--protocol-presentation-tone
+                     20001 40 'overlay 1 '(:waveform triangle)))
+      (should-not (emacsvox-aural--tone-shape-deliverable-p '(:waveform triangle) 5))
+      (should (emacsvox-aural--tone-shape-deliverable-p '(:waveform sine) 5))
+      (let ((emacsvox-aural--exact-tone-preview t))
+        (should-error (emacsvox-aural--tone-shape-deliverable-p '(:waveform triangle) 5)
+                      :type 'user-error)))))
+
 (provide 'omnivox-rich-tone-tests)
 ;;; omnivox-rich-tone-tests.el ends here

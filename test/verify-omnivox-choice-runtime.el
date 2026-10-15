@@ -58,13 +58,13 @@
     (process-put process tts--marker-playback-events-property t)
     process))
 
-(defun omnivox-choice-acceptance--tone (timeline &optional mode)
-  "Verify a quiet tone in MODE completes, with speech when TIMELINE is non-nil."
+(defun omnivox-choice-acceptance--tone (timeline &optional mode shape)
+  "Verify a quiet tone in MODE with SHAPE, adding speech when TIMELINE is non-nil."
   (unless (= (omnivox--choice-registration-version
               (omnivox--choice-current-registration tts-speaker-process)) 6)
     (error "Richer-tone registration did not select timeline 6"))
   (let* ((action (emacsvox-aural--make-concrete-action
-                  :kind 'tone :pitch 880 :duration 40 :audio-mode (or mode 'insert)
+                  :kind 'tone :pitch 880 :duration 40 :audio-mode (or mode 'insert) :shape shape
                   :requested-volume 0.35 :volume-capability 'supported))
          (run (when timeline (omnivox-choice-timeline-test--run '(:preset bolden) nil)))
          result
@@ -81,9 +81,9 @@
            (tts--protocol-dispatch-tracked tts--tracked-completion-function)))))
     (omnivox-choice-acceptance--wait (lambda () result))
     (unless (eq result 'completed) (error "Tone dispatch ended %S" result))
-    (princ (format "worker=%s tone=%s mode=%s gain=0.35 completed\n"
+    (princ (format "worker=%s tone=%s mode=%s shape=%S gain=0.35 completed\n"
                    (process-name tts-speaker-process) (if timeline "timeline6" "standalone2")
-                   (or mode 'insert)))))
+                   (or mode 'insert) shape))))
 (let* ((tts-program "omnivox")
        (tts-speaker-process (omnivox-choice-acceptance--process "choice-live-main" 2001))
        (tts-notify-process (omnivox-choice-acceptance--process "choice-live-notify" 2002))
@@ -142,8 +142,11 @@
               (unless (= 0 (process-get lane 'tts--dispatch-metadata-bytes)) (error "Retained metadata leaked"))
               (when (getenv "EMACSVOX_RICH_TONE_TEST")
                 (dolist (mode '(insert overlay))
-                  (omnivox-choice-acceptance--tone nil mode)
-                  (omnivox-choice-acceptance--tone t mode)))))
+                  (dolist (shape '(nil (:waveform triangle)
+                                   (:waveform square :envelope
+                                    (:attack-ms 5 :decay-ms 10 :sustain-level 0.4 :release-ms 15))))
+                    (omnivox-choice-acceptance--tone nil mode shape)
+                    (omnivox-choice-acceptance--tone t mode shape))))))
           (let* ((record (car emacsvox-aural-presentation-history))
                  (operation (emacsvox-aural-replay--play record)))
             (omnivox-choice-acceptance--wait
