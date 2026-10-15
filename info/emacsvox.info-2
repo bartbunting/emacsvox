@@ -14,107 +14,209 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Voice Lock,  Prev: Presentation Troubleshooting,  Up: Aural Presentation
+
+6.13 Voice Lock And Advanced Configuration
+==========================================
+
+Voice Lock is one compatibility input to Aural Presentation, not the
+whole presentation system.  It maps established Emacs faces and
+‘personality’ text properties to voices.  Emacs calls its visual style
+labels _faces_; Emacsvox can use those labels without requiring you to
+see them.
+
+   The three related policies are independent:
+
+Policy               What it controls               How to inspect or
+                                                    change it
+Semantic             Rules based on roles,          Use ‘C-e E’,
+presentation         events, states, and            Presentation
+                     attributes supplied by         options, and Your
+                     integrations.                  feedback rules.
+Explicit face        Aural rules that               Run
+presentation         deliberately match a named     ‘emacsvox-aural-toggle-face-presentation’
+                     Emacs face.                    or inspect it in
+                                                    Aural Doctor.
+Voice Lock           The historical face or         Use ‘C-e d v’
+                     personality-to-voice mapping   locally or ‘C-e d
+                     in each buffer.                C-v’ globally.
+
+   To find out whether a distinction comes from Voice Lock:
+
+  1. Move across two elements that the mode treats differently, such as
+     a comment and string in source code or a heading and link in Org.
+
+  2. Press ‘C-e d v’ to toggle Voice Lock only in that buffer, then
+     compare the same elements.
+
+  3. Press ‘C-e E’ on the element.  The explanation reports the Voice
+     Lock and explicit face-presentation state alongside the rules that
+     contributed to the result.
+
+   Turning Voice Lock off removes only its compatibility voice
+contribution.  It does not disable semantic presentation, explicit face
+rules, auditory cues, tones, or ordinary spoken status.  The global
+Voice Lock command updates existing and new buffers; an individual mode
+can still opt out when it starts.  Buffer-local Voice Lock state is not
+saved in a presentation profile.
+
+   For new customisation, prefer explanation, Aural Home, voice
+palettes, and Voice Workbench.  Older configurations can still customise
+a named legacy voice's ‘-settings’ option, such as
+‘voice-monotone-settings’.  Customise the settings option rather than a
+generated ‘acss-...’ voice symbol.  Historical background is preserved
+in *note Audio Formatting And Aural CSS: (emacsvox-heritage)Audio
+Formatting And Aural CSS. in _Emacspeak Heritage_.
+
+   Named formatting voices such as ‘bolden’ and ‘annotate’ follow the
+active palette.  An inherited standard entry may use a personality's
+‘-settings’ option as its implementation.  This is the definition in the
+explicit standard root, not a second hidden palette fallback.  Explicit
+styles keep their own settings, and explicit presentation rules can
+change the resulting voice.
+
+   The *note Developer Guide: (emacsvox)Integration Maintenance. covers
+voice-style metadata, rule authoring contracts, and integration
+behaviour; *note Speech Server Protocols: (emacsvox)Speech Server
+Protocols. covers delivery.  The generated *note Emacsvox Commands And
+Options: (emacsvox-reference)Emacsvox Commands And Options. in _Emacsvox
+Reference Manual_ records exact commands, options, and keymaps.  These
+references complement the tasks here; they are not prerequisites for
+using Aural Home.
+
+
 File: emacsvox.info,  Node: Using Online Help,  Next: Emacs Packages,  Prev: Aural Presentation,  Up: Top
 
 7 Find Help While You Work
 **************************
 
-You do not need to memorize every Emacs or Emacsvox command.  Emacs can
-explain the key you are about to use, the modes active in the current
-buffer, and the commands and variables available in your running
-session.  This live help is usually more reliable than a copied key list
-because it includes installed packages and personal customizations.
+Emacs can explain the key you are about to use, the modes active in a
+buffer, and the commands and settings available in your session.  This
+live help reflects installed packages and personal customisations.  Use
+it to understand an unfamiliar command or resolve a difference between a
+manual and your running Emacs.
 
-   Most help commands begin with the ‘C-h’ prefix.  If you forget what
-can follow it, press ‘C-h C-h’ for ‘help-for-help’.
+   Most Emacs help commands begin with ‘C-h’.  Press ‘C-h C-h’ for
+‘help-for-help’ when you need to discover what can follow that prefix.
+Settings menus also have their own contextual Help, described below.
 
 7.1 Ask About A Key, Command, Or Setting
 ========================================
 
-Use the question you have to choose a help command:
+Choose a help command according to what you already know:
 
    • ‘C-h k’ followed by a key runs ‘describe-key’ and explains the
      command currently bound to that key.
-
    • ‘C-h f’ runs ‘describe-function’.  Enter a command or function name
-     to read its complete documentation.
-
-   • ‘C-h v’ runs ‘describe-variable’.  Enter an option name to hear its
-     current value and documentation.
-
+     to read its documentation.
+   • ‘C-h v’ runs ‘describe-variable’.  Enter an option name to inspect
+     its current value and documentation.
    • ‘C-h w’ runs ‘where-is’ and reports the keys that invoke a command.
 
-   For example, press ‘C-h k C-e l’ to ask what the current-line
-speaking key does.  If you know the command name but not its key, use
-‘C-h w’ and enter that name.
+   For example, ‘C-h k C-e l’ explains the current-line speaking key
+without running that command.  If you know its command name but not its
+key, use ‘C-h w’ and enter the name instead.
 
 7.2 Discover What The Current Buffer Can Do
 ===========================================
 
-Two commands answer most questions about a buffer:
+Start with ‘C-h m’ after opening Dired, EWW, mail, a terminal, or
+another application.  This runs ‘describe-mode’ and explains the major
+mode, active minor modes, and their local commands.  Use ‘C-h b’
+(‘describe-bindings’) when you need the effective key bindings after
+package maps and personal customisations have been applied.
 
-   • ‘C-h m’ runs ‘describe-mode’.  It explains the major mode, active
-     minor modes, and their local commands.
+   For Emacsvox settings that apply to the current task, press ‘C-e S’.
+It opens the integration's focused menu when one is available, otherwise
+general buffer settings.  ‘C-e H .’ always opens general buffer
+settings.  The menu captures the buffer on entry, so its controls
+continue to refer to that task while you navigate its menus and editors.
 
-   • ‘C-h b’ runs ‘describe-bindings’.  It lists the effective key
-     bindings after local package maps and personal customizations are
-     applied.
+7.2.1 Find a setting and read its menu Help
+-------------------------------------------
 
-   After opening Dired, EWW, mail, a terminal, or another application,
-start with ‘C-h m’.  Use ‘C-h b’ when you need the exact keys available
-in that particular buffer.
+Press ‘C-e H /’ to find a setting by part of its name.  The search is
+case-insensitive and includes supported aliases.  For example, ‘cap’
+finds capitalisation controls.  Completion lets you choose a result;
+accepting it opens the appropriate menu and selects the control without
+changing its value.  Press ‘<RET>’ again to activate or edit it.
+Cancelling completion leaves the originating menu open.
+
+   In a settings menu, up/down selects an item and left/right changes
+sections.  ‘<RET>’, ‘M-<RET>’, or ‘C-j’ activates the selected item; its
+displayed shortcut also works directly.  Press ‘?’ followed by an item's
+key to hear its effect and scope, or ‘? ?’ for the menu overview.  ‘q’
+in that Help returns to the menu with the selection retained.
+
+   Within the menu itself, ‘q’ or ‘C-g’ goes back one level, while ‘C-q’
+closes the sequence.  These navigation commands do not undo changes
+already applied.  A linked editor keeps its own preview, saving, and
+discard rules.  See *note Choose What Persists: (emacsvox)Saving And
+Startup. before treating a saved default, a live adjustment, or a
+retained draft as the same thing.
+
+   The separate action search at ‘C-e H a’ still uses Aural Home's
+catalogue.  Use it when you need an action rather than a setting.  Aural
+Home remains available at ‘C-e H h’ or ‘M-x emacsvox-aural’; its tables
+and editors use their own Help and return keys.
 
 7.3 Read And Leave A Help Window
 ================================
 
-Help usually appears in a separate ‘*Help*’ window, and Emacsvox speaks
-the most relevant initial result automatically.  Press ‘C-e h’
-‘emacsvox-speak-help’ to hear the displayed help again.
+Ordinary Emacs Help usually appears in a separate ‘*Help*’ window.
+Emacsvox speaks the most relevant initial result automatically.  Press
+‘C-e h’ (‘emacsvox-speak-help’) to hear the displayed help again.
 
-   To explore the help text directly, press ‘C-x o’ to move to its
-window and use ordinary reading and navigation commands.  Press ‘q’ in
-the Help buffer when you are finished.  If another window is selected
-unexpectedly, ‘C-e C-w’ describes the current window arrangement.
+   To explore the text directly, press ‘C-x o’ to select its window and
+use ordinary reading and navigation commands.  Press ‘q’ in the Help
+buffer when finished.  If the selected window is unclear, ‘C-e C-w’
+describes the window arrangement.  Help opened by an Emacsvox settings
+menu uses the menu-return behaviour described above instead of requiring
+you to find the source window.
 
 7.4 Learn Interactively And Read Manuals
 ========================================
 
-   • ‘C-h t’ opens the interactive Emacs tutorial.  Emacsvox speaks the
-     tutorial and your navigation as you work through it.
+‘C-h t’ opens the interactive Emacs tutorial.  Emacsvox speaks its text
+and your navigation as you work through it.  For a separate key-learning
+exercise, ‘C-h C-l’ runs ‘emacsvox-learn-emacs’: it speaks the function
+of each key you press.  Leave that loop with ‘C-g’.
 
-   • ‘C-h i’ opens Info, the manual reader used by Emacs and Emacsvox.
-     Press ‘d’ for the Info directory, then ‘m’ and enter ‘Emacsvox’ to
-     open this manual.
+   ‘C-h i’ opens Info, the manual reader used by Emacs and Emacsvox.
+Press ‘d’ for the Info directory, then ‘m’ and enter ‘Emacsvox’ to open
+this manual.  The Emacs manual's Help and Info chapters explain
+searching manuals, following cross-references, and retaining help
+buffers for later use.
 
-   • ‘C-h C-l’ runs ‘emacsvox-learn-emacs’, a learning loop that speaks
-     the function of each key you press.  Leave the loop with ‘C-g’.
-
-   See the Emacs manual's help and Info chapters when you want to search
-manuals, follow cross-references, or keep a help buffer for later.
+   In an Aural interface, ‘C-c C-i’ opens the relevant manual topic and
+‘q’ in Info returns to that interface.  In the interface's own Help, ‘i’
+opens the same topic.
 
 7.5 Emacsvox-Specific Help
 ==========================
 
-   • ‘C-h C-e’ ‘emacsvox-describe-emacsvox’ opens a concise Emacsvox
-     overview.
+Use ‘C-h C-e’ (‘emacsvox-describe-emacsvox’) for the Emacsvox overview.
+‘C-e N’ (‘emacsvox-view-emacsvox-news’) opens project news, and ‘C-e T’
+(‘emacsvox-view-emacsvox-tips’) opens productivity tips.
 
-   • ‘C-e N’ ‘emacsvox-view-emacsvox-news’ opens versioned project news,
-     while ‘C-e T’ ‘emacsvox-view-emacsvox-tips’ opens productivity
-     tips.
+   For unexpected feedback, leave point on the item and press ‘C-e E’ to
+explain its voices, sounds, and other presentation actions.  ‘C-e H x’
+opens Feedback Details through the settings menu.  Its report
+distinguishes retained output from a simulation; see *note Understand
+Why Something Sounded That Way: (emacsvox)Explaining Presentation.
 
-   • ‘C-e H’ ‘emacsvox-aural-menu’ opens the experimental Emacsvox menu.
-     Press ‘s’ then ‘i’ for Indentation, ‘x’ for Feedback for this item,
-     or ‘h’ for all Aural Home actions.  ‘M-x emacsvox-aural’ opens
-     Aural Home directly.
-
-   • ‘C-e E’ ‘emacsvox-aural-explain-presentation’ explains why the
-     object at point received its voices, sounds, and other auditory
-     actions.
+   ‘C-e H D’ opens diagnostics.  Use ‘d’ there for Aural Doctor, ‘s’ for
+spatial capabilities, or ‘m’ and ‘n’ for retained main and notification
+diagnostics.  These inspection routes do not imply that speech has been
+repaired.  Run a repair or restart only when you deliberately choose
+that action.  If there is no speech at all, begin with *note Recovering
+From No Speech: (emacsvox)Recovering From No Speech. rather than
+presentation settings.
 
    The generated *note Emacsvox Keymaps: (emacsvox-reference)Emacsvox
-Keymaps. in _Emacsvox Reference Manual_ records all default Emacsvox
-bindings.  Prefer ‘C-h k’, ‘C-h m’, and ‘C-h b’ when a running package
-or customization changes those defaults.
+Keymaps. in the _Emacsvox Reference Manual_ records default bindings.
+Return to ‘C-h k’, ‘C-h m’, and ‘C-h b’ when a package or personal
+configuration changes those defaults.
 
 
 File: emacsvox.info,  Node: Emacs Packages,  Next: Notmuch Mail,  Prev: Using Online Help,  Up: Top
@@ -122,24 +224,32 @@ File: emacsvox.info,  Node: Emacs Packages,  Next: Notmuch Mail,  Prev: Using On
 8 Applications And Integrations
 *******************************
 
-Emacsvox prepares speech support for many Emacs modes as their libraries
-are loaded.  Start the application normally; when its buffer appears,
-use ‘C-h m’ for the active modes and their commands, ‘C-h b’ for the
-effective bindings, and ‘C-h k’ followed by a key to identify one
-binding.  The generated *note Emacsvox Commands And Options:
-(emacsvox-reference)Emacsvox Commands And Options. in _Emacsvox
-Reference Manual_ records the public Emacsvox commands and options.
+Start an application with its normal Emacs command.  Emacsvox prepares
+speech support as the relevant libraries load, then presents movement,
+results, and state changes through that application's structure.  Emacs
+or the third-party package still owns its editing, files, network
+operations, and other actions.
 
-   This chapter is a curated starting point, not a promise that every
-module in the generated reference has a maintained task guide.  Emacs
-itself or a third-party package provides the application's general
-operation; Emacsvox adds the speech feedback.  Consult both sets of help
-when diagnosing a problem.
+   Use ‘C-h m’ to learn the active mode, ‘C-h b’ to inspect its
+effective keys, and ‘C-h k’ to explain one binding.  For Emacsvox's
+feedback controls, ‘C-e S’ opens the current integration's focused
+settings when available, otherwise general buffer settings.  ‘C-e H j’
+also provides integration settings and a chooser.  These controls adjust
+speech; they do not replace the application's own setup or preferences.
+*note Using Online Help: Using Online Help. explains menu Help and
+search.
 
-   Earlier Emacspeak surveys, including their W3, Dismal, and
-scanner/OCR setup, are preserved as historical material in *note
-Historical Application Survey: (emacsvox-heritage)Emacs Packages. in
-_Emacspeak Heritage_.  They are not current setup instructions.
+   This chapter is a guide to maintained workflows, not a claim that
+every module has a complete task guide.  The generated *note Emacsvox
+Commands And Options: (emacsvox-reference)Emacsvox Commands And Options.
+in the _Emacsvox Reference Manual_ records public commands and options.
+Consult both that reference and the application's manual when diagnosing
+a problem.
+
+   Earlier surveys of W3, Dismal, and scanner/OCR setup remain in the
+*note Historical Application Survey: (emacsvox-heritage)Emacs Packages.
+in _Emacspeak Heritage_.  They describe their original period and are
+not current installation instructions.
 
 * Menu:
 
@@ -160,12 +270,12 @@ File: emacsvox.info,  Node: Document Authoring,  Next: Structured Editing,  Up: 
 8.1 Document Authoring
 ======================
 
-Emacs major modes provide the editing commands for each document format.
-Emacsvox speaks ordinary movement and editing, applies voice-lock where
-the mode exposes useful faces, and adds mode-specific feedback where an
-integration exists.  Open or create the document in its normal Emacs
-mode, then use ‘C-h m’ to discover that mode's workflow.  For outlines
-and templates, see *note Structured Editing: Structured Editing.
+Open or create a document in its normal Emacs mode.  The major mode
+provides format-specific editing commands; Emacsvox speaks movement and
+edits, applies Voice Lock where useful faces are available, and adds
+integration-specific feedback.  Use ‘C-h m’ for the mode's workflow.
+Outlines and template fields are covered next; table reading is
+described under *note Browsing Structure: Browsing Structure.
 
 
 File: emacsvox.info,  Node: Structured Editing,  Next: Browsing Structure,  Prev: Document Authoring,  Up: Emacs Packages
@@ -173,21 +283,19 @@ File: emacsvox.info,  Node: Structured Editing,  Next: Browsing Structure,  Prev
 8.2 Structured Editing And Templates
 ====================================
 
-Emacsvox has maintained integrations for the built-in Outline and Tempo
-libraries.  In Outline mode, heading navigation speaks the reached
-heading and visibility commands announce what was hidden or exposed.
-Start a dedicated outline with ‘M-x outline-mode’, or enable
-‘outline-minor-mode’ in a suitable document.  See *note
-emacsvox-outline: (emacsvox-reference)emacsvox-outline. in _Emacsvox
-Reference Manual_ for the Emacsvox integration and *note Outline Mode:
-(emacs)Outline Mode. in _The GNU Emacs Manual_ for the underlying
-editor.
+In Outline mode, heading navigation speaks the heading you reach and
+visibility commands announce what was hidden or exposed.  Start a
+dedicated outline with ‘M-x outline-mode’, or enable
+‘outline-minor-mode’ in a suitable document.  See *note Outline Mode:
+(emacs)Outline Mode. in _The GNU Emacs Manual_ for the editor and *note
+emacsvox-outline: (emacsvox-reference)emacsvox-outline. in the _Emacsvox
+Reference Manual_ for its speech support.
 
    Tempo supplies template fields for modes and packages that use it.
 Emacsvox speaks inserted text and the line reached when moving between
-template marks.  The package that supplied a template also provides its
-insertion commands; use that package's mode help, together with *note
-emacsvox-tempo: (emacsvox-reference)emacsvox-tempo. in _Emacsvox
+template marks.  The package supplying the template also supplies its
+insertion commands.  Consult that package's mode help and *note
+emacsvox-tempo: (emacsvox-reference)emacsvox-tempo. in the _Emacsvox
 Reference Manual_.
 
 
@@ -196,13 +304,12 @@ File: emacsvox.info,  Node: Browsing Structure,  Next: Web Browsing,  Prev: Stru
 8.3 Browsing Structure
 ======================
 
-Use the structure exposed by the active Emacs mode rather than treating
-every buffer as plain text.  Info provides node and menu navigation,
-Outline provides heading and visibility commands, and EWW exposes HTML
-headings, links, lists, tables, and other document elements.  Begin with
-‘C-h m’ in the buffer; see *note Using Online Help: Using Online Help.
-for the common discovery commands and *note Web Browsing: Web Browsing.
-for the maintained Web route.
+Use the active mode's structure when it matches the task: Info has nodes
+and menus, Outline has headings and visibility, and EWW exposes HTML
+headings, links, lists, tables, and other document elements.  The
+following sections explain Emacsvox's reading of headings, tables, and
+application lists.  These reading controls are distinct from commands
+that edit the underlying content.
 
 8.3.1 Reading Org headings
 --------------------------
@@ -217,92 +324,91 @@ omitted.
    Word reading and partial-line reading count the stars actually
 selected.  Starting at the second star of a level-three heading
 therefore says "2 star".  Word movement includes the star count when it
-reaches the first heading word, in either direction.  It keeps the usual
-cursor position.  Moving through the remaining title words speaks them
-without repeating the count or heading-level announcement.  Character
+reaches the first heading word, in either direction, without changing
+the usual cursor position.  Moving through the remaining title words
+does not repeat that count or heading-level announcement.  Character
 reading and spelling retain the individual stars.  Collapsed headings
 have a collapse cue at every level; the large-movement cue belongs to
 Org structure navigation.
 
    Counts preserve the configured character name without adding a plural
-ending.  At ‘all’ punctuation, the speech server names the ‘*’
-character, so an active Omnivox pronunciation of "asterisk" produces "3
-asterisk".  Saved punctuation editor changes take effect after
-restarting speech.  For explicit word and partial-line reads at ‘some’
-or ‘none’, the name comes from ‘tts-character-to-speech-table’, the same
-Emacs table used by character reading.
+ending.  At ‘all’ punctuation, the speech server names ‘*’, so an active
+Omnivox pronunciation of "asterisk" produces "3 asterisk".  Saved
+punctuation-editor changes take effect after restarting speech.
+Explicit word and partial-line reads at ‘some’ or ‘none’ use
+‘tts-character-to-speech-table’, the Emacs table also used for character
+reading.
 
 8.3.2 Reading Markdown and Org tables
 -------------------------------------
 
 In a Markdown or Org table, press a Control-Meta arrow to enter table
-reading and move immediately.  Left/Right move by cell; Up/Down move by
-logical row.  The first movement announces table reading and the
-destination in one spoken result.  Outside supported tables, these
-arrows keep their existing bindings, including in code examples.
+reading and move immediately.  Left/right moves by cell; up/down moves
+by logical row.  The first movement announces table reading and the
+destination together.  Outside supported tables, these arrows retain
+their existing bindings, including inside code examples.
 
-   You can still press the speech prefix followed by ‘C-t C-r’ to enter
-without moving.  With the default prefix, this is ‘C-e C-t C-r’.  This
-entry announces the dimensions and current cell.  Press ‘q’ or the same
-prefix command to restore ordinary editing keys.
-
-   Use the speech prefix followed by ‘C-t ]’ or ‘C-t [’ to find and
-enter the next or previous table from prose.  Inside table reading, ‘t’
-and ‘T’ do the same.  Code examples are skipped.
+   ‘C-e C-t C-r’ enters without moving when the default speech prefix is
+used.  It announces the dimensions and current cell.  Press ‘q’ or the
+same command to restore ordinary editing keys.  From prose, ‘C-e C-t ]’
+and ‘C-e C-t [’ find and enter the next or previous table.  Inside table
+reading, ‘t’ and ‘T’ do the same; code examples are skipped.
 
    While table reading is active:
 
-   • Up/Down and Control-Meta-Up/Down move by logical row, retain the
+   • Up/down and Control-Meta-up/down move by logical row, retain the
      column, and read the complete destination row.
-   • Control-Meta-Left/Right move between cells.  Plain Left/Right
-     retain character movement.  Tab and Shift-Tab move between cells
-     without editing; Return or Space reads the current cell.
-   • ‘r’ reads the row; ‘c’ reads the column.  ‘.’ announces
-     coordinates; ‘=’ gives dimensions.
+   • Control-Meta-left/right moves between cells.  Plain left/right
+     retains character movement.  ‘<TAB>’ and ‘S-<TAB>’ move between
+     cells without editing; ‘<RET>’ or ‘<SPC>’ reads the current cell.
+   • ‘r’ reads the row and ‘c’ the column.  ‘.’ announces coordinates
+     and ‘=’ gives dimensions.
    • ‘a’ changes column titles, row titles, or data/title order for this
-     buffer.  The customization group ‘emacsvox-table-reader’ sets
+     buffer.  The ‘emacsvox-table-reader’ customisation group sets
      defaults.
-   • ‘w’ or ‘k k’ copies the cell; ‘k r’ copies the row with tabs
-     between cells; ‘k c’ copies the column with newlines between cells.
-   • Meta-Up/Down leave directly for preceding/following prose.  Up/Down
-     also leave when movement crosses a vertical table edge.  If there
-     is no content beyond that edge, point stays in the table.
+   • ‘w’ or ‘k k’ copies the cell, ‘k r’ copies the row with tabs
+     between cells, and ‘k c’ copies the column with newlines between
+     cells.
+   • Meta-up/down leaves directly for preceding/following prose.
+     Up/down also leaves across a vertical table edge when content
+     exists beyond it; otherwise point stays in the table.
 
    A horizontal edge or a missing cell in a shorter row leaves point
 unchanged and announces the boundary.  Separators are skipped.  A
 separator immediately after the first row identifies column titles;
-otherwise the first row is data.  Coordinates distinguish the header
-from one-based data rows.  Empty cells are spoken as “blank.” Wrapping
-never shortens a logical cell's speech or copy.
+otherwise that row is data.  Coordinates distinguish the header from
+one-based data rows.  Empty cells are spoken as “blank.” Wrapping never
+shortens a logical cell's speech or copy.
 
-   Reading commands preserve document text: they do not align tables,
-create rows, or evaluate Org formulas.  Copies use cell values, with
-ordinary links represented by their labels and inline code by its
-literal text.  Use the host mode to copy exact markup or formulas.  This
-reader covers simple pipe tables; HTML spans, nested tables, and
-spreadsheet-specific structures have separate interfaces.
+   Reading does not align tables, create rows, or evaluate Org formulas.
+Copies use cell values: ordinary links become their labels and inline
+code becomes its literal text.  Use the host mode to copy exact markup
+or formulas.  This reader covers simple pipe tables; HTML spans, nested
+tables, and spreadsheet-specific structures have separate interfaces.
 
-   Leaving the table restores ordinary mode keys.  Other editing
-commands retain their normal meaning; an edit ends the reading context.
-Org's existing table editing feedback and Markdown's markup-stripping
-speech option remain independent of this reader.  Agent Shell uses the
-same logical reading operations with its existing automatic table entry,
-commands and preferences; see *note Agent Shell: Agent Shell.
+   Leaving restores ordinary mode keys.  Other editing commands retain
+their normal meaning, and an edit ends the reading context.  Org's
+table-editing feedback and Markdown's markup-stripping speech option
+remain independent.  Agent Shell has automatic contextual table entry
+and its own preferences.  In Agent Shell, Control-Meta-up/down reads the
+destination _cell_, whereas plain up/down reads the destination _row_.
+Do not assume identical spoken units merely because the keys are
+similar; see *note Agent Shell: Agent Shell.
 
 8.3.3 Reading application lists
 -------------------------------
 
 In an application built on Tabulated List mode, use a Control-Meta arrow
 or ‘C-e C-t C-r’ to enter shared reading.  Ordinary application
-navigation stays unchanged until you enter.  Within reading, Up/Down
-read complete logical rows, Control-Meta-Left/Right read cells, and
-plain Left/Right inspect characters.  ‘q’ leaves reading and restores
+navigation stays unchanged until you enter.  Within reading, up/down
+reads complete logical rows, Control-Meta-left/right reads cells, and
+plain left/right inspects characters.  ‘q’ leaves reading and restores
 the application's usual navigation.
 
    Application actions take precedence over other shared reader keys.
-Opening an item, refreshing, sorting, searching, and editing keep their
-existing commands, including Return on a button.  Where a shared key is
-already occupied, use ‘M-x emacsvox-table-reader-speak-cell’, ‘M-x
+Opening, refreshing, sorting, searching, and editing keep their
+commands, including ‘<RET>’ on a button.  When a shared key is occupied,
+use ‘M-x emacsvox-table-reader-speak-cell’, ‘M-x
 emacsvox-table-reader-speak-row’, ‘M-x
 emacsvox-table-reader-speak-column’, ‘M-x
 emacsvox-table-reader-speak-context’, or ‘M-x
@@ -310,63 +416,64 @@ emacsvox-table-reader-speak-dimensions’.  The matching
 ‘emacsvox-table-reader-copy-cell’, ‘emacsvox-table-reader-copy-row’ and
 ‘emacsvox-table-reader-copy-column’ commands copy logical values.
 
-   Speech and copies use complete entry text even when a column is
-truncated.  Column headings come from the application, not the first
-item.  Coordinates count visible data rows; hidden rows are excluded,
-and empty cells say “blank.” At the first or last row, movement stops at
-the boundary.  A refresh ends reading; enter again to inspect the
-refreshed list.  Custom table printers, image-only cells and duplicate
-column names are not supported by this reader.
+   Speech and copies use complete entry text even when a displayed
+column is truncated.  Column headings come from the application, not the
+first item.  Coordinates count visible data rows; hidden rows are
+excluded and empty cells say “blank.” Movement stops at the first or
+last row.  A refresh ends reading; enter again to inspect the refreshed
+list.  Custom table printers, image-only cells, and duplicate column
+names are not supported by this reader.
 
 8.3.4 Browsing CSV data
 -----------------------
 
 Use ‘emacsvox-table-find-csv-file’ to open a CSV file in the table
-browser, or ‘emacsvox-table-view-csv-buffer’ to browse the current
-buffer's CSV data.  Quoted commas, doubled quotation marks, and
-multiline fields remain single logical cells.  Blank records outside
-quoted fields are skipped; empty fields remain cells.  Empty input or
-malformed quoting produces an error before a table view is created.
+browser, or ‘emacsvox-table-view-csv-buffer’ for the current buffer's
+CSV data.  Quoted commas, doubled quotation marks, and multiline fields
+remain single logical cells.  Blank records outside quoted fields are
+skipped; empty fields remain cells.  Empty input or malformed quoting
+produces an error before creating a view.
 
-   Browsing preserves the source text.  If the file is already open, its
-buffer and unsaved edits remain available, and the view uses those
-current contents.  The browser uses the shared table controls
-immediately; there is no separate reading-mode toggle:
+   Browsing preserves source text.  If the file is already open, the
+view uses that buffer's current contents, including unsaved edits,
+without replacing the source buffer.  Shared table controls are active
+immediately:
 
-   • Up/Down and ‘C-M-Up/Down’ move by logical row and read the whole
-     row.
-   • ‘C-M-Left/Right’ and Tab/Shift-Tab move by cell.  Plain Left/Right
-     and ‘C-b/C-f’ move by character; ‘C-p/C-n’ move by logical row.
-   • Return or Space reads the cell; ‘r’ reads the row and ‘c’ reads the
+   • Up/down and Control-Meta-up/down move by logical row and read the
+     whole row.
+   • Control-Meta-left/right and ‘<TAB>~/~S-<TAB>’ move by cell.  Plain
+     left/right and ‘C-b~/~C-f’ move by character; ‘C-p~/~C-n’ move by
+     logical row.
+   • ‘<RET>’ or ‘<SPC>’ reads the cell; ‘r’ reads the row and ‘c’ the
      column.
-   • ‘.’ gives coordinates and ‘=’ gives dimensions.  The first row
-     supplies column titles and is announced separately from the data
-     rows.
-   • ‘w’ or ‘k k’ copies the cell, ‘k r’ copies the row with tabs
-     between cells, and ‘k c’ copies the column with newlines between
-     cells.  ‘K’ copies the whole table to the table clipboard for
+   • ‘.’ gives coordinates and ‘=’ dimensions.  The first row supplies
+     column titles and is announced separately from data rows.
+   • ‘w’ or ‘k k’ copies the cell, ‘k r’ the row with tabs between
+     cells, and ‘k c’ the column with newlines between cells.  ‘K’
+     copies the whole table to the clipboard used by
      ‘emacsvox-table-paste-from-clipboard’.
-   • ‘a’ changes column titles, row titles, or data order for the view,
-     using the shared reader preferences.  ‘q’ closes the view.
+   • ‘a’ changes column titles, row titles, or data order for this view
+     using shared reader preferences.  ‘q’ closes the view.
 
    These replace the old browser cell-arrow, header-reading,
 automatic-speech, and single-key table-copy bindings.  The old local
-aliases ‘b’, ‘n’, ‘p’, ‘A’, ‘B’, ‘E’, and ‘T’ are removed.  The
-speech-prefix table commands remain available.
+aliases ‘b’, ‘n’, ‘p’, ‘A’, ‘B’, ‘E’, and ‘T’ are removed; speech-prefix
+table commands remain available.
 
-   Search with ‘s’, ‘R’ (row), ‘C’ (column), or ‘h’ (headers); ‘#’ sorts
-on the current column.  ‘M-<’ and ‘M->’ jump to the top and bottom.  At
-a table edge, movement reports the boundary and leaves point in place.
+   Search with ‘s’, ‘R’ for a row, ‘C’ for a column, or ‘h’ for headers.
+‘#’ sorts on the current column and ‘M-<~/~M->’ jumps to the top or
+bottom.  At an edge, movement announces the boundary and leaves point in
+place.
 
-   Filters remain on ‘f’ (row) and ‘g’ (column); a prefix argument
-requests a new filter.  Filter indexes and the ‘j’ jump prompt retain
-zero-based model coordinates, including the header row, even though
-spoken coordinates count data rows and columns from one.  For example, a
-row filter ‘(0 "value" 2)’ reads the first column, the word “value”, and
-the third column.  ‘M-l’ and ‘M-s’ load and save filters.  Filters are
+   Filters remain on ‘f’ for a row and ‘g’ for a column; a prefix
+argument requests a new filter.  Filter indexes and the ‘j’ jump prompt
+retain zero-based model coordinates, including the header, although
+spoken coordinates count data rows and columns from one.  For example,
+the row filter ‘(0 "value" 2)’ reads the first column, “value”, and the
+third column.  ‘M-l’ and ‘M-s’ load and save filters.  Filters are
 explicit inspections; shared row movement always reads the whole row.
-Sorting preserves filters and shared speech preferences.  Use ‘C-h m’
-for the full browser key map.
+Sorting preserves filters and speech preferences.  Use ‘C-h m’ for the
+full browser key map.
 
 
 File: emacsvox.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Structure,  Up: Emacs Packages
@@ -376,16 +483,23 @@ File: emacsvox.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Stru
 
 EWW is the built-in browser supported for current Emacsvox.  Run ‘M-x
 eww <RET>’, enter a URL or search words, and press ‘<RET>’.  Emacsvox
-speaks EWW navigation and rendering feedback and adds commands for
-moving by HTML structure and filtering the displayed DOM.  In an EWW
-buffer, use ‘C-h m’ for the live workflow and ‘C-h b’ for its effective
-keys.  See *note EWW: (emacs)EWW. in _The GNU Emacs Manual_ for browser
-operation and *note emacsvox-eww: (emacsvox-reference)emacsvox-eww. in
-_Emacsvox Reference Manual_ for the speech integration.
+speaks navigation and rendering feedback and adds HTML-structure
+movement and filtering of the displayed DOM.  Consult *note EWW:
+(emacs)EWW. in _The GNU Emacs Manual_ for browser operation and *note
+emacsvox-eww: (emacsvox-reference)emacsvox-eww. in the _Emacsvox
+Reference Manual_ for speech support.
 
-   The former Emacs/W3 and w3m survey is historical.  Do not install
-either one on the strength of the Heritage manual; use EWW unless a
-separately maintained integration says otherwise.
+   From an EWW buffer, ‘C-e S’ opens its focused settings.  ‘s’ toggles
+section-navigation autospeak.  ‘i’ changes image suppression for
+subsequent rendering and the shared SHR image default, preserving
+buffer-local overrides; it does not reload the current page.  ‘w’ saves
+the two Emacsvox defaults, ‘A’ opens advanced settings, and ‘q’ returns.
+These are presentation choices, not a replacement for EWW's browser
+preferences.
+
+   The Emacs/W3 and w3m survey is historical.  Do not install either on
+the strength of the Heritage manual; use EWW unless a separately
+maintained integration says otherwise.
 
 
 File: emacsvox.info,  Node: Messaging,  Next: Editing Code,  Prev: Web Browsing,  Up: Emacs Packages
@@ -393,12 +507,12 @@ File: emacsvox.info,  Node: Messaging,  Next: Editing Code,  Prev: Web Browsing,
 8.5 Messaging
 =============
 
-Emacsvox integrates with several Emacs mail and messaging modes.  The
-curated workflow for indexed mail search, asynchronous results, thread
-reading, attachments, and privacy controls is *note Notmuch Mail:
-Notmuch Mail.  For another client, start with its own manual and ‘C-h
-m’; use the generated reference to find an Emacsvox module with the same
-package or mode name.
+For indexed mail search, asynchronous results, threads, attachments, and
+privacy controls, follow *note Notmuch Mail: Notmuch Mail.  For another
+mail or messaging client, start with its own manual and mode help, then
+find the corresponding Emacsvox module in the generated reference.  The
+presence of a module is not a substitute for configuring the underlying
+account or service.
 
 
 File: emacsvox.info,  Node: Editing Code,  Next: Development Environment,  Prev: Messaging,  Up: Emacs Packages
@@ -407,11 +521,11 @@ File: emacsvox.info,  Node: Editing Code,  Next: Development Environment,  Prev:
 ================
 
 Programming modes provide language-aware movement, indentation,
-compilation, and navigation.  Emacsvox speaks those operations and uses
-voice-lock to distinguish faces such as comments, strings, warnings, and
-language constructs.  Use ‘C-h m’ in the source buffer for the language
-mode, and search the generated reference for an integration named after
-that mode.
+compilation, and navigation.  Emacsvox speaks these operations and uses
+Voice Lock to distinguish comments, strings, warnings, and language
+constructs where the mode exposes them.  Use the language mode's help
+for editing commands and its named integration in the generated
+reference for speech details.
 
 
 File: emacsvox.info,  Node: Development Environment,  Next: Desktop Management,  Prev: Editing Code,  Up: Emacs Packages
@@ -419,61 +533,65 @@ File: emacsvox.info,  Node: Development Environment,  Next: Desktop Management, 
 8.7 Development Environment
 ===========================
 
-Emacs can combine compilation, diagnostics, project navigation, version
-control, debuggers, and language servers into a development environment.
-Emacsvox supplies speech feedback to many of those components, but their
-own manuals remain authoritative for setup and operation.  Verify each
-component individually with its mode help before combining it into a
-larger workflow.
+Compilation, diagnostics, project navigation, version control,
+debuggers, and language servers can share the Emacs workspace.
+Configure each through its own manual and verify its operation before
+combining it with other components.  Emacsvox supplies speech to many of
+them; their underlying operations remain owned by those tools.  *note
+Agent Shell: Agent Shell. provides the separate guide to AI-agent
+sessions and their permission, feedback, and review controls.
 
 8.7.1 Magit
 -----------
 
-Magit navigation speaks the reached section or line.  Empty and
+Magit navigation speaks the section or line you reach.  Empty and
 whitespace-only lines use the normal line tones.  Commit hashes are
-silent by default; changing the voice assigned to the ‘magit-hash’ face
-changes this consistently for both navigation and explicit reading.
-Moving the section highlight preserves that choice.
+silent by default; changing the voice assigned to ‘magit-hash’ affects
+navigation and explicit reading consistently.  Moving the section
+highlight preserves that choice.
 
    After successful staging or unstaging in a Magit view, speech reads
-the line or section where point lands after the refresh.  Failures are
-still reported explicitly.  Staging and unstaging from an ordinary file
-buffer still confirm the outcome.  Branch checkout, branch and remote
-renaming, remote removal, and stash creation also announce their
-results.  Repository-list fetching reports partial failures when some
-repositories fail.  Background process completion uses the notification
-lane, while entering status and navigating use the main speech lane.
+where point lands after the refresh.  Failures remain explicit.  Staging
+and unstaging from an ordinary file buffer still confirm their outcome.
+Branch checkout, branch and remote renaming, remote removal, and stash
+creation announce results.  Repository-list fetching reports partial
+failures.  Background completion uses the notification stream; entering
+status and navigating use the main stream.
 
-   Section visibility commands describe the resulting collapsed,
-expanded, or partly expanded state.  Copying a heading without a value
-says there is nothing to copy; it does not repeat an older kill-ring
-entry as a new copy.
+   Visibility commands describe collapsed, expanded, or partly expanded
+sections.  Copying a heading without a value reports that there is
+nothing to copy rather than presenting an old kill-ring entry as a new
+copy.
 
-   Magit uses Transient menus for actions such as Push, Fetch, Commit,
-and Branch.  When a menu opens, Emacsvox speaks a short introduction and
-navigation guidance.  The automatic shortcut list stays visible without
-being read on the notification stream.  The same navigation applies to
-other packages using Transient.
+   Magit uses Transient menus for Push, Fetch, Commit, Branch, and other
+actions.  Opening one speaks a short introduction and navigation
+guidance.  Its automatic shortcut list remains visible without being
+read on the notification stream.
 
-   • Up and Down move through options.  Each option speaks its
-     description, current state where applicable, and shortcut.  For
-     example: "Dry run, off.  Shortcut minus n."  Capital letters are
-     named explicitly.
-   • Left and Right move between sections.  A section announcement
-     includes the complete heading and its position, such as "Push
-     master to.  Section 2 of 4."  Moving through options also announces
-     section changes and wrapping at either end of the menu.
-   • ‘C-j’ or ‘M-<RET>’ activates the selected option.  You can also
-     type its shortcut.  Changing an option speaks the resulting value
-     once.
-   • ‘?’ followed by an option's shortcut opens its help.
-   • ‘C-g’ closes the current menu or leaves its help mode.  ‘q’ is not
-     a universal quit key in Transient menus.  An unavailable key gives
-     brief recovery guidance on the main speech stream.
+   Up/down browses items and left/right moves between sections.  The
+shared navigation preferences apply to Magit as well as Emacsvox menus:
+wrapping within a section is the default, and continuous navigation or
+stopping at section edges can be selected.  Announcement order can be
+item first, section first, or dependent on the movement.  Detailed
+command descriptions are enabled by default; value adjustments still
+give brief feedback.  Configure these choices through ‘C-e H s n’, as
+described in *note Getting started with menus and Aural Home:
+(emacsvox)Aural Home.
 
-   Navigation only selects an option.  Activating an action can perform
-a Git operation, while activating a switch changes an argument for the
-next action.  Listen to the description before activating it.
+   An item announcement identifies its key, relevant value, and
+description; capital keys are named explicitly.  Section announcements
+include the heading and position according to the selected policy.  Do
+not expect the same section-name repetition after changing that policy.
+
+   Use ‘C-j’ or ‘M-<RET>’ to activate a selected Magit item, or type its
+shortcut.  ‘?’ followed by the shortcut opens Help.  ‘C-g’ closes the
+current menu or leaves its help mode.  Unlike Emacsvox's own settings
+menus, ‘q’ is not a universal quit key in Transient applications.  An
+unavailable key gives brief recovery guidance on the main stream.
+
+   Browsing only selects an item.  Activating an action can perform a
+Git operation, while activating a switch changes an argument for the
+next action.  Listen to the description before activation.
 
 
 File: emacsvox.info,  Node: Desktop Management,  Next: Personal Information Management,  Prev: Development Environment,  Up: Emacs Packages
@@ -481,11 +599,11 @@ File: emacsvox.info,  Node: Desktop Management,  Next: Personal Information Mana
 8.8 Desktop Management
 ======================
 
-Emacs buffers, windows, frames, and tabs provide the workspace.  Their
-standard commands receive speech feedback, and the active help describes
-any additional mode-specific bindings.  Use ‘C-x b’ to select a buffer
-and ‘C-h m’ in specialized buffer-list or tab interfaces to learn their
-local commands.
+Buffers, windows, frames, and tabs organise the workspace.  ‘C-x b’
+selects a buffer; specialised buffer-list and tab interfaces provide
+their own mode help.  *note Audio Desktop: Audio Desktop. explains the
+common navigation model so it need not be learnt again for each
+application.
 
 
 File: emacsvox.info,  Node: Personal Information Management,  Next: Desktop Applications,  Prev: Desktop Management,  Up: Emacs Packages
@@ -494,10 +612,16 @@ File: emacsvox.info,  Node: Personal Information Management,  Next: Desktop Appl
 ===================================
 
 Calendar, Org, and related packages define their data formats and
-workflows.  Emacsvox integrations present navigation, state changes, and
-structured content when those modes are active.  Begin with the
-application's own manual and live mode help, then consult its matching
-Emacsvox module in the generated reference.
+workflows.  Emacsvox presents navigation, state changes, and structured
+content when those modes are active.  Begin with the application's
+manual and live help, then consult its matching integration in the
+generated reference.
+
+   Org's focused menu at ‘C-e S’ includes its table-editing feedback
+choices.  Those are separate from the shared reading mode above: the
+focused menu's global default does not replace an existing buffer-local
+choice, and the shared reader retains its own title and speaking
+preferences.
 
 
 File: emacsvox.info,  Node: Desktop Applications,  Prev: Personal Information Management,  Up: Emacs Packages
@@ -508,166 +632,170 @@ File: emacsvox.info,  Node: Desktop Applications,  Prev: Personal Information Ma
 8.10.1 Terminal Applications
 ----------------------------
 
-For a new full-terminal workflow, use *note EAT Terminal Access: EAT
-Terminal Access.  When a built-in terminal with no additional package is
-preferable, use *note Running Terminal Based Applications: Running
-Terminal Based Applications.  For ordinary line-oriented shell commands,
-‘M-x shell’ is usually the simplest route.
+Use ‘M-x shell’ for ordinary line-oriented shell commands.  For a full
+terminal, follow *note EAT Terminal Access: EAT Terminal Access., or use
+built-in *note Term: Running Terminal Based Applications. when no
+additional package is wanted.  Their input, review, and asynchronous
+feedback models differ; choose the appropriate chapter rather than
+transferring terminal keys from one application to another.
+
+   In Shell/comint, ‘C-e S’ opens focused speech settings.  ‘s’ toggles
+automatic output speech and ‘b’ toggles background monitoring.
+Background reading needs automatic speech enabled.  Both settings affect
+the captured buffer for its lifetime; this menu has no Save action.  ‘q’
+returns to the originating entry or closes a directly opened focused
+menu.
 
    In WSL Shell buffers, command-name completion skips Windows drive
 directories by default.  Scanning large directories such as
-‘C:\Windows\System32’ can otherwise pause Emacs for many seconds.
-Windows programs still run by name, and explicit filename completion,
-including paths under ‘/mnt/c/’, remains available.  To include Windows
-command names in completion again, use ‘M-x customize-option <RET>
-emacsvox-shell-complete-windows-commands <RET>’ and enable the option.
-This setting leaves native Windows and remote Shell buffers unchanged.
+‘C:\Windows\System32’ can otherwise pause Emacs.  Windows programs still
+run by name, and explicit filename completion, including ‘/mnt/c/’
+paths, remains available.  To include Windows command names again, use
+‘M-x customize-option <RET> emacsvox-shell-complete-windows-commands
+<RET>’.  This option does not change native Windows or remote Shell
+buffers.
 
 8.10.2 Forms Mode
 -----------------
 
-The built-in Forms library presents records from a structured text file
-one at a time.  Emacsvox speaks field values, record movement, searches,
-and status changes while Forms mode is active.  Forms requires a format
-specification; see *note Forms Mode: (emacs)Forms Mode. in _The GNU
-Emacs Manual_ for setup and operation, and *note emacsvox-forms:
-(emacsvox-reference)emacsvox-forms. in _Emacsvox Reference Manual_ for
-the speech integration.
+Forms presents records from a structured text file one at a time.
+Emacsvox speaks fields, record movement, searches, and state changes.
+Forms requires a format specification; see *note Forms Mode:
+(emacs)Forms Mode. in _The GNU Emacs Manual_ for setup and *note
+emacsvox-forms: (emacsvox-reference)emacsvox-forms. in the _Emacsvox
+Reference Manual_ for speech.
 
 8.10.3 OCR And PDF-To-Text With PaddleOCR
 -----------------------------------------
 
 Emacsvox uses PaddleOCR PP-StructureV3 to turn an image or PDF into
-UTF-8 Markdown text.  PP-StructureV3 recovers document reading order and
-represents recognized tables as Markdown or embedded HTML, so keep the
-‘.md’ output when table structure matters.  Markdown is plain text and
-can instead be named ‘.txt’ when its lightweight markup is acceptable.
-
-   The supported baseline below is CPU-only x86-64 WSL2 or GNU/Linux.
-Paddle's Linux wheel requires an AVX-capable x86-64 processor and Python
-3.9 through 3.13.  In particular, do not use Ubuntu 26.04's Python 3.14
-for this environment.  The commands install a separate Python 3.13 so
-that they do not alter Emacsvox, system Python, or another project's
-packages.  The initial installation uses about 1.7 GB.  The first
-complete PP-StructureV3 run downloads approximately another 1.8 GB of
-models; later runs reuse that cache.
-
-   Follow the official uv installation guide
-(https://docs.astral.sh/uv/getting-started/installation/) if command
-‘uv’ is not already available, then create the isolated environment:
-
-     uv python install 3.13
-     uv venv --python 3.13 --seed \
-       "$HOME/.local/share/emacsvox/paddleocr-venv"
-
-   Install the tested CPU runtime and the PaddleOCR ‘all’ variant.  The
-‘all’ extra includes the document-parsing dependencies needed by
-PP-StructureV3, including table and formula support.
-
-     "$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
-       paddlepaddle==3.3.0 \
-       -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
-     "$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
-       'paddleocr[all]==3.7.0'
-
-   From the Emacsvox checkout, verify that the launcher finds both
-packages:
-
-     ./bin/emacsvox-paddleocr --check
-
-   With the Debian package, use the installed launcher instead:
-
-     /usr/share/emacsvox/bin/emacsvox-paddleocr --check
-
-   Use that installed path in the image-recognition examples below as
-well.
-
-   The expected line names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the
-CPU device.  A warning that ‘ccache’ is absent is harmless for normal
-inference.  oneDNN, formerly called MKL-DNN, is Paddle's optional
-optimized CPU execution backend; it is not an OCR model.  The launcher
-deliberately leaves it disabled because the stable PaddlePaddle 3.3.0
-CPU runtime has an upstream PIR-to-oneDNN conversion defect
-(https://github.com/PaddlePaddle/Paddle/issues/77340).  In the tested
-pipeline the defect aborts initialization when PP-StructureV3 reaches
-its formula model, but the model itself is not at fault.  With oneDNN
-disabled, Paddle uses its standard CPU kernels and every recognition
-feature remains enabled, including tables and formulas.  The trade-off
-is speed, not recognition capability.
-
-   To recognize one image at the shell, redirect the clean Markdown
-result to a file.  Paddle downloads its models on the first real command
-and writes progress messages to standard error without mixing them into
-the recognized text.
-
-     ./bin/emacsvox-paddleocr "/path/to/page.png" > page.md
-
-   PDF input uses the same command.  Paddle renders and recognizes every
-page, then joins the pages in reading order:
-
-     ./bin/emacsvox-paddleocr "/path/to/scanned-document.pdf" > document.md
+UTF-8 Markdown text.  It recovers reading order and represents
+recognised tables as Markdown or embedded HTML.  Keep ‘.md’ output when
+structure matters; Markdown is plain text and can be named ‘.txt’ when
+its lightweight markup is acceptable.
 
    This route is intended for scanned or image-only PDFs.  For a
-born-digital PDF that already has a trustworthy text layer, extracting
-that layer is faster and usually more exact than OCR.  OCR quality still
-depends on scan quality; 300-DPI, upright, high-contrast source pages
-are a good starting point.  A large PDF can take substantial CPU time
-because table, layout, formula, orientation, and unwarping models are
-all active by default.
+born-digital PDF with a trustworthy text layer, extracting that layer is
+faster and usually more exact than OCR.  Recognition still depends on
+scan quality; upright, high-contrast pages at 300 DPI are a useful
+starting point.
 
-   Within Emacsvox, press ‘C-e C-o’ or run ‘M-x emacsvox-ocr <RET>’.  In
-the OCR buffer:
+  1. Prepare the isolated OCR environment
 
-   • Press ‘o’, choose an image or PDF, and wait for the completion cue.
-     OCR runs asynchronously, and the result appears as a new page in
-     the buffer.
-   • Press ‘<SPC>’ to read the current result, ‘s’ to save it, or ‘w’ to
-     save the complete OCR buffer.  Press ‘[’ and ‘]’ to move between
-     results.
-   • Press ‘d’ to open the per-user OCR directory.  Engine progress and
-     errors are kept separately in buffer ‘*Emacsvox OCR Errors*’.
+     The supported baseline is CPU-only x86-64 WSL2 or GNU/Linux.
+     Paddle's Linux wheel requires an AVX-capable x86-64 processor and
+     Python 3.9 through 3.13.  Do not use Ubuntu 26.04's Python 3.14 for
+     this environment.  The commands below install Python 3.13
+     separately without altering Emacsvox, system Python, or another
+     project's packages.  Installation uses about 1.7 GB; the first
+     complete PP-StructureV3 run downloads approximately another 1.8 GB
+     of models, cached for later runs.
 
-   For ordinary use inside Emacs, customize OCR in Emacs rather than
-setting shell environment variables.  Run ‘M-x customize-group <RET>
-emacsvox-ocr <RET>’.  The bundled adapter has typed options for its
-normal choices:
+     Follow the uv installation guide
+     (https://docs.astral.sh/uv/getting-started/installation/) if ‘uv’
+     is unavailable, then create the environment:
 
-   • ‘emacsvox-ocr-paddleocr-python’ selects an exact Python executable
-     when the default isolated environment is not appropriate.  Leave it
-     at ‘nil’ for the installation path used above.
-   • ‘emacsvox-ocr-paddleocr-language’ and
-     ‘emacsvox-ocr-paddleocr-device’ select the recognition language and
-     Paddle device.
-   • ‘emacsvox-ocr-paddleocr-use-table-recognition’ and
-     ‘emacsvox-ocr-paddleocr-use-formula-recognition’ control the
-     structural models.  Both are enabled by default.
-   • ‘emacsvox-ocr-paddleocr-use-document-orientation’,
-     ‘emacsvox-ocr-paddleocr-use-document-unwarping’, and
-     ‘emacsvox-ocr-paddleocr-use-text-line-orientation’ control image
-     correction.
-   • ‘emacsvox-ocr-paddleocr-enable-mkldnn’ enables oneDNN/MKL-DNN
-     acceleration.  It does not enable or disable any OCR model.  Keep
-     it disabled for the tested PaddlePaddle 3.3.0 CPU setup on WSL.
+          uv python install 3.13
+          uv venv --python 3.13 --seed \
+            "$HOME/.local/share/emacsvox/paddleocr-venv"
 
-   The PaddleOCR options apply only while ‘emacsvox-ocr-engine’ names
-the bundled adapter.  Selecting a different engine preserves the generic
-engine interface.  ‘emacsvox-ocr-engine-options’ remains an advanced
-list of literal arguments; for the bundled adapter it follows, and can
-override, the typed options.
+     Install the tested CPU runtime and PaddleOCR's ‘all’ variant, which
+     includes the document-parsing, table, and formula dependencies:
 
-   The environment variables are retained for direct shell or automation
-use of ‘bin/emacsvox-paddleocr’, not as the primary Emacs configuration
-interface.  ‘EMACSVOX_PADDLEOCR_VENV’ changes the launcher's environment
-directory, ‘EMACSVOX_PADDLEOCR_PYTHON’ selects an exact Python
-executable, and ‘EMACSVOX_PADDLEOCR_LANGUAGE’ or
-‘EMACSVOX_PADDLEOCR_DEVICE’ changes the standalone defaults.  See
-‘./bin/emacsvox-paddleocr --help’ for command-line switches.
+          "$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
+            paddlepaddle==3.3.0 \
+            -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+          "$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
+            'paddleocr[all]==3.7.0'
 
-   The direct SANE scanner-acquisition commands are retained for
-compatibility but are not part of this tested WSL baseline.  It is
-usually simpler to scan with a Windows application and choose the
-resulting image or PDF with ‘o’.  Scanner configuration is independent
-of PaddleOCR.
+     From the checkout, verify that the launcher finds both packages:
+
+          ./bin/emacsvox-paddleocr --check
+
+     For a Debian installation, use the installed launcher, here and in
+     the recognition commands below:
+
+          /usr/share/emacsvox/bin/emacsvox-paddleocr --check
+
+     The expected report names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and
+     the CPU device.  A missing ‘ccache’ warning is harmless for normal
+     inference.
+
+     oneDNN, formerly MKL-DNN, is an optional CPU execution backend, not
+     an OCR model.  The launcher leaves it disabled because PaddlePaddle
+     3.3.0 has an upstream PIR-to-oneDNN conversion defect
+     (https://github.com/PaddlePaddle/Paddle/issues/77340).  In the
+     tested pipeline this aborts initialisation at the formula model,
+     although that model is not itself at fault.  Standard CPU kernels
+     keep every recognition feature enabled, including tables and
+     formulas.  The trade-off is speed, not capability.
+
+  2. Recognise and read a document
+
+     For one image, redirect the clean Markdown result to a file.  Model
+     downloads and progress go to standard error, not the recognised
+     text:
+
+          ./bin/emacsvox-paddleocr "/path/to/page.png" > page.md
+
+     PDF input uses the same command.  Paddle renders and recognises
+     every page, then joins them in reading order:
+
+          ./bin/emacsvox-paddleocr "/path/to/scanned-document.pdf" > document.md
+
+     A large PDF can require substantial CPU time: table, layout,
+     formula, orientation, and unwarping models are all active by
+     default.
+
+     Inside Emacsvox, press ‘C-e C-o’ or run ‘M-x emacsvox-ocr <RET>’.
+     In the OCR buffer, ‘o’ selects an image or PDF.  Recognition runs
+     asynchronously and adds its result as a new page when complete.
+     Listen for the completion cue, then use ‘<SPC>’ to read the current
+     result, ‘s’ to save it, or ‘w’ to save the whole OCR buffer.  ‘[’
+     and ‘]’ move between results.  ‘d’ opens the per-user OCR
+     directory.  Progress and errors are retained separately in
+     ‘*Emacsvox OCR Errors*’.
+
+  3. Configure recognition and diagnose the adapter
+
+     Use ‘M-x customize-group <RET> emacsvox-ocr <RET>’ for ordinary
+     Emacs configuration rather than shell environment variables.  The
+     bundled adapter provides typed options:
+
+        • ‘emacsvox-ocr-paddleocr-python’ selects an exact Python
+          executable; ‘nil’ uses the isolated installation above.
+        • ‘emacsvox-ocr-paddleocr-language’ and
+          ‘emacsvox-ocr-paddleocr-device’ choose recognition language
+          and device.
+        • ‘emacsvox-ocr-paddleocr-use-table-recognition’ and
+          ‘emacsvox-ocr-paddleocr-use-formula-recognition’ control the
+          structural models; both default to enabled.
+        • ‘emacsvox-ocr-paddleocr-use-document-orientation’,
+          ‘emacsvox-ocr-paddleocr-use-document-unwarping’, and
+          ‘emacsvox-ocr-paddleocr-use-text-line-orientation’ control
+          image correction.
+        • ‘emacsvox-ocr-paddleocr-enable-mkldnn’ enables oneDNN/MKL-DNN
+          acceleration, not an OCR model.  Keep it disabled for the
+          tested PaddlePaddle 3.3.0 CPU setup on WSL.
+
+     These options apply only when ‘emacsvox-ocr-engine’ names the
+     bundled adapter.  A different engine retains the generic interface.
+     ‘emacsvox-ocr-engine-options’ is an advanced list of literal
+     arguments; for the bundled adapter it follows, and can override,
+     the typed options.
+
+     For standalone shell or automation use, ‘EMACSVOX_PADDLEOCR_VENV’
+     changes the environment directory, ‘EMACSVOX_PADDLEOCR_PYTHON’
+     selects an executable, and ‘EMACSVOX_PADDLEOCR_LANGUAGE’ or
+     ‘EMACSVOX_PADDLEOCR_DEVICE’ changes defaults.  See
+     ‘./bin/emacsvox-paddleocr --help’ for switches.  These environment
+     settings are not the primary Emacs configuration interface.
+
+     Direct SANE scanner-acquisition commands remain for compatibility
+     but are not part of this tested WSL baseline.  Scan with a Windows
+     application and select the resulting image or PDF with ‘o’ when
+     that is the available acquisition route.  Scanner configuration is
+     independent of PaddleOCR.
 
 
 File: emacsvox.info,  Node: Notmuch Mail,  Next: Agent Shell,  Prev: Emacs Packages,  Up: Top
@@ -675,112 +803,114 @@ File: emacsvox.info,  Node: Notmuch Mail,  Next: Agent Shell,  Prev: Emacs Packa
 9 Notmuch Mail
 **************
 
-Notmuch is a separately installed mail index and Emacs interface.
-Emacsvox adds speech and semantic presentation to its Hello, Search, and
-Show views; it does not configure a mail store, build the Notmuch
-database, fetch or send mail, or replace Notmuch's commands.  Install
-compatible Notmuch command-line and Emacs components and complete their
-setup first.  The official Notmuch Emacs manual
-(https://notmuchmail.org/doc/latest/notmuch-emacs.html) covers that
-setup and the complete upstream command set.
+Notmuch provides the mail index and Emacs interface.  Install compatible
+command-line and Emacs components, then configure the mail store and
+database using the Notmuch Emacs manual
+(https://notmuchmail.org/doc/latest/notmuch-emacs.html).  Emacsvox does
+not fetch or send mail, create the database, or replace Notmuch's
+commands.  It adds structured speech to Hello, Search, and Show; Tree
+has more limited support, described below.
 
-   The generated *note emacsvox-notmuch:
-(emacsvox-reference)emacsvox-notmuch. in _Emacsvox Reference Manual_
-section is the exhaustive Emacsvox command and option reference.  This
-chapter follows the tasks a user performs and explains when automatic
-feedback occurs.
+   Follow this chapter to search, read, and manage mail with speech,
+then adjust which information is spoken automatically.  The generated
+*note emacsvox-notmuch: (emacsvox-reference)emacsvox-notmuch. section in
+the _Emacsvox Reference Manual_ provides the complete command and option
+reference.
 
 9.1 Start Notmuch
 =================
 
-Run ‘M-x notmuch’ to open Notmuch Hello.  With the standard Emacsvox
-global maps loaded, ‘C-' m’ runs ‘notmuch-search’ directly and prompts
-for a query.  Emacsvox loads its live integration when Notmuch loads and
-marks new Hello, Search, Show, and Tree buffers with Notmuch semantic
-context.
+Run ‘M-x notmuch’ to open Hello.  With the standard Emacsvox global maps
+loaded, ‘C-' m’ runs ‘notmuch-search’ directly and asks for a query.
+Emacsvox loads its integration when Notmuch loads and marks new Hello,
+Search, Show, and Tree buffers with Notmuch semantic context.
 
-   Notmuch remains the authority for every database, tag, archive,
-attachment, and message-composition operation.  Emacsvox observes the
-result of an explicit upstream command and presents it; loading the
-integration by itself does not alter mail, tags, files, or Notmuch
-configuration.
+   Loading speech support does not alter mail, tags, files, or Notmuch
+configuration.  Notmuch owns database, tag, archive, attachment, and
+composition operations; Emacsvox presents the result of the action you
+invoke.
 
 9.2 Use Hello and start a search
 ================================
 
-Moving among Hello widgets speaks a saved-search label and its displayed
-message count, or identifies the button or link reached.  These are the
-common Hello keys in the current Notmuch map:
+Moving among Hello widgets speaks each saved search's label and
+displayed message count, or identifies the button or link reached.  Use
+these common Hello commands:
 
 ‘TAB’
-     Run ‘widget-forward’ to reach the next saved search, entry field,
-     button, or link.
+     ‘widget-forward’ reaches the next search, field, button, or link.
 ‘<backtab>’
-     Run ‘widget-backward’ to reach the preceding widget.
+     ‘widget-backward’ reaches the preceding widget.
 ‘RET’
-     Run ‘widget-button-press’; on a saved search this starts its query.
+     ‘widget-button-press’ activates the widget; on a saved search it
+     starts the query.
 ‘j’
-     Run ‘notmuch-jump-search’ and choose a configured search.
+     ‘notmuch-jump-search’ chooses a configured search.
 ‘g’
-     Run ‘notmuch-refresh-this-buffer’ to refresh Hello.
+     ‘notmuch-refresh-this-buffer’ refreshes Hello.
 ‘m’
-     Run ‘notmuch-mua-new-mail’.  Composition then belongs to Message
-     mode and the separate ‘emacsvox-message’ integration.
+     ‘notmuch-mua-new-mail’ starts composition, handled by Message mode
+     and the separate ‘emacsvox-message’ integration.
 
-   Press ‘?’ in any Notmuch view, or ‘C-h m’, for the complete bindings
-provided by the installed Notmuch version.
+   Press ‘?’ in a Notmuch view or ‘C-h m’ for the bindings supplied by
+your installed Notmuch version.  A search can display its first result
+before all rows finish rendering, so an initial message announcement and
+a later count need not arrive together.
 
 9.2.1 Understand asynchronous search completion
 -----------------------------------------------
 
-A Notmuch search buffer can appear before its rows have finished
-rendering.  For a user-owned non-refresh search that remains selected,
-Emacsvox gives a progress cue.  With the default ‘adaptive’ policy, it
-speaks the selected message as soon as the first complete result is
-available, while the search continues.  This uses the same message
-summary, voices, and status cues as ‘n’, ‘p’, and the arrow keys.  It
-does not announce an empty row or move point.
+The default ‘adaptive’ policy gives useful early feedback without
+rereading content after you have moved on.  For a search you start,
+other than a refresh, a progress cue is given while its buffer remains
+selected.  The first complete result can then be spoken while the search
+continues, using the same summary, voices, and status cues as thread
+navigation.  This never moves point or reads an empty row.
 
-   The default ‘adaptive’ completion policy distinguishes two
-interactions:
+   When the new search remains selected, you have issued no command in
+it, and no input is pending, the first result is spoken once on the main
+stream.  Completion reports the final thread count on the notification
+stream without repeating that result.  If completion occurs before an
+early result could be announced, it reports the count and result at
+point, or a zero-thread summary.
 
-   • If the search is still selected, no command has been issued in it,
-     and no input is pending, the first available result is spoken once
-     on the primary speech stream.  Completion reports the final thread
-     count on the notification stream, without repeating that message.
-     If the search finishes before a row could be announced early,
-     completion reports the count followed by the result at point, or an
-     explicit zero-thread summary.
+   If you navigate, invoke another command, or leave before completion,
+the later announcement is only a generic count on the notification
+stream.  It does not reread the selected row or disclose the query,
+sender, recipients, subject, tags, or attachment metadata.  Killing the
+owning search buffer silently cancels that delivery.
 
-   • If you navigate, invoke another command, or leave a new search
-     buffer before it completes, the eventual completion is a generic
-     count on the notification stream.  It does not reread the row you
-     reached and does not disclose the query, sender, recipients,
-     subject, tags, or attachment metadata.  Killing the owning search
-     buffer cancels this delivery silently.
+  1. Refresh an existing result
 
-   An explicit refresh queues only the generic count on the primary
-speech stream, without interrupting speech already playing.  Navigation
-interrupts that announcement, including when you leave the search buffer
-before the refresh finishes.  Refresh completion does not reread the
-selected row.
+     An explicit refresh differs from a new search.  It queues only the
+     generic count on the main stream, without interrupting speech
+     already playing.  Navigation can interrupt this announcement,
+     including after you leave the search buffer before the refresh
+     finishes.  Refresh completion never rereads the selected row.
 
-   The ‘summary’ policy plays only a generic count and its completion
-cue; ‘cue’ plays only that cue, and ‘silent’ suppresses successful
-completion.  These policies use the same stream selection for refreshes.
-Other search summaries use the notification stream.  Failures remain
-audible and generic for every policy, with refresh failures using the
-primary stream too.  The deliberate global refresh-all command remains
-silent.  See *note Aural Presentation: Aural Presentation. for the
-streams' general behavior and configuration.
+  2. Choose less automatic feedback
+
+     ‘summary’ gives a generic count and completion cue; ‘cue’ gives
+     only the cue; ‘silent’ suppresses successful completion.  These
+     policies use the same main-stream selection for refreshes.  Other
+     search summaries use the notification stream.  Failures remain
+     audible and generic with every policy; refresh failures also use
+     the main stream.  The deliberate global refresh-all command remains
+     silent.
+
+     Use the focused settings described under *note Notmuch fields and
+     privacy: Notmuch fields and privacy. to choose a policy.  *note
+     Speech Output And Notifications: (emacsvox)Aural Speech Output.
+     explains the general stream behaviour; the refresh rules above are
+     specific to this integration.
 
 9.3 Navigate and inspect Search results
 =======================================
 
-On thread movement, Emacsvox reads the configured semantic fields and
-presents status cues.  Reaching a boundary reports the beginning or end
-instead of repeating the current row.  Emacsvox makes the arrow keys
-equivalent to the standard next and previous thread commands.
+Thread movement reads configured semantic fields and status cues.  At a
+boundary, speech identifies the beginning or end instead of repeating
+the current row.  Emacsvox makes the arrow keys equivalent to Notmuch's
+next and previous thread commands.
 
 ‘n’
      Run ‘notmuch-search-next-thread’.
@@ -791,16 +921,14 @@ equivalent to the standard next and previous thread commands.
 ‘<up>’
      Also run ‘notmuch-search-previous-thread’.
 ‘RET’
-     Run ‘notmuch-search-show-thread’.  The Show view lands on the first
-     useful visible body line or leaf MIME part and presents the opened
-     message.
+     Run ‘notmuch-search-show-thread’.  Show lands on a useful visible
+     body line or leaf MIME part and presents the opened message.
 ‘SPC’
-     Run ‘notmuch-search-scroll-up’.  This is upstream viewport
-     scrolling rather than semantic thread selection.
+     Run ‘notmuch-search-scroll-up’.  This scrolls the viewport rather
+     than selecting a semantic thread.
 ‘C-c C-p’
-     Run ‘emacsvox-notmuch-speak-search-details’.  This explicitly reads
-     all configured fields for the result at point without the automatic
-     content limits.
+     Run ‘emacsvox-notmuch-speak-search-details’ to read all configured
+     fields for the result at point without automatic content limits.
 ‘+’
      Run ‘notmuch-search-add-tag’.
 ‘-’
@@ -811,32 +939,30 @@ equivalent to the standard next and previous thread commands.
      Run ‘notmuch-search-archive-thread’.
 ‘g’
      Run ‘notmuch-refresh-this-buffer’; completion follows the
-     interruptible refresh policy described above.
+     interruptible refresh policy above.
 
-   The default Search fields are authors, subject, relative date,
-matched and total message counts, and ordinary tags.  Status tags
-configured as auditory cues are not repeated as words.  See *note
-Notmuch fields and privacy: Notmuch fields and privacy. to omit or
-reorder potentially sensitive fields.
+   Search defaults to authors, subject, relative date, matched and total
+message counts, and ordinary tags.  Status tags assigned auditory cues
+are not repeated as words.  *note Notmuch fields and privacy: Notmuch
+fields and privacy. explains omission and ordering of sensitive fields.
 
 9.4 Read a thread and its MIME parts
 ====================================
 
 Opening a thread selects its newest unread message among the open
-messages matching the search.  If there are none, it keeps Notmuch's
-initial selection.  Emacsvox speaks that message's semantic summary and
-first visible body line.  Hidden alternative bodies are skipped.  If a
-message has no visible body text, point falls back to a leaf MIME-part
-button when possible.  Moving onto such a button identifies its bounded
-filename, content type, and size.
+messages matching the search.  If there is none, Notmuch's initial
+selection is retained.  Emacsvox speaks the selected message's summary
+and first visible body line, skipping hidden alternative bodies.  When
+no body text is visible, point falls back to a leaf MIME-part button
+where possible.  That button announces a bounded filename, content type,
+and size.
 
-   Line reading speaks the visible sender row even when the preceding
-message ends with folded quoted text.  The quote stays folded.
-
-   In a short graphical window, ‘<DOWN>’ advances through ordinary body
-text before speaking the next line, even when the current line is only
-partly visible.  Images or text taller than the window retain Emacs's
-partial scrolling.
+   Line reading speaks a visible sender row even if the preceding
+message ends with folded quoted text; it does not unfold the quote.  In
+a short graphical window, Down advances through ordinary body text
+before speaking the next line, even when the current line is only partly
+visible.  Images or text taller than the window retain Emacs's partial
+scrolling.
 
 ‘n’
      Run ‘notmuch-show-next-open-message’.
@@ -847,25 +973,24 @@ partial scrolling.
 ‘P’
      Run ‘notmuch-show-previous-message’, including closed messages.
 ‘SPC’
-     Run ‘notmuch-show-advance-and-archive’.  Within one message
-     Emacsvox reads the newly visible page; on a message transition it
-     reads the new message; at the thread end it reports the actual
-     archive outcome and destination.
+     Run ‘notmuch-show-advance-and-archive’.  Within a message, speech
+     reads the newly visible page; at a message transition it reads the
+     new message; at the thread end it reports the actual archive
+     outcome and destination.
 ‘DEL’
      Run ‘notmuch-show-rewind’ and read the resulting page or message.
 ‘RET’
-     Run ‘notmuch-show-toggle-message’ and cue the current message's
-     resulting visibility.
+     Run ‘notmuch-show-toggle-message’ and cue the resulting visibility.
 ‘M-RET’
-     Run ‘notmuch-show-open-or-close-all’.  It opens every message and
-     reports the resulting thread state and total, such as "Opened all 5
-     messages."  Use a prefix argument, ‘C-u M-<RET>’, to close every
-     message and receive the corresponding total.
+     Run ‘notmuch-show-open-or-close-all’ to open every message and
+     report the state and total, for example "Opened all 5 messages."
+     ‘C-u M-<RET>’ closes every message and reports the corresponding
+     total.
 ‘C-c C-p’
-     Run ‘emacsvox-notmuch-speak-show-position’.  It reports the message
-     ordinal and total plus complete configured message details.  On a
-     MIME-part button it instead gives the complete part description,
-     including its full filename.
+     Run ‘emacsvox-notmuch-speak-show-position’ for the message ordinal,
+     total, and full configured details.  On a MIME-part button it
+     instead reads the complete part description, including its full
+     filename.
 ‘TAB’
      Run ‘notmuch-show-next-button’ and identify the button or MIME
      part.
@@ -873,10 +998,9 @@ partial scrolling.
      Run ‘notmuch-show-previous-button’ and identify the button or MIME
      part.
 ‘w’
-     Run ‘notmuch-show-save-attachments’.  Emacsvox confirms when the
-     upstream command returns, but Notmuch does not expose a
-     per-attachment result through this command, so the confirmation
-     cannot distinguish partial skips.
+     Run ‘notmuch-show-save-attachments’.  Speech confirms when the
+     command returns, but Notmuch exposes no per-attachment result here.
+     The confirmation therefore cannot distinguish partial skips.
 ‘. s’
      Run ‘notmuch-show-save-part’ on the current MIME part.
 ‘. v’
@@ -887,21 +1011,19 @@ partial scrolling.
 ‘. m’
      Run ‘notmuch-show-choose-mime-of-part’.
 
-   Viewing, saving, overwriting, or launching a MIME part remains an
-explicit Notmuch operation.  Merely navigating or requesting details
-never opens an attachment or external viewer.
+   Viewing, saving, overwriting, or launching a MIME part is an explicit
+Notmuch operation.  Navigation and detail inspection never open an
+attachment or an external viewer by themselves.
 
 9.5 Change tags and archive state
 =================================
 
-Emacsvox compares displayed tags before and after interactive mutation.
-It reports only the actual additions and removals.  Adding an existing
-tag or removing an absent one reports "Tags unchanged" rather than
-claiming a change.  An error or cancelled upstream command does not
-produce success feedback.
+Emacsvox compares displayed tags before and after an interactive change
+and reports actual additions and removals.  Adding an existing tag or
+removing an absent tag reports "Tags unchanged".  Errors and cancelled
+commands do not produce success feedback.
 
-   The following common Show commands receive that result-aware
-feedback:
+   These Show commands receive result-aware feedback:
 
 ‘+’
      Run ‘notmuch-show-add-tag’ on the current message.
@@ -915,135 +1037,151 @@ feedback:
      Run ‘notmuch-show-archive-thread-then-next’.
 
    Archive feedback distinguishes a real change, unchanged archive tags,
-and an unset ‘notmuch-archive-tags’ configuration.  Movement wrappers
-give one combined result rather than duplicating feedback from their
-nested tag or archive command.
+and an unset ‘notmuch-archive-tags’.  Movement wrappers combine the
+result instead of duplicating the feedback of nested tag or archive
+commands.
 
 9.6 Choose fields, status, and privacy
 ======================================
 
-Press ‘C-e S’ in a Notmuch buffer for focused speech settings.  ‘c’
-opens explained search-completion choices: arrows browse, Enter applies
-and returns, and ‘q’ cancels.  Press ‘?’ followed by a choice's key for
-spoken Help; ‘q’ returns to the browsed choice.  ‘w’ in the parent menu
-saves completion and reading defaults for future sessions.
+From a Notmuch buffer, press ‘C-e S’ for focused speech settings, or
+reach it through ‘C-e H j c’.  The same menu is available from Hello,
+Search, Show, and Tree.  Availability of settings in Tree does not add
+Tree-specific navigation or message formatting.
 
-   Run ‘M-x customize-group <RET> emacsvox-notmuch <RET>’ for the full
-set of speech options, without altering Notmuch's own database or
-display.
+   ‘c’ opens explained completion choices.  Arrows browse without
+applying, ‘<RET>’ applies and returns, and ‘q’ cancels.  ‘?’ followed by
+a choice's key opens spoken Help; ‘q’ returns to that browsed choice.
+In the parent menu, ‘f’ and ‘b’ control per-field character and UTF-8
+byte limits, while ‘t’ and ‘B’ control total limits.  Shift-left/right
+adjusts a selected limit by 100; ‘<RET>’ accepts an exact positive
+integer or ‘none’.  Disabling one limit leaves the others active.  ‘w’
+saves these four limits and completion policy as the five displayed
+global defaults, not every Notmuch option.
+
+   For ordered search/message fields, use ‘s’ and ‘m’.  ‘i’ and ‘I’ open
+the status-tag and fallback-cue maps.  These linked Customize editors
+retain custom formatter functions and use their own Apply, Save, and
+Reset actions.  Returning with ‘q’ does not save them.  ‘p’ opens
+Presentation Options and ‘A’ advanced settings, including separators.
+The full group is also available through ‘M-x customize-group <RET>
+emacsvox-notmuch <RET>’.  These speech settings do not alter Notmuch's
+database or its own display configuration.
+
+9.6.1 Choose the information in a spoken summary
+------------------------------------------------
 
 ‘emacsvox-notmuch-search-result-fields’
-     Defaults to ‘(authors subject date count tags)’.  Remove ‘subject’
-     or another field to keep it out of Search navigation speech,
-     reorder fields, or add a formatter function.
+     Defaults to ‘(authors subject date count tags)’.  Remove sensitive
+     fields, reorder them, or add a formatter function.
 ‘emacsvox-notmuch-show-message-fields’
-     Defaults to ‘(from date to cc tags attachments)’.  The subject is
-     omitted by default in Show, while To and Cc recipients are
-     included.  Remove ‘to’, ‘cc’, or any other field when recipient
-     privacy matters.
+     Defaults to ‘(from date to cc tags attachments)’.  Show omits the
+     subject but includes To and Cc; remove ‘to’, ‘cc’, or other fields
+     when privacy requires it.
 ‘emacsvox-notmuch-search-field-separator’
 ‘emacsvox-notmuch-show-field-separator’
-     Control the text placed between configured fields; both default to
-     comma and space.
+     Set the text between configured fields.  Both default to comma and
+     space.
 ‘emacsvox-notmuch-search-status-icons’
 ‘emacsvox-notmuch-show-status-icons’
-     Map unread, replied, forwarded, flagged, and personal status tags
-     to cues or silence.  Removing an entry makes that status available
-     to ordinary tag speech.  The optional Aural Presentation feature
-     ‘mail-message-status-cues’ can own shared semantic mail-state cues.
+     Map unread, replied, forwarded, flagged, and personal tags to cues
+     or silence.  Removing an entry makes that status available to
+     ordinary tag speech.  When ‘mail-message-status-cues’ is enabled in
+     Presentation Options, its rules own the shared semantic status
+     cues; the maps still suppress the corresponding spoken status tags.
 ‘emacsvox-notmuch-search-completion-style’
-     Choose ‘adaptive’, ‘summary’, ‘cue’, or ‘silent’ as described under
-     asynchronous completion.
+     Select ‘adaptive’, ‘summary’, ‘cue’, or ‘silent’ using the
+     completion behaviour described earlier.
 
-   Mail-controlled text is bounded before automatic speech and Aural
-history.  The defaults are 256 characters and 1,024 UTF-8 bytes per
-field, then 1,000 characters and 4,096 bytes for the complete automatic
-presentation:
+9.6.2 Understand limits and full inspection
+-------------------------------------------
+
+Mail-controlled text is bounded before automatic speech and Aural
+history.  Defaults are 256 characters and 1,024 UTF-8 bytes per field,
+then 1,000 characters and 4,096 bytes for the complete automatic
+presentation.
 
 ‘emacsvox-notmuch-automatic-field-character-limit’
 ‘emacsvox-notmuch-automatic-field-byte-limit’
      Bound each automatic field before formatting and submission.
 ‘emacsvox-notmuch-automatic-total-character-limit’
 ‘emacsvox-notmuch-automatic-total-byte-limit’
-     Provide the final defense for one automatic Notmuch presentation.
+     Bound the final automatic Notmuch presentation.
 ‘emacsvox-notmuch-mime-node-limit’
 ‘emacsvox-notmuch-mime-depth-limit’
-     Default to 4,096 cons nodes and depth 64.  They keep malformed,
-     cyclic, broad, or deeply nested MIME metadata from exhausting
-     automatic inspection.  An incomplete scan reports a conservative
-     attachment lower bound instead of claiming that no attachment
-     exists.
+     Default to 4,096 cons nodes and depth 64, limiting inspection of
+     malformed, cyclic, broad, or deeply nested MIME metadata.  An
+     incomplete scan reports a conservative attachment lower bound, not
+     a claim that no attachment exists.
 
-   A shortened Search or Show presentation states what was omitted and
-points to ‘C-c C-p’ for explicit full configured details; a shortened
-Hello item points to ‘<RET>’.  The explicit Search and Show inspection
-commands deliberately bypass the automatic content limits; use them only
-when speaking the complete configured fields is appropriate.
+   A shortened Search or Show announcement explains what was omitted and
+points to ‘C-c C-p’ for full configured details.  A shortened Hello item
+points to ‘<RET>’.  Explicit Search and Show inspection deliberately
+bypasses automatic content limits; use it only when speaking the full
+configured fields is appropriate.  These limits are not a general
+privacy guarantee for every explicit command or another application's
+output.
 
-9.6.1 Understand retained and notification content
+9.6.3 Understand retained and notification content
 --------------------------------------------------
 
-Primary-stream Notmuch presentations can enter bounded Aural
-Presentation history.  By default Emacsvox retains at most 20
-presentations and at most 4,096 UTF-8 bytes of speech preview per
-record; records contain frozen data, source names, and positions, but
-never retain source buffers.  Run ‘M-x
-emacsvox-aural-list-recent-feedback’ to inspect what was retained, or
-set ‘emacsvox-aural-presentation-history-limit’ to zero to disable that
+Main-stream Notmuch presentations can enter bounded Aural history.  By
+default, Emacsvox retains at most 20 presentations and 4,096 UTF-8 bytes
+of speech preview per record.  Records contain frozen data, source
+names, and positions, but never retain source buffers.  Inspect them
+through ‘C-e H f h’ or ‘M-x emacsvox-aural-list-recent-feedback’.  Set
+‘emacsvox-aural-presentation-history-limit’ to zero to disable this
 history.
 
    Generic asynchronous completion contains no query or message
-metadata.  Completions sent to the notification stream may be retained
-by the notification subsystem.  Choose ‘cue’ or ‘silent’ when even a
-generic thread count is unwanted, and review the global
-notification-device and log settings separately.
+metadata, but a notification-stream completion may be retained by the
+notification subsystem.  Choose ‘cue’ or ‘silent’ if even a generic
+thread count is unwanted.  Review notification-device and logging
+settings separately from mail field choices.
 
 9.7 Know the support boundaries
 ===============================
 
 Hello
      Widget navigation, view lifecycle, and searches have
-     Notmuch-specific semantic feedback.
+     Notmuch-specific feedback.
 Search
-     Result navigation, asynchronous lifecycle, tags, archive
-     operations, opening, and configured detail inspection have
-     Notmuch-specific feedback.
+     Results, asynchronous lifecycle, tags, archiving, opening, and
+     configured detail inspection have Notmuch-specific feedback.
 Show
-     Message and part navigation, page reading, visibility, tags,
-     archive operations, and explicit detail inspection have
-     Notmuch-specific feedback.
+     Messages, MIME parts, pages, visibility, tags, archiving, and
+     explicit inspection have Notmuch-specific feedback.
 Tree
-     Tree buffers receive ‘emacsvox-aural-module’ context only.  Generic
-     core speech can still operate, but this module currently has no
-     Tree-specific row formatter, navigation, mutation, visibility, or
-     asynchronous lifecycle.
+     Receives ‘emacsvox-aural-module’ context only.  Core speech can
+     operate, but this module has no Tree-specific row formatter,
+     navigation, mutation, visibility, or asynchronous lifecycle.
 Composition
-     Notmuch uses standard Message-mode composition.  Speech support
-     after ‘notmuch-mua-new-mail’, reply, forward, or resume transitions
-     belongs to ‘emacsvox-message’, not to the Notmuch integration.
+     Standard Message mode owns composition.  Speech after new-mail,
+     reply, forward, or resume transitions belongs to
+     ‘emacsvox-message’, not the Notmuch integration.
 
-   There is no independent Notmuch speech disable or unload command.
-Advice, hooks, and the Search arrow bindings remain installed for the
-Emacs session once the module loads.  Repeated loading is idempotent and
-does not duplicate them.
+   There is no independent Notmuch speech-disable or unload command.
+Its advice, hooks, and Search arrow bindings remain installed for the
+Emacs session after loading.  Repeated loading is idempotent and does
+not duplicate them.
 
 9.8 Troubleshoot the live integration
 =====================================
 
-Use ‘?’ or ‘C-h m’ in the affected Notmuch buffer to confirm the keys
-provided by the installed Notmuch version.  Run ‘M-x notmuch-version’ to
-identify that package, and use the official manual linked at the
-beginning of this chapter for its current behavior.
+Use ‘?’ or ‘C-h m’ in the affected view to check its current keys and
+‘M-x notmuch-version’ to identify the package.  Consult Notmuch's own
+manual for its behaviour before treating a database or display problem
+as a speech problem.
 
-   Run ‘M-x emacsvox-aural-doctor’ when speech bindings, loaded source
-versus byte-code, Aural rules, sound resources, or the backend appear
-wrong.  Use ‘M-x emacsvox-aural-list-recent-feedback’ to inspect the
-exact bounded presentation submitted for a Notmuch action.  These
-diagnostics do not query or modify the mail database.
+   For bindings, loaded source versus byte-code, presentation rules,
+sounds, or backend issues, open Aural Doctor through ‘C-e H D d’ or ‘M-x
+emacsvox-aural-doctor’.  Recent feedback at ‘C-e H f h’ or ‘M-x
+emacsvox-aural-list-recent-feedback’ shows the bounded presentation
+submitted for an action.  These diagnostics do not query or modify mail.
 
-   If you are changing the integration rather than using it, see *note
-Integration Maintenance: Integration Maintenance. for the build, test,
-renderer, and asynchronous lifecycle contracts.
+   For source-level work, *note Integration Maintenance: Integration
+Maintenance. contains the build, test, renderer, and asynchronous
+lifecycle contracts.
 
 
 File: emacsvox.info,  Node: Agent Shell,  Next: EAT Terminal Access,  Prev: Notmuch Mail,  Up: Top
@@ -1559,249 +1697,254 @@ File: emacsvox.info,  Node: EAT Terminal Access,  Next: Running Terminal Based A
 11 Speech Access To EAT
 ***********************
 
-EAT (Emulate A Terminal) is a third-party terminal emulator; it is not
-part of stock Emacs.  It is commonly installed from NonGNU ELPA.  Start
-it with ‘M-x eat’; use a prefix argument to create or select another EAT
-terminal.  See the EAT manual for terminal setup and EAT's complete
-command reference (see *note Eat User Manual: (eat)Top.).
+EAT (Emulate A Terminal) is a third-party terminal emulator, commonly
+installed from NonGNU ELPA.  Run ‘M-x eat’ to start it; a prefix
+argument creates or selects another terminal.  Follow the *note Eat User
+Manual: (eat)Top. for installation, terminal setup, and EAT's complete
+command reference.
 
-   Emacsvox observes EAT's bounded rendered screen.  It does not parse a
-shell's private state and it does not generate shell or router
-completion candidates.  This distinction is important: EAT handles
-terminal emulation, the program on the other end handles terminal-side
-input and completion, and Emacsvox presents the visible result.
+   Three parts cooperate here.  EAT emulates the terminal; the shell,
+router, or other program handles terminal input and completion; Emacsvox
+presents the rendered result.  Emacsvox observes a bounded screen, not
+the program's private state.  It does not generate shell or router
+completion candidates.
+
+   First choose an input mode appropriate to the program.  Then use
+automatic feedback for current work and explicit review for content you
+need to examine again.  ‘C-e S’ opens focused EAT speech settings; those
+menu keys apply only while the menu is open, not to ordinary terminal
+input.
 
 11.1 Input Modes And Completion Responsibilities
 ================================================
 
-EAT provides four input modes.  Emacsvox announces a human-readable mode
-name whenever you switch modes.
+EAT has four input modes.  Emacsvox announces the mode name when you
+switch.  The mode determines whether a key edits text in Emacs or
+reaches the terminal program.
 
 Semi-character mode
-     This is EAT's default.  Most keys, including ‘<TAB>’, go to the
-     terminal, while Emacs prefixes such as ‘C-x’, ‘C-c’, and ‘M-x’
-     remain available.  Use ‘C-q’ before a normally reserved key to send
-     it to the terminal.  Switch here with ‘C-c C-j’.
+     The default.  Most keys, including ‘<TAB>’, go to the terminal,
+     while prefixes such as ‘C-x’, ‘C-c’, and ‘M-x’ remain available.
+     Use ‘C-q’ before a normally reserved key to send it through.  ‘C-c
+     C-j’ selects this mode.
 Character mode
-     All supported keys go to the terminal, which is useful for
-     applications that need Emacs-like keys.  Switch here with ‘C-c
-     M-d’; return to semi-character mode with ‘C-M-m’ or ‘M-<RET>’.
+     All supported keys go to the terminal, useful for programs needing
+     Emacs-like keys.  Enter with ‘C-c M-d’ and return to semi-character
+     mode with ‘C-M-m’ or ‘M-<RET>’.
 Emacs mode
-     Keys remain in Emacs and no input is sent to the terminal.  Use
-     this for normal Emacs buffer motion and inspection.  Switch here
-     with ‘C-c C-e’.
+     Keys stay in Emacs and send no terminal input.  Use it for ordinary
+     buffer motion and inspection.  Enter with ‘C-c C-e’.
 Line mode
-     The pending input line is edited locally and sent on ‘<RET>’.
-     ‘<TAB>’ runs Emacs's ‘completion-at-point’, so a configured Emacs
-     completion front end such as Corfu can display its result.  Switch
-     here from semi-character or Emacs mode with ‘C-c C-l’.  Line mode
-     is not available in EAT's embedded Eshell terminal.
+     Edit the pending line locally and send it with ‘<RET>’.  ‘<TAB>’
+     invokes Emacs's ‘completion-at-point’, whose result may be
+     displayed by a front end such as Corfu.  Enter from semi-character
+     or Emacs mode with ‘C-c C-l’.  Line mode is not available in EAT's
+     embedded Eshell terminal.
 
-   Switching to line mode does not create unlimited history.  EAT still
-applies ‘eat-term-scrollback-size’ to retained terminal text; it is a
-character limit, not a line count, and ‘nil’ permits unlimited
-retention.  The editable draft follows the terminal extent.  Changing
-input modes does not change this limit.
+   Line mode does not create unlimited history.
+‘eat-term-scrollback-size’ still limits retained text by _characters_,
+not lines; ‘nil’ permits unlimited retention.  The editable draft
+follows the terminal extent, and changing input modes does not change
+this limit.
 
-   In semi-character and character mode, ‘<TAB>’ belongs to Bash
-Readline, a remote shell, a router CLI, or whichever terminal
-application is running.  Corfu is not involved.  In line mode, ‘<TAB>’
-belongs to Emacs completion and does not ask a remote CLI for
-candidates.  Therefore semi-character mode is usually the right choice
-for SSH sessions and network-device CLIs.  If an Emacs completion
+   In semi-character and character modes, ‘<TAB>’ belongs to Bash
+Readline, a remote shell, router CLI, or the running terminal program.
+Corfu is not involved.  In line mode, completion belongs to Emacs and
+does not query a remote CLI.  Semi-character mode is therefore usually
+appropriate for SSH and network-device sessions.  If an Emacs completion
 backend blocks in line mode, ‘C-g’ cancels that Emacs operation; switch
-to semi-character mode if terminal-side completion was intended.
+to semi-character mode when terminal completion was intended.
 
-   Shell completion must itself be configured.  For example, Bash can
-complete ‘git pul’ to ‘git pull’ only when the shell has suitable
-programmable completion definitions, often supplied by a system
-‘bash-completion’ package.  Emacsvox observes the result but neither
-installs nor substitutes for those definitions.
+   The shell must have its own completion configuration.  For example,
+completing ‘git pul’ to ‘git pull’ in Bash requires suitable
+programmable definitions, often supplied by ‘bash-completion’.  Emacsvox
+neither installs nor substitutes for those definitions.
 
 11.2 Automatic Terminal Feedback
 ================================
 
-Use ‘C-e C-q’ to toggle automatic foreground feedback for this terminal.
-It starts enabled.  This controls routine output, status, automatic
-metadata, application-screen boundaries, and process lifecycle feedback.
-Explicit reading, input and completion feedback, and the configured
-terminal bell remain available.  The verbosity control ‘C-e q v’ and
-background monitoring ‘C-e q m’ remain independent; changing autospeak
-does not change either preference.
+‘C-e C-q’ toggles automatic foreground feedback for this terminal; it
+starts enabled.  The same control is ‘s’ in the focused settings menu.
+It covers routine output, status, automatic metadata, application-screen
+boundaries, and process lifecycle feedback.  Explicit reading, input and
+completion feedback, and the configured terminal bell remain available.
+Verbosity (‘C-e q v’) and background monitoring (‘C-e q m’) are
+independent preferences.
 
    Automatic speech requires the selected EAT buffer and Emacs keyboard
-focus.  The selected window must follow the live cursor or be editing a
-line-mode draft after the terminal output.  Moving into scrollback
-prevents new output from interrupting review.  Another terminal or an
+focus.  The selected window must follow the live cursor or edit a
+line-mode draft after terminal output.  Reviewing scrollback prevents
+new output from interrupting you.  Another selected terminal or an
 active minibuffer also suppresses foreground feedback.  In terminal-only
-Emacs, or when the display cannot report keyboard focus, selection
-within Emacs is the available focus boundary.
+Emacs, or when keyboard focus cannot be reported, selection within Emacs
+is the available boundary.
 
-   Switching autospeak off or losing eligibility discards locally
-pending automatic feedback.  Speech already sent to Omnivox may finish.
-Returning to the terminal or switching autospeak on starts with fresh
-output; it does not replay missed output.  Use explicit reading to
-inspect it.  This control also applies while EAT owns an embedded Eshell
-terminal, without changing ordinary Eshell output.
+   Turning autospeak off or losing eligibility discards locally pending
+automatic feedback.  Speech already sent to Omnivox may finish.
+Returning or re-enabling speech starts with fresh output; it does not
+replay missed content.  Use explicit review instead.  This policy also
+applies to an embedded Eshell terminal, without changing ordinary Eshell
+output.
 
-   On the main screen, Emacsvox coalesces a burst before classifying it.
-Complete new output lines are spoken once, with an automatic limit of
+11.2.1 Read output and follow progress
+--------------------------------------
+
+On the main screen, Emacsvox collects a burst before classifying it.
+Complete new output lines are spoken once, with automatic limits of
 eight lines and 1,000 characters.  Continued input rows and empty
-terminal placeholders are omitted without hiding the output or replaying
-earlier screen rows.  The output remains available to speech when it
-scrolls beyond the screen, including repeated identical lines.
-Increasing scrollback is unnecessary for this feedback.  Wrapped output
-is joined and oversized bursts announce how much output was omitted.
-Fresh text without a newline also speaks, so password requests and
-confirmation questions remain accessible.  Carriage-return progress and
-status rewrites use rate-limited replaceable speech.  Unchanged repaint
-and resize-only updates remain silent.  Terminal bells, paste actions,
-input-mode changes, application-screen boundaries, and process exit are
-content-free semantic events rather than arbitrary screen speech.
+terminal placeholders are omitted without hiding output or rereading
+earlier rows.  Output remains eligible even if it scrolls beyond the
+screen, including repeated identical lines; increasing scrollback is
+unnecessary for this feedback.
 
-   When EAT shell integration identifies a ready prompt, Emacsvox gives
-a cue after the output instead of reading the prompt text.  Set
-‘emacsvox-eat-prompt-feedback’ to ‘text’ to hear it, or ‘silent’ to
-suppress prompt feedback; the default is ‘earcon’.  This preference can
-be buffer-local and is independent of verbosity.  Automatic prompt
-feedback obeys the same foreground autospeak policy.  Split and
-multiline prompts are collected until ready, and redisplay or typing
-does not repeat them.  If several prompts arrive within one coalesced
-burst, feedback describes the final ready prompt.
+   Wrapped output is joined and oversized bursts announce how much was
+omitted.  Fresh text without a newline also speaks, keeping password
+requests and confirmation questions accessible.  Carriage-return
+progress and status rewrites use rate-limited, replaceable speech.
+Unchanged repaints and resize-only updates remain silent.  Bells,
+pastes, input-mode changes, application-screen boundaries, and process
+exit are content-free semantic events rather than arbitrary screen
+readings.
 
-   Use ‘C-e q p’ to read the most recently identified prompt explicitly,
-even with autospeak off.  Prompt recognition does not require EAT's
-margin annotations.  It does require shell integration: over SSH, an
-unintegrated remote prompt or question is ordinary output and is read as
-text.  The prompt preference does not silence such questions.  In that
-situation the last identified prompt may still belong to the local
-shell; ‘C-e q l’ reads the current retained cursor row.
+11.2.2 Recognise and inspect prompts
+------------------------------------
 
-   Terminal bells retain EAT's configured bell sound without speaking
-"Terminal bell" by default.  An aural rule can add that spoken label by
-matching module ‘eat’, role ‘command-interaction’, event
-‘command-terminal-bell’, and occasion ‘notification’, with a speech
-action before or after the event.  Bell notifications remain
-rate-limited and obey the selected-buffer, live-cursor, and secure-input
-restrictions.
+When EAT shell integration identifies a ready prompt, Emacsvox gives a
+cue after output instead of reading the prompt text.
+‘emacsvox-eat-prompt-feedback’ defaults to ‘earcon’; choose ‘text’ to
+hear the prompt or ‘silent’ to suppress it.  This option can be
+buffer-local and is independent of verbosity, but automatic prompt
+feedback still obeys foreground autospeak eligibility.
 
-   In semi-character and character mode on the main screen, ‘<RET>’ is
-silent.  After a rendered Left or Right movement, Emacsvox names the
-character reached; after Up or Down, it speaks the resulting input or
-history row without the observed shell prompt.  ‘M-b’, ‘M-f’, and
-modified Left or Right word movement speak the exact rendered text
-crossed.  A boundary key that produces no movement stays silent.
+   Split and multiline prompts are collected until ready.  Redisplay and
+typing do not repeat them.  If several prompts arrive in one burst,
+feedback describes the final ready prompt.
 
-   In line mode, history navigation speaks the recalled command once.
-EAT's history-item counter and input-restored message remain visible in
-the echo area, but are not spoken over the command on the notification
-stream.
+   ‘C-e q p’ explicitly reads the last identified prompt, even with
+autospeak off.  Recognition does not require margin annotations, but it
+does require shell integration.  An unintegrated remote prompt or
+question is ordinary output, read as text; the prompt preference does
+not silence it.  The last identified prompt may still belong to the
+local shell.  Use ‘C-e q l’ for the current retained cursor row in that
+situation.
 
-   An echoed Space is named without reading the prompt or the rest of
-the line.  For ‘BACKSPACE’, ‘<DELETE>’, ‘M-d’, and ‘C-k’, Emacsvox
-compares bounded public screen snapshots before and after the key.  When
-one same-row removal is unambiguous, it speaks the character or text
-actually removed.  Otherwise it gives only a deletion tone; it never
-guesses from adjacent prompt or screen text.  Terminal padding and
-trailing input blanks do not prevent an otherwise unambiguous word
-deletion from being announced.  This also handles a no-echo peer safely:
-without a visible deletion there is no content to announce.  Feedback
-requires the selected window to follow the live cursor, and is silent
-during protected password input, in an unselected terminal, and on an
-alternate screen where the application controls the keys.
+11.2.3 Hear input and deletion results
+--------------------------------------
 
-   On a full-screen or alternate-screen application, Emacsvox does not
+On the main screen in semi-character and character modes, ‘<RET>’ is
+silent.  After rendered left/right movement, Emacsvox names the reached
+character; after up/down it speaks the resulting input or history row
+without the observed shell prompt.  ‘M-b’, ‘M-f’, and modified
+left/right word movements speak the rendered text crossed.  A boundary
+key that produces no movement stays silent.
+
+   Line-mode history navigation speaks the recalled command once.  EAT's
+history-item counter and input-restored message remain visible in the
+echo area without speaking over the command on the notification stream.
+
+   An echoed Space is named without rereading the prompt or line.  For
+Backspace, Delete, ‘M-d’, and ‘C-k’, Emacsvox compares bounded public
+snapshots before and after the key.  One unambiguous same-row removal is
+read as the actual character or text removed.  Otherwise only a deletion
+tone is given; adjacent prompt or screen text is not guessed as deleted
+content.  Padding and trailing input blanks do not prevent an otherwise
+unambiguous word deletion.
+
+   A no-echo peer provides no visible deletion to announce.  This input
+feedback requires the selected window to follow the live cursor, and is
+silent during protected password entry, in an unselected terminal, and
+on an alternate screen where the application owns the keys.
+
+11.2.4 Bells and application-screen changes
+-------------------------------------------
+
+Bells retain EAT's configured sound without speaking "Terminal bell" by
+default.  An aural rule can add a label by matching module ‘eat’, role
+‘command-interaction’, event ‘command-terminal-bell’, and occasion
+‘notification’, with speech before or after the event.  Bell
+notifications remain rate-limited and obey selected-buffer, live-cursor,
+and secure-input restrictions.
+
+   On full-screen or alternate-screen applications, Emacsvox does not
 read every refresh.  A cursor row reached by correlated arrow-style
-navigation, or one compact high-confidence transfer of selection-like
-styling, can be announced.  Ambiguous repaint remains silent and
-available through explicit review.  In particular, inverse video or a
-colored row alone is not treated as proof of the active item.
+navigation, or a compact high-confidence transfer of selection-like
+styling, may be announced.  Ambiguous repaints remain available to
+explicit review.  Inverse video or a coloured row alone is not proof of
+an active item.
 
 11.3 Terminal-side Completion
 =============================
 
-On the main terminal screen, Emacsvox takes a public screen snapshot
-before a terminal-side ‘<TAB>’ and waits briefly for EAT output to
-settle.
+Before a terminal-side ‘<TAB>’ on the main screen, Emacsvox captures the
+public screen and waits briefly for output to settle.  An inline
+completion speaks the newly displayed field; for example, ‘~/sr<TAB>’
+can speak ‘src slash’ after the shell displays ‘~/src/’.
 
-   • A unique inline completion speaks the newly displayed field.  For
-     example, ‘~/sr<TAB>’ can speak ‘src slash’ after the shell displays
-     ‘~/src/’.
+   An ambiguous completion printed as columns or help rows is presented
+as one transaction after the input line is redrawn.  Small inferred
+lists speak up to eight candidates.  Router-style descriptions keep
+their layout rather than being forced into a shell-token model.  Large
+lists are counted and shortened for automatic speech.  If candidates
+have already scrolled beyond the bounded screen, the count is a lower
+bound, such as "at least N visible", not an invented total.
 
-   • An ambiguous completion that prints columns or help rows is
-     presented as one candidate transaction after the input line is
-     redrawn.  Small inferred lists speak up to eight candidates.
-     Descriptive router-style rows retain their layout instead of being
-     forced into a shell-token model.
+   Identical repeated lists, split output, bells, wrapping, and resizing
+are coalesced without repeating the candidate text.  This works from
+rendered results for local Readline, SSH, and unstructured router help.
+No visible change means there is nothing reliable to announce.  On an
+alternate screen, ‘<TAB>’ is navigation rather than shell completion.
 
-   • Large lists are counted and truncated for automatic speech.  If
-     candidates have already scrolled beyond the bounded visible screen,
-     Emacsvox reports an honest lower bound such as "at least N visible"
-     rather than inventing a total.
-
-   • Repeated identical lists, split output chunks, terminal bells,
-     wrapping, and screen resize are coalesced without replaying the
-     same candidate text.
-
-   The completion result is derived from the rendered screen, so the
-same design works with local Readline, SSH, and unstructured router
-help.  If the peer makes no visible change, there is nothing reliable to
-announce.  On an alternate screen, ‘<TAB>’ is treated as navigation
-rather than shell completion.
-
-   Use ‘C-e q c’ to speak the latest retained candidate or help layout,
-or open frozen review with ‘C-e q r’ and press ‘c’.  These commands are
-especially useful after a large or multi-column result.
+   Use ‘C-e q c’ to read the retained candidate/help layout, or open
+frozen review with ‘C-e q r’ and press ‘c’.  This is useful for large or
+multi-column results and does not ask the terminal to complete again.
 
 11.4 Explicit Review Commands
 =============================
 
-The default Emacsvox prefix is ‘C-e’.  In every EAT input mode, ‘C-e q’
-opens the terminal review prefix:
+With the default speech prefix, ‘C-e q’ provides review commands in
+every EAT input mode:
 
 ‘C-e q l’
      Speak the cursor row from the latest retained screen.
 ‘C-e q d’
-     Speak the last classified screen change.
+     Speak the last classified change.
 ‘C-e q h’
-     Speak the latest conservative likely-focus inference and its
-     confidence.
+     Speak the conservative likely-focus inference and its confidence.
 ‘C-e q c’
-     Speak the retained completion candidates or help rows.
+     Speak retained completion candidates or help rows.
 ‘C-e q s’
      Speak a bounded copy of the retained visible screen.
 ‘C-e q r’
      Open a read-only frozen copy for line-by-line review.
 ‘C-e q t’
-     Speak the retained progress, application, or shell-prompt status.
+     Speak retained progress, application, or shell-prompt status.
 ‘C-e q p’
-     Speak the most recently identified shell prompt.
+     Speak the last identified shell prompt.
 ‘C-e q i’
-     Speak the retained sanitized title or working-directory change.
+     Speak the retained, sanitised title or working-directory change.
 ‘C-e q v’
      Cycle terse, normal, and verbose automatic feedback for this
      terminal.
 ‘C-e q m’
-     Toggle content-free background-output monitoring for this terminal.
+     Toggle content-free background monitoring for this terminal.
 
-   These commands inspect concealed-redacted retained snapshots; they do
-not send terminal input.  Content is bounded when spoken.  The visible
-screen is retained, not arbitrary scrollback.
+   These inspect retained snapshots with concealed content redacted;
+they do not send terminal input.  Speech is bounded.  The retained
+visible screen is not arbitrary scrollback or a promise that it still
+matches a changing live screen.
 
 11.4.1 Frozen Screen Review
 ---------------------------
 
 ‘C-e q r’ opens an immutable copy of the latest visible screen.  It does
-not refresh and navigation cannot move the live terminal cursor or send
-input.  The copy preserves normalized terminal styling, cursor and
-likely-focus anchors, and the exact retained completion rows.  Opening
-and closing review play distinct object cues and announce the
-transition.
+not refresh, move the live cursor, or send input.  It preserves
+normalised styling, cursor and likely-focus anchors, and retained
+completion rows.  Opening and closing play distinct object cues and
+announce the transition.
 
 ‘n, p; C-n, C-p; down, up’
      Move by captured terminal row and speak the destination,
-     interrupting the previous row announcement when navigation
-     continues.
+     interrupting the previous row announcement.
 ‘SPC, RET, .’
      Speak the current captured row.
 ‘a’
@@ -1811,24 +1954,23 @@ transition.
 ‘C’
      Go to the captured terminal cursor.
 ‘h’
-     Go to the retained likely focus, when one exists.
+     Go to retained likely focus when available.
 ‘[, ]’
-     Move among selection-like inverse/background styled regions.  These
-     regions are deliberately not labelled as focus.
+     Move among inverse/background-styled, selection-like regions.  They
+     are not labelled as confirmed focus.
 ‘t, i’
-     Speak status or metadata copied when review was opened.
+     Speak status or metadata copied when review opened.
 ‘v, m’
-     Change verbosity or background monitoring in the source terminal
-     without sending terminal input.  The copied content itself remains
-     frozen.
+     Change verbosity or monitoring in the source terminal without
+     sending terminal input.  The copied content stays frozen.
 ‘?’
      Describe frozen review mode.
 ‘q’
      Kill the content-bearing review buffer and restore its window.
 
-   Starting secure input, resetting or restarting the terminal, killing
-the source, or leaving EAT mode also destroys its frozen review.  This
-bounds the lifetime of copied terminal content.
+   Secure input, terminal reset or restart, killing the source, or
+leaving EAT mode also destroys its frozen review.  These events bound
+the lifetime of copied terminal content.
 
 11.5 Verbosity And Background Monitoring
 ========================================
@@ -1840,176 +1982,172 @@ bounds the lifetime of copied terminal content.
      speaking them automatically.  Actionable failures and content-free
      lifecycle feedback remain available.
 ‘normal’
-     The default.  Speak bounded command output, progress/status,
-     completion, and actionable failures.
+     The default: bounded command output, progress/status, completion,
+     and actionable failures.
 ‘verbose’
-     Also speak bounded terminal title and working-directory changes and
-     successful shell-command status when EAT shell integration provides
-     it.
+     Also give bounded title and directory changes and successful
+     shell-command status when EAT shell integration supplies it.
 
-   Background monitoring is off by default.  When enabled with ‘C-e q
-m’, an unselected terminal plays only a rate-limited content-free cue.
-On returning, Emacsvox reports only the unread burst count, never the
-terminal's identity or output.  Cursor movement, style changes, repaint,
-resize, and process generation changes do not count as background
-output.
+   Background monitoring starts off.  With ‘C-e q m’ enabled, an
+unselected terminal gives only a rate-limited content-free cue.
+Returning reports the unread burst count, never the terminal's identity
+or output.  Cursor movement, style changes, repaint, resize, and
+process-generation changes do not count.  Unlike Shell/comint background
+reading, EAT monitoring neither requires foreground autospeak nor reads
+background content.
 
-   Use ‘C-e S’ or ‘C-e H j c’ from an EAT terminal or its frozen review
-to open the terminal settings menu.  You can also choose EAT terminals
-through ‘C-e H j a’, or find individual controls with ‘C-e H /’.
+11.5.1 Adjust and save focused terminal settings
+------------------------------------------------
+
+Use ‘C-e S’ or ‘C-e H j c’ from EAT or its frozen review.  ‘C-e H j a’
+opens the integration chooser, and ‘C-e H /’ finds individual controls.
 
    • ‘s’ toggles automatic foreground speech.
-   • ‘b’ toggles background cues and unread counts, independently of
-     foreground speech.  It does not read background output.
-   • ‘p’ opens prompt-feedback choices: ready cue, read prompt, or
-     silent.  Feedback requires EAT shell integration and obeys
-     foreground autospeak.
-   • ‘d’ opens terse, normal, and verbose automatic-feedback choices.
+   • ‘b’ toggles background cues and unread counts independently.
+   • ‘p’ chooses ready-prompt cue, text, or silence; recognition still
+     requires shell integration and automatic delivery obeys foreground
+     autospeak.
+   • ‘d’ chooses terse, normal, or verbose feedback.
 
-   Arrows announce current values; Enter activates the selected control.
-The prompt and detail lists start on the current choice.  Arrows browse
-without changing it; Enter applies and returns to the original control,
-while ‘q’ cancels.  Confirmations interrupt older main speech.  Changes
-affect only the captured terminal, including an active EAT terminal
-embedded in Eshell.  From frozen review, the values belong to its source
-terminal.  ‘q’ returns to the originating menu entry.  When opened
-directly with ‘C-e S’, ‘q’ closes the menu and announces the restored
-buffer and mode with a close earcon.
+   Arrows announce values and ‘<RET>’ activates a control.  Choice lists
+start on the current value; browsing does not apply a choice, ‘<RET>’
+applies and returns, and ‘q’ cancels.  Confirmations interrupt older
+main speech.  Changes belong to the captured terminal, including
+embedded Eshell EAT; from frozen review they belong to its source
+terminal.
 
-   Press ‘w’ to save all four displayed values as defaults through
-Customize.  Other terminals with local overrides keep those overrides;
-terminals without them inherit the new defaults.  Adjusting a control
-alone does not save it.  ‘A’ opens advanced EAT Customize settings; ‘q’
-returns to the EAT menu.
+   ‘q’ returns to the originating menu entry.  From direct ‘C-e S’, it
+closes the menu and announces the restored buffer and mode with a close
+cue.  ‘w’ saves the four displayed values as defaults through Customize.
+Terminals with local overrides keep them; others inherit the new
+defaults.  Adjustment alone does not save.  ‘A’ opens advanced EAT
+settings and ‘q’ there returns to the focused menu.
 
 11.6 Shell Integration And Command Status
 =========================================
 
-EAT's Bash or Zsh shell integration is required for prompt annotation,
-directory tracking, and per-command running/success/failure status.  For
-Bash, EAT documents this initialization:
+EAT's Bash or Zsh integration supplies prompt annotation, directory
+tracking, and per-command running/success/failure status.  For Bash, EAT
+documents:
 
      [ -n "$EAT_SHELL_INTEGRATION_DIR" ] && \
        source "$EAT_SHELL_INTEGRATION_DIR/bash"
 
-   For Zsh, source the ‘zsh’ script instead:
+   For Zsh, use its script instead:
 
      [ -n "$EAT_SHELL_INTEGRATION_DIR" ] && \
        source "$EAT_SHELL_INTEGRATION_DIR/zsh"
 
-   With shell integration and ‘eat-enable-shell-prompt-annotation’
-enabled, Emacsvox retains running, successful, and failed command
-status.  A failure is announced automatically at every verbosity.
-Success is automatic only in verbose mode and only after observed
-command activity; the initial successful prompt does not chatter.
-Running state remains silent.  Use ‘C-e q t’ for the retained current
-state.
+   With integration and ‘eat-enable-shell-prompt-annotation’ enabled,
+Emacsvox retains running, successful, and failed command status.  A
+failure is eligible for automatic feedback at every verbosity, subject
+to foreground autospeak.  Success is automatic only at verbose level
+after observed command activity; the initial successful prompt is not
+announced as a completed command.  Running state stays silent.  ‘C-e q
+t’ requests the retained current state.
 
-   This status is not guessed from prompt characters.  A remote shell or
-router normally does not provide EAT's per-command integration, so
-remote commands can still have accessible screen output and completion
-while their individual exit status remains unavailable.
+   Status is not guessed from prompt characters.  A remote shell or
+router usually does not provide this per-command integration.  Its
+output and completion can still be accessible while individual exit
+status remains unavailable.
 
 11.7 Passwords And Sensitive Content
 ====================================
 
-Use ‘M-x eat-send-password’ for a terminal password.  EAT reads it with
-Emacs's protected password reader instead of recording the keystrokes in
-command lossage.  During this command Emacsvox suppresses terminal
-observation and bell speech, clears content-bearing retained state
-before and after, and announces only whether secure input was sent or
-cancelled.
+Use ‘M-x eat-send-password’ for a terminal password.  EAT uses Emacs's
+protected password reader rather than recording those keystrokes in
+command lossage.  Emacsvox suppresses observation and bell speech during
+the command, clears content-bearing retained state before and after it,
+and announces only whether secure input was sent or cancelled.
 
-   Emacsvox intentionally does not guess that arbitrary no-echo terminal
-input is a password: EAT exposes no public echo-state signal, and a
-quiet repaint is not proof.  Typing a secret through ordinary terminal
-input can leave keystrokes in Emacs lossage and does not establish the
-same privacy boundary.  Backspace or Delete in such input can produce a
-content-free deletion tone, but Emacsvox does not name text unless EAT
-exposes one unambiguous visible removal.
+   Ordinary no-echo input does not establish that boundary.  EAT exposes
+no public echo-state signal, and a quiet repaint is not evidence of
+password entry.  Typing a secret through normal terminal input can leave
+keystrokes in Emacs lossage.  Backspace or Delete may give a
+content-free deletion tone, but speech names content only when one
+unambiguous visible removal is exposed.
 
-   Selected foreground output can contain sensitive information and may
-be spoken.  A frozen review is a real in-memory copy until it is killed,
-although visually concealed cells are redacted at snapshot time.
-Verbose title and directory speech can disclose host or path metadata.
-Background monitoring, by contrast, never speaks content or terminal
-identity.
+   Selected foreground output can contain sensitive information and be
+spoken.  Frozen review is a real in-memory copy until killed, although
+visually concealed cells are redacted when captured.  Verbose title and
+directory announcements can disclose host/path metadata.  Background
+monitoring, by contrast, never reads content or terminal identity.
 
 11.8 Terminal-Controlled Clipboard Trust
 ========================================
 
-EAT supports terminal selection control sequences, commonly called OSC
-52.  Consequently, trust applies not only to a local shell but also to
-an SSH peer, router CLI, or any program whose output reaches EAT's
-terminal parser.  Even displaying an untrusted file can pass terminal
-control sequences through a program that does not sanitize them.
+EAT supports terminal selection-control sequences, commonly called OSC
+52.  Trust therefore extends to any local program, SSH peer, router, or
+other output source that reaches its parser.  Displaying an untrusted
+file through a program that does not sanitise control sequences can also
+exercise this interface.
 
    In the audited EAT 0.9.4 release, ‘eat-enable-kill-from-terminal’
-defaults to non-‘nil’.  Despite the potentially confusing name, this is
-the terminal-to-Emacs direction: it permits a terminal program to place
-text in Emacs's kill ring.  ‘eat-enable-yank-to-terminal’ defaults to
-‘nil’ for security.  Enabling it permits a terminal program to request
-the current Emacs kill-ring text.  Verify these defaults after upgrading
-EAT.
+defaults to non-‘nil’.  Despite its name, this is the terminal-to-Emacs
+direction: a terminal program can place text in the kill ring.
+‘eat-enable-yank-to-terminal’ defaults to ‘nil’ for security; enabling
+it lets a terminal program request current kill-ring text.  Check the
+installed defaults again after an EAT upgrade.
 
-   For terminals connected to an endpoint whose output is not fully
-trusted, disable both directions.  They can be customized globally, or
-disabled only in the current EAT buffer with:
+   For output you do not fully trust, disable both directions globally
+through Customize or locally in the EAT buffer:
 
      (setq-local eat-enable-kill-from-terminal nil
                  eat-enable-yank-to-terminal nil)
 
-   Run that expression with ‘M-:’ in the EAT buffer before processing
-untrusted output.  Enabling kill-ring read-back should be reserved for
-terminal programs and remote endpoints that are trusted with whatever
-Emacs currently holds in its kill ring.
+   Evaluate this with ‘M-:’ in that buffer before processing untrusted
+output.  Reserve kill-ring read-back for programs and remote endpoints
+trusted with whatever the kill ring currently contains.
 
-   Emacsvox deliberately changes neither EAT option.  A
-terminal-originated selection payload is not an accessibility command:
-Emacsvox does not speak its contents or retain it as terminal screen
-text.  The content-free paste announcements described elsewhere apply to
-explicit user paste commands, not to terminal-originated selection
-control sequences.
+   Emacsvox changes neither option.  A terminal-originated selection
+payload is not an accessibility command: its contents are neither spoken
+nor retained as terminal screen text.  Content-free paste announcements
+apply to explicit user paste commands, not these terminal-originated
+sequences.
 
 11.9 Full-screen Applications And Limitations
 =============================================
 
-Programs such as pagers, editors, menus, and refreshing dashboards
-frequently rewrite existing cells instead of printing lines.  Emacsvox
-uses conservative cursor, style-change, input-direction, and timing
-evidence.  Arrow-key movement and clear paired highlight movement work
-best.  Printable navigation keys such as ‘h’, ‘j’, ‘k’, and ‘l’ are not
-assumed to be navigation, because they may instead be application text.
+Pagers, editors, menus, and refreshing dashboards often rewrite cells
+instead of printing lines.  Emacsvox uses conservative cursor,
+style-change, input- direction, and timing evidence.  Arrow movement and
+clear paired highlight movement work best.  Printable keys such as ‘h’,
+‘j’, ‘k’, and ‘l’ are not assumed to mean navigation: the application
+may treat them as text.
 
-   Use ‘C-e q l’, ‘C-e q d’, and ‘C-e q h’ after a silent update.  For
-systematic review use ‘C-e q r’, then navigate rows and selection-like
-styled regions.  Rapid dashboards are intentionally not read on every
-refresh.  Hyperlink targets, sixel/image semantics, an application's
-true accessibility focus, and exact update causes are not exposed by
-EAT's current public API, so Emacsvox cannot infer them reliably from
-pixels and faces alone.
+   After a silent update, use ‘C-e q l’, ‘C-e q d’, or ‘C-e q h’.  For
+systematic inspection, open ‘C-e q r’ and review rows or selection-like
+regions.  Rapid dashboards are deliberately not read on every refresh.
+EAT's current public API does not expose hyperlink targets, sixel/image
+semantics, true application accessibility focus, or exact update causes;
+pixels and faces are insufficient to infer them reliably.
 
-   Remote programs also need terminal information compatible with EAT.
-Broken cursor addressing or screen layout caused by missing remote
-terminfo cannot be repaired by speech classification; consult EAT's
-manual when the visual terminal itself renders incorrectly.
+   When ordinary output is unexpectedly silent, check the input mode,
+selected buffer and live-cursor position, foreground autospeak, and
+verbosity before changing recognition settings.  Retained review may
+explain what was observed, but it is not a replacement for live output
+or an unbounded transcript.
+
+   Remote programs also need compatible terminal information.  Missing
+remote terminfo can break cursor addressing and screen layout; speech
+classification cannot repair that.  Consult EAT's manual when the
+terminal itself renders incorrectly.
 
 11.10 EAT In Eshell
 ===================
 
-When EAT's global ‘eat-eshell-mode’ is enabled, Emacsvox uses the same
-screen observer for the terminal region embedded in Eshell.  Rendered
-command output is handled by one speech path, so it is not repeated by
-generic Eshell output feedback.
+With global ‘eat-eshell-mode’ enabled, Emacsvox uses the same screen
+observer for EAT's terminal region inside Eshell.  Rendered command
+output follows one speech path instead of also being repeated by generic
+Eshell feedback.
 
-   With ‘eat-eshell-visual-command-mode’, an Eshell visual command runs
-in a separate EAT buffer.  Emacsvox announces its start, delivers
-eligible final output before the process-exit event, and labels its exit
-as an Eshell visual command.  EAT and Eshell still determine the
-window-return policy.  In particular,
-‘eshell-destroy-buffer-when-process-dies’ determines whether a
-successful visual-command buffer is killed and Eshell is restored;
-Emacsvox does not change that option.
+   With ‘eat-eshell-visual-command-mode’, a visual command runs in a
+separate EAT buffer.  Emacsvox announces its start, delivers eligible
+final output before process-exit feedback, and identifies the exit as an
+Eshell visual command.  EAT and Eshell still own window return.  In
+particular, ‘eshell-destroy-buffer-when-process-dies’ determines whether
+a successful visual-command buffer is killed and Eshell restored;
+Emacsvox does not change it.
 
 
 File: emacsvox.info,  Node: Running Terminal Based Applications,  Next: Emacsvox Keyboard Commands,  Prev: EAT Terminal Access,  Up: Top
@@ -2017,17 +2155,17 @@ File: emacsvox.info,  Node: Running Terminal Based Applications,  Next: Emacsvox
 12 Term Terminal Access
 ***********************
 
-Emacsvox speech-enables the built-in Emacs Term terminal emulator
-through the module named ‘emacsvox-eterm’.  The module name is
-inherited; users do not install a separate Eterm package.
+Term is the terminal emulator built into Emacs.  Its Emacsvox
+integration is named ‘emacsvox-eterm’ for historical reasons; no
+separate Eterm package is required.  Use Term when avoiding an extra
+package matters or a particular application works better there.
 
-   For a new full-terminal workflow, prefer *note EAT Terminal Access:
-EAT Terminal Access.  EAT has the richer current guide for bounded
-screen output, terminal-side completion, scrollback, alternate screens,
-and asynchronous rendering.  Use built-in Term when avoiding an
-additional package matters or an application specifically works better
-there.  For ordinary line-oriented shell commands, ‘M-x shell’ is
-usually simpler than either terminal emulator.
+   For a new full-terminal workflow, *note EAT Terminal Access: EAT
+Terminal Access. provides the richer current model for bounded output,
+terminal completion, scrollback, alternate screens, and asynchronous
+rendering.  For ordinary line-oriented commands, ‘M-x shell’ is another
+option.  These environments have different input and review keys; do not
+transfer a key sequence merely because both are terminals.
 
 * Menu:
 
@@ -2043,18 +2181,17 @@ File: emacsvox.info,  Node: Starting Term,  Next: Term Input Modes,  Up: Running
 12.1 Starting Term
 ==================
 
-Run ‘M-x term <RET>’.  At the ‘Run program:’ prompt, accept the proposed
-shell or enter another executable and press ‘<RET>’.  Emacsvox currently
-makes the selected Term window fill the frame when ‘term’ or ‘ansi-term’
-starts.  This changes only the window layout: it does not kill the
-buffers that were displayed in the other windows.
+Run ‘M-x term <RET>’.  At ‘Run program:’, accept the proposed shell or
+enter another executable and press ‘<RET>’.  Emacsvox makes the selected
+Term window fill the frame when ‘term’ or ‘ansi-term’ starts.  This
+changes window layout, not the existence of buffers previously shown in
+other windows.
 
-   Term handles terminal emulation, while the child program handles its
-prompts, input, and completion.  Emacsvox observes the rendered Term
-buffer and adds speech feedback and review commands.  See *note Term
-Mode: (emacs)Term Mode. in _The GNU Emacs Manual_ for the emulator
-itself and *note emacsvox-eterm: (emacsvox-reference)emacsvox-eterm. in
-_Emacsvox Reference Manual_ for the complete Emacsvox API inventory.
+   Term emulates the terminal, the child program handles input and
+completion, and Emacsvox presents the rendered buffer.  See *note Term
+Mode: (emacs)Term Mode. in _The GNU Emacs Manual_ for the emulator and
+*note emacsvox-eterm: (emacsvox-reference)emacsvox-eterm. in the
+_Emacsvox Reference Manual_ for the complete integration reference.
 
 
 File: emacsvox.info,  Node: Term Input Modes,  Next: Term Speech Feedback,  Prev: Starting Term,  Up: Running Terminal Based Applications
@@ -2062,25 +2199,31 @@ File: emacsvox.info,  Node: Term Input Modes,  Next: Term Speech Feedback,  Prev
 12.2 Character And Line Input Modes
 ===================================
 
-Term starts in character mode.  Choose the mode according to who should
-receive your keys:
+Term starts in character mode.  Choose according to who should receive
+the keys:
 
 Character mode
-     Most keys are sent immediately to the terminal program.  Use this
-     for full-screen or key-driven terminal applications.  Press ‘C-c
-     C-j’ to enter line mode.  Because normal Emacs prefixes may belong
-     to the child program, use ‘C-c C-h m’ for mode help and ‘C-c M-x’
-     to run an Emacs command.
+     Most keys are sent immediately to the terminal program.  This suits
+     full-screen or key-driven applications.  ‘C-c C-j’ enters line
+     mode.  Normal Emacs prefixes may belong to the child, so use ‘C-c
+     C-h m’ for mode help and ‘C-c M-x’ to run an Emacs command.
 Line mode
-     Normal Emacs editing commands edit the pending input.  ‘<RET>’
-     sends that input to the terminal program.  Use ‘C-h m’ and other
-     ordinary Emacs Help keys directly.  Press ‘C-c C-k’ to return to
-     character mode.
+     Ordinary Emacs editing commands edit pending input; ‘<RET>’ sends
+     it to the program.  Emacs Help keys such as ‘C-h m’ work directly.
+     ‘C-c C-k’ returns to character mode.
 
-   Emacsvox announces ‘Terminal line mode’ or ‘Terminal character mode’
-after an interactive switch.  In either mode, ‘C-t’ begins the Emacsvox
-Term review prefix.  To send a literal ‘C-t’ to the child program in
-character mode, press ‘C-t C-t’.
+   An interactive switch announces ‘Terminal line mode’ or ‘Terminal
+character mode’.  In either mode, ‘C-t’ introduces Term's Emacsvox
+review commands.  Send a literal ‘C-t’ to the child in character mode
+with ‘C-t C-t’.
+
+   Use the input-mode escape before trying ordinary Emacs settings or
+Help keys that the child might otherwise receive.  In line mode, ‘C-e H’
+opens the Emacsvox settings menu.  Its general settings do not replace
+Term's own buffer-local automatic-speech control below.  Likewise, ‘q’
+closes an Emacsvox menu or dedicated review only while that interface
+owns the keys; it is not a general command to leave a running terminal
+application.
 
 
 File: emacsvox.info,  Node: Term Speech Feedback,  Next: Reviewing The Term Screen,  Prev: Term Input Modes,  Up: Running Terminal Based Applications
@@ -2088,24 +2231,25 @@ File: emacsvox.info,  Node: Term Speech Feedback,  Next: Reviewing The Term Scre
 12.3 Automatic Speech Feedback
 ==============================
 
-Automatic feedback is controlled by the buffer-local setting
-‘emacsvox-eterm-autospeak’, which is on by default.  Toggle it for the
-current Term buffer with ‘C-t C-q’.  The older spelling
-‘eterm-autospeak’ is not an Emacsvox variable.
+‘emacsvox-eterm-autospeak’ controls automatic feedback in the current
+buffer and defaults to enabled.  ‘C-t C-q’ toggles it.  The older
+spelling ‘eterm-autospeak’ is not an Emacsvox variable.
 
-   The Term buffer must be displayed in a live window for output to be
-spoken automatically.  A hidden Term buffer can continue running without
-speaking.  In line mode, Emacsvox reads the newly inserted output range
-without interrupting it for every character.  In character mode, it
-presents rendered cursor movement, characters, words, or the reached
-line according to how the screen changed; new terminal activity can stop
-earlier speech.
+   A Term buffer must be displayed in a live window for automatic output
+speech.  A hidden buffer can keep running silently.  This
+displayed-window condition is not EAT's selected-buffer and
+keyboard-focus policy.
 
-   This feedback is based on Term's rendered buffer and cursor
-coordinates.  It does not provide EAT's bounded screen transactions,
-terminal-completion model, or alternate-screen policy.  Use explicit
-review whenever automatic output is too brief or an application redraw
-is ambiguous.
+   In line mode, speech reads newly inserted output as a range rather
+than interrupting it for every character.  In character mode, rendered
+cursor and screen changes determine whether a character, word, movement,
+or reached line is presented.  New terminal activity can stop earlier
+speech.
+
+   This integration does not provide EAT's bounded screen transactions,
+completion model, or alternate-screen policy.  When a redraw is
+ambiguous or an announcement too brief, use the explicit review
+commands.
 
 
 File: emacsvox.info,  Node: Reviewing The Term Screen,  Next: Term Help And Recovery,  Prev: Term Speech Feedback,  Up: Running Terminal Based Applications
@@ -2113,46 +2257,45 @@ File: emacsvox.info,  Node: Reviewing The Term Screen,  Next: Term Help And Reco
 12.4 Reviewing The Term Screen
 ==============================
 
-The Emacsvox review pointer is independent of the terminal cursor, so
-reviewing old screen text does not send keys or move the child
-application.  These core commands keep the normal ‘C-t’ prefix:
+The review pointer is independent of the terminal cursor.  Moving it
+does not send keys or move the child application.  It reviews the Term
+buffer, not the immutable snapshot used by EAT's frozen review.  The
+normal prefix is ‘C-t’:
 
 ‘C-t .’
-     Move the review pointer to the terminal cursor and announce its
+     Place the review pointer at the terminal cursor and announce its
      coordinates.
 ‘C-t p’
 ‘C-t n’
-     Move the review pointer to the previous or next line and speak it.
-     The Up and Down arrow keys are equivalent after the ‘C-t’ prefix.
-‘C-t <LEFT>’
-‘C-t <RIGHT>’
-     Move the pointer by a character and speak the character reached.
+     Move to the previous or next line and speak it.  ‘C-t <up>’ and
+     ‘C-t <down>’ are equivalent.
+‘C-t <left>’
+‘C-t <right>’
+     Move by a character and speak the destination.
 ‘C-t M-b’
 ‘C-t M-f’
-     Move the pointer backward or forward by a word and speak it.
+     Move backward or forward by a word and speak it.
 ‘C-t l’
 ‘C-t w’
 ‘C-t c’
-     Speak the line, word, or character at the review pointer without
-     moving it.
-‘C-t <SPC>’
-     Speak from the review pointer to the current end of the Term
-     buffer.
+     Read the line, word, or character at the review pointer without
+     moving.
+‘C-t SPC’
+     Read from the pointer to the current end of the Term buffer.
 ‘C-t s’
-     Prompt for text, search forward from the review pointer, and speak
-     the matching line.
+     Ask for text, search forward from the pointer, and read the
+     matching line.
 
-   In character mode, ‘C-t q’ enters dedicated review mode.  The
-terminal stops receiving ordinary keys while this review keymap is
-active.  Use ‘p’, ‘n’, the arrow keys, ‘M-b’, ‘M-f’, ‘l’, ‘w’, ‘c’, and
-‘s’ without the ‘C-t’ prefix; press ‘q’ to return to character mode.  To
-copy reviewed text, press ‘m’ at one endpoint, move the pointer, and
-press ‘y’ to copy the region to the kill ring.
+   In character mode, ‘C-t q’ enters dedicated review.  Ordinary keys
+then stay in review rather than reaching the child.  Use ‘p’, ‘n’,
+arrows, ‘M-b’, ‘M-f’, ‘l’, ‘w’, ‘c’, and ‘s’ without the prefix.  ‘q’
+returns to character mode.  To copy text, set one endpoint with ‘m’,
+move the pointer, then press ‘y’ to copy the region to the kill ring.
 
-   The integration also supports named rectangular screen regions and
-focus or filter windows.  Those are advanced, coordinate-based
-facilities; inspect the live ‘C-h m’ output and the generated module
-reference before using them.
+   Named rectangular regions and focus/filter windows are advanced,
+coordinate-based facilities.  Consult the live mode Help and generated
+reference before using them; remember the character-mode Help prefix
+when ordinary Emacs keys would otherwise reach the child.
 
 
 File: emacsvox.info,  Node: Term Help And Recovery,  Prev: Reviewing The Term Screen,  Up: Running Terminal Based Applications
@@ -2160,21 +2303,22 @@ File: emacsvox.info,  Node: Term Help And Recovery,  Prev: Reviewing The Term Sc
 12.5 Help And Recovery
 ======================
 
-   • If terminal output is visible but silent, press ‘C-t C-q’ once and
-     retry.  Automatic speech applies only while the Term buffer is
-     displayed.
+For visible but silent output, inspect ‘emacsvox-eterm-autospeak’ in the
+current buffer and ensure that buffer is displayed.  Toggle with ‘C-t
+C-q’ when necessary, then test new output.  An automatic-speech setting
+does not prove that the program has produced a new readable screen
+change.
 
-   • If an Emacs command is being sent to the child program, remember
-     that you are probably in character mode.  Use ‘C-c C-h m’, ‘C-c
-     M-x’, or switch to line mode with ‘C-c C-j’.
+   If an Emacs command goes to the child, check the input mode.  In
+character mode use ‘C-c C-h m’, ‘C-c M-x’, or switch to line mode with
+‘C-c C-j’.  If dedicated review owns the keys, ‘q’ returns to character
+mode first.
 
-   • If review has drifted away from live output, press ‘C-t .’.  If
-     dedicated review mode controls the keys, press ‘q’ first to return
-     to character mode.
-
-   • If a full-screen application redraws in a way that Term cannot
-     present reliably, retry it in *note EAT Terminal Access: EAT
-     Terminal Access. and use EAT's explicit review commands.
+   When review has moved away from current output, ‘C-t .’
+resynchronises the pointer.  Leave dedicated review with ‘q’ before
+using the normal prefix.  For a full-screen redraw that Term cannot
+present reliably, try the workflow in *note EAT Terminal Access: EAT
+Terminal Access. and use that emulator's explicit review commands.
 
 
 File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Copyright,  Prev: Running Terminal Based Applications,  Up: Top
@@ -4390,60 +4534,60 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 
 * acss-default:                          Voices And Routing.  (line   6)
 * Agent Shell:                           Agent Shell.         (line   6)
-* alternate screen, EAT:                 EAT Terminal Access. (line 421)
+* alternate screen, EAT:                 EAT Terminal Access. (line 417)
 * applications:                          Emacs Packages.      (line   6)
-* archiving, Notmuch:                    Notmuch Mail.        (line 225)
+* archiving, Notmuch:                    Notmuch Mail.        (line 221)
 * artificial intelligence agents:        Agent Shell.         (line   6)
 * asynchronous search, Notmuch:          Notmuch Mail.        (line   6)
-* attachments, Notmuch:                  Notmuch Mail.        (line 153)
+* attachments, Notmuch:                  Notmuch Mail.        (line 152)
 * Audio Desktop:                         Audio Desktop.       (line   6)
 * audio formatting:                      Context-Sensitive Interaction.
                                                               (line  15)
 * Aural Doctor:                          Presentation Troubleshooting.
                                                               (line   6)
-* Aural history, mail privacy:           Notmuch Mail.        (line 314)
+* Aural history, mail privacy:           Notmuch Mail.        (line 328)
 * Aural Home:                            Aural Home.          (line   5)
 * Aural Presentation:                    Aural Presentation.  (line   6)
-* automatic speech limits, Notmuch:      Notmuch Mail.        (line 253)
+* automatic speech limits, Notmuch:      Notmuch Mail.        (line 247)
 * automatic speech, Term:                Term Speech Feedback.
                                                               (line   6)
 * buffer cycling:                        Desktop Objects.     (line  33)
 * buffers:                               Desktop Objects.     (line   6)
 * buffers <1>:                           Desktop Management.  (line   6)
-* byte-code, Notmuch integration:        Notmuch Mail.        (line 361)
+* byte-code, Notmuch integration:        Notmuch Mail.        (line 371)
 * character echo:                        Controlling Echo.    (line   6)
 * character mode, Term:                  Term Input Modes.    (line   6)
 * clipboard security, EAT:               EAT Terminal Access. (line 385)
-* completion candidates, terminal:       EAT Terminal Access. (line 167)
-* completion, EAT:                       EAT Terminal Access. (line  21)
+* completion candidates, terminal:       EAT Terminal Access. (line 184)
+* completion, EAT:                       EAT Terminal Access. (line  27)
 * Context-Sensitive Interaction:         Context-Sensitive Interaction.
                                                               (line   6)
-* Corfu, EAT:                            EAT Terminal Access. (line  21)
-* curses applications, EAT:              EAT Terminal Access. (line 421)
+* Corfu, EAT:                            EAT Terminal Access. (line  27)
+* curses applications, EAT:              EAT Terminal Access. (line 417)
 * desktop navigation:                    Context-Sensitive Interaction.
                                                               (line  43)
 * development tools:                     Development Environment.
                                                               (line   6)
 * document authoring:                    Document Authoring.  (line   6)
-* EAT automatic speech:                  EAT Terminal Access. (line  68)
-* EAT input modes:                       EAT Terminal Access. (line  21)
-* EAT review commands:                   EAT Terminal Access. (line 203)
-* EAT shell integration:                 EAT Terminal Access. (line 332)
+* EAT automatic speech:                  EAT Terminal Access. (line  72)
+* EAT input modes:                       EAT Terminal Access. (line  27)
+* EAT review commands:                   EAT Terminal Access. (line 210)
+* EAT shell integration:                 EAT Terminal Access. (line 335)
 * EAT terminal emulator:                 EAT Terminal Access. (line   6)
 * Emacs Keyboard Commands:               Emacsvox Keyboard Commands.
                                                               (line   6)
-* Eshell, EAT accessibility:             EAT Terminal Access. (line 444)
+* Eshell, EAT accessibility:             EAT Terminal Access. (line 445)
 * Eterm, Emacsvox module name:           Running Terminal Based Applications.
                                                               (line   6)
 * EWW:                                   Web Browsing.        (line   6)
 * explaining presentation:               Explaining Presentation.
                                                               (line   6)
-* fields, Notmuch speech:                Notmuch Mail.        (line 253)
+* fields, Notmuch speech:                Notmuch Mail.        (line 247)
 * finding:                               Context-Sensitive Interaction.
                                                               (line  57)
 * Forms mode:                            Desktop Applications.
-                                                              (line  27)
-* frozen EAT review:                     EAT Terminal Access. (line 238)
+                                                              (line  35)
+* frozen EAT review:                     EAT Terminal Access. (line 245)
 * integrations:                          Emacs Packages.      (line   6)
 * Introduction:                          Introduction.        (line   6)
 * line echo:                             Controlling Echo.    (line   6)
@@ -4453,30 +4597,30 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * mail search, Notmuch:                  Notmuch Mail.        (line   6)
 * major modes:                           Object Oriented Desktop.
                                                               (line   6)
-* message composition, Notmuch:          Notmuch Mail.        (line 332)
+* message composition, Notmuch:          Notmuch Mail.        (line 345)
 * messaging:                             Messaging.           (line   6)
-* MIME parts, Notmuch:                   Notmuch Mail.        (line 153)
+* MIME parts, Notmuch:                   Notmuch Mail.        (line 152)
 * minor modes:                           Object Oriented Desktop.
                                                               (line   6)
 * notification stream:                   Aural Speech Output. (line 117)
-* notification stream, Notmuch:          Notmuch Mail.        (line  64)
-* Notmuch Hello:                         Notmuch Mail.        (line  24)
+* notification stream, Notmuch:          Notmuch Mail.        (line  63)
+* Notmuch Hello:                         Notmuch Mail.        (line  23)
 * Notmuch mail:                          Notmuch Mail.        (line   6)
-* Notmuch Search:                        Notmuch Mail.        (line 108)
-* Notmuch Show:                          Notmuch Mail.        (line 153)
-* Notmuch Tree support:                  Notmuch Mail.        (line 332)
+* Notmuch Search:                        Notmuch Mail.        (line 110)
+* Notmuch Show:                          Notmuch Mail.        (line 152)
+* Notmuch Tree support:                  Notmuch Mail.        (line 345)
 * OCR:                                   Desktop Applications.
-                                                              (line  38)
+                                                              (line  45)
 * Online Help:                           Using Online Help.   (line   6)
 * OSC 52, EAT:                           EAT Terminal Access. (line 385)
 * Outline mode:                          Structured Editing.  (line   6)
 * packages, speech support:              Emacs Packages.      (line   6)
 * PaddleOCR:                             Desktop Applications.
-                                                              (line  38)
+                                                              (line  45)
 * palette inheritance:                   Voices And Routing.  (line   6)
-* password input, EAT:                   EAT Terminal Access. (line 360)
+* password input, EAT:                   EAT Terminal Access. (line 363)
 * PDF, converting to text:               Desktop Applications.
-                                                              (line  38)
+                                                              (line  45)
 * personal information management:       Personal Information Management.
                                                               (line   6)
 * physical voices:                       Installed Voices And Engines.
@@ -4488,21 +4632,21 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * presentation profiles:                 Presentation Profiles.
                                                               (line   6)
-* privacy, Notmuch speech:               Notmuch Mail.        (line 253)
+* privacy, Notmuch speech:               Notmuch Mail.        (line 247)
 * programming:                           Editing Code.        (line   6)
 * remote terminal trust:                 EAT Terminal Access. (line 385)
 * review mode, Term:                     Reviewing The Term Screen.
                                                               (line   6)
 * review pointer, Term:                  Reviewing The Term Screen.
                                                               (line   6)
-* router completion:                     EAT Terminal Access. (line 167)
-* saved searches, Notmuch:               Notmuch Mail.        (line  39)
+* router completion:                     EAT Terminal Access. (line 184)
+* saved searches, Notmuch:               Notmuch Mail.        (line  36)
 * saving aural settings:                 Saving And Startup.  (line   6)
-* search fields, Notmuch:                Notmuch Mail.        (line 108)
-* search results, asynchronous rendering: Notmuch Mail.       (line  64)
+* search fields, Notmuch:                Notmuch Mail.        (line 110)
+* search results, asynchronous rendering: Notmuch Mail.       (line  63)
 * searching:                             Context-Sensitive Interaction.
                                                               (line  57)
-* shell command status:                  EAT Terminal Access. (line 332)
+* shell command status:                  EAT Terminal Access. (line 335)
 * sound packs:                           Sounds And Space.    (line   6)
 * spatial presentation:                  Sounds And Space.    (line   6)
 * speech access, terminal:               EAT Terminal Access. (line   6)
@@ -4511,28 +4655,28 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * speech settings:                       Speech System.       (line   6)
 * speech streams:                        Aural Speech Output. (line 117)
 * speech system:                         Speech System.       (line   6)
-* starting Notmuch:                      Notmuch Mail.        (line  24)
+* starting Notmuch:                      Notmuch Mail.        (line  23)
 * startup palette:                       Saving And Startup.  (line   6)
-* status cues, Notmuch:                  Notmuch Mail.        (line 253)
+* status cues, Notmuch:                  Notmuch Mail.        (line 247)
 * structured navigation:                 Context-Sensitive Interaction.
                                                               (line  29)
 * structured navigation <1>:             Browsing Structure.  (line   6)
 * tables, OCR:                           Desktop Applications.
-                                                              (line  38)
+                                                              (line  45)
 * tabs:                                  Desktop Management.  (line   6)
-* tags, Notmuch:                         Notmuch Mail.        (line 225)
+* tags, Notmuch:                         Notmuch Mail.        (line 221)
 * Tempo:                                 Structured Editing.  (line   6)
 * Term mode:                             Running Terminal Based Applications.
                                                               (line   6)
 * terminal accessibility:                EAT Terminal Access. (line   6)
 * terminal applications:                 Running Terminal Based Applications.
                                                               (line   6)
-* terminal output, speech policy:        EAT Terminal Access. (line  68)
-* terminal privacy:                      EAT Terminal Access. (line 360)
-* terminal screen review:                EAT Terminal Access. (line 203)
+* terminal output, speech policy:        EAT Terminal Access. (line  72)
+* terminal privacy:                      EAT Terminal Access. (line 363)
+* terminal screen review:                EAT Terminal Access. (line 210)
 * Transient menus:                       Development Environment.
                                                               (line  36)
-* troubleshooting, Notmuch:              Notmuch Mail.        (line 361)
+* troubleshooting, Notmuch:              Notmuch Mail.        (line 371)
 * TTS:                                   Speech System.       (line   6)
 * voice adjustments:                     Editing Named Voices.
                                                               (line   6)
@@ -4544,6 +4688,6 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Voice Workbench:                       Installed Voices And Engines.
                                                               (line   6)
 * Web browsing:                          Web Browsing.        (line   6)
-* widgets, Notmuch Hello:                Notmuch Mail.        (line  39)
+* widgets, Notmuch Hello:                Notmuch Mail.        (line  36)
 * windows:                               Desktop Management.  (line   6)
 * word echo:                             Controlling Echo.    (line   6)
