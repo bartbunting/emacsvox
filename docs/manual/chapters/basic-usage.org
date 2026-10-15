@@ -400,7 +400,7 @@ presentation profiles are intentionally outside this starter chapter.  Use
 live help for the current speech keymap and see [[*Aural Presentation: Speech, Voices, And Sound][Aural Presentation]] when
 you want a complete presentation setup rather than a temporary buffer change.
 
-*** Edit Punctuation Pronunciations
+**** Edit Punctuation Pronunciations
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -438,7 +438,7 @@ apostrophes in Org prose, set both /APOSTROPHE/, U+0027, and
 This also names apostrophes inside contractions. Omnivox 1.15.0 names straight,
 curly and modifier apostrophes at /all/ by default, without a configuration file.
 
-**** Save And Activate Changes
+***** Save And Activate Changes
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -451,7 +451,7 @@ version. The older built-in-only editor service uses version 3, which requires
 Omnivox 1.15.0 or newer. Do not save a file shared with an executable that cannot
 read its format. Named profiles are currently unreleased.
 
-**** Work With Named Profiles
+***** Work With Named Profiles
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:

@@ -14,6 +14,160 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Using Online Help,  Next: Emacs Packages,  Prev: Aural Presentation,  Up: Top
+
+7 Find Help While You Work
+**************************
+
+You do not need to memorize every Emacs or Emacsvox command.  Emacs can
+explain the key you are about to use, the modes active in the current
+buffer, and the commands and variables available in your running
+session.  This live help is usually more reliable than a copied key list
+because it includes installed packages and personal customizations.
+
+   Most help commands begin with the ‘C-h’ prefix.  If you forget what
+can follow it, press ‘C-h C-h’ for ‘help-for-help’.
+
+7.1 Ask About A Key, Command, Or Setting
+========================================
+
+Use the question you have to choose a help command:
+
+   • ‘C-h k’ followed by a key runs ‘describe-key’ and explains the
+     command currently bound to that key.
+
+   • ‘C-h f’ runs ‘describe-function’.  Enter a command or function name
+     to read its complete documentation.
+
+   • ‘C-h v’ runs ‘describe-variable’.  Enter an option name to hear its
+     current value and documentation.
+
+   • ‘C-h w’ runs ‘where-is’ and reports the keys that invoke a command.
+
+   For example, press ‘C-h k C-e l’ to ask what the current-line
+speaking key does.  If you know the command name but not its key, use
+‘C-h w’ and enter that name.
+
+7.2 Discover What The Current Buffer Can Do
+===========================================
+
+Two commands answer most questions about a buffer:
+
+   • ‘C-h m’ runs ‘describe-mode’.  It explains the major mode, active
+     minor modes, and their local commands.
+
+   • ‘C-h b’ runs ‘describe-bindings’.  It lists the effective key
+     bindings after local package maps and personal customizations are
+     applied.
+
+   After opening Dired, EWW, mail, a terminal, or another application,
+start with ‘C-h m’.  Use ‘C-h b’ when you need the exact keys available
+in that particular buffer.
+
+7.3 Read And Leave A Help Window
+================================
+
+Help usually appears in a separate ‘*Help*’ window, and Emacsvox speaks
+the most relevant initial result automatically.  Press ‘C-e h’
+‘emacsvox-speak-help’ to hear the displayed help again.
+
+   To explore the help text directly, press ‘C-x o’ to move to its
+window and use ordinary reading and navigation commands.  Press ‘q’ in
+the Help buffer when you are finished.  If another window is selected
+unexpectedly, ‘C-e C-w’ describes the current window arrangement.
+
+7.4 Learn Interactively And Read Manuals
+========================================
+
+   • ‘C-h t’ opens the interactive Emacs tutorial.  Emacsvox speaks the
+     tutorial and your navigation as you work through it.
+
+   • ‘C-h i’ opens Info, the manual reader used by Emacs and Emacsvox.
+     Press ‘d’ for the Info directory, then ‘m’ and enter ‘Emacsvox’ to
+     open this manual.
+
+   • ‘C-h C-l’ runs ‘emacsvox-learn-emacs’, a learning loop that speaks
+     the function of each key you press.  Leave the loop with ‘C-g’.
+
+   See the Emacs manual's help and Info chapters when you want to search
+manuals, follow cross-references, or keep a help buffer for later.
+
+7.5 Emacsvox-Specific Help
+==========================
+
+   • ‘C-h C-e’ ‘emacsvox-describe-emacsvox’ opens a concise Emacsvox
+     overview.
+
+   • ‘C-e N’ ‘emacsvox-view-emacsvox-news’ opens versioned project news,
+     while ‘C-e T’ ‘emacsvox-view-emacsvox-tips’ opens productivity
+     tips.
+
+   • ‘C-e H’ ‘emacsvox-aural-menu’ opens the experimental Emacsvox menu.
+     Press ‘s’ then ‘i’ for Indentation, ‘x’ for Feedback for this item,
+     or ‘h’ for all Aural Home actions.  ‘M-x emacsvox-aural’ opens
+     Aural Home directly.
+
+   • ‘C-e E’ ‘emacsvox-aural-explain-presentation’ explains why the
+     object at point received its voices, sounds, and other auditory
+     actions.
+
+   The generated *note Emacsvox Keymaps: (emacsvox-reference)Emacsvox
+Keymaps. in _Emacsvox Reference Manual_ records all default Emacsvox
+bindings.  Prefer ‘C-h k’, ‘C-h m’, and ‘C-h b’ when a running package
+or customization changes those defaults.
+
+
+File: emacsvox.info,  Node: Emacs Packages,  Next: Notmuch Mail,  Prev: Using Online Help,  Up: Top
+
+8 Applications And Integrations
+*******************************
+
+Emacsvox prepares speech support for many Emacs modes as their libraries
+are loaded.  Start the application normally; when its buffer appears,
+use ‘C-h m’ for the active modes and their commands, ‘C-h b’ for the
+effective bindings, and ‘C-h k’ followed by a key to identify one
+binding.  The generated *note Emacsvox Commands And Options:
+(emacsvox-reference)Emacsvox Commands And Options. in _Emacsvox
+Reference Manual_ records the public Emacsvox commands and options.
+
+   This chapter is a curated starting point, not a promise that every
+module in the generated reference has a maintained task guide.  Emacs
+itself or a third-party package provides the application's general
+operation; Emacsvox adds the speech feedback.  Consult both sets of help
+when diagnosing a problem.
+
+   Earlier Emacspeak surveys, including their W3, Dismal, and
+scanner/OCR setup, are preserved as historical material in *note
+Historical Application Survey: (emacsvox-heritage)Emacs Packages. in
+_Emacspeak Heritage_.  They are not current setup instructions.
+
+* Menu:
+
+* Document Authoring::
+* Structured Editing::
+* Browsing Structure::
+* Web Browsing::
+* Messaging::
+* Editing Code::
+* Development Environment::
+* Desktop Management::
+* Personal Information Management::
+* Desktop Applications::
+
+
+File: emacsvox.info,  Node: Document Authoring,  Next: Structured Editing,  Up: Emacs Packages
+
+8.1 Document Authoring
+======================
+
+Emacs major modes provide the editing commands for each document format.
+Emacsvox speaks ordinary movement and editing, applies voice-lock where
+the mode exposes useful faces, and adds mode-specific feedback where an
+integration exists.  Open or create the document in its normal Emacs
+mode, then use ‘C-h m’ to discover that mode's workflow.  For outlines
+and templates, see *note Structured Editing: Structured Editing.
+
+
 File: emacsvox.info,  Node: Structured Editing,  Next: Browsing Structure,  Prev: Document Authoring,  Up: Emacs Packages
 
 8.2 Structured Editing And Templates
@@ -897,17 +1051,20 @@ File: emacsvox.info,  Node: Agent Shell,  Next: EAT Terminal Access,  Prev: Notm
 10 Agent Shell
 **************
 
-Agent Shell is a separately installed Emacs package for interactive
-AI-agent sessions.  Emacsvox adds speech and semantic presentation
-without replacing Agent Shell's provider setup, session management,
-prompt editor, or permission controls.  See Agent Shell
-(https://github.com/xenodium/agent-shell) for provider installation and
-configuration.  Emacsvox requires Agent Shell 0.85.3 or newer.
+Agent Shell is an Emacs package for interactive AI-agent sessions.
+Emacsvox adds speech and structured navigation to its prompts,
+responses, permissions, and other activity.  Agent Shell remains
+responsible for providers, sessions, prompt editing, and permission
+decisions.  Install and configure Agent Shell using its own
+documentation (https://github.com/xenodium/agent-shell); Emacsvox
+requires version 0.85.3 or newer.
 
-   The generated *note emacsvox-agent-shell:
-(emacsvox-reference)emacsvox-agent-shell. in _Emacsvox Reference Manual_
-section is the exhaustive Emacsvox command and option reference.  This
-chapter follows the tasks a user performs in a session.
+   This chapter follows a session from writing a prompt through
+receiving and reviewing an answer, then explains speech choices and
+recovery.  The generated *note emacsvox-agent-shell:
+(emacsvox-reference)emacsvox-agent-shell. section in the _Emacsvox
+Reference Manual_ lists the complete Emacsvox command and option
+interfaces.
 
 10.1 Start and control a session
 ================================
@@ -918,13 +1075,16 @@ already existing shell buffers.  Run ‘M-x emacsvox-agent-shell-enable’
 only when manually re-enabling support after it was disabled or while
 diagnosing a live reload.
 
-   Compose and submit prompts with Agent Shell's normal editing
-commands.  The live prompt retains Emacs undo.  Interactive text yanks
-speak the inserted text, including when a prefix argument selects a
-different kill-ring entry.  Image attachment keeps Agent Shell's
-existing feedback.  Submitted transcript text is history rather than
-editable prompt input.  Press ‘C-c C-c’ to ask Agent Shell to interrupt
-an active request; its normal confirmation setting still applies.
+10.1.1 Write and edit prompts
+-----------------------------
+
+Compose and submit prompts with Agent Shell's normal editing commands.
+The live prompt retains Emacs undo.  Interactive text yanks speak the
+inserted text, including when a prefix argument selects a different
+kill-ring entry.  Image attachment keeps Agent Shell's existing
+feedback.  Submitted transcript text is history rather than editable
+prompt input.  Press ‘C-c C-c’ to ask Agent Shell to interrupt an active
+request; its normal confirmation setting still applies.
 
    With Agent Shell's persistent prompt enabled, you can keep typing
 while the agent works.  Brackets and navigation letters remain ordinary
@@ -944,17 +1104,25 @@ supports native clipboard access.  Image previews survive queueing and
 steering.  The animated busy marker does not add repeated speech;
 reading the prompt continues to give its current state.
 
+   In the viewport prompt editor, continuing a list announces its bullet
+or next number and indentation.  Indenting and dedenting announce the
+new indentation; leaving an empty list item announces that the list
+ended.
+
+10.1.2 Follow a response and steer a running turn
+-------------------------------------------------
+
+Emacsvox speaks routine content only at complete turn boundaries.  A
+network pause does not make a partial answer sound complete.  A
+cancelled, refused, or failed turn reports its outcome without replacing
+the last successfully completed response.
+
    In the viewport editor, Emacsvox announces whether a prompt was
 submitted, queued, or sent for steering, and whether the editor stays
 open.  The normal and override send commands follow Agent Shell's
 configured busy routes, including queueing when the provider does not
 support steering.  “Steering sent” confirms dispatch; the agent's
 acceptance or refusal follows separately.
-
-   Emacsvox speaks routine content only at complete turn boundaries.  A
-network pause does not make a partial answer sound complete.  A
-cancelled, refused, or failed turn reports its outcome without replacing
-the last successfully completed response.
 
    When you use ‘M-x agent-shell-prompt-steer’, Emacsvox confirms
 whether the agent accepted the steer, declined it, or started a separate
@@ -963,7 +1131,10 @@ reported as complete until Agent Shell supplies a completion boundary.
 Server-pushed turns, when supported by the provider, follow the same
 completed-response speech policy.
 
-   Queued prompts announce when they start and how many remain.  Recent
+10.1.3 Work with queued prompts
+-------------------------------
+
+Queued prompts announce when they start and how many remain.  Recent
 Agent Shell versions merge queued prompts into one turn by default;
 Emacsvox announces how many prompts started together.  Set
 ‘agent-shell-prompt-queue-merge’ to nil to send them one turn at a time.
@@ -976,13 +1147,13 @@ session's speech level; paused-queue warnings follow
 killing a shell or exiting Emacs when queued prompts would be lost.
 Declining that question keeps the prompts available.
 
-   Model, mode, thought-level, and other session setting changes
-announce their confirmed values.  Background setting announcements
-identify the session.  When grouped choices share a name, confirmation
-includes the group shown by Agent Shell's completion menu.  In the
-viewport prompt editor, continuing a list announces its bullet or next
-number and indentation.  Indenting and dedenting announce the new
-indentation; leaving an empty list item announces that the list ended.
+10.1.4 Check session settings and status
+----------------------------------------
+
+Model, mode, thought-level, and other session setting changes announce
+their confirmed values.  Background setting announcements identify the
+session.  When grouped choices share a name, confirmation includes the
+group shown by Agent Shell's completion menu.
 
    Use ‘M-x emacsvox-agent-shell-speak-header’ to hear the full session
 header.  When ‘agent-shell-show-cost-indicator’ is enabled and the
@@ -993,8 +1164,9 @@ a session stay concise.
 10.2 Answer an agent's question
 ===============================
 
-Agent Shell has experimental support for structured question forms.  It
-is off by default.  To try it, set
+Some providers ask you to complete a structured form rather than answer
+in ordinary prompt text.  Agent Shell's form support is experimental and
+off by default.  To try it, set
 ‘agent-shell-elicitation--experimental-feature-enabled’ to non-nil after
 loading Agent Shell and start a new session so the agent learns that
 forms are supported.  This upstream experimental setting may change.
@@ -1051,15 +1223,18 @@ the shared background default.  ‘M-x
 emacsvox-agent-shell-cycle-speech-level’ cycles toward less routine
 speech; use a prefix argument to restore ‘auto’.
 
-   Press ‘C-e S’ in a shell or its viewport for focused Emacsvox
-settings.  The same menu is available through ‘C-e H j c’ and the
-integration chooser.  ‘s’ opens choices for the temporary session
-override.  ‘f’ and ‘b’ open foreground and background defaults; ‘t’ and
-‘o’ open thought and tool-output choices.  Each list starts on the
-current value and explains what the choices do.  Browse with arrows,
-press Enter to apply and return, or ‘q’ to cancel.  Press ‘?’ followed
-by a choice's key for spoken Help about its effect and scope; ‘q’
-returns from Help.  ‘? ?’ opens the menu overview.
+10.3.1 Adjust speech in the settings menu
+-----------------------------------------
+
+Press ‘C-e S’ in a shell or its viewport for focused Emacsvox settings.
+The same menu is available through ‘C-e H j c’ and the integration
+chooser.  ‘s’ opens choices for the temporary session override.  ‘f’ and
+‘b’ open foreground and background defaults; ‘t’ and ‘o’ open thought
+and tool-output choices.  Each list starts on the current value and
+explains what the choices do.  Browse with arrows, press Enter to apply
+and return, or ‘q’ to cancel.  Press ‘?’ followed by a choice's key for
+spoken Help about its effect and scope; ‘q’ returns from Help.  ‘? ?’
+opens the menu overview.
 
    The ‘p’, ‘c’ and ‘l’ controls toggle permission speech, tool-call
 announcements and processing cues.  Thought and tool content still
@@ -1089,16 +1264,19 @@ cues as tools start and finish.  Tool updates, steering outcomes, queue
 changes, and confirmed setting changes use the notification lane,
 leaving navigation speech independent.
 
-   Automatic response, tool, error, permission, and similar text is
-limited by ‘emacsvox-agent-shell-automatic-content-max-characters’,
-which defaults to 2,000 characters.  A shortened presentation gives
-exact omitted character and line counts and tells you where to inspect
-the full content.  The complete text rendered by Agent Shell stays in
-its buffer; this speech limit is applied before Aural compiles the
-automatic speech copy.  Agent Shell separately shortens tool output
-lines longer than 32,768 characters, keeping their beginning and end
-with an omitted-character count.  Full tool speech reads that notice;
-the removed middle is not available by reading the buffer.
+10.3.2 Understand automatic speech limits
+-----------------------------------------
+
+Automatic response, tool, error, permission, and similar text is limited
+by ‘emacsvox-agent-shell-automatic-content-max-characters’, which
+defaults to 2,000 characters.  A shortened presentation gives exact
+omitted character and line counts and tells you where to inspect the
+full content.  The complete text rendered by Agent Shell stays in its
+buffer; this speech limit is applied before Aural compiles the automatic
+speech copy.  Agent Shell separately shortens tool output lines longer
+than 32,768 characters, keeping their beginning and end with an
+omitted-character count.  Full tool speech reads that notice; the
+removed middle is not available by reading the buffer.
 
 10.4 Respond to urgent permissions
 ==================================
@@ -1231,10 +1409,12 @@ then:
 automatic content limit.  Ordinary line navigation retains its separate
 bounded speech policy.
 
-   Opening an Agent Shell change review announces its file and hunk
-counts and, for a single file, its name.  The normal Diff Mode hunk
-navigation remains available; opening the review does not accept or
-reject changes.
+10.7.1 Review proposed changes
+------------------------------
+
+Opening an Agent Shell change review announces its file and hunk counts
+and, for a single file, its name.  The normal Diff Mode hunk navigation
+remains available; opening the review does not accept or reject changes.
 
    These interactions expose semantic events and attributes to Aural.
 You can customize speech, voices, and earcons for steering outcomes,
@@ -1244,8 +1424,9 @@ change-review entry.
 10.8 Navigate and copy rendered tables
 ======================================
 
-Moving into a rendered Markdown table activates a contextual table map.
-It announces the table dimensions and current cell.  Leaving the table
+Agent Shell gives rendered Markdown tables their own navigation
+commands.  Moving into a table activates a contextual table map.  It
+announces the table dimensions and current cell.  Leaving the table
 restores the ordinary Agent Shell keys.  Markdown and Org source buffers
 offer explicit table reading with matching logical operations; see *note
 Browsing Structure: Browsing Structure.  Agent Shell retains its own
@@ -1272,7 +1453,10 @@ destination table and cell.  Like the bracket navigation keys, they
 insert themselves in a live prompt or viewport editor, including while
 the agent is working.
 
-   In viewport view mode, ‘t’ takes the place of Agent Shell's
+10.8.1 Understand table key conflicts
+-------------------------------------
+
+In viewport view mode, ‘t’ takes the place of Agent Shell's
 thought-level shortcut; use ‘M-x
 agent-shell-viewport-set-session-thought-level’ for that action.  Inside
 a table, ‘r’, ‘c’, and ‘a’ read rows, read columns, and select the table
@@ -1295,6 +1479,9 @@ borders and keep the cell text.  Decorative borders therefore do not
 force a switch to a different speech engine.  Literal box-drawing
 characters in prose or code remain available to symbol naming and exact
 character inspection.
+
+10.8.2 Table command reference
+------------------------------
 
 ‘t’
      Run ‘emacsvox-agent-shell-next-table’ outside editable input.
@@ -4211,16 +4398,16 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * attachments, Notmuch:                  Notmuch Mail.        (line 153)
 * Audio Desktop:                         Audio Desktop.       (line   6)
 * audio formatting:                      Context-Sensitive Interaction.
-                                                              (line  14)
+                                                              (line  15)
 * Aural Doctor:                          Presentation Troubleshooting.
                                                               (line   6)
 * Aural history, mail privacy:           Notmuch Mail.        (line 314)
-* Aural Home:                            Aural Home.          (line   6)
+* Aural Home:                            Aural Home.          (line   5)
 * Aural Presentation:                    Aural Presentation.  (line   6)
 * automatic speech limits, Notmuch:      Notmuch Mail.        (line 253)
 * automatic speech, Term:                Term Speech Feedback.
                                                               (line   6)
-* buffer cycling:                        Desktop Objects.     (line  36)
+* buffer cycling:                        Desktop Objects.     (line  33)
 * buffers:                               Desktop Objects.     (line   6)
 * buffers <1>:                           Desktop Management.  (line   6)
 * byte-code, Notmuch integration:        Notmuch Mail.        (line 361)
@@ -4234,7 +4421,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Corfu, EAT:                            EAT Terminal Access. (line  21)
 * curses applications, EAT:              EAT Terminal Access. (line 421)
 * desktop navigation:                    Context-Sensitive Interaction.
-                                                              (line  42)
+                                                              (line  43)
 * development tools:                     Development Environment.
                                                               (line   6)
 * document authoring:                    Document Authoring.  (line   6)
@@ -4253,7 +4440,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * fields, Notmuch speech:                Notmuch Mail.        (line 253)
 * finding:                               Context-Sensitive Interaction.
-                                                              (line  56)
+                                                              (line  57)
 * Forms mode:                            Desktop Applications.
                                                               (line  27)
 * frozen EAT review:                     EAT Terminal Access. (line 238)
@@ -4271,7 +4458,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * MIME parts, Notmuch:                   Notmuch Mail.        (line 153)
 * minor modes:                           Object Oriented Desktop.
                                                               (line   6)
-* notification stream:                   Aural Speech Output. (line  13)
+* notification stream:                   Aural Speech Output. (line 117)
 * notification stream, Notmuch:          Notmuch Mail.        (line  64)
 * Notmuch Hello:                         Notmuch Mail.        (line  24)
 * Notmuch mail:                          Notmuch Mail.        (line   6)
@@ -4314,7 +4501,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * search fields, Notmuch:                Notmuch Mail.        (line 108)
 * search results, asynchronous rendering: Notmuch Mail.       (line  64)
 * searching:                             Context-Sensitive Interaction.
-                                                              (line  56)
+                                                              (line  57)
 * shell command status:                  EAT Terminal Access. (line 332)
 * sound packs:                           Sounds And Space.    (line   6)
 * spatial presentation:                  Sounds And Space.    (line   6)
@@ -4322,13 +4509,13 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * speech engine preference:              Installed Voices And Engines.
                                                               (line   6)
 * speech settings:                       Speech System.       (line   6)
-* speech streams:                        Aural Speech Output. (line  13)
+* speech streams:                        Aural Speech Output. (line 117)
 * speech system:                         Speech System.       (line   6)
 * starting Notmuch:                      Notmuch Mail.        (line  24)
 * startup palette:                       Saving And Startup.  (line   6)
 * status cues, Notmuch:                  Notmuch Mail.        (line 253)
 * structured navigation:                 Context-Sensitive Interaction.
-                                                              (line  28)
+                                                              (line  29)
 * structured navigation <1>:             Browsing Structure.  (line   6)
 * tables, OCR:                           Desktop Applications.
                                                               (line  38)

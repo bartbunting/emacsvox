@@ -7,65 +7,120 @@
 
 #+cindex: Aural Presentation
 
-Aural Presentation is the Emacsvox system that decides /how/ information and
-events should be heard.  It can combine spoken text, voice changes, auditory
-icons, tones, pauses, and spatial cues in one ordered presentation.  The speech
-server delivers that result; it does not decide what a heading, unread message,
-completed command, warning, or other object means.
+Aural Presentation determines how Emacsvox conveys information through speech,
+voices, auditory icons, tones, pauses, and spatial cues. An application supplies
+the meaning of a heading, unread message, completed command, or warning;
+presentation rules choose how to express it. The speech server delivers that
+result using the voices and output capabilities available on your machine.
 
-You do not need to configure Aural Presentation before using Emacsvox.  The
-built-in baseline and application integrations provide useful defaults.  When
-you do want a change, start from the object you heard and use Aural Home rather
-than editing configuration data by hand:
+The built-in settings provide a starting point. To change something, begin
+with the item you heard rather than editing configuration data by hand.
+~C-e E~ explains its presentation. ~C-e H~ opens the Emacsvox settings menu;
+~C-e H h~ opens Aural Home and its full action catalogue. These are different
+interfaces to the same settings and editors, with different navigation keys.
 
-#+attr_texinfo: :indic kbd :compact t
-- C-e H ::
+Start with the listening exercise below. The following sections explain the
+presentation model, feedback rules, named voices, installed engines, sounds,
+output settings, and saved setups. Detailed menu instructions appear beside
+the task they perform rather than in the introductory tour.
 
-  Open the experimental Emacsvox menu. Press ~s~ for Speech settings, then
-  ~i~ for Indentation. Press ~x~ for Feedback for this item, or ~h~ for
-  Aural Home and its complete set of actions.
-
-- C-e E ::
-
-  Explain why the object at point received its voices, sounds, and other
-  actions.
-
-This chapter starts with a short listening task, then explains how to change
-feedback and manage voices, sounds, and saved setups. You can follow it in
-order or open a task directly from its Info menu. In an Aural interface,
-~C-c C-i~ opens the relevant manual topic;
-~q~ in Info returns to the interface. In interface Help,
-~i~ opens the same topic.
+In an Aural interface, ~C-c C-i~ opens the relevant manual topic and ~q~ in
+Info returns to the interface. In interface Help, ~i~ opens the same topic.
 
 ** Getting Started With Aural Home
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Aural Home
-:ALT_TITLE: Aural Home
-:DESCRIPTION: Navigate the spoken presentation control center.
+:ALT_TITLE: Getting started with menus and Aural Home
+:DESCRIPTION: Try a voice, navigate the settings menus, and use Aural Home.
 :END:
 
 #+cindex: Aural Home
 
+*** Listen without changing settings
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+This first exercise previews an installed voice. Browsing and previewing save
+no settings.
+
+1. Press ~C-e H h~, then ~/~, and choose /Browse voices/ from Aural Home's
+   searchable actions.
+2. Select an available engine and press ~v~ to list its voices. ~RET~ on an
+   Omnivox engine opens its status, downloads, and settings instead.
+3. Move to a voice and press ~P~ to hear a sample. ~S~ stops it.
+4. Press ~h~ to return to Home. From Home, ~C-c C-o~ returns to the item
+   where you started.
+
+If an engine is unavailable, its details explain why; try another available
+engine. If no speech is available, start with
+[[info:emacsvox#Recovering From No Speech][Recovering From No Speech]].
+
+*** Choose an entry point and preserve your place
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The experimental Emacsvox menu, opened with ~C-e H~, groups everyday settings
+by task. Aural Home remains available with ~C-e H h~ or
+~M-x emacsvox-aural~. Editors that already return through ~h~ continue to
+use that Home.
+
+Use ~C-e S~ for direct access to the current buffer's focused Emacsvox
+settings. When no focused integration menu is available, it opens general
+buffer settings. The buffer is captured on entry. ~q~ closes the directly
+opened menu and announces the restored buffer and mode with a close earcon.
+~C-e H~ remains the general entry; ~C-e H .~ always opens general buffer
+settings.
+
+The menu captures the source item for ~x~ and ~h~. In Feedback Details,
+~q~ returns to the menu with the same item and settings scope; another ~q~
+closes the menu. Opening Feedback Details directly keeps its usual return
+destination. A changed or deleted source item must be selected again by
+reopening the menu. If the source buffer has closed, the menu cannot resume.
+
+Aural Home likewise remembers the source buffer and opening position.
+Contextual actions such as explanation and remapping operate on that item;
+moving the source cursor while Home is open does not select a new target.
+~C-c C-o~ in Home returns to the captured position. To choose another item,
+open ~C-e H h~ afresh from it in an ordinary buffer.
+
+*** Navigate menus and read Help
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 The experimental menu uses Transient. Up/down moves through choices,
 left/right moves between sections, and ~RET~ activates the selected choice.
-~M-RET~ and ~C-j~ also activate choices.
-You can also press its shortcut directly. ~q~ or ~C-g~ goes back one menu;
-~C-q~ closes the menu sequence. Changes already made remain in effect.
+~M-RET~ and ~C-j~ also activate choices. You can press a choice's shortcut
+directly. ~q~ or ~C-g~ goes back one menu; ~C-q~ closes the menu sequence.
+Changes already made remain in effect.
+
 Menu feedback interrupts previous main-stream speech, including when you
 toggle scope or change a setting. Item announcements include the key without
-repeating the word "shortcut" or the section name. Section names are spoken
-when you enter a section under the default announcement mode. Left/right lands
-on its first selectable item and normally speaks it with the section name
-and position.
+repeating the word "shortcut" or the section name. Under the default
+announcement mode, section names are spoken when you enter a section.
+Left/right selects its first selectable item and normally speaks it with the
+section name and position.
+
+For menu Help, press ~?~ followed by a choice's key, or ~? ?~ for help on
+the current menu. ~q~ in Help resumes that menu, including its parent menus.
+
+**** Choose navigation and announcement preferences
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 Press ~C-e H s n~ for Menu navigation. Choose ~c~ for Continuous, which
 crosses sections and wraps around the whole menu; ~w~ to wrap within the
 current section; or ~s~ to stop at section edges with a boundary earcon.
 Left/right moves between sections in every style. Changes apply immediately
 to all Transient menus, independently of the current-buffer settings scope.
-Wrap within section is the default. In the Presentation section, choose ~i~
-for Item first or ~n~ for Section first. Item first is the default; Section
-first speaks the section name and position before the item.
+Wrap within section is the default.
+
+In the Presentation section, choose ~i~ for Item first or ~n~ for Section
+first. Item first is the default; Section first speaks the section name and
+position before the item.
 
 Choose ~m~ for /By movement: sections or items/. Left/right speaks only the
 destination section and its position. Up/down speaks only the item, key, and
@@ -87,364 +142,62 @@ descriptions are on by default. Value adjustments still give brief feedback.
 Press ~S~ to save the navigation style, presentation order, and descriptions
 preference through Customize.
 
+*** Find a setting or an action
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 Press ~C-e H /~ to find an Emacsvox setting by any part of its name, ignoring
-capitalization. Type ~cap~ to find /Capitalization indication and camel case/,
+capitalisation. Type ~cap~ to find /Capitalization indication and camel case/,
 /Capital-letter beep/, and /All-caps beep/. The aliases ~caps beep~ and
-~allcaps~ find both beep controls and just /All-caps beep/, respectively.
+~allcaps~ find both beep controls and only /All-caps beep/, respectively.
 Each result appears once under its normal name. Use completion to choose a
 result; ambiguous text does not choose one automatically. These matching rules
 apply to this search without changing completion elsewhere in Emacs.
-Enter accepts the choice, opens its menu, and selects the matching control
-without changing its value. Press Enter again to activate or edit the control.
-The captured source and current settings scope follow the search.
-~q~ returns to the menu where you searched, and cancelling completion keeps
-that menu open.
 
-Press ~C-e H a~ to search the existing Home action catalogue, including actions
-inside collapsed groups. Child views use their normal return paths; ~q~ from
-Home returns to the originating menu. Press ~C-e H .~ for settings relevant to
-the captured buffer: speech, indentation, typing/point feedback, capitalization,
-and its major mode's Customize group when available. This entry starts with
-buffer scope without changing the parent's scope. ~A~ opens the advanced
-Emacsvox Customize group. In these linked Customize buffers, ~q~ finishes
-Customize normally and returns to the menu; use Customize's own Apply and Save
-commands. Integration speech settings are described below.
+~RET~ accepts the choice, opens its menu, and selects the matching control
+without changing its value. Press ~RET~ again to activate or edit the control.
+The captured source and current settings scope follow the search. ~q~ returns
+to the menu where you searched, and cancelling completion keeps that menu open.
 
-Press ~C-e H f~ for current and recent feedback editing. ~x~ explains the
-captured item's effective presentation; ~c~ opens a guided voice, cue, or tone
-draft, ~v~ prepares a voice mapping, and ~e~ prepares a cue remap. The existing
-editors retain their preview, matching criteria, scope, and explicit Apply/Save
-steps. ~h~ opens recent feedback, where changes use the selected frozen record.
-Returning from an editor restores its menu entry. Guided drafts remain available
-through unfinished drafts; the rule editor retains its existing discard prompt
-when you leave a modified rule list. Replaced source items are rejected.
+Press ~C-e H a~ to search the Home action catalogue, including actions inside
+collapsed groups. Child views use their normal return paths; ~q~ from Home
+returns to the originating menu. This action search is distinct from the
+settings search on ~C-e H /~. Within Aural Home itself, ~/~ searches actions.
 
-Use =C-e H r= for Presentation Options and personal, session, or captured-buffer
-rule editors. Their existing validation, preview, save, and discard prompts stay
-in the editor. The menu also toggles global visual-face presentation; =w= saves
-only that toggle through Customize. Voice Lock remains independent.
+Press ~C-e H .~ for settings relevant to the captured buffer: speech,
+indentation, typing/point feedback, capitalisation, and its major mode's
+Customize group when available. This entry starts with buffer scope without
+changing the parent's scope. ~A~ opens the advanced Emacsvox Customize group.
+In these linked Customize buffers, ~q~ finishes Customize normally and returns
+to the menu; use Customize's own Apply and Save commands. See
+[[Integration speech settings][Adjust an integration's speech settings]] for application-specific controls.
 
-Use =C-e H p= for saved presentation profiles, voice palettes, and unfinished
-changes. Profile inspection explains what a setup captures before activation.
-The palette manager retains its inheritance and reset commands: =w= exports
-portable voices, =W= makes a full local backup, and =i= imports an independent
-palette. Import does not activate it. The drafts entry opens Home on Resume
-unfinished changes; press Enter to choose a retained editor. Return through
-Home to the same menu entry. Each editor keeps its own Save and Apply actions.
+*** Navigate Aural Home and its editors
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-Use =C-e H j= for integration speech settings, or =C-e H . j= from current-buffer
-settings. =s= invokes the existing local Agent Shell session-level chooser or
-EAT/comint autospeak control. =c= opens the source integration's settings;
-=a= chooses among Shell/comint and installed Agent Shell, EAT, Org, Notmuch,
-and EWW integrations. Cancel the chooser to return to its menu entry.
+Aural Home begins with six task groups in one spoken table. Press ~RET~ or
+~TAB~ to expand or collapse a group. Each action names a destination, reports
+its current status, and describes its purpose. ~/~ searches all actions,
+including collapsed groups; the matching group opens with the destination
+selected.
 
-Use =C-e S= for direct access to the current buffer's focused Emacsvox settings.
-When no focused integration menu is available, it opens general buffer settings.
-The buffer is captured on entry. =q= closes the directly opened menu and
-announces the restored buffer and mode with a close earcon.
-=C-e H= remains the general entry; =C-e H .= always opens general buffer settings.
-
-From a shell or Comint buffer, =C-e H j c= opens a focused Transient. =s= toggles
-automatic output speech; =b= toggles background monitoring, which needs automatic
-speech enabled to read output while you are elsewhere. Arrows announce the
-current values and Enter activates the selected control. Both changes affect
-only the captured buffer and last for that buffer's lifetime; there is no Save
-action. =q= returns to the entry you opened it from. You can also find these
-controls with =C-e H /= by searching for =comint= or =monitoring=.
-
-Choosing Shell/comint from another kind of buffer explains where to open the
-controls and leaves them unavailable.
-
-From EAT, =C-e H j c= opens its terminal settings: =s= toggles foreground speech,
-=b= toggles background cues and unread counts, =p= opens prompt-feedback choices,
-and =d= opens automatic-feedback detail choices. Each list starts on the current
-value: arrows browse, Enter applies and returns, and =q= cancels. Changes are local to the captured
-terminal, including when opened from its frozen review. =w= explicitly saves
-the four values as defaults; other terminals without local overrides inherit
-them. =A= opens advanced EAT Customize settings, and =q= returns to the menu.
-Search with =C-e H /= also finds each EAT control. See
-[[info:emacsvox#EAT Terminal Access][EAT Terminal Access]] for prompt requirements and feedback policies.
-
-Agent Shell also has a focused menu for session speech, global feedback defaults
-and reading limits; =w= saves only its displayed global defaults. See
-[[info:emacsvox#Agent Shell][Agent Shell]] for its controls.
-
-Org opens a table-feedback Transient: =c= opens explained choices for cell,
-header, and combined feedback; =w= saves that global default. Column headers
-come from the first row, and row headers from the first column. Buffer-local
-settings take precedence. =t= opens Org's structured table options in Customize
-and =A= opens advanced Emacsvox Org settings. Both return with =q=.
-
-EWW opens a focused menu: =s= toggles section-navigation autospeak and =i=
-toggles image suppression for subsequent rendering. It also updates the shared
-SHR image default, preserving buffer-local overrides. It does not reload the
-current page. =w= saves the two Emacsvox defaults and =A= opens advanced settings.
-
-Notmuch opens the same focused menu from its welcome, search, message and tree
-views. =c= opens explained choices for adaptive, count-only, cue-only and silent
-successful-search feedback; failures remain audible. =f= and =b= set per-field
-character and UTF-8 byte limits; =t= and =B= set total limits. Shift-left/right adjusts the selected
-limit by 100; Enter accepts an exact positive integer or =none= to disable that
-limit. Other limits still apply. =w= saves these five displayed global defaults.
-
-In both choice lists, the current global value is selected on entry. Arrows
-browse without applying, Enter applies and returns, and =q= cancels. Press =?=
-followed by a choice's key for spoken Help about its effect and scope. Return
-with =q=; the browsed choice remains selected, so Enter still targets that item.
-
-In Notmuch, =s= and =m= open ordered search/message field lists; =i= and =I=
-open their status-tag and fallback-cue maps. These Customize editors preserve
-custom formatter functions and use their own Apply, Save and Reset actions.
-=p= opens Presentation Options: when =mail-message-status-cues= is enabled,
-its rules own the standard status cues while the maps still suppress spoken
-status tags. =A= opens advanced settings, including field separators. Return
-from each editor with =q=. Opening or returning does not save changes.
-Integrations without an inventoried entry remain reachable through major-mode
-settings and advanced Customize.
-
-The named-voice editor's =m= tuning menu now works for shared and individual
-fallback adjustments. =f= selects an existing fallback, =h= returns to shared
-settings, and the title identifies the scope. Shift-left/right adjusts the
-focused value. For an individual fallback, =i= uses the shared value, =d= asks
-for the adapter default, and zero is an explicit adjustment. Play and Compare
-use that selected scope. =e= opens the existing engine-specific editor, which
-waits for a qualified runtime catalogue before allowing changes. Its =q= returns
-to the common editor; =m= reopens focused tuning with the same draft and scope.
-
-Use =C-e H d= to review changed settings and retained drafts. The read-only table
-separates the captured buffer's current value, the current global default, and
-the saved startup value known to Customize. It includes loaded Emacsvox, TTS,
-and Omnivox options that are saved, locally overridden, or differ from their
-standard value. Saved expressions are shown as recorded by Customize. Enter
-reads the complete row with its scopes; =g= refreshes and =q= returns.
-
-Unfinished editor and cue drafts appear separately. Voice, rule, and host
-pronunciation stores retain their own save/apply rules. This snapshot does not
-reread disk files, query the speech host, prove that a saved setting is active,
-or include options from integrations that have not loaded. Return to the owning
-settings menu or editor to change a value, save it, or apply a required restart.
-
-Speech settings opens for the current buffer. Press ~g~ there to switch to
-global defaults, or start with ~C-u C-e H~. Indentation shares this scope with
-its parent menus, including changes made with ~g~ inside Indentation.
-~C-e d I~ still opens Indentation directly. Saving global indentation defaults
-uses its ~S~ command through Customize; opening or closing a menu saves nothing.
-In Indentation, select /Volume/ with the arrows and use Shift-left/right to
-adjust it by five percentage points. Plain left/right still changes sections.
-~RET~ edits the value directly, and ~SPC~ previews the indentation settings.
-Other items give brief guidance when you try to adjust them with shifted arrows.
-
-Press ~t~ in Indentation for pitch-tone settings. Choose base pitch, rise per
-column, maximum pitch, or requested duration; Shift-left/right adjusts and
-~RET~ enters an exact value. Space previews four-column pitch feedback without
-changing the selected presentation or enabling indentation. ~s~ stops speech.
-Short durations show the effective blank-line tone minimum. ~R~ restores the
-four bundled values in the displayed scope. Global changes preserve local
-overrides; ~S~ saves global indentation defaults and tone volume through
-Customize. ~q~ returns with changes intact.
-
-In Speech settings, select /Rate/ and use Shift-left/right to adjust it by
-the configured rate step. ~RET~ or ~r~ enters an exact value. Speech must be
-running; Omnivox uses a 0 to 100 scale. Global changes also update the current
-buffer. Press ~p~ for punctuation: ~n~ selects none, ~s~ some, ~a~ all, and ~p~
-offers built-in levels and available named profiles. In current-buffer scope,
-~r~ restores automatic punctuation policy. ~q~ returns to Speech settings.
-Press ~e~ in Punctuation for the pronunciation editor. Its ~q~ returns to the
-same menu item, keeping unfinished drafts and the selected character. Reopening
-resumes that draft. The editor's ~s~ saves pronunciation overrides on the speech
-host; ~r~ explicitly restarts speech after confirmation. The menu's ~S~ still
-saves only the selected punctuation level/profile through Customize.
-
-Press ~S~ in Speech settings to save the displayed rate and punctuation as
-defaults across restarts. The rate uses the current backend's startup option.
-Inside Punctuation, ~S~ saves only the displayed punctuation choice. Saving
-from current-buffer scope promotes those displayed values to defaults.
-Mode-specific punctuation policies and explicit buffer overrides still take
-precedence over the saved punctuation default.
-
-Press ~C-e H s c~ for /Capitalization/. Toggle indication with ~i~, choose
-spoken, tone, combined, personal-rule, or no presentation with ~p~, and toggle
-camel-case splitting independently with ~c~. These controls share the
-buffer/global scope selected by ~g~. Space reads a short sample using the
-displayed settings. ~S~ saves those three reading settings as startup defaults;
-buffer overrides still apply.
-
-Press ~C-e H s t~ for /Typing and interaction/. Character, word, and completed-line
-echo, point indication and presentation, and spoken messages share the
-buffer/global scope. Global changes also update the originating buffer.
-Delayed phonetics after character navigation and its delay are global.
-Shift-left/right adjusts the selected delay by 0.1 seconds; ~RET~ enters an
-exact value of at least 0.1 seconds. Space previews the captured source line
-with the displayed point settings; ~P~ speaks its character's phonetic name
-immediately, and ~s~ stops. ~S~ explicitly saves the displayed settings through
-Customize, promoting buffer choices to startup defaults. Closing retains
-session changes without saving.
-
-Press ~l~ for the capital-letter beep or ~a~ for the all-caps beep. Each editor
-keeps a separate global draft. Select pitch or duration, use Shift-left/right
-to adjust by 25 Hz or 5 milliseconds, or press ~RET~ for an exact value.
-Space previews just the beep; ~s~ stops it. Adjusting and previewing do not
-change your reading settings or enable capitalization indication.
-
-In a beep editor, ~S~ saves that cue globally for tone and combined
-presentations. ~r~ puts the bundled cue into the draft; save to remove this
-menu's override. ~D~ discards edits and rereads the saved cue. ~q~ returns and
-~C-q~ closes the menus, retaining unsaved drafts for this Emacs session.
-Saving preserves unrelated personal rules and spoken labels. Other
-presentation rules may override the saved cue. Finish any unsaved personal-rule
-editor before saving a cue; if its saved rules changed elsewhere, discard the
-draft and reopen it.
-
-Press ~C-e H o c~ for /Line and boundary cues/. Choose blank, whitespace-only,
-separator, decorated, or unspeakable line feedback to tune its pitch and
-integer duration. Shift-left/right adjusts by 25 Hz or 5 milliseconds;
-~RET~ enters an exact value. Boundary and warning, and large movement, instead
-choose replacement earcons. These replacements affect every use of that named
-earcon, including warnings outside navigation.
-
-Each cue retains a global preview draft. Space previews only the cue; ~s~ stops.
-~n~ silences it in the draft, ~r~ restores the bundled cue, and ~D~ discards
-unsaved edits. ~S~ saves through personal rules, preserving unrelated rules;
-other presentation rules may still override it. ~q~ returns with the draft
-intact. This changes cue output, not which lines count as separators or decoration.
-
-Press ~C-e H o~ for /Sounds and output/. Main tones and earcons, plus separate
-notification speech, tones, and earcons, each have a global volume control.
-Shift-left/right adjusts the selected volume by five percentage points;
-~RET~ enters an exact value from 0 to 100. Changes apply immediately through
-the existing audio settings. Press ~S~ to save these volumes across restarts.
-Notification controls affect the separate notification output. Earcon volumes
-affect sounds played by Omnivox.
-
-Press ~n~ in Sounds and output for /Notifications and spatial output/. ~r~
-chooses the notification route for the next speech restart: automatic, left,
-right, both, main output, or another device. The choice does not restart speech.
-~N~ previews the currently active output, which may still use the old route.
-~R~ explicitly restarts speech after confirmation. ~h~ opens a snapshot of
-notification history; ~q~ returns to the menu.
-
-Spatial controls apply immediately: enable presentation, speech and cues
-independently, choose automatic or mono output, change direction mapping, and
-limit separation from 0 to 1. Shift-left/right adjusts selected separation by
-0.1; Enter sets an exact value. Space previews left then right cue requests;
-mono output or limited backend capabilities may center them. ~x~ stops previews.
-~S~ saves routing and spatial defaults through Customize without restarting.
-These controls are global and keep output-volume saving separate.
-
-
-Press ~p~ there to browse sound packs. In the browser, ~q~ returns to /Sounds
-and output/ with the same settings scope. Another ~q~ returns to the main
-menu. Opening the browser directly keeps its usual quit destination.
-
-Press ~C-e H v~ for /Voices and engines/. Press ~b~ to browse engines and
-their voices, ~p~ for voice palettes, or ~w~ to resume the Voice Workbench.
-Browser ~q~ commands unwind their child views, then return to this menu with
-the originating item selected. Workbench filters, selection, and staged edits
-are retained; returning still announces any unsaved engine-policy changes.
-Opening a browser directly keeps its ordinary return destination.
-
-Engine preference is global. Press ~e~ to choose a preferred engine for this
-session, ~S~ to choose and save one, or ~r~ to restore the saved or initial
-engine order. These actions retain the existing engine availability and
-unsaved-policy checks. The speech-settings scope does not change their save
-behaviour.
-
-For focused named-voice tuning, open voice palettes with ~C-e H v p~, select
-a palette, press ~e~, choose a voice, then press ~m~ in its shared editor.
-The menu edits the same retained draft as the full editor. Up/down selects
-controls; plain left/right changes sections. Shift-left/right adjusts relative
-rate, pitch, pitch range, or gain by one control unit. ~RET~ enters an exact
-value. ~d~ restores the selected adjustment to its adapter default, or asks
-which adjustment to reset. Zero is an explicit value, not a reset.
-
-Press ~P~ to preview the edited base voice, ~B~ to compare original and edited
-versions with the same sample, ~S~ to stop, or ~T~ to change the sample text.
-Previews are private and exclude contextual presentation rules. Adjustments
-announce their values without automatic samples in this menu; the full
-editor's automatic-sample preference is retained. ~u~ undoes the last draft
-change. Physical experiments, individual fallback adjustments, and engine
-controls remain available in the full editor.
-
-Press ~w~ to save and apply, or ~c~ to save to the collection without selecting
-the palette. The existing destination prompts, inheritance rules, and save
-recovery apply. ~q~ stops the sample and returns to the editor with the draft
-intact. Leaving the editor still offers its usual keep, discard, or continue
-choices for unsaved changes.
-
-The menu captures the source item for ~x~ and ~h~. In Feedback Details,
-~q~ returns to the menu with the same item and settings scope; another ~q~
-closes the menu. Opening Feedback Details directly keeps its usual return
-destination. A changed or deleted source item must be selected again by
-reopening the menu. If the source buffer has closed, the menu cannot resume.
-
-On the UI experiments branch, ~C-e H x~ opens an Outline version of Feedback
-Details. It is read-only, with a visible summary and initially folded fields.
-Press ~TAB~ on a heading to cycle its visibility, ~Shift-TAB~ to cycle the
-whole report, and ~n~ or ~p~ to move between visible headings. Standard Outline
-minor-mode commands are available under ~C-c @~, including ~C-c @ C-u~ for
-the parent heading. Arrows read visible lines. ~RET~ folds a heading or
-activates an action; ~TAB~ away from a heading and ~M-n~ move to the next
-visible action. Playback and editing use the existing report commands.
-
-Press ~o~ to compare Outline with the original report. Refreshing draft status
-with ~g~ preserves folds and position, and returning from an editor preserves
-its action button. The report continues to describe the captured feedback.
-New reports opened directly use the original layout; ~o~ switches their style.
-
-For menu Help, press ~?~ followed by a choice's key, or ~? ?~ for help on
-the current menu. ~q~ in Help resumes that menu, including its parent menus.
-The original Aural Home
-remains available with ~C-e H h~ or ~M-x emacsvox-aural~. Its existing editors
-and their ~h~ return command continue to use that Home.
-
-For a first listening experiment:
-
-1. Press ~C-e H h~, then ~/~, and choose
-   /Browse voices/ from the searchable actions.
-2. Select an available engine and press ~v~ to list its voices.
-   ~RET~ opens an Omnivox engine's status, downloads, and settings.
-3. Move to a voice and press ~P~ to hear a sample.
-   ~S~ stops it. Browsing and previewing save no settings.
-4. Press ~h~ to return to Home. From Home,
-   ~C-c C-o~ returns to the item where you started.
-
-If an engine is unavailable, its details explain why; try another available
-engine. If no speech is available, start with
-[[info:emacsvox#Recovering From No Speech][Recovering From No Speech]].
-
-Open Aural Home from an ordinary buffer with ~C-e H h~.  Emacsvox
-remembers that source buffer and opening position so contextual actions such
-as explanation and remapping operate on the object you were using.  Moving
-the source cursor while Home is open does not change this target.  In Home,
-~C-c C-o~ returns to it.  To choose a new target, invoke
-~C-e H h~ afresh from that item in an ordinary buffer.
-
-Returning through Home or Help preserves the selected row and unfinished
-edits.  Buffer rule editors retain separate drafts for each source buffer;
-reopening a modified editor resumes its draft.  Reopening the same voice in
-the voice editor likewise preserves its working settings.  If a prepared remap's
-source item changes or disappears, Emacsvox asks you to prepare that change
-again before applying it.
-
-Aural Home begins with six task groups in one spoken table.  Press
-~RET~ or ~TAB~ to expand or collapse a group.
-Each action names a destination, reports its current status, and describes
-its purpose.  ~/~ searches all actions, including collapsed
-groups; the matching group opens with your destination selected.
+#+attr_texinfo: :columns 0.35 0.65
+| Task group | Destinations |
+| Understand and change feedback | Feedback for this item, Recent feedback, and Return to source item. |
+| Voices and speech | Voice palettes, Browse voices, Preferred speech engine, Speech rate, Punctuation, and Voice Workbench. |
+| Sounds and output | Sound packs, Spatial settings, Audio output, and Review notifications. |
+| Optional feedback and rules | Presentation options, Your feedback rules, Current buffer rules, and Explain feedback as you navigate. |
+| Saved setups and unfinished changes | Presentation profiles and Resume unfinished changes. |
+| Troubleshooting | Aural Doctor and Spatial capabilities. |
 
 Expandable groups announce an open or close cue with their name when you
 reach or toggle them. These cues follow the icon setting and sound pack.
-For spoken state words, enable
-/aural-panel-state-labels/ in /Presentation Options/.  This adds ``collapsed''
-or ``expanded'' after the control through the normal presentation rules.
-Key instructions remain available in Help.
-
-Panel entry, return, selection, and warning cues accompany their spoken
-feedback in one utterance.  Returning from a panel announces the destination
-and any unfinished draft warning together.  These cues follow the icon
-setting, sound pack, and cue remapping rules.
-The voice editor uses the normal navigation voice for these announcements;
-auditions still play the working voice.
+For spoken state words, enable /aural-panel-state-labels/ in /Presentation
+Options/. This adds ``collapsed'' or ``expanded'' after the control through
+the normal presentation rules. Key instructions remain available in Help.
 
 In Home and other tables, the navigation controls are:
 
@@ -463,43 +216,43 @@ In Home and other tables, the navigation controls are:
 - h :: Return to Aural Home from a manager or editor.
 - q :: Go back or leave; an editor may first offer to retain or discard changes.
 
-The six groups are:
-
-#+attr_texinfo: :columns 0.35 0.65
-| Task group | Destinations |
-| Understand and change feedback | Feedback for this item, Recent feedback, and Return to source item. |
-| Voices and speech | Voice palettes, Browse voices, Preferred speech engine, Speech rate, Punctuation, and Voice Workbench. |
-| Sounds and output | Sound packs, Spatial settings, Audio output, and Review notifications. |
-| Optional feedback and rules | Presentation options, Your feedback rules, Current buffer rules, and Explain feedback as you navigate. |
-| Saved setups and unfinished changes | Presentation profiles and Resume unfinished changes. |
-| Troubleshooting | Aural Doctor and Spatial capabilities. |
-
-The header identifies the captured source and the number of unfinished drafts.
-Choose /Resume unfinished changes/ to visit the original rule editor, voice editor,
-or Workbench engine settings.  The draft is still unsaved until you accept it there.
-Presentation Profiles capture options, palette, sound pack, and spatial
-settings. Physical choices and their adjustments belong to the selected
-palette's named voices; shared engine settings are saved separately.
-
-You can press ~RET~ on a row without memorizing its shortcut.  Aural
-Home also provides direct keys for frequent routes, including ~x~ for
-Feedback Details, ~O~ for your feedback rules, ~H~ for recent feedback,
-~P~ for profiles, ~V~ for voice palettes, ~W~ for
-Voice Workbench, and ~D~ for Aural Doctor.
+Home also provides direct keys for frequent routes: ~x~ for Feedback Details,
+~O~ for your feedback rules, ~H~ for recent feedback, ~P~ for profiles, ~V~ for
+voice palettes, ~W~ for Voice Workbench, and ~D~ for Aural Doctor.
 
 /Feedback for this item/ combines explanation, playback, and access to voice
-and sound changes. The direct shortcuts ~c~, ~r~,
-~T~, and ~R~ still open their editors. Search with
-~/~ also accepts their existing action names, including /Explain
-this item/. /Semantic vocabulary/ is available from Home's Help, search, and the
-matching-criteria section of a change editor.
+and sound changes. The direct shortcuts ~c~, ~r~, ~T~, and ~R~ still open
+their editors. Search with ~/~ also accepts their existing action names,
+including /Explain this item/. /Semantic vocabulary/ is available from Home's
+Help, search, and the matching-criteria section of a change editor.
 
 The voice editor contains fields and buttons rather than table columns:
-left/right changes a numeric value, and ~RET~ edits a field.
-See [[info:emacsvox#Editing Named Voices][Edit a Named Voice]]. Keys are local to the view: for example,
-~w~ saves a voice in its editor but exports a palette in the
-palette manager. Use ~C-c C-a~ to choose an action by name,
-or ~?~ for that view's current keys.
+left/right changes a numeric value, and ~RET~ edits a field. See
+[[info:emacsvox#Editing Named Voices][Edit a Named Voice]]. Keys are local to the view: for example, ~w~ saves a
+voice in its editor but exports a palette in the palette manager. Use
+~C-c C-a~ to choose an action by name, or ~?~ for that view's current keys.
+
+Panel entry, return, selection, and warning cues accompany their spoken
+feedback in one utterance. Returning from a panel announces the destination
+and any unfinished draft warning together. These cues follow the icon
+setting, sound pack, and cue remapping rules. The voice editor uses the normal
+navigation voice for these announcements; auditions still play the working
+voice.
+
+Returning through Home or Help preserves the selected row and unfinished
+edits. Buffer rule editors retain separate drafts for each source buffer;
+reopening a modified editor resumes its draft. Reopening the same voice in
+the voice editor likewise preserves its working settings. If a prepared remap's
+source item changes or disappears, Emacsvox asks you to prepare that change
+again before applying it.
+
+The header identifies the captured source and the number of unfinished drafts.
+Choose /Resume unfinished changes/ to visit the original rule editor, voice
+editor, or Workbench engine settings. The draft remains unsaved until you
+accept it there. Presentation Profiles capture options, palette, sound pack,
+and spatial settings. Physical choices and their adjustments belong to the
+selected palette's named voices; shared engine settings are saved separately.
+See [[info:emacsvox#Saving And Startup][Choose What Persists]] before treating a saved setup as a backup.
 
 ** How Aural Presentation Works
 :PROPERTIES:
@@ -521,33 +274,33 @@ It helps to separate four questions that are often mixed together:
 
 An Emacs mode or Emacsvox integration supplies facts about an object or event.
 Facts can describe a role such as a heading, an event such as completion, a
-state such as unread, or an attribute such as heading level.  Context also says
+state such as unread, or an attribute such as heading level. Context also says
 whether you are navigating, reading continuously, or receiving a state change.
 This allows the same object to receive concise feedback during continuous
 reading and more orientation when you move to it deliberately.
 
-Presentation rules match those facts and context.  A rule can choose a voice,
+Presentation rules match those facts and context. A rule can choose a voice,
 add speech or a cue, insert a pause or tone, request spatial placement, or
-suppress something that is unhelpful.  Several matching rules can compose; a
+suppress something that is unhelpful. Several matching rules can compose; a
 stronger, narrower rule need change only the relevant part rather than repeat
 the complete presentation.
 
 The user-visible configuration layers are:
 
-1. A fixed internal baseline that preserves established Emacsvox behavior.
+1. A fixed internal baseline that preserves established Emacsvox behaviour.
 
-2. Automatic integration behavior supplied by the active mode or package.
+2. Automatic integration behaviour supplied by the active mode or package.
 
-3. Enabled /Presentation Options/ that add optional behavior in a stable
+3. Enabled /Presentation Options/ that add optional behaviour in a stable
    weakest-to-strongest order.
 
 4. Personal, session, and current-buffer rules. These are the strongest
    layers and are intended for precise changes. They are also called
-   /overrides/ because they can replace weaker behavior.
+   /overrides/ because they can replace weaker behaviour.
 
-A presentation profile is not another rule layer.  It records the
-selected options, sound pack, voice palette, and spatial choices so you can
-switch those choices together.
+A presentation profile is not another rule layer. It records the selected
+options, sound pack, voice palette, and spatial choices so you can switch
+those choices together.
 
 For example, an Org integration identifies a level-two heading. A rule asks
 for =bolden= and a section cue. The active palette supplies =bolden='s voice
@@ -574,18 +327,18 @@ rather than inferring them from the order in which you made edits.
 
 Aural Presentation can use one or more of these forms of feedback:
 
-- /Speech/ conveys content, labels, prompts, results, and status.  Added speech
+- /Speech/ conveys content, labels, prompts, results, and status. Added speech
   should explain meaning that is not already clear from the content.
 
-- /Voice/ changes characteristics of spoken content.  Named voices
-  make distinctions such as headings, annotations, warnings, or quoted text
+- /Voice/ changes characteristics of spoken content. Named voices make
+  distinctions such as headings, annotations, warnings, or quoted text
   portable across speech engines.
 
 - /Auditory cues/, also called /earcons/ or /auditory icons/, are short sounds
   associated with events or objects. A sound pack supplies the recordings for
   those cue names.
 
-- /Tones/ convey compact information using a named pitch and duration.  They
+- /Tones/ convey compact information using a named pitch and duration. They
   are useful when a short distinction is preferable to speech or a sampled
   sound.
 
@@ -595,14 +348,14 @@ Aural Presentation can use one or more of these forms of feedback:
   When the selected backend cannot provide the requested placement, Emacsvox
   keeps the content audible using its documented fallback.
 
-These forms can be ordered around the content.  For example, entering a section
+These forms can be ordered around the content. For example, entering a section
 might play a cue, speak the heading in a distinctive voice, and leave a short
-pause before body text.  The presentation is one result, not several unrelated
+pause before body text. The presentation is one result, not several unrelated
 notifications.
 
 The precise sound may vary by speech engine, installed voices, sound pack, and
-audio hardware.  The intended distinction should remain understandable even
-when a simpler backend uses fewer voice characteristics or centered output.
+audio hardware. The intended distinction should remain understandable even
+when a simpler backend uses fewer voice characteristics or centred output.
 
 ** Understand Why Something Sounded That Way
 :PROPERTIES:
@@ -615,30 +368,45 @@ when a simpler backend uses fewer voice characteristics or centered output.
 
 Use this workflow when feedback is surprising, unclear, or especially useful:
 
-1. Leave point on the object and press ~C-e E~, or choose
-   /Feedback for this item/ in Aural Home. Both open /Feedback Details/ with a brief
-   announcement rather than speaking the complete explanation.
+1. Leave point on the object and press ~C-e E~, or choose /Feedback for this
+   item/ in Aural Home. Both open /Feedback Details/ with a brief announcement
+   rather than speaking the complete explanation.
 
 2. Read the explanation as a report of the object and occasion, matching
    presentation rules, selected actions, concrete voices and sounds, and any
    backend fallback or degradation.
 
-3. Note the strongest rule that changed the part you care about.  This tells
-   you whether to inspect an option, a personal or temporary rule, a named voice, a sound pack,
-   or the Voice Lock compatibility layer.
+3. Note the strongest rule that changed the part you care about. This tells
+   you whether to inspect an option, a personal or temporary rule, a named
+   voice, a sound pack, or the Voice Lock compatibility layer.
+
+From the Emacsvox menu, ~C-e H f~ groups current and recent feedback editing.
+~x~ explains the captured item's effective presentation; ~c~ opens a guided
+voice, cue, or tone draft, ~v~ prepares a voice mapping, and ~e~ prepares a cue
+remap. ~h~ opens recent feedback, where changes use the selected frozen record.
+The editors retain their preview, matching criteria, scope, and explicit
+Apply/Save steps. Returning restores the menu entry. Guided drafts remain
+available through unfinished drafts; the rule editor retains its discard
+prompt when you leave a modified rule list. Replaced source items are rejected.
+
+*** Distinguish a record from a simulation
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 When a retained presentation still matches the source buffer, position, and
-unchanged source text, the explanation
-describes the exact output that was queued, including its source location and
-resolved resources.  It does not reinterpret that old output using your latest
-settings.  Without an exact record, Emacsvox labels the explanation as a
-simulation of what the current rules would produce at point. The simulation
-uses captured source text and context; /Play simulation/ plays that baseline,
-not a recording of something you previously heard. It supports the same field
-review and draft previews as recorded feedback, and is never added to Recent
-Feedback. Use a prefix argument with ~C-e E~ to choose a
-simulated occasion explicitly. Press ~q~ to return to the
-source position or Home row from which you opened the report.
+unchanged source text, the explanation describes the exact output that was
+queued, including its source location and resolved resources. It does not
+reinterpret that old output using your latest settings. Without an exact
+record, Emacsvox labels the explanation as a simulation of what the current
+rules would produce at point.
+
+The simulation uses captured source text and context; /Play simulation/ plays
+that baseline, not a recording of something you previously heard. It supports
+the same field review and draft previews as recorded feedback, and is never
+added to Recent Feedback. Use a prefix argument with ~C-e E~ to choose a
+simulated occasion explicitly. Press ~q~ to return to the source position or
+Home row from which you opened the report.
 
 Expand a field and choose /Edit named voice bolden/ (or the voice name shown)
 beside its voice explanation to open the existing voice editor. A field with
@@ -647,13 +415,18 @@ reported palette, affecting every use there. /Change field/ instead changes
 the feedback rule for that field. Leaving the voice editor returns to the
 same report link; opening it does not save or apply anything.
 
+*** Inspect recent feedback
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 To inspect something heard earlier, open Aural Home and choose /Recent
-feedback/, or press ~H~ there.  Each row preserves a recorded presentation; the history has a size limit.
-Moving through the Content column speaks the preview using its captured voice
-annotations, including voice changes within an entry. Column titles and the
-other fields use the normal interface voice. Use ~P~ to hear the
-engine and physical voice that actually delivered the presentation.
-Useful commands in the feedback browser include:
+feedback/, or press ~H~ there. Each row preserves a recorded presentation;
+the history has a size limit. Moving through the Content column speaks the
+preview using its captured voice annotations, including voice changes within
+an entry. Column titles and the other fields use the normal interface voice.
+Use ~P~ to hear the engine and physical voice that actually delivered the
+presentation.
 
 #+attr_texinfo: :indic kbd :compact t
 - RET or e :: Open a readable Feedback Details buffer for the selected presentation.
@@ -665,10 +438,15 @@ Useful commands in the feedback browser include:
 - i :: Include or exclude feedback from the Aural interfaces themselves.
 
 Aural interface feedback is excluded by default so it does not displace the
-feedback you are investigating.  This includes prompts opened from an Aural
+feedback you are investigating. This includes prompts opened from an Aural
 screen, their completion choices, and their opening and closing sounds.
 Ordinary completion outside these screens remains eligible for history.
 The setting controls new recordings; it does not remove entries already retained.
+
+*** Read and edit the report's fields
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 /Feedback Details/ selects a separate, read-only buffer and announces only a
 brief introduction. Its report stays attached to that recorded presentation
@@ -678,34 +456,35 @@ Press ~q~ to return to the same row and column in Recent Feedback.
 The report groups consecutive voice spans into semantic fields where the
 integration supplies them. In a Notmuch search result, for example, you can
 visit /Authors/, /Subject/, /Date/, /Message count/, and /Tags/. Headings identify
-the recorded logical voices. Collapsed fields show only their headings. Visibility is
-conveyed through the selected aural presentation, using earcons or optional
-spoken labels; the words /expanded/ and /collapsed/ are not inserted into the
-heading text. Press
-~RET~ on a heading to reveal its text, playback and change
-controls, voice source, sounds, and any backend limitations. Field content is
-read with its captured voice annotations. Only fields with multiple spans show separate
-span sections, behind /Individual voice spans/. Expand that section only when
-you want to inspect or change an individual span. Its heading announces the
-section without repeating the field's content. A single-span field shows its
-text and controls once, and its heading omits the span count. Press
-~RET~ on the field heading again to collapse it.
+the recorded logical voices. Collapsed fields show only their headings.
+Visibility is conveyed through the selected aural presentation, using earcons
+or optional spoken labels; the words /expanded/ and /collapsed/ are not inserted
+into the heading text.
+
+Press ~RET~ on a heading to reveal its text, playback and change controls,
+voice source, sounds, and any backend limitations. Field content is read with
+its captured voice annotations. Only fields with multiple spans show separate
+span sections, behind /Individual voice spans/. Expand that section to inspect
+or change an individual span. Its heading announces the section without
+repeating the field's content. A single-span field shows its text and controls
+once, and its heading omits the span count. Press ~RET~ on the field heading
+again to collapse it.
 
 Spoken labels such as /indent 2/ have their own /Before speech/ or
 /After speech/ headings within the expanded field. They are separate from
-the content voice spans. Press ~RET~ on a spoken label's
-heading, or ~O~ within that entry, to replay just that label
-with its recorded settings. Its /Edit named voice indent/ link opens the
-palette voice editor using /indent 2/ as the sample. This changes every use
-of that named voice in the recorded palette. The report keeps its original
-recording; use the editor's preview to hear your changes. Labels without a
-named palette voice remain playable and explain why no editor link is shown.
+the content voice spans. Press ~RET~ on a spoken label's heading, or ~O~
+within that entry, to replay only that label with its recorded settings.
+Its /Edit named voice indent/ link opens the palette voice editor using
+/indent 2/ as the sample. This changes every use of that named voice in the
+recorded palette. The report keeps its original recording; use the editor's
+preview to hear your changes. Labels without a named palette voice remain
+playable and explain why no editor link is shown.
 
 Fields with unapplied drafts announce /unsaved change/ after their names. The
 report also shows how many fields have unsaved changes. These labels update as
 you edit or apply a change, preserving the report's buttons and your return
-position. ~g~ updates draft status, for example after killing a
-draft buffer. The original or simulated presentation remains the same.
+position. ~g~ updates draft status, for example after killing a draft buffer.
+The original or simulated presentation remains the same.
 
 #+attr_texinfo: :indic kbd :compact t
 - n or p :: Move between headings. Collapsed fields speak only their heading; expanded fields also speak their content with its captured voice annotations.
@@ -720,21 +499,22 @@ draft buffer. The original or simulated presentation remains the same.
 - S :: Stop playback.
 - g :: Update the report's draft status.
 
-For example, select /Subject/, press ~C~, and choose another
-content voice. In that editor, ~O~ plays the original field
-and ~P~ previews the changed field. For a complete comparison,
-choose /Play whole original/ or press ~B~, then use
-~V~ to preview the whole presentation with all linked drafts.
-Both actions keep you in the change buffer. The original stays frozen even
-after you change a draft; it can be played before choosing a change or lifetime.
+For example, select /Subject/, press ~C~, and choose another content voice.
+In that editor, ~O~ plays the original field and ~P~ previews the changed
+field. For a complete comparison, choose /Play whole original/ or press ~B~,
+then use ~V~ to preview the whole presentation with all linked drafts. Both
+actions keep you in the change buffer. The original stays frozen even after
+you change a draft; it can be played before choosing a change or lifetime.
 For simulated feedback, /Play whole simulation/ plays the frozen simulated
-baseline instead. Return to the report and select /Message count/ to add a
-sound /After content/. The sound is placed
-once after the complete count, even when that field contains several voices.
-The subject and count editors retain their drafts separately. Their matching
-criteria identify the field, integration, mode, and occasion; inspect those
-criteria before choosing a buffer, session, or saved personal lifetime.
-Changing a field's voice mapping does not retune the shared named voice.
+baseline instead.
+
+Return to the report and select /Message count/ to add a sound /After content/.
+The sound is placed once after the complete count, even when that field contains
+several voices. The subject and count editors retain their drafts separately.
+Their matching criteria identify the field, integration, mode, and occasion;
+inspect those criteria before choosing a buffer, session, or saved personal
+lifetime. Changing a field's voice mapping does not retune the shared named
+voice.
 
 /Choose another voice for matching items/ opens the compact voice editor for
 that field. Its /Applies to/ row identifies the matching items; choose /How
@@ -748,9 +528,33 @@ review and saving; that draft is not included in the report's linked-field
 preview. /Restore inherited behavior/ removes an override made by this sound
 workflow in the selected scope. Press ~q~ to return to the report.
 
+*** Use the Outline report from the menu
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+On the UI experiments branch, ~C-e H x~ opens an Outline version of Feedback
+Details. It is read-only, with a visible summary and initially folded fields.
+Press ~TAB~ on a heading to cycle its visibility, ~Shift-TAB~ to cycle the
+whole report, and ~n~ or ~p~ to move between visible headings. Standard Outline
+minor-mode commands are available under ~C-c @~, including ~C-c @ C-u~ for
+the parent heading. Arrows read visible lines. ~RET~ folds a heading or
+activates an action; ~TAB~ away from a heading and ~M-n~ move to the next
+visible action. Playback and editing use the report commands described above.
+
+Press ~o~ to compare Outline with the original report. Refreshing draft status
+with ~g~ preserves folds and position, and returning from an editor preserves
+its action button. The report continues to describe the captured feedback.
+New reports opened directly use the original layout; ~o~ switches their style.
+
+*** Understand playback evidence and limitations
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 Original playback uses the engine and physical voice reported during the
 original delivery, including notification voices and fallback choices. It keeps
-the captured voice tuning even after a palette change. Speech is synthesized
+the captured voice tuning even after a palette change. Speech is synthesised
 again at the current reading speed and with the host's current pronunciation
 settings; history does not store audio. Cues and pauses retain their order,
 but their timing can differ from the original delivery.
@@ -764,13 +568,13 @@ voice is no longer available, playback stops instead of substituting another.
 Navigate over the source again to capture a new example.
 
 A simulated report labels its baseline playback as simulated throughout the
-report and linked change editor.
-Proposed playback uses current rules,
+report and linked change editor. Proposed playback uses current rules,
 captured buffer context, and the linked drafts without applying them. A span
 can be targeted separately only when its semantic field, a distinct named
-face, or an explicit voice annotation identifies it. Truncated history cannot provide complete playback or a
-comparable change preview. Older records missing preview inputs remain
-readable; capture a new example before previewing changes.
+face, or an explicit voice annotation identifies it. Truncated history cannot
+provide complete playback or a comparable change preview. Older records
+missing preview inputs remain readable; capture a new example before
+previewing changes.
 
 Each expanded field explains where its voice and sounds came from, such as
 a visual face or your personal override. These explanations use the captured
@@ -780,13 +584,13 @@ unsupported voice family, appear beside the affected field.
 /Debug details/ opens the raw snapshot in a separate read-only buffer for
 troubleshooting. It contains all recorded facts, rule identifiers, resolved
 voice properties, and backend diagnostics. Opening it speaks only a brief
-announcement. Press ~q~ to return to the same place in Feedback
-Details; the report keeps its expanded fields and linked drafts.
+announcement. Press ~q~ to return to the same place in Feedback Details;
+the report keeps its expanded fields and linked drafts.
 
-/Explain feedback as you navigate/, available from Aural Home, speaks concise semantic explanations
-after normal presentations.  It can help while learning the vocabulary used by
-an integration, but is intentionally more verbose than ordinary operation;
-turn it off when you no longer need the additional labels.
+/Explain feedback as you navigate/, available from Aural Home, speaks concise
+semantic explanations after normal presentations. It can help while learning
+the vocabulary used by an integration, but is intentionally more verbose than
+ordinary operation; turn it off when you no longer need the additional labels.
 
 ** Change Feedback And Manage Rules
 :PROPERTIES:
@@ -806,6 +610,12 @@ Start by choosing the narrowest tool that matches your intention:
 | Review or remove an existing precise change | Your feedback rules | Its recorded scope |
 | Try rules only in the current work buffer | Current Buffer Rules | Life of that buffer |
 | Switch selected reading or working settings | Presentation Profiles | Saved global configuration |
+
+Use ~C-e H r~ for Presentation Options and personal, session, or
+captured-buffer rule editors. Their validation, preview, save, and discard
+prompts stay in the editor. The menu also toggles global visual-face
+presentation; ~w~ saves only that toggle through Customize. Voice Lock
+remains independent.
 
 *** Walkthrough: Change Headings In One Buffer
 :PROPERTIES:
@@ -869,82 +679,82 @@ a permanent rule can affect future matching buffers too.
 :END:
 
 1. Move to a representative item, press ~C-e H h~, then
-   ~c~.  This captures /Current item/.  For feedback that has
+   ~c~. This captures /Current item/. For feedback that has
    already happened, use Home's ~H~, select a /Recent Feedback/
-   record, and press ~C~.  A record containing several parts
-   expands numbered parts in playback order.  Move with ~n~
+   record, and press ~C~. A record containing several parts
+   expands numbered parts in playback order. Move with ~n~
    and ~p~ to hear their text in the captured voices;
-   ~O~ replays the part at point.  Press ~RET~
-   to select it.  Truncated history cannot supply a complete
+   ~O~ replays the part at point. Press ~RET~
+   to select it. Truncated history cannot supply a complete
    original/proposed comparison.
 
 2. Press ~c~ to expand component changes in the panel.
-   Move to a choice and press ~RET~.  /Content voice/ expands
+   Move to a choice and press ~RET~. /Content voice/ expands
    voice choices and identifies the original voice and proposed replacement.
    The original named voice comes first when available, followed by alternatives
-   in alphabetical order.  Press ~RET~ on a voice to select it
-   for the draft; the panel stays open for comparison.  Available changes
+   in alphabetical order. Press ~RET~ on a voice to select it
+   for the draft; the panel stays open for comparison. Available changes
    include the content voice, adding a sound or tone, adding a spoken label,
    replacing an existing sound, changing a tone, or suppressing one component.
-   You can add a cue when the original has none.  The choices use the facts
+   You can add a cue when the original has none. The choices use the facts
    and components supplied by the integration; they cannot add missing
    semantic distinctions.
    ~RET~ on /Parts/ reopens the parts; unfinished choices are
    retained separately when you switch between parts.
    Press ~q~ to go back one level: from a voice choice to
-   /Content voice/, then to /Change/.  The section closes and focus returns
+   /Content voice/, then to /Change/. The section closes and focus returns
    to its parent, whose name and state are presented through the configured
-   cues and optional spoken labels.  At the top level,
+   cues and optional spoken labels. At the top level,
    ~q~ leaves the panel and preserves the unfinished draft.
 
 3. Press ~P~ to hear the proposed change before choosing how
-   long to keep it.  ~O~ plays the recorded original example;
-   ~S~ stops.  Proposed preview resolves the selected example
-   with current rules and its captured buffer context.  It does not apply
+   long to keep it. ~O~ plays the recorded original example;
+   ~S~ stops. Proposed preview resolves the selected example
+   with current rules and its captured buffer context. It does not apply
    your draft to live feedback.
 
 4. Press ~m~ or ~RET~ on /What should match/
-   to expand the matching criteria.  Each fact, state, event, and occasion
-   shows /Included/ or /Excluded/.  All included conditions must match;
+   to expand the matching criteria. Each fact, state, event, and occasion
+   shows /Included/ or /Excluded/. All included conditions must match;
    excluded conditions are ignored, not forbidden.
    The /Captured example/ (or /Simulated example/) row describes the original
-   feedback.  Its facts are not editable, but they are available as matching
-   conditions.  Opening the conditions preserves your current selections;
-   additional facts appear as /Excluded/ until you include them.  For example,
+   feedback. Its facts are not editable, but they are available as matching
+   conditions. Opening the conditions preserves your current selections;
+   additional facts appear as /Excluded/ until you include them. For example,
    a mail action of /select/ describes the operation that produced the
-   feedback, not whether a row is selected in this editor.  Include that
+   feedback, not whether a row is selected in this editor. Include that
    action or an event such as /operation failed/ to limit the rule to it.
    Press ~RET~ on a criterion
    to exclude or include it; excluded criteria stay available to restore.
    For example, exclude /with state unread/ while keeping /with role field/,
    /with field kind authors/, and /from the notmuch integration/ to match
-   authors in both read and unread messages.  Keep at least one criterion.  The parent row shows
+   authors in both read and unread messages. Keep at least one criterion. The parent row shows
    the resulting match; ~m~ collapses the criteria again.
    These are rules for every matching item, not an edit to one object.
 
-   The summary describes those conditions together.  For example, shell
+   The summary describes those conditions together. For example, shell
    prompt feedback may match "Items from the shell integration, in shell
    mode, during navigation, and with text style comint highlight prompt."
    The text style names the Emacs face used to display that text.
 
 5. Press ~l~ for /How long/: the source buffer's lifetime,
-   this Emacs session, or a saved personal rule.  A buffer rule affects every
-   matching item in that buffer.  Review the spoken summary of target,
+   this Emacs session, or a saved personal rule. A buffer rule affects every
+   matching item in that buffer. Review the spoken summary of target,
    change, matching criteria, and lifetime.
 
 6. Press ~a~ or ~C-c C-c~ to apply or save.
    ~e~ instead opens the prepared rule in the Advanced editor.
    At the top level, ~q~ hides the guided draft; Home's /Resume unfinished
-   changes/ brings it back.  Aborting a choice or leaving before Apply does
-   not change live rules.  Failed saves retain the draft and report failure.
+   changes/ brings it back. Aborting a choice or leaving before Apply does
+   not change live rules. Failed saves retain the draft and report failure.
 
 Replacing or suppressing a sound targets its identity in its before- or
-after-content phase, retaining other components.  Existing rule data can
+after-content phase, retaining other components. Existing rule data can
 insert only at the beginning or end of a phase; replacing a middle component
 therefore asks which edge to use and includes that placement in the summary.
-Ambiguous components require the Advanced editor.  Current-item changes
+Ambiguous components require the Advanced editor. Current-item changes
 recheck their captured source before applying; a changed or killed target
-must be inspected again.  Historical changes remain tied to the selected
+must be inspected again. Historical changes remain tied to the selected
 recorded example.
 
 *** Remap One Item At Point
@@ -961,14 +771,14 @@ recorded example.
    for /Choose a voice for this item/, or ~T~ for /Edit the named
    voice used here/ to open the current named voice in the common voice editor.
    Tuning changes that voice wherever it is used in the palette; remapping
-   changes which voice is used for the face or item.  For example, at a shell
+   changes which voice is used for the face or item. For example, at a shell
    prompt you can assign another voice to the prompt face, or tune the voice
-   currently used by prompts.  You do not need to hear the prompt first.
+   currently used by prompts. You do not need to hear the prompt first.
 
    In the remapping screen, move with ~n~ and
-   ~p~ or the arrow keys.  Press ~RET~ on
+   ~p~ or the arrow keys. Press ~RET~ on
    /Voice/ to choose a voice, /Preview original/ to hear the captured item, or
-   /Preview change/ to hear your choice.  ~O~ and
+   /Preview change/ to hear your choice. ~O~ and
    ~P~ also play these previews; ~S~ stops.
    Previewing does not save the mapping or retune the named voice.
 
@@ -981,8 +791,8 @@ recorded example.
    - a /buffer/ rule affects only the remembered live buffer.
 
 4. Check /Applies to/, /Voice/, and /How long/, then activate /Save/ or press
-   ~w~.  A face mapping affects matching uses of that face
-   within the displayed module or mode and chosen lifetime.  /Advanced/
+   ~w~. A face mapping affects matching uses of that face
+   within the displayed module or mode and chosen lifetime. /Advanced/
    opens the full rule editor when you need more detailed matching controls.
    At the top level, ~q~ hides the simple remapping screen and keeps its draft;
    /Resume unfinished changes/ in Home finds it again after a voice is chosen.
@@ -997,36 +807,32 @@ recorded example.
 :DESCRIPTION: Inspect, change, disable, or remove personal and temporary rules.
 :END:
 
-In /Your feedback rules/, ~RET~ or ~e~
-opens the selected rule's settings panel.  In the rule list, the same keys
-open that panel.  Only the selected rule appears while its panel is open;
-the other rules remain in the working draft.  ~n~ and
-~p~ move through the
-visible settings; ~SPC~ reads the current setting and value.
-~RET~ expands /What should match/, /Content/, /Before content/,
-or /After content/.  Matching criteria toggle between included and excluded.
+Open /Your feedback rules/ to manage personal and temporary changes together.
+~P~ previews the complete current result, ~t~ temporarily disables or enables
+a rule, and ~d~ removes it. Disabling or deleting an override restores the
+next weaker behaviour; it does not leave a copied default behind.
+
+In the rule list, ~RET~ or ~e~ opens the selected rule's settings panel.
+Only that rule appears while its panel is open; the other rules remain in
+the working draft. ~n~ and ~p~ move through the visible settings; ~SPC~ reads
+the current setting and value. ~RET~ expands /What should match/, /Content/,
+/Before content/, or /After content/. Matching criteria toggle between
+included and excluded.
+
 Within /Content/, /voice/ and /speak/ expand their choices in place, showing
-the current choice.  Other fields ask only for the selected value.  Existing
+the current choice. Other fields ask only for the selected value. Existing
 actions expand into their individual settings; /Change operation/ offers the
-operation choices for that phase.  /Inherit/ removes the selected voice or
-speech override; ~D~ removes another selected setting.  Each
-edit preserves the rule's other settings and stays in the working draft.
+operation choices for that phase. /Inherit/ removes the selected voice or
+speech override; ~D~ removes another selected setting. Each edit preserves
+the rule's other settings and stays in the working draft.
 
-~P~ previews the working rule and ~S~ stops.
-~w~ or the /Save/ row saves to the original scope and announces
-whether the rule was saved or applied temporarily.  ~q~ closes
-the current section and focuses its parent, retaining unfinished edits.
-For example, from a voice choice it returns to /voice/, then /Content/.
-At the top level it closes the panel and returns to the full rule list.
-From the rule list,
-~N~ adds a rule and ~q~ asks before discarding
-an unfinished draft.
-
-Open /Your feedback rules/ to manage these changes together.  There,
-~P~ previews the complete current result, ~t~ temporarily disables
-or enables a rule, and ~d~ removes it.  Disabling or deleting an
-override restores the next weaker behavior; it does not leave a copied default
-behind.
+~P~ in the panel previews the working rule and ~S~ stops. ~w~ or the /Save/
+row saves to the original scope and announces whether the rule was saved or
+applied temporarily. ~q~ closes the current section and focuses its parent,
+retaining unfinished edits. For example, from a voice choice it returns to
+/voice/, then /Content/. At the top level it closes the panel and returns to
+the full rule list. In the rule list, ~N~ adds a rule and ~q~ asks before
+discarding an unfinished draft.
 
 *** Try A Presentation Option
 :PROPERTIES:
@@ -1036,20 +842,20 @@ behind.
 :END:
 
 Presentation Options are maintained additions such as richer heading feedback
-or integration-specific cues.  From Aural Home, open /Presentation Options/:
+or integration-specific cues. From Aural Home, open /Presentation Options/:
 
 1. Use ~TAB~ or ~RET~ on a collection to expand it.
 
 2. Move to an option and press ~P~ to preview it composed with the
-   current configuration.  Press ~C-u P~ to preview it in isolation.
+   current configuration. Press ~C-u P~ to preview it in isolation.
 
-3. Press ~t~ to enable or disable it.  Press ~a~ to hear
+3. Press ~t~ to enable or disable it. Press ~a~ to hear
    enabled options in their exact weakest-to-strongest order.
 
-4. Return to the source and test the original task.  Personal, session, and
+4. Return to the source and test the original task. Personal, session, and
    buffer overrides remain stronger than an enabled option.
 
-Avoid reordering options merely to solve one exceptional object.  A narrow
+Avoid reordering options merely to solve one exceptional object. A narrow
 override usually expresses that intention more clearly.
 
 ** Choose And Manage Voice Palettes
@@ -1084,7 +890,7 @@ Use the /Voice Palettes/ manager to choose a palette or manage its named
 voices. Press ~RET~ on a palette to browse its voices,
 use ~P~ to audition the palette sequence before editing,
 and use ~a~ in the palette manager to
-activate a selected palette.  Built-in palettes remain intact; editing can
+activate a selected palette. Built-in palettes remain intact; editing can
 open an unsaved personal child in the common editor.
 
 *Upgrading personal palettes.* This version accepts palette schema 3 only.
@@ -1096,7 +902,7 @@ chain ending at =acss-default=. Shared per-voice routing, migration and preset
 screens have been removed; use the common voice editor for named-voice choices
 and adjustments. Shared engine preference remains a separate workstation setting.
 
-Opening the manager announces its selected palette.  Entering a palette
+Opening the manager announces its selected palette. Entering a palette
 announces its name, voice count, selected voice and main keys.
 
 The /Kind/ column distinguishes personal palettes, built-in palettes and the
@@ -1197,16 +1003,16 @@ palette before starting so you can return to it.
    This affects all uses resolving to your edited entry. Explanation at the
    source helps distinguish palette settings from additional contextual rules.
 
-6. If you want this palette after restart, press ~U~ on it in the palette
-   manager and review the startup proposal. It updates the palette selection
-   in the saved startup profile. If no startup profile exists, review the
-   proposed new profile's other settings too. Saving the palette and selecting
-   it for startup are separate actions.
+6. To use this palette after restart, press ~U~ on it in the palette manager
+   and review the startup proposal. It updates the palette selection in the
+   saved startup profile. If no startup profile exists, review the proposed
+   new profile's other settings too. Saving the palette and selecting it for
+   startup are separate actions.
 
 7. To return to your previous sound, activate the original palette. If you
    also changed startup, use ~U~ on that original palette to restore the
    startup selection. Your saved =reading-demo= remains available for later
-   experiments. To remove only its =bolden= customization, follow the Reset
+   experiments. To remove only its =bolden= customisation, follow the Reset
    example in [[info:emacsvox#Palette Inheritance Walkthrough][Inheritance, Aliases, and Reset]].
 
 *** Walkthrough: Inheritance, Aliases, And Reset
@@ -1266,24 +1072,24 @@ of its sound.
 :END:
 
 Press ~r~ in the voice list to rename a custom voice
-defined directly in that personal palette.  Enter the new name to save it;
+defined directly in that personal palette. Enter the new name to save it;
 the renamed voice keeps its settings, physical choices and individual tuning.
-Save or discard unfinished voice edits first.  Standard Emacsvox voice names
-cannot be renamed; copy one to create a custom voice.  For an inherited voice,
-copy it or rename it in its owning palette.  Renaming updates personal,
+Save or discard unfinished voice edits first. Standard Emacsvox voice names
+cannot be renamed; copy one to create a custom voice. For an inherited voice,
+copy it or rename it in its owning palette. Renaming updates personal,
 session and buffer presentation rules, including face mappings, and loaded
-global and buffer face maps.  Personal rules and the voice are saved together;
-a failed save leaves the old name and mappings usable.  Face mappings declared
+global and buffer face maps. Personal rules and the voice are saved together;
+a failed save leaves the old name and mappings usable. Face mappings declared
 in your own Lisp configuration must also be updated there for future sessions.
 References in maintained integration rules, Presentation Options, or other
 voice definitions still block the rename; update those uses first. Renaming also
 stops if another palette directly defines either name, because mappings are shared.
 
 To rename a personal palette, select it in /Voice Palettes/, press
-~r~, and enter its new name.  The rename is saved immediately.
+~r~, and enter its new name. The rename is saved immediately.
 It preserves voice settings and individual fallback tuning, updates child
 palettes and personal Presentation Profiles, and keeps an active palette
-selected under its new name.  Save or discard unfinished voice edits first.
+selected under its new name. Save or discard unfinished voice edits first.
 Built-in palettes cannot be renamed. A reference from maintained integration
 configuration can block a rename; its owner must update that reference first.
 
@@ -1311,6 +1117,132 @@ fallbacks or tuning for normal text. Each palette has its own effective
 Switching palettes also switches the ordinary reading voice. Other named
 voices, such as =indent= and =bolden=, keep their own settings; changing
 =default= does not change every voice in the palette.
+
+*** Adjust and compare one voice
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The editor uses the ordinary navigation voice for its labelled fields.
+~n/p~, up/down or Tab moves between fields. Left/right adjusts
+a numeric field and moves between fields elsewhere; ~RET~
+activates a button or enters an adjustment value. Press ~d~
+on an adjustment to restore the adapter default; blank numeric entry does the
+same. Zero is an explicit value, such as the lowest pitch or leftmost pan,
+whereas adapter default leaves that setting to the speech adapter. They may
+sound the same for some effects, but they are different settings.
+
+/More adjustments and effects/ exposes filters, gain, pan and other optional
+controls below the button. Point stays on the button, and speech says
+``More adjustments shown below'' or ``More adjustments hidden''. Move down or
+press Tab to enter the exposed controls; press Return on the button again to
+hide them. Changed values say what they were before editing; unsupported
+settings remain visible and are retained. Field navigation stops at the first
+and last field without wrapping. Numeric adjustments stop at their limits
+and announce the minimum or maximum.
+
+~P~ plays the edited voice. ~B~ compares the captured original with the edited
+version using the same text, with spoken labels. ~T~ changes that text; ~S~
+stops. An automatic sample follows each adjustment unless you turn off
+/Automatic sample after adjustment/. The new value precedes the sample text,
+for example ``1. The quick brown fox…''.
+
+Toggling /Automatic sample after adjustment/ announces on or off with distinct
+cues. /More adjustments and effects/ and /Fallbacks/ present their visibility
+with open/close cues and optional spoken state labels, both when toggled and
+when reached during field navigation. Navigation stops an outstanding sample.
+~u~ undoes an edit, including a reset to adapter default. ~q~ dismisses the
+editor and returns to its originating view, offering to retain or discard
+unsaved changes.
+
+Choose the /Physical voice/ field to search by engine or voice name. You can
+audition a candidate with the working adjustments before accepting it. Cancel
+keeps the previous choice and returns to the same field. Named voices also
+have an expandable /Fallbacks/ section: replace, reorder, remove or individually
+audition a choice, append another, or explicitly return to Automatic. Existing
+unavailable, engine-default and property choices are preserved. Shared
+adjustments apply to fields that a row inherits; /Customize this voice/ adds
+optional individual settings.
+
+*** Tune through the focused menu
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Open voice palettes with ~C-e H v p~, select a palette, press ~e~, choose a
+voice, then press ~m~ in its shared editor. The tuning menu edits the same
+retained draft as the full editor. Up/down selects controls; plain left/right
+changes sections. Shift-left/right adjusts relative rate, pitch, pitch range,
+or gain by one control unit. ~RET~ enters an exact value. ~d~ restores the
+selected adjustment to its adapter default, or asks which adjustment to reset.
+Zero is an explicit value, not a reset.
+
+The menu supports both shared and individual fallback adjustments. ~f~ selects
+an existing fallback, ~h~ returns to shared settings, and the title identifies
+the scope. For an individual fallback, ~i~ uses the shared value and ~d~ asks
+for the adapter default. Play and Compare use the selected scope.
+
+Press ~P~ to preview, ~B~ to compare original and edited versions with the same
+sample, ~S~ to stop, or ~T~ to change the sample text. Previews are private and
+exclude contextual presentation rules. Adjustments announce their values
+without automatic samples in this menu; the full editor's automatic-sample
+preference is retained. ~u~ undoes the last draft change.
+
+~e~ opens the engine-specific editor, which waits for a qualified runtime
+catalogue before allowing changes. Its ~q~ returns to the common editor;
+~m~ reopens focused tuning with the same draft and scope. Physical experiments,
+individual fallback adjustments, and engine controls are also available in
+the full editor.
+
+Press ~w~ to save and apply, or ~c~ to save to the collection without selecting
+the palette. The destination prompts, inheritance rules, and save recovery
+are the same as in the full editor. ~q~ stops the sample and returns to the
+editor with the draft intact. Leaving the editor still offers its usual keep,
+discard, or continue choices for unsaved changes.
+
+*** Save the draft and check application
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+For a named voice, ~w~ or ~C-c C-c~ saves and applies the complete draft.
+The save buttons are at the bottom of the editor, after the settings, previews
+and change details. /Save to collection without selecting/ saves an inactive
+palette without changing the current selection. The header reports unsaved
+changes, partial saves, applying, failures, or saved and applied.
+
+Retry uses the pending proposal and retains successful persistence steps.
+Changes made during an earlier apply remain unsaved when its acknowledgement
+arrives. A changed file or destination requires fresh review rather than an
+implicit merge.
+
+Named-voice previews test the complete choice chain without selecting the
+draft palette or changing live settings. They require an Omnivox server
+advertising complete-voice preview. Older servers report this operation
+as unsupported; individual physical auditions remain available. Playback
+reports identify actual accepted audio when the server supplies that evidence,
+including unsupported adjustments. They do not infer a successful fallback
+from inventory or claim exact effective numeric parameter values.
+
+~q~ returns to the originating row and column. With unsaved changes, choose
+to retain the draft, discard changes, or continue editing. Retained drafts
+survive closing the view and can be reopened from Home's /Resume unfinished
+changes/ during this Emacs session. They do not survive restarting Emacs.
+Leaving does not undo a completed save.
+
+/Save and apply/ selects the palette for this session. Use the /Use at Startup/
+action, ~U~ in Voice Palettes, to retain that selection after restart. A save
+can involve more than one settings file. The editor reports partial failures
+and retains the proposal for retry; see
+[[info:emacsvox#Recovering Aural Changes][Recovering Unfinished Changes]].
+
+If you opened an experiment from an installed physical voice, saving first
+asks for a destination. See [[info:emacsvox#Keeping A Voice Experiment][Keep an Installed Voice Experiment]] for that sequence.
+
+*** Use one physical voice across a palette
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 To use one physical voice across a whole palette, select it in /Browse voices/
 or the eSpeak /Voice variants/ browser and press ~V~. Choose
@@ -1353,82 +1285,6 @@ The review's actions menu also offers /Close saved result/ once saving and
 application have finished. This closes the result without undoing saved data
 or changing the currently selected palette.
 
-If you opened an experiment from an installed physical voice, these same
-controls apply, but saving first asks for a destination. See
-[[info:emacsvox#Keeping A Voice Experiment][Keep an Installed Voice Experiment]] for that sequence.
-
-The editor uses the ordinary navigation voice for its labelled fields.
-~n/p~, up/down or Tab moves between fields. Left/right adjusts
-a numeric field and moves between fields elsewhere; ~RET~
-activates a button or enters an adjustment value. Press ~d~
-on an adjustment to restore the adapter default; blank numeric entry does the
-same. Zero is an explicit value, such as the lowest pitch or leftmost pan,
-whereas adapter default leaves that setting to the speech adapter. They may
-sound the same for some effects, but they are different settings.
-/More adjustments and effects/ exposes filters,
-gain, pan and other optional controls below the button. Point stays on the
-button, and speech says ``More adjustments shown below'' or ``More adjustments
-hidden''. Move down or press Tab to enter the exposed controls; press Return
-on the button again to hide them. Changed values say what they were before
-editing; unsupported settings remain visible and are retained.
-Field navigation stops at the first and last field without wrapping. Numeric
-adjustments stop at their limits and announce the minimum or maximum.
-
-~P~ plays the edited voice. ~B~ compares the
-captured original with the edited version using the same text, with spoken
-labels. ~T~ changes that text; ~S~ stops.
-An automatic sample follows each adjustment unless you turn off
-/Automatic sample after adjustment/.
-The new value precedes the sample text, for example ``1. The quick brown fox…''.
-Toggling /Automatic sample after adjustment/ announces on or off with distinct
-cues. /More adjustments and effects/ and /Fallbacks/ present their visibility
-with open/close cues and optional spoken state labels, both when toggled and
-when reached during field navigation.
-Navigation stops an outstanding sample. ~u~ undoes an edit,
-including a reset to adapter default. ~q~ dismisses the editor
-and returns to its originating view, offering to retain or discard unsaved
-changes.
-
-Choose the /Physical voice/ field to search by engine or voice name. You can
-audition a candidate with the working adjustments before accepting it. Cancel
-keeps the previous choice and returns to the same field. Named voices also
-have an expandable /Fallbacks/ section: replace, reorder, remove or individually
-audition a choice, append another, or explicitly return to Automatic. Existing
-unavailable, engine-default and property choices are preserved. Shared
-adjustments apply to fields that a row inherits; /Customize this voice/ adds
-optional individual settings.
-
-For a named voice, ~w~ or ~C-c C-c~ saves and
-applies the complete draft. The save buttons are at the bottom of the editor,
-after the settings, previews and change details.
-/Save to collection without selecting/ saves an
-inactive palette without changing the current selection. The header reports
-unsaved changes, partial saves, applying, failures, or saved and applied.
-Retry uses the pending proposal and retains successful persistence steps.
-Changes made during an earlier apply remain unsaved when its acknowledgement
-arrives. A changed file or destination requires fresh review rather than an
-implicit merge.
-
-Named-voice previews test the complete choice chain without selecting the
-draft palette or changing live settings. They require an Omnivox server
-advertising complete-voice preview. Older servers report this operation
-as unsupported; individual physical auditions remain available. Playback
-reports identify actual accepted audio when the server supplies that evidence,
-including unsupported adjustments. They do not infer a successful fallback
-from inventory or claim exact effective numeric parameter values.
-
-~q~ returns to the originating row and column. With unsaved
-changes, choose to retain the draft, discard changes, or continue editing.
-Retained drafts survive closing the view and can be reopened from Home's
-/Resume unfinished changes/ during this Emacs session. They do not survive
-restarting Emacs. Leaving does not undo a completed save.
-
-/Save and apply/ selects the palette for this session. Use the
-/Use at Startup/ action, ~U~ in Voice Palettes, to retain
-that selection after restart. A save can involve more than one settings file.
-The editor reports partial failures and retains the proposal for retry; see
-[[info:emacsvox#Recovering Aural Changes][Recovering Unfinished Changes]].
-
 *** Understand Voice Adjustments
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Voice Adjustments
@@ -1456,7 +1312,7 @@ zero through nine; Relative Rate is the exception.
   Compare samples rather than treating it as another volume control.
 - /Gain/ changes output level. Five is unchanged; lower values reduce it and
   higher values increase it.
-- /Pan/ places supported audio from left at zero, through center at five,
+- /Pan/ places supported audio from left at zero, through centre at five,
   to right at nine. Its effect also depends on your output arrangement.
 - /Low-pass Amount/ and /High-pass Amount/ remove high and low frequencies,
   respectively. Both use zero for neutral and nine for strongest filtering.
@@ -1475,34 +1331,31 @@ Thus ``standard default palette'', ``Automatic physical selection'', and
 collection supplies the voice, who selects its physical voice, and who supplies
 one adjustment value.
 
-The voice editor presents /Low-pass Amount/ and /High-pass Amount/ from zero through
-nine. Higher amounts mean more filtering: low-pass removes more high
-frequencies, and high-pass removes more low frequencies. Zero is the neutral
-cutoff; blank numeric entry requests the adapter default. The amount scale
-applies to arrows and numeric entry in the common editor. Existing
-saved styles retain their sound; stored low-pass cutoff values keep their
-original meaning.
+The amount scale for /Low-pass Amount/ and /High-pass Amount/ applies to arrows
+and numeric entry in the common editor. Zero is the neutral cutoff; blank
+numeric entry requests the adapter default. Existing saved styles retain their
+sound; stored low-pass cutoff values keep their original meaning.
 
-The voice editor names other neutral effect values instead of speaking an ambiguous number:
-gain five is /unchanged/, pan five is /centre/, and reverb, echo, or chorus zero is
-/disabled/.  Chorus adds a bounded doubled-voice modulation without changing
-speech duration or marker positions.  It is applied by Omnivox to buffered
-audio; the voice editor reports when the selected route cannot apply it.  These
-portable levels are translated to the exact values required by the active
-adapter.
+The voice editor names other neutral effect values instead of speaking an
+ambiguous number: gain five is /unchanged/, pan five is /centre/, and reverb,
+echo, or chorus zero is /disabled/. Chorus adds a bounded doubled-voice
+modulation without changing speech duration or marker positions. It is applied
+by Omnivox to buffered audio; the voice editor reports when the selected route
+cannot apply it. These portable levels are translated to the exact values
+required by the active adapter.
 
 The built-in =acss-default= palette also includes a =telephone= named voice.
 It combines high-pass and low-pass filtering to give any buffered Omnivox
 engine a narrow-band telephone sound while preserving its selected physical
-voice, duration, and markers.  Preview it in /Voice Palettes/ or /Voice
-Workbench/ before assigning it to content.  Adapters without post-synthesis
+voice, duration, and markers. Preview it in /Voice Palettes/ or /Voice
+Workbench/ before assigning it to content. Adapters without post-synthesis
 filtering preserve the portable style but do not apply the filters.
 
-Omnivox average-pitch differences use the customizable
-=omnivox-average-pitch-contrast=.  Its default value, =0.5=, keeps palette
-distinctions while making them gentler.  Set it to =1.0= for the historical
-contrast, or =0= to make average pitch neutral.  Values through =2.0= are
-accepted.  Changing it refreshes logical-voice registration, and the same
+Omnivox average-pitch differences use the customisable
+=omnivox-average-pitch-contrast=. Its default value, =0.5=, keeps palette
+distinctions while making them gentler. Set it to =1.0= for the historical
+contrast, or =0= to make average pitch neutral. Values through =2.0= are
+accepted. Changing it refreshes logical-voice registration, and the same
 setting applies to previews, structured speech, and legacy inline voices.
 
 *** Choose And Tune Fallback Voices
@@ -1527,12 +1380,12 @@ in a requested pitch of seven. Without that rule, the choice requests four.
 Returning the choice field to /Use shared value/ makes it request six.
 
 Expand /Fallbacks/ to see which rows /use shared settings/ and which are
-/customized/. A row's action
-menu can audition that row or compare its original and edited versions.
-Comparison follows the same row after reordering, including two rows mapped to
-the same physical voice. A newly added row has no original to compare yet;
-audition it or compare the complete voice instead. Replacing a customized
-physical voice asks whether to keep its settings or return to shared settings.
+/customized/. A row's action menu can audition that row or compare its
+original and edited versions. Comparison follows the same row after reordering,
+including two rows mapped to the same physical voice. A newly added row has no
+original to compare yet; audition it or compare the complete voice instead.
+Replacing a customised physical voice asks whether to keep its settings or
+return to shared settings.
 
 Choose /Customize this voice/ in that row's menu for optional individual tuning.
 The panel names the physical voice it edits. Each field says /use shared value/,
@@ -1562,16 +1415,21 @@ and identify whether it was an original or edited sample. They distinguish
 inherited values, explicit defaults, zero and unsupported requests. These are
 requested settings, not measurements of the engine's native values or sound.
 
-Older Omnivox servers retain shared-only previews. Customized complete previews
+Older Omnivox servers retain shared-only previews. Customised complete previews
 require per-choice support; an individual audition is available only when its
 settings can be represented faithfully, including adapter defaults. Saving
 remains available when that preview is unavailable.
 
-/Engine-specific settings/ opens the selected engine's own
-parameters in the same voice draft. The available fields depend on what that
-speech worker can describe and apply. A worker that only describes controls
-shows them read-only. Engine-wide and startup settings are also read-only here;
-their help identifies their scope.
+**** Work with engine-specific parameters
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+/Engine-specific settings/ opens the selected engine's own parameters in the
+same voice draft. The available fields depend on what that speech worker can
+describe and apply. A worker that only describes controls shows them read-only.
+Engine-wide and startup settings are also read-only here; their help identifies
+their scope.
 
 Actions come first, followed by expandable groups with columns for parameter,
 value, source, and range. ~RET~ on a control offers
@@ -1587,7 +1445,7 @@ engine-specific settings/ removes its native overrides while preserving common
 adjustments and other choices. ~u~ undoes these edits.
 
 An automatic sample follows adjustments, with the parameter and value spoken
-before the sample. /Automatic sample after adjustment/ controls this behavior
+before the sample. /Automatic sample after adjustment/ controls this behaviour
 and shares its setting with the common editor. Opening, searching, refreshing,
 and asking for help do not play a voice sample. Use ~P~ to preview the selected
 voice, ~B~ to compare, and the usual Save action to keep the draft.
@@ -1597,7 +1455,7 @@ controls only/ shows explicit overrides. ~g~ refreshes the catalogue without
 restarting speech. If the engine is busy, the screen retries quietly for up to
 five seconds. Leaving the screen cancels retries. If it remains busy, wait for
 speech to finish and press ~g~ to try again.
-Unrecognized saved settings remain visible and can be removed explicitly.
+Unrecognised saved settings remain visible and can be removed explicitly.
 
 /Explain planned settings/ describes the captured draft without playing speech.
 On a worker that supports native settings, /Details and last playback evidence/
@@ -1627,14 +1485,14 @@ relative-rate values do not add together.
 
 ~P~ plays the edited voice in this context;
 ~B~ compares original and edited using the same captured facts,
-rules and text. These voice-only previews omit cues and spatial placement. Family remains a portable fallback outside full
-preview. On a server with per-choice support, the actual fallback's settings
-are applied before the captured context. An explicit rule value still overrides
-that row when it happens to equal the shared value. Requested values are
-separate from confirmed sample starts, accepted audio and
-unsupported adjustments. A changed or deleted source is rejected. After saving
-a rule, use /Refresh facts and rules from this source item/ to capture its new
-contribution. ~q~ returns to the base editor.
+rules and text. These voice-only previews omit cues and spatial placement.
+Family remains a portable fallback outside full preview. On a server with
+per-choice support, the actual fallback's settings are applied before the
+captured context. An explicit rule value still overrides that row when it
+happens to equal the shared value. Requested values are separate from confirmed
+sample starts, accepted audio and unsupported adjustments. A changed or deleted
+source is rejected. After saving a rule, use /Refresh facts and rules from
+this source item/ to capture its new contribution. ~q~ returns to the base editor.
 
 /Adjust for this context/ presents the matching criteria and asks whether the
 rule lasts always (personal), for this Emacs session, or for this buffer. Choose
@@ -1711,10 +1569,10 @@ behaviour. Exact character inspection also retains its existing behaviour.
 separately. A subject such as =🤔Dinner? 🍕🍕🍕= is spoken as /thinking face
 Dinner? pizza pizza pizza/, avoiding fallback caused by its four emoji.
 Above the configured limit, automatic naming is skipped for the whole item.
-One captured presentation object can
-contain several voice runs; a standalone preview sample is one item. Transport
-chunk sizes do not affect this limit. A sequence crossing a style or positioned
-cue boundary is conservatively left unchanged.
+One captured presentation object can contain several voice runs; a standalone
+preview sample is one item. Transport chunk sizes do not affect this limit.
+A sequence crossing a style or positioned cue boundary is conservatively left
+unchanged.
 
 Names come from the emoji table and Unicode character data bundled with Emacs.
 Arrows prefer the emoji names when available; the four plain directional arrows
@@ -1757,14 +1615,21 @@ fresh source presentation to try a different naming policy.
 #+cindex: physical voices
 #+cindex: speech engine preference
 
-Use /Voice Workbench/ when the question involves installed voices or engines.  Open it from Aural Home with ~W~.  Its main views are:
+Press ~C-e H v~ for /Voices and engines/. Press ~b~ to browse engines and
+their voices, ~p~ for voice palettes, or ~w~ to resume the Voice Workbench.
+Browser ~q~ commands unwind their child views, then return to this menu with
+the originating item selected. Workbench filters, selection, and staged edits
+are retained; returning still announces any unsaved engine-policy changes.
+Opening a browser directly keeps its ordinary return destination.
+
+Aural Home also opens /Voice Workbench/ with ~W~. Its main views are:
 
 #+attr_texinfo: :indic kbd :compact t
 - e :: Engines, such as Flite or Eloquence. Start here to try voices from a
-  particular synthesizer or inspect its availability.
+  particular synthesiser or inspect its availability.
 - v :: Physical voices: engine voices and, for Omnivox, installed downloads. Use this
   list to listen, compare, and experiment with their parameters. On an engine
-  row, this key opens just that engine's voices.
+  row, this key opens only that engine's voices.
 - l :: Named voices (the /Logical voices/ view): roles such as /bolden/ and /annotate/. Start here
   to change which physical voice reads a role.
 - s :: Styles and effects for those named voices. Use this view to inspect
@@ -1788,14 +1653,19 @@ details. Press ~q~ there to return to the selected engine row
 and column, and again from the engine list to leave the workbench. The direct
 view shortcuts remain available.
 
-Languages containing just one voice show that voice directly. Languages with
+*** Find and filter installed voices
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Languages containing only one voice show that voice directly. Languages with
 several voices appear under expandable headings. Each heading reports
 its voice count and whether it is expanded or collapsed; press
 ~RET~ to toggle it. Languages and voices start in alphabetical
-order, ignoring capitalization. Related regions form a tree: expand /English/,
+order, ignoring capitalisation. Related regions form a tree: expand /English/,
 then /United Kingdom/ to browse voices such as /English (West Midlands)/.
 Redundant single-child levels are omitted, and private language-tag codes do
-not become extra headings. Unrecognized language codes remain visible, and
+not become extra headings. Unrecognised language codes remain visible, and
 voices without a language are sorted under /Unknown language/.
 A list containing one language starts expanded. Expansion choices are remembered
 for each engine scope. Refreshes preserve the selected voice and column, including
@@ -1829,6 +1699,11 @@ previewing or palette editing. Engine overrides can prevent confirmation;
 /Active/ and engine details still report usability and runtime health.
 ~C~ also clears the quick filter.
 
+*** Distinguish installation, enablement, and active speech
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 Omnivox's physical list combines browsing and installed-voice management.
 /Installed/ shows library membership or an engine-supplied voice; /Enabled/
 is the desired selection for the next Apply. /Active/ shows current usability
@@ -1856,25 +1731,30 @@ unconfirmed deletion amount. After interrupted cleanup, press
 resume the retained operation. This needs an Omnivox build supporting voice
 uninstallation.
 
-The engine list reports /Availability/ before routing preferences.  An engine
+The engine list reports /Availability/ before routing preferences. An engine
 with a missing runtime stays visible as /unavailable/, with its reason under
-/Last failure/.  /Routing policy: allowed/ means the policy permits using that
-engine; it does not mean its runtime is installed.  Disabled policies, health,
+/Last failure/. /Routing policy: allowed/ means the policy permits using that
+engine; it does not mean its runtime is installed. Disabled policies, health,
 and temporary failures are reported separately.
 
+*** Compare samples and interpret the result
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 ~A~ plays available matching voices in displayed order,
-skipping unavailable rows.  ~B~ starts with the selected voice
-as A and offers another matching voice as B.  Choose /Search all engines/
-inside that prompt to compare outside the current filters.  Both samples use
-the same sentence.  ~T~ edits it, ~F~ filters,
+skipping unavailable rows. ~B~ starts with the selected voice
+as A and offers another matching voice as B. Choose /Search all engines/
+inside that prompt to compare outside the current filters. Both samples use
+the same sentence. ~T~ edits it, ~F~ filters,
 ~C~ clears filters, and ~R~ refreshes inventory.
 
-Labels identify each engine and voice.  Customize
+Labels identify each engine and voice. Customize
 =emacsvox-aural-preview-label-verbosity= for names, brief letters or numbers,
-or no labels.  Labels and samples share one preview sequence:
+or no labels. Labels and samples share one preview sequence:
 ~S~ or foreground navigation cancels the remaining samples.
 An exact-preview failure is reported instead of accepting a different voice
-as the requested one.  Availability and capability reports describe what the
+as the requested one. Availability and capability reports describe what the
 adapter advertises; they are not a listening test of every parameter.
 
 *** Experiment With An Installed Voice
@@ -1946,19 +1826,19 @@ personal destination. Note the active palette before beginning.
    while retaining existing alternative physical choices.
 3. The named-voice editor opens with the proposed combination. Nothing has
    been saved yet. Expand /Fallbacks/: the new first choice should be marked
-   customized, with any previous explicit choices after it. ~P~ plays the
+   customised, with any previous explicit choices after it. ~P~ plays the
    whole proposed voice. Review the reported engine and physical voice after
    the sample; an unavailable preferred choice can cause a fallback.
 4. Press ~w~ to save and apply. Wait for the editor's result. If it reports
    a partial save or failed application, keep the draft and follow
    [[info:emacsvox#Recovering Aural Changes][Recovering Unfinished Changes]]. A successful save selects the destination
-   palette for this session. Use ~U~ in Voice Palettes only if you also want
-   that palette at startup.
+   palette for this session. Use ~U~ in Voice Palettes only to select that
+   palette for startup as well.
 5. To reverse this change before saving, use ~u~ or discard the draft.
    After saving, reopen the named voice, expand /Fallbacks/, open the added
    choice's action menu with ~RET~, choose /Remove/, preview, and save.
    Removing that row retains the other choices and shared settings. Reactivate
-   your original palette if you also want to restore the session selection.
+   your original palette to restore the session selection as well.
 
 To tune a fallback independently, open its action menu and choose /Customize
 this voice/. Set one field, audition that choice, then select /Play whole
@@ -1972,6 +1852,12 @@ value. Reordering a choice carries its adjustments with it.
 :ALT_TITLE: Set Shared Engine Preferences
 :DESCRIPTION: Choose engine order and distinguish it from explicit palette choices.
 :END:
+
+Engine preference is global, not buffer-local. In ~C-e H v~, press ~e~ to
+choose a preferred engine for this session, ~S~ to choose and save one, or ~r~
+to restore the saved or initial engine order. These actions retain the engine
+availability and unsaved-policy checks. The speech-settings scope does not
+change their saving behaviour.
 
 **** Edit Saved Engine Configuration
 
@@ -2002,7 +1888,7 @@ so a saved change requires successful Apply before it can be heard there.
 **** Choose The Shared Preferred Engine
 
 For a quick engine preference, ~C-e d e~ chooses an available engine
-for the current Emacs session.  Use ~C-u C-e d e~ to save the new
+for the current Emacs session. Use ~C-u C-e d e~ to save the new
 preference. On a first run with no saved engine settings, the ordinary command
 uses the live Omnivox policy as an in-memory baseline and writes no file; the
 prefixed command explicitly saves that baseline and the selected preference.
@@ -2037,12 +1923,17 @@ covered in [[info:emacsvox#Optional Omnivox Engine Modules][Optional Omnivox Eng
 
 #+cindex: spatial presentation
 
-Presentation rules refer to auditory cues by semantic name.  A sound pack maps
+Presentation rules refer to auditory cues by semantic name. A sound pack maps
 those names to concrete audio assets and can inherit missing cues from another
-pack.  This separation lets you change the overall sound character without
+pack. This separation lets you change the overall sound character without
 rewriting every presentation rule.
 
-Open /Sound Packs/ from Aural Home.  In the manager:
+Open /Sound Packs/ from Aural Home, or press ~p~ in ~C-e H o~ /Sounds and
+output/. When opened from the menu, the browser's ~q~ returns to /Sounds and
+output/ with the same settings scope; another ~q~ returns to the main menu.
+Opening the browser directly keeps its usual quit destination.
+
+In the sound-pack manager:
 
 #+attr_texinfo: :indic kbd :compact t
 - P :: Audition a representative cue without activating the pack.
@@ -2051,18 +1942,37 @@ Open /Sound Packs/ from Aural Home.  In the manager:
 - v :: Validate the pack and report missing or invalid resources.
 - a :: Activate the selected pack.
 
-Use a sound pack when you want to change a family of cues together.  Use
-/Change a sound for this item/ or Your feedback rules when one semantic event needs
-a different cue, suppression, or restoration.
+Use a sound pack to change a family of cues together. Use /Change a sound for
+this item/ or Your feedback rules when one semantic event needs a different
+cue, suppression, or restoration.
 
 Spatial requests are portable descriptions rather than assumptions about one
-device.  Aural Home separates /Spatial Capabilities/, which reports what the
+device. Aural Home separates /Spatial Capabilities/, which reports what the
 current route can provide and how it falls back, from /Spatial Settings/, which
-controls output, separation, direction, speech, and cues.  Unsupported or mono
-output remains audible at the center rather than silently losing content.
+controls output, separation, direction, speech, and cues. Unsupported or mono
+output remains audible at the centre rather than silently losing content.
 
-Named tones are another compact presentation resource.  They do not require a
+Named tones are another compact presentation resource. They do not require a
 sampled sound file and may be used independently of the active sound pack.
+
+*** Tune line and boundary cues from the menu
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Press ~C-e H o c~ for /Line and boundary cues/. Choose blank, whitespace-only,
+separator, decorated, or unspeakable line feedback to tune its pitch and
+integer duration. Shift-left/right adjusts by 25 Hz or 5 milliseconds;
+~RET~ enters an exact value. Boundary and warning, and large movement, instead
+choose replacement earcons. These replacements affect every use of that named
+earcon, including warnings outside navigation.
+
+Each cue retains a global preview draft. ~SPC~ previews only the cue; ~s~
+stops. ~n~ silences it in the draft, ~r~ restores the bundled cue, and ~D~
+discards unsaved edits. ~S~ saves through personal rules, preserving unrelated
+rules; other presentation rules may still override it. ~q~ returns with the
+draft intact. This changes cue output, not which lines count as separators
+or decoration.
 
 *** Walkthrough: Try A Sound Pack
 :PROPERTIES:
@@ -2076,7 +1986,7 @@ sampled sound file and may be used independently of the active sound pack.
    cue. Preview does not select the pack.
 2. Press ~RET~ to browse its cues. Inspect /Availability/ and /Provider/:
    a cue may come from the pack itself, its parent, or a registered fallback.
-   Press ~P~ on a few cues you recognize. ~S~ stops playback.
+   Press ~P~ on a few cues you recognise. ~S~ stops playback.
 3. Press ~s~ to return to the pack manager, then ~v~ to validate the
    selected pack. Missing files and unresolved cues need attention before
    relying on the pack. Press ~a~ to activate it and revisit a familiar
@@ -2084,7 +1994,7 @@ sampled sound file and may be used independently of the active sound pack.
 4. To retain this selection, open Home's /Presentation profiles/ and save
    the current setup with ~N~, or deliberately update the selected profile
    with ~w~. Review its other fields: this saves the selected setup, not
-   just the sound pack. See [[info:emacsvox#Presentation Profiles][Save, Switch, and Share Your Setup]].
+   only the sound pack. See [[info:emacsvox#Presentation Profiles][Save, Switch, and Share Your Setup]].
 5. To restore the original, return to Sound packs and activate the pack you
    noted at the start. If you saved the experiment in a profile, restore or
    update that profile as well. Preview alone requires no restoration.
@@ -2143,7 +2053,7 @@ available actions depend on what your integration actually produced.
 4. Press ~m~ to review the matching facts. Press ~l~ and choose /This
    Emacs session/, review the summary, and press ~a~. Navigate onto another
    matching blank line to hear the live result.
-5. Restore the earlier behavior by disabling or deleting this session rule
+5. Restore the earlier behaviour by disabling or deleting this session rule
    in /Your feedback rules/. It also expires when Emacs exits.
 
 If the record contains a sampled cue instead of a tone, /Change a tone/ is
@@ -2163,18 +2073,27 @@ From Home, open /Spatial capabilities/ under /Troubleshooting/ to inspect
 what the current backend reports for speech and cues. Then open /Spatial
 settings/ under /Sounds and output/. Speech and cues have separate enable
 controls. Output can follow the backend capability or be declared mono.
-Maximum separation ranges from zero (centered) to one (full separation);
-direction can stay normal, reverse left and right, or center some or all
+Maximum separation ranges from zero (centred) to one (full separation);
+direction can stay normal, reverse left and right, or centre some or all
 requests.
 
-To try a gentler layout, note the existing maximum separation, set it to =0.3=
-with Customize's /Apply/ action, and repeat feedback that already requests
-spatial placement. Stereo headphones make left/right differences easier to
-compare. If all feedback remains centered, use Explain to check that the
-presentation requests placement and inspect the reported capability.
-A sample with no spatial request cannot demonstrate this setting.
+The menu route is ~C-e H o n~, /Notifications and spatial output/. Spatial
+controls apply immediately: enable presentation, speech and cues independently,
+choose automatic or mono output, change direction mapping, and limit separation
+from 0 to 1. Shift-left/right adjusts the selected separation by 0.1; ~RET~
+sets an exact value. ~SPC~ previews left then right cue requests; mono output
+or limited backend capabilities may centre them. ~x~ stops previews. ~S~ saves
+routing and spatial defaults through Customize without restarting. These
+controls are global and keep output-volume saving separate.
 
-For a centered comparison, temporarily select /Mono output/, apply, and repeat
+To try a gentler layout through Home's Customize page, note the existing
+maximum separation, set it to =0.3= with /Apply/, and repeat feedback that
+already requests spatial placement. Stereo headphones make left/right
+differences easier to compare. If all feedback remains centred, use Explain
+to check that the presentation requests placement and inspect the reported
+capability. A sample with no spatial request cannot demonstrate this setting.
+
+For a centred comparison, temporarily select /Mono output/, apply, and repeat
 the same action. Content should remain audible. Restore the values you noted
 when finished. Use Customize's save action or capture the spatial choices in
 a Presentation Profile to retain an intentional change across restarts.
@@ -2191,7 +2110,7 @@ and notification-device routing are separate settings.
 In the sound-pack manager, ~o~ opens the pack directory and ~g~ rescans
 and refreshes discovered resources. For a discovered personal pack, ~e~
 offers guided metadata editing: summary, parent, coverage profiles, and
-default spatialization. Registered built-in packs are read-only in this editor.
+default spatialisation. Registered built-in packs are read-only in this editor.
 Editing metadata saves it; this is not an unsaved voice-style draft.
 
 A pack's /coverage profiles/ declare sets of cues it intends to supply. They
@@ -2212,11 +2131,119 @@ ordinary change to when a cue plays, use /Change this feedback/.
 :DESCRIPTION: Set speech rate and understand foreground and background output.
 :END:
 
-Speech rate and output settings control how speech reaches you, independently
-of which presentation rule chose the content. /Speech rate/ in Home applies to
-the captured source buffer; invoke that action with a prefix argument to set
-the global rate. A named voice's relative rate adjusts its speech around the
-applicable base rate. See [[info:emacsvox#Voice Adjustments][Voice Adjustments]].
+Reading and output settings control how much detail you hear and how speech
+reaches you. They are separate from the rule that selected the content and
+from the voice palette that gives it a particular sound. The menu procedures
+below distinguish changes to the captured buffer, global defaults, and saved
+host configuration.
+
+*** Set the reading scope, rate, and punctuation
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+~C-e H s~ opens Speech settings for the current buffer. Press ~g~ to switch
+to global defaults, or start the main menu with ~C-u C-e H~. Indentation
+shares this scope with its parent menus, including changes made with ~g~
+inside Indentation. Opening or closing a menu saves nothing.
+
+In Speech settings, select /Rate/ and use Shift-left/right to adjust it by
+the configured rate step. ~RET~ or ~r~ enters an exact value. Speech must be
+running; Omnivox uses a 0 to 100 scale. Global rate changes also update the
+current buffer. Home's /Speech rate/ action likewise applies to the captured
+source buffer; invoke it with a prefix argument to set the global rate.
+A named voice's relative rate adjusts its speech around the applicable base
+rate. See [[info:emacsvox#Voice Adjustments][Voice Adjustments]].
+
+Press ~p~ in Speech settings for punctuation: ~n~ selects none, ~s~ some,
+~a~ all, and ~p~ offers built-in levels and available named profiles. In
+current-buffer scope, ~r~ restores automatic punctuation policy. ~q~ returns
+to Speech settings.
+
+Press ~e~ in Punctuation for the pronunciation editor. Its ~q~ returns to the
+same menu item, keeping unfinished drafts and the selected character. Reopening
+resumes that draft. The editor's ~s~ saves pronunciation overrides on the speech
+host; ~r~ explicitly restarts speech after confirmation. The menu's ~S~ saves
+only the selected punctuation level/profile through Customize, not the editor's
+host pronunciation draft.
+
+Press ~S~ in Speech settings to save the displayed rate and punctuation as
+defaults across restarts. The rate uses the current backend's startup option.
+Inside Punctuation, ~S~ saves only the displayed punctuation choice. Saving
+from current-buffer scope promotes those displayed values to defaults.
+Mode-specific punctuation policies and explicit buffer overrides still take
+precedence over the saved punctuation default.
+
+*** Adjust indentation feedback
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Press ~C-e H s i~ for Indentation, or use ~C-e d I~ directly. Its ~S~ command
+saves global indentation defaults through Customize. Select /Volume/ with the
+arrows and use Shift-left/right to adjust it by five percentage points. Plain
+left/right still changes sections. ~RET~ edits the value directly, and ~SPC~
+previews the indentation settings. Other items give brief guidance when you
+try to adjust them with shifted arrows.
+
+Press ~t~ in Indentation for pitch-tone settings. Choose base pitch, rise per
+column, maximum pitch, or requested duration; Shift-left/right adjusts and
+~RET~ enters an exact value. ~SPC~ previews four-column pitch feedback without
+changing the selected presentation or enabling indentation. ~s~ stops speech.
+Short durations show the effective blank-line tone minimum. ~R~ restores the
+four bundled values in the displayed scope. Global changes preserve local
+overrides; ~S~ saves global indentation defaults and tone volume through
+Customize. ~q~ returns with changes intact.
+
+*** Set capitalisation feedback and its beeps
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Press ~C-e H s c~ for /Capitalization/. Toggle indication with ~i~, choose
+spoken, tone, combined, personal-rule, or no presentation with ~p~, and toggle
+camel-case splitting independently with ~c~. These controls share the
+buffer/global scope selected by ~g~. ~SPC~ reads a short sample using the
+displayed settings. ~S~ saves those three reading settings as startup defaults;
+buffer overrides still apply.
+
+In Capitalization, press ~l~ for the capital-letter beep or ~a~ for the
+all-caps beep. Each editor keeps a separate global draft. Select pitch or
+duration, use Shift-left/right to adjust by 25 Hz or 5 milliseconds, or press
+~RET~ for an exact value. ~SPC~ previews only the beep; ~s~ stops it. Adjusting
+and previewing do not change your reading settings or enable capitalisation
+indication.
+
+In a beep editor, ~S~ saves that cue globally for tone and combined
+presentations. ~r~ puts the bundled cue into the draft; save to remove this
+menu's override. ~D~ discards edits and rereads the saved cue. ~q~ returns and
+~C-q~ closes the menus, retaining unsaved drafts for this Emacs session.
+Saving preserves unrelated personal rules and spoken labels. Other
+presentation rules may override the saved cue. Finish any unsaved personal-rule
+editor before saving a cue; if its saved rules changed elsewhere, discard the
+draft and reopen it.
+
+*** Choose typing and point feedback
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Press ~C-e H s t~ for /Typing and interaction/. Character, word, and
+completed-line echo, point indication and presentation, and spoken messages
+share the buffer/global scope. Global changes also update the originating
+buffer. Delayed phonetics after character navigation and its delay are global.
+Shift-left/right adjusts the selected delay by 0.1 seconds; ~RET~ enters an
+exact value of at least 0.1 seconds.
+
+~SPC~ previews the captured source line with the displayed point settings;
+~P~ speaks its character's phonetic name immediately, and ~s~ stops. ~S~
+explicitly saves the displayed settings through Customize, promoting buffer
+choices to startup defaults. Closing retains session changes without saving.
+
+*** Understand the main and notification streams
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 #+cindex: speech streams
 
@@ -2228,39 +2255,64 @@ Emacsvox assigns speech to one of two streams according to what caused it:
 
 - The /main stream/ presents foreground information produced directly by your
   current interaction, such as movement, entering a buffer, or opening a
-  message.  New navigation interrupts obsolete main-stream speech, and you can
+  message. New navigation interrupts obsolete main-stream speech, and you can
   interrupt a longer entry announcement by navigating again.
 
 - The /notification stream/ presents asynchronous events, such as completion
-  of background work.  It does not stop main-stream speech, and normal
-  navigation does not stop it, so both streams may be heard concurrently.  A
+  of background work. It does not stop main-stream speech, and normal
+  navigation does not stop it, so both streams may be heard concurrently. A
   notification cue and its associated speech are delivered together on this
   stream.
 
 Open /Audio output/ in Home to choose the notification arrangement and adjust
-volumes in Customize.
-With Omnivox, /Automatic/ normally uses an independent notification process.
-The left, right, and both choices select its output route.
+volumes in Customize. With Omnivox, /Automatic/ normally uses an independent
+notification process. The left, right, and both choices select its output route.
 /Use main output (notifications remain audible)/ sends notifications through
 the main process instead. Navigation can then interrupt them; this setting
 does not mute notifications. Other backends may use their configured device
 or fall back to the main stream.
 
-After changing the setting, initialize the arrangement with
-~C-e d C-n~. Use Customize's save action to retain the choice
-across restarts. In Lisp, =default= or an empty string selects main output;
-prefer the descriptive Customize labels for ordinary configuration.
+After changing the setting in Customize, initialise the arrangement with
+~C-e d C-n~. Use Customize's save action to retain the choice across restarts.
+In Lisp, =default= or an empty string selects main output; prefer the
+descriptive Customize labels for ordinary configuration.
 
-The same /Audio output/ page provides five independent Omnivox volume controls:
-main-stream tones and earcons, and
-notification-stream speech, tones and earcons. Each accepts an integer
-percentage from 0 to 100. The default, 100, preserves normal volume; 0 silences
-that component. For example, reduce notification speech to 35 while keeping
-notification earcons at 70 to hear brief cues more prominently than messages.
+The menu route is ~C-e H o n~, /Notifications and spatial output/. ~r~ chooses
+the notification route for the next speech restart: automatic, left, right,
+both, main output, or another device. The choice does not restart speech.
+~N~ previews the currently active output, which may still use the old route.
+~R~ explicitly restarts speech after confirmation. ~h~ opens a snapshot of
+notification history; ~q~ returns to the menu. ~S~ saves routing and spatial
+defaults through Customize without restarting. See
+[[info:emacsvox#Spatial Presentation Controls][Adjust Spatial Presentation]] for the placement controls in this menu.
 
-Customize applies volume changes to subsequent audio without restarting the
-server. Audio already prepared keeps its previous level. Save the settings in
-Customize to retain them across Emacs restarts; replacement and reconnected
+/Review notifications/ in Home also opens the notification history so you can
+read an announcement you missed. Stopping obsolete main speech is local to
+the main stream. An explicit =tts-stop= command stops both main and
+notification speech.
+
+*** Adjust output volumes
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Press ~C-e H o~ for /Sounds and output/. The menu and Home's /Audio output/
+page provide five independent global Omnivox volume controls: main-stream
+tones and earcons, and notification-stream speech, tones and earcons. Each
+accepts an integer percentage from 0 to 100. The default, 100, preserves normal
+volume; 0 silences that component. For example, reduce notification speech to
+35 while keeping notification earcons at 70 to hear brief cues more prominently
+than messages.
+
+In the menu, Shift-left/right adjusts the selected volume by five percentage
+points; ~RET~ enters an exact value. Changes apply immediately through the
+existing audio settings. Press ~S~ to save these five volumes across restarts.
+Routing and spatial settings have their own save action; saving volumes does
+not save them.
+
+Customize also applies volume changes to subsequent audio without restarting
+the server. Audio already prepared keeps its previous level. Save the settings
+in Customize to retain them across Emacs restarts; replacement and reconnected
 Omnivox processes receive the current settings automatically.
 
 Independent notification levels require the separate notification process
@@ -2270,11 +2322,93 @@ process's levels. Earcon volume controls apply to sounds played by Omnivox;
 external sound players and other speech backends do not use these settings.
 Setting a volume to zero does not disable notification recording.
 
-/Review notifications/ in Home opens the notification history so you can read
-an announcement you missed.
+*** Adjust an integration's speech settings
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-Stopping obsolete main speech is local to the main stream.  An explicit
-=tts-stop= command stops both main and notification speech.
+<<Integration speech settings>>
+
+Use ~C-e H j~ for integration speech settings, or ~C-e H . j~ from
+current-buffer settings. ~s~ invokes the existing local Agent Shell
+session-level chooser or EAT/comint autospeak control. ~c~ opens the source
+integration's settings; ~a~ chooses among Shell/comint and installed Agent
+Shell, EAT, Org, Notmuch, and EWW integrations. Cancel the chooser to return
+to its menu entry. ~C-e S~ opens the focused settings directly where available.
+
+**** Shell/comint and EAT
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+From a shell or Comint buffer, ~C-e H j c~ opens a focused Transient. ~s~
+toggles automatic output speech; ~b~ toggles background monitoring, which
+needs automatic speech enabled to read output while you are elsewhere. Arrows
+announce the current values and ~RET~ activates the selected control. Both
+changes affect only the captured buffer and last for that buffer's lifetime;
+there is no Save action. ~q~ returns to the entry you opened it from. You can
+also find these controls with ~C-e H /~ by searching for =comint= or =monitoring=.
+Choosing Shell/comint from another kind of buffer explains where to open the
+controls and leaves them unavailable.
+
+From EAT, ~C-e H j c~ opens its terminal settings: ~s~ toggles foreground
+speech, ~b~ toggles background cues and unread counts, ~p~ opens prompt-feedback
+choices, and ~d~ opens automatic-feedback detail choices. Each list starts on
+the current value: arrows browse, ~RET~ applies and returns, and ~q~ cancels.
+Changes are local to the captured terminal, including when opened from its
+frozen review. ~w~ explicitly saves the four values as defaults; other terminals
+without local overrides inherit them. ~A~ opens advanced EAT Customize settings,
+and ~q~ returns to the menu. Search with ~C-e H /~ also finds each EAT control.
+See [[info:emacsvox#EAT Terminal Access][EAT Terminal Access]] for prompt requirements and feedback policies.
+
+**** Agent Shell, Org, and EWW
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Agent Shell has a focused menu for session speech, global feedback defaults,
+and reading limits; ~w~ saves only its displayed global defaults. See
+[[info:emacsvox#Agent Shell][Agent Shell]] for its controls.
+
+Org opens a table-feedback Transient: ~c~ opens explained choices for cell,
+header, and combined feedback; ~w~ saves that global default. Column headers
+come from the first row, and row headers from the first column. Buffer-local
+settings take precedence. ~t~ opens Org's structured table options in Customize
+and ~A~ opens advanced Emacsvox Org settings. Both return with ~q~.
+
+EWW opens a focused menu: ~s~ toggles section-navigation autospeak and ~i~
+toggles image suppression for subsequent rendering. It also updates the shared
+SHR image default, preserving buffer-local overrides. It does not reload the
+current page. ~w~ saves the two Emacsvox defaults and ~A~ opens advanced settings.
+
+**** Notmuch and shared choice-list navigation
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Notmuch opens the same focused menu from its welcome, search, message and tree
+views. ~c~ opens explained choices for adaptive, count-only, cue-only and silent
+successful-search feedback; failures remain audible. ~f~ and ~b~ set per-field
+character and UTF-8 byte limits; ~t~ and ~B~ set total limits. Shift-left/right
+adjusts the selected limit by 100; ~RET~ accepts an exact positive integer or
+=none= to disable that limit. Other limits still apply. ~w~ saves these five
+displayed global defaults.
+
+The Org and Notmuch choice lists select the current global value on entry.
+Arrows browse without applying, ~RET~ applies and returns, and ~q~ cancels.
+Press ~?~ followed by a choice's key for spoken Help about its effect and
+scope. Return with ~q~; the browsed choice remains selected, so ~RET~ still
+targets that item.
+
+In Notmuch, ~s~ and ~m~ open ordered search/message field lists; ~i~ and ~I~
+open their status-tag and fallback-cue maps. These Customize editors preserve
+custom formatter functions and use their own Apply, Save and Reset actions.
+~p~ opens Presentation Options: when =mail-message-status-cues= is enabled,
+its rules own the standard status cues while the maps still suppress spoken
+status tags. ~A~ opens advanced settings, including field separators. Return
+from each editor with ~q~. Opening or returning does not save changes.
+Integrations without an inventoried entry remain reachable through major-mode
+settings and advanced Customize.
 
 ** Save, Switch, And Share Your Setup
 :PROPERTIES:
@@ -2287,9 +2421,16 @@ Stopping obsolete main speech is local to the main stream.  An explicit
 
 A presentation profile records a coordinated setup: enabled Presentation
 Options and their order, the sound pack, the voice palette, and portable
-spatial settings.  This is useful for switching between focused work and
+spatial settings. This is useful for switching between focused work and
 leisure reading, between quiet and information-rich feedback, or between audio
 environments.
+
+Use ~C-e H p~ for saved presentation profiles, voice palettes, and unfinished
+changes. Profile inspection explains what a setup captures before activation.
+Each editor keeps its own Save and Apply actions. The palette manager retains
+its inheritance and reset commands: ~w~ exports portable voices, ~W~ makes a
+full local backup, and ~i~ imports an independent palette. Import does not
+activate it. See [[info:emacsvox#Sharing Voice Palettes][Export, Back Up, and Import Palettes]] for the limits of each format.
 
 To save and use a profile:
 
@@ -2305,12 +2446,12 @@ To save and use a profile:
    its saved values.
 
 5. If you deliberately change the live configuration and want the selected
-   profile to adopt it, press ~w~.  If you instead want to discard the
-   live differences, press ~a~ to restore the saved profile; Emacsvox
-   asks before replacing the diverged values.
+   profile to adopt it, press ~w~. To discard the live differences instead,
+   press ~a~ to restore the saved profile; Emacsvox asks before replacing
+   the diverged values.
 
-Only one profile identity is selected.  /Active/ means the selected profile's
-saved values match the live configuration.  /Diverged/ means the same profile
+Only one profile identity is selected. /Active/ means the selected profile's
+saved values match the live configuration. /Diverged/ means the same profile
 is still selected but the live values differ; it is a status, not an unsaved
 editor warning.
 
@@ -2320,9 +2461,9 @@ it. A profile is therefore a convenient selection of settings, not a backup.
 Profiles do not capture engine policy, speech rate, or notification output.
 
 Profiles do not copy presentation rules. Edit rules through Presentation
-Options or /Your feedback rules/. They also do not capture buffer-local Voice Lock state or
-current-buffer rules, because those belong to an individual buffer rather than
-a global setup.
+Options or /Your feedback rules/. They also do not capture buffer-local Voice
+Lock state or current-buffer rules, because those belong to an individual
+buffer rather than a global setup.
 
 *** Walkthrough: Switch Reading And Working Setups
 :PROPERTIES:
@@ -2334,9 +2475,9 @@ a global setup.
 This example saves two profiles with different voice or sound selections.
 Use unused names and note the profile selected before starting.
 
-1. Open ~C-e H h P~. If you want a restore point for the current selected
-   options and resources, press ~N~ and save =before-demo= with a short
-   purpose. This captures those selections and makes the new profile selected.
+1. Open ~C-e H h P~. To keep a restore point for the current selected options
+   and resources, press ~N~ and save =before-demo= with a short purpose.
+   This captures those selections and makes the new profile selected.
    It does not back up rules, resource definitions, or engine settings.
 2. From Home, activate the voice palette and sound pack you want for reading.
    Enable any desired Presentation Options and choose spatial settings.
@@ -2349,7 +2490,7 @@ Use unused names and note the profile selected before starting.
    =working-setup-demo= and apply it to compare the two setups.
 5. Change one live option without updating the profile. The selected profile
    now reports /Diverged/. Press ~a~ on it to restore its saved settings,
-   or ~w~ if you intend to replace its saved values with the current ones.
+   or ~w~ to replace its saved values with the current ones.
    Read the confirmation before discarding live differences.
 6. Applying a profile also saves its selection for future sessions. Finish on
    the profile you want at startup. To restore the earlier setup, apply the
@@ -2414,11 +2555,11 @@ unavailable choice is a request to review, not evidence of successful audio.
 Delete the imported copy when finished if no profiles, children, or rules
 need it. The original palette is unchanged by this trial.
 
-Use uppercase ~W~ when the aim is to retain exact local choice data with
-the required palette ancestry. Importing that backup still creates a new,
-independent palette; it does not overwrite the original tree. Neither form
-contains speech engines or sound-pack audio, and a palette backup is not a
-backup of every Emacsvox setting.
+Use uppercase ~W~ to retain exact local choice data with the required palette
+ancestry. Importing that backup still creates a new, independent palette; it
+does not overwrite the original tree. Neither form contains speech engines
+or sound-pack audio, and a palette backup is not a backup of every Emacsvox
+setting.
 
 ** Troubleshooting And Recovery
 :PROPERTIES:
@@ -2442,11 +2583,11 @@ Use the symptom to choose the shortest diagnostic route:
 | A saved setup no longer appears active | Check whether the selected Presentation Profile is active or diverged. |
 | Voice changes disappear only in some buffers | Compare Voice Lock and explicit face-presentation state. |
 
-Open /Aural Doctor/ from Aural Home or press ~D~ there.  The doctor
+Open /Aural Doctor/ from Aural Home or press ~D~ there. The doctor
 checks live bindings, loaded source or byte-code, the compatibility baseline,
 options, profiles, personal data, sound resources, spatial fallback, and the
-speech backend.  It does not start the speech server or change settings
-automatically.  When one row offers a reviewed safe repair, press ~r~
+speech backend. It does not start the speech server or change settings
+automatically. When one row offers a reviewed safe repair, press ~r~
 on that row to run it.
 
 Separate main and notification rows show each current connection's capabilities
@@ -2458,7 +2599,7 @@ log and bundled launcher's log directory without opening them. Press ~y~ to copy
 the displayed report; review personal paths and configuration details before
 sharing it. Speech text and log contents are not included.
 
-Press ~?~ in any Aural interface for its complete current keys.  If
+Press ~?~ in any Aural interface for its complete current keys. If
 speech itself is absent rather than merely presented incorrectly, follow
 [[*Backend Diagnostics And Responsibilities][Backend Diagnostics And Responsibilities]]; presentation diagnostics assume that a speech route can run.
 
@@ -2481,6 +2622,25 @@ name is a configuration error. Ordinary speech preserves the text using an
 unstyled voice and records a diagnostic; it does not invent the missing
 palette entry. Doctor and Explain help locate the unresolved reference.
 
+*** Review changed settings before editing again
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Use ~C-e H d~ to review changed settings and retained drafts. The read-only
+table separates the captured buffer's current value, the current global
+default, and the saved startup value known to Customize. It includes loaded
+Emacsvox, TTS, and Omnivox options that are saved, locally overridden, or differ
+from their standard value. Saved expressions are shown as recorded by
+Customize. ~RET~ reads the complete row with its scopes; ~g~ refreshes and
+~q~ returns.
+
+Unfinished editor and cue drafts appear separately. Voice, rule, and host
+pronunciation stores retain their own save/apply rules. This snapshot does not
+reread disk files, query the speech host, prove that a saved setting is active,
+or include options from integrations that have not loaded. Return to the owning
+settings menu or editor to change a value, save it, or apply a required restart.
+
 *** Recover Unfinished Changes
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Recovering Aural Changes
@@ -2488,12 +2648,15 @@ palette entry. Doctor and Explain help locate the unresolved reference.
 :DESCRIPTION: Resume drafts and distinguish saved settings from confirmed application.
 :END:
 
-Use ~h~ to leave a working editor through Home without losing
-it.  Home's /Resume unfinished changes/ opens the original draft, including
-its source and working settings.  In the common voice editor, ~u~ undoes and
-~q~ offers to keep the draft, discard changes, or continue.  Guided feedback
-~q~ goes back one level, then hides and retains the draft at
-the top level.  To undo an already applied
+Use ~h~ to leave a working editor through Home without losing it. Home's
+/Resume unfinished changes/ opens the original draft, including its source and
+working settings. From ~C-e H p~, the drafts entry opens Home on /Resume
+unfinished changes/; press ~RET~ to choose a retained editor. Return through
+Home to the same menu entry.
+
+In the common voice editor, ~u~ undoes and ~q~ offers to keep the draft,
+discard changes, or continue. Guided feedback ~q~ goes back one level, then
+hides and retains the draft at the top level. To undo an already applied
 rule, open /Your feedback rules/, select it in the appropriate scope, and
 use ~t~ to disable it or ~d~ to remove it.
 
@@ -2502,13 +2665,13 @@ unsaved edits; it does not undo a completed save. A voice editor reports saved
 settings separately from successful application to the speech server. Keep
 that distinction when deciding whether to retry or to edit the saved voice.
 
-Applying waits for each speech stream to acknowledge its configuration.  If
+Applying waits for each speech stream to acknowledge its configuration. If
 an Omnivox apply times out, the Workbench reports /server outcome unconfirmed/.
 Emacsvox stops that apply and sends no later steps, but changes already sent
 may still take effect on the server. A timeout does not undo the saved engine
 settings or confirm that the server rejected them. Press ~r~ to reapply
-the saved engine settings and obtain a fresh result.  Save or cancel any newer
-staged edits before retrying.  A partial result retains the streams that
+the saved engine settings and obtain a fresh result. Save or cancel any newer
+staged edits before retrying. A partial result retains the streams that
 acknowledged success and identifies those that timed out.
 
 ** Voice Lock And Advanced Configuration
@@ -2521,8 +2684,8 @@ acknowledged success and identifies those that timed out.
 #+cindex: Voice Lock
 
 Voice Lock is one compatibility input to Aural Presentation, not the whole
-presentation system.  It maps established Emacs faces and =personality= text
-properties to voices.  Emacs calls its visual style labels /faces/; Emacsvox
+presentation system. It maps established Emacs faces and =personality= text
+properties to voices. Emacs calls its visual style labels /faces/; Emacsvox
 can use those labels without requiring you to see them.
 
 The three related policies are independent:
@@ -2541,20 +2704,20 @@ To find out whether a distinction comes from Voice Lock:
 2. Press ~C-e d v~ to toggle Voice Lock only in that buffer, then
    compare the same elements.
 
-3. Press ~C-e E~ on the element.  The explanation reports the
+3. Press ~C-e E~ on the element. The explanation reports the
    Voice Lock and explicit face-presentation state alongside the rules that
    contributed to the result.
 
-Turning Voice Lock off removes only its compatibility voice contribution.  It
+Turning Voice Lock off removes only its compatibility voice contribution. It
 does not disable semantic presentation, explicit face rules, auditory cues,
-tones, or ordinary spoken status.  The global Voice Lock command updates
+tones, or ordinary spoken status. The global Voice Lock command updates
 existing and new buffers; an individual mode can still opt out when it starts.
 Buffer-local Voice Lock state is not saved in a presentation profile.
 
-For new customization, prefer explanation, Aural Home, voice palettes, and
-Voice Workbench.  Older configurations can still customize a named legacy
-voice's =-settings= option, such as =voice-monotone-settings=.  Customize the
-settings option rather than a generated =acss-...= voice symbol.  Historical
+For new customisation, prefer explanation, Aural Home, voice palettes, and
+Voice Workbench. Older configurations can still customise a named legacy
+voice's =-settings= option, such as =voice-monotone-settings=. Customise the
+settings option rather than a generated =acss-...= voice symbol. Historical
 background is preserved in
 [[info:emacsvox-heritage#Audio Formatting And Aural CSS][Audio Formatting And Aural CSS]] in /Emacspeak Heritage/.
 
@@ -2565,7 +2728,7 @@ root, not a second hidden palette fallback. Explicit styles keep their own
 settings, and explicit presentation rules can change the resulting voice.
 
 The [[info:emacsvox#Integration Maintenance][Developer Guide]] covers voice-style metadata, rule authoring contracts,
-and integration behavior; [[info:emacsvox#Speech Server Protocols][Speech Server Protocols]] covers delivery.
+and integration behaviour; [[info:emacsvox#Speech Server Protocols][Speech Server Protocols]] covers delivery.
 The generated [[info:emacsvox-reference#Emacsvox Commands And Options][Emacsvox Commands And Options]] in /Emacsvox Reference Manual/
 records exact commands, options, and keymaps. These references complement the
 tasks here; they are not prerequisites for using Aural Home.
