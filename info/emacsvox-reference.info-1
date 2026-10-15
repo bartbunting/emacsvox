@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1663 commands and 234 options.
+   This chapter documents a total of 1664 commands and 239 options.
 
 * Menu:
 
@@ -663,6 +663,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-sounds:: auditory icons.
 * emacsvox-speak:: Core Speech Lib.
 * emacsvox-speedbar:: speedbar -.
+* emacsvox-spelling:: Spelling feedback settings.
 * emacsvox-sql:: Speech enable sql-mode.
 * emacsvox-sudoku:: Play SuDoku.
 * emacsvox-supercite:: Speech enable SC.

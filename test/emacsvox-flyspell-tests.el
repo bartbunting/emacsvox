@@ -6,6 +6,7 @@
 (require 'package)
 (package-initialize)
 (require 'flyspell)
+(require 'message)
 (load
  (expand-file-name "../lisp/emacsvox-flyspell.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
@@ -202,5 +203,169 @@
             (overlays-in (point-min) (point-max)))))
       (when (process-live-p ispell-process)
         (delete-process ispell-process)))))
+
+(ert-deftest emacsvox-flyspell-reply-setup-marks-errors-without-cues ()
+  "Notmuch reply construction stays quiet without disabling spell checking."
+  (skip-unless (executable-find "hunspell"))
+  (skip-unless (file-exists-p "/usr/share/hunspell/en_AU.dic"))
+  (skip-unless (require 'notmuch-mua nil t))
+  (let ((ispell-program-name "hunspell")
+        (ispell-dictionary "en_AU")
+        (ispell-process nil)
+        (text-mode-hook (list (lambda () (flyspell-mode 1))))
+        (message-mode-hook nil)
+        (message-signature nil)
+        (message-directory (make-temp-file "emacsvox-spelling-mail-" t))
+        (notmuch-mua-user-agent-function nil)
+        (notmuch-show-process-crypto nil)
+        (notmuch-message-replied-tags nil)
+        (flyspell-pre-buffer nil)
+        (this-command 'notmuch-show-reply)
+        icons)
+    (unwind-protect
+        (with-temp-buffer
+          (cl-letf (((symbol-function 'emacsvox-icon)
+                     (lambda (icon) (push icon icons)))
+                    ((symbol-function 'notmuch-call-notmuch-sexp)
+                     (lambda (&rest _)
+                       '(:reply-headers
+                         (:From "Tester <test@example.invalid>"
+                          :To "Qzxv Qzxq <sender@example.invalid>"
+                          :Subject "Re: I start to like Emacsvox")
+                         :original
+                         (:headers
+                          (:From "Qzxv Qzxq <sender@example.invalid>"
+                           :Date "Thu, 15 Oct 2026 12:42:28 +0200")))))
+                    ((symbol-function 'notmuch-mua-pop-to-buffer)
+                     (lambda (&rest _) (notmuch-message-mode)))
+                    ((symbol-function 'notmuch-address-setup) #'ignore)
+                    ((symbol-function 'notmuch-fcc-header-setup) #'ignore)
+                    ((symbol-function 'notmuch-mua-maybe-set-window-dedicated)
+                     #'ignore)
+                    ((symbol-function 'notmuch-show-insert-body)
+                     (lambda (&rest _)
+                       (insert "Hello,\nEmacsvox helps me read mail.\n"))))
+            (notmuch-mua-reply "synthetic-message")
+            (should flyspell-mode)
+            (should flyspell-changes)
+            (should-not (memq 'help icons))
+            (setq icons nil)
+            (let ((text (buffer-string))
+                  (position (point)))
+              (flyspell-post-command-hook)
+              (should-not icons)
+              (should-not flyspell-changes)
+              (should (= (point) position))
+              (should (equal (buffer-substring-no-properties
+                              (point-min) (point-max))
+                             (substring-no-properties text)))
+              (should (seq-some #'flyspell-overlay-p
+                                (overlays-in (point-min) (point-max)))))))
+      (when (process-live-p ispell-process) (delete-process ispell-process))
+      (delete-directory message-directory t))))
+
+(ert-deftest emacsvox-flyspell-editing-keeps-spelling-cues ()
+  "Typing errors still cues in ordinary text and mail composition buffers."
+  (skip-unless (executable-find "hunspell"))
+  (skip-unless (file-exists-p "/usr/share/hunspell/en_AU.dic"))
+  (let ((ispell-program-name "hunspell")
+        (ispell-dictionary "en_AU")
+        (ispell-process nil)
+        (text-mode-hook nil)
+        (message-mode-hook nil))
+    (unwind-protect
+        (dolist (mode '(text-mode message-mode))
+          (with-temp-buffer
+            (funcall mode)
+            (when (eq mode 'message-mode)
+              (insert "To: test@example.invalid\nSubject: Test\n"
+                      mail-header-separator "\n\n"))
+            (cl-letf (((symbol-function 'emacsvox-icon) #'ignore))
+              (flyspell-mode 1))
+            (should flyspell-mode)
+            (let ((start (point))
+                  (this-command 'newline)
+                  (flyspell-incorrect-hook
+                   (list #'emacsvox-flyspell--incorrect))
+                  icons)
+              (insert "mispeled")
+              (flyspell-pre-command-hook)
+              (insert "\n")
+              ;; Multiple edits can queue the same word more than once.
+              (setq flyspell-changes (make-list 4 (cons start (point))))
+              (cl-letf (((symbol-function 'emacsvox-icon)
+                         (lambda (icon) (push icon icons))))
+                (flyspell-post-command-hook)
+                (ert-info ((format "%s: initial edit" mode))
+                  (should (equal icons '(help))))
+                (should (seq-some #'flyspell-overlay-p
+                                  (overlays-in start (point))))
+                ;; A later edit must still announce a misspelling.
+                (setq icons nil)
+                (goto-char start)
+                (delete-region start (point-max))
+                (insert "mispeledx")
+                (flyspell-pre-command-hook)
+                (insert "\n")
+                (flyspell-post-command-hook)
+                (ert-info ((format "%s: subsequent edit" mode))
+                  (should (equal icons '(help))))))))
+      (when (process-live-p ispell-process) (delete-process ispell-process)))))
+
+(ert-deftest emacsvox-flyspell-repeated-changes-cue-once-per-word ()
+  "Interleaved checks of two errors give two cues, not one per queued change."
+  (skip-unless (executable-find "hunspell"))
+  (skip-unless (file-exists-p "/usr/share/hunspell/en_AU.dic"))
+  (let ((ispell-program-name "hunspell")
+        (ispell-dictionary "en_AU")
+        (ispell-process nil)
+        (text-mode-hook nil))
+    (unwind-protect
+        (with-temp-buffer
+          (text-mode)
+          (insert "mispeled qzxq\n")
+          (cl-letf (((symbol-function 'emacsvox-icon) #'ignore))
+            (flyspell-mode 1))
+          (let ((this-command 'newline)
+                (flyspell-pre-point nil)
+                icons)
+            (cl-letf (((symbol-function 'emacsvox-icon)
+                       (lambda (icon) (push icon icons))))
+              (dotimes (_ 2)
+                (setq icons nil
+                      flyspell-changes '((1 . 9) (10 . 14) (1 . 9) (10 . 14)))
+                (flyspell-post-command-hook)
+                (should (equal icons '(help help)))))))
+      (when (process-live-p ispell-process) (delete-process ispell-process)))))
+
+(ert-deftest emacsvox-flyspell-reading-owns-post-command-cue ()
+  "Reading a flagged word prevents a later cue from the real automatic checker."
+  (skip-unless (executable-find "hunspell"))
+  (skip-unless (file-exists-p "/usr/share/hunspell/en_AU.dic"))
+  (let ((ispell-program-name "hunspell") (ispell-dictionary "en_AU")
+        (ispell-process nil) (text-mode-hook nil) (message-mode-hook nil))
+    (unwind-protect
+        (with-temp-buffer
+          (message-mode)
+          (insert "To: test@example.invalid\nSubject: Test\n" mail-header-separator
+                  "\n\nParham Doustdar <parham90@gmail.com> writes:\n> Hi Bart,\n")
+          (cl-letf (((symbol-function 'emacsvox-icon) #'ignore))
+            (flyspell-mode 1)
+            (flyspell-buffer))
+          (goto-char (point-min))
+          (search-forward "> Hi Bart,")
+          (beginning-of-line)
+          (setq flyspell-changes nil)
+          (let ((this-command 'previous-line) icons)
+            (flyspell-pre-command-hook)
+            (forward-line -1)
+            (let ((text (emacsvox-flyspell--annotate
+                         (emacsvox-aural-source-substring
+                          (line-beginning-position) (line-end-position)))))
+              (should (get-text-property 0 emacsvox-aural-positioned-facts-property text)))
+            (cl-letf (((symbol-function 'emacsvox-icon) (lambda (icon) (push icon icons))))
+              (flyspell-post-command-hook))
+            (should-not icons)))
+      (when (process-live-p ispell-process) (delete-process ispell-process)))))
 
 (provide 'emacsvox-flyspell-tests)

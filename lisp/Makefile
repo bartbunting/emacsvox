@@ -107,6 +107,7 @@ emacsvox-aural-voice-editor.elc \
 emacsvox-aural-voice-menu.elc \
 emacsvox-capitalization.elc \
 emacsvox-interaction.elc \
+emacsvox-spelling.elc \
 emacsvox-line-cues.elc \
 emacsvox-output-settings.elc \
 emacsvox-settings.elc \
@@ -428,6 +429,7 @@ emacsvox-settings.elc: emacsvox-aural-menu.elc
 emacsvox-output-settings.elc: emacsvox-aural-menu.elc emacsvox-aural-spatial.elc emacsvox-aural-preview.elc
 emacsvox-line-cues.elc: emacsvox-aural-menu.elc emacsvox-aural-editor.elc emacsvox-aural-preview.elc emacsvox-aural-tools.elc
 emacsvox-interaction.elc: emacsvox-aural-menu.elc
+emacsvox-spelling.elc: emacsvox-aural-menu.elc emacsvox-flyspell.elc
 emacsvox-aural-voice-bulk.elc: emacsvox-aural-voice-editor.elc
 emacsvox-aural-voice-engine-controls.elc: emacsvox-aural-voice-editor.elc omnivox-parameters.elc
 emacsvox-aural-voice-context.elc: emacsvox-aural-voice-editor.elc emacsvox-aural-editor.elc emacsvox-aural-tools.elc

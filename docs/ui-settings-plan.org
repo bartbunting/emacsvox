@@ -1050,6 +1050,7 @@ contextual integration selector.
 | Markdown and Info | =emacsvox-markdown-auto-reading-mode=; =emacsvox-info-select-node-speak-chunk= | Add reading-integration links; do not assume their upstream mode groups contain these options. |
 | Gnus and ERC | =emacsvox-gnus-punctuation-mode=; =emacsvox-gnus-large-article=; =emacsvox-erc-ignore-notices=; =emacsvox-erc-toggle-room-monitor= | Add integration discovery, including ERC participant and personal-monitor controls. |
 | Spelling and review | =emacsvox-ispell-max-choices=; =emacsvox-flyspell-correct=; =emacsvox-org-srs-use-command-confirmation=; =emacsvox-org-srs-announce-pending-count= | Link actual speech options when the corresponding package is available. |
+| Spelling presentation | =emacsvox-flyspell-use-voice=; =emacsvox-flyspell-use-tone=; =emacsvox-flyspell-use-earcon=; =emacsvox-flyspell-tone-pitch=; =emacsvox-flyspell-tone-duration= | Implemented prototype at =C-e H s f=: independent global feedback toggles, pitch/duration adjustments, tone and reading previews, explicit Save. Shared main-tone volume is labelled separately. Listening pending. |
 | Terminal review | =emacsvox-toggle-eterm-autospeak=; =emacsvox-eterm-toggle-focus-window=; =emacsvox-eterm-toggle-filter-window=; =emacsvox-eterm-toggle-pointer-mode= | Inventory as contextual terminal controls; preserve their existing interaction model. |
 | Popup help | =emacsvox-which-key-toggle-auto-speak=; =emacsvox-hydra-toggle-talkative= | Missing session controls. Hydra changes the upstream =hydra-is-helpful= variable; it is not an Emacsvox Custom default. |
 | OCR | =emacsvox-ocr-customize=; =emacsvox-ocr-engine= | Link the existing configuration workflow, including scanning and PaddleOCR options; do not make a root entry for every engine parameter. |
@@ -1479,6 +1480,63 @@ behaviour settles. Preserve earlier evidence without treating it as current
 verification of subsequently changed code.
 
 ** Findings queue
+
+- 2026-10-16: Opening a Notmuch reply produced six spelling cues. The speech
+  log showed six separate sound requests; a synthetic reply with real Hunspell
+  reproduced repeated checks of inserted sender names and the subject.
+  Flyspell now keeps checking and highlighting when entering a composition
+  buffer, but suppresses that automatic pass's spelling cues. Ordinary editing
+  retains feedback, with one cue per word and position in each checking pass.
+  All 16 Flyspell checks pass from source and compiled code in fresh Emacs,
+  including reply construction, subsequent mail/text edits, and duplicate
+  checks. Incremental compilation and byte-code preflight pass.
+  The initial documentation review gate found a stale generated manual from
+  separate keyboard-reference and task-lookup changes. Regeneration during
+  spelling-feedback commit preparation resolved that prerequisite.
+  Listening accepted on 2026-10-16 for opening a reply without the cue burst.
+  Ordinary editing cues have automated coverage; listening acceptance for
+  typing and leaving a misspelled word remains open.
+
+- 2026-10-16: Reading a reply attribution can play a spelling cue near the end
+  of the line instead of at the flagged word. In test Emacs PID 719265,
+  dispatch 79 read the attribution; a separate sound request in the same
+  stop epoch waited about 1.04 seconds behind its synthesis. Both sender names
+  had Flyspell overlays and received their mapped voices during speech.
+  A fresh batch reproduction with the same attribution and real Hunspell
+  confirms that moving onto the line checks the first name and emits =help=
+  from Flyspell's post-command check. This cue has no word anchor in the
+  submitted speech.
+  The implemented prototype captures Flyspell overlays into speech strings
+  without editing the source. It places selected tone and earcon actions at
+  flagged words through the existing timeline, retains editing feedback, and
+  suppresses later checker cues for ranges captured in that command. Independent
+  voice, tone and earcon toggles include all-off. Voice defaults retain existing
+  face mappings; voice plus earcon is the initial combination. Settings apply
+  globally for the session, with explicit Save through Customize.
+  =C-e H s f= opens the menu; pitch and duration accept exact values or shifted
+  arrow adjustments. Previews cover the tone alone and a marked word in a line.
+  All 20 non-graphical Flyspell/spelling tests pass in fresh compiled Emacs,
+  including the real checker and all eight presentation combinations on the
+  final timeline. The menu passes source and compiled graphical checks, and
+  all 275 aural regression tests pass. Incremental compilation, byte-code
+  preflight and attribution checks pass. Commit preparation on 2026-10-16 adds
+  the menu guide and NEWS entry and regenerates the manual and public reference.
+  The non-mutating documentation release gate now passes, including the earlier
+  keyboard-reference and task-lookup source updates in the generated manual.
+  Listening remains open: restart the normal profile, read the attribution,
+  adjust and preview the spelling tone, try feedback combinations, and type
+  and leave a misspelled word. No live profile was reloaded.
+
+- 2026-10-16: Tone-volume inspection distinguishes backend capability from the
+  current Emacsvox controls. Omnivox timeline tones have per-action volume,
+  multiplied by the worker's master tone volume. Emacsvox currently sends
+  =1.0= per tone and exposes only the master control. The spelling prototype
+  labels that shared scope; independent spelling volume remains a proposed
+  Emacsvox follow-up, including consistent standalone preview/editing delivery.
+  Omnivox generates sine waves with fixed fades of up to 10 milliseconds.
+  Selectable waveforms and adjustable fades would need a separate backend
+  extension. Prioritize existing per-tone gain before additional synthesis
+  controls. No Omnivox source or protocol changes are included here.
 
 - 2026-10-15: The Transient dependency follow-up resolves the recorded build
   and packaging gaps. Commit =62c99ca83= adds all nine omitted menu modules to

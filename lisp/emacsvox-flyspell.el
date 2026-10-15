@@ -65,7 +65,120 @@ fly spell checking."
    (flyspell-duplicate voice-monotone-extra)
    (flyspell-correct-highlight-face voice-animate)))
 
+(defcustom emacsvox-flyspell-use-voice t
+  "Use the mapped spelling voice when reading flagged words.
+This changes reading feedback, not Flyspell highlighting or checking."
+  :type 'boolean :group 'emacsvox-flyspell)
+
+(defcustom emacsvox-flyspell-use-tone nil
+  "Play a tone at flagged words and when editing detects a spelling error."
+  :type 'boolean :group 'emacsvox-flyspell)
+
+(defcustom emacsvox-flyspell-use-earcon t
+  "Play the help earcon at flagged words and newly checked spelling errors."
+  :type 'boolean :group 'emacsvox-flyspell)
+
+(defcustom emacsvox-flyspell-tone-pitch 880
+  "Pitch of the spelling tone in hertz.
+Tone volume follows the shared main-stream tone volume."
+  :type '(number :tag "Hertz") :group 'emacsvox-flyspell)
+
+(defcustom emacsvox-flyspell-tone-duration 40
+  "Duration of the spelling tone in milliseconds."
+  :type '(number :tag "Milliseconds") :group 'emacsvox-flyspell)
+
+(defvar-local emacsvox-flyspell--read-errors nil
+  "Flagged source ranges captured for reading during this command.")
+
+(defun emacsvox-flyspell--clear-read-errors ()
+  "Begin a new command's spelling feedback ownership."
+  (setq emacsvox-flyspell--read-errors nil))
+
+(add-hook 'pre-command-hook #'emacsvox-flyspell--clear-read-errors)
+
+(defun emacsvox-flyspell--facts ()
+  "Return the selected nonverbal spelling feedback as semantic facts."
+  (list :events '(spelling-error-located)
+        :spelling-tone emacsvox-flyspell-use-tone
+        :spelling-earcon emacsvox-flyspell-use-earcon
+        :spelling-tone-pitch emacsvox-flyspell-tone-pitch
+        :spelling-tone-duration emacsvox-flyspell-tone-duration))
+
+(defun emacsvox-flyspell--capture (original start end &optional buffer)
+  "Capture spelling spans with ORIGINAL from START to END in BUFFER.
+Only the returned speech string is annotated; source text is unchanged."
+  (let ((text (funcall original start end buffer)))
+    (with-current-buffer (or buffer (current-buffer))
+      (when (bound-and-true-p flyspell-mode)
+        (dolist (overlay (overlays-in start end))
+          (when (flyspell-overlay-p overlay)
+            (let ((beg (max start (overlay-start overlay)))
+                  (stop (min end (overlay-end overlay))))
+              (when (< beg stop)
+                (cl-pushnew (cons (overlay-start overlay) (overlay-end overlay))
+                            emacsvox-flyspell--read-errors :test #'equal)
+                (put-text-property
+                 (- beg start) (- stop start) 'emacsvox-flyspell-word
+                 (list (overlay-start overlay) (overlay-end overlay)) text)))))))
+    text))
+
+(advice-add 'emacsvox-aural-source-substring :around #'emacsvox-flyspell--capture)
+
+(defun emacsvox-flyspell--annotate (text)
+  "Add word-positioned spelling cues to a copy of captured TEXT.
+Voice feedback remains independent of the selected tone and earcon."
+  (let ((result (copy-sequence text)) (position 0))
+    (while (< position (length result))
+      (let ((end (next-single-property-change
+                  position 'emacsvox-flyspell-word result (length result))))
+        (when (get-text-property position 'emacsvox-flyspell-word result)
+          (let ((entries (copy-tree (get-text-property
+                                    position emacsvox-aural-positioned-facts-property result)))
+                (facts (emacsvox-flyspell--facts)))
+            (unless (member facts entries)
+              (put-text-property position (1+ position)
+                                 emacsvox-aural-positioned-facts-property
+                                 (append entries (list facts)) result)))
+          (unless emacsvox-flyspell-use-voice
+            (let ((p position))
+              (while (< p end)
+                (let ((next (next-property-change p result end)))
+                  (put-text-property
+                   p next emacsvox-aural-source-faces-property
+                   (cl-remove-if
+                    (lambda (record) (memq (plist-get record :face)
+                                          '(flyspell-incorrect flyspell-duplicate)))
+                    (get-text-property p emacsvox-aural-source-faces-property result))
+                   result)
+                  (when (memq (get-text-property p 'personality result)
+                              '(voice-bolden voice-monotone-extra))
+                    (remove-text-properties p next '(personality nil) result))
+                  (setq p next))))))
+        (setq position end)))
+    result))
+
+(add-hook 'emacsvox-aural-source-annotation-functions #'emacsvox-flyspell--annotate)
+
 ;;;  advice
+
+(defvar emacsvox-flyspell--reported-errors nil
+  "Errors already announced during the current automatic checking pass.")
+
+(defun emacsvox-flyspell--automatic-check (original &rest arguments)
+  "Run ORIGINAL with ARGUMENTS without announcing mail setup changes.
+Keep checking and highlighting words when entering a composition buffer.
+Announce each misspelling at most once during an ordinary editing pass."
+  (let ((emacsvox-use-icons
+         (and emacsvox-use-icons
+              (or (not (derived-mode-p 'message-mode))
+                  (eq flyspell-pre-buffer (current-buffer)))))
+        (emacsvox-flyspell--reported-errors (make-hash-table :test #'equal)))
+    (apply original arguments)))
+
+(advice-add 'flyspell-post-command-hook :around
+            #'emacsvox-flyspell--automatic-check)
+(advice-add 'flyspell-check-changes :around
+            #'emacsvox-flyspell--automatic-check)
 
 (defun emacsvox--advice-flyspell-buffer-around (orig-fun &rest args)
   "Silence icon."
@@ -112,11 +225,27 @@ fly spell checking."
 (advice-add 'flyspell-unhighlight-at :before
             #'emacsvox--advice-flyspell-unhighlight-at-before)
 
-(add-hook
- 'flyspell-incorrect-hook
- #'(lambda (_s _e p)
-     (unless (eq p 'doublon) (emacsvox-icon 'help))
-     nil))
+(defun emacsvox-flyspell--incorrect (start end possible)
+  "Cue a misspelling from START to END with corrections POSSIBLE.
+Leave Flyspell's highlighting intact, including for duplicate words."
+  (when (and emacsvox-use-icons (not (eq possible 'doublon))
+             (not (cl-some (lambda (range)
+                             (and (< start (cdr range)) (> end (car range))))
+                           emacsvox-flyspell--read-errors)))
+    (let ((key (list (current-buffer) start end
+                     (buffer-substring-no-properties start end))))
+      (unless (and emacsvox-flyspell--reported-errors
+                   (gethash key emacsvox-flyspell--reported-errors))
+        (when emacsvox-flyspell--reported-errors
+          (puthash key t emacsvox-flyspell--reported-errors))
+        (if emacsvox-flyspell-use-tone
+            (emacsvox-aural-submit-actions
+             :facts (emacsvox-flyspell--facts) :module 'flyspell
+             :occasion 'edit :lane 'main :interruption-policy 'none)
+          (when emacsvox-flyspell-use-earcon (emacsvox-icon 'help))))))
+  nil)
+
+(add-hook 'flyspell-incorrect-hook #'emacsvox-flyspell--incorrect)
 
 ;;;  Use flyspell-correct if available:
 

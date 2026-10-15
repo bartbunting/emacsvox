@@ -575,6 +575,7 @@ Registry validation rejects missing targets and alias cycles."
          (focus-entered event "Navigation arrived at an aural object")
          (point-located event "A spoken text boundary corresponds to buffer point")
          (capitalization-located event "A spoken text boundary begins capitalized content")
+         (spelling-error-located event "A spoken word is marked by the spell checker")
          (indentation-located event "A spoken line has leading indentation")
          (state-changed event "A registered state changed")
          (object-changed event "A registered object was created or modified")
@@ -641,6 +642,14 @@ Registry validation rejects missing targets and alias cycles."
      :phases '(before content after)
      :usage
      "Selects the built-in point presentation while allowing stronger rules to override it."))
+  (dolist (entry '((spelling-tone boolean "Play a tone at a spelling error")
+                   (spelling-earcon boolean "Play an earcon at a spelling error")
+                   (spelling-tone-pitch number "Spelling tone pitch in hertz")
+                   (spelling-tone-duration number "Spelling tone duration in milliseconds")))
+    (unless (emacsvox-aural-semantic (car entry))
+      (emacsvox-aural-register-semantic
+       (car entry) :kind 'attribute :summary (nth 2 entry)
+       :value-type (nth 1 entry) :phases '(before))))
   (unless (emacsvox-aural-semantic 'capitalization-kind)
     (emacsvox-aural-register-semantic
      'capitalization-kind

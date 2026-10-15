@@ -10,6 +10,18 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.10.0][NEWS for Emacsvox 2026.10.0]].
 
+** Spelling feedback
+
+=C-e H s f= opens global spelling feedback settings. Combine voice changes,
+tones and earcons independently; adjust tone pitch and duration, preview a
+tone or a sample sentence, and save through Customize. The volume control
+affects all main-stream tones.
+
+Reading words marked by Flyspell places selected cues at those words instead
+of after the line. Opening a mail reply retains spelling highlights without
+playing a burst of cues. Repeated automatic checks announce each error once
+per checking pass, while ordinary editing retains spelling feedback.
+
 ** Experimental Emacsvox menu
 
 On the =ui-experiments= branch, =C-e H= opens a Transient. Press =s= for

@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 317 loaded; 0 intentionally omitted.
+@c Modules: 318 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -49,23 +49,23 @@
 @c Loaded: emacsvox-ruby.elc emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc
 @c Loaded: emacsvox-settings-changes.elc emacsvox-settings-integrations.elc emacsvox-settings-workflows.elc emacsvox-settings.elc emacsvox-setup.elc
 @c Loaded: emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-slime.elc emacsvox-smartparens.elc emacsvox-solitaire.elc
-@c Loaded: emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-sql.elc emacsvox-sudoku.elc
-@c Loaded: emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-reader.elc emacsvox-table-ui.elc
-@c Loaded: emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc
-@c Loaded: emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-transient.elc
-@c Loaded: emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc
-@c Loaded: emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc
-@c Loaded: emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-welcome.elc emacsvox-which-key.elc emacsvox-widget.elc
-@c Loaded: emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc
-@c Loaded: emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc
-@c Loaded: espeak-voices.elc g-utils.elc gm-nnir.elc gmaps.elc gweb.elc
-@c Loaded: ladspa.elc light.elc mac-voices.elc omaps.elc omnivox-catalogue.elc
-@c Loaded: omnivox-choice-codec.elc omnivox-engine-configuration.elc omnivox-engine-settings.elc omnivox-espeak-variants.elc omnivox-library-apply.elc
-@c Loaded: omnivox-library.elc omnivox-native-codec.elc omnivox-parameters-codec.elc omnivox-parameters.elc omnivox-preview.elc
-@c Loaded: omnivox-punctuation-profiles.elc omnivox-punctuation.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc
-@c Loaded: pip.elc plain-voices.elc soundscape.elc sox-gen.elc sox.elc
-@c Loaded: swiftmac-voices.elc tetris.elc tts-queue-state.elc tts-speak.elc voice-defs.elc
-@c Loaded: voice-setup.elc xbacklight.elc
+@c Loaded: emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-spelling.elc emacsvox-sql.elc
+@c Loaded: emacsvox-sudoku.elc emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-reader.elc
+@c Loaded: emacsvox-table-ui.elc emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc
+@c Loaded: emacsvox-tcl.elc emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc
+@c Loaded: emacsvox-transient.elc emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc
+@c Loaded: emacsvox-version.elc emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc
+@c Loaded: emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-welcome.elc emacsvox-which-key.elc
+@c Loaded: emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc
+@c Loaded: emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc
+@c Loaded: emacsvox.elc espeak-voices.elc g-utils.elc gm-nnir.elc gmaps.elc
+@c Loaded: gweb.elc ladspa.elc light.elc mac-voices.elc omaps.elc
+@c Loaded: omnivox-catalogue.elc omnivox-choice-codec.elc omnivox-engine-configuration.elc omnivox-engine-settings.elc omnivox-espeak-variants.elc
+@c Loaded: omnivox-library-apply.elc omnivox-library.elc omnivox-native-codec.elc omnivox-parameters-codec.elc omnivox-parameters.elc
+@c Loaded: omnivox-preview.elc omnivox-punctuation-profiles.elc omnivox-punctuation.elc omnivox-remote.elc omnivox-voices.elc
+@c Loaded: outloud-voices.elc pip.elc plain-voices.elc soundscape.elc sox-gen.elc
+@c Loaded: sox.elc swiftmac-voices.elc tetris.elc tts-queue-state.elc tts-speak.elc
+@c Loaded: voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1663 commands and 234 options.
+This chapter documents a total of 1664 commands and 239 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -315,6 +315,7 @@ This chapter documents a total of 1663 commands and 234 options.
 * emacsvox-sounds:: auditory icons.
 * emacsvox-speak:: Core Speech Lib.
 * emacsvox-speedbar:: speedbar -.
+* emacsvox-spelling:: Spelling feedback settings.
 * emacsvox-sql:: Speech enable sql-mode.
 * emacsvox-sudoku:: Play SuDoku.
 * emacsvox-supercite:: Speech enable SC.
@@ -13390,6 +13391,78 @@ nil
 
 @end defvar
 
+@defvar {User Option} emacsvox-flyspell-tone-duration
+@verbatim
+Duration of the spelling tone in milliseconds.
+@end verbatim
+
+Default Value:
+@verbatim
+
+40
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-tone-pitch
+@verbatim
+Pitch of the spelling tone in hertz.
+Tone volume follows the shared main-stream tone volume.
+@end verbatim
+
+Default Value:
+@verbatim
+
+880
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-use-earcon
+@verbatim
+Play the help earcon at flagged words and newly checked spelling errors.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-use-tone
+@verbatim
+Play a tone at flagged words and when editing detects a spelling error.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-use-voice
+@verbatim
+Use the mapped spelling voice when reading flagged words.
+This changes reading feedback, not Flyspell highlighting or checking.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
 @node emacsvox-folding
 @section emacsvox-folding
 
@@ -20793,6 +20866,27 @@ Does the equivalent of the mouse click from the keyboard
 
 @format
 Switch to the speedbar
+@end format
+@end deffn
+
+@node emacsvox-spelling
+@section emacsvox-spelling
+
+Independent spelling voice, tone and earcon controls with tone adjustment.
+Changes apply to the current session; saving startup defaults is explicit.
+
+@subsection Emacsvox-Spelling Commands
+
+@subsubsection emacsvox-spelling
+@deffn {Command} emacsvox-spelling
+@findex emacsvox-spelling
+
+@format
+Choose global spelling feedback and adjust its tone.
+Voice, tone and earcon combine independently. All off silences spelling
+feedback without disabling Flyspell. Voice changes apply while reading;
+tone and earcon also report errors detected while editing. Settings apply
+immediately; S saves across restarts. Volume affects all main-stream tones.
 @end format
 @end deffn
 

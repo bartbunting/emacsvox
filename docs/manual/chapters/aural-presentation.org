@@ -2128,6 +2128,31 @@ for this session. Unrelated rules and labels survive, and stronger rules may
 override the cue. Finish unsaved personal-rule editors before cue saving. If
 saved rules changed elsewhere, discard the cue draft and reopen it.
 
+**** Choose spelling feedback
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+~C-e H s f~ opens /Spelling feedback/. These settings are global. Toggle
+~v~ for voice changes, ~t~ for a tone, and ~e~ for the help earcon. You can
+combine them or turn all three off without disabling Flyspell checking and
+highlighting. The default is voice plus earcon.
+
+When you read text already marked by Flyspell, tones and earcons occur at
+the flagged word. Voice feedback uses the existing spelling face mappings.
+Tone and earcon feedback also report errors detected while editing. Opening
+a mail reply checks and highlights inserted text without a burst of cues.
+
+Select ~p~ for pitch or ~d~ for duration. ~RET~ enters an exact value;
+Shift-left/right adjusts by 25 Hz or 5 milliseconds. ~b~ previews the tone
+alone, even when tone feedback is off. ~SPC~ reads a sample containing one
+flagged word with the selected combination.
+
+~V~ changes the shared volume of all main-stream tones, including indentation
+and spelling. It is not a separate spelling volume. Changes take effect in
+the current session; ~S~ saves the spelling settings and shared tone volume
+through Customize. ~q~ returns and ~C-q~ closes the menus without saving.
+
 **** Choose typing and point feedback
 :PROPERTIES:
 :TEXINFO_NODE: no

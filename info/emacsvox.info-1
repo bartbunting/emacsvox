@@ -5659,7 +5659,33 @@ punctuation default.
      If saved rules changed elsewhere, discard the cue draft and reopen
      it.
 
-  4. Choose typing and point feedback
+  4. Choose spelling feedback
+
+     ‘C-e H s f’ opens _Spelling feedback_.  These settings are global.
+     Toggle ‘v’ for voice changes, ‘t’ for a tone, and ‘e’ for the help
+     earcon.  You can combine them or turn all three off without
+     disabling Flyspell checking and highlighting.  The default is voice
+     plus earcon.
+
+     When you read text already marked by Flyspell, tones and earcons
+     occur at the flagged word.  Voice feedback uses the existing
+     spelling face mappings.  Tone and earcon feedback also report
+     errors detected while editing.  Opening a mail reply checks and
+     highlights inserted text without a burst of cues.
+
+     Select ‘p’ for pitch or ‘d’ for duration.  ‘<RET>’ enters an exact
+     value; Shift-left/right adjusts by 25 Hz or 5 milliseconds.  ‘b’
+     previews the tone alone, even when tone feedback is off.  ‘<SPC>’
+     reads a sample containing one flagged word with the selected
+     combination.
+
+     ‘V’ changes the shared volume of all main-stream tones, including
+     indentation and spelling.  It is not a separate spelling volume.
+     Changes take effect in the current session; ‘S’ saves the spelling
+     settings and shared tone volume through Customize.  ‘q’ returns and
+     ‘C-q’ closes the menus without saving.
+
+  5. Choose typing and point feedback
 
      ‘C-e H s t’ opens _Typing and interaction_.  Character, word,
      completed-line echo, point indication/presentation, and spoken
@@ -5982,27 +6008,3 @@ updated too.  Saved startup settings are retained for later sessions.
      automatic activation.  Follow *note Export, back up and import
      palettes: Sharing Voice Palettes. for the exact contents and
      checks.
-
-
-File: emacsvox.info,  Node: Sharing Voice Palettes,  Prev: Saving And Startup,  Up: Presentation Profiles
-
-8.12.3 Export, Back Up, And Import Palettes
--------------------------------------------
-
-‘w’ in Voice Palettes exports effective portable entries, asking before
-omitting machine-local choices.  ‘W’ backs up full ancestry and
-referenced local choices.  ‘i’ imports either as an independent personal
-palette under an unused name; it neither replaces ancestry nor activates
-the result.  Missing installed voices are reported and retained for
-replacement.  Partial import retains its proposal for Retry or Discard.
-
-   For practice, export ‘reading-demo’ with ‘w’, review omitted choices,
-and import as ‘reading-import-demo’.  Enter and preview before
-activating.  An unavailable retained choice is a review request, not
-proof of audio.  Delete the imported copy when no profile, child, or
-rule needs it; the original is unchanged.
-
-   Use ‘W’ when local choice data and ancestry matter.  Import still
-creates a new independent palette, not an overwrite.  Neither export
-contains engines or sound-pack audio, and neither is a backup of every
-Emacsvox setting.

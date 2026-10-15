@@ -5325,6 +5325,30 @@ override the cue. Finish unsaved personal-rule editors before cue saving. If
 saved rules changed elsewhere@comma{} discard the cue draft and reopen it.
 
 @item
+@anchor{Choose spelling feedback}Choose spelling feedback
+
+
+@kbd{C-e H s f} opens @emph{Spelling feedback}. These settings are global. Toggle
+@kbd{v} for voice changes@comma{} @kbd{t} for a tone@comma{} and @kbd{e} for the help earcon. You can
+combine them or turn all three off without disabling Flyspell checking and
+highlighting. The default is voice plus earcon.
+
+When you read text already marked by Flyspell@comma{} tones and earcons occur at
+the flagged word. Voice feedback uses the existing spelling face mappings.
+Tone and earcon feedback also report errors detected while editing. Opening
+a mail reply checks and highlights inserted text without a burst of cues.
+
+Select @kbd{p} for pitch or @kbd{d} for duration. @kbd{@key{RET}} enters an exact value;
+Shift-left/right adjusts by 25 Hz or 5 milliseconds. @kbd{b} previews the tone
+alone@comma{} even when tone feedback is off. @kbd{@key{SPC}} reads a sample containing one
+flagged word with the selected combination.
+
+@kbd{V} changes the shared volume of all main-stream tones@comma{} including indentation
+and spelling. It is not a separate spelling volume. Changes take effect in
+the current session; @kbd{S} saves the spelling settings and shared tone volume
+through Customize. @kbd{q} returns and @kbd{C-q} closes the menus without saving.
+
+@item
 @anchor{Choose typing and point feedback}Choose typing and point feedback
 
 
@@ -9890,15 +9914,259 @@ contracts in first-installation instructions.
 @chapter Emacsvox Keyboard Commands.
 
 @cindex Emacs Keyboard Commands
+@cindex everyday commands
+@cindex keyboard shortcuts
+@cindex command reference
 
-This chapter explains how speech prefixes@comma{} settings menus and application
-keys fit together. If the notation is unfamiliar@comma{} first read
-@ref{Emacs Key Notation, , Read the key instructions}: a modifier is held for one keypress@comma{} while
-spaces separate successive steps. A capital letter is not a modifier name.
+Use this chapter to recall an everyday command and check its important
+conditions before acting. @ref{Emacs Key Notation, , Read the key instructions} explains modifiers@comma{}
+capital letters and successive keypresses. @ref{Basic Usage,Basic Usage,,emacsvox,} teaches the reading
+and editing workflows; the links beside each reminder lead to their details.
 
-Use @ref{Basic Usage, , Basic Usage} for essential reading commands and
-@ref{Using Online Help, , Using Online Help} to inspect a binding in your current buffer.
-The generated @ref{Emacsvox Keymaps,Emacsvox Keymaps,,emacsvox-reference,} provides the full default inventory.
+These are default keys@comma{} used without a prefix argument unless one is shown.
+Application keymaps and personal bindings can change their meaning. A short
+reference cannot replace a terminal's or editor's own instructions. Use
+@ref{Using Online Help, , live Help} in the affected buffer when a binding differs@comma{} and
+@ref{Emacsvox Keymaps,the generated keymap reference,,emacsvox-reference,} for the full default inventory.
+
+@menu
+* Reading reminders: Everyday Reading Commands.  Choose a reading unit and check its effect on point and windows.
+* Editing reminders: Everyday Editing Commands.  Select, copy, cut, paste and recover with the right scope.
+* Files@comma{} buffers and windows: Everyday Workspace Commands.  Open and save documents without confusing buffers and views.
+* Help and orientation: Everyday Help Commands.  Find commands and return to the intended working buffer.
+* Speech and settings: Everyday Speech Commands.  Find controls and distinguish navigation from undo and saving.
+* How prefixes and menus fit together: Emacsvox Key Prefixes.  Understand the speech prefix, menu entry and application overrides.
+@end menu
+
+@node Everyday Reading Commands
+@section Reading reminders
+
+@cindex reading commands, quick reference
+@cindex read from here, command
+
+These commands apply to the selected buffer's accessible text. In Info that
+means the current node@comma{} not the whole manual. Use the application's own reader
+for a table@comma{} terminal or other specialised view.
+
+@table @asis
+@item Read from here (@kbd{C-e i})
+Read towards the accessible buffer end with
+tracked position. Requires a supporting speech server; point advances by
+chunks@comma{} and another command stops reading before performing its action.
+See @ref{Reading From Point,Stopping and restarting tracked reading,,emacsvox,}.
+@item Stop current speech (@kbd{C-e s})
+Stop main and notification speech without
+disabling future feedback. During tracked reading this retains a chunk
+boundary@comma{} not an exact spoken word. See @ref{Reading From Point,Where stopping leaves point,,emacsvox,}.
+@item Repeat the current line (@kbd{C-e l})
+Inspect the line without moving point.
+@kbd{C-u C-e l} reads from point to the line's end. See
+@ref{Reading Without Moving Point,Short reading and prefix variants,,emacsvox,}.
+@item Read or spell the word (@kbd{C-e w})
+Read the word at point; repeat at the
+same position to spell it. See @ref{Reading Without Moving Point,Inspecting short passages,,emacsvox,}.
+@item Inspect the character (@kbd{C-e c})
+Read the character at point@comma{} using its
+phonetic name where available. Point does not move. See
+@ref{Reading,Character and word reading,,emacsvox,}.
+@item Read the paragraph (@kbd{C-e [})
+Read the paragraph around point without
+moving it. The mode determines its boundaries. Sentence reading is also
+available by name. See @ref{Reading Without Moving Point,Sentence and paragraph inspection,,emacsvox,}.
+@item Read a checked selection (@kbd{C-e r})
+Read between point and mark. A short
+region read preserves its endpoints and activation; it does not establish a
+new selection for you. See @ref{Selecting Text With Speech,Selecting and checking text,,emacsvox,}.
+@item Read the buffer (@kbd{C-e b})
+Read its accessible contents without tracked
+interruption position. Requests of 40@comma{}000 characters or more fall back to
+windowful reading at the current default limit@comma{} removing other windows.
+The same limit applies to region reading. See
+@ref{Reading Without Moving Point,Buffer-reading limits and alternatives,,emacsvox,}.
+@end table
+
+Page reading and the complete reading-key list remain under
+@ref{Reading,Reading and navigating,,emacsvox,}. Page reading changes the mark; it is not a
+substitute for inspecting an existing selection.
+
+@node Everyday Editing Commands
+@section Editing reminders
+
+@cindex editing commands, quick reference
+@cindex cut and paste, command reference
+
+Use these in ordinary text@comma{} after leaving any prompt or special reader. Check
+the buffer and the affected text first. @ref{Editing Terms,Selection and editing terms,,emacsvox,}
+defines Emacs's names for copying@comma{} cutting and pasting.
+
+@table @asis
+@item Start a selection (@kbd{C-@key{SPC}})
+Set the mark@comma{} then move point to its other
+end. Extend it by moving rather than repeatedly setting the mark. See
+@ref{Selecting Text With Speech,Selection boundaries and newline checks,,emacsvox,}.
+@item Inspect the other end (@kbd{C-x C-x})
+Exchange point and mark. The selected
+text is unchanged until you move an endpoint. See
+@ref{Selecting Text With Speech,Adjusting a checked selection,,emacsvox,}.
+@item Copy (@kbd{M-w})
+Copy the checked region to the kill ring without removing
+the source text. See @ref{Copying Text Between Buffers,Copying into another buffer,,emacsvox,}.
+@item Cut (@kbd{C-w})
+Remove the checked region and retain it in the kill ring.
+This edits the buffer@comma{} not the saved file. See
+@ref{Moving Text Safely,Moving text and verifying both locations,,emacsvox,}.
+@item Paste (@kbd{C-y})
+Insert the current kill-ring entry at point; clipboard
+integration can supply a more recent external copy instead. Point ends
+after the inserted text. See @ref{Copying Text Between Buffers,Checking the destination and pasted text,,emacsvox,}.
+@item Use an earlier copy (@kbd{M-y})
+Immediately after a yank@comma{} replace that
+insertion with an earlier entry. After a separate command@comma{} including a
+reading command@comma{} choose an entry for another insertion instead. See
+@ref{Choosing Earlier Copied Text,Earlier copies and yank sequencing,,emacsvox,}.
+@item Undo while listening (@kbd{M-x undo-only @key{RET}})
+Undo a change in the selected
+buffer@comma{} inspect it@comma{} and repeat only as needed. Deactivate an unrelated
+selection first. Unlike ordinary @kbd{C-/}@comma{} this avoids undoing an earlier undo
+after an intervening reading command. See
+@ref{Recovering Text Edits,Undo@comma{} inspection and recovery limits,,emacsvox,}.
+@item Find text (@kbd{C-s} or @kbd{C-r})
+Search forwards or backwards. Finish with
+@kbd{@key{RET}} before typing an edit; text entered during search changes the query.
+See @ref{Searching And Replacing Text,Search direction and failure recovery,,emacsvox,}.
+@item Review replacements (@kbd{M-%})
+Query-replace in the checked active region@comma{}
+or ordinarily from point onwards when no region is active. The replacement
+questions have their own keys; stopping does not undo accepted changes.
+See @ref{Reviewing Text Replacements,Scoped replacement and match-by-match decisions,,emacsvox,}.
+@end table
+
+Copying is not a permanent backup. Message repetition and filename speech can
+also change the kill ring; @ref{Copying Text Between Buffers,the transfer guide,,emacsvox,} explains how to inspect it
+without accidentally replacing the next paste.
+
+@node Everyday Workspace Commands
+@section Files@comma{} buffers and windows
+
+@cindex files and windows, quick reference
+@cindex close a view, command
+
+A buffer contains work; a window displays it. Identify the selected buffer with
+@kbd{C-e m} before editing@comma{} saving or closing anything. For definitions@comma{} see
+@ref{Working Context Terms,Buffers@comma{} windows and frames,,emacsvox,}.
+
+@table @asis
+@item Open a file (@kbd{C-x C-f})
+Visit a pathname@comma{} creating a new unsaved buffer
+if the file does not exist. @kbd{C-x C-r} visits read-only instead. See
+@ref{Opening A Document,Checking the document and its destination,,emacsvox,}.
+@item Save the current file (@kbd{C-x C-s})
+Write this buffer to its file; a new
+buffer may need a filename. An error is not a completed save. See
+@ref{Saving A Working Copy,Saving destinations and failure recovery,,emacsvox,}.
+@item Save under another filename (@kbd{C-x C-w})
+Write the current text@comma{} including
+unsaved edits@comma{} and change where this buffer's later saves go. Cancel an
+unexpected overwrite prompt. See @ref{Saving A Working Copy,Working copies versus copies of saved files,,emacsvox,}.
+@item Switch to another buffer (@kbd{C-x b})
+Select content by buffer name in the
+current window. The buffer you leave stays available. See
+@ref{Desktop Objects,Buffer selection,,emacsvox,}.
+@item Display a reference (@kbd{C-x 4 b})
+Display and select an existing buffer
+in another window@comma{} creating or reusing a view. See
+@ref{Reference And Draft Windows,Keeping a reference beside a draft,,emacsvox,}.
+@item Select another window (@kbd{C-x o})
+Select the next view; lowercase o is not
+zero. With more than two windows@comma{} the next one need not be the draft. See
+@ref{Working With Windows,Identifying the selected view,,emacsvox,}.
+@item Remove a window (@kbd{C-x 0})
+Remove this view@comma{} not its buffer. The last
+ordinary window cannot be removed this way. @kbd{C-x 1} instead keeps only the
+selected view. See @ref{Closing Windows Safely,Closing windows without losing documents,,emacsvox,}.
+@item Close a buffer (@kbd{C-x k})
+Kill the named buffer@comma{} checking any unsaved-work
+prompt. This is not the same as removing its window or deleting its file.
+See @ref{Opening A Document,Leaving document buffers safely,,emacsvox,}.
+@end table
+
+@node Everyday Help Commands
+@section Help and orientation
+
+@cindex Help commands, quick reference
+@cindex where am I, command
+
+Help can change the selected buffer and window arrangement. Before your next
+editing command@comma{} check that you have returned to the intended document.
+
+@table @asis
+@item Identify your context (@kbd{C-e m})
+Speak the mode line@comma{} including the
+current buffer and major mode. See @ref{Status Information,Position and status commands,,emacsvox,}.
+@item Describe the windows (@kbd{C-e C-w})
+Describe the current arrangement.
+This does not select a different view. See
+@ref{Working With Windows,Working with windows through speech,,emacsvox,}.
+@item Explain a key (@kbd{C-h k} followed by the key sequence)
+Describe its
+effective binding without invoking it as the requested action. See
+@ref{Using Online Help,Discovering a key@comma{} command or setting,,emacsvox,}.
+@item Discover local commands (@kbd{C-h m})
+Describe the current modes. @kbd{C-h b}
+lists effective bindings; invoke these from the application you are asking
+about. See @ref{Using Online Help,Help for the current buffer,,emacsvox,}.
+@item Read Help again (@kbd{C-e h})
+Select and read Help using a windowful helper
+that removes other windows without killing their buffers. Lowercase h is
+different from capital H for settings. See
+@ref{Using Online Help,Reading Help and returning to work,,emacsvox,}.
+@item Open the manual (@kbd{C-e C-i})
+Open this manual directly in Info. Use @kbd{i}
+in Info to look up a subject and @kbd{l} to retrace a link. See
+@ref{Finding Help In Info,Manual lookup and return navigation,,emacsvox,}.
+@end table
+
+@kbd{C-e f} speaks a filename or default directory@comma{} and @kbd{C-e a} repeats a message.
+Both also put text in the kill ring and can affect the next paste. See
+@ref{Status Information,Status commands and their side effects,,emacsvox,}.
+
+@node Everyday Speech Commands
+@section Speech and settings
+
+@cindex speech settings, command reference
+@cindex cancel versus undo
+
+These routes use the current settings interface. A live adjustment@comma{} a saved
+default and a retained draft are distinct; follow the linked scope and saving
+instructions before making a persistent change.
+
+@table @asis
+@item Open speech controls (@kbd{C-e H s})
+Browse rate@comma{} punctuation and related
+controls for the captured context. Inspect the displayed scope; global
+defaults need not override local values. See @ref{Speech System,Speech controls and scope,,emacsvox,}.
+@item Open settings for this task (@kbd{C-e S})
+Use the integration's focused menu
+when available@comma{} otherwise general buffer settings. @kbd{C-e H .} always opens
+the latter. See @ref{Using Online Help,Finding the appropriate settings menu,,emacsvox,}.
+@item Find a setting (@kbd{C-e H /})
+Choose a matching name; accepting the search
+selects its control without changing the value. Activate it separately.
+See @ref{Finding Settings And Actions,Settings search and action search,,emacsvox,}.
+@item Explain this item's feedback (@kbd{C-e E})
+Inspect the presentation chosen
+for the object at point. The report is not itself a repair. See
+@ref{Explaining Presentation,Understanding voices@comma{} sounds and rules,,emacsvox,}.
+@end table
+
+In an Emacsvox settings menu@comma{} @kbd{q} goes back and @kbd{C-q} closes the sequence.
+In an ordinary unfinished prompt@comma{} @kbd{C-g} cancels. None of these reverses an
+already applied change. Editors@comma{} tables and terminals have their own return
+commands; see @ref{Returning From Settings,Returning from settings,,emacsvox,} and
+@ref{Recovering Aural Changes,Recovering an unfinished edit,,emacsvox,}.
+
+@node Emacsvox Key Prefixes
+@section How prefixes and menus fit together
 
 @table @kbd
 @item C-e
@@ -9969,6 +10237,8 @@ feedback problems rather than binding discovery@comma{} see
 Choose the result you want. Each link leads to the procedure@comma{} its conditions
 and its recovery instructions; following a link changes no settings.
 @ref{Finding Problem Tasks, , Something is wrong} starts from a symptom rather than an editor's name.
+For a key reminder rather than a worked procedure@comma{} use
+@ref{Emacsvox Keyboard Commands,Everyday commands and key prefixes,,emacsvox,}.
 
 If the keyboard instructions are unfamiliar@comma{} begin with
 @ref{Emacs Key Notation, , Read the key instructions}. For terms such as palette@comma{} profile or draft@comma{}
@@ -9996,6 +10266,9 @@ use @ref{Emacsvox Terminology, , Terms used in this manual}.
 @cindex read continuously
 @cindex resume reading
 @cindex reference and draft windows
+@cindex read from here
+@cindex close this view
+@cindex close a window without losing my document
 
 @itemize
 @item
@@ -10008,8 +10281,8 @@ completion@comma{} document text and command examples.
 @ref{Recovering From No Speech,Get speech working again,,emacsvox,}: start with the no-speech recovery procedure
 before changing presentation rules or voices.
 @item
-@ref{Basic Usage,Stop current speech,,emacsvox,}: the first-session commands include stopping speech
-without disabling feedback from subsequent commands.
+@ref{Everyday Reading Commands,Stop current speech,,emacsvox,}: recall the stop key and its effect on tracked
+reading without disabling feedback from subsequent commands.
 @item
 @ref{Reading Without Moving Point, , Inspect a line@comma{} sentence or paragraph}: choose the reading unit and
 preserve the editing position@comma{} with the limits of large requests explained.
@@ -10042,6 +10315,8 @@ spoken units.
 @cindex move a paragraph
 @cindex paste an older copy
 @cindex undo, inspect between steps
+@cindex paste something I copied earlier
+@cindex undo while listening
 
 @itemize
 @item
@@ -10172,8 +10447,8 @@ buffer before using navigation keys.
 @ref{Navigating A Web Page, , Find information within a page}: use its HTML structure or search the
 loaded text@comma{} without submitting a new web search.
 @item
-@ref{Following Web Links, , Follow a link and get back}: distinguish browser history@comma{} separate
-buffers and saved website bookmarks.
+@ref{Following Web Links, , Follow a link and get back}: distinguish browser history@comma{}
+separate buffers and saved website bookmarks.
 @item
 @ref{Notmuch Speech And Privacy,Limit the mail details spoken automatically,,emacsvox,}: choose fields@comma{} bounds@comma{} and
 completion feedback. Explicit full-detail reading bypasses automatic bounds.
@@ -10208,6 +10483,9 @@ active buffer's mode Help.
 @cindex go back, settings
 @cindex timeout, did anything change
 @cindex reporting a problem
+@cindex why did it paste a filename
+@cindex pasted a filename
+@cindex Help replaced my windows
 
 Start with the closest symptom. These routes preserve existing work and help
 you decide what to inspect before attempting a repair. A failed preview@comma{} an
@@ -10223,6 +10501,12 @@ from exact-word pause/resume and inspect the retained position.
 @item
 @ref{Recovering Text Edits, , Text was pasted in the wrong place}: undo in the affected buffer and
 check the result before trying the transfer again.
+@item
+@ref{Copying Text Between Buffers,A paste inserted a filename or message instead of my passage,,emacsvox,}: inspect
+which command changed the kill ring before choosing the earlier copy.
+@item
+@ref{Using Online Help,Help replaced my other windows,,emacsvox,}: check the selected buffer and restore
+the desired views; a collapsed layout need not mean lost documents.
 @item
 @ref{Saved Voice Change Not Audible,I saved a voice@comma{} but it still sounds the same,,emacsvox,}: check selection@comma{}
 matching rules@comma{} individual tuning and engine support in that order.
@@ -10262,12 +10546,29 @@ original action to check the result.
 
 These definitions help you choose a procedure. They do not replace a control's
 specific scope@comma{} save@comma{} or recovery instructions. @ref{Finding Tasks, , Find a task} starts from what
-you want to accomplish rather than the names below.
+you want to accomplish rather than the names below. For a key reminder@comma{} use
+@ref{Emacsvox Keyboard Commands,Everyday commands and key prefixes,,emacsvox,}.
 
+@ref{Working Context Terms,Working context,,emacsvox,} covers buffers and views;
+@ref{Editing Terms,selection and editing,,emacsvox,} covers mark@comma{} region@comma{} copying and recovery.
+@ref{Presentation Resource Terms,Presentation resources,,emacsvox,} and @ref{Speech And Settings Terms,changes and speech output,,emacsvox,} explain configuration.
+
+@menu
+* Your working context: Working Context Terms.  Distinguish buffers, views, editing positions and restrictions.
+* Selection@comma{} copying and editing: Editing Terms.  Translate selection, cut and paste into mark, region, kill and yank.
+* Voices and presentation resources: Presentation Resource Terms.  Distinguish physical voices, named voices, palettes, rules and profiles.
+* Changes and speech output: Speech And Settings Terms.  Distinguish preview, drafts, saving, application and speech workers.
+@end menu
+
+@node Working Context Terms
 @section Your working context
 
 @cindex buffer, meaning
 @cindex point, meaning
+@cindex window, meaning
+@cindex frame, meaning
+@cindex read-only, meaning
+@cindex narrowing, meaning
 @cindex captured source
 @cindex scope, meaning
 
@@ -10276,13 +10577,34 @@ you want to accomplish rather than the names below.
 An Emacs object containing a document or application view. It is
 not necessarily a file@comma{} and switching buffers does not close the one you
 leave. A window displays a buffer. See @ref{Desktop Objects,Buffers hold your work,,emacsvox,}.
+@item Window
+A view of a buffer inside an Emacs frame. Removing a window does
+not kill its buffer. Two windows showing the same buffer are views of the
+same text@comma{} not independent copies. See @ref{Working With Windows,Working with windows,,emacsvox,}.
+@item Frame
+An outer Emacs application window@comma{} or the corresponding display in
+a terminal session. It contains Emacs windows. Selecting another window
+within a frame differs from switching applications in the operating system.
+See @ref{Working With Windows,Windows and frames,,emacsvox,}.
 @item Point
-The position in the current buffer at which movement and editing
-act. Explicit reading commands often let you inspect text without moving it.
+The current editing position@comma{} between characters. Text is normally
+inserted there. Short reading often leaves it unchanged; tracked reading
+advances it. See @ref{Reading From Point,Reading position and interruption,,emacsvox,}.
 @item Mode
 The commands and behaviour associated with a buffer. Its major mode
 supplies its principal tools; minor modes add other behaviour. See
 @ref{Object Oriented Desktop,Let modes give each buffer its tools,,emacsvox,}.
+@item Read-only
+A buffer state that prevents ordinary text edits. It does not
+mean the buffer has no unsaved changes@comma{} and making a buffer writable does
+not grant permission to overwrite a protected file. Special applications
+may still provide their own operations. See @ref{Opening A Document,Opening a document safely,,emacsvox,}.
+@item Narrowing
+Restricting access to part of a buffer without deleting the
+rest. Reading@comma{} movement and many editing commands stay within that portion;
+widening removes the restriction. Ordinary file saving still saves the
+entire buffer. See @ref{Reading Without Moving Point,Reading accessible text,,emacsvox,} and
+@ref{Narrowing,Narrowing,,emacs,} in the GNU Emacs Manual.
 @item Captured source
 The buffer and position retained when a settings workflow
 starts. Contextual actions continue to refer to that source rather than
@@ -10295,6 +10617,69 @@ need not be saved@comma{} and a saved resource need not be active. See
 @ref{Saving And Startup,Choose what persists,,emacsvox,}.
 @end table
 
+@node Editing Terms
+@section Selection@comma{} copying and editing
+
+@cindex mark, meaning
+@cindex region, meaning
+@cindex selection, meaning
+@cindex active region, meaning
+@cindex Transient Mark mode, meaning
+@cindex copy, meaning
+@cindex cut, meaning
+@cindex kill, meaning
+@cindex paste, meaning
+@cindex yank, meaning
+@cindex kill ring, meaning
+@cindex clipboard, meaning
+@cindex undo, meaning
+
+@table @asis
+@item Mark
+A remembered position in a buffer. Point and mark delimit the
+region@comma{} whichever comes first. The mark can remain after the selection is
+deactivated; it is not copied text. See @ref{Selecting Text With Speech,Selecting and checking text,,emacsvox,}.
+@item Region or selection
+The text between point and mark@comma{} including any
+selected spaces and newlines. The character at its end is excluded. The
+active region is the current selection; some commands can also use an
+inactive mark. Establish a fresh region before cutting. See
+@ref{Selecting Text With Speech,Selection boundaries and activation,,emacsvox,}.
+@item Transient Mark mode
+Emacs's usual active-selection behaviour@comma{} used by
+the editing examples. It is unrelated to the Transient package that supplies
+settings menus. See @ref{Selecting Text With Speech,Using the region through speech,,emacsvox,} and
+@ref{Mark,The mark and the region,,emacs,} in the GNU Emacs Manual.
+@item Copy
+Store a passage in the kill ring while leaving its source text
+unchanged. The destination becomes an independent text copy when you paste
+it. See @ref{Copying Text Between Buffers,Copying between buffers,,emacsvox,}.
+@item Kill or cut
+Remove text and keep it in the kill ring for later insertion.
+Some deletion commands do not keep that copy. Killing a buffer is a different
+operation: it closes the buffer rather than copying its contents. See
+@ref{Moving Text Safely,Moving text safely,,emacsvox,}.
+@item Yank or paste
+Insert text from the kill ring@comma{} or through configured
+clipboard integration@comma{} at point. It changes the destination buffer@comma{} not
+automatically its saved file. See @ref{Copying Text Between Buffers,Checking a paste,,emacsvox,}.
+@item Kill ring
+Emacs's shared history of copied and cut text. It can contain
+more than the latest passage@comma{} including text placed there by inspection
+commands. It is not a permanent backup or the same store as the system
+clipboard. See @ref{Choosing Earlier Copied Text,Choosing an earlier copy,,emacsvox,}.
+@item Clipboard
+The operating system's text-transfer facility. Its connection
+to Emacs depends on the display session and configuration; a new external
+copy can affect the next paste. See @ref{Copying Through The Clipboard,Testing clipboard exchange,,emacsvox,}.
+@item Undo
+Reverse recorded edits in the selected buffer. It does not reverse
+a settings save or an action already sent to another application. When
+listening between successive corrections@comma{} use the recovery guide's
+@code{undo-only} procedure. See @ref{Recovering Text Edits,Undo and spoken inspection,,emacsvox,}.
+@end table
+
+@node Presentation Resource Terms
 @section Voices and presentation resources
 
 @cindex physical voice, meaning
@@ -10338,6 +10723,7 @@ startup; individual palette operations have different rules. See
 @ref{Presentation Profiles,Presentation profiles,,emacsvox,}.
 @end table
 
+@node Speech And Settings Terms
 @section Changes and speech output
 
 @cindex preview, meaning

@@ -209,6 +209,7 @@
   (require 'emacsvox-indentation-tests)
   (require 'emacsvox-aural-menu-tests)
   (require 'emacsvox-capitalization-tests)
+  (require 'emacsvox-spelling-tests)
   (require 'emacsvox-interaction-tests)
   (require 'emacsvox-line-cues-tests)
   (require 'emacsvox-output-settings-tests)

@@ -14,6 +14,30 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Sharing Voice Palettes,  Prev: Saving And Startup,  Up: Presentation Profiles
+
+8.12.3 Export, Back Up, And Import Palettes
+-------------------------------------------
+
+‘w’ in Voice Palettes exports effective portable entries, asking before
+omitting machine-local choices.  ‘W’ backs up full ancestry and
+referenced local choices.  ‘i’ imports either as an independent personal
+palette under an unused name; it neither replaces ancestry nor activates
+the result.  Missing installed voices are reported and retained for
+replacement.  Partial import retains its proposal for Retry or Discard.
+
+   For practice, export ‘reading-demo’ with ‘w’, review omitted choices,
+and import as ‘reading-import-demo’.  Enter and preview before
+activating.  An unavailable retained choice is a review request, not
+proof of audio.  Delete the imported copy when no profile, child, or
+rule needs it; the original is unchanged.
+
+   Use ‘W’ when local choice data and ancestry matter.  Import still
+creates a new independent palette, not an overwrite.  Neither export
+contains engines or sound-pack audio, and neither is a backup of every
+Emacsvox setting.
+
+
 File: emacsvox.info,  Node: Presentation Troubleshooting,  Next: Voice Lock,  Prev: Presentation Profiles,  Up: Aural Presentation
 
 8.13 Troubleshooting And Recovery
@@ -4393,17 +4417,274 @@ File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Finding Tasks,  P
 15 Emacsvox Keyboard Commands.
 ******************************
 
-This chapter explains how speech prefixes, settings menus and
-application keys fit together.  If the notation is unfamiliar, first
-read *note Read the key instructions: Emacs Key Notation.: a modifier is
-held for one keypress, while spaces separate successive steps.  A
-capital letter is not a modifier name.
+Use this chapter to recall an everyday command and check its important
+conditions before acting.  *note Read the key instructions: Emacs Key
+Notation. explains modifiers, capital letters and successive keypresses.
+*note Basic Usage: (emacsvox)Basic Usage. teaches the reading and
+editing workflows; the links beside each reminder lead to their details.
 
-   Use *note Basic Usage: Basic Usage. for essential reading commands
-and *note Using Online Help: Using Online Help. to inspect a binding in
-your current buffer.  The generated *note Emacsvox Keymaps:
-(emacsvox-reference)Emacsvox Keymaps. provides the full default
-inventory.
+   These are default keys, used without a prefix argument unless one is
+shown.  Application keymaps and personal bindings can change their
+meaning.  A short reference cannot replace a terminal's or editor's own
+instructions.  Use *note live Help: Using Online Help. in the affected
+buffer when a binding differs, and *note the generated keymap reference:
+(emacsvox-reference)Emacsvox Keymaps. for the full default inventory.
+
+* Menu:
+
+* Reading reminders: Everyday Reading Commands.  Choose a reading unit and check its effect on point and windows.
+* Editing reminders: Everyday Editing Commands.  Select, copy, cut, paste and recover with the right scope.
+* Files, buffers and windows: Everyday Workspace Commands.  Open and save documents without confusing buffers and views.
+* Help and orientation: Everyday Help Commands.  Find commands and return to the intended working buffer.
+* Speech and settings: Everyday Speech Commands.  Find controls and distinguish navigation from undo and saving.
+* How prefixes and menus fit together: Emacsvox Key Prefixes.  Understand the speech prefix, menu entry and application overrides.
+
+
+File: emacsvox.info,  Node: Everyday Reading Commands,  Next: Everyday Editing Commands,  Up: Emacsvox Keyboard Commands
+
+15.1 Reading reminders
+======================
+
+These commands apply to the selected buffer's accessible text.  In Info
+that means the current node, not the whole manual.  Use the
+application's own reader for a table, terminal or other specialised
+view.
+
+Read from here (‘C-e i’)
+     Read towards the accessible buffer end with tracked position.
+     Requires a supporting speech server; point advances by chunks, and
+     another command stops reading before performing its action.  See
+     *note Stopping and restarting tracked reading: (emacsvox)Reading
+     From Point.
+Stop current speech (‘C-e s’)
+     Stop main and notification speech without disabling future
+     feedback.  During tracked reading this retains a chunk boundary,
+     not an exact spoken word.  See *note Where stopping leaves point:
+     (emacsvox)Reading From Point.
+Repeat the current line (‘C-e l’)
+     Inspect the line without moving point.  ‘C-u C-e l’ reads from
+     point to the line's end.  See *note Short reading and prefix
+     variants: (emacsvox)Reading Without Moving Point.
+Read or spell the word (‘C-e w’)
+     Read the word at point; repeat at the same position to spell it.
+     See *note Inspecting short passages: (emacsvox)Reading Without
+     Moving Point.
+Inspect the character (‘C-e c’)
+     Read the character at point, using its phonetic name where
+     available.  Point does not move.  See *note Character and word
+     reading: (emacsvox)Reading.
+Read the paragraph (‘C-e [’)
+     Read the paragraph around point without moving it.  The mode
+     determines its boundaries.  Sentence reading is also available by
+     name.  See *note Sentence and paragraph inspection:
+     (emacsvox)Reading Without Moving Point.
+Read a checked selection (‘C-e r’)
+     Read between point and mark.  A short region read preserves its
+     endpoints and activation; it does not establish a new selection for
+     you.  See *note Selecting and checking text: (emacsvox)Selecting
+     Text With Speech.
+Read the buffer (‘C-e b’)
+     Read its accessible contents without tracked interruption position.
+     Requests of 40,000 characters or more fall back to windowful
+     reading at the current default limit, removing other windows.  The
+     same limit applies to region reading.  See *note Buffer-reading
+     limits and alternatives: (emacsvox)Reading Without Moving Point.
+
+   Page reading and the complete reading-key list remain under *note
+Reading and navigating: (emacsvox)Reading.  Page reading changes the
+mark; it is not a substitute for inspecting an existing selection.
+
+
+File: emacsvox.info,  Node: Everyday Editing Commands,  Next: Everyday Workspace Commands,  Prev: Everyday Reading Commands,  Up: Emacsvox Keyboard Commands
+
+15.2 Editing reminders
+======================
+
+Use these in ordinary text, after leaving any prompt or special reader.
+Check the buffer and the affected text first.  *note Selection and
+editing terms: (emacsvox)Editing Terms. defines Emacs's names for
+copying, cutting and pasting.
+
+Start a selection (‘C-<SPC>’)
+     Set the mark, then move point to its other end.  Extend it by
+     moving rather than repeatedly setting the mark.  See *note
+     Selection boundaries and newline checks: (emacsvox)Selecting Text
+     With Speech.
+Inspect the other end (‘C-x C-x’)
+     Exchange point and mark.  The selected text is unchanged until you
+     move an endpoint.  See *note Adjusting a checked selection:
+     (emacsvox)Selecting Text With Speech.
+Copy (‘M-w’)
+     Copy the checked region to the kill ring without removing the
+     source text.  See *note Copying into another buffer:
+     (emacsvox)Copying Text Between Buffers.
+Cut (‘C-w’)
+     Remove the checked region and retain it in the kill ring.  This
+     edits the buffer, not the saved file.  See *note Moving text and
+     verifying both locations: (emacsvox)Moving Text Safely.
+Paste (‘C-y’)
+     Insert the current kill-ring entry at point; clipboard integration
+     can supply a more recent external copy instead.  Point ends after
+     the inserted text.  See *note Checking the destination and pasted
+     text: (emacsvox)Copying Text Between Buffers.
+Use an earlier copy (‘M-y’)
+     Immediately after a yank, replace that insertion with an earlier
+     entry.  After a separate command, including a reading command,
+     choose an entry for another insertion instead.  See *note Earlier
+     copies and yank sequencing: (emacsvox)Choosing Earlier Copied Text.
+Undo while listening (‘M-x undo-only <RET>’)
+     Undo a change in the selected buffer, inspect it, and repeat only
+     as needed.  Deactivate an unrelated selection first.  Unlike
+     ordinary ‘C-/’, this avoids undoing an earlier undo after an
+     intervening reading command.  See *note Undo, inspection and
+     recovery limits: (emacsvox)Recovering Text Edits.
+Find text (‘C-s’ or ‘C-r’)
+     Search forwards or backwards.  Finish with ‘<RET>’ before typing an
+     edit; text entered during search changes the query.  See *note
+     Search direction and failure recovery: (emacsvox)Searching And
+     Replacing Text.
+Review replacements (‘M-%’)
+     Query-replace in the checked active region, or ordinarily from
+     point onwards when no region is active.  The replacement questions
+     have their own keys; stopping does not undo accepted changes.  See
+     *note Scoped replacement and match-by-match decisions:
+     (emacsvox)Reviewing Text Replacements.
+
+   Copying is not a permanent backup.  Message repetition and filename
+speech can also change the kill ring; *note the transfer guide:
+(emacsvox)Copying Text Between Buffers. explains how to inspect it
+without accidentally replacing the next paste.
+
+
+File: emacsvox.info,  Node: Everyday Workspace Commands,  Next: Everyday Help Commands,  Prev: Everyday Editing Commands,  Up: Emacsvox Keyboard Commands
+
+15.3 Files, buffers and windows
+===============================
+
+A buffer contains work; a window displays it.  Identify the selected
+buffer with ‘C-e m’ before editing, saving or closing anything.  For
+definitions, see *note Buffers, windows and frames: (emacsvox)Working
+Context Terms.
+
+Open a file (‘C-x C-f’)
+     Visit a pathname, creating a new unsaved buffer if the file does
+     not exist.  ‘C-x C-r’ visits read-only instead.  See *note Checking
+     the document and its destination: (emacsvox)Opening A Document.
+Save the current file (‘C-x C-s’)
+     Write this buffer to its file; a new buffer may need a filename.
+     An error is not a completed save.  See *note Saving destinations
+     and failure recovery: (emacsvox)Saving A Working Copy.
+Save under another filename (‘C-x C-w’)
+     Write the current text, including unsaved edits, and change where
+     this buffer's later saves go.  Cancel an unexpected overwrite
+     prompt.  See *note Working copies versus copies of saved files:
+     (emacsvox)Saving A Working Copy.
+Switch to another buffer (‘C-x b’)
+     Select content by buffer name in the current window.  The buffer
+     you leave stays available.  See *note Buffer selection:
+     (emacsvox)Desktop Objects.
+Display a reference (‘C-x 4 b’)
+     Display and select an existing buffer in another window, creating
+     or reusing a view.  See *note Keeping a reference beside a draft:
+     (emacsvox)Reference And Draft Windows.
+Select another window (‘C-x o’)
+     Select the next view; lowercase o is not zero.  With more than two
+     windows, the next one need not be the draft.  See *note Identifying
+     the selected view: (emacsvox)Working With Windows.
+Remove a window (‘C-x 0’)
+     Remove this view, not its buffer.  The last ordinary window cannot
+     be removed this way.  ‘C-x 1’ instead keeps only the selected view.
+     See *note Closing windows without losing documents:
+     (emacsvox)Closing Windows Safely.
+Close a buffer (‘C-x k’)
+     Kill the named buffer, checking any unsaved-work prompt.  This is
+     not the same as removing its window or deleting its file.  See
+     *note Leaving document buffers safely: (emacsvox)Opening A
+     Document.
+
+
+File: emacsvox.info,  Node: Everyday Help Commands,  Next: Everyday Speech Commands,  Prev: Everyday Workspace Commands,  Up: Emacsvox Keyboard Commands
+
+15.4 Help and orientation
+=========================
+
+Help can change the selected buffer and window arrangement.  Before your
+next editing command, check that you have returned to the intended
+document.
+
+Identify your context (‘C-e m’)
+     Speak the mode line, including the current buffer and major mode.
+     See *note Position and status commands: (emacsvox)Status
+     Information.
+Describe the windows (‘C-e C-w’)
+     Describe the current arrangement.  This does not select a different
+     view.  See *note Working with windows through speech:
+     (emacsvox)Working With Windows.
+Explain a key (‘C-h k’ followed by the key sequence)
+     Describe its effective binding without invoking it as the requested
+     action.  See *note Discovering a key, command or setting:
+     (emacsvox)Using Online Help.
+Discover local commands (‘C-h m’)
+     Describe the current modes.  ‘C-h b’ lists effective bindings;
+     invoke these from the application you are asking about.  See *note
+     Help for the current buffer: (emacsvox)Using Online Help.
+Read Help again (‘C-e h’)
+     Select and read Help using a windowful helper that removes other
+     windows without killing their buffers.  Lowercase h is different
+     from capital H for settings.  See *note Reading Help and returning
+     to work: (emacsvox)Using Online Help.
+Open the manual (‘C-e C-i’)
+     Open this manual directly in Info.  Use ‘i’ in Info to look up a
+     subject and ‘l’ to retrace a link.  See *note Manual lookup and
+     return navigation: (emacsvox)Finding Help In Info.
+
+   ‘C-e f’ speaks a filename or default directory, and ‘C-e a’ repeats a
+message.  Both also put text in the kill ring and can affect the next
+paste.  See *note Status commands and their side effects:
+(emacsvox)Status Information.
+
+
+File: emacsvox.info,  Node: Everyday Speech Commands,  Next: Emacsvox Key Prefixes,  Prev: Everyday Help Commands,  Up: Emacsvox Keyboard Commands
+
+15.5 Speech and settings
+========================
+
+These routes use the current settings interface.  A live adjustment, a
+saved default and a retained draft are distinct; follow the linked scope
+and saving instructions before making a persistent change.
+
+Open speech controls (‘C-e H s’)
+     Browse rate, punctuation and related controls for the captured
+     context.  Inspect the displayed scope; global defaults need not
+     override local values.  See *note Speech controls and scope:
+     (emacsvox)Speech System.
+Open settings for this task (‘C-e S’)
+     Use the integration's focused menu when available, otherwise
+     general buffer settings.  ‘C-e H .’ always opens the latter.  See
+     *note Finding the appropriate settings menu: (emacsvox)Using Online
+     Help.
+Find a setting (‘C-e H /’)
+     Choose a matching name; accepting the search selects its control
+     without changing the value.  Activate it separately.  See *note
+     Settings search and action search: (emacsvox)Finding Settings And
+     Actions.
+Explain this item's feedback (‘C-e E’)
+     Inspect the presentation chosen for the object at point.  The
+     report is not itself a repair.  See *note Understanding voices,
+     sounds and rules: (emacsvox)Explaining Presentation.
+
+   In an Emacsvox settings menu, ‘q’ goes back and ‘C-q’ closes the
+sequence.  In an ordinary unfinished prompt, ‘C-g’ cancels.  None of
+these reverses an already applied change.  Editors, tables and terminals
+have their own return commands; see *note Returning from settings:
+(emacsvox)Returning From Settings. and *note Recovering an unfinished
+edit: (emacsvox)Recovering Aural Changes.
+
+
+File: emacsvox.info,  Node: Emacsvox Key Prefixes,  Prev: Everyday Speech Commands,  Up: Emacsvox Keyboard Commands
+
+15.6 How prefixes and menus fit together
+========================================
 
 ‘C-e’
      The main Emacsvox keymap, including reading, status, and navigation
@@ -4439,7 +4720,7 @@ resolves those contexts.  The manual uses the default speech prefix; a
 customised prefix changes its entry sequences without changing a menu's
 own displayed shortcuts.
 
-15.1 Choose a different speech prefix
+15.7 Choose a different speech prefix
 =====================================
 
 Set ‘emacsvox-prefix’ before loading Emacsvox.  For example:
@@ -4458,7 +4739,7 @@ not installed as recovery.
 default ‘C-e C-e’.  Mode-local bindings can still shadow the prefix;
 inspect them before assuming a key is unavailable or broken.
 
-15.2 Inspect the effective bindings
+15.8 Inspect the effective bindings
 ===================================
 
 ‘C-h m’ describes the current modes and their commands.  ‘C-h b’ lists
@@ -4480,7 +4761,9 @@ File: emacsvox.info,  Node: Finding Tasks,  Next: Emacsvox Terminology,  Prev: E
 Choose the result you want.  Each link leads to the procedure, its
 conditions and its recovery instructions; following a link changes no
 settings.  *note Something is wrong: Finding Problem Tasks. starts from
-a symptom rather than an editor's name.
+a symptom rather than an editor's name.  For a key reminder rather than
+a worked procedure, use *note Everyday commands and key prefixes:
+(emacsvox)Emacsvox Keyboard Commands.
 
    If the keyboard instructions are unfamiliar, begin with *note Read
 the key instructions: Emacs Key Notation.  For terms such as palette,
@@ -4511,9 +4794,9 @@ File: emacsvox.info,  Node: Finding Reading Tasks,  Next: Finding Editing Tasks,
    • *note Get speech working again: (emacsvox)Recovering From No
      Speech.: start with the no-speech recovery procedure before
      changing presentation rules or voices.
-   • *note Stop current speech: (emacsvox)Basic Usage.: the
-     first-session commands include stopping speech without disabling
-     feedback from subsequent commands.
+   • *note Stop current speech: (emacsvox)Everyday Reading Commands.:
+     recall the stop key and its effect on tracked reading without
+     disabling feedback from subsequent commands.
    • *note Inspect a line, sentence or paragraph: Reading Without Moving
      Point.: choose the reading unit and preserve the editing position,
      with the limits of large requests explained.
@@ -4695,6 +4978,12 @@ problems.
    • *note Text was pasted in the wrong place: Recovering Text Edits.:
      undo in the affected buffer and check the result before trying the
      transfer again.
+   • *note A paste inserted a filename or message instead of my passage:
+     (emacsvox)Copying Text Between Buffers.: inspect which command
+     changed the kill ring before choosing the earlier copy.
+   • *note Help replaced my other windows: (emacsvox)Using Online Help.:
+     check the selected buffer and restore the desired views; a
+     collapsed layout need not mean lost documents.
    • *note I saved a voice, but it still sounds the same:
      (emacsvox)Saved Voice Change Not Audible.: check selection,
      matching rules, individual tuning and engine support in that order.
@@ -4737,7 +5026,25 @@ File: emacsvox.info,  Node: Emacsvox Terminology,  Next: Copyright,  Prev: Findi
 These definitions help you choose a procedure.  They do not replace a
 control's specific scope, save, or recovery instructions.  *note Find a
 task: Finding Tasks. starts from what you want to accomplish rather than
-the names below.
+the names below.  For a key reminder, use *note Everyday commands and
+key prefixes: (emacsvox)Emacsvox Keyboard Commands.
+
+   *note Working context: (emacsvox)Working Context Terms. covers
+buffers and views; *note selection and editing: (emacsvox)Editing Terms.
+covers mark, region, copying and recovery.  *note Presentation
+resources: (emacsvox)Presentation Resource Terms. and *note changes and
+speech output: (emacsvox)Speech And Settings Terms. explain
+configuration.
+
+* Menu:
+
+* Your working context: Working Context Terms.  Distinguish buffers, views, editing positions and restrictions.
+* Selection, copying and editing: Editing Terms.  Translate selection, cut and paste into mark, region, kill and yank.
+* Voices and presentation resources: Presentation Resource Terms.  Distinguish physical voices, named voices, palettes, rules and profiles.
+* Changes and speech output: Speech And Settings Terms.  Distinguish preview, drafts, saving, application and speech workers.
+
+
+File: emacsvox.info,  Node: Working Context Terms,  Next: Editing Terms,  Up: Emacsvox Terminology
 
 17.1 Your working context
 =========================
@@ -4747,15 +5054,40 @@ Buffer
      not necessarily a file, and switching buffers does not close the
      one you leave.  A window displays a buffer.  See *note Buffers hold
      your work: (emacsvox)Desktop Objects.
+Window
+     A view of a buffer inside an Emacs frame.  Removing a window does
+     not kill its buffer.  Two windows showing the same buffer are views
+     of the same text, not independent copies.  See *note Working with
+     windows: (emacsvox)Working With Windows.
+Frame
+     An outer Emacs application window, or the corresponding display in
+     a terminal session.  It contains Emacs windows.  Selecting another
+     window within a frame differs from switching applications in the
+     operating system.  See *note Windows and frames: (emacsvox)Working
+     With Windows.
 Point
-     The position in the current buffer at which movement and editing
-     act.  Explicit reading commands often let you inspect text without
-     moving it.
+     The current editing position, between characters.  Text is normally
+     inserted there.  Short reading often leaves it unchanged; tracked
+     reading advances it.  See *note Reading position and interruption:
+     (emacsvox)Reading From Point.
 Mode
      The commands and behaviour associated with a buffer.  Its major
      mode supplies its principal tools; minor modes add other behaviour.
      See *note Let modes give each buffer its tools: (emacsvox)Object
      Oriented Desktop.
+Read-only
+     A buffer state that prevents ordinary text edits.  It does not mean
+     the buffer has no unsaved changes, and making a buffer writable
+     does not grant permission to overwrite a protected file.  Special
+     applications may still provide their own operations.  See *note
+     Opening a document safely: (emacsvox)Opening A Document.
+Narrowing
+     Restricting access to part of a buffer without deleting the rest.
+     Reading, movement and many editing commands stay within that
+     portion; widening removes the restriction.  Ordinary file saving
+     still saves the entire buffer.  See *note Reading accessible text:
+     (emacsvox)Reading Without Moving Point. and *note Narrowing:
+     (emacs)Narrowing. in the GNU Emacs Manual.
 Captured source
      The buffer and position retained when a settings workflow starts.
      Contextual actions continue to refer to that source rather than
@@ -4768,7 +5100,68 @@ Scope
      change need not be saved, and a saved resource need not be active.
      See *note Choose what persists: (emacsvox)Saving And Startup.
 
-17.2 Voices and presentation resources
+
+File: emacsvox.info,  Node: Editing Terms,  Next: Presentation Resource Terms,  Prev: Working Context Terms,  Up: Emacsvox Terminology
+
+17.2 Selection, copying and editing
+===================================
+
+Mark
+     A remembered position in a buffer.  Point and mark delimit the
+     region, whichever comes first.  The mark can remain after the
+     selection is deactivated; it is not copied text.  See *note
+     Selecting and checking text: (emacsvox)Selecting Text With Speech.
+Region or selection
+     The text between point and mark, including any selected spaces and
+     newlines.  The character at its end is excluded.  The active region
+     is the current selection; some commands can also use an inactive
+     mark.  Establish a fresh region before cutting.  See *note
+     Selection boundaries and activation: (emacsvox)Selecting Text With
+     Speech.
+Transient Mark mode
+     Emacs's usual active-selection behaviour, used by the editing
+     examples.  It is unrelated to the Transient package that supplies
+     settings menus.  See *note Using the region through speech:
+     (emacsvox)Selecting Text With Speech. and *note The mark and the
+     region: (emacs)Mark. in the GNU Emacs Manual.
+Copy
+     Store a passage in the kill ring while leaving its source text
+     unchanged.  The destination becomes an independent text copy when
+     you paste it.  See *note Copying between buffers: (emacsvox)Copying
+     Text Between Buffers.
+Kill or cut
+     Remove text and keep it in the kill ring for later insertion.  Some
+     deletion commands do not keep that copy.  Killing a buffer is a
+     different operation: it closes the buffer rather than copying its
+     contents.  See *note Moving text safely: (emacsvox)Moving Text
+     Safely.
+Yank or paste
+     Insert text from the kill ring, or through configured clipboard
+     integration, at point.  It changes the destination buffer, not
+     automatically its saved file.  See *note Checking a paste:
+     (emacsvox)Copying Text Between Buffers.
+Kill ring
+     Emacs's shared history of copied and cut text.  It can contain more
+     than the latest passage, including text placed there by inspection
+     commands.  It is not a permanent backup or the same store as the
+     system clipboard.  See *note Choosing an earlier copy:
+     (emacsvox)Choosing Earlier Copied Text.
+Clipboard
+     The operating system's text-transfer facility.  Its connection to
+     Emacs depends on the display session and configuration; a new
+     external copy can affect the next paste.  See *note Testing
+     clipboard exchange: (emacsvox)Copying Through The Clipboard.
+Undo
+     Reverse recorded edits in the selected buffer.  It does not reverse
+     a settings save or an action already sent to another application.
+     When listening between successive corrections, use the recovery
+     guide's ‘undo-only’ procedure.  See *note Undo and spoken
+     inspection: (emacsvox)Recovering Text Edits.
+
+
+File: emacsvox.info,  Node: Presentation Resource Terms,  Next: Speech And Settings Terms,  Prev: Editing Terms,  Up: Emacsvox Terminology
+
+17.3 Voices and presentation resources
 ======================================
 
 Physical voice
@@ -4804,7 +5197,10 @@ Presentation profile
      rules.  See *note Presentation profiles: (emacsvox)Presentation
      Profiles.
 
-17.3 Changes and speech output
+
+File: emacsvox.info,  Node: Speech And Settings Terms,  Prev: Presentation Resource Terms,  Up: Emacsvox Terminology
+
+17.4 Changes and speech output
 ==============================
 
 Preview

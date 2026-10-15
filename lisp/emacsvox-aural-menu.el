@@ -37,6 +37,7 @@
                   "emacsvox-aural-feedback-details" (&optional arg))
 
 (autoload 'emacsvox-capitalization "emacsvox-capitalization" nil t)
+(autoload 'emacsvox-spelling "emacsvox-spelling" nil t)
 (autoload 'emacsvox-settings-changes "emacsvox-settings-changes" nil t)
 (autoload 'emacsvox-settings-integrations "emacsvox-settings-integrations" nil t)
 (autoload 'emacsvox-settings-setups "emacsvox-settings-workflows" nil t)
@@ -67,7 +68,7 @@
                        '(emacsvox-aural-menu emacsvox-aural-menu-speech
                          emacsvox-aural-menu-sounds emacsvox-aural-menu-punctuation
                          emacsvox-aural-menu-voices emacsvox-capitalization
-                         emacsvox-interaction emacsvox-aural-menu-line-cues
+                         emacsvox-interaction emacsvox-spelling emacsvox-aural-menu-line-cues
                          emacsvox-output-settings emacsvox-settings-buffer
                          emacsvox-settings-dictionaries emacsvox-settings-history emacsvox-settings-switches
                          emacsvox-settings-voice-presentation emacsvox-settings-preview-labels
@@ -524,6 +525,7 @@ When opened from the Emacsvox menu, share its selected scope."
    ("p" (lambda () (emacsvox-aural-menu--punctuation-label))
     emacsvox-aural-menu-punctuation :transient transient--do-stack)
    ("c" "Capitalization" emacsvox-capitalization :transient transient--do-stack)
+   ("f" "Spelling feedback (global)" emacsvox-spelling :transient transient--do-stack)
    ("i" (lambda () (emacsvox-aural-menu--indentation-label))
     emacsvox-aural-menu--indentation :transient transient--do-stack)
    ("t" "Typing and interaction" emacsvox-interaction :transient transient--do-stack)]
