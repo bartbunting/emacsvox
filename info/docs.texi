@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1660 commands and 233 options.
+This chapter documents a total of 1662 commands and 233 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -18572,6 +18572,16 @@ Manage presentation features and explicitly scoped rule drafts.
 @end format
 @end deffn
 
+@subsubsection emacsvox-settings-preview-labels
+@deffn {Command} emacsvox-settings-preview-labels
+@findex emacsvox-settings-preview-labels
+
+@format
+Choose physical voice comparison labels; navigation changes nothing.
+Enter applies the selected policy and returns.  Cancel retains the old policy.
+@end format
+@end deffn
+
 @subsubsection emacsvox-settings-setups
 @deffn {Command} emacsvox-settings-setups
 @findex emacsvox-settings-setups
@@ -18589,6 +18599,16 @@ Manage saved setups and retained drafts in their owning editors.
 Control Voice Lock, local silence, and earcons with explicit scopes.
 Only global Voice Lock has a Customize save here.  Other switches last for the
 session or buffer; Help explains which presentation each switch affects.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-voice-presentation
+@deffn {Command} emacsvox-settings-voice-presentation
+@findex emacsvox-settings-voice-presentation
+
+@format
+Set comparison labels and overall Omnivox pitch contrast globally.
+Changes apply now; Save defaults explicitly to keep them across restarts.
 @end format
 @end deffn
 

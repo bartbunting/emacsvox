@@ -12,6 +12,46 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: emacsvox-reference.info,  Node: emacsvox-vdiff,  Next: emacsvox-version,  Prev: emacsvox-url-template,  Up: Emacsvox Commands And Options
+
+2.260 emacsvox-vdiff
+====================
+
+VDIFF == vimdiff Installable from melpa, vdiff enables synchronized
+movement through diff buffers without resorting to an extra
+control-panel as is the case with ediff.  In addition to speech-enabling
+interactive commands and setting up face->voice mappings, this module
+provides commands that speak the current hunk.  These are bound in
+‘vdiff-mode-prefix-map’.
+   • ‘emacsvox-vdiff-speak-this-hunk’ bound to ‘SPC’.
+   • ‘emacsvox-vdiff-speak-other-hunk’ bound to ‘C-SPC’.
+   • ‘emacsvox-vdiff-speak-other-line’ bound to ‘l’.
+
+2.260.1 Emacsvox-Vdiff Commands
+-------------------------------
+
+2.260.1.1 emacsvox-vdiff-speak-other-hunk
+.........................................
+
+ -- Command: emacsvox-vdiff-speak-other-hunk
+
+     Speak corresponding hunk from other buffer.
+
+2.260.1.2 emacsvox-vdiff-speak-other-line
+.........................................
+
+ -- Command: emacsvox-vdiff-speak-other-line
+
+     Speak corresponding line from other buffer.
+
+2.260.1.3 emacsvox-vdiff-speak-this-hunk
+........................................
+
+ -- Command: emacsvox-vdiff-speak-this-hunk
+
+     Speak VDiff hunk under point.
+
+
 File: emacsvox-reference.info,  Node: emacsvox-version,  Next: emacsvox-vertico,  Prev: emacsvox-vdiff,  Up: Emacsvox Commands And Options
 
 2.261 emacsvox-version
@@ -8666,18 +8706,26 @@ Function Index
                                                              (line   38)
 * emacsvox-settings-presentation <1>:    emacsvox-settings-workflows.
                                                              (line   39)
+* emacsvox-settings-preview-labels:      emacsvox-settings-workflows.
+                                                             (line   45)
+* emacsvox-settings-preview-labels <1>:  emacsvox-settings-workflows.
+                                                             (line   46)
 * emacsvox-settings-search:              emacsvox-settings.  (line   21)
 * emacsvox-settings-search <1>:          emacsvox-settings.  (line   22)
 * emacsvox-settings-search-actions:      emacsvox-settings.  (line   28)
 * emacsvox-settings-search-actions <1>:  emacsvox-settings.  (line   29)
 * emacsvox-settings-setups:              emacsvox-settings-workflows.
-                                                             (line   45)
-* emacsvox-settings-setups <1>:          emacsvox-settings-workflows.
-                                                             (line   46)
-* emacsvox-settings-switches:            emacsvox-settings-workflows.
-                                                             (line   52)
-* emacsvox-settings-switches <1>:        emacsvox-settings-workflows.
                                                              (line   53)
+* emacsvox-settings-setups <1>:          emacsvox-settings-workflows.
+                                                             (line   54)
+* emacsvox-settings-switches:            emacsvox-settings-workflows.
+                                                             (line   60)
+* emacsvox-settings-switches <1>:        emacsvox-settings-workflows.
+                                                             (line   61)
+* emacsvox-settings-voice-presentation:  emacsvox-settings-workflows.
+                                                             (line   69)
+* emacsvox-settings-voice-presentation <1>: emacsvox-settings-workflows.
+                                                             (line   70)
 * emacsvox-shell-command:                emacsvox-speak.     (line  291)
 * emacsvox-shell-command <1>:            emacsvox-speak.     (line  292)
 * emacsvox-show-property-at-point:       emacsvox-wizards.   (line  148)

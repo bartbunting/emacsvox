@@ -28,6 +28,8 @@
 ;;; Code:
 (require 'emacsvox-aural-menu)
 (require 'emacsvox-aural-history)
+(defvar omnivox-average-pitch-contrast)
+(defvar emacsvox-aural-preview-label-verbosity)
 (declare-function emacsvox-aural-set-history-limit "emacsvox-aural-recent-feedback" (limit))
 (declare-function emacsvox-aural-toggle-interface-history-recording "emacsvox-aural-recent-feedback" ())
 (declare-function emacsvox-aural-feedback-outline-mode "emacsvox-aural-feedback-details" (&optional arg))
@@ -147,7 +149,8 @@ This does not save retained feedback or restore discarded records."
                    (when-let* ((button (button-at (point))))
                      (button-get button 'button-data))))
          (command (and object (oref object command))))
-    (if (memq command '(emacsvox-settings-workflows--history-limit))
+    (if (memq command '(emacsvox-settings-workflows--history-limit
+                        emacsvox-settings-workflows--pitch-contrast))
         (funcall command delta)
       (emacsvox-settings-workflows--say
        "Not adjustable. Enter activates; left and right change sections."
@@ -161,7 +164,8 @@ This does not save retained feedback or restore discarded records."
 (defun emacsvox-settings-workflows--bindings (map)
   "Add numeric workflow adjustments to transient MAP."
   (when (and transient-enable-menu-navigation transient--prefix
-             (memq (oref transient--prefix command) '(emacsvox-settings-history)))
+             (memq (oref transient--prefix command) '(emacsvox-settings-history
+                       emacsvox-settings-voice-presentation)))
     (keymap-set map "S-<left>" #'emacsvox-settings-workflows--decrease)
     (keymap-set map "S-<right>" #'emacsvox-settings-workflows--increase))
   map)
@@ -362,6 +366,119 @@ This affects the source buffer immediately and does not save startup settings."
   (emacsvox-settings-workflows--say
    (concat (emacsvox-settings-workflows--source-toggle-label 'emacsvox-use-icons "Earcons in source")
            ", following default")))
+
+(defun emacsvox-settings-workflows--preview-label-name ()
+  "Describe the global voice comparison label policy."
+  (require 'emacsvox-aural-preview)
+  (pcase emacsvox-aural-preview-label-verbosity
+    ('names "engine and voice names")
+    ('brief "letters or numbers")
+    (_ "no labels")))
+
+(defun emacsvox-settings-workflows--preview-label-choice (value label)
+  "Describe VALUE's LABEL and whether it is selected."
+  (concat label (when (eq value emacsvox-aural-preview-label-verbosity) ", selected")))
+
+(defun emacsvox-settings-workflows--preview-label-apply (value)
+  "Apply comparison label VALUE and return to the invoking control."
+  (customize-set-variable 'emacsvox-aural-preview-label-verbosity value)
+  (transient--stack-pop)
+  (transient--show)
+  (emacsvox-settings-workflows--say
+   (concat "Comparison labels: " (emacsvox-settings-workflows--preview-label-name))))
+
+(defun emacsvox-settings-workflows--preview-names ()
+  "Identify physical comparison samples by engine and voice name.
+This global policy keeps each label in the same cancellable sequence as its
+unchanged sample.  It applies immediately; Save defaults separately."
+  (interactive) (emacsvox-settings-workflows--preview-label-apply 'names))
+(defun emacsvox-settings-workflows--preview-brief ()
+  "Identify physical comparison samples only by letter or sequence number.
+The sample text stays unchanged.  This global policy applies immediately;
+Save defaults separately."
+  (interactive) (emacsvox-settings-workflows--preview-label-apply 'brief))
+(defun emacsvox-settings-workflows--preview-unlabelled ()
+  "Omit identifying labels from physical voice comparisons globally.
+Samples keep their text and order, but no longer say which voice is playing.
+This applies immediately; Save defaults separately."
+  (interactive) (emacsvox-settings-workflows--preview-label-apply nil))
+
+(transient-define-prefix emacsvox-settings-preview-labels ()
+  "Choose physical voice comparison labels; navigation changes nothing.
+Enter applies the selected policy and returns.  Cancel retains the old policy."
+  ["Comparison labels (global)"
+   ("n" (lambda () (emacsvox-settings-workflows--preview-label-choice 'names "Engine and voice names"))
+    emacsvox-settings-workflows--preview-names :transient transient--do-replace)
+   ("b" (lambda () (emacsvox-settings-workflows--preview-label-choice 'brief "Letters or numbers"))
+    emacsvox-settings-workflows--preview-brief :transient transient--do-replace)
+   ("o" (lambda () (emacsvox-settings-workflows--preview-label-choice nil "No labels"))
+    emacsvox-settings-workflows--preview-unlabelled :transient transient--do-replace)]
+  ["Finish"
+   ("q" "Cancel" transient-quit-one)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (require 'emacsvox-aural-preview)
+  (transient-setup 'emacsvox-settings-preview-labels nil nil :scope (emacsvox-aural-menu--context))
+  (transient--show)
+  (with-selected-window transient--window
+    (transient--goto-button
+     (transient-suffix-object
+      (pcase emacsvox-aural-preview-label-verbosity
+        ('names 'emacsvox-settings-workflows--preview-names)
+        ('brief 'emacsvox-settings-workflows--preview-brief)
+        (_ 'emacsvox-settings-workflows--preview-unlabelled)))))
+  (emacsvox-transient--speak-button))
+
+(defun emacsvox-settings-workflows--pitch-label ()
+  "Describe the current Omnivox contrast, including when opened from search."
+  (require 'omnivox-voices)
+  (format "Omnivox pitch contrast: %g" omnivox-average-pitch-contrast))
+
+(defun emacsvox-settings-workflows--pitch-contrast (&optional delta)
+  "Set global Omnivox pitch contrast, or adjust by DELTA tenths.
+Zero neutralises average pitch, 0.5 is the gentle default, 1 restores the
+historical curve, and values through 2 increase contrast.  This scales every
+ACSS average-pitch level rather than retuning one named voice.  It affects
+subsequent Omnivox speech and previews via live logical-voice registration;
+other speech backends are unaffected.  Save the default separately."
+  (interactive)
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (require 'omnivox-voices)
+  (let ((value (if delta
+                   (max 0.0 (min 2.0 (+ omnivox-average-pitch-contrast (* delta 0.1))))
+                 (emacsvox-aural-menu--read-number
+                  "Omnivox average-pitch contrast (0 to 2): " omnivox-average-pitch-contrast))))
+    (unless (and (numberp value) (<= 0 value 2))
+      (user-error "Pitch contrast must be from 0 to 2"))
+    (customize-set-variable 'omnivox-average-pitch-contrast value)
+    (emacsvox-settings-workflows--say (format "Pitch contrast: %g" omnivox-average-pitch-contrast))))
+
+(defun emacsvox-settings-workflows--voice-presentation-save ()
+  "Save global comparison labels and Omnivox pitch contrast through Customize.
+This does not save a palette, named voice, physical choice, or engine order."
+  (interactive)
+  (dolist (option '(emacsvox-aural-preview-label-verbosity omnivox-average-pitch-contrast))
+    (customize-save-variable option (symbol-value option)))
+  (emacsvox-settings-workflows--say "Voice presentation defaults saved" 'save-object))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-voice-presentation ()
+  "Set comparison labels and overall Omnivox pitch contrast globally.
+Changes apply now; Save defaults explicitly to keep them across restarts."
+  :refresh-suffixes t
+  ["Voice presentation (global)"
+   ("l" (lambda () (concat "Comparison labels: " (emacsvox-settings-workflows--preview-label-name)))
+    emacsvox-settings-preview-labels :transient transient--do-stack)
+   ("p" (lambda () (emacsvox-settings-workflows--pitch-label))
+    emacsvox-settings-workflows--pitch-contrast :transient t)]
+  ["Save and finish"
+   ("w" "Save voice presentation defaults" emacsvox-settings-workflows--voice-presentation-save :transient t)
+   ("q" "Back" transient-quit-one)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (require 'emacsvox-aural-preview)
+  (require 'omnivox-voices)
+  (transient-setup 'emacsvox-settings-voice-presentation nil nil :scope (emacsvox-aural-menu--context)))
 
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-switches ()

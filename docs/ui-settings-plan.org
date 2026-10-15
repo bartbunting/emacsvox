@@ -1286,6 +1286,15 @@ deferred until all four are ready in a fresh normal Emacsvox profile.
   compiled code. Build, preflight, generated reference and documentation gate
   passed. Listening and user-guide updates remain deferred.
 
+- Voice presentation is at =C-e H v o= and in both searches. Comparison labels
+  use an explicit three-choice list; arrows are inert and Enter returns to the
+  invoking control. Omnivox average-pitch contrast uses its Custom setter and
+  live registration, accepts 0 through 2, and adjusts by tenths with Shift-arrows.
+  Explicit Save persists both global options; no palette or named voice changes.
+  Both new graphical checks passed from source; all 66 settings checks passed
+  with compiled code. Compilation, byte-code preflight, generated reference and
+  documentation gate passed. Listening remains deferred.
+
 ** Next proposed slices
 
 Diagnostics, named-voice tuning, the combined rule overview, training controls,

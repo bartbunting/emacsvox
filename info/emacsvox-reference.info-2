@@ -7006,14 +7006,22 @@ semantics.
 
      Manage presentation features and explicitly scoped rule drafts.
 
-2.230.1.5 emacsvox-settings-setups
+2.230.1.5 emacsvox-settings-preview-labels
+..........................................
+
+ -- Command: emacsvox-settings-preview-labels
+
+     Choose physical voice comparison labels; navigation changes nothing.
+     Enter applies the selected policy and returns.  Cancel retains the old policy.
+
+2.230.1.6 emacsvox-settings-setups
 ..................................
 
  -- Command: emacsvox-settings-setups
 
      Manage saved setups and retained drafts in their owning editors.
 
-2.230.1.6 emacsvox-settings-switches
+2.230.1.7 emacsvox-settings-switches
 ....................................
 
  -- Command: emacsvox-settings-switches
@@ -7021,6 +7029,14 @@ semantics.
      Control Voice Lock, local silence, and earcons with explicit scopes.
      Only global Voice Lock has a Customize save here.  Other switches last for the
      session or buffer; Help explains which presentation each switch affects.
+
+2.230.1.8 emacsvox-settings-voice-presentation
+..............................................
+
+ -- Command: emacsvox-settings-voice-presentation
+
+     Set comparison labels and overall Omnivox pitch contrast globally.
+     Changes apply now; Save defaults explicitly to keep them across restarts.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-setup,  Next: emacsvox-sgml-mode,  Prev: emacsvox-settings-workflows,  Up: Emacsvox Commands And Options
@@ -9899,44 +9915,3 @@ presently defined.
      Default Value:
 
      ("aapl" "amzn" "goog" "meta" "msft" "nflx" "nvda")
-
-
-
-File: emacsvox-reference.info,  Node: emacsvox-vdiff,  Next: emacsvox-version,  Prev: emacsvox-url-template,  Up: Emacsvox Commands And Options
-
-2.260 emacsvox-vdiff
-====================
-
-VDIFF == vimdiff Installable from melpa, vdiff enables synchronized
-movement through diff buffers without resorting to an extra
-control-panel as is the case with ediff.  In addition to speech-enabling
-interactive commands and setting up face->voice mappings, this module
-provides commands that speak the current hunk.  These are bound in
-‘vdiff-mode-prefix-map’.
-   • ‘emacsvox-vdiff-speak-this-hunk’ bound to ‘SPC’.
-   • ‘emacsvox-vdiff-speak-other-hunk’ bound to ‘C-SPC’.
-   • ‘emacsvox-vdiff-speak-other-line’ bound to ‘l’.
-
-2.260.1 Emacsvox-Vdiff Commands
--------------------------------
-
-2.260.1.1 emacsvox-vdiff-speak-other-hunk
-.........................................
-
- -- Command: emacsvox-vdiff-speak-other-hunk
-
-     Speak corresponding hunk from other buffer.
-
-2.260.1.2 emacsvox-vdiff-speak-other-line
-.........................................
-
- -- Command: emacsvox-vdiff-speak-other-line
-
-     Speak corresponding line from other buffer.
-
-2.260.1.3 emacsvox-vdiff-speak-this-hunk
-........................................
-
- -- Command: emacsvox-vdiff-speak-this-hunk
-
-     Speak VDiff hunk under point.

@@ -30,7 +30,9 @@
 (require 'cus-edit)
 
 (defconst emacsvox-settings--destinations
-  '(("Voice Lock in source buffer" emacsvox-settings-workflows emacsvox-settings-switches "v")
+  '(("Voice comparison labels" emacsvox-settings-workflows emacsvox-settings-voice-presentation "l")
+    ("Omnivox average pitch contrast" emacsvox-settings-workflows emacsvox-settings-voice-presentation "p")
+    ("Voice Lock in source buffer" emacsvox-settings-workflows emacsvox-settings-switches "v")
     ("Global Voice Lock" emacsvox-settings-workflows emacsvox-settings-switches "V")
     ("Silence mapped voice at captured item" emacsvox-settings-workflows emacsvox-settings-switches "s")
     ("Earcons in source buffer" emacsvox-settings-workflows emacsvox-settings-switches "e")
@@ -120,6 +122,8 @@
     ("Edit the named voice used here" emacsvox-settings-workflows emacsvox-settings-feedback "t")
     ("Change a sound for this item" emacsvox-settings-workflows emacsvox-settings-feedback "e")
     ("Your feedback rules" emacsvox-settings-workflows emacsvox-settings-presentation "o")
+    ("Choose voice comparison labels" emacsvox-settings-workflows emacsvox-settings-voice-presentation "l")
+    ("Adjust overall pitch contrast" emacsvox-settings-workflows emacsvox-settings-voice-presentation "p")
     ("Silence or restore mapped voice here" emacsvox-settings-workflows emacsvox-settings-switches "s")
     ("Enable or disable earcons" emacsvox-settings-workflows emacsvox-settings-switches "e")
     ("Set feedback history policy" emacsvox-settings-workflows emacsvox-settings-history "l")

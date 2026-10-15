@@ -42,6 +42,7 @@
 (autoload 'emacsvox-settings-setups "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-presentation "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-diagnostics "emacsvox-settings-workflows" nil t)
+(autoload 'emacsvox-settings-voice-presentation "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-feedback "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-search "emacsvox-settings" nil t)
 (autoload 'emacsvox-settings-search-actions "emacsvox-settings" nil t)
@@ -68,6 +69,7 @@
                          emacsvox-interaction emacsvox-aural-menu-line-cues
                          emacsvox-output-settings emacsvox-settings-buffer
                          emacsvox-settings-history emacsvox-settings-switches
+                         emacsvox-settings-voice-presentation emacsvox-settings-preview-labels
                          emacsvox-settings-diagnostics emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations
                          emacsvox-settings-integrations--comint
                          emacsvox-settings-integrations--eat
@@ -763,7 +765,8 @@ Engine preferences last for this session unless explicitly saved."
   ["Voices and engines"
    ("b" "Browse voices and engines" emacsvox-aural-menu--browse-voices :transient transient--do-suspend)
    ("p" "Voice palettes" emacsvox-aural-menu--voice-palettes :transient transient--do-suspend)
-   ("w" "Resume Voice Workbench" emacsvox-aural-menu--voice-workbench :transient transient--do-suspend)]
+   ("w" "Resume Voice Workbench" emacsvox-aural-menu--voice-workbench :transient transient--do-suspend)
+   ("o" "Voice presentation options" emacsvox-settings-voice-presentation :transient transient--do-stack)]
   ["Engine preference (global)"
    ("e" "Choose preferred engine for this session" emacsvox-aural-menu--prefer-engine :transient t)
    ("S" "Choose and save preferred engine" emacsvox-aural-menu--save-preferred-engine :transient t)
