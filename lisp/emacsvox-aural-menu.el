@@ -508,17 +508,19 @@ as the default across restarts; mode policies still take precedence."
 With prefix GLOBAL, start with global defaults when opening directly.
 When opened from the Emacsvox menu, share its selected scope."
   :refresh-suffixes t
-  ["Speech settings"
+  ["Scope"
    ("g" (lambda () (concat "Scope: " (emacsvox-aural-menu--scope-label)))
-    emacsvox-aural-menu--toggle-scope :transient t)
-   ("i" (lambda () (emacsvox-aural-menu--indentation-label))
-    emacsvox-aural-menu--indentation :transient transient--do-stack)
+    emacsvox-aural-menu--toggle-scope :transient t)]
+  ["Speech settings"
    ("r" (lambda () (format "Rate: %s" (emacsvox-aural-menu--rate-value)))
     emacsvox-aural-menu--rate :transient t)
    ("p" (lambda () (emacsvox-aural-menu--punctuation-label))
     emacsvox-aural-menu-punctuation :transient transient--do-stack)
    ("c" "Capitalization" emacsvox-capitalization :transient transient--do-stack)
-   ("t" "Typing and interaction" emacsvox-interaction :transient transient--do-stack)
+   ("i" (lambda () (emacsvox-aural-menu--indentation-label))
+    emacsvox-aural-menu--indentation :transient transient--do-stack)
+   ("t" "Typing and interaction" emacsvox-interaction :transient transient--do-stack)]
+  ["Menu navigation"
    ("n" "Menu navigation (global)" emacsvox-aural-menu-navigation
     :transient transient--do-stack)]
   ["Save and finish"
@@ -855,7 +857,8 @@ The source item is captured on entry for contextual editing and return."
     emacsvox-aural-menu-speech)
    ("v" "Voices and engines" emacsvox-aural-menu-voices)
    ("o" "Sounds and output (global)" emacsvox-aural-menu-sounds)
-   ("j" "Integration settings" emacsvox-settings-integrations :transient transient--do-stack)]
+   ("j" "Integration settings" emacsvox-settings-integrations :transient transient--do-stack)
+   ("n" "Menu navigation (global)" emacsvox-aural-menu-navigation :transient transient--do-stack)]
   ["This buffer and item"
    ("." "Settings for this buffer" emacsvox-settings-buffer :transient transient--do-stack)
    ("x" "Explain this item" emacsvox-aural-menu--feedback)

@@ -22,6 +22,13 @@ personal configuration changes, or publication.
 
 ** Current baseline
 
+- Menu organisation follow-up, 2026-10-15: Speech starts with scope, then
+  rate, punctuation, capitalization, indentation, and typing. =C-e H n=
+  opens navigation preferences directly; =C-e H s n= remains available.
+  All 90 menu, discovery, Transient, and Magit source checks pass in graphical
+  Emacs. The remaining organisation slices are in progress. Final compilation,
+  documentation checks, and listening acceptance are still pending.
+
 - Submenu return, 2026-10-15: ordinary Emacsvox submenu return now restores the
   invoking entry before announcing the parent. Shortcut entry, nested menus,
   and delayed display retain the correct target for Enter. Closing the menu

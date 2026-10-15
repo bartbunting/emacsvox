@@ -120,7 +120,7 @@
               (execute-kbd-macro (kbd "C-u <f8>"))
               (should-not transient--stack)
               (transient--show)
-              (execute-kbd-macro (kbd "<down> <down> C-j"))
+              (execute-kbd-macro (kbd "<right> <down> <down> <down> C-j"))
               (should (eq (oref transient--prefix command) 'emacsvox-indentation))
               (should (cdr (emacsvox-indentation--state)))
               (execute-kbd-macro (kbd "q q"))
@@ -148,7 +148,7 @@
                 (execute-kbd-macro (kbd "<down> RET"))
                 (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-speech))
                 (transient--show)
-                (execute-kbd-macro (kbd "<down> <down> <return>"))
+                (execute-kbd-macro (kbd "<right> <down> <down> <down> <return>"))
                 (should (eq (oref transient--prefix command) 'emacsvox-indentation))
                 (transient--show)
                 (execute-kbd-macro (kbd "<down> <down> RET"))
@@ -466,6 +466,35 @@
                   (should (eq (current-buffer) source))
                   (should (= (point) 3)))
               (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))))
+
+(ert-deftest emacsvox-aural-menu-graphical-speech-order-and-navigation-entry ()
+  "Browse speech in task order and use either navigation entry without edits."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (emacsvox-test--with-aural-menu
+      (switch-to-buffer source)
+      (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+      (dolist (style '(continuous section-wrap section-stop))
+        (let ((transient--prefix nil) (transient-show-menu t)
+              (emacsvox-transient-navigation-style style))
+          (unwind-protect
+              (progn
+                (execute-kbd-macro (kbd "C-u <f8> s <right>"))
+                (dolist (key '("r" "p" "c" "i" "t"))
+                  (with-selected-window transient--window
+                    (should (equal (oref (button-get (button-at (point)) 'button-data) key)
+                                   key)))
+                  (unless (equal key "t") (execute-kbd-macro (kbd "<down>"))))
+                (execute-kbd-macro (kbd "<right> RET"))
+                (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-navigation))
+                (execute-kbd-macro (kbd "q q n"))
+                (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-navigation))
+                (execute-kbd-macro (kbd "q"))
+                (should (eq (emacsvox-aural-menu--source (emacsvox-aural-menu--context)) source))
+                (should (cdr (plist-get (emacsvox-aural-menu--context) :settings)))
+                (with-selected-window transient--window
+                  (should (equal (oref (button-get (button-at (point)) 'button-data) key) "n"))))
+            (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))
 
 (ert-deftest emacsvox-aural-menu-graphical-submenu-return-targets ()
   "Nested shortcuts restore their own entries, including delayed parent display."
@@ -956,7 +985,7 @@
                    (execute-kbd-macro (kbd "<f8> s <down> S-<right>"))
                    (should (string-prefix-p "Not adjustable" (car spoken)))
                    (should (= tts-speech-rate 60))
-                   (execute-kbd-macro (kbd "<down> <down>"))
+                   (execute-kbd-macro (kbd "<right>"))
                    (setq spoken nil)
                    (execute-kbd-macro (kbd "S-<right> S-<right> S-<left>"))
                    (should (equal (reverse spoken) '("68" "76" "68")))
