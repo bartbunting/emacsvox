@@ -7,54 +7,71 @@
 
 #+cindex: Emacs Keyboard Commands
 
-This chapter explains how to discover the bindings that are current in
-your Emacs session.  For the small starter set, see [[*Basic Usage][Basic Usage]].
-For the complete generated default bindings, see
-[[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/.
-
-Most Emacsvox commands use one of these two default prefixes:
+Use [[*Basic Usage][Basic Usage]] for the essential reading keys and
+[[*Find Help While You Work][Using Online Help]] to inspect an unfamiliar command. This chapter explains
+how the default prefixes, settings menus, and local application bindings fit
+together. The generated [[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] provides the full default inventory.
 
 #+attr_texinfo: :indic kbd :compact t
 - C-e ::
 
-  The main Emacsvox keymap.
+  The main Emacsvox keymap, including reading, status, and navigation commands.
 - C-e d ::
 
-  The text-to-speech keymap.
+  The text-to-speech keymap, including direct rate, punctuation, and echo controls.
+- C-e H ::
 
-Emacsvox also defines integration-specific and optional convenience
-maps.  Which of those keys are available depends on the current major
-and minor modes, your window system or terminal, and your configuration;
-therefore this conceptual chapter does not duplicate their inventories.
+  Open the general settings menu. Its displayed keys and contextual Help
+  provide discoverable routes to speech, voices, sounds, rules, and diagnostics.
+- C-e S ::
 
-To choose a different main prefix, set =emacsvox-prefix= before loading
-Emacsvox.  For example:
+  Open focused settings for the captured integration when available, otherwise
+  general buffer settings. C-e H . always opens general buffer settings.
+
+Inside an Emacsvox settings menu, arrows browse, RET activates, ? followed by
+an item's key explains it, q goes back, and C-q closes the sequence. These are
+menu-local meanings, not universal bindings in every Emacs buffer. A voice
+editor, terminal, table reader, or another Transient application retains its
+own documented keys. In particular, the same letter can mean Save in an editor,
+Export in a palette manager, or ordinary input in a terminal.
+
+Integration-specific and convenience maps depend on major/minor modes, window
+system or terminal, and personal configuration. Live Help resolves those
+contexts. The manual uses the default speech prefix; a customised prefix changes
+its entry sequences without changing a menu's own displayed shortcuts.
+
+** Choose a different speech prefix
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Set =emacsvox-prefix= before loading Emacsvox. For example:
 
 #+begin_src emacs-lisp
 (setq emacsvox-prefix (kbd "C-c e"))
 #+end_src
 
-With this setting, ~C-c e l~ speaks the line and
-~C-c e e~ provides end-of-line recovery.  Evil, EXWM,
-widgets and Term use the prefix followed by ~e~ for their
-corresponding recovery command when the prefix contains multiple events.
-Repeating such a prefix is also bound when the sequence is unused or already
-runs that recovery command.  Existing commands and submaps take precedence:
-~C-c e C-c~ retains selective display, so
-~C-c e C-c e~ is not installed as a recovery shortcut.
-Single-event prefixes retain their existing repeated-key behavior, including
-the default ~C-e C-e~.  Mode-local bindings can still shadow
-the chosen prefix; inspect them with Help.
+Then ~C-c e l~ reads the line and ~C-c e e~ provides end-of-line recovery.
+Evil, EXWM, widgets, and Term use the prefix followed by ~e~ for their
+corresponding recovery command when it contains multiple events. Repeating
+such a prefix is also bound if unused or already assigned to that recovery.
+Existing commands and submaps take precedence: ~C-c e C-c~ retains selective
+display, so ~C-c e C-c e~ is not installed as recovery.
 
-Use Emacs Help to inspect the effective result:
+Single-event prefixes keep their repeated-key behaviour, including default
+~C-e C-e~. Mode-local bindings can still shadow the prefix; inspect them before
+assuming a key is unavailable or broken.
 
-- ~C-h m~ describes the modes and their bindings in the current buffer.
+** Inspect the effective bindings
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-- ~C-h k~, followed by a key, describes the command that key invokes.
+~C-h m~ describes the current modes and their commands. ~C-h b~ lists effective
+bindings, and ~C-h k~ followed by a key identifies its command. After typing
+a prefix such as ~C-e~, ~C-h~ shows that prefix's current bindings.
 
-- After typing a prefix such as ~C-e~, type ~C-h~ to display that
-   prefix's current bindings.
-
-If live Help and this manual differ, live Help describes your running
-session.  Check customizations first, then compare the generated defaults
-in the [[info:emacsvox-reference#Emacsvox Keymaps][Emacsvox Keymaps]] in /Emacsvox Reference Manual/.
+When live Help differs from this manual, check personal configuration and
+installed package versions, then compare the generated defaults. For speech
+feedback problems rather than binding discovery, see
+[[info:emacsvox#Presentation Troubleshooting][Troubleshooting And Recovery]].
