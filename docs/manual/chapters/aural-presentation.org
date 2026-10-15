@@ -13,12 +13,11 @@ short sounds, tones, pauses, and spatial cues. The application identifies
 what happened; presentation rules choose the feedback. The speech server
 then produces it with the voices and output capabilities on your machine.
 
-Begin with the item you heard. Press ~C-e E~ to explain its feedback,
-~C-e H~ for the settings menu, or ~C-e S~ for the current task's focused
-settings where available. These commands open inspection and editing tools.
-The everyday workflows below use them rather than hand-edited configuration
-files.
-For help entering those sequences, see [[*Read the key instructions][Read the key instructions]].
+Return to the item whose feedback you want to understand and leave point on
+it. Press ~C-e E~ to explain that item, ~C-e H~ for the settings menu, or
+~C-e S~ for the current task's focused settings where available. The workflows
+below use these inspection and editing tools rather than hand-edited
+configuration files. [[*Read the key instructions][Read the key instructions]] explains how to enter the sequences.
 
 [[*Choose the change you need][Choose the change you need]] helps you pick the right tool. To listen
 without making changes, start with [[*Listen without changing settings][the voice-preview exercise]]. The rest of the
@@ -704,10 +703,11 @@ saves only that toggle through Customize. Voice Lock is independent.
 :END:
 
 This experiment changes headings in a temporary Org buffer without altering
-palette definitions or saved personal rules.
+palette definitions or saved personal rules. Use an unused buffer name; if
+=*aural-practice*= already contains work, choose another name throughout the
+exercise. Do not erase existing text to recreate the example.
 
-1. Use ~C-x b~ to create a buffer named =*aural-practice*=. Run ~M-x org-mode~
-   and insert:
+1. Use ~C-x b~ to create that new buffer. Run ~M-x org-mode RET~ and insert:
 
    #+begin_example
    * Reading notes
@@ -730,10 +730,11 @@ palette definitions or saved personal rules.
    Press ~l~ and select /Current buffer, until it is killed/. This matches
    every qualifying heading in the buffer, not only the original heading.
 
-5. Review the summary, then press ~a~. Open settings with ~h~,
-   then press ~b~ to return to the captured item. Move between the two headings
-   using the same navigation action. Both matching headings should use your chosen voice; the ordinary
-   paragraphs should keep their previous presentation.
+5. Review the summary and press ~a~ to apply it. Open settings with ~h~,
+   then press ~b~ in that menu to return to the captured item. Move between
+   the two headings using the same navigation action. Both matching headings
+   should use the chosen voice; ordinary paragraphs should keep their
+   previous presentation.
 
 6. Press ~C-e E~ on a heading again. Check that the buffer rule supplies the
    selected voice. If the sound is too similar to distinguish, the report
@@ -1005,8 +1006,10 @@ view refreshes to show the saved choice.
 :DESCRIPTION: Create, edit, save, activate, and optionally select a palette for startup.
 :END:
 
-Use an unused name; =reading-demo= is an example. Note the currently active
-palette so you can restore it.
+Use an unused name; =reading-demo= is an example. Note the active palette and
+whether selection is explicit or follows the standard baseline. The experiment
+saves a personal palette and briefly activates it, but leaves startup selection
+unchanged. Restore the selection policy as well as the audible result at the end.
 
 1. Open ~C-e H v p~. Press ~N~, enter =reading-demo=, describe its purpose
    as ``My reading experiments'', and choose =acss-default= as parent.
@@ -1027,13 +1030,18 @@ palette so you can restore it.
    Check status and revisit content using =bolden=. This changes every use
    resolving to that entry. Explain at the source distinguishes palette
    settings from contextual rules.
-6. For startup, press ~U~ on the palette and review the proposal. It changes
-   the saved profile's palette selection. If a new profile is proposed,
-   review its other settings too. Saving a palette is not startup selection.
-7. Restore the original sound by activating the previous palette. If startup
-   was changed, use ~U~ on that original too. The saved demo remains for later
-   experiments. To remove only its =bolden= override, follow
-   [[info:emacsvox#Palette Inheritance Walkthrough][Inheritance, Aliases, and Reset]].
+6. Leave startup selection unchanged for this experiment. Capital ~U~ is
+   the separate /Use at Startup/ action, not the next step required to hear
+   your saved palette.
+7. In the palette manager, use ~f~ if you originally followed the standard
+   baseline. Otherwise select the previous explicit palette and press ~a~.
+   The saved demo remains for later experiments. To remove only its =bolden=
+   override, follow [[info:emacsvox#Palette Inheritance Walkthrough][Inheritance, aliases and reset]].
+
+For a deliberate lasting change, ~U~ changes the palette in the saved profile.
+If it proposes a new profile, review its other settings too. Re-selecting an
+old palette does not by itself undo creating or editing that startup profile.
+See [[info:emacsvox#Saving And Startup][Choose what persists]] before taking this separate step.
 
 *** Walkthrough: Inheritance, Aliases, And Reset
 :PROPERTIES:
@@ -1739,8 +1747,10 @@ which can differ because of scope/fallback order. Choosing it has not saved.
 :DESCRIPTION: Place an experiment in a named voice and verify the saved combination.
 :END:
 
-Create =reading-demo= as in [[info:emacsvox#Personal Palette Walkthrough][Make a Personal Reading Palette]], or use an
-existing personal destination. Note the active palette first.
+Create =reading-demo= as in [[info:emacsvox#Personal Palette Walkthrough][Make a personal reading palette]], or deliberately
+choose an existing personal destination. Note the active palette and whether
+selection follows the standard baseline or is explicit. Saving into an
+existing destination changes that resource; it is not preview-only practice.
 
 1. In the voice browser, open ~t~, adjust a field, and preview with ~P~/~B~.
    Press ~w~ to keep it.
@@ -1757,8 +1767,9 @@ existing personal destination. Note the active palette first.
    Palettes only to choose it for startup too.
 5. Before saving, undo or discard to reverse. After saving, reopen the voice,
    expand fallbacks, choose /Remove/ in the added row's ~RET~ action menu,
-   preview, and save. Other choices/shared tuning remain. Reactivate the
-   original palette to restore session selection too.
+   preview, and save. Other choices and shared tuning remain. To restore
+   session selection, use ~f~ in Voice Palettes if you originally followed
+   the standard baseline; otherwise activate the recorded explicit palette.
 
 For independent fallback tuning, open its menu and /Customize this voice/.
 Change one field, audition that row, then test /Play whole fallback chain/.

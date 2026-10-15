@@ -85,9 +85,13 @@ output is ignored; choose an untracked destination when overriding it.
 - Use verbatim markup (=local.mk=, for example) for filenames, Lisp symbols,
   shell commands, and other literals. An Emacs invocation such as
   ~M-x term RET~ is a key sequence; a shell command is literal text.
-- Use Org heading links for sections in this manual and =info:= links with
-  descriptions for other manuals. Keep stable =TEXINFO_NODE_NAME= properties
-  when the printed heading differs from its existing Info node.
+- Link to an existing Info destination using an Org heading link or an
+  internal =info:emacsvox#Node Name= link. A heading marked =TEXINFO_NODE: no=
+  is not an Info destination: link to its containing named node, or add and
+  use a deliberate explicit Org anchor when a precise subtopic is needed.
+  Do not assume a heading link that works in HTML will also export to Info.
+  Use described =info:= links for other manuals, and preserve stable
+  =TEXINFO_NODE_NAME= properties when changing printed headings.
 - Write acronyms and punctuation as ordinary text. Raw Texinfo remains only
   for block-level compatibility material such as the Info index.
 

@@ -2071,14 +2071,14 @@ speech; use a prefix argument to restore ‘auto’.
 11.3.1 Adjust speech in the settings menu
 -----------------------------------------
 
-Press ‘C-e S’ in a shell or its viewport for focused Emacsvox settings.
-The same menu is available through ‘C-e H j c’ and the integration
-chooser.  ‘s’ opens choices for the temporary session override.  ‘f’ and
-‘b’ open foreground and background defaults; ‘t’ and ‘o’ open thought
-and tool-output choices.  Each list starts on the current value and
-explains what the choices do.  Browse with arrows, press Enter to apply
-and return, or ‘q’ to cancel.  Press ‘?’ followed by a choice's key for
-spoken Help about its effect and scope; ‘q’ returns from Help.  ‘? ?’
+Press ‘C-e S’ in an Agent Shell buffer or its viewport for focused
+Emacsvox settings.  The same menu is available through ‘C-e H j c’ and
+the integration chooser.  ‘s’ opens choices for the temporary session
+override.  ‘f’ and ‘b’ open foreground and background defaults; ‘t’ and
+‘o’ open thought and tool-output choices.  Each list starts on the
+current value and explains its choices.  Browse with arrows, press
+‘<RET>’ to apply and return, or ‘q’ to cancel.  Press ‘?’ followed by a
+choice's key for its effect and scope; ‘q’ returns from Help.  ‘? ?’
 opens the menu overview.
 
    The ‘p’, ‘c’ and ‘l’ controls toggle permission speech, tool-call
@@ -2086,8 +2086,8 @@ announcements and processing cues.  Thought and tool content still
 depend on the effective speech level.
 
    The ‘a’, ‘n’ and ‘k’ controls set automatic-content, line-navigation
-and block-navigation character limits.  Enter reads an exact positive
-integer or ‘none’; Shift-left/right adjusts by 100.  For line
+and block-navigation character limits.  ‘<RET>’ accepts an exact
+positive integer or ‘none’; Shift-left/right adjusts by 100.  For line
 navigation, ‘none’ restores the core long-line policy.  For the other
 limits it allows complete content.  ‘w’ saves the displayed global
 defaults through Customize, excluding the session override.  ‘A’ opens
@@ -2117,9 +2117,9 @@ by ‘emacsvox-agent-shell-automatic-content-max-characters’, which
 defaults to 2,000 characters.  A shortened presentation gives exact
 omitted character and line counts and tells you where to inspect the
 full content.  The complete text rendered by Agent Shell stays in its
-buffer; this speech limit is applied before Aural compiles the automatic
-speech copy.  Agent Shell separately shortens tool output lines longer
-than 32,768 characters, keeping their beginning and end with an
+buffer; Emacsvox limits the automatic announcement rather than editing
+that displayed text.  Agent Shell separately shortens tool output lines
+longer than 32,768 characters, keeping their beginning and end with an
 omitted-character count.  Full tool speech reads that notice; the
 removed middle is not available by reading the buffer.
 
@@ -2273,10 +2273,11 @@ Opening an Agent Shell change review announces its file and hunk counts
 and, for a single file, its name.  The normal Diff Mode hunk navigation
 remains available; opening the review does not accept or reject changes.
 
-   These interactions expose semantic events and attributes to Aural.
-You can customize speech, voices, and earcons for steering outcomes,
-queue changes, list editing, setting changes, updated tool output, and
-change-review entry.
+   These events can have their own presentation rules.  You can
+customise speech, voices and earcons for steering outcomes, queue
+changes, list editing, setting changes, updated tool output and
+change-review entry.  Use *note Feedback Details: (emacsvox)Explaining
+Presentation. to inspect a representative event before changing it.
 
 
 File: emacsvox.info,  Node: Agent Shell Tables,  Next: Agent Shell Recovery,  Prev: Agent Shell Source Blocks,  Up: Agent Shell
@@ -2469,9 +2470,12 @@ Semi-character mode
      Use ‘C-q’ before a normally reserved key to send it through.  ‘C-c
      C-j’ selects this mode.
 Character mode
-     All supported keys go to the terminal, useful for programs needing
-     Emacs-like keys.  Enter with ‘C-c M-d’ and return to semi-character
-     mode with ‘C-M-m’ or ‘M-<RET>’.
+     Supported input keys go to the terminal, useful for programs
+     needing Emacs-like keys.  Emacsvox's review prefix remains
+     available as described under *note Review retained terminal output:
+     (emacsvox)EAT Screen Review.  Enter character mode with ‘C-c M-d’
+     and return to semi-character mode with ‘C-M-m’ or ‘M-<RET>’ before
+     using ordinary Emacs command entry.
 Emacs mode
      Keys stay in Emacs and send no terminal input.  Use it for ordinary
      buffer motion and inspection.  Enter with ‘C-c C-e’.
@@ -2678,10 +2682,11 @@ every EAT input mode:
 ‘C-e q m’
      Toggle content-free background monitoring for this terminal.
 
-   These inspect retained snapshots with concealed content redacted;
-they do not send terminal input.  Speech is bounded.  The retained
-visible screen is not arbitrary scrollback or a promise that it still
-matches a changing live screen.
+   The reading commands inspect retained snapshots with concealed
+content redacted.  The verbosity and monitoring commands instead change
+the source terminal's preferences.  Neither operation sends terminal
+input.  Speech is bounded: the retained visible screen is not arbitrary
+scrollback and need not match a changing live screen.
 
 12.4.1 Frozen Screen Review
 ---------------------------
@@ -2813,11 +2818,14 @@ File: emacsvox.info,  Node: EAT Passwords And Privacy,  Next: EAT Clipboard Trus
 12.7 Passwords And Sensitive Content
 ====================================
 
-Use ‘M-x eat-send-password’ for a terminal password.  EAT uses Emacs's
-protected password reader rather than recording those keystrokes in
-command lossage.  Emacsvox suppresses observation and bell speech during
-the command, clears content-bearing retained state before and after it,
-and announces only whether secure input was sent or cancelled.
+Use ‘M-x eat-send-password <RET>’ for a terminal password.  In character
+mode, first press ‘M-<RET>’ to return to semi-character mode so command
+entry reaches Emacs rather than the terminal program.  Enter the secret
+only in the protected password prompt.  EAT uses Emacs's password reader
+rather than recording those keystrokes in command lossage.  Emacsvox
+suppresses observation and bell speech during the command, clears
+content-bearing retained state before and after it, and announces only
+whether secure input was sent or cancelled.
 
    Ordinary no-echo input does not establish that boundary.  EAT exposes
 no public echo-state signal, and a quiet repaint is not evidence of
@@ -2938,10 +2946,10 @@ transfer a key sequence merely because both are terminals.
 * Menu:
 
 * Starting Term::
-* Term Input Modes::
-* Term Speech Feedback::
+* Choose Term's input mode: Term Input Modes.  Choose whether keys reach Emacs or the terminal program.
+* Understand Term's automatic speech: Term Speech Feedback.  Control automatic feedback and inspect silent output.
 * Reviewing The Term Screen::
-* Term Help And Recovery::
+* Help and recovery in Term: Term Help And Recovery.  Recover speech and send commands to the intended application.
 
 
 File: emacsvox.info,  Node: Starting Term,  Next: Term Input Modes,  Up: Running Terminal Based Applications
@@ -3204,8 +3212,10 @@ archive examples and guided installers pin the 1.17.0 core and matching
 optional engines exactly; the macOS Homebrew tap follows its maintained
 stable formula.
 
-   Upgrade an existing Omnivox installation separately; updating
-Emacsvox does not replace the selected speech server.  Voice-library
+   Updating Emacsvox source alone does not upgrade Omnivox.  Rerunning a
+guided installer can install its pinned Omnivox release; Homebrew and
+manual installations use their own update procedures.  Check which route
+owns the selected installation before changing it.  Voice-library
 management uses the bundled local management route.  Remote and
 direct-native launches do not acquire the WSL launcher's file or
 release-management capabilities merely by connecting to an Omnivox
@@ -3659,9 +3669,9 @@ runtime or chosen voice data before they can speak.
      on the speech host.
 
      These are explicit overrides, not the complete installed-voice
-     inventory.  No manually selected files can still mean library
-     voices or launcher defaults are available.  A manual Flite file
-     list overrides its installed library.
+     inventory.  An empty file selection does not mean that no voices
+     are available: the library or launcher defaults may still supply
+     them.  A manual Flite file list overrides its installed library.
 
      _Check configured engine_ runs independent discovery using the
      local launcher's current configuration, limited to 30 seconds.  It
@@ -3803,8 +3813,8 @@ closes Setup.
 
    The default directory is ‘%LOCALAPPDATA%\Emacsvox\Desktop Dev’.
 Launch through Start or its shortcut.  Rerun Setup to repair missing
-files or upgrade a development build, closing the Emacsvox using that
-installation first.  Setup does not close it.  Locally edited
+files or upgrade a development build.  First close the Emacsvox session
+using that installation; Setup does not close it.  Locally edited
 application files prevent replacement so they can be preserved.
 
    Windows Settings or the Start uninstall entry removes the application
@@ -4012,13 +4022,20 @@ Direct setup loading is intentional: ‘bin/emacsvox’ is POSIX;
 
 Check the isolated native session:
 
-  1. Confirm the startup introduction/ready checkpoint is audible.
+  1. Confirm the startup introduction/ready checkpoint is audible.  Note
+     the working buffer's name with ‘C-e m’.
   2. ‘C-h v tts-program <RET>’ should identify the verified executable's
-     absolute path.
+     absolute path.  Leave Help and return to the working buffer by name
+     with ‘C-x b’.
   3. ‘M-x tts-speak-version <RET>’ speaks the version; ‘M-x
-     omnivox-list-voices <RET>’ displays Windows voices.
-  4. ‘C-n~/~C-p’ speak line movement, ‘C-e s’ stops current speech, and
-     ‘M-x tts-restart <RET>’ restores it without process errors.
+     omnivox-list-voices <RET>’ displays Windows voices.  Finish
+     inspecting that list, then return to the working buffer and confirm
+     its name and mode.
+  4. ‘C-n’ and ‘C-p’ should speak the lines reached.  Press ‘C-e s’ to
+     stop, then ‘C-e l’ to read again: stopping does not disable later
+     speech.  To test restarting separately, run ‘M-x tts-restart <RET>’
+     and confirm that speech returns without process errors.  Restarting
+     is not needed after every Stop.
   5. Toggle icons twice with ‘M-x emacsvox-toggle-icons <RET>’.  In a
      session starting with icons enabled, the second toggle restores
      them and plays an icon in addition to speech.  Preserve the initial
@@ -4392,10 +4409,11 @@ A process starts and later fails
      ‘OMNIVOX_LOG_SYNTHESIS_TEXT’ is explicitly enabled; that can expose
      passwords, mail, and documents.
 Speech works but is delayed
-     ‘C-e d D’ enables a private diagnostic log; reproduce one short
-     presentation and toggle it off.  Default
-     ‘~/.emacsvox-aural-diagnostics.log’ can be changed with ‘C-u C-e d
-     D’ when enabling.  Records ‘dispatch-sent’,
+     Note whether diagnostic logging is already enabled.  Use ‘C-e d D’
+     to enable it only if needed, reproduce one short non-confidential
+     presentation, then restore its previous on/off state.  The default
+     log path is ‘~/.emacsvox-aural-diagnostics.log’ and can be changed
+     with ‘C-u C-e d D’ when enabling.  Records ‘dispatch-sent’,
      ‘mixer-source-observed’, and ‘playback-terminal-observed’ share a
      dispatch ID.  Match it in Omnivox logs to separate submission,
      queueing, synthesis, and mixer-source delay.  This Emacs log is off
@@ -4698,7 +4716,7 @@ File: emacsvox.info,  Node: Emacsvox Key Prefixes,  Prev: Everyday Speech Comman
      and diagnostics.
 ‘C-e S’
      Open focused settings for the captured integration when available,
-     otherwise general buffer settings.  C-e H .  always opens general
+     otherwise general buffer settings.  ‘C-e H .’ always opens general
      buffer settings.
 
    A prefix such as ‘C-e’ waits for another key; ‘C-e H’ is a complete
@@ -5356,9 +5374,12 @@ inspecting or rebuilding Lisp byte-code:
    Use ordinary Org code markup for keys (‘C-x C-f’ or ‘M-x term <RET>’)
 and verbatim markup for other literals (‘local.mk’ or ‘make
 docs-update’).  The Texinfo exporter preserves keyboard and named-key
-formatting; standard Org text and HTML exports retain the key text.  Use
-Org heading links within the manual and described ‘info:’ links to other
-manuals.
+formatting; standard Org text and HTML exports retain the key text.
+Within the manual, link to a named Info destination or an explicit Org
+anchor.  A structural heading marked ‘TEXINFO_NODE: no’ cannot be used
+as an Info destination merely because HTML can link to it.  Use the
+containing named node when appropriate, and described ‘info:’ links to
+other manuals.  Check the result in both Info and HTML.
 
    Run ‘make docs-org-text’ for a complete UTF-8 text copy at
 ‘.docs-preview/org-manual/emacsvox.txt’.  Set ‘DOCS_ORG_TEXT’ to choose
@@ -5557,13 +5578,12 @@ follows:
 
      commandWord {arguments}
 
-   The braces are optional if the command argument contains no white
-space.  The speech server maintains a *current state* that determines
-various characteristics of spoken output such as speech rate,
-punctuations mode etc.  (see set of commands that manipulate speech
-state for complete list).  The client application *queues* The text and
-non-speech audio output to be produced before asking the server to
-*dispatch* the set of queued requests, i.e.  start producing output.
+   The braces are optional when the command argument contains no
+whitespace.  The speech server's current state determines speech rate,
+punctuation mode and other output characteristics.  The state-setting
+commands below describe those controls.  The client queues text and
+non-speech audio, then asks the server to dispatch the queued requests
+and begin producing output.
 
    Once the server has been asked to produce output, it removes items
 from the front of the queue, sends the requisite commands to the
@@ -5720,10 +5740,10 @@ time.
 
           tts_set_character_scale factor
 
-     Queues changing the scale factor.  Scale factor applied to speech
-     rate when speaking individual characters.Thus, setting speech rate
-     to 500 and character scale to 1.2 will cause command *l* to use a
-     speech rate of *500 * 1.2 = 600*.
+     Queues a change to the scale factor used for individual-character
+     speech.  For a speech rate of 500 and a character scale of 1.2,
+     command ‘l’ uses a rate of 600: the base rate multiplied by the
+     character scale.
 
           tts_split_caps flag
 

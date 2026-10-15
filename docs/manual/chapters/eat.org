@@ -57,9 +57,11 @@ program.
   this mode.
 - Character mode ::
 
-  All supported keys go to the terminal, useful for programs needing
-  Emacs-like keys. Enter with ~C-c M-d~ and return to semi-character mode
-  with ~C-M-m~ or ~M-RET~.
+  Supported input keys go to the terminal, useful for programs needing
+  Emacs-like keys. Emacsvox's review prefix remains available as described
+  under [[info:emacsvox#EAT Screen Review][Review retained terminal output]]. Enter character mode with ~C-c M-d~
+  and return to semi-character mode with ~C-M-m~ or ~M-RET~ before using
+  ordinary Emacs command entry.
 - Emacs mode ::
 
   Keys stay in Emacs and send no terminal input. Use it for ordinary buffer
@@ -285,9 +287,11 @@ EAT input mode:
 - C-e q v :: Cycle terse, normal, and verbose automatic feedback for this terminal.
 - C-e q m :: Toggle content-free background monitoring for this terminal.
 
-These inspect retained snapshots with concealed content redacted; they do not
-send terminal input. Speech is bounded. The retained visible screen is not
-arbitrary scrollback or a promise that it still matches a changing live screen.
+The reading commands inspect retained snapshots with concealed content
+redacted. The verbosity and monitoring commands instead change the source
+terminal's preferences. Neither operation sends terminal input. Speech is
+bounded: the retained visible screen is not arbitrary scrollback and need
+not match a changing live screen.
 
 *** Frozen Screen Review
 :PROPERTIES:
@@ -437,8 +441,11 @@ still be accessible while individual exit status remains unavailable.
 #+cindex: terminal privacy
 #+findex: eat-send-password
 
-Use ~M-x eat-send-password~ for a terminal password. EAT uses Emacs's protected
-password reader rather than recording those keystrokes in command lossage.
+Use ~M-x eat-send-password RET~ for a terminal password. In character mode,
+first press ~M-RET~ to return to semi-character mode so command entry reaches
+Emacs rather than the terminal program. Enter the secret only in the protected
+password prompt. EAT uses Emacs's password reader rather than recording those
+keystrokes in command lossage.
 Emacsvox suppresses observation and bell speech during the command, clears
 content-bearing retained state before and after it, and announces only whether
 secure input was sent or cancelled.

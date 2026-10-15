@@ -195,26 +195,26 @@ speech; use a prefix argument to restore =auto=.
 :TEXINFO_NODE: no
 :END:
 
-Press =C-e S= in a shell or its viewport for focused Emacsvox settings. The same
-menu is available through =C-e H j c= and the integration chooser. =s= opens
-choices for the temporary session override. =f= and =b= open foreground and
-background defaults; =t= and =o= open thought and tool-output choices. Each
-list starts on the current value and explains what the choices do. Browse with
-arrows, press Enter to apply and return, or =q= to cancel. Press =?= followed by
-a choice's key for spoken Help about its effect and scope; =q= returns from
-Help. =? ?= opens the menu overview.
+Press ~C-e S~ in an Agent Shell buffer or its viewport for focused Emacsvox
+settings. The same menu is available through ~C-e H j c~ and the integration
+chooser. ~s~ opens choices for the temporary session override. ~f~ and ~b~
+open foreground and background defaults; ~t~ and ~o~ open thought and tool-output
+choices. Each list starts on the current value and explains its choices.
+Browse with arrows, press ~RET~ to apply and return, or ~q~ to cancel. Press
+~?~ followed by a choice's key for its effect and scope; ~q~ returns from
+Help. ~? ?~ opens the menu overview.
 
-The =p=, =c= and =l= controls toggle permission speech, tool-call announcements
+The ~p~, ~c~ and ~l~ controls toggle permission speech, tool-call announcements
 and processing cues. Thought and tool content still depend on the effective
 speech level.
 
-The =a=, =n= and =k= controls set automatic-content, line-navigation and
-block-navigation character limits. Enter reads an exact positive integer or
+The ~a~, ~n~ and ~k~ controls set automatic-content, line-navigation and
+block-navigation character limits. ~RET~ accepts an exact positive integer or
 =none=; Shift-left/right adjusts by 100. For line navigation, =none= restores
 the core long-line policy. For the other limits it allows complete content.
-=w= saves the displayed global defaults through Customize, excluding the
-session override. =A= opens advanced settings; =q= returns. From the direct
-=C-e S= entry, =q= closes the menu and leaves you in the captured buffer.
+~w~ saves the displayed global defaults through Customize, excluding the
+session override. ~A~ opens advanced settings; ~q~ returns. From the direct
+~C-e S~ entry, ~q~ closes the menu and leaves you in the captured buffer.
 
 Thought content defaults to an icon under
 =emacsvox-agent-shell-speak-thought-process=.  Tool feedback is separately
@@ -239,8 +239,8 @@ Automatic response, tool, error, permission, and similar text is limited by
 =emacsvox-agent-shell-automatic-content-max-characters=, which defaults to
 2,000 characters.  A shortened presentation gives exact omitted character and
 line counts and tells you where to inspect the full content.  The complete text
-rendered by Agent Shell stays in its buffer; this speech limit is applied before
-Aural compiles the automatic speech copy. Agent Shell separately shortens tool
+rendered by Agent Shell stays in its buffer; Emacsvox limits the automatic
+announcement rather than editing that displayed text. Agent Shell separately shortens tool
 output lines longer than 32,768 characters, keeping their beginning and end with
 an omitted-character count. Full tool speech reads that notice; the removed
 middle is not available by reading the buffer.
@@ -413,9 +413,10 @@ Opening an Agent Shell change review announces its file and hunk counts and,
 for a single file, its name.  The normal Diff Mode hunk navigation remains
 available; opening the review does not accept or reject changes.
 
-These interactions expose semantic events and attributes to Aural.  You can
-customize speech, voices, and earcons for steering outcomes, queue changes,
-list editing, setting changes, updated tool output, and change-review entry.
+These events can have their own presentation rules. You can customise speech,
+voices and earcons for steering outcomes, queue changes, list editing, setting
+changes, updated tool output and change-review entry. Use
+[[info:emacsvox#Explaining Presentation][Feedback Details]] to inspect a representative event before changing it.
 
 ** Navigate and copy rendered tables
 :PROPERTIES:

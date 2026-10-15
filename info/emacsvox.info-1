@@ -168,6 +168,13 @@ brackets are not typed.  "Shift-left" means hold Shift and press Left
 Arrow.  Where this manual says "left/right", it offers either arrow, not
 a slash to type.
 
+   ‘<DEL>’ in Emacs instructions normally means Backspace, not the
+separate forward-Delete key.  Check live Help when a terminal reports
+those keys differently.  Later guides also use ‘M-<’, ‘M->’ and ‘M-%’:
+hold Meta while typing the less-than, greater-than or percent symbol.
+Add Shift if your keyboard needs it to produce that symbol; do not type
+the surrounding notation.
+
    Some instructions run a command by name.  In ‘M-x describe-mode
 <RET>’, press Meta-x, release it, type ‘describe-mode’ with its hyphen,
 then press Enter.  The name is ordinary text entered at the command
@@ -386,6 +393,12 @@ current editable answer: Control-a goes to its beginning and Control-k
 removes the text that follows.  This edits the answer, not a file.  Then
 type the intended path and press ‘<RET>’.
 
+   Like other kill commands, ‘C-k’ also puts the removed text in the
+kill ring.  If you intended to paste a previously copied path, clearing
+the prompt this way can change the next paste.  Type the intended path
+here, or use *note Choose text copied earlier: (emacsvox)Choosing
+Earlier Copied Text. to retrieve the right entry.
+
    The examples use ‘~/’ for the home directory understood by the
 running Emacs.  For example, ‘~/evox-notes.org’ names ‘evox-notes.org’
 in that home directory.  In WSL this normally means the Linux home, not
@@ -454,14 +467,16 @@ Writing An Org Document., or *note Web browsing with EWW: Web Browsing.
 These guides explain real files and pages; they do not require
 completing the tutorial or changing your voice configuration.
 
-   For one question, go directly to *note Find a task: Finding Tasks.,
-use Info's index, or search the manual text.  When something is not
-working, *note Something is wrong: Finding Problem Tasks. starts with
-symptoms rather than the names of settings.  *note Speech Backends:
-(emacsvox)Speech Backends. contains alternative installation and backend
-configuration procedures; it is not required reading between your first
-speaking session and everyday editing.  The final Developer Guide is for
-changing and maintaining Emacsvox, not for ordinary use.
+   For one question, use *note Find a task: Finding Tasks., Info's index
+or a text search.  For a familiar action whose key you cannot remember,
+use *note Everyday commands and key prefixes: (emacsvox)Emacsvox
+Keyboard Commands.  When something is not working, *note Something is
+wrong: Finding Problem Tasks. starts with symptoms rather than the names
+of settings.  *note Speech Backends: (emacsvox)Speech Backends. contains
+alternative installation and backend configuration procedures; it is not
+required reading between your first speaking session and everyday
+editing.  The final Developer Guide is for changing and maintaining
+Emacsvox, not for ordinary use.
 
 
 File: emacsvox.info,  Node: Finding Help In Info,  Next: Manual Editions And Formats,  Prev: Manual Reading Routes,  Up: Using This Manual
@@ -683,9 +698,12 @@ supported version; Emacs 30.2's bundled 0.7.2.2 needs an upgrade before
 building Emacsvox.  Use your selected Emacs and its package manager,
 with GNU ELPA enabled:
 
-  1. Set ‘package-install-upgrade-built-in’ to ‘t’ for this
-     installation, so package dependencies can replace older built-in
-     copies.
+  1. Run ‘M-x set-variable <RET> package-install-upgrade-built-in <RET>
+     t <RET>’.  Answer the variable-name and value prompts separately.
+     This permits package dependencies to replace older built-in copies
+     in this Emacs session; it does not save a new startup preference.
+     See *note Examining and setting variables: (emacs)Examining. in the
+     GNU Emacs Manual for this command.
   2. Run ‘M-x package-refresh-contents <RET>’, then ‘M-x package-upgrade
      <RET> transient <RET>’.  Accept the package's dependencies.
   3. Start a fresh Emacs before building or trying the menus.  A running
@@ -998,8 +1016,9 @@ WSL2 installation, or later diagnosis.
 
           make check-emacs
 
-     This uses ‘local.mk’ when present, prints the selected executable
-     and version, and confirms whether Emacsvox supports it.
+     This checks the Emacs selected by ‘local.mk’ when present.  It can
+     finish without printing anything when the version is supported.
+     Resolve any executable or version error before compiling.
 
   3. Compile Emacsvox:
 
@@ -1065,12 +1084,21 @@ Run the command again to refresh the report; ‘q’ closes it.
    Before connecting Emacsvox to your personal configuration, check the
 live adapter and everyday feedback:
 
-  1. Run ‘M-x tts-speak-version <RET>’.  The live speech adapter should
-     speak its version response.
+  1. Begin in an ordinary working buffer.  Press ‘C-e m’ and note its
+     name, then run ‘M-x tts-speak-version <RET>’.  The live adapter
+     should speak its version response.
   2. Use ‘C-h v tts-program <RET>’.  In this isolated launcher session,
-     the current value should name ‘omnivox’.
-  3. Move over lines with ‘C-n’ and ‘C-p’ and confirm spoken navigation.
-     ‘M-x emacsvox-describe-emacsvox <RET>’ opens the Emacsvox overview.
+     the value should name ‘omnivox’.  This opens Help; it is no longer
+     a test in the original working buffer.
+  3. Leave Help with ‘q’, then use ‘C-x b’ to select the working buffer
+     by name if necessary.  Confirm it with ‘C-e m’ before moving over
+     its lines with ‘C-n’ and ‘C-p’.  The reached lines should be
+     spoken.
+
+   ‘M-x emacsvox-describe-emacsvox <RET>’ opens the overview.  Return to
+your working buffer before trying the buffer-local rate adjustments
+below.  See *note Using Online Help: (emacsvox)Using Online Help. for
+Help's selection and window behaviour.
 
    For a rate change through the settings interface, open ‘C-e H s’ and
 select _Rate_; ‘<RET>’ or ‘r’ enters an exact value.  The direct
@@ -1081,9 +1109,12 @@ characters, ‘C-e d f’ accepts a multiplier such as ‘0.7’.  A prefix
 ‘C-u’ on the exact-rate or character-factor command changes the global
 default rather than only a buffer-local setting.
 
-   When these checks pass, continue to *note Basic Usage: Basic Usage.
-for the first-session guide, or *note Persistent Startup: Persistent
-Startup. to connect Emacsvox to your normal configuration.
+   When these checks pass, continue to *note Learn the audio desktop:
+(emacsvox)Guided Tutorial. for connected practice, or use *note Basic
+Usage: Basic Usage. as an everyday reference.  Connecting Emacsvox to
+your normal configuration through *note Persistent Startup: Persistent
+Startup. is a separate choice; it is not required to continue learning
+in the isolated session.
 
 3.7.1 Add optional engines after first speech
 ---------------------------------------------
@@ -1145,10 +1176,13 @@ The audible check passes, but "Emacsvox is ready" is absent
      process error, inspect the private log directory described below.
 The ready message is heard, but one mode lacks spoken feedback
      Run ‘M-x emacsvox-startup-status <RET>’.  It names failed startup
-     work or package integrations and retains the original error.  Use
-     ‘M-x emacsvox-speak-buffer <RET>’ to hear the full report.  Correct
-     the named package, configuration, or Emacsvox problem, then verify
-     in a fresh session.  For source edits, follow the byte-code build
+     work or package integrations and retains the original error.
+     Select the report and inspect its lines or paragraphs.  ‘M-x
+     emacsvox-speak-buffer <RET>’ can read a short report; large
+     requests have the limits described in *note Short reading and
+     buffer limits: (emacsvox)Reading Without Moving Point.  Correct the
+     named package, configuration, or Emacsvox problem, then verify in a
+     fresh session.  For source edits, follow the byte-code build
      procedure before testing.  Repeating startup or restarting the
      speech server does not retry failed integrations: an interrupted
      load can leave some hooks or advice installed.  Keep the original
@@ -3313,12 +3347,12 @@ identifies what happened; presentation rules choose the feedback.  The
 speech server then produces it with the voices and output capabilities
 on your machine.
 
-   Begin with the item you heard.  Press ‘C-e E’ to explain its
-feedback, ‘C-e H’ for the settings menu, or ‘C-e S’ for the current
-task's focused settings where available.  These commands open inspection
-and editing tools.  The everyday workflows below use them rather than
-hand-edited configuration files.  For help entering those sequences, see
-*note Read the key instructions: Emacs Key Notation.
+   Return to the item whose feedback you want to understand and leave
+point on it.  Press ‘C-e E’ to explain that item, ‘C-e H’ for the
+settings menu, or ‘C-e S’ for the current task's focused settings where
+available.  The workflows below use these inspection and editing tools
+rather than hand-edited configuration files.  *note Read the key
+instructions: Emacs Key Notation. explains how to enter the sequences.
 
    *note Choose the change you need: Choosing A Presentation Change.
 helps you pick the right tool.  To listen without making changes, start
@@ -4110,10 +4144,13 @@ File: emacsvox.info,  Node: Heading Voice Walkthrough,  Next: Guided Feedback Ch
 ------------------------------------------------
 
 This experiment changes headings in a temporary Org buffer without
-altering palette definitions or saved personal rules.
+altering palette definitions or saved personal rules.  Use an unused
+buffer name; if ‘*aural-practice*’ already contains work, choose another
+name throughout the exercise.  Do not erase existing text to recreate
+the example.
 
-  1. Use ‘C-x b’ to create a buffer named ‘*aural-practice*’.  Run ‘M-x
-     org-mode’ and insert:
+  1. Use ‘C-x b’ to create that new buffer.  Run ‘M-x org-mode <RET>’
+     and insert:
 
           * Reading notes
           An ordinary paragraph.
@@ -4136,11 +4173,11 @@ altering palette definitions or saved personal rules.
      it is killed_.  This matches every qualifying heading in the
      buffer, not only the original heading.
 
-  5. Review the summary, then press ‘a’.  Open settings with ‘h’, then
-     press ‘b’ to return to the captured item.  Move between the two
-     headings using the same navigation action.  Both matching headings
-     should use your chosen voice; the ordinary paragraphs should keep
-     their previous presentation.
+  5. Review the summary and press ‘a’ to apply it.  Open settings with
+     ‘h’, then press ‘b’ in that menu to return to the captured item.
+     Move between the two headings using the same navigation action.
+     Both matching headings should use the chosen voice; ordinary
+     paragraphs should keep their previous presentation.
 
   6. Press ‘C-e E’ on a heading again.  Check that the buffer rule
      supplies the selected voice.  If the sound is too similar to
@@ -4437,8 +4474,11 @@ File: emacsvox.info,  Node: Personal Palette Walkthrough,  Next: Palette Inherit
 8.6.1 Walkthrough: Make A Personal Reading Palette
 --------------------------------------------------
 
-Use an unused name; ‘reading-demo’ is an example.  Note the currently
-active palette so you can restore it.
+Use an unused name; ‘reading-demo’ is an example.  Note the active
+palette and whether selection is explicit or follows the standard
+baseline.  The experiment saves a personal palette and briefly activates
+it, but leaves startup selection unchanged.  Restore the selection
+policy as well as the audible result at the end.
 
   1. Open ‘C-e H v p’.  Press ‘N’, enter ‘reading-demo’, describe its
      purpose as "My reading experiments", and choose ‘acss-default’ as
@@ -4462,15 +4502,20 @@ active palette so you can restore it.
      ‘reading-demo’.  Check status and revisit content using ‘bolden’.
      This changes every use resolving to that entry.  Explain at the
      source distinguishes palette settings from contextual rules.
-  6. For startup, press ‘U’ on the palette and review the proposal.  It
-     changes the saved profile's palette selection.  If a new profile is
-     proposed, review its other settings too.  Saving a palette is not
-     startup selection.
-  7. Restore the original sound by activating the previous palette.  If
-     startup was changed, use ‘U’ on that original too.  The saved demo
-     remains for later experiments.  To remove only its ‘bolden’
-     override, follow *note Inheritance, Aliases, and Reset:
-     (emacsvox)Palette Inheritance Walkthrough.
+  6. Leave startup selection unchanged for this experiment.  Capital ‘U’
+     is the separate _Use at Startup_ action, not the next step required
+     to hear your saved palette.
+  7. In the palette manager, use ‘f’ if you originally followed the
+     standard baseline.  Otherwise select the previous explicit palette
+     and press ‘a’.  The saved demo remains for later experiments.  To
+     remove only its ‘bolden’ override, follow *note Inheritance,
+     aliases and reset: (emacsvox)Palette Inheritance Walkthrough.
+
+   For a deliberate lasting change, ‘U’ changes the palette in the saved
+profile.  If it proposes a new profile, review its other settings too.
+Re-selecting an old palette does not by itself undo creating or editing
+that startup profile.  See *note Choose what persists: (emacsvox)Saving
+And Startup. before taking this separate step.
 
 
 File: emacsvox.info,  Node: Palette Inheritance Walkthrough,  Next: Renaming Voices And Palettes,  Prev: Personal Palette Walkthrough,  Up: Voices And Routing
@@ -5220,9 +5265,12 @@ File: emacsvox.info,  Node: Keeping A Voice Experiment,  Next: Speech Engine Pre
 8.9.5 Walkthrough: Keep An Installed Voice Experiment
 -----------------------------------------------------
 
-Create ‘reading-demo’ as in *note Make a Personal Reading Palette:
-(emacsvox)Personal Palette Walkthrough., or use an existing personal
-destination.  Note the active palette first.
+Create ‘reading-demo’ as in *note Make a personal reading palette:
+(emacsvox)Personal Palette Walkthrough., or deliberately choose an
+existing personal destination.  Note the active palette and whether
+selection follows the standard baseline or is explicit.  Saving into an
+existing destination changes that resource; it is not preview-only
+practice.
 
   1. In the voice browser, open ‘t’, adjust a field, and preview with
      ‘P~/~B’.  Press ‘w’ to keep it.
@@ -5242,9 +5290,10 @@ destination.  Note the active palette first.
      choose it for startup too.
   5. Before saving, undo or discard to reverse.  After saving, reopen
      the voice, expand fallbacks, choose _Remove_ in the added row's
-     ‘<RET>’ action menu, preview, and save.  Other choices/shared
-     tuning remain.  Reactivate the original palette to restore session
-     selection too.
+     ‘<RET>’ action menu, preview, and save.  Other choices and shared
+     tuning remain.  To restore session selection, use ‘f’ in Voice
+     Palettes if you originally followed the standard baseline;
+     otherwise activate the recorded explicit palette.
 
    For independent fallback tuning, open its menu and _Customize this
 voice_.  Change one field, audition that row, then test _Play whole

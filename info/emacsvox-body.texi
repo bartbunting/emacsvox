@@ -89,6 +89,12 @@ and @kbd{@key{ESC}} means Escape. Press the named key@comma{} not the letters of
 "Shift-left" means hold Shift and press Left Arrow. Where this manual says
 "left/right"@comma{} it offers either arrow@comma{} not a slash to type.
 
+@kbd{@key{DEL}} in Emacs instructions normally means Backspace@comma{} not the separate
+forward-Delete key. Check live Help when a terminal reports those keys
+differently. Later guides also use @kbd{M-<}@comma{} @kbd{M->} and @kbd{M-%}: hold Meta while
+typing the less-than@comma{} greater-than or percent symbol. Add Shift if your
+keyboard needs it to produce that symbol; do not type the surrounding notation.
+
 Some instructions run a command by name. In
 @kbd{M-x describe-mode @key{RET}}@comma{} press Meta-x@comma{} release it@comma{} type @code{describe-mode}
 with its hyphen@comma{} then press Enter. The name is ordinary text entered at the
@@ -283,6 +289,11 @@ file minibuffer@comma{} @kbd{C-a C-k} removes the current editable answer: Contr
 to its beginning and Control-k removes the text that follows. This edits the
 answer@comma{} not a file. Then type the intended path and press @kbd{@key{RET}}.
 
+Like other kill commands@comma{} @kbd{C-k} also puts the removed text in the kill ring.
+If you intended to paste a previously copied path@comma{} clearing the prompt this
+way can change the next paste. Type the intended path here@comma{} or use
+@ref{Choosing Earlier Copied Text,Choose text copied earlier,,emacsvox,} to retrieve the right entry.
+
 The examples use @code{~/} for the home directory understood by the running Emacs.
 For example@comma{} @code{~/evox-notes.org} names @code{evox-notes.org} in that home directory.
 In WSL this normally means the Linux home@comma{} not Windows Documents. A Windows
@@ -336,8 +347,10 @@ For independent everyday tasks@comma{} use @ref{Working With Files, , Work with 
 explain real files and pages; they do not require completing the tutorial or
 changing your voice configuration.
 
-For one question@comma{} go directly to @ref{Finding Tasks, , Find a task}@comma{} use Info's index@comma{} or search
-the manual text. When something is not working@comma{} @ref{Finding Problem Tasks, , Something is wrong} starts
+For one question@comma{} use @ref{Finding Tasks, , Find a task}@comma{} Info's index or a text search. For a
+familiar action whose key you cannot remember@comma{} use
+@ref{Emacsvox Keyboard Commands,Everyday commands and key prefixes,,emacsvox,}. When something is not working@comma{}
+@ref{Finding Problem Tasks, , Something is wrong} starts
 with symptoms rather than the names of settings. @ref{Speech Backends,Speech Backends,,emacsvox,} contains alternative installation and backend
 configuration procedures; it is not required reading between your first
 speaking session and everyday editing. The final Developer Guide is for
@@ -548,8 +561,11 @@ Use your selected Emacs and its package manager@comma{} with GNU ELPA enabled:
 
 @enumerate
 @item
-Set @code{package-install-upgrade-built-in} to @code{t} for this installation@comma{} so
-package dependencies can replace older built-in copies.
+Run @kbd{M-x set-variable @key{RET} package-install-upgrade-built-in @key{RET} t @key{RET}}.
+Answer the variable-name and value prompts separately. This permits package
+dependencies to replace older built-in copies in this Emacs session; it
+does not save a new startup preference. See @ref{Examining,Examining and setting variables,,emacs,}
+in the GNU Emacs Manual for this command.
 @item
 Run @kbd{M-x package-refresh-contents @key{RET}}@comma{} then
 @kbd{M-x package-upgrade @key{RET} transient @key{RET}}. Accept the package's dependencies.
@@ -860,8 +876,9 @@ executable selected by the build separately:
 make check-emacs
 @end example
 
-This uses @code{local.mk} when present@comma{} prints the selected executable and
-version@comma{} and confirms whether Emacsvox supports it.
+This checks the Emacs selected by @code{local.mk} when present. It can finish
+without printing anything when the version is supported. Resolve any
+executable or version error before compiling.
 
 @item
 Compile Emacsvox:
@@ -940,15 +957,22 @@ adapter and everyday feedback:
 
 @enumerate
 @item
-Run @kbd{M-x tts-speak-version @key{RET}}. The live speech adapter should speak its
+Begin in an ordinary working buffer. Press @kbd{C-e m} and note its name@comma{}
+then run @kbd{M-x tts-speak-version @key{RET}}. The live adapter should speak its
 version response.
 @item
-Use @kbd{C-h v tts-program @key{RET}}. In this isolated launcher session@comma{} the current
-value should name @code{omnivox}.
+Use @kbd{C-h v tts-program @key{RET}}. In this isolated launcher session@comma{} the value
+should name @code{omnivox}. This opens Help; it is no longer a test in the
+original working buffer.
 @item
-Move over lines with @kbd{C-n} and @kbd{C-p} and confirm spoken navigation.
-@kbd{M-x emacsvox-describe-emacsvox @key{RET}} opens the Emacsvox overview.
+Leave Help with @kbd{q}@comma{} then use @kbd{C-x b} to select the working buffer by name
+if necessary. Confirm it with @kbd{C-e m} before moving over its lines with
+@kbd{C-n} and @kbd{C-p}. The reached lines should be spoken.
 @end enumerate
+
+@kbd{M-x emacsvox-describe-emacsvox @key{RET}} opens the overview. Return to your working
+buffer before trying the buffer-local rate adjustments below. See
+@ref{Using Online Help,Using Online Help,,emacsvox,} for Help's selection and window behaviour.
 
 For a rate change through the settings interface@comma{} open @kbd{C-e H s} and select
 @emph{Rate}; @kbd{@key{RET}} or @kbd{r} enters an exact value. The direct commands remain useful
@@ -958,8 +982,10 @@ For individually echoed characters@comma{} @kbd{C-e d f} accepts a multiplier su
 @code{0.7}. A prefix @kbd{C-u} on the exact-rate or character-factor command changes
 the global default rather than only a buffer-local setting.
 
-When these checks pass@comma{} continue to @ref{Basic Usage, , Basic Usage} for the first-session guide@comma{}
-or @ref{Persistent Startup, , Persistent Startup} to connect Emacsvox to your normal configuration.
+When these checks pass@comma{} continue to @ref{Guided Tutorial,Learn the audio desktop,,emacsvox,} for connected
+practice@comma{} or use @ref{Basic Usage, , Basic Usage} as an everyday reference. Connecting Emacsvox
+to your normal configuration through @ref{Persistent Startup, , Persistent Startup} is a separate choice;
+it is not required to continue learning in the isolated session.
 
 @subsection Add optional engines after first speech
 
@@ -1016,9 +1042,11 @@ adding more init-file configuration. For an Omnivox process error@comma{} inspec
 the private log directory described below.
 @item The ready message is heard@comma{} but one mode lacks spoken feedback
 Run @kbd{M-x emacsvox-startup-status @key{RET}}. It names failed startup work or
-package integrations and retains the original error. Use
-@kbd{M-x emacsvox-speak-buffer @key{RET}} to hear the full report. Correct the named
-package@comma{} configuration@comma{} or Emacsvox problem@comma{} then verify in a fresh session.
+package integrations and retains the original error. Select the report and
+inspect its lines or paragraphs. @kbd{M-x emacsvox-speak-buffer @key{RET}} can read a
+short report; large requests have the limits described in
+@ref{Reading Without Moving Point,Short reading and buffer limits,,emacsvox,}. Correct the named package@comma{}
+configuration@comma{} or Emacsvox problem@comma{} then verify in a fresh session.
 For source edits@comma{} follow the byte-code build procedure before testing.
 Repeating startup or restarting the speech server does not retry failed
 integrations: an interrupted load can leave some hooks or advice installed.
@@ -3127,12 +3155,11 @@ short sounds@comma{} tones@comma{} pauses@comma{} and spatial cues. The applicat
 what happened; presentation rules choose the feedback. The speech server
 then produces it with the voices and output capabilities on your machine.
 
-Begin with the item you heard. Press @kbd{C-e E} to explain its feedback@comma{}
-@kbd{C-e H} for the settings menu@comma{} or @kbd{C-e S} for the current task's focused
-settings where available. These commands open inspection and editing tools.
-The everyday workflows below use them rather than hand-edited configuration
-files.
-For help entering those sequences@comma{} see @ref{Emacs Key Notation, , Read the key instructions}.
+Return to the item whose feedback you want to understand and leave point on
+it. Press @kbd{C-e E} to explain that item@comma{} @kbd{C-e H} for the settings menu@comma{} or
+@kbd{C-e S} for the current task's focused settings where available. The workflows
+below use these inspection and editing tools rather than hand-edited
+configuration files. @ref{Emacs Key Notation, , Read the key instructions} explains how to enter the sequences.
 
 @ref{Choosing A Presentation Change, , Choose the change you need} helps you pick the right tool. To listen
 without making changes@comma{} start with @ref{Previewing An Installed Voice, , the voice-preview exercise}. The rest of the
@@ -3874,12 +3901,13 @@ saves only that toggle through Customize. Voice Lock is independent.
 @subsection Walkthrough: Change Headings In One Buffer
 
 This experiment changes headings in a temporary Org buffer without altering
-palette definitions or saved personal rules.
+palette definitions or saved personal rules. Use an unused buffer name; if
+@code{*aural-practice*} already contains work@comma{} choose another name throughout the
+exercise. Do not erase existing text to recreate the example.
 
 @enumerate
 @item
-Use @kbd{C-x b} to create a buffer named @code{*aural-practice*}. Run @kbd{M-x org-mode}
-and insert:
+Use @kbd{C-x b} to create that new buffer. Run @kbd{M-x org-mode @key{RET}} and insert:
 
 @example
 * Reading notes
@@ -3906,10 +3934,11 @@ Press @kbd{l} and select @emph{Current buffer@comma{} until it is killed}. This 
 every qualifying heading in the buffer@comma{} not only the original heading.
 
 @item
-Review the summary@comma{} then press @kbd{a}. Open settings with @kbd{h}@comma{}
-then press @kbd{b} to return to the captured item. Move between the two headings
-using the same navigation action. Both matching headings should use your chosen voice; the ordinary
-paragraphs should keep their previous presentation.
+Review the summary and press @kbd{a} to apply it. Open settings with @kbd{h}@comma{}
+then press @kbd{b} in that menu to return to the captured item. Move between
+the two headings using the same navigation action. Both matching headings
+should use the chosen voice; ordinary paragraphs should keep their
+previous presentation.
 
 @item
 Press @kbd{C-e E} on a heading again. Check that the buffer rule supplies the
@@ -4187,8 +4216,10 @@ view refreshes to show the saved choice.
 @node Personal Palette Walkthrough
 @subsection Walkthrough: Make A Personal Reading Palette
 
-Use an unused name; @code{reading-demo} is an example. Note the currently active
-palette so you can restore it.
+Use an unused name; @code{reading-demo} is an example. Note the active palette and
+whether selection is explicit or follows the standard baseline. The experiment
+saves a personal palette and briefly activates it@comma{} but leaves startup selection
+unchanged. Restore the selection policy as well as the audible result at the end.
 
 @enumerate
 @item
@@ -4216,15 +4247,20 @@ Check status and revisit content using @code{bolden}. This changes every use
 resolving to that entry. Explain at the source distinguishes palette
 settings from contextual rules.
 @item
-For startup@comma{} press @kbd{U} on the palette and review the proposal. It changes
-the saved profile's palette selection. If a new profile is proposed@comma{}
-review its other settings too. Saving a palette is not startup selection.
+Leave startup selection unchanged for this experiment. Capital @kbd{U} is
+the separate @emph{Use at Startup} action@comma{} not the next step required to hear
+your saved palette.
 @item
-Restore the original sound by activating the previous palette. If startup
-was changed@comma{} use @kbd{U} on that original too. The saved demo remains for later
-experiments. To remove only its @code{bolden} override@comma{} follow
-@ref{Palette Inheritance Walkthrough,Inheritance@comma{} Aliases@comma{} and Reset,,emacsvox,}.
+In the palette manager@comma{} use @kbd{f} if you originally followed the standard
+baseline. Otherwise select the previous explicit palette and press @kbd{a}.
+The saved demo remains for later experiments. To remove only its @code{bolden}
+override@comma{} follow @ref{Palette Inheritance Walkthrough,Inheritance@comma{} aliases and reset,,emacsvox,}.
 @end enumerate
+
+For a deliberate lasting change@comma{} @kbd{U} changes the palette in the saved profile.
+If it proposes a new profile@comma{} review its other settings too. Re-selecting an
+old palette does not by itself undo creating or editing that startup profile.
+See @ref{Saving And Startup,Choose what persists,,emacsvox,} before taking this separate step.
 
 @node Palette Inheritance Walkthrough
 @subsection Walkthrough: Inheritance@comma{} Aliases@comma{} And Reset
@@ -4920,8 +4956,10 @@ which can differ because of scope/fallback order. Choosing it has not saved.
 @node Keeping A Voice Experiment
 @subsection Walkthrough: Keep An Installed Voice Experiment
 
-Create @code{reading-demo} as in @ref{Personal Palette Walkthrough,Make a Personal Reading Palette,,emacsvox,}@comma{} or use an
-existing personal destination. Note the active palette first.
+Create @code{reading-demo} as in @ref{Personal Palette Walkthrough,Make a personal reading palette,,emacsvox,}@comma{} or deliberately
+choose an existing personal destination. Note the active palette and whether
+selection follows the standard baseline or is explicit. Saving into an
+existing destination changes that resource; it is not preview-only practice.
 
 @enumerate
 @item
@@ -4944,8 +4982,9 @@ Palettes only to choose it for startup too.
 @item
 Before saving@comma{} undo or discard to reverse. After saving@comma{} reopen the voice@comma{}
 expand fallbacks@comma{} choose @emph{Remove} in the added row's @kbd{@key{RET}} action menu@comma{}
-preview@comma{} and save. Other choices/shared tuning remain. Reactivate the
-original palette to restore session selection too.
+preview@comma{} and save. Other choices and shared tuning remain. To restore
+session selection@comma{} use @kbd{f} in Voice Palettes if you originally followed
+the standard baseline; otherwise activate the recorded explicit palette.
 @end enumerate
 
 For independent fallback tuning@comma{} open its menu and @emph{Customize this voice}.
@@ -7644,26 +7683,26 @@ speech; use a prefix argument to restore @code{auto}.
 
 @subsection Adjust speech in the settings menu
 
-Press @code{C-e S} in a shell or its viewport for focused Emacsvox settings. The same
-menu is available through @code{C-e H j c} and the integration chooser. @code{s} opens
-choices for the temporary session override. @code{f} and @code{b} open foreground and
-background defaults; @code{t} and @code{o} open thought and tool-output choices. Each
-list starts on the current value and explains what the choices do. Browse with
-arrows@comma{} press Enter to apply and return@comma{} or @code{q} to cancel. Press @code{?} followed by
-a choice's key for spoken Help about its effect and scope; @code{q} returns from
-Help. @code{? ?} opens the menu overview.
+Press @kbd{C-e S} in an Agent Shell buffer or its viewport for focused Emacsvox
+settings. The same menu is available through @kbd{C-e H j c} and the integration
+chooser. @kbd{s} opens choices for the temporary session override. @kbd{f} and @kbd{b}
+open foreground and background defaults; @kbd{t} and @kbd{o} open thought and tool-output
+choices. Each list starts on the current value and explains its choices.
+Browse with arrows@comma{} press @kbd{@key{RET}} to apply and return@comma{} or @kbd{q} to cancel. Press
+@kbd{?} followed by a choice's key for its effect and scope; @kbd{q} returns from
+Help. @kbd{? ?} opens the menu overview.
 
-The @code{p}@comma{} @code{c} and @code{l} controls toggle permission speech@comma{} tool-call announcements
+The @kbd{p}@comma{} @kbd{c} and @kbd{l} controls toggle permission speech@comma{} tool-call announcements
 and processing cues. Thought and tool content still depend on the effective
 speech level.
 
-The @code{a}@comma{} @code{n} and @code{k} controls set automatic-content@comma{} line-navigation and
-block-navigation character limits. Enter reads an exact positive integer or
+The @kbd{a}@comma{} @kbd{n} and @kbd{k} controls set automatic-content@comma{} line-navigation and
+block-navigation character limits. @kbd{@key{RET}} accepts an exact positive integer or
 @code{none}; Shift-left/right adjusts by 100. For line navigation@comma{} @code{none} restores
 the core long-line policy. For the other limits it allows complete content.
-@code{w} saves the displayed global defaults through Customize@comma{} excluding the
-session override. @code{A} opens advanced settings; @code{q} returns. From the direct
-@code{C-e S} entry@comma{} @code{q} closes the menu and leaves you in the captured buffer.
+@kbd{w} saves the displayed global defaults through Customize@comma{} excluding the
+session override. @kbd{A} opens advanced settings; @kbd{q} returns. From the direct
+@kbd{C-e S} entry@comma{} @kbd{q} closes the menu and leaves you in the captured buffer.
 
 Thought content defaults to an icon under
 @code{emacsvox-agent-shell-speak-thought-process}.  Tool feedback is separately
@@ -7685,8 +7724,8 @@ Automatic response@comma{} tool@comma{} error@comma{} permission@comma{} and sim
 @code{emacsvox-agent-shell-automatic-content-max-characters}@comma{} which defaults to
 2@comma{}000 characters.  A shortened presentation gives exact omitted character and
 line counts and tells you where to inspect the full content.  The complete text
-rendered by Agent Shell stays in its buffer; this speech limit is applied before
-Aural compiles the automatic speech copy. Agent Shell separately shortens tool
+rendered by Agent Shell stays in its buffer; Emacsvox limits the automatic
+announcement rather than editing that displayed text. Agent Shell separately shortens tool
 output lines longer than 32@comma{}768 characters@comma{} keeping their beginning and end with
 an omitted-character count. Full tool speech reads that notice; the removed
 middle is not available by reading the buffer.
@@ -7829,9 +7868,10 @@ Opening an Agent Shell change review announces its file and hunk counts and@comm
 for a single file@comma{} its name.  The normal Diff Mode hunk navigation remains
 available; opening the review does not accept or reject changes.
 
-These interactions expose semantic events and attributes to Aural.  You can
-customize speech@comma{} voices@comma{} and earcons for steering outcomes@comma{} queue changes@comma{}
-list editing@comma{} setting changes@comma{} updated tool output@comma{} and change-review entry.
+These events can have their own presentation rules. You can customise speech@comma{}
+voices and earcons for steering outcomes@comma{} queue changes@comma{} list editing@comma{} setting
+changes@comma{} updated tool output and change-review entry. Use
+@ref{Explaining Presentation,Feedback Details,,emacsvox,} to inspect a representative event before changing it.
 
 @node Agent Shell Tables
 @section Navigate and copy rendered tables
@@ -8017,9 +8057,11 @@ prefixes such as @kbd{C-x}@comma{} @kbd{C-c}@comma{} and @kbd{M-x} remain availa
 before a normally reserved key to send it through. @kbd{C-c C-j} selects
 this mode.
 @item Character mode
-All supported keys go to the terminal@comma{} useful for programs needing
-Emacs-like keys. Enter with @kbd{C-c M-d} and return to semi-character mode
-with @kbd{C-M-m} or @kbd{M-@key{RET}}.
+Supported input keys go to the terminal@comma{} useful for programs needing
+Emacs-like keys. Emacsvox's review prefix remains available as described
+under @ref{EAT Screen Review,Review retained terminal output,,emacsvox,}. Enter character mode with @kbd{C-c M-d}
+and return to semi-character mode with @kbd{C-M-m} or @kbd{M-@key{RET}} before using
+ordinary Emacs command entry.
 @item Emacs mode
 Keys stay in Emacs and send no terminal input. Use it for ordinary buffer
 motion and inspection. Enter with @kbd{C-c C-e}.
@@ -8232,9 +8274,11 @@ Cycle terse@comma{} normal@comma{} and verbose automatic feedback for this termi
 Toggle content-free background monitoring for this terminal.
 @end table
 
-These inspect retained snapshots with concealed content redacted; they do not
-send terminal input. Speech is bounded. The retained visible screen is not
-arbitrary scrollback or a promise that it still matches a changing live screen.
+The reading commands inspect retained snapshots with concealed content
+redacted. The verbosity and monitoring commands instead change the source
+terminal's preferences. Neither operation sends terminal input. Speech is
+bounded: the retained visible screen is not arbitrary scrollback and need
+not match a changing live screen.
 
 @subsection Frozen Screen Review
 
@@ -8376,8 +8420,11 @@ still be accessible while individual exit status remains unavailable.
 @cindex terminal privacy
 @findex eat-send-password
 
-Use @kbd{M-x eat-send-password} for a terminal password. EAT uses Emacs's protected
-password reader rather than recording those keystrokes in command lossage.
+Use @kbd{M-x eat-send-password @key{RET}} for a terminal password. In character mode@comma{}
+first press @kbd{M-@key{RET}} to return to semi-character mode so command entry reaches
+Emacs rather than the terminal program. Enter the secret only in the protected
+password prompt. EAT uses Emacs's password reader rather than recording those
+keystrokes in command lossage.
 Emacsvox suppresses observation and bell speech during the command@comma{} clears
 content-bearing retained state before and after it@comma{} and announces only whether
 secure input was sent or cancelled.
@@ -8498,10 +8545,10 @@ review keys; do not transfer a key sequence merely because both are terminals.
 
 @menu
 * Starting Term::
-* Term Input Modes::
-* Term Speech Feedback::
+* Choose Term's input mode: Term Input Modes.  Choose whether keys reach Emacs or the terminal program.
+* Understand Term's automatic speech: Term Speech Feedback.  Control automatic feedback and inspect silent output.
 * Reviewing The Term Screen::
-* Term Help And Recovery::
+* Help and recovery in Term: Term Help And Recovery.  Recover speech and send commands to the intended application.
 @end menu
 
 @node Starting Term
@@ -8727,8 +8774,10 @@ compatible release may be used. The manual archive examples and guided
 installers pin the 1.17.0 core and matching optional engines exactly; the
 macOS Homebrew tap follows its maintained stable formula.
 
-Upgrade an existing Omnivox installation separately; updating Emacsvox does
-not replace the selected speech server. Voice-library management uses the
+Updating Emacsvox source alone does not upgrade Omnivox. Rerunning a guided
+installer can install its pinned Omnivox release; Homebrew and manual
+installations use their own update procedures. Check which route owns the
+selected installation before changing it. Voice-library management uses the
 bundled local management route. Remote and direct-native launches do not
 acquire the WSL launcher's file or release-management capabilities merely by
 connecting to an Omnivox worker. The individual procedures identify their
@@ -9171,8 +9220,9 @@ WSL converts them for the selected Windows executable. Keep companion files
 beside their runtime/model. Remote settings must be changed on the speech host.
 
 These are explicit overrides@comma{} not the complete installed-voice inventory.
-No manually selected files can still mean library voices or launcher defaults
-are available. A manual Flite file list overrides its installed library.
+An empty file selection does not mean that no voices are available: the
+library or launcher defaults may still supply them. A manual Flite file list
+overrides its installed library.
 
 @emph{Check configured engine} runs independent discovery using the local launcher's
 current configuration@comma{} limited to 30 seconds. It retains target@comma{} voices@comma{} and
@@ -9300,8 +9350,8 @@ actions and closes Setup.
 
 The default directory is @code{%LOCALAPPDATA%\Emacsvox\Desktop Dev}. Launch through
 Start or its shortcut. Rerun Setup to repair missing files or upgrade a
- development build@comma{} closing the Emacsvox using that installation first. Setup
-does not close it. Locally edited application files prevent replacement so
+development build. First close the Emacsvox session using that installation;
+Setup does not close it. Locally edited application files prevent replacement so
 they can be preserved.
 
 Windows Settings or the Start uninstall entry removes the application while
@@ -9508,15 +9558,20 @@ Check the isolated native session:
 
 @enumerate
 @item
-Confirm the startup introduction/ready checkpoint is audible.
+Confirm the startup introduction/ready checkpoint is audible. Note the
+working buffer's name with @kbd{C-e m}.
 @item
-@kbd{C-h v tts-program @key{RET}} should identify the verified executable's absolute path.
+@kbd{C-h v tts-program @key{RET}} should identify the verified executable's absolute
+path. Leave Help and return to the working buffer by name with @kbd{C-x b}.
 @item
 @kbd{M-x tts-speak-version @key{RET}} speaks the version; @kbd{M-x omnivox-list-voices @key{RET}}
-displays Windows voices.
+displays Windows voices. Finish inspecting that list@comma{} then return to the
+working buffer and confirm its name and mode.
 @item
-@kbd{C-n~/~C-p} speak line movement@comma{} @kbd{C-e s} stops current speech@comma{} and
-@kbd{M-x tts-restart @key{RET}} restores it without process errors.
+@kbd{C-n} and @kbd{C-p} should speak the lines reached. Press @kbd{C-e s} to stop@comma{}
+then @kbd{C-e l} to read again: stopping does not disable later speech. To test
+restarting separately@comma{} run @kbd{M-x tts-restart @key{RET}} and confirm that speech
+returns without process errors. Restarting is not needed after every Stop.
 @item
 Toggle icons twice with @kbd{M-x emacsvox-toggle-icons @key{RET}}. In a session
 starting with icons enabled@comma{} the second toggle restores them and plays an
@@ -9893,8 +9948,10 @@ The POSIX/WSL launcher retains private bounded stderr logs at
 @code{OMNIVOX_LOG_SYNTHESIS_TEXT} is explicitly enabled; that can expose
 passwords@comma{} mail@comma{} and documents.
 @item Speech works but is delayed
-@kbd{C-e d D} enables a private diagnostic log; reproduce one short presentation
-and toggle it off. Default @code{~/.emacsvox-aural-diagnostics.log} can be changed
+Note whether diagnostic logging is already enabled. Use @kbd{C-e d D} to enable
+it only if needed@comma{} reproduce one short non-confidential presentation@comma{} then
+restore its previous on/off state. The default log path is
+@code{~/.emacsvox-aural-diagnostics.log} and can be changed
 with @kbd{C-u C-e d D} when enabling. Records @code{dispatch-sent}@comma{}
 @code{mixer-source-observed}@comma{} and @code{playback-terminal-observed} share a dispatch ID@.
 Match it in Omnivox logs to separate submission@comma{} queueing@comma{} synthesis@comma{} and
@@ -10178,7 +10235,7 @@ Open the general settings menu. Its displayed keys and contextual Help
 provide discoverable routes to speech@comma{} voices@comma{} sounds@comma{} rules@comma{} and diagnostics.
 @item C-e S
 Open focused settings for the captured integration when available@comma{} otherwise
-general buffer settings. C-e H . always opens general buffer settings.
+general buffer settings. @kbd{C-e H .} always opens general buffer settings.
 @end table
 
 A prefix such as @kbd{C-e} waits for another key; @kbd{C-e H} is a complete
@@ -10870,8 +10927,11 @@ make docs-org-preview
 Use ordinary Org code markup for keys (@kbd{C-x C-f} or @kbd{M-x term @key{RET}}) and
 verbatim markup for other literals (@code{local.mk} or @code{make docs-update}).
 The Texinfo exporter preserves keyboard and named-key formatting; standard
-Org text and HTML exports retain the key text. Use Org heading links within
-the manual and described @code{info:} links to other manuals.
+Org text and HTML exports retain the key text. Within the manual@comma{} link to a
+named Info destination or an explicit Org anchor. A structural heading marked
+@code{TEXINFO_NODE: no} cannot be used as an Info destination merely because HTML
+can link to it. Use the containing named node when appropriate@comma{} and described
+@code{info:} links to other manuals. Check the result in both Info and HTML@.
 
 Run @code{make docs-org-text} for a complete UTF-8 text copy at
 @code{.docs-preview/org-manual/emacsvox.txt}. Set @code{DOCS_ORG_TEXT} to choose another
@@ -11073,14 +11133,11 @@ All commands are of the form
 commandWord @{arguments@}
 @end example
 
-The braces are optional if the command argument contains no white
-space.  The speech server maintains a @strong{current state} that
-determines various characteristics of spoken output such as speech
-rate@comma{} punctuations mode etc. (see set of commands that manipulate
-speech state for complete list).  The client application
-@strong{queues} The text and non-speech audio output to be produced
-before asking the server to @strong{dispatch} the set of queued
-requests@comma{} i.e. start producing output.
+The braces are optional when the command argument contains no whitespace.
+The speech server's current state determines speech rate@comma{} punctuation mode
+and other output characteristics. The state-setting commands below describe
+those controls. The client queues text and non-speech audio@comma{} then asks the
+server to dispatch the queued requests and begin producing output.
 
 Once the server has been asked to produce output@comma{} it removes items
 from the front of the queue@comma{} sends the requisite commands to the
@@ -11281,10 +11338,9 @@ value is typically engine specific.
 tts_set_character_scale factor
 @end example
 
-Queues changing the scale factor.  Scale factor applied to speech rate
-when speaking individual characters.Thus@comma{} setting speech rate to 500
-and character scale to 1.2 will cause command @strong{l} to use a
-speech rate of @strong{500 * 1.2 = 600}.
+Queues a change to the scale factor used for individual-character speech.
+For a speech rate of 500 and a character scale of 1.2@comma{} command @code{l} uses a
+rate of 600: the base rate multiplied by the character scale.
 
 @example
 tts_split_caps flag

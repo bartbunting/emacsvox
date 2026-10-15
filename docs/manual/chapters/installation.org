@@ -124,8 +124,11 @@ Emacsvox requires Transient 0.13.3 or newer. Emacs 31 supplies a supported
 version; Emacs 30.2's bundled 0.7.2.2 needs an upgrade before building Emacsvox.
 Use your selected Emacs and its package manager, with GNU ELPA enabled:
 
-1. Set =package-install-upgrade-built-in= to =t= for this installation, so
-   package dependencies can replace older built-in copies.
+1. Run ~M-x set-variable RET package-install-upgrade-built-in RET t RET~.
+   Answer the variable-name and value prompts separately. This permits package
+   dependencies to replace older built-in copies in this Emacs session; it
+   does not save a new startup preference. See [[info:emacs#Examining][Examining and setting variables]]
+   in the GNU Emacs Manual for this command.
 2. Run ~M-x package-refresh-contents RET~, then
    ~M-x package-upgrade RET transient RET~. Accept the package's dependencies.
 3. Start a fresh Emacs before building or trying the menus. A running session
@@ -452,8 +455,9 @@ or later diagnosis.
    make check-emacs
    #+end_example
 
-   This uses =local.mk= when present, prints the selected executable and
-   version, and confirms whether Emacsvox supports it.
+   This checks the Emacs selected by =local.mk= when present. It can finish
+   without printing anything when the version is supported. Resolve any
+   executable or version error before compiling.
 
 1. Compile Emacsvox:
 
@@ -527,12 +531,19 @@ report; ~q~ closes it.
 Before connecting Emacsvox to your personal configuration, check the live
 adapter and everyday feedback:
 
-1. Run ~M-x tts-speak-version RET~. The live speech adapter should speak its
+1. Begin in an ordinary working buffer. Press ~C-e m~ and note its name,
+   then run ~M-x tts-speak-version RET~. The live adapter should speak its
    version response.
-1. Use ~C-h v tts-program RET~. In this isolated launcher session, the current
-   value should name =omnivox=.
-1. Move over lines with ~C-n~ and ~C-p~ and confirm spoken navigation.
-   ~M-x emacsvox-describe-emacsvox RET~ opens the Emacsvox overview.
+1. Use ~C-h v tts-program RET~. In this isolated launcher session, the value
+   should name =omnivox=. This opens Help; it is no longer a test in the
+   original working buffer.
+1. Leave Help with ~q~, then use ~C-x b~ to select the working buffer by name
+   if necessary. Confirm it with ~C-e m~ before moving over its lines with
+   ~C-n~ and ~C-p~. The reached lines should be spoken.
+
+~M-x emacsvox-describe-emacsvox RET~ opens the overview. Return to your working
+buffer before trying the buffer-local rate adjustments below. See
+[[info:emacsvox#Using Online Help][Using Online Help]] for Help's selection and window behaviour.
 
 For a rate change through the settings interface, open ~C-e H s~ and select
 /Rate/; ~RET~ or ~r~ enters an exact value. The direct commands remain useful
@@ -542,8 +553,10 @@ For individually echoed characters, ~C-e d f~ accepts a multiplier such as
 =0.7=. A prefix ~C-u~ on the exact-rate or character-factor command changes
 the global default rather than only a buffer-local setting.
 
-When these checks pass, continue to [[*Basic Usage][Basic Usage]] for the first-session guide,
-or [[*Persistent Startup][Persistent Startup]] to connect Emacsvox to your normal configuration.
+When these checks pass, continue to [[info:emacsvox#Guided Tutorial][Learn the audio desktop]] for connected
+practice, or use [[*Basic Usage][Basic Usage]] as an everyday reference. Connecting Emacsvox
+to your normal configuration through [[*Persistent Startup][Persistent Startup]] is a separate choice;
+it is not required to continue learning in the isolated session.
 
 *** Add optional engines after first speech
 :PROPERTIES:
@@ -610,9 +623,11 @@ that failed rather than adding configuration at several layers at once.
 - The ready message is heard, but one mode lacks spoken feedback ::
 
   Run ~M-x emacsvox-startup-status RET~. It names failed startup work or
-  package integrations and retains the original error. Use
-  ~M-x emacsvox-speak-buffer RET~ to hear the full report. Correct the named
-  package, configuration, or Emacsvox problem, then verify in a fresh session.
+  package integrations and retains the original error. Select the report and
+  inspect its lines or paragraphs. ~M-x emacsvox-speak-buffer RET~ can read a
+  short report; large requests have the limits described in
+  [[info:emacsvox#Reading Without Moving Point][Short reading and buffer limits]]. Correct the named package,
+  configuration, or Emacsvox problem, then verify in a fresh session.
   For source edits, follow the byte-code build procedure before testing.
   Repeating startup or restarting the speech server does not retry failed
   integrations: an interrupted load can leave some hooks or advice installed.

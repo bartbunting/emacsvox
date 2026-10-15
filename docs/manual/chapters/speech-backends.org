@@ -68,8 +68,10 @@ compatible release may be used. The manual archive examples and guided
 installers pin the 1.17.0 core and matching optional engines exactly; the
 macOS Homebrew tap follows its maintained stable formula.
 
-Upgrade an existing Omnivox installation separately; updating Emacsvox does
-not replace the selected speech server. Voice-library management uses the
+Updating Emacsvox source alone does not upgrade Omnivox. Rerunning a guided
+installer can install its pinned Omnivox release; Homebrew and manual
+installations use their own update procedures. Check which route owns the
+selected installation before changing it. Voice-library management uses the
 bundled local management route. Remote and direct-native launches do not
 acquire the WSL launcher's file or release-management capabilities merely by
 connecting to an Omnivox worker. The individual procedures identify their
@@ -522,8 +524,9 @@ WSL converts them for the selected Windows executable. Keep companion files
 beside their runtime/model. Remote settings must be changed on the speech host.
 
 These are explicit overrides, not the complete installed-voice inventory.
-No manually selected files can still mean library voices or launcher defaults
-are available. A manual Flite file list overrides its installed library.
+An empty file selection does not mean that no voices are available: the
+library or launcher defaults may still supply them. A manual Flite file list
+overrides its installed library.
 
 /Check configured engine/ runs independent discovery using the local launcher's
 current configuration, limited to 30 seconds. It retains target, voices, and
@@ -650,8 +653,8 @@ actions and closes Setup.
 
 The default directory is =%LOCALAPPDATA%\Emacsvox\Desktop Dev=. Launch through
 Start or its shortcut. Rerun Setup to repair missing files or upgrade a
- development build, closing the Emacsvox using that installation first. Setup
-does not close it. Locally edited application files prevent replacement so
+development build. First close the Emacsvox session using that installation;
+Setup does not close it. Locally edited application files prevent replacement so
 they can be preserved.
 
 Windows Settings or the Start uninstall entry removes the application while
@@ -868,12 +871,17 @@ launch so startup errors remain in PowerShell. Direct setup loading is intention
 
 Check the isolated native session:
 
-1. Confirm the startup introduction/ready checkpoint is audible.
-2. ~C-h v tts-program RET~ should identify the verified executable's absolute path.
+1. Confirm the startup introduction/ready checkpoint is audible. Note the
+   working buffer's name with ~C-e m~.
+2. ~C-h v tts-program RET~ should identify the verified executable's absolute
+   path. Leave Help and return to the working buffer by name with ~C-x b~.
 3. ~M-x tts-speak-version RET~ speaks the version; ~M-x omnivox-list-voices RET~
-   displays Windows voices.
-4. ~C-n~/~C-p~ speak line movement, ~C-e s~ stops current speech, and
-   ~M-x tts-restart RET~ restores it without process errors.
+   displays Windows voices. Finish inspecting that list, then return to the
+   working buffer and confirm its name and mode.
+4. ~C-n~ and ~C-p~ should speak the lines reached. Press ~C-e s~ to stop,
+   then ~C-e l~ to read again: stopping does not disable later speech. To test
+   restarting separately, run ~M-x tts-restart RET~ and confirm that speech
+   returns without process errors. Restarting is not needed after every Stop.
 5. Toggle icons twice with ~M-x emacsvox-toggle-icons RET~. In a session
    starting with icons enabled, the second toggle restores them and plays an
    icon in addition to speech. Preserve the initial preference when testing a
@@ -1261,8 +1269,10 @@ Choose the diagnostic at the failed layer:
   passwords, mail, and documents.
 - Speech works but is delayed ::
 
-  ~C-e d D~ enables a private diagnostic log; reproduce one short presentation
-  and toggle it off. Default =~/.emacsvox-aural-diagnostics.log= can be changed
+  Note whether diagnostic logging is already enabled. Use ~C-e d D~ to enable
+  it only if needed, reproduce one short non-confidential presentation, then
+  restore its previous on/off state. The default log path is
+  =~/.emacsvox-aural-diagnostics.log= and can be changed
   with ~C-u C-e d D~ when enabling. Records =dispatch-sent=,
   =mixer-source-observed=, and =playback-terminal-observed= share a dispatch ID.
   Match it in Omnivox logs to separate submission, queueing, synthesis, and

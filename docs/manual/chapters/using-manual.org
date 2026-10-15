@@ -85,6 +85,11 @@ file minibuffer, ~C-a C-k~ removes the current editable answer: Control-a goes
 to its beginning and Control-k removes the text that follows. This edits the
 answer, not a file. Then type the intended path and press ~RET~.
 
+Like other kill commands, ~C-k~ also puts the removed text in the kill ring.
+If you intended to paste a previously copied path, clearing the prompt this
+way can change the next paste. Type the intended path here, or use
+[[info:emacsvox#Choosing Earlier Copied Text][Choose text copied earlier]] to retrieve the right entry.
+
 The examples use =~/= for the home directory understood by the running Emacs.
 For example, =~/evox-notes.org= names =evox-notes.org= in that home directory.
 In WSL this normally means the Linux home, not Windows Documents. A Windows
@@ -141,8 +146,10 @@ For independent everyday tasks, use [[*Work with files and directories][Work wit
 explain real files and pages; they do not require completing the tutorial or
 changing your voice configuration.
 
-For one question, go directly to [[*Find a task][Find a task]], use Info's index, or search
-the manual text. When something is not working, [[*Something is wrong][Something is wrong]] starts
+For one question, use [[*Find a task][Find a task]], Info's index or a text search. For a
+familiar action whose key you cannot remember, use
+[[info:emacsvox#Emacsvox Keyboard Commands][Everyday commands and key prefixes]]. When something is not working,
+[[*Something is wrong][Something is wrong]] starts
 with symptoms rather than the names of settings. [[info:emacsvox#Speech Backends][Speech Backends]] contains alternative installation and backend
 configuration procedures; it is not required reading between your first
 speaking session and everyday editing. The final Developer Guide is for

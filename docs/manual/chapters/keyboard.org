@@ -238,7 +238,7 @@ commands; see [[info:emacsvox#Returning From Settings][Returning from settings]]
 - C-e S ::
 
   Open focused settings for the captured integration when available, otherwise
-  general buffer settings. C-e H . always opens general buffer settings.
+  general buffer settings. ~C-e H .~ always opens general buffer settings.
 
 A prefix such as ~C-e~ waits for another key; ~C-e H~ is a complete
 command that opens a settings menu. Release Control-e before typing capital H.

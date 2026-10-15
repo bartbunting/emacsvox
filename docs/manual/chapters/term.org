@@ -1,7 +1,7 @@
 * Term Terminal Access
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Running Terminal Based Applications
-:ALT_TITLE: Running Terminal Based Applications
+:ALT_TITLE: Term terminal access
 :DESCRIPTION: Use Term with speech and screen review.
 :END:
 
@@ -40,7 +40,8 @@ Manual/ for the complete integration reference.
 ** Character And Line Input Modes
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Term Input Modes
-:ALT_TITLE: Term Input Modes
+:ALT_TITLE: Choose Term's input mode
+:DESCRIPTION: Choose whether keys reach Emacs or the terminal program.
 :END:
 
 #+cindex: character mode, Term
@@ -78,7 +79,8 @@ a general command to leave a running terminal application.
 ** Automatic Speech Feedback
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Term Speech Feedback
-:ALT_TITLE: Term Speech Feedback
+:ALT_TITLE: Understand Term's automatic speech
+:DESCRIPTION: Control automatic feedback and inspect silent output.
 :END:
 
 #+cindex: automatic speech, Term
@@ -157,7 +159,8 @@ ordinary Emacs keys would otherwise reach the child.
 ** Help And Recovery
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Term Help And Recovery
-:ALT_TITLE: Term Help And Recovery
+:ALT_TITLE: Help and recovery in Term
+:DESCRIPTION: Recover speech and send commands to the intended application.
 :END:
 
 For visible but silent output, inspect =emacsvox-eterm-autospeak= in the

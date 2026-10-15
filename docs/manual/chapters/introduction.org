@@ -95,6 +95,12 @@ and ~ESC~ means Escape. Press the named key, not the letters of its name.
 "Shift-left" means hold Shift and press Left Arrow. Where this manual says
 "left/right", it offers either arrow, not a slash to type.
 
+~DEL~ in Emacs instructions normally means Backspace, not the separate
+forward-Delete key. Check live Help when a terminal reports those keys
+differently. Later guides also use ~M-<~, ~M->~ and ~M-%~: hold Meta while
+typing the less-than, greater-than or percent symbol. Add Shift if your
+keyboard needs it to produce that symbol; do not type the surrounding notation.
+
 Some instructions run a command by name. In
 ~M-x describe-mode RET~, press Meta-x, release it, type =describe-mode=
 with its hyphen, then press Enter. The name is ordinary text entered at the
