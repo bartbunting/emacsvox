@@ -63,6 +63,7 @@
   (require 'omnivox-native-preview-tests)
   (require 'omnivox-explanation-tests)
   (require 'omnivox-native-runtime-tests)
+  (require 'omnivox-rich-tone-tests)
   (require 'omnivox-library-apply-tests)
   (require 'omnivox-library-tests)
   (require 'omnivox-punctuation-tests)

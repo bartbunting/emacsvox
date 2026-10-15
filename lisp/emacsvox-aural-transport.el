@@ -87,6 +87,7 @@
 (declare-function omnivox--choice-span-projection "omnivox-choice-codec" (registration logical request balance))
 (declare-function omnivox--choice-registration-version "omnivox-voices" (snapshot))
 (declare-function omnivox--native-tuning-supported-p "omnivox-voices" (process))
+(declare-function omnivox--rich-tones-supported-p "omnivox-voices" (process))
 (declare-function omnivox--choice-validate-wire-patch "omnivox-choice-codec" (patch))
 (declare-function omnivox--choice-object-keys "omnivox-choice-codec" (object keys))
 (declare-function omnivox--choice-string "omnivox-choice-codec" (value maximum &optional nullable empty))
@@ -293,7 +294,7 @@ VERSION defaults to 3 for direct callers.  Older versions are recorded only
 so an installation mismatch can be reported before Aural semantics are
 lowered."
   (setq version (or version 3))
-  (unless (memq version '(1 2 3 4 5))
+  (unless (memq version '(1 2 3 4 5 6))
     (error "Unsupported structured timeline version: %S" version))
   (process-put
    process emacsvox-aural--structured-timeline-process-property version)
@@ -307,7 +308,7 @@ lowered."
 (defun emacsvox-aural-enable-presentation-tone (process &optional version)
   "Record explicit presentation-tone VERSION support for PROCESS."
   (setq version (or version emacsvox-aural--presentation-tone-version))
-  (unless (= version emacsvox-aural--presentation-tone-version)
+  (unless (memq version '(1 2))
     (error "Unsupported presentation-tone version: %S" version))
   (process-put
    process emacsvox-aural--presentation-tone-process-property version)
@@ -360,22 +361,16 @@ the tone and surrounding speech but cannot preserve overlay timing."
     (emacsvox-aural--transport-error
      "Presentation tone duration must be from 1 through %d ms: %S"
      emacsvox-aural--presentation-tone-max-duration-ms duration))
-  (if
-      (and
-       (processp tts-speaker-process)
-       (=
-        (or
-         (process-get
-          tts-speaker-process
-          emacsvox-aural--presentation-tone-process-property)
-         0)
-        emacsvox-aural--presentation-tone-version))
-      (emacsvox-aural--delivery-send-typed
-       tts-speaker-process
-       (format
-        "emacsvox_tone %d %s %s %d\n"
-        emacsvox-aural--presentation-tone-version mode pitch duration) 'queue)
-    (tts--protocol-tone (max 1 (round pitch)) duration)))
+  (let ((version (and (processp tts-speaker-process)
+                      (process-get tts-speaker-process
+                                   emacsvox-aural--presentation-tone-process-property))))
+    (if (memq version '(1 2))
+        (emacsvox-aural--delivery-send-typed
+         tts-speaker-process
+         (if (= version 2)
+             (format "emacsvox_tone 2 %s %s %d 1 sine classic\n" mode pitch duration)
+           (format "emacsvox_tone 1 %s %s %d\n" mode pitch duration)) 'queue)
+      (tts--protocol-tone (max 1 (round pitch)) duration))))
 
 (defun emacsvox-aural--capture-record (kind value bytes)
   "Retain a bounded journal reference to VALUE of KIND, charging BYTES."
@@ -477,6 +472,15 @@ This checks framing eligibility only; it does not infer inline voice semantics."
             ("a" (emacsvox-aural--legacy-frame-resource-p args))
             ("sh" (emacsvox-aural--legacy-frame-uint-p args 4294967295))
             ((or "t" "emacsvox_tone")
+             (when (and (equal name "emacsvox_tone") (equal (car fields) "2"))
+               (setq fields
+                     (when (and (= (length fields) 7)
+                                (member (nth 1 fields) '("insert" "overlay"))
+                                (emacsvox-aural--legacy-frame-float-p (nth 4 fields))
+                                (<= 0 (string-to-number (nth 4 fields)) 1)
+                                (equal (nth 5 fields) "sine")
+                                (equal (nth 6 fields) "classic"))
+                       (list "1" (nth 1 fields) (nth 2 fields) (nth 3 fields)))))
              (when (equal name "emacsvox_tone")
                (unless (and (equal (car fields) "1")
                             (member (cadr fields) '("insert" "overlay")))
@@ -780,7 +784,7 @@ Return non-nil when every entry was sent to a live process."
   "Return non-nil when OWNER natively replaces structured ENTRIES."
   (and
    (processp owner)
-   (memq (process-get owner emacsvox-aural--structured-timeline-process-property) '(3 4 5))
+   (memq (process-get owner emacsvox-aural--structured-timeline-process-property) '(3 4 5 6))
    (cl-some
     (lambda (entry)
       (eq 'structured (emacsvox-aural--delivery-entry-kind entry)))
@@ -963,7 +967,7 @@ OWNER so a logical transaction cannot be partially delivered across streams."
    (emacsvox-aural-structured-timeline-available-p)))
 
 (defun emacsvox-aural-structured-timeline-available-p ()
-  "Return non-nil when the speaker accepts version 3, 4 or 5 timelines.
+  "Return non-nil when the speaker accepts version 3, 4, 5 or 6 timelines.
 
 Signal a clear installation error when negotiation found an older version."
   (when (processp tts-speaker-process)
@@ -972,7 +976,7 @@ Signal a clear installation error when negotiation found an older version."
             tts-speaker-process
             emacsvox-aural--structured-timeline-process-property)))
       (cond
-       ((memq version '(3 4 5)) t)
+       ((memq version '(3 4 5 6)) t)
        ((memq version '(1 2))
         (error
          "Omnivox timeline V3 is required; rebuild and restart the speech server"))
@@ -1398,7 +1402,8 @@ construction can retain that plan's trailing actions and context."
 (defun emacsvox-aural--build-structured-timeline
     (generation dispatch-id runs &optional registration)
   "Build a timeline for GENERATION, DISPATCH-ID, and RUNS.
-REGISTRATION selects version 4 or 5 using its frozen acknowledged definitions.
+REGISTRATION selects version 4, 5 or 6 using its frozen acknowledged
+definitions.
 Return envelope, opaque semantic bindings and a compact span index, or nil
 when the recorded plans have no speech span and require legacy lowering."
   (let ((span-sequence 0)
@@ -1757,11 +1762,11 @@ the authoritative check after punctuation and split-cap preprocessing."
                emacsvox-aural--timeline-max-actions-per-speech-window))))))))
 
 (defun emacsvox-aural--validate-structured-timeline (envelope)
-  "Validate a version-3, version-4 or version-5 ENVELOPE before transport."
-  (unless (memq (plist-get envelope :protocol_version) '(3 4 5))
+  "Validate a version-3 through version-6 ENVELOPE before transport."
+  (unless (memq (plist-get envelope :protocol_version) '(3 4 5 6))
     (emacsvox-aural--transport-error
-     "Structured delivery requires timeline protocol version 3, 4 or 5"))
-  (when (memq (plist-get envelope :protocol_version) '(4 5))
+     "Structured delivery requires timeline protocol version 3, 4, 5 or 6"))
+  (when (memq (plist-get envelope :protocol_version) '(4 5 6))
     (omnivox--choice-object-keys
      envelope (append '(:protocol_version :generation :dispatch_id :registry_generation :delivery_policy :spans :actions)
                       (when (equal (plist-get envelope :delivery_policy) "replaceable") '(:replacement_key))))
@@ -1771,11 +1776,11 @@ the authoritative check after punctuation and split-cap preprocessing."
       (omnivox--choice-string (plist-get envelope :replacement_key)
                               emacsvox-aural--timeline-replacement-key-max-bytes)))
   (dolist (field (append '(:generation :dispatch_id)
-                         (when (memq (plist-get envelope :protocol_version) '(4 5)) '(:registry_generation))))
+                         (when (memq (plist-get envelope :protocol_version) '(4 5 6)) '(:registry_generation))))
     (unless
         (let ((value (plist-get envelope field)))
           (and (integerp value) (> value 0)
-               (or (not (memq (plist-get envelope :protocol_version) '(4 5)))
+               (or (not (memq (plist-get envelope :protocol_version) '(4 5 6)))
                    (<= value (1- (expt 2 64))))))
       (emacsvox-aural--transport-error
        "Structured timeline %S must be a positive integer" field)))
@@ -1798,12 +1803,12 @@ the authoritative check after punctuation and split-cap preprocessing."
        "Structured timeline exceeds %d actions"
        emacsvox-aural--timeline-max-actions))
     (dolist (wrapper spans)
-      (let* ((v4 (memq (plist-get envelope :protocol_version) '(4 5)))
+      (let* ((v4 (memq (plist-get envelope :protocol_version) '(4 5 6)))
              (span (if v4 (plist-get wrapper :span) wrapper)))
         (when v4
           (omnivox--choice-object-keys wrapper '(:mode :span))
           (unless (member (plist-get wrapper :mode)
-                          (if (eql (plist-get envelope :protocol_version) 5)
+                          (if (memq (plist-get envelope :protocol_version) '(5 6))
                               '("legacy" "layered" "engine_layered") '("legacy" "layered")))
             (emacsvox-aural--transport-error "Unknown layered span mode"))
           (when (member (plist-get wrapper :mode) '("layered" "engine_layered"))
@@ -1912,7 +1917,7 @@ the authoritative check after punctuation and split-cap preprocessing."
     (if emacsvox-aural--isolated-letter
         (let* ((spans (plist-get envelope :spans))
                (span (and (= (length spans) 1) (aref spans 0))))
-          (unless (and (memq (plist-get envelope :protocol_version) '(4 5))
+          (unless (and (memq (plist-get envelope :protocol_version) '(4 5 6))
                        (member (plist-get span :mode) '("layered" "engine_layered"))
                        (= (length (plist-get (plist-get span :span) :text)) 1)
                        (zerop (length (plist-get envelope :actions)))
@@ -1948,7 +1953,8 @@ the authoritative check after punctuation and split-cap preprocessing."
     (cond
      ((not (pcase (process-get owner emacsvox-aural--structured-timeline-process-property)
              (4 (omnivox--choice-tuning-supported-p owner))
-             (5 (omnivox--native-tuning-supported-p owner)))) 'old-server)
+             (5 (omnivox--native-tuning-supported-p owner))
+             (6 (omnivox--rich-tones-supported-p owner)))) 'old-server)
      ((tts-queue--known-empty-p owner) nil)
      ((and state (tts-queue--state-remote state) (tts-queue--state-unusable state))
       'remote-proof-unusable)
@@ -2034,7 +2040,7 @@ the authoritative check after punctuation and split-cap preprocessing."
         (cl-some #'emacsvox-aural--timeline-run-has-speech-p runs)
         (emacsvox-aural--capture-single-timeline-p entries)))
       (emacsvox-aural--finalize-legacy-delivery entries effects)
-    (let* ((snapshot (when (memq (process-get owner emacsvox-aural--structured-timeline-process-property) '(4 5))
+    (let* ((snapshot (when (memq (process-get owner emacsvox-aural--structured-timeline-process-property) '(4 5 6))
                        (omnivox--choice-current-registration owner)))
            (built (emacsvox-aural--build-structured-timeline generation 1 runs snapshot)))
       (if (not built)

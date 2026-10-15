@@ -33,6 +33,7 @@
                     emacsvox-aural-voice-engine-controls-tests
                     omnivox-native-preview-tests
                     omnivox-native-runtime-tests
+                    omnivox-rich-tone-tests
                     omnivox-library-apply-tests
                     omnivox-library-tests
                     omnivox-punctuation-tests
