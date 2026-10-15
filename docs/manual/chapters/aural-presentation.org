@@ -2157,15 +2157,25 @@ the flagged word. Voice feedback uses the existing spelling face mappings.
 Tone and earcon feedback also report errors detected while editing. Opening
 a mail reply checks and highlights inserted text without a burst of cues.
 
-Select ~p~ for pitch or ~d~ for duration. ~RET~ enters an exact value;
-Shift-left/right adjusts by 25 Hz or 5 milliseconds. ~b~ previews the tone
-alone, even when tone feedback is off. ~SPC~ reads a sample containing one
-flagged word with the selected combination.
-
+Select ~p~ for pitch, ~d~ for duration, or ~l~ for spelling tone volume.
+~RET~ enters an exact value; Shift-left/right adjusts by 25 Hz, 5 milliseconds,
+or 5 percentage points. Spelling tone volume ranges from 0 to 100 percent:
+zero silences the tone, and the default of 100 preserves its original level.
 ~V~ changes the shared volume of all main-stream tones, including indentation
-and spelling. It is not a separate spelling volume. Changes take effect in
-the current session; ~S~ saves the spelling settings and shared tone volume
-through Customize. ~q~ returns and ~C-q~ closes the menus without saving.
+and spelling. The shared volume still scales the spelling tone after its
+individual adjustment.
+
+~b~ previews the tone alone, even when tone feedback is off. ~SPC~ reads a
+sample containing one flagged word with the selected combination. Individual
+volume requires an Omnivox worker with richer-tone support. With an older
+worker, a volume below 100 omits the tone while retaining speech and earcons;
+the feedback explanation records the omission. A preview reports missing
+support instead of playing at the wrong volume. Your setting remains intact.
+Use an updated worker or restore 100 to hear the tone again.
+
+Changes take effect in the current session; ~S~ saves the spelling settings,
+including individual volume, and the shared tone volume through Customize.
+~q~ returns and ~C-q~ closes the menus without saving.
 
 **** Choose typing and point feedback
 :PROPERTIES:

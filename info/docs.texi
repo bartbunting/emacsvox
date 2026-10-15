@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1664 commands and 239 options.
+This chapter documents a total of 1664 commands and 240 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -13408,13 +13408,30 @@ Default Value:
 @defvar {User Option} emacsvox-flyspell-tone-pitch
 @verbatim
 Pitch of the spelling tone in hertz.
-Tone volume follows the shared main-stream tone volume.
 @end verbatim
 
 Default Value:
 @verbatim
 
 880
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-flyspell-tone-volume
+@verbatim
+Spelling tone volume as a percentage from 0 to 100.
+Zero silences the tone; 100 preserves its original level.  The shared
+‘tts-main-tone-volume’ still scales the result.  Values below 100 require
+a worker with richer-tone support; older workers omit that tone while
+retaining speech and earcons.  Preview reports missing support.
+@end verbatim
+
+Default Value:
+@verbatim
+
+100
 
 @end verbatim
 
@@ -20886,7 +20903,8 @@ Choose global spelling feedback and adjust its tone.
 Voice, tone and earcon combine independently. All off silences spelling
 feedback without disabling Flyspell. Voice changes apply while reading;
 tone and earcon also report errors detected while editing. Settings apply
-immediately; S saves across restarts. Volume affects all main-stream tones.
+immediately; S saves across restarts. Spelling tone volume affects only
+this tone; Shared tone volume scales all main-stream tones.
 @end format
 @end deffn
 

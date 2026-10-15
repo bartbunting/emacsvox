@@ -5380,15 +5380,25 @@ the flagged word. Voice feedback uses the existing spelling face mappings.
 Tone and earcon feedback also report errors detected while editing. Opening
 a mail reply checks and highlights inserted text without a burst of cues.
 
-Select @kbd{p} for pitch or @kbd{d} for duration. @kbd{@key{RET}} enters an exact value;
-Shift-left/right adjusts by 25 Hz or 5 milliseconds. @kbd{b} previews the tone
-alone@comma{} even when tone feedback is off. @kbd{@key{SPC}} reads a sample containing one
-flagged word with the selected combination.
-
+Select @kbd{p} for pitch@comma{} @kbd{d} for duration@comma{} or @kbd{l} for spelling tone volume.
+@kbd{@key{RET}} enters an exact value; Shift-left/right adjusts by 25 Hz@comma{} 5 milliseconds@comma{}
+or 5 percentage points. Spelling tone volume ranges from 0 to 100 percent:
+zero silences the tone@comma{} and the default of 100 preserves its original level.
 @kbd{V} changes the shared volume of all main-stream tones@comma{} including indentation
-and spelling. It is not a separate spelling volume. Changes take effect in
-the current session; @kbd{S} saves the spelling settings and shared tone volume
-through Customize. @kbd{q} returns and @kbd{C-q} closes the menus without saving.
+and spelling. The shared volume still scales the spelling tone after its
+individual adjustment.
+
+@kbd{b} previews the tone alone@comma{} even when tone feedback is off. @kbd{@key{SPC}} reads a
+sample containing one flagged word with the selected combination. Individual
+volume requires an Omnivox worker with richer-tone support. With an older
+worker@comma{} a volume below 100 omits the tone while retaining speech and earcons;
+the feedback explanation records the omission. A preview reports missing
+support instead of playing at the wrong volume. Your setting remains intact.
+Use an updated worker or restore 100 to hear the tone again.
+
+Changes take effect in the current session; @kbd{S} saves the spelling settings@comma{}
+including individual volume@comma{} and the shared tone volume through Customize.
+@kbd{q} returns and @kbd{C-q} closes the menus without saving.
 
 @item
 @anchor{Choose typing and point feedback}Choose typing and point feedback

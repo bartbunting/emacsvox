@@ -96,6 +96,7 @@
     ("Spelling voice tone and earcon feedback" emacsvox-spelling emacsvox-spelling "v")
     ("Spelling tone pitch" emacsvox-spelling emacsvox-spelling "p")
     ("Spelling tone duration" emacsvox-spelling emacsvox-spelling "d")
+    ("Spelling tone volume" emacsvox-spelling emacsvox-spelling "l")
     ("Character echo" emacsvox-interaction emacsvox-interaction "c")
     ("Word echo" emacsvox-interaction emacsvox-interaction "w")
     ("Completed-line echo" emacsvox-interaction emacsvox-interaction "l")

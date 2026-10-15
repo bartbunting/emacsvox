@@ -8,6 +8,8 @@
 ;; It starts isolated eSpeak processes with --audio-output null. No installed
 ;; server or personal configuration is changed. Build byte-code first; set
 ;; EMACSVOX_CHOICE_TEST_SOURCE=1 only when deliberately exercising source.
+;; Set EMACSVOX_RICH_TONE_TEST=1 to require richer-tone negotiation and check
+;; standalone and timeline gain on both workers, including reconnection.
 
 ;;; Code:
 (unless noninteractive (error "Run acceptance in a fresh batch Emacs"))
@@ -45,11 +47,42 @@
     (omnivox--install-control-filter process)
     (let ((capabilities (omnivox-choice-acceptance--control process "capabilities")))
       (process-put process omnivox--control-capabilities-property capabilities)
-      (unless (omnivox--choice-tuning-supported-p process) (error "Server lacks the complete choice bundle")))
+      (unless (omnivox--choice-tuning-supported-p process) (error "Server lacks the complete choice bundle"))
+      (when (getenv "EMACSVOX_RICH_TONE_TEST")
+        (unless (omnivox--rich-tones-supported-p process) (error "Server lacks the richer-tone bundle"))
+        ;; Inventory is requested synchronously below, before owned registration.
+        (cl-letf (((symbol-function 'omnivox--request-inventory) #'ignore))
+          (omnivox--handle-capabilities-response process capabilities))))
     (process-put process omnivox--control-inventory-property (omnivox-choice-acceptance--control process "inventory"))
     (process-put process tts--tracked-playback-completion-property t)
     (process-put process tts--marker-playback-events-property t)
     process))
+
+(defun omnivox-choice-acceptance--tone (timeline)
+  "Verify a quiet tone completes, with speech when TIMELINE is non-nil."
+  (unless (= (omnivox--choice-registration-version
+              (omnivox--choice-current-registration tts-speaker-process)) 6)
+    (error "Richer-tone registration did not select timeline 6"))
+  (let* ((action (emacsvox-aural--make-concrete-action
+                  :kind 'tone :pitch 880 :duration 40 :audio-mode 'insert
+                  :requested-volume 0.35 :volume-capability 'supported))
+         (run (when timeline (omnivox-choice-timeline-test--run '(:preset bolden) nil)))
+         result
+         (tts--tracked-completion-function
+          (lambda (_ status) (setq result status))))
+    (when run (setf (emacsvox-aural-concrete-plan-before (car run)) (list action)))
+    (cl-letf (((symbol-function 'tts-voice-reset-code) (lambda () "")))
+      (emacsvox-aural-call-with-delivery-transaction
+       tts-speaker-process
+       (lambda ()
+         (if run (emacsvox-aural-queue-concrete-plan (car run) (cadr run))
+           (emacsvox-aural-queue-concrete-action action))
+         (if run (tts--protocol-dispatch)
+           (tts--protocol-dispatch-tracked tts--tracked-completion-function)))))
+    (omnivox-choice-acceptance--wait (lambda () result))
+    (unless (eq result 'completed) (error "Tone dispatch ended %S" result))
+    (princ (format "worker=%s tone=%s gain=0.35 completed\n"
+                   (process-name tts-speaker-process) (if timeline "timeline6" "standalone2")))))
 (let* ((tts-program "omnivox")
        (tts-speaker-process (omnivox-choice-acceptance--process "choice-live-main" 2001))
        (tts-notify-process (omnivox-choice-acceptance--process "choice-live-notify" 2002))
@@ -105,7 +138,10 @@
                   (error "Unexpected real consumed route: %S; decoder: %S" route omnivox-marker-last-error))
                 (princ (format "round=%d lane=%s dispatch=%d choice=%s registry=%d verified=t\n"
                                round (plist-get route :lane) identifier (plist-get route :choice-id) (plist-get route :registry-generation))))
-              (unless (= 0 (process-get lane 'tts--dispatch-metadata-bytes)) (error "Retained metadata leaked"))))
+              (unless (= 0 (process-get lane 'tts--dispatch-metadata-bytes)) (error "Retained metadata leaked"))
+              (when (getenv "EMACSVOX_RICH_TONE_TEST")
+                (omnivox-choice-acceptance--tone nil)
+                (omnivox-choice-acceptance--tone t))))
           (let* ((record (car emacsvox-aural-presentation-history))
                  (operation (emacsvox-aural-replay--play record)))
             (omnivox-choice-acceptance--wait

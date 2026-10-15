@@ -2010,11 +2010,12 @@ An existing file is copied to FILE~ before replacement."
              :anchor transition)))))
         (:id core-spelling-tone
          :match (:event spelling-error-located :spelling-tone t
-                 :requires (spelling-tone-pitch spelling-tone-duration))
+                 :requires (spelling-tone-pitch spelling-tone-duration spelling-tone-volume))
          :render
          (:before ((:id core-spelling-tone-action :kind tone
                     :pitch (:fact spelling-tone-pitch)
                     :duration (:fact spelling-tone-duration)
+                    :volume (:fact spelling-tone-volume)
                     :audio-mode insert :anchor run))))
         (:id core-spelling-earcon
          :match (:event spelling-error-located :spelling-earcon t)

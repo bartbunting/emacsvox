@@ -34,7 +34,7 @@
 (defconst emacsvox-spelling--options
   '(emacsvox-flyspell-use-voice emacsvox-flyspell-use-tone
     emacsvox-flyspell-use-earcon emacsvox-flyspell-tone-pitch
-    emacsvox-flyspell-tone-duration)
+    emacsvox-flyspell-tone-duration emacsvox-flyspell-tone-volume)
   "Global spelling feedback options saved by this menu.")
 
 (defun emacsvox-spelling--say (text)
@@ -66,16 +66,19 @@
   (interactive)
   (emacsvox-spelling--toggle 'emacsvox-flyspell-use-earcon "Earcon"))
 
-(defun emacsvox-spelling--number (symbol label units minimum maximum step &optional direction)
+(defun emacsvox-spelling--number (symbol label units minimum maximum step &optional direction integer-only)
   "Set SYMBOL exactly or by DIRECTION times STEP, within MINIMUM and MAXIMUM.
-Announce LABEL and UNITS after validating the value."
+Announce LABEL and UNITS after validating the value.
+When INTEGER-ONLY is non-nil, reject fractional input."
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
   (let* ((old (default-value symbol))
          (value (if direction (min maximum (max minimum (+ old (* step direction))))
                   (emacsvox-aural-menu--read-number
                    (format "%s in %s (%s–%s): " label units minimum maximum) old))))
-    (unless (and (numberp value) (<= minimum value maximum))
-      (user-error "%s must be between %s and %s" label minimum maximum))
+    (unless (and (numberp value) (<= minimum value maximum)
+                 (or (not integer-only) (integerp value)))
+      (user-error "%s must be %sbetween %s and %s"
+                  label (if integer-only "an integer " "") minimum maximum))
     (set-default symbol value)
     (emacsvox-spelling--say (format "%s %s" value units))))
 
@@ -88,6 +91,22 @@ Announce LABEL and UNITS after validating the value."
   (interactive)
   (emacsvox-spelling--number 'emacsvox-flyspell-tone-duration "Duration" "milliseconds" 5 1000 5 direction))
 
+(defun emacsvox-spelling--volume (&optional direction)
+  "Set spelling tone volume, or adjust by DIRECTION times 5 percentage points.
+Range: 0–100 percent. Zero silences this tone; 100 preserves its original
+level. The shared main-tone volume still scales it. Older workers omit
+tones below 100; Preview explains missing support without changing settings."
+  (interactive)
+  (emacsvox-spelling--number 'emacsvox-flyspell-tone-volume
+                             "Spelling tone volume" "percent" 0 100 5 direction t))
+
+(defun emacsvox-spelling--check-preview ()
+  "Require exact tone-volume support before submitting a spelling preview."
+  (when emacsvox-flyspell-use-tone
+    (let ((emacsvox-aural--exact-tone-preview t))
+      (emacsvox-aural--tone-volume-deliverable-p
+       (/ emacsvox-flyspell-tone-volume 100.0)))))
+
 (defun emacsvox-spelling--sample ()
   "Return sample text with one flagged word for private preview."
   (let ((text (copy-sequence "This mispeled word needs checking.")))
@@ -99,19 +118,24 @@ Announce LABEL and UNITS after validating the value."
 Preview does not change Flyspell, edit your text, or save settings."
   (interactive)
   (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
-    (tts-speak (emacsvox-spelling--sample))))
+    (emacsvox-spelling--check-preview)
+    (let ((emacsvox-aural--exact-tone-preview t))
+      (tts-speak (emacsvox-spelling--sample)))))
 
 (defun emacsvox-spelling--preview-tone ()
   "Play the adjusted tone alone, even when spelling tones are disabled."
   (interactive)
   (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
-    (let ((emacsvox-flyspell-use-tone t) (emacsvox-flyspell-use-earcon nil))
+    (let ((emacsvox-flyspell-use-tone t) (emacsvox-flyspell-use-earcon nil)
+          (emacsvox-aural--exact-tone-preview t))
+      (emacsvox-spelling--check-preview)
       (emacsvox-aural-submit-actions
        :facts (emacsvox-flyspell--facts) :module 'flyspell :occasion 'inspection
        :lane 'main :interruption-policy 'lane))))
 
 (defun emacsvox-spelling--save ()
-  "Save global spelling controls and shared main-tone volume across restarts."
+  "Save spelling controls, individual tone volume and shared main-tone volume.
+These global defaults apply across restarts."
   (interactive)
   (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
   (dolist (symbol (append emacsvox-spelling--options '(tts-main-tone-volume)))
@@ -126,9 +150,10 @@ Preview does not change Flyspell, edit your text, or save settings."
     (pcase command
       ('emacsvox-spelling--pitch (emacsvox-spelling--pitch direction))
       ('emacsvox-spelling--duration (emacsvox-spelling--duration direction))
+      ('emacsvox-spelling--volume (emacsvox-spelling--volume direction))
       ('emacsvox-aural-menu--main-tones
        (emacsvox-aural-menu--output-volume 'tts-main-tone-volume (* 5 direction)))
-      (_ (user-error "Choose Pitch, Duration or Shared tone volume first")))))
+      (_ (user-error "Choose Pitch, Duration, Spelling tone volume or Shared tone volume first")))))
 (defun emacsvox-spelling--decrease ()
   "Decrease the selected numeric control." (interactive) (emacsvox-spelling--adjust -1))
 (defun emacsvox-spelling--increase ()
@@ -150,7 +175,8 @@ Preview does not change Flyspell, edit your text, or save settings."
 Voice, tone and earcon combine independently. All off silences spelling
 feedback without disabling Flyspell. Voice changes apply while reading;
 tone and earcon also report errors detected while editing. Settings apply
-immediately; S saves across restarts. Volume affects all main-stream tones."
+immediately; S saves across restarts. Spelling tone volume affects only
+this tone; Shared tone volume scales all main-stream tones."
   :refresh-suffixes t
   ["Spelling feedback (global; combine any)"
    ("v" (lambda () (emacsvox-spelling--label 'emacsvox-flyspell-use-voice "Voice")) emacsvox-spelling--voice :transient t)
@@ -159,6 +185,7 @@ immediately; S saves across restarts. Volume affects all main-stream tones."
   ["Tone adjustment (Shift arrows adjust selected control)"
    ("p" (lambda () (format "Pitch: %s Hz" emacsvox-flyspell-tone-pitch)) emacsvox-spelling--pitch :transient t)
    ("d" (lambda () (format "Duration: %s milliseconds" emacsvox-flyspell-tone-duration)) emacsvox-spelling--duration :transient t)
+   ("l" (lambda () (format "Spelling tone volume: %s percent" emacsvox-flyspell-tone-volume)) emacsvox-spelling--volume :transient t)
    ("V" (lambda () (format "Shared tone volume: %s percent" tts-main-tone-volume)) emacsvox-aural-menu--main-tones :transient t)
    ("b" "Preview tone alone" emacsvox-spelling--preview-tone :transient t)]
   ["Preview and save"

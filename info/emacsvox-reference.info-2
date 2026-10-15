@@ -2595,11 +2595,22 @@ completion or an explicit IDO, Popup, or Helm interface.
 
  -- Variable: User Option emacsvox-flyspell-tone-pitch
      Pitch of the spelling tone in hertz.
-     Tone volume follows the shared main-stream tone volume.
 
      Default Value:
 
      880
+
+
+ -- Variable: User Option emacsvox-flyspell-tone-volume
+     Spelling tone volume as a percentage from 0 to 100.
+     Zero silences the tone; 100 preserves its original level.  The shared
+     ‘tts-main-tone-volume’ still scales the result.  Values below 100 require
+     a worker with richer-tone support; older workers omit that tone while
+     retaining speech and earcons.  Preview reports missing support.
+
+     Default Value:
+
+     100
 
 
  -- Variable: User Option emacsvox-flyspell-use-earcon
@@ -8679,7 +8690,8 @@ defaults is explicit.
      Voice, tone and earcon combine independently. All off silences spelling
      feedback without disabling Flyspell. Voice changes apply while reading;
      tone and earcon also report errors detected while editing. Settings apply
-     immediately; S saves across restarts. Volume affects all main-stream tones.
+     immediately; S saves across restarts. Spelling tone volume affects only
+     this tone; Shared tone volume scales all main-stream tones.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-sql,  Next: emacsvox-sudoku,  Prev: emacsvox-spelling,  Up: Emacsvox Commands And Options

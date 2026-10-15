@@ -1050,7 +1050,7 @@ contextual integration selector.
 | Markdown and Info | =emacsvox-markdown-auto-reading-mode=; =emacsvox-info-select-node-speak-chunk= | Add reading-integration links; do not assume their upstream mode groups contain these options. |
 | Gnus and ERC | =emacsvox-gnus-punctuation-mode=; =emacsvox-gnus-large-article=; =emacsvox-erc-ignore-notices=; =emacsvox-erc-toggle-room-monitor= | Add integration discovery, including ERC participant and personal-monitor controls. |
 | Spelling and review | =emacsvox-ispell-max-choices=; =emacsvox-flyspell-correct=; =emacsvox-org-srs-use-command-confirmation=; =emacsvox-org-srs-announce-pending-count= | Link actual speech options when the corresponding package is available. |
-| Spelling presentation | =emacsvox-flyspell-use-voice=; =emacsvox-flyspell-use-tone=; =emacsvox-flyspell-use-earcon=; =emacsvox-flyspell-tone-pitch=; =emacsvox-flyspell-tone-duration= | Implemented prototype at =C-e H s f=: independent global feedback toggles, pitch/duration adjustments, tone and reading previews, explicit Save. Shared main-tone volume is labelled separately. Listening pending. |
+| Spelling presentation | =emacsvox-flyspell-use-voice=; =emacsvox-flyspell-use-tone=; =emacsvox-flyspell-use-earcon=; =emacsvox-flyspell-tone-pitch=; =emacsvox-flyspell-tone-duration=; =emacsvox-flyspell-tone-volume= | Implemented at =C-e H s f=: independent global feedback toggles, pitch/duration/individual-volume adjustments, tone and reading previews, explicit Save. Shared main-tone volume is labelled separately. Listening pending. |
 | Terminal review | =emacsvox-toggle-eterm-autospeak=; =emacsvox-eterm-toggle-focus-window=; =emacsvox-eterm-toggle-filter-window=; =emacsvox-eterm-toggle-pointer-mode= | Inventory as contextual terminal controls; preserve their existing interaction model. |
 | Popup help | =emacsvox-which-key-toggle-auto-speak=; =emacsvox-hydra-toggle-talkative= | Missing session controls. Hydra changes the upstream =hydra-is-helpful= variable; it is not an Emacsvox Custom default. |
 | OCR | =emacsvox-ocr-customize=; =emacsvox-ocr-engine= | Link the existing configuration workflow, including scanning and PaddleOCR options; do not make a root entry for every engine parameter. |
@@ -1593,9 +1593,38 @@ verification of subsequently changed code.
   with unsupported gain, preserves speech and records the reason. Exact
   previews report missing support. Personal rules use schema 11 only when
   they contain tone volume; older data stays at its existing schema. The
-  focused shared suites pass 692 tests. Individual spelling volume is next.
-  New sounds and their relative loudness still need listening acceptance;
-  no live session has been changed.
+  first two client slices are committed as =47df2aa1a= and =82d13b353=.
+  Individual spelling volume is now available at =C-e H s f l= and through
+  settings search. It defaults to 100 percent, adjusts in steps of five with
+  Shift arrows, accepts an exact integer with Enter, and saves with =S=.
+  =V= retains its shared main-tone scope. Reading, editing feedback and both
+  previews use the same gain. The graphical check also found and fixed the
+  spelling menu's missing Enter activation binding.
+  Automated verification: 692 shared regressions and six spelling tests pass;
+  79 focused integration checks pass. Four graphical checks pass in a fresh
+  Emacs with current byte-code, covering spelling adjustments and Enter,
+  every search destination, and feedback-detail return paths. A separate fresh
+  Emacs restores the saved volume through Customize. The compiled client and
+  staged Windows runtime complete standalone and timeline gain checks on
+  both workers, after reconnect, and through retained replay, using null audio.
+  The existing runtime is reused; no Omnivox rebuild is needed for these
+  client-only changes. Lisp compilation and the documentation gate pass.
+  A combined 805-test run has 770 passes, 34 graphical skips and one
+  order-dependent failure: =emacsvox-indentation-menu-feedback-replaces-main-speech=
+  cannot resolve =select-object= in =chimes=. That test passes alone. A broader
+  optional-integration run also exposes the same cue-fixture issue in the
+  earcon replacement preview, which passes alone, and an outdated default-rule
+  count in =emacsvox-aural-tools-disabled-rules-stay-valid-but-inactive= (38
+  expected, 40 actual; the existing two spelling rules are absent from its
+  expected list). These test-maintenance findings remain open. None of the
+  automated checks establishes listening acceptance.
+  Listening remains open in a fresh normal profile: compare =b= and =SPC=
+  at 100, 50 and 0 percent; check a flagged word during reading and editing;
+  confirm other main tones retain their level; check interruption, Help,
+  return focus and saved volume after restart. Restore the original settings.
+  No live session has been changed. Next are waveform/envelope fields and
+  named spelling presets, then capitalization and indentation controls and
+  platform/listening qualification.
 
 - 2026-10-15: The Transient dependency follow-up resolves the recorded build
   and packaging gaps. Commit =62c99ca83= adds all nine omitted menu modules to

@@ -1141,7 +1141,7 @@ SECTION-ONLY speaks its section while retaining the button's facts and cues."
                      emacsvox-aural-menu-navigation emacsvox-aural-menu-sounds
                      emacsvox-aural-menu-punctuation emacsvox-aural-menu-voices
                      emacsvox-aural-voice-menu emacsvox-indentation
-                     emacsvox-capitalization emacsvox-capitalization-cue
+                     emacsvox-capitalization emacsvox-capitalization-cue emacsvox-spelling
                      emacsvox-interaction emacsvox-indentation-tone
                      emacsvox-aural-menu-line-cues emacsvox-line-cues-edit
                      emacsvox-output-settings emacsvox-settings-buffer emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations

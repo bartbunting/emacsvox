@@ -79,13 +79,24 @@ This changes reading feedback, not Flyspell highlighting or checking."
   :type 'boolean :group 'emacsvox-flyspell)
 
 (defcustom emacsvox-flyspell-tone-pitch 880
-  "Pitch of the spelling tone in hertz.
-Tone volume follows the shared main-stream tone volume."
+  "Pitch of the spelling tone in hertz."
   :type '(number :tag "Hertz") :group 'emacsvox-flyspell)
 
 (defcustom emacsvox-flyspell-tone-duration 40
   "Duration of the spelling tone in milliseconds."
   :type '(number :tag "Milliseconds") :group 'emacsvox-flyspell)
+
+(defcustom emacsvox-flyspell-tone-volume 100
+  "Spelling tone volume as a percentage from 0 to 100.
+Zero silences the tone; 100 preserves its original level.  The shared
+`tts-main-tone-volume' still scales the result.  Values below 100 require
+a worker with richer-tone support; older workers omit that tone while
+retaining speech and earcons.  Preview reports missing support."
+  :type 'integer :group 'emacsvox-flyspell
+  :set (lambda (symbol value)
+         (unless (and (integerp value) (<= 0 value 100))
+           (user-error "Spelling tone volume must be an integer from 0 to 100"))
+         (set-default symbol value)))
 
 (defvar-local emacsvox-flyspell--read-errors nil
   "Flagged source ranges captured for reading during this command.")
@@ -102,7 +113,8 @@ Tone volume follows the shared main-stream tone volume."
         :spelling-tone emacsvox-flyspell-use-tone
         :spelling-earcon emacsvox-flyspell-use-earcon
         :spelling-tone-pitch emacsvox-flyspell-tone-pitch
-        :spelling-tone-duration emacsvox-flyspell-tone-duration))
+        :spelling-tone-duration emacsvox-flyspell-tone-duration
+        :spelling-tone-volume (/ emacsvox-flyspell-tone-volume 100.0)))
 
 (defun emacsvox-flyspell--capture (original start end &optional buffer)
   "Capture spelling spans with ORIGINAL from START to END in BUFFER.
