@@ -28,8 +28,9 @@ without adding words to everything you read.
 Start with [[*Getting Started: Installation and First Speech][Installation]] if Emacsvox is not yet installed. It explains the
 supported installation routes, takes you to a clean speaking session, and
 provides recovery instructions when speech does not start. Once speech works,
-continue with [[*Basic Usage][Basic Usage]], [[*Find Help While You Work][Using Online Help]], and [[*Work With The Audio Desktop][Audio Desktop]] for reading,
-editing, command discovery, and moving among tasks.
+[[info:emacsvox#Guided Tutorial][Learn the audio desktop]] teaches reading, editing, Help, structure, and
+speech adjustments through six connected lessons and a disposable document.
+Return to [[*Basic Usage][Basic Usage]], [[*Find Help While You Work][Using Online Help]], and [[*Work With The Audio Desktop][Audio Desktop]] as everyday references.
 
 If Emacs itself is new to you, ~C-h t~ opens its interactive tutorial.
 Emacsvox speaks the tutorial and your navigation while you follow it. At any

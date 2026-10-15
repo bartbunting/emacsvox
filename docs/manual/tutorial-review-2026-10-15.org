@@ -1,0 +1,76 @@
+#+title: Guided tutorial review, 15 October 2026
+#+language: en
+
+* Scope
+
+The tutorial is based on =ui-experiments= at
+=6729d414c28d573fdf2f954e81dba257de6ea7d9=. It follows the retired-Home
+settings routes and retains the committed Transient requirement without
+changing dependencies, Lisp, packaging, or publication machinery.
+
+Six connected lessons use one disposable document: reading, editing, Help and
+buffers, Org structure and shared table reading, buffer punctuation, and voice
+experiments. Twelve exercises have separate answers. The required path saves
+no speech settings. The optional palette exercise clearly identifies file
+writes, session selection, restoration of baseline-following, and the separate
+startup action. Existing drafts and personal resources are not cleanup targets.
+
+=examples/tutorial-practice.org= is the single source of the example. The
+tutorial includes it as an Org example block so Info and HTML readers receive
+the complete text without needing a checkout. Changes to that file must also
+be checked against the lessons' search strings, table answers, and line count.
+The source block in the sample is for reading and is never evaluated by the
+lesson. Do not copy its contents into a second maintained example.
+
+The master includes the tutorial immediately after Installation. Introduction
+and Using This Manual link to it while retaining the reference reading paths.
+Ten named destinations are added; all 136 previous identifiers and their
+relative ordering remain. Next/Previous navigation around the inserted chapter
+changes intentionally. Existing application chapters are unchanged.
+
+* Checks completed
+
+Local baseline copies of the four edited existing files matched their Git blob
+hashes before transformation. Static checks then verified the ten new nodes,
+the 146-entry inventory, preservation of old node ordering, all twelve internal
+Info links in the tutorial, and its six exercise-answer anchors. All twelve
+exercise labels occur once as a question and once as an answer.
+
+The checks also cover the example include's path and literal block type, the
+practice text's search targets and table values, balanced sample source-block
+markers, absence of executable file-local settings, trailing whitespace, and
+absence of the retired menu route. Entry-point chapters retain their node names.
+These are source checks, not a simulated Emacs session or an Org export.
+
+Punctuation scope, reset, saving, browser return, and voice-menu entry were
+checked against =lisp/emacsvox-aural-menu.el=. Voice-editor operations and
+palette restoration follow the maintained Aural Presentation guide; shared
+table reading follows Applications and Integrations. Org's documented heading
+motion, visibility cycling, and literal includes were checked separately.
+No exact acoustic result is inferred from a preview request or a saved value.
+
+* Remaining acceptance
+
+The editing environment had no Emacs, and its attempted network checkout
+failed. makeinfo alone cannot run the Org exporter. Org lint, export, full
+documentation gates, live key tests,
+and listening acceptance were not run. Generated Texinfo and Info are unchanged
+and must be regenerated; previous gate results do not validate this tutorial.
+
+Use the configured toolchain and required byte-code preflight, then run:
+
+#+begin_example
+make docs-org-preview
+make docs-update
+make docs-release-check
+#+end_example
+
+Check that the nested example include is literal in Info, HTML, and text
+exports and creates no extra nodes. Follow every answer link and return. Run
+the six lessons with a fresh practice buffer, then try them with existing
+unrelated drafts present. Confirm buffer-only punctuation restoration, no-save
+voice preview and draft discard, and the optional palette's inactive save and
+restoration of both explicit and baseline-following selection. Report skipped
+backend capabilities rather than silently changing engines or expectations.
+
+The public website and release remain separate authorised operations.

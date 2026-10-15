@@ -19,6 +19,7 @@ manuals remain Texinfo.
 #+include: "chapters/introduction.org"
 #+include: "chapters/using-manual.org"
 #+include: "chapters/installation.org"
+#+include: "chapters/tutorial.org"
 #+include: "chapters/basic-usage.org"
 #+include: "chapters/online-help.org"
 #+include: "chapters/audio-desktop.org"

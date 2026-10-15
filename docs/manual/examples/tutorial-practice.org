@@ -1,0 +1,23 @@
+* Practice note
+The green notebook is on the desk.
+This sentence is ready.
+Check (A+B), then C.
+
+** Packing list
+- Notebook
+- Headphones
+- Cable
+
+** Journey plan
+| Day     | Task | Status  |
+|---------+------+---------|
+| Monday  | Read | Ready   |
+| Tuesday | Edit | Planned |
+
+** Reference
+[[*Packing list][Return to the packing list]]
+
+** Code to read
+#+begin_src emacs-lisp
+(+ 2 3)
+#+end_src
