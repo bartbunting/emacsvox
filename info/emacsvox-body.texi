@@ -2066,8 +2066,13 @@ your navigation as you work through it. For a separate key-learning exercise@com
 @kbd{C-h C-l} runs @code{emacsvox-learn-emacs}: it speaks the function of each key
 you press. Leave that loop with @kbd{C-g}.
 
-@kbd{C-h i} opens Info@comma{} the manual reader used by Emacs and Emacsvox. Press @kbd{d}
-for the Info directory@comma{} then @kbd{m} and enter @code{Emacsvox} to open this manual.
+Press @kbd{C-e H i} to read the offline Emacsvox manual from the settings menu.
+It opens at the top in Info@comma{} retaining Info's navigation and index lookup.
+Press @kbd{q} to return to the menu with @emph{Read the manual} selected and the same
+source buffer and settings scope. @kbd{C-e C-i} opens the manual directly.
+
+@kbd{C-h i} opens Info's general manual reader. Press @kbd{d} for the Info directory@comma{}
+then @kbd{m} and enter @code{Emacsvox} to choose this manual.
 @ref{Using This Manual, , Using this manual} provides an exercise in index lookup@comma{} following a link@comma{}
 and returning to your work. @ref{Finding Tasks, , Find a task} starts from an everyday goal@comma{} and
 @ref{Emacsvox Terminology, , Terms used in this manual} explains the names used in the procedures. The

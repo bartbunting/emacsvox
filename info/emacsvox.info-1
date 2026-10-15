@@ -2188,14 +2188,20 @@ and your navigation as you work through it.  For a separate key-learning
 exercise, ‘C-h C-l’ runs ‘emacsvox-learn-emacs’: it speaks the function
 of each key you press.  Leave that loop with ‘C-g’.
 
-   ‘C-h i’ opens Info, the manual reader used by Emacs and Emacsvox.
-Press ‘d’ for the Info directory, then ‘m’ and enter ‘Emacsvox’ to open
-this manual.  *note Using this manual: Using This Manual. provides an
-exercise in index lookup, following a link, and returning to your work.
-*note Find a task: Finding Tasks. starts from an everyday goal, and
-*note Terms used in this manual: Emacsvox Terminology. explains the
-names used in the procedures.  The *note Info manual: (info)Top. covers
-the reader's complete navigation and search commands.
+   Press ‘C-e H i’ to read the offline Emacsvox manual from the settings
+menu.  It opens at the top in Info, retaining Info's navigation and
+index lookup.  Press ‘q’ to return to the menu with _Read the manual_
+selected and the same source buffer and settings scope.  ‘C-e C-i’ opens
+the manual directly.
+
+   ‘C-h i’ opens Info's general manual reader.  Press ‘d’ for the Info
+directory, then ‘m’ and enter ‘Emacsvox’ to choose this manual.  *note
+Using this manual: Using This Manual. provides an exercise in index
+lookup, following a link, and returning to your work.  *note Find a
+task: Finding Tasks. starts from an everyday goal, and *note Terms used
+in this manual: Emacsvox Terminology. explains the names used in the
+procedures.  The *note Info manual: (info)Top. covers the reader's
+complete navigation and search commands.
 
    In an Aural interface, ‘C-c C-i’ opens the relevant manual topic and
 ‘q’ in Info returns to that interface.  In the interface's own Help, ‘i’
@@ -6134,36 +6140,3 @@ header.  When ‘agent-shell-show-cost-indicator’ is enabled and the
 provider reports a positive cost, this includes the cumulative cost with
 Agent Shell's currency and rounding.  Brief announcements when entering
 a session stay concise.
-
-
-File: emacsvox.info,  Node: Answering Agent Questions,  Next: Agent Shell Speech And Privacy,  Prev: Starting An Agent Shell Session,  Up: Agent Shell
-
-11.2 Answer an agent's question
-===============================
-
-Some providers ask you to complete a structured form rather than answer
-in ordinary prompt text.  Agent Shell's form support is experimental and
-off by default.  To try it, set
-‘agent-shell-elicitation--experimental-feature-enabled’ to non-nil after
-loading Agent Shell and start a new session so the agent learns that
-forms are supported.  This upstream experimental setting may change.
-
-   When a form arrives, Emacsvox announces that an answer is needed and
-reads the question.  Automatic question feedback follows the session's
-speech level; ‘quiet’ suppresses it.  Explicit reading and actions still
-speak.
-
-   Use ‘<TAB>’ and ‘S-<TAB>’ to move between controls in the shell or
-viewport.  Emacsvox reads the field name, whether it is required, and
-its current value or selection state.  Press ‘<RET>’ to select an
-option, toggle a checkbox, or edit a text or number field.  Changes are
-confirmed after they take effect.  When an option has a preview, ‘?’
-opens or closes it; opening it reads its contents.  The preview key
-applies only to controls that offer a preview.
-
-   Choose _Submit_ to send the answers or _Decline_ to decline the
-question.  Missing required answers are reported without announcing
-successful submission.  ‘C-c C-c’ interrupts the running request,
-including any pending form.  To return to the latest question, use ‘M-x
-agent-shell-elicitation-jump-to-latest-form’.  The next-field and
-previous-field commands are also available through ‘M-x’.

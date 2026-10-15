@@ -675,6 +675,50 @@
           (when (get-buffer "*Aural Sound Packs*")
             (kill-buffer "*Aural Sound Packs*")))))))
 
+(ert-deftest emacsvox-aural-menu-graphical-manual-returns-to-menu ()
+  "Info navigation preserves menu return, scope, source, and selection."
+  (skip-unless (display-graphic-p))
+  (require 'info)
+  (save-window-excursion
+    (emacsvox-test--with-aural-menu
+      (switch-to-buffer source)
+      (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+      (let ((transient--prefix nil) (transient-show-menu 0)
+            (info-quit (lookup-key Info-mode-map (kbd "q"))))
+        (unwind-protect
+            (progn
+              (execute-kbd-macro (kbd "C-u <f8> i"))
+              (should-not transient--prefix)
+              (should (derived-mode-p 'Info-mode))
+              (should (equal Info-current-node "Top"))
+              (should (equal (file-truename Info-current-file)
+                             (file-truename
+                              (expand-file-name "emacsvox.info" emacsvox-info-directory))))
+              (should (eq (key-binding (kbd "i")) #'Info-index))
+              (should (eq (emacsvox-aural-inspection-source-buffer) source))
+              (execute-kbd-macro (kbd "m Aural SPC Presentation RET"))
+              (should (equal Info-current-node "Aural Presentation"))
+              (execute-kbd-macro (kbd "q"))
+              (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
+              (should (cdr (plist-get (emacsvox-aural-menu--context) :settings)))
+              (with-selected-window transient--window
+                (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                            'emacsvox-aural-menu--manual)))
+              (should-not (buffer-local-value 'emacsvox-aural-ui--return-function
+                                             (get-buffer "*Emacsvox Settings Manual*")))
+              ;; Enter follows the restored selection, including on repeat visits.
+              (execute-kbd-macro (kbd "RET"))
+              (should (derived-mode-p 'Info-mode))
+              (should (equal Info-current-node "Top"))
+              (execute-kbd-macro (kbd "q"))
+              (execute-kbd-macro (kbd "q"))
+              (should (eq (current-buffer) source))
+              (should (= (point) 3))
+              (should (eq (lookup-key Info-mode-map (kbd "q")) info-quit)))
+          (when transient--prefix (execute-kbd-macro (kbd "C-q")))
+          (when (get-buffer "*Emacsvox Settings Manual*")
+            (kill-buffer "*Emacsvox Settings Manual*")))))))
+
 (defun emacsvox-test--call-with-speech-settings (function)
   "Call FUNCTION with isolated speech settings and silent live test processes."
   (let* ((tts-speaker-process (make-pipe-process :name "menu-test-main" :noquery t))

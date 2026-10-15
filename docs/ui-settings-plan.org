@@ -22,6 +22,16 @@ personal configuration changes, or publication.
 
 ** Current baseline
 
+- Implemented on 2026-10-15: =C-e H i= opens the offline manual at its top
+  node in a separate Info buffer. Normal Info navigation and index lookup
+  remain available; =q= restores the menu's manual selection, captured source,
+  and settings scope. The help chapter documents this route alongside
+  =C-e C-i=. All 25 focused menu tests passed from source and in a fresh
+  graphical Emacs loading compiled code, including repeated Enter activation,
+  Info navigation, and exact menu return. Incremental compilation and byte-code
+  preflight passed. Listening acceptance remains open for entry speech and
+  menu return.
+
 Listening checkpoint, 2026-10-15: the nine tasks covering rate/punctuation
 persistence, typing/interaction, indentation and line/boundary cues,
 movement-based announcements, the full voice workflow, notification/spatial

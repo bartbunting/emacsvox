@@ -689,6 +689,25 @@ Cancelled prompts and failed opens restore the suspended menu too."
        (unless transient--prefix (funcall return))
        (signal (car failure) (cdr failure))))))
 
+(defun emacsvox-aural-menu--manual ()
+  "Read the offline Emacsvox manual; q returns to this menu.
+Info navigation and index lookup remain available.  Reading changes no
+settings, and returning retains the captured source and settings scope."
+  (interactive)
+  (require 'info)
+  (emacsvox-aural-menu--open-browser
+   (lambda ()
+     (let ((source (current-buffer)))
+       ;; Keep other manual visits and the shared Info keymap untouched.
+       (info (format "(%s)Top"
+                     (expand-file-name "emacsvox.info" emacsvox-info-directory))
+             "*Emacsvox Settings Manual*")
+       (emacsvox-aural-ui-register-interface source)
+       (use-local-map (copy-keymap (current-local-map)))
+       (local-set-key (kbd "q") #'emacsvox-aural-quit)
+       (current-buffer)))
+   'emacsvox-aural-menu--manual))
+
 (defun emacsvox-aural-menu--sound-packs ()
   "Open the sound-pack browser; q returns to Sounds and output."
   (interactive)
@@ -844,7 +863,8 @@ The source item is captured on entry for contextual editing and return."
    ("D" "Diagnostics and recovery" emacsvox-settings-diagnostics :transient transient--do-stack)
    ("/" "Find an Emacsvox setting" emacsvox-settings-search :transient transient--do-stack)
    ("a" "Find an action" emacsvox-settings-search-actions :transient transient--do-stack)
-   ("." "Settings for this buffer" emacsvox-settings-buffer :transient transient--do-stack)]
+   ("." "Settings for this buffer" emacsvox-settings-buffer :transient transient--do-stack)
+   ("i" "Read the manual" emacsvox-aural-menu--manual :transient transient--do-suspend)]
   ["Finish"
    ("b" "Return to captured source item" emacsvox-aural-menu--return-source :transient transient--do-exit)
    ("q" "Close" transient-quit-one)]

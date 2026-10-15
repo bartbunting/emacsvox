@@ -107,8 +107,13 @@ your navigation as you work through it. For a separate key-learning exercise,
 ~C-h C-l~ runs =emacsvox-learn-emacs=: it speaks the function of each key
 you press. Leave that loop with ~C-g~.
 
-~C-h i~ opens Info, the manual reader used by Emacs and Emacsvox. Press ~d~
-for the Info directory, then ~m~ and enter =Emacsvox= to open this manual.
+Press ~C-e H i~ to read the offline Emacsvox manual from the settings menu.
+It opens at the top in Info, retaining Info's navigation and index lookup.
+Press ~q~ to return to the menu with /Read the manual/ selected and the same
+source buffer and settings scope. ~C-e C-i~ opens the manual directly.
+
+~C-h i~ opens Info's general manual reader. Press ~d~ for the Info directory,
+then ~m~ and enter =Emacsvox= to choose this manual.
 [[*Using this manual][Using this manual]] provides an exercise in index lookup, following a link,
 and returning to your work. [[*Find a task][Find a task]] starts from an everyday goal, and
 [[*Terms used in this manual][Terms used in this manual]] explains the names used in the procedures. The
