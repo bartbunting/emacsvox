@@ -2158,11 +2158,13 @@ hear its effect and scope, or ‘? ?’ for the menu overview.  ‘q’ in that
 Help returns to the menu with the selection retained.
 
    Within the menu itself, ‘q’ or ‘C-g’ goes back one level, while ‘C-q’
-closes the sequence.  These navigation commands do not undo changes
-already applied.  A linked editor keeps its own preview, saving, and
-discard rules.  See *note Choose What Persists: (emacsvox)Saving And
-Startup. before treating a saved default, a live adjustment, or a
-retained draft as the same thing.
+closes the sequence.  Returning from an Emacsvox submenu selects the
+entry that opened it, including when you used its shortcut.  The return
+announcement identifies that item; ‘<RET>’ opens it again.  These
+navigation commands do not undo changes already applied.  A linked
+editor keeps its own preview, saving, and discard rules.  See *note
+Choose What Persists: (emacsvox)Saving And Startup. before treating a
+saved default, a live adjustment, or a retained draft as the same thing.
 
    Use ‘C-e H a’ to find an action such as browsing voices or inspecting
 diagnostics.  It uses the same partial-name matching and two-Enter

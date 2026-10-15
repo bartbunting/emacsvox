@@ -22,6 +22,17 @@ personal configuration changes, or publication.
 
 ** Current baseline
 
+- Submenu return, 2026-10-15: ordinary Emacsvox submenu return now restores the
+  invoking entry before announcing the parent. Shortcut entry, nested menus,
+  and delayed display retain the correct target for Enter. Closing the menu
+  sequence releases its return state; unrelated Transient menus keep their
+  existing behaviour. The heading-return failure was reproduced before the fix.
+  All 89 menu, discovery, Transient, and Magit checks pass in fresh graphical
+  Emacs with source and compiled code using Transient 0.13.8, and from source
+  with pinned Transient 0.13.3. Loaded paths and versions were verified.
+  Incremental compilation and byte-code preflight pass.
+  Listening acceptance remains open for the restored item and its announcement.
+
 - Menu organisation, 2026-10-15: the first slice groups =C-e H= into Everyday
   settings, This buffer and item, Rules and saved work, Find and get help, and
   Finish. Existing shortcuts and actions are retained. The item explanation
@@ -1168,11 +1179,8 @@ Complete the menu-organisation pass before expanding settings coverage:
   changes to established Save and Stop keys remain a separate decision.
 - Add the manual to action discovery and review duplicate search results,
   preserving useful aliases and cross-links.
-- Ordinary submenu return does not consistently restore the invoking item:
-  entering Buffer settings with Enter and returning with =q= leaves point at
-  the main-menu heading. A graphical probe reproduces this on the committed
-  layout before regrouping. Treat return selection as a separate interaction
-  fix; the grouping slice preserves existing submenu return behaviour.
+- Listen to submenu return after the separate focus fix above. Check =q= and
+  =C-g= after opening by arrows/Enter and by shortcut, including nested menus.
 
 Diagnostics, named-voice tuning, the combined rule overview, training controls,
 direct action discovery, and Home menu retirement are delivered above. The

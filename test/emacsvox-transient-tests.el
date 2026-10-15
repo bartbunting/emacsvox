@@ -59,6 +59,8 @@
     (transient-prefix-set :after
                           emacsvox--advice-transient-prefix-set-after)
     (transient--show :after emacsvox--advice-transient--show-after)
+    (transient--do-stack :around emacsvox--advice-transient--do-stack-around)
+    (transient--stack-pop :around emacsvox--advice-transient--stack-pop-around)
     (transient--show-hint :around emacsvox--advice-transient--show-hint-around)
     (transient--invalid :around emacsvox--advice-transient--invalid-around)
     (transient-suspend :around

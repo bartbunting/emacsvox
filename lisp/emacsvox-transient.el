@@ -586,6 +586,63 @@ Section context is announced when navigation enters a section."
 (defvar emacsvox-transient--announced-stack nil
   "Command identity of the stack paired with the announced prefix.")
 
+(defvar emacsvox-transient--return-targets
+  (make-hash-table :test #'eq :weakness 'key)
+  "Invoking items owned by live stack entries or awaiting prefix displays.
+Each value contains the parent command, suffix key, and suffix command.
+Weak keys let abandoned menus release their return state.")
+
+(defvar emacsvox-transient--restoring-target nil
+  "Invoking item awaiting display while a parent menu is being restored.")
+
+(defun emacsvox--advice-transient--do-stack-around (original)
+  "Retain an Emacsvox submenu's invoking item while ORIGINAL stacks its parent."
+  (let* ((prefix transient--prefix)
+         (command (and prefix (oref prefix command)))
+         (suffix (and command
+                      (string-prefix-p "emacsvox-" (symbol-name command))
+                      (cl-find this-command transient--suffixes
+                               :key (lambda (item) (oref item command)))))
+         (target (and suffix (list command (oref suffix key) this-command))))
+    (prog1 (funcall original)
+      (when (and target transient--stack)
+        (puthash (car transient--stack) target emacsvox-transient--return-targets)))))
+
+(advice-add 'transient--do-stack :around
+            #'emacsvox--advice-transient--do-stack-around)
+
+(defun emacsvox--advice-transient--stack-pop-around (original)
+  "Make the saved invoking item available while ORIGINAL restores its parent."
+  (let* ((entry (car transient--stack))
+         (emacsvox-transient--restoring-target
+          (gethash entry emacsvox-transient--return-targets)))
+    (remhash entry emacsvox-transient--return-targets)
+    (prog1 (funcall original)
+      ;; A delayed menu may not have displayed during `transient-setup'.
+      (when (and emacsvox-transient--restoring-target transient--prefix
+                 (eq (oref transient--prefix command)
+                     (car emacsvox-transient--restoring-target)))
+        (puthash transient--prefix emacsvox-transient--restoring-target
+                 emacsvox-transient--return-targets)))))
+
+(advice-add 'transient--stack-pop :around
+            #'emacsvox--advice-transient--stack-pop-around)
+
+(defun emacsvox-transient--restore-return-target ()
+  "Restore the invoking item once, before announcing the displayed parent."
+  (when-let* ((target (or emacsvox-transient--restoring-target
+                          (gethash transient--prefix emacsvox-transient--return-targets)))
+              (_ (eq (oref transient--prefix command) (car target))))
+    (setq emacsvox-transient--restoring-target nil)
+    (remhash transient--prefix emacsvox-transient--return-targets)
+    (when-let* ((suffix (cl-find-if
+                        (lambda (item)
+                          (and (equal (oref item key) (nth 1 target))
+                               (eq (oref item command) (nth 2 target))))
+                        transient--suffixes)))
+      (with-selected-window transient--window
+        (transient--goto-button suffix)))))
+
 (defun emacsvox-transient--stack-commands ()
   "Return the command identities in the current Transient stack."
   (mapcar #'car transient--stack))
@@ -715,6 +772,7 @@ ICON-PHASE defaults to `before'.  Replace and interrupt previous main speech."
 (defun emacsvox--advice-transient--show-after (&rest _)
   "Cache the menu and announce a new or explicitly requested display."
   (when (window-live-p transient--window)
+    (emacsvox-transient--restore-return-target)
     (with-current-buffer (window-buffer transient--window)
       (setq-local emacsvox-aural-module 'transient)
       (setq

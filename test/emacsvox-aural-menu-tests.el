@@ -456,10 +456,55 @@
                   (execute-kbd-macro (kbd "q"))
                   (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))
                   (should (cdr (plist-get (emacsvox-aural-menu--context) :settings)))
+                  (with-selected-window transient--window
+                    (should (equal (oref (button-get (button-at (point)) 'button-data) key) ".")))
+                  (should (string-match-p "Settings for this buffer" (car speech)))
+                  (execute-kbd-macro (kbd "RET"))
+                  (should (eq (oref transient--prefix command) 'emacsvox-settings-buffer))
+                  (execute-kbd-macro (kbd "q"))
                   (execute-kbd-macro (kbd "q"))
                   (should (eq (current-buffer) source))
                   (should (= (point) 3)))
               (when transient--prefix (execute-kbd-macro (kbd "C-q"))))))))))
+
+(ert-deftest emacsvox-aural-menu-graphical-submenu-return-targets ()
+  "Nested shortcuts restore their own entries, including delayed parent display."
+  (skip-unless (display-graphic-p))
+  (save-window-excursion
+    (emacsvox-test--with-aural-menu
+      (switch-to-buffer source)
+      (local-set-key (kbd "<f8>") #'emacsvox-aural-menu)
+      (let ((transient--prefix nil) (transient-show-menu t))
+        (cl-labels ((check-key (key)
+                     (transient--show)
+                     (with-selected-window transient--window
+                       (should (equal (oref (button-get (button-at (point)) 'button-data) key)
+                                      key)))))
+          (unwind-protect
+              (progn
+                (execute-kbd-macro (kbd "<f8>"))
+                (transient--show)
+                (execute-kbd-macro (kbd "<right>"))
+                (check-key ".")
+                ;; The shortcut, rather than the previously focused item, owns return.
+                (execute-kbd-macro (kbd "s p C-g"))
+                (check-key "p")
+                (execute-kbd-macro (kbd "RET"))
+                (should (eq (oref transient--prefix command) 'emacsvox-aural-menu-punctuation))
+                (let ((transient-show-menu nil))
+                  (setq transient--showp nil)
+                  (execute-kbd-macro (kbd "q")))
+                (check-key "p")
+                ;; A later redraw must retain subsequent navigation.
+                (execute-kbd-macro (kbd "<up>"))
+                (check-key "r")
+                (execute-kbd-macro (kbd "q"))
+                (check-key "s")
+                (execute-kbd-macro (kbd "v C-q <f8>"))
+                (transient--show)
+                (with-selected-window transient--window
+                  (should-not (button-at (point)))))
+            (when transient--prefix (execute-kbd-macro (kbd "C-q")))))))))
 
 (ert-deftest emacsvox-aural-menu-graphical-help-returns-to-menu ()
   "Menu overview and command help return with scope and parent menus intact."

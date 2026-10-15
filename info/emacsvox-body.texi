@@ -2040,7 +2040,10 @@ and scope@comma{} or @kbd{? ?} for the menu overview. @kbd{q} in that Help retur
 menu with the selection retained.
 
 Within the menu itself@comma{} @kbd{q} or @kbd{C-g} goes back one level@comma{} while @kbd{C-q} closes
-the sequence. These navigation commands do not undo changes already applied.
+the sequence. Returning from an Emacsvox submenu selects the entry that opened
+it@comma{} including when you used its shortcut. The return announcement identifies
+that item; @kbd{@key{RET}} opens it again. These navigation commands do not undo changes
+already applied.
 A linked editor keeps its own preview@comma{} saving@comma{} and discard rules. See
 @ref{Saving And Startup,Choose What Persists,,emacsvox,} before treating a saved default@comma{} a live adjustment@comma{}
 or a retained draft as the same thing.
