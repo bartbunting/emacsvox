@@ -1577,8 +1577,11 @@ verification of subsequently changed code.
   The first implementation slice adds shared tone types, standalone version 2
   and timeline version 6 decoders, and compatibility and rejection tests in
   Omnivox. The active server still rejects the new formats and advertises no
-  richer-tone capability. Next are shared rendering and cancellation, then
-  playback integration. No new sound is available for listening yet.
+  richer-tone capability. Shared waveform/envelope rendering and cancellation
+  during generation are now implemented, with regression coverage for sound
+  parameters and cancelled preparation. Next is connecting both versioned
+  formats to playback and worker-local negotiation. No runtime has been staged;
+  new sounds and their relative loudness still need listening acceptance.
 
 - 2026-10-15: The Transient dependency follow-up resolves the recorded build
   and packaging gaps. Commit =62c99ca83= adds all nine omitted menu modules to
