@@ -4,28 +4,15 @@
 :DESCRIPTION: Select, install, and verify a speech server.
 :END:
 
-Emacsvox needs a speech-server process.  For a new installation, use
-*Omnivox*.  Omnivox is the server that Emacsvox talks to; the engine
-that produces speech underneath it is platform-specific.  The normal engine
-is eSpeak NG on GNU/Linux, AVSpeechSynthesizer on macOS, and WinRT
+Emacsvox sends speech through a speech server. For a new installation,
+use /Omnivox/. The server communicates with the engine that produces speech:
+normally eSpeak NG on GNU/Linux, AVSpeechSynthesizer on macOS, and WinRT
 SpeechSynthesizer on Windows.
 
-Omnivox 1.17.0 is the minimum supported release. It supplies named punctuation
-profiles, palette-aware character speech and editable engine configuration,
-alongside managed voice libraries, eSpeak variants, engine-specific voice
-controls, individual fallback tuning and complete voice previews. A newer compatible
-release may be used. The manual archive examples and guided installers pin the
-1.17.0 core and matching optional engines exactly; the macOS Homebrew tap follows
-its maintained stable formula. Upgrade an existing Omnivox
-installation separately; updating Emacsvox does not replace the selected speech
-server. Voice-library management currently uses the bundled WSL-to-Windows
-launcher; remote and direct native launches retain their existing limits.
-
-For a first installation, follow the linear procedure in
-[[*Getting Started: Installation and First Speech][Installation]].  Return here when you need platform-specific build
-details, compatibility servers, or deeper diagnostics.  Omnivox build
-internals, engine behavior, and versioned protocols are documented and
-maintained in
+Follow [[*Getting Started: Installation and First Speech][Installation]] if you have not yet obtained speech. This chapter is for
+choosing a supported platform route, installing or configuring a different
+backend, and diagnosing problems. Omnivox's native build procedures, engine
+behaviour, and versioned protocols belong to
 [[https://github.com/bartbunting/omnivox][the Omnivox repository]].
 
 ** Supported Platform Routes
@@ -62,99 +49,25 @@ the normal platform engine above.  Engine routing and optional Piper,
 Eloquence, or DECtalk support are later customizations, not prerequisites for
 first speech.
 
-*Remote workstation speech (preview).*  Emacs can run on an SSH
-host while Omnivox, its installed voices, and playback remain on the computer
-you are using. This uses the =--serve= option included in Omnivox 1.17.0
-and the Emacsvox remote transport. Remote access remains a preview feature.
+For Emacs running on a remote SSH host, see
+[[*Remote Workstation Speech (Preview)][Remote Workstation Speech]].
 
-On your workstation, create a private token once.  The creation tool refuses
-to overwrite an existing token or print its contents:
+*** Version and capability requirements
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-#+begin_example
-mkdir -p "$HOME/.config/omnivox"
-python3 /path/to/omnivox/tools/create_remote_token.py \
-    "$HOME/.config/omnivox/remote-token"
-#+end_example
+Omnivox 1.17.0 is the minimum supported release. It supplies named punctuation
+profiles, palette-aware character speech and editable engine configuration,
+alongside managed voice libraries, eSpeak variants, engine-specific voice
+controls, individual fallback tuning and complete voice previews. A newer compatible
+release may be used. The manual archive examples and guided installers pin the
+1.17.0 core and matching optional engines exactly; the macOS Homebrew tap follows
+its maintained stable formula. Upgrade an existing Omnivox
+installation separately; updating Emacsvox does not replace the selected speech
+server. Voice-library management currently uses the bundled WSL-to-Windows
+launcher; remote and direct native launches retain their existing limits.
 
-Start your installed Omnivox in a terminal and leave it running.  Give it the
-sound directory from the same Emacsvox sound-pack installation used by remote
-Emacs:
-
-#+begin_example
-omnivox --serve --token-file "$HOME/.config/omnivox/remote-token" \
-    --sound-root /path/to/emacsvox/sounds
-#+end_example
-
-For a Windows service started through the WSL Emacsvox launcher, translate
-both paths for the Windows process:
-
-#+begin_example
-/path/to/emacsvox/servers/omnivox --serve \
-    --token-file "$(wslpath -w "$HOME/.config/omnivox/remote-token")" \
-    --sound-root "$(wslpath -w /path/to/emacsvox/sounds)"
-#+end_example
-
-In another workstation terminal, copy the token over your verified SSH
-connection and open the reverse forward.  Replace =user@emacs-host= with the
-machine where Emacs will run:
-
-#+begin_example
-ssh user@emacs-host 'mkdir -p ~/.config/omnivox; chmod 700 ~/.config/omnivox'
-scp "$HOME/.config/omnivox/remote-token" user@emacs-host:.config/omnivox/remote-token
-ssh user@emacs-host 'chmod 600 ~/.config/omnivox/remote-token'
-ssh -o ExitOnForwardFailure=yes -o ServerAliveInterval=10 \
-    -o ServerAliveCountMax=2 \
-    -R 127.0.0.1:6417:127.0.0.1:6417 user@emacs-host
-#+end_example
-
-If Omnivox runs on Windows, open the final SSH connection with Windows
-OpenSSH (=ssh.exe= from WSL, or =ssh= from PowerShell).  Its forward must
-reach Windows loopback.  A WSL SSH client under NAT reaches WSL's separate
-loopback instead.  Windows OpenSSH uses your Windows SSH keys and host-trust
-configuration.
-
-For a remote-only Linux installation and isolated launch commands, follow
-[[*Installing On A Remote Linux Host][Installing Remote Emacsvox]].  The =--remote= launcher supplies
-the connection options before initializing speech and needs no local Omnivox
-executable.
-
-For a personal Emacs configuration, set these options before starting Emacsvox:
-
-#+begin_src emacs-lisp
-(setq tts-program "omnivox"
-      omnivox-remote-host "127.0.0.1"
-      omnivox-remote-port 6417
-      omnivox-remote-token-file "~/.config/omnivox/remote-token")
-#+end_src
-
-Use ~M-x omnivox-remote-connect~ to connect or retry manually,
-~M-x omnivox-remote-status~ to inspect the connection, and
-~M-x omnivox-remote-disconnect~ to stop it and suspend retries.  After a lost
-connection, Emacsvox reconnects with fresh voice and routing information;
-unfinished speech is discarded.  Foreground and notification speech retain
-separate workers.  Only one Emacs session may own a service at a time.
-
-If startup connects main speech but the notification connection fails,
-Emacsvox keeps main speech available and retries the missing notification
-connection automatically.  Recovery does not replace the working main
-connection.  Set =omnivox-remote-auto-reconnect= to nil to disable automatic
-retries; an explicit disconnect also suspends them until you connect again.
-The status command reports the pending retry and latest connection error.
-
-The service and forwarded endpoint must stay on loopback.  Do not enable SSH
-=GatewayPorts=.  SSH encrypts the connection; the private token also excludes
-other users on the remote host.  To rotate it, stop the service, replace both
-private token files, and restart.  Typing =quit= in the service terminal or
-interrupting it stops its workers.
-
-The voice inventory describes your workstation.  Install engines and use the
-engine installation manager on that workstation.  Bundled icons resolve there by
-pack-relative name; personal sounds outside the bundled sound directory and
-sound uploads are not supported in this first version.  Omitting
-=--sound-root= disables file-based icons.  If the remote port is occupied,
-choose another port on the left side of =-R= and set =omnivox-remote-port= to
-match.  An authentication failure means the token copies differ or their file
-permissions are too broad; a busy service still belongs to another connection.
 
 ** Install Omnivox From A Release Binary
 :PROPERTIES:
@@ -448,10 +361,14 @@ user-supplied runtimes.
 :DESCRIPTION: Install, check, remove, and reinstall optional engines from Emacs.
 :END:
 
-The ordinary WSL2 archive is the Omnivox core, not a claim that every supported
-engine is installed.  It keeps first speech small while matching companion
-archives provide engines that are larger, experimental, architecture-specific,
-or incomplete without separately chosen data.
+Omnivox keeps first speech in a small core. Optional engines may require a
+version-matched companion, a separately supplied runtime, or downloaded voice
+data.
+
+**** Inspect running engines
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 From a running Emacsvox session, open:
 
@@ -491,15 +408,12 @@ A disabled engine does not imply missing files, and evidence from a replaced
 worker does not establish the new worker's runtime status. Opening or refreshing
 engine details uses speech-worker discovery without invoking the release installer.
 
-On WSL, /Manage installed release/ explicitly opens the separate release
-installer. /Installation being managed/ and /Location/ identify the versioned
-release affected by its actions. This may differ from a development build or
-remote speech server. /Installed engine files/ reports file presence;
-/Check release engine/ tests runtime initialization and voice discovery for
-that release. Installation and removal keep current speech running and do not
-select a different speech server. If a helper is still in use, removal fails
-visibly; stop the sessions using that release before retrying. Press
-~q~ to return to the current engine with its selection retained.
+**** Browse voices and variants
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Browse voices reported by the running worker and audition eSpeak variants without changing saved settings.
 
 - /Browse voices/ combines that engine's reported voices with its installed
   library, including disabled downloads. This separate browser keeps the general Voice Workbench's filters and
@@ -519,23 +433,7 @@ visibly; stop the sessions using that release before retrying. Press
   ~R~ to refresh. Active does not mean a model is resident in
   memory, and is not a listening test. Samples use main speech; an inactive
   downloaded voice must be enabled and applied before sampling.
-- Under /Startup settings/, /Edit file settings/ for the bundled local Omnivox launcher opens the
-  selected engine's file option in Customize. Piper accepts one local ONNX
-  model with its matching JSON file. Eloquence and DECtalk accept their runtime
-  DLL paths. Flite accepts external =.flitevox= files, each with a /Load file/
-  switch. Use absolute paths as seen by Emacs; WSL converts them for the chosen
-  Windows executable. Keep required companion files beside their runtime or
-  model. Remote speech settings must be changed on the speech host.
-  These are manual overrides. Having no manual files selected does not mean
-  there are no downloaded voices: the installed voice library or launcher
-  defaults apply. A manual Flite file list overrides its installed library.
-- In /Browse voices/, manage installed Piper and Flite voices on the
-  local speech host. Press ~+~ to enable or disable a voice in
-  the desired configuration, then ~a~ to review and Apply.
-  Apply checks both replacements, restarts main and notification speech, and
-  verifies both before committing. If a replacement fails, it restores both
-  previous configurations. Disabling keeps the files and saved palette
-  references. Changing /Enabled/ leaves /Active/ unchanged until Apply.
+
 - /Voice variants/ in eSpeak details lists the bundled variants reported by
   the running speech worker. Choose a base voice with ~b~,
   then use the arrow keys or ~C-n~ / ~C-p~ to
@@ -565,6 +463,14 @@ visibly; stop the sessions using that release before retrying. Press
   ~v~ opens the base-voice browser. Existing saved variant
   references remain valid. An older Omnivox worker must be updated once to
   provide on-demand variants; the screen reports missing support explicitly.
+
+**** Install and activate voice packages
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Installing a voice and making it active are separate steps. The download catalogue, library, and Apply workflow keep them distinct.
+
 - /Get more voices/ in Piper, Flite, MBROLA or RHVoice details opens the reviewed download
   catalogue. Piper is grouped by language, voice name and quality; Flite
   offers AWB and RMS. Voices with one quality appear directly in their
@@ -590,6 +496,7 @@ visibly; stop the sessions using that release before retrying. Press
   The shipped collection contains reviewed, pinned models that passed native
   validation. Models with unresolved terms or unsupported configurations are
   withheld; the catalogue is not a live listing of every upstream download.
+
 - MBROLA offers US1, US2 and US3; British English en1 is already included.
   These downloads require the updated, separately configured development
   companion on Linux or Windows. Older runtimes keep their Piper and Flite
@@ -599,6 +506,7 @@ visibly; stop the sessions using that release before retrying. Press
   voice, unless it was explicitly disabled. Enable several MBROLA voices to
   assign them to different palette choices or speech streams. Each request
   opens its selected database; enabled databases do not all remain loaded.
+
 - RHVoice offers Alan (Scottish English), BDL and CLB (American English), and
   Ksp (Indian English). These downloads require an updated Omnivox build and
   a separately installed compatible RHVoice runtime, selected in engine
@@ -608,6 +516,15 @@ visibly; stop the sessions using that release before retrying. Press
   A conflicting external installation of the same voice is reported rather
   than replaced. Uninstallation removes only the managed package; it preserves
   your external voices and RHVoice runtime.
+
+- In /Browse voices/, manage installed Piper and Flite voices on the
+  local speech host. Press ~+~ to enable or disable a voice in
+  the desired configuration, then ~a~ to review and Apply.
+  Apply checks both replacements, restarts main and notification speech, and
+  verifies both before committing. If a replacement fails, it restores both
+  previous configurations. Disabling keeps the files and saved palette
+  references. Changing /Enabled/ leaves /Active/ unchanged until Apply.
+
 - After installation, press ~l~ to browse voices,
   ~+~ to enable the voice, and ~a~ to review
   Apply. Review covers the managed engines and both speech streams.
@@ -615,12 +532,21 @@ visibly; stop the sessions using that release before retrying. Press
   Downloaded files belong to you and stay in Omnivox's per-user voice storage
   across executable upgrades. Failed and interrupted operations retain files
   for inspection; automatic resume and package updates are not provided yet.
+
+**** Remove or import managed voices
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Review the effect on stored palettes before deleting a package or importing a voice outside the catalogue.
+
 - To uninstall a downloaded Piper, Flite, MBROLA or RHVoice package, disable all its
   speakers and Apply, then press ~C-c u~ in the voice browser.
   Review its affected voices, size and retained palette references before
   confirming. Files still needed by other sessions are retained. Built-in SLT
   and MBROLA en1, imported files and engine runtimes cannot be removed here.
   ~C-c U~ reviews incomplete cleanup for resumption.
+
 - In the voice browser, ~d~ opens the download catalogue and
   ~b~ includes built-in Flite SLT explicitly.
   ~i~ installs a completed native validation operation by its
@@ -633,12 +559,32 @@ visibly; stop the sessions using that release before retrying. Press
   updated local Omnivox build. Explicit Piper or Flite file overrides must be
   cleared before applying that engine's installed voices. An uncertain native
   cleanup or commit blocks further Apply and remains visible in the result.
+
+**** Configure and check an engine
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+File configuration and current-worker discovery are different. Review the configured paths before restarting speech.
+
+- Under /Startup settings/, /Edit file settings/ for the bundled local Omnivox launcher opens the
+  selected engine's file option in Customize. Piper accepts one local ONNX
+  model with its matching JSON file. Eloquence and DECtalk accept their runtime
+  DLL paths. Flite accepts external =.flitevox= files, each with a /Load file/
+  switch. Use absolute paths as seen by Emacs; WSL converts them for the chosen
+  Windows executable. Keep required companion files beside their runtime or
+  model. Remote speech settings must be changed on the speech host.
+  These are manual overrides. Having no manual files selected does not mean
+  there are no downloaded voices: the installed voice library or launcher
+  defaults apply. A manual Flite file list overrides its installed library.
+
 - /Check configured engine/ runs separate voice discovery using the local
   launcher's current configuration, with a 30 second limit. It retains the
   executable target, voice list and diagnostic output. It neither speaks a
   sample nor replaces live workers. A failed Flite file can leave built-in SLT
   usable; the check reports incomplete discovery when fewer than the selected
   files plus SLT are found. Duplicate external voice names are not supported.
+
 - File settings take effect in newly started workers. Save through Customize
   to retain them, then explicitly choose /Restart local speech/ when ready;
   this interrupts this session's main and notification speech. Refresh live
@@ -647,24 +593,46 @@ visibly; stop the sessions using that release before retrying. Press
   it loaded until restarted. Built-in SLT remains loaded, and each speech
   worker loads its own copy of enabled external voices. These file switches
   do not provide a general per-voice policy or a memory measurement.
+
 - Explicit =OMNIVOX_PIPER_MODEL=, =OMNIVOX_FLITE_VOICES= and runtime environment
   settings override these options; details identify such overrides. The
   legacy =EMACSVOX_ECI_DLL= and =EMACSVOX_DECTALK_DLL= overrides also remain
   effective. Clearing an option returns to existing discovery or launcher
   defaults. Direct native executable launches do not consume the bundled
   launcher's file options.
+
+**** Manage the installed Omnivox release
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The installed-release manager acts on its displayed release, which need not be the server currently providing speech.
+
+On WSL, /Manage installed release/ explicitly opens the separate release
+installer. /Installation being managed/ and /Location/ identify the versioned
+release affected by its actions. This may differ from a development build or
+remote speech server. /Installed engine files/ reports file presence;
+/Check release engine/ tests runtime initialization and voice discovery for
+that release. Installation and removal keep current speech running and do not
+select a different speech server. If a helper is still in use, removal fails
+visibly; stop the sessions using that release before retrying. Press
+~q~ to return to the current engine with its selection retained.
+
 - To refresh discovery, press ~g~ or use /Refresh status/ in
   details. Both worker inventories are requested asynchronously.
+
 - To install an engine, choose /Manage installed release/ and check the displayed
   installation and location. If its files are available to download, activate
   /Install engine/ with ~RET~,
   then confirm. The manager verifies the version-matched download. The table
   shows its operation in progress while the current engine's status stays separate.
+
 - In the installed-release view, /Refresh release files/ runs a bounded background
   file check. /Check release engine/ lists voices in that release without playing
   a sample. A changed installation target requires refreshing before retrying.
   Completion produces a short notice without selecting another buffer. The last
   result remains in the release view; /Read last result/ opens its complete output.
+
 - In details, ~TAB~ moves to the next action or section;
   ~S-TAB~ moves to the previous one.
   ~RET~ activates an action or toggles a section.
@@ -672,6 +640,7 @@ visibly; stop the sessions using that release before retrying. Press
   ~q~ returns to the selected engine row and
   ~h~ opens Aural Home, and ~?~ opens help.
   Background refresh preserves selection and expanded sections.
+
 - To remove an /installed/ engine, expand /Engine installation/, activate /Uninstall engine/, and confirm. This
   is available only for Flite, RuTTS, Piper, and TGSpeechBox engines installed
   by this manager.  It cannot remove the Omnivox core, built-in engines, or
@@ -739,9 +708,12 @@ to select them.
 :DESCRIPTION: Install and verify supported native Windows x64 Emacsvox.
 :END:
 
-Native Windows x64 is a supported desktop installation with Emacs 30.2 or
-newer. The guided PowerShell installer runs entirely on Windows. WSL,
-Docker, Rust, and a system MSYS2 installation are not required.
+Native Windows x64 is supported with Emacs 30.2 or newer. If you have a
+development Setup executable, use its installation wizard. Otherwise, the
+guided PowerShell installer prepares Emacsvox from a Windows checkout. An
+advanced manual route follows for an existing native Emacs installation.
+Neither Setup nor the guided installer requires WSL, Docker, Rust, or a system
+MSYS2 installation.
 
 *** Using a Windows Setup Build
 :PROPERTIES:
@@ -1291,6 +1263,105 @@ and ~M-x tts-restart~ after changing server configuration.  This backend
 contract stops at a proven speech server; the complete isolated Emacs start,
 expected startup speech, and no-speech recovery belong to the first-use
 procedure.
+
+** Remote Workstation Speech (Preview)
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Emacs can run on an SSH
+host while Omnivox, its installed voices, and playback remain on the computer
+you are using. This uses the =--serve= option included in Omnivox 1.17.0
+and the Emacsvox remote transport. Remote access remains a preview feature.
+
+On your workstation, create a private token once.  The creation tool refuses
+to overwrite an existing token or print its contents:
+
+#+begin_example
+mkdir -p "$HOME/.config/omnivox"
+python3 /path/to/omnivox/tools/create_remote_token.py \
+    "$HOME/.config/omnivox/remote-token"
+#+end_example
+
+Start your installed Omnivox in a terminal and leave it running.  Give it the
+sound directory from the same Emacsvox sound-pack installation used by remote
+Emacs:
+
+#+begin_example
+omnivox --serve --token-file "$HOME/.config/omnivox/remote-token" \
+    --sound-root /path/to/emacsvox/sounds
+#+end_example
+
+For a Windows service started through the WSL Emacsvox launcher, translate
+both paths for the Windows process:
+
+#+begin_example
+/path/to/emacsvox/servers/omnivox --serve \
+    --token-file "$(wslpath -w "$HOME/.config/omnivox/remote-token")" \
+    --sound-root "$(wslpath -w /path/to/emacsvox/sounds)"
+#+end_example
+
+In another workstation terminal, copy the token over your verified SSH
+connection and open the reverse forward.  Replace =user@emacs-host= with the
+machine where Emacs will run:
+
+#+begin_example
+ssh user@emacs-host 'mkdir -p ~/.config/omnivox; chmod 700 ~/.config/omnivox'
+scp "$HOME/.config/omnivox/remote-token" user@emacs-host:.config/omnivox/remote-token
+ssh user@emacs-host 'chmod 600 ~/.config/omnivox/remote-token'
+ssh -o ExitOnForwardFailure=yes -o ServerAliveInterval=10 \
+    -o ServerAliveCountMax=2 \
+    -R 127.0.0.1:6417:127.0.0.1:6417 user@emacs-host
+#+end_example
+
+If Omnivox runs on Windows, open the final SSH connection with Windows
+OpenSSH (=ssh.exe= from WSL, or =ssh= from PowerShell).  Its forward must
+reach Windows loopback.  A WSL SSH client under NAT reaches WSL's separate
+loopback instead.  Windows OpenSSH uses your Windows SSH keys and host-trust
+configuration.
+
+For a remote-only Linux installation and isolated launch commands, follow
+[[*Installing On A Remote Linux Host][Installing Remote Emacsvox]].  The =--remote= launcher supplies
+the connection options before initializing speech and needs no local Omnivox
+executable.
+
+For a personal Emacs configuration, set these options before starting Emacsvox:
+
+#+begin_src emacs-lisp
+(setq tts-program "omnivox"
+      omnivox-remote-host "127.0.0.1"
+      omnivox-remote-port 6417
+      omnivox-remote-token-file "~/.config/omnivox/remote-token")
+#+end_src
+
+Use ~M-x omnivox-remote-connect~ to connect or retry manually,
+~M-x omnivox-remote-status~ to inspect the connection, and
+~M-x omnivox-remote-disconnect~ to stop it and suspend retries.  After a lost
+connection, Emacsvox reconnects with fresh voice and routing information;
+unfinished speech is discarded.  Foreground and notification speech retain
+separate workers.  Only one Emacs session may own a service at a time.
+
+If startup connects main speech but the notification connection fails,
+Emacsvox keeps main speech available and retries the missing notification
+connection automatically.  Recovery does not replace the working main
+connection.  Set =omnivox-remote-auto-reconnect= to nil to disable automatic
+retries; an explicit disconnect also suspends them until you connect again.
+The status command reports the pending retry and latest connection error.
+
+The service and forwarded endpoint must stay on loopback.  Do not enable SSH
+=GatewayPorts=.  SSH encrypts the connection; the private token also excludes
+other users on the remote host.  To rotate it, stop the service, replace both
+private token files, and restart.  Typing =quit= in the service terminal or
+interrupting it stops its workers.
+
+The voice inventory describes your workstation.  Install engines and use the
+engine installation manager on that workstation.  Bundled icons resolve there by
+pack-relative name; personal sounds outside the bundled sound directory and
+sound uploads are not supported in this first version.  Omitting
+=--sound-root= disables file-based icons.  If the remote port is occupied,
+choose another port on the left side of =-R= and set =omnivox-remote-port= to
+match.  An authentication failure means the token copies differ or their file
+permissions are too broad; a busy service still belongs to another connection.
 
 ** Compatibility Speech Servers
 :PROPERTIES:
