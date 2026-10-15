@@ -21,15 +21,15 @@ Emacsvox
 
 Welcome to the Emacsvox user manual.  Begin with the introduction,
 follow the installation path until Emacsvox speaks, and then try the
-guided first session in Basic Usage.  Platform and compatibility detail
-is available in Speech Backends when you need it.  Exact commands,
-options, and keymaps are in the separate *note Emacsvox Reference
-Manual: (emacsvox-reference)Top.  Selected historical Emacspeak material
-is in the separate *note Emacspeak Heritage: (emacsvox-heritage)Top.
-manual and is not current setup guidance.  For rapidly evolving
-development and Aural Presentation rule-authoring details, also consult
-‘README.org’ and ‘etc/aural-presentation-reference.org’ in the source
-tree.
+Guided Tutorial for step-by-step practice or Basic Usage for a concise
+first session.  Platform and compatibility detail is available in Speech
+Backends when you need it.  Exact commands, options, and keymaps are in
+the separate *note Emacsvox Reference Manual: (emacsvox-reference)Top.
+Selected historical Emacspeak material is in the separate *note
+Emacspeak Heritage: (emacsvox-heritage)Top. manual and is not current
+setup guidance.  For rapidly evolving development and Aural Presentation
+rule-authoring details, also consult ‘README.org’ and
+‘etc/aural-presentation-reference.org’ in the source tree.
 
    The manual is divided into the following chapters:
 
@@ -39,6 +39,7 @@ Current-user path:
 * Welcome to Emacsvox: Introduction.
 * Using This Manual: Using This Manual.
 * Installation: Installation.
+* Guided Tutorial: Guided Tutorial.
 * Basic Usage: Basic Usage.
 * Using Online Help: Using Online Help.
 * Audio Desktop: Audio Desktop.
@@ -101,10 +102,12 @@ you read.
 Start with *note Installation: Installation. if Emacsvox is not yet
 installed.  It explains the supported installation routes, takes you to
 a clean speaking session, and provides recovery instructions when speech
-does not start.  Once speech works, continue with *note Basic Usage:
-Basic Usage., *note Using Online Help: Using Online Help., and *note
-Audio Desktop: Audio Desktop. for reading, editing, command discovery,
-and moving among tasks.
+does not start.  Once speech works, *note Learn the audio desktop:
+(emacsvox)Guided Tutorial. teaches reading, editing, Help, structure,
+and speech adjustments through six connected lessons and a disposable
+document.  Return to *note Basic Usage: Basic Usage., *note Using Online
+Help: Using Online Help., and *note Audio Desktop: Audio Desktop. as
+everyday references.
 
    If Emacs itself is new to you, ‘C-h t’ opens its interactive
 tutorial.  Emacsvox speaks the tutorial and your navigation while you
@@ -209,19 +212,29 @@ lowercase keys are different.
 2.1 Choose a reading route
 ==========================
 
-If Emacs is new to you, follow *note Installation:
-(emacsvox)Installation. to obtain speech, then work through Emacs's
-tutorial with ‘C-h t’.  Return to *note Basic Usage: (emacsvox)Basic
-Usage. for speech commands.  *note Using Online Help: (emacsvox)Using
-Online Help. and *note Audio Desktop: (emacsvox)Audio Desktop. explain
-how to find commands and move among tasks.  You need not configure
-voices or additional engines before learning to read and edit.
+After *note Installation: (emacsvox)Installation. gives you speech, work
+through *note Learn the audio desktop: (emacsvox)Guided Tutorial. for
+six progressive lessons using a disposable practice document.  It
+teaches reading, editing, Help, structure, temporary settings, and voice
+previews, with exercises and separate answers.  No additional engine is
+needed.
+
+   If Emacs itself is new to you, ‘C-h t’ opens its separate interactive
+tutorial.  Use it for more practice with general editing.  *note Basic
+Usage: (emacsvox)Basic Usage., *note Using Online Help: (emacsvox)Using
+Online Help., and *note Audio Desktop: (emacsvox)Audio Desktop. are
+references to return to as you work.
 
    If you already use Emacs, start with *note Basic Usage:
 (emacsvox)Basic Usage. once speech works.  Keep your usual editing and
-mode commands.  Then read *note Aural Presentation: (emacsvox)Aural
-Presentation. for the relationship between application meaning, voices,
-sounds, and settings, and choose an application guide for your work.
+mode commands.  The tutorial's *note temporary-settings lesson:
+(emacsvox)Tutorial Temporary Settings. and *note voice experiments:
+(emacsvox)Tutorial Voice Experiments. provide guided practice without
+making its earlier editing lessons prerequisites for experienced users;
+prepare its disposable buffer before experimenting.  Then read *note
+Aural Presentation: (emacsvox)Aural Presentation. for application
+meaning, voices, sounds, and settings, and choose an application guide
+for your work.
 
    For one question, go directly to *note Find a task: Finding Tasks.,
 use Info's index, or search the manual text.  *note Speech Backends:
@@ -311,7 +324,7 @@ matching the Emacsvox you are running and live Help to check its
 commands.
 
 
-File: emacsvox.info,  Node: Installation,  Next: Basic Usage,  Prev: Using This Manual,  Up: Top
+File: emacsvox.info,  Node: Installation,  Next: Guided Tutorial,  Prev: Using This Manual,  Up: Top
 
 3 Getting Started: Installation and First Speech
 ************************************************
@@ -954,9 +967,641 @@ does not, remove or comment out the two init forms and return to the
 isolated launcher before another change.
 
 
-File: emacsvox.info,  Node: Basic Usage,  Next: Using Online Help,  Prev: Installation,  Up: Top
+File: emacsvox.info,  Node: Guided Tutorial,  Next: Basic Usage,  Prev: Installation,  Up: Top
 
-4 Basic Usage
+4 Learn the audio desktop
+*************************
+
+This tutorial takes you from reading a short document to exploring its
+structure and making a deliberate speech adjustment.  Work through the
+lessons in order the first time.  Each builds on the same practice
+document; the exercises ask you to use what you have learned without
+repeating every step.  Answers are collected at the end so you can try
+before consulting them.
+
+   Start with a speaking Emacsvox session prepared through *note
+Installation: (emacsvox)Installation., including its settings-menu
+dependency.  No mail account, agent service, downloaded voice, or
+terminal package is needed.  The first five lessons work with text and
+the Org mode supplied with Emacs.  The final lesson uses an already
+available voice.  If your backend cannot preview an adjustment, keep the
+working voice and follow the reported limitation rather than installing
+another engine to complete the exercise.
+
+   The required exercises do not save speech settings.  One clearly
+marked optional exercise creates a personal palette; you can finish the
+tutorial without doing it.  Do not practise in a document, draft, or
+configuration that you need to preserve.
+
+   Keys are the defaults.  ‘C-n’ means hold Control and press n.  In
+‘C-e l’, press Control-e, release it, then press lowercase l.  ‘M-’
+normally means Alt or Option, ‘<RET>’ means Enter, and ‘<SPC>’ means
+Space.  Capital letters matter.  Use ‘M-x’, type the command name, and
+press ‘<RET>’ when a command is given by name.  *note Using this manual:
+(emacsvox)Using This Manual. explains finding a topic and returning from
+it.
+
+* Menu:
+
+* Prepare a practice buffer: Tutorial Practice Buffer.  Make a disposable copy of the practice text without editing repository files.
+* Lesson 1 read and locate point: Tutorial Reading.  Distinguish movement, explicit reading, and stopping speech.
+* Lesson 2 find, edit, and recover text: Tutorial Editing.  Search for a known word, make a small edit, and verify undo.
+* Lesson 3 get Help and return to your work: Tutorial Help And Buffers.  Keep two tasks open, inspect a key, and return without losing your place.
+* Lesson 4 navigate the document's structure: Tutorial Structured Navigation.  Explore Org headings, links, and a table without evaluating code.
+* Lesson 5 change speech in one buffer: Tutorial Temporary Settings.  Compare punctuation levels, inspect scope, and restore the previous policy.
+* Lesson 6 preview and keep a voice experiment: Tutorial Voice Experiments.  Compare an unsaved voice draft, resume it, and distinguish saving from selection.
+* Exercise answers: Tutorial Exercise Answers.  Check the exercises and the reasons behind their recovery steps.
+* Finish and choose your next task: Tutorial Next Steps.  Leave practice safely and choose a task or a deeper explanation.
+
+
+File: emacsvox.info,  Node: Tutorial Practice Buffer,  Next: Tutorial Reading,  Up: Guided Tutorial
+
+4.1 Prepare a practice buffer
+=============================
+
+A buffer is Emacs's working copy of text.  It need not have a file
+behind it.  We will use a new buffer so that editing, undo, and
+temporary settings cannot change the supplied example or an existing
+document.
+
+  1. Press ‘C-x b’, enter ‘evox-tutorial’, and press ‘<RET>’.  If that
+     name already belongs to work you want to keep, use an unused name
+     such as ‘evox-tutorial-2’ and substitute it throughout these
+     lessons.
+  2. Run ‘M-x text-mode <RET>’.  This starts with ordinary text rather
+     than Org's structural commands.  Press ‘C-e m’ to hear the buffer
+     and mode.
+  3. Insert the practice text below.  In a source checkout, you can use
+     ‘C-x i’ and select ‘docs/manual/examples/tutorial-practice.org’
+     relative to that checkout.  This inserts a copy; it does not visit
+     or modify that file.  Otherwise copy or type the displayed text
+     into the empty buffer.
+  4. Press ‘M-<’ to move to the beginning.  ‘C-e l’ reads the current
+     line.  It should contain the heading ‘* Practice note’.
+
+   The example is included here so you can use an installed Info or HTML
+manual without a source checkout.  Preserve its asterisks, brackets,
+pipes, and line breaks.  Those characters become useful in the structure
+lesson.  The code at the end is for reading, not evaluation; do not run
+it.
+
+     * Practice note
+     The green notebook is on the desk.
+     This sentence is ready.
+     Check (A+B), then C.
+
+     ** Packing list
+     - Notebook
+     - Headphones
+     - Cable
+
+     ** Journey plan
+     | Day     | Task | Status  |
+     |---------+------+---------|
+     | Monday  | Read | Ready   |
+     | Tuesday | Edit | Planned |
+
+     ** Reference
+     [[*Packing list][Return to the packing list]]
+
+     ** Code to read
+     #+begin_src emacs-lisp
+     (+ 2 3)
+     #+end_src
+
+   Keep the manual and the practice buffer available.  ‘C-x b’ followed
+by your practice buffer's name returns to your work without closing the
+manual.  Finish any active minibuffer prompt first; ‘C-g’ cancels an
+ordinary unfinished Emacs command.  In a settings menu or an editor, use
+the return procedure specified in the lesson instead of assuming that
+every quit key is identical.
+
+   If you need a fresh copy, leave menus and editors first, then use
+‘C-x k’ while in the disposable practice buffer.  Check the buffer name
+and discard only that practice text if asked.  Create a new buffer and
+insert the example again.  Do not use this reset procedure on other
+work.
+
+
+File: emacsvox.info,  Node: Tutorial Reading,  Next: Tutorial Editing,  Prev: Tutorial Practice Buffer,  Up: Guided Tutorial
+
+4.2 Lesson 1: read and locate point
+===================================
+
+Emacs calls the editing position _point_.  Movement changes point and
+Emacsvox speaks what you reach.  Explicit reading lets you inspect text
+without first moving.  Learning that distinction makes it easier to
+recover when speech is interrupted or you are unsure where the next edit
+will occur.
+
+  1. In the practice buffer, press ‘M-<’, then ‘C-n’.  You reach the
+     line about the green notebook and hear its text.
+  2. Press ‘C-e l’ twice.  Each invocation reads that line again without
+     moving point.  Now press ‘C-n’: you reach the sentence about being
+     ready, not a line farther down because of the repeated reading.
+  3. Press ‘C-p’ to return to the notebook line, then ‘C-a’ to reach its
+     start.  ‘C-e c’ reads the character at point.  Use ‘C-f’ to move
+     one character forward and ‘C-b’ to move back.  Point moves only
+     with the movement commands.
+  4. Press ‘C-e b’ to start reading the buffer and ‘C-e s’ to stop that
+     speech.  Then press ‘C-e l’.  It still works: stopping an utterance
+     has not switched speech off or closed the document.
+
+   The exact voice and pronunciation depend on your current settings.
+Check the text you reached, not whether your system sounds like someone
+else's.  ‘C-e m’ identifies the buffer and mode whenever your context is
+unclear.
+
+   If ‘M-<’ is intercepted by your desktop or screen reader, run ‘M-x
+beginning-of-buffer <RET>’ instead.  This is an Emacs command, not a
+requirement to change screen-reader configuration.
+
+4.2.1 Try it
+------------
+
+*1A.*  From the start of the buffer, reach the line beginning ‘Check’
+using line movement.  Read it twice without changing point.
+
+   *1B.*  Start a longer reading, stop it, and establish both which
+buffer you are in and what its current line contains.  Do not restart
+Emacs or speech.
+
+   See *note Answers for lesson 1: tutorial-answer-1.
+
+
+File: emacsvox.info,  Node: Tutorial Editing,  Next: Tutorial Help And Buffers,  Prev: Tutorial Reading,  Up: Guided Tutorial
+
+4.3 Lesson 2: find, edit, and recover text
+==========================================
+
+Searching locates text; it does not change the text.  Editing happens at
+point, which is after the match when a forward search succeeds.  We will
+make one small insertion, inspect it, and undo it before attempting a
+replacement.
+
+  1. Press ‘M-<’, then ‘C-s’ and type ‘ready’.  When the search finds
+     the word, press ‘<RET>’ to finish.  Point is after ‘ready’ and
+     before its full stop.
+  2. Type a space followed by ‘now’.  ‘C-e l’ should read the sentence
+     with ‘ready now’.  The other sentences are unchanged.
+  3. Press ‘C-/’ to undo and inspect the line again with ‘C-e l’.  Undo
+     works in editing groups, not necessarily one character at a time.
+     Stop when the sentence is back to ‘This sentence is ready.’; do not
+     keep undoing into the initial insertion of the example.  ‘M-x undo
+     <RET>’ is an alternative when your keyboard cannot send ‘C-/’.
+  4. Search for ‘notebook’ from the beginning and finish with ‘<RET>’.
+     Notice that searching and reading did not modify the document.  You
+     can return to any known phrase without counting lines.
+
+   If a search does not find its text, check your spelling.  ‘C-g’
+during a failing search first backs out of the failure; another ‘C-g’
+may be needed to leave the search.  Wait until the search prompt is gone
+before typing ordinary text.  A successful search is accepted with
+‘<RET>’, not by typing the edit into its search prompt.
+
+4.3.1 Try it
+------------
+
+*2A.*  Replace ‘green’ with ‘blue’.  Use a successful search for the
+whole word, then ‘M-<DEL>’ to remove the word immediately before point,
+and type its replacement.  Here ‘<DEL>’ means Backspace; ‘M-x
+backward-kill-word <RET>’ is an alternative to ‘M-<DEL>’.  Inspect the
+complete line and restore ‘green’ before continuing.
+
+   *2B.*  What would happen if you typed ‘now’ before accepting the
+search?  Explain the difference between changing the query and changing
+the document.
+
+   See *note Answers for lesson 2: tutorial-answer-2.  Text undo is not
+a general undo command for settings menus; we will practise their
+recovery separately.
+
+
+File: emacsvox.info,  Node: Tutorial Help And Buffers,  Next: Tutorial Structured Navigation,  Prev: Tutorial Editing,  Up: Guided Tutorial
+
+4.4 Lesson 3: get Help and return to your work
+==============================================
+
+A Help buffer is another piece of work you can visit.  It need not
+replace the document you were editing.  We will keep a second text
+buffer available, then inspect a command without running it.
+
+  1. Press ‘C-x b’, enter an unused name such as ‘evox-tutorial-notes’,
+     and press ‘<RET>’.  Run ‘M-x text-mode <RET>’ and type ‘I can
+     return to my document by name.’.
+  2. Use ‘C-x b’ and your original practice buffer's name to return.
+     Its text and position are still available.  ‘C-e m’ and ‘C-e l’
+     confirm where you are.
+  3. Press ‘C-h k C-e l’.  Emacs describes the current-line reading key;
+     it does not execute that key as the requested action.  ‘C-e h’
+     reads the displayed Help again.
+  4. To read Help directly, use ‘C-x b’ and select its ‘*Help*’ buffer
+     from completion.  Navigate with ordinary reading commands, then
+     press ‘q’ to leave Help.  Use ‘C-x b’ to select the practice buffer
+     if other window or buffer changes make the return destination
+     unclear.
+  5. Press ‘C-h m’ in the practice buffer.  This describes its modes and
+     local commands.  Leave Help and return to the document by the same
+     method.
+
+   The information comes from your running Emacs, so it is particularly
+useful when a package or personal binding differs from this manual.  A
+buffer and a window are different: switching buffers chooses content,
+while ‘C-x o’ selects another window.  You do not have to rearrange
+windows to finish this exercise.
+
+4.4.1 Try it
+------------
+
+*3A.*  Without closing either text buffer, visit the notes, add a second
+line, and return to the practice document.  Confirm that each contains
+its own text.
+
+   *3B.*  Discover what ‘C-e s’ does without stopping speech as the
+action you are investigating.  Then find the keys for the command name
+reported by Help, using ‘C-h w’.
+
+   See *note Answers for lesson 3: tutorial-answer-3.  For manual lookup
+and navigation history, practise *note Find an answer in Info and
+return: (emacsvox)Using This Manual. alongside this buffer-based Help
+exercise.
+
+
+File: emacsvox.info,  Node: Tutorial Structured Navigation,  Next: Tutorial Temporary Settings,  Prev: Tutorial Help And Buffers,  Up: Guided Tutorial
+
+4.5 Lesson 4: navigate the document's structure
+===============================================
+
+The practice text is also an Org document.  Changing its major mode
+gives Emacs commands that understand headings, lists, links, and tables.
+The text remains yours; a folded section is hidden, not deleted.
+
+  1. Return to the practice buffer and run ‘M-x org-mode <RET>’.  Press
+     ‘M-<’, then ‘C-u C-u C-u <TAB>’ to show the whole document,
+     including any folded sections.  Each ‘C-u’ is a separate prefix
+     keystroke.  ‘C-e m’ now identifies Org rather than Text mode.
+  2. From the first heading, press ‘C-c C-n’ to reach ‘Packing list’.
+     This moves to a heading, skipping intervening body text.  ‘C-c C-p’
+     returns to the previous visible heading.  Go forward to ‘Packing
+     list’ again.
+  3. Press ‘<TAB>’ on that heading to fold its body.  ‘C-c C-n’ reaches
+     ‘Journey plan’.  Return with ‘C-c C-p’ and press ‘<TAB>’ to expose
+     the list again.  Read down into it to confirm that the items are
+     still present.
+  4. Show all content again with ‘C-u C-u C-u <TAB>’, then search from
+     the beginning for ‘Return to the packing list’.  Finish with
+     ‘<RET>’ and press ‘C-b’ once to leave point inside the link text.
+     ‘C-c C-o’ follows this internal link to the heading; no website or
+     external file is opened.
+
+   Heading speech and collapse cues depend on your presentation
+settings.  What matters is the location and visibility you can inspect.
+Do not require one exact spoken phrase or one physical voice to
+recognise a heading.
+
+4.5.1 Read the table without editing it
+---------------------------------------
+
+Show the whole document again, then search from the beginning for
+‘Monday’ and finish with ‘<RET>’.  You are in the first data row's Day
+cell.
+
+  1. Press ‘C-e C-t C-r’ to enter table reading without moving.
+     Emacsvox announces the table dimensions and the current cell.
+  2. Press ‘<TAB>’ to reach the Task cell, ‘Read’.  ‘<RET>’ reads that
+     cell again.  In this reader these keys do not align the table or
+     insert a row.
+  3. Press Down.  You remain in the Task column and hear the complete
+     Tuesday row.  Press ‘c’ to read the column, or ‘r’ to repeat the
+     current row.  ‘.’ reports coordinates; headers and data rows are
+     distinguished.
+  4. Press ‘q’ to leave table reading, then ‘C-e l’ to inspect the text
+     line.  The table reader closes, not the practice buffer.  Ordinary
+     Org editing keys are restored.
+
+   Outside table reading, Org's ‘<TAB>’ is an editing/navigation command
+that can align a table and create rows.  A key's meaning belongs to the
+active mode or reader, not to its letter alone.  Do not evaluate the
+source block at the end of the document: it is present so you can also
+inspect literal code.
+
+4.5.2 Try it
+------------
+
+*4A.*  Enter table reading at ‘Monday’ again.  Reach Tuesday's Status
+cell and read it without typing into the table.  Then leave reading
+mode.
+
+   *4B.*  Fold ‘Packing list’, read another section, and bring the list
+back.  Explain why text undo is not needed to recover the hidden items.
+
+   See *note Answers for lesson 4: tutorial-answer-4.  *note Browsing
+Structure: (emacsvox)Browsing Structure. documents the complete shared
+table reader; *note Org heading motion: (org)Motion. and *note Org
+visibility cycling: (org)Visibility Cycling. explain the underlying
+document commands.
+
+
+File: emacsvox.info,  Node: Tutorial Temporary Settings,  Next: Tutorial Voice Experiments,  Prev: Tutorial Structured Navigation,  Up: Guided Tutorial
+
+4.6 Lesson 5: change speech in one buffer
+=========================================
+
+Now change how one line is spoken without changing its text.  This is a
+live buffer adjustment, not a draft preview.  Closing the menu keeps it
+in effect; restoring it is a separate action.  We will not save a
+default.
+
+  1. In the practice buffer, leave table reading if active.  Show all
+     content, then search from the beginning for ‘Check (A+B), then C.’
+     and accept the match.  Press ‘C-a’, then ‘C-e l’ to hear the
+     starting presentation.
+  2. Press ‘C-e H s p’ without a prefix argument.  Read the scope and
+     current punctuation policy.  It must name the current buffer, not
+     global defaults.  Record whether the original policy is automatic,
+     an explicit level, or a named profile.  If scope is global, use ‘g’
+     to choose buffer scope before changing anything.
+  3. Press ‘? a’ for Help on All, then ‘q’ to return to the punctuation
+     menu.  Press ‘a’ to apply All, followed by ‘C-q’ to close the
+     menus.  Back in the document, ‘C-e l’ lets you compare the same
+     line with punctuation spoken.
+  4. Visit the notes buffer and read its line.  This operation did not
+     set its punctuation policy.  Return to the practice buffer, reopen
+     ‘C-e H s p’, choose ‘n’ for None, close with ‘C-q’, and compare the
+     same line again.
+  5. Restore the original policy.  For an automatic policy, use ‘r’ in
+     that buffer's punctuation menu.  For an explicit level or named
+     profile, use ‘p’ and select the recorded choice instead.  Close the
+     menu and verify the line and the reported policy.  Do not press
+     uppercase ‘S’.
+
+   Punctuation pronunciation varies by engine and configuration, so
+judge the change by the treatment of the line's punctuation rather than
+an exact sample transcript.  The characters in the buffer never changed.
+Restoring Automatic returns control to the mode policy; it is not a
+synonym for choosing Some.
+
+   An explicit global change can affect both the default and the source
+buffer.  Saving a default adds a persistence step and does not cancel
+stronger mode policies or buffer overrides.  Those are different tasks
+from this temporary experiment; see *note Choose What Persists:
+(emacsvox)Saving And Startup.
+
+4.6.1 Try it
+------------
+
+*5A.*  From the practice buffer, press ‘C-e H /’, search for
+‘punctuation’, and choose the punctuation control from completion.  The
+first ‘<RET>’ selects its menu item without activating it.  Read its
+Help, then leave without making a change.  Check the policy afterward.
+
+   *5B.*  After choosing All and then closing the menu, should the
+original policy return?  Describe how to restore it and why ‘C-/’ in the
+document is not the right operation.
+
+   See *note Answers for lesson 5: tutorial-answer-5.
+
+
+File: emacsvox.info,  Node: Tutorial Voice Experiments,  Next: Tutorial Exercise Answers,  Prev: Tutorial Temporary Settings,  Up: Guided Tutorial
+
+4.7 Lesson 6: preview and keep a voice experiment
+=================================================
+
+An installed _physical voice_ is a voice an engine can produce.  A
+palette's _named voice_, such as ‘default’ for ordinary reading, chooses
+physical voices and adjustments for a purpose.  Browsing a physical
+voice does not replace that named entry.  We will first try a physical
+voice without selecting it for ordinary reading or changing startup.
+
+  1. From the practice buffer, press ‘C-e H v b’.  Select an available
+     engine and press ‘v’ to browse its voices.  Expand a language group
+     with ‘<RET>’ if needed, then choose an already usable voice.
+  2. Press ‘P’ to hear its sample and ‘S’ to stop.  An unavailable or
+     inactive downloaded voice is not suitable for this first exercise.
+     Read its details rather than enabling, installing, or applying
+     packages as a workaround.
+  3. Press ‘t’ on the usable voice to open an experiment.  If this
+     resumes someone else's or your earlier unfinished draft, leave it
+     with Keep and choose another voice; do not overwrite or discard
+     unrelated work.
+  4. In your new editor draft, find _Average Pitch_ and note its value.
+     Use ‘<RET>’ to enter ‘6’, or ‘5’ if it is already six.  Press ‘P’
+     to preview and ‘B’ to compare the opening and edited versions with
+     the same sample.  ‘S’ stops.  An automatic sample may also follow
+     an adjustment in the full editor; navigation stops it.
+  5. Press ‘u’ to undo that draft adjustment, compare again, then make
+     the small adjustment once more.  This is editor undo, not text
+     undo.  If the backend reports the adjustment unsupported, keep that
+     limitation explicit and continue with browsing; do not infer that
+     saving will fix support.
+  6. Press ‘q’ in the editor and choose to keep the unfinished draft.
+     Return through the browser's parent views with ‘q’ until you reach
+     its menu, then close the menu sequence with ‘C-q’.  Ordinary
+     reading is unchanged.
+  7. From the practice buffer, press ‘C-e H p d’ and select your
+     retained experiment.  Verify the value is still there.  To finish
+     without saving, leave its editor with ‘q’ and choose to discard
+     this practice draft only.  Return through the remaining views and
+     menus.
+
+   A retained draft lasts within the Emacs session.  It is not a saved
+palette and does not survive restart.  Discarding it leaves ordinary
+reading untouched, but discarding a draft would not undo a save that had
+already completed.  The editor's status distinguishes unsaved work,
+successful saving, and failed or pending application.  Never treat a
+preview as proof of persistence.
+
+4.7.1 Optional: save an inactive personal palette
+-------------------------------------------------
+
+This exercise writes personal palette data.  Skip it to keep the
+tutorial entirely free of saved speech-configuration changes.  It
+deliberately avoids startup selection and does not require you to
+restart a working session.
+
+  1. Open ‘C-e H v p’ and note the active palette and whether selection
+     follows the standard baseline or is explicit.  Press ‘N’ to create
+     a palette with an unused name such as ‘tutorial-reading’, a short
+     description, and ‘acss-default’ as parent.  Creation saves the new
+     palette but does not activate it.  Use another name if that one
+     already exists.
+  2. Enter your new palette with ‘<RET>’, select ‘default’, and press
+     ‘e’ to edit it.  Change _Average Pitch_ as above and compare with
+     ‘B’.  This entry controls ordinary reading, not every named voice
+     in the palette.
+  3. Choose _Save to collection without selecting_.  Wait for its result
+     and check the destination and saved status.  Leave with ‘q’.  The
+     palette now holds your entry, but it is still not selected for
+     ordinary reading.
+  4. To try live selection deliberately, return to the palette manager
+     with ‘o’, select your new palette, and press ‘a’.  Return to the
+     practice document and read the notebook line.  Other named voices
+     retain their own definitions.  Rules or unsupported adjustments can
+     make a contrast subtle; *note Inspect Or Adjust A Voice In Context:
+     (emacsvox)Voices In Context. explains how to investigate.
+  5. Reopen the palette manager.  If you originally followed the
+     standard baseline, use ‘f’ to follow it again.  Otherwise select
+     the original palette you recorded and press ‘a’.  Do not use ‘U’,
+     the separate startup action, during this tutorial.  The inactive
+     tutorial palette remains saved for later use.
+
+   If saving or application fails, keep the reported status and follow
+*note Recovering Unfinished Changes: (emacsvox)Recovering Aural Changes.
+Do not repeat Create, delete files, or restart Emacs to hide the
+failure.  After an accepted save, text undo and draft discard are not
+rollback commands.  *note Make a Personal Reading Palette:
+(emacsvox)Personal Palette Walkthrough. gives the fuller lifecycle,
+including inheritance and startup selection.
+
+4.7.2 Try it
+------------
+
+*6A.*  Create another small preview-only experiment, keep its draft, and
+resume it without saving.  Then discard that practice draft and
+establish that your working document is still there.
+
+   *6B.*  Explain the difference between Preview, Keep draft, Save to
+collection, Activate, and Use at Startup.  Which of them did the
+required exercise use?  Which additional operations belong to the
+optional exercise?
+
+   See *note Answers for lesson 6: tutorial-answer-6.
+
+
+File: emacsvox.info,  Node: Tutorial Exercise Answers,  Next: Tutorial Next Steps,  Prev: Tutorial Voice Experiments,  Up: Guided Tutorial
+
+4.8 Exercise answers
+====================
+
+Use these answers to check your approach, not as a script you must
+memorise.  Equivalent commands are useful when their scope and result
+are the same.  In Info, ‘l’ retraces the link from an exercise to its
+answer.
+
+4.8.1 Answers: lesson 1
+-----------------------
+
+*1A.*  With the unmodified example, ‘M-< C-n C-n C-n’ reaches the Check
+line.  ‘C-e l’ reads it without moving, so two repetitions leave the
+editing position unchanged.  A different number of inserted lines
+changes the count; search is more dependable when you no longer know the
+exact layout.
+
+   *1B.*  Use ‘C-e b’, then ‘C-e s’.  ‘C-e m’ identifies the buffer and
+mode; ‘C-e l’ reads the line at point.  Stopping speech does not delete
+text, move to another buffer, or disable later speech commands.
+
+4.8.2 Answers: lesson 2
+-----------------------
+
+*2A.*  ‘M-< C-s green <RET>’ places point after green.  ‘M-<DEL>’
+removes that word; typing ‘blue’ supplies the replacement.  Read the
+whole line to catch spacing or punctuation mistakes.  Restore it with a
+search for blue followed by the same replacement procedure.  Undo may
+also work, but verify each editing group rather than assuming a fixed
+number of undo commands.
+
+   *2B.*  Before ‘<RET>’, the letters extend the search query.  No
+document edit has occurred.  Accept a successful search, then insert the
+text at point.
+
+4.8.3 Answers: lesson 3
+-----------------------
+
+*3A.*  Switch to the notes by name, use ‘M->’ to reach their end, add a
+newline and a short sentence, then switch back by name.  Neither switch
+closes the other buffer.  ‘C-e m’ and line reading distinguish them.
+
+   *3B.*  ‘C-h k C-e s’ describes the effective binding.  With the
+default maps, the command is ‘tts-stop’.  ‘C-h w tts-stop <RET>’ reports
+its keys in the current context.  Help describes the binding; it does
+not invoke it as the requested action.
+
+4.8.4 Answers: lesson 4
+-----------------------
+
+*4A.*  From Monday's cell, enter with ‘C-e C-t C-r’, press Down for
+Tuesday, then ‘<TAB>’ twice to reach Status.  ‘<RET>’ reads ‘Planned’.
+‘q’ restores normal Org editing.  While table reading is active, these
+operations do not realign the source, add rows, or evaluate formulas.
+
+   *4B.*  ‘<TAB>’ on the heading changes visibility.  Return to it and
+cycle open, or use ‘C-u C-u C-u <TAB>’ to expose the whole document.
+The hidden items never left the buffer.  Text undo would affect edits,
+not provide the intended folding operation.
+
+4.8.5 Answers: lesson 5
+-----------------------
+
+*5A.*  Search accepts a result by selecting its menu control.  The
+separate activation step is what can open an editor or change a value.
+Reading Help and leaving without activation does not change the
+punctuation policy.
+
+   *5B.*  Closing keeps the chosen live adjustment.  Restore the
+recorded policy in the buffer's punctuation menu: ‘r’ for Automatic, or
+‘p’ and the recorded explicit choice.  Text undo does not restore speech
+settings.  Uppercase ‘S’ would save a default, so it is deliberately
+absent from this exercise.
+
+4.8.6 Answers: lesson 6
+-----------------------
+
+*6A.*  Keep the practice draft on leaving its editor, return to the
+document, and use ‘C-e H p d’ to resume that specific draft.  Inspect
+it, then leave with Discard.  Use the editor and menu return commands,
+or select the practice buffer by name once the menus are closed.  Do not
+discard another draft to make the chooser empty.
+
+   *6B.*  Preview auditions working values.  Keep draft retains unsaved
+work in this Emacs session.  Save to collection writes the destination
+without selecting an inactive palette.  Activate chooses the palette for
+this session.  Use at Startup changes its selection in a saved
+Presentation Profile; it is not the same as saving the palette.  The
+required exercise uses Preview and Keep draft, then discards.  The
+optional exercise additionally creates and saves a palette and
+optionally activates it before restoring the original selection.
+Neither exercise needs Use at Startup.
+
+
+File: emacsvox.info,  Node: Tutorial Next Steps,  Prev: Tutorial Exercise Answers,  Up: Guided Tutorial
+
+4.9 Finish and choose your next task
+====================================
+
+Finish any practice draft in its editor, close menus, restore the
+punctuation policy, and restore the original palette if you deliberately
+activated another.  Keep saved work separate from unsaved practice when
+choosing what to remove.
+
+   To discard the text exercises, use ‘C-x k’ on each tutorial buffer
+after checking its name.  To keep your own text instead, use ‘C-x C-w’
+and choose an unused file in your personal documents directory.  Review
+any overwrite prompt and cancel rather than replacing an existing file.
+Saving text does not save voice settings, and saving a palette does not
+save the practice document.
+
+   A saved tutorial palette can remain inactive.  To remove it later,
+use the palette manager's deletion action only on the unused personal
+palette you created, after finishing its drafts and checking known
+references.  Do not remove a built-in palette or other saved work as
+part of tutorial cleanup.
+
+   You can now read a location twice without moving, recover a small
+edit, visit Help without abandoning work, distinguish a document's
+structure from its text, and tell a temporary setting from a preview or
+a saved resource.  *note Find a task: (emacsvox)Finding Tasks. is the
+quickest route to a specific goal.  *note Basic Usage: (emacsvox)Basic
+Usage. and *note Audio Desktop: (emacsvox)Audio Desktop. provide the
+everyday reference, while *note Aural Presentation: (emacsvox)Aural
+Presentation. explains rules, palettes, voices, and saved setups in
+depth.  The application guides then apply these habits to mail,
+terminals, and agents.
+
+
+File: emacsvox.info,  Node: Basic Usage,  Next: Using Online Help,  Prev: Guided Tutorial,  Up: Top
+
+5 Basic Usage
 *************
 
 Once Emacsvox is speaking, you can read, edit, and navigate with
@@ -975,7 +1620,7 @@ how these habits carry over to other applications.
 * Hear Structure With Voice Lock: Voice-lock.  Hear document and program structure through voice changes.
 * Find Out Where You Are: Status Information.  Ask about the current buffer, position, and Emacs state.
 
-4.1 Key Notation And Emacs Words
+5.1 Key Notation And Emacs Words
 ================================
 
 Emacs documentation uses ‘C-’ for Control and ‘M-’ for Meta, usually Alt
@@ -989,7 +1634,7 @@ affected by movement and editing.  If Emacs is new to you, ‘C-h t’ opens
 its interactive tutorial.  Follow it with Emacsvox and return here for
 the speech controls.
 
-4.2 Your First Few Minutes
+5.2 Your First Few Minutes
 ==========================
 
 Try these in the speaking session started during installation:
@@ -1019,7 +1664,7 @@ application buffer.
 
 File: emacsvox.info,  Node: Overview,  Next: Working,  Up: Basic Usage
 
-4.3 Emacsvox Overview
+5.3 Emacsvox Overview
 =====================
 
 Emacsvox speaks movement and command results.  Integrations present
@@ -1037,7 +1682,7 @@ reusable voice settings in detail.
 
 File: emacsvox.info,  Node: Working,  Next: Reading,  Prev: Overview,  Up: Basic Usage
 
-4.4 Using Emacs Buffers
+5.4 Using Emacs Buffers
 =======================
 
 Much editing feedback is automatic.  Echo settings can speak each
@@ -1075,7 +1720,7 @@ engine-independent controls.
 
 File: emacsvox.info,  Node: Reading,  Next: Speech System,  Prev: Working,  Up: Basic Usage
 
-4.5 Reading And Navigating
+5.5 Reading And Navigating
 ==========================
 
 Ordinary movement speaks the character, word, line, or larger unit
@@ -1121,7 +1766,7 @@ point.  They share ‘C-e’ but differ in how much text they speak.
 point.  Use ‘C-h k’ before relying on a variant; exact prefix behaviour
 belongs to that command's documentation.
 
-4.5.1 Hear Phonetic Names After A Pause
+5.5.1 Hear Phonetic Names After A Pause
 ---------------------------------------
 
 ‘M-x emacsvox-delayed-phonetic-mode’ toggles delayed phonetics.  With it
@@ -1144,7 +1789,7 @@ phonetic reading do not trigger the delay.
 
 File: emacsvox.info,  Node: Speech System,  Next: Voice-lock,  Prev: Reading,  Up: Basic Usage
 
-4.6 Adjust Speech While You Work
+5.6 Adjust Speech While You Work
 ================================
 
 Use ‘C-e H s’ for rate, punctuation, indentation, capitalisation, and
@@ -1169,7 +1814,7 @@ command's global prefix form before using it.
 
 File: emacsvox.info,  Node: Controlling Echo,  Next: Speech Output Control,  Up: Speech System
 
-4.6.1 Choose Typing Echo
+5.6.1 Choose Typing Echo
 ------------------------
 
 Character echo reads each typed character, word echo each completed
@@ -1197,7 +1842,7 @@ below.  These direct commands affect the current buffer; a preceding
 
 File: emacsvox.info,  Node: Speech Output Control,  Next: Miscellaneous,  Prev: Controlling Echo,  Up: Speech System
 
-4.6.2 Adjust Rate And Spoken Detail
+5.6.2 Adjust Rate And Spoken Detail
 -----------------------------------
 
 Start with rate and punctuation, then adjust other feedback when the
@@ -1361,7 +2006,7 @@ the current buffer unless their Help specifies a global prefix form.
 
 File: emacsvox.info,  Node: Miscellaneous,  Prev: Speech Output Control,  Up: Speech System
 
-4.6.3 Stop Or Restart Speech
+5.6.3 Stop Or Restart Speech
 ----------------------------
 
 Stopping ends current output without disabling future feedback.  Quiet
@@ -1386,7 +2031,7 @@ entries.  For missing speech, follow *note Recovering From No Speech:
 
 File: emacsvox.info,  Node: Voice-lock,  Next: Status Information,  Prev: Speech System,  Up: Basic Usage
 
-4.7 Hear Structure With Voice Lock
+5.7 Hear Structure With Voice Lock
 ==================================
 
 Voice Lock starts automatically in supported buffers.  It maps faces and
@@ -1408,7 +2053,7 @@ toggle.
 
 File: emacsvox.info,  Node: Status Information,  Prev: Voice-lock,  Up: Basic Usage
 
-4.8 Find Out Where You Are
+5.8 Find Out Where You Are
 ==========================
 
 These commands report context without moving point: the last message,
@@ -1448,7 +2093,7 @@ current buffer/modes, or position.
 
 File: emacsvox.info,  Node: Using Online Help,  Next: Audio Desktop,  Prev: Basic Usage,  Up: Top
 
-5 Find Help While You Work
+6 Find Help While You Work
 **************************
 
 Emacs can explain the key you are about to use, the modes active in a
@@ -1461,7 +2106,7 @@ manual and your running Emacs.
 ‘help-for-help’ when you need to discover what can follow that prefix.
 Settings menus also have their own contextual Help, described below.
 
-5.1 Ask About A Key, Command, Or Setting
+6.1 Ask About A Key, Command, Or Setting
 ========================================
 
 Choose a help command according to what you already know:
@@ -1478,7 +2123,7 @@ Choose a help command according to what you already know:
 without running that command.  If you know its command name but not its
 key, use ‘C-h w’ and enter the name instead.
 
-5.2 Discover What The Current Buffer Can Do
+6.2 Discover What The Current Buffer Can Do
 ===========================================
 
 Start with ‘C-h m’ after opening Dired, EWW, mail, a terminal, or
@@ -1493,7 +2138,7 @@ general buffer settings.  ‘C-e H .’ always opens general buffer
 settings.  The menu captures the buffer on entry, so its controls
 continue to refer to that task while you navigate its menus and editors.
 
-5.2.1 Find a setting and read its menu Help
+6.2.1 Find a setting and read its menu Help
 -------------------------------------------
 
 Press ‘C-e H /’ to find a setting by part of its name.  The search is
@@ -1521,7 +2166,7 @@ diagnostics.  It uses the same partial-name matching and two-Enter
 selection as settings search.  Editors opened from these menus retain
 their own Help, preview, save, and return commands.
 
-5.3 Read And Leave A Help Window
+6.3 Read And Leave A Help Window
 ================================
 
 Ordinary Emacs Help usually appears in a separate ‘*Help*’ window.
@@ -1535,7 +2180,7 @@ describes the window arrangement.  Help opened by an Emacsvox settings
 menu uses the menu-return behaviour described above instead of requiring
 you to find the source window.
 
-5.4 Learn Interactively And Read Manuals
+6.4 Learn Interactively And Read Manuals
 ========================================
 
 ‘C-h t’ opens the interactive Emacs tutorial.  Emacsvox speaks its text
@@ -1556,7 +2201,7 @@ the reader's complete navigation and search commands.
 ‘q’ in Info returns to that interface.  In the interface's own Help, ‘i’
 opens the same topic.
 
-5.5 Emacsvox-Specific Help
+6.5 Emacsvox-Specific Help
 ==========================
 
 Use ‘C-h C-e’ (‘emacsvox-describe-emacsvox’) for the Emacsvox overview.
@@ -1585,7 +2230,7 @@ configuration changes those defaults.
 
 File: emacsvox.info,  Node: Audio Desktop,  Next: Aural Presentation,  Prev: Using Online Help,  Up: Top
 
-6 Work With The Audio Desktop
+7 Work With The Audio Desktop
 *****************************
 
 Emacs uses buffers for documents, application views, search results, and
@@ -1610,7 +2255,7 @@ applications.
 
 File: emacsvox.info,  Node: Desktop Objects,  Next: Object Oriented Desktop,  Up: Audio Desktop
 
-6.1 Buffers Hold Your Work
+7.1 Buffers Hold Your Work
 ==========================
 
 A buffer holds the content or application view you are working with.  It
@@ -1637,7 +2282,7 @@ Press ‘C-e m’ to hear it.  These are the main ways to change buffers:
 document, consult Help or a reference, visit a shell, and return to the
 document without reopening it.
 
-6.1.1 Cycle Between Buffers of the Same Kind
+7.1.1 Cycle Between Buffers of the Same Kind
 --------------------------------------------
 
 When several buffers use the same major mode, you can cycle among them
@@ -1672,7 +2317,7 @@ its normal action.  To choose a particular buffer by name, use ‘C-x b’.
 
 File: emacsvox.info,  Node: Object Oriented Desktop,  Next: Context-Sensitive Interaction,  Prev: Desktop Objects,  Up: Audio Desktop
 
-6.2 Let Modes Give Each Buffer Its Tools
+7.2 Let Modes Give Each Buffer Its Tools
 ========================================
 
 Each buffer has one major mode responsible for its principal editing or
@@ -1691,7 +2336,7 @@ explains these help commands.
 
 File: emacsvox.info,  Node: Context-Sensitive Interaction,  Prev: Object Oriented Desktop,  Up: Audio Desktop
 
-6.3 Hear And Navigate The Current Context
+7.3 Hear And Navigate The Current Context
 =========================================
 
 Because Emacsvox has access to Emacs modes and application state, it can
@@ -1700,7 +2345,7 @@ everything as undifferentiated text.  Use the active mode's navigation
 for the structure you are working with, and request more spoken detail
 as needed.
 
-6.3.1 Hear Structure Without Extra Words
+7.3.1 Hear Structure Without Extra Words
 ----------------------------------------
 
 Voice changes can distinguish headings, comments, strings, links,
@@ -1714,7 +2359,7 @@ Presentation. explains how the parts fit together, including the
 established Voice Lock compatibility layer; ‘C-e E’ explains the
 presentation chosen for the object at point.
 
-6.3.2 Move By The Structure Of The Content
+7.3.2 Move By The Structure Of The Content
 ------------------------------------------
 
 Prefer the navigation supplied by the active mode when it matches your
@@ -1728,7 +2373,7 @@ commands, including those supplied by installed packages and your
 customisations.  *note Browsing Structure: Browsing Structure. points to
 guides for common kinds of structured content.
 
-6.3.3 Move Between Tasks Without Losing Your Place
+7.3.3 Move Between Tasks Without Losing Your Place
 --------------------------------------------------
 
 Buffers keep different tasks available in one Emacs session.  Use ‘C-x
@@ -1742,7 +2387,7 @@ for moving among those views.  Treat each buffer as a place you can
 revisit, rather than as a dialog that must be completed before doing
 anything else.
 
-6.3.4 Search Wherever You Are
+7.3.4 Search Wherever You Are
 -----------------------------
 
 In most text buffers, ‘C-s’ searches forward incrementally and ‘C-r’
@@ -1760,7 +2405,7 @@ kind of object matters.
 
 File: emacsvox.info,  Node: Aural Presentation,  Next: Emacs Packages,  Prev: Audio Desktop,  Up: Top
 
-7 Aural Presentation: Speech, Voices, And Sound
+8 Aural Presentation: Speech, Voices, And Sound
 ***********************************************
 
 Aural Presentation determines how Emacsvox conveys information through
@@ -1803,10 +2448,10 @@ Help, ‘i’ opens the same topic.
 
 File: emacsvox.info,  Node: Aural Home,  Next: Presentation Model,  Up: Aural Presentation
 
-7.1 Getting Started With Settings Menus
+8.1 Getting Started With Settings Menus
 =======================================
 
-7.1.1 Listen without changing settings
+8.1.1 Listen without changing settings
 --------------------------------------
 
 This exercise previews an installed voice without changing saved
@@ -1831,7 +2476,7 @@ unavailable, its details explain why.  If speech itself is absent, begin
 with *note Recovering From No Speech: (emacsvox)Recovering From No
 Speech.
 
-7.1.2 Choose an entry point and preserve your place
+8.1.2 Choose an entry point and preserve your place
 ---------------------------------------------------
 
 The Emacsvox menu, ‘C-e H’, groups settings by task.  ‘C-e S’ opens the
@@ -1866,7 +2511,7 @@ keys.  Returning does not reverse an applied setting, and retaining a
 draft does not save it.  *note Choose What Persists: (emacsvox)Saving
 And Startup. explains those distinctions across the interfaces.
 
-7.1.3 Navigate menus and read Help
+8.1.3 Navigate menus and read Help
 ----------------------------------
 
 The settings menus use Transient.  Up/down moves through choices,
@@ -1925,7 +2570,7 @@ its parent menus.
      feedback.  Press ‘S’ to save the navigation style, presentation
      order, and descriptions preference through Customize.
 
-7.1.4 Find a setting or an action
+8.1.4 Find a setting or an action
 ---------------------------------
 
 Press ‘C-e H /’ to find an Emacsvox setting by any part of its name,
@@ -1962,7 +2607,7 @@ Customize normally and returns to the menu; use Customize's own Apply
 and Save commands.  See *note Adjust an integration's speech settings:
 Integration speech settings. for application-specific controls.
 
-7.1.5 Choose a task and navigate its editor
+8.1.5 Choose a task and navigate its editor
 -------------------------------------------
 
 Choose a focused menu for your task:
@@ -2060,7 +2705,7 @@ Startup. before treating a setup as a backup.
 
 File: emacsvox.info,  Node: Presentation Model,  Next: Explaining Presentation,  Prev: Aural Home,  Up: Aural Presentation
 
-7.2 How Aural Presentation Works
+8.2 How Aural Presentation Works
 ================================
 
 Four questions explain the path from an application event to sound:
@@ -2131,7 +2776,7 @@ Emacs session; it does not save a startup default.
 
 File: emacsvox.info,  Node: Presentation Modalities,  Up: Presentation Model
 
-7.2.1 What You Can Hear
+8.2.1 What You Can Hear
 -----------------------
 
 Aural Presentation combines these forms of feedback:
@@ -2162,7 +2807,7 @@ simpler backend offers fewer voice characteristics or centred output.
 
 File: emacsvox.info,  Node: Explaining Presentation,  Next: Adjusting Presentation,  Prev: Presentation Model,  Up: Aural Presentation
 
-7.3 Understand Why Something Sounded That Way
+8.3 Understand Why Something Sounded That Way
 =============================================
 
 Use this workflow when feedback is surprising, unclear, or especially
@@ -2192,7 +2837,7 @@ remain available through unfinished drafts; a rule list still asks
 before discarding its modified draft.  A replaced source item is
 rejected rather than silently changing the target.
 
-7.3.1 Distinguish a record from a simulation
+8.3.1 Distinguish a record from a simulation
 --------------------------------------------
 
 When retained feedback matches the source buffer, position, and
@@ -2215,7 +2860,7 @@ affects its uses there.  _Change field_ instead changes the field's
 feedback rule.  Leaving the voice editor returns to the same link;
 opening it does not save or apply anything.
 
-7.3.2 Inspect recent feedback
+8.3.2 Inspect recent feedback
 -----------------------------
 
 Press ‘C-e H f h’ for recent feedback.  Each row preserves one recorded
@@ -2247,7 +2892,7 @@ completion choices, and opening/closing sounds.  Ordinary completion
 elsewhere remains eligible.  Changing the setting affects new
 recordings, not entries already retained.
 
-7.3.3 Read and edit the report's fields
+8.3.3 Read and edit the report's fields
 ---------------------------------------
 
 Feedback Details selects a separate read-only buffer and gives a brief
@@ -2341,7 +2986,7 @@ exact-sound rule draft restricted to the field.  It is not included in
 linked-field previews.  _Restore inherited behavior_ removes an override
 made by that workflow in the selected scope.  ‘q’ returns to the report.
 
-7.3.4 Use the Outline report from the menu
+8.3.4 Use the Outline report from the menu
 ------------------------------------------
 
 ‘C-e H x’ opens the experimental Outline version of Feedback Details.
@@ -2360,7 +3005,7 @@ preserves its button.  The report still describes the captured feedback.
 Reports opened directly start in the original layout; ‘o’ switches their
 style.
 
-7.3.5 Understand playback evidence and limitations
+8.3.5 Understand playback evidence and limitations
 --------------------------------------------------
 
 Original replay uses the recorded engine and physical voice, including
@@ -2404,7 +3049,7 @@ needed.
 
 File: emacsvox.info,  Node: Adjusting Presentation,  Next: Voices And Routing,  Prev: Explaining Presentation,  Up: Aural Presentation
 
-7.4 Change Feedback And Manage Rules
+8.4 Change Feedback And Manage Rules
 ====================================
 
 Choose the narrowest tool that expresses the change:
@@ -2438,7 +3083,7 @@ Customize.  Voice Lock is independent.
 
 File: emacsvox.info,  Node: Heading Voice Walkthrough,  Next: Guided Feedback Changes,  Up: Adjusting Presentation
 
-7.4.1 Walkthrough: Change Headings In One Buffer
+8.4.1 Walkthrough: Change Headings In One Buffer
 ------------------------------------------------
 
 This experiment changes headings in a temporary Org buffer without
@@ -2493,7 +3138,7 @@ rule can affect future matching buffers.
 
 File: emacsvox.info,  Node: Guided Feedback Changes,  Next: Choosing A Voice For An Item,  Prev: Heading Voice Walkthrough,  Up: Adjusting Presentation
 
-7.4.2 Guided Change This Feedback
+8.4.2 Guided Change This Feedback
 ---------------------------------
 
   1. Move to an item and press ‘C-e H f c’ to capture _Current item_.
@@ -2572,7 +3217,7 @@ selected record.
 
 File: emacsvox.info,  Node: Choosing A Voice For An Item,  Next: Managing Feedback Rules,  Prev: Guided Feedback Changes,  Up: Adjusting Presentation
 
-7.4.3 Remap One Item At Point
+8.4.3 Remap One Item At Point
 -----------------------------
 
   1. Move to a representative object and press ‘C-e E’ to identify what
@@ -2610,7 +3255,7 @@ File: emacsvox.info,  Node: Choosing A Voice For An Item,  Next: Managing Feedba
 
 File: emacsvox.info,  Node: Managing Feedback Rules,  Next: Presentation Options,  Prev: Choosing A Voice For An Item,  Up: Adjusting Presentation
 
-7.4.4 Review And Remove Your Rules
+8.4.4 Review And Remove Your Rules
 ----------------------------------
 
 ‘C-e H r o’ opens _Your feedback rules_, combining personal, session,
@@ -2642,7 +3287,7 @@ an unfinished draft.
 
 File: emacsvox.info,  Node: Presentation Options,  Prev: Managing Feedback Rules,  Up: Adjusting Presentation
 
-7.4.5 Try A Presentation Option
+8.4.5 Try A Presentation Option
 -------------------------------
 
 Presentation Options supply maintained additions such as heading
@@ -2662,7 +3307,7 @@ override expresses the intended change more precisely.
 
 File: emacsvox.info,  Node: Voices And Routing,  Next: Editing Named Voices,  Prev: Adjusting Presentation,  Up: Aural Presentation
 
-7.5 Choose And Manage Voice Palettes
+8.5 Choose And Manage Voice Palettes
 ====================================
 
 A _named voice_, also called a _logical voice_ in detailed views, gives
@@ -2760,7 +3405,7 @@ view refreshes to show the saved choice.
 
 File: emacsvox.info,  Node: Personal Palette Walkthrough,  Next: Palette Inheritance Walkthrough,  Up: Voices And Routing
 
-7.5.1 Walkthrough: Make A Personal Reading Palette
+8.5.1 Walkthrough: Make A Personal Reading Palette
 --------------------------------------------------
 
 Use an unused name; ‘reading-demo’ is an example.  Note the currently
@@ -2801,7 +3446,7 @@ active palette so you can restore it.
 
 File: emacsvox.info,  Node: Palette Inheritance Walkthrough,  Next: Renaming Voices And Palettes,  Prev: Personal Palette Walkthrough,  Up: Voices And Routing
 
-7.5.2 Walkthrough: Inheritance, Aliases, And Reset
+8.5.2 Walkthrough: Inheritance, Aliases, And Reset
 --------------------------------------------------
 
 Use ‘reading-demo’ from the previous exercise or another personal
@@ -2841,7 +3486,7 @@ follow that personality's settings.  A copy is not a sound recording.
 
 File: emacsvox.info,  Node: Renaming Voices And Palettes,  Prev: Palette Inheritance Walkthrough,  Up: Voices And Routing
 
-7.5.3 Rename Voices And Palettes
+8.5.3 Rename Voices And Palettes
 --------------------------------
 
 ‘r’ in the voice list renames a direct custom voice in a personal
@@ -2869,7 +3514,7 @@ block the change until their owner updates them.
 
 File: emacsvox.info,  Node: Editing Named Voices,  Next: Emoji Speech Names,  Prev: Voices And Routing,  Up: Aural Presentation
 
-7.6 Edit A Named Voice
+8.6 Edit A Named Voice
 ======================
 
 Open a palette through ‘C-e H v p’, select a voice, and press ‘e’.  To
@@ -2894,7 +3539,7 @@ not a whole-palette voice change.
 * Choose And Tune Fallback Voices: Voice Fallbacks.  Order physical choices and customize their individual adjustments.
 * Inspect Or Adjust A Voice In Context: Voices In Context.  Learn the controls and scope of this task.
 
-7.6.1 Adjust and compare one voice
+8.6.1 Adjust and compare one voice
 ----------------------------------
 
 The editor reads labels in the normal navigation voice.  ‘n~/~p’,
@@ -2932,7 +3577,7 @@ Automatic.  Unavailable, engine-default, and property choices are
 retained.  Shared adjustments supply inherited fields; _Customize this
 voice_ provides optional per-choice settings.
 
-7.6.2 Tune through the focused menu
+8.6.2 Tune through the focused menu
 -----------------------------------
 
 From ‘C-e H v p’, select a palette, press ‘e’, choose a voice, then
@@ -2965,7 +3610,7 @@ Existing destination prompts, inheritance, and recovery remain.  ‘q’
 stops playback and returns to the editor with the draft.  Leaving that
 editor still offers keep, discard, or continue choices.
 
-7.6.3 Save the draft and check application
+8.6.3 Save the draft and check application
 ------------------------------------------
 
 ‘w’ or ‘C-c C-c’ saves and applies a complete named-voice draft.  Save
@@ -3000,7 +3645,7 @@ for retry.  See *note Recovering Unfinished Changes:
 a destination; see *note Keep an Installed Voice Experiment:
 (emacsvox)Keeping A Voice Experiment.
 
-7.6.4 Use one physical voice across a palette
+8.6.4 Use one physical voice across a palette
 ---------------------------------------------
 
 Select a physical voice in _Browse voices_ or eSpeak _Voice variants_
@@ -3040,7 +3685,7 @@ changing selection.
 
 File: emacsvox.info,  Node: Voice Adjustments,  Next: Voice Fallbacks,  Up: Editing Named Voices
 
-7.6.5 Understand Voice Adjustments
+8.6.5 Understand Voice Adjustments
 ----------------------------------
 
 Change one field at a time and compare with ‘B’.  Portable controls are
@@ -3106,7 +3751,7 @@ inline voices alike.
 
 File: emacsvox.info,  Node: Voice Fallbacks,  Next: Voices In Context,  Prev: Voice Adjustments,  Up: Editing Named Voices
 
-7.6.6 Choose And Tune Fallback Voices
+8.6.6 Choose And Tune Fallback Voices
 -------------------------------------
 
 Shared settings provide a base for the whole voice.  Physical choices
@@ -3204,7 +3849,7 @@ Saving remains possible when a preview is unsupported.
 
 File: emacsvox.info,  Node: Voices In Context,  Prev: Voice Fallbacks,  Up: Editing Named Voices
 
-7.6.7 Inspect Or Adjust A Voice In Context
+8.6.7 Inspect Or Adjust A Voice In Context
 ------------------------------------------
 
 In the voice editor, choose _Effective sound / Where settings came
@@ -3251,7 +3896,7 @@ Maintenance. describes representation and compatibility.
 
 File: emacsvox.info,  Node: Emoji Speech Names,  Next: Installed Voices And Engines,  Prev: Editing Named Voices,  Up: Aural Presentation
 
-7.7 Name Occasional Emoji In Speech
+8.7 Name Occasional Emoji In Speech
 ===================================
 
 An emoji can require fallback from a voice such as Eloquence.  Naming
@@ -3329,7 +3974,7 @@ that text; capture new source feedback to try another naming policy.
 
 File: emacsvox.info,  Node: Installed Voices And Engines,  Next: Sounds And Space,  Prev: Emoji Speech Names,  Up: Aural Presentation
 
-7.8 Browse Installed Voices And Choose Engines
+8.8 Browse Installed Voices And Choose Engines
 ==============================================
 
 Open ‘C-e H v’ for _Voices and engines_.  ‘b’ browses engines and
@@ -3370,7 +4015,7 @@ voices across engines.  Direct view shortcuts remain available.
 * Walkthrough Keep An Installed Voice Experiment: Keeping A Voice Experiment.  Place an experiment in a named voice and verify the saved combination.
 * Set Shared Engine Preferences: Speech Engine Preferences.  Choose engine order and distinguish it from explicit palette choices.
 
-7.8.1 Find and filter installed voices
+8.8.1 Find and filter installed voices
 --------------------------------------
 
 A language with one voice shows it directly; several voices form an
@@ -3413,7 +4058,7 @@ Apply_, ‘2’ returns to downloads for previewing or editing.  Engine
 overrides may prevent confirmation; _Active_ and engine details still
 report health and usability.  ‘C’ clears the quick filter as well.
 
-7.8.2 Distinguish installation, enablement, and active speech
+8.8.2 Distinguish installation, enablement, and active speech
 -------------------------------------------------------------
 
 _Installed_ identifies library membership or engine-supplied voices.
@@ -3446,7 +4091,7 @@ visible as unavailable with _Last failure_.  _Routing policy: allowed_
 permits selection but does not prove installation.  Disablement, health,
 and temporary failures remain separate.
 
-7.8.3 Compare samples and interpret the result
+8.8.3 Compare samples and interpret the result
 ----------------------------------------------
 
 ‘A’ auditions available matching voices in displayed order, skipping
@@ -3465,7 +4110,7 @@ every parameter.
 
 File: emacsvox.info,  Node: Physical Voice Experiments,  Next: Keeping A Voice Experiment,  Up: Installed Voices And Engines
 
-7.8.4 Experiment With An Installed Voice
+8.8.4 Experiment With An Installed Voice
 ----------------------------------------
 
 ‘t’ on a physical voice opens an experiment with that exact
@@ -3507,7 +4152,7 @@ scope/fallback order.  Choosing it has not saved.
 
 File: emacsvox.info,  Node: Keeping A Voice Experiment,  Next: Speech Engine Preferences,  Prev: Physical Voice Experiments,  Up: Installed Voices And Engines
 
-7.8.5 Walkthrough: Keep An Installed Voice Experiment
+8.8.5 Walkthrough: Keep An Installed Voice Experiment
 -----------------------------------------------------
 
 Create ‘reading-demo’ as in *note Make a Personal Reading Palette:
@@ -3545,7 +4190,7 @@ the row.
 
 File: emacsvox.info,  Node: Speech Engine Preferences,  Prev: Keeping A Voice Experiment,  Up: Installed Voices And Engines
 
-7.8.6 Set Shared Engine Preferences
+8.8.6 Set Shared Engine Preferences
 -----------------------------------
 
 Engine preference is global, not buffer-local.  In ‘C-e H v’, ‘e’
@@ -3605,7 +4250,7 @@ remain.  The speech-settings scope does not change these saving rules.
 
 File: emacsvox.info,  Node: Sounds And Space,  Next: Aural Speech Output,  Prev: Installed Voices And Engines,  Up: Aural Presentation
 
-7.9 Sounds, Tones, And Spatial Cues
+8.9 Sounds, Tones, And Spatial Cues
 ===================================
 
 Rules request cues by semantic name.  Sound packs map names to audio
@@ -3643,7 +4288,7 @@ pack.
 * Adjust Spatial Presentation: Spatial Presentation Controls.  Check stereo support, adjust placement, and restore centered output.
 * Inspect And Maintain A Personal Sound Pack: Personal Sound Packs.  Understand pack metadata, discovery, and the limits of the manager.
 
-7.9.1 Tune line and boundary cues from the menu
+8.9.1 Tune line and boundary cues from the menu
 -----------------------------------------------
 
 ‘C-e H o c’ opens _Line and boundary cues_.  Blank, whitespace-only,
@@ -3663,7 +4308,7 @@ separators or decorated lines.
 
 File: emacsvox.info,  Node: Sound Pack Walkthrough,  Next: Changing One Sound,  Up: Sounds And Space
 
-7.9.2 Walkthrough: Try A Sound Pack
+8.9.2 Walkthrough: Try A Sound Pack
 -----------------------------------
 
   1. Open ‘C-e H o p’ and note the active pack.  Select another of kind
@@ -3690,7 +4335,7 @@ in a pack.
 
 File: emacsvox.info,  Node: Changing One Sound,  Next: Changing Tones,  Prev: Sound Pack Walkthrough,  Up: Sounds And Space
 
-7.9.3 Walkthrough: Silence One Cue
+8.9.3 Walkthrough: Silence One Cue
 ----------------------------------
 
   1. Repeat the action producing the cue, then open ‘C-e H f h’.  Select
@@ -3716,7 +4361,7 @@ workflow.
 
 File: emacsvox.info,  Node: Changing Tones,  Next: Spatial Presentation Controls,  Prev: Changing One Sound,  Up: Sounds And Space
 
-7.9.4 Change A Blank-Line Tone
+8.9.4 Change A Blank-Line Tone
 ------------------------------
 
 This changes a tone actually present in recorded feedback, not every
@@ -3745,7 +4390,7 @@ missing component from appearance.
 
 File: emacsvox.info,  Node: Spatial Presentation Controls,  Next: Personal Sound Packs,  Prev: Changing Tones,  Up: Sounds And Space
 
-7.9.5 Adjust Spatial Presentation
+8.9.5 Adjust Spatial Presentation
 ---------------------------------
 
 Open ‘C-e H D s’ to inspect reported speech/cue capabilities, then
@@ -3778,7 +4423,7 @@ placement.
 
 File: emacsvox.info,  Node: Personal Sound Packs,  Prev: Spatial Presentation Controls,  Up: Sounds And Space
 
-7.9.6 Inspect And Maintain A Personal Sound Pack
+8.9.6 Inspect And Maintain A Personal Sound Pack
 ------------------------------------------------
 
 In the manager, ‘o’ opens the directory and ‘g’ rescans.  For a
@@ -3800,7 +4445,7 @@ use the feedback-rule workflow.
 
 File: emacsvox.info,  Node: Aural Speech Output,  Next: Presentation Profiles,  Prev: Sounds And Space,  Up: Aural Presentation
 
-7.10 Speech Output And Notifications
+8.10 Speech Output And Notifications
 ====================================
 
 Reading/output settings control detail and delivery independently of the
@@ -3808,7 +4453,7 @@ rule selecting content or the palette shaping its voice.  Scope, saving,
 and worker activation differ between these controls.  Check the named
 action rather than assuming every ‘S’ saves all settings.
 
-7.10.1 Set the reading scope, rate, and punctuation
+8.10.1 Set the reading scope, rate, and punctuation
 ---------------------------------------------------
 
 ‘C-e H s’ opens Speech settings for the captured buffer.  ‘g’ switches
@@ -3838,7 +4483,7 @@ buffer scope promotes those displayed choices to defaults.  Mode
 punctuation policy and explicit buffer settings still override the saved
 punctuation default.
 
-7.10.2 Adjust indentation feedback
+8.10.2 Adjust indentation feedback
 ----------------------------------
 
 Open ‘C-e H s i’ or directly ‘C-e d I’.  In global-default scope, ‘S’
@@ -3856,7 +4501,7 @@ blank-line-tone minimum.  ‘R’ restores the four bundled values in scope.
 Global changes preserve local overrides; ‘S’ saves global defaults and
 tone volume.  ‘q’ retains live changes.
 
-7.10.3 Set capitalisation feedback and its beeps
+8.10.3 Set capitalisation feedback and its beeps
 ------------------------------------------------
 
 ‘C-e H s c’ opens _Capitalization_.  ‘i’ toggles indication, ‘p’ chooses
@@ -3879,7 +4524,7 @@ and labels survive, and stronger rules may override the cue.  Finish
 unsaved personal-rule editors before cue saving.  If saved rules changed
 elsewhere, discard the cue draft and reopen it.
 
-7.10.4 Choose typing and point feedback
+8.10.4 Choose typing and point feedback
 ---------------------------------------
 
 ‘C-e H s t’ opens _Typing and interaction_.  Character, word,
@@ -3894,7 +4539,7 @@ its character's phonetic name immediately, and ‘s’ stops.  ‘S’ saves
 displayed settings through Customize, promoting buffer choices to
 startup defaults.  Closing retains live changes without saving.
 
-7.10.5 Understand the main and notification streams
+8.10.5 Understand the main and notification streams
 ---------------------------------------------------
 
 The _main stream_ presents current interaction such as movement, buffer
@@ -3926,7 +4571,7 @@ arrangement.  Use notification history to read an announcement you
 missed.  Ordinary obsolete-main-speech cancellation is local to main;
 explicit ‘tts-stop’ stops both streams.
 
-7.10.6 Adjust output volumes
+8.10.6 Adjust output volumes
 ----------------------------
 
 ‘C-e H o’ provides five global Omnivox volumes: main tones and earcons,
@@ -3947,7 +4592,7 @@ shares main-process levels.  Earcon volume applies to Omnivox-played
 sounds, not external players or other speech backends.  Zero volume does
 not disable notification recording.
 
-7.10.7 Adjust an integration's speech settings
+8.10.7 Adjust an integration's speech settings
 ----------------------------------------------
 
 ‘C-e S’ opens focused settings directly where available.  Alternatively
@@ -4033,7 +4678,7 @@ detailed workflows.
 
 File: emacsvox.info,  Node: Presentation Profiles,  Next: Presentation Troubleshooting,  Prev: Aural Speech Output,  Up: Aural Presentation
 
-7.11 Save, Switch, And Share Your Setup
+8.11 Save, Switch, And Share Your Setup
 =======================================
 
 A Presentation Profile records enabled options and their order, sound
@@ -4078,7 +4723,7 @@ remain in their owning settings or rule stores.
 
 File: emacsvox.info,  Node: Presentation Profile Walkthrough,  Next: Saving And Startup,  Up: Presentation Profiles
 
-7.11.1 Walkthrough: Switch Reading And Working Setups
+8.11.1 Walkthrough: Switch Reading And Working Setups
 -----------------------------------------------------
 
 Use unused names and note the selected profile first.
@@ -4114,7 +4759,7 @@ Palettes rather than recapturing everything.
 
 File: emacsvox.info,  Node: Saving And Startup,  Next: Sharing Voice Palettes,  Prev: Presentation Profile Walkthrough,  Up: Presentation Profiles
 
-7.11.2 Choose What Persists
+8.11.2 Choose What Persists
 ---------------------------
 
 Scope, persistence, and activation answer different questions.  A
@@ -4160,7 +4805,7 @@ completed save when discarded.
 
 File: emacsvox.info,  Node: Sharing Voice Palettes,  Prev: Saving And Startup,  Up: Presentation Profiles
 
-7.11.3 Export, Back Up, And Import Palettes
+8.11.3 Export, Back Up, And Import Palettes
 -------------------------------------------
 
 ‘w’ in Voice Palettes exports effective portable entries, asking before
@@ -4184,7 +4829,7 @@ Emacsvox setting.
 
 File: emacsvox.info,  Node: Presentation Troubleshooting,  Next: Voice Lock,  Prev: Presentation Profiles,  Up: Aural Presentation
 
-7.12 Troubleshooting And Recovery
+8.12 Troubleshooting And Recovery
 =================================
 
 Choose the first diagnostic according to the symptom:
@@ -4255,7 +4900,7 @@ palette entry.  Doctor and Explain locate the unresolved reference.
 
 * Recover Unfinished Changes: Recovering Aural Changes.  Resume drafts and distinguish saved settings from confirmed application.
 
-7.12.1 Review changed settings before editing again
+8.12.1 Review changed settings before editing again
 ---------------------------------------------------
 
 ‘C-e H d’ opens a read-only snapshot separating captured-buffer values,
@@ -4273,7 +4918,7 @@ to change, save, or apply a restart.
 
 File: emacsvox.info,  Node: Recovering Aural Changes,  Up: Presentation Troubleshooting
 
-7.12.2 Recover Unfinished Changes
+8.12.2 Recover Unfinished Changes
 ---------------------------------
 
 Press ‘C-e H p d’ to resume a retained draft directly in its owning
@@ -4305,7 +4950,7 @@ acknowledged streams and identify timeouts.
 
 File: emacsvox.info,  Node: Voice Lock,  Prev: Presentation Troubleshooting,  Up: Aural Presentation
 
-7.13 Voice Lock And Advanced Configuration
+8.13 Voice Lock And Advanced Configuration
 ==========================================
 
 Voice Lock is one compatibility input to Aural Presentation, not the
@@ -4362,7 +5007,7 @@ than being prerequisites for them.
 
 File: emacsvox.info,  Node: Emacs Packages,  Next: Notmuch Mail,  Prev: Aural Presentation,  Up: Top
 
-8 Applications And Integrations
+9 Applications And Integrations
 *******************************
 
 Start an application with its normal Emacs command.  Emacsvox prepares
@@ -4408,7 +5053,7 @@ not current installation instructions.
 
 File: emacsvox.info,  Node: Document Authoring,  Next: Structured Editing,  Up: Emacs Packages
 
-8.1 Document Authoring
+9.1 Document Authoring
 ======================
 
 Open or create a document in its normal Emacs mode.  The major mode
@@ -4421,7 +5066,7 @@ described under *note Browsing Structure: Browsing Structure.
 
 File: emacsvox.info,  Node: Structured Editing,  Next: Browsing Structure,  Prev: Document Authoring,  Up: Emacs Packages
 
-8.2 Structured Editing And Templates
+9.2 Structured Editing And Templates
 ====================================
 
 In Outline mode, heading navigation speaks the heading you reach and
@@ -4442,7 +5087,7 @@ Reference Manual_.
 
 File: emacsvox.info,  Node: Browsing Structure,  Next: Web Browsing,  Prev: Structured Editing,  Up: Emacs Packages
 
-8.3 Browsing Structure
+9.3 Browsing Structure
 ======================
 
 Use the active mode's structure when it matches the task: Info has nodes
@@ -4452,7 +5097,7 @@ following sections explain Emacsvox's reading of headings, tables, and
 application lists.  These reading controls are distinct from commands
 that edit the underlying content.
 
-8.3.1 Reading Org headings
+9.3.1 Reading Org headings
 --------------------------
 
 Reading a whole Org heading omits its leading stars at punctuation
@@ -4480,7 +5125,7 @@ Explicit word and partial-line reads at ‘some’ or ‘none’ use
 ‘tts-character-to-speech-table’, the Emacs table also used for character
 reading.
 
-8.3.2 Reading Markdown and Org tables
+9.3.2 Reading Markdown and Org tables
 -------------------------------------
 
 In a Markdown or Org table, press a Control-Meta arrow to enter table
@@ -4536,7 +5181,7 @@ destination _cell_, whereas plain up/down reads the destination _row_.
 Do not assume identical spoken units merely because the keys are
 similar; see *note Agent Shell: Agent Shell.
 
-8.3.3 Reading application lists
+9.3.3 Reading application lists
 -------------------------------
 
 In an application built on Tabulated List mode, use a Control-Meta arrow
@@ -4565,7 +5210,7 @@ last row.  A refresh ends reading; enter again to inspect the refreshed
 list.  Custom table printers, image-only cells, and duplicate column
 names are not supported by this reader.
 
-8.3.4 Browsing CSV data
+9.3.4 Browsing CSV data
 -----------------------
 
 Use ‘emacsvox-table-find-csv-file’ to open a CSV file in the table
@@ -4619,7 +5264,7 @@ full browser key map.
 
 File: emacsvox.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Structure,  Up: Emacs Packages
 
-8.4 Web Browsing With EWW
+9.4 Web Browsing With EWW
 =========================
 
 EWW is the built-in browser supported for current Emacsvox.  Run ‘M-x
@@ -4645,7 +5290,7 @@ maintained integration says otherwise.
 
 File: emacsvox.info,  Node: Messaging,  Next: Editing Code,  Prev: Web Browsing,  Up: Emacs Packages
 
-8.5 Messaging
+9.5 Messaging
 =============
 
 For indexed mail search, asynchronous results, threads, attachments, and
@@ -4658,7 +5303,7 @@ account or service.
 
 File: emacsvox.info,  Node: Editing Code,  Next: Development Environment,  Prev: Messaging,  Up: Emacs Packages
 
-8.6 Editing Code
+9.6 Editing Code
 ================
 
 Programming modes provide language-aware movement, indentation,
@@ -4671,7 +5316,7 @@ reference for speech details.
 
 File: emacsvox.info,  Node: Development Environment,  Next: Desktop Management,  Prev: Editing Code,  Up: Emacs Packages
 
-8.7 Development Environment
+9.7 Development Environment
 ===========================
 
 Compilation, diagnostics, project navigation, version control,
@@ -4682,7 +5327,7 @@ them; their underlying operations remain owned by those tools.  *note
 Agent Shell: Agent Shell. provides the separate guide to AI-agent
 sessions and their permission, feedback, and review controls.
 
-8.7.1 Magit
+9.7.1 Magit
 -----------
 
 Magit navigation speaks the section or line you reach.  Empty and
@@ -4737,7 +5382,7 @@ next action.  Listen to the description before activation.
 
 File: emacsvox.info,  Node: Desktop Management,  Next: Personal Information Management,  Prev: Development Environment,  Up: Emacs Packages
 
-8.8 Desktop Management
+9.8 Desktop Management
 ======================
 
 Buffers, windows, frames, and tabs organise the workspace.  ‘C-x b’
@@ -4749,7 +5394,7 @@ application.
 
 File: emacsvox.info,  Node: Personal Information Management,  Next: Desktop Applications,  Prev: Desktop Management,  Up: Emacs Packages
 
-8.9 Personal Information Management
+9.9 Personal Information Management
 ===================================
 
 Calendar, Org, and related packages define their data formats and
@@ -4767,10 +5412,10 @@ preferences.
 
 File: emacsvox.info,  Node: Desktop Applications,  Prev: Personal Information Management,  Up: Emacs Packages
 
-8.10 Desktop Applications
+9.10 Desktop Applications
 =========================
 
-8.10.1 Terminal Applications
+9.10.1 Terminal Applications
 ----------------------------
 
 Use ‘M-x shell’ for ordinary line-oriented shell commands.  For a full
@@ -4796,7 +5441,7 @@ paths, remains available.  To include Windows command names again, use
 <RET>’.  This option does not change native Windows or remote Shell
 buffers.
 
-8.10.2 Forms Mode
+9.10.2 Forms Mode
 -----------------
 
 Forms presents records from a structured text file one at a time.
@@ -4806,7 +5451,7 @@ Forms requires a format specification; see *note Forms Mode:
 emacsvox-forms: (emacsvox-reference)emacsvox-forms. in the _Emacsvox
 Reference Manual_ for speech.
 
-8.10.3 OCR And PDF-To-Text With PaddleOCR
+9.10.3 OCR And PDF-To-Text With PaddleOCR
 -----------------------------------------
 
 Emacsvox uses PaddleOCR PP-StructureV3 to turn an image or PDF into
@@ -4941,8 +5586,8 @@ starting point.
 
 File: emacsvox.info,  Node: Notmuch Mail,  Next: Agent Shell,  Prev: Emacs Packages,  Up: Top
 
-9 Notmuch Mail
-**************
+10 Notmuch Mail
+***************
 
 Notmuch provides the mail index and Emacs interface.  Install compatible
 command-line and Emacs components, then configure the mail store and
@@ -4972,8 +5617,8 @@ reference.
 
 File: emacsvox.info,  Node: Starting Notmuch,  Next: Notmuch Hello And Searches,  Up: Notmuch Mail
 
-9.1 Start Notmuch
-=================
+10.1 Start Notmuch
+==================
 
 Run ‘M-x notmuch’ to open Hello.  With the standard Emacsvox global maps
 loaded, ‘C-' m’ runs ‘notmuch-search’ directly and asks for a query.
@@ -4988,8 +5633,8 @@ invoke.
 
 File: emacsvox.info,  Node: Notmuch Hello And Searches,  Next: Notmuch Search Results,  Prev: Starting Notmuch,  Up: Notmuch Mail
 
-9.2 Use Hello and start a search
-================================
+10.2 Use Hello and start a search
+=================================
 
 Moving among Hello widgets speaks each saved search's label and
 displayed message count, or identifies the button or link reached.  Use
@@ -5015,8 +5660,8 @@ your installed Notmuch version.  A search can display its first result
 before all rows finish rendering, so an initial message announcement and
 a later count need not arrive together.
 
-9.2.1 Understand asynchronous search completion
------------------------------------------------
+10.2.1 Understand asynchronous search completion
+------------------------------------------------
 
 The default ‘adaptive’ policy gives useful early feedback without
 rereading content after you have moved on.  For a search you start,
@@ -5065,8 +5710,8 @@ owning search buffer silently cancels that delivery.
 
 File: emacsvox.info,  Node: Notmuch Search Results,  Next: Notmuch Messages And Attachments,  Prev: Notmuch Hello And Searches,  Up: Notmuch Mail
 
-9.3 Navigate and inspect Search results
-=======================================
+10.3 Navigate and inspect Search results
+========================================
 
 Thread movement reads configured semantic fields and status cues.  At a
 boundary, speech identifies the beginning or end instead of repeating
@@ -5110,8 +5755,8 @@ fields and privacy. explains omission and ordering of sensitive fields.
 
 File: emacsvox.info,  Node: Notmuch Messages And Attachments,  Next: Notmuch Tags And Archiving,  Prev: Notmuch Search Results,  Up: Notmuch Mail
 
-9.4 Read a thread and its MIME parts
-====================================
+10.4 Read a thread and its MIME parts
+=====================================
 
 Opening a thread selects its newest unread message among the open
 messages matching the search.  If there is none, Notmuch's initial
@@ -5182,8 +5827,8 @@ attachment or an external viewer by themselves.
 
 File: emacsvox.info,  Node: Notmuch Tags And Archiving,  Next: Notmuch Speech And Privacy,  Prev: Notmuch Messages And Attachments,  Up: Notmuch Mail
 
-9.5 Change tags and archive state
-=================================
+10.5 Change tags and archive state
+==================================
 
 Emacsvox compares displayed tags before and after an interactive change
 and reports actual additions and removals.  Adding an existing tag or
@@ -5211,8 +5856,8 @@ commands.
 
 File: emacsvox.info,  Node: Notmuch Speech And Privacy,  Next: Notmuch Support Boundaries,  Prev: Notmuch Tags And Archiving,  Up: Notmuch Mail
 
-9.6 Choose fields, status, and privacy
-======================================
+10.6 Choose fields, status, and privacy
+=======================================
 
 From a Notmuch buffer, press ‘C-e S’ for focused speech settings, or
 reach it through ‘C-e H j c’.  The same menu is available from Hello,
@@ -5238,8 +5883,8 @@ The full group is also available through ‘M-x customize-group <RET>
 emacsvox-notmuch <RET>’.  These speech settings do not alter Notmuch's
 database or its own display configuration.
 
-9.6.1 Choose the information in a spoken summary
-------------------------------------------------
+10.6.1 Choose the information in a spoken summary
+-------------------------------------------------
 
 ‘emacsvox-notmuch-search-result-fields’
      Defaults to ‘(authors subject date count tags)’.  Remove sensitive
@@ -5263,8 +5908,8 @@ database or its own display configuration.
      Select ‘adaptive’, ‘summary’, ‘cue’, or ‘silent’ using the
      completion behaviour described earlier.
 
-9.6.2 Understand limits and full inspection
--------------------------------------------
+10.6.2 Understand limits and full inspection
+--------------------------------------------
 
 Mail-controlled text is bounded before automatic speech and Aural
 history.  Defaults are 256 characters and 1,024 UTF-8 bytes per field,
@@ -5292,8 +5937,8 @@ configured fields is appropriate.  These limits are not a general
 privacy guarantee for every explicit command or another application's
 output.
 
-9.6.3 Understand retained and notification content
---------------------------------------------------
+10.6.3 Understand retained and notification content
+---------------------------------------------------
 
 Main-stream Notmuch presentations can enter bounded Aural history.  By
 default, Emacsvox retains at most 20 presentations and 4,096 UTF-8 bytes
@@ -5312,8 +5957,8 @@ settings separately from mail field choices.
 
 File: emacsvox.info,  Node: Notmuch Support Boundaries,  Next: Notmuch Troubleshooting,  Prev: Notmuch Speech And Privacy,  Up: Notmuch Mail
 
-9.7 Know the support boundaries
-===============================
+10.7 Know the support boundaries
+================================
 
 Hello
      Widget navigation, view lifecycle, and searches have
@@ -5341,8 +5986,8 @@ not duplicate them.
 
 File: emacsvox.info,  Node: Notmuch Troubleshooting,  Prev: Notmuch Support Boundaries,  Up: Notmuch Mail
 
-9.8 Troubleshoot the live integration
-=====================================
+10.8 Troubleshoot the live integration
+======================================
 
 Use ‘?’ or ‘C-h m’ in the affected view to check its current keys and
 ‘M-x notmuch-version’ to identify the package.  Consult Notmuch's own
@@ -5362,7 +6007,7 @@ lifecycle contracts.
 
 File: emacsvox.info,  Node: Agent Shell,  Next: EAT Terminal Access,  Prev: Notmuch Mail,  Up: Top
 
-10 Agent Shell
+11 Agent Shell
 **************
 
 Agent Shell is an Emacs package for interactive AI-agent sessions.
@@ -5395,7 +6040,7 @@ interfaces.
 
 File: emacsvox.info,  Node: Starting An Agent Shell Session,  Next: Answering Agent Questions,  Up: Agent Shell
 
-10.1 Start and control a session
+11.1 Start and control a session
 ================================
 
 Load Emacsvox and start Agent Shell with ‘M-x agent-shell’.  Emacsvox
@@ -5404,7 +6049,7 @@ already existing shell buffers.  Run ‘M-x emacsvox-agent-shell-enable’
 only when manually re-enabling support after it was disabled or while
 diagnosing a live reload.
 
-10.1.1 Write and edit prompts
+11.1.1 Write and edit prompts
 -----------------------------
 
 Compose and submit prompts with Agent Shell's normal editing commands.
@@ -5438,7 +6083,7 @@ or next number and indentation.  Indenting and dedenting announce the
 new indentation; leaving an empty list item announces that the list
 ended.
 
-10.1.2 Follow a response and steer a running turn
+11.1.2 Follow a response and steer a running turn
 -------------------------------------------------
 
 Emacsvox speaks routine content only at complete turn boundaries.  A
@@ -5460,7 +6105,7 @@ reported as complete until Agent Shell supplies a completion boundary.
 Server-pushed turns, when supported by the provider, follow the same
 completed-response speech policy.
 
-10.1.3 Work with queued prompts
+11.1.3 Work with queued prompts
 -------------------------------
 
 Queued prompts announce when they start and how many remain.  Recent
@@ -5476,7 +6121,7 @@ session's speech level; paused-queue warnings follow
 killing a shell or exiting Emacs when queued prompts would be lost.
 Declining that question keeps the prompts available.
 
-10.1.4 Check session settings and status
+11.1.4 Check session settings and status
 ----------------------------------------
 
 Model, mode, thought-level, and other session setting changes announce
@@ -5493,7 +6138,7 @@ a session stay concise.
 
 File: emacsvox.info,  Node: Answering Agent Questions,  Next: Agent Shell Speech And Privacy,  Prev: Starting An Agent Shell Session,  Up: Agent Shell
 
-10.2 Answer an agent's question
+11.2 Answer an agent's question
 ===============================
 
 Some providers ask you to complete a structured form rather than answer
@@ -5522,615 +6167,3 @@ successful submission.  ‘C-c C-c’ interrupts the running request,
 including any pending form.  To return to the latest question, use ‘M-x
 agent-shell-elicitation-jump-to-latest-form’.  The next-field and
 previous-field commands are also available through ‘M-x’.
-
-
-File: emacsvox.info,  Node: Agent Shell Speech And Privacy,  Next: Agent Shell Permissions,  Prev: Answering Agent Questions,  Up: Agent Shell
-
-10.3 Choose automatic speech and privacy
-========================================
-
-The focused session defaults to ‘response’: completed answers and
-routine completion feedback are presented, while thought, plan, and tool
-chatter is suppressed.  An unfocused session defaults to ‘notify’: its
-notification names the session but does not disclose response or tool
-content.
-
-‘full’
-     Speak responses plus configured thought, plan, and tool detail.
-     Full tool output can contain commands, file contents, or other
-     sensitive provider data.
-‘response’
-     Speak completed agent responses while suppressing routine thought,
-     plan, and tool content.
-‘notify’
-     Present routine completion without reading the response body.
-‘quiet’
-     Suppress routine automatic feedback.  Explicit inspection remains
-     available.
-‘auto’
-     Use ‘emacsvox-agent-shell-foreground-speech-level’ or
-     ‘emacsvox-agent-shell-background-speech-level’ according to focus.
-
-   Press ‘C-c C-q’ to run ‘emacsvox-agent-shell-select-speech-level’ and
-choose the current session's level, including ‘auto’.  Press ‘C-c C-S-q’
-to run ‘emacsvox-agent-shell-select-background-speech-level’ and change
-the shared background default.  ‘M-x
-emacsvox-agent-shell-cycle-speech-level’ cycles toward less routine
-speech; use a prefix argument to restore ‘auto’.
-
-10.3.1 Adjust speech in the settings menu
------------------------------------------
-
-Press ‘C-e S’ in a shell or its viewport for focused Emacsvox settings.
-The same menu is available through ‘C-e H j c’ and the integration
-chooser.  ‘s’ opens choices for the temporary session override.  ‘f’ and
-‘b’ open foreground and background defaults; ‘t’ and ‘o’ open thought
-and tool-output choices.  Each list starts on the current value and
-explains what the choices do.  Browse with arrows, press Enter to apply
-and return, or ‘q’ to cancel.  Press ‘?’ followed by a choice's key for
-spoken Help about its effect and scope; ‘q’ returns from Help.  ‘? ?’
-opens the menu overview.
-
-   The ‘p’, ‘c’ and ‘l’ controls toggle permission speech, tool-call
-announcements and processing cues.  Thought and tool content still
-depend on the effective speech level.
-
-   The ‘a’, ‘n’ and ‘k’ controls set automatic-content, line-navigation
-and block-navigation character limits.  Enter reads an exact positive
-integer or ‘none’; Shift-left/right adjusts by 100.  For line
-navigation, ‘none’ restores the core long-line policy.  For the other
-limits it allows complete content.  ‘w’ saves the displayed global
-defaults through Customize, excluding the session override.  ‘A’ opens
-advanced settings; ‘q’ returns.  From the direct ‘C-e S’ entry, ‘q’
-closes the menu and leaves you in the captured buffer.
-
-   Thought content defaults to an icon under
-‘emacsvox-agent-shell-speak-thought-process’.  Tool feedback is
-separately controlled by ‘emacsvox-agent-shell-speak-tool-calls’ and
-‘emacsvox-agent-shell-tool-output-verbosity’.  Selecting background
-‘response’ or ‘full’, thought ‘speak’, or full tool output is an
-explicit disclosure choice.
-
-   At ‘full’ speech level, tool verbosity ‘full’ reads the tool's
-rendered output, including Codex command output and textual diffs.
-Changed output can be read even when the tool's status has not changed;
-identical updates are suppressed.  Tool verbosity ‘status’ plays status
-cues as tools start and finish.  Tool updates, steering outcomes, queue
-changes, and confirmed setting changes use the notification lane,
-leaving navigation speech independent.
-
-10.3.2 Understand automatic speech limits
------------------------------------------
-
-Automatic response, tool, error, permission, and similar text is limited
-by ‘emacsvox-agent-shell-automatic-content-max-characters’, which
-defaults to 2,000 characters.  A shortened presentation gives exact
-omitted character and line counts and tells you where to inspect the
-full content.  The complete text rendered by Agent Shell stays in its
-buffer; this speech limit is applied before Aural compiles the automatic
-speech copy.  Agent Shell separately shortens tool output lines longer
-than 32,768 characters, keeping their beginning and end with an
-omitted-character count.  Full tool speech reads that notice; the
-removed middle is not available by reading the buffer.
-
-
-File: emacsvox.info,  Node: Agent Shell Permissions,  Next: Reading Agent Responses,  Prev: Agent Shell Speech And Privacy,  Up: Agent Shell
-
-10.4 Respond to urgent permissions
-==================================
-
-Permission requests are separate from routine speech levels because they
-can block the agent and require a decision.  With
-‘emacsvox-agent-shell-speak-permissions’ enabled, a request interrupts
-the appropriate speech stream, identifies the session and requested
-operation, and announces its choices.  Provider-controlled descriptions
-and choice labels are bounded, but the actual permission controls remain
-in Agent Shell.
-
-   If the provider supplies new operation details after asking
-permission, Emacsvox announces the changed description or input.
-Identical updates and routine output do not repeat the warning.  The
-permission controls remain the place to inspect and decide the request.
-
-   If the request belongs to another session, switch to the named
-buffer.  Use ‘M-x agent-shell-jump-to-latest-permission-button-row’ to
-find its latest permission row, or use Agent Shell's ‘<TAB>’ and
-‘S-<TAB>’ item navigation.  Move among the buttons and press ‘<RET>’, or
-use a direct choice key displayed by Agent Shell.  Choice keys are
-supplied by Agent Shell and the provider, so the visible permission row
-is authoritative.
-
-   Error blocks remain exceptional feedback rather than routine
-transcript chatter.  Lifecycle error announcements follow
-‘emacsvox-agent-shell-signal-processing’; rendered error content remains
-available in the transcript even when routine response speech is quiet.
-
-
-File: emacsvox.info,  Node: Reading Agent Responses,  Next: Agent Shell Transcript Navigation,  Prev: Agent Shell Permissions,  Up: Agent Shell
-
-10.5 Inspect a response on demand
-=================================
-
-These commands work from the shell and its associated viewports:
-
-‘C-c r’
-     Run ‘emacsvox-agent-shell-speak-last-response’.  It reads the
-     latest successfully completed response in full without moving
-     point.  This deliberate operation does not inherit the automatic
-     2,000-character limit.  While a new turn is busy it explicitly
-     identifies and reads the prior completed response.
-‘C-c R’
-     Run ‘emacsvox-agent-shell-speak-response-overview’.  It reports
-     line, heading, source-block, and table counts plus a bounded
-     opening preview.
-
-   These commands remain usable at ‘notify’ and ‘quiet’.  If no turn has
-completed, they say that no completed response is available rather than
-presenting a streaming partial or failed answer.
-
-
-File: emacsvox.info,  Node: Agent Shell Transcript Navigation,  Next: Agent Shell Source Blocks,  Prev: Reading Agent Responses,  Up: Agent Shell
-
-10.6 Navigate transcript blocks
-===============================
-
-Agent Shell responses contain semantic prompt, response, thought,
-activity, tool, plan, permission, error, source-block, and table
-locations.  Emacsvox navigation reports the block type, visibility, and
-a bounded body preview.
-
-   Up and Down play the ellipses cue when you enter a collapsed heading,
-such as Capabilities, Models, or Notices.  Wrapped continuation rows do
-not repeat the cue; leaving and returning to the heading plays it again.
-The optional block visibility cue replaces this default cue.  Reading
-the current line with ‘C-e l’ continues to indicate hidden content.
-
-‘h / H’
-     Use ‘h’ (‘emacsvox-agent-shell-next-heading’) or ‘H’
-     (‘emacsvox-agent-shell-previous-heading’).  Move to the next or
-     previous visible Markdown heading and speak its text.
-‘k / K’
-     Use ‘k’ (‘emacsvox-agent-shell-next-source-block’) or ‘K’
-     (‘emacsvox-agent-shell-previous-source-block’).  Move to the next
-     or previous source block and announce its language and line count.
-     Inside a table, lowercase ‘k’ remains the table copy prefix; use
-     ‘M-x emacsvox-agent-shell-next-source-block’ to jump forward to
-     code from there.
-‘u / U’
-     Use ‘u’ (‘emacsvox-agent-shell-next-user-prompt’) or ‘U’
-     (‘emacsvox-agent-shell-previous-user-prompt’).  Move to the next or
-     previous submitted user prompt, skipping the live editor.
-‘j / J’
-     Use ‘j’ (‘emacsvox-agent-shell-next-response’) or ‘J’
-     (‘emacsvox-agent-shell-previous-response’).  Move to the next or
-     previous agent response and speak its bounded body preview.  These
-     keys skip intervening thoughts, tools, and other block types.  From
-     code or a table inside an answer, they skip that enclosing answer.
-‘l / L’
-     Use ‘l’ (‘emacsvox-agent-shell-next-link’) or ‘L’
-     (‘emacsvox-agent-shell-previous-link’).  Move to the next or
-     previous visible rendered link and speak its label and Return
-     action together.  The cursor hint remains visible without a second
-     voice repeating it.  Press ‘<RET>’ to follow the link.
-‘e / E’
-     Use ‘e’ (‘emacsvox-agent-shell-next-error’) or ‘E’
-     (‘emacsvox-agent-shell-previous-error’).  Move to the next or
-     previous error or failed tool call.  Failed tools are identified by
-     Agent Shell's error styling in their status label, rather than by
-     words in their output.
-‘]’
-     Run ‘emacsvox-agent-shell-next-block-at-point’ to find the next
-     block of the current semantic type.
-‘[’
-     Run ‘emacsvox-agent-shell-previous-block-at-point’ to find the
-     preceding block of the current semantic type.
-‘C-c ]’
-     Run ‘emacsvox-agent-shell-next-block-of-type’, choose a type, and
-     move to its next occurrence.
-‘C-c [’
-     Run ‘emacsvox-agent-shell-previous-block-of-type’, choose a type,
-     and move to its preceding occurrence.
-
-   After a successful typed jump, ‘]’ and ‘[’ repeat in that direction.
-At an editable live prompt or viewport editor, bare brackets and
-navigation letters insert themselves instead of taking over prompt
-editing.
-
-
-File: emacsvox.info,  Node: Agent Shell Source Blocks,  Next: Agent Shell Tables,  Prev: Agent Shell Transcript Navigation,  Up: Agent Shell
-
-10.7 Read and copy source blocks
-================================
-
-Use ‘k’ or ‘K’, or typed block navigation, to reach a source block,
-then:
-
-‘C-c C-b’
-     Run ‘emacsvox-agent-shell-speak-source-block’ to read the complete
-     rendered source block with its language and line count.
-‘C-c C-y’
-     Run ‘emacsvox-agent-shell-copy-source-block’ to copy the logical
-     source through Agent Shell's public copy operation.
-
-   The source commands are explicit operations and do not use the
-automatic content limit.  Ordinary line navigation retains its separate
-bounded speech policy.
-
-10.7.1 Review proposed changes
-------------------------------
-
-Opening an Agent Shell change review announces its file and hunk counts
-and, for a single file, its name.  The normal Diff Mode hunk navigation
-remains available; opening the review does not accept or reject changes.
-
-   These interactions expose semantic events and attributes to Aural.
-You can customize speech, voices, and earcons for steering outcomes,
-queue changes, list editing, setting changes, updated tool output, and
-change-review entry.
-
-
-File: emacsvox.info,  Node: Agent Shell Tables,  Next: Agent Shell Recovery,  Prev: Agent Shell Source Blocks,  Up: Agent Shell
-
-10.8 Navigate and copy rendered tables
-======================================
-
-Agent Shell gives rendered Markdown tables their own navigation
-commands.  Moving into a table activates a contextual table map.  It
-announces the table dimensions and current cell.  Leaving the table
-restores the ordinary Agent Shell keys.  Markdown and Org source buffers
-offer explicit table reading with matching logical operations; see *note
-Browsing Structure: Browsing Structure.  Agent Shell retains its own
-table speech preferences and automatic contextual activation.  Plain
-Left and Right, or ‘C-b’ and ‘C-f’, move by character within the current
-cell.  ‘M-b’ and ‘M-f’, or Control-Left and Control-Right, move by word.
-These commands follow wrapped text within the same cell, skipping
-borders, padding, and neighbouring columns.  At the beginning or end of
-the cell, they stop and announce the boundary.  Use Control-Meta-Left
-and Control-Meta-Right to move between columns.  Control-Meta-Up and
-Control-Meta-Down move between logical rows in the current column and
-read only the destination cell.  Plain Up and Down make the same move
-and read the entire destination row.  Wrapped cells are read in full,
-using your table title settings.
-
-   ‘C-n’ and ‘C-p’ retain ordinary line movement.  They can move through
-wrapped cell text, but do not stay within the logical cell or skip other
-columns.  Use character and word movement to follow the cell's text in
-order.
-
-   Outside editable input, press ‘t’ for the next table or ‘T’ for the
-previous table.  These keys skip the current table and announce the
-destination table and cell.  Like the bracket navigation keys, they
-insert themselves in a live prompt or viewport editor, including while
-the agent is working.
-
-10.8.1 Understand table key conflicts
--------------------------------------
-
-In viewport view mode, ‘t’ takes the place of Agent Shell's
-thought-level shortcut; use ‘M-x
-agent-shell-viewport-set-session-thought-level’ for that action.  Inside
-a table, ‘r’, ‘c’, and ‘a’ read rows, read columns, and select the table
-speaking method.  To invoke the displaced viewport actions there, use
-‘M-x agent-shell-viewport-reply’, ‘M-x
-agent-shell-viewport-reply-continue’, or ‘M-x
-agent-shell-viewport-reply-again’.  In the shell transcript, table ‘r’
-replaces quoting; use ‘M-x agent-shell-quote-region’ with a selected
-region.  Leaving the table restores these ordinary bindings.
-
-   Outside tables, ‘C-M-<up>’ and ‘C-M-<down>’ do nothing in Agent
-Shell, including its viewport and prompt editor.  Repeating a row key
-after leaving a table therefore keeps point at the exit.  These two keys
-also do nothing in ordinary ‘shell-mode’ buffers.  For structural
-movement there, use ‘M-x backward-up-list’ or ‘M-x down-list’.
-Source-code buffers keep their usual bindings.
-
-   Continuous speech and response-block reading omit rendered table
-borders and keep the cell text.  Decorative borders therefore do not
-force a switch to a different speech engine.  Literal box-drawing
-characters in prose or code remain available to symbol naming and exact
-character inspection.
-
-10.8.2 Table command reference
-------------------------------
-
-‘t’
-     Run ‘emacsvox-agent-shell-next-table’ outside editable input.
-‘T’
-     Run ‘emacsvox-agent-shell-previous-table’ outside editable input.
-‘C-M-<right>’
-     Run ‘emacsvox-agent-shell-table-next-column’.
-‘C-M-<left>’
-     Run ‘emacsvox-agent-shell-table-previous-column’.
-‘<down>’
-     Run ‘emacsvox-agent-shell-table-next-row’ and read the destination
-     row.
-‘<up>’
-     Run ‘emacsvox-agent-shell-table-previous-row’ and read the
-     destination row.
-‘C-M-<down>’
-     Run ‘emacsvox-agent-shell-table-next-row-cell’ and read the
-     destination cell.
-‘C-M-<up>’
-     Run ‘emacsvox-agent-shell-table-previous-row-cell’ and read the
-     destination cell.
-‘M-<down>’
-     Run ‘emacsvox-agent-shell-table-exit-forward’.
-‘M-<up>’
-     Run ‘emacsvox-agent-shell-table-exit-backward’.
-‘SPC’
-     Run ‘emacsvox-agent-shell-table-speak-cell’.
-‘r’
-     Run ‘emacsvox-agent-shell-table-speak-row’.
-‘c’
-     Run ‘emacsvox-agent-shell-table-speak-column’.
-‘.’
-     Run ‘emacsvox-agent-shell-table-speak-context’ for row, column, and
-     table position.
-‘=’
-     Run ‘emacsvox-agent-shell-table-speak-dimensions’.
-‘w’
-     Run ‘emacsvox-agent-shell-table-copy-cell’.
-‘k k’
-     Also run ‘emacsvox-agent-shell-table-copy-cell’.
-‘k r’
-     Run ‘emacsvox-agent-shell-table-copy-row’; copied cells are
-     tab-separated.
-‘k c’
-     Run ‘emacsvox-agent-shell-table-copy-column’; copied cells are
-     separated by newlines.
-‘a’
-     Run ‘emacsvox-agent-shell-table-select-speaking-method’ to toggle
-     column titles, row titles, or whether data is spoken before titles.
-
-   Copy commands use logical cell values, excluding renderer padding and
-Markdown borders.  Wrapped cell contents remain complete.
-
-
-File: emacsvox.info,  Node: Agent Shell Recovery,  Prev: Agent Shell Tables,  Up: Agent Shell
-
-10.9 Recover from interruption or failure
-=========================================
-
-If a request is taking the wrong path, press ‘C-c C-c’ and confirm the
-Agent Shell interrupt.  A failed or interrupted partial response is not
-cached as complete.  Press ‘C-c r’ for the preceding completed response,
-or ‘C-c R’ for its overview.  Read the error block in the transcript for
-the provider's details and edit the live prompt before resubmitting.
-
-   Use ‘M-x agent-shell-restart’ when Agent Shell itself needs a fresh
-process for the same project.  Use ‘M-x emacsvox-agent-shell-enable’ to
-reinstall speech hooks after deliberately disabling them.  Neither
-recovery command discards transcript files or project work.
-
-   If you are changing the integration rather than using it, see *note
-Integration Maintenance: Integration Maintenance. for its public event,
-renderer, and compatibility contracts.
-
-
-File: emacsvox.info,  Node: EAT Terminal Access,  Next: Running Terminal Based Applications,  Prev: Agent Shell,  Up: Top
-
-11 Speech Access To EAT
-***********************
-
-EAT (Emulate A Terminal) is a third-party terminal emulator, commonly
-installed from NonGNU ELPA.  Run ‘M-x eat’ to start it; a prefix
-argument creates or selects another terminal.  Follow the *note Eat User
-Manual: (eat)Top. for installation, terminal setup, and EAT's complete
-command reference.
-
-   Three parts cooperate here.  EAT emulates the terminal; the shell,
-router, or other program handles terminal input and completion; Emacsvox
-presents the rendered result.  Emacsvox observes a bounded screen, not
-the program's private state.  It does not generate shell or router
-completion candidates.
-
-   First choose an input mode appropriate to the program.  Then use
-automatic feedback for current work and explicit review for content you
-need to examine again.  ‘C-e S’ opens focused EAT speech settings; those
-menu keys apply only while the menu is open, not to ordinary terminal
-input.
-
-* Menu:
-
-* Choose an input mode: EAT Input Modes.  Decide which keys reach Emacs and which reach the terminal program.
-* Understand automatic terminal feedback: EAT Automatic Feedback.  Follow output, prompts, editing results, and application-screen changes.
-* Hear terminal-side completion: EAT Terminal Completion.  Hear completed input and inspect retained candidate or help rows.
-* Review retained terminal output: EAT Screen Review.  Read retained state or inspect an immutable screen without sending input.
-* Adjust and save terminal feedback: EAT Feedback Preferences.  Choose verbosity, background monitoring, and focused speech defaults.
-* Follow shell prompts and command status: EAT Shell Integration.  Understand the Bash or Zsh integration and its remote-shell limits.
-* Enter passwords and protect sensitive content: EAT Passwords And Privacy.  Use protected password input and understand retained terminal data.
-* Control terminal access to the clipboard: EAT Clipboard Trust.  Review OSC 52 trust and the two terminal selection-control options.
-* Inspect full-screen applications and diagnose silence: EAT Full-screen Applications.  Use retained review and distinguish terminal rendering from speech.
-* Use EAT in Eshell: EAT In Eshell.  Understand embedded terminals and visual-command window return.
-
-
-File: emacsvox.info,  Node: EAT Input Modes,  Next: EAT Automatic Feedback,  Up: EAT Terminal Access
-
-11.1 Input Modes And Completion Responsibilities
-================================================
-
-EAT has four input modes.  Emacsvox announces the mode name when you
-switch.  The mode determines whether a key edits text in Emacs or
-reaches the terminal program.
-
-Semi-character mode
-     The default.  Most keys, including ‘<TAB>’, go to the terminal,
-     while prefixes such as ‘C-x’, ‘C-c’, and ‘M-x’ remain available.
-     Use ‘C-q’ before a normally reserved key to send it through.  ‘C-c
-     C-j’ selects this mode.
-Character mode
-     All supported keys go to the terminal, useful for programs needing
-     Emacs-like keys.  Enter with ‘C-c M-d’ and return to semi-character
-     mode with ‘C-M-m’ or ‘M-<RET>’.
-Emacs mode
-     Keys stay in Emacs and send no terminal input.  Use it for ordinary
-     buffer motion and inspection.  Enter with ‘C-c C-e’.
-Line mode
-     Edit the pending line locally and send it with ‘<RET>’.  ‘<TAB>’
-     invokes Emacs's ‘completion-at-point’, whose result may be
-     displayed by a front end such as Corfu.  Enter from semi-character
-     or Emacs mode with ‘C-c C-l’.  Line mode is not available in EAT's
-     embedded Eshell terminal.
-
-   Line mode does not create unlimited history.
-‘eat-term-scrollback-size’ still limits retained text by _characters_,
-not lines; ‘nil’ permits unlimited retention.  The editable draft
-follows the terminal extent, and changing input modes does not change
-this limit.
-
-   In semi-character and character modes, ‘<TAB>’ belongs to Bash
-Readline, a remote shell, router CLI, or the running terminal program.
-Corfu is not involved.  In line mode, completion belongs to Emacs and
-does not query a remote CLI.  Semi-character mode is therefore usually
-appropriate for SSH and network-device sessions.  If an Emacs completion
-backend blocks in line mode, ‘C-g’ cancels that Emacs operation; switch
-to semi-character mode when terminal completion was intended.
-
-   The shell must have its own completion configuration.  For example,
-completing ‘git pul’ to ‘git pull’ in Bash requires suitable
-programmable definitions, often supplied by ‘bash-completion’.  Emacsvox
-neither installs nor substitutes for those definitions.
-
-
-File: emacsvox.info,  Node: EAT Automatic Feedback,  Next: EAT Terminal Completion,  Prev: EAT Input Modes,  Up: EAT Terminal Access
-
-11.2 Automatic Terminal Feedback
-================================
-
-‘C-e C-q’ toggles automatic foreground feedback for this terminal; it
-starts enabled.  The same control is ‘s’ in the focused settings menu.
-It covers routine output, status, automatic metadata, application-screen
-boundaries, and process lifecycle feedback.  Explicit reading, input and
-completion feedback, and the configured terminal bell remain available.
-Verbosity (‘C-e q v’) and background monitoring (‘C-e q m’) are
-independent preferences.
-
-   Automatic speech requires the selected EAT buffer and Emacs keyboard
-focus.  The selected window must follow the live cursor or edit a
-line-mode draft after terminal output.  Reviewing scrollback prevents
-new output from interrupting you.  Another selected terminal or an
-active minibuffer also suppresses foreground feedback.  In terminal-only
-Emacs, or when keyboard focus cannot be reported, selection within Emacs
-is the available boundary.
-
-   Turning autospeak off or losing eligibility discards locally pending
-automatic feedback.  Speech already sent to Omnivox may finish.
-Returning or re-enabling speech starts with fresh output; it does not
-replay missed content.  Use explicit review instead.  This policy also
-applies to an embedded Eshell terminal, without changing ordinary Eshell
-output.
-
-11.2.1 Read output and follow progress
---------------------------------------
-
-On the main screen, Emacsvox collects a burst before classifying it.
-Complete new output lines are spoken once, with automatic limits of
-eight lines and 1,000 characters.  Continued input rows and empty
-terminal placeholders are omitted without hiding output or rereading
-earlier rows.  Output remains eligible even if it scrolls beyond the
-screen, including repeated identical lines; increasing scrollback is
-unnecessary for this feedback.
-
-   Wrapped output is joined and oversized bursts announce how much was
-omitted.  Fresh text without a newline also speaks, keeping password
-requests and confirmation questions accessible.  Carriage-return
-progress and status rewrites use rate-limited, replaceable speech.
-Unchanged repaints and resize-only updates remain silent.  Bells,
-pastes, input-mode changes, application-screen boundaries, and process
-exit are content-free semantic events rather than arbitrary screen
-readings.
-
-11.2.2 Recognise and inspect prompts
-------------------------------------
-
-When EAT shell integration identifies a ready prompt, Emacsvox gives a
-cue after output instead of reading the prompt text.
-‘emacsvox-eat-prompt-feedback’ defaults to ‘earcon’; choose ‘text’ to
-hear the prompt or ‘silent’ to suppress it.  This option can be
-buffer-local and is independent of verbosity, but automatic prompt
-feedback still obeys foreground autospeak eligibility.
-
-   Split and multiline prompts are collected until ready.  Redisplay and
-typing do not repeat them.  If several prompts arrive in one burst,
-feedback describes the final ready prompt.
-
-   ‘C-e q p’ explicitly reads the last identified prompt, even with
-autospeak off.  Recognition does not require margin annotations, but it
-does require shell integration.  An unintegrated remote prompt or
-question is ordinary output, read as text; the prompt preference does
-not silence it.  The last identified prompt may still belong to the
-local shell.  Use ‘C-e q l’ for the current retained cursor row in that
-situation.
-
-11.2.3 Hear input and deletion results
---------------------------------------
-
-On the main screen in semi-character and character modes, ‘<RET>’ is
-silent.  After rendered left/right movement, Emacsvox names the reached
-character; after up/down it speaks the resulting input or history row
-without the observed shell prompt.  ‘M-b’, ‘M-f’, and modified
-left/right word movements speak the rendered text crossed.  A boundary
-key that produces no movement stays silent.
-
-   Line-mode history navigation speaks the recalled command once.  EAT's
-history-item counter and input-restored message remain visible in the
-echo area without speaking over the command on the notification stream.
-
-   An echoed Space is named without rereading the prompt or line.  For
-Backspace, Delete, ‘M-d’, and ‘C-k’, Emacsvox compares bounded public
-snapshots before and after the key.  One unambiguous same-row removal is
-read as the actual character or text removed.  Otherwise only a deletion
-tone is given; adjacent prompt or screen text is not guessed as deleted
-content.  Padding and trailing input blanks do not prevent an otherwise
-unambiguous word deletion.
-
-   A no-echo peer provides no visible deletion to announce.  This input
-feedback requires the selected window to follow the live cursor, and is
-silent during protected password entry, in an unselected terminal, and
-on an alternate screen where the application owns the keys.
-
-11.2.4 Bells and application-screen changes
--------------------------------------------
-
-Bells retain EAT's configured sound without speaking "Terminal bell" by
-default.  An aural rule can add a label by matching module ‘eat’, role
-‘command-interaction’, event ‘command-terminal-bell’, and occasion
-‘notification’, with speech before or after the event.  Bell
-notifications remain rate-limited and obey selected-buffer, live-cursor,
-and secure-input restrictions.
-
-   On full-screen or alternate-screen applications, Emacsvox does not
-read every refresh.  A cursor row reached by correlated arrow-style
-navigation, or a compact high-confidence transfer of selection-like
-styling, may be announced.  Ambiguous repaints remain available to
-explicit review.  Inverse video or a coloured row alone is not proof of
-an active item.
-
-
-File: emacsvox.info,  Node: EAT Terminal Completion,  Next: EAT Screen Review,  Prev: EAT Automatic Feedback,  Up: EAT Terminal Access
-
-11.3 Terminal-side Completion
-=============================
-
-Before a terminal-side ‘<TAB>’ on the main screen, Emacsvox captures the
-public screen and waits briefly for output to settle.  An inline
-completion speaks the newly displayed field; for example, ‘~/sr<TAB>’
-can speak ‘src slash’ after the shell displays ‘~/src/’.
-
-   An ambiguous completion printed as columns or help rows is presented
-as one transaction after the input line is redrawn.  Small inferred
-lists speak up to eight candidates.  Router-style descriptions keep
-their layout rather than being forced into a shell-token model.  Large
-lists are counted and shortened for automatic speech.  If candidates
-have already scrolled beyond the bounded screen, the count is a lower
-bound, such as "at least N visible", not an invented total.
-
-   Identical repeated lists, split output, bells, wrapping, and resizing
-are coalesced without repeating the candidate text.  This works from
-rendered results for local Readline, SSH, and unstructured router help.
-No visible change means there is nothing reliable to announce.  On an
-alternate screen, ‘<TAB>’ is navigation rather than shell completion.
-
-   Use ‘C-e q c’ to read the retained candidate/help layout, or open
-frozen review with ‘C-e q r’ and press ‘c’.  This is useful for large or
-multi-column results and does not ask the terminal to complete again.

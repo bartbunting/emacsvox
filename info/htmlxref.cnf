@@ -4,6 +4,8 @@ emacs	mono	https://www.gnu.org/software/emacs/manual/html_mono/emacs.html
 emacs	node	https://www.gnu.org/software/emacs/manual/html_node/emacs/
 info	mono	https://www.gnu.org/software/emacs/manual/html_mono/info.html
 info	node	https://www.gnu.org/software/emacs/manual/html_node/info/
+org	mono	https://www.gnu.org/software/emacs/manual/html_mono/org.html
+org	node	https://www.gnu.org/software/emacs/manual/html_node/org/
 eat	mono	https://elpa.nongnu.org/nongnu/doc/eat.html
 dir	mono	index.html
 emacspeak	mono	https://tvraman.github.io/emacspeak/manual/index.html

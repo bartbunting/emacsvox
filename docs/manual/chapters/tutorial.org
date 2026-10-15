@@ -1,0 +1,569 @@
+* Learn the audio desktop
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Guided Tutorial
+:DESCRIPTION: Practise reading, editing, navigation, and reversible speech changes.
+:END:
+
+#+cindex: tutorial
+#+cindex: learning Emacsvox
+#+cindex: practice document
+
+This tutorial takes you from reading a short document to exploring its
+structure and making a deliberate speech adjustment. Work through the lessons
+in order the first time. Each builds on the same practice document; the
+exercises ask you to use what you have learned without repeating every step.
+Answers are collected at the end so you can try before consulting them.
+
+Start with a speaking Emacsvox session prepared through
+[[info:emacsvox#Installation][Installation]], including its settings-menu dependency. No mail account,
+agent service, downloaded voice, or terminal package is needed. The first
+five lessons work with text and the Org mode supplied with Emacs. The final
+lesson uses an already available voice. If your backend cannot preview an
+adjustment, keep the working voice and follow the reported limitation rather
+than installing another engine to complete the exercise.
+
+The required exercises do not save speech settings. One clearly marked
+optional exercise creates a personal palette; you can finish the tutorial
+without doing it. Do not practise in a document, draft, or configuration that
+you need to preserve.
+
+Keys are the defaults. ~C-n~ means hold Control and press n. In ~C-e l~,
+press Control-e, release it, then press lowercase l. ~M-~ normally means
+Alt or Option, ~RET~ means Enter, and ~SPC~ means Space. Capital letters
+matter. Use ~M-x~, type the command name, and press ~RET~ when a command is
+given by name. [[info:emacsvox#Using This Manual][Using this manual]] explains finding a topic and returning from it.
+
+** Prepare a practice buffer
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Tutorial Practice Buffer
+:DESCRIPTION: Make a disposable copy of the practice text without editing repository files.
+:END:
+
+A buffer is Emacs's working copy of text. It need not have a file behind it.
+We will use a new buffer so that editing, undo, and temporary settings cannot
+change the supplied example or an existing document.
+
+1. Press ~C-x b~, enter =evox-tutorial=, and press ~RET~. If that name already
+   belongs to work you want to keep, use an unused name such as
+   =evox-tutorial-2= and substitute it throughout these lessons.
+2. Run ~M-x text-mode RET~. This starts with ordinary text rather than Org's
+   structural commands. Press ~C-e m~ to hear the buffer and mode.
+3. Insert the practice text below. In a source checkout, you can use
+   ~C-x i~ and select =docs/manual/examples/tutorial-practice.org= relative
+   to that checkout. This inserts a copy; it does not visit or modify that
+   file. Otherwise copy or type the displayed text into the empty buffer.
+4. Press ~M-<~ to move to the beginning. ~C-e l~ reads the current line.
+   It should contain the heading =* Practice note=.
+
+The example is included here so you can use an installed Info or HTML manual
+without a source checkout. Preserve its asterisks, brackets, pipes, and line
+breaks. Those characters become useful in the structure lesson. The code at
+the end is for reading, not evaluation; do not run it.
+
+#+include: "../examples/tutorial-practice.org" example
+
+Keep the manual and the practice buffer available. ~C-x b~ followed by your
+practice buffer's name returns to your work without closing the manual.
+Finish any active minibuffer prompt first; ~C-g~ cancels an ordinary unfinished
+Emacs command. In a settings menu or an editor, use the return procedure
+specified in the lesson instead of assuming that every quit key is identical.
+
+If you need a fresh copy, leave menus and editors first, then use ~C-x k~
+while in the disposable practice buffer. Check the buffer name and discard
+only that practice text if asked. Create a new buffer and insert the example
+again. Do not use this reset procedure on other work.
+
+** Lesson 1: read and locate point
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Tutorial Reading
+:DESCRIPTION: Distinguish movement, explicit reading, and stopping speech.
+:END:
+
+Emacs calls the editing position /point/. Movement changes point and Emacsvox
+speaks what you reach. Explicit reading lets you inspect text without first
+moving. Learning that distinction makes it easier to recover when speech is
+interrupted or you are unsure where the next edit will occur.
+
+1. In the practice buffer, press ~M-<~, then ~C-n~. You reach the line about
+   the green notebook and hear its text.
+2. Press ~C-e l~ twice. Each invocation reads that line again without moving
+   point. Now press ~C-n~: you reach the sentence about being ready, not a line
+   farther down because of the repeated reading.
+3. Press ~C-p~ to return to the notebook line, then ~C-a~ to reach its start.
+   ~C-e c~ reads the character at point. Use ~C-f~ to move one character
+   forward and ~C-b~ to move back. Point moves only with the movement commands.
+4. Press ~C-e b~ to start reading the buffer and ~C-e s~ to stop that speech.
+   Then press ~C-e l~. It still works: stopping an utterance has not switched
+   speech off or closed the document.
+
+The exact voice and pronunciation depend on your current settings. Check the
+text you reached, not whether your system sounds like someone else's.
+~C-e m~ identifies the buffer and mode whenever your context is unclear.
+
+If ~M-<~ is intercepted by your desktop or screen reader, run
+~M-x beginning-of-buffer RET~ instead. This is an Emacs command, not a
+requirement to change screen-reader configuration.
+
+*** Try it
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+*1A.* From the start of the buffer, reach the line beginning =Check= using
+line movement. Read it twice without changing point.
+
+*1B.* Start a longer reading, stop it, and establish both which buffer you
+are in and what its current line contains. Do not restart Emacs or speech.
+
+See [[tutorial-answer-1][Answers for lesson 1]].
+
+** Lesson 2: find, edit, and recover text
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Tutorial Editing
+:DESCRIPTION: Search for a known word, make a small edit, and verify undo.
+:END:
+
+Searching locates text; it does not change the text. Editing happens at point,
+which is after the match when a forward search succeeds. We will make one
+small insertion, inspect it, and undo it before attempting a replacement.
+
+1. Press ~M-<~, then ~C-s~ and type =ready=. When the search finds the word,
+   press ~RET~ to finish. Point is after =ready= and before its full stop.
+2. Type a space followed by =now=. ~C-e l~ should read the sentence with
+   =ready now=. The other sentences are unchanged.
+3. Press ~C-/~ to undo and inspect the line again with ~C-e l~. Undo works in
+   editing groups, not necessarily one character at a time. Stop when the
+   sentence is back to =This sentence is ready.=; do not keep undoing into
+   the initial insertion of the example. ~M-x undo RET~ is an alternative
+   when your keyboard cannot send ~C-/~.
+4. Search for =notebook= from the beginning and finish with ~RET~. Notice that
+   searching and reading did not modify the document. You can return to any
+   known phrase without counting lines.
+
+If a search does not find its text, check your spelling. ~C-g~ during a
+failing search first backs out of the failure; another ~C-g~ may be needed to
+leave the search. Wait until the search prompt is gone before typing ordinary
+text. A successful search is accepted with ~RET~, not by typing the edit into
+its search prompt.
+
+*** Try it
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+*2A.* Replace =green= with =blue=. Use a successful search for the whole word,
+then ~M-DEL~ to remove the word immediately before point, and type its
+replacement. Here ~DEL~ means Backspace; ~M-x backward-kill-word RET~ is an
+alternative to ~M-DEL~. Inspect the complete line and restore =green= before
+continuing.
+
+*2B.* What would happen if you typed =now= before accepting the search?
+Explain the difference between changing the query and changing the document.
+
+See [[tutorial-answer-2][Answers for lesson 2]]. Text undo is not a general undo command for settings
+menus; we will practise their recovery separately.
+
+** Lesson 3: get Help and return to your work
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Tutorial Help And Buffers
+:DESCRIPTION: Keep two tasks open, inspect a key, and return without losing your place.
+:END:
+
+A Help buffer is another piece of work you can visit. It need not replace the
+document you were editing. We will keep a second text buffer available, then
+inspect a command without running it.
+
+1. Press ~C-x b~, enter an unused name such as =evox-tutorial-notes=, and
+   press ~RET~. Run ~M-x text-mode RET~ and type
+   =I can return to my document by name.=.
+2. Use ~C-x b~ and your original practice buffer's name to return. Its text
+   and position are still available. ~C-e m~ and ~C-e l~ confirm where you are.
+3. Press ~C-h k C-e l~. Emacs describes the current-line reading key; it does
+   not execute that key as the requested action. ~C-e h~ reads the displayed
+   Help again.
+4. To read Help directly, use ~C-x b~ and select its =*Help*= buffer from
+   completion. Navigate with ordinary reading commands, then press ~q~ to
+   leave Help. Use ~C-x b~ to select the practice buffer if other window or
+   buffer changes make the return destination unclear.
+5. Press ~C-h m~ in the practice buffer. This describes its modes and local
+   commands. Leave Help and return to the document by the same method.
+
+The information comes from your running Emacs, so it is particularly useful
+when a package or personal binding differs from this manual. A buffer and a
+window are different: switching buffers chooses content, while ~C-x o~
+selects another window. You do not have to rearrange windows to finish this
+exercise.
+
+*** Try it
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+*3A.* Without closing either text buffer, visit the notes, add a second line,
+and return to the practice document. Confirm that each contains its own text.
+
+*3B.* Discover what ~C-e s~ does without stopping speech as the action you
+are investigating. Then find the keys for the command name reported by Help,
+using ~C-h w~.
+
+See [[tutorial-answer-3][Answers for lesson 3]]. For manual lookup and navigation history, practise
+[[info:emacsvox#Using This Manual][Find an answer in Info and return]] alongside this buffer-based Help exercise.
+
+** Lesson 4: navigate the document's structure
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Tutorial Structured Navigation
+:DESCRIPTION: Explore Org headings, links, and a table without evaluating code.
+:END:
+
+The practice text is also an Org document. Changing its major mode gives
+Emacs commands that understand headings, lists, links, and tables. The text
+remains yours; a folded section is hidden, not deleted.
+
+1. Return to the practice buffer and run ~M-x org-mode RET~. Press ~M-<~,
+   then ~C-u C-u C-u TAB~ to show the whole document, including any folded
+   sections. Each ~C-u~ is a separate prefix keystroke. ~C-e m~ now identifies
+   Org rather than Text mode.
+2. From the first heading, press ~C-c C-n~ to reach =Packing list=. This
+   moves to a heading, skipping intervening body text. ~C-c C-p~ returns to
+   the previous visible heading. Go forward to =Packing list= again.
+3. Press ~TAB~ on that heading to fold its body. ~C-c C-n~ reaches
+   =Journey plan=. Return with ~C-c C-p~ and press ~TAB~ to expose the list
+   again. Read down into it to confirm that the items are still present.
+4. Show all content again with ~C-u C-u C-u TAB~, then search from the
+   beginning for =Return to the packing list=. Finish with ~RET~ and press
+   ~C-b~ once to leave point inside the link text. ~C-c C-o~ follows this
+   internal link to the heading; no website or external file is opened.
+
+Heading speech and collapse cues depend on your presentation settings.
+What matters is the location and visibility you can inspect. Do not require
+one exact spoken phrase or one physical voice to recognise a heading.
+
+*** Read the table without editing it
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Show the whole document again, then search from the beginning for =Monday=
+and finish with ~RET~. You are in the first data row's Day cell.
+
+1. Press ~C-e C-t C-r~ to enter table reading without moving. Emacsvox
+   announces the table dimensions and the current cell.
+2. Press ~TAB~ to reach the Task cell, =Read=. ~RET~ reads that cell again.
+   In this reader these keys do not align the table or insert a row.
+3. Press Down. You remain in the Task column and hear the complete Tuesday
+   row. Press ~c~ to read the column, or ~r~ to repeat the current row.
+   ~.~ reports coordinates; headers and data rows are distinguished.
+4. Press ~q~ to leave table reading, then ~C-e l~ to inspect the text line.
+   The table reader closes, not the practice buffer. Ordinary Org editing
+   keys are restored.
+
+Outside table reading, Org's ~TAB~ is an editing/navigation command that can
+align a table and create rows. A key's meaning belongs to the active mode or
+reader, not to its letter alone. Do not evaluate the source block at the end
+of the document: it is present so you can also inspect literal code.
+
+*** Try it
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+*4A.* Enter table reading at =Monday= again. Reach Tuesday's Status cell and
+read it without typing into the table. Then leave reading mode.
+
+*4B.* Fold =Packing list=, read another section, and bring the list back.
+Explain why text undo is not needed to recover the hidden items.
+
+See [[tutorial-answer-4][Answers for lesson 4]]. [[info:emacsvox#Browsing Structure][Browsing Structure]] documents the complete shared table reader;
+[[info:org#Motion][Org heading motion]] and [[info:org#Visibility Cycling][Org visibility cycling]] explain the underlying document commands.
+
+** Lesson 5: change speech in one buffer
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Tutorial Temporary Settings
+:DESCRIPTION: Compare punctuation levels, inspect scope, and restore the previous policy.
+:END:
+
+Now change how one line is spoken without changing its text. This is a live
+buffer adjustment, not a draft preview. Closing the menu keeps it in effect;
+restoring it is a separate action. We will not save a default.
+
+1. In the practice buffer, leave table reading if active. Show all content,
+   then search from the beginning for =Check (A+B), then C.= and accept the
+   match. Press ~C-a~, then ~C-e l~ to hear the starting presentation.
+2. Press ~C-e H s p~ without a prefix argument. Read the scope and current
+   punctuation policy. It must name the current buffer, not global defaults.
+   Record whether the original policy is automatic, an explicit level, or a
+   named profile. If scope is global, use ~g~ to choose buffer scope before
+   changing anything.
+3. Press ~? a~ for Help on All, then ~q~ to return to the punctuation menu.
+   Press ~a~ to apply All, followed by ~C-q~ to close the menus. Back in the
+   document, ~C-e l~ lets you compare the same line with punctuation spoken.
+4. Visit the notes buffer and read its line. This operation did not set its
+   punctuation policy. Return to the practice buffer, reopen ~C-e H s p~,
+   choose ~n~ for None, close with ~C-q~, and compare the same line again.
+5. Restore the original policy. For an automatic policy, use ~r~ in that
+   buffer's punctuation menu. For an explicit level or named profile, use
+   ~p~ and select the recorded choice instead. Close the menu and verify
+   the line and the reported policy. Do not press uppercase ~S~.
+
+Punctuation pronunciation varies by engine and configuration, so judge the
+change by the treatment of the line's punctuation rather than an exact sample
+transcript. The characters in the buffer never changed. Restoring Automatic
+returns control to the mode policy; it is not a synonym for choosing Some.
+
+An explicit global change can affect both the default and the source buffer.
+Saving a default adds a persistence step and does not cancel stronger mode
+policies or buffer overrides. Those are different tasks from this temporary
+experiment; see [[info:emacsvox#Saving And Startup][Choose What Persists]].
+
+*** Try it
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+*5A.* From the practice buffer, press ~C-e H /~, search for =punctuation=,
+and choose the punctuation control from completion. The first ~RET~ selects
+its menu item without activating it. Read its Help, then leave without making
+a change. Check the policy afterward.
+
+*5B.* After choosing All and then closing the menu, should the original policy
+return? Describe how to restore it and why ~C-/~ in the document is not the
+right operation.
+
+See [[tutorial-answer-5][Answers for lesson 5]].
+
+** Lesson 6: preview and keep a voice experiment
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Tutorial Voice Experiments
+:DESCRIPTION: Compare an unsaved voice draft, resume it, and distinguish saving from selection.
+:END:
+
+An installed /physical voice/ is a voice an engine can produce. A palette's
+/named voice/, such as =default= for ordinary reading, chooses physical voices
+and adjustments for a purpose. Browsing a physical voice does not replace
+that named entry. We will first try a physical voice without selecting it for
+ordinary reading or changing startup.
+
+1. From the practice buffer, press ~C-e H v b~. Select an available engine
+   and press ~v~ to browse its voices. Expand a language group with ~RET~
+   if needed, then choose an already usable voice.
+2. Press ~P~ to hear its sample and ~S~ to stop. An unavailable or inactive
+   downloaded voice is not suitable for this first exercise. Read its details
+   rather than enabling, installing, or applying packages as a workaround.
+3. Press ~t~ on the usable voice to open an experiment. If this resumes
+   someone else's or your earlier unfinished draft, leave it with Keep and
+   choose another voice; do not overwrite or discard unrelated work.
+4. In your new editor draft, find /Average Pitch/ and note its value. Use
+   ~RET~ to enter =6=, or =5= if it is already six. Press ~P~ to preview and
+   ~B~ to compare the opening and edited versions with the same sample.
+   ~S~ stops. An automatic sample may also follow an adjustment in the full
+   editor; navigation stops it.
+5. Press ~u~ to undo that draft adjustment, compare again, then make the
+   small adjustment once more. This is editor undo, not text undo. If the
+   backend reports the adjustment unsupported, keep that limitation explicit
+   and continue with browsing; do not infer that saving will fix support.
+6. Press ~q~ in the editor and choose to keep the unfinished draft. Return
+   through the browser's parent views with ~q~ until you reach its menu, then
+   close the menu sequence with ~C-q~. Ordinary reading is unchanged.
+7. From the practice buffer, press ~C-e H p d~ and select your retained
+   experiment. Verify the value is still there. To finish without saving,
+   leave its editor with ~q~ and choose to discard this practice draft only.
+   Return through the remaining views and menus.
+
+A retained draft lasts within the Emacs session. It is not a saved palette and
+does not survive restart. Discarding it leaves ordinary reading untouched,
+but discarding a draft would not undo a save that had already completed.
+The editor's status distinguishes unsaved work, successful saving, and failed
+or pending application. Never treat a preview as proof of persistence.
+
+*** Optional: save an inactive personal palette
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+This exercise writes personal palette data. Skip it to keep the tutorial
+entirely free of saved speech-configuration changes. It deliberately avoids
+startup selection and does not require you to restart a working session.
+
+1. Open ~C-e H v p~ and note the active palette and whether selection follows
+   the standard baseline or is explicit. Press ~N~ to create a palette with an unused name such as =tutorial-reading=, a short
+   description, and =acss-default= as parent. Creation saves the new palette
+   but does not activate it. Use another name if that one already exists.
+2. Enter your new palette with ~RET~, select =default=, and press ~e~ to
+   edit it. Change /Average Pitch/ as above and compare with ~B~. This entry
+   controls ordinary reading, not every named voice in the palette.
+3. Choose /Save to collection without selecting/. Wait for its result and
+   check the destination and saved status. Leave with ~q~. The palette now
+   holds your entry, but it is still not selected for ordinary reading.
+4. To try live selection deliberately, return to the palette manager with
+   ~o~, select your new palette, and press ~a~. Return to the practice
+   document and read the notebook line. Other named voices retain their
+   own definitions. Rules or unsupported adjustments can make a contrast
+   subtle; [[info:emacsvox#Voices In Context][Inspect Or Adjust A Voice In Context]] explains how to investigate.
+5. Reopen the palette manager. If you originally followed the standard
+   baseline, use ~f~ to follow it again. Otherwise select the original palette
+   you recorded and press ~a~. Do not use ~U~, the separate startup action,
+   during this tutorial. The inactive tutorial palette remains saved for
+   later use.
+
+If saving or application fails, keep the reported status and follow
+[[info:emacsvox#Recovering Aural Changes][Recovering Unfinished Changes]]. Do not repeat Create, delete files, or restart
+Emacs to hide the failure. After an accepted save, text undo and draft discard
+are not rollback commands. [[info:emacsvox#Personal Palette Walkthrough][Make a Personal Reading Palette]] gives the fuller
+lifecycle, including inheritance and startup selection.
+
+*** Try it
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+*6A.* Create another small preview-only experiment, keep its draft, and
+resume it without saving. Then discard that practice draft and establish
+that your working document is still there.
+
+*6B.* Explain the difference between Preview, Keep draft, Save to collection,
+Activate, and Use at Startup. Which of them did the required exercise use?
+Which additional operations belong to the optional exercise?
+
+See [[tutorial-answer-6][Answers for lesson 6]].
+
+** Exercise answers
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Tutorial Exercise Answers
+:DESCRIPTION: Check the exercises and the reasons behind their recovery steps.
+:END:
+
+Use these answers to check your approach, not as a script you must memorise.
+Equivalent commands are useful when their scope and result are the same.
+In Info, ~l~ retraces the link from an exercise to its answer.
+
+*** Answers: lesson 1
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+<<tutorial-answer-1>>
+
+*1A.* With the unmodified example, ~M-< C-n C-n C-n~ reaches the Check line.
+~C-e l~ reads it without moving, so two repetitions leave the editing position
+unchanged. A different number of inserted lines changes the count; search is
+more dependable when you no longer know the exact layout.
+
+*1B.* Use ~C-e b~, then ~C-e s~. ~C-e m~ identifies the buffer and mode;
+~C-e l~ reads the line at point. Stopping speech does not delete text, move
+to another buffer, or disable later speech commands.
+
+*** Answers: lesson 2
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+<<tutorial-answer-2>>
+
+*2A.* ~M-< C-s green RET~ places point after green. ~M-DEL~ removes that
+word; typing =blue= supplies the replacement. Read the whole line to catch
+spacing or punctuation mistakes. Restore it with a search for blue followed
+by the same replacement procedure. Undo may also work, but verify each editing
+group rather than assuming a fixed number of undo commands.
+
+*2B.* Before ~RET~, the letters extend the search query. No document edit
+has occurred. Accept a successful search, then insert the text at point.
+
+*** Answers: lesson 3
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+<<tutorial-answer-3>>
+
+*3A.* Switch to the notes by name, use ~M->~ to reach their end, add a newline
+and a short sentence, then switch back by name. Neither switch closes the
+other buffer. ~C-e m~ and line reading distinguish them.
+
+*3B.* ~C-h k C-e s~ describes the effective binding. With the default maps,
+the command is =tts-stop=. ~C-h w tts-stop RET~ reports its keys in the
+current context. Help describes the binding; it does not invoke it as the
+requested action.
+
+*** Answers: lesson 4
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+<<tutorial-answer-4>>
+
+*4A.* From Monday's cell, enter with ~C-e C-t C-r~, press Down for Tuesday,
+then ~TAB~ twice to reach Status. ~RET~ reads =Planned=. ~q~ restores normal
+Org editing. While table reading is active, these operations do not realign
+the source, add rows, or evaluate formulas.
+
+*4B.* ~TAB~ on the heading changes visibility. Return to it and cycle open,
+or use ~C-u C-u C-u TAB~ to expose the whole document. The hidden items
+never left the buffer. Text undo would affect edits, not provide the intended
+folding operation.
+
+*** Answers: lesson 5
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+<<tutorial-answer-5>>
+
+*5A.* Search accepts a result by selecting its menu control. The separate
+activation step is what can open an editor or change a value. Reading Help
+and leaving without activation does not change the punctuation policy.
+
+*5B.* Closing keeps the chosen live adjustment. Restore the recorded policy
+in the buffer's punctuation menu: ~r~ for Automatic, or ~p~ and the recorded
+explicit choice. Text undo does not restore speech settings. Uppercase ~S~
+would save a default, so it is deliberately absent from this exercise.
+
+*** Answers: lesson 6
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+<<tutorial-answer-6>>
+
+*6A.* Keep the practice draft on leaving its editor, return to the document,
+and use ~C-e H p d~ to resume that specific draft. Inspect it, then leave
+with Discard. Use the editor and menu return commands, or select the practice
+buffer by name once the menus are closed. Do not discard another draft to
+make the chooser empty.
+
+*6B.* Preview auditions working values. Keep draft retains unsaved work in
+this Emacs session. Save to collection writes the destination without selecting
+an inactive palette. Activate chooses the palette for this session. Use at
+Startup changes its selection in a saved Presentation Profile; it is not the
+same as saving the palette. The required exercise uses Preview and Keep draft,
+then discards. The optional exercise additionally creates and saves a palette
+and optionally activates it before restoring the original selection. Neither
+exercise needs Use at Startup.
+
+** Finish and choose your next task
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Tutorial Next Steps
+:DESCRIPTION: Leave practice safely and choose a task or a deeper explanation.
+:END:
+
+Finish any practice draft in its editor, close menus, restore the punctuation
+policy, and restore the original palette if you deliberately activated another.
+Keep saved work separate from unsaved practice when choosing what to remove.
+
+To discard the text exercises, use ~C-x k~ on each tutorial buffer after
+checking its name. To keep your own text instead, use ~C-x C-w~ and choose
+an unused file in your personal documents directory. Review any overwrite
+prompt and cancel rather than replacing an existing file. Saving text does not
+save voice settings, and saving a palette does not save the practice document.
+
+A saved tutorial palette can remain inactive. To remove it later, use the
+palette manager's deletion action only on the unused personal palette you
+created, after finishing its drafts and checking known references. Do not
+remove a built-in palette or other saved work as part of tutorial cleanup.
+
+You can now read a location twice without moving, recover a small edit, visit
+Help without abandoning work, distinguish a document's structure from its
+text, and tell a temporary setting from a preview or a saved resource.
+[[info:emacsvox#Finding Tasks][Find a task]] is the quickest route to a specific goal. [[info:emacsvox#Basic Usage][Basic Usage]] and
+[[info:emacsvox#Audio Desktop][Audio Desktop]] provide the everyday reference, while
+[[info:emacsvox#Aural Presentation][Aural Presentation]] explains rules, palettes, voices, and saved setups in depth.
+The application guides then apply these habits to mail, terminals, and agents.

@@ -14,9 +14,621 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: Agent Shell Speech And Privacy,  Next: Agent Shell Permissions,  Prev: Answering Agent Questions,  Up: Agent Shell
+
+11.3 Choose automatic speech and privacy
+========================================
+
+The focused session defaults to ‘response’: completed answers and
+routine completion feedback are presented, while thought, plan, and tool
+chatter is suppressed.  An unfocused session defaults to ‘notify’: its
+notification names the session but does not disclose response or tool
+content.
+
+‘full’
+     Speak responses plus configured thought, plan, and tool detail.
+     Full tool output can contain commands, file contents, or other
+     sensitive provider data.
+‘response’
+     Speak completed agent responses while suppressing routine thought,
+     plan, and tool content.
+‘notify’
+     Present routine completion without reading the response body.
+‘quiet’
+     Suppress routine automatic feedback.  Explicit inspection remains
+     available.
+‘auto’
+     Use ‘emacsvox-agent-shell-foreground-speech-level’ or
+     ‘emacsvox-agent-shell-background-speech-level’ according to focus.
+
+   Press ‘C-c C-q’ to run ‘emacsvox-agent-shell-select-speech-level’ and
+choose the current session's level, including ‘auto’.  Press ‘C-c C-S-q’
+to run ‘emacsvox-agent-shell-select-background-speech-level’ and change
+the shared background default.  ‘M-x
+emacsvox-agent-shell-cycle-speech-level’ cycles toward less routine
+speech; use a prefix argument to restore ‘auto’.
+
+11.3.1 Adjust speech in the settings menu
+-----------------------------------------
+
+Press ‘C-e S’ in a shell or its viewport for focused Emacsvox settings.
+The same menu is available through ‘C-e H j c’ and the integration
+chooser.  ‘s’ opens choices for the temporary session override.  ‘f’ and
+‘b’ open foreground and background defaults; ‘t’ and ‘o’ open thought
+and tool-output choices.  Each list starts on the current value and
+explains what the choices do.  Browse with arrows, press Enter to apply
+and return, or ‘q’ to cancel.  Press ‘?’ followed by a choice's key for
+spoken Help about its effect and scope; ‘q’ returns from Help.  ‘? ?’
+opens the menu overview.
+
+   The ‘p’, ‘c’ and ‘l’ controls toggle permission speech, tool-call
+announcements and processing cues.  Thought and tool content still
+depend on the effective speech level.
+
+   The ‘a’, ‘n’ and ‘k’ controls set automatic-content, line-navigation
+and block-navigation character limits.  Enter reads an exact positive
+integer or ‘none’; Shift-left/right adjusts by 100.  For line
+navigation, ‘none’ restores the core long-line policy.  For the other
+limits it allows complete content.  ‘w’ saves the displayed global
+defaults through Customize, excluding the session override.  ‘A’ opens
+advanced settings; ‘q’ returns.  From the direct ‘C-e S’ entry, ‘q’
+closes the menu and leaves you in the captured buffer.
+
+   Thought content defaults to an icon under
+‘emacsvox-agent-shell-speak-thought-process’.  Tool feedback is
+separately controlled by ‘emacsvox-agent-shell-speak-tool-calls’ and
+‘emacsvox-agent-shell-tool-output-verbosity’.  Selecting background
+‘response’ or ‘full’, thought ‘speak’, or full tool output is an
+explicit disclosure choice.
+
+   At ‘full’ speech level, tool verbosity ‘full’ reads the tool's
+rendered output, including Codex command output and textual diffs.
+Changed output can be read even when the tool's status has not changed;
+identical updates are suppressed.  Tool verbosity ‘status’ plays status
+cues as tools start and finish.  Tool updates, steering outcomes, queue
+changes, and confirmed setting changes use the notification lane,
+leaving navigation speech independent.
+
+11.3.2 Understand automatic speech limits
+-----------------------------------------
+
+Automatic response, tool, error, permission, and similar text is limited
+by ‘emacsvox-agent-shell-automatic-content-max-characters’, which
+defaults to 2,000 characters.  A shortened presentation gives exact
+omitted character and line counts and tells you where to inspect the
+full content.  The complete text rendered by Agent Shell stays in its
+buffer; this speech limit is applied before Aural compiles the automatic
+speech copy.  Agent Shell separately shortens tool output lines longer
+than 32,768 characters, keeping their beginning and end with an
+omitted-character count.  Full tool speech reads that notice; the
+removed middle is not available by reading the buffer.
+
+
+File: emacsvox.info,  Node: Agent Shell Permissions,  Next: Reading Agent Responses,  Prev: Agent Shell Speech And Privacy,  Up: Agent Shell
+
+11.4 Respond to urgent permissions
+==================================
+
+Permission requests are separate from routine speech levels because they
+can block the agent and require a decision.  With
+‘emacsvox-agent-shell-speak-permissions’ enabled, a request interrupts
+the appropriate speech stream, identifies the session and requested
+operation, and announces its choices.  Provider-controlled descriptions
+and choice labels are bounded, but the actual permission controls remain
+in Agent Shell.
+
+   If the provider supplies new operation details after asking
+permission, Emacsvox announces the changed description or input.
+Identical updates and routine output do not repeat the warning.  The
+permission controls remain the place to inspect and decide the request.
+
+   If the request belongs to another session, switch to the named
+buffer.  Use ‘M-x agent-shell-jump-to-latest-permission-button-row’ to
+find its latest permission row, or use Agent Shell's ‘<TAB>’ and
+‘S-<TAB>’ item navigation.  Move among the buttons and press ‘<RET>’, or
+use a direct choice key displayed by Agent Shell.  Choice keys are
+supplied by Agent Shell and the provider, so the visible permission row
+is authoritative.
+
+   Error blocks remain exceptional feedback rather than routine
+transcript chatter.  Lifecycle error announcements follow
+‘emacsvox-agent-shell-signal-processing’; rendered error content remains
+available in the transcript even when routine response speech is quiet.
+
+
+File: emacsvox.info,  Node: Reading Agent Responses,  Next: Agent Shell Transcript Navigation,  Prev: Agent Shell Permissions,  Up: Agent Shell
+
+11.5 Inspect a response on demand
+=================================
+
+These commands work from the shell and its associated viewports:
+
+‘C-c r’
+     Run ‘emacsvox-agent-shell-speak-last-response’.  It reads the
+     latest successfully completed response in full without moving
+     point.  This deliberate operation does not inherit the automatic
+     2,000-character limit.  While a new turn is busy it explicitly
+     identifies and reads the prior completed response.
+‘C-c R’
+     Run ‘emacsvox-agent-shell-speak-response-overview’.  It reports
+     line, heading, source-block, and table counts plus a bounded
+     opening preview.
+
+   These commands remain usable at ‘notify’ and ‘quiet’.  If no turn has
+completed, they say that no completed response is available rather than
+presenting a streaming partial or failed answer.
+
+
+File: emacsvox.info,  Node: Agent Shell Transcript Navigation,  Next: Agent Shell Source Blocks,  Prev: Reading Agent Responses,  Up: Agent Shell
+
+11.6 Navigate transcript blocks
+===============================
+
+Agent Shell responses contain semantic prompt, response, thought,
+activity, tool, plan, permission, error, source-block, and table
+locations.  Emacsvox navigation reports the block type, visibility, and
+a bounded body preview.
+
+   Up and Down play the ellipses cue when you enter a collapsed heading,
+such as Capabilities, Models, or Notices.  Wrapped continuation rows do
+not repeat the cue; leaving and returning to the heading plays it again.
+The optional block visibility cue replaces this default cue.  Reading
+the current line with ‘C-e l’ continues to indicate hidden content.
+
+‘h / H’
+     Use ‘h’ (‘emacsvox-agent-shell-next-heading’) or ‘H’
+     (‘emacsvox-agent-shell-previous-heading’).  Move to the next or
+     previous visible Markdown heading and speak its text.
+‘k / K’
+     Use ‘k’ (‘emacsvox-agent-shell-next-source-block’) or ‘K’
+     (‘emacsvox-agent-shell-previous-source-block’).  Move to the next
+     or previous source block and announce its language and line count.
+     Inside a table, lowercase ‘k’ remains the table copy prefix; use
+     ‘M-x emacsvox-agent-shell-next-source-block’ to jump forward to
+     code from there.
+‘u / U’
+     Use ‘u’ (‘emacsvox-agent-shell-next-user-prompt’) or ‘U’
+     (‘emacsvox-agent-shell-previous-user-prompt’).  Move to the next or
+     previous submitted user prompt, skipping the live editor.
+‘j / J’
+     Use ‘j’ (‘emacsvox-agent-shell-next-response’) or ‘J’
+     (‘emacsvox-agent-shell-previous-response’).  Move to the next or
+     previous agent response and speak its bounded body preview.  These
+     keys skip intervening thoughts, tools, and other block types.  From
+     code or a table inside an answer, they skip that enclosing answer.
+‘l / L’
+     Use ‘l’ (‘emacsvox-agent-shell-next-link’) or ‘L’
+     (‘emacsvox-agent-shell-previous-link’).  Move to the next or
+     previous visible rendered link and speak its label and Return
+     action together.  The cursor hint remains visible without a second
+     voice repeating it.  Press ‘<RET>’ to follow the link.
+‘e / E’
+     Use ‘e’ (‘emacsvox-agent-shell-next-error’) or ‘E’
+     (‘emacsvox-agent-shell-previous-error’).  Move to the next or
+     previous error or failed tool call.  Failed tools are identified by
+     Agent Shell's error styling in their status label, rather than by
+     words in their output.
+‘]’
+     Run ‘emacsvox-agent-shell-next-block-at-point’ to find the next
+     block of the current semantic type.
+‘[’
+     Run ‘emacsvox-agent-shell-previous-block-at-point’ to find the
+     preceding block of the current semantic type.
+‘C-c ]’
+     Run ‘emacsvox-agent-shell-next-block-of-type’, choose a type, and
+     move to its next occurrence.
+‘C-c [’
+     Run ‘emacsvox-agent-shell-previous-block-of-type’, choose a type,
+     and move to its preceding occurrence.
+
+   After a successful typed jump, ‘]’ and ‘[’ repeat in that direction.
+At an editable live prompt or viewport editor, bare brackets and
+navigation letters insert themselves instead of taking over prompt
+editing.
+
+
+File: emacsvox.info,  Node: Agent Shell Source Blocks,  Next: Agent Shell Tables,  Prev: Agent Shell Transcript Navigation,  Up: Agent Shell
+
+11.7 Read and copy source blocks
+================================
+
+Use ‘k’ or ‘K’, or typed block navigation, to reach a source block,
+then:
+
+‘C-c C-b’
+     Run ‘emacsvox-agent-shell-speak-source-block’ to read the complete
+     rendered source block with its language and line count.
+‘C-c C-y’
+     Run ‘emacsvox-agent-shell-copy-source-block’ to copy the logical
+     source through Agent Shell's public copy operation.
+
+   The source commands are explicit operations and do not use the
+automatic content limit.  Ordinary line navigation retains its separate
+bounded speech policy.
+
+11.7.1 Review proposed changes
+------------------------------
+
+Opening an Agent Shell change review announces its file and hunk counts
+and, for a single file, its name.  The normal Diff Mode hunk navigation
+remains available; opening the review does not accept or reject changes.
+
+   These interactions expose semantic events and attributes to Aural.
+You can customize speech, voices, and earcons for steering outcomes,
+queue changes, list editing, setting changes, updated tool output, and
+change-review entry.
+
+
+File: emacsvox.info,  Node: Agent Shell Tables,  Next: Agent Shell Recovery,  Prev: Agent Shell Source Blocks,  Up: Agent Shell
+
+11.8 Navigate and copy rendered tables
+======================================
+
+Agent Shell gives rendered Markdown tables their own navigation
+commands.  Moving into a table activates a contextual table map.  It
+announces the table dimensions and current cell.  Leaving the table
+restores the ordinary Agent Shell keys.  Markdown and Org source buffers
+offer explicit table reading with matching logical operations; see *note
+Browsing Structure: Browsing Structure.  Agent Shell retains its own
+table speech preferences and automatic contextual activation.  Plain
+Left and Right, or ‘C-b’ and ‘C-f’, move by character within the current
+cell.  ‘M-b’ and ‘M-f’, or Control-Left and Control-Right, move by word.
+These commands follow wrapped text within the same cell, skipping
+borders, padding, and neighbouring columns.  At the beginning or end of
+the cell, they stop and announce the boundary.  Use Control-Meta-Left
+and Control-Meta-Right to move between columns.  Control-Meta-Up and
+Control-Meta-Down move between logical rows in the current column and
+read only the destination cell.  Plain Up and Down make the same move
+and read the entire destination row.  Wrapped cells are read in full,
+using your table title settings.
+
+   ‘C-n’ and ‘C-p’ retain ordinary line movement.  They can move through
+wrapped cell text, but do not stay within the logical cell or skip other
+columns.  Use character and word movement to follow the cell's text in
+order.
+
+   Outside editable input, press ‘t’ for the next table or ‘T’ for the
+previous table.  These keys skip the current table and announce the
+destination table and cell.  Like the bracket navigation keys, they
+insert themselves in a live prompt or viewport editor, including while
+the agent is working.
+
+11.8.1 Understand table key conflicts
+-------------------------------------
+
+In viewport view mode, ‘t’ takes the place of Agent Shell's
+thought-level shortcut; use ‘M-x
+agent-shell-viewport-set-session-thought-level’ for that action.  Inside
+a table, ‘r’, ‘c’, and ‘a’ read rows, read columns, and select the table
+speaking method.  To invoke the displaced viewport actions there, use
+‘M-x agent-shell-viewport-reply’, ‘M-x
+agent-shell-viewport-reply-continue’, or ‘M-x
+agent-shell-viewport-reply-again’.  In the shell transcript, table ‘r’
+replaces quoting; use ‘M-x agent-shell-quote-region’ with a selected
+region.  Leaving the table restores these ordinary bindings.
+
+   Outside tables, ‘C-M-<up>’ and ‘C-M-<down>’ do nothing in Agent
+Shell, including its viewport and prompt editor.  Repeating a row key
+after leaving a table therefore keeps point at the exit.  These two keys
+also do nothing in ordinary ‘shell-mode’ buffers.  For structural
+movement there, use ‘M-x backward-up-list’ or ‘M-x down-list’.
+Source-code buffers keep their usual bindings.
+
+   Continuous speech and response-block reading omit rendered table
+borders and keep the cell text.  Decorative borders therefore do not
+force a switch to a different speech engine.  Literal box-drawing
+characters in prose or code remain available to symbol naming and exact
+character inspection.
+
+11.8.2 Table command reference
+------------------------------
+
+‘t’
+     Run ‘emacsvox-agent-shell-next-table’ outside editable input.
+‘T’
+     Run ‘emacsvox-agent-shell-previous-table’ outside editable input.
+‘C-M-<right>’
+     Run ‘emacsvox-agent-shell-table-next-column’.
+‘C-M-<left>’
+     Run ‘emacsvox-agent-shell-table-previous-column’.
+‘<down>’
+     Run ‘emacsvox-agent-shell-table-next-row’ and read the destination
+     row.
+‘<up>’
+     Run ‘emacsvox-agent-shell-table-previous-row’ and read the
+     destination row.
+‘C-M-<down>’
+     Run ‘emacsvox-agent-shell-table-next-row-cell’ and read the
+     destination cell.
+‘C-M-<up>’
+     Run ‘emacsvox-agent-shell-table-previous-row-cell’ and read the
+     destination cell.
+‘M-<down>’
+     Run ‘emacsvox-agent-shell-table-exit-forward’.
+‘M-<up>’
+     Run ‘emacsvox-agent-shell-table-exit-backward’.
+‘SPC’
+     Run ‘emacsvox-agent-shell-table-speak-cell’.
+‘r’
+     Run ‘emacsvox-agent-shell-table-speak-row’.
+‘c’
+     Run ‘emacsvox-agent-shell-table-speak-column’.
+‘.’
+     Run ‘emacsvox-agent-shell-table-speak-context’ for row, column, and
+     table position.
+‘=’
+     Run ‘emacsvox-agent-shell-table-speak-dimensions’.
+‘w’
+     Run ‘emacsvox-agent-shell-table-copy-cell’.
+‘k k’
+     Also run ‘emacsvox-agent-shell-table-copy-cell’.
+‘k r’
+     Run ‘emacsvox-agent-shell-table-copy-row’; copied cells are
+     tab-separated.
+‘k c’
+     Run ‘emacsvox-agent-shell-table-copy-column’; copied cells are
+     separated by newlines.
+‘a’
+     Run ‘emacsvox-agent-shell-table-select-speaking-method’ to toggle
+     column titles, row titles, or whether data is spoken before titles.
+
+   Copy commands use logical cell values, excluding renderer padding and
+Markdown borders.  Wrapped cell contents remain complete.
+
+
+File: emacsvox.info,  Node: Agent Shell Recovery,  Prev: Agent Shell Tables,  Up: Agent Shell
+
+11.9 Recover from interruption or failure
+=========================================
+
+If a request is taking the wrong path, press ‘C-c C-c’ and confirm the
+Agent Shell interrupt.  A failed or interrupted partial response is not
+cached as complete.  Press ‘C-c r’ for the preceding completed response,
+or ‘C-c R’ for its overview.  Read the error block in the transcript for
+the provider's details and edit the live prompt before resubmitting.
+
+   Use ‘M-x agent-shell-restart’ when Agent Shell itself needs a fresh
+process for the same project.  Use ‘M-x emacsvox-agent-shell-enable’ to
+reinstall speech hooks after deliberately disabling them.  Neither
+recovery command discards transcript files or project work.
+
+   If you are changing the integration rather than using it, see *note
+Integration Maintenance: Integration Maintenance. for its public event,
+renderer, and compatibility contracts.
+
+
+File: emacsvox.info,  Node: EAT Terminal Access,  Next: Running Terminal Based Applications,  Prev: Agent Shell,  Up: Top
+
+12 Speech Access To EAT
+***********************
+
+EAT (Emulate A Terminal) is a third-party terminal emulator, commonly
+installed from NonGNU ELPA.  Run ‘M-x eat’ to start it; a prefix
+argument creates or selects another terminal.  Follow the *note Eat User
+Manual: (eat)Top. for installation, terminal setup, and EAT's complete
+command reference.
+
+   Three parts cooperate here.  EAT emulates the terminal; the shell,
+router, or other program handles terminal input and completion; Emacsvox
+presents the rendered result.  Emacsvox observes a bounded screen, not
+the program's private state.  It does not generate shell or router
+completion candidates.
+
+   First choose an input mode appropriate to the program.  Then use
+automatic feedback for current work and explicit review for content you
+need to examine again.  ‘C-e S’ opens focused EAT speech settings; those
+menu keys apply only while the menu is open, not to ordinary terminal
+input.
+
+* Menu:
+
+* Choose an input mode: EAT Input Modes.  Decide which keys reach Emacs and which reach the terminal program.
+* Understand automatic terminal feedback: EAT Automatic Feedback.  Follow output, prompts, editing results, and application-screen changes.
+* Hear terminal-side completion: EAT Terminal Completion.  Hear completed input and inspect retained candidate or help rows.
+* Review retained terminal output: EAT Screen Review.  Read retained state or inspect an immutable screen without sending input.
+* Adjust and save terminal feedback: EAT Feedback Preferences.  Choose verbosity, background monitoring, and focused speech defaults.
+* Follow shell prompts and command status: EAT Shell Integration.  Understand the Bash or Zsh integration and its remote-shell limits.
+* Enter passwords and protect sensitive content: EAT Passwords And Privacy.  Use protected password input and understand retained terminal data.
+* Control terminal access to the clipboard: EAT Clipboard Trust.  Review OSC 52 trust and the two terminal selection-control options.
+* Inspect full-screen applications and diagnose silence: EAT Full-screen Applications.  Use retained review and distinguish terminal rendering from speech.
+* Use EAT in Eshell: EAT In Eshell.  Understand embedded terminals and visual-command window return.
+
+
+File: emacsvox.info,  Node: EAT Input Modes,  Next: EAT Automatic Feedback,  Up: EAT Terminal Access
+
+12.1 Input Modes And Completion Responsibilities
+================================================
+
+EAT has four input modes.  Emacsvox announces the mode name when you
+switch.  The mode determines whether a key edits text in Emacs or
+reaches the terminal program.
+
+Semi-character mode
+     The default.  Most keys, including ‘<TAB>’, go to the terminal,
+     while prefixes such as ‘C-x’, ‘C-c’, and ‘M-x’ remain available.
+     Use ‘C-q’ before a normally reserved key to send it through.  ‘C-c
+     C-j’ selects this mode.
+Character mode
+     All supported keys go to the terminal, useful for programs needing
+     Emacs-like keys.  Enter with ‘C-c M-d’ and return to semi-character
+     mode with ‘C-M-m’ or ‘M-<RET>’.
+Emacs mode
+     Keys stay in Emacs and send no terminal input.  Use it for ordinary
+     buffer motion and inspection.  Enter with ‘C-c C-e’.
+Line mode
+     Edit the pending line locally and send it with ‘<RET>’.  ‘<TAB>’
+     invokes Emacs's ‘completion-at-point’, whose result may be
+     displayed by a front end such as Corfu.  Enter from semi-character
+     or Emacs mode with ‘C-c C-l’.  Line mode is not available in EAT's
+     embedded Eshell terminal.
+
+   Line mode does not create unlimited history.
+‘eat-term-scrollback-size’ still limits retained text by _characters_,
+not lines; ‘nil’ permits unlimited retention.  The editable draft
+follows the terminal extent, and changing input modes does not change
+this limit.
+
+   In semi-character and character modes, ‘<TAB>’ belongs to Bash
+Readline, a remote shell, router CLI, or the running terminal program.
+Corfu is not involved.  In line mode, completion belongs to Emacs and
+does not query a remote CLI.  Semi-character mode is therefore usually
+appropriate for SSH and network-device sessions.  If an Emacs completion
+backend blocks in line mode, ‘C-g’ cancels that Emacs operation; switch
+to semi-character mode when terminal completion was intended.
+
+   The shell must have its own completion configuration.  For example,
+completing ‘git pul’ to ‘git pull’ in Bash requires suitable
+programmable definitions, often supplied by ‘bash-completion’.  Emacsvox
+neither installs nor substitutes for those definitions.
+
+
+File: emacsvox.info,  Node: EAT Automatic Feedback,  Next: EAT Terminal Completion,  Prev: EAT Input Modes,  Up: EAT Terminal Access
+
+12.2 Automatic Terminal Feedback
+================================
+
+‘C-e C-q’ toggles automatic foreground feedback for this terminal; it
+starts enabled.  The same control is ‘s’ in the focused settings menu.
+It covers routine output, status, automatic metadata, application-screen
+boundaries, and process lifecycle feedback.  Explicit reading, input and
+completion feedback, and the configured terminal bell remain available.
+Verbosity (‘C-e q v’) and background monitoring (‘C-e q m’) are
+independent preferences.
+
+   Automatic speech requires the selected EAT buffer and Emacs keyboard
+focus.  The selected window must follow the live cursor or edit a
+line-mode draft after terminal output.  Reviewing scrollback prevents
+new output from interrupting you.  Another selected terminal or an
+active minibuffer also suppresses foreground feedback.  In terminal-only
+Emacs, or when keyboard focus cannot be reported, selection within Emacs
+is the available boundary.
+
+   Turning autospeak off or losing eligibility discards locally pending
+automatic feedback.  Speech already sent to Omnivox may finish.
+Returning or re-enabling speech starts with fresh output; it does not
+replay missed content.  Use explicit review instead.  This policy also
+applies to an embedded Eshell terminal, without changing ordinary Eshell
+output.
+
+12.2.1 Read output and follow progress
+--------------------------------------
+
+On the main screen, Emacsvox collects a burst before classifying it.
+Complete new output lines are spoken once, with automatic limits of
+eight lines and 1,000 characters.  Continued input rows and empty
+terminal placeholders are omitted without hiding output or rereading
+earlier rows.  Output remains eligible even if it scrolls beyond the
+screen, including repeated identical lines; increasing scrollback is
+unnecessary for this feedback.
+
+   Wrapped output is joined and oversized bursts announce how much was
+omitted.  Fresh text without a newline also speaks, keeping password
+requests and confirmation questions accessible.  Carriage-return
+progress and status rewrites use rate-limited, replaceable speech.
+Unchanged repaints and resize-only updates remain silent.  Bells,
+pastes, input-mode changes, application-screen boundaries, and process
+exit are content-free semantic events rather than arbitrary screen
+readings.
+
+12.2.2 Recognise and inspect prompts
+------------------------------------
+
+When EAT shell integration identifies a ready prompt, Emacsvox gives a
+cue after output instead of reading the prompt text.
+‘emacsvox-eat-prompt-feedback’ defaults to ‘earcon’; choose ‘text’ to
+hear the prompt or ‘silent’ to suppress it.  This option can be
+buffer-local and is independent of verbosity, but automatic prompt
+feedback still obeys foreground autospeak eligibility.
+
+   Split and multiline prompts are collected until ready.  Redisplay and
+typing do not repeat them.  If several prompts arrive in one burst,
+feedback describes the final ready prompt.
+
+   ‘C-e q p’ explicitly reads the last identified prompt, even with
+autospeak off.  Recognition does not require margin annotations, but it
+does require shell integration.  An unintegrated remote prompt or
+question is ordinary output, read as text; the prompt preference does
+not silence it.  The last identified prompt may still belong to the
+local shell.  Use ‘C-e q l’ for the current retained cursor row in that
+situation.
+
+12.2.3 Hear input and deletion results
+--------------------------------------
+
+On the main screen in semi-character and character modes, ‘<RET>’ is
+silent.  After rendered left/right movement, Emacsvox names the reached
+character; after up/down it speaks the resulting input or history row
+without the observed shell prompt.  ‘M-b’, ‘M-f’, and modified
+left/right word movements speak the rendered text crossed.  A boundary
+key that produces no movement stays silent.
+
+   Line-mode history navigation speaks the recalled command once.  EAT's
+history-item counter and input-restored message remain visible in the
+echo area without speaking over the command on the notification stream.
+
+   An echoed Space is named without rereading the prompt or line.  For
+Backspace, Delete, ‘M-d’, and ‘C-k’, Emacsvox compares bounded public
+snapshots before and after the key.  One unambiguous same-row removal is
+read as the actual character or text removed.  Otherwise only a deletion
+tone is given; adjacent prompt or screen text is not guessed as deleted
+content.  Padding and trailing input blanks do not prevent an otherwise
+unambiguous word deletion.
+
+   A no-echo peer provides no visible deletion to announce.  This input
+feedback requires the selected window to follow the live cursor, and is
+silent during protected password entry, in an unselected terminal, and
+on an alternate screen where the application owns the keys.
+
+12.2.4 Bells and application-screen changes
+-------------------------------------------
+
+Bells retain EAT's configured sound without speaking "Terminal bell" by
+default.  An aural rule can add a label by matching module ‘eat’, role
+‘command-interaction’, event ‘command-terminal-bell’, and occasion
+‘notification’, with speech before or after the event.  Bell
+notifications remain rate-limited and obey selected-buffer, live-cursor,
+and secure-input restrictions.
+
+   On full-screen or alternate-screen applications, Emacsvox does not
+read every refresh.  A cursor row reached by correlated arrow-style
+navigation, or a compact high-confidence transfer of selection-like
+styling, may be announced.  Ambiguous repaints remain available to
+explicit review.  Inverse video or a coloured row alone is not proof of
+an active item.
+
+
+File: emacsvox.info,  Node: EAT Terminal Completion,  Next: EAT Screen Review,  Prev: EAT Automatic Feedback,  Up: EAT Terminal Access
+
+12.3 Terminal-side Completion
+=============================
+
+Before a terminal-side ‘<TAB>’ on the main screen, Emacsvox captures the
+public screen and waits briefly for output to settle.  An inline
+completion speaks the newly displayed field; for example, ‘~/sr<TAB>’
+can speak ‘src slash’ after the shell displays ‘~/src/’.
+
+   An ambiguous completion printed as columns or help rows is presented
+as one transaction after the input line is redrawn.  Small inferred
+lists speak up to eight candidates.  Router-style descriptions keep
+their layout rather than being forced into a shell-token model.  Large
+lists are counted and shortened for automatic speech.  If candidates
+have already scrolled beyond the bounded screen, the count is a lower
+bound, such as "at least N visible", not an invented total.
+
+   Identical repeated lists, split output, bells, wrapping, and resizing
+are coalesced without repeating the candidate text.  This works from
+rendered results for local Readline, SSH, and unstructured router help.
+No visible change means there is nothing reliable to announce.  On an
+alternate screen, ‘<TAB>’ is navigation rather than shell completion.
+
+   Use ‘C-e q c’ to read the retained candidate/help layout, or open
+frozen review with ‘C-e q r’ and press ‘c’.  This is useful for large or
+multi-column results and does not ask the terminal to complete again.
+
+
 File: emacsvox.info,  Node: EAT Screen Review,  Next: EAT Feedback Preferences,  Prev: EAT Terminal Completion,  Up: EAT Terminal Access
 
-11.4 Explicit Review Commands
+12.4 Explicit Review Commands
 =============================
 
 With the default speech prefix, ‘C-e q’ provides review commands in
@@ -51,7 +663,7 @@ they do not send terminal input.  Speech is bounded.  The retained
 visible screen is not arbitrary scrollback or a promise that it still
 matches a changing live screen.
 
-11.4.1 Frozen Screen Review
+12.4.1 Frozen Screen Review
 ---------------------------
 
 ‘C-e q r’ opens an immutable copy of the latest visible screen.  It does
@@ -93,7 +705,7 @@ the lifetime of copied terminal content.
 
 File: emacsvox.info,  Node: EAT Feedback Preferences,  Next: EAT Shell Integration,  Prev: EAT Screen Review,  Up: EAT Terminal Access
 
-11.5 Verbosity And Background Monitoring
+12.5 Verbosity And Background Monitoring
 ========================================
 
 ‘emacsvox-eat-verbosity’ is buffer-local:
@@ -117,7 +729,7 @@ process-generation changes do not count.  Unlike Shell/comint background
 reading, EAT monitoring neither requires foreground autospeak nor reads
 background content.
 
-11.5.1 Adjust and save focused terminal settings
+12.5.1 Adjust and save focused terminal settings
 ------------------------------------------------
 
 Use ‘C-e S’ or ‘C-e H j c’ from EAT or its frozen review.  ‘C-e H j a’
@@ -147,7 +759,7 @@ settings and ‘q’ there returns to the focused menu.
 
 File: emacsvox.info,  Node: EAT Shell Integration,  Next: EAT Passwords And Privacy,  Prev: EAT Feedback Preferences,  Up: EAT Terminal Access
 
-11.6 Shell Integration And Command Status
+12.6 Shell Integration And Command Status
 =========================================
 
 EAT's Bash or Zsh integration supplies prompt annotation, directory
@@ -178,7 +790,7 @@ status remains unavailable.
 
 File: emacsvox.info,  Node: EAT Passwords And Privacy,  Next: EAT Clipboard Trust,  Prev: EAT Shell Integration,  Up: EAT Terminal Access
 
-11.7 Passwords And Sensitive Content
+12.7 Passwords And Sensitive Content
 ====================================
 
 Use ‘M-x eat-send-password’ for a terminal password.  EAT uses Emacs's
@@ -203,7 +815,7 @@ monitoring, by contrast, never reads content or terminal identity.
 
 File: emacsvox.info,  Node: EAT Clipboard Trust,  Next: EAT Full-screen Applications,  Prev: EAT Passwords And Privacy,  Up: EAT Terminal Access
 
-11.8 Terminal-Controlled Clipboard Trust
+12.8 Terminal-Controlled Clipboard Trust
 ========================================
 
 EAT supports terminal selection-control sequences, commonly called OSC
@@ -238,7 +850,7 @@ sequences.
 
 File: emacsvox.info,  Node: EAT Full-screen Applications,  Next: EAT In Eshell,  Prev: EAT Clipboard Trust,  Up: EAT Terminal Access
 
-11.9 Full-screen Applications And Limitations
+12.9 Full-screen Applications And Limitations
 =============================================
 
 Pagers, editors, menus, and refreshing dashboards often rewrite cells
@@ -269,7 +881,7 @@ terminal itself renders incorrectly.
 
 File: emacsvox.info,  Node: EAT In Eshell,  Prev: EAT Full-screen Applications,  Up: EAT Terminal Access
 
-11.10 EAT In Eshell
+12.10 EAT In Eshell
 ===================
 
 With global ‘eat-eshell-mode’ enabled, Emacsvox uses the same screen
@@ -288,7 +900,7 @@ Emacsvox does not change it.
 
 File: emacsvox.info,  Node: Running Terminal Based Applications,  Next: Speech Backends,  Prev: EAT Terminal Access,  Up: Top
 
-12 Term Terminal Access
+13 Term Terminal Access
 ***********************
 
 Term is the terminal emulator built into Emacs.  Its Emacsvox
@@ -314,7 +926,7 @@ transfer a key sequence merely because both are terminals.
 
 File: emacsvox.info,  Node: Starting Term,  Next: Term Input Modes,  Up: Running Terminal Based Applications
 
-12.1 Starting Term
+13.1 Starting Term
 ==================
 
 Run ‘M-x term <RET>’.  At ‘Run program:’, accept the proposed shell or
@@ -332,7 +944,7 @@ _Emacsvox Reference Manual_ for the complete integration reference.
 
 File: emacsvox.info,  Node: Term Input Modes,  Next: Term Speech Feedback,  Prev: Starting Term,  Up: Running Terminal Based Applications
 
-12.2 Character And Line Input Modes
+13.2 Character And Line Input Modes
 ===================================
 
 Term starts in character mode.  Choose according to who should receive
@@ -364,7 +976,7 @@ application.
 
 File: emacsvox.info,  Node: Term Speech Feedback,  Next: Reviewing The Term Screen,  Prev: Term Input Modes,  Up: Running Terminal Based Applications
 
-12.3 Automatic Speech Feedback
+13.3 Automatic Speech Feedback
 ==============================
 
 ‘emacsvox-eterm-autospeak’ controls automatic feedback in the current
@@ -390,7 +1002,7 @@ commands.
 
 File: emacsvox.info,  Node: Reviewing The Term Screen,  Next: Term Help And Recovery,  Prev: Term Speech Feedback,  Up: Running Terminal Based Applications
 
-12.4 Reviewing The Term Screen
+13.4 Reviewing The Term Screen
 ==============================
 
 The review pointer is independent of the terminal cursor.  Moving it
@@ -436,7 +1048,7 @@ when ordinary Emacs keys would otherwise reach the child.
 
 File: emacsvox.info,  Node: Term Help And Recovery,  Prev: Reviewing The Term Screen,  Up: Running Terminal Based Applications
 
-12.5 Help And Recovery
+13.5 Help And Recovery
 ======================
 
 For visible but silent output, inspect ‘emacsvox-eterm-autospeak’ in the
@@ -459,7 +1071,7 @@ Terminal Access. and use that emulator's explicit review commands.
 
 File: emacsvox.info,  Node: Speech Backends,  Next: Emacsvox Keyboard Commands,  Prev: Running Terminal Based Applications,  Up: Top
 
-13 Speech Backends
+14 Speech Backends
 ******************
 
 Emacsvox sends speech through a speech server.  For a new installation,
@@ -493,7 +1105,7 @@ installation available while testing the development branch.
 
 File: emacsvox.info,  Node: Supported Platform Routes,  Next: Installing An Omnivox Release Binary,  Up: Speech Backends
 
-13.1 Supported Platform Routes
+14.1 Supported Platform Routes
 ==============================
 
 The following table describes Emacsvox support, not every platform that
@@ -560,7 +1172,7 @@ prerequisites for first speech.
    For Emacs running on a remote SSH host, see *note Remote Workstation
 Speech: Remote workstation speech setup.
 
-13.1.1 Version and capability requirements
+14.1.1 Version and capability requirements
 ------------------------------------------
 
 Omnivox 1.17.0 is the minimum supported release.  It supplies named
@@ -583,10 +1195,10 @@ capabilities.
 
 File: emacsvox.info,  Node: Installing An Omnivox Release Binary,  Next: Installing An Omnivox Windows Release Under WSL2,  Prev: Supported Platform Routes,  Up: Speech Backends
 
-13.2 Install Omnivox From A Release Binary
+14.2 Install Omnivox From A Release Binary
 ==========================================
 
-13.2.1 macOS with Homebrew
+14.2.1 macOS with Homebrew
 --------------------------
 
 On macOS (formerly OS X), install Homebrew (https://brew.sh) and follow
@@ -661,7 +1273,7 @@ Source.  Native tap checks cover WAV synthesis and package operations;
 they do not replace listening acceptance in Emacs or prove an upgrade
 between different upstream versions.
 
-13.2.2 Manual archive installation
+14.2.2 Manual archive installation
 ----------------------------------
 
 Use this route for GNU/Linux x86-64 with an Ubuntu 24.04-compatible
@@ -733,7 +1345,7 @@ Windows archive without requiring a compiler or Docker.
 
 File: emacsvox.info,  Node: Installing An Omnivox Windows Release Under WSL2,  Next: Trying Native Windows Emacsvox,  Prev: Installing An Omnivox Release Binary,  Up: Speech Backends
 
-13.3 Install An Omnivox Windows Release Under WSL2
+14.3 Install An Omnivox Windows Release Under WSL2
 ==================================================
 
 This is the ordinary WSL2 route for x86-64 Windows and Windows on ARM.
@@ -772,7 +1384,7 @@ later.
 
 * Optional Omnivox Engines: Optional Omnivox Engine Modules.  Install, check, remove, and reinstall optional engines from Emacs.
 
-13.3.1 Manual Release Installation
+14.3.1 Manual Release Installation
 ----------------------------------
 
 Use this equivalent manual procedure to inspect installer actions, work
@@ -844,7 +1456,7 @@ supplied.
 
 File: emacsvox.info,  Node: Optional Omnivox Engine Modules,  Up: Installing An Omnivox Windows Release Under WSL2
 
-13.3.2 Optional Omnivox Engines
+14.3.2 Optional Omnivox Engines
 -------------------------------
 
 The ordinary WSL2 archive is the core, not a claim that every supported
@@ -1147,7 +1759,7 @@ runtime or chosen voice data before they can speak.
 
 File: emacsvox.info,  Node: Trying Native Windows Emacsvox,  Next: Installing Omnivox From Source,  Prev: Installing An Omnivox Windows Release Under WSL2,  Up: Speech Backends
 
-13.4 Installing Native Windows Emacsvox
+14.4 Installing Native Windows Emacsvox
 =======================================
 
 Native Windows x64 is supported with Emacs 30.2 or newer.  A development
@@ -1157,7 +1769,7 @@ manual route requires an existing native Emacs.  Neither Setup nor the
 guided installation requires WSL, Docker, Rust, or a system MSYS2
 installation.
 
-13.4.1 Using a Windows Setup Build
+14.4.1 Using a Windows Setup Build
 ----------------------------------
 
 Run the development Setup executable to install ‘Emacsvox Windows’ for
@@ -1190,7 +1802,7 @@ directory links are not followed.  Development Setup builds are test
 artifacts; these instructions do not imply that a stable release
 installer includes this branch's interface.
 
-13.4.2 Guided Windows x64 Installation
+14.4.2 Guided Windows x64 Installation
 --------------------------------------
 
 You need PowerShell 5.1 or newer, Git, network access, and working
@@ -1280,7 +1892,7 @@ is intercepted, try ‘JAWSKey+3’ before the key.  Bart's
 ‘workstation-config’ repository supplies the separate Emacs-specific
 JAWS override used on the test workstation.
 
-13.4.3 Manual Native Installation
+14.4.3 Manual Native Installation
 ---------------------------------
 
 This route requires native Emacs 30.2 or newer already installed.  It
@@ -1288,7 +1900,7 @@ does not acquire Emacs or replace the guided x64 checks.  Set
 ‘$Emacsvox’ to the absolute checkout path and continue in one PowerShell
 window.
 
-13.4.4 Download And Verify Omnivox
+14.4.4 Download And Verify Omnivox
 ----------------------------------
 
 Set ‘$Platform’ for the host.  The normal Intel/AMD x64 example is:
@@ -1320,7 +1932,7 @@ unsigned Windows release may be rejected by policy; stop rather than
 weakening security.  The existence of an ARM64 Omnivox archive does not
 extend Emacsvox's supported native desktop beyond x64.
 
-13.4.5 Install And Check The Native Server
+14.4.5 Install And Check The Native Server
 ------------------------------------------
 
 In the same PowerShell, extract everything beneath per-user
@@ -1354,7 +1966,7 @@ tone and speech.  Keep executable, ‘espeak-ng-data’, and
 from the archive; that is the upstream Emacspeak adapter, not Emacsvox's
 bundled one.
 
-13.4.6 Start Native Emacsvox
+14.4.6 Start Native Emacsvox
 ----------------------------
 
 Keep the window so ‘$Omnivox’ still identifies the verified binary.  Set
@@ -1375,7 +1987,7 @@ set above:
 Direct setup loading is intentional: ‘bin/emacsvox’ is POSIX;
 ‘bin/emacsvox.ps1’ is the guided native entry.
 
-13.4.7 Verify Speech And Report Problems
+14.4.7 Verify Speech And Report Problems
 ----------------------------------------
 
 Check the isolated native session:
@@ -1414,7 +2026,7 @@ remote speech is a separate preview.
 
 File: emacsvox.info,  Node: Installing Omnivox From Source,  Next: Building Omnivox For WSL2,  Prev: Trying Native Windows Emacsvox,  Up: Speech Backends
 
-13.5 Installing Omnivox From Source
+14.5 Installing Omnivox From Source
 ===================================
 
 On GNU/Linux/macOS, a source build needs network access for clone,
@@ -1449,7 +2061,7 @@ runtime is needed for the recommended Linux/Mac route.
 
 File: emacsvox.info,  Node: Building Omnivox For WSL2,  Next: Selecting And Checking Omnivox,  Prev: Installing Omnivox From Source,  Up: Speech Backends
 
-13.6 Building Omnivox For WSL2
+14.6 Building Omnivox For WSL2
 ==============================
 
 This advanced path maintains the reproducible Windows bundle or optional
@@ -1565,7 +2177,7 @@ does not alter the reproducible release's pinned companion.
 
 File: emacsvox.info,  Node: Selecting And Checking Omnivox,  Next: Compatibility Speech Servers,  Prev: Building Omnivox For WSL2,  Up: Speech Backends
 
-13.7 Selecting And Checking Omnivox
+14.7 Selecting And Checking Omnivox
 ===================================
 
 Test the installed server outside Emacs on GNU/Linux/macOS:
@@ -1603,7 +2215,7 @@ tts-restart’ restarts after a deliberate configuration change.  The
 complete isolated start, expected speech, and recovery remain in *note
 Installation: Installation.
 
-13.7.1 Remote Workstation Speech (Preview)
+14.7.1 Remote Workstation Speech (Preview)
 ------------------------------------------
 
 Emacs can run on an SSH host while Omnivox, installed voices, and
@@ -1685,7 +2297,7 @@ service belongs to another connection.
 
 File: emacsvox.info,  Node: Compatibility Speech Servers,  Next: Backend Diagnostics And Ownership,  Prev: Selecting And Checking Omnivox,  Up: Speech Backends
 
-13.8 Compatibility Speech Servers
+14.8 Compatibility Speech Servers
 =================================
 
 These retained direct servers support existing installations, not the
@@ -1720,7 +2332,7 @@ Emacsvox server.
 
 File: emacsvox.info,  Node: Backend Diagnostics And Ownership,  Prev: Compatibility Speech Servers,  Up: Speech Backends
 
-13.9 Backend Diagnostics And Responsibilities
+14.9 Backend Diagnostics And Responsibilities
 =============================================
 
 Local server messages/errors remain in diagnostics buffers, hidden from
@@ -1782,7 +2394,7 @@ instructions.
 
 File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Finding Tasks,  Prev: Speech Backends,  Up: Top
 
-14 Emacsvox Keyboard Commands.
+15 Emacsvox Keyboard Commands.
 ******************************
 
 Use *note Basic Usage: Basic Usage. for the essential reading keys and
@@ -1821,7 +2433,7 @@ resolves those contexts.  The manual uses the default speech prefix; a
 customised prefix changes its entry sequences without changing a menu's
 own displayed shortcuts.
 
-14.1 Choose a different speech prefix
+15.1 Choose a different speech prefix
 =====================================
 
 Set ‘emacsvox-prefix’ before loading Emacsvox.  For example:
@@ -1840,7 +2452,7 @@ not installed as recovery.
 default ‘C-e C-e’.  Mode-local bindings can still shadow the prefix;
 inspect them before assuming a key is unavailable or broken.
 
-14.2 Inspect the effective bindings
+15.2 Inspect the effective bindings
 ===================================
 
 ‘C-h m’ describes the current modes and their commands.  ‘C-h b’ lists
@@ -1856,7 +2468,7 @@ Troubleshooting And Recovery: (emacsvox)Presentation Troubleshooting.
 
 File: emacsvox.info,  Node: Finding Tasks,  Next: Emacsvox Terminology,  Prev: Emacsvox Keyboard Commands,  Up: Top
 
-15 Find a task
+16 Find a task
 **************
 
 Choose the result you want.  Each link leads to the maintained
@@ -1874,7 +2486,7 @@ terms, use *note Terms used in this manual: Emacsvox Terminology.
 
 File: emacsvox.info,  Node: Finding Reading Tasks,  Next: Finding Voice Tasks,  Up: Finding Tasks
 
-15.1 Read and navigate
+16.1 Read and navigate
 ======================
 
    • *note Get speech working again: (emacsvox)Recovering From No
@@ -1900,7 +2512,7 @@ File: emacsvox.info,  Node: Finding Reading Tasks,  Next: Finding Voice Tasks,  
 
 File: emacsvox.info,  Node: Finding Voice Tasks,  Next: Finding Settings Tasks,  Prev: Finding Reading Tasks,  Up: Finding Tasks
 
-15.2 Change voices and sounds
+16.2 Change voices and sounds
 =============================
 
    • *note Change my ordinary reading voice: (emacsvox)Editing Named
@@ -1925,7 +2537,7 @@ File: emacsvox.info,  Node: Finding Voice Tasks,  Next: Finding Settings Tasks, 
 
 File: emacsvox.info,  Node: Finding Settings Tasks,  Next: Finding Application Tasks,  Prev: Finding Voice Tasks,  Up: Finding Tasks
 
-15.3 Keep, inspect, or reverse settings
+16.3 Keep, inspect, or reverse settings
 =======================================
 
    • *note Make a setting survive restarting Emacs: (emacsvox)Saving And
@@ -1951,7 +2563,7 @@ File: emacsvox.info,  Node: Finding Settings Tasks,  Next: Finding Application T
 
 File: emacsvox.info,  Node: Finding Application Tasks,  Prev: Finding Settings Tasks,  Up: Finding Tasks
 
-15.4 Work in an application
+16.4 Work in an application
 ===========================
 
    • *note Limit the mail details spoken automatically:
@@ -1983,7 +2595,7 @@ Help.
 
 File: emacsvox.info,  Node: Emacsvox Terminology,  Next: Copyright,  Prev: Finding Tasks,  Up: Top
 
-16 Terms used in this manual
+17 Terms used in this manual
 ****************************
 
 These definitions help you choose a procedure.  They do not replace a
@@ -1991,7 +2603,7 @@ control's specific scope, save, or recovery instructions.  *note Find a
 task: Finding Tasks. starts from what you want to accomplish rather than
 the names below.
 
-16.1 Your working context
+17.1 Your working context
 =========================
 
 Buffer
@@ -2020,7 +2632,7 @@ Scope
      change need not be saved, and a saved resource need not be active.
      See *note Choose what persists: (emacsvox)Saving And Startup.
 
-16.2 Voices and presentation resources
+17.2 Voices and presentation resources
 ======================================
 
 Physical voice
@@ -2056,7 +2668,7 @@ Presentation profile
      rules.  See *note Presentation profiles: (emacsvox)Presentation
      Profiles.
 
-16.3 Changes and speech output
+17.3 Changes and speech output
 ==============================
 
 Preview
@@ -2096,7 +2708,7 @@ Main and notification speech
 
 File: emacsvox.info,  Node: Copyright,  Next: Acknowledgments,  Prev: Emacsvox Terminology,  Up: Top
 
-17 Copyright
+18 Copyright
 ************
 
 This manual documents Emacsvox, a speech extension to Emacs.
@@ -2112,7 +2724,7 @@ same license as the original source code.
 
 File: emacsvox.info,  Node: Acknowledgments,  Next: Developer Guide,  Prev: Copyright,  Up: Top
 
-18 Acknowledgments
+19 Acknowledgments
 ******************
 
 Emacsvox grows from Emacspeak, created by T.  V.  Raman.  Raman is the
@@ -2136,7 +2748,7 @@ repository.
 
 File: emacsvox.info,  Node: Developer Guide,  Next: Concept Index,  Prev: Acknowledgments,  Up: Top
 
-19 Developer And Maintainer Guide
+20 Developer And Maintainer Guide
 *********************************
 
 This guide is for people changing Emacsvox source, documentation,
@@ -2161,7 +2773,7 @@ procedures that cannot be generated from those interfaces.
 
 File: emacsvox.info,  Node: Documentation Maintenance,  Next: Speech Server Protocols,  Up: Developer Guide
 
-19.1 Documentation Maintenance
+20.1 Documentation Maintenance
 ==============================
 
 This chapter is for contributors changing the maintained manuals,
@@ -2169,7 +2781,7 @@ generated reference, or public browser documentation.  Reports and
 internal notes do not require an Emacsvox build; use the smallest
 documentation target that covers the source being changed.
 
-19.1.1 Choose the canonical source
+20.1.1 Choose the canonical source
 ----------------------------------
 
 The maintained Org master is ‘docs/manual/emacsvox.org’.  Current-user
@@ -2195,7 +2807,7 @@ separately installed ‘emacsvox-reference.info’ manual.  Selected
 historical chapters form the separately installed
 ‘emacsvox-heritage.info’ manual.
 
-19.1.2 Use the fast authoring workflow
+20.1.2 Use the fast authoring workflow
 --------------------------------------
 
 Keep current operating instructions separate from historical accounts.
@@ -2236,7 +2848,7 @@ comprehensive reference and manual update.
 docs-release-check’; ‘make docs-check’ is its compatibility alias.
 Commit the regenerated Info artifacts with their source changes.
 
-19.1.3 Publish the browser manual
+20.1.3 Publish the browser manual
 ---------------------------------
 
 Org on ‘master’ is the canonical maintained manual source.  GitHub Pages
@@ -2275,7 +2887,7 @@ maintainer action.
 
 File: emacsvox.info,  Node: Speech Server Protocols,  Next: Integration Maintenance,  Prev: Documentation Maintenance,  Up: Developer Guide
 
-19.2 Speech Server Protocols
+20.2 Speech Server Protocols
 ============================
 
 Emacsvox produces spoken output by communicating with one of several
@@ -2297,7 +2909,7 @@ legacy line protocol.
 developing a speech server, see the historical Emacspeak article at
 <http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html>.
 
-19.2.1 Omnivox Structured Protocol
+20.2.1 Omnivox Structured Protocol
 ----------------------------------
 
 At process startup the Emacsvox adapter requests capabilities and live
@@ -2394,7 +3006,7 @@ snapshot.
    • Omnivox Helper Protocol
      (https://github.com/bartbunting/omnivox/blob/main/docs/protocols/helper.md)
 
-19.2.2 Legacy Line Protocol
+20.2.2 Legacy Line Protocol
 ---------------------------
 
 The TTS server reads commands from standard input.  Script
@@ -2637,7 +3249,7 @@ time.
 
 File: emacsvox.info,  Node: Integration Maintenance,  Prev: Speech Server Protocols,  Up: Developer Guide
 
-19.3 Integration Maintenance
+20.3 Integration Maintenance
 ============================
 
 This chapter collects source-level contracts that are deliberately
@@ -2649,7 +3261,7 @@ behavior bounded when changing an integration.
 
 * Authoring Sound Packs::        Prepare a personal resource directory and validate its cue metadata.
 
-19.3.1 Logical table readers
+20.3.1 Logical table readers
 ----------------------------
 
 ‘emacsvox-table-reader.el’ supplies common cell/row/column formatting,
@@ -2730,7 +3342,7 @@ buttons, native action keys, sorting, filtering, refresh and hidden
 rows.  Its graphical navigation case must run on a real graphical Emacs;
 a batch skip does not establish display acceptance.
 
-19.3.2 Ordinary line movement in short windows
+20.3.2 Ordinary line movement in short windows
 ----------------------------------------------
 
 Core ‘next-line’ advice dynamically disables ‘auto-window-vscroll’ for
@@ -2747,7 +3359,7 @@ as a substitute for correct movement.  The graphical integration gate
 exercises real rendering, cursor movement and speech, plus a tall-image
 case, in ‘test/emacsvox-vertical-navigation-tests.el’.
 
-19.3.3 EAT rendered output and prompt observation
+20.3.3 EAT rendered output and prompt observation
 -------------------------------------------------
 
 EAT output is collected around ‘eat-term-process-output’ before
@@ -2787,7 +3399,7 @@ identifiers, without terminal text.  Selection for presentation is not
 proof of transport, playback or audible output; correlate the ordinary
 aural submission and Omnivox records for those later stages.
 
-19.3.4 Source checkout and byte-code lifecycle
+20.3.4 Source checkout and byte-code lifecycle
 ----------------------------------------------
 
 Use the Emacs selected by the ignored repository-local ‘local.mk’.  When
@@ -3207,7 +3819,7 @@ checker runs.
      through a separate SSH host.  Remote access remains preview
      independently of native Windows desktop support.
 
-19.3.5 Debian package builds
+20.3.5 Debian package builds
 ----------------------------
 
 ‘make deb’ builds a local development package in ‘dist/’ using Python 3,
@@ -3258,7 +3870,7 @@ Transient route.  The recorded build toolchain can differ from a locally
 prepared package.  Let CI attach the release deb instead of uploading a
 differently built local package with the same name.
 
-19.3.6 Emacsvox release staging and publication
+20.3.6 Emacsvox release staging and publication
 -----------------------------------------------
 
 The repository-level ‘VERSION’ file is the canonical stable release
@@ -3328,7 +3940,7 @@ release target pushes ‘master’ or the documentation branch.  Use ‘make
 release-check’ alone when a non-mutating preflight is wanted without
 creating an artifact.
 
-19.3.7 Future Aural contract decisions
+20.3.7 Future Aural contract decisions
 --------------------------------------
 
 The completed Aural implementation diary is preserved under
@@ -3348,7 +3960,7 @@ implementation:
 is defined by the Aural implementation, its generated reference, and
 accepted ADRs.
 
-19.3.8 Voice-style metadata ownership
+20.3.8 Voice-style metadata ownership
 -------------------------------------
 
 The private ‘emacsvox-aural--voice-style-fields’ table in
@@ -3436,7 +4048,7 @@ preview or palette lookup.  Preserve final-write, timeout, reentrancy,
 and trace regressions when working on later delivery slices; metadata
 validation alone cannot establish process lifecycle or audible behavior.
 
-19.3.9 Timeline preparation boundaries
+20.3.9 Timeline preparation boundaries
 --------------------------------------
 
 Two private helpers in ‘lisp/emacsvox-aural-transport.el’ make
@@ -3475,7 +4087,7 @@ compiled implementation resident.  Keep the full failure, reentrancy,
 and golden-trace suites as regression checks; captured writes establish
 protocol behavior, not audible playback.
 
-19.3.10 Aural interface source ownership
+20.3.10 Aural interface source ownership
 ----------------------------------------
 
 Ordinary-buffer entry captures a source buffer, a marker, and a guarded
@@ -3502,7 +4114,7 @@ fragment identifiers, and personal/session scopes each share one working
 editor.  Reopening a dirty editor preserves its draft and source
 association.
 
-19.3.11 Remote speech recovery
+20.3.11 Remote speech recovery
 ------------------------------
 
 Ordinary ‘tts-initialize’ startup schedules the existing remote retry
@@ -3517,7 +4129,7 @@ remote recovery.  Exercise these boundaries in
 ‘test/omnivox-remote-tests.el’ with controlled connection failures and
 timers.
 
-19.3.12 Omnivox voice configuration applies
+20.3.12 Omnivox voice configuration applies
 -------------------------------------------
 
 ‘omnivox-apply-voice-configuration’ captures one generation and its
@@ -3543,7 +4155,7 @@ late-reply, overlapping-apply, and replacement regressions in
 ‘test/emacsvox-tts-tests.el’ and spoken timeout feedback coverage in
 ‘test/emacsvox-aural-voice-workbench-tests.el’.
 
-19.3.13 Notmuch contracts
+20.3.13 Notmuch contracts
 -------------------------
 
 The live module is registered as an optional package integration.  Its
@@ -3574,7 +4186,7 @@ exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
 focused selector, including real displayed-window reading for both
 advance paths.
 
-19.3.14 Agent Shell contracts
+20.3.14 Agent Shell contracts
 -----------------------------
 
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
@@ -3769,7 +4381,7 @@ unrelated keys.
      or setting attributes are registered by the workflow semantic
      provider so Aural rules can customize their presentation.
 
-19.3.15 Magit contracts
+20.3.15 Magit contracts
 -----------------------
 
 Staging and selected synchronous operations collect Git outcomes at
@@ -3804,7 +4416,7 @@ from source, then again in a fresh Emacs with
 live buffer created with the former highlight mirroring needs a Magit
 refresh to rebuild its source properties.
 
-19.3.16 WSL2 Omnivox development staging
+20.3.16 WSL2 Omnivox development staging
 ----------------------------------------
 
 The ordinary WSL2 user route is implemented by
@@ -3964,7 +4576,7 @@ repository to make its release guard pass.  Use ‘make windows-omnivox’
 only for the reproducible clean-release path documented in the
 user-facing WSL2 route.
 
-19.3.17 Windows staging implementation and fixtures
+20.3.17 Windows staging implementation and fixtures
 ---------------------------------------------------
 
 Make owns option and clean-source guards, toolchain verification,
@@ -4017,7 +4629,7 @@ reproducibility, real Windows path conversion, engine startup, or
 audible playback; run the existing native gates for that acceptance in
 an appropriate staging environment.
 
-19.3.18 Aural experiments and guided changes
+20.3.18 Aural experiments and guided changes
 --------------------------------------------
 
 Physical experiments use the common voice editor with an exact
@@ -4064,7 +4676,7 @@ Row action predicates should hide operations that cannot apply to that
 row; this includes editing built-in options and reordering items outside
 the active-order view.
 
-19.3.19 Repeatable voice performance measurements
+20.3.19 Repeatable voice performance measurements
 -------------------------------------------------
 
 Use ‘utils/voice_benchmark.py’ to retain comparable measurements of
@@ -4189,7 +4801,7 @@ and comparison logic.
 
 File: emacsvox.info,  Node: Authoring Sound Packs,  Up: Integration Maintenance
 
-19.3.20 Authoring Sound Packs
+20.3.20 Authoring Sound Packs
 -----------------------------
 
 Ordinary selection, preview, and cue remapping are covered in *note
@@ -4252,7 +4864,7 @@ startup selection remain separate tasks.
 
 File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 
-20 Concept Index
+21 Concept Index
 ****************
 
  [index ]
@@ -4352,6 +4964,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Introduction:                          Introduction.        (line   6)
 * keys, discovering:                     Finding Reading Tasks.
                                                               (line   6)
+* learning Emacsvox:                     Guided Tutorial.     (line   6)
 * line echo:                             Controlling Echo.    (line   6)
 * line mode, Term:                       Term Input Modes.    (line   6)
 * lost speech:                           Finding Reading Tasks.
@@ -4412,6 +5025,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line   6)
 * point, meaning:                        Emacsvox Terminology.
                                                               (line  14)
+* practice document:                     Guided Tutorial.     (line   6)
 * presentation modalities:               Presentation Modalities.
                                                               (line   6)
 * presentation model:                    Presentation Model.  (line   6)
@@ -4509,6 +5123,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * troubleshooting, Notmuch:              Notmuch Troubleshooting.
                                                               (line   6)
 * TTS:                                   Speech System.       (line   6)
+* tutorial:                              Guided Tutorial.     (line   6)
 * undoing a temporary rule:              Finding Settings Tasks.
                                                               (line   6)
 * unexpected feedback:                   Finding Settings Tasks.

@@ -22,8 +22,9 @@ without adding words to everything you read.
 Start with @ref{Installation, , Installation} if Emacsvox is not yet installed. It explains the
 supported installation routes@comma{} takes you to a clean speaking session@comma{} and
 provides recovery instructions when speech does not start. Once speech works@comma{}
-continue with @ref{Basic Usage, , Basic Usage}@comma{} @ref{Using Online Help, , Using Online Help}@comma{} and @ref{Audio Desktop, , Audio Desktop} for reading@comma{}
-editing@comma{} command discovery@comma{} and moving among tasks.
+@ref{Guided Tutorial,Learn the audio desktop,,emacsvox,} teaches reading@comma{} editing@comma{} Help@comma{} structure@comma{} and
+speech adjustments through six connected lessons and a disposable document.
+Return to @ref{Basic Usage, , Basic Usage}@comma{} @ref{Using Online Help, , Using Online Help}@comma{} and @ref{Audio Desktop, , Audio Desktop} as everyday references.
 
 If Emacs itself is new to you@comma{} @kbd{C-h t} opens its interactive tutorial.
 Emacsvox speaks the tutorial and your navigation while you follow it. At any
@@ -115,16 +116,22 @@ following key separately. Uppercase and lowercase keys are different.
 
 @section Choose a reading route
 
-If Emacs is new to you@comma{} follow @ref{Installation,Installation,,emacsvox,} to obtain speech@comma{} then
-work through Emacs's tutorial with @kbd{C-h t}. Return to @ref{Basic Usage,Basic Usage,,emacsvox,} for
-speech commands. @ref{Using Online Help,Using Online Help,,emacsvox,} and @ref{Audio Desktop,Audio Desktop,,emacsvox,} explain how to find
-commands and move among tasks. You need not configure voices or additional
-engines before learning to read and edit.
+After @ref{Installation,Installation,,emacsvox,} gives you speech@comma{} work through @ref{Guided Tutorial,Learn the audio desktop,,emacsvox,} for
+six progressive lessons using a disposable practice document. It teaches
+reading@comma{} editing@comma{} Help@comma{} structure@comma{} temporary settings@comma{} and voice previews@comma{}
+with exercises and separate answers. No additional engine is needed.
+
+If Emacs itself is new to you@comma{} @kbd{C-h t} opens its separate interactive tutorial.
+Use it for more practice with general editing. @ref{Basic Usage,Basic Usage,,emacsvox,}@comma{}
+@ref{Using Online Help,Using Online Help,,emacsvox,}@comma{} and @ref{Audio Desktop,Audio Desktop,,emacsvox,} are references to return to as you work.
 
 If you already use Emacs@comma{} start with @ref{Basic Usage,Basic Usage,,emacsvox,} once speech works.
-Keep your usual editing and mode commands. Then read
-@ref{Aural Presentation,Aural Presentation,,emacsvox,} for the relationship between application meaning@comma{}
-voices@comma{} sounds@comma{} and settings@comma{} and choose an application guide for your work.
+Keep your usual editing and mode commands. The tutorial's
+@ref{Tutorial Temporary Settings,temporary-settings lesson,,emacsvox,} and @ref{Tutorial Voice Experiments,voice experiments,,emacsvox,} provide guided practice
+without making its earlier editing lessons prerequisites for experienced users;
+prepare its disposable buffer before experimenting. Then read
+@ref{Aural Presentation,Aural Presentation,,emacsvox,} for application meaning@comma{} voices@comma{} sounds@comma{} and settings@comma{}
+and choose an application guide for your work.
 
 For one question@comma{} go directly to @ref{Finding Tasks, , Find a task}@comma{} use Info's index@comma{} or search
 the manual text. @ref{Speech Backends,Speech Backends,,emacsvox,} contains alternative installation and backend
@@ -846,6 +853,600 @@ entry point can warn and prefer source when newer Lisp would otherwise be
 hidden by stale local byte-code. A customised startup should speak the same
 ready message as the isolated launcher. If it does not@comma{} remove or comment out
 the two init forms and return to the isolated launcher before another change.
+
+@node Guided Tutorial
+@chapter Learn the audio desktop
+
+@cindex tutorial
+@cindex learning Emacsvox
+@cindex practice document
+
+This tutorial takes you from reading a short document to exploring its
+structure and making a deliberate speech adjustment. Work through the lessons
+in order the first time. Each builds on the same practice document; the
+exercises ask you to use what you have learned without repeating every step.
+Answers are collected at the end so you can try before consulting them.
+
+Start with a speaking Emacsvox session prepared through
+@ref{Installation,Installation,,emacsvox,}@comma{} including its settings-menu dependency. No mail account@comma{}
+agent service@comma{} downloaded voice@comma{} or terminal package is needed. The first
+five lessons work with text and the Org mode supplied with Emacs. The final
+lesson uses an already available voice. If your backend cannot preview an
+adjustment@comma{} keep the working voice and follow the reported limitation rather
+than installing another engine to complete the exercise.
+
+The required exercises do not save speech settings. One clearly marked
+optional exercise creates a personal palette; you can finish the tutorial
+without doing it. Do not practise in a document@comma{} draft@comma{} or configuration that
+you need to preserve.
+
+Keys are the defaults. @kbd{C-n} means hold Control and press n. In @kbd{C-e l}@comma{}
+press Control-e@comma{} release it@comma{} then press lowercase l. @kbd{M-} normally means
+Alt or Option@comma{} @kbd{@key{RET}} means Enter@comma{} and @kbd{@key{SPC}} means Space. Capital letters
+matter. Use @kbd{M-x}@comma{} type the command name@comma{} and press @kbd{@key{RET}} when a command is
+given by name. @ref{Using This Manual,Using this manual,,emacsvox,} explains finding a topic and returning from it.
+
+@menu
+* Prepare a practice buffer: Tutorial Practice Buffer.  Make a disposable copy of the practice text without editing repository files.
+* Lesson 1 read and locate point: Tutorial Reading.  Distinguish movement, explicit reading, and stopping speech.
+* Lesson 2 find@comma{} edit@comma{} and recover text: Tutorial Editing.  Search for a known word, make a small edit, and verify undo.
+* Lesson 3 get Help and return to your work: Tutorial Help And Buffers.  Keep two tasks open, inspect a key, and return without losing your place.
+* Lesson 4 navigate the document's structure: Tutorial Structured Navigation.  Explore Org headings, links, and a table without evaluating code.
+* Lesson 5 change speech in one buffer: Tutorial Temporary Settings.  Compare punctuation levels, inspect scope, and restore the previous policy.
+* Lesson 6 preview and keep a voice experiment: Tutorial Voice Experiments.  Compare an unsaved voice draft, resume it, and distinguish saving from selection.
+* Exercise answers: Tutorial Exercise Answers.  Check the exercises and the reasons behind their recovery steps.
+* Finish and choose your next task: Tutorial Next Steps.  Leave practice safely and choose a task or a deeper explanation.
+@end menu
+
+@node Tutorial Practice Buffer
+@section Prepare a practice buffer
+
+A buffer is Emacs's working copy of text. It need not have a file behind it.
+We will use a new buffer so that editing@comma{} undo@comma{} and temporary settings cannot
+change the supplied example or an existing document.
+
+@enumerate
+@item
+Press @kbd{C-x b}@comma{} enter @code{evox-tutorial}@comma{} and press @kbd{@key{RET}}. If that name already
+belongs to work you want to keep@comma{} use an unused name such as
+@code{evox-tutorial-2} and substitute it throughout these lessons.
+@item
+Run @kbd{M-x text-mode @key{RET}}. This starts with ordinary text rather than Org's
+structural commands. Press @kbd{C-e m} to hear the buffer and mode.
+@item
+Insert the practice text below. In a source checkout@comma{} you can use
+@kbd{C-x i} and select @code{docs/manual/examples/tutorial-practice.org} relative
+to that checkout. This inserts a copy; it does not visit or modify that
+file. Otherwise copy or type the displayed text into the empty buffer.
+@item
+Press @kbd{M-<} to move to the beginning. @kbd{C-e l} reads the current line.
+It should contain the heading @code{* Practice note}.
+@end enumerate
+
+The example is included here so you can use an installed Info or HTML manual
+without a source checkout. Preserve its asterisks@comma{} brackets@comma{} pipes@comma{} and line
+breaks. Those characters become useful in the structure lesson. The code at
+the end is for reading@comma{} not evaluation; do not run it.
+
+@example
+* Practice note
+The green notebook is on the desk.
+This sentence is ready.
+Check (A+B)@comma{} then C.
+
+** Packing list
+- Notebook
+- Headphones
+- Cable
+
+** Journey plan
+| Day     | Task | Status  |
+|---------+------+---------|
+| Monday  | Read | Ready   |
+| Tuesday | Edit | Planned |
+
+** Reference
+[[*Packing list][Return to the packing list]]
+
+** Code to read
+#+begin_src emacs-lisp
+(+ 2 3)
+#+end_src
+@end example
+
+Keep the manual and the practice buffer available. @kbd{C-x b} followed by your
+practice buffer's name returns to your work without closing the manual.
+Finish any active minibuffer prompt first; @kbd{C-g} cancels an ordinary unfinished
+Emacs command. In a settings menu or an editor@comma{} use the return procedure
+specified in the lesson instead of assuming that every quit key is identical.
+
+If you need a fresh copy@comma{} leave menus and editors first@comma{} then use @kbd{C-x k}
+while in the disposable practice buffer. Check the buffer name and discard
+only that practice text if asked. Create a new buffer and insert the example
+again. Do not use this reset procedure on other work.
+
+@node Tutorial Reading
+@section Lesson 1: read and locate point
+
+Emacs calls the editing position @emph{point}. Movement changes point and Emacsvox
+speaks what you reach. Explicit reading lets you inspect text without first
+moving. Learning that distinction makes it easier to recover when speech is
+interrupted or you are unsure where the next edit will occur.
+
+@enumerate
+@item
+In the practice buffer@comma{} press @kbd{M-<}@comma{} then @kbd{C-n}. You reach the line about
+the green notebook and hear its text.
+@item
+Press @kbd{C-e l} twice. Each invocation reads that line again without moving
+point. Now press @kbd{C-n}: you reach the sentence about being ready@comma{} not a line
+farther down because of the repeated reading.
+@item
+Press @kbd{C-p} to return to the notebook line@comma{} then @kbd{C-a} to reach its start.
+@kbd{C-e c} reads the character at point. Use @kbd{C-f} to move one character
+forward and @kbd{C-b} to move back. Point moves only with the movement commands.
+@item
+Press @kbd{C-e b} to start reading the buffer and @kbd{C-e s} to stop that speech.
+Then press @kbd{C-e l}. It still works: stopping an utterance has not switched
+speech off or closed the document.
+@end enumerate
+
+The exact voice and pronunciation depend on your current settings. Check the
+text you reached@comma{} not whether your system sounds like someone else's.
+@kbd{C-e m} identifies the buffer and mode whenever your context is unclear.
+
+If @kbd{M-<} is intercepted by your desktop or screen reader@comma{} run
+@kbd{M-x beginning-of-buffer @key{RET}} instead. This is an Emacs command@comma{} not a
+requirement to change screen-reader configuration.
+
+@subsection Try it
+
+@strong{1A@.} From the start of the buffer@comma{} reach the line beginning @code{Check} using
+line movement. Read it twice without changing point.
+
+@strong{1B@.} Start a longer reading@comma{} stop it@comma{} and establish both which buffer you
+are in and what its current line contains. Do not restart Emacs or speech.
+
+See @ref{tutorial-answer-1, , Answers for lesson 1}.
+
+@node Tutorial Editing
+@section Lesson 2: find@comma{} edit@comma{} and recover text
+
+Searching locates text; it does not change the text. Editing happens at point@comma{}
+which is after the match when a forward search succeeds. We will make one
+small insertion@comma{} inspect it@comma{} and undo it before attempting a replacement.
+
+@enumerate
+@item
+Press @kbd{M-<}@comma{} then @kbd{C-s} and type @code{ready}. When the search finds the word@comma{}
+press @kbd{@key{RET}} to finish. Point is after @code{ready} and before its full stop.
+@item
+Type a space followed by @code{now}. @kbd{C-e l} should read the sentence with
+@code{ready now}. The other sentences are unchanged.
+@item
+Press @kbd{C-/} to undo and inspect the line again with @kbd{C-e l}. Undo works in
+editing groups@comma{} not necessarily one character at a time. Stop when the
+sentence is back to @code{This sentence is ready.}; do not keep undoing into
+the initial insertion of the example. @kbd{M-x undo @key{RET}} is an alternative
+when your keyboard cannot send @kbd{C-/}.
+@item
+Search for @code{notebook} from the beginning and finish with @kbd{@key{RET}}. Notice that
+searching and reading did not modify the document. You can return to any
+known phrase without counting lines.
+@end enumerate
+
+If a search does not find its text@comma{} check your spelling. @kbd{C-g} during a
+failing search first backs out of the failure; another @kbd{C-g} may be needed to
+leave the search. Wait until the search prompt is gone before typing ordinary
+text. A successful search is accepted with @kbd{@key{RET}}@comma{} not by typing the edit into
+its search prompt.
+
+@subsection Try it
+
+@strong{2A@.} Replace @code{green} with @code{blue}. Use a successful search for the whole word@comma{}
+then @kbd{M-@key{DEL}} to remove the word immediately before point@comma{} and type its
+replacement. Here @kbd{@key{DEL}} means Backspace; @kbd{M-x backward-kill-word @key{RET}} is an
+alternative to @kbd{M-@key{DEL}}. Inspect the complete line and restore @code{green} before
+continuing.
+
+@strong{2B@.} What would happen if you typed @code{now} before accepting the search?
+Explain the difference between changing the query and changing the document.
+
+See @ref{tutorial-answer-2, , Answers for lesson 2}. Text undo is not a general undo command for settings
+menus; we will practise their recovery separately.
+
+@node Tutorial Help And Buffers
+@section Lesson 3: get Help and return to your work
+
+A Help buffer is another piece of work you can visit. It need not replace the
+document you were editing. We will keep a second text buffer available@comma{} then
+inspect a command without running it.
+
+@enumerate
+@item
+Press @kbd{C-x b}@comma{} enter an unused name such as @code{evox-tutorial-notes}@comma{} and
+press @kbd{@key{RET}}. Run @kbd{M-x text-mode @key{RET}} and type
+@code{I can return to my document by name.}.
+@item
+Use @kbd{C-x b} and your original practice buffer's name to return. Its text
+and position are still available. @kbd{C-e m} and @kbd{C-e l} confirm where you are.
+@item
+Press @kbd{C-h k C-e l}. Emacs describes the current-line reading key; it does
+not execute that key as the requested action. @kbd{C-e h} reads the displayed
+Help again.
+@item
+To read Help directly@comma{} use @kbd{C-x b} and select its @code{*Help*} buffer from
+completion. Navigate with ordinary reading commands@comma{} then press @kbd{q} to
+leave Help. Use @kbd{C-x b} to select the practice buffer if other window or
+buffer changes make the return destination unclear.
+@item
+Press @kbd{C-h m} in the practice buffer. This describes its modes and local
+commands. Leave Help and return to the document by the same method.
+@end enumerate
+
+The information comes from your running Emacs@comma{} so it is particularly useful
+when a package or personal binding differs from this manual. A buffer and a
+window are different: switching buffers chooses content@comma{} while @kbd{C-x o}
+selects another window. You do not have to rearrange windows to finish this
+exercise.
+
+@subsection Try it
+
+@strong{3A@.} Without closing either text buffer@comma{} visit the notes@comma{} add a second line@comma{}
+and return to the practice document. Confirm that each contains its own text.
+
+@strong{3B@.} Discover what @kbd{C-e s} does without stopping speech as the action you
+are investigating. Then find the keys for the command name reported by Help@comma{}
+using @kbd{C-h w}.
+
+See @ref{tutorial-answer-3, , Answers for lesson 3}. For manual lookup and navigation history@comma{} practise
+@ref{Using This Manual,Find an answer in Info and return,,emacsvox,} alongside this buffer-based Help exercise.
+
+@node Tutorial Structured Navigation
+@section Lesson 4: navigate the document's structure
+
+The practice text is also an Org document. Changing its major mode gives
+Emacs commands that understand headings@comma{} lists@comma{} links@comma{} and tables. The text
+remains yours; a folded section is hidden@comma{} not deleted.
+
+@enumerate
+@item
+Return to the practice buffer and run @kbd{M-x org-mode @key{RET}}. Press @kbd{M-<}@comma{}
+then @kbd{C-u C-u C-u @key{TAB}} to show the whole document@comma{} including any folded
+sections. Each @kbd{C-u} is a separate prefix keystroke. @kbd{C-e m} now identifies
+Org rather than Text mode.
+@item
+From the first heading@comma{} press @kbd{C-c C-n} to reach @code{Packing list}. This
+moves to a heading@comma{} skipping intervening body text. @kbd{C-c C-p} returns to
+the previous visible heading. Go forward to @code{Packing list} again.
+@item
+Press @kbd{@key{TAB}} on that heading to fold its body. @kbd{C-c C-n} reaches
+@code{Journey plan}. Return with @kbd{C-c C-p} and press @kbd{@key{TAB}} to expose the list
+again. Read down into it to confirm that the items are still present.
+@item
+Show all content again with @kbd{C-u C-u C-u @key{TAB}}@comma{} then search from the
+beginning for @code{Return to the packing list}. Finish with @kbd{@key{RET}} and press
+@kbd{C-b} once to leave point inside the link text. @kbd{C-c C-o} follows this
+internal link to the heading; no website or external file is opened.
+@end enumerate
+
+Heading speech and collapse cues depend on your presentation settings.
+What matters is the location and visibility you can inspect. Do not require
+one exact spoken phrase or one physical voice to recognise a heading.
+
+@subsection Read the table without editing it
+
+Show the whole document again@comma{} then search from the beginning for @code{Monday}
+and finish with @kbd{@key{RET}}. You are in the first data row's Day cell.
+
+@enumerate
+@item
+Press @kbd{C-e C-t C-r} to enter table reading without moving. Emacsvox
+announces the table dimensions and the current cell.
+@item
+Press @kbd{@key{TAB}} to reach the Task cell@comma{} @code{Read}. @kbd{@key{RET}} reads that cell again.
+In this reader these keys do not align the table or insert a row.
+@item
+Press Down. You remain in the Task column and hear the complete Tuesday
+row. Press @kbd{c} to read the column@comma{} or @kbd{r} to repeat the current row.
+@kbd{.} reports coordinates; headers and data rows are distinguished.
+@item
+Press @kbd{q} to leave table reading@comma{} then @kbd{C-e l} to inspect the text line.
+The table reader closes@comma{} not the practice buffer. Ordinary Org editing
+keys are restored.
+@end enumerate
+
+Outside table reading@comma{} Org's @kbd{@key{TAB}} is an editing/navigation command that can
+align a table and create rows. A key's meaning belongs to the active mode or
+reader@comma{} not to its letter alone. Do not evaluate the source block at the end
+of the document: it is present so you can also inspect literal code.
+
+@subsection Try it
+
+@strong{4A@.} Enter table reading at @code{Monday} again. Reach Tuesday's Status cell and
+read it without typing into the table. Then leave reading mode.
+
+@strong{4B@.} Fold @code{Packing list}@comma{} read another section@comma{} and bring the list back.
+Explain why text undo is not needed to recover the hidden items.
+
+See @ref{tutorial-answer-4, , Answers for lesson 4}. @ref{Browsing Structure,Browsing Structure,,emacsvox,} documents the complete shared table reader;
+@ref{Motion,Org heading motion,,org,} and @ref{Visibility Cycling,Org visibility cycling,,org,} explain the underlying document commands.
+
+@node Tutorial Temporary Settings
+@section Lesson 5: change speech in one buffer
+
+Now change how one line is spoken without changing its text. This is a live
+buffer adjustment@comma{} not a draft preview. Closing the menu keeps it in effect;
+restoring it is a separate action. We will not save a default.
+
+@enumerate
+@item
+In the practice buffer@comma{} leave table reading if active. Show all content@comma{}
+then search from the beginning for @code{Check (A+B)@comma{} then C.} and accept the
+match. Press @kbd{C-a}@comma{} then @kbd{C-e l} to hear the starting presentation.
+@item
+Press @kbd{C-e H s p} without a prefix argument. Read the scope and current
+punctuation policy. It must name the current buffer@comma{} not global defaults.
+Record whether the original policy is automatic@comma{} an explicit level@comma{} or a
+named profile. If scope is global@comma{} use @kbd{g} to choose buffer scope before
+changing anything.
+@item
+Press @kbd{? a} for Help on All@comma{} then @kbd{q} to return to the punctuation menu.
+Press @kbd{a} to apply All@comma{} followed by @kbd{C-q} to close the menus. Back in the
+document@comma{} @kbd{C-e l} lets you compare the same line with punctuation spoken.
+@item
+Visit the notes buffer and read its line. This operation did not set its
+punctuation policy. Return to the practice buffer@comma{} reopen @kbd{C-e H s p}@comma{}
+choose @kbd{n} for None@comma{} close with @kbd{C-q}@comma{} and compare the same line again.
+@item
+Restore the original policy. For an automatic policy@comma{} use @kbd{r} in that
+buffer's punctuation menu. For an explicit level or named profile@comma{} use
+@kbd{p} and select the recorded choice instead. Close the menu and verify
+the line and the reported policy. Do not press uppercase @kbd{S}.
+@end enumerate
+
+Punctuation pronunciation varies by engine and configuration@comma{} so judge the
+change by the treatment of the line's punctuation rather than an exact sample
+transcript. The characters in the buffer never changed. Restoring Automatic
+returns control to the mode policy; it is not a synonym for choosing Some.
+
+An explicit global change can affect both the default and the source buffer.
+Saving a default adds a persistence step and does not cancel stronger mode
+policies or buffer overrides. Those are different tasks from this temporary
+experiment; see @ref{Saving And Startup,Choose What Persists,,emacsvox,}.
+
+@subsection Try it
+
+@strong{5A@.} From the practice buffer@comma{} press @kbd{C-e H /}@comma{} search for @code{punctuation}@comma{}
+and choose the punctuation control from completion. The first @kbd{@key{RET}} selects
+its menu item without activating it. Read its Help@comma{} then leave without making
+a change. Check the policy afterward.
+
+@strong{5B@.} After choosing All and then closing the menu@comma{} should the original policy
+return? Describe how to restore it and why @kbd{C-/} in the document is not the
+right operation.
+
+See @ref{tutorial-answer-5, , Answers for lesson 5}.
+
+@node Tutorial Voice Experiments
+@section Lesson 6: preview and keep a voice experiment
+
+An installed @emph{physical voice} is a voice an engine can produce. A palette's
+@emph{named voice}@comma{} such as @code{default} for ordinary reading@comma{} chooses physical voices
+and adjustments for a purpose. Browsing a physical voice does not replace
+that named entry. We will first try a physical voice without selecting it for
+ordinary reading or changing startup.
+
+@enumerate
+@item
+From the practice buffer@comma{} press @kbd{C-e H v b}. Select an available engine
+and press @kbd{v} to browse its voices. Expand a language group with @kbd{@key{RET}}
+if needed@comma{} then choose an already usable voice.
+@item
+Press @kbd{P} to hear its sample and @kbd{S} to stop. An unavailable or inactive
+downloaded voice is not suitable for this first exercise. Read its details
+rather than enabling@comma{} installing@comma{} or applying packages as a workaround.
+@item
+Press @kbd{t} on the usable voice to open an experiment. If this resumes
+someone else's or your earlier unfinished draft@comma{} leave it with Keep and
+choose another voice; do not overwrite or discard unrelated work.
+@item
+In your new editor draft@comma{} find @emph{Average Pitch} and note its value. Use
+@kbd{@key{RET}} to enter @code{6}@comma{} or @code{5} if it is already six. Press @kbd{P} to preview and
+@kbd{B} to compare the opening and edited versions with the same sample.
+@kbd{S} stops. An automatic sample may also follow an adjustment in the full
+editor; navigation stops it.
+@item
+Press @kbd{u} to undo that draft adjustment@comma{} compare again@comma{} then make the
+small adjustment once more. This is editor undo@comma{} not text undo. If the
+backend reports the adjustment unsupported@comma{} keep that limitation explicit
+and continue with browsing; do not infer that saving will fix support.
+@item
+Press @kbd{q} in the editor and choose to keep the unfinished draft. Return
+through the browser's parent views with @kbd{q} until you reach its menu@comma{} then
+close the menu sequence with @kbd{C-q}. Ordinary reading is unchanged.
+@item
+From the practice buffer@comma{} press @kbd{C-e H p d} and select your retained
+experiment. Verify the value is still there. To finish without saving@comma{}
+leave its editor with @kbd{q} and choose to discard this practice draft only.
+Return through the remaining views and menus.
+@end enumerate
+
+A retained draft lasts within the Emacs session. It is not a saved palette and
+does not survive restart. Discarding it leaves ordinary reading untouched@comma{}
+but discarding a draft would not undo a save that had already completed.
+The editor's status distinguishes unsaved work@comma{} successful saving@comma{} and failed
+or pending application. Never treat a preview as proof of persistence.
+
+@subsection Optional: save an inactive personal palette
+
+This exercise writes personal palette data. Skip it to keep the tutorial
+entirely free of saved speech-configuration changes. It deliberately avoids
+startup selection and does not require you to restart a working session.
+
+@enumerate
+@item
+Open @kbd{C-e H v p} and note the active palette and whether selection follows
+the standard baseline or is explicit. Press @kbd{N} to create a palette with an unused name such as @code{tutorial-reading}@comma{} a short
+description@comma{} and @code{acss-default} as parent. Creation saves the new palette
+but does not activate it. Use another name if that one already exists.
+@item
+Enter your new palette with @kbd{@key{RET}}@comma{} select @code{default}@comma{} and press @kbd{e} to
+edit it. Change @emph{Average Pitch} as above and compare with @kbd{B}. This entry
+controls ordinary reading@comma{} not every named voice in the palette.
+@item
+Choose @emph{Save to collection without selecting}. Wait for its result and
+check the destination and saved status. Leave with @kbd{q}. The palette now
+holds your entry@comma{} but it is still not selected for ordinary reading.
+@item
+To try live selection deliberately@comma{} return to the palette manager with
+@kbd{o}@comma{} select your new palette@comma{} and press @kbd{a}. Return to the practice
+document and read the notebook line. Other named voices retain their
+own definitions. Rules or unsupported adjustments can make a contrast
+subtle; @ref{Voices In Context,Inspect Or Adjust A Voice In Context,,emacsvox,} explains how to investigate.
+@item
+Reopen the palette manager. If you originally followed the standard
+baseline@comma{} use @kbd{f} to follow it again. Otherwise select the original palette
+you recorded and press @kbd{a}. Do not use @kbd{U}@comma{} the separate startup action@comma{}
+during this tutorial. The inactive tutorial palette remains saved for
+later use.
+@end enumerate
+
+If saving or application fails@comma{} keep the reported status and follow
+@ref{Recovering Aural Changes,Recovering Unfinished Changes,,emacsvox,}. Do not repeat Create@comma{} delete files@comma{} or restart
+Emacs to hide the failure. After an accepted save@comma{} text undo and draft discard
+are not rollback commands. @ref{Personal Palette Walkthrough,Make a Personal Reading Palette,,emacsvox,} gives the fuller
+lifecycle@comma{} including inheritance and startup selection.
+
+@subsection Try it
+
+@strong{6A@.} Create another small preview-only experiment@comma{} keep its draft@comma{} and
+resume it without saving. Then discard that practice draft and establish
+that your working document is still there.
+
+@strong{6B@.} Explain the difference between Preview@comma{} Keep draft@comma{} Save to collection@comma{}
+Activate@comma{} and Use at Startup. Which of them did the required exercise use?
+Which additional operations belong to the optional exercise?
+
+See @ref{tutorial-answer-6, , Answers for lesson 6}.
+
+@node Tutorial Exercise Answers
+@section Exercise answers
+
+Use these answers to check your approach@comma{} not as a script you must memorise.
+Equivalent commands are useful when their scope and result are the same.
+In Info@comma{} @kbd{l} retraces the link from an exercise to its answer.
+
+@subsection Answers: lesson 1
+
+@anchor{tutorial-answer-1}
+
+@strong{1A@.} With the unmodified example@comma{} @kbd{M-< C-n C-n C-n} reaches the Check line.
+@kbd{C-e l} reads it without moving@comma{} so two repetitions leave the editing position
+unchanged. A different number of inserted lines changes the count; search is
+more dependable when you no longer know the exact layout.
+
+@strong{1B@.} Use @kbd{C-e b}@comma{} then @kbd{C-e s}. @kbd{C-e m} identifies the buffer and mode;
+@kbd{C-e l} reads the line at point. Stopping speech does not delete text@comma{} move
+to another buffer@comma{} or disable later speech commands.
+
+@subsection Answers: lesson 2
+
+@anchor{tutorial-answer-2}
+
+@strong{2A@.} @kbd{M-< C-s green @key{RET}} places point after green. @kbd{M-@key{DEL}} removes that
+word; typing @code{blue} supplies the replacement. Read the whole line to catch
+spacing or punctuation mistakes. Restore it with a search for blue followed
+by the same replacement procedure. Undo may also work@comma{} but verify each editing
+group rather than assuming a fixed number of undo commands.
+
+@strong{2B@.} Before @kbd{@key{RET}}@comma{} the letters extend the search query. No document edit
+has occurred. Accept a successful search@comma{} then insert the text at point.
+
+@subsection Answers: lesson 3
+
+@anchor{tutorial-answer-3}
+
+@strong{3A@.} Switch to the notes by name@comma{} use @kbd{M->} to reach their end@comma{} add a newline
+and a short sentence@comma{} then switch back by name. Neither switch closes the
+other buffer. @kbd{C-e m} and line reading distinguish them.
+
+@strong{3B@.} @kbd{C-h k C-e s} describes the effective binding. With the default maps@comma{}
+the command is @code{tts-stop}. @kbd{C-h w tts-stop @key{RET}} reports its keys in the
+current context. Help describes the binding; it does not invoke it as the
+requested action.
+
+@subsection Answers: lesson 4
+
+@anchor{tutorial-answer-4}
+
+@strong{4A@.} From Monday's cell@comma{} enter with @kbd{C-e C-t C-r}@comma{} press Down for Tuesday@comma{}
+then @kbd{@key{TAB}} twice to reach Status. @kbd{@key{RET}} reads @code{Planned}. @kbd{q} restores normal
+Org editing. While table reading is active@comma{} these operations do not realign
+the source@comma{} add rows@comma{} or evaluate formulas.
+
+@strong{4B@.} @kbd{@key{TAB}} on the heading changes visibility. Return to it and cycle open@comma{}
+or use @kbd{C-u C-u C-u @key{TAB}} to expose the whole document. The hidden items
+never left the buffer. Text undo would affect edits@comma{} not provide the intended
+folding operation.
+
+@subsection Answers: lesson 5
+
+@anchor{tutorial-answer-5}
+
+@strong{5A@.} Search accepts a result by selecting its menu control. The separate
+activation step is what can open an editor or change a value. Reading Help
+and leaving without activation does not change the punctuation policy.
+
+@strong{5B@.} Closing keeps the chosen live adjustment. Restore the recorded policy
+in the buffer's punctuation menu: @kbd{r} for Automatic@comma{} or @kbd{p} and the recorded
+explicit choice. Text undo does not restore speech settings. Uppercase @kbd{S}
+would save a default@comma{} so it is deliberately absent from this exercise.
+
+@subsection Answers: lesson 6
+
+@anchor{tutorial-answer-6}
+
+@strong{6A@.} Keep the practice draft on leaving its editor@comma{} return to the document@comma{}
+and use @kbd{C-e H p d} to resume that specific draft. Inspect it@comma{} then leave
+with Discard. Use the editor and menu return commands@comma{} or select the practice
+buffer by name once the menus are closed. Do not discard another draft to
+make the chooser empty.
+
+@strong{6B@.} Preview auditions working values. Keep draft retains unsaved work in
+this Emacs session. Save to collection writes the destination without selecting
+an inactive palette. Activate chooses the palette for this session. Use at
+Startup changes its selection in a saved Presentation Profile; it is not the
+same as saving the palette. The required exercise uses Preview and Keep draft@comma{}
+then discards. The optional exercise additionally creates and saves a palette
+and optionally activates it before restoring the original selection. Neither
+exercise needs Use at Startup.
+
+@node Tutorial Next Steps
+@section Finish and choose your next task
+
+Finish any practice draft in its editor@comma{} close menus@comma{} restore the punctuation
+policy@comma{} and restore the original palette if you deliberately activated another.
+Keep saved work separate from unsaved practice when choosing what to remove.
+
+To discard the text exercises@comma{} use @kbd{C-x k} on each tutorial buffer after
+checking its name. To keep your own text instead@comma{} use @kbd{C-x C-w} and choose
+an unused file in your personal documents directory. Review any overwrite
+prompt and cancel rather than replacing an existing file. Saving text does not
+save voice settings@comma{} and saving a palette does not save the practice document.
+
+A saved tutorial palette can remain inactive. To remove it later@comma{} use the
+palette manager's deletion action only on the unused personal palette you
+created@comma{} after finishing its drafts and checking known references. Do not
+remove a built-in palette or other saved work as part of tutorial cleanup.
+
+You can now read a location twice without moving@comma{} recover a small edit@comma{} visit
+Help without abandoning work@comma{} distinguish a document's structure from its
+text@comma{} and tell a temporary setting from a preview or a saved resource.
+@ref{Finding Tasks,Find a task,,emacsvox,} is the quickest route to a specific goal. @ref{Basic Usage,Basic Usage,,emacsvox,} and
+@ref{Audio Desktop,Audio Desktop,,emacsvox,} provide the everyday reference@comma{} while
+@ref{Aural Presentation,Aural Presentation,,emacsvox,} explains rules@comma{} palettes@comma{} voices@comma{} and saved setups in depth.
+The application guides then apply these habits to mail@comma{} terminals@comma{} and agents.
 
 @node Basic Usage
 @chapter Basic Usage

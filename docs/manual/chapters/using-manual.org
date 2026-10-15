@@ -24,16 +24,22 @@ following key separately. Uppercase and lowercase keys are different.
 :TEXINFO_NODE: no
 :END:
 
-If Emacs is new to you, follow [[info:emacsvox#Installation][Installation]] to obtain speech, then
-work through Emacs's tutorial with ~C-h t~. Return to [[info:emacsvox#Basic Usage][Basic Usage]] for
-speech commands. [[info:emacsvox#Using Online Help][Using Online Help]] and [[info:emacsvox#Audio Desktop][Audio Desktop]] explain how to find
-commands and move among tasks. You need not configure voices or additional
-engines before learning to read and edit.
+After [[info:emacsvox#Installation][Installation]] gives you speech, work through [[info:emacsvox#Guided Tutorial][Learn the audio desktop]] for
+six progressive lessons using a disposable practice document. It teaches
+reading, editing, Help, structure, temporary settings, and voice previews,
+with exercises and separate answers. No additional engine is needed.
+
+If Emacs itself is new to you, ~C-h t~ opens its separate interactive tutorial.
+Use it for more practice with general editing. [[info:emacsvox#Basic Usage][Basic Usage]],
+[[info:emacsvox#Using Online Help][Using Online Help]], and [[info:emacsvox#Audio Desktop][Audio Desktop]] are references to return to as you work.
 
 If you already use Emacs, start with [[info:emacsvox#Basic Usage][Basic Usage]] once speech works.
-Keep your usual editing and mode commands. Then read
-[[info:emacsvox#Aural Presentation][Aural Presentation]] for the relationship between application meaning,
-voices, sounds, and settings, and choose an application guide for your work.
+Keep your usual editing and mode commands. The tutorial's
+[[info:emacsvox#Tutorial Temporary Settings][temporary-settings lesson]] and [[info:emacsvox#Tutorial Voice Experiments][voice experiments]] provide guided practice
+without making its earlier editing lessons prerequisites for experienced users;
+prepare its disposable buffer before experimenting. Then read
+[[info:emacsvox#Aural Presentation][Aural Presentation]] for application meaning, voices, sounds, and settings,
+and choose an application guide for your work.
 
 For one question, go directly to [[*Find a task][Find a task]], use Info's index, or search
 the manual text. [[info:emacsvox#Speech Backends][Speech Backends]] contains alternative installation and backend

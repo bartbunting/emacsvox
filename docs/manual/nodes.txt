@@ -9,6 +9,16 @@ Quick Installation
 Confirming First Speech
 Recovering From No Speech
 Persistent Startup
+Guided Tutorial
+Tutorial Practice Buffer
+Tutorial Reading
+Tutorial Editing
+Tutorial Help And Buffers
+Tutorial Structured Navigation
+Tutorial Temporary Settings
+Tutorial Voice Experiments
+Tutorial Exercise Answers
+Tutorial Next Steps
 Basic Usage
 Overview
 Working
