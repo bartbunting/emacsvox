@@ -6,26 +6,30 @@
 :END:
 
 #+cindex: applications
-
 #+cindex: integrations
-
 #+cindex: packages, speech support
 
-Emacsvox prepares speech support for many Emacs modes as their libraries are
-loaded.  Start the application normally; when its buffer appears, use
-~C-h m~ for the active modes and their commands, ~C-h b~ for the
-effective bindings, and ~C-h k~ followed by a key to identify one binding.
-The generated
-[[info:emacsvox-reference#Emacsvox Commands And Options][Emacsvox Commands And Options]] in /Emacsvox Reference Manual/ records the public Emacsvox commands and options.
+Start an application with its normal Emacs command. Emacsvox prepares speech
+support as the relevant libraries load, then presents movement, results, and
+state changes through that application's structure. Emacs or the third-party
+package still owns its editing, files, network operations, and other actions.
 
-This chapter is a curated starting point, not a promise that every module in
-the generated reference has a maintained task guide.  Emacs itself or a
-third-party package provides the application's general operation; Emacsvox
-adds the speech feedback.  Consult both sets of help when diagnosing a problem.
+Use ~C-h m~ to learn the active mode, ~C-h b~ to inspect its effective keys,
+and ~C-h k~ to explain one binding. For Emacsvox's feedback controls, ~C-e S~
+opens the current integration's focused settings when available, otherwise
+general buffer settings. ~C-e H j~ also provides integration settings and a
+chooser. These controls adjust speech; they do not replace the application's
+own setup or preferences. [[*Find Help While You Work][Using Online Help]] explains menu Help and search.
 
-Earlier Emacspeak surveys, including their W3, Dismal, and scanner/OCR setup,
-are preserved as historical material in
-[[info:emacsvox-heritage#Emacs Packages][Historical Application Survey]] in /Emacspeak Heritage/.  They are not current setup instructions.
+This chapter is a guide to maintained workflows, not a claim that every module
+has a complete task guide. The generated
+[[info:emacsvox-reference#Emacsvox Commands And Options][Emacsvox Commands And Options]] in the /Emacsvox Reference Manual/ records
+public commands and options. Consult both that reference and the application's
+manual when diagnosing a problem.
+
+Earlier surveys of W3, Dismal, and scanner/OCR setup remain in the
+[[info:emacsvox-heritage#Emacs Packages][Historical Application Survey]] in /Emacspeak Heritage/. They describe their
+original period and are not current installation instructions.
 
 ** Document Authoring
 :PROPERTIES:
@@ -34,12 +38,11 @@ are preserved as historical material in
 
 #+cindex: document authoring
 
-Emacs major modes provide the editing commands for each document format.
-Emacsvox speaks ordinary movement and editing, applies voice-lock where the
-mode exposes useful faces, and adds mode-specific feedback where an integration
-exists.  Open or create the document in its normal Emacs mode, then use
-~C-h m~ to discover that mode's workflow.  For outlines and templates, see
-[[*Structured Editing And Templates][Structured Editing]].
+Open or create a document in its normal Emacs mode. The major mode provides
+format-specific editing commands; Emacsvox speaks movement and edits, applies
+Voice Lock where useful faces are available, and adds integration-specific
+feedback. Use ~C-h m~ for the mode's workflow. Outlines and template fields
+are covered next; table reading is described under [[*Browsing Structure][Browsing Structure]].
 
 ** Structured Editing And Templates
 :PROPERTIES:
@@ -48,27 +51,21 @@ exists.  Open or create the document in its normal Emacs mode, then use
 :END:
 
 #+cindex: Outline mode
-
 #+cindex: Tempo
-
 #+findex: outline-mode
-
 #+findex: outline-minor-mode
 
-Emacsvox has maintained integrations for the built-in Outline and Tempo
-libraries.  In Outline mode, heading navigation speaks the reached heading and
-visibility commands announce what was hidden or exposed.  Start a dedicated
-outline with ~M-x outline-mode~, or enable =outline-minor-mode= in a
-suitable document.  See
-[[info:emacsvox-reference#emacsvox-outline][emacsvox-outline]] in /Emacsvox Reference Manual/ for the
-Emacsvox integration and [[info:emacs#Outline Mode][Outline Mode]] in /The GNU Emacs Manual/ for
-the underlying editor.
+In Outline mode, heading navigation speaks the heading you reach and visibility
+commands announce what was hidden or exposed. Start a dedicated outline with
+~M-x outline-mode~, or enable =outline-minor-mode= in a suitable document.
+See [[info:emacs#Outline Mode][Outline Mode]] in /The GNU Emacs Manual/ for the editor and
+[[info:emacsvox-reference#emacsvox-outline][emacsvox-outline]] in the /Emacsvox Reference Manual/ for its speech support.
 
-Tempo supplies template fields for modes and packages that use it.  Emacsvox
+Tempo supplies template fields for modes and packages that use it. Emacsvox
 speaks inserted text and the line reached when moving between template marks.
-The package that supplied a template also provides its insertion commands;
-use that package's mode help, together with
-[[info:emacsvox-reference#emacsvox-tempo][emacsvox-tempo]] in /Emacsvox Reference Manual/.
+The package supplying the template also supplies its insertion commands.
+Consult that package's mode help and
+[[info:emacsvox-reference#emacsvox-tempo][emacsvox-tempo]] in the /Emacsvox Reference Manual/.
 
 ** Browsing Structure
 :PROPERTIES:
@@ -77,12 +74,11 @@ use that package's mode help, together with
 
 #+cindex: structured navigation
 
-Use the structure exposed by the active Emacs mode rather than treating every
-buffer as plain text.  Info provides node and menu navigation, Outline provides
-heading and visibility commands, and EWW exposes HTML headings, links, lists,
-tables, and other document elements.  Begin with ~C-h m~ in the buffer;
-see [[*Find Help While You Work][Using Online Help]] for the common discovery commands and
-[[*Web Browsing With EWW][Web Browsing]] for the maintained Web route.
+Use the active mode's structure when it matches the task: Info has nodes and
+menus, Outline has headings and visibility, and EWW exposes HTML headings,
+links, lists, tables, and other document elements. The following sections
+explain Emacsvox's reading of headings, tables, and application lists. These
+reading controls are distinct from commands that edit the underlying content.
 
 *** Reading Org headings
 :PROPERTIES:
@@ -90,26 +86,26 @@ see [[*Find Help While You Work][Using Online Help]] for the common discovery co
 :END:
 
 Reading a whole Org heading omits its leading stars at punctuation levels
-=some= and =none=.  Heading voices and the optional heading-level announcement
-still identify the structure.  At =all= punctuation, the stars are counted,
-for example, ``3 star'' before a level-three heading.  An empty heading is
+=some= and =none=. Heading voices and the optional heading-level announcement
+still identify the structure. At =all= punctuation, the stars are counted,
+for example, ``3 star'' before a level-three heading. An empty heading is
 spoken as ``Empty heading'' when its stars are omitted.
 
 Word reading and partial-line reading count the stars actually selected.
 Starting at the second star of a level-three heading therefore says ``2 star''.
 Word movement includes the star count when it reaches the first heading word,
-in either direction.  It keeps the usual cursor position.  Moving through the
-remaining title words speaks them without repeating the count or heading-level
-announcement.  Character reading and spelling retain the individual stars.
+in either direction, without changing the usual cursor position. Moving through
+the remaining title words does not repeat that count or heading-level
+announcement. Character reading and spelling retain the individual stars.
 Collapsed headings have a collapse cue at every level; the large-movement cue
 belongs to Org structure navigation.
 
 Counts preserve the configured character name without adding a plural ending.
-At =all= punctuation, the speech server names the =*= character, so an active
-Omnivox pronunciation of ``asterisk'' produces ``3 asterisk''.  Saved punctuation
-editor changes take effect after restarting speech.  For explicit word and
-partial-line reads at =some= or =none=, the name comes from
-=tts-character-to-speech-table=, the same Emacs table used by character reading.
+At =all= punctuation, the speech server names =*=, so an active Omnivox
+pronunciation of ``asterisk'' produces ``3 asterisk''. Saved punctuation-editor
+changes take effect after restarting speech. Explicit word and partial-line
+reads at =some= or =none= use =tts-character-to-speech-table=, the Emacs table
+also used for character reading.
 
 *** Reading Markdown and Org tables
 :PROPERTIES:
@@ -117,59 +113,53 @@ partial-line reads at =some= or =none=, the name comes from
 :END:
 
 In a Markdown or Org table, press a Control-Meta arrow to enter table reading
-and move immediately. Left/Right move by cell; Up/Down move by logical row.
-The first movement announces table reading and the destination in one spoken
-result. Outside supported tables, these arrows keep their existing bindings,
-including in code examples.
+and move immediately. Left/right moves by cell; up/down moves by logical row.
+The first movement announces table reading and the destination together.
+Outside supported tables, these arrows retain their existing bindings,
+including inside code examples.
 
-You can still press the speech prefix followed by ~C-t C-r~
-to enter without moving. With the default prefix, this is
-~C-e C-t C-r~. This entry announces the dimensions and current
-cell. Press ~q~ or the same prefix command to restore ordinary
-editing keys.
-
-Use the speech prefix followed by ~C-t ]~ or
-~C-t [~ to find and enter the next or previous table from
-prose. Inside table reading, ~t~ and ~T~ do
-the same. Code examples are skipped.
+~C-e C-t C-r~ enters without moving when the default speech prefix is used.
+It announces the dimensions and current cell. Press ~q~ or the same command
+to restore ordinary editing keys. From prose, ~C-e C-t ]~ and ~C-e C-t [~
+find and enter the next or previous table. Inside table reading, ~t~ and ~T~
+do the same; code examples are skipped.
 
 While table reading is active:
 
-- Up/Down and Control-Meta-Up/Down move by logical row, retain the column,
+- Up/down and Control-Meta-up/down move by logical row, retain the column,
   and read the complete destination row.
-- Control-Meta-Left/Right move between cells. Plain Left/Right retain
-  character movement. Tab and Shift-Tab move between cells without editing;
-  Return or Space reads the current cell.
-- ~r~ reads the row; ~c~ reads the column.
-  ~.~ announces coordinates; ~=~ gives dimensions.
-- ~a~ changes column titles, row titles, or data/title order
-  for this buffer. The customization group =emacsvox-table-reader= sets defaults.
-- ~w~ or ~k k~ copies the cell;
-  ~k r~ copies the row with tabs between cells;
-  ~k c~ copies the column with newlines between cells.
-- Meta-Up/Down leave directly for preceding/following prose. Up/Down also
-  leave when movement crosses a vertical table edge. If there is no content
-  beyond that edge, point stays in the table.
+- Control-Meta-left/right moves between cells. Plain left/right retains
+  character movement. ~TAB~ and ~S-TAB~ move between cells without editing;
+  ~RET~ or ~SPC~ reads the current cell.
+- ~r~ reads the row and ~c~ the column. ~.~ announces coordinates and ~=~
+  gives dimensions.
+- ~a~ changes column titles, row titles, or data/title order for this buffer.
+  The =emacsvox-table-reader= customisation group sets defaults.
+- ~w~ or ~k k~ copies the cell, ~k r~ copies the row with tabs between cells,
+  and ~k c~ copies the column with newlines between cells.
+- Meta-up/down leaves directly for preceding/following prose. Up/down also
+  leaves across a vertical table edge when content exists beyond it;
+  otherwise point stays in the table.
 
 A horizontal edge or a missing cell in a shorter row leaves point unchanged
 and announces the boundary. Separators are skipped. A separator immediately
-after the first row identifies column titles; otherwise the first row is data.
+after the first row identifies column titles; otherwise that row is data.
 Coordinates distinguish the header from one-based data rows. Empty cells are
 spoken as “blank.” Wrapping never shortens a logical cell's speech or copy.
 
-Reading commands preserve document text: they do not align tables, create
-rows, or evaluate Org formulas. Copies use cell values, with ordinary links
-represented by their labels and inline code by its literal text. Use the host
-mode to copy exact markup or formulas. This reader covers simple pipe tables;
-HTML spans, nested tables, and spreadsheet-specific structures have separate
-interfaces.
+Reading does not align tables, create rows, or evaluate Org formulas. Copies
+use cell values: ordinary links become their labels and inline code becomes
+its literal text. Use the host mode to copy exact markup or formulas. This
+reader covers simple pipe tables; HTML spans, nested tables, and
+spreadsheet-specific structures have separate interfaces.
 
-Leaving the table restores ordinary mode keys. Other editing commands retain
-their normal meaning; an edit ends the reading context. Org's existing table
-editing feedback and Markdown's markup-stripping speech option remain
-independent of this reader. Agent Shell uses the same logical reading
-operations with its existing automatic table entry, commands and preferences;
-see [[*Agent Shell][Agent Shell]].
+Leaving restores ordinary mode keys. Other editing commands retain their
+normal meaning, and an edit ends the reading context. Org's table-editing
+feedback and Markdown's markup-stripping speech option remain independent.
+Agent Shell has automatic contextual table entry and its own preferences.
+In Agent Shell, Control-Meta-up/down reads the destination /cell/, whereas
+plain up/down reads the destination /row/. Do not assume identical spoken
+units merely because the keys are similar; see [[*Agent Shell][Agent Shell]].
 
 *** Reading application lists
 :PROPERTIES:
@@ -178,71 +168,70 @@ see [[*Agent Shell][Agent Shell]].
 
 In an application built on Tabulated List mode, use a Control-Meta arrow or
 ~C-e C-t C-r~ to enter shared reading. Ordinary application navigation stays
-unchanged until you enter. Within reading, Up/Down read complete logical rows,
-Control-Meta-Left/Right read cells, and plain Left/Right inspect characters.
+unchanged until you enter. Within reading, up/down reads complete logical rows,
+Control-Meta-left/right reads cells, and plain left/right inspects characters.
 ~q~ leaves reading and restores the application's usual navigation.
 
-Application actions take precedence over other shared reader keys. Opening an
-item, refreshing, sorting, searching, and editing keep their existing commands,
-including Return on a button. Where a shared key is already occupied, use
+Application actions take precedence over other shared reader keys. Opening,
+refreshing, sorting, searching, and editing keep their commands, including
+~RET~ on a button. When a shared key is occupied, use
 ~M-x emacsvox-table-reader-speak-cell~, ~M-x emacsvox-table-reader-speak-row~,
 ~M-x emacsvox-table-reader-speak-column~, ~M-x emacsvox-table-reader-speak-context~,
 or ~M-x emacsvox-table-reader-speak-dimensions~. The matching
 =emacsvox-table-reader-copy-cell=, =emacsvox-table-reader-copy-row= and
 =emacsvox-table-reader-copy-column= commands copy logical values.
 
-Speech and copies use complete entry text even when a column is truncated.
-Column headings come from the application, not the first item. Coordinates
-count visible data rows; hidden rows are excluded, and empty cells say “blank.”
-At the first or last row, movement stops at the boundary. A refresh ends
-reading; enter again to inspect the refreshed list. Custom table printers,
-image-only cells and duplicate column names are not supported by this reader.
+Speech and copies use complete entry text even when a displayed column is
+truncated. Column headings come from the application, not the first item.
+Coordinates count visible data rows; hidden rows are excluded and empty cells
+say “blank.” Movement stops at the first or last row. A refresh ends reading;
+enter again to inspect the refreshed list. Custom table printers, image-only
+cells, and duplicate column names are not supported by this reader.
 
 *** Browsing CSV data
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Use =emacsvox-table-find-csv-file= to open a CSV file in
-the table browser, or =emacsvox-table-view-csv-buffer= to
-browse the current buffer's CSV data. Quoted commas, doubled quotation marks,
-and multiline fields remain single logical cells. Blank records outside quoted
-fields are skipped; empty fields remain cells. Empty input or malformed quoting
-produces an error before a table view is created.
+Use =emacsvox-table-find-csv-file= to open a CSV file in the table browser,
+or =emacsvox-table-view-csv-buffer= for the current buffer's CSV data. Quoted
+commas, doubled quotation marks, and multiline fields remain single logical
+cells. Blank records outside quoted fields are skipped; empty fields remain
+cells. Empty input or malformed quoting produces an error before creating a
+view.
 
-Browsing preserves the source text. If the file is already open, its buffer
-and unsaved edits remain available, and the view uses those current contents.
-The browser uses the shared table controls immediately; there is no separate
-reading-mode toggle:
+Browsing preserves source text. If the file is already open, the view uses
+that buffer's current contents, including unsaved edits, without replacing the
+source buffer. Shared table controls are active immediately:
 
-- Up/Down and ~C-M-Up/Down~ move by logical row and read the whole row.
-- ~C-M-Left/Right~ and Tab/Shift-Tab move by cell. Plain Left/Right and
-  ~C-b/C-f~ move by character; ~C-p/C-n~ move by logical row.
-- Return or Space reads the cell; ~r~ reads the row and ~c~ reads the column.
-- ~.~ gives coordinates and ~=~ gives dimensions. The first row supplies
-  column titles and is announced separately from the data rows.
-- ~w~ or ~k k~ copies the cell, ~k r~ copies the row with tabs between cells,
-  and ~k c~ copies the column with newlines between cells. ~K~ copies the
-  whole table to the table clipboard for =emacsvox-table-paste-from-clipboard=.
-- ~a~ changes column titles, row titles, or data order for the view, using
-  the shared reader preferences. ~q~ closes the view.
+- Up/down and Control-Meta-up/down move by logical row and read the whole row.
+- Control-Meta-left/right and ~TAB~/~S-TAB~ move by cell. Plain left/right
+  and ~C-b~/~C-f~ move by character; ~C-p~/~C-n~ move by logical row.
+- ~RET~ or ~SPC~ reads the cell; ~r~ reads the row and ~c~ the column.
+- ~.~ gives coordinates and ~=~ dimensions. The first row supplies column
+  titles and is announced separately from data rows.
+- ~w~ or ~k k~ copies the cell, ~k r~ the row with tabs between cells,
+  and ~k c~ the column with newlines between cells. ~K~ copies the whole
+  table to the clipboard used by =emacsvox-table-paste-from-clipboard=.
+- ~a~ changes column titles, row titles, or data order for this view using
+  shared reader preferences. ~q~ closes the view.
 
 These replace the old browser cell-arrow, header-reading, automatic-speech,
 and single-key table-copy bindings. The old local aliases ~b~, ~n~, ~p~, ~A~,
-~B~, ~E~, and ~T~ are removed. The speech-prefix table commands remain available.
+~B~, ~E~, and ~T~ are removed; speech-prefix table commands remain available.
 
-Search with ~s~, ~R~ (row), ~C~ (column), or ~h~ (headers); ~#~ sorts on the
-current column. ~M-<~ and ~M->~ jump to the top and bottom. At a table edge,
-movement reports the boundary and leaves point in place.
+Search with ~s~, ~R~ for a row, ~C~ for a column, or ~h~ for headers.
+~#~ sorts on the current column and ~M-<~/~M->~ jumps to the top or bottom.
+At an edge, movement announces the boundary and leaves point in place.
 
-Filters remain on ~f~ (row) and ~g~ (column); a prefix argument requests a new
-filter. Filter indexes and the ~j~ jump prompt retain zero-based model
-coordinates, including the header row, even though spoken coordinates count
-data rows and columns from one. For example, a row filter =(0 "value" 2)=
-reads the first column, the word “value”, and the third column. ~M-l~ and ~M-s~
-load and save filters. Filters are explicit inspections; shared row movement
-always reads the whole row. Sorting preserves filters and shared speech
-preferences. Use ~C-h m~ for the full browser key map.
+Filters remain on ~f~ for a row and ~g~ for a column; a prefix argument
+requests a new filter. Filter indexes and the ~j~ jump prompt retain
+zero-based model coordinates, including the header, although spoken
+coordinates count data rows and columns from one. For example, the row filter
+=(0 "value" 2)= reads the first column, “value”, and the third column.
+~M-l~ and ~M-s~ load and save filters. Filters are explicit inspections;
+shared row movement always reads the whole row. Sorting preserves filters and
+speech preferences. Use ~C-h m~ for the full browser key map.
 
 ** Web Browsing With EWW
 :PROPERTIES:
@@ -251,23 +240,26 @@ preferences. Use ~C-h m~ for the full browser key map.
 :END:
 
 #+cindex: EWW
-
 #+cindex: Web browsing
-
 #+findex: eww
 
-EWW is the built-in browser supported for current Emacsvox.  Run
-~M-x eww RET~, enter a URL or search words, and press ~RET~.
-Emacsvox speaks EWW navigation and rendering feedback and adds commands for
-moving by HTML structure and filtering the displayed DOM.  In an EWW buffer,
-use ~C-h m~ for the live workflow and ~C-h b~ for its effective keys.
-See [[info:emacs#EWW][EWW]] in /The GNU Emacs Manual/ for browser operation and
-[[info:emacsvox-reference#emacsvox-eww][emacsvox-eww]] in /Emacsvox Reference Manual/ for the
-speech integration.
+EWW is the built-in browser supported for current Emacsvox. Run
+~M-x eww RET~, enter a URL or search words, and press ~RET~. Emacsvox speaks
+navigation and rendering feedback and adds HTML-structure movement and
+filtering of the displayed DOM. Consult [[info:emacs#EWW][EWW]] in /The GNU Emacs Manual/ for
+browser operation and [[info:emacsvox-reference#emacsvox-eww][emacsvox-eww]] in the /Emacsvox Reference Manual/
+for speech support.
 
-The former Emacs/W3 and w3m survey is historical.  Do not install either one
-on the strength of the Heritage manual; use EWW unless a separately maintained
-integration says otherwise.
+From an EWW buffer, ~C-e S~ opens its focused settings. ~s~ toggles
+section-navigation autospeak. ~i~ changes image suppression for subsequent
+rendering and the shared SHR image default, preserving buffer-local overrides;
+it does not reload the current page. ~w~ saves the two Emacsvox defaults,
+~A~ opens advanced settings, and ~q~ returns. These are presentation choices,
+not a replacement for EWW's browser preferences.
+
+The Emacs/W3 and w3m survey is historical. Do not install either on the strength
+of the Heritage manual; use EWW unless a separately maintained integration says
+otherwise.
 
 ** Messaging
 :PROPERTIES:
@@ -276,11 +268,11 @@ integration says otherwise.
 
 #+cindex: messaging
 
-Emacsvox integrates with several Emacs mail and messaging modes.  The curated
-workflow for indexed mail search, asynchronous results, thread reading,
-attachments, and privacy controls is [[*Notmuch Mail][Notmuch Mail]].  For another client,
-start with its own manual and ~C-h m~; use the generated reference to find
-an Emacsvox module with the same package or mode name.
+For indexed mail search, asynchronous results, threads, attachments, and
+privacy controls, follow [[*Notmuch Mail][Notmuch Mail]]. For another mail or messaging client,
+start with its own manual and mode help, then find the corresponding Emacsvox
+module in the generated reference. The presence of a module is not a substitute
+for configuring the underlying account or service.
 
 ** Editing Code
 :PROPERTIES:
@@ -290,10 +282,10 @@ an Emacsvox module with the same package or mode name.
 #+cindex: programming
 
 Programming modes provide language-aware movement, indentation, compilation,
-and navigation.  Emacsvox speaks those operations and uses voice-lock to
-distinguish faces such as comments, strings, warnings, and language constructs.  Use
-~C-h m~ in the source buffer for the language mode, and search the generated
-reference for an integration named after that mode.
+and navigation. Emacsvox speaks these operations and uses Voice Lock to
+distinguish comments, strings, warnings, and language constructs where the mode
+exposes them. Use the language mode's help for editing commands and its named
+integration in the generated reference for speech details.
 
 ** Development Environment
 :PROPERTIES:
@@ -302,61 +294,65 @@ reference for an integration named after that mode.
 
 #+cindex: development tools
 
-Emacs can combine compilation, diagnostics, project navigation, version
-control, debuggers, and language servers into a development environment.
-Emacsvox supplies speech feedback to many of those components, but their own
-manuals remain authoritative for setup and operation.  Verify each component
-individually with its mode help before combining it into a larger workflow.
+Compilation, diagnostics, project navigation, version control, debuggers, and
+language servers can share the Emacs workspace. Configure each through its own
+manual and verify its operation before combining it with other components.
+Emacsvox supplies speech to many of them; their underlying operations remain
+owned by those tools. [[*Agent Shell][Agent Shell]] provides the separate guide to AI-agent
+sessions and their permission, feedback, and review controls.
 
 *** Magit
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-Magit navigation speaks the reached section or line.  Empty and whitespace-only
-lines use the normal line tones.  Commit hashes are silent by default; changing
-the voice assigned to the =magit-hash= face changes this consistently for both
-navigation and explicit reading.  Moving the section highlight preserves that
+Magit navigation speaks the section or line you reach. Empty and
+whitespace-only lines use the normal line tones. Commit hashes are silent by
+default; changing the voice assigned to =magit-hash= affects navigation and
+explicit reading consistently. Moving the section highlight preserves that
 choice.
 
-After successful staging or unstaging in a Magit view, speech reads the line
-or section where point lands after the refresh.  Failures are still reported
-explicitly.  Staging and unstaging from an ordinary file buffer still confirm
-the outcome.  Branch checkout, branch and remote renaming, remote removal, and
-stash creation also announce their results.  Repository-list fetching reports
-partial failures when some repositories fail.  Background process completion
-uses the notification lane, while entering status and navigating use the main
-speech lane.
+After successful staging or unstaging in a Magit view, speech reads where point
+lands after the refresh. Failures remain explicit. Staging and unstaging from
+an ordinary file buffer still confirm their outcome. Branch checkout, branch
+and remote renaming, remote removal, and stash creation announce results.
+Repository-list fetching reports partial failures. Background completion uses
+the notification stream; entering status and navigating use the main stream.
 
-Section visibility commands describe the resulting collapsed, expanded, or
-partly expanded state.  Copying a heading without a value says there is nothing
-to copy; it does not repeat an older kill-ring entry as a new copy.
+Visibility commands describe collapsed, expanded, or partly expanded sections.
+Copying a heading without a value reports that there is nothing to copy rather
+than presenting an old kill-ring entry as a new copy.
 
 #+cindex: Magit
 #+cindex: Transient menus
 
-Magit uses Transient menus for actions such as Push, Fetch, Commit, and Branch.
-When a menu opens, Emacsvox speaks a short introduction and navigation guidance.
-The automatic shortcut list stays visible without being read on the notification
-stream.  The same navigation applies to other packages using Transient.
+Magit uses Transient menus for Push, Fetch, Commit, Branch, and other actions.
+Opening one speaks a short introduction and navigation guidance. Its automatic
+shortcut list remains visible without being read on the notification stream.
 
-- Up and Down move through options.  Each option speaks its description, current
-  state where applicable, and shortcut.  For example: ``Dry run, off. Shortcut
-  minus n.''  Capital letters are named explicitly.
-- Left and Right move between sections.  A section announcement includes the
-  complete heading and its position, such as ``Push master to. Section 2 of 4.''
-  Moving through options also announces section changes and wrapping at either
-  end of the menu.
-- ~C-j~ or ~M-RET~ activates the selected option.  You can also type its shortcut.
-  Changing an option speaks the resulting value once.
-- ~?~ followed by an option's shortcut opens its help.
-- ~C-g~ closes the current menu or leaves its help mode.  ~q~ is not a universal
-  quit key in Transient menus.  An unavailable key gives brief recovery guidance
-  on the main speech stream.
+Up/down browses items and left/right moves between sections. The shared
+navigation preferences apply to Magit as well as Emacsvox menus: wrapping
+within a section is the default, and continuous navigation or stopping at
+section edges can be selected. Announcement order can be item first, section
+first, or dependent on the movement. Detailed command descriptions are enabled
+by default; value adjustments still give brief feedback. Configure these
+choices through ~C-e H s n~, as described in
+[[info:emacsvox#Aural Home][Getting started with menus and Aural Home]].
 
-Navigation only selects an option.  Activating an action can perform a Git
+An item announcement identifies its key, relevant value, and description;
+capital keys are named explicitly. Section announcements include the heading
+and position according to the selected policy. Do not expect the same
+section-name repetition after changing that policy.
+
+Use ~C-j~ or ~M-RET~ to activate a selected Magit item, or type its shortcut.
+~?~ followed by the shortcut opens Help. ~C-g~ closes the current menu or
+leaves its help mode. Unlike Emacsvox's own settings menus, ~q~ is not a
+universal quit key in Transient applications. An unavailable key gives brief
+recovery guidance on the main stream.
+
+Browsing only selects an item. Activating an action can perform a Git
 operation, while activating a switch changes an argument for the next action.
-Listen to the description before activating it.
+Listen to the description before activation.
 
 ** Desktop Management
 :PROPERTIES:
@@ -364,15 +360,13 @@ Listen to the description before activating it.
 :END:
 
 #+cindex: buffers
-
 #+cindex: windows
-
 #+cindex: tabs
 
-Emacs buffers, windows, frames, and tabs provide the workspace.  Their standard
-commands receive speech feedback, and the active help describes any additional
-mode-specific bindings.  Use ~C-x b~ to select a buffer and ~C-h m~ in
-specialized buffer-list or tab interfaces to learn their local commands.
+Buffers, windows, frames, and tabs organise the workspace. ~C-x b~ selects a
+buffer; specialised buffer-list and tab interfaces provide their own mode
+help. [[*Work With The Audio Desktop][Audio Desktop]] explains the common navigation model so it need not be
+learnt again for each application.
 
 ** Personal Information Management
 :PROPERTIES:
@@ -382,10 +376,14 @@ specialized buffer-list or tab interfaces to learn their local commands.
 #+cindex: personal information management
 
 Calendar, Org, and related packages define their data formats and workflows.
-Emacsvox integrations present navigation, state changes, and structured
-content when those modes are active.  Begin with the application's own manual
-and live mode help, then consult its matching Emacsvox module in the generated
-reference.
+Emacsvox presents navigation, state changes, and structured content when those
+modes are active. Begin with the application's manual and live help, then
+consult its matching integration in the generated reference.
+
+Org's focused menu at ~C-e S~ includes its table-editing feedback choices.
+Those are separate from the shared reading mode above: the focused menu's
+global default does not replace an existing buffer-local choice, and the
+shared reader retains its own title and speaking preferences.
 
 ** Desktop Applications
 :PROPERTIES:
@@ -397,21 +395,27 @@ reference.
 :TEXINFO_NODE: no
 :END:
 
-For a new full-terminal workflow, use [[*Speech Access To EAT][EAT Terminal Access]].  When a
-built-in terminal with no additional package is preferable, use
-[[*Term Terminal Access][Running Terminal Based Applications]].  For ordinary line-oriented shell
-commands, ~M-x shell~ is usually the simplest route.
+Use ~M-x shell~ for ordinary line-oriented shell commands. For a full terminal,
+follow [[*Speech Access To EAT][EAT Terminal Access]], or use built-in
+[[*Term Terminal Access][Term]] when no additional package is wanted. Their input, review, and
+asynchronous feedback models differ; choose the appropriate chapter rather
+than transferring terminal keys from one application to another.
+
+In Shell/comint, ~C-e S~ opens focused speech settings. ~s~ toggles automatic
+output speech and ~b~ toggles background monitoring. Background reading needs
+automatic speech enabled. Both settings affect the captured buffer for its
+lifetime; this menu has no Save action. ~q~ returns to the originating entry
+or closes a directly opened focused menu.
 
 #+vindex: emacsvox-shell-complete-windows-commands
 
 In WSL Shell buffers, command-name completion skips Windows drive directories
-by default.  Scanning large directories such as =C:\Windows\System32= can
-otherwise pause Emacs for many seconds.  Windows programs still run by name,
-and explicit filename completion, including paths under =/mnt/c/=, remains
-available.  To include Windows command names in completion again, use
-~M-x customize-option RET emacsvox-shell-complete-windows-commands RET~
-and enable the option.  This setting leaves native Windows and remote Shell
-buffers unchanged.
+by default. Scanning large directories such as =C:\Windows\System32= can
+otherwise pause Emacs. Windows programs still run by name, and explicit
+filename completion, including =/mnt/c/= paths, remains available. To include
+Windows command names again, use
+~M-x customize-option RET emacsvox-shell-complete-windows-commands RET~.
+This option does not change native Windows or remote Shell buffers.
 
 *** Forms Mode
 :PROPERTIES:
@@ -419,15 +423,12 @@ buffers unchanged.
 :END:
 
 #+cindex: Forms mode
-
 #+findex: forms-find-file
 
-The built-in Forms library presents records from a structured text file one at
-a time.  Emacsvox speaks field values, record movement, searches, and status
-changes while Forms mode is active.  Forms requires a format specification;
-see [[info:emacs#Forms Mode][Forms Mode]] in /The GNU Emacs Manual/ for setup and operation, and
-[[info:emacsvox-reference#emacsvox-forms][emacsvox-forms]] in /Emacsvox Reference Manual/ for the
-speech integration.
+Forms presents records from a structured text file one at a time. Emacsvox
+speaks fields, record movement, searches, and state changes. Forms requires a
+format specification; see [[info:emacs#Forms Mode][Forms Mode]] in /The GNU Emacs Manual/ for
+setup and [[info:emacsvox-reference#emacsvox-forms][emacsvox-forms]] in the /Emacsvox Reference Manual/ for speech.
 
 *** OCR And PDF-To-Text With PaddleOCR
 :PROPERTIES:
@@ -435,31 +436,35 @@ speech integration.
 :END:
 
 #+cindex: OCR
-
 #+cindex: PaddleOCR
-
 #+cindex: PDF, converting to text
-
 #+cindex: tables, OCR
-
 #+findex: emacsvox-ocr
 
 Emacsvox uses PaddleOCR PP-StructureV3 to turn an image or PDF into UTF-8
-Markdown text.  PP-StructureV3 recovers document reading order and represents
-recognized tables as Markdown or embedded HTML, so keep the =.md= output when
-table structure matters.  Markdown is plain text and can instead be named
-=.txt= when its lightweight markup is acceptable.
+Markdown text. It recovers reading order and represents recognised tables as
+Markdown or embedded HTML. Keep =.md= output when structure matters; Markdown
+is plain text and can be named =.txt= when its lightweight markup is acceptable.
 
-The supported baseline below is CPU-only x86-64 WSL2 or GNU/Linux.  Paddle's
-Linux wheel requires an AVX-capable x86-64 processor and Python 3.9 through
-3.13.  In particular, do not use Ubuntu 26.04's Python 3.14 for this environment.
-The commands install a separate Python 3.13 so that they do not alter Emacsvox,
-system Python, or another project's packages.  The initial installation uses
-about 1.7 GB.  The first complete PP-StructureV3 run downloads approximately
-another 1.8 GB of models; later runs reuse that cache.
+This route is intended for scanned or image-only PDFs. For a born-digital PDF
+with a trustworthy text layer, extracting that layer is faster and usually
+more exact than OCR. Recognition still depends on scan quality; upright,
+high-contrast pages at 300 DPI are a useful starting point.
 
-Follow the [[https://docs.astral.sh/uv/getting-started/installation/][official uv installation guide]] if command =uv= is not already available,
-then create the isolated environment:
+**** Prepare the isolated OCR environment
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The supported baseline is CPU-only x86-64 WSL2 or GNU/Linux. Paddle's Linux
+wheel requires an AVX-capable x86-64 processor and Python 3.9 through 3.13.
+Do not use Ubuntu 26.04's Python 3.14 for this environment. The commands below
+install Python 3.13 separately without altering Emacsvox, system Python, or
+another project's packages. Installation uses about 1.7 GB; the first complete
+PP-StructureV3 run downloads approximately another 1.8 GB of models, cached
+for later runs.
+
+Follow the [[https://docs.astral.sh/uv/getting-started/installation/][uv installation guide]] if =uv= is unavailable, then create the environment:
 
 #+begin_src sh
 uv python install 3.13
@@ -467,9 +472,8 @@ uv venv --python 3.13 --seed \
   "$HOME/.local/share/emacsvox/paddleocr-venv"
 #+end_src
 
-Install the tested CPU runtime and the PaddleOCR =all= variant.  The =all=
-extra includes the document-parsing dependencies needed by PP-StructureV3,
-including table and formula support.
+Install the tested CPU runtime and PaddleOCR's =all= variant, which includes
+the document-parsing, table, and formula dependencies:
 
 #+begin_src sh
 "$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
@@ -479,98 +483,94 @@ including table and formula support.
   'paddleocr[all]==3.7.0'
 #+end_src
 
-From the Emacsvox checkout, verify that the launcher finds both packages:
+From the checkout, verify that the launcher finds both packages:
 
 #+begin_src sh
 ./bin/emacsvox-paddleocr --check
 #+end_src
 
-With the Debian package, use the installed launcher instead:
+For a Debian installation, use the installed launcher, here and in the
+recognition commands below:
 
 #+begin_src sh
 /usr/share/emacsvox/bin/emacsvox-paddleocr --check
 #+end_src
 
-Use that installed path in the image-recognition examples below as well.
+The expected report names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the CPU
+device. A missing =ccache= warning is harmless for normal inference.
 
-The expected line names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the CPU
-device.  A warning that =ccache= is absent is harmless for normal inference.
-oneDNN, formerly called MKL-DNN, is Paddle's optional optimized CPU execution
-backend; it is not an OCR model.  The launcher deliberately leaves it disabled
-because the stable PaddlePaddle 3.3.0 CPU runtime has an
-[[https://github.com/PaddlePaddle/Paddle/issues/77340][upstream PIR-to-oneDNN conversion defect]].  In the tested pipeline the defect
-aborts initialization when PP-StructureV3 reaches its formula model, but the
-model itself is not at fault.  With oneDNN disabled, Paddle uses its standard
-CPU kernels and every recognition feature remains enabled, including tables
-and formulas.  The trade-off is speed, not recognition capability.
+oneDNN, formerly MKL-DNN, is an optional CPU execution backend, not an OCR
+model. The launcher leaves it disabled because PaddlePaddle 3.3.0 has an
+[[https://github.com/PaddlePaddle/Paddle/issues/77340][upstream PIR-to-oneDNN conversion defect]]. In the tested pipeline this aborts
+initialisation at the formula model, although that model is not itself at
+fault. Standard CPU kernels keep every recognition feature enabled, including
+tables and formulas. The trade-off is speed, not capability.
 
-To recognize one image at the shell, redirect the clean Markdown result to a
-file.  Paddle downloads its models on the first real command and writes
-progress messages to standard error without mixing them into the recognized
-text.
+**** Recognise and read a document
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+For one image, redirect the clean Markdown result to a file. Model downloads
+and progress go to standard error, not the recognised text:
 
 #+begin_src sh
 ./bin/emacsvox-paddleocr "/path/to/page.png" > page.md
 #+end_src
 
-PDF input uses the same command.  Paddle renders and recognizes every page,
-then joins the pages in reading order:
+PDF input uses the same command. Paddle renders and recognises every page,
+then joins them in reading order:
 
 #+begin_src sh
 ./bin/emacsvox-paddleocr "/path/to/scanned-document.pdf" > document.md
 #+end_src
 
-This route is intended for scanned or image-only PDFs.  For a born-digital PDF
-that already has a trustworthy text layer, extracting that layer is faster and
-usually more exact than OCR.  OCR quality still depends on scan quality;
-300-DPI, upright, high-contrast source pages are a good starting point.  A
-large PDF can take substantial CPU time because table, layout, formula,
+A large PDF can require substantial CPU time: table, layout, formula,
 orientation, and unwarping models are all active by default.
 
-Within Emacsvox, press ~C-e C-o~ or run
-~M-x emacsvox-ocr RET~.  In the OCR buffer:
+Inside Emacsvox, press ~C-e C-o~ or run ~M-x emacsvox-ocr RET~. In the OCR
+buffer, ~o~ selects an image or PDF. Recognition runs asynchronously and adds
+its result as a new page when complete. Listen for the completion cue, then
+use ~SPC~ to read the current result, ~s~ to save it, or ~w~ to save the
+whole OCR buffer. ~[~ and ~]~ move between results. ~d~ opens the per-user
+OCR directory. Progress and errors are retained separately in
+=*Emacsvox OCR Errors*=.
 
-- Press ~o~, choose an image or PDF, and wait for the completion cue.  OCR runs
-  asynchronously, and the result appears as a new page in the buffer.
-- Press ~SPC~ to read the current result, ~s~ to save it, or ~w~ to
-  save the complete OCR buffer.  Press ~[~ and ~]~ to move between results.
-- Press ~d~ to open the per-user OCR directory.  Engine progress and errors are
-  kept separately in buffer =*Emacsvox OCR Errors*=.
+**** Configure recognition and diagnose the adapter
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-For ordinary use inside Emacs, customize OCR in Emacs rather than setting shell
-environment variables.  Run
-~M-x customize-group RET emacsvox-ocr RET~.  The bundled adapter
-has typed options for its normal choices:
+Use ~M-x customize-group RET emacsvox-ocr RET~ for ordinary Emacs configuration
+rather than shell environment variables. The bundled adapter provides typed
+options:
 
-- =emacsvox-ocr-paddleocr-python= selects an exact Python executable when the
-  default isolated environment is not appropriate.  Leave it at =nil= for the
-  installation path used above.
-- =emacsvox-ocr-paddleocr-language= and =emacsvox-ocr-paddleocr-device= select
-  the recognition language and Paddle device.
+- =emacsvox-ocr-paddleocr-python= selects an exact Python executable; =nil=
+  uses the isolated installation above.
+- =emacsvox-ocr-paddleocr-language= and =emacsvox-ocr-paddleocr-device= choose
+  recognition language and device.
 - =emacsvox-ocr-paddleocr-use-table-recognition= and
   =emacsvox-ocr-paddleocr-use-formula-recognition= control the structural
-  models.  Both are enabled by default.
+  models; both default to enabled.
 - =emacsvox-ocr-paddleocr-use-document-orientation=,
   =emacsvox-ocr-paddleocr-use-document-unwarping=, and
   =emacsvox-ocr-paddleocr-use-text-line-orientation= control image correction.
-- =emacsvox-ocr-paddleocr-enable-mkldnn= enables oneDNN/MKL-DNN acceleration.
-  It does not enable or disable any OCR model.  Keep it disabled for the tested
-  PaddlePaddle 3.3.0 CPU setup on WSL.
+- =emacsvox-ocr-paddleocr-enable-mkldnn= enables oneDNN/MKL-DNN acceleration,
+  not an OCR model. Keep it disabled for the tested PaddlePaddle 3.3.0 CPU
+  setup on WSL.
 
-The PaddleOCR options apply only while =emacsvox-ocr-engine= names the bundled
-adapter.  Selecting a different engine preserves the generic engine interface.
-=emacsvox-ocr-engine-options= remains an advanced list of literal arguments;
-for the bundled adapter it follows, and can override, the typed options.
+These options apply only when =emacsvox-ocr-engine= names the bundled adapter.
+A different engine retains the generic interface. =emacsvox-ocr-engine-options=
+is an advanced list of literal arguments; for the bundled adapter it follows,
+and can override, the typed options.
 
-The environment variables are retained for direct shell or automation use of
-=bin/emacsvox-paddleocr=, not as the primary Emacs configuration interface.
-=EMACSVOX_PADDLEOCR_VENV= changes the launcher's environment directory,
-=EMACSVOX_PADDLEOCR_PYTHON= selects an exact Python executable, and
-=EMACSVOX_PADDLEOCR_LANGUAGE= or =EMACSVOX_PADDLEOCR_DEVICE= changes the
-standalone defaults.  See =./bin/emacsvox-paddleocr --help= for command-line
-switches.
+For standalone shell or automation use, =EMACSVOX_PADDLEOCR_VENV= changes the
+environment directory, =EMACSVOX_PADDLEOCR_PYTHON= selects an executable, and
+=EMACSVOX_PADDLEOCR_LANGUAGE= or =EMACSVOX_PADDLEOCR_DEVICE= changes defaults.
+See =./bin/emacsvox-paddleocr --help= for switches. These environment settings
+are not the primary Emacs configuration interface.
 
-The direct SANE scanner-acquisition commands are retained for compatibility
-but are not part of this tested WSL baseline.  It is usually simpler to scan
-with a Windows application and choose the resulting image or PDF with ~o~.
-Scanner configuration is independent of PaddleOCR.
+Direct SANE scanner-acquisition commands remain for compatibility but are not
+part of this tested WSL baseline. Scan with a Windows application and select
+the resulting image or PDF with ~o~ when that is the available acquisition
+route. Scanner configuration is independent of PaddleOCR.
