@@ -2,6 +2,11 @@ Introduction
 Emacs Key Notation
 Where To Begin
 Using This Manual
+Answering Emacs Prompts
+Filenames And Example Commands
+Manual Reading Routes
+Finding Help In Info
+Manual Editions And Formats
 Installation
 Obtaining Emacsvox
 Installing Remote Emacsvox
@@ -91,11 +96,21 @@ Recovering Aural Changes
 Unconfirmed Speech Changes
 Voice Lock
 Emacs Packages
+Working With Files
+Opening A Document
+Saving A Working Copy
+Browsing Files With Dired
 Document Authoring
+Writing An Org Document
+Reviewing An Org Document
 Structured Editing
 Browsing Structure
 Reading Markdown And Org Tables
 Web Browsing
+Opening A Web Page
+Navigating A Web Page
+Following Web Links
+Recovering A Web Page
 Messaging
 Editing Code
 Development Environment

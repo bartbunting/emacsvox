@@ -19,9 +19,104 @@ which keys to hold together, when to release them, and how to enter a command
 by name. The reading routes below assume that notation, not prior experience
 with Emacs.
 
+** Answer a prompt and return to your work
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Answering Emacs Prompts
+:DESCRIPTION: Know where to type, how completion helps, and when a command has finished.
+:END:
+
+#+cindex: minibuffer
+#+cindex: prompts, answering
+#+cindex: completion, first use
+#+cindex: where to type
+
+A command may ask for a file, a buffer, a search term or another value. Emacs
+reads that answer in the /minibuffer/, a temporary input area separate from
+your document. While the prompt is active, ordinary typing answers the prompt;
+it does not add words to the document. Emacsvox speaks prompts and completion
+feedback according to your settings.
+
+For example, ~M-x~ asks for a command name. Type =describe-mode=, including
+its hyphen, then press ~RET~ to run it. Do not type the prompt label or the
+letters =M-x=. A command may then ask another question: after choosing =eww=,
+for example, its next prompt asks for a web address or search words. Answer
+one prompt at a time rather than pasting the whole printed instruction.
+
+Completion helps you enter an existing name. Type a distinctive beginning,
+then press ~TAB~. Emacs may extend the text or offer several candidates.
+With several matches, type more of the name; you can always type the complete
+name and press ~RET~. Completion interfaces differ between configurations,
+so the guides do not assume that Down Arrow accepts the first suggestion.
+Opening a new file permits a name that does not yet exist; selecting an
+installed command normally requires a recognised name.
+
+~RET~ submits the current answer, including any text already in the prompt.
+An empty answer may accept a displayed default. Read that default before
+accepting it. For a yes/no question, use the response requested: some prompts
+accept ~y~ or ~n~, while others require =yes= or =no= followed by ~RET~.
+
+Use ~C-g~ to abandon an unfinished ordinary prompt. If you have already
+submitted it and the command has acted, cancellation does not undo the result.
+Likewise, quitting a settings menu does not undo an adjustment made there.
+Follow the recovery instructions for the operation you actually performed.
+
+After the prompt finishes, notice which buffer has been selected. An open-file
+command selects a document; Help may appear in another window; a save normally
+leaves you in the document. Press ~C-e m~ to identify the current buffer and
+mode before editing. Finish or cancel an active prompt before switching buffers
+with ~C-x b~; otherwise its answer is still unfinished. See
+[[*Find Help While You Work][Using Online Help]] for entering and leaving a Help window.
+
+*** Interpret filenames and examples
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Filenames And Example Commands
+:DESCRIPTION: Resolve paths in the right environment and distinguish input from instructions.
+:END:
+
+#+cindex: filenames, entering
+#+cindex: paths, examples
+#+cindex: shell commands, where to run
+#+cindex: WSL, document paths
+
+A /path/ identifies a file's location as well as its name. A file prompt often
+starts with a directory already filled in. Append a filename to use that
+directory, or replace the editable answer with a complete path. In an ordinary
+file minibuffer, ~C-a C-k~ removes the current editable answer: Control-a goes
+to its beginning and Control-k removes the text that follows. This edits the
+answer, not a file. Then type the intended path and press ~RET~.
+
+The examples use =~/= for the home directory understood by the running Emacs.
+For example, =~/evox-notes.org= names =evox-notes.org= in that home directory.
+In WSL this normally means the Linux home, not Windows Documents. A Windows
+C-drive path is normally reached through =/mnt/c/= in WSL; native Windows Emacs
+uses its own Windows paths. Use a directory that exists and is writable in the
+environment running Emacs. A speech server running on another host does not
+change where ordinary Emacs document files are stored.
+
+A relative name is resolved against the directory in the prompt, which may
+change with the selected buffer. Do not assume it means the repository root
+or the folder used in an earlier task. When an instruction says "from the
+checkout", it explicitly means that source directory. Replace placeholders
+such as =/path/to/document.txt= with real names; do not create those directories
+merely to copy the example literally. In Emacs file prompts, type spaces in
+names normally rather than adding shell quotes around the whole path.
+
+Keyboard sequences invoke Emacs commands. A shell example belongs at a shell
+or terminal prompt in the environment named by the instructions, not after
+~M-x~. Lisp configuration belongs in the specified Emacs configuration file;
+it is not ordinary document text or a shell command. A displayed command's
+output is something to check, not another command to enter. Read the sentence
+introducing each example to establish which of these contexts it uses.
+
+When practising, choose unused names. If a proposed name already contains work,
+cancel and substitute another name consistently. An overwrite warning is not a
+routine confirmation to accept. Opening, copying, saving and deleting have
+different effects; the following task guides explain the effect before the step.
+
 ** Choose a reading route
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Manual Reading Routes
+:DESCRIPTION: Choose sequential lessons, everyday tasks or a specific reference answer.
 :END:
 
 After [[info:emacsvox#Installation][Installation]] gives you speech, work through [[info:emacsvox#Guided Tutorial][Learn the audio desktop]] for
@@ -41,6 +136,11 @@ prepare its disposable buffer before experimenting. Then read
 [[info:emacsvox#Aural Presentation][Aural Presentation]] for application meaning, voices, sounds, and settings,
 and choose an application guide for your work.
 
+For independent everyday tasks, use [[*Work with files and directories][Work with files and directories]],
+[[*Write a note with headings][Write a note with headings]], or [[*Web Browsing With EWW][Web browsing with EWW]]. These guides
+explain real files and pages; they do not require completing the tutorial or
+changing your voice configuration.
+
 For one question, go directly to [[*Find a task][Find a task]], use Info's index, or search
 the manual text. When something is not working, [[*Something is wrong][Something is wrong]] starts
 with symptoms rather than the names of settings. [[info:emacsvox#Speech Backends][Speech Backends]] contains alternative installation and backend
@@ -50,7 +150,8 @@ changing and maintaining Emacsvox, not for ordinary use.
 
 ** Find an answer in Info and return
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Finding Help In Info
+:DESCRIPTION: Use the index and task links, retrace a lookup and return to work.
 :END:
 
 Info is Emacs's manual reader. A /node/ is one navigable topic, which can have
@@ -99,7 +200,8 @@ explains its effective binding without invoking it.
 
 ** Recognise the document you are reading
 :PROPERTIES:
-:TEXINFO_NODE: no
+:TEXINFO_NODE_NAME: Manual Editions And Formats
+:DESCRIPTION: Distinguish current guidance, generated reference, heritage and published formats.
 :END:
 
 This user manual explains tasks, feedback, and recovery. The generated

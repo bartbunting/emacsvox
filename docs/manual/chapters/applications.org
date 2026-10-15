@@ -27,22 +27,276 @@ has a complete task guide. The generated
 public commands and options. Consult both that reference and the application's
 manual when diagnosing a problem.
 
+The everyday guides below cover opening and copying files, writing and reviewing
+notes, and reading web pages. They use existing speech settings. Start with
+[[*Answer a prompt and return to your work][Answer a prompt and return to your work]] if filename entry, completion or
+switching from the manual to a working buffer is unfamiliar.
+
 Earlier surveys of W3, Dismal, and scanner/OCR setup remain in the
 [[info:emacsvox-heritage#Emacs Packages][Historical Application Survey]] in /Emacspeak Heritage/. They describe their
 original period and are not current installation instructions.
 
+** Work with files and directories
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Working With Files
+:DESCRIPTION: Open a document, save a separate working copy and find it again in Dired.
+:END:
+
+#+cindex: files, everyday work
+#+cindex: directories, browsing
+#+cindex: buffer versus file
+
+A file is stored on disk. Visiting it in Emacs opens a /buffer/ containing its
+working text; editing changes that buffer until you save. Switching to another
+buffer leaves the work open. Closing a buffer does not delete its file.
+
+These tasks use ordinary text files and existing writable directories. They
+do not convert Word documents or PDFs into text. Start with speech working and
+finish any open menu or prompt. [[*Answer a prompt and return to your work][Answer a prompt and return to your work]]
+explains filename entry and the distinction between Emacs and shell input.
+
+*** Open a document and check its identity
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Opening A Document
+:DESCRIPTION: Visit the intended text file and distinguish a new file from an existing one.
+:END:
+
+1. Press ~C-x C-f~. At the file prompt, choose the existing text file you
+   want to read. Complete or type its path, then press ~RET~. Emacs selects
+   the file's buffer; use ~C-e m~ to hear its name and mode.
+2. Press ~M-<~, then ~C-e l~ to read its first line. Check that the content
+   is what you expected before editing. A missing filename can instead open
+   an empty buffer for a new file. Opening that buffer alone has not created
+   a saved document: check the name rather than assuming your text was lost.
+3. If you need to confirm the full destination, use
+   ~C-h v buffer-file-name RET~. This Help shows the pathname visited by the
+   source buffer; =nil= means that buffer is not visiting a file. Read Help
+   as described in [[*Find Help While You Work][Using Online Help]], then return to the document by
+   its buffer name with ~C-x b~. Do not edit while Help is selected.
+
+For reading without accidental text edits, use ~C-x C-r~ in place of
+~C-x C-f~. That opens the file read-only. A read-only buffer is different from
+a document with unsaved changes; do not remove the protection merely to make
+an unfamiliar command work.
+
+When you follow this task from Info or HTML, leave the manual available and
+switch to the document before trying its editing commands. In Emacs, ~C-x b~
+selects an existing buffer by name; ~C-x C-f~ selects a file by its path.
+Those are different questions even when the buffer and file have similar names.
+
+To close a document buffer, use ~C-x k~ and check the name and any unsaved-work
+prompt. That is not a file deletion. Unlike a Dired or Help buffer, an ordinary
+text buffer does not use ~q~ to quit: typing it normally inserts a letter.
+
+*** Save a separate working copy
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Saving A Working Copy
+:DESCRIPTION: Preserve the original saved file and make later saves go to the intended copy.
+:END:
+
+Use this route before editing a document whose original you want to preserve.
+It writes the current buffer text, including unsaved edits, to a new filename
+and makes that new file the buffer's saving destination.
+
+1. Select the source document and check its identity. Press ~C-x C-w~,
+   replace the proposed filename with an unused path such as
+   =~/evox-notes-copy.txt=, and press ~RET~. Keep the appropriate extension
+   for the document, for example =.org= for Org notes. Cancel an unexpected
+   overwrite prompt and choose another name.
+2. Read the save result and check the new destination with
+   ~C-h v buffer-file-name RET~ when necessary. A permission or write error
+   is not a completed save. Keep the buffer open while correcting the problem;
+   do not discard the only copy of unsaved text.
+3. Return to that document, make the intended changes, and press ~C-x C-s~.
+   This saves to the new destination. The old saved file remains at its old
+   path. You can open it separately with ~C-x C-f~ to compare it with the copy.
+
+~C-x C-w~ does not keep the buffer attached to both files. After it succeeds,
+later ~C-x C-s~ saves update the new file. The old file retains its previously
+saved content, not any unsaved changes that were written only to the copy.
+Changing the filename is also not a format converter: naming plain text with
+=.docx= does not create a Word document.
+
+To duplicate the last saved file while leaving the working buffer's destination
+unchanged, use ~M-x copy-file RET~ instead. Answer its source and destination
+prompts with paths. It copies the file on disk, not unsaved buffer edits, and
+does not switch you into the new copy. Open the destination separately to work
+on it. See [[info:emacs#Save Commands][Save commands]] and [[info:emacs#Copying and Naming][Copying and naming files]] in the GNU Emacs
+Manual for other saving and copying operations.
+
+If Emacs reports that another program changed the original, do not force a
+save or revert simply to clear the warning. Keep your buffer, preserve its
+text under an unused filename if needed, and compare the versions before
+deciding which changes to keep. [[info:emacs#Simultaneous Editing][Simultaneous editing]] explains that conflict.
+
+*** Find and inspect files with Dired
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Browsing Files With Dired
+:DESCRIPTION: Navigate filenames, request metadata and return without changing files.
+:END:
+
+#+cindex: Dired
+#+cindex: file size, hearing
+#+cindex: file modification time
+#+findex: dired
+#+findex: emacsvox-dired-speak-file-size
+#+findex: emacsvox-dired-speak-file-modification-time
+
+Dired is Emacs's directory browser. Its ordinary listing is not document text:
+letters such as ~n~, ~p~ and ~q~ invoke commands rather than being inserted.
+Emacsvox normally speaks filenames as you move, leaving detailed metadata for
+inspection on request. Voices and cues can distinguish directories, links and
+marked entries according to your presentation settings.
+
+1. Press ~C-x d~, enter an existing directory such as =~/=, and press ~RET~.
+   In the Dired buffer, press comma, ~,~, to hear the listing header.
+2. Move with ~n~ and ~p~ to the next or previous entry. To reach a known name
+   in a long listing, use ~C-s~, type part of the filename, and press ~RET~
+   to finish searching. Check the filename you reached before acting on it.
+3. On an ordinary file, press ~z~ to hear its size, lowercase ~c~ for its
+   modification time, and ~/~ for permissions. These inspect the selected
+   entry without opening it. Uppercase ~C~ is Dired's Copy command, not a
+   second way to hear the time. Size inspection on a directory instead uses
+   the external =du= program and may take longer or be unavailable; file-type
+   inspection with apostrophe, ~'~, similarly requires the =file= program.
+4. Press ~RET~ on the file to visit it in Emacs. On a directory, ~RET~ opens
+   that directory's listing. Opening announces the destination; ~C-e m~ lets
+   you check the resulting buffer and mode. Use ~RET~ here, not ~C-j~:
+   Emacsvox assigns ~C-j~ and Control-Enter to a separate, file-type-aware
+   opener which may preview or play a file instead of visiting its text.
+5. To return from the document, use ~C-x b~ and select the directory buffer.
+   In Dired, ~^~ goes to the parent directory and ~g~ refreshes the listing
+   from disk. Refreshing Dired does not save or discard an open document's
+   edits. Press ~q~ in Dired to leave the listing; your files remain on disk.
+
+Looking at a file is not the same as marking it for an operation. ~m~ marks
+an entry and then moves to the next; its action cue precedes the newly selected
+filename. ~u~ unmarks an entry and also advances. If you are inspecting a
+listing with existing marks, leave them alone. Dired operations can apply to
+marked files rather than the row you are hearing.
+
+This guide does not require deletion, renaming, changing permissions or running
+commands on files. In particular, ~d~ flags deletion and ~x~ executes flagged
+deletions; do not use either as a way to close a listing. Cancellation after a
+file operation and ordinary text undo are not promises of filesystem recovery.
+Use [[info:emacs#Dired][Dired]] in the GNU Emacs Manual before performing those operations, and
+[[info:emacsvox-reference#emacsvox-dired][emacsvox-dired]] for the complete speech-command reference.
+
 ** Document Authoring
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Document Authoring
+:ALT_TITLE: Writing and reviewing documents
+:DESCRIPTION: Create a note, navigate its structure and verify changes before saving.
 :END:
 
 #+cindex: document authoring
 
-Open or create a document in its normal Emacs mode. The major mode provides
-format-specific editing commands; Emacsvox speaks movement and edits, applies
-Voice Lock where useful faces are available, and adds integration-specific
-feedback. Use ~C-h m~ for the mode's workflow. Outlines and template fields
-are covered next; table reading is described under [[*Browsing Structure][Browsing Structure]].
+Open or create a document in its normal Emacs mode. The mode supplies the
+format's editing commands; Emacsvox presents movement, edits and structure
+through speech. Voice Lock can distinguish useful faces supplied by the mode.
+The following task writes a small Org note, then reviews it without relying
+on visual formatting. Org comes with Emacs; no mail account or additional
+speech engine is required.
+
+For copying an existing document before editing, use
+[[*Save a separate working copy][Save a separate working copy]]. Outlines and template fields are covered
+under [[*Structured Editing And Templates][Structured editing and templates]], and tables under
+[[*Reading Markdown and Org tables][Reading Markdown and Org tables]].
+
+*** Write a note with headings
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Writing An Org Document
+:DESCRIPTION: Create a real text file and organise a short note with Org headings.
+:END:
+
+#+cindex: notes, writing
+#+cindex: documents, creating
+#+cindex: Org, writing a document
+
+Unlike the tutorial's disposable buffer, this task creates a file you can
+return to. Use an unused name and a writable directory. The name
+=~/evox-notes.org= is an example, not a file the package supplies.
+
+1. Press ~C-x C-f~, enter =~/evox-notes.org= and press ~RET~. If it already
+   contains work, choose another name before typing. The =.org= extension
+   normally selects Org mode; check with ~C-e m~. If a personal configuration
+   selected another mode, run ~M-x org-mode RET~ in this new note.
+2. Type or insert the following text in the document buffer, not in the
+   minibuffer or the manual. Start each heading at the beginning of its line.
+   One asterisk and a space introduce the main heading; two asterisks and a
+   space introduce a heading beneath it.
+
+   #+begin_example
+   * Project notes
+   The draft is ready for review.
+   ** Questions
+   Check the delivery date.
+   ** Decisions
+   Keep a separate review copy.
+   #+end_example
+
+3. Press ~M-<~ and read with ~C-n~ and ~C-e l~. Verify the heading words
+   and body text. Org heading feedback can identify structure without reading
+   every leading asterisk; exact character inspection remains available.
+4. Press ~C-x C-s~ and read the save result. That writes this Org text to
+   the selected file. It does not export a formatted document or change speech
+   settings. Keep the file open for the following review, or reopen it later
+   with ~C-x C-f~ and its path.
+
+Choose your own heading titles when writing real notes. Org stores the title
+and body as plain text, so the structure remains in the file even when parts
+of it are folded in the current view. Do not delete a folded heading to try
+to reveal its body: folding is a visibility operation, not missing content.
+
+*** Review structure and correct text
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Reviewing An Org Document
+:DESCRIPTION: Read headings, reveal their contents, search and verify an edit before saving.
+:END:
+
+Start in the Org document, not in an Info example. Use ~C-e m~ to check the
+selected buffer. If the note was reopened with content folded, first press
+~M-<~, then ~C-u C-u C-u TAB~: Control-u three times, followed by Tab.
+This shows all content without rewriting it. See
+[[info:org#Global and local cycling][Global and local cycling]] in the Org manual.
+
+At the first heading, ~C-c C-n~ moves to the next visible heading and
+~C-c C-p~ to the previous one. In the example, these let you review Questions
+and Decisions without reading every paragraph. Emacsvox announces the heading
+you reach. Use ~C-e l~ to repeat it and ~C-n~ to begin reading its body.
+
+On a heading, ~TAB~ cycles that subtree's visibility. Listen to the state
+feedback before moving into it. This is different from Tab in a table or at a
+completion prompt. The show-all sequence above provides a known starting view
+if the current folds become confusing. [[info:org#Motion][Motion]] documents the other heading
+commands, while [[*Reading Org headings][Reading Org headings]] explains the speech detail.
+
+For a focused text correction in the example:
+
+1. Press ~M-<~, then ~C-s~, type =ready= and press ~RET~ to finish the
+   search. Search moves point; the subsequent typing will occur there, not
+   in a separate search box. Press ~C-e l~ to confirm the sentence.
+2. Point is immediately after =ready=. Press ~M-b~ to move to its beginning,
+   then ~M-d~ to remove that word. Type =prepared=. The surrounding text
+   should now read =The draft is prepared for review.=.
+3. Read the whole line again before saving. If the edit is wrong, use ~C-/~
+   once and inspect the result. Removing the old word and inserting the new
+   one can be separate undo steps; undo only as far as the intended state.
+   Do not repeat undo blindly through earlier work.
+4. Press ~C-x C-s~ only when the text is correct. Switch to another buffer
+   and back with ~C-x b~ to continue working; leaving the note does not
+   require closing its buffer.
+
+If a search fails, check the text and the starting position. ~RET~ ends the
+search at its current position; ~C-g~ can remove a failing suffix before
+aborting the search, so listen for whether it is still active. Finish or cancel
+search before issuing editing commands. Keep the desired note selected when
+saving: a browser page, Help buffer and document do not share Save semantics.
+
+An edit made after a successful save needs another save to replace that file's
+contents. Undo also changes the buffer; it does not by itself restore the file
+on disk. For a separate review version, use [[*Save a separate working copy][Save a separate working copy]] rather
+than renaming the buffer and assuming that changed its destination.
 
 ** Structured Editing And Templates
 :PROPERTIES:
@@ -211,8 +465,8 @@ source buffer. Shared table controls are active immediately:
 - ~RET~ or ~SPC~ reads the cell; ~r~ reads the row and ~c~ the column.
 - ~.~ gives coordinates and ~=~ dimensions. The first row supplies column
   titles and is announced separately from data rows.
-- ~w~ or ~k k~ copies the cell, ~k r~ the row with tabs between cells,
-  and ~k c~ the column with newlines between cells. ~K~ copies the whole
+- ~w~ or ~k k~ copies the cell, ~k r~ copies the row with tabs between cells,
+  and ~k c~ copies the column with newlines between cells. ~K~ copies the whole
   table to the clipboard used by =emacsvox-table-paste-from-clipboard=.
 - ~a~ changes column titles, row titles, or data order for this view using
   shared reader preferences. ~q~ closes the view.
@@ -237,30 +491,170 @@ speech preferences. Use ~C-h m~ for the full browser key map.
 ** Web Browsing With EWW
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Web Browsing
-:ALT_TITLE: Web Browsing
+:ALT_TITLE: Reading web pages with EWW
+:DESCRIPTION: Open pages, read their structure, follow links and recover your place.
 :END:
 
 #+cindex: EWW
 #+cindex: Web browsing
 #+findex: eww
 
-EWW is the built-in browser supported for current Emacsvox. Run
-~M-x eww RET~, enter a URL or search words, and press ~RET~. Emacsvox speaks
-navigation and rendering feedback and adds HTML-structure movement and
-filtering of the displayed DOM. Consult [[info:emacs#EWW][EWW]] in /The GNU Emacs Manual/ for
-browser operation and [[info:emacsvox-reference#emacsvox-eww][emacsvox-eww]] in the /Emacsvox Reference Manual/
-for speech support.
+EWW is Emacs's built-in text-oriented web browser. Emacsvox adds speech and
+navigation using the page's HTML structure. These commands act on the rendered
+page, not on the manual you are reading now. Start with a speaking session and
+use a public page for practice; a site requiring JavaScript may need your
+ordinary external browser instead.
 
-From an EWW buffer, ~C-e S~ opens its focused settings. ~s~ toggles
-section-navigation autospeak. ~i~ changes image suppression for subsequent
-rendering and the shared SHR image default, preserving buffer-local overrides;
-it does not reload the current page. ~w~ saves the two Emacsvox defaults,
-~A~ opens advanced settings, and ~q~ returns. These are presentation choices,
-not a replacement for EWW's browser preferences.
+The keys below include Emacsvox's EWW bindings, which differ from unmodified
+EWW. In particular, lowercase ~b~ moves to the previous link, lowercase ~s~
+requests a readable view, and ~?~ is not the settings menu's Help key. Use
+~C-h m~ or ~C-h k~ to inspect the running buffer. The upstream
+[[info:emacs#EWW][EWW guide]] and [[info:emacsvox-reference#emacsvox-eww][emacsvox-eww]] reference cover the rest of the interface.
+
+*** Open a page and establish your place
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Opening A Web Page
+:DESCRIPTION: Enter an address, wait for rendering and identify the selected browser buffer.
+:END:
+
+#+cindex: web page, opening
+#+cindex: EWW, buffer names
+
+1. Run ~M-x eww RET~. At its next prompt, enter a web address, for example
+   =https://www.gnu.org/software/emacs/=, and press ~RET~. Text that EWW does
+   not recognise as an address is sent to its configured search service;
+   do not enter private document text as a practice search.
+2. Wait for loading and rendering to finish before navigating the page.
+   An opening cue means the command started, not that the server returned the
+   expected article. Read the page title and any error or login message.
+   Emacsvox normally names the buffer after the page title, so do not assume
+   the buffer is called =*eww*=. Press ~C-e m~ to identify it.
+3. Press ~M-<~ and use ~C-n~ or ~C-e l~ to read. Keep the browser buffer's
+   name in mind when switching to notes or Help. ~C-x b~ returns to that
+   existing buffer; running =eww= again starts another browsing operation.
+
+To request a separate browser buffer instead of reusing the default one,
+start with ~C-u M-x eww RET~. This is an intentional use of the prefix
+argument explained in [[*Read the key instructions][Read the key instructions]]. It lets you keep the earlier
+page available while opening another. A title can change after navigation;
+check the new buffer name before using it in a later switch.
+
+*** Read by heading, paragraph or search
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Navigating A Web Page
+:DESCRIPTION: Use HTML structure when it is present and text search when it is not.
+:END:
+
+#+cindex: web headings
+#+cindex: web page, finding text
+
+In the EWW page buffer, period, ~.~, moves to the next supported heading and
+comma, ~,~, to the previous one. ~1~ through ~4~ find the next heading at the
+corresponding level; ~M-1~ through ~M-4~ go backwards. These are HTML heading
+levels, not numbered paragraphs. A page without suitable heading markup
+cannot be navigated as though that structure existed.
+
+Use ~]~ and ~[~ to move between paragraphs. ~M-SPC~ requests the contents of
+the current HTML element. Section-navigation autospeak can read more than a
+heading or a line, depending on your setting; use explicit line or element
+reading when you want to control the amount. Stop current speech with ~C-e s~
+without disabling later feedback.
+
+For known words, press ~C-s~, type the text, and press ~RET~ to finish at
+the match. Repeat ~C-s~ while searching to find another occurrence. This is
+Control-s, not the unmodified ~s~ key used for a readable view. Search covers
+the current rendered buffer; it does not submit a web search or find text
+that was never loaded into the page.
+
+Use the original page when checking whether information is genuinely absent.
+A readable or filtered view can omit menus, tables or other useful material.
+The recovery procedure below explains restoring the page without treating a
+filter as an edit to the website.
+
+*** Follow a link and return to the article
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Following Web Links
+:DESCRIPTION: Inspect a link, follow it and distinguish browser history from buffer selection.
+:END:
+
+#+cindex: web links, inspecting
+#+cindex: web history, going back
+#+cindex: EWW, bookmarks
+
+Use lowercase ~f~ to reach the next link and lowercase ~b~ for the previous
+one. Emacsvox presents link navigation; ~C-e l~ reads its surrounding line.
+The link's label is not necessarily its destination address.
+
+On a link, ~k~ copies its address to Emacs's kill ring, the text store used by
+~C-y~. To inspect that address as text, press ~C-x b~, enter an unused buffer
+name such as =evox-web-address=, and press ~RET~. If that name already contains
+work, choose another. Run ~M-x text-mode RET~, press ~C-y~ to insert the
+address, then ~C-e l~ to read it. Return to the browser by name with ~C-x b~.
+This temporary buffer need not be saved. Do not paste into an important document
+or a web form merely to inspect a URL.
+
+To copy the page's own address regardless of point, use
+~M-x eww-copy-page-url RET~ instead. Emacsvox's ~k~ is context-sensitive and
+means the link address when on a link.
+
+Press ~RET~ on the intended link to follow it. After the new page loads,
+press lowercase ~l~ to go back in that EWW buffer's history and ~r~ to go
+forward again. Emacsvox announces URL navigation through the page header.
+Check your position with line reading; if necessary, search for a distinctive
+phrase from the article. History is limited and a page can change, so do not
+assume the exact passage is always restored.
+
+To follow a link in a separate buffer, use ~M-RET~. Return to the original
+page with ~C-x b~; that is a buffer change rather than a history step in the
+new buffer. Use ~q~ in an ordinary EWW page to leave its view. Uppercase ~Q~
+is Emacsvox's buffer-killing command and is not required for this task.
+
+To keep a website for a future session, run ~M-x eww-add-bookmark RET~ on the
+wanted page. ~M-x eww-list-bookmarks RET~ opens the saved list; select a
+bookmark and press ~RET~ to visit it. These are website bookmarks, not the
+Emacsvox ebook-position marks on ~m~, and they do not promise to preserve an
+exact reading position on a changing page.
+
+*** Recover a cluttered or incomplete page
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Recovering A Web Page
+:DESCRIPTION: Restore a reading view, handle missing content and keep browser settings distinct.
+:END:
+
+#+cindex: EWW, readable view
+#+cindex: web page, missing content
+
+In a page buffer, lowercase ~s~ runs EWW's readable-view command. It tries to
+isolate the main text; it is not the same action as ~s~ inside the focused
+settings menu. To return from the filtered view, run
+~M-x emacsvox-eww-restore RET~. This restores the retained canonical view
+rather than changing the site. The command is also on ~DEL~, but its name
+avoids differences in how keyboards report Backspace and Delete.
+
+If the retained view is unavailable or you need fresh content, ~g~ reloads
+the current address. Reloading makes a new request and can lose form input or
+change the page and reading position. Save needed notes and finish or abandon
+forms deliberately before reloading. Search for a known phrase afterwards
+rather than assuming the old screen position still identifies the passage.
+
+For content that requires JavaScript or another unsupported browser feature,
+use ~M-x eww-browse-with-external-browser RET~ to hand the page to the configured
+external browser. The external browser and any screen reader then provide
+its controls; Emacsvox's EWW keys do not operate there. Browser configuration,
+login state and downloaded-content handling can differ. A failed or inaccessible
+website is not in itself a reason to change speech engines or reset voices.
+
+For speech preferences, open ~C-e S~ from EWW. In that focused menu, ~s~
+toggles section-navigation autospeak and ~i~ changes image suppression for
+subsequent rendering. The latter also changes the shared SHR image default
+while preserving buffer-local overrides; it does not reload the current page.
+Lowercase ~w~ saves those two Emacsvox defaults, ~A~ opens advanced settings,
+and ~q~ returns. These are presentation choices, not EWW's site or account
+preferences. Returning does not undo changes you have already made.
 
 The Emacs/W3 and w3m survey is historical. Do not install either on the strength
 of the Heritage manual; use EWW unless a separately maintained integration says
-otherwise.
+otherwise. The GNU Emacs Manual's [[info:emacs#EWW][EWW]] entry provides its general introduction.
 
 ** Messaging
 :PROPERTIES:
