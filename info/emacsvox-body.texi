@@ -3239,6 +3239,10 @@ It helps to separate four questions that are often mixed together:
 @tab Route speech to an installed engine and apply supported spatial behavior.
 @end multitable
 
+Press @kbd{C-e H r h} to browse the semantic vocabulary without changing settings.
+@kbd{C-e H r t} toggles training explanations for this Emacs session across all
+buffers; it does not save a startup default.
+
 An Emacs mode or Emacsvox integration supplies facts about an object or event.
 Facts can describe a role such as a heading@comma{} an event such as completion@comma{} a
 state such as unread@comma{} or an attribute such as heading level. Context also says
@@ -3824,7 +3828,8 @@ confirm which rule now wins.
 @node Managing Feedback Rules
 @subsection Review And Remove Your Rules
 
-Open @emph{Your feedback rules} to manage personal and temporary changes together.
+Press @kbd{C-e H r o} for @emph{Your feedback rules}@comma{} combining personal@comma{} session@comma{}
+and captured-buffer changes. @kbd{q} returns to the selected menu item.
 @kbd{P} previews the complete current result@comma{} @kbd{t} temporarily disables or enables
 a rule@comma{} and @kbd{d} removes it. Disabling or deleting an override restores the
 next weaker behaviour; it does not leave a copied default behind.
@@ -4126,8 +4131,10 @@ configuration can block a rename; its owner must update that reference first.
 @cindex voice adjustments
 
 From @emph{Voice Palettes}@comma{} open a palette@comma{} select a voice@comma{} and press
-@kbd{e} to edit it. From Aural Home@comma{} @emph{Edit the named voice used here}
-opens the named voice used by the captured source item. Editing an inherited
+@kbd{e} to edit it. Press @kbd{C-e H f t} to tune the named voice used by the
+captured source item; Aural Home also retains that action. This changes the
+named voice shared by every item that uses it@comma{} rather than adding a rule for
+just this item. @kbd{q} offers to retain unfinished changes and returns to the menu. Editing an inherited
 voice creates a complete entry in your destination palette when saved.
 Editing a built-in palette asks for a personal child. Opening the editor
 and previewing a draft do not change live feedback or save settings.

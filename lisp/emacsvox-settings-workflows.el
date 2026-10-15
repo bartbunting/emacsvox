@@ -83,12 +83,21 @@
   (emacsvox-settings-workflows--open 'emacsvox-aural-recent-feedback
    #'emacsvox-aural-list-recent-feedback 'emacsvox-settings-workflows--recent))
 
+(defun emacsvox-settings-workflows--tune ()
+  "Tune the named voice used at the captured source item.
+Changes affect every use of that named voice.  Preview, save, and application
+remain explicit in the editor; q retains unfinished work and returns here."
+  (interactive)
+  (emacsvox-settings-workflows--open 'emacsvox-aural-change-feedback
+   #'emacsvox-aural-change-feedback--tune-at-point 'emacsvox-settings-workflows--tune t))
+
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-feedback ()
   "Explain and edit current or recent feedback, preserving source context."
   ["Captured item"
    ("x" "Explain effective feedback" emacsvox-settings-workflows--explain :transient transient--do-suspend)
    ("c" "Change voice, cue, or tone (preview draft)" emacsvox-settings-workflows--change :transient transient--do-suspend)
+   ("t" "Tune this item's named voice (shared)" emacsvox-settings-workflows--tune :transient transient--do-suspend)
    ("v" "Choose a voice for this item" emacsvox-settings-workflows--voice :transient transient--do-suspend)
    ("e" "Remap a cue with explicit scope" emacsvox-settings-workflows--cue :transient transient--do-suspend)]
   ["Recent feedback"
@@ -139,13 +148,49 @@
    (emacsvox-transient--menu-facts 'presentation 'command-menu-value-changed)
    'state-change 'save-object))
 
+(defun emacsvox-settings-workflows--overrides ()
+  "Review personal, session, and captured-buffer rules together.
+Opening the overview changes no rules.  Edit, preview, disable, or remove a
+selected rule explicitly; q returns to this menu."
+  (interactive)
+  (emacsvox-settings-workflows--open 'emacsvox-aural-overrides
+   #'emacsvox-aural-list-overrides 'emacsvox-settings-workflows--overrides))
+
+(defun emacsvox-settings-workflows--semantics ()
+  "Browse the registered roles, states, and events used by presentation rules.
+This is a reference view; inspecting vocabulary changes no settings."
+  (interactive)
+  (emacsvox-settings-workflows--open 'emacsvox-aural-semantics
+   #'emacsvox-aural-list-semantics 'emacsvox-settings-workflows--semantics))
+
+(defun emacsvox-settings-workflows--training-label ()
+  "Describe session-wide training explanations."
+  (format "Training explanations (session): %s"
+          (if emacsvox-aural-training-mode "on" "off")))
+
+(defun emacsvox-settings-workflows--training ()
+  "Toggle automatic presentation explanations for this Emacs session.
+Training adds explanations to supported feedback.  It affects all buffers,
+uses the existing training lifecycle, and does not save a startup default."
+  (interactive)
+  (emacsvox-aural-training-mode (if emacsvox-aural-training-mode -1 1))
+  (emacsvox-transient--submit-text
+   (emacsvox-settings-workflows--training-label)
+   (emacsvox-transient--menu-facts 'training 'command-menu-value-changed)
+   'state-change 'select-object))
+
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-presentation ()
   "Manage presentation features and explicitly scoped rule drafts."
+  :refresh-suffixes t
   ["Presentation (global)"
    ("f" "Presentation Options: activate, copy, edit" emacsvox-settings-workflows--features :transient transient--do-suspend)
    ("v" (lambda () (emacsvox-settings-workflows--face-label)) emacsvox-settings-workflows--face :transient t)
    ("w" "Save visual-face default" emacsvox-settings-workflows--save-face :transient t)]
+  ["Inspect and learn"
+   ("o" "Combined feedback rules" emacsvox-settings-workflows--overrides :transient transient--do-suspend)
+   ("h" "Semantic vocabulary reference" emacsvox-settings-workflows--semantics :transient transient--do-suspend)
+   ("t" (lambda () (emacsvox-settings-workflows--training-label)) emacsvox-settings-workflows--training :transient t)]
   ["Rule editors: save inside the editor"
    ("p" "Personal rules (persistent)" emacsvox-settings-workflows--personal :transient transient--do-suspend)
    ("s" "Session rules (temporary)" emacsvox-settings-workflows--session :transient transient--do-suspend)

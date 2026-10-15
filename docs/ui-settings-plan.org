@@ -735,20 +735,20 @@ menu gap means the action has no direct control in the new focused menus.
 | drafts | =p d=, then Enter | Home's retained-editor chooser |
 | explain | =x= or =f x= | Effective feedback details |
 | remap | =f v= | Named-voice mapping draft |
-| tune-voice | =h T=; action search | Focused-menu gap for tuning the named voice used at point |
+| tune-voice | =f t=; action search | Shared named-voice draft; direct return preserves unfinished work |
 | remap-earcon | =f e= | Scoped cue-remapping draft |
-| overrides | =h O=; action search | Combined rule overview; =r= currently opens individual rule layers |
+| overrides | =r o=; action search | Combined overview alongside individual rule-layer editors |
 | recent-feedback | =f h= | Frozen feedback review and editing |
 | profiles | =p p= | Profile manager |
 | voices | =v p= or =p v= | Palette manager and its native editing/exchange commands |
 | voice-workbench | =v w= | Existing workbench |
 | features | =r f= | Presentation Options manager |
 | buffer-rules | =r b= | Captured-buffer rule editor |
-| semantics | Action search: Semantic vocabulary; Home Help link | Retain as a reference view |
+| semantics | =r h=; action search | Read-only vocabulary reference with direct return |
 | sounds | =o p= | Sound-pack browser and editor |
 | spatial | =D s=; action search | Capability report returns directly to Diagnostics |
 | spatial-settings | =o n=; Home offers Customize | Focused spatial controls plus advanced settings |
-| training | =h t= | Session toggle; its searchable row explains the setting |
+| training | =r t= | Session toggle with current value and explicit scope |
 | diagnostics | =D d=; action search: Aural Doctor | Direct Doctor return; binding check and repair target Transient |
 
 Home's =engine-modules= shortcut dispatches to Browse voices; =I= remains an
@@ -1000,6 +1000,20 @@ Diagnostics checkpoint:
   installed and bundled Transient. Incremental compilation, byte-code preflight,
   generated references/manuals, and the documentation gate pass. Listening
   acceptance remains pending.
+
+Presentation checkpoint:
+- =f t= opens the named voice used at the captured item, explaining shared scope.
+  Its editor now honours the existing one-shot menu return after Keep or Discard;
+  Continue editing retains both the draft and the pending return.
+- =r o= opens combined feedback rules, =r h= the semantic reference, and =r t=
+  session-wide training explanations. Each has effect and scope Help, searchable
+  discovery, and direct return where applicable. No implicit saving was added.
+- Source: all 51 graphical settings checks and 51 batch voice-editor checks
+  pass; two layout cases require graphics. Fresh compiled graphical verification
+  passes all 104 settings/editor checks with installed Transient, including those
+  layout cases, and all 51 settings checks with bundled Transient. Incremental
+  compilation, byte-code preflight, and the documentation gate pass. Listening
+  remains pending; broader settings discovery remains in the queue.
 
 ** Next proposed slices
 

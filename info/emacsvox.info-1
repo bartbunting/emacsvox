@@ -3293,6 +3293,10 @@ Output           What can this          Route speech to an installed
                  machine produce?       engine and apply supported
                                         spatial behavior.
 
+   Press ‘C-e H r h’ to browse the semantic vocabulary without changing
+settings.  ‘C-e H r t’ toggles training explanations for this Emacs
+session across all buffers; it does not save a startup default.
+
    An Emacs mode or Emacsvox integration supplies facts about an object
 or event.  Facts can describe a role such as a heading, an event such as
 completion, a state such as unread, or an attribute such as heading
@@ -3879,8 +3883,9 @@ File: emacsvox.info,  Node: Managing Feedback Rules,  Next: Presentation Options
 6.4.4 Review And Remove Your Rules
 ----------------------------------
 
-Open _Your feedback rules_ to manage personal and temporary changes
-together.  ‘P’ previews the complete current result, ‘t’ temporarily
+Press ‘C-e H r o’ for _Your feedback rules_, combining personal,
+session, and captured-buffer changes.  ‘q’ returns to the selected menu
+item.  ‘P’ previews the complete current result, ‘t’ temporarily
 disables or enables a rule, and ‘d’ removes it.  Disabling or deleting
 an override restores the next weaker behaviour; it does not leave a
 copied default behind.
@@ -4194,12 +4199,14 @@ File: emacsvox.info,  Node: Editing Named Voices,  Next: Emoji Speech Names,  Pr
 ======================
 
 From _Voice Palettes_, open a palette, select a voice, and press ‘e’ to
-edit it.  From Aural Home, _Edit the named voice used here_ opens the
-named voice used by the captured source item.  Editing an inherited
-voice creates a complete entry in your destination palette when saved.
-Editing a built-in palette asks for a personal child.  Opening the
-editor and previewing a draft do not change live feedback or save
-settings.
+edit it.  Press ‘C-e H f t’ to tune the named voice used by the captured
+source item; Aural Home also retains that action.  This changes the
+named voice shared by every item that uses it, rather than adding a rule
+for just this item.  ‘q’ offers to retain unfinished changes and returns
+to the menu.  Editing an inherited voice creates a complete entry in
+your destination palette when saved.  Editing a built-in palette asks
+for a personal child.  Opening the editor and previewing a draft do not
+change live feedback or save settings.
 
    The named voice ‘default’ controls ordinary reading and spoken labels
 that have no explicitly selected voice.  Choose it to change the

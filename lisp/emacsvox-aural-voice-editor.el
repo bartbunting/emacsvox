@@ -1159,11 +1159,14 @@ SOURCE optionally supplies the return buffer for the destination editor."
     (emacsvox-aural-voice-editor-stop)
     (let ((origin (emacsvox-aural-voice-editor--get :origin))
           (row (emacsvox-aural-voice-editor--get :origin-row))
-          (column (emacsvox-aural-voice-editor--get :origin-column)))
+          (column (emacsvox-aural-voice-editor--get :origin-column))
+          (return emacsvox-aural-ui--return-function))
+      (setq emacsvox-aural-ui--return-function nil)
       ;; Selecting the origin alone leaves this editor in the window history,
       ;; so quitting the workbench can immediately reveal it again.
       (quit-window (emacsvox-aural-voice-editor--get :discarded))
-      (if (and (markerp origin) (marker-buffer origin))
+      (if (and (not (and return (funcall return)))
+               (markerp origin) (marker-buffer origin))
           (progn (pop-to-buffer (marker-buffer origin))
                  (if (and row (derived-mode-p 'tabulated-list-mode))
                      (progn (emacsvox-aural-ui-goto-row row) (move-to-column (or column 0)))

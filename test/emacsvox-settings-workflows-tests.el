@@ -178,6 +178,77 @@
     (execute-kbd-macro (kbd "f"))
     (with-current-buffer source (erase-buffer) (insert "replacement"))
     (should-error (emacsvox-settings-workflows--change) :type 'user-error)))
+(ert-deftest emacsvox-settings-workflows-presentation-references-return ()
+  "Both reference views use the captured source and return without changing rules."
+  (emacsvox-test--with-settings
+    (let ((before (emacsvox-aural-read-user-data)))
+      (execute-kbd-macro (kbd "r"))
+      (dolist (entry '(("o" emacsvox-aural-overrides-mode emacsvox-settings-workflows--overrides)
+                       ("h" emacsvox-aural-semantics-mode emacsvox-settings-workflows--semantics)))
+        (execute-kbd-macro (kbd (car entry)))
+        (should (derived-mode-p (nth 1 entry)))
+        (should (eq (emacsvox-aural-inspection-source-buffer) source))
+        (execute-kbd-macro (kbd "q"))
+        (should (eq (oref transient--prefix command) 'emacsvox-settings-presentation))
+        (with-selected-window transient--window
+          (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                      (nth 2 entry)))))
+      (should (equal before (emacsvox-aural-read-user-data)))
+      (should-not (file-exists-p custom-file)))))
+
+(ert-deftest emacsvox-settings-workflows-training-is-explicit-and-temporary ()
+  "Training navigation is passive; activation installs and removes its hooks."
+  (emacsvox-test--with-settings
+    (unwind-protect
+        (progn
+          (execute-kbd-macro (kbd "r <down> <up>"))
+          (should-not emacsvox-aural-training-mode)
+          (execute-kbd-macro (kbd "t"))
+          (should emacsvox-aural-training-mode)
+          (should (memq 'emacsvox-aural-explanation--training-presented
+                        emacsvox-aural-plan-presented-hook))
+          (execute-kbd-macro (kbd "t"))
+          (should-not emacsvox-aural-training-mode)
+          (should-not (memq 'emacsvox-aural-explanation--training-presented
+                            emacsvox-aural-plan-presented-hook))
+          (should-not (file-exists-p custom-file)))
+      (emacsvox-aural-training-mode -1))))
+
+(ert-deftest emacsvox-settings-workflows-tune-retains-draft-and-source ()
+  "Contextual tuning preserves source text, a changed draft, and return focus."
+  (emacsvox-test--with-settings
+    (emacsvox-test--with-voice-editor
+      (let ((before (emacsvox-aural-read-user-data)) seen)
+        (cl-letf (((symbol-function 'emacsvox-aural-tools--remap-source-input)
+                   (lambda (&rest _)
+                     (setq seen (list (current-buffer) (point)))
+                     (list :source source :facts '(:content "Captured heading"))))
+                  ((symbol-function 'emacsvox-aural-change-feedback--named-voice)
+                   (lambda (_) '(reading-owned bolden))))
+          (execute-kbd-macro (kbd "f t")))
+        (should (equal seen (list source 3)))
+        (should (derived-mode-p 'emacsvox-aural-voice-editor-mode))
+        (should (equal (emacsvox-aural-voice-editor--get :text) "Captured heading"))
+        (should (eq (emacsvox-aural-voice-editor--get :voice) 'bolden))
+        (emacsvox-aural-voice-editor--put :automatic-sample nil)
+        (emacsvox-aural-voice-editor--set 'average-pitch 7)
+        (let ((draft (emacsvox-aural-voice-editor--draft)))
+          (cl-letf (((symbol-function 'completing-read)
+                     (lambda (&rest _) "Continue editing")))
+            (execute-kbd-macro (kbd "q")))
+          (should (derived-mode-p 'emacsvox-aural-voice-editor-mode))
+          (should emacsvox-aural-ui--return-function)
+          (cl-letf (((symbol-function 'completing-read)
+                     (lambda (&rest _) "Keep draft and return")))
+            (execute-kbd-macro (kbd "q")))
+          (should (eq (oref transient--prefix command) 'emacsvox-settings-feedback))
+          (with-selected-window transient--window
+            (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                        'emacsvox-settings-workflows--tune)))
+          (should (emacsvox-aural-voice-drafts--dirty-fields draft)))
+        (should (equal before (emacsvox-aural-read-user-data)))
+        (should-not requests)))))
+
 (ert-deftest emacsvox-settings-workflows-rule-scopes-and-return ()
   "Each rule route owns its advertised scope and returns to its exact entry."
   (emacsvox-test--with-settings
