@@ -5614,12 +5614,23 @@ Use the symptom to choose the shortest diagnostic route:
 @tab Compare Voice Lock and explicit face-presentation state.
 @end multitable
 
-Open @emph{Aural Doctor} from Aural Home or press @kbd{D} there. The doctor
+Press @kbd{C-e H D} for @emph{Diagnostics and recovery}@comma{} then @kbd{d} for @emph{Aural Doctor}.
+Doctor also remains available from Aural Home. The doctor
 checks live bindings@comma{} loaded source or byte-code@comma{} the compatibility baseline@comma{}
 options@comma{} profiles@comma{} personal data@comma{} sound resources@comma{} spatial fallback@comma{} and the
 speech backend. It does not start the speech server or change settings
 automatically. When one row offers a reviewed safe repair@comma{} press @kbd{r}
 on that row to run it.
+
+From the diagnostics menu@comma{} @kbd{s} explains spatial capabilities and policy;
+@kbd{m} and @kbd{n} show retained local main and notification speech-server output.
+They report when no local diagnostic buffer exists. @kbd{q} returns from these
+views to the selected menu item. Opening a view does not repair or restart speech.
+
+@kbd{l} toggles diagnostic logging for this session. Logs include complete spoken
+text; the menu reports whether logging is on. @kbd{A} opens log-file@comma{} size@comma{} retention@comma{}
+and diagnostic-buffer visibility options in Customize. Apply and Save remain
+explicit; buffer naming changes take effect after a speech restart.
 
 Separate main and notification rows show each current connection's capabilities
 and last reported engine inventory. Configuration agreement compares acknowledged

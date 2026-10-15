@@ -11,6 +11,74 @@
 (require 'emacsvox-aural-voice-editor-tests)
 (require 'emacsvox-aural-change-feedback-tests)
 
+(ert-deftest emacsvox-settings-diagnostics-inspect-and-return ()
+  "Reports and Customize return directly, preserving scope and selected entry."
+  (emacsvox-test--with-settings
+    (let ((emacsvox-aural-diagnostic-log-file nil)
+          (before (emacsvox-aural-read-user-data)))
+      (execute-kbd-macro (kbd "D"))
+      (dolist (entry '(("d" emacsvox-aural-doctor-mode emacsvox-settings-workflows--doctor)
+                       ("s" help-mode emacsvox-settings-workflows--spatial)
+                       ("A" Custom-mode emacsvox-settings-workflows--diagnostic-options)))
+        (execute-kbd-macro (kbd (car entry)))
+        (should (derived-mode-p (nth 1 entry)))
+        (execute-kbd-macro (kbd "q"))
+        (should (eq (oref transient--prefix command) 'emacsvox-settings-diagnostics))
+        (should (eq (emacsvox-aural-menu--source (emacsvox-aural-menu--context)) source))
+        (with-selected-window transient--window
+          (should (eq (oref (button-get (button-at (point)) 'button-data) command)
+                      (nth 2 entry)))))
+      (should-not emacsvox-aural-diagnostic-log-file)
+      (should-not (file-exists-p custom-file))
+      (should (equal before (emacsvox-aural-read-user-data)))
+      (execute-kbd-macro (kbd "q q"))
+      (should (eq (current-buffer) source))
+      (should (= (point) 3)))))
+
+(ert-deftest emacsvox-settings-diagnostics-help-does-not-capture-later-help ()
+  "Reusing the report's Help buffer preserves Transient's normal Help return."
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "D s q q ? s"))
+    (should (derived-mode-p 'help-mode))
+    (execute-kbd-macro (kbd "q"))
+    (should (eq (oref transient--prefix command) 'emacsvox-aural-menu))))
+
+(ert-deftest emacsvox-settings-diagnostics-retained-output ()
+  "Both retained server buffers keep their contents and original maps on return."
+  (emacsvox-test--with-settings
+    (execute-kbd-macro (kbd "D"))
+    (dolist (entry '(("m" "Speaker") ("n" "Notify")))
+      (let* ((buffer (tts--diagnostic-buffer (cadr entry) t))
+             (map (buffer-local-value 'major-mode buffer)))
+        (unwind-protect
+            (progn
+              (with-current-buffer buffer (insert "retained diagnostic output"))
+              (execute-kbd-macro (kbd (car entry)))
+              (should (eq (current-buffer) buffer))
+              (should (equal (buffer-string) "retained diagnostic output"))
+              (execute-kbd-macro (kbd "q"))
+              (should (eq (oref transient--prefix command) 'emacsvox-settings-diagnostics))
+              (with-current-buffer buffer
+                (should (eq major-mode map))
+                (should-not (local-key-binding (kbd "q")))))
+          (when (buffer-live-p buffer) (kill-buffer buffer)))))))
+
+(ert-deftest emacsvox-settings-diagnostics-logging-is-explicit ()
+  "Browsing does not log; activation toggles session logging without saving."
+  (emacsvox-test--with-settings
+    (let ((emacsvox-aural-diagnostic-log-file nil)
+          (emacsvox-aural--diagnostic-log-toggle-file
+           (expand-file-name "speech.log" (file-name-directory custom-file))))
+      (execute-kbd-macro (kbd "D <down> <up>"))
+      (should-not (file-exists-p emacsvox-aural--diagnostic-log-toggle-file))
+      (execute-kbd-macro (kbd "l"))
+      (should (equal emacsvox-aural-diagnostic-log-file
+                     emacsvox-aural--diagnostic-log-toggle-file))
+      (should (file-exists-p emacsvox-aural-diagnostic-log-file))
+      (execute-kbd-macro (kbd "l"))
+      (should-not emacsvox-aural-diagnostic-log-file)
+      (should-not (file-exists-p custom-file)))))
+
 (ert-deftest emacsvox-settings-context-shortcut-and-return ()
   "The real prefix binding captures the current buffer and q closes its menu."
   (require 'emacsvox-keymap)

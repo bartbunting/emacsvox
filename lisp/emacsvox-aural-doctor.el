@@ -489,7 +489,7 @@
   (append
    (list
     (emacsvox-aural-doctor--binding-finding
-     'home-binding "C-e H" 'emacsvox-aural "Aural home binding")
+     'home-binding "C-e H" 'emacsvox-aural-menu "Emacsvox settings binding")
     (emacsvox-aural-doctor--binding-finding
      'explain-binding "C-e E" 'emacsvox-aural-explain-presentation
      "Point explanation binding"))
@@ -539,9 +539,9 @@
      (t "All checks passed"))))
 
 (defun emacsvox-aural-doctor-restore-bindings ()
-  "Restore the documented aural home and point-explanation bindings."
+  "Restore the documented settings and point-explanation bindings."
   (interactive)
-  (define-key emacsvox-keymap (kbd "H") #'emacsvox-aural)
+  (define-key emacsvox-keymap (kbd "H") #'emacsvox-aural-menu)
   (define-key
    emacsvox-keymap (kbd "E") #'emacsvox-aural-explain-presentation)
   (global-set-key emacsvox-prefix emacsvox-keymap)

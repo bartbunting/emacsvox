@@ -6975,21 +6975,29 @@ semantics.
 2.230.1 Emacsvox-Settings-Workflows Commands
 --------------------------------------------
 
-2.230.1.1 emacsvox-settings-feedback
+2.230.1.1 emacsvox-settings-diagnostics
+.......................................
+
+ -- Command: emacsvox-settings-diagnostics
+
+     Inspect speech and presentation; only explicit actions change settings.
+     Doctor offers individual repairs.  Logging includes complete spoken text.
+
+2.230.1.2 emacsvox-settings-feedback
 ....................................
 
  -- Command: emacsvox-settings-feedback
 
      Explain and edit current or recent feedback, preserving source context.
 
-2.230.1.2 emacsvox-settings-presentation
+2.230.1.3 emacsvox-settings-presentation
 ........................................
 
  -- Command: emacsvox-settings-presentation
 
      Manage presentation features and explicitly scoped rule drafts.
 
-2.230.1.3 emacsvox-settings-setups
+2.230.1.4 emacsvox-settings-setups
 ..................................
 
  -- Command: emacsvox-settings-setups

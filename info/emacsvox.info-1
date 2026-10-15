@@ -5762,12 +5762,25 @@ appears active                  Profile is active or diverged.
 Voice changes disappear only    Compare Voice Lock and explicit
 in some buffers                 face-presentation state.
 
-   Open _Aural Doctor_ from Aural Home or press ‘D’ there.  The doctor
+   Press ‘C-e H D’ for _Diagnostics and recovery_, then ‘d’ for _Aural
+Doctor_.  Doctor also remains available from Aural Home.  The doctor
 checks live bindings, loaded source or byte-code, the compatibility
 baseline, options, profiles, personal data, sound resources, spatial
 fallback, and the speech backend.  It does not start the speech server
 or change settings automatically.  When one row offers a reviewed safe
 repair, press ‘r’ on that row to run it.
+
+   From the diagnostics menu, ‘s’ explains spatial capabilities and
+policy; ‘m’ and ‘n’ show retained local main and notification
+speech-server output.  They report when no local diagnostic buffer
+exists.  ‘q’ returns from these views to the selected menu item.
+Opening a view does not repair or restart speech.
+
+   ‘l’ toggles diagnostic logging for this session.  Logs include
+complete spoken text; the menu reports whether logging is on.  ‘A’ opens
+log-file, size, retention, and diagnostic-buffer visibility options in
+Customize.  Apply and Save remain explicit; buffer naming changes take
+effect after a speech restart.
 
    Separate main and notification rows show each current connection's
 capabilities and last reported engine inventory.  Configuration

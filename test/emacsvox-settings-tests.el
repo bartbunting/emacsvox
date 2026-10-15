@@ -59,7 +59,7 @@
     (cl-letf (((symbol-function 'completing-read)
                (lambda (_prompt table &rest _)
                  (dolist (case '(("cap" "Capitalization indication and camel case"
-                                  "Capital-letter beep" "All-caps beep")
+                                  "Capital-letter beep" "All-caps beep" "Spatial capabilities")
                                  ("CAPS BEEP" "Capital-letter beep" "All-caps beep")
                                  ("allcaps" "All-caps beep")
                                  ("allcaps beep" "All-caps beep")

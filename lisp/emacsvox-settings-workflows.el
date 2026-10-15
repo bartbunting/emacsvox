@@ -45,9 +45,18 @@
        (setq opened (window-buffer (selected-window)))) suffix)
     (with-current-buffer opened
       (when (derived-mode-p 'emacsvox-aural-feedback-details-mode)
-        (emacsvox-aural-feedback-outline-mode 1)
+        (emacsvox-aural-feedback-outline-mode 1))
+      (when (derived-mode-p 'emacsvox-aural-feedback-details-mode 'help-mode)
         (setq-local emacsvox-aural-ui--help-return-function
-                    emacsvox-aural-ui--return-function)))))
+                    (if (derived-mode-p 'help-mode)
+                        (let ((return emacsvox-aural-ui--return-function)
+                              (buffer opened))
+                          (lambda ()
+                            (with-current-buffer buffer
+                              (setq emacsvox-aural-ui--return-function nil)
+                              (emacsvox-aural-ui-help-return-mode -1))
+                            (funcall return)))
+                      emacsvox-aural-ui--return-function))))))
 (defun emacsvox-settings-workflows--change ()
   "Open a retained feedback draft for the captured source item."
   (interactive)
@@ -183,6 +192,118 @@
    ("C-q" "Close menus" transient-quit-all)]
   (interactive)
   (transient-setup 'emacsvox-settings-setups nil nil :scope (emacsvox-aural-menu--context)))
+
+
+(defun emacsvox-settings-workflows--doctor ()
+  "Inspect installation findings without changing settings or starting speech.
+Doctor's r runs the selected repair explicitly; q returns to this menu."
+  (interactive)
+  (emacsvox-settings-workflows--open 'emacsvox-aural-doctor
+   #'emacsvox-aural-doctor 'emacsvox-settings-workflows--doctor))
+
+(defun emacsvox-settings-workflows--spatial ()
+  "Explain available spatial backends and current output policy.
+This report changes no routing or saved settings; q returns to this menu."
+  (interactive)
+  (emacsvox-settings-workflows--open 'emacsvox-aural-explanation
+   (lambda ()
+     (interactive)
+     (pop-to-buffer (emacsvox-aural-describe-spatial-capabilities)))
+   'emacsvox-settings-workflows--spatial))
+
+(defun emacsvox-settings-workflows--diagnostic-buffer (name suffix)
+  "Show existing speech diagnostics for NAME, returning to SUFFIX."
+  (let (buffer map)
+    (emacsvox-aural-menu--open-browser
+     (lambda ()
+       (tts-show-diagnostics name)
+       (setq buffer (window-buffer (selected-window)))
+       (with-current-buffer buffer
+         (setq map (current-local-map))
+         (use-local-map (copy-keymap (or map (make-sparse-keymap)))))
+       buffer)
+     suffix)
+    (with-current-buffer buffer
+      (let ((return emacsvox-aural-ui--return-function))
+        (local-set-key
+         (kbd "q")
+         (lambda ()
+           (interactive)
+           (setq emacsvox-aural-ui--return-function nil)
+           (use-local-map map)
+           (quit-window)
+           (funcall return)))))))
+
+(defun emacsvox-settings-workflows--main-diagnostics ()
+  "Read retained local main speech-server output, without starting a server.
+If no diagnostics exist, report that fact.  q returns to this menu."
+  (interactive)
+  (emacsvox-settings-workflows--diagnostic-buffer
+   "Speaker" 'emacsvox-settings-workflows--main-diagnostics))
+
+(defun emacsvox-settings-workflows--notification-diagnostics ()
+  "Read retained local notification-server output, without starting a server.
+Remote speech may have no local diagnostics.  q returns to this menu."
+  (interactive)
+  (emacsvox-settings-workflows--diagnostic-buffer
+   "Notify" 'emacsvox-settings-workflows--notification-diagnostics))
+
+(defun emacsvox-settings-workflows--logging-label ()
+  "Describe the current session's diagnostic logging."
+  (format "Log complete spoken text: %s"
+          (if emacsvox-aural-diagnostic-log-file "on" "off")))
+
+(defun emacsvox-settings-workflows--logging ()
+  "Toggle diagnostic logging for this session, including complete spoken text.
+Reuse the last log path or ~/.emacsvox-aural-diagnostics.log.  This does not
+save a startup default.  Advanced options control the file and retention."
+  (interactive)
+  (let ((emacsvox-speak-messages nil))
+    (emacsvox-aural-toggle-diagnostic-logging))
+  (emacsvox-transient--submit-text
+   (emacsvox-settings-workflows--logging-label)
+   (emacsvox-transient--menu-facts 'diagnostics 'command-menu-value-changed)
+   'state-change 'select-object))
+
+(defun emacsvox-settings-workflows--diagnostic-options ()
+  "Customize diagnostic log location, size, retention, and buffer visibility.
+Use Customize's Apply and Save explicitly.  Buffer naming changes take effect
+on speech restart; this view does not restart speech.  q returns to this menu."
+  (interactive)
+  (require 'emacsvox-settings)
+  (emacsvox-aural-menu--open-browser
+   (lambda ()
+     (custom-buffer-create
+      '((emacsvox-aural-diagnostic-log-file custom-variable)
+        (emacsvox-aural-diagnostic-log-max-bytes custom-variable)
+        (emacsvox-aural-diagnostic-log-retained-files custom-variable)
+        (tts-hide-diagnostic-buffers custom-variable))
+      "*Customize Speech Diagnostics*")
+     (let ((buffer (window-buffer (selected-window))))
+       (with-current-buffer buffer
+         (use-local-map (copy-keymap (current-local-map)))
+         (local-set-key (kbd "q") #'emacsvox-settings--custom-quit))
+       buffer))
+   'emacsvox-settings-workflows--diagnostic-options))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-diagnostics ()
+  "Inspect speech and presentation; only explicit actions change settings.
+Doctor offers individual repairs.  Logging includes complete spoken text."
+  :refresh-suffixes t
+  ["Inspect without changing settings"
+   ("d" "Aural Doctor: findings and explicit repairs" emacsvox-settings-workflows--doctor :transient transient--do-suspend)
+   ("s" "Spatial capabilities and policy" emacsvox-settings-workflows--spatial :transient transient--do-suspend)
+   ("m" "Main speech diagnostics" emacsvox-settings-workflows--main-diagnostics :transient transient--do-suspend)
+   ("n" "Notification speech diagnostics" emacsvox-settings-workflows--notification-diagnostics :transient transient--do-suspend)]
+  ["Logging"
+   ("l" (lambda () (emacsvox-settings-workflows--logging-label)) emacsvox-settings-workflows--logging :transient t)
+   ("A" "Advanced diagnostic options" emacsvox-settings-workflows--diagnostic-options :transient transient--do-suspend)]
+  ["Finish"
+   ("q" "Back" transient-quit-one)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (transient-setup 'emacsvox-settings-diagnostics nil nil :scope (emacsvox-aural-menu--context)))
 
 (provide 'emacsvox-settings-workflows)
 ;;; emacsvox-settings-workflows.el ends here

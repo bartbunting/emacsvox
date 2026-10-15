@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1657 commands and 233 options.
+This chapter documents a total of 1658 commands and 233 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -2319,7 +2319,7 @@ Run the deterministic repair offered by the finding at point.
 @findex emacsvox-aural-doctor-restore-bindings
 
 @format
-Restore the documented aural home and point-explanation bindings.
+Restore the documented settings and point-explanation bindings.
 @end format
 @end deffn
 
@@ -18531,6 +18531,16 @@ Find integration settings and existing local speech controls.
 Link focused menus to existing editors, retaining their persistence semantics.
 
 @subsection Emacsvox-Settings-Workflows Commands
+
+@subsubsection emacsvox-settings-diagnostics
+@deffn {Command} emacsvox-settings-diagnostics
+@findex emacsvox-settings-diagnostics
+
+@format
+Inspect speech and presentation; only explicit actions change settings.
+Doctor offers individual repairs.  Logging includes complete spoken text.
+@end format
+@end deffn
 
 @subsubsection emacsvox-settings-feedback
 @deffn {Command} emacsvox-settings-feedback

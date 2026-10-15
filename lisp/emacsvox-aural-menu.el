@@ -42,6 +42,7 @@
 (autoload 'emacsvox-settings-integrations "emacsvox-settings-integrations" nil t)
 (autoload 'emacsvox-settings-setups "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-presentation "emacsvox-settings-workflows" nil t)
+(autoload 'emacsvox-settings-diagnostics "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-feedback "emacsvox-settings-workflows" nil t)
 (autoload 'emacsvox-settings-search "emacsvox-settings" nil t)
 (autoload 'emacsvox-settings-search-actions "emacsvox-settings" nil t)
@@ -67,7 +68,7 @@
                          emacsvox-aural-menu-voices emacsvox-capitalization
                          emacsvox-interaction emacsvox-aural-menu-line-cues
                          emacsvox-output-settings emacsvox-settings-buffer
-                         emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations
+                         emacsvox-settings-diagnostics emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations
                          emacsvox-settings-integrations--comint
                          emacsvox-settings-integrations--eat
                          emacsvox-settings-integrations--eat-choice
@@ -826,6 +827,7 @@ The source item is captured on entry; Aural Home offers all other actions."
    ("r" "Presentation and rules" emacsvox-settings-presentation :transient transient--do-stack)
    ("f" "Edit current or recent feedback" emacsvox-settings-feedback :transient transient--do-stack)
    ("x" "Feedback for this item" emacsvox-aural-menu--feedback)
+   ("D" "Diagnostics and recovery" emacsvox-settings-diagnostics :transient transient--do-stack)
    ("h" "Aural Home (all actions)" emacsvox-aural-menu--home)
    ("/" "Find an Emacsvox setting" emacsvox-settings-search :transient transient--do-stack)
    ("a" "Search all Home actions" emacsvox-settings-search-actions :transient transient--do-suspend)

@@ -746,10 +746,10 @@ menu gap means the action has no direct control in the new focused menus.
 | buffer-rules | =r b= | Captured-buffer rule editor |
 | semantics | Action search: Semantic vocabulary; Home Help link | Retain as a reference view |
 | sounds | =o p= | Sound-pack browser and editor |
-| spatial | Action search: Spatial capabilities | Capability explanation lacks a focused-menu link |
+| spatial | =D s=; action search | Capability report returns directly to Diagnostics |
 | spatial-settings | =o n=; Home offers Customize | Focused spatial controls plus advanced settings |
 | training | =h t= | Session toggle; its searchable row explains the setting |
-| diagnostics | =h D=; action search: Aural Doctor | Diagnostics lack a focused-menu link |
+| diagnostics | =D d=; action search: Aural Doctor | Direct Doctor return; binding check and repair target Transient |
 
 Home's =engine-modules= shortcut dispatches to Browse voices; =I= remains an
 alias for that browser. The legacy =notifications= activation branch opens
@@ -967,6 +967,40 @@ Then add focused regression coverage and listening tasks for candidate speech,
 partial-word matching, cancellation, scope and return. This inventory records
 source behavior; it is not listening acceptance of all these paths.
 
+** Home retirement delivery, 2026-10-15
+
+Prioritise replacing Home-dependent routes before expanding the wider settings
+inventory. Dedicated voice, palette, rule, sound, and pronunciation editors
+remain supported buffers; retiring the Home menu does not require rewriting them.
+
+1. Diagnostics: a focused menu, corrected Doctor binding repair, reports,
+   logging, and direct return. Implemented at =C-e H D=; listening pending.
+2. Presentation gaps: tune the named voice at point, combined rule overview,
+   training explanations, and semantic reference, with useful Help and direct return.
+3. Remove Home as an intermediate step for action search, retained drafts,
+   source return, and linked editor navigation. Preserve drafts and cancellation.
+4. Verify complete tasks without Home, including the minimum supported Emacs.
+   Keep the old entry available for comparison until listening acceptance;
+   then retire its menu entry and update durable design/documentation decisions.
+
+These slices take priority over the broader queue below. Automated checks and
+listening acceptance remain separate; no new acceptance is implied by this plan.
+
+Diagnostics checkpoint:
+- Doctor's check and explicit repair now target =emacsvox-aural-menu= at =C-e H=.
+- =D d= opens Doctor, =D s= spatial capabilities, and =D m= / =D n= retained
+  local main/notification diagnostics. Reports return to the exact menu item.
+- =D l= toggles session logging, explicitly labelled as complete spoken text;
+  =D A= opens file, size, retention, and buffer-visibility options in Customize.
+  Opening and navigating do not log, save, repair, or restart speech.
+- A reused Help buffer initially retained its Aural return binding and broke
+  later Transient choice Help. The scoped report return now removes that binding.
+- All 13 Doctor tests and 48 graphical settings tests pass from source.
+  The same 48 checks pass against compiled code in fresh graphical Emacs with
+  installed and bundled Transient. Incremental compilation, byte-code preflight,
+  generated references/manuals, and the documentation gate pass. Listening
+  acceptance remains pending.
+
 ** Next proposed slices
 
 1. Diagnostics and recovery discovery. Link Aural Doctor, spatial capabilities,
@@ -1002,8 +1036,8 @@ source behavior; it is not listening acceptance of all these paths.
    against Home, verify Emacs 30.2 in a separate checkout, and record settled
    documentation/design decisions. Home retirement remains a separate decision.
 
-The next implementation candidate is diagnostics discovery. Listening can run
-alongside these scoped discovery changes and determines later editor priorities.
+The next implementation candidate is the Home retirement track above. Listening
+can run alongside those slices and determines later editor priorities.
 The repository-wide audit adds work to this queue; six headings no longer imply
 six small patches or a fixed completion estimate. No additional implementation
 or new listening result is recorded by this audit.

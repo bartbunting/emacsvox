@@ -31,7 +31,12 @@
 (declare-function emacsvox-aural-home-search "emacsvox-aural-home" ())
 
 (defconst emacsvox-settings--destinations
-  '(("Edit current and recent feedback" emacsvox-settings-workflows emacsvox-settings-feedback "c")
+  '(("Aural Doctor and recovery" emacsvox-settings-workflows emacsvox-settings-diagnostics "d")
+    ("Spatial capabilities" emacsvox-settings-workflows emacsvox-settings-diagnostics "s")
+    ("Main speech diagnostics" emacsvox-settings-workflows emacsvox-settings-diagnostics "m")
+    ("Notification speech diagnostics" emacsvox-settings-workflows emacsvox-settings-diagnostics "n")
+    ("Diagnostic logging" emacsvox-settings-workflows emacsvox-settings-diagnostics "l")
+    ("Edit current and recent feedback" emacsvox-settings-workflows emacsvox-settings-feedback "c")
     ("Presentation features and scoped rules" emacsvox-settings-workflows emacsvox-settings-presentation "f")
     ("Saved setups, profiles and drafts" emacsvox-settings-workflows emacsvox-settings-setups "p")
     ("Integration speech settings" emacsvox-settings-integrations emacsvox-settings-integrations "a")

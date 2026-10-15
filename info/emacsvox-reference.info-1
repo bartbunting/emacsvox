@@ -420,7 +420,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1657 commands and 233 options.
+   This chapter documents a total of 1658 commands and 233 options.
 
 * Menu:
 
@@ -2321,7 +2321,7 @@ deterministic repairs are explicit commands from the spoken report.
 
  -- Command: emacsvox-aural-doctor-restore-bindings
 
-     Restore the documented aural home and point-explanation bindings.
+     Restore the documented settings and point-explanation bindings.
 
 2.22.1.14 emacsvox-aural-doctor-speak-current
 .............................................
