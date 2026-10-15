@@ -361,9 +361,13 @@ user-supplied runtimes.
 :DESCRIPTION: Install, check, remove, and reinstall optional engines from Emacs.
 :END:
 
-Omnivox keeps first speech in a small core. Optional engines may require a
-version-matched companion, a separately supplied runtime, or downloaded voice
-data.
+The ordinary WSL2 archive is the Omnivox core, not a claim that every supported
+engine is installed.  It keeps first speech small while matching companion
+archives provide engines that are larger, experimental, architecture-specific,
+or incomplete without separately chosen data.
+
+Some companions also need a separately supplied runtime or downloaded voice
+data; installing the Omnivox core alone does not make those voices available.
 
 **** Inspect running engines
 :PROPERTIES:
