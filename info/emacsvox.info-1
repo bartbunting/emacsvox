@@ -2262,10 +2262,12 @@ Cancelling completion leaves the originating menu open.
 _This buffer and item_, _Rules and saved work_, _Find and get help_, and
 _Finish_.  Use left/right to reach a group, then up/down to select an
 item.  The same arrows navigate sections and items in the submenus.
-‘<RET>’, ‘M-<RET>’, or ‘C-j’ activates the selected item; its displayed
-shortcut also works directly.  Press ‘?’ followed by an item's key to
-hear its effect and scope, or ‘? ?’ for the menu overview.  ‘q’ in that
-Help returns to the menu with the selection retained.
+Press ‘C-e H n’ to choose navigation and announcement preferences; the
+same controls remain available through ‘C-e H s n’.  ‘<RET>’, ‘M-<RET>’,
+or ‘C-j’ activates the selected item; its displayed shortcut also works
+directly.  Press ‘?’ followed by an item's key to hear its effect and
+scope, or ‘? ?’ for the menu overview.  ‘q’ in that Help returns to the
+menu with the selection retained.
 
    Within the menu itself, ‘q’ or ‘C-g’ goes back one level, while ‘C-q’
 closes the sequence.  Returning from an Emacsvox submenu selects the
@@ -2276,10 +2278,13 @@ editor keeps its own preview, saving, and discard rules.  See *note
 Choose What Persists: (emacsvox)Saving And Startup. before treating a
 saved default, a live adjustment, or a retained draft as the same thing.
 
-   Use ‘C-e H a’ to find an action such as browsing voices or inspecting
-diagnostics.  It uses the same partial-name matching and two-Enter
-selection as settings search.  Editors opened from these menus retain
-their own Help, preview, save, and return commands.
+   Use ‘C-e H a’ to find an action such as browsing voices, inspecting
+diagnostics, or reading the manual.  It uses the same partial-name
+matching and two-Enter selection as settings search.  Alternative names
+lead to one displayed result for each action: for example, ‘Feedback for
+this item’ finds _Explain this item_, and ‘Recent aural feedback’ finds
+_Recent feedback_.  Editors opened from these menus retain their own
+Help, preview, save, and return commands.
 
 6.3 Read And Leave A Help Window
 ================================

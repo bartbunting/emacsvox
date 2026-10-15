@@ -2137,6 +2137,8 @@ The main menu groups its entries in this order: @emph{Everyday settings}@comma{}
 @emph{This buffer and item}@comma{} @emph{Rules and saved work}@comma{} @emph{Find and get help}@comma{} and
 @emph{Finish}. Use left/right to reach a group@comma{} then up/down to select an item.
 The same arrows navigate sections and items in the submenus.
+Press @kbd{C-e H n} to choose navigation and announcement preferences; the
+same controls remain available through @kbd{C-e H s n}.
 @kbd{@key{RET}}@comma{} @kbd{M-@key{RET}}@comma{} or @kbd{C-j} activates the selected item; its displayed shortcut
 also works directly. Press @kbd{?} followed by an item's key to hear its effect
 and scope@comma{} or @kbd{? ?} for the menu overview. @kbd{q} in that Help returns to the
@@ -2151,9 +2153,12 @@ A linked editor keeps its own preview@comma{} saving@comma{} and discard rules. 
 @ref{Saving And Startup,Choose What Persists,,emacsvox,} before treating a saved default@comma{} a live adjustment@comma{}
 or a retained draft as the same thing.
 
-Use @kbd{C-e H a} to find an action such as browsing voices or inspecting
-diagnostics. It uses the same partial-name matching and two-Enter selection
-as settings search. Editors opened from these menus retain their own Help@comma{}
+Use @kbd{C-e H a} to find an action such as browsing voices@comma{} inspecting
+diagnostics@comma{} or reading the manual. It uses the same partial-name matching and
+two-Enter selection as settings search. Alternative names lead to one displayed
+result for each action: for example@comma{} @code{Feedback for this item} finds
+@emph{Explain this item}@comma{} and @code{Recent aural feedback} finds @emph{Recent feedback}.
+Editors opened from these menus retain their own Help@comma{}
 preview@comma{} save@comma{} and return commands.
 
 @section Read And Leave A Help Window

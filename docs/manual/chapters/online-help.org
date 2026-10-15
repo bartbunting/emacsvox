@@ -69,6 +69,8 @@ The main menu groups its entries in this order: /Everyday settings/,
 /This buffer and item/, /Rules and saved work/, /Find and get help/, and
 /Finish/. Use left/right to reach a group, then up/down to select an item.
 The same arrows navigate sections and items in the submenus.
+Press ~C-e H n~ to choose navigation and announcement preferences; the
+same controls remain available through ~C-e H s n~.
 ~RET~, ~M-RET~, or ~C-j~ activates the selected item; its displayed shortcut
 also works directly. Press ~?~ followed by an item's key to hear its effect
 and scope, or ~? ?~ for the menu overview. ~q~ in that Help returns to the
@@ -83,9 +85,12 @@ A linked editor keeps its own preview, saving, and discard rules. See
 [[info:emacsvox#Saving And Startup][Choose What Persists]] before treating a saved default, a live adjustment,
 or a retained draft as the same thing.
 
-Use ~C-e H a~ to find an action such as browsing voices or inspecting
-diagnostics. It uses the same partial-name matching and two-Enter selection
-as settings search. Editors opened from these menus retain their own Help,
+Use ~C-e H a~ to find an action such as browsing voices, inspecting
+diagnostics, or reading the manual. It uses the same partial-name matching and
+two-Enter selection as settings search. Alternative names lead to one displayed
+result for each action: for example, =Feedback for this item= finds
+/Explain this item/, and =Recent aural feedback= finds /Recent feedback/.
+Editors opened from these menus retain their own Help,
 preview, save, and return commands.
 
 ** Read And Leave A Help Window
