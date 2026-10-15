@@ -1260,6 +1260,22 @@ remains open for this pass. In a fresh normal Emacsvox profile:
 
 Changing the established Save and Stop keys remains a separate decision.
 
+** Presentation and dictionary slices, 2026-10-15
+
+Implementation proceeds in four commits: history policy, presentation switches,
+voice presentation options, then Emacs pronunciation dictionaries. Listening is
+deferred until all four are ready in a fresh normal Emacsvox profile.
+
+- History policy is available at =C-e H f H= and through settings/action search.
+  Enter sets an exact nonnegative limit; Shift-arrows adjust by one. Lowering
+  removes old records immediately, and zero clears and disables history.
+  Interface recording uses the existing lifecycle. Explicit Save writes only
+  the two defaults through Customize; retained feedback stays in memory.
+  All 61 focused settings checks passed in fresh graphical Emacs with compiled
+  code; the two new history checks also passed from source. Compilation,
+  byte-code preflight, generated reference and documentation gate passed.
+  User-guide updates are batched with the fourth slice; listening remains open.
+
 ** Next proposed slices
 
 Diagnostics, named-voice tuning, the combined rule overview, training controls,

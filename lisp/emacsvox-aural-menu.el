@@ -67,6 +67,7 @@
                          emacsvox-aural-menu-voices emacsvox-capitalization
                          emacsvox-interaction emacsvox-aural-menu-line-cues
                          emacsvox-output-settings emacsvox-settings-buffer
+                         emacsvox-settings-history
                          emacsvox-settings-diagnostics emacsvox-settings-feedback emacsvox-settings-presentation emacsvox-settings-setups emacsvox-settings-integrations
                          emacsvox-settings-integrations--comint
                          emacsvox-settings-integrations--eat

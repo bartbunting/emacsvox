@@ -27,6 +27,9 @@
 ;; Link focused menus to existing editors, retaining their persistence semantics.
 ;;; Code:
 (require 'emacsvox-aural-menu)
+(require 'emacsvox-aural-history)
+(declare-function emacsvox-aural-set-history-limit "emacsvox-aural-recent-feedback" (limit))
+(declare-function emacsvox-aural-toggle-interface-history-recording "emacsvox-aural-recent-feedback" ())
 (declare-function emacsvox-aural-feedback-outline-mode "emacsvox-aural-feedback-details" (&optional arg))
 (declare-function emacsvox-aural-change-feedback--remap-at-point "emacsvox-aural-change-feedback" ())
 (declare-function emacsvox-aural-remap-earcon-at-point "emacsvox-aural-tools" (&optional record))
@@ -90,6 +93,104 @@ remain explicit in the editor; q retains unfinished work and returns here."
   (emacsvox-settings-workflows--open 'emacsvox-aural-change-feedback
    #'emacsvox-aural-change-feedback--tune-at-point 'emacsvox-settings-workflows--tune t))
 
+(defun emacsvox-settings-workflows--say (text &optional icon)
+  "Announce TEXT interruptibly with optional ICON."
+  (emacsvox-transient--submit-text
+   text (emacsvox-transient--menu-facts 'settings 'command-menu-value-changed)
+   'state-change (or icon 'select-object)))
+
+(defun emacsvox-settings-workflows--history-say (text)
+  "Announce history setting TEXT without retaining the announcement."
+  (let ((emacsvox-aural--history-recording-inhibited t))
+    (emacsvox-settings-workflows--say text)))
+
+(defun emacsvox-settings-workflows--history-limit (&optional delta)
+  "Set the global history limit, or adjust it by DELTA.
+Lowering the limit immediately removes the oldest excess records.  Zero clears
+and disables history; increasing it cannot restore removed records.  Enter
+accepts an exact nonnegative integer; Shift-arrows adjust by one.  Save is
+separate and saves the limit, never the retained spoken text."
+  (interactive)
+  (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+  (require 'emacsvox-aural-recent-feedback)
+  (let ((value (if delta
+                   (max 0 (+ emacsvox-aural-presentation-history-limit delta))
+                 (emacsvox-aural-menu--read-number
+                  "History limit (lowering removes old entries; 0 clears): "
+                  emacsvox-aural-presentation-history-limit))))
+    (cl-letf (((symbol-function 'emacsvox-aural-tools--speak-history-setting)
+               #'emacsvox-settings-workflows--history-say))
+      (emacsvox-aural-set-history-limit value))))
+
+(defun emacsvox-settings-workflows--history-interface ()
+  "Toggle recording of Aural interface presentations globally.
+Enable temporarily to diagnose interface feedback.  Navigation, previews and
+status can then displace source feedback.  Save defaults separately."
+  (interactive)
+  (require 'emacsvox-aural-recent-feedback)
+  (cl-letf (((symbol-function 'emacsvox-aural-tools--speak-history-setting)
+             #'emacsvox-settings-workflows--history-say))
+    (emacsvox-aural-toggle-interface-history-recording)))
+
+(defun emacsvox-settings-workflows--history-save ()
+  "Save the history limit and interface-recording policy through Customize.
+This does not save retained feedback or restore discarded records."
+  (interactive)
+  (dolist (option '(emacsvox-aural-presentation-history-limit
+                    emacsvox-aural-history-record-interface-presentations))
+    (customize-save-variable option (symbol-value option)))
+  (emacsvox-settings-workflows--history-say "History defaults saved"))
+
+(defun emacsvox-settings-workflows--adjust (delta)
+  "Adjust the selected numeric workflow control by DELTA steps."
+  (let* ((object (with-selected-window (emacsvox-transient--navigation-window)
+                   (when-let* ((button (button-at (point))))
+                     (button-get button 'button-data))))
+         (command (and object (oref object command))))
+    (if (memq command '(emacsvox-settings-workflows--history-limit))
+        (funcall command delta)
+      (emacsvox-settings-workflows--say
+       "Not adjustable. Enter activates; left and right change sections."
+       'warn-user))))
+(defun emacsvox-settings-workflows--decrease ()
+  "Lower the selected numeric setting by one step."
+  (interactive) (emacsvox-settings-workflows--adjust -1))
+(defun emacsvox-settings-workflows--increase ()
+  "Raise the selected numeric setting by one step."
+  (interactive) (emacsvox-settings-workflows--adjust 1))
+(defun emacsvox-settings-workflows--bindings (map)
+  "Add numeric workflow adjustments to transient MAP."
+  (when (and transient-enable-menu-navigation transient--prefix
+             (memq (oref transient--prefix command) '(emacsvox-settings-history)))
+    (keymap-set map "S-<left>" #'emacsvox-settings-workflows--decrease)
+    (keymap-set map "S-<right>" #'emacsvox-settings-workflows--increase))
+  map)
+(advice-add 'transient--make-transient-map :filter-return
+            #'emacsvox-settings-workflows--bindings)
+(dolist (command '(emacsvox-settings-workflows--decrease
+                   emacsvox-settings-workflows--increase))
+  (define-key transient-predicate-map (vector command) #'transient--do-stay))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-history ()
+  "Manage retained feedback globally; lowering the limit deletes old records.
+Changes apply immediately.  Save defaults separately through Customize."
+  :refresh-suffixes t
+  ["History policy (global)"
+   ("l" (lambda () (format "Retained records: %d (0 clears)"
+                           emacsvox-aural-presentation-history-limit))
+    emacsvox-settings-workflows--history-limit :transient t)
+   ("i" (lambda () (format "Record Aural interfaces: %s"
+                           (if emacsvox-aural-history-record-interface-presentations "on" "off")))
+    emacsvox-settings-workflows--history-interface :transient t)]
+  ["Save and finish"
+   ("w" "Save history defaults" emacsvox-settings-workflows--history-save :transient t)
+   ("q" "Back" transient-quit-one)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (require 'emacsvox-aural-history)
+  (transient-setup 'emacsvox-settings-history nil nil :scope (emacsvox-aural-menu--context)))
+
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-feedback ()
   "Explain and edit current or recent feedback, preserving source context."
@@ -100,7 +201,8 @@ remain explicit in the editor; q retains unfinished work and returns here."
    ("v" "Choose a voice for this item" emacsvox-settings-workflows--voice :transient transient--do-suspend)
    ("e" "Remap a cue with explicit scope" emacsvox-settings-workflows--cue :transient transient--do-suspend)]
   ["Recent feedback"
-   ("h" "Review, replay, and edit retained feedback" emacsvox-settings-workflows--recent :transient transient--do-suspend)]
+   ("h" "Review, replay, and edit retained feedback" emacsvox-settings-workflows--recent :transient transient--do-suspend)
+   ("H" "History limits and recording" emacsvox-settings-history :transient transient--do-stack)]
   ["Finish"
    ("q" "Back" transient-quit-one)
    ("C-q" "Close menus" transient-quit-all)]

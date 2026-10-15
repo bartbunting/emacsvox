@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1658 commands and 233 options.
+This chapter documents a total of 1659 commands and 233 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -18550,6 +18550,16 @@ Doctor offers individual repairs.  Logging includes complete spoken text.
 
 @format
 Explain and edit current or recent feedback, preserving source context.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-history
+@deffn {Command} emacsvox-settings-history
+@findex emacsvox-settings-history
+
+@format
+Manage retained feedback globally; lowering the limit deletes old records.
+Changes apply immediately.  Save defaults separately through Customize.
 @end format
 @end deffn
 

@@ -1364,5 +1364,61 @@
       (should-not requests)
       (should-not callbacks))))
 
+(ert-deftest emacsvox-settings-history-controls ()
+  "Navigation is inert; adjustments trim oldest records and Save is explicit."
+  (emacsvox-test--with-settings
+    (let ((emacsvox-aural-presentation-history-limit 3)
+          (emacsvox-aural-history-record-interface-presentations nil)
+          (emacsvox-aural-presentation-history (list 'new 'middle 'old))
+          speech)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest args) (push (cons text args) speech))))
+        (execute-kbd-macro (kbd "f H <down> <down> <up>"))
+        (should (= emacsvox-aural-presentation-history-limit 3))
+        (should (equal emacsvox-aural-presentation-history '(new middle old)))
+        (execute-kbd-macro (kbd "S-<left>"))
+        (should (= emacsvox-aural-presentation-history-limit 2))
+        (should (equal emacsvox-aural-presentation-history '(new middle)))
+        (should (eq (plist-get (cdar speech) :delivery-policy) 'replaceable))
+        (should (eq (plist-get (cdar speech) :interruption-policy) 'lane))
+        (execute-kbd-macro (kbd "S-<right> RET 3 RET i"))
+        (should (= emacsvox-aural-presentation-history-limit 3))
+        (should (= (length emacsvox-aural-presentation-history) 2))
+        (should emacsvox-aural-history-record-interface-presentations)
+        (should-not (file-exists-p custom-file))
+        (execute-kbd-macro (kbd "w"))
+        (with-temp-buffer
+          (insert-file-contents custom-file)
+          (should (search-forward "emacsvox-aural-presentation-history-limit 3" nil t))
+          (goto-char (point-min))
+          (should (search-forward "emacsvox-aural-history-record-interface-presentations t" nil t)))
+        (execute-kbd-macro (kbd "q"))
+        (should (eq (oref transient--prefix command) 'emacsvox-settings-feedback))
+        (with-selected-window transient--window
+          (should (equal (oref (button-get (button-at (point)) 'button-data) key) "H")))))))
+
+(ert-deftest emacsvox-settings-history-validation-and-zero ()
+  "Invalid limits preserve records; zero clears and disables through lifecycle."
+  (emacsvox-test--with-settings
+    (let ((emacsvox-aural-presentation-history-limit 2)
+          (emacsvox-aural-presentation-history (list 'new 'old)))
+      (cl-letf (((symbol-function 'emacsvox-aural-submit) #'ignore))
+        (execute-kbd-macro (kbd "f H <down>"))
+        (dolist (value '(-1 1.5))
+          (cl-letf (((symbol-function 'emacsvox-aural-menu--read-number)
+                     (lambda (&rest _) value)))
+            (should-error (emacsvox-settings-workflows--history-limit) :type 'user-error))
+          (should (= emacsvox-aural-presentation-history-limit 2))
+          (should (equal emacsvox-aural-presentation-history '(new old))))
+        (cl-letf (((symbol-function 'emacsvox-aural-menu--read-number)
+                   (lambda (&rest _) (signal 'quit nil))))
+          (should (eq (condition-case nil
+                          (emacsvox-settings-workflows--history-limit)
+                        (quit 'cancelled)) 'cancelled)))
+        (execute-kbd-macro (kbd "S-<left> S-<left> S-<left>"))
+        (should (zerop emacsvox-aural-presentation-history-limit))
+        (should-not emacsvox-aural-presentation-history)
+        (should-not (file-exists-p custom-file))))))
+
 (provide 'emacsvox-settings-workflows-tests)
 ;;; emacsvox-settings-workflows-tests.el ends here

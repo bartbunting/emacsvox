@@ -30,7 +30,9 @@
 (require 'cus-edit)
 
 (defconst emacsvox-settings--destinations
-  '(("Aural Doctor and recovery" emacsvox-settings-workflows emacsvox-settings-diagnostics "d")
+  '(("Feedback history limit" emacsvox-settings-workflows emacsvox-settings-history "l")
+    ("Aural interface history recording" emacsvox-settings-workflows emacsvox-settings-history "i")
+    ("Aural Doctor and recovery" emacsvox-settings-workflows emacsvox-settings-diagnostics "d")
     ("Spatial capabilities" emacsvox-settings-workflows emacsvox-settings-diagnostics "s")
     ("Main speech diagnostics" emacsvox-settings-workflows emacsvox-settings-diagnostics "m")
     ("Notification speech diagnostics" emacsvox-settings-workflows emacsvox-settings-diagnostics "n")
@@ -113,6 +115,7 @@
     ("Edit the named voice used here" emacsvox-settings-workflows emacsvox-settings-feedback "t")
     ("Change a sound for this item" emacsvox-settings-workflows emacsvox-settings-feedback "e")
     ("Your feedback rules" emacsvox-settings-workflows emacsvox-settings-presentation "o")
+    ("Set feedback history policy" emacsvox-settings-workflows emacsvox-settings-history "l")
     ("Recent feedback" emacsvox-settings-workflows emacsvox-settings-feedback "h")
     ("Presentation profiles" emacsvox-settings-workflows emacsvox-settings-setups "p")
     ("Voice palettes" emacsvox-aural-menu emacsvox-aural-menu-voices "p")
