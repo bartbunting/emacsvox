@@ -30,7 +30,12 @@
 (require 'cus-edit)
 
 (defconst emacsvox-settings--destinations
-  '(("Feedback history limit" emacsvox-settings-workflows emacsvox-settings-history "l")
+  '(("Voice Lock in source buffer" emacsvox-settings-workflows emacsvox-settings-switches "v")
+    ("Global Voice Lock" emacsvox-settings-workflows emacsvox-settings-switches "V")
+    ("Silence mapped voice at captured item" emacsvox-settings-workflows emacsvox-settings-switches "s")
+    ("Earcons in source buffer" emacsvox-settings-workflows emacsvox-settings-switches "e")
+    ("Earcon global default" emacsvox-settings-workflows emacsvox-settings-switches "E")
+    ("Feedback history limit" emacsvox-settings-workflows emacsvox-settings-history "l")
     ("Aural interface history recording" emacsvox-settings-workflows emacsvox-settings-history "i")
     ("Aural Doctor and recovery" emacsvox-settings-workflows emacsvox-settings-diagnostics "d")
     ("Spatial capabilities" emacsvox-settings-workflows emacsvox-settings-diagnostics "s")
@@ -115,6 +120,8 @@
     ("Edit the named voice used here" emacsvox-settings-workflows emacsvox-settings-feedback "t")
     ("Change a sound for this item" emacsvox-settings-workflows emacsvox-settings-feedback "e")
     ("Your feedback rules" emacsvox-settings-workflows emacsvox-settings-presentation "o")
+    ("Silence or restore mapped voice here" emacsvox-settings-workflows emacsvox-settings-switches "s")
+    ("Enable or disable earcons" emacsvox-settings-workflows emacsvox-settings-switches "e")
     ("Set feedback history policy" emacsvox-settings-workflows emacsvox-settings-history "l")
     ("Recent feedback" emacsvox-settings-workflows emacsvox-settings-feedback "h")
     ("Presentation profiles" emacsvox-settings-workflows emacsvox-settings-setups "p")

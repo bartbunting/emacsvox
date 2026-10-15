@@ -7013,6 +7013,15 @@ semantics.
 
      Manage saved setups and retained drafts in their owning editors.
 
+2.230.1.6 emacsvox-settings-switches
+....................................
+
+ -- Command: emacsvox-settings-switches
+
+     Control Voice Lock, local silence, and earcons with explicit scopes.
+     Only global Voice Lock has a Customize save here.  Other switches last for the
+     session or buffer; Help explains which presentation each switch affects.
+
 
 File: emacsvox-reference.info,  Node: emacsvox-setup,  Next: emacsvox-sgml-mode,  Prev: emacsvox-settings-workflows,  Up: Emacsvox Commands And Options
 

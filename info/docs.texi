@@ -73,7 +73,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1659 commands and 233 options.
+This chapter documents a total of 1660 commands and 233 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -18578,6 +18578,17 @@ Manage presentation features and explicitly scoped rule drafts.
 
 @format
 Manage saved setups and retained drafts in their owning editors.
+@end format
+@end deffn
+
+@subsubsection emacsvox-settings-switches
+@deffn {Command} emacsvox-settings-switches
+@findex emacsvox-settings-switches
+
+@format
+Control Voice Lock, local silence, and earcons with explicit scopes.
+Only global Voice Lock has a Customize save here.  Other switches last for the
+session or buffer; Help explains which presentation each switch affects.
 @end format
 @end deffn
 

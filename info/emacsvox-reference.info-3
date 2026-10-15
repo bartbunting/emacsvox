@@ -8674,6 +8674,10 @@ Function Index
                                                              (line   45)
 * emacsvox-settings-setups <1>:          emacsvox-settings-workflows.
                                                              (line   46)
+* emacsvox-settings-switches:            emacsvox-settings-workflows.
+                                                             (line   52)
+* emacsvox-settings-switches <1>:        emacsvox-settings-workflows.
+                                                             (line   53)
 * emacsvox-shell-command:                emacsvox-speak.     (line  291)
 * emacsvox-shell-command <1>:            emacsvox-speak.     (line  292)
 * emacsvox-show-property-at-point:       emacsvox-wizards.   (line  148)

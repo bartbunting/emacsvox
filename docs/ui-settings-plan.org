@@ -1276,6 +1276,16 @@ deferred until all four are ready in a fresh normal Emacsvox profile.
   byte-code preflight, generated reference and documentation gate passed.
   User-guide updates are batched with the fourth slice; listening remains open.
 
+- Presentation switches are at =C-e H r l= and in search. Voice Lock exposes
+  source-local and global lifecycle commands, with a separate Save for the
+  global minor-mode default. Captured-item silence reuses the local mapping
+  command and combines its result and cue into interruptible feedback.
+  Earcons have source-local, inherited, and global-default controls; these are
+  session state and are not presented as Customize options. All three new
+  graphical checks passed from source and all 64 settings checks passed with
+  compiled code. Build, preflight, generated reference and documentation gate
+  passed. Listening and user-guide updates remain deferred.
+
 ** Next proposed slices
 
 Diagnostics, named-voice tuning, the combined rule overview, training controls,

@@ -280,6 +280,115 @@ uses the existing training lifecycle, and does not save a startup default."
    (emacsvox-transient--menu-facts 'training 'command-menu-value-changed)
    'state-change 'select-object))
 
+(defun emacsvox-settings-workflows--source-toggle-label (option label)
+  "Describe buffer-local OPTION with LABEL in the captured source."
+  (format "%s: %s" label
+          (if (buffer-local-value option
+               (emacsvox-aural-menu--source (emacsvox-aural-menu--context)))
+              "on" "off")))
+
+(defun emacsvox-settings-workflows--voice-lock ()
+  "Toggle legacy face/personality voice mapping in the captured buffer.
+Semantic presentation and explicit face rules remain independent.  This uses
+Voice Lock's change hooks and does not save a startup default."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (voice-lock-mode (if voice-lock-mode -1 1)))
+  (emacsvox-settings-workflows--say
+   (emacsvox-settings-workflows--source-toggle-label 'voice-lock-mode "Voice Lock in source")))
+
+(defun emacsvox-settings-workflows--global-voice-lock ()
+  "Toggle global Voice Lock through its minor-mode lifecycle.
+This updates existing buffers and the policy for new buffers.  Modes may opt
+out on startup.  It does not disable semantic presentation or explicit face
+rules.  Save this global default separately; local overrides are not saved."
+  (interactive)
+  (global-voice-lock-mode (if global-voice-lock-mode -1 1))
+  (emacsvox-settings-workflows--say
+   (format "Global Voice Lock: %s" (if global-voice-lock-mode "on" "off"))))
+
+(defun emacsvox-settings-workflows--save-voice-lock ()
+  "Save only global Voice Lock through Customize.
+Local Voice Lock, local silence and earcon switches are not saved here."
+  (interactive)
+  (customize-save-variable 'global-voice-lock-mode global-voice-lock-mode)
+  (emacsvox-settings-workflows--say "Global Voice Lock default saved" 'save-object))
+
+(defun emacsvox-settings-workflows--silence ()
+  "Silence or restore the captured item's mapped voice in its source buffer.
+This toggles the existing local personality/face suppression, which can affect
+other text with that mapping in the same buffer.  It neither retunes a shared
+voice nor silences every presentation.  A globally inaudible mapping cannot be
+restored here.  Changes last for this buffer and are not saved."
+  (interactive)
+  (require 'voice-setup)
+  (let (report cue)
+    ;; Keep the existing target selection and local-map lifecycle, but combine
+    ;; its message and cue into one interruptible menu announcement.
+    (cl-letf (((symbol-function 'message)
+               (lambda (format-string &rest args)
+                 (setq report (apply #'format format-string args))))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (setq cue icon))))
+      (emacsvox-aural-menu--call-at-item #'voice-setup-toggle-silence-personality))
+    (when report (emacsvox-settings-workflows--say report cue))))
+
+(defun emacsvox-settings-workflows--icons ()
+  "Toggle earcons only in the captured source buffer for this session.
+This creates a local override.  Speech remains available when earcons are off.
+Use Inherit to remove the override and follow the current global default."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (emacsvox-toggle-icons))
+  (emacsvox-settings-workflows--say
+   (emacsvox-settings-workflows--source-toggle-label 'emacsvox-use-icons "Earcons in source")))
+
+(defun emacsvox-settings-workflows--default-icons ()
+  "Toggle the earcon default for buffers without a local override.
+Existing local overrides, including the source's, remain unchanged.  This is
+session state, not a Customize option; there is no startup save here.  Turning
+it off also removes menu cues in buffers inheriting the default."
+  (interactive)
+  (set-default 'emacsvox-use-icons (not (default-value 'emacsvox-use-icons)))
+  (emacsvox-settings-workflows--say
+   (format "Earcon default: %s" (if (default-value 'emacsvox-use-icons) "on" "off"))))
+
+(defun emacsvox-settings-workflows--inherit-icons ()
+  "Remove the captured buffer's earcon override and follow the global default.
+This affects the source buffer immediately and does not save startup settings."
+  (interactive)
+  (with-current-buffer (emacsvox-aural-menu--source (emacsvox-aural-menu--context))
+    (kill-local-variable 'emacsvox-use-icons))
+  (emacsvox-settings-workflows--say
+   (concat (emacsvox-settings-workflows--source-toggle-label 'emacsvox-use-icons "Earcons in source")
+           ", following default")))
+
+;;;###autoload
+(transient-define-prefix emacsvox-settings-switches ()
+  "Control Voice Lock, local silence, and earcons with explicit scopes.
+Only global Voice Lock has a Customize save here.  Other switches last for the
+session or buffer; Help explains which presentation each switch affects."
+  :refresh-suffixes t
+  ["Captured buffer"
+   ("v" (lambda () (emacsvox-settings-workflows--source-toggle-label 'voice-lock-mode "Voice Lock"))
+    emacsvox-settings-workflows--voice-lock :transient t)
+   ("s" "Silence or restore mapped voice at captured item" emacsvox-settings-workflows--silence :transient t)
+   ("e" (lambda () (emacsvox-settings-workflows--source-toggle-label 'emacsvox-use-icons "Earcons"))
+    emacsvox-settings-workflows--icons :transient t)
+   ("i" "Inherit earcon default" emacsvox-settings-workflows--inherit-icons :transient t)]
+  ["Global policy"
+   ("V" (lambda () (format "Voice Lock: %s" (if global-voice-lock-mode "on" "off")))
+    emacsvox-settings-workflows--global-voice-lock :transient t)
+   ("E" (lambda () (format "Earcon default: %s" (if (default-value 'emacsvox-use-icons) "on" "off")))
+    emacsvox-settings-workflows--default-icons :transient t)]
+  ["Save and finish"
+   ("w" "Save global Voice Lock default" emacsvox-settings-workflows--save-voice-lock :transient t)
+   ("q" "Back" transient-quit-one)
+   ("C-q" "Close menus" transient-quit-all)]
+  (interactive)
+  (require 'emacsvox-aural-compatibility-voice)
+  (transient-setup 'emacsvox-settings-switches nil nil :scope (emacsvox-aural-menu--context)))
+
 ;;;###autoload
 (transient-define-prefix emacsvox-settings-presentation ()
   "Manage presentation features and explicitly scoped rule drafts."
@@ -293,6 +402,8 @@ uses the existing training lifecycle, and does not save a startup default."
    ("p" "Personal rules (persistent)" emacsvox-settings-workflows--personal :transient transient--do-suspend)
    ("s" "Session rules (temporary)" emacsvox-settings-workflows--session :transient transient--do-suspend)
    ("b" "Captured buffer rules (temporary)" emacsvox-settings-workflows--buffer :transient transient--do-suspend)]
+  ["Presentation switches"
+   ("l" "Voice Lock, local silence, and earcons" emacsvox-settings-switches :transient transient--do-stack)]
   ["Learn about feedback"
    ("h" "Semantic vocabulary reference" emacsvox-settings-workflows--semantics :transient transient--do-suspend)
    ("t" (lambda () (emacsvox-settings-workflows--training-label)) emacsvox-settings-workflows--training :transient t)]

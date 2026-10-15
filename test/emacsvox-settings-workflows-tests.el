@@ -1420,5 +1420,93 @@
         (should-not emacsvox-aural-presentation-history)
         (should-not (file-exists-p custom-file))))))
 
+(ert-deftest emacsvox-settings-switches-source-and-default-scopes ()
+  "Buffer switches and inherited earcon defaults have distinct effects."
+  (emacsvox-test--with-settings
+    (let ((old-default (default-value 'emacsvox-use-icons))
+          (other (generate-new-buffer " *settings other*")) events)
+      (unwind-protect
+          (progn
+            (set-default 'emacsvox-use-icons t)
+            (with-current-buffer source
+              (kill-local-variable 'emacsvox-use-icons)
+              (voice-lock-mode 1))
+            (with-current-buffer other (voice-lock-mode 1))
+            (let ((emacsvox-aural-compatibility-voice-changed-hook
+                   (list (lambda (buffer enabled) (push (cons buffer enabled) events)))))
+              (execute-kbd-macro (kbd "r l <down> <down> <up> RET")))
+            (should-not (buffer-local-value 'voice-lock-mode source))
+            (should (buffer-local-value 'voice-lock-mode other))
+            (should (equal events (list (cons source nil))))
+            (execute-kbd-macro (kbd "v e"))
+            (should (buffer-local-value 'voice-lock-mode source))
+            (should-not (buffer-local-value 'emacsvox-use-icons source))
+            (should (buffer-local-value 'emacsvox-use-icons other))
+            (execute-kbd-macro (kbd "E E"))
+            (should-not (buffer-local-value 'emacsvox-use-icons source))
+            (should (buffer-local-value 'emacsvox-use-icons other))
+            (execute-kbd-macro (kbd "i"))
+            (should (buffer-local-value 'emacsvox-use-icons source))
+            (should-not (local-variable-p 'emacsvox-use-icons source))
+            (should-not (file-exists-p custom-file))
+            (execute-kbd-macro (kbd "? e"))
+            (should (derived-mode-p 'help-mode))
+            (should (string-match-p "local override" (buffer-string)))
+            (execute-kbd-macro (kbd "q q"))
+            (should (eq (oref transient--prefix command) 'emacsvox-settings-presentation)))
+        (set-default 'emacsvox-use-icons old-default)
+        (kill-buffer other)))))
+
+(ert-deftest emacsvox-settings-switches-global-voice-lock ()
+  "Global Voice Lock uses its lifecycle and only its explicit Save persists."
+  (emacsvox-test--with-settings
+    (let ((original global-voice-lock-mode)
+          (states (mapcar (lambda (buffer)
+                            (cons buffer (buffer-local-value 'voice-lock-mode buffer)))
+                          (buffer-list))))
+      (unwind-protect
+          (progn
+            (execute-kbd-macro (kbd "r l V"))
+            (should (eq global-voice-lock-mode (not original)))
+            (should (eq (buffer-local-value 'voice-lock-mode source) (not original)))
+            (should-not (file-exists-p custom-file))
+            (execute-kbd-macro (kbd "V w"))
+            (should (eq global-voice-lock-mode original))
+            (with-temp-buffer
+              (insert-file-contents custom-file)
+              (should (search-forward "global-voice-lock-mode" nil t))
+              (should-not (search-forward "emacsvox-use-icons" nil t))))
+        (global-voice-lock-mode (if original 1 -1))
+        (dolist (entry states)
+          (when (buffer-live-p (car entry))
+            (with-current-buffer (car entry)
+              (voice-lock-mode (if (cdr entry) 1 -1)))))))))
+
+(ert-deftest emacsvox-settings-switches-silence-captured-item ()
+  "Local suppression targets the captured personality, and can be restored."
+  (emacsvox-test--with-settings
+    (require 'voice-setup)
+    (with-current-buffer source
+      (put-text-property 3 4 'personality 'bolden)
+      (goto-char 3))
+    (execute-kbd-macro (kbd "C-q <f8>"))
+    (with-current-buffer source (goto-char (point-max)))
+    (let (speech)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest args) (push (cons text args) speech))))
+        (execute-kbd-macro (kbd "r l s"))
+        (should (gethash 'bolden (buffer-local-value 'emacsvox-aural-suppressed-personalities source)))
+        (should (string-match-p "Silenced personality bolden" (caar speech)))
+        (should (eq (plist-get (cdar speech) :interruption-policy) 'lane))
+        (with-current-buffer source (should (= (point) (point-max))))
+        (execute-kbd-macro (kbd "s"))
+        (should-not (gethash 'bolden (buffer-local-value 'emacsvox-aural-suppressed-personalities source)))
+        (should (string-match-p "Made personality bolden audible" (caar speech)))
+        (with-current-buffer source (remove-text-properties 3 4 '(personality nil)))
+        (should-error (emacsvox-settings-workflows--silence) :type 'user-error)
+        (execute-kbd-macro (kbd "C-q <f8> r l s"))
+        (should (equal (caar speech) "No personality or mapped face here."))
+        (should-not (file-exists-p custom-file))))))
+
 (provide 'emacsvox-settings-workflows-tests)
 ;;; emacsvox-settings-workflows-tests.el ends here
